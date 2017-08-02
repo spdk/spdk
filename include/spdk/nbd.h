@@ -37,6 +37,14 @@
 struct spdk_bdev;
 
 int spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path);
+
+/**
+ * Poll an NBD instance.
+ *
+ * \return 0 on success or negated errno values on error (e.g. connection closed).
+ */
+int spdk_nbd_poll(void);
+
 void spdk_nbd_stop(void);
 
 #endif
