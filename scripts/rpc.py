@@ -243,6 +243,35 @@ p = subparsers.add_parser('construct_error_bdev', help='Add bdev with error inje
 p.add_argument('base_name', help='base bdev name')
 p.set_defaults(func=construct_error_bdev)
 
+
+def construct_lvol_store(args):
+    params = {'base_name': args.base_name}
+    print_array(jsonrpc_call('construct_lvol_store', params))
+p = subparsers.add_parser('construct_lvol_store', help='Add logical volume store on base bdev')
+p.add_argument('base_name', help='base bdev name')
+p.set_defaults(func=construct_lvol_store)
+
+
+def construct_lvol_bdev(args):
+    params = {
+        'lvol_store_uuid': args.lvol_store_uuid,
+        'size': args.size,
+    }
+    print_array(jsonrpc_call('construct_lvol_bdev', params))
+p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
+p.add_argument('lvol_store_uuid', help='lvol store UUID')
+p.add_argument('size', help='size in MiB for this bdev', type=int)
+p.set_defaults(func=construct_lvol_bdev)
+
+
+def destroy_lvol_store(args):
+    params = {'lvol_store_uuid': args.lvol_store_uuid}
+    jsonrpc_call('destroy_lvol_store', params)
+p = subparsers.add_parser('destroy_lvol_store', help='Destroy an logical volume store')
+p.add_argument('lvol_store_uuid', help='lvol store UUID')
+p.set_defaults(func=destroy_lvol_store)
+
+
 def set_trace_flag(args):
     params = {'flag': args.flag}
     jsonrpc_call('set_trace_flag', params)
