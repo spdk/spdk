@@ -171,16 +171,24 @@ struct spdk_nvmf_rdma_poll_group {
 
 	SLIST_HEAD(, spdk_nvmf_rdma_buf)	data_buf_pool;
 
-	struct ibv_context			*verbs;
+	struct spdk_nvmf_rdma_device		*device;
 
 	uint8_t					*buf;
 	struct ibv_mr				*buf_mr;
 };
 
+/* Assuming rdma_cm uses just one protection domain per ibv_context. */
+struct spdk_nvmf_rdma_device {
+	struct ibv_device_attr			attr;
+	struct ibv_context			*context;
+
+	TAILQ_ENTRY(spdk_nvmf_rdma_device)	link;
+};
+
 struct spdk_nvmf_rdma_listen_addr {
 	struct spdk_nvme_transport_id		trid;
 	struct rdma_cm_id			*id;
-	struct ibv_device_attr 			attr;
+	struct spdk_nvmf_rdma_device		*device;
 	struct ibv_comp_channel			*comp_channel;
 	uint32_t				ref;
 	TAILQ_ENTRY(spdk_nvmf_rdma_listen_addr)	link;
@@ -197,6 +205,7 @@ struct spdk_nvmf_rdma_transport {
 	uint32_t 			max_io_size;
 	uint32_t 			in_capsule_data_size;
 
+	TAILQ_HEAD(, spdk_nvmf_rdma_device)		devices;
 	TAILQ_HEAD(, spdk_nvmf_rdma_listen_addr)	listen_addrs;
 };
 
@@ -582,9 +591,9 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	/* Next check the local NIC's hardware limitations */
 	SPDK_TRACELOG(SPDK_TRACE_RDMA,
 		      "Local NIC Max Send/Recv Queue Depth: %d Max Read/Write Queue Depth: %d\n",
-		      addr->attr.max_qp_wr, addr->attr.max_qp_rd_atom);
-	max_queue_depth = spdk_min(max_queue_depth, addr->attr.max_qp_wr);
-	max_rw_depth = spdk_min(max_rw_depth, addr->attr.max_qp_rd_atom);
+		      addr->device->attr.max_qp_wr, addr->device->attr.max_qp_rd_atom);
+	max_queue_depth = spdk_min(max_queue_depth, addr->device->attr.max_qp_wr);
+	max_rw_depth = spdk_min(max_rw_depth, addr->device->attr.max_qp_rd_atom);
 
 	/* Next check the remote NIC's hardware limitations */
 	SPDK_TRACELOG(SPDK_TRACE_RDMA,
@@ -921,6 +930,9 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 {
 	int rc;
 	struct spdk_nvmf_rdma_transport *rtransport;
+	struct spdk_nvmf_rdma_device	*device;
+	struct ibv_context		**contexts;
+	uint32_t			i;
 
 	rtransport = calloc(1, sizeof(*rtransport));
 	if (!rtransport) {
@@ -928,6 +940,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	}
 
 	pthread_mutex_init(&rtransport->lock, NULL);
+	TAILQ_INIT(&rtransport->devices);
 	TAILQ_INIT(&rtransport->listen_addrs);
 
 	rtransport->transport.tgt = tgt;
@@ -953,19 +966,51 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		return NULL;
 	}
 
+	contexts = rdma_get_devices(NULL);
+	i = 0;
+	while (contexts[i] != NULL) {
+		device = calloc(1, sizeof(*device));
+		if (!device) {
+			SPDK_ERRLOG("Unable to allocate memory for RDMA devices.\n");
+			rdma_destroy_event_channel(rtransport->event_channel);
+			free(rtransport);
+			rdma_free_devices(contexts);
+			return NULL;
+		}
+		device->context = contexts[i];
+		rc = ibv_query_device(device->context, &device->attr);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
+			rdma_destroy_event_channel(rtransport->event_channel);
+			free(rtransport);
+			rdma_free_devices(contexts);
+			return NULL;
+		}
+		TAILQ_INSERT_TAIL(&rtransport->devices, device, link);
+		i++;
+	}
+
+	rdma_free_devices(contexts);
+
 	return &rtransport->transport;
 }
 
 static int
 spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 {
-	struct spdk_nvmf_rdma_transport *rtransport;
+	struct spdk_nvmf_rdma_transport	*rtransport;
+	struct spdk_nvmf_rdma_device	*device, *device_tmp;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
 	assert(TAILQ_EMPTY(&rtransport->listen_addrs));
 	if (rtransport->event_channel != NULL) {
 		rdma_destroy_event_channel(rtransport->event_channel);
+	}
+
+	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, device_tmp) {
+		TAILQ_REMOVE(&rtransport->devices, device, link);
+		free(device);
 	}
 
 	free(rtransport);
@@ -978,6 +1023,7 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		      const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
+	struct spdk_nvmf_rdma_device	*device;
 	struct spdk_nvmf_rdma_listen_addr *addr_tmp, *addr;
 	struct sockaddr_in saddr;
 	int rc;
@@ -1030,15 +1076,6 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		return rc;
 	}
 
-	rc = ibv_query_device(addr->id->verbs, &addr->attr);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to query RDMA device attributes.\n");
-		rdma_destroy_id(addr->id);
-		free(addr);
-		pthread_mutex_unlock(&rtransport->lock);
-		return rc;
-	}
-
 	addr->comp_channel = ibv_create_comp_channel(addr->id->verbs);
 	if (!addr->comp_channel) {
 		SPDK_ERRLOG("Failed to create completion channel\n");
@@ -1068,6 +1105,22 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		free(addr);
 		pthread_mutex_unlock(&rtransport->lock);
 		return rc;
+	}
+
+	TAILQ_FOREACH(device, &rtransport->devices, link) {
+		if (device->context == addr->id->verbs) {
+			addr->device = device;
+			break;
+		}
+	}
+	if (!addr->device) {
+		SPDK_ERRLOG("Accepted a connection with verbs %p, but unable to find a corresponding device.\n",
+			    addr->id->verbs);
+		ibv_destroy_comp_channel(addr->comp_channel);
+		rdma_destroy_id(addr->id);
+		free(addr);
+		pthread_mutex_unlock(&rtransport->lock);
+		return -EINVAL;
 	}
 
 	SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
@@ -1265,13 +1318,14 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_poll_group *group,
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_rdma_qpair 		*rdma_qpair;
 	struct spdk_nvmf_rdma_transport		*rtransport;
+	struct spdk_nvmf_rdma_device 		*device;
 
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
 	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rtransport = SPDK_CONTAINEROF(group->transport, struct spdk_nvmf_rdma_transport, transport);
 
-	if (rgroup->verbs != NULL) {
-		if (rgroup->verbs != rdma_qpair->cm_id->verbs) {
+	if (rgroup->device != NULL) {
+		if (rgroup->device->context != rdma_qpair->cm_id->verbs) {
 			SPDK_ERRLOG("Attempted to add a qpair to a poll group with mismatched RDMA devices.\n");
 			return -1;
 		}
@@ -1281,7 +1335,17 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_poll_group *group,
 		return 0;
 	}
 
-	rgroup->verbs = rdma_qpair->cm_id->verbs;
+	TAILQ_FOREACH(device, &rtransport->devices, link) {
+		if (device->context == rdma_qpair->cm_id->verbs) {
+			break;
+		}
+	}
+	if (!device) {
+		SPDK_ERRLOG("Attempted to add a qpair with an unknown device\n");
+		return -EINVAL;
+	}
+
+	rgroup->device = device;
 	rgroup->buf_mr = ibv_reg_mr(rdma_qpair->cm_id->pd, rgroup->buf,
 				    rtransport->max_queue_depth * rtransport->max_io_size,
 				    IBV_ACCESS_LOCAL_WRITE |
