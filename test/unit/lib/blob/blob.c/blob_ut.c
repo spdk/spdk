@@ -91,17 +91,24 @@ blob_op_with_handle_complete(void *cb_arg, struct spdk_blob *blb, int bserrno)
 static void
 blob_init(void)
 {
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 
-	init_dev(&dev);
+	dev = init_dev();
 
 	/* should fail for an unsupported blocklen */
-	dev.blocklen = 500;
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	dev->blocklen = 500;
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == -EINVAL);
+	/*
+	 * Normally dev gets deleted as part of the dev->destroy callback.  But
+	 *  that doesn't get invoked when init() fails.  So manually free it here
+	 *  instead.  Probably blobstore should still destroy the dev when init
+	 *  fails, but we'll do that in a separate patch.
+	 */
+	free(dev);
 
-	init_dev(&dev);
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	dev = init_dev();
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -114,12 +121,12 @@ static void
 blob_super(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	spdk_blob_id blobid;
 
-	init_dev(&dev);
+	dev = init_dev();
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -154,13 +161,13 @@ static void
 blob_open(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
 	spdk_blob_id blobid, blobid2;
 
-	init_dev(&dev);
+	dev = init_dev();
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -216,12 +223,12 @@ static void
 blob_delete(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	spdk_blob_id blobid;
 
-	init_dev(&dev);
+	dev = init_dev();
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -248,15 +255,15 @@ static void
 blob_resize(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
 	int rc;
 
-	init_dev(&dev);
+	dev = init_dev();
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -311,12 +318,12 @@ static void
 channel_ops(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_io_channel *channel;
 
-	init_dev(&dev);
+	dev = init_dev();
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -335,7 +342,7 @@ static void
 blob_write(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
 	struct spdk_io_channel *channel;
 	spdk_blob_id blobid;
@@ -343,9 +350,9 @@ blob_write(void)
 	uint8_t payload[10 * 4096];
 	int rc;
 
-	init_dev(&dev);
+	dev = init_dev();
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -401,7 +408,7 @@ static void
 blob_read(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
 	struct spdk_io_channel *channel;
 	spdk_blob_id blobid;
@@ -409,9 +416,9 @@ blob_read(void)
 	uint8_t payload[10 * 4096];
 	int rc;
 
-	init_dev(&dev);
+	dev = init_dev();
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -467,7 +474,7 @@ static void
 blob_rw_verify(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
 	struct spdk_io_channel *channel;
 	spdk_blob_id blobid;
@@ -475,9 +482,9 @@ blob_rw_verify(void)
 	uint8_t payload_write[10 * 4096];
 	int rc;
 
-	init_dev(&dev);
+	dev = init_dev();
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -521,7 +528,7 @@ static void
 blob_rw_verify_iov(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
 	struct spdk_io_channel *channel;
 	spdk_blob_id blobid;
@@ -532,10 +539,10 @@ blob_rw_verify_iov(void)
 	void *buf;
 	int rc;
 
-	init_dev(&dev);
+	dev = init_dev();
 	memset(g_dev_buffer, 0, DEV_BUFFER_SIZE);
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -624,7 +631,7 @@ static void
 blob_rw_verify_iov_nomem(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
 	struct spdk_io_channel *channel;
 	spdk_blob_id blobid;
@@ -633,10 +640,10 @@ blob_rw_verify_iov_nomem(void)
 	uint32_t req_count;
 	int rc;
 
-	init_dev(&dev);
+	dev = init_dev();
 	memset(g_dev_buffer, 0, DEV_BUFFER_SIZE);
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -688,13 +695,13 @@ static void
 blob_iter(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
 	spdk_blob_id blobid;
 
-	init_dev(&dev);
+	dev = init_dev();
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -727,7 +734,7 @@ static void
 blob_xattr(void)
 {
 	struct spdk_blob_store *bs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_blob *blob;
 	spdk_blob_id blobid;
 	uint64_t length;
@@ -737,9 +744,9 @@ blob_xattr(void)
 	size_t value_len;
 	struct spdk_xattr_names *names;
 
-	init_dev(&dev);
+	dev = init_dev();
 
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -806,7 +813,7 @@ blob_xattr(void)
 static void
 bs_load(void)
 {
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	spdk_blob_id blobid;
 	struct spdk_blob *blob;
 	uint64_t length;
@@ -814,10 +821,10 @@ bs_load(void)
 	const void *value;
 	size_t value_len;
 
-	init_dev(&dev);
+	dev = init_dev();
 
 	/* Initialize a new blob store */
-	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -857,8 +864,9 @@ bs_load(void)
 	g_blob = NULL;
 	g_blobid = 0;
 
+	dev = init_dev();
 	/* Load an existing blob store */
-	spdk_bs_load(&dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -898,17 +906,17 @@ bs_load(void)
 static void
 bs_cluster_sz(void)
 {
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts opts;
 	uint32_t cluster_sz;
 
-	init_dev(&dev);
+	dev = init_dev();
 	spdk_bs_opts_init(&opts);
 	opts.cluster_sz *= 2;
 	cluster_sz = opts.cluster_sz;
 
 	/* Initialize a new blob store */
-	spdk_bs_init(&dev, &opts, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -921,8 +929,9 @@ bs_cluster_sz(void)
 	g_blob = NULL;
 	g_blobid = 0;
 
+	dev = init_dev();
 	/* Load an existing blob store */
-	spdk_bs_load(&dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -944,20 +953,20 @@ bs_resize_md(void)
 {
 	const int CLUSTER_PAGE_COUNT = 4;
 	const int NUM_BLOBS = CLUSTER_PAGE_COUNT * 4;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts opts;
 	uint32_t cluster_sz;
 	spdk_blob_id blobids[NUM_BLOBS];
 	int i;
 
 
-	init_dev(&dev);
+	dev = init_dev();
 	spdk_bs_opts_init(&opts);
 	opts.cluster_sz = CLUSTER_PAGE_COUNT * 4096;
 	cluster_sz = opts.cluster_sz;
 
 	/* Initialize a new blob store */
-	spdk_bs_init(&dev, &opts, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -981,7 +990,8 @@ bs_resize_md(void)
 	/* Load an existing blob store */
 	g_bserrno = -1;
 	g_bs = NULL;
-	spdk_bs_load(&dev, bs_op_with_handle_complete, NULL);
+	dev = init_dev();
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -1009,7 +1019,7 @@ bs_resize_md(void)
 static void
 blob_serialize(void)
 {
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts opts;
 	struct spdk_blob_store *bs;
 	spdk_blob_id blobid[2];
@@ -1018,12 +1028,12 @@ blob_serialize(void)
 	char *value;
 	int rc;
 
-	init_dev(&dev);
+	dev = init_dev();
 
 	/* Initialize a new blobstore with very small clusters */
 	spdk_bs_opts_init(&opts);
-	opts.cluster_sz = dev.blocklen * 8;
-	spdk_bs_init(&dev, &opts, bs_op_with_handle_complete, NULL);
+	opts.cluster_sz = dev->blocklen * 8;
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -1044,10 +1054,10 @@ blob_serialize(void)
 		/* Set a fairly large xattr on both blobs to eat up
 		 * metadata space
 		 */
-		value = calloc(dev.blocklen - 64, sizeof(char));
+		value = calloc(dev->blocklen - 64, sizeof(char));
 		SPDK_CU_ASSERT_FATAL(value != NULL);
-		memset(value, i, dev.blocklen / 2);
-		rc = spdk_blob_md_set_xattr(blob[i], "name", value, dev.blocklen - 64);
+		memset(value, i, dev->blocklen / 2);
+		rc = spdk_blob_md_set_xattr(blob[i], "name", value, dev->blocklen - 64);
 		CU_ASSERT(rc == 0);
 		free(value);
 	}
@@ -1080,8 +1090,9 @@ blob_serialize(void)
 	g_blobid = 0;
 	bs = NULL;
 
+	dev = init_dev();
 	/* Load an existing blob store */
-	spdk_bs_load(&dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
