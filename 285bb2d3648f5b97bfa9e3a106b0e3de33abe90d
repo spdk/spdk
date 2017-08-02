@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6ec4749_ebfbeffa",
+        "filename": "test/vhost/fiotest/fio_jobs/default_performance.job",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-02T06:12:22Z",
+      "side": 1,
+      "message": "Why is BS specified twice?",
+      "range": {
+        "startLine": 2,
+        "startChar": 13,
+        "endLine": 2,
+        "endChar": 30
+      },
+      "revId": "285bb2d3648f5b97bfa9e3a106b0e3de33abe90d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
