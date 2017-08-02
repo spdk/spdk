@@ -620,16 +620,52 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 			      uint32_t io_flags)
 {
 	struct nvme_request	*req;
-	struct spdk_nvme_cmd	*cmd;
+	struct nvme_request *child_req;
+	struct spdk_nvme_cmd *cmd;
 	uint64_t		*tmp_lba;
+	uint32_t lba_remaining;
+	uint64_t child_lba;
+	uint32_t child_lba_count;
+	uint32_t sectors_per_max_io;
+
+	sectors_per_max_io = UINT16_MAX + 1;
 
 	if (lba_count == 0) {
 		return -EINVAL;
 	}
 
 	req = nvme_allocate_request_null(qpair, cb_fn, cb_arg);
+
 	if (req == NULL) {
 		return -ENOMEM;
+	}
+
+	if (lba_count > sectors_per_max_io) {
+		lba_remaining = lba_count;
+
+		while (lba_remaining > 0) {
+			child_req = nvme_allocate_request_null(qpair, cb_fn, cb_arg);
+
+			if (child_req == NULL) {
+				nvme_request_free_children(req);
+				nvme_free_request(req);
+				return -ENOMEM;
+			}
+
+			cmd = &child_req->cmd;
+			cmd->opc = SPDK_NVME_OPC_WRITE_ZEROES;
+			cmd->nsid = ns->id;
+
+			child_lba = lba + lba_count - lba_remaining;
+			child_lba_count = spdk_min(lba_remaining, sectors_per_max_io);
+
+			tmp_lba = (uint64_t *)&cmd->cdw10;
+			*tmp_lba = child_lba;
+			cmd->cdw12 = child_lba_count - 1;
+			cmd->cdw12 |= io_flags;
+			nvme_request_add_child(req, child_req);
+			lba_remaining -= child_lba_count;
+		}
 	}
 
 	cmd = &req->cmd;
