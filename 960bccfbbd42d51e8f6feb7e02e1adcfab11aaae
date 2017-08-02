@@ -16,6 +16,24 @@
       "revId": "960bccfbbd42d51e8f6feb7e02e1adcfab11aaae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ac3398d_802e954b",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-02T22:34:06Z",
+      "side": 1,
+      "message": "Ignore my comment on additional calls to spdk_get_ticks().  Daniel pointed out to me offline that you add one on line 511 but removed the one from line 514 in the old file.\n\nI am still not sure the extra complication is worth it though.  Do you see a use case where it is critical that we get the exact number of I/O?\n\nWorst case, if you run QD\u003d128, you could get 128 extra I/O which complete just after TSC expires.  If the device only does 50K IO/s, and runs for 10 seconds, the performance impact would be 128 / (50K * 10s) \u003d 0.02%.  For longer test runs, devices with higher throughput, or lower queue depth, the % difference would be even smaller.",
+      "parentUuid": "c1f322a9_b4b9d8a4",
+      "revId": "960bccfbbd42d51e8f6feb7e02e1adcfab11aaae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
