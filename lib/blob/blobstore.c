@@ -1136,13 +1136,13 @@ _spdk_bs_channel_destroy(void *io_device, void *ctx_buf)
 }
 
 static void
-_spdk_bs_free(struct spdk_blob_store *bs)
+_spdk_bs_dev_destroy(void *io_device)
 {
+	struct spdk_blob_store *bs;
 	struct spdk_blob	*blob, *blob_tmp;
 
-	spdk_bs_unregister_md_thread(bs);
-	spdk_io_device_unregister(&bs->io_target, NULL);
-	spdk_io_device_unregister(&bs->md_target, NULL);
+	bs = SPDK_CONTAINEROF(io_device, struct spdk_blob_store, md_target);
+	bs->dev->destroy(bs->dev);
 
 	TAILQ_FOREACH_SAFE(blob, &bs->blobs, link, blob_tmp) {
 		TAILQ_REMOVE(&bs->blobs, blob, link);
@@ -1151,9 +1151,15 @@ _spdk_bs_free(struct spdk_blob_store *bs)
 
 	spdk_bit_array_free(&bs->used_md_pages);
 	spdk_bit_array_free(&bs->used_clusters);
-
-	bs->dev->destroy(bs->dev);
 	free(bs);
+}
+
+static void
+_spdk_bs_free(struct spdk_blob_store *bs)
+{
+	spdk_bs_unregister_md_thread(bs);
+	spdk_io_device_unregister(&bs->io_target, NULL);
+	spdk_io_device_unregister(&bs->md_target, _spdk_bs_dev_destroy);
 }
 
 void
