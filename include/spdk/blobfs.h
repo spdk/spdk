@@ -121,6 +121,7 @@ int64_t spdk_file_read(struct spdk_file *file, struct spdk_io_channel *channel,
 
 void spdk_fs_set_cache_size(uint64_t size_in_mb);
 uint64_t spdk_fs_get_cache_size(void);
+void spdk_fs_set_cache_buffer_shift(uint32_t shift);
 
 #define SPDK_FILE_PRIORITY_LOW	0 /* default */
 #define SPDK_FILE_PRIORITY_HIGH	1
