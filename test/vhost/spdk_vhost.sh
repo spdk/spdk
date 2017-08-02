@@ -61,22 +61,33 @@ case $param in
 	echo Running lvol integrity suite...
 	./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--ctrl-type=vhost_scsi
-    ;;
+	;;
 	-ilb|--integrity-lvol-blk)
 	echo Running lvol integrity suite...
 	./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--ctrl-type=vhost_blk
+	;;
+	-ht|--hottests)
+	echo Running hot tests suite...
+	./hotfeatures/scsi_hottests.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1 \
+	--vm=1,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p2:Nvme0n1p3 \
+	--vm=2,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p4:Nvme0n1p5 \
+	--vm=3,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p6:Nvme0n1p7 \
+	--test-type=spdk_vhost_scsi \
+	--fio-jobs=$WORKDIR/hotfeatures/fio_jobs/default_hotfeature.job -x
     ;;
     -h|--help)
-	echo "-i |--integrity             for running an integrity test with vhost scsi"
-	echo "-fs|--fs-integrity-scsi     for running an integrity test with filesystem"
-	echo "-fb|--fs-integrity-blk      for running an integrity test with filesystem"
-	echo "-p |--performance           for running a performance test with vhost scsi"
-	echo "-ib|--integrity-blk         for running an integrity test with vhost blk"
-	echo "-pb|--performance-blk       for running a performance test with vhost blk"
+	echo "-i |--integrity          for running an integrity test with vhost scsi"
+	echo "-fs|--fs-integrity-scsi  for running an integrity test with filesystem"
+	echo "-fb|--fs-integrity-blk   for running an integrity test with filesystem"
+	echo "-p |--performance        for running a performance test with vhost scsi"
+	echo "-ib|--integrity-blk      for running an integrity test with vhost blk"
+	echo "-pb|--performance-blk    for running a performance test with vhost blk"
 	echo "-ils|--integrity-lvol-scsi  for running an integrity test with vhost scsi and lvol backends"
 	echo "-ilb|--integrity-lvol-blk   for running an integrity test with vhost blk and lvol backends"
-	echo "-h |--help                  prints this message"
+	echo "-ht|--hottests           for running hot tests"
+	echo "-h |--help               prints this message"
     ;;
     *)
 	echo "unknown test type"
