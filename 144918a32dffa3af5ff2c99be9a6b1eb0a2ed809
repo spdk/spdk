@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c15075e_3af2fdc8",
+        "filename": "lib/nvme/nvme_quirks.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-02T18:12:19Z",
+      "side": 1,
+      "message": "I think this quirk can probably be added to all of the Intel devices (we should verify this experimentally).",
+      "revId": "144918a32dffa3af5ff2c99be9a6b1eb0a2ed809",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
