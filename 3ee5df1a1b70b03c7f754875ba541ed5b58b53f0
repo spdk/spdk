@@ -34,6 +34,24 @@
       "revId": "3ee5df1a1b70b03c7f754875ba541ed5b58b53f0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c8a36e3_cb378e4a",
+        "filename": "lib/nvme/nvme_ns.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-08-02T16:33:33Z",
+      "side": 1,
+      "message": "Yes, check format moves the brace for this function onto the same line.",
+      "parentUuid": "e5cde943_a739a185",
+      "revId": "3ee5df1a1b70b03c7f754875ba541ed5b58b53f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
