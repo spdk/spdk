@@ -850,7 +850,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair, struct nvme_request 
 		return -1;
 	}
 
-	if (length != req->payload_size) {
+	if (length < req->payload_size) {
 		SPDK_ERRLOG("multi-element SGL currently not supported for RDMA\n");
 		return -1;
 	}
@@ -863,7 +863,7 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair, struct nvme_request 
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
-	req->cmd.dptr.sgl1.keyed.length = length;
+	req->cmd.dptr.sgl1.keyed.length = req->payload_size;
 	req->cmd.dptr.sgl1.keyed.key = mr->rkey;
 	req->cmd.dptr.sgl1.address = (uint64_t)virt_addr;
 
