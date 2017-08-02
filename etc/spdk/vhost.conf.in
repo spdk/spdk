@@ -127,7 +127,7 @@
 
 #[VhostScsi1]
 #  Name vhost.1
-#  Dev0 AIO1
+#  Dev 0 AIO1
 #  Cpumask 0x1
 
 #[VhostBlk0]
