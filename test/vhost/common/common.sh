@@ -277,6 +277,36 @@ function vm_ssh()
 	$ssh_cmd "$@"
 }
 
+# Execute scp command on given VM
+# param $1 virtual machine number
+#
+function vm_scp()
+{
+        vm_num_is_valid $1 || return 1
+        local ssh_config="$VM_BASE_DIR/ssh_config"
+        if [[ ! -f $ssh_config ]]; then
+                (
+                echo "Host *"
+                echo "  ControlPersist=10m"
+                echo "  ConnectTimeout=2"
+                echo "  Compression=no"
+                echo "  ControlMaster=auto"
+                echo "  UserKnownHostsFile=/dev/null"
+                echo "  StrictHostKeyChecking=no"
+                echo "  User root"
+                echo "  ControlPath=$VM_BASE_DIR/%r@%h:%p.ssh"
+                echo ""
+                ) > $ssh_config
+        fi
+
+        local scp_cmd="scp -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
+                      -P $(vm_ssh_socket $1) "
+
+        shift
+        $scp_cmd "$@"
+}
+
+
 # check if specified VM is running
 # param $1 VM num
 function vm_is_running()
