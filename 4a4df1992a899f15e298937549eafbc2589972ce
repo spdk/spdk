@@ -16,6 +16,23 @@
       "revId": "4a4df1992a899f15e298937549eafbc2589972ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df99b7cd_2c62685b",
+        "filename": "test/unit/lib/scsi/scsi.c/scsi_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-02T23:39:22Z",
+      "side": 1,
+      "message": "This backslash is not necessary (we aren\u0027t in a macro here), so might as well clean it up while you\u0027re changing this line. (Probably would look better to just not break the line at all - it should fit in our column limit without a linebreak.)",
+      "revId": "4a4df1992a899f15e298937549eafbc2589972ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
