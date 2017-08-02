@@ -44,8 +44,11 @@ struct cache_buffer {
 	bool			in_progress;
 };
 
-#define CACHE_BUFFER_SHIFT (18)
-#define CACHE_BUFFER_SIZE (1U << CACHE_BUFFER_SHIFT)
+extern uint32_t g_fs_cache_buffer_shift;
+
+#define CACHE_BUFFER_SHIFT (g_fs_cache_buffer_shift)
+#define CACHE_BUFFER_SIZE (1 << CACHE_BUFFER_SHIFT)
+>>>>>>> b6e11cb... blobfs: Make the cache buffer size configurable.
 #define NEXT_CACHE_BUFFER_OFFSET(offset)	\
 	(((offset + CACHE_BUFFER_SIZE) >> CACHE_BUFFER_SHIFT) << CACHE_BUFFER_SHIFT)
 

@@ -37,6 +37,7 @@ if [ -z "$RESULTS_DIR" ]; then
 fi
 
 : ${CACHE_SIZE:=4096}
+: ${CACHE_BUFFER_SHIFT:=16}
 : ${DURATION:=120}
 : ${NUM_KEYS:=500000000}
 : ${ROCKSDB_CONF:=/usr/local/etc/spdk/rocksdb.conf}
@@ -129,6 +130,7 @@ run_step() {
 	  echo "--spdk=$ROCKSDB_CONF" >> "$1"_flags.txt
 	  echo "--spdk_bdev=Nvme0n1" >> "$1"_flags.txt
 	  echo "--spdk_cache_size=$CACHE_SIZE" >> "$1"_flags.txt
+	  echo "--spdk_cache_buffer_shift=$CACHE_BUFFER_SHIFT" >> "$1"_flags.txt
 	fi
 
 	if [ "$NO_SPDK" = "1" ]
