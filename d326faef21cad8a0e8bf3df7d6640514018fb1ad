@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c657017_0b087fe3",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-02T20:19:38Z",
+      "side": 1,
+      "message": "After looking at the next review, I realized that this won\u0027t actually test what we want to test - match_req is also the request that you put on the free_req list, so it will be overwritten by nvme_allocate_request().  See my comments here: https://review.gerrithub.io/#/c/369088/8/test/unit/lib/nvme/nvme.c/nvme_ut.c",
+      "revId": "d326faef21cad8a0e8bf3df7d6640514018fb1ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
