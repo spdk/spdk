@@ -70,12 +70,12 @@ static void
 fs_init(void)
 {
 	struct spdk_filesystem *fs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 
-	init_dev(&dev);
+	dev = init_dev();
 	spdk_allocate_thread(_fs_send_msg, NULL);
 
-	spdk_fs_init(&dev, NULL, fs_op_with_handle_complete, NULL);
+	spdk_fs_init(dev, NULL, fs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
@@ -111,15 +111,15 @@ fs_open(void)
 {
 	struct spdk_filesystem *fs;
 	spdk_fs_iter iter;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_file *file;
 	char name[257] = {'\0'};
 
-	init_dev(&dev);
+	dev = init_dev();
 	memset(name, 'a', sizeof(name) - 1);
 	spdk_allocate_thread(_fs_send_msg, NULL);
 
-	spdk_fs_init(&dev, NULL, fs_op_with_handle_complete, NULL);
+	spdk_fs_init(dev, NULL, fs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
@@ -181,14 +181,14 @@ static void
 fs_create(void)
 {
 	struct spdk_filesystem *fs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	char name[257] = {'\0'};
 
-	init_dev(&dev);
+	dev = init_dev();
 	memset(name, 'a', sizeof(name) - 1);
 	spdk_allocate_thread(_fs_send_msg, NULL);
 
-	spdk_fs_init(&dev, NULL, fs_op_with_handle_complete, NULL);
+	spdk_fs_init(dev, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
@@ -222,12 +222,12 @@ static void
 fs_truncate(void)
 {
 	struct spdk_filesystem *fs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 
-	init_dev(&dev);
+	dev = init_dev();
 	spdk_allocate_thread(_fs_send_msg, NULL);
 
-	spdk_fs_init(&dev, NULL, fs_op_with_handle_complete, NULL);
+	spdk_fs_init(dev, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
@@ -275,12 +275,12 @@ fs_rename(void)
 {
 	struct spdk_filesystem *fs;
 	struct spdk_file *file, *file2;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 
-	init_dev(&dev);
+	dev = init_dev();
 	spdk_allocate_thread(_fs_send_msg, NULL);
 
-	spdk_fs_init(&dev, NULL, fs_op_with_handle_complete, NULL);
+	spdk_fs_init(dev, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
@@ -427,13 +427,13 @@ static void
 channel_ops(void)
 {
 	struct spdk_filesystem *fs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_io_channel *channel;
 
-	init_dev(&dev);
+	dev = init_dev();
 	spdk_allocate_thread(_fs_send_msg, NULL);
 
-	spdk_fs_init(&dev, NULL, fs_op_with_handle_complete, NULL);
+	spdk_fs_init(dev, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
@@ -455,13 +455,13 @@ static void
 channel_ops_sync(void)
 {
 	struct spdk_filesystem *fs;
-	struct spdk_bs_dev dev;
+	struct spdk_bs_dev *dev;
 	struct spdk_io_channel *channel;
 
-	init_dev(&dev);
+	dev = init_dev();
 	spdk_allocate_thread(_fs_send_msg, NULL);
 
-	spdk_fs_init(&dev, NULL, fs_op_with_handle_complete, NULL);
+	spdk_fs_init(dev, NULL, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 	fs = g_fs;
