@@ -406,6 +406,12 @@ nvme_pcie_ctrlr_get_max_io_queue_size(struct spdk_nvme_ctrlr *ctrlr)
 	return NVME_IO_ENTRIES;
 }
 
+uint16_t
+nvme_pcie_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return NVME_MAX_SGL_DESCRIPTORS;
+}
+
 static void
 nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 {

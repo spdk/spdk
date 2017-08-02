@@ -1499,3 +1499,15 @@ nvme_rdma_ctrlr_get_max_io_queue_size(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return NVME_HOST_MAX_ENTRIES_PER_QUEUE;
 }
+
+uint16_t
+nvme_rdma_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
+{
+	/*
+	 * We do not support >1 SGE in the initiator currently,
+	 *  so we can only return 1 here.  Once that support is
+	 *  added, this should return ctrlr->cdata.nvmf_specific.msdbd
+	 *  instead.
+	 */
+	return 1;
+}
