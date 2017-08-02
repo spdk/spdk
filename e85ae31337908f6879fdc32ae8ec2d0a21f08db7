@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "955945d2_133ddb80",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-02T18:39:14Z",
+      "side": 1,
+      "message": "We could just make a struct spdk_nvme_qpair on the stack to avoid the need for malloc() here. (If you do keep malloc(), it needs a SPDK_CU_ASSERT_FATAL(qpair !\u003d NULL) check to keep our static analysis tool happy.)",
+      "revId": "e85ae31337908f6879fdc32ae8ec2d0a21f08db7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61f8ce58_1384b036",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-02T18:39:14Z",
+      "side": 1,
+      "message": "We should just directly compare pointers here: return_req \u003d\u003d \u0026dummy_req",
+      "revId": "e85ae31337908f6879fdc32ae8ec2d0a21f08db7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
