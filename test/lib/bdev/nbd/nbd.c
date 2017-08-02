@@ -43,6 +43,7 @@
 #include "spdk/util.h"
 
 static struct spdk_poller *g_nbd_poller;
+static struct spdk_nbd_disk *g_nbd_disk;
 static char *g_bdev_name;
 static char *g_nbd_name = "/dev/nbd0";
 
@@ -52,7 +53,7 @@ static void
 nbd_shutdown(void)
 {
 	spdk_poller_unregister(&g_nbd_poller, NULL);
-	spdk_nbd_stop();
+	spdk_nbd_stop(g_nbd_disk);
 	spdk_app_stop(0);
 }
 
@@ -61,7 +62,7 @@ nbd_poll(void *arg)
 {
 	int rc;
 
-	rc = spdk_nbd_poll();
+	rc = spdk_nbd_poll(g_nbd_disk);
 	if (rc < 0) {
 		SPDK_NOTICELOG("spdk_nbd_poll() returned %d; shutting down", rc);
 		nbd_shutdown();
@@ -72,7 +73,6 @@ static void
 nbd_start(void *arg1, void *arg2)
 {
 	struct spdk_bdev	*bdev;
-	int rc;
 
 	bdev = spdk_bdev_get_by_name(g_bdev_name);
 	if (bdev == NULL) {
@@ -81,8 +81,8 @@ nbd_start(void *arg1, void *arg2)
 		return;
 	}
 
-	rc = spdk_nbd_start(bdev, g_nbd_name);
-	if (rc != 0) {
+	g_nbd_disk = spdk_nbd_start(bdev, g_nbd_name);
+	if (g_nbd_disk == NULL) {
 		spdk_app_stop(-1);
 		return;
 	}
