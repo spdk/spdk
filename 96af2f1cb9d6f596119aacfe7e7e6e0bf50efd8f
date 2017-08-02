@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99d8158b_7284011c",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-02T20:17:39Z",
+      "side": 1,
+      "message": "Putting match_req on the free_req list will result in it being memset() to 0 by nvme_allocate_request(), so comparing it with memcmp() later will always succeed, even if the function under test wrote the wrong values.  It would be better to just CU_ASSERT(req-\u003eqpair \u003d\u003d \u0026qpair), etc. after calling the function.\n\nAlternatively, if you want to build up a match_req and compare it after nvme_allocate_request_null(), you\u0027ll need a second nvme_request object to put on the free_req list instead of match_req so that match_req doesn\u0027t get overwritten.\n\nWe should also check that the payload was filled out correctly; for null requests, that means it should have payload.type \u003d\u003d NVME_PAYLOAD_CONTIG and payload.u.contig \u003d\u003d NULL.",
+      "revId": "96af2f1cb9d6f596119aacfe7e7e6e0bf50efd8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
