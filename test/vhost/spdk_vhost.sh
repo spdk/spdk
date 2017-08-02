@@ -57,17 +57,36 @@ case $param in
 	echo Running filesystem integrity suite...
 	./integrity/integrity_start.sh -i /home/sys_sgsw/vhost_vm_image.qcow2 -m blk -f ntfs
 	;;
+        -ha|--hotattach)
+        echo Running hotattach suite...
+        ./hotfeatures/scsi_hotattach.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+        --vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1 \
+        --vm=1,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p2:Nvme0n1p3 \
+        --test-type=spdk_vhost_scsi \
+        --fio-jobs=$WORKDIR/hotfeatures/fio_jobs/default_integrity.job -x
+        ;;
+        -hd|--hotdetach)
+        echo Running hotdetach suite...
+        ./hotfeatures/scsi_hotdetach.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+        --vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1 \
+        --vm=1,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p2:Nvme0n1p3 \
+        --test-type=spdk_vhost_scsi \
+        --fio-jobs=$WORKDIR/hotfeatures/fio_jobs/default_integrity.job -x
+    ;;
     -h|--help)
+
 	echo "-i |--integrity          for running an integrity test with vhost scsi"
 	echo "-fs|--fs-integrity-scsi  for running an integrity test with filesystem"
 	echo "-fb|--fs-integrity-blk   for running an integrity test with filesystem"
 	echo "-p |--performance        for running a performance test with vhost scsi"
 	echo "-ib|--integrity-blk      for running an integrity test with vhost blk"
 	echo "-pb|--performance-blk    for running a performance test with vhost blk"
+	echo "-ha|--hotattach          for running hot attach feature tests"
+	echo "-hd|--hotdetach          for running hot detach feature tests"
 	echo "-h |--help               prints this message"
     ;;
     *)
-	echo "unknown test type"
+        echo "unknown test type"
     ;;
 esac
 
