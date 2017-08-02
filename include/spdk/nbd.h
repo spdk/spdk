@@ -35,8 +35,9 @@
 #define SPDK_NBD_H_
 
 struct spdk_bdev;
+struct spdk_nbd_disk;
 
-int spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path);
-void spdk_nbd_stop(void);
+struct spdk_nbd_disk *spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path);
+void spdk_nbd_stop(struct spdk_nbd_disk *nbd);
 
 #endif
