@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1f322a9_b4b9d8a4",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-02T22:26:48Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nWhy do we need to do this check here?\n\nI think it is OK if we count one or two extra I/O.  If we are testing for 60 seconds, we probably have completed millions of I/O, so one or two extra do not make any real difference.\n\nI think this just makes the code more complicated.  It also adds more calls to spdk_get_ticks() which are not cheap.  So it could actually hurt performance in the case where we are trying to get 3-4 million I/O on one core.",
+      "revId": "960bccfbbd42d51e8f6feb7e02e1adcfab11aaae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
