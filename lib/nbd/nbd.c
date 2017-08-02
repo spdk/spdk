@@ -67,7 +67,7 @@ struct nbd_io {
 	uint32_t		offset;
 };
 
-struct nbd_disk {
+struct spdk_nbd_disk {
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*bdev_desc;
 	struct spdk_io_channel	*ch;
@@ -75,8 +75,6 @@ struct nbd_disk {
 	struct nbd_io		io;
 	uint32_t		buf_align;
 };
-
-struct nbd_disk g_nbd_disk = {};
 
 static bool
 is_read(enum spdk_bdev_io_type io_type)
@@ -101,11 +99,25 @@ is_write(enum spdk_bdev_io_type io_type)
 }
 
 void
-spdk_nbd_stop(void)
+spdk_nbd_stop(struct spdk_nbd_disk *nbd)
 {
-	spdk_put_io_channel(g_nbd_disk.ch);
-	spdk_bdev_close(g_nbd_disk.bdev_desc);
-	close(g_nbd_disk.fd);
+	if (nbd == NULL) {
+		return;
+	}
+
+	if (nbd->ch) {
+		spdk_put_io_channel(nbd->ch);
+	}
+
+	if (nbd->bdev_desc) {
+		spdk_bdev_close(nbd->bdev_desc);
+	}
+
+	if (nbd->fd >= 0) {
+		close(nbd->fd);
+	}
+
+	free(nbd);
 }
 
 static int64_t
@@ -195,7 +207,7 @@ nbd_submit_bdev_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 }
 
 static int
-process_request(struct nbd_disk *nbd)
+process_request(struct spdk_nbd_disk *nbd)
 {
 	struct nbd_io	*io = &nbd->io;
 
@@ -242,9 +254,8 @@ process_request(struct nbd_disk *nbd)
 }
 
 int
-spdk_nbd_poll(void)
+spdk_nbd_poll(struct spdk_nbd_disk *nbd)
 {
-	struct nbd_disk *nbd = &g_nbd_disk;
 	struct nbd_io	*io = &nbd->io;
 	int		fd = nbd->fd;
 	int64_t		ret;
@@ -341,50 +352,57 @@ nbd_start_kernel(int nbd_fd, int *sp)
 	exit(0);
 }
 
-int
+struct spdk_nbd_disk *
 spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 {
+	struct spdk_nbd_disk	*nbd;
 	int			rc;
-	int			sp[2], nbd_fd;
+	int			sp[2] = { -1, -1 }, nbd_fd;
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &g_nbd_disk.bdev_desc);
+	nbd = calloc(1, sizeof(*nbd));
+	if (nbd == NULL) {
+		return NULL;
+	}
+	nbd->fd = -1;
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &nbd->bdev_desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not open bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
-		return -1;
+		goto err;
 	}
 
-	g_nbd_disk.bdev = bdev;
-	g_nbd_disk.ch = spdk_bdev_get_io_channel(g_nbd_disk.bdev_desc);
-	g_nbd_disk.buf_align = spdk_max(spdk_bdev_get_buf_align(bdev), 64);
+	nbd->bdev = bdev;
+	nbd->ch = spdk_bdev_get_io_channel(nbd->bdev_desc);
+	nbd->buf_align = spdk_max(spdk_bdev_get_buf_align(bdev), 64);
 
 	rc = socketpair(AF_UNIX, SOCK_STREAM, 0, sp);
 	if (rc != 0) {
 		SPDK_ERRLOG("socketpair failed\n");
-		return -1;
+		goto err;
 	}
 
 	nbd_fd = open(nbd_path, O_RDWR);
 	if (nbd_fd == -1) {
 		SPDK_ERRLOG("open(\"%s\") failed: %s\n", nbd_path, strerror(errno));
-		return -1;
+		goto err;
 	}
 
 	rc = ioctl(nbd_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(bdev));
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", strerror(errno));
-		return -1;
+		goto err;
 	}
 
 	rc = ioctl(nbd_fd, NBD_SET_SIZE_BLOCKS, spdk_bdev_get_num_blocks(bdev));
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_SIZE_BLOCKS) failed: %s\n", strerror(errno));
-		return -1;
+		goto err;
 	}
 
 	rc = ioctl(nbd_fd, NBD_CLEAR_SOCK);
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_CLEAR_SOCK) failed: %s\n", strerror(errno));
-		return -1;
+		goto err;
 	}
 
 	printf("Enabling kernel access to bdev %s via %s\n", spdk_bdev_get_name(bdev), nbd_path);
@@ -397,18 +415,29 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 		break;
 	case -1:
 		SPDK_ERRLOG("could not fork: %s\n", strerror(errno));
-		return -1;
+		goto err;
 	default:
 		break;
 	}
 
 	close(sp[1]);
 
-	g_nbd_disk.fd = sp[0];
-	fcntl(g_nbd_disk.fd, F_SETFL, O_NONBLOCK);
+	nbd->fd = sp[0];
+	fcntl(nbd->fd, F_SETFL, O_NONBLOCK);
 
-	to_be32(&g_nbd_disk.io.resp.magic, NBD_REPLY_MAGIC);
-	g_nbd_disk.io.req_in_progress = true;
+	to_be32(&nbd->io.resp.magic, NBD_REPLY_MAGIC);
+	nbd->io.req_in_progress = true;
 
-	return 0;
+	return nbd;
+
+err:
+	if (sp[0] >= 0) {
+		close(sp[0]);
+	}
+	if (sp[1] >= 0) {
+		close(sp[1]);
+	}
+	spdk_nbd_stop(nbd);
+
+	return NULL;
 }

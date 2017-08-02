@@ -35,16 +35,17 @@
 #define SPDK_NBD_H_
 
 struct spdk_bdev;
+struct spdk_nbd_disk;
 
-int spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path);
+struct spdk_nbd_disk *spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path);
 
 /**
  * Poll an NBD instance.
  *
  * \return 0 on success or negated errno values on error (e.g. connection closed).
  */
-int spdk_nbd_poll(void);
+int spdk_nbd_poll(struct spdk_nbd_disk *nbd);
 
-void spdk_nbd_stop(void);
+void spdk_nbd_stop(struct spdk_nbd_disk *nbd);
 
 #endif
