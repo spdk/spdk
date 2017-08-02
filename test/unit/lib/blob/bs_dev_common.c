@@ -50,6 +50,7 @@ dev_destroy_channel(struct spdk_bs_dev *dev, struct spdk_io_channel *channel)
 static void
 dev_destroy(struct spdk_bs_dev *dev)
 {
+	free(dev);
 }
 
 static void
@@ -101,9 +102,11 @@ dev_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
 }
 
-static void
-init_dev(struct spdk_bs_dev *dev)
+static struct spdk_bs_dev *
+init_dev(void)
 {
+	struct spdk_bs_dev *dev = calloc(1, sizeof(*dev));
+
 	dev->create_channel = dev_create_channel;
 	dev->destroy_channel = dev_destroy_channel;
 	dev->destroy = dev_destroy;
@@ -113,4 +116,6 @@ init_dev(struct spdk_bs_dev *dev)
 	dev->unmap = dev_unmap;
 	dev->blockcnt = DEV_BUFFER_BLOCKCNT;
 	dev->blocklen = DEV_BUFFER_BLOCKLEN;
+
+	return dev;
 }

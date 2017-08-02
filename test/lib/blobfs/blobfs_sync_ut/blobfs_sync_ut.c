@@ -49,8 +49,6 @@ struct spdk_filesystem *g_fs;
 struct spdk_file *g_file;
 int g_fserrno;
 
-struct spdk_bs_dev g_dev;
-
 static void
 _fs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
@@ -131,9 +129,12 @@ fs_op_with_handle_complete(void *ctx, struct spdk_filesystem *fs, int fserrno)
 static void
 _fs_init(void *arg)
 {
+	struct spdk_bs_dev *dev;
+
 	g_fs = NULL;
 	g_fserrno = -1;
-	spdk_fs_init(&g_dev, send_request, fs_op_with_handle_complete, NULL);
+	dev = init_dev();
+	spdk_fs_init(dev, send_request, fs_op_with_handle_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(g_fs != NULL);
 	CU_ASSERT(g_fserrno == 0);
 }
@@ -342,7 +343,6 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	init_dev(&g_dev);
 	pthread_create(&spdk_tid, NULL, spdk_thread, NULL);
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
 	CU_basic_set_mode(CU_BRM_VERBOSE);
