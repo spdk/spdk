@@ -1363,6 +1363,7 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 
 	if (ctrlr->cdata.sgls.supported) {
 		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
+		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
 	}
 
 	if (nvme_ctrlr_set_keep_alive_timeout(ctrlr) != 0) {
