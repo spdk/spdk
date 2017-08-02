@@ -355,7 +355,7 @@ Expected result:
 ### destroy_lvol_store - positive tests
 
 #### TEST CASE 19 - Name: nested_destroy_logical_volume_positive
-Negative test for destroying a nested first lvol store.
+Positive test for destroying a nested first lvol store.
 Call destroy_lvol_store with correct base bdev name.
 Steps:
 - create a malloc bdev
@@ -404,7 +404,7 @@ Expected result:
 - no other operation fails
 
 #### TEST CASE 22 - Name: SIGTERM_nested_lvol -  positive tests
-Call CTRL+C (SIGTERM) occurs after creating lvol store
+Call CTRL+C (SIGTERM) occurs after creating nested lvol store
 Steps:
 - create a malloc bdev
 - construct_lvol_store on created malloc bdev
@@ -420,4 +420,3 @@ Steps:
 Expected result:
 - calls successfull, return code = 0
 - no other operation fails
-
