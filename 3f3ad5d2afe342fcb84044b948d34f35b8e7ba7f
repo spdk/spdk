@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90266d31_0bad9dae",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-02T16:54:59Z",
+      "side": 1,
+      "message": "You don\u0027t need to export NVMF_FIRST_TARGET_IP anymore - your previous patch removed its use elsewhere. Just make it a local variable instead.",
+      "revId": "3f3ad5d2afe342fcb84044b948d34f35b8e7ba7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
