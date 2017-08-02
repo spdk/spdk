@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "383de588_f1987f63",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-02T17:11:59Z",
+      "side": 1,
+      "message": "Bash array stuff is really difficult to follow. I think there is a simpler way to write this:\n\nrdma_nics\u003d$(get_rdma_if_list)\nall_nics\u003d$(ifconfig -s | awk \u0027{print $1}\u0027)\nnon_rdma_nics\u003d$(echo \"$rdma_nics $all_nics\" | sort | uniq -u)\n\nfor nic in $non_rdma_nics; do\n    rxe_cfg add $interface || true\ndone",
+      "revId": "d1a444e7c0453059ee0d521083b671513b94c3a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "458d40bb_62bd0ea9",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-02T17:11:59Z",
+      "side": 1,
+      "message": "If you\u0027re going to define this function, you may as well use it in the two other places that do this same thing above.",
+      "revId": "d1a444e7c0453059ee0d521083b671513b94c3a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7687717_b3c64c97",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-02T17:11:59Z",
+      "side": 1,
+      "message": "I think you should rxe_cfg stop before you remove.",
+      "revId": "d1a444e7c0453059ee0d521083b671513b94c3a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
