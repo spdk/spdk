@@ -53,6 +53,16 @@ case $param in
 	echo Running filesystem integrity suite...
 	VM_IMG=/home/sys_sgsw/vhost_scsi_vm_image.qcow2 ./integrity/integrity_start.sh
 	;;
+        -ha|--hotattach)
+        echo Running hotattach suite...
+        ./hotfeatures/scsi_hotattach.sh --work-dir=/home/pawelkax/newest_spdk \
+        --fio-bin=/home/pawelkax/fio_ubuntu \
+	--vm=0,/home/pawelkax/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1 \
+	--vm=1,/home/pawelkax/vhost_vm_image.qcow2,Nvme0n1p2:Nvme0n1p3 \
+	--test-type=spdk_vhost_scsi \
+	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
+	--qemu-src=/home/pawelkax/newest_spdk/qemu -x
+    ;;
     -h|--help)
 	echo "-i|--integrity 		for running an integrity test with vhost scsi"
 	echo "-f|--fs-integrity 	for running an integrity test with filesystem"
