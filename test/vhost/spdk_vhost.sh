@@ -53,12 +53,32 @@ case $param in
 	echo Running filesystem integrity suite...
 	VM_IMG=/home/sys_sgsw/vhost_scsi_vm_image.qcow2 ./integrity/integrity_start.sh
 	;;
+        -ha|--hotattach)
+        echo Running hotattach suite...
+        ./hotfeatures/scsi_hotattach.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1 \
+	--vm=1,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p2:Nvme0n1p3 \
+        --test-type=spdk_vhost_scsi \
+	--fio-jobs=$WORKDIR/hotfeatures/fio_jobs/default_integrity.job \
+	--qemu-src=/home/sys_sgsw/vhost/qemu -x
+        ;;
+        -hd|--hotdetach)
+        echo Running hotdetach suite...
+        ./hotfeatures/scsi_hotdetach.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+        --vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1 \
+        --vm=1,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p2:Nvme0n1p3 \
+        --test-type=spdk_vhost_scsi \
+        --fio-jobs=$WORKDIR/hotfeatures/fio_jobs/default_integrity.job \
+        --qemu-src=/home/sys_sgsw/vhost/qemu -x
+    ;;
     -h|--help)
 	echo "-i|--integrity 		for running an integrity test with vhost scsi"
 	echo "-f|--fs-integrity 	for running an integrity test with filesystem"
 	echo "-p|--performance 		for running a performance test with vhost scsi"
 	echo "-ib|--integrity-blk 	for running an integrity test with vhost blk"
 	echo "-pb|--performance-blk	for running a performance test with vhost blk"
+        echo "-ha|--hotattach           for running tests with hotattach feature"
+        echo "-hd|--hotdetach           for running tests with hotdetach feature"
 	echo "-h|--help 		prints this message"
     ;;
     *)
