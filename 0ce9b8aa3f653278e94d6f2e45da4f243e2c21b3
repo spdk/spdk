@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "806d2cd0_a46ca9e9",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-02T01:23:55Z",
+      "side": 0,
+      "message": "We could also continue accepting \"mode\" here, but make it an optional parameter - that way, current virtual mode RPC users would continue to work and new users won\u0027t need to specify mode.\n\nI\u0027m also OK with just dropping it, but it doesn\u0027t really cost us anything to maintain compatibility in this case.",
+      "revId": "0ce9b8aa3f653278e94d6f2e45da4f243e2c21b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
