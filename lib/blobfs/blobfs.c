@@ -1511,6 +1511,12 @@ spdk_fs_set_cache_size(uint64_t size_in_mb)
 	g_fs_cache_size = size_in_mb * 1024 * 1024;
 }
 
+void
+spdk_fs_set_cache_buffer_shift(uint32_t shift)
+{
+	g_fs_cache_buffer_shift = shift;
+}
+
 uint64_t
 spdk_fs_get_cache_size(void)
 {
