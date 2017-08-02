@@ -126,6 +126,7 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	run_test ./test/vhost/spdk_vhost.sh --integrity
 	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
 	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
+	run_test ./test/vhost/spdk_vhost.sh --hotplug
 	timing_exit vhost
 fi
 
