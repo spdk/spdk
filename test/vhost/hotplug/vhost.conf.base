@@ -1,0 +1,7 @@
+[Global]
+
+[Rpc]
+  Enable Yes
+
+[Ioat]
+  Disable Yes
