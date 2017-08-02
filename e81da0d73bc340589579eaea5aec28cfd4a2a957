@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55c972d5_7a9042aa",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-02T23:52:39Z",
+      "side": 1,
+      "message": "We should pick some magic numbers for cb_fn and cb_arg to be sure they are actually copied through - if they\u0027re NULL, it\u0027s hard to tell if the function under test actually copied them or just zeroed everything out.",
+      "revId": "e81da0d73bc340589579eaea5aec28cfd4a2a957",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf371da8_dcbd693b",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-02T23:52:39Z",
+      "side": 1,
+      "message": "This looks correct now (req will be pointing at dummy_req, so match_req should be pristine).\n\nHowever, I think it would be even simpler to check each element after the function is called rather than building up an expected request object, e.g.:\n\n    req \u003d nvme_allocate_request(...);\n    SPDK_CU_ASSERT_FATAL(req !\u003d NULL);\n    CU_ASSERT(req-\u003ecb_fn \u003d\u003d cb_fn);\n    CU_ASSERT(req-\u003ecb_arg \u003d\u003d cb_arg);\n    // etc\n\nBut I\u0027ll defer to Jim and Ben on this one - I\u0027m not against the memcmp() approach if you prefer it.",
+      "revId": "e81da0d73bc340589579eaea5aec28cfd4a2a957",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
