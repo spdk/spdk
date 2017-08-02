@@ -16,6 +16,24 @@
       "revId": "185b6ee0b1a19c71b756f2a3c0b425de521c2bd6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b99ae79a_74562f90",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1176,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-02T14:00:24Z",
+      "side": 1,
+      "message": "Thanks for this suggestion. You were correct that this part could use an improvement.\nI will look into adding unit test for that in next patch set.",
+      "parentUuid": "58844a52_e3519ca4",
+      "revId": "185b6ee0b1a19c71b756f2a3c0b425de521c2bd6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
