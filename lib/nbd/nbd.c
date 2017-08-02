@@ -39,7 +39,6 @@
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
-#include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
 #include "spdk/io_channel.h"
@@ -73,7 +72,6 @@ struct nbd_disk {
 	struct spdk_bdev_desc	*bdev_desc;
 	struct spdk_io_channel	*ch;
 	int			fd;
-	struct spdk_poller	*poller;
 	struct nbd_io		io;
 	uint32_t		buf_align;
 };
@@ -110,18 +108,17 @@ spdk_nbd_stop(void)
 	close(g_nbd_disk.fd);
 }
 
-static uint64_t
+static int64_t
 read_from_socket(int fd, void *buf, size_t length)
 {
 	ssize_t bytes_read;
 
 	bytes_read = read(fd, buf, length);
 	if (bytes_read == 0) {
-		spdk_app_stop(-1);
-		return 0;
+		return -EIO;
 	} else if (bytes_read == -1) {
 		if (errno != EAGAIN) {
-			spdk_app_stop(-1);
+			return -errno;
 		}
 		return 0;
 	} else {
@@ -129,18 +126,17 @@ read_from_socket(int fd, void *buf, size_t length)
 	}
 }
 
-static uint64_t
+static int64_t
 write_to_socket(int fd, void *buf, size_t length)
 {
 	ssize_t bytes_written;
 
 	bytes_written = write(fd, buf, length);
 	if (bytes_written == 0) {
-		spdk_app_stop(-1);
-		return 0;
+		return -EIO;
 	} else if (bytes_written == -1) {
 		if (errno != EAGAIN) {
-			spdk_app_stop(-1);
+			return -errno;
 		}
 		return 0;
 	} else {
@@ -198,7 +194,7 @@ nbd_submit_bdev_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	}
 }
 
-static void
+static int
 process_request(struct nbd_disk *nbd)
 {
 	struct nbd_io	*io = &nbd->io;
@@ -212,8 +208,7 @@ process_request(struct nbd_disk *nbd)
 	io->payload = spdk_dma_malloc(io->payload_size, nbd->buf_align, NULL);
 	if (io->payload == NULL) {
 		SPDK_ERRLOG("could not allocate io->payload of size %d\n", io->payload_size);
-		spdk_app_stop(-1);
-		return;
+		return -ENOMEM;
 	}
 
 	assert(from_be32(&io->req.magic) == NBD_REQUEST_MAGIC);
@@ -228,8 +223,7 @@ process_request(struct nbd_disk *nbd)
 		io->payload_in_progress = true;
 		break;
 	case NBD_CMD_DISC:
-		spdk_nbd_stop();
-		return;
+		return -ECONNRESET;
 #ifdef NBD_FLAG_SEND_FLUSH
 	case NBD_CMD_FLUSH:
 		io->type = SPDK_BDEV_IO_TYPE_FLUSH;
@@ -243,32 +237,38 @@ process_request(struct nbd_disk *nbd)
 		break;
 #endif
 	}
+
+	return 0;
 }
 
-static void
-nbd_poll(void *arg)
+int
+spdk_nbd_poll(void)
 {
-	struct nbd_disk *nbd = arg;
+	struct nbd_disk *nbd = &g_nbd_disk;
 	struct nbd_io	*io = &nbd->io;
 	int		fd = nbd->fd;
-	uint64_t	ret;
+	int64_t		ret;
+	int		rc;
 
 	if (io->req_in_progress) {
 		ret = read_from_socket(fd, (char *)&io->req + io->offset, sizeof(io->req) - io->offset);
-		if (ret == 0) {
-			return;
+		if (ret <= 0) {
+			return ret;
 		}
 		io->offset += ret;
 		if (io->offset == sizeof(io->req)) {
 			io->req_in_progress = false;
-			process_request(nbd);
+			rc = process_request(nbd);
+			if (rc != 0) {
+				return rc;
+			}
 		}
 	}
 
 	if (io->payload_in_progress && is_write(io->type)) {
 		ret = read_from_socket(fd, io->payload + io->offset, io->payload_size - io->offset);
-		if (ret == 0) {
-			return;
+		if (ret <= 0) {
+			return ret;
 		}
 		io->offset += ret;
 		if (io->offset == io->payload_size) {
@@ -280,8 +280,8 @@ nbd_poll(void *arg)
 
 	if (io->resp_in_progress) {
 		ret = write_to_socket(fd, (char *)&io->resp + io->offset, sizeof(io->resp) - io->offset);
-		if (ret == 0) {
-			return;
+		if (ret <= 0) {
+			return ret;
 		}
 		io->offset += ret;
 		if (io->offset == sizeof(io->resp)) {
@@ -297,8 +297,8 @@ nbd_poll(void *arg)
 
 	if (io->payload_in_progress && is_read(io->type)) {
 		ret = write_to_socket(fd, io->payload + io->offset, io->payload_size - io->offset);
-		if (ret == 0) {
-			return;
+		if (ret <= 0) {
+			return ret;
 		}
 		io->offset += ret;
 		if (io->offset == io->payload_size) {
@@ -307,6 +307,8 @@ nbd_poll(void *arg)
 			io->offset = 0;
 		}
 	}
+
+	return 0;
 }
 
 static void
@@ -408,6 +410,5 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 	to_be32(&g_nbd_disk.io.resp.magic, NBD_REPLY_MAGIC);
 	g_nbd_disk.io.req_in_progress = true;
 
-	spdk_poller_register(&g_nbd_disk.poller, nbd_poll, &g_nbd_disk, spdk_env_get_current_core(), 0);
 	return 0;
 }
