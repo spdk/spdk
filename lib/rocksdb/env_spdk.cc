@@ -275,7 +275,7 @@ private:
 
 public:
 	SpdkEnv(const std::string &dir, const std::string &conf,
-		const std::string &bdev, uint64_t cache_size_in_mb);
+		const std::string &bdev, uint64_t cache_size_in_mb, uint32_t cache_buffer_shift);
 
 	virtual ~SpdkEnv();
 
@@ -518,7 +518,7 @@ initialize_spdk(void *arg)
 }
 
 SpdkEnv::SpdkEnv(const std::string &dir, const std::string &conf,
-		 const std::string &bdev, uint64_t cache_size_in_mb)
+		 const std::string &bdev, uint64_t cache_size_in_mb, uint32_t cache_buffer_shift)
 	: PosixEnv(), mDirectory(dir), mConfig(conf), mBdev(bdev)
 {
 	struct spdk_app_opts *opts = new struct spdk_app_opts;
@@ -531,6 +531,7 @@ SpdkEnv::SpdkEnv(const std::string &dir, const std::string &conf,
 	opts->shutdown_cb = spdk_rocksdb_shutdown;
 
 	spdk_fs_set_cache_size(cache_size_in_mb);
+	spdk_fs_set_cache_buffer_shift(cache_buffer_shift);
 	g_bdev_name = mBdev;
 
 	pthread_create(&mSpdkTid, NULL, &initialize_spdk, opts);
@@ -547,9 +548,9 @@ SpdkEnv::~SpdkEnv()
 }
 
 void NewSpdkEnv(Env **env, const std::string &dir, const std::string &conf,
-		const std::string &bdev, uint64_t cache_size_in_mb)
+		const std::string &bdev, uint64_t cache_size_in_mb, uint32_t cache_buffer_shift)
 {
-	SpdkEnv *spdk_env = new SpdkEnv(dir, conf, bdev, cache_size_in_mb);
+	SpdkEnv *spdk_env = new SpdkEnv(dir, conf, bdev, cache_size_in_mb, cache_buffer_shift);
 
 	if (g_fs != NULL) {
 		*env = spdk_env;
