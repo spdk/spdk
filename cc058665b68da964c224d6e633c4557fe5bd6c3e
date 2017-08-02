@@ -301,6 +301,24 @@
     },
     {
       "key": {
+        "uuid": "7c8bc3ae_0435d55a",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-02T16:32:47Z",
+      "side": 1,
+      "message": "To be clear, we don\u0027t want to add dirs and files per function.  You can add new test functions to this file and include them in main() when you call CU_add_test().  There should be a 1:1 relationship with library C files and UT C files.  Thanks!",
+      "parentUuid": "6cba12d6_4cf6d015",
+      "revId": "cc058665b68da964c224d6e633c4557fe5bd6c3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3ba0611_5d80a668",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 11
