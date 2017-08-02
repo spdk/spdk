@@ -16,6 +16,24 @@
       "revId": "2ef9af348f10de82142a4bfdd74b7bfb1a39c840",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffd67a71_08faadf2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 965,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-08-02T16:39:43Z",
+      "side": 1,
+      "message": "Good question. I wrote it this way just to follow the convention of the other functions, but I had a conversation about something similar with Daniel and I think the logic behind it is that since we know it\u0027s not an error code from the if statement above, it\u0027s more clear to return 0 directly since we already know that\u0027s what the variable rc contains.",
+      "parentUuid": "e1a3c6fc_b068138d",
+      "revId": "2ef9af348f10de82142a4bfdd74b7bfb1a39c840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
