@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ec0c5dd_fab646c8",
+        "filename": "test/lib/bdev/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-02T04:54:43Z",
+      "side": 1,
+      "message": "Also what if adding below two for the latency metric?\n\nqueue depth 1 size 4096 read 10s\nqueue depth 1 size 4096 write 10s",
+      "range": {
+        "startLine": 27,
+        "startChar": 2,
+        "endLine": 27,
+        "endChar": 43
+      },
+      "revId": "a2c1c04fb19706f592bdf80a240b9614bea7c426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fda4100f_839bab56",
+        "filename": "test/lib/bdev/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-02T04:54:43Z",
+      "side": 1,
+      "message": "Maybe to split them into 6 tests with 4096 and 65536 IO size respectively?",
+      "range": {
+        "startLine": 28,
+        "startChar": 2,
+        "endLine": 30,
+        "endChar": 43
+      },
+      "revId": "a2c1c04fb19706f592bdf80a240b9614bea7c426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
