@@ -50,6 +50,24 @@
       "revId": "d1a444e7c0453059ee0d521083b671513b94c3a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac9b6aad_13385bad",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-08-02T18:15:36Z",
+      "side": 1,
+      "message": "I thought the same thing, but found out that removals and additions only take effect if rxe_cfg has already been started when they occur. so start and stop are, respectively, the first and last things I call.",
+      "parentUuid": "d7687717_b3c64c97",
+      "revId": "d1a444e7c0453059ee0d521083b671513b94c3a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
