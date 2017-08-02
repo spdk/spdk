@@ -714,7 +714,7 @@ spdk_nvme_ns_cmd_write_zeroes(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *q
 	struct spdk_nvme_cmd	*cmd;
 	uint64_t		*tmp_lba;
 
-	if (lba_count == 0) {
+	if (lba_count == 0 || lba_count > UINT16_MAX + 1) {
 		return -EINVAL;
 	}
 
