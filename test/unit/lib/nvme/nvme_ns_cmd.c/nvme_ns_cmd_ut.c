@@ -547,7 +547,8 @@ test_nvme_ns_cmd_write_zeroes(void)
 	struct spdk_nvme_ns	ns = { 0 };
 	struct spdk_nvme_ctrlr	ctrlr = { 0 };
 	struct spdk_nvme_qpair	qpair;
-	spdk_nvme_cmd_cb	cb_fn = NULL;
+	struct nvme_request *child;
+	spdk_nvme_cmd_cb cb_fn = NULL;
 	void			*cb_arg = NULL;
 	uint64_t		cmd_lba;
 	uint32_t		cmd_lba_count;
@@ -555,6 +556,7 @@ test_nvme_ns_cmd_write_zeroes(void)
 
 	prepare_for_test(&ns, &ctrlr, &qpair, 512, 0, 128 * 1024, 0, false);
 
+	/* valid i/o, no split */
 	rc = spdk_nvme_ns_cmd_write_zeroes(&ns, &qpair, 0, 2, cb_fn, cb_arg, 0);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_request != NULL);
@@ -565,6 +567,58 @@ test_nvme_ns_cmd_write_zeroes(void)
 	CU_ASSERT_EQUAL(cmd_lba_count, 2);
 
 	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 0, 128 * 1024, 0, false);
+
+	/* valid i/o, split */
+	rc = spdk_nvme_ns_cmd_write_zeroes(&ns, &qpair, 0, 131071, cb_fn, cb_arg, 0);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_request != NULL);
+	CU_ASSERT(g_request->cmd.opc == SPDK_NVME_OPC_WRITE_ZEROES);
+	CU_ASSERT(g_request->cmd.nsid == ns.id);
+	CU_ASSERT_EQUAL(g_request->num_children, 2);
+
+	child = TAILQ_FIRST(&g_request->children);
+	SPDK_CU_ASSERT_FATAL(child != NULL);
+	nvme_request_remove_child(g_request, child);
+	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT(child->num_children == 0);
+	CU_ASSERT(cmd_lba == 0);
+	CU_ASSERT(cmd_lba_count == UINT16_MAX + 1);
+	CU_ASSERT(child->cmd.opc == SPDK_NVME_OPC_WRITE_ZEROES);
+	CU_ASSERT(child->cmd.nsid == ns.id);
+	nvme_free_request(child);
+
+	child = TAILQ_FIRST(&g_request->children);
+	SPDK_CU_ASSERT_FATAL(child != NULL);
+	nvme_request_remove_child(g_request, child);
+	nvme_cmd_interpret_rw(&child->cmd, &cmd_lba, &cmd_lba_count);
+	CU_ASSERT(child->num_children == 0);
+	CU_ASSERT(cmd_lba == UINT16_MAX + 1);
+	CU_ASSERT(cmd_lba_count == UINT16_MAX);
+	CU_ASSERT(child->cmd.opc == SPDK_NVME_OPC_WRITE_ZEROES);
+	CU_ASSERT(child->cmd.nsid == ns.id);
+	nvme_free_request(child);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_request->children));
+	nvme_free_request(g_request);
+	cleanup_after_test(&qpair);
+
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 0, 128 * 1024, 0, false);
+
+	/* invalid i/o, no blocks written */
+	rc = spdk_nvme_ns_cmd_write_zeroes(&ns, &qpair, 0, 0, cb_fn, cb_arg, 0);
+	CU_ASSERT(rc == -EINVAL);
+
+	cleanup_after_test(&qpair);
+
+	prepare_for_test(&ns, &ctrlr, &qpair, 512, 0, 128 * 1024, 0, false);
+
+	/* invalid i/o, too many blocks */
+	rc = spdk_nvme_ns_cmd_write_zeroes(&ns, &qpair, 0, UINT32_MAX, cb_fn, cb_arg, 0);
+	CU_ASSERT(rc == -ENOMEM);
+
 	cleanup_after_test(&qpair);
 }
 
