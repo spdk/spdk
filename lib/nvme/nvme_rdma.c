@@ -621,8 +621,10 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
-	rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status.cpl;
-	rctrlr->cntlid = rsp->status_code_specific.success.cntlid;
+	if (nvme_qpair_is_admin_queue(&rqpair->qpair)) {
+		rsp = (struct spdk_nvmf_fabric_connect_rsp *)&status.cpl;
+		rctrlr->cntlid = rsp->status_code_specific.success.cntlid;
+	}
 ret:
 	spdk_dma_free(nvmf_data);
 	return rc;
