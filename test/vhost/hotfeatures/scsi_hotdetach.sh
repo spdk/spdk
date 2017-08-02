@@ -1,0 +1,227 @@
+
+#!/usr/bin/env bash
+set -e
+BASE_DIR=$(readlink -f $(dirname $0))
+[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
+
+. $BASE_DIR/common.sh
+
+function get_first_disk() {
+    vm_check_scsi_location $1
+    disk_array=( $SCSI_DISK )
+    eval "$2=${disk_array[0]}"
+}
+
+function check_disks() {
+    if [ "$1" == "$2" ]; then
+        echo "Disk has not been deleted"
+        exit 1
+    fi
+}
+
+function prepare_fio_cmd_tc1_iter1() {
+    print_test_fio_header
+
+    run_fio="$fio_bin --eta=never "
+    for vm_num in $1; do
+        cp $fio_job $tmp_detach_job
+        vm_dir=$VM_BASE_DIR/$vm_num
+        vm_check_scsi_location $vm_num
+        for disk in $SCSI_DISK; do
+            echo "[nvme-host$disk]" >> $tmp_detach_job
+            echo "filename=/dev/$disk" >> $tmp_detach_job
+        done
+        vm_scp "$vm_num" $tmp_detach_job 127.0.0.1:/root/default_integrity_4discs.job
+        run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/default_integrity_4discs.job "
+        rm $tmp_detach_job
+    done
+}
+
+function prepare_fio_cmd_tc1_iter2() {
+    print_test_fio_header
+
+    for vm_num in 2; do
+        cp $fio_job $tmp_detach_job
+        vm_dir=$VM_BASE_DIR/$vm_num
+        vm_check_scsi_location $vm_num
+        for disk in $SCSI_DISK; do
+            echo "[nvme-host$disk]" >> $tmp_detach_job
+            echo "filename=/dev/$disk" >> $tmp_detach_job
+        done
+        vm_scp "$vm_num" $tmp_detach_job 127.0.0.1:/root/default_integrity_3discs.job
+        rm $tmp_detach_job
+    done
+    run_fio="$fio_bin --eta=never "
+    for vm_num in $used_vms; do
+         if [ $vm_num == 2 ]; then
+             run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/default_integrity_3discs.job "
+             continue
+         fi
+         run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/default_integrity_4discs.job "
+    done
+}
+
+function prepare_fio_cmd_tc2_iter1() {
+    print_test_fio_header
+
+    run_fio="$fio_bin --eta=never "
+    for vm_num in $1; do
+        cp $fio_job $tmp_detach_job
+        vm_dir=$VM_BASE_DIR/$vm_num
+        vm_check_scsi_location $vm_num
+        disk_array=($SCSI_DISK)
+        disk=${disk_array[0]}
+        echo "[nvme-host$disk]" >> $tmp_detach_job
+        echo "filename=/dev/$disk" >> $tmp_detach_job
+        vm_scp "$vm_num" $tmp_detach_job 127.0.0.1:/root/default_integrity.job
+        run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/default_integrity.job "
+        rm $tmp_detach_job
+    done
+}
+
+function prepare_fio_cmd_tc2_iter2() {
+    print_test_fio_header
+
+    run_fio="$fio_bin --eta=never "
+    for vm_num in $1; do
+        cp $fio_job $tmp_detach_job
+        if [ $vm_num == 2 ]; then
+            vm_job_name=default_integrity_3discs.job
+        else
+            vm_job_name=default_integrity_4discs.job
+        fi
+        vm_dir=$VM_BASE_DIR/$vm_num
+        vm_check_scsi_location $vm_num
+        for disk in $SCSI_DISK; do
+            echo "[nvme-host$disk]" >> $tmp_detach_job
+            echo "filename=/dev/$disk" >> $tmp_detach_job
+        done
+        vm_scp "$vm_num" $tmp_detach_job  127.0.0.1:/root/$vm_job_name
+        run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/${vm_job_name} "
+        rm $tmp_detach_job
+    done
+}
+
+
+function prepare_fio_cmd_tc3_iter1() {
+    print_test_fio_header
+
+    run_fio="$fio_bin --eta=never "
+    for vm_num in $1; do
+        cp $fio_job $tmp_detach_job
+        if [ $vm_num == 2 ]; then
+            vm_job_name=default_integrity_3discs.job
+        else
+            vm_job_name=default_integrity_4discs.job
+        fi
+        vm_dir=$VM_BASE_DIR/$vm_num
+        vm_check_scsi_location $vm_num
+        j=1
+        for disk in $SCSI_DISK; do
+            if [ $vm_num == 2 ]; then
+                if [ $j == 1 ]; then
+                    (( j++ ))
+                    continue
+                fi
+            fi
+            echo "[nvme-host$disk]" >> $tmp_detach_job
+            echo "filename=/dev/$disk" >> $tmp_detach_job
+            (( j++ ))
+        done
+        vm_scp "$vm_num" $tmp_detach_job 127.0.0.1:/root/$vm_job_name
+        run_fio+="--client=127.0.0.1,$(vm_fio_socket $vm_num) --remote-config /root/$vm_job_name "
+        rm $tmp_detach_job
+    done
+}
+
+function hotdetach_tc1() {
+    echo "Hotdetach test case 1"
+    first_disk=""
+    get_first_disk "2" first_disk
+    prepare_fio_cmd_tc1_iter1 "2 3"
+    $run_fio &
+    last_pid=$!
+    sleep 3
+    $rpc_py remove_vhost_scsi_dev naa.Nvme0n1p4.2 0
+    set +xe
+    wait $last_pid
+    check_fio_retcode "Hotdetach test case 1: Iteration 1." 1 $?
+    set -xe
+    second_disk=""
+    get_first_disk "2" second_disk
+    check_disks $first_disk $second_disk
+}
+
+function hotdetach_tc2() {
+    echo "Hotdetach test case 2"
+    $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
+    sleep 2
+    first_disk=""
+    get_first_disk "2" first_disk
+    prepare_fio_cmd_tc2_iter1 "2"
+    $run_fio &
+    last_pid=$!
+    sleep 3
+    $rpc_py remove_vhost_scsi_dev naa.Nvme0n1p4.2 0
+    set +xe
+    wait $last_pid
+    check_fio_retcode "Hotdetach test case 2: Iteration 1." 1 $?
+    set -xe
+    second_disk=""
+    get_first_disk "2" second_disk
+    check_disks $first_disk $second_disk
+}
+
+function hotdetach_tc3() {
+    echo "Hotdetach test case 3"
+    $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
+    sleep 2
+    first_disk=""
+    get_first_disk "2" first_disk
+    prepare_fio_cmd_tc3_iter1 "2 3"
+    $run_fio &
+    last_pid=$!
+    sleep 3
+    $rpc_py remove_vhost_scsi_dev naa.Nvme0n1p4.2 0
+    wait $last_pid
+    check_fio_retcode "Hotdetach test case 3: Iteration 1." 0 $?
+    second_disk=""
+    get_first_disk "2" second_disk
+    check_disks $first_disk $second_disk
+}
+
+function hotdetach_tc4() {
+    echo "Hotdetach test case 4"
+    $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
+    sleep 2
+    first_disk=""
+    get_first_disk "2" first_disk
+    prepare_fio_cmd_tc2_iter1 "2"
+    $run_fio &
+    first_fio_pid=$!
+    prepare_fio_cmd_tc3_iter1 "2 3"
+    $run_fio &
+    second_fio_pid=$!
+    sleep 3
+    $rpc_py remove_vhost_scsi_dev naa.Nvme0n1p4.2 0
+    set +xe
+    wait $first_fio_pid
+    check_fio_retcode "Hotdetach test case 4: Iteration 1." 1 $?
+    set -xe
+    wait $second_fio_pid
+    check_fio_retcode "Hotdetach test case 4: Iteration 2." 0 $?
+    second_disk=""
+    get_first_disk "2" second_disk
+    check_disks $first_disk $second_disk
+
+    reboot_all_and_prepare "2 3"
+    sleep 2
+    prepare_fio_cmd_tc2_iter2 "2 3"
+    $run_fio
+    check_fio_retcode "Hotdetach test case 4: Iteration 3." 0 $?
+}
+
+hotdetach_tc1
+hotdetach_tc2
+hotdetach_tc3
+hotdetach_tc4
