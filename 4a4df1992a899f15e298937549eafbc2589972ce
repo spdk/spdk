@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "939df0a9_585c082a",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-02T23:38:17Z",
+      "side": 1,
+      "message": "I think this [24] offset is wrong - you\u0027re overwriting the max unmap block descriptor count.\n\nIf we aren\u0027t setting ugavalid, we also don\u0027t need to write the optimal unmap granularity or unmap granularity alignment, so you could just delete these two.",
+      "revId": "4a4df1992a899f15e298937549eafbc2589972ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
