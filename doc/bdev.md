@@ -31,7 +31,7 @@ can be either locally attached SSDs or remote NVMe subsystems via NVMe-oF.
   # The devices will be assigned names in the format <YourName>nY, where YourName is the
   # name specified at the end of the TransportId line and Y is the namespace id, which starts at 1.
   TransportID "trtype:PCIe traddr:0000:00:00.0" Nvme0
-  TransportID "trtype:RDMA subnqn:nqn.2016-06.io.spdk:cnode1 traddr:192.168.100.1 trsvcid:4420" Nvme1
+  TransportID "trtype:RDMA adrfam:IPv4 subnqn:nqn.2016-06.io.spdk:cnode1 traddr:192.168.100.1 trsvcid:4420" Nvme1
 ~~~
 
 This exports block devices for all namespaces attached to the two controllers.  Block devices
