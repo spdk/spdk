@@ -44,7 +44,7 @@ C_SRCS-$(CONFIG_VTUNE) += vtune.c
 
 LIBNAME = bdev
 
-DIRS-y += error gpt malloc null nvme rpc split
+DIRS-y += error gpt lvol malloc null nvme rpc split
 
 ifeq ($(OS),Linux)
 DIRS-y += aio
