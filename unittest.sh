@@ -46,6 +46,7 @@ $valgrind test/unit/lib/bdev/scsi_nvme.c/scsi_nvme_ut
 
 $valgrind test/unit/lib/blob/blob.c/blob_ut
 
+$valgrind test/unit/lib/blobfs/tree.c/tree_ut
 $valgrind test/lib/blobfs/blobfs_async_ut/blobfs_async_ut
 # blobfs_sync_ut hangs when run under valgrind, so don't use $valgrind
 test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
