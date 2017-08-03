@@ -159,7 +159,7 @@ def main():
             # VM - tuple of IP / Port / Filename for VM to run test
             print("Preparing VM {0} - {1} for FIO job".format(i, vm[0]))
 
-            exec_cmd("./test/vhost/fiotest/vm_ssh.sh {vm_num} sh -c 'rm {cfg}'"
+            exec_cmd("./test/vhost/common/vm_ssh.sh {vm_num} sh -c 'rm {cfg}'"
                      .format(vm_num=i, cfg=fio_cfg_fname), blocking=True)
 
             # Copy FIO config to VM
@@ -167,7 +167,7 @@ def main():
                 for line in fio_cfg_fh.readlines():
                     if "filename" in line:
                         line = "filename=" + vm[2]
-                    out = exec_cmd("./test/vhost/fiotest/vm_ssh.sh {vm_num} sh -c 'echo {line} >> {cfg}'"
+                    out = exec_cmd("./test/vhost/common/vm_ssh.sh {vm_num} sh -c 'echo {line} >> {cfg}'"
                                    .format(vm_num=i, line=line.strip(), cfg=fio_cfg_fname), blocking=True)
                     if out[0] != 0:
                         print("ERROR! While copying FIO job config file to VM {vm_num} - {vm_ip}"
