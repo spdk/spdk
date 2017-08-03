@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 BASE_DIR=$(readlink -f $(dirname $0))
+[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 
 function usage()
@@ -35,7 +36,7 @@ while getopts "$optspec" optchar; do
 	esac
 done
 
-. $BASE_DIR/common.sh
+. $COMMON_DIR/common.sh
 
 if $do_kill && [[ $EUID -ne 0 ]]; then
 	echo "Go away user come back as root"

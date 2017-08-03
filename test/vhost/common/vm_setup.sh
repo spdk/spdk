@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 BASE_DIR=$(readlink -f $(dirname $0))
+[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 
 function usage()
@@ -64,7 +65,7 @@ while getopts 'xf:h-:' optchar; do
 	esac
 done
 
-. $BASE_DIR/common.sh
+. $COMMON_DIR/common.sh
 
 [[ -z "$os" ]] && os="$TEST_DIR/debian.qcow2"
 [[ $test_type =~ "spdk_vhost" ]] && [[ -z "$disk" ]] && disk="$SPDK_VHOST_SCSI_TEST_DIR/usvhost"
