@@ -7,8 +7,8 @@ MAKE="make -j$(( $(nproc)  * 2 ))"
 # Default running dir -> spdk/..
 [[ -z "$TEST_DIR" ]] && TEST_DIR=$BASE_DIR/../../../../
 
+COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 TEST_DIR="$(mkdir -p $TEST_DIR && cd $TEST_DIR && echo $PWD)"
-
 SPDK_SRC_DIR=$TEST_DIR/spdk
 SPDK_BUILD_DIR=$BASE_DIR/../../../
 
@@ -38,7 +38,7 @@ INSTALL_DIR="$TEST_DIR/root"
 
 mkdir -p $TEST_DIR
 
-. $BASE_DIR/autotest.config
+. $COMMON_DIR/autotest.config
 
 RPC_PORT=5260
 
@@ -128,8 +128,8 @@ function spdk_vhost_run()
 	local vhost_log_file="$SPDK_VHOST_SCSI_TEST_DIR/vhost.log"
 	local vhost_pid_file="$SPDK_VHOST_SCSI_TEST_DIR/vhost.pid"
 	local vhost_socket="$SPDK_VHOST_SCSI_TEST_DIR/usvhost"
-	local vhost_conf_template="$BASE_DIR/vhost.conf.in"
-	local vhost_conf_file="$BASE_DIR/vhost.conf"
+	local vhost_conf_template="$COMMON_DIR/vhost.conf.in"
+	local vhost_conf_file="$COMMON_DIR/vhost.conf"
 	echo "INFO: starting vhost app in background"
 	[[ -r "$vhost_pid_file" ]] && spdk_vhost_kill
 	[[ -d $SPDK_VHOST_SCSI_TEST_DIR ]] && rm -f $SPDK_VHOST_SCSI_TEST_DIR/*

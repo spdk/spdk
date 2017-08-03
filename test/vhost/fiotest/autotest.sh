@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -e
 BASE_DIR=$(readlink -f $(dirname $0))
+[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 
 dry_run=false
 no_shutdown=false
 fio_bin="fio"
-fio_jobs="$BASE_DIR/fio_jobs/"
+fio_jobs="$COMMON_DIR/fio_jobs/"
 test_type=spdk_vhost_scsi
 reuse_vms=false
 force_build=false
@@ -85,7 +86,7 @@ if [[ -d "$fio_jobs" ]]; then
 	fio_jobs="$fio_jobs/*.job"
 fi
 
-. $BASE_DIR/common.sh
+. $COMMON_DIR/common.sh
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
@@ -121,7 +122,7 @@ if [[ $test_type =~ "spdk_vhost" ]]; then
 	echo ""
 	echo "INFO: running SPDK"
 	echo ""
-	$BASE_DIR/run_vhost.sh $x --work-dir=$TEST_DIR
+	$COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR
 	echo
 fi
 
@@ -135,7 +136,7 @@ rpc_py+="-s 127.0.0.1 "
 
 for vm_conf in ${vms[@]}; do
 	IFS=',' read -ra conf <<< "$vm_conf"
-	setup_cmd="$BASE_DIR/vm_setup.sh $x --work-dir=$TEST_DIR --test-type=$test_type"
+	setup_cmd="$COMMON_DIR/vm_setup.sh $x --work-dir=$TEST_DIR --test-type=$test_type"
 	if [[ x"${conf[0]}" == x"" ]] || ! assert_number ${conf[0]}; then
 		echo "ERROR: invalid VM configuration syntax $vm_conf"
 		exit 1;
@@ -205,7 +206,7 @@ for vm_conf in ${vms[@]}; do
 done
 
 # Run everything
-$BASE_DIR/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
+$COMMON_DIR/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
 vm_wait_for_boot 600 $used_vms
 
 if [[ $test_type == "spdk_vhost_scsi" ]]; then
@@ -233,7 +234,7 @@ echo ""
 echo "INFO: Testing..."
 
 echo "INFO: Running fio jobs ..."
-run_fio="python $BASE_DIR/run_fio.py "
+run_fio="python $COMMON_DIR/run_fio.py "
 run_fio+="$fio_bin "
 run_fio+="--job-file="
 for job in $fio_jobs; do
