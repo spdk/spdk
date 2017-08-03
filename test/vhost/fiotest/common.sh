@@ -163,7 +163,7 @@ function spdk_vhost_run()
 	waitforlisten "$vhost_pid" ${RPC_PORT}
 	echo "INFO: vhost started - pid=$vhost_pid"
 
-	rm $vhost_conf_file
+#	rm $vhost_conf_file
 }
 
 function spdk_vhost_kill()
