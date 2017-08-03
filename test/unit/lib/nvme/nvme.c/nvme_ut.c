@@ -109,6 +109,68 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 }
 
 static void
+test_nvme_allocate_request_user_copy(void)
+{
+	struct spdk_nvme_qpair qpair;
+	spdk_nvme_cmd_cb cb_fn = (spdk_nvme_cmd_cb)0x12345;
+	void *cb_arg = (void *)0x12345;
+	bool host_to_controller = true;
+	struct nvme_request *req;
+	struct nvme_request dummy_req;
+	int test_data = 0xdeadbeef;
+	void *buffer = NULL;
+	uint32_t payload_size = sizeof(int);
+
+	STAILQ_INIT(&qpair.free_req);
+	STAILQ_INIT(&qpair.queued_req);
+
+	/* no buffer or valid payload size, early NULL return */
+	req = nvme_allocate_request_user_copy(&qpair, buffer, payload_size, cb_fn,
+					      cb_arg, host_to_controller);
+	CU_ASSERT(req == NULL);
+
+	/* good buffer and valid payload size */
+	buffer = malloc(payload_size);
+	SPDK_CU_ASSERT_FATAL(buffer != NULL);
+	memcpy(buffer, &test_data, payload_size);
+
+	/* put a dummy on the queue */
+	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
+
+	req = nvme_allocate_request_user_copy(&qpair, buffer, payload_size, cb_fn,
+					      cb_arg, host_to_controller);
+	CU_ASSERT(req->user_cb_fn == cb_fn);
+	CU_ASSERT(req->user_cb_arg == cb_arg);
+	CU_ASSERT(req->user_buffer == buffer);
+	CU_ASSERT(req->cb_arg == req);
+	CU_ASSERT(memcmp(req->payload.u.contig, buffer, payload_size) == 0);
+	spdk_dma_free(req->payload.u.contig);
+
+	/* same thing but additional path coverage, no copy */
+	host_to_controller = false;
+	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
+
+	req = nvme_allocate_request_user_copy(&qpair, buffer, payload_size, cb_fn,
+					      cb_arg, host_to_controller);
+	CU_ASSERT(req->user_cb_fn == cb_fn);
+	CU_ASSERT(req->user_cb_arg == cb_arg);
+	CU_ASSERT(req->user_buffer == buffer);
+	CU_ASSERT(req->cb_arg == req);
+	CU_ASSERT(memcmp(req->payload.u.contig, buffer, payload_size) != 0);
+	spdk_dma_free(req->payload.u.contig);
+
+	/* good buffer and valid payload size but make spdk_dma_zmalloc fail */
+	/* set the mock pointer to NULL for spdk_dma_zmalloc */
+	MOCK_SET_P(spdk_dma_zmalloc, void *, NULL);
+	req = nvme_allocate_request_user_copy(&qpair, buffer, payload_size, cb_fn,
+					      cb_arg, host_to_controller);
+	CU_ASSERT(req == NULL);
+	free(buffer);
+	/* restore mock function back to the way it was */
+	MOCK_SET_P(spdk_dma_zmalloc, void *, &ut_spdk_dma_zmalloc);
+}
+
+static void
 test_nvme_ctrlr_probe(void)
 {
 	int rc = 0;
@@ -460,6 +522,8 @@ int main(int argc, char **argv)
 			    test_trid_adrfam_str) == NULL ||
 		CU_add_test(suite, "test_nvme_ctrlr_probe",
 			    test_nvme_ctrlr_probe) == NULL ||
+		CU_add_test(suite, "test_nvme_allocate_request_user_copy",
+			    test_nvme_allocate_request_user_copy) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
 			    test_nvme_robust_mutex_init_shared) == NULL
 	) {
