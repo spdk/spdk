@@ -34,6 +34,24 @@
       "revId": "960bccfbbd42d51e8f6feb7e02e1adcfab11aaae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4dcbab6_cef92775",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-03T01:41:39Z",
+      "side": 1,
+      "message": "The issue happens under the multi devices case for example, we run perf with 16 NVMe SSDs for a short time. The original behavior will count in more IOs as we loop all the devices (namespaces) and then check the time to break out. In the fixed way, add a local variable to check and properly count in those valid IOs and set the is_draining flag if time is expired.\n\nWenzhong verified the result and show no different on 16 NVMe SSDs with short run and long run:\n\nhttps://jira01.devtools.intel.com/browse/CSS-779",
+      "parentUuid": "7ac3398d_802e954b",
+      "revId": "960bccfbbd42d51e8f6feb7e02e1adcfab11aaae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
