@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25ea43d1_11c88220",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-03T08:25:47Z",
+      "side": 1,
+      "message": "This is to get the lcount which is properly set once DPDK is initialized (and from parsing the input parameters). Move after the spdk_app_start() accordingly.",
+      "range": {
+        "startLine": 314,
+        "startChar": 39,
+        "endLine": 314,
+        "endChar": 62
+      },
+      "revId": "65905adfe4eba2b3f7e109c6ea007ad4ffb24a88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
