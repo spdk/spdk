@@ -6,5 +6,31 @@
 [Ioat]
   Disable Yes
 
+[Malloc]
+  # Number of Malloc targets
+  NumberOfLuns 1
+  # Malloc targets are 8M
+  LunSizeInMB 8
+  # Block size. Default is 512 bytes.
+  BlockSize 4096
+
 [Split]
   Split Nvme0n1 4
+
+  [VhostScsi0]
+  # Define name for controller
+  Name vhost.0
+  # Assign devices from backend
+  # Use the first malloc device
+  #Dev 0 Nvme0n1p0
+  # Use the first AIO device
+  Dev 0 Malloc0
+  # Use the frist Nvme device
+  #Dev 2 Nvme0n1
+  # Use the third partition from second Nvme device
+  #Dev 3 Nvme1n1p2
+
+  # Start the poller for this vhost controller on one of the cores in
+  #  this cpumask.  By default, it not specified, will use any core in the
+  #  SPDK process.
+  #Cpumask 0x1
