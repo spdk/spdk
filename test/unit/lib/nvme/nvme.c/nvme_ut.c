@@ -109,6 +109,27 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 }
 
 static void
+test_nvme_free_request(void)
+{
+	struct nvme_request match_req;
+	struct spdk_nvme_qpair qpair;
+	struct nvme_request *req;
+
+	/* put a req on the Q, take it off and compare */
+	memset(&match_req.cmd, 0x5a, sizeof(struct spdk_nvme_cmd));
+	match_req.qpair = &qpair;
+	/* the code under tests asserts this condition */
+	match_req.num_children = 0;
+	STAILQ_INIT(&match_req.qpair->free_req);
+
+	nvme_free_request(&match_req);
+	req = STAILQ_FIRST(&match_req.qpair->free_req);
+	CU_ASSERT(memcmp(req, &match_req,
+			 sizeof(struct spdk_nvme_cmd)) == 0);
+
+}
+
+static void
 test_nvme_allocate_request_user_copy(void)
 {
 	struct spdk_nvme_qpair qpair;
@@ -522,6 +543,8 @@ int main(int argc, char **argv)
 			    test_trid_adrfam_str) == NULL ||
 		CU_add_test(suite, "test_nvme_ctrlr_probe",
 			    test_nvme_ctrlr_probe) == NULL ||
+		CU_add_test(suite, "test_nvme_free_request",
+			    test_nvme_free_request) == NULL ||
 		CU_add_test(suite, "test_nvme_allocate_request_user_copy",
 			    test_nvme_allocate_request_user_copy) == NULL ||
 		CU_add_test(suite, "test_nvme_robust_mutex_init_shared",
