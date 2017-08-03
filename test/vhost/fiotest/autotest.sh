@@ -173,6 +173,9 @@ for vm_conf in ${vms[@]}; do
 					fi
 					echo "INFO: Creating controller naa.$disk.${conf[0]}"
 					$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
+					
+					$rpc_py get_bdevs
+					$rpc_py get_vhost_scsi_controllers
 
 					echo "INFO: Adding initial device (0) to naa.$disk.${conf[0]}"
 					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
