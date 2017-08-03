@@ -37,6 +37,7 @@
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
+#include "spdk_internal/event.h"
 
 struct rpc_kill_instance {
 	char *sig_name;
@@ -108,3 +109,44 @@ invalid:
 	free_rpc_kill_instance(&req);
 }
 SPDK_RPC_REGISTER("kill_instance", spdk_rpc_kill_instance)
+
+static void
+spdk_rpc_get_reactors_rusage(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
+{
+	struct spdk_reactor_rusage_array reactor_rusage_array;
+	struct spdk_reactor_rusage *reactor_rusage;
+	uint32_t i;
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_portal_groups requires no parameters");
+		return;
+	}
+
+	memset(&reactor_rusage_array, 0, sizeof(struct spdk_reactor_rusage_array));
+	spdk_reactor_get_rusage(&reactor_rusage_array);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	for (i = 0; i < reactor_rusage_array.lcore_count; i++) {
+		reactor_rusage = &reactor_rusage_array.reactor_usage[i];
+		spdk_json_write_object_begin(w);
+		spdk_json_write_name(w, "lcore");
+		spdk_json_write_uint32(w, reactor_rusage->lcore);
+		spdk_json_write_name(w, "ru_nvcsw");
+		spdk_json_write_int64(w, reactor_rusage->rusage.ru_nvcsw);
+		spdk_json_write_name(w, "ru_nivcsw");
+		spdk_json_write_int64(w, reactor_rusage->rusage.ru_nivcsw);
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_reactors_rusage", spdk_rpc_get_reactors_rusage)
