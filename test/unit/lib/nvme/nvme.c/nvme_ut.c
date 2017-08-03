@@ -109,6 +109,29 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 }
 
 static void
+test_nvme_allocate_request_null(void)
+{
+	struct spdk_nvme_qpair qpair;
+	spdk_nvme_cmd_cb cb_fn = (spdk_nvme_cmd_cb)0x12345;
+	void *cb_arg = (void *)0x12345;
+	struct nvme_request *req = NULL;
+	struct nvme_request dummy_req;
+
+	STAILQ_INIT(&qpair.free_req);
+	STAILQ_INIT(&qpair.queued_req);
+
+	/* put a dummy on the queue */
+	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
+
+	req = nvme_allocate_request_null(&qpair, cb_fn, cb_arg);
+	CU_ASSERT(req->cb_fn == cb_fn);
+	CU_ASSERT(req->cb_arg == cb_arg);
+	CU_ASSERT(req->pid == getpid());
+	CU_ASSERT(req->payload.type == NVME_PAYLOAD_TYPE_CONTIG);
+	CU_ASSERT(req->payload.md == NULL);
+}
+
+static void
 test_nvme_allocate_request(void)
 {
 	struct spdk_nvme_qpair qpair;
@@ -575,6 +598,8 @@ int main(int argc, char **argv)
 			    test_trid_adrfam_str) == NULL ||
 		CU_add_test(suite, "test_nvme_ctrlr_probe",
 			    test_nvme_ctrlr_probe) == NULL ||
+		CU_add_test(suite, "test_nvme_allocate_request_null",
+			    test_nvme_allocate_request_null) == NULL ||
 		CU_add_test(suite, "test_nvme_allocate_request",
 			    test_nvme_allocate_request) == NULL ||
 		CU_add_test(suite, "test_nvme_free_request",
