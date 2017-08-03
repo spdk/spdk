@@ -47,3 +47,5 @@ echo
 . $BASE_DIR/common.sh
 
 spdk_vhost_run
+cat $BASE_DIR/vhost.conf
+
