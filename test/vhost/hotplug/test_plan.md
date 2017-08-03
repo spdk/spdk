@@ -25,7 +25,7 @@ If you don't have 16 disks use split.
 
 ## Test Case 1
 1. Attach NVMe to Ctrlr 1
-2. Run fio integrity on attached device
+2. Run FIO I/O traffic with verification enabled on on attached device
 
 ## Test Case 2
 1. Run fio integrity on attached device from test case 1
@@ -84,3 +84,114 @@ If you don't have 16 disks use split.
 10. Check that detatched device is gone from VM
 11. Check that all other devices are in place
 12. Run fio integrity on all remianing devices
+
+#Vhost blk and scsi hot remove test plan
+
+## Objective
+The purpose of these tests is to verify that SPDK vhost remains stable during
+hot-remove operations performed on SCSI and BLK controllers devices.
+Hot-remove is a scenario where a device is removed from controller when already in use.
+
+### Hotremove Test Cases prerequisites
+1. Run vhost with prepare 2 nvme disks and 2 splits per disks.
+2. In test cases fio status is checked after every run if there are any errors.
+
+### The vhost blk feature.
+
+## Test Case1
+1. Run the command to hot remove NVMe disk.
+2. Check vhost did not crash
+
+## Test Case2
+1. Attach one NVMe bdev to blk controller.
+2. Run one VM, attach to blk controller.
+3. Run FIO I/O traffic with verification enabled on NVMe disk.
+4. Run the command to hot remove NVMe disk.
+5. Check FIO returns an interrupt operation error.
+6. Reboot VM.
+7. Run FFIO I/O traffic with verification enabled on NVMe disk.
+8. Check FIO returns a run error.
+
+## Test Case3
+1. Attach one NVMe bdev to blk controller.
+2. Run one VM, attach to first blk controller.
+3. Run FIO I/O traffic with verification enabled on on first NVMe disks.
+4. Check pci address bus device function of first NVMe disk.
+5. Run the command to hot remove of first NVMe disk.
+6. Check FIO returns an interrupt operation error on removed NVMe disk.
+7. Reboot VM
+8. Run FIO I/O traffic with verification enabled on on removed NVMe disk.
+9. Check FIO returns a run error.
+
+## Test Case4
+1. Attach one NVMe bdev to blk controller.
+2. Run two VM, attach to blk controller.
+3. Run FIO I/O traffic with verification enabled on on both NVMe disks.
+4. Run the command to hot remove of first NVMe disk.
+5. Check FIO returns an interrupt operation error on removed NVMe disk.
+6. Check finished status FIO. Write and read in the not-removed
+  NVMe disk should be successful.
+7. Reboot all VM's.
+8. Run FIO I/O traffic with verification enabled on on not-removed NVMe disk.
+9. Check finished status FIO. Write and read in the not-removed
+  NVMe disk should be successful.
+10. Run FIO I/O traffic with verification enabled on on removed NVMe disk.
+11. Check FIO returns a run error.
+
+## Test Case5
+1. Attach one split NVMe bdev to blk controller.
+2. Run one VM, attach to blk controller.
+3. Run FIO I/O traffic with verification enabled on on both NVMe disks in VM's.
+4. Run the command to hot remove NVMe disk.
+5. Check FIO returns an interrupt operation error on both VM's.
+6. Reboot both VM's.
+7. Run FIO I/O traffic with verification enabled on on both VMs.
+8. Check FIO returns a run error.
+
+### The vhost scsi feature.
+
+## Test Case1
+1. Run the command to hot remove NVMe disk.
+2. Check vhost did not crash
+
+## Test Case2
+1. Attach one split NVMe bdev to scsi controller.
+2. Run one VM, attach to scsi controller.
+3. Run FIO I/O traffic with verification enabled on on both NVMe disks in VM's.
+4. Run the command to hot remove NVMe disk.
+5. Check FIO returns an interrupt operation error on both VM's.
+6. Check if removed devices are gone from lsblk.
+7. Reboot both VM's.
+8. Check if removed devices are gone from lsblk.
+9. Run FIO I/O traffic with verification enabled on on both VMs.
+10. Check FIO returns a run error.
+
+## Test Case3
+1. Attach both NVMe bdevs to scsi controller.
+2. Run one VM, attach to scsi controller.
+3. Run FIO I/O traffic with verification enabled on on both NVMe disks in VM's.
+4. Run the command to hot remove NVMe disk.
+5. Check FIO returns an interrupt operation error on both VM's.
+6. Check if removed devices are gone from lsblk.
+7. Reboot both VM's.
+8. Check if removed devices are gone from lsblk.
+9. Run FIO I/O traffic with verification enabled on on both VMs.
+10. Check FIO returns a run error.
+
+## Test Case4
+1. Attachd one NVMe bdev to scsi controller.
+2. Run one VM, attach to scsi controller.
+3. Run FIO I/O traffic with verification enabled on on both NVMe disks.
+4. Run the command to hot remove of first NVMe disk.
+5. Check FIO returns an interrupt operation error on removed NVMe disk.
+6. Check if removed devices are gone from lsblk.
+7. Check finished status FIO. Write and read in the not-removed.
+  NVMe disk should be successful.
+8. Reboot both VM's.
+9. Check if removed disk are gone from lsblk.
+10. Run FIO I/O traffic with verification enabled on on not-removed NVMe disk.
+11. Check finished status FIO. Write and read in the not-removed.
+  NVMe disk should be successful.
+12. Run FIO I/O traffic with verification enabled on on removed NVMe disk.
+13. Check FIO returns a run error.
+14. Check if removed devices are gone from lsblk.
