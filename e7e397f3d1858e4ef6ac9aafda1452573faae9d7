@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1659072_3d3e2d74",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-03T20:59:52Z",
+      "side": 1,
+      "message": "This should be OK - but want Changpeng to double-check since this code was added based on a MySQL issue that he found.",
+      "revId": "e7e397f3d1858e4ef6ac9aafda1452573faae9d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
