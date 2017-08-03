@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe045420_f2714b58",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-03T19:21:31Z",
+      "side": 1,
+      "message": "Mixed indentation styles (tabs vs spaces) - we use tabs elsewhere in this file.",
+      "revId": "e86e7245f7d7d916cbc15977f60eff85d8538112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
