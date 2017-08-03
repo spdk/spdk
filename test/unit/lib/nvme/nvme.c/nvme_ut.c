@@ -37,9 +37,9 @@
 
 #include "nvme/nvme.c"
 
-#include "lib/test_env.c"
-
 #include "spdk_internal/mock.h"
+
+#include "lib/test_env.c"
 
 DEFINE_STUB_V(nvme_ctrlr_fail,
 	      (struct spdk_nvme_ctrlr *ctrlr, bool hot_remove))
@@ -111,6 +111,78 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 {
 	memset(trid1, 0, sizeof(struct spdk_nvme_transport_id));
 	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
+}
+
+static void
+test_nvme_driver_init(void)
+{
+	int rc;
+	struct nvme_driver dummy;
+	g_spdk_nvme_driver = &dummy;
+
+	/* adjust this so testing doesn't take so long */
+	g_nvme_driver_timeout_ms = 100;
+
+	/* process is primary and mem already reserved */
+	MOCK_SET(spdk_process_is_primary, bool, true);
+	dummy.initialized = true;
+	rc = nvme_driver_init();
+	CU_ASSERT(rc == 0);
+
+	/* process is primary and mem not yet reserved and can't be */
+	g_spdk_nvme_driver = NULL;
+	MOCK_SET(spdk_process_is_primary, bool, true);
+	MOCK_SET_P(spdk_memzone_reserve, void *, NULL);
+	rc = nvme_driver_init();
+	CU_ASSERT(rc == -1);
+
+	/* process is not primary, no mem already reserved */
+	MOCK_SET(spdk_process_is_primary, bool, false);
+	g_spdk_nvme_driver = NULL;
+	rc = nvme_driver_init();
+	CU_ASSERT(rc == -1);
+
+	/* process is not primary, mem is already reserved & init'd */
+	MOCK_SET(spdk_process_is_primary, bool, false);
+	MOCK_SET_P(spdk_memzone_lookup, void *, &dummy);
+	dummy.initialized = true;
+	rc = nvme_driver_init();
+	CU_ASSERT(rc == 0);
+
+	/* process is not primary, mem is reserved but not intiialized */
+	/* and times out */
+	MOCK_SET(spdk_process_is_primary, bool, false);
+	MOCK_SET_P(spdk_memzone_reserve, void *, &dummy);
+	dummy.initialized = false;
+	rc = nvme_driver_init();
+	CU_ASSERT(rc == -1);
+
+	/* process is primary, got mem but mutex won't init */
+	MOCK_SET(spdk_process_is_primary, bool, true);
+	MOCK_SET_P(spdk_memzone_reserve, void *, &dummy);
+	MOCK_SET(pthread_mutexattr_init, int, -1);
+	g_spdk_nvme_driver = NULL;
+	dummy.initialized = true;
+	rc = nvme_driver_init();
+	/* for FreeBSD we can't can't effectively mock this path */
+#ifndef __FreeBSD__
+	CU_ASSERT(rc != 0);
+#else
+	CU_ASSERT(rc == 0);
+#endif
+
+	/* process is primary, got mem, mutex OK */
+	MOCK_SET(spdk_process_is_primary, bool, true);
+	MOCK_SET(pthread_mutexattr_init, int, MOCK_PASS_THRU);
+	g_spdk_nvme_driver = NULL;
+	rc = nvme_driver_init();
+	CU_ASSERT(g_spdk_nvme_driver->initialized == false);
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs));
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->attached_ctrlrs));
+	CU_ASSERT(rc == 0);
+
+	g_spdk_nvme_driver = NULL;
+	MOCK_SET_P(spdk_memzone_reserve, void *, MOCK_PASS_THRU_P);
 }
 
 static void
@@ -703,6 +775,8 @@ int main(int argc, char **argv)
 			    test_trid_adrfam_str) == NULL ||
 		CU_add_test(suite, "test_nvme_ctrlr_probe",
 			    test_nvme_ctrlr_probe) == NULL ||
+		CU_add_test(suite, "test_nvme_driver_init",
+			    test_nvme_driver_init) == NULL ||
 		CU_add_test(suite, "test_spdk_nvme_detach",
 			    test_spdk_nvme_detach) == NULL ||
 		CU_add_test(suite, "test_nvme_completion_poll_cb",
