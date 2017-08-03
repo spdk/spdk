@@ -271,6 +271,8 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 {
 	int rc;
 
+	printf("Total cores available: %d\n", spdk_env_get_core_count());
+
 	rc = spdk_nvmf_parse_conf();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
@@ -308,7 +310,6 @@ spdk_nvmf_tgt_start(struct spdk_app_opts *opts)
 
 	opts->shutdown_cb = spdk_nvmf_shutdown_cb;
 
-	printf("Total cores available: %d\n", spdk_env_get_core_count());
 	/* Blocks until the application is exiting */
 	rc = spdk_app_start(opts, spdk_nvmf_startup, NULL, NULL);
 
