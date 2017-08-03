@@ -41,8 +41,6 @@
 
 #include "spdk_internal/mock.h"
 
-DEFINE_STUB_V(nvme_ctrlr_destruct, (struct spdk_nvme_ctrlr *ctrlr))
-
 DEFINE_STUB_V(nvme_ctrlr_fail,
 	      (struct spdk_nvme_ctrlr *ctrlr, bool hot_remove))
 
@@ -95,6 +93,13 @@ DEFINE_STUB_P(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr,
 	       const struct spdk_nvme_ctrlr_opts *opts,
 	       void *devhandle), {0})
 
+static bool ut_destruct_called = false;
+void
+nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
+{
+	ut_destruct_called = true;
+}
+
 void
 spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 {
@@ -106,6 +111,50 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 {
 	memset(trid1, 0, sizeof(struct spdk_nvme_transport_id));
 	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
+}
+
+static void
+test_spdk_nvme_detach(void)
+{
+	int rc = 1;
+	struct spdk_nvme_ctrlr ctrlr;
+	struct spdk_nvme_ctrlr *ret_ctrlr;
+	struct nvme_driver test_driver;
+
+	g_spdk_nvme_driver = &test_driver;
+	TAILQ_INIT(&test_driver.attached_ctrlrs);
+	TAILQ_INSERT_TAIL(&test_driver.attached_ctrlrs, &ctrlr, tailq);
+	CU_ASSERT_FATAL(pthread_mutex_init(&test_driver.lock, NULL) == 0);
+
+	/*
+	 * Controllers are ref counted so mock the function that returns
+	 * the ref count so that detach will actually call the destruct
+	 * function which we've mocked simply to verify that it gets
+	 * called (we aren't testing what the real destuct function does
+	 * here.)
+	 */
+	MOCK_SET(nvme_ctrlr_get_ref_count, int, 0);
+	rc = spdk_nvme_detach(&ctrlr);
+	ret_ctrlr = TAILQ_FIRST(&test_driver.attached_ctrlrs);
+	CU_ASSERT(ret_ctrlr == NULL);
+	CU_ASSERT(ut_destruct_called == true);
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * Mock the ref count to 1 so we confirm that the destruct
+	 * function is not called and that attached ctrl list is
+	 * not empty.
+	 */
+	MOCK_SET(nvme_ctrlr_get_ref_count, int, 1);
+	TAILQ_INSERT_TAIL(&test_driver.attached_ctrlrs, &ctrlr, tailq);
+	ut_destruct_called = false;
+	rc = spdk_nvme_detach(&ctrlr);
+	ret_ctrlr = TAILQ_FIRST(&test_driver.attached_ctrlrs);
+	CU_ASSERT(ret_ctrlr != NULL);
+	CU_ASSERT(ut_destruct_called == false);
+	CU_ASSERT(rc == 0);
+
+	g_spdk_nvme_driver = NULL;
 }
 
 static void
@@ -690,6 +739,8 @@ int main(int argc, char **argv)
 			    test_trid_adrfam_str) == NULL ||
 		CU_add_test(suite, "test_nvme_ctrlr_probe",
 			    test_nvme_ctrlr_probe) == NULL ||
+		CU_add_test(suite, "test_spdk_nvme_detach",
+			    test_spdk_nvme_detach) == NULL ||
 		CU_add_test(suite, "test_nvme_completion_poll_cb",
 			    test_nvme_completion_poll_cb) == NULL ||
 		CU_add_test(suite, "test_nvme_user_copy_cmd_complete",
