@@ -82,7 +82,7 @@ spdk_tree_insert_buffer(struct cache_tree *root, struct cache_buffer *buffer)
 	uint64_t index, offset;
 
 	offset = buffer->offset;
-	while (offset >= CACHE_TREE_LEVEL_SIZE(root->level)) {
+	while (offset >= CACHE_TREE_LEVEL_SIZE(root->level + 1)) {
 		if (root->present_mask != 0) {
 			tree = calloc(1, sizeof(*tree));
 			tree->level = root->level + 1;
