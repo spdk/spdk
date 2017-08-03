@@ -121,7 +121,7 @@ int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
 
 typedef void (*spdk_vhost_timed_event_fn)(void *);
 
-struct spdk_vhost_timed_event {
+struct spdk_vhost_timed_event_ctx {
 	/** User callback function to be executed on given lcore. */
 	spdk_vhost_timed_event_fn cb_fn;
 
@@ -130,17 +130,10 @@ struct spdk_vhost_timed_event {
 
 	/** Timout specified during initialization. */
 	struct timespec timeout;
-
-	/** Event object that can be passed to *spdk_event_call()*. */
-	struct spdk_event *spdk_event;
 };
-
-void spdk_vhost_timed_event_init(struct spdk_vhost_timed_event *ev, int32_t lcore,
-				 spdk_vhost_timed_event_fn cb_fn, void *arg, unsigned timeout_sec);
 
 void spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cn_fn, void *arg,
 				 unsigned timeout_sec, const char *errmsg);
-void spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *event, const char *errmsg);
 
 int spdk_vhost_blk_controller_construct(void);
 
