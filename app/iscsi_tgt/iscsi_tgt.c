@@ -84,6 +84,8 @@ spdk_startup(void *arg1, void *arg2)
 		spdk_memzone_dump(stdout);
 		fflush(stdout);
 	}
+
+	printf("Total cores available: %u\n", spdk_env_get_core_count());
 }
 
 int
@@ -177,7 +179,6 @@ main(int argc, char **argv)
 	opts.shutdown_cb = spdk_iscsi_shutdown;
 	opts.usr1_handler = spdk_sigusr1;
 
-	printf("Total cores available: %u\n", spdk_env_get_core_count());
 	printf("Using net framework %s\n", spdk_net_framework_get_name());
 	/* Blocks until the application is exiting */
 	app_rc = spdk_app_start(&opts, spdk_startup, NULL, NULL);
