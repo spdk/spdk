@@ -22,7 +22,7 @@ case $param in
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0 \
 	--test-type=spdk_vhost_scsi \
-	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_performance.job \
+	--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu
     ;;
 	-pb|--performance-blk)
@@ -30,7 +30,7 @@ case $param in
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0 \
 	--test-type=spdk_vhost_blk \
-	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_performance.job \
+	--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu
     ;;
     -i|--integrity)
@@ -38,7 +38,7 @@ case $param in
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_scsi \
-	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
+	--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu -x
     ;;
     -ib|--integrity-blk)
@@ -46,7 +46,7 @@ case $param in
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_blk \
-	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
+	--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu -x
     ;;
 	-f|--fs-integrity)
