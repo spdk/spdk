@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e922f17c_fe979fef",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-03T21:20:59Z",
+      "side": 1,
+      "message": "This isn\u0027t thread safe - this call can occur simultaneously with one of the reactors updating rusage.\n\nI also don\u0027t think this is doing what the user really wants it to do. It\u0027s spawning a poller which then very infrequently updates the rusage on each reactor. When this is called, it just copies the version from whenever it was last updated. I think instead, we want this call to pass a message to each thread, call getrusage, and construct the RPC as it goes.\n\nThe best way to implement that is probably to add a new function to include/spdk/io_channel.h called spdk_for_each_thread (put it near spdk_for_each_channel). That can then, in serial, pass a message to each thread, call a user callback, and then call an extra function when the iteration is complete on the original thread. It\u0027s a lot like spdk_for_each_channel, but simpler.",
+      "revId": "cd6c8b2089d41e46ae7af35758bb31761419e67c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
