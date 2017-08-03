@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 BASE_DIR=$(readlink -f $(dirname $0))
+[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 
 function usage()
@@ -13,6 +14,7 @@ function usage()
 	echo "    --gdb            Run app under gdb"
 	echo "    --gdbserver      Run app under gdb-server"
 	echo "    --work-dir=PATH  Where to find source/project. [default=$TEST_DIR]"
+	echo "    --conf-dir=PATH  Path to directory with configuration for vhost"
 
 	exit 0
 }
@@ -27,6 +29,7 @@ while getopts 'xh-:' optchar; do
 			gdbserver) VHOST_GDB="gdbserver 127.0.0.1:12345"
 				;;
 			work-dir=*) TEST_DIR="${OPTARG#*=}" ;;
+			conf-dir=*) CONF_DIR="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
@@ -44,6 +47,6 @@ fi
 echo "INFO: $0"
 echo
 
-. $BASE_DIR/common.sh
+. $COMMON_DIR/common.sh
 
-spdk_vhost_run
+spdk_vhost_run $CONF_DIR
