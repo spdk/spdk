@@ -91,4 +91,41 @@ if hash pep8; then
 	rm -f pep8.log
 fi
 
+# Check if any of the public interfaces were modified by this patch.
+# Warn the user to consider updating the changelog any changes
+# are detected.
+echo -n "Checking whether CHANGELOG.md should be updated..."
+staged=$(git diff --name-only --cached .)
+working=$(git status -s --porcelain | grep -iv "??" | awk '{print $2}')
+files="$staged $working"
+if [[ "$files" = " " ]]; then
+	files=$(git diff-tree --no-commit-id --name-only -r HEAD)
+fi
+
+has_changelog=0
+for f in $files; do
+	if [[ $f == CHANGELOG.md ]]; then
+		# The user has a changelog entry, so exit.
+		has_changelog=1
+		break
+	fi
+done
+
+needs_changelog=0
+if [ $has_changelog -eq 0 ]; then
+	for f in $files; do
+		if [[ $f == include/spdk/* ]] || [[ $f == scripts/rpc.py ]] || [[ $f == etc/* ]]; then
+			echo ""
+			echo -n "$f was modified. Consider updating CHANGELOG.md."
+			needs_changelog=1
+		fi
+	done
+fi
+
+if [ $needs_changelog -eq 0 ]; then
+	echo " OK"
+else
+	echo ""
+fi
+
 exit $rc
