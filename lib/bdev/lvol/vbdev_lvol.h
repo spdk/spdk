@@ -35,6 +35,12 @@
 #define SPDK_VBDEV_LVOL_H
 
 #include "spdk/lvol.h"
+#include "spdk_internal/bdev.h"
+
+struct lvol_task {
+	int				num_outstanding;
+	enum spdk_bdev_io_status	status;
+};
 
 int vbdev_lvol_create(uuid_t uuid, size_t sz, spdk_lvol_op_with_handle_complete cb_fn,
 		      void *cb_arg);
