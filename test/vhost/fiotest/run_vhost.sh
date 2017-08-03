@@ -47,3 +47,4 @@ echo
 . $BASE_DIR/common.sh
 
 spdk_vhost_run
+

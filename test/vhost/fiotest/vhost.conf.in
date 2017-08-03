@@ -6,5 +6,15 @@
 [Ioat]
   Disable Yes
 
+[Malloc]
+  NumberOfLuns 1
+  LunSizeInMB 128
+  BlockSize 4096
+
 [Split]
   Split Nvme0n1 4
+
+[VhostScsi0]
+  Name vhost.0
+  Dev 0 Malloc0
+
