@@ -109,6 +109,41 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 }
 
 static void
+test_nvme_allocate_request(void)
+{
+	struct spdk_nvme_qpair qpair;
+	struct nvme_payload payload;
+	uint32_t payload_struct_size = sizeof(payload);
+	spdk_nvme_cmd_cb cb_fn = (spdk_nvme_cmd_cb)0x1234;
+	void *cb_arg = (void *)0x6789;
+	struct nvme_request *req = NULL;
+	struct nvme_request dummy_req;
+
+	/* Fill the whole payload struct with a known pattern */
+	memset(&payload, 0x5a, payload_struct_size);
+	STAILQ_INIT(&qpair.free_req);
+	STAILQ_INIT(&qpair.queued_req);
+
+	/* Test trying to allocate a request when no requests are available */
+	req = nvme_allocate_request(&qpair, &payload, payload_struct_size,
+				    cb_fn, cb_arg);
+	CU_ASSERT(req == NULL);
+
+	/* put a dummy on the queue, and then allocate one */
+	STAILQ_INSERT_HEAD(&qpair.free_req, &dummy_req, stailq);
+	req = nvme_allocate_request(&qpair, &payload, payload_struct_size,
+				    cb_fn, cb_arg);
+
+	/* all the req elements should now match the passed in paramters */
+	CU_ASSERT(req->cb_fn == cb_fn);
+	CU_ASSERT(req->cb_arg == cb_arg);
+	CU_ASSERT(memcmp(&req->payload, &payload, payload_struct_size) == 0);
+	CU_ASSERT(req->payload_size == payload_struct_size);
+	CU_ASSERT(req->qpair == &qpair);
+	CU_ASSERT(req->pid == getpid());
+}
+
+static void
 test_nvme_free_request(void)
 {
 	struct nvme_request match_req;
@@ -541,6 +576,8 @@ int main(int argc, char **argv)
 			    test_trid_adrfam_str) == NULL ||
 		CU_add_test(suite, "test_nvme_ctrlr_probe",
 			    test_nvme_ctrlr_probe) == NULL ||
+		CU_add_test(suite, "test_nvme_allocate_request",
+			    test_nvme_allocate_request) == NULL ||
 		CU_add_test(suite, "test_nvme_free_request",
 			    test_nvme_free_request) == NULL ||
 		CU_add_test(suite, "test_nvme_allocate_request_user_copy",
