@@ -108,6 +108,21 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
 }
 
+static void
+test_nvme_completion_poll_cb(void)
+{
+	struct nvme_completion_poll_status status;
+	struct spdk_nvme_cpl cpl;
+
+	memset(&status, 0x0, sizeof(struct nvme_completion_poll_status));
+	memset(&cpl, 0xff, sizeof(struct spdk_nvme_cpl));
+
+	nvme_completion_poll_cb(&status, &cpl);
+	CU_ASSERT(status.done == true);
+	CU_ASSERT(memcmp(&cpl, &status.cpl,
+			 sizeof(struct spdk_nvme_cpl)) == 0);
+}
+
 /* stub callback used by test_nvme_user_copy_cmd_complete() */
 static int ut_dummy_cb_ret = 0;
 static void
@@ -649,6 +664,8 @@ int main(int argc, char **argv)
 			    test_trid_adrfam_str) == NULL ||
 		CU_add_test(suite, "test_nvme_ctrlr_probe",
 			    test_nvme_ctrlr_probe) == NULL ||
+		CU_add_test(suite, "test_nvme_completion_poll_cb",
+			    test_nvme_completion_poll_cb) == NULL ||
 		CU_add_test(suite, "test_nvme_user_copy_cmd_complete",
 			    test_nvme_user_copy_cmd_complete) == NULL ||
 		CU_add_test(suite, "test_nvme_allocate_request_null",
