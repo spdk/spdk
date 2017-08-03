@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e25b542_6bc98d3b",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-03T15:18:44Z",
+      "side": 1,
+      "message": "Could use some word of comment here - what are we testing, why, how, under what conditions?\nTake a look here: https://review.gerrithub.io/#/c/372290/1/test/lvol/testplan.md",
+      "revId": "ec69f753ed77fe18406427071172bec30629ae28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2809272b_0029e245",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-03T15:18:44Z",
+      "side": 1,
+      "message": "White spaces everywhere",
+      "range": {
+        "startLine": 5,
+        "startChar": 24,
+        "endLine": 5,
+        "endChar": 25
+      },
+      "revId": "ec69f753ed77fe18406427071172bec30629ae28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb4a3319_803af93e",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-03T15:18:44Z",
+      "side": 1,
+      "message": "Should be test steps",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 9
+      },
+      "revId": "ec69f753ed77fe18406427071172bec30629ae28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca755552_700e5174",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-03T15:18:44Z",
+      "side": 1,
+      "message": "check for what?",
+      "range": {
+        "startLine": 10,
+        "startChar": 8,
+        "endLine": 10,
+        "endChar": 31
+      },
+      "revId": "ec69f753ed77fe18406427071172bec30629ae28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41d6127e_99e4d61e",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-03T15:18:44Z",
+      "side": 1,
+      "message": "Again, check for what? what to expect or look for? I know our temporary test plan didn\u0027t cover the details but we should be more specific here.\n\nIn general - it applies to all \"check\", \"verify\", etc steps in this test plan: more details.",
+      "range": {
+        "startLine": 12,
+        "startChar": 8,
+        "endLine": 12,
+        "endChar": 29
+      },
+      "revId": "ec69f753ed77fe18406427071172bec30629ae28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e87ba7ab_b48bdd24",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-03T15:18:44Z",
+      "side": 1,
+      "message": "No need to repeat this in  each case.\nAdd \"Methodology\" or \"Set up\", etc. point like mantioned above and describe test generic stuff before going to detailed test cases description.",
+      "range": {
+        "startLine": 20,
+        "startChar": 2,
+        "endLine": 20,
+        "endChar": 24
+      },
+      "revId": "ec69f753ed77fe18406427071172bec30629ae28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60bd1d80_33555d4a",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-03T15:18:44Z",
+      "side": 1,
+      "message": "doesn\u0027t",
+      "range": {
+        "startLine": 35,
+        "startChar": 10,
+        "endLine": 35,
+        "endChar": 15
+      },
+      "revId": "ec69f753ed77fe18406427071172bec30629ae28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "566be740_0bf9941a",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-03T15:18:44Z",
+      "side": 1,
+      "message": "I think we expect that  FIO exits with error as result of removing the device, \"stopped\" doesn\u0027t say the same in my opinion.",
+      "range": {
+        "startLine": 36,
+        "startChar": 14,
+        "endLine": 36,
+        "endChar": 31
+      },
+      "revId": "ec69f753ed77fe18406427071172bec30629ae28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3801ae08_03a75a11",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-03T15:18:44Z",
+      "side": 1,
+      "message": "shouldn\u0027t it be \"immediately after\"?",
+      "range": {
+        "startLine": 36,
+        "startChar": 32,
+        "endLine": 36,
+        "endChar": 38
+      },
+      "revId": "ec69f753ed77fe18406427071172bec30629ae28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9113bde4_93e0972f",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-03T15:18:44Z",
+      "side": 1,
+      "message": "I think you could drop the \"step\" word and just list the steps as numbered or non-numbered list",
+      "range": {
+        "startLine": 133,
+        "startChar": 1,
+        "endLine": 133,
+        "endChar": 6
+      },
+      "revId": "ec69f753ed77fe18406427071172bec30629ae28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
