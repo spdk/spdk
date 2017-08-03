@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb733058_cfc7c43b",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-03T20:23:49Z",
+      "side": 1,
+      "message": "I think these should be [i].",
+      "range": {
+        "startLine": 565,
+        "startChar": 18,
+        "endLine": 565,
+        "endChar": 21
+      },
+      "revId": "a9ce95fd756be7451e08a802dce24bbc9148e5c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
