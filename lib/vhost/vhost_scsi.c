@@ -728,6 +728,15 @@ remove_vdev_cb(void *arg)
 	spdk_vhost_dev_mem_unregister(&svdev->vdev);
 }
 
+static void
+unregister_vdev_cb(void *arg)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg;
+
+	spdk_poller_unregister(&svdev->requestq_poller, NULL);
+	spdk_poller_unregister(&svdev->mgmt_poller, NULL);
+}
+
 static struct spdk_vhost_scsi_dev *
 to_scsi_dev(struct spdk_vhost_dev *ctrlr)
 {
@@ -1131,7 +1140,6 @@ destroy_device(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	void *ev;
-	struct spdk_vhost_timed_event event = {0};
 	uint32_t i;
 
 	svdev = to_scsi_dev(vdev);
@@ -1140,13 +1148,7 @@ destroy_device(struct spdk_vhost_dev *vdev)
 		return -1;
 	}
 
-	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
-	spdk_poller_unregister(&svdev->requestq_poller, event.spdk_event);
-	spdk_vhost_timed_event_wait(&event, "unregister request queue poller");
-
-	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
-	spdk_poller_unregister(&svdev->mgmt_poller, event.spdk_event);
-	spdk_vhost_timed_event_wait(&event, "unregister management poller");
+	spdk_vhost_timed_event_send(vdev->lcore, unregister_vdev_cb, svdev, 1, "unregister scsi vdev");
 
 	/* Wait for all tasks to finish */
 	for (i = 1000; i && vdev->task_cnt > 0; i--) {

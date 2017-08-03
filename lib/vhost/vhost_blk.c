@@ -403,6 +403,14 @@ remove_vdev_cb(void *arg)
 	spdk_vhost_dev_mem_unregister(&bvdev->vdev);
 }
 
+static void
+unregister_vdev_cb(void *arg)
+{
+	struct spdk_vhost_blk_dev *bvdev = arg;
+
+	spdk_poller_unregister(&bvdev->requestq_poller, NULL);
+}
+
 static struct spdk_vhost_blk_dev *
 to_blk_dev(struct spdk_vhost_dev *vdev)
 {
@@ -484,11 +492,12 @@ new_device(struct spdk_vhost_dev *vdev)
 	return 0;
 }
 
+
+
 static int
 destroy_device(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_blk_dev *bvdev;
-	struct spdk_vhost_timed_event event = {0};
 	uint32_t i;
 
 	bvdev = to_blk_dev(vdev);
@@ -497,9 +506,7 @@ destroy_device(struct spdk_vhost_dev *vdev)
 		return -1;
 	}
 
-	spdk_vhost_timed_event_init(&event, vdev->lcore, NULL, NULL, 1);
-	spdk_poller_unregister(&bvdev->requestq_poller, event.spdk_event);
-	spdk_vhost_timed_event_wait(&event, "unregister poller");
+	spdk_vhost_timed_event_send(vdev->lcore, unregister_vdev_cb, bvdev, 1, "unregister vdev");
 
 	/* Wait for all tasks to finish */
 	for (i = 1000; i && vdev->task_cnt > 0; i--) {
