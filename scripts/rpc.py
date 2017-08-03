@@ -602,5 +602,71 @@ def get_rpc_methods(args):
 p = subparsers.add_parser('get_rpc_methods', help='Get list of supported RPC methods')
 p.set_defaults(func=get_rpc_methods)
 
+def app_bdev_open(args):
+    params = {
+        'bdev': args.bdev,
+    }
+    print(jsonrpc_call('bdev_open', params))
+p = subparsers.add_parser('bdev_open', help='Open BDEV')
+p.add_argument('bdev', help='Name of bdev to open')
+p.set_defaults(func=app_bdev_open)
+
+def app_bdev_close(args):
+    params = {
+        'bdev': args.bdev,
+    }
+    print(jsonrpc_call('bdev_close', params))
+p = subparsers.add_parser('bdev_close', help='Close BDEV')
+p.add_argument('bdev', help='Name of bdev to close')
+p.set_defaults(func=app_bdev_close)
+
+def app_bdev_read(args):
+    params = {
+        'num_blocks': args.num_blocks,
+        'check_char': args.check_char,
+    }
+    print(jsonrpc_call('bdev_read', params))
+p = subparsers.add_parser('bdev_read', help='Perform read on opened bdev')
+p.add_argument('num_blocks', help='Number of blocks to read', type=int)
+p.add_argument('check_char', help='Character to read')
+p.set_defaults(func=app_bdev_read)
+
+def app_bdev_readv(args):
+    params = {
+        'iovec_cnt': args.iovec_cnt,
+        'num_blocks': args.num_blocks,
+        'check_char': args.check_char,
+    }
+    print(jsonrpc_call('bdev_readv', params))
+p = subparsers.add_parser('bdev_readv', help='Perform readv on opened bdev')
+p.add_argument('iovec_cnt', help='Number of iovectors to readv', type=int)
+p.add_argument('num_blocks', help='Number of blocks to readv', type=int)
+p.add_argument('check_char', help='Character to readv')
+p.set_defaults(func=app_bdev_readv)
+
+def app_bdev_write(args):
+    params = {
+        'num_blocks': args.num_blocks,
+        'check_char': args.check_char,
+    }
+    print(jsonrpc_call('bdev_write', params))
+p = subparsers.add_parser('bdev_write', help='Perform write to opened bdev')
+p.add_argument('num_blocks', help='Number of blocks to write', type=int)
+p.add_argument('check_char', help='Character to write')
+p.set_defaults(func=app_bdev_write)
+
+def app_bdev_writev(args):
+    params = {
+        'iovec_cnt': args.iovec_cnt,
+        'num_blocks': args.num_blocks,
+        'check_char': args.check_char,
+    }
+    print(jsonrpc_call('bdev_writev', params))
+p = subparsers.add_parser('bdev_writev', help='Perform writev to opened bdev')
+p.add_argument('iovec_cnt', help='Number of iovectors to writev', type=int)
+p.add_argument('num_blocks', help='Number of blocks to writev', type=int)
+p.add_argument('check_char', help='Character to writev')
+p.set_defaults(func=app_bdev_writev)
+
 args = parser.parse_args()
 args.func(args)
