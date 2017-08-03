@@ -108,6 +108,73 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
 }
 
+/* stub callback used by test_nvme_user_copy_cmd_complete() */
+static struct spdk_nvme_cpl ut_spdk_nvme_cpl = {0};
+static void
+dummy_cb(void *user_cb_arg, struct spdk_nvme_cpl *cpl)
+{
+	ut_spdk_nvme_cpl  = *cpl;
+}
+
+static void
+test_nvme_user_copy_cmd_complete(void)
+{
+	struct nvme_request req;
+	int test_data = 0xdeadbeef;
+	int buff_size = sizeof(int);
+	static struct spdk_nvme_cpl cpl;
+
+	memset(&req, 0, sizeof(req));
+	memset(&cpl, 0x5a, sizeof(cpl));
+
+	/* test without a user buffer provided */
+	req.user_cb_fn = (void *)dummy_cb;
+	nvme_user_copy_cmd_complete(&req, &cpl);
+	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
+
+	/* test with a user buffer provided */
+	req.user_buffer = malloc(buff_size);
+	SPDK_CU_ASSERT_FATAL(req.user_buffer != NULL);
+	memset(req.user_buffer, 0, buff_size);
+	req.payload_size = buff_size;
+	req.payload.type = NVME_PAYLOAD_TYPE_CONTIG;
+	req.payload.u.contig = malloc(buff_size);
+	SPDK_CU_ASSERT_FATAL(req.payload.u.contig != NULL);
+	memcpy(req.payload.u.contig, &test_data, buff_size);
+	req.cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	req.pid = getpid();
+
+	/* zero out the test value set in the callback */
+	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
+
+	/*
+	 * Mocking this to prevent the calling code from freeing the
+	 * buff as it confuses either valgrind or the static analyzer.
+	 */
+	MOCK_SET_P(spdk_dma_zmalloc, void *, NULL);
+	nvme_user_copy_cmd_complete(&req, &cpl);
+	CU_ASSERT(memcmp(req.user_buffer, &test_data, buff_size) == 0);
+	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
+
+	/*
+	 * Now test the same path as above but this time choose an opc
+	 * that results in a different data transfer type.
+	 */
+	memset(&ut_spdk_nvme_cpl, 0, sizeof(ut_spdk_nvme_cpl));
+	memset(req.user_buffer, 0, buff_size);
+	req.cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
+	nvme_user_copy_cmd_complete(&req, &cpl);
+	CU_ASSERT(memcmp(req.user_buffer, &test_data, buff_size) != 0);
+	CU_ASSERT(memcmp(&ut_spdk_nvme_cpl, &cpl, sizeof(cpl)) == 0);
+
+	/* clean up */
+	free(req.user_buffer);
+	free(req.payload.u.contig);
+
+	/* return spdk_dma_zmalloc/freee to unmocked */
+	MOCK_SET_P(spdk_dma_zmalloc, void *, &ut_spdk_dma_zmalloc);
+}
+
 static void
 test_nvme_allocate_request_null(void)
 {
@@ -608,6 +675,8 @@ int main(int argc, char **argv)
 			    test_trid_adrfam_str) == NULL ||
 		CU_add_test(suite, "test_nvme_ctrlr_probe",
 			    test_nvme_ctrlr_probe) == NULL ||
+		CU_add_test(suite, "test_nvme_user_copy_cmd_complete",
+			    test_nvme_user_copy_cmd_complete) == NULL ||
 		CU_add_test(suite, "test_nvme_allocate_request_null",
 			    test_nvme_allocate_request_null) == NULL ||
 		CU_add_test(suite, "test_nvme_allocate_request",
