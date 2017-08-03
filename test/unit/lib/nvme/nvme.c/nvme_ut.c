@@ -113,6 +113,64 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 	memset(trid2, 0, sizeof(struct spdk_nvme_transport_id));
 }
 
+static bool ut_attach_cb_called = false;
+static void
+dummy_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+		struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
+{
+	ut_attach_cb_called = true;
+}
+
+static void
+test_nvme_init_controllers(void)
+{
+	int rc = 0;
+	struct nvme_driver test_driver;
+	void *cb_ctx = NULL;
+	spdk_nvme_attach_cb attach_cb = dummy_attach_cb;
+	struct spdk_nvme_ctrlr ctrlr;
+	pthread_mutexattr_t attr;
+
+	g_spdk_nvme_driver = &test_driver;
+	memset(&ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
+	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
+	CU_ASSERT(pthread_mutex_init(&test_driver.lock, &attr) == 0);
+	TAILQ_INIT(&test_driver.init_ctrlrs);
+	TAILQ_INSERT_TAIL(&test_driver.init_ctrlrs, &ctrlr, tailq);
+	TAILQ_INIT(&test_driver.attached_ctrlrs);
+
+	/*
+	 * Try to initialize, but nvme_ctrlr_process_init will fail.
+	 * Verify correct behavior when it does.
+	 */
+	MOCK_SET(nvme_ctrlr_process_init, int, 1);
+	g_spdk_nvme_driver->initialized = false;
+	ut_destruct_called = false;
+	rc = nvme_init_controllers(cb_ctx, attach_cb);
+	CU_ASSERT(rc == -1);
+	CU_ASSERT(g_spdk_nvme_driver->initialized == true);
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs));
+	CU_ASSERT(ut_destruct_called == true);
+
+	/*
+	 * Controller init OK, need to move the controller state machine
+	 * forward by setting the ctrl state so that it can be moved
+	 * the attached_ctrlrs list.
+	 */
+	TAILQ_INSERT_TAIL(&test_driver.init_ctrlrs, &ctrlr, tailq);
+	ctrlr.state = NVME_CTRLR_STATE_READY;
+	MOCK_SET(nvme_ctrlr_process_init, int, 0);
+	rc = nvme_init_controllers(cb_ctx, attach_cb);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ut_attach_cb_called == true);
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs));
+	CU_ASSERT(TAILQ_FIRST(&g_spdk_nvme_driver->attached_ctrlrs) == &ctrlr);
+
+	g_spdk_nvme_driver = NULL;
+	pthread_mutexattr_destroy(&attr);
+	pthread_mutex_destroy(&test_driver.lock);
+}
+
 static void
 test_nvme_driver_init(void)
 {
@@ -815,6 +873,8 @@ int main(int argc, char **argv)
 			    test_trid_adrfam_str) == NULL ||
 		CU_add_test(suite, "test_nvme_ctrlr_probe",
 			    test_nvme_ctrlr_probe) == NULL ||
+		CU_add_test(suite, "test_nvme_init_controllers",
+			    test_nvme_init_controllers) == NULL ||
 		CU_add_test(suite, "test_nvme_driver_init",
 			    test_nvme_driver_init) == NULL ||
 		CU_add_test(suite, "test_spdk_nvme_detach",
