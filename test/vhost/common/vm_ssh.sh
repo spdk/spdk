@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 BASE_DIR=$(readlink -f $(dirname $0))
+[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 
 function usage()
@@ -32,7 +33,7 @@ while getopts 'xwh-:' optchar; do
 	esac
 done
 
-. $BASE_DIR/common.sh
+. $COMMON_DIR/common.sh
 
 shift $((OPTIND-1))
 vm_num="$1"
