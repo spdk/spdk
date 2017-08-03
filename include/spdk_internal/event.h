@@ -38,6 +38,8 @@
 
 #include "spdk/event.h"
 
+#define SPDK_MAX_LCORES		128
+
 struct spdk_event {
 	uint32_t		lcore;
 	spdk_event_fn		fn;
@@ -67,6 +69,16 @@ struct spdk_subsystem_depend {
 	TAILQ_ENTRY(spdk_subsystem_depend) tailq;
 };
 
+struct spdk_reactor_rusage {
+	uint32_t lcore;
+	struct rusage rusage;
+};
+
+struct spdk_reactor_rusage_array {
+	uint32_t lcore_count;
+	struct spdk_reactor_rusage reactor_usage[SPDK_MAX_LCORES];
+};
+
 void spdk_add_subsystem(struct spdk_subsystem *subsystem);
 void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
 
@@ -74,6 +86,7 @@ void spdk_subsystem_init(void *arg1, void *arg2);
 int spdk_subsystem_fini(void);
 void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_config(FILE *fp);
+void spdk_reactor_get_rusage(struct spdk_reactor_rusage_array *reactor_rusage_array);
 
 /**
  * \brief Register a new subsystem
