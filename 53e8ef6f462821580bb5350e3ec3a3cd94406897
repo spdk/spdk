@@ -33,6 +33,23 @@
       "revId": "53e8ef6f462821580bb5350e3ec3a3cd94406897",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8177b4ca_7307a8bc",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1538,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-04T17:48:56Z",
+      "side": 1,
+      "message": "Note that there is an extra bug fix in this patch here. Previously, if iovcnt was greater than 1 this memcpy would have done:\n\nmemcpy(desc, \u0026data[8], desc_data_len - 8);\n\nwhich was a bug - desc_data_len already accounts for the header size. This never actually hit before because we limited iovcnt to 1 and the broken code never would have executed.",
+      "revId": "53e8ef6f462821580bb5350e3ec3a3cd94406897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
