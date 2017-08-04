@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "c2545009_d741e6a6",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-04T17:48:56Z",
+      "side": 1,
+      "message": "It\u0027s actually how I intended it. \"response\" is the aggregate response that we\u0027re going to send to the user. This is saying if the response still thinks it is successful, check this particular completion and update the status. That results in us returning the first error reported in a completion.\n\nI could change it to report the last error seen too which would look like this:\n\nspdk_bdev_io_get_nvme_status(bdev_io, \u0026sc, \u0026sct);\nif (sct !\u003d SPDK_NVME_SCT_GENERIC || sc !\u003d SPDK_NVME_SC_SUCCESS) {\n    response-\u003estatus.sc \u003d sc;\n    response-\u003estatus.sct \u003d sct;\n}\n\nI\u0027m not sure which behavior is the better one to have. Since the completions are unordered, it probably doesn\u0027t matter.",
+      "parentUuid": "99ce62de_d3c61ee4",
+      "revId": "013a478fb9dfdd2489d5ea00730b3de72737adf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51225858_168909cb",
         "filename": "lib/scsi/scsi_bdev.c",
         "patchSetId": 20
