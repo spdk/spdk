@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d5f7ecf_f8e74335",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T05:18:21Z",
+      "side": 1,
+      "message": "number of bytes to zero.",
+      "revId": "6752f69b8652db3912ffb83ff1f1b72f7ac01c62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b41316a1_4f310943",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T05:18:21Z",
+      "side": 1,
+      "message": "should add IO_TYPE_WRITE_ZEROES here\n\nThe bdev rpc should also be updated to return whether each bdev supports WRITE_ZEROES or not",
+      "revId": "6752f69b8652db3912ffb83ff1f1b72f7ac01c62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
