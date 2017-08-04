@@ -316,8 +316,7 @@ io_valid_test(void)
 	CU_ASSERT(spdk_bdev_io_valid(&bdev, 512, 1024) == true);
 
 	/* Offset not a block multiple */
-	/* TODO: add a check for this in spdk_bdev_io_valid() */
-	/*CU_ASSERT(spdk_bdev_io_valid(&bdev, 3, 512) == false);*/
+	CU_ASSERT(spdk_bdev_io_valid(&bdev, 3, 512) == false);
 
 	/* Length not a block multiple */
 	CU_ASSERT(spdk_bdev_io_valid(&bdev, 512, 3) == false);
