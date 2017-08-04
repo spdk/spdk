@@ -95,6 +95,12 @@ struct spdk_reactor {
 	/* Socket ID for this reactor. */
 	uint32_t					socket_id;
 
+	/* Poller for get the rusage for the reactor. */
+	struct spdk_poller				*rusage_poller;
+
+	/* Thre rusage information of previous circle for the reactor. */
+	struct rusage 					rusage;
+
 	/*
 	 * Contains pollers actively running on this reactor.  Pollers
 	 *  are run round-robin. The reactor takes one poller from the head
@@ -276,6 +282,22 @@ _spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	spdk_event_call(event);
 }
 
+static void
+get_rusage(void *arg)
+{
+	struct spdk_reactor	*reactor = arg;
+	struct rusage		rusage;
+
+	getrusage(RUSAGE_THREAD, &rusage);
+	if (rusage.ru_nvcsw - reactor->rusage.ru_nvcsw > 10 ||
+	    rusage.ru_nivcsw - reactor->rusage.ru_nivcsw > 10) {
+		printf("Waring on reactor %d:", reactor->lcore);
+		printf("There are %ld vcsw and %ld ivcsw in the last second\n",
+		       rusage.ru_nvcsw - reactor->rusage.ru_nvcsw, rusage.ru_nivcsw - reactor->rusage.ru_nivcsw);
+	}
+	memcpy(&reactor->rusage, &rusage, sizeof(struct rusage));
+}
+
 /**
  *
  * \brief This is the main function of the reactor thread.
@@ -317,6 +339,10 @@ _spdk_reactor_run(void *arg)
 	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / 1000000ULL;
 	idle_started = 0;
 	timer_poll_count = 0;
+
+	if (reactor->rusage_poller == NULL) {
+		spdk_poller_register(&reactor->rusage_poller, get_rusage, reactor, reactor->lcore, 1000000);
+	}
 
 	while (1) {
 		bool took_action = false;
@@ -400,6 +426,7 @@ _spdk_reactor_run(void *arg)
 		}
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
+			spdk_poller_unregister(&reactor->rusage_poller, NULL);
 			break;
 		}
 	}
