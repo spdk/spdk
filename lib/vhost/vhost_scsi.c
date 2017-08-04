@@ -112,8 +112,8 @@ struct spdk_vhost_scsi_event {
 	struct spdk_scsi_lun *lun;
 };
 
-static int new_device(struct spdk_vhost_dev *);
-static int destroy_device(struct spdk_vhost_dev *);
+static int new_device(struct spdk_vhost_dev *, void *);
+static int destroy_device(struct spdk_vhost_dev *, void *);
 
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
@@ -689,56 +689,6 @@ vdev_worker(void *arg)
 	}
 }
 
-static int
-add_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
-{
-	struct spdk_vhost_scsi_dev *svdev = arg;
-	uint32_t i;
-
-	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-		if (svdev->scsi_dev[i] == NULL) {
-			continue;
-		}
-		spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[i]);
-	}
-	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
-
-	spdk_vhost_dev_mem_register(vdev);
-
-	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
-	spdk_poller_register(&svdev->mgmt_poller, vdev_mgmt_worker, svdev, vdev->lcore,
-			     MGMT_POLL_PERIOD_US);
-	return 0;
-}
-
-static int
-remove_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
-{
-	struct spdk_vhost_scsi_dev *svdev = arg;
-	uint32_t i;
-
-	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-		if (svdev->scsi_dev[i] == NULL) {
-			continue;
-		}
-		spdk_scsi_dev_free_io_channels(svdev->scsi_dev[i]);
-	}
-
-	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
-	spdk_vhost_dev_mem_unregister(&svdev->vdev);
-	return 0;
-}
-
-static int
-unregister_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
-{
-	struct spdk_vhost_scsi_dev *svdev = arg;
-
-	spdk_poller_unregister(&svdev->requestq_poller, NULL);
-	spdk_poller_unregister(&svdev->mgmt_poller, NULL);
-	return 0;
-}
-
 static struct spdk_vhost_scsi_dev *
 to_scsi_dev(struct spdk_vhost_dev *ctrlr)
 {
@@ -1108,9 +1058,11 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
  * and then allocated to a specific data core.
  */
 static int
-new_device(struct spdk_vhost_dev *vdev)
+new_device(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev;
+	sem_t *sem = arg;
+	uint32_t i;
 	int rc;
 
 	svdev = to_scsi_dev(vdev);
@@ -1132,35 +1084,50 @@ new_device(struct spdk_vhost_dev *vdev)
 		return -1;
 	}
 
-	spdk_vhost_event_send(vdev, add_vdev_cb, svdev, 1, "add scsi vdev");
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+		if (svdev->scsi_dev[i] == NULL) {
+			continue;
+		}
+		spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[i]);
+	}
+	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
+
+	spdk_vhost_dev_mem_register(vdev);
+
+	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
+	spdk_poller_register(&svdev->mgmt_poller, vdev_mgmt_worker, svdev, vdev->lcore,
+			     MGMT_POLL_PERIOD_US);
+	sem_post(sem);
 	return 0;
 }
 
-static int
-destroy_device(struct spdk_vhost_dev *vdev)
-{
+struct spdk_vhost_dev_destroy_ctx {
 	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_poller *poller;
+	sem_t *sem;
+};
+
+static void
+destroy_device_poller_cb(void *arg)
+{
+	struct spdk_vhost_dev_destroy_ctx *ctx = arg;
+	struct spdk_vhost_scsi_dev *svdev = ctx->svdev;
 	void *ev;
 	uint32_t i;
 
-	svdev = to_scsi_dev(vdev);
-	if (svdev == NULL) {
-		SPDK_ERRLOG("Trying to stop non-scsi controller as a scsi one.\n");
-		return -1;
+	if (svdev->vdev.task_cnt > 0) {
+		return;
 	}
 
-	spdk_vhost_event_send(vdev, unregister_vdev_cb, svdev, 1, "unregister scsi vdev");
-
-	/* Wait for all tasks to finish */
-	for (i = 1000; i && vdev->task_cnt > 0; i--) {
-		usleep(1000);
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+		if (svdev->scsi_dev[i] == NULL) {
+			continue;
+		}
+		spdk_scsi_dev_free_io_channels(svdev->scsi_dev[i]);
 	}
 
-	if (vdev->task_cnt > 0) {
-		SPDK_ERRLOG("%s: pending tasks did not finish in 1s.\n", vdev->name);
-	}
-
-	spdk_vhost_event_send(vdev, remove_vdev_cb, svdev, 1, "remove scsi vdev");
+	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", svdev->vdev.name);
+	spdk_vhost_dev_mem_unregister(&svdev->vdev);
 
 	/* Flush not sent events */
 	while (spdk_ring_dequeue(svdev->vhost_events, &ev, 1) == 1) {
@@ -1172,6 +1139,37 @@ destroy_device(struct spdk_vhost_dev *vdev)
 	spdk_ring_free(svdev->vhost_events);
 
 	free_task_pool(svdev);
+
+	spdk_poller_unregister(&ctx->poller, NULL);
+	sem_post(ctx->sem);
+}
+
+static int
+destroy_device(struct spdk_vhost_dev *vdev, void *arg)
+{
+	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
+
+	svdev = to_scsi_dev(vdev);
+	if (svdev == NULL) {
+		SPDK_ERRLOG("Trying to stop non-scsi controller as a scsi one.\n");
+		return -1;
+	}
+
+	destroy_ctx = spdk_dma_zmalloc(sizeof(*destroy_ctx), SPDK_CACHE_LINE_SIZE, NULL);
+	if (destroy_ctx == NULL) {
+		SPDK_ERRLOG("Failed to alloc memory for destroying device.\n");
+		return -1;
+	}
+
+	destroy_ctx->svdev = svdev;
+	destroy_ctx->sem = arg;
+
+	spdk_poller_unregister(&svdev->requestq_poller, NULL);
+	spdk_poller_unregister(&svdev->mgmt_poller, NULL);
+	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx, vdev->lcore,
+			     1000);
+
 	return 0;
 }
 
