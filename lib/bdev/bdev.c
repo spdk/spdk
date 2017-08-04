@@ -748,6 +748,11 @@ spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
 static bool
 spdk_bdev_io_valid(struct spdk_bdev *bdev, uint64_t offset, uint64_t nbytes)
 {
+	/* Return failure if offset is not a multiple of bdev->blocklen */
+	if (offset % bdev->blocklen) {
+		return false;
+	}
+
 	/* Return failure if nbytes is not a multiple of bdev->blocklen */
 	if (nbytes % bdev->blocklen) {
 		return false;
