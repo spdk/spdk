@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbe5d7e5_e7b0af14",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T04:31:02Z",
+      "side": 1,
+      "message": "I think we should keep this as 4M for this patch so that we aren\u0027t changing default functionality.\n\nI\u0027d still prefer to keep this as a smaller value though.  I know on FreeBSD we purposely capped the max unmap size at around 1GB I think because there are some SSDs out there that crap out on unmap requests that are too big.\n\nWe can discuss this more but for now I\u0027d just keep this at 4M for this patch so we can get the rest of this code removed.",
+      "revId": "8ce3f165d4907de51d33ef19e96143f15834b77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65f27285_3c2bc383",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T04:31:02Z",
+      "side": 1,
+      "message": "This also changes default behavior (previously was 512).  This change might be OK but it still should be done in a separate patch.",
+      "revId": "8ce3f165d4907de51d33ef19e96143f15834b77d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
