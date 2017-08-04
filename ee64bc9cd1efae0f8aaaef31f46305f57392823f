@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cd069dd_acdb0c31",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T05:20:20Z",
+      "side": 1,
+      "message": "Oh - I see you add this code here (see my comment on previous patch).\n\nI think you should just merge this patch with the one before it.  Please still update the bdev rpc code in that patch to report whether each bdev supports WRITE_ZEROES.",
+      "revId": "ee64bc9cd1efae0f8aaaef31f46305f57392823f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
