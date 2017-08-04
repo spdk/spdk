@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "245563ea_ef8eefb0",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T15:58:27Z",
+      "side": 1,
+      "message": "I\u0027m guessing if soft roce is available, then we are deciding to only use that, even if a HW RDMA NIC is attached?\n\nI think that\u0027s fine, but might be good to clarify that with a comment.  Or if I\u0027m completely not understand why we return 0 if SOFT_ROCE\u003d\u003dtrue, then we probably still need a comment.  :)",
+      "revId": "8f7a6c75d21ae4ab12658b0fa4035bffc78c1cfb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b2245d6_9cca9e1a",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T15:58:27Z",
+      "side": 1,
+      "message": "Is it possible for this to be true?  NVMF_IP_LEAST_ADDR gets set to 8 at the beginning of this script - I don\u0027t see where it could get set to anything else.",
+      "revId": "8f7a6c75d21ae4ab12658b0fa4035bffc78c1cfb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
