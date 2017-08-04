@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2225281_679c7ef9",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T17:01:09Z",
+      "side": 1,
+      "message": "We should keep unmap and add write_zeroes.  We will need unmap later for unmapping portions of a blob (specifically for the logical volumes use case).",
+      "revId": "e4cc9ba359654698b7434cf0290299b1cd73a0d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbb17e11_041941d8",
+        "filename": "lib/blob/request.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T17:01:09Z",
+      "side": 1,
+      "message": "I think we\u0027re going to need to add spdk_bs_batch_write_zeroes instead of mapping spdk_bs_batch_unmap to the write_zeroes function call.\n\nThe blobstore.c code will need to explicitly call the spdk_bs_batch_write_zeroes function when it wants to write zeroes.  We will have a future case where we allow a user to unmap (not write zeroes to) a portion of a blob.  So we should plan for that now and have support for both unmap *and* write zeroes.",
+      "revId": "e4cc9ba359654698b7434cf0290299b1cd73a0d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
