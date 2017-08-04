@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b79685d0_3dbf4ec3",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T04:22:22Z",
+      "side": 1,
+      "message": "check nbd_fd here too?",
+      "revId": "4b9e80b075f169ab108b457a9b201c3229cbb9f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
