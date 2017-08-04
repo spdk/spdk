@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c5194103_e772d61e",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-04T17:30:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65e59028_ba24d4ba",
+      "revId": "ae430bea861fe83ed0302058ad29c80db78810cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0aa1f75b_ea8dd9be",
         "filename": "examples/blob/hello_world/hello_blob.c",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-03T23:46:17Z",
       "side": 1,
       "message": "Changes to the blob metadata are not persistent unless a sync has completed. If you need your blob to be persistent, even if you find the performance impact unacceptable, you have to sync.",
+      "revId": "ae430bea861fe83ed0302058ad29c80db78810cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "224930db_cac8a528",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-04T17:30:12Z",
+      "side": 1,
+      "message": "yeah, I dunno.  I read this and get \"though must sync\" from it. Was it your suggestion to replace the whole comment with just this or replace only part of the comment?",
+      "parentUuid": "0aa1f75b_ea8dd9be",
       "revId": "ae430bea861fe83ed0302058ad29c80db78810cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
