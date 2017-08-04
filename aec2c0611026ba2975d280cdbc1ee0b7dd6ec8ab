@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4690ec3f_e5defb18",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T17:30:49Z",
+      "side": 1,
+      "message": "just curious - why is it valid for a qpair to already have a transport set here?",
+      "revId": "aec2c0611026ba2975d280cdbc1ee0b7dd6ec8ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
