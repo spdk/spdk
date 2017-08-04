@@ -1524,6 +1524,7 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 {
 	struct spdk_file *file;
 	void *buf;
+	bool found_file = false;
 
 	buf = spdk_mempool_get(g_cache_pool);
 	if (buf != NULL) {
@@ -1537,11 +1538,12 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 		    file != context) {
 			TAILQ_REMOVE(&g_caches, file, cache_tailq);
 			TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+			found_file = true;
 			break;
 		}
 	}
 	pthread_spin_unlock(&g_caches_lock);
-	if (file != NULL) {
+	if (found_file) {
 		cache_free_buffers(file);
 		buf = spdk_mempool_get(g_cache_pool);
 		if (buf != NULL) {
@@ -1554,11 +1556,12 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 		if (!file->open_for_writing && file != context) {
 			TAILQ_REMOVE(&g_caches, file, cache_tailq);
 			TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+			found_file = true;
 			break;
 		}
 	}
 	pthread_spin_unlock(&g_caches_lock);
-	if (file != NULL) {
+	if (found_file) {
 		cache_free_buffers(file);
 		buf = spdk_mempool_get(g_cache_pool);
 		if (buf != NULL) {
@@ -1571,11 +1574,12 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 		if (file != context) {
 			TAILQ_REMOVE(&g_caches, file, cache_tailq);
 			TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
+			found_file = true;
 			break;
 		}
 	}
 	pthread_spin_unlock(&g_caches_lock);
-	if (file != NULL) {
+	if (found_file) {
 		cache_free_buffers(file);
 		buf = spdk_mempool_get(g_cache_pool);
 		if (buf != NULL) {
