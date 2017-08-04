@@ -22,6 +22,30 @@
       "revId": "3e31c4f9d90af90ca577e7ab9d38a67624cba6de",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0e039af_2ea683f7",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-04T08:36:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "672d6293_e10e7c07",
+      "range": {
+        "startLine": 237,
+        "startChar": 0,
+        "endLine": 237,
+        "endChar": 4
+      },
+      "revId": "3e31c4f9d90af90ca577e7ab9d38a67624cba6de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
