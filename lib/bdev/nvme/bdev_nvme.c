@@ -1200,18 +1200,9 @@ bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
 		    int direction, struct iovec *iov, int iovcnt, uint64_t nbytes,
 		    uint64_t offset)
 {
-	uint32_t ss = spdk_nvme_ns_get_sector_size(bdev->ns);
-	uint32_t lba_count;
+	uint32_t lba_count = nbytes / bdev->disk.blocklen;
 	uint64_t lba = offset / bdev->disk.blocklen;
 	int rc;
-
-	if (nbytes % ss) {
-		SPDK_ERRLOG("Unaligned IO request length\n");
-		return -EINVAL;
-	}
-
-
-	lba_count = nbytes / ss;
 
 	bio->iovs = iov;
 	bio->iovcnt = iovcnt;
@@ -1243,11 +1234,6 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	int rc = 0;
 	struct spdk_nvme_dsm_range dsm_range = {};
-
-	if (nbytes % nbdev->disk.blocklen) {
-		SPDK_ERRLOG("Unaligned IO request length\n");
-		return -EINVAL;
-	}
 
 	dsm_range.starting_lba = offset / nbdev->disk.blocklen;
 	dsm_range.length = nbytes / nbdev->disk.blocklen;
