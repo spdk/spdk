@@ -16,6 +16,24 @@
       "revId": "aec2c0611026ba2975d280cdbc1ee0b7dd6ec8ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "194b3116_5ee0b1de",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-04T18:56:08Z",
+      "side": 1,
+      "message": "For RDMA at least, you know which transport the connection belongs to before you know which controller it is for. That\u0027s because the controller ID is only sent in the first message, but the NIC the connection originated on implies the transport.",
+      "parentUuid": "4690ec3f_e5defb18",
+      "revId": "aec2c0611026ba2975d280cdbc1ee0b7dd6ec8ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
