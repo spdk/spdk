@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6fc93fa8_f8ddcf41",
+        "filename": "lib/nvmf/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T04:05:15Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "8376a4e8abd139278225683bc1dec5b4492a1b80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7aad869_152489b0",
+        "filename": "lib/nvmf/ctrlr.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T04:05:15Z",
+      "side": 1,
+      "message": "I think you meant to keep \"session\" here.",
+      "revId": "8376a4e8abd139278225683bc1dec5b4492a1b80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3772be3_608a2c23",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T04:05:15Z",
+      "side": 1,
+      "message": "should we just remove this line?",
+      "revId": "8376a4e8abd139278225683bc1dec5b4492a1b80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4932838a_df0d7b7f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T04:05:15Z",
+      "side": 1,
+      "message": "tab",
+      "revId": "8376a4e8abd139278225683bc1dec5b4492a1b80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "840473c1_2c58419e",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T04:05:15Z",
+      "side": 1,
+      "message": "tab",
+      "revId": "8376a4e8abd139278225683bc1dec5b4492a1b80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
