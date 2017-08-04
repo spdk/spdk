@@ -33,6 +33,24 @@
       "revId": "8f7a6c75d21ae4ab12658b0fa4035bffc78c1cfb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "511a96a0_7fa0355a",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-08-04T18:06:50Z",
+      "side": 1,
+      "message": "Good point. That is a remnant from an earlier version of this patch. Thanks for pointing it out.",
+      "parentUuid": "7b2245d6_9cca9e1a",
+      "revId": "8f7a6c75d21ae4ab12658b0fa4035bffc78c1cfb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
