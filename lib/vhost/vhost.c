@@ -530,7 +530,7 @@ spdk_vhost_event_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_dev_timed_event_ctx *ctx = arg1;
 
-	ctx->response = ctx->cb_fn(ctx->vdev, arg2);
+	ctx->response = ctx->cb_fn(ctx->vdev, &ctx->sem);
 	sem_post(&ctx->sem);
 }
 
@@ -553,7 +553,7 @@ spdk_vhost_event_async_fn(void *arg1, void *arg2)
 	spdk_dma_free(ctx);
 }
 
-int
+static int
 spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
 		      unsigned timeout_sec, const char *errmsg)
 {
@@ -571,13 +571,20 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, vo
 	ev_ctx.vdev = vdev;
 	ev_ctx.ctrlr_name = strdup(vdev->name);
 	ev_ctx.cb_fn = cb_fn;
-	clock_gettime(CLOCK_REALTIME, &timeout);
-	timeout.tv_sec += timeout_sec;
 
 	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_cb, &ev_ctx, arg);
 	assert(ev);
 	spdk_event_call(ev);
 
+	clock_gettime(CLOCK_REALTIME, &timeout);
+	timeout.tv_sec += timeout_sec;
+
+	/* Wait for 2 subsequent sem unlocks. We pass sem_t to the cb_fn and it might
+	 * be unlocked either before, or after it has returned (e.g. deferred event).
+	 * The second unlock comes just before enqueued spdk_event has finished and is
+	 * required to properly read ev_ctx.response.
+	 */
+	sem_timedwait(&ev_ctx.sem, &timeout); /* if this times out, so will the next one */
 	rc = sem_timedwait(&ev_ctx.sem, &timeout);
 	if (rc != 0) {
 		SPDK_ERRLOG("Timout waiting for event: %s.\n", errmsg);
@@ -619,6 +626,7 @@ destroy_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	struct rte_vhost_vring *q;
+	int rc;
 	uint16_t i;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
@@ -635,7 +643,8 @@ destroy_device(int vid)
 		return;
 	}
 
-	if (vdev->backend->destroy_device(vdev) != 0) {
+	rc = spdk_vhost_event_send(vdev, vdev->backend->destroy_device, NULL, 3, "destroy device");
+	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
 		return;
 	}
@@ -706,7 +715,7 @@ new_device(int vid)
 	}
 
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
-	rc = vdev->backend->new_device(vdev);
+	rc = spdk_vhost_event_send(vdev, vdev->backend->new_device, NULL, 3, "new device");
 	if (rc != 0) {
 		free(vdev->mem);
 		spdk_vhost_free_reactor(vdev->lcore);
@@ -803,6 +812,7 @@ new_connection(int vid)
 		return -1;
 	}
 
+	/* since pollers are not running it safe not to use spdk_event here */
 	if (vdev->vid != -1) {
 		SPDK_ERRLOG("Device with vid %d is already connected.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -827,6 +837,7 @@ destroy_connection(int vid)
 		return;
 	}
 
+	/* since pollers are not running it safe not to use spdk_event here */
 	vdev->vid = -1;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
