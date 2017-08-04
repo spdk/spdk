@@ -85,8 +85,18 @@ enum spdk_vhost_dev_type {
 struct spdk_vhost_dev_backend {
 	uint64_t virtio_features;
 	uint64_t disabled_features;
-	int (*new_device)(struct spdk_vhost_dev *);
-	int (*destroy_device)(struct spdk_vhost_dev *);
+
+	/**
+	 * Callbacks for starting and pausing the device.
+	 * The first param is struct spdk_vhost_dev *,
+	 * The second one is sem_t* passed as a void*.
+	 * The callback must call sem_post with given sem.
+	 * If sem_post won't be called within an arbitrary
+	 * limit of 3 seconds, this will time out.
+	 */
+	spdk_vhost_event_fn new_device;
+	spdk_vhost_event_fn destroy_device;
+
 	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 };
 
@@ -134,9 +144,6 @@ bool spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id
 int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
 			     enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
 int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
-
-int spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
-			  unsigned timeout_sec, const char *errmsg);
 
 int spdk_vhost_blk_controller_construct(void);
 void spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
