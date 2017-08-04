@@ -745,26 +745,26 @@ spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
 	return bdev->write_cache;
 }
 
-static int
+static bool
 spdk_bdev_io_valid(struct spdk_bdev *bdev, uint64_t offset, uint64_t nbytes)
 {
 	/* Return failure if nbytes is not a multiple of bdev->blocklen */
 	if (nbytes % bdev->blocklen) {
-		return -1;
+		return false;
 	}
 
 	/* Return failure if offset + nbytes is less than offset; indicates there
 	 * has been an overflow and hence the offset has been wrapped around */
 	if (offset + nbytes < offset) {
-		return -1;
+		return false;
 	}
 
 	/* Return failure if offset + nbytes exceeds the size of the bdev */
 	if (offset + nbytes > bdev->blockcnt * bdev->blocklen) {
-		return -1;
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
 int
@@ -777,7 +777,7 @@ spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
-	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
+	if (!spdk_bdev_io_valid(bdev, offset, nbytes)) {
 		return -EINVAL;
 	}
 
@@ -817,7 +817,7 @@ spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	int rc;
 
-	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
+	if (!spdk_bdev_io_valid(bdev, offset, nbytes)) {
 		return -EINVAL;
 	}
 
@@ -858,7 +858,7 @@ spdk_bdev_write(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EBADF;
 	}
 
-	if (spdk_bdev_io_valid(bdev, offset, nbytes) != 0) {
+	if (!spdk_bdev_io_valid(bdev, offset, nbytes)) {
 		return -EINVAL;
 	}
 
@@ -902,7 +902,7 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EBADF;
 	}
 
-	if (spdk_bdev_io_valid(bdev, offset, len) != 0) {
+	if (!spdk_bdev_io_valid(bdev, offset, len)) {
 		return -EINVAL;
 	}
 
