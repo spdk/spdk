@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1c4c48e_753f4f98",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T05:07:08Z",
+      "side": 1,
+      "message": "this change should go into the earlier patch that added this line",
+      "revId": "666173868bb65c179edf842300299c3b68c5783b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31e2b56c_6bd646b9",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T05:07:08Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "666173868bb65c179edf842300299c3b68c5783b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
