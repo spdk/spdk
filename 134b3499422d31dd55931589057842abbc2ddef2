@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de184c4c_58a9dd26",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T17:17:32Z",
+      "side": 1,
+      "message": "Should probably just change this to nvme_transport_ctrlr_create_io_qpair.  Looks like you\u0027ll need to rebase this patch anyways so might as well fix it.",
+      "revId": "134b3499422d31dd55931589057842abbc2ddef2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
