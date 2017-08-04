@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9996f7c_29739d01",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T05:03:17Z",
+      "side": 1,
+      "message": "Should this explicitly call out that this patch also restricts spdk_bdev_unmap() to a single range?  I mean it\u0027s obviously implied since its now just an offset and bytes.  But the way this is worded makes it sound like there is no downside to this patch.  (I still agree with the patch though.)",
+      "revId": "013a478fb9dfdd2489d5ea00730b3de72737adf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99ce62de_d3c61ee4",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T05:03:17Z",
+      "side": 1,
+      "message": "This logic be reversed - get the nvme status if !(act \u003d\u003d SCT_GENERIC \u0026\u0026 sc \u003d\u003d SC_SUCCESS).",
+      "revId": "013a478fb9dfdd2489d5ea00730b3de72737adf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51225858_168909cb",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1611,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-04T05:03:17Z",
+      "side": 1,
+      "message": "A SCSI unmap descriptor may have a 0 block count.  So I think if nbytes \u003d\u003d 0, we should just continue and skip this descriptor rather than asserting.  (Obviously do that before incrementing the count.)",
+      "revId": "013a478fb9dfdd2489d5ea00730b3de72737adf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
