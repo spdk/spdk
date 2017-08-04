@@ -77,45 +77,86 @@ then
 	echo done.
 fi
 
-cp $TESTDIR/common_flags.txt insert_flags.txt
-echo "--benchmarks=fillseq" >> insert_flags.txt
-echo "--threads=1" >> insert_flags.txt
-echo "--disable_wal=1" >> insert_flags.txt
-echo "--use_existing_db=0" >> insert_flags.txt
-echo "--num=$NUM_KEYS" >> insert_flags.txt
+cp $TESTDIR/common_flags.txt bulkload_flags.txt
+echo "--benchmarks=fillrandom" >> bulkload_flags.txt
+echo "--use_existing_db=0" >> bulkload_flags.txt
+echo "--num=$NUM_KEYS" >> bulkload_flags.txt
+echo "--disable_auto_compactions=1" >> bulkload_flags.txt
+echo "--disable_data_sync=1" >> bulkload_flags.txt
+echo "--disable_wal=1" >> bulkload_flags.txt # TODO: FB doesn't disable WAL
+echo "--threads=1" >> bulkload_flags.txt
+echo "--level0_file_num_compaction_trigger=100000000" >> bulkload_flags.txt
+echo "--level0_slowdown_writes_trigger=100000000" >> bulkload_flags.txt
+echo "--level0_stop_writes_trigger=100000000" >> bulkload_flags.txt
+echo "--max_background_compactions=16" >> bulkload_flags.txt
+echo "--max_background_flushes=16" >> bulkload_flags.txt
 
-cp $TESTDIR/common_flags.txt randread_flags.txt
-echo "--benchmarks=readrandom" >> randread_flags.txt
-echo "--threads=16" >> randread_flags.txt
-echo "--duration=$DURATION" >> randread_flags.txt
-echo "--disable_wal=1" >> randread_flags.txt
-echo "--use_existing_db=1" >> randread_flags.txt
-echo "--num=$NUM_KEYS" >> randread_flags.txt
+cp $TESTDIR/common_flags.txt compact_flags.txt
+echo "--benchmarks=compact" >> compact_flags.txt
+echo "--use_existing_db=1" >> compact_flags.txt
+echo "--num=$NUM_KEYS" >> compact_flags.txt
+echo "--disable_auto_compactions=1" >> compact_flags.txt
+echo "--disable_data_sync=1" >> compact_flags.txt
+echo "--threads=16" >> compact_flags.txt
+echo "--disable_wal=1" >> compact_flags.txt # TODO: FB doesn't disable WAL
+echo "--level0_file_num_compaction_trigger=8" >> compact_flags.txt
+echo "--level0_slowdown_writes_trigger=16" >> compact_flags.txt
+echo "--level0_stop_writes_trigger=24" >> compact_flags.txt
+echo "--max_background_compactions=16" >> compact_flags.txt
+echo "--max_background_flushes=16" >> compact_flags.txt
 
 cp $TESTDIR/common_flags.txt overwrite_flags.txt
 echo "--benchmarks=overwrite" >> overwrite_flags.txt
-echo "--threads=1" >> overwrite_flags.txt
 echo "--duration=$DURATION" >> overwrite_flags.txt
-echo "--disable_wal=1" >> overwrite_flags.txt
 echo "--use_existing_db=1" >> overwrite_flags.txt
 echo "--num=$NUM_KEYS" >> overwrite_flags.txt
+echo "--threads=1" >> overwrite_flags.txt
+echo "--disable_wal=1" >> overwrite_flags.txt # TODO: FB doesn't disable WAL
+echo "--level0_file_num_compaction_trigger=8" >> overwrite_flags.txt
+echo "--level0_slowdown_writes_trigger=16" >> overwrite_flags.txt
+echo "--level0_stop_writes_trigger=24" >> overwrite_flags.txt
+echo "--max_background_compactions=16" >> overwrite_flags.txt
+echo "--max_background_flushes=16" >> overwrite_flags.txt
 
-cp $TESTDIR/common_flags.txt readwrite_flags.txt
-echo "--benchmarks=readwhilewriting" >> readwrite_flags.txt
-echo "--threads=4" >> readwrite_flags.txt
-echo "--duration=$DURATION" >> readwrite_flags.txt
-echo "--disable_wal=1" >> readwrite_flags.txt
-echo "--use_existing_db=1" >> readwrite_flags.txt
-echo "--num=$NUM_KEYS" >> readwrite_flags.txt
+cp $TESTDIR/common_flags.txt readrandom_flags.txt
+echo "--benchmarks=readrandom" >> readrandom_flags.txt
+echo "--duration=$DURATION" >> readrandom_flags.txt
+echo "--use_existing_db=1" >> readrandom_flags.txt
+echo "--num=$NUM_KEYS" >> readrandom_flags.txt
+echo "--threads=16" >> readrandom_flags.txt
+echo "--disable_auto_compactions=1" >> readrandom_flags.txt
+echo "--disable_wal=1" >> readrandom_flags.txt # TODO: FB doesn't disable WAL
+echo "--level0_file_num_compaction_trigger=8" >> readrandom_flags.txt
+echo "--level0_slowdown_writes_trigger=16" >> readrandom_flags.txt
+echo "--level0_stop_writes_trigger=24" >> readrandom_flags.txt
+echo "--max_background_compactions=4" >> readrandom_flags.txt
+echo "--max_background_flushes=1" >> readrandom_flags.txt
 
-cp $TESTDIR/common_flags.txt writesync_flags.txt
-echo "--benchmarks=overwrite" >> writesync_flags.txt
-echo "--threads=1" >> writesync_flags.txt
-echo "--duration=$DURATION" >> writesync_flags.txt
-echo "--disable_wal=0" >> writesync_flags.txt
-echo "--use_existing_db=1" >> writesync_flags.txt
-echo "--sync=1" >> writesync_flags.txt
-echo "--num=$NUM_KEYS" >> writesync_flags.txt
+cp $TESTDIR/common_flags.txt readwhilewriting_flags.txt
+echo "--benchmarks=readwhilewriting" >> readwhilewriting_flags.txt
+echo "--duration=$DURATION" >> readwhilewriting_flags.txt
+echo "--use_existing_db=1" >> readwhilewriting_flags.txt
+echo "--num=$NUM_KEYS" >> readwhilewriting_flags.txt
+echo "--threads=16" >> readwhilewriting_flags.txt
+echo "--writes_per_second=??" >> readwhilewriting_flags.txt
+echo "--disable_wal=1" >> readwhilewriting_flags.txt #TODO
+echo "--level0_file_num_compaction_trigger=8" >> readwhilewriting_flags.txt
+echo "--level0_slowdown_writes_trigger=16" >> readwhilewriting_flags.txt
+echo "--level0_stop_writes_trigger=24" >> readwhilewriting_flags.txt
+echo "--max_background_compactions=4" >> readwhilewriting_flags.txt
+echo "--max_background_flushes=1" >> readwhilewriting_flags.txt
+
+cp $TESTDIR/common_flags.txt fillseq_flags.txt
+echo "--benchmarks=fillseq" >> fillseq_flags.txt
+echo "--use_existing_db=0" >> fillseq_flags.txt
+echo "--num=$NUM_KEYS" >> fillseq_flags.txt
+echo "--threads=1" >> fillseq_flags.txt
+echo "--disable_wal=1" >> fillseq_flags.txt # TODO: FB doesn't disable WAL
+echo "--level0_file_num_compaction_trigger=8" >> fillseq_flags.txt
+echo "--level0_slowdown_writes_trigger=16" >> fillseq_flags.txt
+echo "--level0_stop_writes_trigger=24" >> fillseq_flags.txt
+echo "--max_background_compactions=16" >> fillseq_flags.txt
+echo "--max_background_flushes=16" >> fillseq_flags.txt
 
 run_step() {
 	if [ -z "$1" ]
@@ -163,23 +204,24 @@ run_step() {
 
 if [ -z "$SKIP_INSERT" ]
 then
-	run_step insert
+	run_step bulkload
+	run_step compact
 fi
 if [ -z "$SKIP_OVERWRITE" ]
 then
 	run_step overwrite
 fi
-if [ -z "$SKIP_READWRITE" ]
-then
-	run_step readwrite
-fi
-if [ -z "$SKIP_WRITESYNC" ]
-then
-	run_step writesync
-fi
 if [ -z "$SKIP_RANDREAD" ]
 then
-	run_step randread
+	run_step readrandom
+fi
+if [ -z "$SKIP_READWRITE" ]
+then
+	run_step readwhilewriting
+fi
+if [ -z "$SKIP_FILLSEQ" ]
+then
+	run_step fillseq
 fi
 
 if [ "$NO_SPDK" = "1" ]
