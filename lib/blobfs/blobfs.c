@@ -1599,23 +1599,21 @@ cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 	}
 
 	buf->buf = alloc_cache_memory_buffer(file);
-	if (buf->buf == NULL) {
-		while (buf->buf == NULL) {
-			/*
-			 * TODO: alloc_cache_memory_buffer() should eventually free
-			 *  some buffers.  Need a more sophisticated check here, instead
-			 *  of just bailing if 100 tries does not result in getting a
-			 *  free buffer.  This will involve using the sync channel's
-			 *  semaphore to block until a buffer becomes available.
-			 */
-			if (count++ == 100) {
-				SPDK_ERRLOG("could not allocate cache buffer\n");
-				assert(false);
-				free(buf);
-				return NULL;
-			}
-			buf->buf = alloc_cache_memory_buffer(file);
+	while (buf->buf == NULL) {
+		/*
+		 * TODO: alloc_cache_memory_buffer() should eventually free
+		 *  some buffers.  Need a more sophisticated check here, instead
+		 *  of just bailing if 100 tries does not result in getting a
+		 *  free buffer.  This will involve using the sync channel's
+		 *  semaphore to block until a buffer becomes available.
+		 */
+		if (count++ == 100) {
+			SPDK_ERRLOG("could not allocate cache buffer\n");
+			assert(false);
+			free(buf);
+			return NULL;
 		}
+		buf->buf = alloc_cache_memory_buffer(file);
 	}
 
 	buf->buf_size = CACHE_BUFFER_SIZE;
