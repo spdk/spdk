@@ -57,6 +57,8 @@ typedef void (*spdk_io_device_unregister_cb)(void *io_device);
 typedef void (*spdk_channel_msg)(void *io_device, struct spdk_io_channel *ch,
 				 void *ctx);
 typedef void (*spdk_channel_for_each_cpl)(void *io_device, void *ctx);
+typedef void (*spdk_thread_msg)(void *ctx);
+typedef void (*spdk_thread_for_each_cpl)(void *ctx);
 
 /**
  * \brief Initializes the calling thread for I/O channel allocation.
@@ -162,5 +164,17 @@ struct spdk_thread *spdk_io_channel_get_thread(struct spdk_io_channel *ch);
  */
 void spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 			   spdk_channel_for_each_cpl cpl);
+
+/**
+ * \brief Call 'fn' on each thread. This happens asynchronously, so fn may be
+ * called after spdk_for_each_channel returns.
+ * 'fn' will be called on the correct thread. 'fn' will be called for each thread
+ * serially, such that two calls to 'fn' will not overlap in time.
+ *
+ * Once 'fn' has been called on each thread, 'cpl' will be called
+ * on the thread that spdk_for_each_thread was initially called from.
+ */
+void spdk_for_each_thread(spdk_thread_msg fn, void *ctx,
+			  spdk_thread_for_each_cpl cpl);
 
 #endif /* SPDK_IO_CHANNEL_H_ */

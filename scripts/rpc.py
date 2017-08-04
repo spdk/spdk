@@ -470,6 +470,12 @@ p = subparsers.add_parser('kill_instance', help='Send signal to instance')
 p.add_argument('sig_name', help='signal will be sent to server.')
 p.set_defaults(func=kill_instance)
 
+def get_threads_rusage(args):
+    print_dict(jsonrpc_call('get_threads_rusage'))
+
+p = subparsers.add_parser('get_threads_rusage', help='List rusage information for all threads')
+p.set_defaults(func=get_threads_rusage)
+
 def get_vhost_scsi_controllers(args):
     print_dict(jsonrpc_call('get_vhost_scsi_controllers'))
 

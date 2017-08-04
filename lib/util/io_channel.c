@@ -378,6 +378,14 @@ struct call_channel {
 	spdk_channel_for_each_cpl cpl;
 };
 
+struct call_thread {
+	spdk_thread_msg fn;
+	void *ctx;
+	struct spdk_thread *cur_thread;
+	struct spdk_thread *orig_thread;
+	spdk_thread_for_each_cpl cpl;
+};
+
 static void
 _call_completion(void *ctx)
 {
@@ -458,4 +466,70 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	cpl(io_device, ctx);
+}
+
+static void
+_call_thread(void *ctx)
+{
+	struct call_thread *ch_ctx = ctx;
+	struct spdk_thread *thread;
+
+	thread = ch_ctx->cur_thread;
+
+	ch_ctx->fn(ch_ctx->ctx);
+	pthread_mutex_lock(&g_devlist_mutex);
+	thread = TAILQ_NEXT(thread, tailq);
+
+	if (thread) {
+		if (thread->thread_id == ch_ctx->orig_thread->thread_id) {
+			thread = TAILQ_NEXT(thread, tailq);
+		}
+
+		if (thread) {
+			ch_ctx->cur_thread = thread;
+			pthread_mutex_unlock(&g_devlist_mutex);
+			spdk_thread_send_msg(thread, _call_thread, ch_ctx);
+			return;
+		}
+	}
+
+	pthread_mutex_unlock(&g_devlist_mutex);
+	ch_ctx->cpl(ch_ctx->ctx);
+	free(ch_ctx);
+}
+
+void spdk_for_each_thread(spdk_thread_msg fn, void *ctx,
+			  spdk_thread_for_each_cpl cpl)
+{
+	struct spdk_thread *thread;
+	struct call_thread *ch_ctx;
+
+	ch_ctx = calloc(1, sizeof(*ch_ctx));
+	if (!ch_ctx) {
+		SPDK_ERRLOG("Unable to allocate context\n");
+		return;
+	}
+
+	ch_ctx->fn = fn;
+	ch_ctx->ctx = ctx;
+	ch_ctx->cpl = cpl;
+	pthread_mutex_lock(&g_devlist_mutex);
+
+	ch_ctx->orig_thread = _get_thread();
+	/* run the orig_thread fn immediately */
+	ch_ctx->fn(ch_ctx->ctx);
+
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		ch_ctx->cur_thread = thread;
+		if (ch_ctx->cur_thread->thread_id == ch_ctx->orig_thread->thread_id) {
+			continue;
+		}
+		pthread_mutex_unlock(&g_devlist_mutex);
+		spdk_thread_send_msg(thread, _call_thread, ch_ctx);
+		return;
+	}
+
+	free(ch_ctx);
+	pthread_mutex_unlock(&g_devlist_mutex);
+	cpl(ctx);
 }

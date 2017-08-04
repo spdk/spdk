@@ -33,10 +33,19 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/barrier.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
-
+#include "spdk/io_channel.h"
 #include "spdk_internal/log.h"
+
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
+
+#ifdef __FreeBSD__
+#include <pthread_np.h>
+#endif
 
 struct rpc_kill_instance {
 	char *sig_name;
@@ -108,3 +117,87 @@ invalid:
 	free_rpc_kill_instance(&req);
 }
 SPDK_RPC_REGISTER("kill_instance", spdk_rpc_kill_instance)
+
+#define SPDK_MAX_LCORES 128
+
+struct spdk_thread_rusage {
+	char thread_name[128];
+	struct rusage rusage;
+};
+
+struct spdk_thread_rusage_array {
+	bool done;
+	uint32_t thread_count;
+	struct spdk_thread_rusage rusages[SPDK_MAX_LCORES];
+};
+
+static void
+thread_get_rusage(void *ctx)
+{
+	struct spdk_thread_rusage_array *rusage_array = ctx;
+	uint32_t index = rusage_array->thread_count;
+	struct spdk_thread_rusage *thread_rusage = &rusage_array->rusages[index];
+
+#if defined(__linux__)
+	prctl(PR_GET_NAME, thread_rusage->thread_name, 0, 0, 0);
+#elif defined(__FreeBSD__)
+	pthread_get_name_np(pthread_self(), thread_rusage->thread_name);
+#endif
+	getrusage(RUSAGE_THREAD, &thread_rusage->rusage);
+	rusage_array->thread_count++;
+}
+
+static void
+thread_get_rusage_done(void *ctx)
+{
+	struct spdk_thread_rusage_array *rusage_array = ctx;
+
+	rusage_array->done = true;
+}
+
+static void
+spdk_rpc_get_threads_rusage(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct spdk_thread_rusage_array thread_rusage_array;
+	struct spdk_thread_rusage *thread_rusage;
+	uint32_t i;
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_portal_groups requires no parameters");
+		return;
+	}
+
+	memset(&thread_rusage_array, 0, sizeof(struct spdk_thread_rusage_array));
+
+	spdk_for_each_thread(thread_get_rusage, &thread_rusage_array, thread_get_rusage_done);
+
+	while (thread_rusage_array.done == false) {
+		spdk_wmb();
+		continue;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	for (i = 0; i < thread_rusage_array.thread_count; i++) {
+		thread_rusage = &thread_rusage_array.rusages[i];
+		spdk_json_write_object_begin(w);
+		spdk_json_write_name(w, "thread id");
+		spdk_json_write_string(w, thread_rusage->thread_name);
+		spdk_json_write_name(w, "ru_nvcsw");
+		spdk_json_write_int64(w, thread_rusage->rusage.ru_nvcsw);
+		spdk_json_write_name(w, "ru_nivcsw");
+		spdk_json_write_int64(w, thread_rusage->rusage.ru_nivcsw);
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_threads_rusage", spdk_rpc_get_threads_rusage)
