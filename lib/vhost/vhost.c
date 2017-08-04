@@ -61,9 +61,6 @@ struct spdk_vhost_dev_event_ctx {
 
 	/** Semaphore used to signal that event is done. */
 	sem_t sem;
-
-	/** Response to be written by enqueued event. */
-	int response;
 };
 
 static int new_connection(int vid);
@@ -544,8 +541,7 @@ spdk_vhost_event_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_dev_event_ctx *ctx = arg1;
 
-	ctx->response = ctx->cb_fn(ctx->vdev, arg2);
-	sem_post(&ctx->sem);
+	ctx->cb_fn(ctx->vdev, &ctx->sem);
 }
 
 static void
@@ -568,8 +564,8 @@ spdk_vhost_event_async_fn(void *arg1, void *arg2)
 	free(ctx);
 }
 
-int
-spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
+static int
+spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 		      unsigned timeout_sec, const char *errmsg)
 {
 	struct spdk_vhost_dev_event_ctx ev_ctx = {0};
@@ -586,12 +582,13 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, vo
 	ev_ctx.vdev = vdev;
 	ev_ctx.ctrlr_name = strdup(vdev->name);
 	ev_ctx.cb_fn = cb_fn;
-	clock_gettime(CLOCK_REALTIME, &timeout);
-	timeout.tv_sec += timeout_sec;
 
-	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_cb, &ev_ctx, arg);
+	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
 	assert(ev);
 	spdk_event_call(ev);
+
+	clock_gettime(CLOCK_REALTIME, &timeout);
+	timeout.tv_sec += timeout_sec;
 
 	rc = sem_timedwait(&ev_ctx.sem, &timeout);
 	if (rc != 0) {
@@ -602,7 +599,7 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, vo
 	sem_destroy(&ev_ctx.sem);
 	free(ev_ctx.ctrlr_name);
 
-	return ev_ctx.response;
+	return rc;
 }
 
 static int
@@ -633,6 +630,7 @@ destroy_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	struct rte_vhost_vring *q;
+	int rc;
 	uint16_t i;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
@@ -649,7 +647,8 @@ destroy_device(int vid)
 		return;
 	}
 
-	if (vdev->backend->destroy_device(vdev) != 0) {
+	rc = spdk_vhost_event_send(vdev, vdev->backend->destroy_device, 3, "destroy device");
+	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
@@ -721,7 +720,7 @@ new_device(int vid)
 	}
 
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
-	rc = vdev->backend->new_device(vdev);
+	rc = spdk_vhost_event_send(vdev, vdev->backend->new_device, 3, "new device");
 	if (rc != 0) {
 		free(vdev->mem);
 		spdk_vhost_free_reactor(vdev->lcore);
@@ -837,6 +836,7 @@ new_connection(int vid)
 		return -1;
 	}
 
+	/* since pollers are not running it safe not to use spdk_event here */
 	if (vdev->vid != -1) {
 		SPDK_ERRLOG("Device with vid %d is already connected.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -861,6 +861,7 @@ destroy_connection(int vid)
 		return;
 	}
 
+	/* since pollers are not running it safe not to use spdk_event here */
 	vdev->vid = -1;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
