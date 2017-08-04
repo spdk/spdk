@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd272e49_303e3b0c",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 589,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-04T22:28:35Z",
+      "side": 1,
+      "message": "This should be [32].\n\nAlso mention that ugavalid is always 0.",
+      "revId": "0a85a8025aee6404ee849fb5d86cb72799a2ac83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
