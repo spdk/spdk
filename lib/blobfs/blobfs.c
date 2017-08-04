@@ -467,11 +467,16 @@ file_alloc(struct spdk_filesystem *fs)
 		return NULL;
 	}
 
+	file->tree = calloc(1, sizeof(*file->tree));
+	if (file->tree == NULL) {
+		free(file);
+		return NULL;
+	}
+
 	file->fs = fs;
 	TAILQ_INIT(&file->open_requests);
 	TAILQ_INIT(&file->sync_requests);
 	pthread_spin_init(&file->lock, 0);
-	file->tree = calloc(1, sizeof(*file->tree));
 	TAILQ_INSERT_TAIL(&fs->files, file, tailq);
 	file->priority = SPDK_FILE_PRIORITY_LOW;
 	return file;
