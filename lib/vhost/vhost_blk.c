@@ -359,52 +359,6 @@ no_bdev_vdev_worker(void *arg)
 	}
 }
 
-static int
-add_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
-{
-	struct spdk_vhost_blk_dev *bvdev = arg;
-
-	spdk_vhost_dev_mem_register(&bvdev->vdev);
-
-	if (bvdev->bdev) {
-		bvdev->bdev_io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
-		if (!bvdev->bdev_io_channel) {
-			SPDK_ERRLOG("Controller %s: IO channel allocation failed\n", vdev->name);
-			abort();
-		}
-	}
-
-	spdk_poller_register(&bvdev->requestq_poller, bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
-			     bvdev, vdev->lcore, 0);
-	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
-	return 0;
-}
-
-static int
-remove_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
-{
-	struct spdk_vhost_blk_dev *bvdev = arg;
-
-	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", bvdev->vdev.name);
-
-	if (bvdev->bdev_io_channel) {
-		spdk_put_io_channel(bvdev->bdev_io_channel);
-		bvdev->bdev_io_channel = NULL;
-	}
-
-	spdk_vhost_dev_mem_unregister(&bvdev->vdev);
-	return 0;
-}
-
-static int
-unregister_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
-{
-	struct spdk_vhost_blk_dev *bvdev = arg;
-
-	spdk_poller_unregister(&bvdev->requestq_poller, NULL);
-	return 0;
-}
-
 static struct spdk_vhost_blk_dev *
 to_blk_dev(struct spdk_vhost_dev *vdev)
 {
@@ -530,58 +484,108 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
  *
  */
 static int
-new_device(struct spdk_vhost_dev *vdev)
+new_device(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev;
-	int rc = -1;
+	sem_t *sem = arg;
+	int rc = 0;
 
 	bvdev = to_blk_dev(vdev);
 	if (bvdev == NULL) {
 		SPDK_ERRLOG("Trying to start non-blk controller as a blk one.\n");
-		return -1;
+		rc = -1;
+		goto out;
 	} else if (bvdev == NULL) {
 		SPDK_ERRLOG("Trying to start non-blk controller as blk one.\n");
-		return -1;
+		rc = -1;
+		goto out;
 	}
 
 	rc = alloc_task_pool(bvdev);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to alloc task pool.\n", bvdev->vdev.name);
-		return -1;
+		goto out;
 	}
 
-	spdk_vhost_event_send(vdev, add_vdev_cb, bvdev, 1, "add blk vdev");
-	return 0;
+	spdk_vhost_dev_mem_register(&bvdev->vdev);
+
+	if (bvdev->bdev) {
+		bvdev->bdev_io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
+		if (!bvdev->bdev_io_channel) {
+			SPDK_ERRLOG("Controller %s: IO channel allocation failed\n", vdev->name);
+			rc = -1;
+			goto out;
+		}
+	}
+
+	spdk_poller_register(&bvdev->requestq_poller, bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
+			     bvdev, vdev->lcore, 0);
+	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
+out:
+	sem_post(sem);
+	return rc;
+}
+
+struct spdk_vhost_dev_destroy_ctx {
+	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_poller *poller;
+	sem_t *sem;
+};
+
+static void
+destroy_device_poller_cb(void *arg)
+{
+	struct spdk_vhost_dev_destroy_ctx *ctx = arg;
+	struct spdk_vhost_blk_dev *bvdev = ctx->bvdev;
+
+	if (bvdev->vdev.task_cnt > 0) {
+		return;
+	}
+
+	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", bvdev->vdev.name);
+
+	if (bvdev->bdev_io_channel) {
+		spdk_put_io_channel(bvdev->bdev_io_channel);
+		bvdev->bdev_io_channel = NULL;
+	}
+
+	free_task_pool(bvdev);
+	spdk_vhost_dev_mem_unregister(&bvdev->vdev);
+
+	spdk_poller_unregister(&ctx->poller, NULL);
+	sem_post(ctx->sem);
 }
 
 static int
-destroy_device(struct spdk_vhost_dev *vdev)
+destroy_device(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev;
-	uint32_t i;
+	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
+	sem_t *sem = arg;
 
 	bvdev = to_blk_dev(vdev);
 	if (bvdev == NULL) {
 		SPDK_ERRLOG("Trying to stop non-blk controller as a blk one.\n");
-		return -1;
+		goto err;
 	}
 
-	spdk_vhost_event_send(vdev, unregister_vdev_cb, bvdev, 1, "unregister vdev");
-
-	/* Wait for all tasks to finish */
-	for (i = 1000; i && vdev->task_cnt > 0; i--) {
-		usleep(1000);
+	destroy_ctx = spdk_dma_zmalloc(sizeof(*destroy_ctx), SPDK_CACHE_LINE_SIZE, NULL);
+	if (destroy_ctx == NULL) {
+		SPDK_ERRLOG("Failed to alloc memory for destroying device.\n");
+		goto err;
 	}
 
-	if (vdev->task_cnt > 0) {
-		SPDK_ERRLOG("%s: pending tasks did not finish in 1s.\n", vdev->name);
-		abort();
-	}
+	destroy_ctx->bvdev = bvdev;
+	destroy_ctx->sem = arg;
 
-	spdk_vhost_event_send(vdev, remove_vdev_cb, bvdev, 1, "remove vdev");
-
-	free_task_pool(bvdev);
+	spdk_poller_unregister(&bvdev->requestq_poller, NULL);
+	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx, vdev->lcore,
+			     1000);
 	return 0;
+
+err:
+	sem_post(sem);
+	return -1;
 }
 
 static void
