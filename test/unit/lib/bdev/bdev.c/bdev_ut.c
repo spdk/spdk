@@ -302,6 +302,39 @@ open_write_test(void)
 
 }
 
+static void
+io_valid_test(void)
+{
+	struct spdk_bdev bdev;
+
+	memset(&bdev, 0, sizeof(bdev));
+
+	bdev.blocklen = 512;
+	bdev.blockcnt = 100;
+
+	/* All parameters valid */
+	CU_ASSERT(spdk_bdev_io_valid(&bdev, 512, 1024) == true);
+
+	/* Offset not a block multiple */
+	/* TODO: add a check for this in spdk_bdev_io_valid() */
+	/* CU_ASSERT(spdk_bdev_io_valid(&bdev, 3, 512) == false); */
+
+	/* Length not a block multiple */
+	CU_ASSERT(spdk_bdev_io_valid(&bdev, 512, 3) == false);
+
+	/* Last valid block */
+	CU_ASSERT(spdk_bdev_io_valid(&bdev, 50688, 512) == true);
+
+	/* Offset past end of bdev */
+	CU_ASSERT(spdk_bdev_io_valid(&bdev, 51200, 512) == false);
+
+	/* Offset + length past end of bdev */
+	CU_ASSERT(spdk_bdev_io_valid(&bdev, 50688, 1024) == false);
+
+	/* Offset near end of uint64_t range (2^64 - 512) */
+	CU_ASSERT(spdk_bdev_io_valid(&bdev, 18446744073709551104ULL, 512) == false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -319,6 +352,7 @@ main(int argc, char **argv)
 	}
 
 	if (
+		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
 		CU_add_test(suite, "open_write", open_write_test) == NULL
 	) {
 		CU_cleanup_registry();
