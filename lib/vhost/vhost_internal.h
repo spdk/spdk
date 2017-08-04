@@ -70,8 +70,8 @@ enum spdk_vhost_dev_type {
 struct spdk_vhost_dev_backend {
 	uint64_t virtio_features;
 	uint64_t disabled_features;
-	int (*new_device)(struct spdk_vhost_dev *);
-	int (*destroy_device)(struct spdk_vhost_dev *);
+	spdk_vhost_event_fn new_device;
+	spdk_vhost_event_fn destroy_device;
 	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 };
 
@@ -118,9 +118,6 @@ int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
 			     enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
 int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
-
-int spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
-			  unsigned timeout_sec, const char *errmsg);
 
 int spdk_vhost_blk_controller_construct(void);
 void spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
