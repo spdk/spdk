@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "4e9eb79e_de727a60",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-05T00:03:11Z",
+      "side": 1,
+      "message": "I completely misread this.  This behavior is fine.",
+      "parentUuid": "c2545009_d741e6a6",
+      "revId": "013a478fb9dfdd2489d5ea00730b3de72737adf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51225858_168909cb",
         "filename": "lib/scsi/scsi_bdev.c",
         "patchSetId": 20
