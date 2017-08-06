@@ -1359,6 +1359,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / sizeof(struct spdk_blob_md_page);
 	ctx->bs->md_start = ctx->super->md_start;
 	ctx->bs->md_len = ctx->super->md_len;
+	ctx->bs->super_blob = ctx->super->super_blob;
 
 	/* Read the used pages mask */
 	mask_size = ctx->super->used_page_mask_len * sizeof(struct spdk_blob_md_page);
