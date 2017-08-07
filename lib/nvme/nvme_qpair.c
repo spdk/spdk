@@ -436,7 +436,10 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 		 */
 		TAILQ_FOREACH_SAFE(child_req, &req->children, child_tailq, tmp) {
 			if (!child_req_failed) {
-				rc = nvme_qpair_submit_request(qpair, child_req);
+				if (!child_req->submitted_to_qp) {
+					rc = nvme_qpair_submit_request(qpair, child_req);
+					child_req->submitted_to_qp = true;
+				}
 				if (rc != 0)
 					child_req_failed = true;
 			} else { /* free remaining child_reqs since one child_req fails */
