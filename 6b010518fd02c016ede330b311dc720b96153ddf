@@ -33,6 +33,23 @@
       "revId": "6b010518fd02c016ede330b311dc720b96153ddf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9f5d904_70c0d7c4",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-08-07T16:19:51Z",
+      "side": 1,
+      "message": "I opted to leave that branch out until we support arbitrarily large write_zeroes requests. The actual write_zeroes function will fail to trim devices according to the blobstore spec until we do that. Maybe I should work out that issue first then re-base this change on top of that one with support for the actual write_zeroes function?",
+      "revId": "6b010518fd02c016ede330b311dc720b96153ddf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
