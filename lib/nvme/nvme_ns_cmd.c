@@ -39,6 +39,8 @@ static struct nvme_request *_nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk
 		void *cb_arg, uint32_t opc, uint32_t io_flags,
 		uint16_t apptag_mask, uint16_t apptag, bool check_sgl);
 
+void spdk_nvme_ns_cmd_delayed_split(struct nvme_request *request);
+
 static void
 nvme_cb_complete_child(void *child_arg, const struct spdk_nvme_cpl *cpl)
 {
@@ -49,6 +51,10 @@ nvme_cb_complete_child(void *child_arg, const struct spdk_nvme_cpl *cpl)
 
 	if (spdk_nvme_cpl_is_error(cpl)) {
 		memcpy(&parent->parent_status, cpl, sizeof(*cpl));
+	}
+
+	if (child->perform_delayed_split) {
+		spdk_nvme_ns_cmd_delayed_split(child);
 	}
 
 	if (parent->num_children == 0) {
@@ -156,7 +162,7 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 		sector_size -= 8;
 	}
 
-	while (remaining_lba_count > 0) {
+	while (remaining_lba_count > 0 && req->num_children < 5) {
 		lba_count = sectors_per_max_io - (lba & sector_mask);
 		lba_count = spdk_min(remaining_lba_count, lba_count);
 
@@ -166,11 +172,15 @@ _nvme_ns_cmd_split_request(struct spdk_nvme_ns *ns,
 		if (child == NULL) {
 			return NULL;
 		}
+		child->perform_delayed_split = true;
 
 		remaining_lba_count -= lba_count;
 		lba += lba_count;
 		payload_offset += lba_count * sector_size;
 		md_offset += lba_count * md_size;
+		req->current_lba = lba;
+		req->payload_offset = payload_offset;
+		req->md_offset = md_offset;
 	}
 
 	return req;
@@ -311,6 +321,9 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 			if (child == NULL) {
 				return NULL;
 			}
+			if (req->perform_delayed_split) {
+				child->perform_delayed_split = true;
+			}
 			payload_offset += child_length;
 			md_offset += child_lba_count * ns->md_size;
 			child_lba += child_lba_count;
@@ -393,6 +406,9 @@ _nvme_ns_cmd_split_request_sgl(struct spdk_nvme_ns *ns,
 			if (child == NULL) {
 				return NULL;
 			}
+			if (req->perform_delayed_split) {
+				child->perform_delayed_split = true;
+			}
 			payload_offset += child_length;
 			md_offset += child_lba_count * ns->md_size;
 			child_lba += child_lba_count;
@@ -452,22 +468,25 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	 */
 	if (sectors_per_stripe > 0 &&
 	    (((lba & (sectors_per_stripe - 1)) + lba_count) > sectors_per_stripe)) {
-
+		req->split_type = SPDK_NVME_SPLIT_STRIPE;
 		return _nvme_ns_cmd_split_request(ns, qpair, payload, payload_offset, md_offset, lba, lba_count,
 						  cb_fn,
 						  cb_arg, opc,
 						  io_flags, req, sectors_per_stripe, sectors_per_stripe - 1, apptag_mask, apptag);
 	} else if (lba_count > sectors_per_max_io) {
+		req->split_type = SPDK_NVME_SPLIT_SIZE;
 		return _nvme_ns_cmd_split_request(ns, qpair, payload, payload_offset, md_offset, lba, lba_count,
 						  cb_fn,
 						  cb_arg, opc,
 						  io_flags, req, sectors_per_max_io, 0, apptag_mask, apptag);
 	} else if (req->payload.type == NVME_PAYLOAD_TYPE_SGL && check_sgl) {
+		req->split_type = SPDK_NVME_SPLIT_SGL;
 		if (ns->ctrlr->flags & SPDK_NVME_CTRLR_SGL_SUPPORTED) {
 			return _nvme_ns_cmd_split_request_sgl(ns, qpair, payload, payload_offset, md_offset,
 							      lba, lba_count, cb_fn, cb_arg, opc, io_flags,
 							      req, apptag_mask, apptag);
 		} else {
+			req->split_type = SPDK_NVME_SPLIT_PRP;
 			return _nvme_ns_cmd_split_request_prp(ns, qpair, payload, payload_offset, md_offset,
 							      lba, lba_count, cb_fn, cb_arg, opc, io_flags,
 							      req, apptag_mask, apptag);
@@ -476,6 +495,76 @@ _nvme_ns_cmd_rw(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 
 	_nvme_ns_cmd_setup_request(ns, req, opc, lba, lba_count, io_flags, apptag_mask, apptag);
 	return req;
+}
+
+void
+spdk_nvme_ns_cmd_delayed_split(struct nvme_request *request)
+{
+	/*
+	 * Only use the original parent to split from.
+	 * No intermediate ancestors will be split on a delay.
+	 */
+	struct nvme_request *parent;
+	struct spdk_nvme_cmd *cmd;
+	struct spdk_nvme_ns *ns;
+	uint64_t lba;
+	uint32_t lba_count;
+	uint64_t current_lba_count;
+	uint32_t opc;
+	uint32_t io_flags;
+	uint32_t nsid;
+	uint32_t sectors_per_max_io;
+	uint32_t sector_mask;
+	uint16_t apptag_mask;
+	uint16_t apptag;
+
+	assert(request->parent != NULL);
+	parent = request->parent;
+
+	while (parent->parent != NULL) {
+		parent = parent->parent;
+	}
+
+	cmd = &(parent->cmd);
+	nsid = cmd->nsid;
+	opc = cmd->opc;
+	ns = &parent->qpair->ctrlr->ns[nsid];
+
+	io_flags = cmd->cdw12 >> 16;
+	lba_count = (cmd->cdw12 | ~io_flags);
+
+	lba = *(uint64_t *)&cmd->cdw10;
+
+	current_lba_count = lba_count - (parent->current_lba - lba);
+
+
+	/* This means that we have already traversed the whole request and don't need to split */
+	if (current_lba_count <= 0) {
+		return;
+	}
+
+	apptag_mask = (uint16_t)cmd->cdw15 >> 16;
+	apptag = (cmd->cdw15 | ~apptag_mask);
+
+	switch (parent->split_type) {
+	case SPDK_NVME_SPLIT_STRIPE:
+		sectors_per_max_io = ns->sectors_per_stripe;
+		sector_mask = sectors_per_max_io - 1;
+		break;
+	case SPDK_NVME_SPLIT_SIZE:
+		sectors_per_max_io = ns->sectors_per_max_io;
+		sector_mask = 0;
+		break;
+	default:
+		return;
+	}
+
+	_nvme_ns_cmd_split_request(ns, parent->qpair, &(parent->payload), parent->payload_offset,
+				   parent->md_offset,
+				   parent->current_lba, current_lba_count, parent->cb_fn, parent->cb_arg, opc, io_flags, parent,
+				   sectors_per_max_io, sector_mask,
+				   apptag_mask, apptag);
+
 }
 
 int
