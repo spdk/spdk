@@ -16,6 +16,47 @@
       "revId": "6316e1585063cffc9ca2388bee12088e22089996",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4127a2f_7000cc2c",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-07T07:37:46Z",
+      "side": 1,
+      "message": "\u0027-h\u0027 option at the end make vhost to exit just after parsing it so failure is not expected here.",
+      "parentUuid": "8b84915b_dacdeb02",
+      "revId": "6316e1585063cffc9ca2388bee12088e22089996",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f5ebf61_5763310d",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-07T07:37:46Z",
+      "side": 1,
+      "message": "This line is ok but in next line you should check content of thi pid file. Something like \ntest $(cat $SPDK_VHOST_SCSI_TEST_DIR/vhost.pid) \u003d\u003d $!",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 92
+      },
+      "revId": "6316e1585063cffc9ca2388bee12088e22089996",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
