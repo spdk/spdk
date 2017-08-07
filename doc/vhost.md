@@ -178,14 +178,9 @@ assigned to the VM.
 
 # Known bugs and limitations {#vhost_bugs}
 
-## Hot plug is not supported
+## Windows virtio-blk driver before version 0.1.130-1 only works with 512-byte sectors
 
-Hot plug is not supported in vhost yet. Event queue path doesn't handle that
-case yet.
-
-## Windows virtio-blk driver only works with 512-byte sectors
-
-The Windows `viostor` driver is buggy and does not correctly support vhost-blk
-devices with non-512-byte block size.
+The Windows `viostor` driver before version 0.1.130-1 is buggy and does not
+correctly support vhost-blk devices with non-512-byte block size.
 See the [bug report](https://bugzilla.redhat.com/show_bug.cgi?id=1411092) for
 more information.
