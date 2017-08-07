@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bce0fb4b_4348f246",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-07T20:37:23Z",
+      "side": 1,
+      "message": "Please use consistent indentation style here (the other variables in this function use tabs between the type and the variable name).",
+      "revId": "de9f058cee5cca5c6b2a006f355b30ab35a5ddf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9f24b80_b71fa603",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-07T20:37:23Z",
+      "side": 1,
+      "message": "I think \"max_sectors_per_io\" would make more sense.",
+      "range": {
+        "startLine": 631,
+        "startChar": 1,
+        "endLine": 631,
+        "endChar": 19
+      },
+      "revId": "de9f058cee5cca5c6b2a006f355b30ab35a5ddf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04651df9_506dc17f",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-07T20:37:23Z",
+      "side": 1,
+      "message": "The code from here on down duplicates the cmd setup code below; I think it would be best if you factored out this part into a small helper function so that we don\u0027t have two places that build the Write Zeroes command.",
+      "revId": "de9f058cee5cca5c6b2a006f355b30ab35a5ddf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58c053f2_42321644",
+        "filename": "test/unit/lib/nvme/nvme_ns_cmd.c/nvme_ns_cmd_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-07T20:37:23Z",
+      "side": 1,
+      "message": "Each of these child \u003d TAILQ_FIRST() assignments should probably have a SPDK_CU_ASSERT_FATAL(child !\u003d NULL) after it to ensure we got a request.",
+      "revId": "de9f058cee5cca5c6b2a006f355b30ab35a5ddf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
