@@ -1535,8 +1535,6 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 		if (!file->open_for_writing &&
 		    file->priority == SPDK_FILE_PRIORITY_LOW &&
 		    file != context) {
-			TAILQ_REMOVE(&g_caches, file, cache_tailq);
-			TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
 			break;
 		}
 	}
@@ -1552,8 +1550,6 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
 		if (!file->open_for_writing && file != context) {
-			TAILQ_REMOVE(&g_caches, file, cache_tailq);
-			TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
 			break;
 		}
 	}
@@ -1569,8 +1565,6 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
 		if (file != context) {
-			TAILQ_REMOVE(&g_caches, file, cache_tailq);
-			TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
 			break;
 		}
 	}
@@ -2333,8 +2327,11 @@ cache_free_buffers(struct spdk_file *file)
 		return;
 	}
 	spdk_tree_free_buffers(file->tree);
-	if (file->tree->present_mask == 0) {
-		TAILQ_REMOVE(&g_caches, file, cache_tailq);
+
+	TAILQ_REMOVE(&g_caches, file, cache_tailq);
+	/* If not freed, put it in the end of the queue */
+	if (file->tree->present_mask != 0) {
+		TAILQ_INSERT_TAIL(&g_caches, file, cache_tailq);
 	}
 	file->last = NULL;
 	pthread_spin_unlock(&g_caches_lock);
