@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "84999161_febc32e4",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-07T12:32:03Z",
+      "side": 1,
+      "message": "I raised the same question couple versions ago but didn\u0027t get answer :)",
+      "parentUuid": "7adbc475_6af6ca72",
+      "range": {
+        "startLine": 40,
+        "startChar": 1,
+        "endLine": 40,
+        "endChar": 8
+      },
+      "revId": "b59b6eaa9615ae02ec823c7dca0ca3ecf3bc9f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ccbe48c0_da11773f",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 31
