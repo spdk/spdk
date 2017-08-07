@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41d94062_3ec09705",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-07T13:25:30Z",
+      "side": 1,
+      "message": "name should be const char",
+      "range": {
+        "startLine": 63,
+        "startChar": 41,
+        "endLine": 63,
+        "endChar": 51
+      },
+      "revId": "114ca0240475bb6d442b4061a381e83faa9a9dd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae21ae22_b1a01b3b",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-07T13:25:30Z",
+      "side": 1,
+      "message": "This if is not needed as name is mandatory parameter and this will be checked during argument parsing.",
+      "range": {
+        "startLine": 349,
+        "startChar": 0,
+        "endLine": 352,
+        "endChar": 2
+      },
+      "revId": "114ca0240475bb6d442b4061a381e83faa9a9dd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0be0ab6_a5d393a3",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-07T13:25:30Z",
+      "side": 1,
+      "message": "You can use (size_t)req.size directly\nvbdev_lvol_resize(req.name, (size_t)req.size, ...",
+      "range": {
+        "startLine": 354,
+        "startChar": 1,
+        "endLine": 356,
+        "endChar": 78
+      },
+      "revId": "114ca0240475bb6d442b4061a381e83faa9a9dd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8399985a_225aeb1e",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-07T13:25:30Z",
+      "side": 1,
+      "message": "Why casting to signed integer and not something like\nsz * cluster_size \u003e lvol-\u003esz\n\nAnd please cache: new_sz \u003d sz * cluster_size\u0027",
+      "range": {
+        "startLine": 294,
+        "startChar": 5,
+        "endLine": 294,
+        "endChar": 59
+      },
+      "revId": "114ca0240475bb6d442b4061a381e83faa9a9dd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b6a9a0f_3e9a5b5d",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-07T13:25:30Z",
+      "side": 1,
+      "message": "Can you explain this part? I can\u0027t figure out what this condition say.",
+      "range": {
+        "startLine": 295,
+        "startChar": 5,
+        "endLine": 295,
+        "endChar": 66
+      },
+      "revId": "114ca0240475bb6d442b4061a381e83faa9a9dd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b1d95a2_88ea33f7",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-07T13:25:30Z",
+      "side": 1,
+      "message": "Please write unit for \u0027size\u0027 param.",
+      "range": {
+        "startLine": 275,
+        "startChar": 29,
+        "endLine": 275,
+        "endChar": 51
+      },
+      "revId": "114ca0240475bb6d442b4061a381e83faa9a9dd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
