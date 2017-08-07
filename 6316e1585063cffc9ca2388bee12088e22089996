@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "0e2d9a3a_1bd01876",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-08-07T14:54:22Z",
+      "side": 1,
+      "message": "As Pawel Wodkowski wrote, vhost will exit with no error after parsing \"-h\" option, so \"|| true\" is not needed here",
+      "parentUuid": "8b84915b_dacdeb02",
+      "revId": "6316e1585063cffc9ca2388bee12088e22089996",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f5ebf61_5763310d",
         "filename": "test/vhost/fiotest/run_vhost.sh",
         "patchSetId": 14
