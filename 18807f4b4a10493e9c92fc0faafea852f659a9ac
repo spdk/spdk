@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30886dc3_fd95b429",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-07T07:56:04Z",
+      "side": 1,
+      "message": "No mutex unlock here.",
+      "range": {
+        "startLine": 524,
+        "startChar": 2,
+        "endLine": 525,
+        "endChar": 9
+      },
+      "revId": "18807f4b4a10493e9c92fc0faafea852f659a9ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
