@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e71f4e4_4995005a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 948,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-07T22:00:37Z",
+      "side": 1,
+      "message": "I changed the meaning of the spdk_bdev_io_valid() return code in a patch that got merged since you updated this; it will need to be changed to:\n\n    if (!spdk_bdev_io_valid(bdev, offset_len)) {",
+      "revId": "685297f0eaf7bc41b6ff146caca9a58e9734afcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
