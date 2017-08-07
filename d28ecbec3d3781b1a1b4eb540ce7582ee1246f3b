@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f92053d_96aae991",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-07T08:41:59Z",
+      "side": 1,
+      "message": "unnecessary newline",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 148,
+        "endChar": 4
+      },
+      "revId": "d28ecbec3d3781b1a1b4eb540ce7582ee1246f3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
