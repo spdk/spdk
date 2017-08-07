@@ -920,6 +920,15 @@ enum spdk_nvme_dealloc_logical_block_read_value spdk_nvme_ns_get_dealloc_logical
 	struct spdk_nvme_ns *ns);
 
 /**
+ * \brief Get the optimal I/O boundary, in blocks, for the given namespace.
+ *
+ * \return Optimal granularity of I/O commands, in blocks, or 0 if no optimal granularity is reported.
+ *
+ * Read and write commands should not cross the optimal I/O boundary for best performance.
+ */
+uint32_t spdk_nvme_ns_get_optimal_io_boundary(struct spdk_nvme_ns *ns);
+
+/**
  * \brief Namespace command support flags.
  */
 enum spdk_nvme_ns_flags {

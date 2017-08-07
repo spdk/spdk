@@ -211,9 +211,8 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 		ns->extended_lba_size += md_size;
 	}
 	ns->md_size = md_size;
-	ns->stripe_size = stripe_size;
 	ns->sectors_per_max_io = spdk_nvme_ns_get_max_io_xfer_size(ns) / ns->extended_lba_size;
-	ns->sectors_per_stripe = ns->stripe_size / ns->extended_lba_size;
+	ns->sectors_per_stripe = stripe_size / ns->extended_lba_size;
 
 	memset(qpair, 0, sizeof(*qpair));
 	qpair->req_buf = calloc(num_requests, sizeof(struct nvme_request));
