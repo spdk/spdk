@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce6992ae_e63b669a",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1273,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-07T15:46:45Z",
+      "side": 1,
+      "message": "What if the controller does not support returning 00 on DEALLOCATE, but does support the write zeroes command?",
+      "revId": "59fddb6f00b49da5e0ad5b70a501899e94568826",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
