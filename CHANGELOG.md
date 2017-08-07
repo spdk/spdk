@@ -14,6 +14,12 @@ unmap descriptors. This limits unmaps to a single contiguous range.
 
 The AIO bdev now allows the user to override the auto-detected block size.
 
+### NVMe driver
+
+The NVMe driver now recognizes the NVMe 1.3 Namespace Optimal I/O Boundary field.
+NVMe 1.3 devices may report an optimal I/O boundary, which the driver will take
+into account when splitting I/O requests.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
