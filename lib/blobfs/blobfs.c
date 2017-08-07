@@ -1646,7 +1646,7 @@ cache_append_buffer(struct spdk_file *file)
 	}
 
 	if (file->last != NULL) {
-		file->last->next = last;
+		last->next = file->last;
 	}
 	file->last = last;
 
