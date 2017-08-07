@@ -36,7 +36,6 @@
 
 struct cache_buffer {
 	uint8_t			*buf;
-	struct cache_buffer	*next;
 	uint64_t		offset;
 	uint32_t		buf_size;
 	uint32_t		bytes_filled;
