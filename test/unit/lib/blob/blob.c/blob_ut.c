@@ -48,10 +48,41 @@ int g_bserrno;
 struct spdk_xattr_names *g_names;
 int g_done;
 
+bool g_scheduler_delay = false;
+
+struct scheduled_ops {
+	spdk_thread_fn	fn;
+	void		*ctx;
+
+	TAILQ_ENTRY(scheduled_ops)	ops_queue;
+};
+
+static TAILQ_HEAD(, scheduled_ops) g_scheduled_ops = TAILQ_HEAD_INITIALIZER(g_scheduled_ops);
+
 static void
 _bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
-	fn(ctx);
+	if (g_scheduler_delay) {
+		struct scheduled_ops *ops = calloc(1, sizeof(*ops));
+
+		ops->fn = fn;
+		ops->ctx = ctx;
+		TAILQ_INSERT_TAIL(&g_scheduled_ops, ops, ops_queue);
+	} else {
+		fn(ctx);
+	}
+}
+
+static void
+_bs_flush_scheduler(void)
+{
+	struct scheduled_ops *ops, *tmp;
+
+	TAILQ_FOREACH_SAFE(ops, &g_scheduled_ops, ops_queue, tmp) {
+		ops->fn(ops->ctx);
+		TAILQ_REMOVE(&g_scheduled_ops, ops, ops_queue);
+		free(ops);
+	}
 }
 
 static void
@@ -720,6 +751,33 @@ bs_load(void)
 }
 
 /*
+ * Create a blobstore and then unload it, while delaying all scheduled operations
+ * untill after spdk_bs_unload call has finished.
+ */
+static void
+bs_unload_delayed(void)
+{
+	struct spdk_bs_dev *dev;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	g_scheduler_delay = true;
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	_bs_flush_scheduler();
+	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
+
+	g_scheduler_delay = false;
+}
+
+/*
  * Create a blobstore with a cluster size different than the default, and ensure it is
  *  persisted.
  */
@@ -964,6 +1022,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_iter", blob_iter) == NULL ||
 		CU_add_test(suite, "blob_xattr", blob_xattr) == NULL ||
 		CU_add_test(suite, "bs_load", bs_load) == NULL ||
+		CU_add_test(suite, "bs_unload_delayed", bs_unload_delayed) == NULL ||
 		CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz) == NULL ||
 		CU_add_test(suite, "bs_resize_md", bs_resize_md) == NULL ||
 		CU_add_test(suite, "blob_serialize", blob_serialize) == NULL
