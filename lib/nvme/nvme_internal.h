@@ -116,6 +116,17 @@ enum nvme_payload_type {
 };
 
 /*
+ * Stateful information for split requests.
+ */
+enum spdk_split_io_type {
+	SPDK_NVME_NO_SPLIT = 0,
+	SPDK_NVME_SPLIT_STRIPE = 1,
+	SPDK_NVME_SPLIT_SIZE = 2,
+	SPDK_NVME_SPLIT_SGL = 3,
+	SPDK_NVME_SPLIT_PRP = 4,
+};
+
+/*
  * Controller support flags.
  */
 enum spdk_nvme_ctrlr_flags {
@@ -164,7 +175,9 @@ struct nvme_request {
 	 *  request which was split into multiple child requests.
 	 */
 	uint8_t				num_children;
-	uint32_t			payload_size;
+	bool				perform_delayed_split;
+	enum				spdk_split_io_type split_type;
+	uint32_t 			payload_size;
 
 	/**
 	 * Offset in bytes from the beginning of payload for this request.
@@ -188,6 +201,7 @@ struct nvme_request {
 	 */
 	pid_t				pid;
 	struct spdk_nvme_cpl		cpl;
+	uint64_t			current_lba;
 
 	/**
 	 * The following members should not be reordered with members
