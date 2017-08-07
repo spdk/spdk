@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa788a5b_4befeed2",
+        "filename": "lib/lvol/bdev/lvs_bdev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-07T11:04:44Z",
+      "side": 1,
+      "message": "why not strdup? also, why not something as following:\nbdev-\u003elvs_guid \u003d calloc(UUID_STRING_LEN, 1);\nuuid_unparse(lvs-\u003euuid, bdev-\u003elvs_guid);",
+      "range": {
+        "startLine": 75,
+        "startChar": 18,
+        "endLine": 75,
+        "endChar": 48
+      },
+      "revId": "29f55756628f09b3772cf88f0f2b094a82ecd5c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
