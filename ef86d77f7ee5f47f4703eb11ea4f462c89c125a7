@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c5031a0_4a92af2a",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-07T08:44:57Z",
+      "side": 1,
+      "message": "uses",
+      "range": {
+        "startLine": 4,
+        "startChar": 20,
+        "endLine": 4,
+        "endChar": 21
+      },
+      "revId": "ef86d77f7ee5f47f4703eb11ea4f462c89c125a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8b84acd_979590ef",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-07T08:44:57Z",
+      "side": 1,
+      "message": "Capital letter to be consistent",
+      "revId": "ef86d77f7ee5f47f4703eb11ea4f462c89c125a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07c45cf8_7da1f3a5",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-07T08:44:57Z",
+      "side": 1,
+      "message": "White. Spaces. Everywhere. :P",
+      "range": {
+        "startLine": 14,
+        "startChar": 25,
+        "endLine": 14,
+        "endChar": 27
+      },
+      "revId": "ef86d77f7ee5f47f4703eb11ea4f462c89c125a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c603cea_1c100cf6",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-07T08:44:57Z",
+      "side": 1,
+      "message": "How do we check for success / fail?\nI know we didn\u0027t mention that in our temporary document, but we should be more specific and add more detail to this test plan. Applies to all other similar points.",
+      "range": {
+        "startLine": 16,
+        "startChar": 39,
+        "endLine": 16,
+        "endChar": 41
+      },
+      "revId": "ef86d77f7ee5f47f4703eb11ea4f462c89c125a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
