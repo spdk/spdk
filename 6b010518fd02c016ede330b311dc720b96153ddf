@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12b8ad4f_8442e60d",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-07T15:45:01Z",
+      "side": 1,
+      "message": "It seems to me that we should either:\n\n1) move the contents of this patch into the previous patch, or\n2) move the NVMe specific parts of the previous patch into this patch",
+      "revId": "6b010518fd02c016ede330b311dc720b96153ddf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "359bbb38_486ef2da",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-07T15:45:01Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this also return TRUE if the controller supports the write_zeroes command itself?",
+      "revId": "6b010518fd02c016ede330b311dc720b96153ddf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
