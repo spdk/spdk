@@ -281,7 +281,6 @@ struct spdk_nvme_qpair {
 
 struct spdk_nvme_ns {
 	struct spdk_nvme_ctrlr		*ctrlr;
-	uint32_t			stripe_size;
 	uint32_t			sector_size;
 
 	/*
