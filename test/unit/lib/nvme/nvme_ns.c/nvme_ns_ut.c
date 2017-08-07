@@ -39,6 +39,8 @@
 
 #include "lib/test_env.c"
 
+SPDK_LOG_REGISTER_TRACE_FLAG("nvme", SPDK_TRACE_NVME)
+
 int
 nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid, void *payload,
 				  spdk_nvme_cmd_cb cb_fn, void *cb_arg)
@@ -66,7 +68,6 @@ test_nvme_ns_construct(void)
 
 	nvme_ns_construct(&ns, id, &ctrlr);
 	CU_ASSERT(ns.id == 1);
-	CU_ASSERT(ns.stripe_size == 0);
 }
 
 int main(int argc, char **argv)

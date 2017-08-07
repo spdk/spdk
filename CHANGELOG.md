@@ -10,6 +10,12 @@ spdk_bdev_unmap() was modified to take an offset and a length in bytes as
 arguments instead of requiring the user to provide an array of SCSI
 unmap descriptors. This limits unmaps to a single contiguous range.
 
+### NVMe driver
+
+The NVMe driver now recognizes the NVMe 1.3 Namespace Optimal I/O Boundary field.
+NVMe 1.3 devices may report an optimal I/O boundary, which the driver will take
+into account when splitting I/O requests.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
