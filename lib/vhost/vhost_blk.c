@@ -48,6 +48,8 @@
 struct spdk_vhost_blk_task {
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_vhost_blk_dev *bvdev;
+	struct rte_vhost_vring *vq;
+
 	volatile uint8_t *status;
 
 	uint16_t req_idx;
@@ -104,9 +106,11 @@ spdk_vhost_blk_put_tasks(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_blk
 static void
 invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
 {
-	*task->status = status;
-	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, &task->bvdev->vdev.virtqueue[0], task->req_idx,
-					0);
+	if (task->status) {
+		*task->status = status;
+	}
+
+	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, task->vq, task->req_idx, 0);
 	spdk_vhost_blk_put_tasks(task->bvdev, &task, 1);
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK_DATA, "Invalid request (status=%" PRIu8")\n", status);
 }
@@ -172,7 +176,7 @@ static void
 blk_request_finish(bool success, struct spdk_vhost_blk_task *task)
 {
 	*task->status = success ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR;
-	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, &task->bvdev->vdev.virtqueue[0], task->req_idx,
+	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, task->vq, task->req_idx,
 					task->length);
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Finished task (%p) req_idx=%d\n status: %s\n", task,
 		      task->req_idx, success ? "OK" : "FAIL");
@@ -190,9 +194,9 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 
 static int
 process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev *bvdev,
+		    struct rte_vhost_vring *vq,
 		    uint16_t req_idx)
 {
-	struct rte_vhost_vring *vq = &bvdev->vdev.virtqueue[0];
 	const struct virtio_blk_outhdr *req;
 	struct iovec *iov;
 	uint32_t type;
@@ -200,7 +204,9 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 
 	assert(task->bvdev == bvdev);
 	task->req_idx = req_idx;
+	task->vq = vq;
 	task->iovcnt = SPDK_COUNTOF(task->iovs);
+	task->status = NULL;
 
 	if (blk_iovs_setup(&bvdev->vdev, vq, req_idx, task->iovs, &task->iovcnt, &task->length)) {
 		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Invalid request (req_idx = %"PRIu16").\n", req_idx);
@@ -286,10 +292,8 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 }
 
 static void
-vdev_worker(void *arg)
+process_vq(struct spdk_vhost_blk_dev *bvdev, struct rte_vhost_vring *vq)
 {
-	struct spdk_vhost_blk_dev *bvdev = arg;
-	struct rte_vhost_vring *vq = &bvdev->vdev.virtqueue[0];
 	struct spdk_vhost_blk_task *tasks[32] = {0};
 	int rc;
 	uint16_t reqs[32];
@@ -304,7 +308,7 @@ vdev_worker(void *arg)
 	for (i = 0; i < reqs_cnt; i++) {
 		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "====== Starting processing request idx %"PRIu16"======\n",
 			      reqs[i]);
-		rc = process_blk_request(tasks[i], bvdev, reqs[i]);
+		rc = process_blk_request(tasks[i], bvdev, vq, reqs[i]);
 		if (rc == 0) {
 			SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", tasks[i],
 				      reqs[i]);
@@ -315,10 +319,19 @@ vdev_worker(void *arg)
 }
 
 static void
-no_bdev_vdev_worker(void *arg)
+vdev_worker(void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = arg;
-	struct rte_vhost_vring *vq = &bvdev->vdev.virtqueue[0];
+	uint16_t q_idx;
+
+	for (q_idx = 0; q_idx < bvdev->vdev.num_queues; q_idx++) {
+		process_vq(bvdev, &bvdev->vdev.virtqueue[q_idx]);
+	}
+}
+
+static void
+no_bdev_process_vq(struct spdk_vhost_blk_dev *bvdev, struct rte_vhost_vring *vq)
+{
 	struct iovec iovs[SPDK_VHOST_IOVS_MAX];
 	uint32_t length;
 	uint16_t iovcnt, req_idx;
@@ -337,13 +350,21 @@ no_bdev_vdev_worker(void *arg)
 }
 
 static void
+no_bdev_vdev_worker(void *arg)
+{
+	struct spdk_vhost_blk_dev *bvdev = arg;
+	uint16_t q_idx;
+
+	for (q_idx = 0; q_idx < bvdev->vdev.num_queues; q_idx++) {
+		no_bdev_process_vq(bvdev, &bvdev->vdev.virtqueue[q_idx]);
+	}
+}
+
+static void
 add_vdev_cb(void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = arg;
 	struct spdk_vhost_dev *vdev = &bvdev->vdev;
-	struct spdk_vhost_blk_task *task;
-	size_t rc;
-	uint32_t i;
 
 	spdk_vhost_dev_mem_register(&bvdev->vdev);
 
@@ -352,24 +373,6 @@ add_vdev_cb(void *arg)
 		if (!bvdev->bdev_io_channel) {
 			SPDK_ERRLOG("Controller %s: IO channel allocation failed\n", vdev->name);
 			abort();
-		}
-	}
-
-	bvdev->tasks_pool = spdk_ring_create(SPDK_RING_TYPE_SP_SC, vdev->virtqueue[0].size * 2,
-					     spdk_env_get_socket_id(vdev->lcore));
-
-	for (i = 0; i < vdev->virtqueue[0].size; i++) {
-		task = spdk_dma_zmalloc(sizeof(*task), SPDK_CACHE_LINE_SIZE, NULL);
-		if (task == NULL) {
-			// TODO: add a mechanism to report failure so we can handle this properly
-			SPDK_ERRLOG("task allocation failed\n");
-			abort();
-		}
-		task->bvdev = bvdev;
-
-		rc = spdk_ring_enqueue(bvdev->tasks_pool, (void **)&task, 1);
-		if (rc != 1) {
-			assert(false);
 		}
 	}
 
@@ -382,23 +385,13 @@ static void
 remove_vdev_cb(void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = arg;
-	struct spdk_vhost_blk_task *task;
 
 	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", bvdev->vdev.name);
-
-	assert(rte_ring_count((struct rte_ring *)bvdev->tasks_pool) == bvdev->vdev.virtqueue[0].size);
 
 	if (bvdev->bdev_io_channel) {
 		spdk_put_io_channel(bvdev->bdev_io_channel);
 		bvdev->bdev_io_channel = NULL;
 	}
-
-	while (spdk_ring_dequeue(bvdev->tasks_pool, (void **)&task, 1) == 1) {
-		spdk_dma_free(task);
-	}
-
-	spdk_ring_free(bvdev->tasks_pool);
-	bvdev->tasks_pool = NULL;
 
 	spdk_vhost_dev_mem_unregister(&bvdev->vdev);
 }
@@ -458,6 +451,76 @@ bdev_remove_cb(void *remove_ctx)
 	bvdev->bdev = NULL;
 }
 
+
+static void
+free_task_pool(struct spdk_vhost_blk_dev *bvdev)
+{
+	struct spdk_vhost_task *task;
+
+	if (!bvdev->tasks_pool) {
+		return;
+	}
+
+	while (spdk_ring_dequeue(bvdev->tasks_pool, (void **)&task, 1) == 1) {
+		spdk_dma_free(task);
+	}
+
+	spdk_ring_free(bvdev->tasks_pool);
+	bvdev->tasks_pool = NULL;
+}
+
+static int
+alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
+{
+	struct spdk_vhost_blk_task *task;
+	uint32_t task_cnt = 0;
+	uint32_t ring_size, socket_id;
+	uint16_t i;
+	int rc;
+
+	for (i = 0; i < bvdev->vdev.num_queues; i++) {
+		/*
+		 * FIXME:
+		 * this is too big because we need only size/2 from each queue but for now
+		 * lets leave it as is to be sure we are not mistaken.
+		 *
+		 * Limit the pool size to 1024 * num_queues. This should be enough as QEMU have the
+		 * same hard limit for queue size.
+		 */
+		task_cnt += spdk_min(bvdev->vdev.virtqueue[i].size, 1024);
+	}
+
+	ring_size = spdk_align32pow2(task_cnt + 1);
+	socket_id = spdk_env_get_socket_id(bvdev->vdev.lcore);
+
+	bvdev->tasks_pool = spdk_ring_create(SPDK_RING_TYPE_SP_SC, ring_size, socket_id);
+	if (bvdev->tasks_pool == NULL) {
+		SPDK_ERRLOG("Controller %s: Failed to init vhost blk task pool\n", bvdev->vdev.name);
+		return -1;
+	}
+
+	for (i = 0; i < task_cnt; ++i) {
+		task = spdk_dma_malloc_socket(sizeof(*task), SPDK_CACHE_LINE_SIZE, NULL, socket_id);
+		if (task == NULL) {
+			SPDK_ERRLOG("Controller %s: Failed to allocate task\n", bvdev->vdev.name);
+			free_task_pool(bvdev);
+			return -1;
+		}
+
+		task->bvdev = bvdev;
+
+		rc = spdk_ring_enqueue(bvdev->tasks_pool, (void **)&task, 1);
+		if (rc != 1) {
+			SPDK_ERRLOG("Controller %s: Failed to enqueue %"PRIu32" vhost blk tasks\n", bvdev->vdev.name,
+				    task_cnt);
+			free_task_pool(bvdev);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
 /*
  * A new device is added to a data core. First the device is added to the main linked list
  * and then allocated to a specific data core.
@@ -466,22 +529,31 @@ bdev_remove_cb(void *remove_ctx)
 static int
 new_device(int vid)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_dev *vdev = spdk_vhost_dev_load(vid);
+	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+	int rc = -1;
 
-	vdev = spdk_vhost_dev_load(vid);
 	if (vdev == NULL) {
 		return -1;
+	} else if (bvdev == NULL) {
+		SPDK_ERRLOG("Trying to start non-blk controller as blk one.\n");
+		goto out;
 	}
 
-	if (vdev->num_queues != 1) {
-		SPDK_ERRLOG("Controller %s virtio-block device must have exactly one queue but got %d.\n",
-			    vdev->name, vdev->num_queues);
-		vdev->vid = -1;
-		return -1;
+	rc = alloc_task_pool(bvdev);
+	if (rc != 0) {
+		SPDK_ERRLOG("%s: failed to alloc task pool.", bvdev->vdev.name);
+		goto out;
 	}
 
-	spdk_vhost_timed_event_send(vdev->lcore, add_vdev_cb, vdev, 1, "add blk vdev");
-	return 0;
+	spdk_vhost_timed_event_send(bvdev->vdev.lcore, add_vdev_cb, bvdev, 1, "add blk vdev");
+
+out:
+	if (rc != 0) {
+		spdk_vhost_dev_unload(&bvdev->vdev);
+	}
+
+	return rc;
 }
 
 static void
@@ -514,6 +586,8 @@ destroy_device(int vid)
 	}
 
 	spdk_vhost_timed_event_send(vdev->lcore, remove_vdev_cb, bvdev, 1, "remove vdev");
+
+	free_task_pool(bvdev);
 	spdk_vhost_dev_unload(vdev);
 }
 
@@ -524,7 +598,8 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	(1ULL << VIRTIO_BLK_F_GEOMETRY) | (1ULL << VIRTIO_BLK_F_RO) |
 	(1ULL << VIRTIO_BLK_F_BLK_SIZE) | (1ULL << VIRTIO_BLK_F_TOPOLOGY) |
 	(1ULL << VIRTIO_BLK_F_BARRIER)  | (1ULL << VIRTIO_BLK_F_SCSI) |
-	(1ULL << VIRTIO_BLK_F_FLUSH)    | (1ULL << VIRTIO_BLK_F_CONFIG_WCE),
+	(1ULL << VIRTIO_BLK_F_FLUSH)    | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
+	(1ULL << VIRTIO_BLK_F_MQ),
 	.disabled_features = (1ULL << VHOST_F_LOG_ALL) | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
 	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
