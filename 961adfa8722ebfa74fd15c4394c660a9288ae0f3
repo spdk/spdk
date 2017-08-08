@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5d08b52_159bc92f",
+        "filename": "test/unit/lib/vhost/vhost.c/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-08T17:30:49Z",
+      "side": 1,
+      "message": "We shouldn\u0027t need to specify DPDK_INC here - spdk.common.mk already includes env.mk, which should add it to ENV_CFLAGS.  Does this work if you add this instead?\n\n    CFLAGS +\u003d $(ENV_CFLAGS)",
+      "revId": "961adfa8722ebfa74fd15c4394c660a9288ae0f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
