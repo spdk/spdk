@@ -16,6 +16,24 @@
       "revId": "3647e76029d921c8456ffe78f5804e507e0db7d6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed704411_d7fc7e14",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011829
+      },
+      "writtenOn": "2017-08-08T13:29:21Z",
+      "side": 1,
+      "message": "ups, thanks :)",
+      "parentUuid": "d70bb8f6_ee313f98",
+      "revId": "3647e76029d921c8456ffe78f5804e507e0db7d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
