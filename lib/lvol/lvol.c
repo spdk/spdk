@@ -54,6 +54,7 @@ _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 
 		SPDK_TRACELOG(SPDK_TRACE_LVOL, "Lvol store initialized\n");
 	}
+	assert(lvs_req->u.lvs_handle.cb_fn != NULL);
 	lvs_req->u.lvs_handle.cb_fn(lvs_req->u.lvs_handle.cb_arg, lvs, lvserrno);
 	free(lvs_req);
 }
@@ -64,6 +65,11 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 {
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvol_store_req *lvs_req;
+
+	if (bs_dev == NULL) {
+		SPDK_ERRLOG("Blobstore device does not exist\n");
+		return -ENODEV;
+	}
 
 	lvs = calloc(1, sizeof(*lvs));
 	if (!lvs) {
@@ -97,6 +103,7 @@ _lvs_unload_cb(void *cb_arg, int lvserrno)
 	struct spdk_lvol_store_req *lvs_req = cb_arg;
 
 	SPDK_TRACELOG(SPDK_TRACE_LVOL, "Lvol store unloaded\n");
+	assert(lvs_req->u.lvs_basic.cb_fn != NULL);
 	lvs_req->u.lvs_basic.cb_fn(lvs_req->u.lvs_basic.cb_arg, lvserrno);
 	free(lvs_req);
 }
@@ -132,6 +139,8 @@ static void
 _spdk_lvol_return_to_caller(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvol_store_req *req = cb_arg;
+
+	assert(req->u.lvol_handle.cb_fn != NULL);
 	req->u.lvol_handle.cb_fn(req->u.lvol_handle.cb_arg, req->u.lvol_handle.lvol, lvolerrno);
 	free(req);
 }
@@ -206,6 +215,7 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	return;
 
 invalid:
+	assert(req->u.lvol_handle.cb_fn != NULL);
 	req->u.lvol_handle.cb_fn(req->u.lvol_handle.cb_arg, NULL, lvolerrno);
 	free(req);
 	return;
@@ -220,6 +230,7 @@ _spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		free(req->u.lvol_handle.lvol);
+		assert(req->u.lvol_handle.cb_fn != NULL);
 		req->u.lvol_handle.cb_fn(req->u.lvol_handle.cb_arg, NULL, lvolerrno);
 		free(req);
 		return;
@@ -237,6 +248,11 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz,
 	struct spdk_lvol_store_req *req;
 	struct spdk_lvol *lvol;
 	uint64_t free_clusters;
+
+	if (lvs == NULL) {
+		SPDK_ERRLOG("lvol store does not exist\n");
+		return -ENODEV;
+	}
 
 	free_clusters = spdk_bs_free_cluster_count(lvs->blobstore);
 	if (sz > free_clusters) {
@@ -269,9 +285,69 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz,
 	return 0;
 }
 
+static void
+_spdk_lvol_resize_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_store_req *req = cb_arg;
+
+	req->u.lvol_basic.cb_fn(req->u.lvol_basic.cb_arg,  lvolerrno);
+	free(req);
+}
+
+int
+spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob *blob = lvol->blob;
+	struct spdk_lvol_store *lvs = lvol->lvol_store;
+	struct spdk_lvol_store_req *req;
+	uint64_t cluster_size = spdk_bs_get_cluster_size(lvs->blobstore);
+	uint64_t number_of_clusters = sz / cluster_size;
+	uint64_t free_clusters;
+	int rc;
+
+	free_clusters = spdk_bs_free_cluster_count(lvs->blobstore);
+	if ((int64_t)(sz * cluster_size) - (int64_t)(lvol->sz) > 0 &&
+	    (sz * cluster_size - lvol->sz) / cluster_size > free_clusters) {
+		SPDK_ERRLOG("Not enough free clusters left on lvol store to resize lvol to %zu clusters\n", sz);
+		return -ENOMEM;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		return -ENOMEM;
+	}
+	req->u.lvol_basic.cb_fn = cb_fn;
+	req->u.lvol_basic.cb_arg = cb_arg;
+
+	rc = spdk_bs_md_resize_blob(blob, number_of_clusters);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	lvol->sz = sz * cluster_size;
+
+	spdk_blob_md_set_xattr(blob, "length", &sz, sizeof(sz));
+
+	spdk_bs_md_sync_blob(blob, _spdk_lvol_resize_cb, req);
+
+	return rc;
+
+invalid:
+	req->u.lvol_basic.cb_fn(req->u.lvol_basic.cb_arg, rc);
+	free(req);
+	return rc;
+}
+
 void
 spdk_lvol_destroy(struct spdk_lvol *lvol)
 {
+	if (lvol == NULL) {
+		SPDK_ERRLOG("lvol does not exist\n");
+		return;
+	}
+
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
 	spdk_bs_md_close_blob(&(lvol->blob), _spdk_lvol_delete_blob_cb, lvol);
 }
@@ -279,6 +355,11 @@ spdk_lvol_destroy(struct spdk_lvol *lvol)
 void
 spdk_lvol_close(struct spdk_lvol *lvol)
 {
+	if (lvol == NULL) {
+		SPDK_ERRLOG("lvol does not exist\n");
+		return;
+	}
+
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
 	spdk_bs_md_close_blob(&(lvol->blob), _spdk_lvol_close_blob_cb, lvol);
 }
