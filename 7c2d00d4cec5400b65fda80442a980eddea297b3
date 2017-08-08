@@ -1,0 +1,262 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e8015c8_540cbac4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "This will be quite large commit. Could you add some more detailed description? \n\nKeep in mind you will need to rebase onto https://review.gerrithub.io/#/c/372545/ where common stuff is moved out of fiotest into it\u0027s dedicated directory.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 42
+      },
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f491e6b_cb4002ee",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "Rebase onto https://review.gerrithub.io/#/c/372545/ so to avoid repetitions.",
+      "range": {
+        "startLine": 81,
+        "startChar": 9,
+        "endLine": 81,
+        "endChar": 23
+      },
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e28fe98b_d78f0aef",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "Like above.",
+      "range": {
+        "startLine": 88,
+        "startChar": 9,
+        "endLine": 88,
+        "endChar": 30
+      },
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a69a9586_839f3698",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "This only calls spdk_vhost_run() form common.sh, so I think we cant remove this function.",
+      "range": {
+        "startLine": 105,
+        "startChar": 9,
+        "endLine": 105,
+        "endChar": 20
+      },
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bed8a577_4c80b067",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "See comments for this function here: https://review.gerrithub.io/#/c/372545/4",
+      "range": {
+        "startLine": 115,
+        "startChar": 9,
+        "endLine": 115,
+        "endChar": 16
+      },
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2f760bc_ec39c82b",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "See comments for this function here: https://review.gerrithub.io/#/c/372545/4",
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48e13fd4_8c2cb612",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "Could this be declared only once, in common maybe?",
+      "range": {
+        "startLine": 269,
+        "startChar": 8,
+        "endLine": 269,
+        "endChar": 55
+      },
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f754b455_ae034ae7",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "Why do we use nmap?",
+      "range": {
+        "startLine": 284,
+        "startChar": 16,
+        "endLine": 284,
+        "endChar": 72
+      },
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7ee84ae_fb0b6e2e",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "uses",
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "026566ad_ed37cc5f",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "Capital letter to be consistent",
+      "range": {
+        "startLine": 9,
+        "startChar": 4,
+        "endLine": 9,
+        "endChar": 5
+      },
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b9388cb_90113b58",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "White. Spaces. Everywhere. :P",
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de5dd1eb_d14a7d24",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:27:19Z",
+      "side": 1,
+      "message": "How do we check for success / fail?\nI know we didn\u0027t mention that in our temporary document, but we should be more specific and add more detail to this test plan. Applies to all other similar points.",
+      "range": {
+        "startLine": 16,
+        "startChar": 3,
+        "endLine": 16,
+        "endChar": 39
+      },
+      "revId": "7c2d00d4cec5400b65fda80442a980eddea297b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
