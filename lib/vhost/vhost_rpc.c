@@ -526,12 +526,48 @@ invalid:
 }
 SPDK_RPC_REGISTER("remove_vhost_blk_controller", spdk_rpc_remove_vhost_blk_controller)
 
+struct rpc_get_vhost_ctrlrs {
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request;
+};
+
+static int
+spdk_rpc_get_vhost_controllers_cb(struct spdk_vhost_dev *vdev, void *arg)
+{
+	struct rpc_get_vhost_ctrlrs *ctx = arg;
+
+	if (vdev == NULL) {
+		spdk_json_write_array_end(ctx->w);
+		spdk_jsonrpc_end_result(ctx->request, ctx->w);
+		spdk_dma_free(ctx);
+		return 0;
+	}
+
+	spdk_json_write_object_begin(ctx->w);
+
+	spdk_json_write_name(ctx->w, "ctrlr");
+	spdk_json_write_string(ctx->w, spdk_vhost_dev_get_name(vdev));
+
+	spdk_json_write_name(ctx->w, "cpumask");
+	spdk_json_write_string_fmt(ctx->w, "%#" PRIx64, spdk_vhost_dev_get_cpumask(vdev));
+
+	spdk_json_write_name(ctx->w, "backend_specific");
+
+	spdk_json_write_object_begin(ctx->w);
+	spdk_vhost_dump_config_json(vdev, ctx->w);
+	spdk_json_write_object_end(ctx->w);
+
+	spdk_json_write_object_end(ctx->w); // ctrl
+	return 0;
+}
+
+
 static void
 spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
+	struct rpc_get_vhost_ctrlrs *ctx;
 	struct spdk_json_write_ctx *w;
-	struct spdk_vhost_dev *vdev = NULL;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -545,25 +581,15 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_json_write_array_begin(w);
-	while ((vdev = spdk_vhost_dev_next(vdev)) != NULL) {
-		spdk_json_write_object_begin(w);
 
-		spdk_json_write_name(w, "ctrlr");
-		spdk_json_write_string(w, spdk_vhost_dev_get_name(vdev));
-
-		spdk_json_write_name(w, "cpumask");
-		spdk_json_write_string_fmt(w, "%#" PRIx64, spdk_vhost_dev_get_cpumask(vdev));
-
-		spdk_json_write_name(w, "backend_specific");
-
-		spdk_json_write_object_begin(w);
-		spdk_vhost_dump_config_json(vdev, w);
-		spdk_json_write_object_end(w);
-
-		spdk_json_write_object_end(w);
+	ctx = spdk_dma_zmalloc(sizeof(*ctx), SPDK_CACHE_LINE_SIZE, NULL);
+	if (ctx == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, strerror(-ENOMEM));
+		return;
 	}
 
-	spdk_json_write_array_end(w);
-	spdk_jsonrpc_end_result(request, w);
+	ctx->w = w;
+	ctx->request = request;
+	spdk_vhost_call_external_event_foreach(spdk_rpc_get_vhost_controllers_cb, ctx);
 }
 SPDK_RPC_REGISTER("get_vhost_controllers", spdk_rpc_get_vhost_controllers)
