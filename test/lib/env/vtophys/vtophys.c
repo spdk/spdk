@@ -106,7 +106,7 @@ vtophys_positive_test(void)
 	return rc;
 }
 
-static void
+static int
 test_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 		enum spdk_mem_map_notify_action action,
 		void *vaddr, size_t size)
@@ -123,6 +123,7 @@ test_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	}
 
 	printf("%s: %s %p-%p (%zu bytes)\n", __func__, action_str, vaddr, vaddr + size - 1, size);
+	return 0;
 }
 
 static int
