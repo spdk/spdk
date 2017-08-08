@@ -937,7 +937,7 @@ bdev_nvme_library_init(void)
 			retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT;
 		} else {
 			SPDK_WARNLOG("NvmeRetryCount was renamed to RetryCount\n");
-			SPDK_WARNLOG("Please update your configuration file");
+			SPDK_WARNLOG("Please update your configuration file\n");
 		}
 	}
 
