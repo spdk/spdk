@@ -309,7 +309,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 	if (req.mode) {
 		SPDK_NOTICELOG("Mode present in the construct NVMe-oF subsystem RPC.\n"
 			       "Mode was removed as a valid parameter.\n");
-		if (strcasecmp(req.mode, "Virtual")) {
+		if (strcasecmp(req.mode, "Virtual") == 0) {
 			SPDK_NOTICELOG("Your mode value is 'Virtual' which is now the only possible mode.\n"
 				       "Your RPC will work as expected.\n");
 		} else {
