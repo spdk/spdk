@@ -55,6 +55,9 @@ struct spdk_vhost_dev_timed_event_ctx {
 	/** Name of the ctrlr to send event to */
 	char *ctrlr_name;
 
+	/** Index of the ctrlr to send event to. Used for *foreach* events */
+	unsigned ctrlr_id;
+
 	/** User callback function to be executed on given lcore. */
 	spdk_vhost_event_fn cb_fn;
 
@@ -297,6 +300,29 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 	return NULL;
 }
 
+static int
+spdk_vhost_dev_find_id(const char *ctrlr_name)
+{
+	unsigned i;
+	size_t dev_dirname_len = strlen(dev_dirname);
+
+	if (strncmp(ctrlr_name, dev_dirname, dev_dirname_len) == 0) {
+		ctrlr_name += dev_dirname_len;
+	}
+
+	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
+		if (g_spdk_vhost_devices[i] == NULL) {
+			continue;
+		}
+
+		if (strcmp(g_spdk_vhost_devices[i]->name, ctrlr_name) == 0) {
+			return i;
+		}
+	}
+
+	return -1;
+}
+
 int
 spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
 			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
@@ -456,30 +482,18 @@ spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask)
 	return 0;
 }
 
-struct spdk_vhost_dev *
-spdk_vhost_dev_next(struct spdk_vhost_dev *prev)
+static int
+spdk_vhost_dev_next(int i)
 {
-	int i = 0;
-
-	if (prev != NULL) {
-		for (; i < MAX_VHOST_DEVICES; i++) {
-			if (g_spdk_vhost_devices[i] == prev) {
-				break;
-			}
-		}
-
-		i++;
-	}
-
-	for (; i < MAX_VHOST_DEVICES; i++) {
+	for (i++; i < MAX_VHOST_DEVICES; i++) {
 		if (g_spdk_vhost_devices[i] == NULL) {
 			continue;
 		}
 
-		return g_spdk_vhost_devices[i];
+		return i;
 	}
 
-	return NULL;
+	return -1;
 }
 
 const char *
@@ -555,6 +569,28 @@ spdk_vhost_event_async_fn(void *arg1, void *arg2)
 	spdk_dma_free(ctx);
 }
 
+static void spdk_vhost_external_event_foreach_continue(int ctrlr_id, spdk_vhost_event_fn fn,
+		void *arg);
+
+static void
+spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
+{
+	struct spdk_vhost_dev_timed_event_ctx *ctx = arg1;
+	struct spdk_vhost_dev *vdev;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_find(ctx->ctrlr_name);
+	if (vdev == ctx->vdev) {
+		ctx->cb_fn(vdev, arg2);
+	}
+
+	spdk_vhost_external_event_foreach_continue(ctx->ctrlr_id, ctx->cb_fn, arg2);
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+
+	free(ctx->ctrlr_name);
+	spdk_dma_free(ctx);
+}
+
 static int
 spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
 		      unsigned timeout_sec, const char *errmsg)
@@ -600,10 +636,12 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, vo
 }
 
 static int
-spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg)
+spdk_vhost_event_async_send(unsigned ctrlr_id, spdk_vhost_event_fn cb_fn, void *arg,
+			    bool foreach)
 {
 	struct spdk_vhost_dev_timed_event_ctx *ev_ctx;
 	struct spdk_event *ev;
+	spdk_event_fn fn;
 
 	ev_ctx = spdk_dma_zmalloc(sizeof(*ev_ctx), SPDK_CACHE_LINE_SIZE, NULL);
 	if (ev_ctx == NULL) {
@@ -611,11 +649,13 @@ spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_
 		return -ENOMEM;
 	}
 
-	ev_ctx->vdev = vdev;
-	ev_ctx->ctrlr_name = strdup(vdev->name);
+	ev_ctx->ctrlr_id = ctrlr_id;
+	ev_ctx->vdev = g_spdk_vhost_devices[ctrlr_id];
+	ev_ctx->ctrlr_name = strdup(ev_ctx->vdev->name);
 	ev_ctx->cb_fn = cb_fn;
 
-	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_async_fn, ev_ctx, arg);
+	fn = foreach ? spdk_vhost_event_async_foreach_fn : spdk_vhost_event_async_fn;
+	ev = spdk_event_allocate(ev_ctx->vdev->lcore, fn, ev_ctx, arg);
 	assert(ev);
 	spdk_event_call(ev);
 
@@ -848,22 +888,55 @@ void
 spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, void *arg)
 {
 	struct spdk_vhost_dev *vdev;
+	int ctrlr_id;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vdev = spdk_vhost_dev_find(ctrlr_name);
-
-	if (vdev == NULL) {
+	ctrlr_id = spdk_vhost_dev_find_id(ctrlr_name);
+	if (ctrlr_id == -1) {
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		fn(NULL, arg);
+	}
+
+	vdev = g_spdk_vhost_devices[ctrlr_id];
+	if (vdev->lcore == -1) {
+		fn(vdev, arg);
+	} else {
+		spdk_vhost_event_async_send(ctrlr_id, fn, arg, false);
+	}
+
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+}
+
+static void
+spdk_vhost_external_event_foreach_continue(int ctrlr_id, spdk_vhost_event_fn fn, void *arg)
+{
+	struct spdk_vhost_dev *vdev;
+
+	ctrlr_id = spdk_vhost_dev_next(ctrlr_id);
+	if (ctrlr_id == -1) {
 		fn(NULL, arg);
 		return;
 	}
 
-	if (vdev->lcore == -1) {
+	vdev = g_spdk_vhost_devices[ctrlr_id];
+	while (vdev->lcore == -1) {
 		fn(vdev, arg);
-	} else {
-		spdk_vhost_event_async_send(vdev, fn, arg);
+		ctrlr_id = spdk_vhost_dev_next(ctrlr_id);
+		if (ctrlr_id == -1) {
+			fn(NULL, arg);
+			return;
+		}
+		vdev = g_spdk_vhost_devices[ctrlr_id];
 	}
 
+	spdk_vhost_event_async_send(ctrlr_id, fn, arg, true);
+}
+
+void
+spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg)
+{
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	spdk_vhost_external_event_foreach_continue(-1, fn, arg);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
