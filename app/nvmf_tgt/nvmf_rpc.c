@@ -269,6 +269,9 @@ struct rpc_subsystem {
 static void
 free_rpc_subsystem(struct rpc_subsystem *req)
 {
+	free(req->mode);
+	free(req->nqn);
+	free(req->serial_number);
 	free_rpc_dev_names(&req->namespaces);
 	free_rpc_listen_addresses(&req->listen_addresses);
 	free_rpc_hosts(&req->hosts);
