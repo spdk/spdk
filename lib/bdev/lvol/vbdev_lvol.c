@@ -76,18 +76,175 @@ vbdev_lvol_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 static struct spdk_io_channel *
 vbdev_lvol_get_io_channel(void *ctx)
 {
-	return NULL;
+	struct spdk_lvol *lvol = ctx;
+
+	return spdk_lvol_get_io_channel(lvol);
+}
+
+static bool
+vbdev_lvol_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
+{
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		return true;
+	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+	case SPDK_BDEV_IO_TYPE_NVME_IO:
+	default:
+		return false;
+	}
+}
+
+static void
+lvol_op_comp(void *cb_arg, int bserrno)
+{
+	struct lvol_task *task = cb_arg;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(task);
+
+	if (bserrno != 0) {
+		task->status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+
+	if (--task->num_outstanding == 0) {
+		SPDK_TRACELOG(SPDK_TRACE_VBDEV_LVOL, "Vbdev processing callback on device %s with type %d\n",
+			      bdev_io->bdev->name, bdev_io->type);
+		spdk_bdev_io_complete(bdev_io, task->status);
+	}
+}
+
+static void
+lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	uint64_t start_page, num_pages;
+	uint32_t page_size;
+	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+	struct spdk_blob *blob = lvol->blob;
+	int i;
+	struct lvol_task *task = (struct lvol_task *)bdev_io->driver_ctx;
+
+	page_size = lvol->lvol_store->page_size;
+
+	assert((bdev_io->u.read.offset % page_size) == 0);
+	start_page = bdev_io->u.read.offset / page_size;
+
+	uint32_t beg_page = start_page; //DEBUG
+	size_t len_so_far = 0; //DEBUG
+
+	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	task->num_outstanding = bdev_io->u.read.iovcnt;
+
+	SPDK_TRACELOG(SPDK_TRACE_VBDEV_LVOL,
+		      "Vbdev doing read at offset page %" PRIu64
+		      " pages of size %d on device %s (iovcnt %d, len %d, offset %" PRIu64 ")\n", start_page, page_size,
+		      bdev_io->bdev->name, bdev_io->u.read.iovcnt, (int)bdev_io->u.read.len, bdev_io->u.read.offset);
+
+	for (i = 0 ; i < bdev_io->u.read.iovcnt; i++) {
+		assert((bdev_io->u.read.iovs[i].iov_len % page_size) == 0);
+		num_pages = bdev_io->u.read.iovs[i].iov_len / page_size;
+
+		spdk_bs_io_read_blob(blob, ch, bdev_io->u.read.iovs[i].iov_base, start_page, num_pages,
+				     lvol_op_comp, task);
+
+		SPDK_TRACELOG(SPDK_TRACE_VBDEV_LVOL,
+			      "Single blob read request at offset page %" PRIu64 " using %" PRIu64
+			      " pages of size %d (iovcnt %d, iov_len %d)\n", start_page, num_pages, page_size, i,
+			      (int)bdev_io->u.read.iovs[i].iov_len);
+
+		start_page += num_pages;
+		len_so_far += bdev_io->u.read.iovs[i].iov_len; //DEBUG
+	}
+	assert(bdev_io->u.read.len == len_so_far); //DEBUG
+	assert((start_page - beg_page) * page_size == len_so_far); //DEBUG
+}
+
+static void
+lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	uint64_t start_page, num_pages;
+	uint32_t page_size;
+	struct spdk_blob *blob = lvol->blob;
+	int i;
+	struct lvol_task *task = (struct lvol_task *)bdev_io->driver_ctx;
+
+	page_size = lvol->lvol_store->page_size;
+
+	assert((bdev_io->u.write.offset % page_size) == 0);
+	start_page = bdev_io->u.write.offset / page_size;
+
+	uint32_t beg_page = start_page; //DEBUG
+	size_t len_so_far = 0; //DEBUG
+
+	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	task->num_outstanding = bdev_io->u.write.iovcnt;
+
+	SPDK_TRACELOG(SPDK_TRACE_VBDEV_LVOL,
+		      "Vbdev doing write at offset page %" PRIu64
+		      " pages of size %d on device %s (iovcnt %d, len %d, offset %" PRIu64 ")\n", start_page, page_size,
+		      bdev_io->bdev->name, bdev_io->u.write.iovcnt, (int)bdev_io->u.write.len, bdev_io->u.write.offset);
+
+	for (i = 0 ; i < bdev_io->u.write.iovcnt; i++) {
+		assert((bdev_io->u.write.iovs[i].iov_len % page_size) == 0);
+		num_pages = bdev_io->u.write.iovs[i].iov_len / page_size;
+
+		spdk_bs_io_write_blob(blob, ch, bdev_io->u.write.iovs[i].iov_base, start_page, num_pages,
+				      lvol_op_comp, task);
+
+		SPDK_TRACELOG(SPDK_TRACE_VBDEV_LVOL,
+			      "Single blob write request at offset page %" PRIu64 " using %" PRIu64
+			      " pages of size %d (iovcnt %d, iov_len %d)\n", start_page, num_pages, page_size, i,
+			      (int)bdev_io->u.write.iovs[i].iov_len);
+
+		start_page += num_pages;
+		len_so_far += bdev_io->u.write.iovs[i].iov_len; //DEBUG
+	}
+	assert(bdev_io->u.write.len == len_so_far); //DEBUG
+	assert((start_page - beg_page) * page_size == len_so_far); //DEBUG
+}
+
+static void
+lvol_flush(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct lvol_task *task = (struct lvol_task *)bdev_io->driver_ctx;
+
+	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	task->num_outstanding = 1;
+
+	spdk_bs_io_flush_channel(ch, lvol_op_comp, task);
 }
 
 static void
 vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
+
+	SPDK_TRACELOG(SPDK_TRACE_VBDEV_LVOL, "Vbdev request type %d submitted\n", bdev_io->type);
+
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		spdk_bdev_io_get_buf(bdev_io, lvol_read);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		lvol_write(lvol, ch, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+		lvol_flush(ch, bdev_io);
+		break;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_RESET:
+	default:
+		SPDK_ERRLOG("lvol: unknown I/O type %d\n", bdev_io->type);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 	return;
 }
 
 static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
 	.destruct		= vbdev_lvol_destruct,
-	.io_type_supported	= NULL,
+	.io_type_supported	= vbdev_lvol_io_type_supported,
 	.submit_request		= vbdev_lvol_submit_request,
 	.get_io_channel		= vbdev_lvol_get_io_channel,
 	.dump_config_json	= vbdev_lvol_dump_config_json,
@@ -234,3 +391,4 @@ vbdev_lvol_resize(char *name, size_t sz,
 
 	return rc;
 }
+SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_lvol", SPDK_TRACE_VBDEV_LVOL);
