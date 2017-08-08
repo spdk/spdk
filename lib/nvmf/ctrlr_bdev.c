@@ -675,9 +675,14 @@ nvmf_bdev_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 
 	for (i = 0; i < subsystem->dev.max_nsid; i++) {
 		if (subsystem->dev.ns_list[i]) {
-			spdk_put_io_channel(subsystem->dev.ch[i]);
-			spdk_bdev_close(subsystem->dev.desc[i]);
-			subsystem->dev.ch[i] = NULL;
+			if (subsystem->dev.ch[i]) {
+				spdk_put_io_channel(subsystem->dev.ch[i]);
+				subsystem->dev.ch[i] = NULL;
+			}
+			if (subsystem->dev.desc[i]) {
+				spdk_bdev_close(subsystem->dev.desc[i]);
+				subsystem->dev.desc[i] = NULL;
+			}
 			subsystem->dev.ns_list[i] = NULL;
 		}
 	}
