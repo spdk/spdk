@@ -210,7 +210,13 @@ spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
 		len = end - start;
 		SPDK_NOTICELOG("Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
 			       start, len);
-		spdk_mem_register((void *)start, len);
+
+		if (spdk_mem_register((void *)start, len) != 0) {
+			SPDK_WARNLOG("Failed to register memory region %"PRIu32". Future vtophys translation might fail.\n",
+				     i);
+			continue;
+		}
+
 		if (spdk_iommu_mem_register(region->host_user_addr, region->size)) {
 			abort();
 		}
@@ -230,11 +236,17 @@ spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev)
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
 		len = end - start;
 
+		if (spdk_vtophys((void *) start) == SPDK_VTOPHYS_ERROR) {
+			continue; /* region has not been registered */
+		}
+
 		if (spdk_iommu_mem_unregister(region->host_user_addr, region->size)) {
 			abort();
 		}
 
-		spdk_mem_unregister((void *)start, len);
+		if (spdk_mem_unregister((void *)start, len) != 0) {
+			assert(false);
+		}
 	}
 }
 
