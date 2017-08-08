@@ -62,6 +62,9 @@ struct spdk_vhost_dev_timed_event_ctx {
 
 	/** Response to be written by enqueued event. */
 	int response;
+
+	/** If event should be re-called for each vhost controller */
+	bool foreach;
 };
 
 static int new_connection(int vid);
@@ -548,6 +551,7 @@ spdk_vhost_event_async_fn(void *arg1, void *arg2)
 	}
 
 	ctx->cb_fn(vdev, arg2);
+	/* TODO foreach */
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 
 	spdk_dma_free(ctx);
@@ -599,7 +603,7 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, vo
 
 static int
 spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
-			    const char *errmsg)
+			    const char *errmsg, bool foreach)
 {
 	struct spdk_vhost_dev_timed_event_ctx *ev_ctx;
 	struct spdk_event *ev;
@@ -613,6 +617,7 @@ spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_
 	ev_ctx->vdev = vdev;
 	ev_ctx->ctrlr_name = strdup(vdev->name);
 	ev_ctx->cb_fn = cb_fn;
+	ev_ctx->foreach = foreach;
 
 	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_async_fn, ev_ctx, arg);
 	assert(ev);
@@ -861,7 +866,29 @@ spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, v
 	if (vdev->lcore == -1) {
 		fn(vdev, arg);
 	} else {
-		spdk_vhost_event_async_send(vdev, fn, arg, event_name);
+		spdk_vhost_event_async_send(vdev, fn, arg, event_name, false);
+	}
+
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+}
+
+void
+spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg, const char *event_name)
+{
+	struct spdk_vhost_dev *vdev;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_next(NULL);
+	if (vdev == NULL) {
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		fn(NULL, arg);
+		return;
+	}
+
+	if (vdev->lcore == -1) {
+		fn(vdev, arg);
+	} else {
+		spdk_vhost_event_async_send(vdev, fn, arg, event_name, true);
 	}
 
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);

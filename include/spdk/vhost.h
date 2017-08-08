@@ -104,4 +104,7 @@ bool spdk_vhost_blk_get_readonly(struct spdk_vhost_dev *vdev);
 void spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, void *arg,
 				    const char *event_name);
 
+void spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg,
+		const char *event_name);
+
 #endif /* SPDK_VHOST_H */
