@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7288eb50_f13d191e",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-08-08T01:23:44Z",
+      "side": 1,
+      "message": "As I stated, we need to only test spdk_gpt_parse with different cases to test the inner functions of spdk_gpt_check_mbr or others, since those functions are static functions inside the file, you can not directly call that instead of spdk_gpt_parse. And spdk_gpt_parse will avoid passing wrong parameters to those functions, so I have concerns why we want to directly call those functions.",
+      "range": {
+        "startLine": 81,
+        "startChar": 6,
+        "endLine": 81,
+        "endChar": 24
+      },
+      "revId": "1d369a2a96b78190bd1f10a32d4a4ffce242ef59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
