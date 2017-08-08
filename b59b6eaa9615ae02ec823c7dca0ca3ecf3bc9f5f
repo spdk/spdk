@@ -66,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "732b8523_e9ac72ae",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-08-08T09:26:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ccbe48c0_da11773f",
+      "revId": "b59b6eaa9615ae02ec823c7dca0ca3ecf3bc9f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8d3b32e8_756ffb2c",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 31
@@ -83,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "51069bc3_18a4e1ca",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-08-08T09:26:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d3b32e8_756ffb2c",
+      "revId": "b59b6eaa9615ae02ec823c7dca0ca3ecf3bc9f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "40a44da1_ef4eb9c4",
         "filename": "lib/lvol/bdev/lvs_bdev.c",
         "patchSetId": 31
@@ -94,6 +130,30 @@
       "writtenOn": "2017-08-07T10:53:14Z",
       "side": 1,
       "message": "you could move it before line #54 and then delete assert in line #55.",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 21
+      },
+      "revId": "b59b6eaa9615ae02ec823c7dca0ca3ecf3bc9f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8adbe68c_4b606808",
+        "filename": "lib/lvol/bdev/lvs_bdev.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-08-08T09:26:08Z",
+      "side": 1,
+      "message": "I\u0027m not sure I can do this - when lvserrno is !\u003d 0 I expect lvs to be NULL, but when lvserrno \u003d\u003d 0 i expect lvs not to be NULL",
+      "parentUuid": "40a44da1_ef4eb9c4",
       "range": {
         "startLine": 61,
         "startChar": 0,
@@ -129,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "cb6581b2_226539d7",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-08-08T09:26:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7201a05f_2aa9b44a",
+      "range": {
+        "startLine": 152,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 18
+      },
+      "revId": "b59b6eaa9615ae02ec823c7dca0ca3ecf3bc9f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "83d2d75d_89e41c68",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 31
@@ -140,6 +224,30 @@
       "writtenOn": "2017-08-07T10:53:14Z",
       "side": 1,
       "message": "the same message might have been just printed from_spdk_lvol_close_blob_cb.\nCould you use lvol-\u003eclose_only flag to reuse _spdk_lvol_close_blob_cb for both close \u0026 delete cb? It could also simplify spdk_lvol_close/destroy.\n\n_spdk_lvol_close_blob_cb() {\n  if (! lvol-\u003eclose_only) {\n    lvol-\u003eclose_only \u003d true;\n    spdk_bs_md_delete_blob(bs, lvol-\u003eblob_id, _spdk_lvol_close_blob_cb, lvol);\n    return;\n  } \n\n  //free lvol\n}\n\nwould that make any sense?",
+      "range": {
+        "startLine": 157,
+        "startChar": 33,
+        "endLine": 157,
+        "endChar": 52
+      },
+      "revId": "b59b6eaa9615ae02ec823c7dca0ca3ecf3bc9f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7b40a84_42584c82",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-08-08T09:26:08Z",
+      "side": 1,
+      "message": "That makes some sense, but then the name will be misleading as it would be used to 2 different operations.",
+      "parentUuid": "83d2d75d_89e41c68",
       "range": {
         "startLine": 157,
         "startChar": 33,
