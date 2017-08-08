@@ -22,6 +22,30 @@
       "revId": "b0d9a3ea53b32aae00619f2ca181e43b66ee5b7e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ced65eda_f7daa2eb",
+        "filename": "test/vhost/fiotest/fio_jobs/default_integrity.job",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-08-08T07:38:16Z",
+      "side": 1,
+      "message": "first 4k-512k is read range and  second 4k-512k is wirte range",
+      "parentUuid": "2c282eb6_b79bec49",
+      "range": {
+        "startLine": 2,
+        "startChar": 13,
+        "endLine": 2,
+        "endChar": 31
+      },
+      "revId": "b0d9a3ea53b32aae00619f2ca181e43b66ee5b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
