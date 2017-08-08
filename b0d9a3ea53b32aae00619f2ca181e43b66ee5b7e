@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c282eb6_b79bec49",
+        "filename": "test/vhost/fiotest/fio_jobs/default_integrity.job",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:53:13Z",
+      "side": 1,
+      "message": "what about here?",
+      "range": {
+        "startLine": 2,
+        "startChar": 13,
+        "endLine": 2,
+        "endChar": 31
+      },
+      "revId": "b0d9a3ea53b32aae00619f2ca181e43b66ee5b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
