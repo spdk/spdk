@@ -25,6 +25,52 @@
     },
     {
       "key": {
+        "uuid": "4838b50d_8f4f4ff1",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-08T07:49:49Z",
+      "side": 1,
+      "message": "Please add expected error code, in this case ENODEV (\"No such device\").",
+      "range": {
+        "startLine": 46,
+        "startChar": 2,
+        "endLine": 46,
+        "endChar": 16
+      },
+      "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "120c253c_f9ac9eea",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-08T07:49:49Z",
+      "side": 1,
+      "message": "Error code",
+      "range": {
+        "startLine": 61,
+        "startChar": 2,
+        "endLine": 61,
+        "endChar": 7
+      },
+      "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8f95ac9b_56ec794a",
         "filename": "test/lvol/testplan.md",
         "patchSetId": 2
@@ -111,6 +157,29 @@
     },
     {
       "key": {
+        "uuid": "f6d088fb_6ec3b7dd",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-08T07:49:49Z",
+      "side": 1,
+      "message": "previous",
+      "range": {
+        "startLine": 88,
+        "startChar": 13,
+        "endLine": 88,
+        "endChar": 17
+      },
+      "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e690fa7_9b21a569",
         "filename": "test/lvol/testplan.md",
         "patchSetId": 2
@@ -174,6 +243,29 @@
     },
     {
       "key": {
+        "uuid": "1ec51fa8_63a84b49",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-08T07:49:49Z",
+      "side": 1,
+      "message": "Error code",
+      "range": {
+        "startLine": 106,
+        "startChar": 2,
+        "endLine": 106,
+        "endChar": 7
+      },
+      "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "966e931d_99cfcd6c",
         "filename": "test/lvol/testplan.md",
         "patchSetId": 2
@@ -190,6 +282,75 @@
         "startChar": 0,
         "endLine": 110,
         "endChar": 66
+      },
+      "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7445423c_7593c114",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-08T07:49:49Z",
+      "side": 1,
+      "message": "\"destroy_lvol_store\" is an RPC and should be noted same as the ones in steps above",
+      "range": {
+        "startLine": 116,
+        "startChar": 2,
+        "endLine": 116,
+        "endChar": 13
+      },
+      "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f81fe72d_5bcd0100",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-08T07:49:49Z",
+      "side": 1,
+      "message": "Error code",
+      "range": {
+        "startLine": 122,
+        "startChar": 2,
+        "endLine": 122,
+        "endChar": 7
+      },
+      "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b6928b6_8661406f",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-08T07:49:49Z",
+      "side": 1,
+      "message": "Size of the lvol bdev could be additionally verified by get_bdevs RPC and using provided num_blocks value",
+      "range": {
+        "startLine": 130,
+        "startChar": 0,
+        "endLine": 130,
+        "endChar": 5
       },
       "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -236,6 +397,75 @@
         "startChar": 2,
         "endLine": 141,
         "endChar": 6
+      },
+      "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c4c0c08_09b6bb96",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-08T07:49:49Z",
+      "side": 1,
+      "message": "Error code",
+      "range": {
+        "startLine": 154,
+        "startChar": 2,
+        "endLine": 154,
+        "endChar": 7
+      },
+      "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c236709b_312e1ade",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-08T07:49:49Z",
+      "side": 1,
+      "message": "I don\u0027t think multiple cases are required here. Any size value higher than malloc bdev size should fail.",
+      "range": {
+        "startLine": 163,
+        "startChar": 77,
+        "endLine": 163,
+        "endChar": 104
+      },
+      "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fa37052_18aaedb5",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-08T07:49:49Z",
+      "side": 1,
+      "message": "Error code",
+      "range": {
+        "startLine": 169,
+        "startChar": 2,
+        "endLine": 169,
+        "endChar": 7
       },
       "revId": "230f5660222489dbf7e01d994c807a4799ba4e94",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
