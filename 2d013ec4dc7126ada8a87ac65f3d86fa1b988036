@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c9c55b9_f705d4ae",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-08T17:39:10Z",
+      "side": 1,
+      "message": "It looks like VIRTIO_BLK_F_MQ is not defined in the Linux kernel headers shipped with CentOS 6; this should be added to the #ifndef/#define fallbacks in vhost_internal.h.",
+      "revId": "2d013ec4dc7126ada8a87ac65f3d86fa1b988036",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
