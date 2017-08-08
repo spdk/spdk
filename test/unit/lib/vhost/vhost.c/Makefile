@@ -40,7 +40,7 @@ SPDK_LIB_LIST = log
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/vhost
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/vhost/rte_vhost
-CFLAGS += -I$(DPDK_DIR)/include
+CFLAGS += $(ENV_CFLAGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 LIBS += -lcunit
 
