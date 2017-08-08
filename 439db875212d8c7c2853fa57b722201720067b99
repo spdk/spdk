@@ -1,0 +1,135 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39dbfea0_e1afdc16",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T05:29:45Z",
+      "side": 1,
+      "message": "test/vhost:",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 13
+      },
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b2e0c50_ec03bf5f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T05:29:45Z",
+      "side": 1,
+      "message": "I mentioned this before: on each patch set you keep changing the commit message as if it was a comment. Try to describe what you will be doing in one commit and try to stick to it for the whole time. Any new stuff that you want to add, that is unrelated to original change should be placed in separate commit (preferably in series).",
+      "range": {
+        "startLine": 7,
+        "startChar": 15,
+        "endLine": 7,
+        "endChar": 81
+      },
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e41d17fe_9cdd83c8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T05:29:45Z",
+      "side": 1,
+      "message": "Previously this commit was about just moving the common stuff from fiotest to \"common\" directory and let\u0027s keep it that way.\nAdding tests and new functions should be done in separate commit in series.",
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d8fb97c_60285af4",
+        "filename": "test/vhost/common/fio_jobs/default_integrity.job",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T05:29:45Z",
+      "side": 1,
+      "message": "Something is wrong with moving this file. Jenkins \u0026 TP still try to run from fiotest/fio_jobs/default_integrity.job instead of \"common\" directory",
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbb88e27_9e5359e7",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T05:29:45Z",
+      "side": 1,
+      "message": "Move this to separate commit.",
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68ea4bfb_a7eac9f0",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T05:29:45Z",
+      "side": 1,
+      "message": "Move this to separate commit.",
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a9d45ad_e7de36ad",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T05:29:45Z",
+      "side": 1,
+      "message": "Move this to separate commit.",
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
