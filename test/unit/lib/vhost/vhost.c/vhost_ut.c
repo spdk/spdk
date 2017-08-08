@@ -42,8 +42,8 @@
 DEFINE_STUB(rte_vhost_driver_unregister, int, (const char *path), 0);
 DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
 	    (uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2), NULL);
-DEFINE_STUB_V(spdk_mem_register, (void *vaddr, size_t len));
-DEFINE_STUB_V(spdk_mem_unregister, (void *vaddr, size_t len));
+DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
+DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_iommu_mem_register, int, (uint64_t addr, uint64_t len), 0);
 DEFINE_STUB(spdk_app_get_core_mask, uint64_t, (void), 0);
 DEFINE_STUB_V(spdk_app_stop, (int rc));
