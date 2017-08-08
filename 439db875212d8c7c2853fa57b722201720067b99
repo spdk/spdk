@@ -116,6 +116,52 @@
     },
     {
       "key": {
+        "uuid": "b6888449_9b806ebc",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-08T06:55:32Z",
+      "side": 1,
+      "message": "We shouldn\u0027t need this function anymore.",
+      "range": {
+        "startLine": 5,
+        "startChar": 9,
+        "endLine": 5,
+        "endChar": 19
+      },
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34b7ba28_114918fa",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-08T06:55:32Z",
+      "side": 1,
+      "message": "We shouldn\u0027t need this function anymore.",
+      "range": {
+        "startLine": 25,
+        "startChar": 9,
+        "endLine": 25,
+        "endChar": 19
+      },
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6d2b55ed_2e831b62",
         "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
         "patchSetId": 4
@@ -225,6 +271,53 @@
     },
     {
       "key": {
+        "uuid": "d20a8182_2006269e",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-08T06:55:32Z",
+      "side": 1,
+      "message": "Yes, RPC would be better here.",
+      "parentUuid": "cd9255bb_a90a4b7f",
+      "range": {
+        "startLine": 115,
+        "startChar": 9,
+        "endLine": 115,
+        "endChar": 38
+      },
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0630040f_7d3d85d3",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-08T06:55:32Z",
+      "side": 1,
+      "message": "You modify so many things in this patch so why not modify spdk_vhost_run to take configuration file as parameter and use vhost.conf.tmp?",
+      "range": {
+        "startLine": 136,
+        "startChar": 4,
+        "endLine": 138,
+        "endChar": 33
+      },
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9b33a4a_0edc1d5c",
         "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
         "patchSetId": 4
@@ -236,6 +329,29 @@
       "writtenOn": "2017-08-08T06:04:36Z",
       "side": 1,
       "message": "echo, but what?",
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2de621eb_3fc648d6",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-08T06:55:32Z",
+      "side": 1,
+      "message": "Relative path? Are you sure?",
+      "range": {
+        "startLine": 148,
+        "startChar": 12,
+        "endLine": 148,
+        "endChar": 14
+      },
       "revId": "439db875212d8c7c2853fa57b722201720067b99",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
