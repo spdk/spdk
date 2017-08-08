@@ -83,7 +83,7 @@ struct spdk_lvol {
 	spdk_blob_id			blob_id;
 	char				*name;
 	bool				close_only;
-	struct spdk_bdev		*bdev; // Shouldn't be here ?
+	struct spdk_bdev		*bdev;
 	TAILQ_ENTRY(spdk_lvol) link;
 };
 
