@@ -269,7 +269,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	if (mode) {
 		SPDK_NOTICELOG("Mode present in the [Subsystem] section of the config file.\n"
 			       "Mode was removed as a valid parameter.\n");
-		if (strcasecmp(mode, "Virtual")) {
+		if (strcasecmp(mode, "Virtual") == 0) {
 			SPDK_NOTICELOG("Your mode value is 'Virtual' which is now the only possible mode.\n"
 				       "Your configuration file will work as expected.\n");
 		} else {
