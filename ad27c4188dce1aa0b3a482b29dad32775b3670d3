@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e45e6d39_a3a34fe0",
+        "filename": "CONFIG",
+        "patchSetId": 3
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-08T17:41:14Z",
+      "side": 1,
+      "message": "This looks unrelated.",
+      "revId": "ad27c4188dce1aa0b3a482b29dad32775b3670d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
