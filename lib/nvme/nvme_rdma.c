@@ -630,13 +630,14 @@ ret:
 	return rc;
 }
 
-static void
+static int
 nvme_rdma_mr_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 			enum spdk_mem_map_notify_action action,
 			void *vaddr, size_t size)
 {
 	struct ibv_pd *pd = cb_ctx;
 	struct ibv_mr *mr;
+	int rc;
 
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
@@ -646,18 +647,23 @@ nvme_rdma_mr_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 				IBV_ACCESS_REMOTE_WRITE);
 		if (mr == NULL) {
 			SPDK_ERRLOG("ibv_reg_mr() failed\n");
+			return -EFAULT;
 		} else {
-			spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
+			rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
 		}
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
 		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr);
-		spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
+		rc = spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
 		if (mr) {
 			ibv_dereg_mr(mr);
 		}
 		break;
+	default:
+		SPDK_UNREACHABLE();
 	}
+
+	return rc;
 }
 
 

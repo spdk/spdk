@@ -404,9 +404,9 @@ enum spdk_mem_map_notify_action {
 	SPDK_MEM_MAP_NOTIFY_UNREGISTER,
 };
 
-typedef void (*spdk_mem_map_notify_cb)(void *cb_ctx, struct spdk_mem_map *map,
-				       enum spdk_mem_map_notify_action action,
-				       void *vaddr, size_t size);
+typedef int (*spdk_mem_map_notify_cb)(void *cb_ctx, struct spdk_mem_map *map,
+				      enum spdk_mem_map_notify_action action,
+				      void *vaddr, size_t size);
 
 /**
  * Allocate a virtual memory address translation map
@@ -429,15 +429,15 @@ void spdk_mem_map_free(struct spdk_mem_map **pmap);
  *
  * \sa spdk_mem_map_clear_translation()
  */
-void spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size,
-				  uint64_t translation);
+int spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size,
+				 uint64_t translation);
 
 /**
  * Unregister an address translation.
  *
  * \sa spdk_mem_map_set_translation()
  */
-void spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size);
+int spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t size);
 
 /**
  * Look up the translation of a virtual address in a memory map.
@@ -448,14 +448,14 @@ uint64_t spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr);
  * Register the specified memory region for address translation.
  * The memory region must map to pinned huge pages (2MB or greater).
  */
-void spdk_mem_register(void *vaddr, size_t len);
+int spdk_mem_register(void *vaddr, size_t len);
 
 /**
  * Unregister the specified memory region from vtophys address translation.
  * The caller must ensure all in-flight DMA operations to this memory region
  *  are completed or cancelled before calling this function.
  */
-void spdk_mem_unregister(void *vaddr, size_t len);
+int spdk_mem_unregister(void *vaddr, size_t len);
 
 #ifdef __cplusplus
 }
