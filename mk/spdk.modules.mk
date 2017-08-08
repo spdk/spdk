@@ -31,7 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-BLOCKDEV_MODULES_LIST = bdev_malloc bdev_null bdev_nvme nvme vbdev_error vbdev_gpt vbdev_split
+BLOCKDEV_MODULES_LIST = bdev_malloc bdev_null bdev_nvme nvme vbdev_error vbdev_gpt vbdev_lvol vbdev_split
+
+# Modules below are added as dependency for vbdev_lvol
+BLOCKDEV_MODULES_LIST += blob blob_bdev lvol lvs_bdev
 
 ifeq ($(CONFIG_RDMA),y)
 BLOCKDEV_MODULES_DEPS += -libverbs -lrdmacm
