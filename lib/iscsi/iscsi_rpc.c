@@ -472,6 +472,8 @@ struct rpc_target_node {
 static void
 free_rpc_target_node(struct rpc_target_node *req)
 {
+	free(req->name);
+	free(req->alias_name);
 	free_rpc_lun_names(&req->lun_names);
 }
 
