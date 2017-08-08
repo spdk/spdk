@@ -1050,7 +1050,7 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 {
 	struct spdk_vhost_scsi_task *task;
 	uint32_t task_cnt = 0;
-	uint32_t ring_size;
+	uint32_t ring_size, socket_id;
 	uint16_t i;
 	int rc;
 
@@ -1067,15 +1067,16 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 	}
 
 	ring_size = spdk_align32pow2(task_cnt + 1);
-	svdev->task_pool = spdk_ring_create(SPDK_RING_TYPE_SP_SC, ring_size,
-					    spdk_env_get_socket_id(svdev->vdev.lcore));
+	socket_id = spdk_env_get_socket_id(svdev->vdev.lcore);
+
+	svdev->task_pool = spdk_ring_create(SPDK_RING_TYPE_SP_SC, ring_size, socket_id);
 	if (svdev->task_pool == NULL) {
 		SPDK_ERRLOG("Controller %s: Failed to init vhost scsi task pool\n", svdev->vdev.name);
 		return -1;
 	}
 
 	for (i = 0; i < task_cnt; ++i) {
-		task = spdk_dma_zmalloc(sizeof(*task), SPDK_CACHE_LINE_SIZE, NULL);
+		task = spdk_dma_zmalloc_socket(sizeof(*task), SPDK_CACHE_LINE_SIZE, NULL, socket_id);
 		if (task == NULL) {
 			SPDK_ERRLOG("Controller %s: Failed to allocate task\n", svdev->vdev.name);
 			free_task_pool(svdev);
@@ -1084,7 +1085,7 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 
 		rc = spdk_ring_enqueue(svdev->task_pool, (void **)&task, 1);
 		if (rc != 1) {
-			SPDK_ERRLOG("Controller %s: Failed to alloc %"PRIu32" vhost scsi tasks\n", svdev->vdev.name,
+			SPDK_ERRLOG("Controller %s: Failed to enuqueue %"PRIu32" vhost scsi tasks\n", svdev->vdev.name,
 				    task_cnt);
 			free_task_pool(svdev);
 			return -1;
