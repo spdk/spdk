@@ -57,12 +57,6 @@ struct spdk_vhost_dev;
 
 typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_dev *, void *);
 
-/**
- * Get handle to next controller.
- * \param prev Previous controller or NULL to get first one.
- * \return handle to next controller ot NULL if prev was the last one.
- */
-struct spdk_vhost_dev *spdk_vhost_dev_next(struct spdk_vhost_dev *prev);
 struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
 const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *ctrl);
 uint64_t spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *ctrl);
@@ -98,5 +92,23 @@ bool spdk_vhost_blk_get_readonly(struct spdk_vhost_dev *vdev);
  * \param arg parameter to be passed to *fn*.
  */
 void spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, void *arg);
+
+/**
+ * Call function for each available vhost controller on
+ * it's reactor. This will call given function in a chain,
+ * meaning that each callback will be called after the
+ * previous one has finished. After given function has
+ * been called for all controllers, it will be called
+ * once again with first param - vhost controller - set
+ * to NULL.
+ *
+ * This function is thread safe.
+ *
+ * \param fn function to be called for each controller.
+ * The first param will be either vdev pointer or NULL.
+ * The second param is user provided argument *arg*.
+ * \param arg parameter to be passed to *fn*.
+ */
+void spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg);
 
 #endif /* SPDK_VHOST_H */
