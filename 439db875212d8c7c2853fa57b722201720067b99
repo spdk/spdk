@@ -116,6 +116,149 @@
     },
     {
       "key": {
+        "uuid": "6d2b55ed_2e831b62",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:04:36Z",
+      "side": 1,
+      "message": "once",
+      "range": {
+        "startLine": 53,
+        "startChar": 45,
+        "endLine": 53,
+        "endChar": 50
+      },
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab2984d4_f70db189",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:04:36Z",
+      "side": 1,
+      "message": "maybe \"vm_prepare()\" to be consistent with common.sh from fiotest?  all functions for vms there have \"vm_\" prefix",
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf3ead1f_0ad2dc95",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:04:36Z",
+      "side": 1,
+      "message": "vms; or, to be more consistent with previous common.sh - \"vm_reboot_all()\"",
+      "range": {
+        "startLine": 88,
+        "startChar": 20,
+        "endLine": 88,
+        "endChar": 22
+      },
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ffd78c7_e691f541",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:04:36Z",
+      "side": 1,
+      "message": "lsblk would be ok for BLK controller, as it\u0027s disks are presented as vd*, but it\u0027d be non-conclusive for creating a list of SCSI disks",
+      "range": {
+        "startLine": 99,
+        "startChar": 8,
+        "endLine": 99,
+        "endChar": 30
+      },
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd9255bb_a90a4b7f",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:04:36Z",
+      "side": 1,
+      "message": "Not sure if we need a function to create just one vhost config. Why not keep it as a file in repository? \nYou could also use rpc calls.",
+      "range": {
+        "startLine": 115,
+        "startChar": 9,
+        "endLine": 115,
+        "endChar": 38
+      },
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9b33a4a_0edc1d5c",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:04:36Z",
+      "side": 1,
+      "message": "echo, but what?",
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77d336f7_4d4516c3",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:04:36Z",
+      "side": 1,
+      "message": "indentation",
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a9d45ad_e7de36ad",
         "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
         "patchSetId": 4
@@ -127,6 +270,52 @@
       "writtenOn": "2017-08-08T05:29:45Z",
       "side": 1,
       "message": "Move this to separate commit.",
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ed3daec_adeb1788",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:04:36Z",
+      "side": 1,
+      "message": "Do we have to check for sources every time? I think it\u0027s unnecessary.",
+      "range": {
+        "startLine": 26,
+        "startChar": 4,
+        "endLine": 27,
+        "endChar": 14
+      },
+      "revId": "439db875212d8c7c2853fa57b722201720067b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dced8c6_35b19a36",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:04:36Z",
+      "side": 1,
+      "message": "No such function is seems",
+      "range": {
+        "startLine": 37,
+        "startChar": 4,
+        "endLine": 37,
+        "endChar": 7
+      },
       "revId": "439db875212d8c7c2853fa57b722201720067b99",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

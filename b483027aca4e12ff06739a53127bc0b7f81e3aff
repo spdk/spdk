@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ca3809a_1f76faf7",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-08T06:04:36Z",
+      "side": 0,
+      "message": "nitpicking, but why remove this line?",
+      "revId": "b483027aca4e12ff06739a53127bc0b7f81e3aff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
