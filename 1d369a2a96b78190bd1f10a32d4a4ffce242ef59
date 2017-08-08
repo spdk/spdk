@@ -22,6 +22,30 @@
       "revId": "1d369a2a96b78190bd1f10a32d4a4ffce242ef59",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c88693a0_bfdddfca",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-08T06:56:58Z",
+      "side": 1,
+      "message": "I have fixed all to call spdk_gpt_parse.",
+      "parentUuid": "7288eb50_f13d191e",
+      "range": {
+        "startLine": 81,
+        "startChar": 6,
+        "endLine": 81,
+        "endChar": 24
+      },
+      "revId": "1d369a2a96b78190bd1f10a32d4a4ffce242ef59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
