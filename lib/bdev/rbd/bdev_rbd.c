@@ -44,6 +44,7 @@
 #include "spdk/log.h"
 #include "spdk/bdev.h"
 #include "spdk/io_channel.h"
+#include "spdk/json.h"
 #include "spdk/string.h"
 
 #include "spdk_internal/bdev.h"
@@ -455,11 +456,31 @@ bdev_rbd_get_io_channel(void *ctx)
 	return spdk_get_io_channel(&rbd_bdev->info);
 }
 
+static int
+bdev_rbd_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct bdev_rbd *rbd_bdev = ctx;
+
+	spdk_json_write_name(w, "rbd");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "pool_name");
+	spdk_json_write_string(w, rbd_bdev->pool_name);
+
+	spdk_json_write_name(w, "rbd_name");
+	spdk_json_write_string(w, rbd_bdev->rbd_name);
+
+	spdk_json_write_object_end(w);
+
+	return 0;
+}
+
 static const struct spdk_bdev_fn_table rbd_fn_table = {
 	.destruct		= bdev_rbd_destruct,
 	.submit_request		= bdev_rbd_submit_request,
 	.io_type_supported	= bdev_rbd_io_type_supported,
 	.get_io_channel		= bdev_rbd_get_io_channel,
+	.dump_config_json	= bdev_rbd_dump_config_json,
 };
 
 static void
