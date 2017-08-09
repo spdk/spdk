@@ -108,9 +108,9 @@ invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
 {
 	if (task->status) {
 		*task->status = status;
-		spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, task->vq, task->req_idx, 0);
 	}
 
+	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, task->vq, task->req_idx, 0);
 	spdk_vhost_blk_put_tasks(task->bvdev, &task, 1);
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK_DATA, "Invalid request (status=%" PRIu8")\n", status);
 }
@@ -206,6 +206,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 	task->req_idx = req_idx;
 	task->vq = vq;
 	task->iovcnt = SPDK_COUNTOF(task->iovs);
+	task->status = NULL;
 
 	if (blk_iovs_setup(&bvdev->vdev, vq, req_idx, task->iovs, &task->iovcnt, &task->length)) {
 		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Invalid request (req_idx = %"PRIu16").\n", req_idx);
