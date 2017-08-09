@@ -176,7 +176,13 @@ for vm_conf in ${vms[@]}; do
 
 					echo "INFO: Adding initial device (0) to naa.$disk.${conf[0]}"
 					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
-
+					
+					echo "test"
+					if $rpc_py get_vhost_scsi_controllers unk0 /dev/null; then
+						echo "ERROR"
+						false
+					fi
+					
 					echo "INFO: Trying to remove inexistent device on existing controller"
 					if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 1 > /dev/null; then
 						echo "ERROR: Removing inexistent device (1) from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
