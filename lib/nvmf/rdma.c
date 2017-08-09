@@ -189,7 +189,6 @@ struct spdk_nvmf_rdma_port {
 	struct spdk_nvme_transport_id		trid;
 	struct rdma_cm_id			*id;
 	struct spdk_nvmf_rdma_device		*device;
-	struct ibv_comp_channel			*comp_channel;
 	uint32_t				ref;
 	TAILQ_ENTRY(spdk_nvmf_rdma_port)	link;
 };
@@ -243,7 +242,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rdma_qpair)
 
 static struct spdk_nvmf_rdma_qpair *
 spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
-			    struct rdma_cm_id *id, struct ibv_comp_channel *channel,
+			    struct rdma_cm_id *id,
 			    uint16_t max_queue_depth, uint16_t max_rw_depth, uint32_t subsystem_id)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
@@ -269,10 +268,9 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 	TAILQ_INIT(&rdma_qpair->pending_data_buf_queue);
 	TAILQ_INIT(&rdma_qpair->pending_rdma_rw_queue);
 
-	rdma_qpair->cq = ibv_create_cq(id->verbs, max_queue_depth * 3, rdma_qpair, channel, 0);
+	rdma_qpair->cq = ibv_create_cq(id->verbs, max_queue_depth * 3, rdma_qpair, NULL, 0);
 	if (!rdma_qpair->cq) {
 		SPDK_ERRLOG("Unable to create completion queue\n");
-		SPDK_ERRLOG("Completion Channel: %p Id: %p Verbs: %p\n", channel, id, id->verbs);
 		SPDK_ERRLOG("Errno %d: %s\n", errno, strerror(errno));
 		rdma_destroy_id(id);
 		spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
@@ -617,7 +615,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 		      max_queue_depth, max_rw_depth);
 
 	/* Init the NVMf rdma transport connection */
-	rdma_qpair = spdk_nvmf_rdma_qpair_create(transport, event->id, port->comp_channel, max_queue_depth,
+	rdma_qpair = spdk_nvmf_rdma_qpair_create(transport, event->id, max_queue_depth,
 			max_rw_depth, subsystem_id);
 	if (rdma_qpair == NULL) {
 		SPDK_ERRLOG("Error on nvmf connection creation\n");
@@ -1076,31 +1074,9 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		return rc;
 	}
 
-	port->comp_channel = ibv_create_comp_channel(port->id->verbs);
-	if (!port->comp_channel) {
-		SPDK_ERRLOG("Failed to create completion channel\n");
-		rdma_destroy_id(port->id);
-		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
-		return rc;
-	}
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "For listen id %p with context %p, created completion channel %p\n",
-		      port->id, port->id->verbs, port->comp_channel);
-
-	rc = fcntl(port->comp_channel->fd, F_SETFL, O_NONBLOCK);
-	if (rc < 0) {
-		SPDK_ERRLOG("fcntl to set comp channel to non-blocking failed\n");
-		ibv_destroy_comp_channel(port->comp_channel);
-		rdma_destroy_id(port->id);
-		free(port);
-		pthread_mutex_unlock(&rtransport->lock);
-		return rc;
-	}
-
 	rc = rdma_listen(port->id, 10); /* 10 = backlog */
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_listen() failed\n");
-		ibv_destroy_comp_channel(port->comp_channel);
 		rdma_destroy_id(port->id);
 		free(port);
 		pthread_mutex_unlock(&rtransport->lock);
@@ -1158,7 +1134,6 @@ spdk_nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 			port->ref--;
 			if (port->ref == 0) {
 				TAILQ_REMOVE(&rtransport->ports, port, link);
-				ibv_destroy_comp_channel(port->comp_channel);
 				rdma_destroy_id(port->id);
 				free(port);
 			}
