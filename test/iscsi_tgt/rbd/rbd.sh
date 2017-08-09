@@ -42,6 +42,7 @@ timing_exit start_iscsi_tgt
 $rpc_py add_portal_group 1 $TARGET_IP:$PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
+$rpc_py get_bdevs
 # "Ceph0:0" ==> use Ceph0 blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
