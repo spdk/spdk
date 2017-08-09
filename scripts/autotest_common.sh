@@ -1,4 +1,5 @@
 set -xe
+PS4=' \t	\$ '
 ulimit -c unlimited
 
 export RUN_NIGHTLY=0
