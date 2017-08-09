@@ -74,6 +74,18 @@ The environment abstraction layer has been updated to include several new functi
 in order to wrap additional DPDK functionality. See `include/spdk/env.h` for the
 current set of functions.
 
+### SPDK Performance Analysis with Intel® VTune™ Amplifier
+
+Support for SPDK performance analysis has been added to Intel® VTune™ Amplifier 2018.
+
+This analysis provides:
+- I/O performance monitoring (calculating standard I/O metrics like IOPS, throughput, etc.)
+- Tuning insights on the interplay of I/O and compute devices by estimating how many cores
+  would be reasonable to provide for SPDK to keep up with a current storage workload.
+
+See the VTune Amplifier documentation for more information.
+
+
 ## v17.03: Blobstore and userspace vhost-scsi target
 
 ### Blobstore and BlobFS
