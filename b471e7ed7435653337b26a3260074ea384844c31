@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b33dd294_5c54d5fe",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-09T19:38:59Z",
+      "side": 1,
+      "message": "Change comment to:\n\n/* The last known rusage values */",
+      "revId": "b471e7ed7435653337b26a3260074ea384844c31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe2cef86_b0a18cd3",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-09T19:38:59Z",
+      "side": 1,
+      "message": "There were %ld involuntary context switches in the last second.\\n",
+      "revId": "b471e7ed7435653337b26a3260074ea384844c31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
