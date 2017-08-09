@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e9c7bc6_682336f4",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-09T16:23:50Z",
+      "side": 1,
+      "message": "Is it possible for a vhost-blk controller to exist without a bdev? That seems like it shouldn\u0027t be allowed to happen. (I see that this already exists in the current get_vhost_blk_controllers, but I think we can simplify this by removing the check.)",
+      "revId": "14bf378656e03ba07863cf463067a4a8c745a482",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
