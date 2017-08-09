@@ -992,6 +992,15 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 	struct spdk_iscsi_task *tmp;
 	bool flag = false;
 
+	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
+		TAILQ_FOREACH(tmp, &primary->subtask_list, subtask_link) {
+			memcpy(tmp->scsi.sense_data, task->scsi.sense_data,
+			       task->scsi.sense_data_len);
+			tmp->scsi.sense_data_len = task->scsi.sense_data_len;
+			tmp->scsi.status = task->scsi.status;
+		}
+	}
+
 	if ((task != primary) &&
 	    (task->scsi.offset != primary->bytes_completed)) {
 		TAILQ_FOREACH(tmp, &primary->subtask_list, subtask_link) {
