@@ -5,7 +5,3 @@
 
 [Ioat]
   Disable Yes
-
-[VhostScsi0]
-  Name naa.0
-  Dev 1 Nvme0n1
