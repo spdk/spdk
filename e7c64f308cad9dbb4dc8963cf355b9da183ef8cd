@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f48ae9e_32ce3cc9",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2017-08-09T11:14:30Z",
+      "side": 1,
+      "message": "Use BASE_DIR. Different tests need different configs.\nvhost.conf.in should be declared locally.",
+      "revId": "e7c64f308cad9dbb4dc8963cf355b9da183ef8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efdd0f13_d2a31726",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2017-08-09T11:14:30Z",
+      "side": 1,
+      "message": "Like above",
+      "revId": "e7c64f308cad9dbb4dc8963cf355b9da183ef8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
