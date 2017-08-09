@@ -74,10 +74,6 @@ struct spdk_nvmf_rdma_recv {
 	uint8_t				*buf;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_recv) link;
-
-#ifdef DEBUG
-	bool				in_use;
-#endif
 };
 
 struct spdk_nvmf_rdma_request {
@@ -361,9 +357,6 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 		rdma_recv->wr.wr_id = (uintptr_t)rdma_recv;
 		rdma_recv->wr.sg_list = rdma_recv->sgl;
 		rdma_recv->wr.num_sge = SPDK_COUNTOF(rdma_recv->sgl);
-#ifdef DEBUG
-		rdma_recv->in_use = false;
-#endif
 
 		rc = ibv_post_recv(rdma_qpair->cm_id->qp, &rdma_recv->wr, &bad_wr);
 		if (rc) {
@@ -463,10 +456,6 @@ request_transfer_out(struct spdk_nvmf_request *req)
 
 	/* Post the capsule to the recv buffer */
 	assert(rdma_req->recv != NULL);
-#ifdef DEBUG
-	assert(rdma_req->recv->in_use == true);
-	rdma_req->recv->in_use = false;
-#endif
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Recv: %p Connection: %p\n", rdma_req->recv,
 		      rdma_qpair);
 	rc = ibv_post_recv(rdma_qpair->cm_id->qp, &rdma_req->recv->wr, &bad_recv_wr);
@@ -1520,10 +1509,6 @@ get_rdma_recv_from_wc(struct spdk_nvmf_rdma_qpair *rdma_qpair,
 	assert(rdma_recv != NULL);
 	assert(rdma_recv - rdma_qpair->recvs >= 0);
 	assert(rdma_recv - rdma_qpair->recvs < (ptrdiff_t)rdma_qpair->max_queue_depth);
-#ifdef DEBUG
-	assert(rdma_recv->in_use == false);
-	rdma_recv->in_use = true;
-#endif
 
 	return rdma_recv;
 }
