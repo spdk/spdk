@@ -2726,6 +2726,11 @@ spdk_iscsi_transfer_in(struct spdk_iscsi_conn *conn,
 	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
 		if (task != primary) {
 			conn->data_in_cnt--;
+			/* Handle the case when primary task return sucess but the subtask failed */
+			if (primary->bytes_completed == primary->scsi.transfer_len &&
+			    primary->scsi.status == SPDK_SCSI_STATUS_GOOD) {
+				conn->data_in_cnt--;
+			}
 		} else {
 			/* handle the case that it is a primary task which has subtasks */
 			if (primary->scsi.transfer_len != task->scsi.length) {
@@ -2893,6 +2898,10 @@ int spdk_iscsi_conn_handle_queued_tasks(struct spdk_iscsi_conn *conn)
 
 			task->scsi.lun = spdk_scsi_dev_get_lun(conn->dev, task->scsi.lun_id);
 			if (task->scsi.lun == NULL) {
+				/* Remove the primary task from the list if this is the last subtask */
+				if (task->current_datain_offset == task->scsi.transfer_len) {
+					TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+				}
 				subtask->scsi.transfer_len = subtask->scsi.length;
 				spdk_scsi_task_process_null_lun(&subtask->scsi);
 				spdk_iscsi_task_cpl(&subtask->scsi);
