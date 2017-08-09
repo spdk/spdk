@@ -1,4 +1,5 @@
 set -xe
+PS4='$0:$LINENO \t '
 ulimit -c unlimited
 
 export RUN_NIGHTLY=0
