@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7e4bd7f_47c14bef",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-09T17:09:45Z",
+      "side": 1,
+      "message": "Maybe add a comment explaining why the difference has to be greater than 10 instead of greater than 0?",
+      "revId": "02fd6fa5e807b24016485e619dee763011514c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae37fdae_41fe495d",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-09T17:09:45Z",
+      "side": 1,
+      "message": "Waring -\u003e Warning\n\nAlso, in the printf, translate vcsw and ivcsw into what they actually mean. Most people won\u0027t know what that message means if they see it.\n\nInstead of printf, use SPDK_WARNLOG.",
+      "revId": "02fd6fa5e807b24016485e619dee763011514c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1b6c62d_23abf863",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-09T17:09:45Z",
+      "side": 1,
+      "message": "You can just write reactor-\u003erusage \u003d rusage;",
+      "revId": "02fd6fa5e807b24016485e619dee763011514c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
