@@ -36,6 +36,75 @@
     },
     {
       "key": {
+        "uuid": "f0945e10_30ce6c3d",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-09T07:24:47Z",
+      "side": 1,
+      "message": "automated test of what?",
+      "range": {
+        "startLine": 23,
+        "startChar": 33,
+        "endLine": 23,
+        "endChar": 47
+      },
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4d6caf0_afe27a41",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-09T07:24:47Z",
+      "side": 1,
+      "message": "Elaborate help text here.",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 57
+      },
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5c85408_db09affc",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-09T07:24:47Z",
+      "side": 1,
+      "message": "Please remove those. We must have working environment already.",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 1
+      },
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6054b0a_5f5fb1f8",
         "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
         "patchSetId": 5
@@ -185,6 +254,52 @@
       "writtenOn": "2017-08-09T06:15:37Z",
       "side": 1,
       "message": "Commit message says only about adding hot-attach tests, so these changes are unrelated.\nFor more convenient reviewing - please do not add hot-detach changes in here and instead add them to another commit in series.",
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1bcb3bc_2f12d496",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-09T07:24:47Z",
+      "side": 1,
+      "message": "Nice, red whitespaces",
+      "range": {
+        "startLine": 14,
+        "startChar": 25,
+        "endLine": 14,
+        "endChar": 27
+      },
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aecd6a49_7e522420",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-09T07:24:47Z",
+      "side": 1,
+      "message": "Why those tests are not part of vhost_scsi integrity tests?",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 6
+      },
       "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
