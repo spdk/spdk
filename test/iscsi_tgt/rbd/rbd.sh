@@ -5,13 +5,8 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
-if [ -z $CEPH_DIR ] && ! hash ceph; then
-	echo "Ceph directory not defined; skipping RBD tests"
-	exit 0
-fi
-
-if [ ! -d $CEPH_DIR ] && ! hash ceph; then
-	echo "Ceph directory not detected on this system; skipping RBD tests"
+if ! hash ceph; then
+	echo "Ceph not detected on this system; skipping RBD tests"
 	exit 0
 fi
 
