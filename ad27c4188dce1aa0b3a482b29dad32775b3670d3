@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "eaca43be_340c2d83",
+        "filename": "CONFIG",
+        "patchSetId": 3
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-09T05:05:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e45e6d39_a3a34fe0",
+      "revId": "ad27c4188dce1aa0b3a482b29dad32775b3670d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a27a259_d8a538dd",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-08T17:43:09Z",
       "side": 1,
       "message": "rc should probably be initialized here to satisfy the compiler that the \u0027return rc\u0027 is not using a potentially uninitialized value.  Alternatively, you could add a default case to the switch statement below and mark it as unreachable like you did in the vtophys.c code.",
+      "revId": "ad27c4188dce1aa0b3a482b29dad32775b3670d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2042806_08aac06e",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-09T05:05:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3a27a259_d8a538dd",
       "revId": "ad27c4188dce1aa0b3a482b29dad32775b3670d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
