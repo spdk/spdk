@@ -106,6 +106,8 @@ struct spdk_nvmf_rdma_request {
 struct spdk_nvmf_rdma_qpair {
 	struct spdk_nvmf_qpair			qpair;
 
+	struct spdk_nvmf_rdma_port		*port;
+
 	struct rdma_cm_id			*cm_id;
 	struct ibv_cq				*cq;
 
@@ -242,6 +244,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rdma_qpair)
 
 static struct spdk_nvmf_rdma_qpair *
 spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
+			    struct spdk_nvmf_rdma_port *port,
 			    struct rdma_cm_id *id,
 			    uint16_t max_queue_depth, uint16_t max_rw_depth, uint32_t subsystem_id)
 {
@@ -261,6 +264,7 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 		return NULL;
 	}
 
+	rdma_qpair->port = port;
 	rdma_qpair->max_queue_depth = max_queue_depth;
 	rdma_qpair->max_rw_depth = max_rw_depth;
 	TAILQ_INIT(&rdma_qpair->incoming_queue);
@@ -615,7 +619,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 		      max_queue_depth, max_rw_depth);
 
 	/* Init the NVMf rdma transport connection */
-	rdma_qpair = spdk_nvmf_rdma_qpair_create(transport, event->id, max_queue_depth,
+	rdma_qpair = spdk_nvmf_rdma_qpair_create(transport, port, event->id, max_queue_depth,
 			max_rw_depth, subsystem_id);
 	if (rdma_qpair == NULL) {
 		SPDK_ERRLOG("Error on nvmf connection creation\n");
