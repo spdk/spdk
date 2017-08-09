@@ -245,6 +245,18 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 	char **dpdk_args = NULL;
 	int argcount, i, rc;
 	int orig_optind;
+	int maxpri;
+	struct sched_param param;
+
+        maxpri = sched_get_priority_max(SCHED_FIFO);
+        if (maxpri == -1) {
+                fprintf(stderr, "sched_get_priority_max() failed\n");
+        } else {
+		param.sched_priority = maxpri;
+		if (sched_setscheduler(getpid(), SCHED_FIFO, &param) == -1) {
+			fprintf(stderr, "sched_setscheduler failed\n");
+		}
+	}
 
 	argcount = spdk_build_eal_cmdline(opts, &args);
 	if (argcount <= 0) {
