@@ -36,6 +36,7 @@
 #include "spdk/env.h"
 #include "spdk/likely.h"
 #include "spdk/util.h"
+#include "spdk/barrier.h"
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
@@ -98,30 +99,34 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vr
 				uint16_t id,
 				uint32_t len)
 {
+	int need_event = 0;
+	volatile uint16_t *used_event;
 	struct vring_used *used = vq->used;
 	uint16_t size_mask = vq->size - 1;
-	uint16_t last_idx = vq->last_used_idx;
+	uint16_t last_idx = vq->last_used_idx & size_mask;
 
 	SPDK_TRACELOG(SPDK_TRACE_VHOST_RING, "USED: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
-		      last_idx, id, len);
-
-	vq->last_used_idx++;
-	last_idx &= size_mask;
+		      vq->last_used_idx, id, len);
 
 	used->ring[last_idx].id = id;
 	used->ring[last_idx].len = len;
 
-	rte_compiler_barrier();
+	spdk_compiler_barrier();
 
-	vq->used->idx = vq->last_used_idx;
+	vq->last_used_idx++;
+	* (volatile uint16_t *) &vq->used->idx = vq->last_used_idx;
 
-	/*
-	 * We should be able to used hints form guest but simply checking
-	 * avail->flags prove to be unreliable. Till it is figured out how
-	 * reliable use avail->flags value interrupts are always sent to guest.
-	 */
-	eventfd_write(vq->callfd, (eventfd_t)1);
+	if ((vdev->negotiated_features & (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY)) &&
+	    spdk_unlikely(vq->avail->idx == vq->last_avail_idx)) {
+		need_event = 1;
+	} else {
+		spdk_mb();
+		need_event = !(vq->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
+	}
 
+	if (need_event) {
+		eventfd_write(vq->callfd, (eventfd_t)1);
+	}
 }
 
 bool
