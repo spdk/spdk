@@ -49,10 +49,7 @@
 #include "spdk_internal/assert.h"
 
 /* Features supported by SPDK VHOST lib. */
-#define SPDK_VHOST_SCSI_FEATURES	((1ULL << VIRTIO_F_VERSION_1) | \
-					(1ULL << VHOST_F_LOG_ALL) | \
-					(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
-					(1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) | \
+#define SPDK_VHOST_SCSI_FEATURES	(SPDK_VHOST_FEATURES | \
 					(1ULL << VIRTIO_SCSI_F_INOUT) | \
 					(1ULL << VIRTIO_SCSI_F_HOTPLUG) | \
 					(1ULL << VIRTIO_SCSI_F_CHANGE ) | \
@@ -62,7 +59,7 @@
  * - Live migration not supported yet
  * - T10 PI
  */
-#define SPDK_VHOST_SCSI_DISABLED_FEATURES	((1ULL << VHOST_F_LOG_ALL) | \
+#define SPDK_VHOST_SCSI_DISABLED_FEATURES	(SPDK_VHOST_DISABLED_FEATURES | \
 						(1ULL << VIRTIO_SCSI_F_T10_PI ))
 
 #define MGMT_POLL_PERIOD_US (1000 * 5)
