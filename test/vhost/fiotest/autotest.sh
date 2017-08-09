@@ -164,7 +164,8 @@ for vm_conf in ${vms[@]}; do
 				if [[ "$test_type" == "spdk_vhost_blk" ]]; then
 					disk=${disk%%_*}
 					echo "INFO: Creating vhost block controller naa.$disk.${conf[0]} with device $disk"
-					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $disk
+					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $disk			
+
 				else
 					echo "INFO: Trying to remove inexistent controller"
 					if $rpc_py remove_vhost_scsi_controller unk0 > /dev/null; then
@@ -176,7 +177,7 @@ for vm_conf in ${vms[@]}; do
 
 					echo "INFO: Adding initial device (0) to naa.$disk.${conf[0]}"
 					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
-
+	
 					echo "INFO: Trying to remove inexistent device on existing controller"
 					if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 1 > /dev/null; then
 						echo "ERROR: Removing inexistent device (1) from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
@@ -196,6 +197,35 @@ for vm_conf in ${vms[@]}; do
 					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
 				fi
 			done
+				echo "INFO: Test2"
+				if $rpc_py construct_vhost_scsi_controller . > /dev/null; then
+					echo "ERROR"
+					false
+				fi
+
+				echo "INFO: Test3"
+				if $rpc_py construct_vhost_scsi_controller vhost.test --cpumask 9 > /dev/null; then
+					echo "ERROR"
+					false
+				fi
+
+				echo "INFO: Test4"
+				if $rpc_py remove_vhost_scsi_dev vhost.test 0 > /dev/null; then
+					echo "ERROR"
+					false
+				fi
+
+				echo "INFO: Test5"
+				if $rpc_py add_vhost_scsi_lun vhost.invalid.name 0 malloc0 > /dev/null; then
+					echo "ERROR"
+					false
+				fi
+				
+				echo "INFO6: Test"
+				if $rpc_py construct_vhost_blk_controller vhost.test  malloc0 --cpumask 9 > /dev/null; then
+					echo "ERROR"
+					false
+				fi
 		done <<< "${conf[2]}"
 		unset IFS;
 		$rpc_py get_vhost_scsi_controllers
