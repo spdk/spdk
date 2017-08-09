@@ -181,6 +181,14 @@ vbdev_error_disk_free(struct vbdev_error_disk *disk)
 		return;
 	}
 
+	if (disk->base_bdev) {
+		spdk_bdev_module_release_bdev(disk->base_bdev);
+	}
+
+	if (disk->base_bdev_desc) {
+		spdk_bdev_close(disk->base_bdev_desc);
+	}
+
 	free(disk->disk.name);
 	free(disk);
 }
