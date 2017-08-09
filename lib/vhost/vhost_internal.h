@@ -73,8 +73,7 @@
 	(1ULL << VIRTIO_RING_F_EVENT_IDX) | \
 	(1ULL << VIRTIO_RING_F_INDIRECT_DESC))
 
-#define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
-	(1ULL << VIRTIO_RING_F_EVENT_IDX))
+#define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VHOST_F_LOG_ALL))
 
 enum spdk_vhost_dev_type {
 	SPDK_VHOST_DEV_T_SCSI,
@@ -84,6 +83,9 @@ enum spdk_vhost_dev_type {
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
 	uint16_t size_mask;
+
+	uint16_t signaled_used_idx;
+	volatile uint16_t *used_event;
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_dev_backend {
