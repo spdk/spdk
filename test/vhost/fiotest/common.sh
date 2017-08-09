@@ -580,7 +580,7 @@ function vm_setup()
 				disk=${disk%%_*}
 				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-blk-pci,chardev=char_$disk,"
+				cmd+="-device vhost-user-blk-pci,num_queues=$cpu_num,chardev=char_$disk,"
 				cmd+="logical_block_size=4096,size=$size ${eol}"
 				;;
 			kernel_vhost)
