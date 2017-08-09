@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "9be410f7_40f4c76f",
+        "filename": "test/vhost/hotfeatures/fio_jobs/default_integrity.job",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-09T06:17:18Z",
+      "side": 1,
+      "message": "Do we need all these job files? We could probably get list of disks on VM by ssh.",
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6054b0a_5f5fb1f8",
         "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
         "patchSetId": 5
