@@ -10,6 +10,11 @@ spdk_bdev_unmap() was modified to take an offset and a length in bytes as
 arguments instead of requiring the user to provide an array of SCSI
 unmap descriptors. This limits unmaps to a single contiguous range.
 
+### General changes
+Set up the scheduler priority of process which based on SPDK as SCHED_FIFO in function
+spdk_env_init(), this make sure the process will run on a high priority and reduce the
+involuntary context switches.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
