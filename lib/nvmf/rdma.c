@@ -185,13 +185,13 @@ struct spdk_nvmf_rdma_device {
 	TAILQ_ENTRY(spdk_nvmf_rdma_device)	link;
 };
 
-struct spdk_nvmf_rdma_listen_addr {
+struct spdk_nvmf_rdma_port {
 	struct spdk_nvme_transport_id		trid;
 	struct rdma_cm_id			*id;
 	struct spdk_nvmf_rdma_device		*device;
 	struct ibv_comp_channel			*comp_channel;
 	uint32_t				ref;
-	TAILQ_ENTRY(spdk_nvmf_rdma_listen_addr)	link;
+	TAILQ_ENTRY(spdk_nvmf_rdma_port)	link;
 };
 
 struct spdk_nvmf_rdma_transport {
@@ -205,8 +205,8 @@ struct spdk_nvmf_rdma_transport {
 	uint32_t 			max_io_size;
 	uint32_t 			in_capsule_data_size;
 
-	TAILQ_HEAD(, spdk_nvmf_rdma_device)		devices;
-	TAILQ_HEAD(, spdk_nvmf_rdma_listen_addr)	listen_addrs;
+	TAILQ_HEAD(, spdk_nvmf_rdma_device)	devices;
+	TAILQ_HEAD(, spdk_nvmf_rdma_port)	ports;
 };
 
 static void
@@ -539,7 +539,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_qpair	*rdma_qpair = NULL;
-	struct spdk_nvmf_rdma_listen_addr *addr;
+	struct spdk_nvmf_rdma_port 	*port;
 	struct rdma_conn_param		*rdma_param = NULL;
 	struct rdma_conn_param		ctrlr_event_data;
 	const struct spdk_nvmf_rdma_request_private_data *private_data = NULL;
@@ -573,9 +573,9 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Connect Recv on fabric intf name %s, dev_name %s\n",
 		      event->id->verbs->device->name, event->id->verbs->device->dev_name);
 
-	addr = event->listen_id->context;
+	port = event->listen_id->context;
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Listen Id was %p with verbs %p. ListenAddr: %p\n",
-		      event->listen_id, event->listen_id->verbs, addr);
+		      event->listen_id, event->listen_id->verbs, port);
 
 	/* Figure out the supported queue depth. This is a multi-step process
 	 * that takes into account hardware maximums, host provided values,
@@ -591,9 +591,9 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	/* Next check the local NIC's hardware limitations */
 	SPDK_TRACELOG(SPDK_TRACE_RDMA,
 		      "Local NIC Max Send/Recv Queue Depth: %d Max Read/Write Queue Depth: %d\n",
-		      addr->device->attr.max_qp_wr, addr->device->attr.max_qp_rd_atom);
-	max_queue_depth = spdk_min(max_queue_depth, addr->device->attr.max_qp_wr);
-	max_rw_depth = spdk_min(max_rw_depth, addr->device->attr.max_qp_rd_atom);
+		      port->device->attr.max_qp_wr, port->device->attr.max_qp_rd_atom);
+	max_queue_depth = spdk_min(max_queue_depth, port->device->attr.max_qp_wr);
+	max_rw_depth = spdk_min(max_rw_depth, port->device->attr.max_qp_rd_atom);
 
 	/* Next check the remote NIC's hardware limitations */
 	SPDK_TRACELOG(SPDK_TRACE_RDMA,
@@ -617,7 +617,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 		      max_queue_depth, max_rw_depth);
 
 	/* Init the NVMf rdma transport connection */
-	rdma_qpair = spdk_nvmf_rdma_qpair_create(transport, event->id, addr->comp_channel, max_queue_depth,
+	rdma_qpair = spdk_nvmf_rdma_qpair_create(transport, event->id, port->comp_channel, max_queue_depth,
 			max_rw_depth, subsystem_id);
 	if (rdma_qpair == NULL) {
 		SPDK_ERRLOG("Error on nvmf connection creation\n");
@@ -941,7 +941,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 
 	pthread_mutex_init(&rtransport->lock, NULL);
 	TAILQ_INIT(&rtransport->devices);
-	TAILQ_INIT(&rtransport->listen_addrs);
+	TAILQ_INIT(&rtransport->ports);
 
 	rtransport->transport.tgt = tgt;
 	rtransport->transport.ops = &spdk_nvmf_transport_rdma;
@@ -1003,7 +1003,7 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
-	assert(TAILQ_EMPTY(&rtransport->listen_addrs));
+	assert(TAILQ_EMPTY(&rtransport->ports));
 	if (rtransport->event_channel != NULL) {
 		rdma_destroy_event_channel(rtransport->event_channel);
 	}
@@ -1024,111 +1024,110 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_device	*device;
-	struct spdk_nvmf_rdma_listen_addr *addr_tmp, *addr;
+	struct spdk_nvmf_rdma_port 	*port_tmp, *port;
 	struct sockaddr_in saddr;
 	int rc;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
-	addr = calloc(1, sizeof(*addr));
-	if (!addr) {
+	port = calloc(1, sizeof(*port));
+	if (!port) {
 		return -ENOMEM;
 	}
 
 	/* Selectively copy the trid. Things like NQN don't matter here - that
 	 * mapping is enforced elsewhere.
 	 */
-	addr->trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	addr->trid.adrfam = trid->adrfam;
-	snprintf(addr->trid.traddr, sizeof(addr->trid.traddr), "%s", trid->traddr);
-	snprintf(addr->trid.trsvcid, sizeof(addr->trid.trsvcid), "%s", trid->trsvcid);
+	port->trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	port->trid.adrfam = trid->adrfam;
+	snprintf(port->trid.traddr, sizeof(port->trid.traddr), "%s", trid->traddr);
+	snprintf(port->trid.trsvcid, sizeof(port->trid.trsvcid), "%s", trid->trsvcid);
 
 	pthread_mutex_lock(&rtransport->lock);
 	assert(rtransport->event_channel != NULL);
-	TAILQ_FOREACH(addr_tmp, &rtransport->listen_addrs, link) {
-		if (spdk_nvme_transport_id_compare(&addr_tmp->trid, &addr->trid) == 0) {
-			addr_tmp->ref++;
-			free(addr);
+	TAILQ_FOREACH(port_tmp, &rtransport->ports, link) {
+		if (spdk_nvme_transport_id_compare(&port_tmp->trid, &port->trid) == 0) {
+			port_tmp->ref++;
+			free(port);
 			/* Already listening at this address */
 			pthread_mutex_unlock(&rtransport->lock);
 			return 0;
 		}
 	}
 
-	rc = rdma_create_id(rtransport->event_channel, &addr->id, addr, RDMA_PS_TCP);
+	rc = rdma_create_id(rtransport->event_channel, &port->id, port, RDMA_PS_TCP);
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_create_id() failed\n");
-		free(addr);
+		free(port);
 		pthread_mutex_unlock(&rtransport->lock);
 		return rc;
 	}
 
 	memset(&saddr, 0, sizeof(saddr));
 	saddr.sin_family = AF_INET;
-	saddr.sin_addr.s_addr = inet_addr(addr->trid.traddr);
-	saddr.sin_port = htons((uint16_t)strtoul(addr->trid.trsvcid, NULL, 10));
-	rc = rdma_bind_addr(addr->id, (struct sockaddr *)&saddr);
+	saddr.sin_addr.s_addr = inet_addr(port->trid.traddr);
+	saddr.sin_port = htons((uint16_t)strtoul(port->trid.trsvcid, NULL, 10));
+	rc = rdma_bind_addr(port->id, (struct sockaddr *)&saddr);
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_bind_addr() failed\n");
-		rdma_destroy_id(addr->id);
-		free(addr);
+		rdma_destroy_id(port->id);
+		free(port);
 		pthread_mutex_unlock(&rtransport->lock);
 		return rc;
 	}
 
-	addr->comp_channel = ibv_create_comp_channel(addr->id->verbs);
-	if (!addr->comp_channel) {
+	port->comp_channel = ibv_create_comp_channel(port->id->verbs);
+	if (!port->comp_channel) {
 		SPDK_ERRLOG("Failed to create completion channel\n");
-		rdma_destroy_id(addr->id);
-		free(addr);
+		rdma_destroy_id(port->id);
+		free(port);
 		pthread_mutex_unlock(&rtransport->lock);
 		return rc;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "For listen id %p with context %p, created completion channel %p\n",
-		      addr->id, addr->id->verbs, addr->comp_channel);
+		      port->id, port->id->verbs, port->comp_channel);
 
-	rc = fcntl(addr->comp_channel->fd, F_SETFL, O_NONBLOCK);
+	rc = fcntl(port->comp_channel->fd, F_SETFL, O_NONBLOCK);
 	if (rc < 0) {
 		SPDK_ERRLOG("fcntl to set comp channel to non-blocking failed\n");
-		ibv_destroy_comp_channel(addr->comp_channel);
-		rdma_destroy_id(addr->id);
-		free(addr);
+		ibv_destroy_comp_channel(port->comp_channel);
+		rdma_destroy_id(port->id);
+		free(port);
 		pthread_mutex_unlock(&rtransport->lock);
 		return rc;
 	}
 
-	rc = rdma_listen(addr->id, 10); /* 10 = backlog */
+	rc = rdma_listen(port->id, 10); /* 10 = backlog */
 	if (rc < 0) {
 		SPDK_ERRLOG("rdma_listen() failed\n");
-		ibv_destroy_comp_channel(addr->comp_channel);
-		rdma_destroy_id(addr->id);
-		free(addr);
+		ibv_destroy_comp_channel(port->comp_channel);
+		rdma_destroy_id(port->id);
+		free(port);
 		pthread_mutex_unlock(&rtransport->lock);
 		return rc;
 	}
 
 	TAILQ_FOREACH(device, &rtransport->devices, link) {
-		if (device->context == addr->id->verbs) {
-			addr->device = device;
+		if (device->context == port->id->verbs) {
+			port->device = device;
 			break;
 		}
 	}
-	if (!addr->device) {
+	if (!port->device) {
 		SPDK_ERRLOG("Accepted a connection with verbs %p, but unable to find a corresponding device.\n",
-			    addr->id->verbs);
-		ibv_destroy_comp_channel(addr->comp_channel);
-		rdma_destroy_id(addr->id);
-		free(addr);
+			    port->id->verbs);
+		rdma_destroy_id(port->id);
+		free(port);
 		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
 	}
 
 	SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
-		       addr->trid.traddr, ntohs(rdma_get_src_port(addr->id)));
+		       port->trid.traddr, ntohs(rdma_get_src_port(port->id)));
 
-	addr->ref = 1;
+	port->ref = 1;
 
-	TAILQ_INSERT_TAIL(&rtransport->listen_addrs, addr, link);
+	TAILQ_INSERT_TAIL(&rtransport->ports, port, link);
 	pthread_mutex_unlock(&rtransport->lock);
 
 	return 0;
@@ -1139,7 +1138,7 @@ spdk_nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 			   const struct spdk_nvme_transport_id *_trid)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
-	struct spdk_nvmf_rdma_listen_addr *addr, *tmp;
+	struct spdk_nvmf_rdma_port *port, *tmp;
 	struct spdk_nvme_transport_id trid = {};
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
@@ -1149,19 +1148,19 @@ spdk_nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 	 */
 	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
 	trid.adrfam = _trid->adrfam;
-	snprintf(trid.traddr, sizeof(addr->trid.traddr), "%s", _trid->traddr);
-	snprintf(trid.trsvcid, sizeof(addr->trid.trsvcid), "%s", _trid->trsvcid);
+	snprintf(trid.traddr, sizeof(port->trid.traddr), "%s", _trid->traddr);
+	snprintf(trid.trsvcid, sizeof(port->trid.trsvcid), "%s", _trid->trsvcid);
 
 	pthread_mutex_lock(&rtransport->lock);
-	TAILQ_FOREACH_SAFE(addr, &rtransport->listen_addrs, link, tmp) {
-		if (spdk_nvme_transport_id_compare(&addr->trid, &trid) == 0) {
-			assert(addr->ref > 0);
-			addr->ref--;
-			if (addr->ref == 0) {
-				TAILQ_REMOVE(&rtransport->listen_addrs, addr, link);
-				ibv_destroy_comp_channel(addr->comp_channel);
-				rdma_destroy_id(addr->id);
-				free(addr);
+	TAILQ_FOREACH_SAFE(port, &rtransport->ports, link, tmp) {
+		if (spdk_nvme_transport_id_compare(&port->trid, &trid) == 0) {
+			assert(port->ref > 0);
+			port->ref--;
+			if (port->ref == 0) {
+				TAILQ_REMOVE(&rtransport->ports, port, link);
+				ibv_destroy_comp_channel(port->comp_channel);
+				rdma_destroy_id(port->id);
+				free(port);
 			}
 			break;
 		}
@@ -1244,15 +1243,15 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 
 static void
 spdk_nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
-			struct spdk_nvmf_listen_addr *listen_addr,
+			struct spdk_nvmf_listen_addr *port,
 			struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	entry->trtype = SPDK_NVMF_TRTYPE_RDMA;
-	entry->adrfam = listen_addr->trid.adrfam;
+	entry->adrfam = port->trid.adrfam;
 	entry->treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_SPECIFIED;
 
-	spdk_strcpy_pad(entry->trsvcid, listen_addr->trid.trsvcid, sizeof(entry->trsvcid), ' ');
-	spdk_strcpy_pad(entry->traddr, listen_addr->trid.traddr, sizeof(entry->traddr), ' ');
+	spdk_strcpy_pad(entry->trsvcid, port->trid.trsvcid, sizeof(entry->trsvcid), ' ');
+	spdk_strcpy_pad(entry->traddr, port->trid.traddr, sizeof(entry->traddr), ' ');
 
 	entry->tsas.rdma.rdma_qptype = SPDK_NVMF_RDMA_QPTYPE_RELIABLE_CONNECTED;
 	entry->tsas.rdma.rdma_prtype = SPDK_NVMF_RDMA_PRTYPE_NONE;
