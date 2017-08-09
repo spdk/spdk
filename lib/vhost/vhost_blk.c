@@ -518,14 +518,13 @@ destroy_device(int vid)
 }
 
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
-	.virtio_features = (1ULL << VHOST_F_LOG_ALL) | (1ULL << VHOST_USER_F_PROTOCOL_FEATURES) |
-	(1ULL << VIRTIO_F_VERSION_1) | (1ULL << VIRTIO_F_NOTIFY_ON_EMPTY) |
+	.virtio_features = SPDK_VHOST_FEATURES |
 	(1ULL << VIRTIO_BLK_F_SIZE_MAX) | (1ULL << VIRTIO_BLK_F_SEG_MAX) |
 	(1ULL << VIRTIO_BLK_F_GEOMETRY) | (1ULL << VIRTIO_BLK_F_RO) |
 	(1ULL << VIRTIO_BLK_F_BLK_SIZE) | (1ULL << VIRTIO_BLK_F_TOPOLOGY) |
 	(1ULL << VIRTIO_BLK_F_BARRIER)  | (1ULL << VIRTIO_BLK_F_SCSI) |
 	(1ULL << VIRTIO_BLK_F_FLUSH)    | (1ULL << VIRTIO_BLK_F_CONFIG_WCE),
-	.disabled_features = (1ULL << VHOST_F_LOG_ALL) | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
+	.disabled_features = SPDK_VHOST_DISABLED_FEATURES | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
 	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
 	.ops = {
