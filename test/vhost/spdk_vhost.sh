@@ -49,17 +49,22 @@ case $param in
 	--fio-jobs=$WORKDIR/fiotest/fio_jobs/default_integrity.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu -x
     ;;
-	-f|--fs-integrity)
+	-fs|--fs-integrity-scsi)
 	echo Running filesystem integrity suite...
-	VM_IMG=/home/sys_sgsw/vhost_scsi_vm_image.qcow2 ./integrity/integrity_start.sh
+	VM_IMG=/home/klateck/backup/dut_ext4.qcow2 VM_FS=ntfs VHOST_MODE=scsi ./integrity/integrity_start.sh
+	;;
+	-fb|--fs-integrity-blk)
+	echo Running filesystem integrity suite...
+	VM_IMG=/home/klateck/backup/dut_ext4.qcow2 VM_FS=ntfs VHOST_MODE=blk ./integrity/integrity_start.sh
 	;;
     -h|--help)
-	echo "-i|--integrity 		for running an integrity test with vhost scsi"
-	echo "-f|--fs-integrity 	for running an integrity test with filesystem"
-	echo "-p|--performance 		for running a performance test with vhost scsi"
-	echo "-ib|--integrity-blk 	for running an integrity test with vhost blk"
-	echo "-pb|--performance-blk	for running a performance test with vhost blk"
-	echo "-h|--help 		prints this message"
+	echo "-i |--integrity 			for running an integrity test with vhost scsi"
+	echo "-fs|--fs-integrity-scsi 	for running an integrity test with filesystem"
+	echo "-fb|--fs-integrity-blk 	for running an integrity test with filesystem"
+	echo "-p |--performance 		for running a performance test with vhost scsi"
+	echo "-ib|--integrity-blk 		for running an integrity test with vhost blk"
+	echo "-pb|--performance-blk		for running a performance test with vhost blk"
+	echo "-h |--help 				prints this message"
     ;;
     *)
 	echo "unknown test type"

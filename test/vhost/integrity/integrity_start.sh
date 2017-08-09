@@ -3,28 +3,12 @@
 basedir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $basedir/../../..)
 testdir=$(readlink -f $rootdir/..)
-qemu_src_dir="$testdir/qemu"
-qemu_build_dir="$testdir/qemu/build"
 qemu_install_dir="$testdir/root"
 MAKE="make -j$(( $(nproc)  * 2 ))"
 
-source $rootdir/scripts/autotest_common.sh
-
-if [ -z "$VM_IMG" ]; then
-    echo "ERROR: VM_IMG: path to qcow2 image not provided - not running"
-    exit 1
-fi
-
-if [ -z "$VM_QEMU" ]; then
-    echo "INFO: VM_QEMU: path to qemu binary not provided"
-    echo "INFO: Will use qemu from repository"
-fi
-
-if [ -z "$VM_FS" ]; then
-    VM_FS="ext4"
-    echo "INFO: Using default value for filesystem: $VM_FS"
-fi
-
+rpc_py="python $rootdir/scripts/rpc.py "
+rpc_py+="-s 127.0.0.1 "
+RPC_PORT=5260
 HOST_IP=192.200.200.1
 VM_IP=192.200.200.254
 VM_UNAME="root"
@@ -37,7 +21,32 @@ TIMEO=60
 SSHCMD="sshpass -p $VM_PASS ssh"
 SCPCMD="sshpass -p $VM_PASS scp"
 
-echo "FS: $VM_FS"
+source $rootdir/scripts/autotest_common.sh
+
+if [ -z "$VM_IMG" ]; then
+    echo "ERROR: VM_IMG: path to qcow2 image not provided - not running"
+    exit 1
+fi
+
+if [ -z "$VHOST_MODE" ]; then
+    echo "ERROR: VHOST_MODE: please specify Vhost mode - scsi or blk"
+fi
+
+if [ -z "$VM_FS" ]; then
+    VM_FS="ext4"
+    echo "INFO: Using default value for filesystem: $VM_FS"
+fi
+
+# Check if Qemu binary is present
+if [[ -z $VM_QEMU ]];then
+    VM_QEMU="$qemu_install_dir/bin/qemu-system-x86_64"
+fi
+
+if [[ ! -x $VM_QEMU ]]; then
+    echo "ERROR: QEMU binary not present in $VM_QEMU"
+fi
+
+echo "Running test with filesystem: $VM_FS"
 
 function cleanup_virsh() {
     virsh shutdown $VM_NAME || true
@@ -47,37 +56,6 @@ function cleanup_virsh() {
 }
 
 timing_enter integrity_test
-
-# If no VM_QEMU argument is given - check if needed qemu is installed
-echo "INFO: Checking qemu..."
-if [[ ! -d $qemu_src_dir && -z "$VM_QEMU" ]]; then
-    echo "INFO: Cloning $qemu_src_dir"
-    rm -rf $qemu_src_dir
-    mkdir -p $qemu_src_dir
-    cd $(dirname $qemu_src_dir)
-    git clone -b dev/vhost_scsi ssh://az-sg-sw01.ch.intel.com:29418/qemu
-    echo "INFO: Cloning Qemu Done"
-else
-    echo "INFO: Qemu source exist $qemu_src_dir - not cloning"
-fi
-
-# Check if Qemu binary is present; build it if not
-if [[ ! -x $qemu_install_dir/bin/qemu-system-x86_64 && -z "$VM_QEMU" ]]; then
-    echo "INFO: Can't find $qemu_install_dir/bin/qemu-system-x86_64 - building and installing"
-    mkdir -p $qemu_build_dir
-    cd $qemu_build_dir
-
-    $qemu_src_dir/configure --prefix=$qemu_install_dir \
-    --target-list="x86_64-softmmu" \
-    --enable-kvm --enable-linux-aio --enable-numa
-
-    echo "INFO: Compiling and installing QEMU in $qemu_install_dir"
-    $MAKE install
-    VM_QEMU="$qemu_install_dir/bin/qemu-system-x86_64"
-    echo "INFO: DONE"
-elif [[ -z "$VM_QEMU" ]]; then
-    VM_QEMU="$qemu_install_dir/bin/qemu-system-x86_64"
-fi
 
 # Backing image for VM
 qemu-img create -f qcow2 -o backing_file=$VM_IMG $VM_BAK_IMG
@@ -95,6 +73,11 @@ sed -i "s@<emulator></emulator>@<emulator>$VM_QEMU</emulator>@g" $basedir/vm_con
 sed -i "s@mac address=''@mac address='$VM_MAC'@g" $basedir/vm_conf.xml
 sed -i "s@source network=''@source network='$VM_NET_NAME'@g" $basedir/vm_conf.xml
 sed -i "s@<name></name>@<name>$VM_NET_NAME</name>@g" $basedir/vnet_conf.xml
+if [[ "$VHOST_MODE" == "scsi" ]]; then
+    sed -i "s@vhost_dev_args@vhost-user-scsi-pci,id=scsi0@g" $basedir/vm_conf.xml
+else
+    sed -i "s@vhost_dev_args@vhost-user-blk-pci,size=30G,logical_block_size=4096@g" $basedir/vm_conf.xml
+fi
 
 trap "cleanup_virsh; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
@@ -106,7 +89,13 @@ cd /tmp
 $rootdir/app/vhost/vhost -c $basedir/vhost.conf &
 pid=$!
 echo "Process pid: $pid"
-sleep 10
+waitforlisten "$pid" "$RPC_PORT"
+if [[ "$VHOST_MODE" == "scsi" ]]; then
+    $rpc_py construct_vhost_scsi_controller naa.0
+    $rpc_py add_vhost_scsi_lun naa.0 0 Nvme0n1
+else
+    $rpc_py construct_vhost_blk_controller naa.0 Nvme0n1
+fi
 chmod 777 /tmp/naa.0
 
 virsh create $basedir/vm_conf.xml
@@ -121,6 +110,7 @@ rc=-1
 while [[ $TIMEO -gt 0 && rc -ne 0 ]]; do
     $SSHCMD root@$VM_IP -q -oStrictHostKeyChecking=no 'echo Hello'
     rc=$?
+    sleep 1
     ((TIMEO-=1))
 done
 set -xe
@@ -133,7 +123,7 @@ fi
 
 # Run test on Virtual Machine
 $SCPCMD -r $basedir/integrity_vm.sh root@$VM_IP:~
-$SSHCMD root@$VM_IP "fs=$VM_FS ~/integrity_vm.sh"
+$SSHCMD root@$VM_IP "fs=$VM_FS ~/integrity_vm.sh $VHOST_MODE"
 
 # Kill VM, cleanup config files
 cleanup_virsh

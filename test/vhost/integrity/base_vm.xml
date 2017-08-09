@@ -63,6 +63,6 @@
     <qemu:arg value='-chardev'/>
     <qemu:arg value='socket,id=char0,path=/tmp/naa.0'/>
         <qemu:arg value='-device'/>
-    <qemu:arg value='vhost-user-scsi-pci,id=scsi0,chardev=char0'/>
+    <qemu:arg value='vhost_dev_args,chardev=char0'/>
     </qemu:commandline>
 </domain>

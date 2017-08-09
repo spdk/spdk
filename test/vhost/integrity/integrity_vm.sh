@@ -4,7 +4,7 @@ set -xe
 basedir=$(readlink -f $(dirname $0))
 MAKE="make -j$(( $(nproc)  * 2 ))"
 
-script='shopt -s nullglob; \
+scsi_script='shopt -s nullglob; \
     for entry in /sys/block/sd*; do \
         disk_type="$(cat $entry/device/vendor)"; \
            if [[ $disk_type == INTEL* ]] || [[ $disk_type == RAWSCSI* ]] || [[ $disk_type == LIO-ORG* ]]; then \
@@ -13,6 +13,9 @@ script='shopt -s nullglob; \
            fi; \
     done'
 
+blk_script='shopt -s nullglob; cd /sys/block; echo vd*'
+
+if [[ $1 == "scsi" ]];then script=$scsi_script; else script=$blk_script; fi
 devs="$(echo "$script" | bash -s)"
 
 trap "exit 1" SIGINT SIGTERM EXIT
@@ -31,12 +34,12 @@ for dev in $devs; do
 
         echo "INFO: Creating partition table on disk using: $parted_cmd mklabel gpt"
         $parted_cmd mklabel gpt
-        $parted_cmd mkpart primary $fs 0% 100%
+        $parted_cmd mkpart primary 2048s 100%
         sleep 2
 
-		mkfs_cmd+=" /dev/${dev}1"
+        mkfs_cmd+=" /dev/${dev}1"
         echo "INFO: Creating filesystem using: $mkfs_cmd"
-        $mkfscmd
+        $mkfs_cmd
 
         mkdir -p /mnt/${dev}dir
         mount -o sync /dev/${dev}1 /mnt/${dev}dir
