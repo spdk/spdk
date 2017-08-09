@@ -1,0 +1,176 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8821869_dd40a75b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-09T06:15:37Z",
+      "side": 1,
+      "message": "This will be quite large commit. Could you add some more detailed description? \nKeep in mind you will need to rebase onto https://review.gerrithub.io/#/c/372545/ where common stuff is moved out of fiotest into it\u0027s dedicated directory.",
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6054b0a_5f5fb1f8",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-09T06:15:37Z",
+      "side": 1,
+      "message": "Not needed",
+      "range": {
+        "startLine": 108,
+        "startChar": 5,
+        "endLine": 108,
+        "endChar": 22
+      },
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a291c039_92f1bf15",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-09T06:15:37Z",
+      "side": 1,
+      "message": "Suggested thing to do was to rename the function to have \"vm_\" prefix - like other functions in \"common.sh\".  Let\u0027s stick to it.",
+      "range": {
+        "startLine": 118,
+        "startChar": 9,
+        "endLine": 118,
+        "endChar": 18
+      },
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22792c42_3809768c",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-09T06:15:37Z",
+      "side": 1,
+      "message": "Like above",
+      "range": {
+        "startLine": 144,
+        "startChar": 9,
+        "endLine": 144,
+        "endChar": 26
+      },
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "935df0a6_294ba970",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-09T06:15:37Z",
+      "side": 1,
+      "message": "Like above",
+      "range": {
+        "startLine": 151,
+        "startChar": 9,
+        "endLine": 151,
+        "endChar": 21
+      },
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "059d99ed_e75fe63d",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-09T06:15:37Z",
+      "side": 1,
+      "message": "Like above",
+      "range": {
+        "startLine": 165,
+        "startChar": 9,
+        "endLine": 165,
+        "endChar": 23
+      },
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a8ab9d5_aa9b380e",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-09T06:15:37Z",
+      "side": 1,
+      "message": "Maybe use square brackets instead?",
+      "range": {
+        "startLine": 177,
+        "startChar": 8,
+        "endLine": 177,
+        "endChar": 43
+      },
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d598d2e7_1bae7d1c",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-09T06:15:37Z",
+      "side": 1,
+      "message": "Commit message says only about adding hot-attach tests, so these changes are unrelated.\nFor more convenient reviewing - please do not add hot-detach changes in here and instead add them to another commit in series.",
+      "revId": "2ad276715d3a0a2daa5d41c6be64c2695b8d18c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
