@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ad85618_06790c64",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-09T14:40:29Z",
+      "side": 1,
+      "message": "Should be tab.",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 6
+      },
+      "revId": "7014a037d0a91555362319aac67d81a42d5f7055",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
