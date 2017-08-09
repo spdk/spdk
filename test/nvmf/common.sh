@@ -91,7 +91,7 @@ function detect_rdma_nics()
 function allocate_nic_ips()
 {
 	let count=$NVMF_IP_LEAST_ADDR
-	for nic_name in $get_rdma_if_list; do
+	for nic_name in $(get_rdma_if_list); do
 		ip="$(get_ip_address $nic_name)"
 		if [ -z $ip ]; then
 			ifconfig $nic_name $NVMF_IP_PREFIX.$count netmask 255.255.255.0 up
@@ -104,7 +104,7 @@ function allocate_nic_ips()
 
 function get_available_rdma_ips()
 {
-	for nic_name in $get_rdma_if_list; do
+	for nic_name in $(get_rdma_if_list); do
 		ifconfig $nic_name | grep "inet " | awk '{print $2}'
 	done
 }
