@@ -66,6 +66,14 @@ void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
 	return (void *)rte_vhost_gpa_to_vva(vdev->mem, addr);
 }
 
+static void
+spdk_vhost_vq_set_avail_event(struct spdk_vhost_vring *virt_queue, uint16_t event_idx)
+{
+	virt_queue->signaled_avail = event_idx;
+	*virt_queue->avail_event = virt_queue->signaled_avail;
+	spdk_wmb();
+}
+
 /*
  * Get available requests from avail ring.
  */
@@ -86,6 +94,14 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_vring *virt_queue, uint16_t *reqs
 	vq->last_avail_idx += count;
 	for (i = 0; i < count; i++) {
 		reqs[i] = vq->avail->ring[(last_idx + i) & size_mask];
+	}
+
+	if (virt_queue->avail_event && (uint16_t)(virt_queue->signaled_avail - avail_idx) < vq->size * 2) {
+		/*
+		 * Make sure that guest won't try to send us useless interrupts by setting
+		 * avail_event position 0xffff - 2 * vq->size ahead.
+		 */
+		spdk_vhost_vq_set_avail_event(virt_queue, avail_idx - vq->size * 2);
 	}
 
 	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
@@ -147,6 +163,9 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
 	    spdk_unlikely(vq->avail->idx == vq->last_avail_idx)) {
 		need_event = 1;
+	} else if (virt_queue->used_event) {
+		spdk_mb();
+		need_event = vring_need_event(*virt_queue->used_event, vq->last_used_idx, vq->last_used_idx - 1);
 	} else {
 		spdk_mb();
 		need_event = !(vq->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
@@ -586,6 +605,7 @@ static int
 new_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_vring *q;
 	char ifname[PATH_MAX];
 	int rc = -1;
 	uint16_t num_queues;
@@ -616,6 +636,11 @@ new_device(int vid)
 		goto out;
 	}
 
+	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
+		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
+		goto out;
+	}
+
 	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
 	for (i = 0; i < num_queues; i++) {
 		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i].vq)) {
@@ -623,8 +648,16 @@ new_device(int vid)
 			goto out;
 		}
 
-		assert(spdk_align32pow2(vq->size) == vq->size);
-		vdev->virtqueue[i].size_mask = vdev->virtqueue[i].vq.size - 1;
+		q = &vdev->virtqueue[i];
+		assert(spdk_align32pow2(q->vq.size) == q->vq.size);
+		q->size_mask = q->vq.size - 1;
+
+		if (vdev->negotiated_features & (1ULL << VIRTIO_RING_F_EVENT_IDX)) {
+			q->vq.avail->flags = 0;
+			vdev->virtqueue[i].avail_event = (void *)&q->vq.used->ring[q->vq.size];
+			vdev->virtqueue[i].used_event = (void *)&q->vq.avail->ring[q->vq.size];
+			spdk_vhost_vq_set_avail_event(&vdev->virtqueue[i], q->vq.avail->idx - q->vq.size);
+		}
 
 		/* Disable notifications. */
 		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
@@ -636,11 +669,6 @@ new_device(int vid)
 
 	vdev->vid = vid;
 	vdev->num_queues = num_queues;
-
-	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
-		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
-		goto out;
-	}
 
 	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
