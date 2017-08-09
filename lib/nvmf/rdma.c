@@ -632,7 +632,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	rc = rdma_accept(event->id, &ctrlr_event_data);
 	if (rc) {
-		SPDK_ERRLOG("Error on rdma_accept\n");
+		SPDK_ERRLOG("Error %d on rdma_accept\n", errno);
 		goto err2;
 	}
 	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Sent back the accept\n");
