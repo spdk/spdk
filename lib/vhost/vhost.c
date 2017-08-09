@@ -72,10 +72,10 @@ uint16_t
 spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 			     uint16_t reqs_len)
 {
-	struct rte_vhost_vring *vq = &virtqueue->vring;
-	struct vring_avail *avail = vq->avail;
+	struct rte_vhost_vring *vring = &virtqueue->vring;
+	struct vring_avail *avail = vring->avail;
 	uint16_t size_mask = virtqueue->size_mask;
-	uint16_t last_idx = vq->last_avail_idx, avail_idx = avail->idx;
+	uint16_t last_idx = vring->last_avail_idx, avail_idx = avail->idx;
 	uint16_t count = RTE_MIN((avail_idx - last_idx) & size_mask, reqs_len);
 	uint16_t i;
 
@@ -83,9 +83,9 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *r
 		return 0;
 	}
 
-	vq->last_avail_idx += count;
+	vring->last_avail_idx += count;
 	for (i = 0; i < count; i++) {
-		reqs[i] = vq->avail->ring[(last_idx + i) & size_mask];
+		reqs[i] = avail->ring[(last_idx + i) & size_mask];
 	}
 
 	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
@@ -148,8 +148,13 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	spdk_wmb();
 	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
 
-	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
-	    spdk_unlikely(vring->avail->idx == vring->last_avail_idx)) {
+	if (virtqueue->used_event) {
+		spdk_mb();
+		need_event = vring->last_used_idx == virtqueue->signaled_used_idx;
+		need_event |= vring_need_event(*virtqueue->used_event, vring->last_used_idx,
+					       virtqueue->signaled_used_idx);
+	} else if (spdk_vhost_dev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
+		   spdk_unlikely(vring->avail->idx == vring->last_avail_idx)) {
 		need_event = 1;
 	} else {
 		spdk_mb();
@@ -157,7 +162,8 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	}
 
 	if (need_event) {
-		eventfd_write(vring->callfd, (eventfd_t)1);
+		virtqueue->signaled_used_idx = virtqueue->vring.last_used_idx;
+		eventfd_write(virtqueue->vring.callfd, (eventfd_t)1);
 	}
 }
 
@@ -590,6 +596,7 @@ static int
 new_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_virtqueue *q;
 	char ifname[PATH_MAX];
 	int rc = -1;
 	uint16_t num_queues;
@@ -620,34 +627,52 @@ new_device(int vid)
 		goto out;
 	}
 
-	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
-	for (i = 0; i < num_queues; i++) {
-		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i].vring)) {
-			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
-			goto out;
-		}
-
-		if (spdk_align32pow2(vdev->virtqueue[i].vring.size) != vdev->virtqueue[i].vring.size) {
-			SPDK_ERRLOG("vhost device %d: queue %"PRIu16" size is not power of two.\n", vid, i);
-			goto out;
-		}
-		vdev->virtqueue[i].size_mask = vdev->virtqueue[i].vring.size - 1;
-
-		/* Disable notifications. */
-		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
-			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
-			goto out;
-		}
-
-	}
-
-	vdev->vid = vid;
-	vdev->num_queues = num_queues;
-
 	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
 		goto out;
 	}
+
+	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
+	for (i = 0; i < num_queues; i++) {
+		q = &vdev->virtqueue[i];
+
+		if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
+			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
+			goto out;
+		}
+
+		if (spdk_align32pow2(q->vring.size) != q->vring.size) {
+			SPDK_ERRLOG("vhost device %d: queue %"PRIu16" size is not power of two.\n", vid, i);
+			goto out;
+		}
+
+		q->size_mask = q->vring.size - 1;
+
+		if (spdk_vhost_dev_has_feature(vdev, VIRTIO_RING_F_EVENT_IDX)) {
+			/*
+			 * Flags must be 0 in case of EVENT_IDX but cant do that with
+			 * rte_vhost_enable_guest_notification() so hack this and set to 0.
+			 *
+			 * In Linux kernel there is hardcoded limit of 64k IO without IRQ so
+			 * don't touch avail->event_idx as it is pointless anyway.
+			 */
+			q->vring.avail->flags = 0;
+
+			/*
+			 * The Guest publishes the used index for which it expects an
+			 * interrupt at the end of the avail ring.
+			 */
+			q->used_event = (void *)&q->vring.avail->ring[q->vring.size];
+			q->signaled_used_idx = q->vring.last_used_idx;
+		} else if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
+			/* Disable notifications. */
+			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
+			goto out;
+		}
+	}
+
+	vdev->vid = vid;
+	vdev->num_queues = num_queues;
 
 	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
