@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48aff6f2_b283ee33",
+        "filename": "lib/event/app.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-09T00:38:31Z",
+      "side": 1,
+      "message": "This looks OK, although we should probably use one of the spdk/log.h macros instead of printf().  (That can be another patch, since this at least fixes the reported issue.)",
+      "revId": "095a1c08587cd9201eff94b4987a594ed432ff41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
