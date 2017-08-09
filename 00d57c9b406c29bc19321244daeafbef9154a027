@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b51ac52_b07752a4",
+        "filename": "test/blobfs/rocksdb/common_flags.txt",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-09T17:37:32Z",
+      "side": 1,
+      "message": "We should really be using compression_type\u003dsnappy here - that\u0027s the most common case I believe. It just isn\u0027t installed on all of the test systems currently.",
+      "revId": "00d57c9b406c29bc19321244daeafbef9154a027",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
