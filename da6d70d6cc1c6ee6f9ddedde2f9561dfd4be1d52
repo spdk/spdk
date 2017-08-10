@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea81354f_f461a8d3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-10T22:00:55Z",
+      "side": 1,
+      "message": "The cast is already part of the SPDK_CONTAINEROF macro. I also think it would be nice if these were kept to a single line, if possible.",
+      "range": {
+        "startLine": 209,
+        "startChar": 8,
+        "endLine": 209,
+        "endChar": 39
+      },
+      "revId": "da6d70d6cc1c6ee6f9ddedde2f9561dfd4be1d52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
