@@ -188,7 +188,7 @@ p.set_defaults(func=construct_null_bdev)
 
 def construct_aio_bdev(args):
     params = {'name': args.name,
-              'fname': args.fname}
+              'filename': args.filename}
 
     if args.block_size:
         params['block_size'] = args.block_size
@@ -196,7 +196,7 @@ def construct_aio_bdev(args):
     print_array(jsonrpc_call('construct_aio_bdev', params))
 
 p = subparsers.add_parser('construct_aio_bdev', help='Add a bdev with aio backend')
-p.add_argument('fname', help='Path to device or file (ex: /dev/sda)')
+p.add_argument('filename', help='Path to device or file (ex: /dev/sda)')
 p.add_argument('name', help='Block device name')
 p.add_argument('block_size', help='Block size for this bdev', type=int, default=argparse.SUPPRESS)
 p.set_defaults(func=construct_aio_bdev)
