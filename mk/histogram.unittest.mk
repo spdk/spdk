@@ -1,7 +1,7 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
+#  Copyright (c) NetApp, Inc.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -31,14 +31,32 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+HIST_DIR = $(SPDK_ROOT_DIR)/lib/util/histogram
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-DIRS-y = bit_array.c io_channel.c string.c histogram_ut.c
+C_SRCS = $(TEST_FILE) $(OTHER_FILES)
 
-.PHONY: all clean $(DIRS-y)
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/util
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/json
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+SPDK_LIB_LIST = util json log
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
+LIBS += -lcunit $(SPDK_LIB_LINKER_ARGS)
+
+APP = $(TEST_FILE:.c=)
+
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+%.o: $(HIST_DIR)/%.c %.d $(MAKEFILE_LIST)
+	$(COMPILE_C)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
