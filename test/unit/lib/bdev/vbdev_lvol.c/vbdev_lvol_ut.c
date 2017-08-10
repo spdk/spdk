@@ -314,6 +314,113 @@ lvol_resize(void)
 	free(g_lvs);
 }
 
+static void
+lvol_submit_io(void)
+{
+	struct spdk_bdev_io *io = NULL;
+	struct spdk_bdev *bdev = NULL;
+
+	io = calloc(1, sizeof(*io));
+	bdev = calloc(1, sizeof(struct spdk_bdev));
+
+	io->bdev = bdev;
+	io->type = SPDK_BDEV_IO_TYPE_READ;
+
+	/* Successful io operation */
+	vbdev_lvol_submit_request(NULL, io);
+
+	free(io);
+	free(bdev);
+}
+
+
+static void
+lvol_submit_io_read(void)
+{
+	struct spdk_bdev_io *io = NULL;
+	struct spdk_bdev *bdev = NULL;
+	struct spdk_lvol *lvol = NULL;
+	struct spdk_lvol_store *lvs = NULL;
+	struct lvol_task *task = NULL;
+
+	io = calloc(1, sizeof(*io));
+	bdev = calloc(1, sizeof(struct spdk_bdev));
+	lvol = calloc(1, sizeof(struct spdk_lvol));
+	lvs = calloc(1, sizeof(struct spdk_lvol_store));
+	task = calloc(1, sizeof(struct lvol_task));
+
+	io->type = SPDK_BDEV_IO_TYPE_READ;
+	io->bdev = bdev;
+	bdev->ctxt = lvol;
+	lvol->lvol_store = lvs;
+	lvs->page_size = 4096;
+	*(struct lvol_task **)io->driver_ctx = task;
+
+	/* Successful read from lvol */
+	lvol_read(NULL, io);
+
+	CU_ASSERT(task->status != SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	free(io);
+	free(bdev);
+	free(lvol);
+	free(lvs);
+	free(task);
+}
+
+static void
+lvol_submit_io_write(void)
+{
+
+	struct spdk_bdev_io *io = NULL;
+	struct spdk_bdev *bdev = NULL;
+	struct spdk_lvol *lvol = NULL;
+	struct spdk_lvol_store *lvs = NULL;
+	struct lvol_task *task = NULL;
+
+	io = calloc(1, sizeof(*io));
+	bdev = calloc(1, sizeof(struct spdk_bdev));
+	lvol = calloc(1, sizeof(struct spdk_lvol));
+	lvs = calloc(1, sizeof(struct spdk_lvol_store));
+	task = calloc(1, sizeof(struct lvol_task));
+
+	io->type = SPDK_BDEV_IO_TYPE_WRITE;
+	io->bdev = bdev;
+	bdev->ctxt = lvol;
+	lvol->lvol_store = lvs;
+	lvs->page_size = 4096;
+	*(struct lvol_task **)io->driver_ctx = task;
+
+	/* Successful write to lvol */
+	lvol_write(lvol, NULL, io);
+
+	CU_ASSERT(task->status != SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	free(io);
+	free(bdev);
+	free(lvol);
+	free(lvs);
+	free(task);
+}
+static void
+lvol_submit_io_flush(void)
+{
+	struct spdk_bdev_io *io = NULL;
+	struct lvol_task *task = NULL;
+
+	io = calloc(1, sizeof(*io));
+	task = calloc(1, sizeof(struct lvol_task));
+
+	*(struct lvol_task **)io->driver_ctx = task;
+	/* Successful flush to lvol */
+	lvol_flush(NULL, io);
+
+	CU_ASSERT(task->status != SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	free(io);
+	free(task);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -331,7 +438,11 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "lvol_init", lvol_init) == NULL ||
-		CU_add_test(suite, "lvol_resize", lvol_resize) == NULL
+		CU_add_test(suite, "lvol_resize", lvol_resize) == NULL ||
+		CU_add_test(suite, "lvol_submit_io", lvol_submit_io) == NULL ||
+		CU_add_test(suite, "lvol_submit_io_read", lvol_submit_io_read) == NULL ||
+		CU_add_test(suite, "lvol_submit_io_write", lvol_submit_io_write) == NULL ||
+		CU_add_test(suite, "lvol_submit_io_flush", lvol_submit_io_flush) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
