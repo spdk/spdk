@@ -93,14 +93,13 @@ void
 spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t req_idx,
 		       struct vring_desc **desc, struct vring_desc **desc_table, uint32_t *desc_table_size)
 {
-	assert(req_idx < vq->size);
-
-	*desc = &vq->desc[req_idx];
+	*desc = &vq->desc[req_idx & (vq->size - 1)];
 
 	if (spdk_vhost_vring_desc_is_indirect(*desc)) {
 		assert(spdk_vhost_dev_has_feature(vdev, VIRTIO_RING_F_INDIRECT_DESC));
 		*desc_table = spdk_vhost_gpa_to_vva(vdev, (*desc)->addr);
 		*desc_table_size = (*desc)->len / sizeof(**desc);
+		assert(*desc_table_size > 0);
 		*desc = &(*desc_table)[0];
 		return;
 	}
@@ -143,17 +142,14 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vr
 
 }
 
-bool
-spdk_vhost_vring_desc_has_next(struct vring_desc *cur_desc)
-{
-	return !!(cur_desc->flags & VRING_DESC_F_NEXT);
-}
-
 struct vring_desc *
 spdk_vhost_vring_desc_get_next(struct vring_desc *desc_table, uint32_t desc_table_size,
 			       struct vring_desc *cur_desc)
 {
-	assert(spdk_vhost_vring_desc_has_next(cur_desc));
+	if (!(cur_desc->flags & VRING_DESC_F_NEXT) || cur_desc->next >= desc_table_size) {
+		return NULL;
+	}
+
 	return &desc_table[cur_desc->next];
 }
 
