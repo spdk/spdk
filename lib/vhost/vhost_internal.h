@@ -93,6 +93,7 @@ struct spdk_vhost_dev_backend {
 	spdk_vhost_event_fn destroy_device;
 };
 
+struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
 void spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev);
 void spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev);
 
@@ -118,6 +119,7 @@ int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint
 			     enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
 int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
 
+int spdk_vhost_scsi_controller_construct(void);
 int spdk_vhost_blk_controller_construct(void);
 
 #endif /* SPDK_VHOST_INTERNAL_H */
