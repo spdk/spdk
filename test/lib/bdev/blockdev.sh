@@ -10,6 +10,9 @@ source $rootdir/scripts/autotest_common.sh
 
 timing_enter bdev
 
+# Create a file to be used as an AIO backend
+dd if=/dev/zero of=/tmp/aiofile bs=4096 count=5000
+
 cp $testdir/bdev.conf.in $testdir/bdev.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
 
@@ -60,5 +63,6 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_exit unmap
 fi
 
+rm -f /tmp/aiofile
 rm -f $testdir/bdev.conf
 timing_exit bdev
