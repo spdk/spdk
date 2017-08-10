@@ -31,29 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-NVME_DIR := $(SPDK_ROOT_DIR)/lib/nvme
-
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-C_SRCS = $(APP:%=%.c)
+C_SRCS = histogram_rpc.c
+LIBNAME = histogram_rpc
 
-CFLAGS += -I. $(ENV_CFLAGS)
-
-SPDK_LIB_LIST = nvme util log json
-
-LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
-
-ifeq ($(CONFIG_RDMA),y)
-LIBS += -libverbs -lrdmacm
-endif
-
-all: $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
