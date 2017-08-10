@@ -206,22 +206,25 @@ static struct spdk_nvmf_rdma g_rdma = {
 static inline struct spdk_nvmf_rdma_qpair *
 get_rdma_qpair(struct spdk_nvmf_qpair *qpair)
 {
-	return (struct spdk_nvmf_rdma_qpair *)((uintptr_t)qpair - offsetof(struct spdk_nvmf_rdma_qpair,
-					       qpair));
+	return (struct spdk_nvmf_rdma_qpair *)SPDK_CONTAINEROF(qpair,
+			struct spdk_nvmf_rdma_qpair,
+			qpair);
 }
 
 static inline struct spdk_nvmf_rdma_request *
 get_rdma_req(struct spdk_nvmf_request *req)
 {
-	return (struct spdk_nvmf_rdma_request *)((uintptr_t)req - offsetof(struct spdk_nvmf_rdma_request,
-			req));
+	return (struct spdk_nvmf_rdma_request *)SPDK_CONTAINEROF(req,
+			struct spdk_nvmf_rdma_request,
+			req);
 }
 
 static inline struct spdk_nvmf_rdma_ctrlr *
 get_rdma_ctrlr(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	return (struct spdk_nvmf_rdma_ctrlr *)((uintptr_t)ctrlr - offsetof(struct spdk_nvmf_rdma_ctrlr,
-					       ctrlr));
+	return (struct spdk_nvmf_rdma_ctrlr *)SPDK_CONTAINEROF(ctrlr,
+			struct spdk_nvmf_rdma_ctrlr,
+			ctrlr);
 }
 
 static void
