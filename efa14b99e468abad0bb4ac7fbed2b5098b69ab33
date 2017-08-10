@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3952c26_331bbe98",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-10T07:53:10Z",
+      "side": 1,
+      "message": "I think you should move this condition as a separate check",
+      "revId": "efa14b99e468abad0bb4ac7fbed2b5098b69ab33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
