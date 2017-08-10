@@ -119,7 +119,7 @@ $rpc_py construct_target_node Target3 Target3_alias HotInNvme0n1:0 1:2 64 1 0 0 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
 iscsiadm -m node --login -p $TARGET_IP:$PORT
 sleep 1
-$fio_py 1048576 128 read 10 &
+$fio_py 1048576 128 rw 10 &
 fio_pid=$!
 
 sleep 3
