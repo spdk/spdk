@@ -427,8 +427,11 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	switch (ctrl_req->type) {
 	case VIRTIO_SCSI_T_TMF:
 		/* Get the response buffer */
-		assert(spdk_vhost_vring_desc_has_next(desc));
 		desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+		if (desc == NULL) {
+			SPDK_WARNLOG("No response descriptor for TMF controlq request.\n");
+			break;
+		}
 		task->tmf_resp = spdk_vhost_gpa_to_vva(&task->svdev->vdev, desc->addr);
 
 		/* Check if we are processing a valid request */
@@ -454,6 +457,10 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	case VIRTIO_SCSI_T_AN_QUERY:
 	case VIRTIO_SCSI_T_AN_SUBSCRIBE: {
 		desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+		if (desc == NULL) {
+			SPDK_WARNLOG("No response descriptor for AN controlq request.\n");
+			break;
+		}
 		an_resp = spdk_vhost_gpa_to_vva(&task->svdev->vdev, desc->addr);
 		an_resp->response = VIRTIO_SCSI_S_ABORTED;
 		break;
@@ -489,7 +496,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 	spdk_vhost_vq_get_desc(vdev, vq, task->req_idx, &desc, &desc_table, &desc_table_size);
 
 	/* Sanity check. First descriptor must be readable and must have next one. */
-	if (spdk_unlikely(spdk_vhost_vring_desc_is_wr(desc) || !spdk_vhost_vring_desc_has_next(desc))) {
+	if (spdk_unlikely(spdk_vhost_vring_desc_is_wr(desc))) {
 		SPDK_WARNLOG("Invalid first (request) descriptor.\n");
 		task->resp = NULL;
 		goto abort_task;
@@ -508,7 +515,8 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		 * FROM_DEV (READ): [RD_req][WR_resp][WR_buf0]...[WR_bufN]
 		 */
 		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
-		if (!spdk_vhost_vring_desc_has_next(desc)) {
+		desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+		if (desc == NULL) {
 			/*
 			 * TEST UNIT READY command and some others might not contain any payload and this is not an error.
 			 */
@@ -522,8 +530,6 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			return 0;
 		}
 
-		desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
-
 		/* All remaining descriptors are data. */
 		while (iovcnt < iovcnt_max) {
 			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &iovcnt, desc))) {
@@ -532,10 +538,11 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			}
 			len += desc->len;
 
-			if (!spdk_vhost_vring_desc_has_next(desc))
-				break;
-
 			desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+			if (desc == NULL) {
+				break;
+			}
+
 			if (spdk_unlikely(!spdk_vhost_vring_desc_is_wr(desc))) {
 				SPDK_WARNLOG("FROM DEV cmd: descriptor nr %" PRIu16" in payload chain is read only.\n", iovcnt);
 				task->resp = NULL;
@@ -557,19 +564,15 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			}
 			len += desc->len;
 
-			if (!spdk_vhost_vring_desc_has_next(desc)) {
+			desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+			if (desc == NULL) {
 				SPDK_WARNLOG("TO_DEV cmd: no response descriptor.\n");
 				task->resp = NULL;
 				goto abort_task;
 			}
-
-			desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
 		}
 
 		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
-		if (spdk_vhost_vring_desc_has_next(desc)) {
-			SPDK_WARNLOG("TO_DEV cmd: ignoring unexpected descriptors after response descriptor.\n");
-		}
 	}
 
 	if (iovcnt == iovcnt_max) {
