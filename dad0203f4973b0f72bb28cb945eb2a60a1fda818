@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6bf2576d_20c87835",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-10T06:30:55Z",
+      "side": 1,
+      "message": "Do we need extra check if block_size is smaller than detected block size?",
+      "revId": "dad0203f4973b0f72bb28cb945eb2a60a1fda818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
