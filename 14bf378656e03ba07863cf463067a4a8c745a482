@@ -16,6 +16,24 @@
       "revId": "14bf378656e03ba07863cf463067a4a8c745a482",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "913c4aa9_28454be3",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-08-10T07:48:07Z",
+      "side": 1,
+      "message": "Actually it is possible, when you hot remove the device (unbind from driver)",
+      "parentUuid": "0e9c7bc6_682336f4",
+      "revId": "14bf378656e03ba07863cf463067a4a8c745a482",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
