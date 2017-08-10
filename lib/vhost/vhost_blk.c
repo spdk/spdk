@@ -125,9 +125,15 @@ static int
 blk_iovs_setup(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t req_idx,
 	       struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
 {
-	struct vring_desc *desc = spdk_vhost_vq_get_desc(vq, req_idx);
+	struct vring_desc *desc_table;
+	struct vring_desc *desc;
+	uint32_t desc_table_size, len = 0;
 	uint16_t out_cnt = 0, cnt = 0;
-	uint32_t len = 0;
+
+	if (spdk_unlikely(spdk_vhost_vq_get_desc(vdev, vq, req_idx, &desc, &desc_table,
+			  &desc_table_size))) {
+		return -1;
+	}
 
 	while (1) {
 		/*
@@ -151,7 +157,10 @@ blk_iovs_setup(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t
 		out_cnt += spdk_vhost_vring_desc_is_wr(desc);
 
 		if (spdk_vhost_vring_desc_has_next(desc)) {
-			desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+			desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+			if (spdk_unlikely(desc == NULL)) {
+				return -1;
+			}
 		} else {
 			break;
 		}
@@ -436,14 +445,6 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
 	int rc;
 
 	for (i = 0; i < bvdev->vdev.num_queues; i++) {
-		/*
-		 * FIXME:
-		 * this is too big because we need only size/2 from each queue but for now
-		 * lets leave it as is to be sure we are not mistaken.
-		 *
-		 * Limit the pool size to 1024 * num_queues. This should be enough as QEMU have the
-		 * same hard limit for queue size.
-		 */
 		task_cnt += spdk_min(bvdev->vdev.virtqueue[i].size, 1024);
 	}
 
