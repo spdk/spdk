@@ -12,6 +12,7 @@ timing_enter bdev
 
 cp $testdir/bdev.conf.in $testdir/bdev.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
+$rootdir/scripts/gen_rbd.sh >> $testdir/bdev.conf
 
 timing_enter bounds
 $testdir/bdevio/bdevio $testdir/bdev.conf
