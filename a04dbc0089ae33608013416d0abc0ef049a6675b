@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6f5d128_61a20cff",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 948,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-10T20:28:04Z",
+      "side": 1,
+      "message": "This path leaks the bdev_io.  You will need to either call spdk_bdev_put_io(bdev_io) here or reorder the calls so that spdk_bdev_io_valid() is checked before calling spdk_bdev_get_io() - the second option is probably simpler, and it matches the existing code.",
+      "revId": "a04dbc0089ae33608013416d0abc0ef049a6675b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
