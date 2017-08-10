@@ -40,7 +40,7 @@ C_SRCS = $(APP:%=%.c)
 
 CFLAGS += -I. $(ENV_CFLAGS)
 
-SPDK_LIB_LIST = nvme util log
+SPDK_LIB_LIST = nvme util log json
 
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
