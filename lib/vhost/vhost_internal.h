@@ -108,6 +108,7 @@ bool spdk_vhost_vring_desc_has_next(struct vring_desc *cur_desc);
 struct vring_desc *spdk_vhost_vring_desc_get_next(struct vring_desc *vq_desc,
 		struct vring_desc *cur_desc);
 bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
+bool spdk_vhost_vring_desc_is_indirect(struct vring_desc *cur_desc);
 
 int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 				 uint16_t *iov_index, const struct vring_desc *desc);

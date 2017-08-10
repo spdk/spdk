@@ -143,6 +143,12 @@ spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
 	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
 }
 
+bool
+spdk_vhost_vring_desc_is_indirect(struct vring_desc *cur_desc)
+{
+	return !!(cur_desc->flags & VRING_DESC_F_INDIRECT);
+}
+
 #define _2MB_OFFSET(ptr)	((ptr) & (0x200000 - 1))
 
 int

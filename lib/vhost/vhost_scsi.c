@@ -56,6 +56,7 @@
 					(1ULL << VIRTIO_SCSI_F_INOUT) | \
 					(1ULL << VIRTIO_SCSI_F_HOTPLUG) | \
 					(1ULL << VIRTIO_SCSI_F_CHANGE ) | \
+					(1ULL << VIRTIO_RING_F_INDIRECT_DESC) | \
 					(1ULL << VIRTIO_SCSI_F_T10_PI ))
 
 /* Features that are specified in VIRTIO SCSI but currently not supported:
@@ -473,10 +474,17 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 {
 	struct rte_vhost_vring *vq = task->vq;
 	struct spdk_vhost_dev *vdev = &task->svdev->vdev;
-	struct vring_desc *desc =  spdk_vhost_vq_get_desc(task->vq, task->req_idx);
+	struct vring_desc *desc_table = vq->desc;
+	struct vring_desc *desc =  spdk_vhost_vq_get_desc(vq, task->req_idx);
 	struct iovec *iovs = task->iovs;
 	uint16_t iovcnt = 0, iovcnt_max = SPDK_VHOST_IOVS_MAX;
 	uint32_t len = 0;
+
+	if (spdk_vhost_vring_desc_is_indirect(desc)) {
+		desc_table = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+		/* FIXME: check table length */
+		desc = &desc_table[0];
+	}
 
 	/* Sanity check. First descriptor must be readable and must have next one. */
 	if (spdk_unlikely(spdk_vhost_vring_desc_is_wr(desc) || !spdk_vhost_vring_desc_has_next(desc))) {
@@ -488,7 +496,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_cpl, spdk_vhost_scsi_task_free_cb, NULL);
 	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 
-	desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+	desc = spdk_vhost_vring_desc_get_next(desc_table, desc);
 	task->scsi.dxfer_dir = spdk_vhost_vring_desc_is_wr(desc) ? SPDK_SCSI_DIR_FROM_DEV :
 			       SPDK_SCSI_DIR_TO_DEV;
 	task->scsi.iovs = iovs;
@@ -512,7 +520,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			return 0;
 		}
 
-		desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+		desc = spdk_vhost_vring_desc_get_next(desc_table, desc);
 
 		/* All remaining descriptors are data. */
 		while (iovcnt < iovcnt_max) {
@@ -525,7 +533,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			if (!spdk_vhost_vring_desc_has_next(desc))
 				break;
 
-			desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+			desc = spdk_vhost_vring_desc_get_next(desc_table, desc);
 			if (spdk_unlikely(!spdk_vhost_vring_desc_is_wr(desc))) {
 				SPDK_WARNLOG("FROM DEV cmd: descriptor nr %" PRIu16" in payload chain is read only.\n", iovcnt);
 				task->resp = NULL;
@@ -553,7 +561,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 				goto abort_task;
 			}
 
-			desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+			desc = spdk_vhost_vring_desc_get_next(desc_table, desc);
 		}
 
 		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
