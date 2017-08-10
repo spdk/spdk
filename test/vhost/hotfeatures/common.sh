@@ -167,3 +167,20 @@ function check_fio_retcode() {
         fi
     fi
 }
+
+function back_configuration(){
+    rm $BASE_DIR/vhost.conf.in
+    vm_shutdown_all
+    spdk_vhost_kill
+    echo $bdf > /sys/bus/pci/drivers/uio_pci_generic/bind
+}
+function get_nvme_pci_addr()
+{
+    if [[ ! $2 =~ (^[n-N][v-V][m-M][e-E][0-9]+) ]]; then
+    error "Bad name disk: $2"
+    return 1
+   fi
+    chmod 755 $1
+    [[ $(  grep $2 $1 ) =~ ([0-9a-fA-F]{4}(:[0-9a-fA-F]{2}){2}.[0-9a-fA-F]) ]]
+    echo ${BASH_REMATCH[1]}
+}
