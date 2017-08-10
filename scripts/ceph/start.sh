@@ -13,7 +13,7 @@ ceph_conf=${base_dir}/ceph.conf
 ceph_conf_temp=${base_dir}/ceph.conf.tmp
 mnt_dir=${base_dir}/ceph/mnt
 dev_backend=/dev/ceph
-image=${base_dir}/../../../output/ceph_raw.img
+image=/tmp/ceph_raw.img
 dev=/dev/loop200
 # partition osd
 
