@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce3b52ec_85898207",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 976,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-10T23:43:19Z",
+      "side": 1,
+      "message": "I think this needs to free any previous devices that may have been inserted into the rtransport-\u003edevices list.",
+      "revId": "974f8100d401e2eb3d9853cf5e21ec4ffaaa254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad0db8a3_561ac21f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 985,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-10T23:43:19Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "974f8100d401e2eb3d9853cf5e21ec4ffaaa254d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
