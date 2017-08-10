@@ -80,8 +80,8 @@ struct ns_entry {
 	uint32_t		current_queue_depth;
 	char			name[1024];
 
-	struct spdk_histogram_data	submit_histogram;
-	struct spdk_histogram_data	complete_histogram;
+	struct spdk_histogram_data	*submit_histogram;
+	struct spdk_histogram_data	*complete_histogram;
 };
 
 struct perf_task {
@@ -150,8 +150,23 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->size_in_ios = spdk_nvme_ns_get_size(ns) /
 			     g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / spdk_nvme_ns_get_sector_size(ns);
-	spdk_histogram_data_reset(&entry->submit_histogram);
-	spdk_histogram_data_reset(&entry->complete_histogram);
+	entry->submit_histogram = spdk_histogram_alloc(true, "nvme submit", "overhead", "ticks");
+	if (!entry->submit_histogram) {
+		free(entry);
+		perror("entry submit histogram alloc");
+		exit(1);
+	}
+
+	entry->complete_histogram = spdk_histogram_alloc(true, "nvme complete", "overhead", "ticks");
+	if (!entry->complete_histogram) {
+		free(entry->submit_histogram);
+		free(entry);
+		perror("entry complete histogram alloc");
+		exit(1);
+	}
+
+	spdk_histogram_data_reset(entry->submit_histogram);
+	spdk_histogram_data_reset(entry->complete_histogram);
 
 	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
@@ -314,7 +329,7 @@ submit_single_io(void)
 		g_tsc_submit_max = tsc_submit;
 	}
 	if (g_enable_histogram) {
-		spdk_histogram_data_tally(&entry->submit_histogram, tsc_submit);
+		spdk_histogram_data_tally(entry->submit_histogram, tsc_submit);
 	}
 
 	if (rc != 0) {
@@ -369,7 +384,7 @@ check_io(void)
 			g_tsc_complete_max = tsc_complete;
 		}
 		if (g_enable_histogram) {
-			spdk_histogram_data_tally(&g_ns->complete_histogram, tsc_complete);
+			spdk_histogram_data_tally(g_ns->complete_histogram, tsc_complete);
 		}
 		g_io_completed++;
 		if (!g_ns->is_draining) {
@@ -521,13 +536,13 @@ print_stats(void)
 	printf("Submit histogram\n");
 	printf("================\n");
 	printf("       Range in us     Cumulative     Count\n");
-	spdk_histogram_data_iterate(&g_ns->submit_histogram, print_bucket, NULL);
+	spdk_histogram_data_iterate(g_ns->submit_histogram, print_bucket, NULL);
 	printf("\n");
 
 	printf("Complete histogram\n");
 	printf("==================\n");
 	printf("       Range in us     Cumulative     Count\n");
-	spdk_histogram_data_iterate(&g_ns->complete_histogram, print_bucket, NULL);
+	spdk_histogram_data_iterate(g_ns->complete_histogram, print_bucket, NULL);
 	printf("\n");
 
 }
@@ -666,6 +681,8 @@ int main(int argc, char **argv)
 	print_stats();
 
 cleanup:
+	spdk_histogram_free(g_ns->submit_histogram);
+	spdk_histogram_free(g_ns->complete_histogram);
 	free(g_ns);
 	if (g_ctrlr) {
 		spdk_nvme_detach(g_ctrlr->ctrlr);

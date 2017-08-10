@@ -80,3 +80,6 @@ CONFIG_RBD?=n
 
 # Build vhost library.
 CONFIG_VHOST?=y
+
+# Build histogram probe points for rdma layer
+CONFIG_HISTOGRAM_RDMA?=n
