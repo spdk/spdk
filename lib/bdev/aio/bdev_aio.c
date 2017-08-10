@@ -62,10 +62,10 @@ bdev_aio_open(struct file_disk *disk)
 {
 	int fd;
 
-	fd = open(disk->file, O_RDWR | O_DIRECT);
+	fd = open(disk->filename, O_RDWR | O_DIRECT);
 	if (fd < 0) {
 		/* Try without O_DIRECT for non-disk files */
-		fd = open(disk->file, O_RDWR);
+		fd = open(disk->filename, O_RDWR);
 		if (fd < 0) {
 			perror("open");
 			disk->fd = -1;
@@ -331,12 +331,13 @@ static void aio_free_disk(struct file_disk *fdisk)
 {
 	if (fdisk == NULL)
 		return;
+	free(fdisk->filename);
 	free(fdisk->disk.name);
 	free(fdisk);
 }
 
 struct spdk_bdev *
-create_aio_disk(const char *name, const char *fname, uint32_t block_size)
+create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
@@ -348,15 +349,19 @@ create_aio_disk(const char *name, const char *fname, uint32_t block_size)
 		return NULL;
 	}
 
-	fdisk->file = fname;
+	fdisk->filename = strdup(filename);
+	if (!fdisk->filename) {
+		goto error_return;
+	}
+
 	if (bdev_aio_open(fdisk)) {
-		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", fname, fdisk->fd, errno);
+		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", filename, fdisk->fd, errno);
 		goto error_return;
 	}
 
 	disk_size = spdk_fd_get_size(fdisk->fd);
 
-	fdisk->disk.name = strdup(name);
+	fdisk->disk.name = strdup(filename);
 	if (!fdisk->disk.name) {
 		goto error_return;
 	}
