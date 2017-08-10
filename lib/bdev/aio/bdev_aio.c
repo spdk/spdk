@@ -40,6 +40,7 @@
 #include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/io_channel.h"
+#include "spdk/json.h"
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
@@ -320,11 +321,29 @@ bdev_aio_get_io_channel(void *ctx)
 	return spdk_get_io_channel(&fdisk->fd);
 }
 
+
+static int
+bdev_aio_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct file_disk *fdisk = ctx;
+
+	spdk_json_write_name(w, "aio");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "filename");
+	spdk_json_write_string(w, fdisk->filename);
+
+	spdk_json_write_object_end(w);
+
+	return 0;
+}
+
 static const struct spdk_bdev_fn_table aio_fn_table = {
 	.destruct		= bdev_aio_destruct,
 	.submit_request		= bdev_aio_submit_request,
 	.io_type_supported	= bdev_aio_io_type_supported,
 	.get_io_channel		= bdev_aio_get_io_channel,
+	.dump_config_json	= bdev_aio_dump_config_json,
 };
 
 static void aio_free_disk(struct file_disk *fdisk)
