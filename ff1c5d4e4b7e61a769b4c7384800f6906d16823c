@@ -16,6 +16,24 @@
       "revId": "ff1c5d4e4b7e61a769b4c7384800f6906d16823c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea7ebf45_d7e36e2e",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-08-10T16:24:57Z",
+      "side": 1,
+      "message": "The subtasks will return to one by one at last and the parent task could be already return successful (I have another patch to handle this scenario, we need the parent task\u0027s status keep as the original, modify it here will cause other issue).",
+      "parentUuid": "a43fc14c_a564cd60",
+      "revId": "ff1c5d4e4b7e61a769b4c7384800f6906d16823c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
