@@ -37,6 +37,8 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
+#define SPDK_NUM_HIST_TRACK_REQUEST 6
+
 typedef enum _spdk_nvmf_request_exec_status {
 	SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE,
 	SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS,
@@ -65,6 +67,9 @@ struct spdk_nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+	uint64_t time[SPDK_NUM_HIST_TRACK_REQUEST];
+#endif
 };
 
 int

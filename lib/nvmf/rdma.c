@@ -44,6 +44,7 @@
 #include "transport.h"
 
 #include "spdk/assert.h"
+#include "spdk/histogram_data.h"
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/string.h"
@@ -52,6 +53,23 @@
 #include "spdk/likely.h"
 
 #include "spdk_internal/log.h"
+
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+enum spdk_rdma_hist_time {
+	SPDK_RDMA_HIST_SUB_START,
+	SPDK_RDMA_HIST_SUB_END,
+	SPDK_RDMA_HIST_COM_START,
+	SPDK_RDMA_HIST_COM_END,
+	SPDK_RDMA_HIST_ACK_START,
+	SPDK_RDMA_HIST_ACK_END,
+};
+
+static struct spdk_histogram_data *g_hist_submit_rdma_read;
+static struct spdk_histogram_data *g_hist_complete_rdma_read;
+static struct spdk_histogram_data *g_hist_ack_rdma_read;
+static struct spdk_histogram_data *g_hist_total_rdma_read;
+static struct spdk_histogram_data *g_hist_dev_read;
+#endif
 
 /*
  RDMA Connection Resouce Defaults
@@ -491,6 +509,14 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	if (rc) {
 		SPDK_ERRLOG("Unable to send response capsule\n");
 	}
+
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+	req->time[SPDK_RDMA_HIST_COM_END] = spdk_get_ticks();
+	if (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		spdk_histogram_data_tally(g_hist_complete_rdma_read, (
+						  req->time[SPDK_RDMA_HIST_COM_END] - req->time[SPDK_RDMA_HIST_COM_START]));
+	}
+#endif
 
 	return rc;
 }
@@ -1024,6 +1050,17 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		return NULL;
 	}
 
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+	if (!g_hist_total_rdma_read) {
+		g_hist_submit_rdma_read = spdk_histogram_alloc(false, "hist_submit_rdma_read", "RDMA", "ticks");
+		g_hist_total_rdma_read = spdk_histogram_alloc(false, "hist_total_rdma_read", "RDMA", "ticks");
+		g_hist_complete_rdma_read = spdk_histogram_alloc(false, "hist_complete_rdma_read", "RDMA",
+					    "ticks");
+		g_hist_ack_rdma_read = spdk_histogram_alloc(false, "hist_ack_rdma_read", "RDMA", "ticks");
+		g_hist_dev_read = spdk_histogram_alloc(false, "hist_dev_read", "DEV", "ticks");
+	}
+#endif
+
 	rdma_free_devices(contexts);
 
 	return &rtransport->transport;
@@ -1052,6 +1089,29 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 
 	spdk_mempool_free(rtransport->data_buf_pool);
 	free(rtransport);
+
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+	if (g_hist_total_rdma_read) {
+		spdk_histogram_free(g_hist_total_rdma_read);
+		g_hist_total_rdma_read = NULL;
+	}
+	if (g_hist_submit_rdma_read) {
+		spdk_histogram_free(g_hist_submit_rdma_read);
+		g_hist_submit_rdma_read = NULL;
+	}
+	if (g_hist_complete_rdma_read) {
+		spdk_histogram_free(g_hist_complete_rdma_read);
+		g_hist_complete_rdma_read = NULL;
+	}
+	if (g_hist_ack_rdma_read) {
+		spdk_histogram_free(g_hist_ack_rdma_read);
+		g_hist_ack_rdma_read = NULL;
+	}
+	if (g_hist_dev_read) {
+		spdk_histogram_free(g_hist_dev_read);
+		g_hist_dev_read = NULL;
+	}
+#endif
 
 	return 0;
 }
@@ -1367,6 +1427,11 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	int rc;
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+	req->time[SPDK_RDMA_HIST_COM_START] = spdk_get_ticks();
+	spdk_histogram_data_tally(g_hist_dev_read,
+				  (req->time[SPDK_RDMA_HIST_COM_START] - req->time[SPDK_RDMA_HIST_SUB_END]));
+#endif
 
 	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
 	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
@@ -1395,6 +1460,16 @@ request_release_buffer(struct spdk_nvmf_request *req)
 		req->length = 0;
 		rdma_req->data_from_pool = false;
 	}
+
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+	req->time[SPDK_RDMA_HIST_ACK_END] = spdk_get_ticks();
+	if (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		spdk_histogram_data_tally(g_hist_ack_rdma_read,
+					  (req->time[SPDK_RDMA_HIST_ACK_END] - req->time[SPDK_RDMA_HIST_COM_END]));
+		spdk_histogram_data_tally(g_hist_total_rdma_read,
+					  (req->time[SPDK_RDMA_HIST_ACK_END] - req->time[SPDK_RDMA_HIST_SUB_START]));
+	}
+#endif
 }
 
 static void
@@ -1424,6 +1499,10 @@ process_incoming_queue(struct spdk_nvmf_rdma_qpair *rdma_qpair)
 		rdma_req->recv = rdma_recv;
 		req = &rdma_req->req;
 
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+		req->time[SPDK_RDMA_HIST_SUB_START] = spdk_get_ticks();
+#endif
+
 		/* The first element of the SGL is the NVMe command */
 		req->cmd = (union nvmf_h2c_msg *)rdma_recv->sgl[0].addr;
 
@@ -1434,6 +1513,13 @@ process_incoming_queue(struct spdk_nvmf_rdma_qpair *rdma_qpair)
 		switch (rc) {
 		case SPDK_NVMF_REQUEST_PREP_READY:
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p is ready for execution\n", req);
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+			req->time[SPDK_RDMA_HIST_SUB_END] = spdk_get_ticks();
+			if (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+				spdk_histogram_data_tally(g_hist_submit_rdma_read, (
+								  req->time[SPDK_RDMA_HIST_SUB_END] - req->time[SPDK_RDMA_HIST_SUB_START]));
+			}
+#endif
 			/* Data is immediately available */
 			rc = spdk_nvmf_request_exec(req);
 			if (rc < 0) {
@@ -1588,6 +1674,13 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_qpair *qpair)
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ Complete. Request: %p Connection: %p\n",
 				      req, qpair);
 			spdk_trace_record(TRACE_RDMA_READ_COMPLETE, 0, 0, (uint64_t)req, 0);
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+			req->time[SPDK_RDMA_HIST_SUB_END] = spdk_get_ticks();
+			if (req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+				spdk_histogram_data_tally(g_hist_submit_rdma_read,
+							  (req->time[SPDK_RDMA_HIST_SUB_END] - req->time[SPDK_RDMA_HIST_SUB_START]));
+			}
+#endif
 			rc = spdk_nvmf_request_exec(req);
 			if (rc) {
 				error = true;
