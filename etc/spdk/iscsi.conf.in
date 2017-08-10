@@ -135,12 +135,14 @@
 # Users must change this section to match the /dev/sdX devices to be
 # exported as iSCSI LUNs. The devices are accessed using Linux AIO.
 # The format is:
-# AIO <file name> <bdev name>
+# AIO <file name> <bdev name> [<block size>]
 # The file name is the backing device
 # The bdev name can be referenced from elsewhere in the configuration file.
+# Block size may be omitted to automatically detect the block size of a disk.
 [AIO]
   AIO /dev/sdb AIO0
   AIO /dev/sdc AIO1
+  AIO /tmp/myfile AIO2 4096
 
 # The Split virtual block device slices block devices into multiple smaller bdevs.
 [Split]

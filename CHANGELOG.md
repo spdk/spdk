@@ -10,6 +10,10 @@ spdk_bdev_unmap() was modified to take an offset and a length in bytes as
 arguments instead of requiring the user to provide an array of SCSI
 unmap descriptors. This limits unmaps to a single contiguous range.
 
+### Linux AIO bdev
+
+The AIO bdev now allows the user to override the auto-detected block size.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
