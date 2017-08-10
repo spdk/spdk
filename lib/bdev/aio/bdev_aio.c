@@ -356,7 +356,6 @@ create_aio_disk(const char *name, const char *fname, uint32_t block_size)
 
 	disk_size = spdk_fd_get_size(fdisk->fd);
 
-	TAILQ_INIT(&fdisk->sync_completion_list);
 	fdisk->disk.name = strdup(name);
 	if (!fdisk->disk.name) {
 		goto error_return;
