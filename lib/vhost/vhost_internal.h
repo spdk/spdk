@@ -100,13 +100,15 @@ uint16_t spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs
 				      uint16_t reqs_len);
 bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq);
 
-struct vring_desc *spdk_vhost_vq_get_desc(struct rte_vhost_vring *vq, uint16_t req_idx);
+void spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
+			    uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
+			    uint32_t *desc_table_len);
 
 void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
 				     uint16_t id, uint32_t len);
 bool spdk_vhost_vring_desc_has_next(struct vring_desc *cur_desc);
-struct vring_desc *spdk_vhost_vring_desc_get_next(struct vring_desc *vq_desc,
-		struct vring_desc *cur_desc);
+struct vring_desc *spdk_vhost_vring_desc_get_next(struct vring_desc *desc_table,
+		uint32_t desc_table_size, struct vring_desc *cur_desc);
 bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
 int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
