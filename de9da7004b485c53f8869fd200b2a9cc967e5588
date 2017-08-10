@@ -1,0 +1,319 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c14ce223_473e38b6",
+        "filename": "test/vhost/fiotest/autotest.config",
+        "patchSetId": 6
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "The file used for that would be: test/vhost/common/autotest.config\nas in parent commit.\nAny change to fiotest is now unrelated.",
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10dcb377_6e08a147",
+        "filename": "test/vhost/hotfeatures/cmdline_parser.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "tabs or spaces?",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 6
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a7e30ff_f4f6ef45",
+        "filename": "test/vhost/hotfeatures/cmdline_parser.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "Pawel suggested removing \"check_*\" functions which build QEMU and SPDK so this should be gone from here.",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 62
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "737411d3_d2c07976",
+        "filename": "test/vhost/hotfeatures/cmdline_parser.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "Not sure it this is needed",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 82
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6db041d_65695057",
+        "filename": "test/vhost/hotfeatures/cmdline_parser.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "Anything below this comment should not be here - you named this file \"cmdline_parser\" but you keep all other helper functions in here.",
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9092ac8c_aa32336b",
+        "filename": "test/vhost/hotfeatures/cmdline_parser.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "If we have that kind of function - add an argument to it so it\u0027d print out the test case name as well.",
+      "range": {
+        "startLine": 104,
+        "startChar": 9,
+        "endLine": 104,
+        "endChar": 33
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c24624c_9138d78f",
+        "filename": "test/vhost/hotfeatures/cmdline_parser.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "Naming suggested in previous comments.",
+      "range": {
+        "startLine": 123,
+        "startChar": 9,
+        "endLine": 123,
+        "endChar": 20
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae078547_ab9e1fb2",
+        "filename": "test/vhost/hotfeatures/cmdline_parser.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "Naming suggested in previous comments.",
+      "range": {
+        "startLine": 149,
+        "startChar": 9,
+        "endLine": 149,
+        "endChar": 26
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ba2d563_ed92089a",
+        "filename": "test/vhost/hotfeatures/cmdline_parser.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "Naming suggested in previous comments.",
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1b5315f_fceea5c2",
+        "filename": "test/vhost/hotfeatures/cmdline_parser.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "Naming suggested in previous comments.",
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "252a0cdb_8ac8f558",
+        "filename": "test/vhost/hotfeatures/cmdline_parser.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "What about cases where we do expect an error? Like in hot detach?",
+      "range": {
+        "startLine": 182,
+        "startChar": 7,
+        "endLine": 182,
+        "endChar": 43
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cabc9f4d_4239a074",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "I think using RPC would be much better",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 33
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82df8f85_cb349326",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "You mix tabs with spaces - be consistent about it. Either use tabs or spaces only. I suggest tabs.",
+      "range": {
+        "startLine": 112,
+        "startChar": 0,
+        "endLine": 113,
+        "endChar": 63
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf54b986_0814d6fe",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "Move this file to next commit in series.",
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec4523d3_1b17f914",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-10T06:32:36Z",
+      "side": 1,
+      "message": "Move hot detach to next commit in series, along with test script.",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 38
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
