@@ -203,27 +203,6 @@ static struct spdk_nvmf_rdma g_rdma = {
 	.listen_addrs = TAILQ_HEAD_INITIALIZER(g_rdma.listen_addrs),
 };
 
-static inline struct spdk_nvmf_rdma_qpair *
-get_rdma_qpair(struct spdk_nvmf_qpair *qpair)
-{
-	return (struct spdk_nvmf_rdma_qpair *)((uintptr_t)qpair - offsetof(struct spdk_nvmf_rdma_qpair,
-					       qpair));
-}
-
-static inline struct spdk_nvmf_rdma_request *
-get_rdma_req(struct spdk_nvmf_request *req)
-{
-	return (struct spdk_nvmf_rdma_request *)((uintptr_t)req - offsetof(struct spdk_nvmf_rdma_request,
-			req));
-}
-
-static inline struct spdk_nvmf_rdma_ctrlr *
-get_rdma_ctrlr(struct spdk_nvmf_ctrlr *ctrlr)
-{
-	return (struct spdk_nvmf_rdma_ctrlr *)((uintptr_t)ctrlr - offsetof(struct spdk_nvmf_rdma_ctrlr,
-					       ctrlr));
-}
-
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rdma_qpair)
 {
@@ -421,10 +400,14 @@ static int
 request_transfer_in(struct spdk_nvmf_request *req)
 {
 	int				rc;
-	struct spdk_nvmf_rdma_request	*rdma_req = get_rdma_req(req);
-	struct spdk_nvmf_qpair 		*qpair = req->qpair;
-	struct spdk_nvmf_rdma_qpair 	*rdma_qpair = get_rdma_qpair(qpair);
+	struct spdk_nvmf_rdma_request	*rdma_req;
+	struct spdk_nvmf_qpair 		*qpair;
+	struct spdk_nvmf_rdma_qpair 	*rdma_qpair;
 	struct ibv_send_wr		*bad_wr = NULL;
+
+	qpair = req->qpair;
+	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
+	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	assert(req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
 
@@ -448,12 +431,17 @@ static int
 request_transfer_out(struct spdk_nvmf_request *req)
 {
 	int 				rc;
-	struct spdk_nvmf_rdma_request	*rdma_req = get_rdma_req(req);
-	struct spdk_nvmf_qpair		*qpair = req->qpair;
-	struct spdk_nvmf_rdma_qpair 	*rdma_qpair = get_rdma_qpair(qpair);
-	struct spdk_nvme_cpl		*rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_rdma_request	*rdma_req;
+	struct spdk_nvmf_qpair		*qpair;
+	struct spdk_nvmf_rdma_qpair 	*rdma_qpair;
+	struct spdk_nvme_cpl		*rsp;
 	struct ibv_recv_wr		*bad_recv_wr = NULL;
 	struct ibv_send_wr		*send_wr, *bad_send_wr = NULL;
+
+	qpair = req->qpair;
+	rsp = &req->rsp->nvme_cpl;
+	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
+	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	/* Advance our sq_head pointer */
 	if (qpair->sq_head == qpair->sq_head_max) {
@@ -511,9 +499,13 @@ request_transfer_out(struct spdk_nvmf_request *req)
 static int
 spdk_nvmf_rdma_request_transfer_data(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_rdma_request *rdma_req = get_rdma_req(req);
-	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_rdma_qpair *rdma_qpair = get_rdma_qpair(qpair);
+	struct spdk_nvmf_rdma_request	*rdma_req;
+	struct spdk_nvmf_qpair		*qpair;
+	struct spdk_nvmf_rdma_qpair	*rdma_qpair;
+
+	qpair = req->qpair;
+	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
+	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	if (req->xfer == SPDK_NVME_DATA_NONE) {
 		/* If no data transfer, this can bypass the queue */
@@ -677,7 +669,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	/* ack the disconnect event before rdma_destroy_id */
 	rdma_ack_cm_event(evt);
 
-	rdma_qpair = get_rdma_qpair(qpair);
+	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	ctrlr = qpair->ctrlr;
 	if (ctrlr == NULL) {
@@ -726,11 +718,15 @@ typedef enum _spdk_nvmf_request_prep_type {
 static spdk_nvmf_request_prep_type
 spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvme_cmd		*cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvme_cpl		*rsp = &req->rsp->nvme_cpl;
-	struct spdk_nvmf_rdma_request	*rdma_req = get_rdma_req(req);
+	struct spdk_nvme_cmd		*cmd;
+	struct spdk_nvme_cpl		*rsp;
+	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_rdma_ctrlr	*rdma_ctrlr;
 	struct spdk_nvme_sgl_descriptor *sgl;
+
+	cmd = &req->cmd->nvme_cmd;
+	rsp = &req->rsp->nvme_cpl;
+	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
 
 	req->length = 0;
 	req->data = NULL;
@@ -780,7 +776,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
 		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
 
-		rdma_ctrlr = get_rdma_ctrlr(req->qpair->ctrlr);
+		rdma_ctrlr = SPDK_CONTAINEROF(req->qpair->ctrlr, struct spdk_nvmf_rdma_ctrlr, ctrlr);
 		if (!rdma_ctrlr) {
 			/* The only time a connection won't have a ctrlr
 			 * is when this is the CONNECT request.
@@ -792,7 +788,8 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 			/* Use the in capsule data buffer, even though this isn't in capsule data. */
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request using in capsule buffer for non-capsule data\n");
 			req->data = rdma_req->recv->buf;
-			rdma_req->data.sgl[0].lkey = get_rdma_qpair(req->qpair)->bufs_mr->lkey;
+			rdma_req->data.sgl[0].lkey = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_rdma_qpair,
+						     qpair)->bufs_mr->lkey;
 			rdma_req->data_from_pool = false;
 		} else {
 			req->data = SLIST_FIRST(&rdma_ctrlr->data_buf_pool);
@@ -860,15 +857,17 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 static int
 spdk_nvmf_rdma_handle_pending_rdma_rw(struct spdk_nvmf_qpair *qpair)
 {
-	struct spdk_nvmf_rdma_qpair	*rdma_qpair = get_rdma_qpair(qpair);
+	struct spdk_nvmf_rdma_qpair	*rdma_qpair;
 	struct spdk_nvmf_rdma_ctrlr	*rdma_ctrlr;
 	struct spdk_nvmf_rdma_request	*rdma_req, *tmp;
-	int rc;
-	int count = 0;
+	int 				rc;
+	int 				count = 0;
+
+	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	/* First, try to assign free data buffers to requests that need one */
 	if (qpair->ctrlr) {
-		rdma_ctrlr = get_rdma_ctrlr(qpair->ctrlr);
+		rdma_ctrlr = SPDK_CONTAINEROF(qpair->ctrlr, struct spdk_nvmf_rdma_ctrlr, ctrlr);
 		TAILQ_FOREACH_SAFE(rdma_req, &rdma_qpair->pending_data_buf_queue, link, tmp) {
 			assert(rdma_req->req.data == NULL);
 			rdma_req->req.data = SLIST_FIRST(&rdma_ctrlr->data_buf_pool);
@@ -1231,7 +1230,9 @@ spdk_nvmf_rdma_ctrlr_init(struct spdk_nvmf_transport *transport)
 static void
 spdk_nvmf_rdma_ctrlr_fini(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	struct spdk_nvmf_rdma_ctrlr *rdma_ctrlr = get_rdma_ctrlr(ctrlr);
+	struct spdk_nvmf_rdma_ctrlr *rdma_ctrlr;
+
+	rdma_ctrlr = SPDK_CONTAINEROF(ctrlr, struct spdk_nvmf_rdma_ctrlr, ctrlr);
 
 	if (!rdma_ctrlr) {
 		return;
@@ -1246,8 +1247,11 @@ static int
 spdk_nvmf_rdma_ctrlr_add_qpair(struct spdk_nvmf_ctrlr *ctrlr,
 			       struct spdk_nvmf_qpair *qpair)
 {
-	struct spdk_nvmf_rdma_ctrlr	*rdma_ctrlr = get_rdma_ctrlr(ctrlr);
-	struct spdk_nvmf_rdma_qpair	*rdma_qpair = get_rdma_qpair(qpair);
+	struct spdk_nvmf_rdma_ctrlr *rdma_ctrlr;
+	struct spdk_nvmf_rdma_qpair *rdma_qpair;
+
+	rdma_ctrlr = SPDK_CONTAINEROF(ctrlr, struct spdk_nvmf_rdma_ctrlr, ctrlr);
+	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	if (rdma_ctrlr->verbs != NULL) {
 		if (rdma_ctrlr->verbs != rdma_qpair->cm_id->verbs) {
@@ -1304,14 +1308,16 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 static void
 request_release_buffer(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_rdma_request	*rdma_req = get_rdma_req(req);
+	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair		*qpair = req->qpair;
 	struct spdk_nvmf_rdma_ctrlr	*rdma_ctrlr;
 	struct spdk_nvmf_rdma_buf	*buf;
 
+	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
+
 	if (rdma_req->data_from_pool) {
 		/* Put the buffer back in the pool */
-		rdma_ctrlr = get_rdma_ctrlr(qpair->ctrlr);
+		rdma_ctrlr = SPDK_CONTAINEROF(qpair->ctrlr, struct spdk_nvmf_rdma_ctrlr, ctrlr);
 		buf = req->data;
 
 		SLIST_INSERT_HEAD(&rdma_ctrlr->data_buf_pool, buf, link);
@@ -1324,7 +1330,7 @@ request_release_buffer(struct spdk_nvmf_request *req)
 static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
-	spdk_nvmf_rdma_qpair_destroy(get_rdma_qpair(qpair));
+	spdk_nvmf_rdma_qpair_destroy(SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair));
 }
 
 static int
@@ -1432,13 +1438,15 @@ static int
 spdk_nvmf_rdma_poll(struct spdk_nvmf_qpair *qpair)
 {
 	struct ibv_wc wc[32];
-	struct spdk_nvmf_rdma_qpair *rdma_qpair = get_rdma_qpair(qpair);
+	struct spdk_nvmf_rdma_qpair *rdma_qpair;
 	struct spdk_nvmf_rdma_request *rdma_req;
 	struct spdk_nvmf_rdma_recv    *rdma_recv;
 	struct spdk_nvmf_request *req;
 	int reaped, i, rc;
 	int count = 0;
 	bool error = false;
+
+	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	/* Poll for completing operations. */
 	rc = ibv_poll_cq(rdma_qpair->cq, 32, wc);
@@ -1568,7 +1576,9 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_qpair *qpair)
 static bool
 spdk_nvmf_rdma_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
 {
-	struct spdk_nvmf_rdma_qpair *rdma_qpair = get_rdma_qpair(qpair);
+	struct spdk_nvmf_rdma_qpair *rdma_qpair;
+
+	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	if (rdma_qpair->cur_queue_depth == 0 && rdma_qpair->cur_rdma_rw_depth == 0) {
 		return true;
