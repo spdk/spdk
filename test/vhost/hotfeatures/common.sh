@@ -37,6 +37,8 @@ function usage() {
     echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
     echo "                          If test-type=spdk_vhost_blk then each disk can have additional size parameter, e.g."
     echo "                          --vm=X,os.qcow,DISK_size_35G; unit can be M or G; default - 20G"
+    echo "    --test-case           Number of test case which we want to run e.g -test-case=test_case1"
+    echo "    --nvme-disk	    Name of the Nvme disk which will be hot remove e.g.-nvme-disk=Nvme0"
     exit 0
 }
 
@@ -166,4 +168,17 @@ function check_fio_retcode() {
             exit 1
         fi
     fi
+}
+
+function back_configuration(){
+    rm $BASE_DIR/vhost.conf.in
+    vm_shutdown_all
+    spdk_vhost_kill
+    echo $bdf > /sys/bus/pci/drivers/uio_pci_generic/bind
+}
+function get_nvme_pci_addr()
+{
+    chmod 755 $1
+    [[ $(  grep $2 $1 ) =~ ([0-9a-fA-F]{4}(:[0-9a-fA-F]{2}){2}.[0-9a-fA-F]) ]]
+    echo ${BASH_REMATCH[1]}
 }
