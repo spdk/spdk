@@ -76,8 +76,7 @@ spdk_fd_get_blocklen(int fd)
 	}
 #endif
 
-	/* Assume 512 if none of the other methods worked */
-	return 512;
+	return 0;
 }
 
 uint64_t
