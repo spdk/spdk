@@ -58,7 +58,6 @@ struct file_disk {
 	struct spdk_bdev	disk;
 	const char		*file;
 	int			fd;
-	uint64_t		size;
 
 	/**
 	 * For storing I/O that were completed synchronously, and will be
