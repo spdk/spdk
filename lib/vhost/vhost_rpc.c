@@ -68,7 +68,6 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	int rc;
 	char buf[64];
-	uint64_t cpumask;
 
 	if (spdk_json_decode_object(params, rpc_construct_vhost_ctrlr,
 				    SPDK_COUNTOF(rpc_construct_vhost_ctrlr),
@@ -78,13 +77,7 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	cpumask = spdk_app_get_core_mask();
-	if (req.cpumask != NULL && spdk_vhost_parse_core_mask(req.cpumask, &cpumask)) {
-		rc = -EINVAL;
-		goto invalid;
-	}
-
-	rc = spdk_vhost_scsi_dev_construct(req.ctrlr, cpumask);
+	rc = spdk_vhost_scsi_dev_construct(req.ctrlr, req.cpumask);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -319,7 +312,6 @@ spdk_rpc_construct_vhost_blk_controller(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	int rc;
 	char buf[64];
-	uint64_t cpumask;
 
 	if (spdk_json_decode_object(params, rpc_construct_vhost_blk_ctrlr,
 				    SPDK_COUNTOF(rpc_construct_vhost_blk_ctrlr),
@@ -329,13 +321,7 @@ spdk_rpc_construct_vhost_blk_controller(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	cpumask = spdk_app_get_core_mask();
-	if (req.cpumask != NULL && spdk_vhost_parse_core_mask(req.cpumask, &cpumask)) {
-		rc = -EINVAL;
-		goto invalid;
-	}
-
-	rc = spdk_vhost_blk_construct(req.ctrlr, cpumask, req.dev_name, req.readonly);
+	rc = spdk_vhost_blk_construct(req.ctrlr, req.cpumask, req.dev_name, req.readonly);
 	if (rc < 0) {
 		goto invalid;
 	}

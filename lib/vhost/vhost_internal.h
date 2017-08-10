@@ -120,7 +120,7 @@ int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 bool spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id);
 struct spdk_vhost_dev *spdk_vhost_dev_find_by_vid(int vid);
 
-int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
+int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
 			     enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend);
 int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
 
