@@ -267,13 +267,35 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 	return NULL;
 }
 
+static int
+spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask)
+{
+	char *end;
+
+	if (mask == NULL || cpumask == NULL) {
+		*cpumask = spdk_app_get_core_mask();
+		return 0;
+	}
+
+	errno = 0;
+	*cpumask = strtoull(mask, &end, 16);
+
+	if (*end != '\0' || errno || !*cpumask ||
+	    ((*cpumask & spdk_app_get_core_mask()) != *cpumask)) {
+		return -1;
+	}
+
+	return 0;
+}
+
 int
-spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
+spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
 			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
 {
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
 	struct stat file_stat;
+	uint64_t cpumask;
 
 	assert(vdev);
 
@@ -282,9 +304,9 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 		return -EINVAL;
 	}
 
-	if ((cpumask & spdk_app_get_core_mask()) != cpumask) {
-		SPDK_ERRLOG("cpumask 0x%jx not a subset of app mask 0x%jx\n",
-			    cpumask, spdk_app_get_core_mask());
+	if (spdk_vhost_parse_core_mask(mask_str, &cpumask) != 0) {
+		SPDK_ERRLOG("cpumask %s not a subset of app mask 0x%jx\n",
+			    mask_str, spdk_app_get_core_mask());
 		return -EINVAL;
 	}
 
@@ -399,29 +421,6 @@ spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 	free(vdev->name);
 	free(vdev->path);
 	g_spdk_vhost_devices[ctrlr_num] = NULL;
-	return 0;
-}
-
-int
-spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask)
-{
-	char *end;
-
-	if (mask == NULL || cpumask == NULL) {
-		return -1;
-	}
-
-	errno = 0;
-	*cpumask = strtoull(mask, &end, 16);
-
-	if (*end != '\0' || errno || !*cpumask ||
-	    ((*cpumask & spdk_app_get_core_mask()) != *cpumask)) {
-
-		SPDK_ERRLOG("cpumask %s not a subset of app mask 0x%jx\n",
-			    mask, spdk_app_get_core_mask());
-		return -1;
-	}
-
 	return 0;
 }
 

@@ -747,7 +747,7 @@ to_scsi_dev(struct spdk_vhost_dev *ctrlr)
 }
 
 int
-spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask)
+spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 {
 	struct spdk_vhost_scsi_dev *svdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_scsi_dev),
 					    SPDK_CACHE_LINE_SIZE, NULL);
@@ -970,9 +970,8 @@ spdk_vhost_scsi_controller_construct(void)
 	int i, dev_num;
 	unsigned ctrlr_num = 0;
 	char *lun_name, *dev_num_str;
-	char *cpumask_str;
+	char *cpumask;
 	char *name;
-	uint64_t cpumask;
 
 	while (sp != NULL) {
 		if (!spdk_conf_section_match_prefix(sp, "VhostScsi")) {
@@ -987,13 +986,7 @@ spdk_vhost_scsi_controller_construct(void)
 		}
 
 		name =  spdk_conf_section_get_val(sp, "Name");
-		cpumask_str = spdk_conf_section_get_val(sp, "Cpumask");
-		if (cpumask_str == NULL) {
-			cpumask = spdk_app_get_core_mask();
-		} else if (spdk_vhost_parse_core_mask(cpumask_str, &cpumask)) {
-			SPDK_ERRLOG("%s: Error parsing cpumask '%s' while creating controller\n", name, cpumask_str);
-			return -1;
-		}
+		cpumask = spdk_conf_section_get_val(sp, "Cpumask");
 
 		if (spdk_vhost_scsi_dev_construct(name, cpumask) < 0) {
 			return -1;

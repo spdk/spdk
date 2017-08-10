@@ -540,9 +540,8 @@ spdk_vhost_blk_controller_construct(void)
 	struct spdk_conf_section *sp;
 	unsigned ctrlr_num;
 	char *bdev_name;
-	char *cpumask_str;
+	char *cpumask;
 	char *name;
-	uint64_t cpumask;
 	bool readonly;
 
 	for (sp = spdk_conf_first_section(NULL); sp != NULL; sp = spdk_conf_next_section(sp)) {
@@ -562,14 +561,8 @@ spdk_vhost_blk_controller_construct(void)
 			return -1;
 		}
 
-		cpumask_str = spdk_conf_section_get_val(sp, "Cpumask");
+		cpumask = spdk_conf_section_get_val(sp, "Cpumask");
 		readonly = spdk_conf_section_get_boolval(sp, "ReadOnly", false);
-		if (cpumask_str == NULL) {
-			cpumask = spdk_app_get_core_mask();
-		} else if (spdk_vhost_parse_core_mask(cpumask_str, &cpumask)) {
-			SPDK_ERRLOG("%s: Error parsing cpumask '%s' while creating controller\n", name, cpumask_str);
-			return -1;
-		}
 
 		bdev_name = spdk_conf_section_get_val(sp, "Dev");
 		if (bdev_name == NULL) {
@@ -585,7 +578,7 @@ spdk_vhost_blk_controller_construct(void)
 }
 
 int
-spdk_vhost_blk_construct(const char *name, uint64_t cpumask, const char *dev_name, bool readonly)
+spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name, bool readonly)
 {
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_bdev *bdev;
