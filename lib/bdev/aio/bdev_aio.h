@@ -58,12 +58,6 @@ struct file_disk {
 	struct spdk_bdev	disk;
 	const char		*file;
 	int			fd;
-
-	/**
-	 * For storing I/O that were completed synchronously, and will be
-	 *   completed during next check_io call.
-	 */
-	TAILQ_HEAD(, bdev_aio_task) sync_completion_list;
 };
 
 struct spdk_bdev *create_aio_disk(const char *name, const char *fname, uint32_t block_size);
