@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "95f54429_50e9501f",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-10T09:54:35Z",
+      "side": 1,
+      "message": "Idea was to have similar path for all requests, but turns out that was not needed after all. This will be changed to separate structs, definitely will improve readability. Thanks for keeping it in check :)",
+      "parentUuid": "84999161_febc32e4",
+      "range": {
+        "startLine": 40,
+        "startChar": 1,
+        "endLine": 40,
+        "endChar": 8
+      },
+      "revId": "b59b6eaa9615ae02ec823c7dca0ca3ecf3bc9f5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ccbe48c0_da11773f",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 31
