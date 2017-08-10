@@ -340,6 +340,7 @@ create_aio_disk(const char *name, const char *fname, uint32_t block_size)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
+	uint64_t disk_size;
 
 	fdisk = calloc(sizeof(*fdisk), 1);
 	if (!fdisk) {
@@ -353,7 +354,7 @@ create_aio_disk(const char *name, const char *fname, uint32_t block_size)
 		goto error_return;
 	}
 
-	fdisk->size = spdk_fd_get_size(fdisk->fd);
+	disk_size = spdk_fd_get_size(fdisk->fd);
 
 	TAILQ_INIT(&fdisk->sync_completion_list);
 	fdisk->disk.name = strdup(name);
@@ -399,13 +400,13 @@ create_aio_disk(const char *name, const char *fname, uint32_t block_size)
 
 	fdisk->disk.blocklen = block_size;
 
-	if (fdisk->size % fdisk->disk.blocklen != 0) {
+	if (disk_size % fdisk->disk.blocklen != 0) {
 		SPDK_ERRLOG("Disk size %" PRIu64 " is not a multiple of block size %" PRIu32 "\n",
-			    fdisk->size, fdisk->disk.blocklen);
+			    disk_size, fdisk->disk.blocklen);
 		goto error_return;
 	}
 
-	fdisk->disk.blockcnt = fdisk->size / fdisk->disk.blocklen;
+	fdisk->disk.blockcnt = disk_size / fdisk->disk.blocklen;
 	fdisk->disk.ctxt = fdisk;
 
 	fdisk->disk.fn_table = &aio_fn_table;
