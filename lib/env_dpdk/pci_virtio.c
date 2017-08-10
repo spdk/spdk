@@ -54,7 +54,6 @@ static struct spdk_pci_enum_ctx g_virtio_pci_drv = {
 		.name		= "spdk_virtio",
 #endif
 	},
-
 	.cb_fn = NULL,
 	.cb_arg = NULL,
 	.mtx = PTHREAD_MUTEX_INITIALIZER,
