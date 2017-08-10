@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1e2f741_7c491adb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-10T17:25:52Z",
+      "side": 1,
+      "message": "This should use SPDK_CONTAINEROF() - we should fix up the existing ones in a separate patch too.",
+      "revId": "2ccf471aefca4f82dc3dfcc5b1c81fd408f20cd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
