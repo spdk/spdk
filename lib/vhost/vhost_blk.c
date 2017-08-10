@@ -150,9 +150,8 @@ blk_iovs_setup(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t
 
 		out_cnt += spdk_vhost_vring_desc_is_wr(desc);
 
-		if (spdk_vhost_vring_desc_has_next(desc)) {
-			desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
-		} else {
+		desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+		if (desc == NULL) {
 			break;
 		}
 	}
