@@ -91,6 +91,7 @@ $valgrind test/unit/lib/util/crc32_ieee.c/crc32_ieee_ut
 $valgrind test/unit/lib/util/crc32c.c/crc32c_ut
 $valgrind test/unit/lib/util/io_channel.c/io_channel_ut
 $valgrind test/unit/lib/util/string.c/string_ut
+$valgrind test/unit/lib/util/histogram_ut.c/histogram_ut
 
 if [ $(uname -s) = Linux ]; then
 $valgrind test/unit/lib/vhost/vhost.c/vhost_ut
