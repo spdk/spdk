@@ -286,6 +286,63 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz,
 	return 0;
 }
 
+static void
+_spdk_lvol_resize_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_store_req *req = cb_arg;
+
+	req->u.lvol_basic.cb_fn(req->u.lvol_basic.cb_arg,  lvolerrno);
+	free(req);
+}
+
+int
+spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	int rc;
+	struct spdk_blob *blob = lvol->blob;
+	struct spdk_lvol_store *lvs = lvol->lvol_store;
+	struct spdk_lvol_store_req *req;
+	uint64_t cluster_size = spdk_bs_get_cluster_size(lvs->blobstore);
+	uint64_t free_clusters = spdk_bs_free_cluster_count(lvs->blobstore);
+	uint64_t used_clusters = lvol->sz / cluster_size;
+
+	/* Check if size of lvol increasing */
+	if (sz > used_clusters) {
+		/* Check if there is enough clusters left to resize */
+		if (sz - used_clusters > free_clusters) {
+			SPDK_ERRLOG("Not enough free clusters left on lvol store to resize lvol to %zu clusters\n", sz);
+			return -ENOMEM;
+		}
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		return -ENOMEM;
+	}
+	req->u.lvol_basic.cb_fn = cb_fn;
+	req->u.lvol_basic.cb_arg = cb_arg;
+
+	rc = spdk_bs_md_resize_blob(blob, sz);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	lvol->sz = sz * cluster_size;
+
+	spdk_blob_md_set_xattr(blob, "length", &sz, sizeof(sz));
+
+	spdk_bs_md_sync_blob(blob, _spdk_lvol_resize_cb, req);
+
+	return rc;
+
+invalid:
+	req->u.lvol_basic.cb_fn(req->u.lvol_basic.cb_arg, rc);
+	free(req);
+	return rc;
+}
+
 void
 spdk_lvol_destroy(struct spdk_lvol *lvol)
 {

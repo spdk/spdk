@@ -242,6 +242,23 @@ vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
 	return NULL;
 }
 
+struct spdk_lvol *
+vbdev_get_lvol_by_name(const char *name)
+{
+	struct spdk_lvol *lvol, *tmp_lvol;
+	struct lvol_store_bdev *lvs_bdev, *tmp_lvs_pair;
+
+	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp_lvs_pair) {
+		TAILQ_FOREACH_SAFE(lvol, &lvs_bdev->lvs->lvols, link, tmp_lvol) {
+			if (!strcmp(lvol->name, name)) {
+				return lvol;
+			}
+		}
+	}
+
+	return NULL;
+}
+
 static int
 vbdev_lvs_get_ctx_size(void)
 {
