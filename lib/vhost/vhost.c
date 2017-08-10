@@ -114,11 +114,33 @@ spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs, uint16_
 	return count;
 }
 
-struct vring_desc *
-spdk_vhost_vq_get_desc(struct rte_vhost_vring *vq, uint16_t req_idx)
+static bool
+spdk_vhost_vring_desc_is_indirect(struct vring_desc *cur_desc)
 {
-	assert(req_idx < vq->size);
-	return &vq->desc[req_idx];
+	return !!(cur_desc->flags & VRING_DESC_F_INDIRECT);
+}
+
+int
+spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t req_idx,
+		       struct vring_desc **desc, struct vring_desc **desc_table, uint32_t *desc_table_size)
+{
+	if (spdk_unlikely(req_idx >= vq->size)) {
+		return -1;
+	}
+
+	*desc = &vq->desc[req_idx];
+
+	if (spdk_vhost_vring_desc_is_indirect(*desc)) {
+		assert(spdk_vhost_dev_has_feature(vdev, VIRTIO_RING_F_INDIRECT_DESC));
+		*desc_table = spdk_vhost_gpa_to_vva(vdev, (*desc)->addr);
+		*desc_table_size = (*desc)->len / sizeof(**desc);
+		*desc = *desc_table;
+		return 0;
+	}
+
+	*desc_table = vq->desc;
+	*desc_table_size = vq->size;
+	return 0;
 }
 
 /*
@@ -163,10 +185,19 @@ spdk_vhost_vring_desc_has_next(struct vring_desc *cur_desc)
 }
 
 struct vring_desc *
-spdk_vhost_vring_desc_get_next(struct vring_desc *vq_desc, struct vring_desc *cur_desc)
+spdk_vhost_vring_desc_get_next(struct vring_desc *desc_table, uint32_t desc_table_size,
+			       struct vring_desc *cur_desc)
 {
 	assert(spdk_vhost_vring_desc_has_next(cur_desc));
-	return &vq_desc[cur_desc->next];
+
+	if (spdk_likely(cur_desc->next < desc_table_size)) {
+		return &desc_table[cur_desc->next];
+	}
+
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
+		      "Invalid descriptor: next is %"PRIu32" but table size is size=%"PRIu32"\n",
+		      cur_desc->next, desc_table_size);
+	return NULL;
 }
 
 bool
