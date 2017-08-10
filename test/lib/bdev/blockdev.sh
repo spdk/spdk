@@ -56,6 +56,10 @@ dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
 cp $testdir/bdev.conf.in $testdir/bdev.conf
 $rootdir/scripts/gen_nvme.sh >> $testdir/bdev.conf
 
+if [ $SPDK_TEST_RBD -eq 1 ]; then
+	$rootdir/scripts/gen_rbd.sh >> $testdir/bdev.conf
+fi
+
 timing_enter bounds
 $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
