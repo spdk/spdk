@@ -40,6 +40,7 @@
 #include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/io_channel.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
@@ -331,9 +332,10 @@ static void aio_free_disk(struct file_disk *fdisk)
 }
 
 struct spdk_bdev *
-create_aio_disk(const char *name, const char *fname)
+create_aio_disk(const char *name, const char *fname, uint32_t block_size)
 {
 	struct file_disk *fdisk;
+	uint32_t detected_block_size;
 
 	fdisk = calloc(sizeof(*fdisk), 1);
 	if (!fdisk) {
@@ -359,7 +361,30 @@ create_aio_disk(const char *name, const char *fname)
 
 	fdisk->disk.need_aligned_buffer = 1;
 	fdisk->disk.write_cache = 1;
-	fdisk->disk.blocklen = spdk_fd_get_blocklen(fdisk->fd);
+
+	detected_block_size = spdk_fd_get_blocklen(fdisk->fd);
+	if (block_size == 0) {
+		/* User did not specify block size - use autodetected block size. */
+		if (detected_block_size == 0) {
+			SPDK_ERRLOG("Block size could not be auto-detected\n");
+			goto error_return;
+		}
+		block_size = detected_block_size;
+	} else {
+		if (block_size != detected_block_size) {
+			SPDK_WARNLOG("Specified block size %" PRIu32 " does not match "
+				     "auto-detected block size %" PRIu32 "\n",
+				     block_size, detected_block_size);
+		}
+	}
+
+	assert(block_size != 0);
+	if (!spdk_u32_is_pow2(block_size)) {
+		SPDK_ERRLOG("Block size must be a power of 2.\n");
+		goto error_return;
+	}
+	fdisk->disk.blocklen = block_size;
+
 	fdisk->disk.blockcnt = fdisk->size / fdisk->disk.blocklen;
 	fdisk->disk.ctxt = fdisk;
 
@@ -392,6 +417,8 @@ bdev_aio_initialize(void)
 	while (true) {
 		const char *file;
 		const char *name;
+		const char *block_size_str;
+		uint32_t block_size = 0;
 
 		file = spdk_conf_section_get_nmval(sp, "AIO", i, 0);
 		if (!file) {
@@ -405,7 +432,12 @@ bdev_aio_initialize(void)
 			continue;
 		}
 
-		bdev = create_aio_disk(name, file);
+		block_size_str = spdk_conf_section_get_nmval(sp, "AIO", i, 2);
+		if (block_size_str) {
+			block_size = atoi(block_size_str);
+		}
+
+		bdev = create_aio_disk(name, file, block_size);
 		if (!bdev) {
 			SPDK_ERRLOG("Unable to create AIO bdev from file %s\n", file);
 			i++;
