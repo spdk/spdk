@@ -67,6 +67,19 @@ spdk_align32pow2(uint32_t x)
 	return 1u << (1 + spdk_u32log2(x - 1));
 }
 
+/**
+ * Check if a uint32_t is a power of 2.
+ */
+static inline bool
+spdk_u32_is_pow2(uint32_t x)
+{
+	if (x == 0) {
+		return false;
+	}
+
+	return (x & (x - 1)) == 0;
+}
+
 #ifdef __cplusplus
 }
 #endif
