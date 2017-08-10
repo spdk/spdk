@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a43fc14c_a564cd60",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-10T16:19:24Z",
+      "side": 1,
+      "message": "Why do you need to set every subtask as failed? Wouldn\u0027t it be simpler to just set the parent task sense data to failed, and then when each subtask completes only update the parent task sense data if the subtask failed?",
+      "revId": "ff1c5d4e4b7e61a769b4c7384800f6906d16823c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
