@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf5881c5_aa2a58f0",
+        "filename": "lib/blobfs/tree.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-10T16:37:03Z",
+      "side": 1,
+      "message": "It looks like this is a leftover merge marker.",
+      "revId": "70dc7e68eb408d76007cf4b0e9b0fa4b286aa0a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
