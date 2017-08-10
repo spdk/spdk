@@ -12,6 +12,7 @@
 
 [AIO]
   AIO /dev/ram0 AIO0
+  AIO /tmp/aiofile AIO1 4096
 
 [Rpc]
   Enable Yes
