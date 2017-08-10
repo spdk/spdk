@@ -67,11 +67,13 @@ Configuration file syntax:
 
 ~~~
 [AIO]
-  # AIO <file name> <bdev name>
+  # AIO <file name> <bdev name> [<block size>]
   # The file name is the backing device
   # The bdev name can be referenced from elsewhere in the configuration file.
+  # Block size may be omitted to automatically detect the block size of a disk.
   AIO /dev/sdb AIO0
   AIO /dev/sdc AIO1
+  AIO /tmp/myfile AIO2 4096
 ~~~
 
 This exports 2 aio block devices, named AIO0 and AIO1.

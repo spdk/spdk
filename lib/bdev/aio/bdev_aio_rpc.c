@@ -40,6 +40,7 @@
 struct rpc_construct_aio {
 	char *name;
 	char *fname;
+	uint32_t block_size;
 };
 
 static void
@@ -52,6 +53,7 @@ free_rpc_construct_aio(struct rpc_construct_aio *req)
 static const struct spdk_json_object_decoder rpc_construct_aio_decoders[] = {
 	{"name", offsetof(struct rpc_construct_aio, name), spdk_json_decode_string},
 	{"fname", offsetof(struct rpc_construct_aio, fname), spdk_json_decode_string},
+	{"block_size", offsetof(struct rpc_construct_aio, block_size), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -69,7 +71,7 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev = create_aio_disk(req.name, req.fname);
+	bdev = create_aio_disk(req.name, req.fname, req.block_size);
 	if (bdev == NULL) {
 		goto invalid;
 	}
