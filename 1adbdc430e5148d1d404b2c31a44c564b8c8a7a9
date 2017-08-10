@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2c21cc1_d610f7bd",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-10T17:18:33Z",
+      "side": 1,
+      "message": "We should use SPDK_CONTAINEROF() for this kind of math.",
+      "revId": "1adbdc430e5148d1d404b2c31a44c564b8c8a7a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
