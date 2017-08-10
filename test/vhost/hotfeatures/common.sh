@@ -13,6 +13,7 @@ force_build=false
 vms=()
 used_vms=""
 disk_split=""
+test_case=""
 x=""
 
 
@@ -37,6 +38,7 @@ function usage() {
     echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
     echo "                          If test-type=spdk_vhost_blk then each disk can have additional size parameter, e.g."
     echo "                          --vm=X,os.qcow,DISK_size_35G; unit can be M or G; default - 20G"
+    echo "    --test-case"
     exit 0
 }
 
@@ -49,6 +51,7 @@ while getopts 'xh-:' optchar; do
             fio-bin=*) fio_bin="${OPTARG#*=}" ;;
             fio-jobs=*) fio_jobs="${OPTARG#*=}" ;;
             test-type=*) test_type="${OPTARG#*=}" ;;
+	    test-case=*) test_case="${OPTARG#*=}" ;;
             vm=*) vms+=("${OPTARG#*=}") ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
@@ -160,6 +163,7 @@ function check_fio_retcode() {
         if [ "$fio_retcode" != 0 ]; then
             echo "    Fio test ended with expected error."
         else
+        print
             echo "    Fio test ended with unexpected success."
             vm_shutdown_all
             spdk_vhost_kill
@@ -167,3 +171,24 @@ function check_fio_retcode() {
         fi
     fi
 }
+
+function back_configuration(){
+    rm $BASE_DIR/vhost.conf.in
+    vm_shutdown_all
+    spdk_vhost_kill
+    echo $bdf > /sys/bus/pci/drivers/uio_pci_generic/bind
+}
+
+function get_nvme_pci_addr()
+{
+    chmod 755 $1
+    [[ $(  grep $2 $1 ) =~ ([0-9a-fA-F]{4}(:[0-9a-fA-F]{2}){2}.[0-9a-fA-F]) ]]
+    echo ${BASH_REMATCH[1]}
+}
+
+function unbind_bdev() {
+    bdf="$(get_nvme_pci_addr $BASE_DIR/vhost.conf.in $nvme_disk)"
+    (sleep 5; echo $bdf>/sys/bus/pci/devices/$bdf/driver/unbind) &
+    set +xe
+}
+
