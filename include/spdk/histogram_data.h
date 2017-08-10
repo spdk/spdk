@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
+ *   Copyright (c) NetApp, Inc.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -31,13 +31,31 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * \file
- * Generic histogram library
+/** \file
+ * This file contains services for creating and managing histograms
+ */
+
+/*
+ * usage info
+ * use below api to create a histogram and tally to populate
+ *     spdk_histogram_alloc - create an histogram with attributes
+ *     spdk_histogram_data_tally    - populate histogram stats
+ *
+ * below apis from rpc client to manage histograms
+ *  spdk_hist_list_ids       - list histogram list based on internal ids
+ *  spdk_histogram_data_reset - clear contents of histogram
+ *  spdk_histogram_data_reset_all - clear contents of all histogram
+ *  spdk_histogram_dump_json - get histogram stats in json format
+ *  spdk_histogram_enable    - enable  data collection for histogram
+ *  spdk_histogram_disable   - disable data collection for histogram
  */
 
 #ifndef _SPDK_HISTOGRAM_DATA_H_
 #define _SPDK_HISTOGRAM_DATA_H_
+
+#include "spdk/stdinc.h"
+#include "spdk/queue.h"
+#include "spdk/json.h"
 
 #include "spdk/stdinc.h"
 
@@ -45,11 +63,13 @@
 extern "C" {
 #endif
 
-#define SPDK_HISTOGRAM_BUCKET_SHIFT		7
-#define SPDK_HISTOGRAM_BUCKET_LSB		(64 - SPDK_HISTOGRAM_BUCKET_SHIFT)
-#define SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE	(1ULL << SPDK_HISTOGRAM_BUCKET_SHIFT)
-#define SPDK_HISTOGRAM_BUCKET_MASK		(SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE - 1)
-#define SPDK_HISTOGRAM_NUM_BUCKET_RANGES	(SPDK_HISTOGRAM_BUCKET_LSB + 1)
+#define SPDK_HISTOGRAM_BUCKET_SHIFT     7
+#define SPDK_HISTOGRAM_BUCKET_LSB       (64 - SPDK_HISTOGRAM_BUCKET_SHIFT)
+#define SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE    (1ULL << SPDK_HISTOGRAM_BUCKET_SHIFT)
+#define SPDK_HISTOGRAM_BUCKET_MASK      (SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE - 1)
+#define SPDK_HISTOGRAM_NUM_BUCKET_RANGES    (SPDK_HISTOGRAM_BUCKET_LSB + 1)
+#define SPDK_HIST_LARGEST_VALUE  ~0ull
+#define SPDK_HIST_SMALLEST_VALUE 0ull
 
 /*
  * SPDK histograms are implemented using ranges of bucket arrays.  The most common usage
@@ -82,15 +102,64 @@ extern "C" {
  */
 
 struct spdk_histogram_data {
+	uint32_t        hist_id;            /* histogram id for parsing from user scripts. */
 
-	uint64_t	bucket[SPDK_HISTOGRAM_NUM_BUCKET_RANGES][SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE];
+	bool            enabled;            /* if true starts collecting stats */
+	unsigned char   name[32];           /* name for each histogram structure. */
+	unsigned char   unit_name[32];      /* metric of tally value. */
+	unsigned char   class_name[32];     /* class name */
 
+	uint64_t        values;             /* track number of tally entry */
+	uint64_t        value_min;          /* track min value of tally entry */
+	uint64_t        value_max;          /* track max value of tally entry */
+	uint64_t        value_total;        /* track total of tally entries */
+
+	TAILQ_ENTRY(spdk_histogram_data) link;
+
+	uint64_t    bucket[SPDK_HISTOGRAM_NUM_BUCKET_RANGES][SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE];
 };
 
-static inline void
-spdk_histogram_data_reset(struct spdk_histogram_data *histogram)
+static inline bool
+spdk_histogram_is_enabled(struct spdk_histogram_data *hg)
 {
-	memset(histogram, 0, sizeof(*histogram));
+	return hg->enabled;
+}
+
+static inline void
+spdk_histogram_enable(struct spdk_histogram_data *hg)
+{
+	if (hg) {
+		hg->enabled = true;
+	}
+}
+
+static inline void
+spdk_histogram_disable(struct spdk_histogram_data *hg)
+{
+	if (hg) {
+		hg->enabled = false;
+	}
+}
+
+static inline bool
+spdk_histogram_cleared(struct spdk_histogram_data *hg)
+{
+	return !hg->value_total;
+}
+
+/**
+ * Clears all statistics of given histogram object.
+ */
+static inline void
+spdk_histogram_data_reset(struct spdk_histogram_data *hg)
+{
+	hg->values      = 0;
+	hg->value_min   = SPDK_HIST_LARGEST_VALUE;
+	hg->value_max   = SPDK_HIST_SMALLEST_VALUE;
+	hg->value_total = 0;
+
+	memset(hg->bucket, 0, SPDK_HISTOGRAM_NUM_BUCKET_RANGES * SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE *
+	       sizeof(uint64_t));
 }
 
 static inline uint32_t
@@ -126,12 +195,25 @@ __spdk_histogram_data_get_bucket_index(uint64_t datapoint, uint32_t range)
 }
 
 static inline void
-spdk_histogram_data_tally(struct spdk_histogram_data *histogram, uint64_t datapoint)
+spdk_histogram_data_tally(struct spdk_histogram_data *hg, uint64_t value)
 {
-	uint32_t range = __spdk_histogram_data_get_bucket_range(datapoint);
-	uint32_t index = __spdk_histogram_data_get_bucket_index(datapoint, range);
+	if (!hg || !hg->enabled) {
+		return;
+	}
 
-	histogram->bucket[range][index]++;
+	uint32_t range = __spdk_histogram_data_get_bucket_range(value);
+	uint32_t index = __spdk_histogram_data_get_bucket_index(value, range);
+
+	hg->bucket[range][index]++;
+
+	if (value < hg->value_min)
+		hg->value_min = value;
+
+	if (value > hg->value_max)
+		hg->value_max = value;
+
+	hg->values++;
+	hg->value_total += value;
 }
 
 static inline uint64_t
@@ -181,6 +263,37 @@ spdk_histogram_data_iterate(const struct spdk_histogram_data *histogram,
 		}
 	}
 }
+
+/**
+ * Function create a histogram with attributes to be used by clients
+ */
+struct spdk_histogram_data *spdk_histogram_alloc(bool enable, const char *name,
+		const char *class_name, const char *unit_name);
+
+/**
+ * Clears all statistics of all histogram objects.
+ */
+void spdk_histogram_data_reset_all(void);
+
+/**
+ *Function returns the histogram object using its id number.
+ */
+struct spdk_histogram_data *spdk_histogram_find(uint32_t hist_id);
+
+/**
+ * Function prints information for all the histogram objects in json format
+ */
+void spdk_histogram_dump_json(struct spdk_json_write_ctx *w, struct spdk_histogram_data *hg);
+
+/**
+ *Function lists ids of all histograms
+ */
+void spdk_hist_list_ids(struct spdk_json_write_ctx *w);
+
+/**
+ *Function frees memory of histogram allocated during register
+ */
+void spdk_histogram_free(struct spdk_histogram_data *hg);
 
 #ifdef __cplusplus
 }
