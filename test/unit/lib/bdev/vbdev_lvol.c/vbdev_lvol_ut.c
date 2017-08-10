@@ -45,6 +45,9 @@ struct spdk_lvol_store *g_lvs = NULL;
 struct spdk_lvol *g_lvol = NULL;
 struct lvol_store_bdev *g_lvs_bdev = NULL;
 struct spdk_bdev *g_base_bdev = NULL;
+struct spdk_bdev_io *g_io = NULL;
+struct spdk_io_channel *g_ch = NULL;
+struct lvol_task *g_task = NULL;
 
 
 static struct spdk_bdev g_bdev = {};
@@ -190,10 +193,12 @@ spdk_is_bdev_opened(struct spdk_bdev *bdev)
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
+
 }
 
 struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol)
 {
+	CU_ASSERT(lvol == g_lvol);
 	return NULL;
 }
 
@@ -508,6 +513,146 @@ ut_lvs_init(void)
 
 }
 
+static void
+ut_vbdev_lvol_submit_request(void)
+{
+	struct spdk_bdev_io *io = NULL;
+	struct spdk_bdev *bdev = NULL;
+
+	io = calloc(1, sizeof(*io));
+	bdev = calloc(1, sizeof(struct spdk_bdev));
+
+	io->bdev = bdev;
+	io->type = SPDK_BDEV_IO_TYPE_READ;
+
+	/* Successful io operation */
+	vbdev_lvol_submit_request(NULL, io);
+
+	free(io);
+	free(bdev);
+}
+
+static void
+ut_lvol_read(void)
+{
+	g_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct lvol_task));
+	g_base_bdev = calloc(1, sizeof(struct spdk_bdev));
+
+	g_lvol = calloc(1, sizeof(struct spdk_lvol));
+
+	g_task = (struct lvol_task *)g_io->driver_ctx;
+	g_io->bdev = g_base_bdev;
+	g_io->bdev->ctxt = g_lvol;
+
+	lvol_read(g_ch, g_io);
+	CU_ASSERT(g_task->status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	free(g_io);
+	free(g_base_bdev);
+	free(g_lvol);
+}
+
+static void
+ut_lvol_write(void)
+{
+
+	struct spdk_bdev_io *io = NULL;
+	struct spdk_bdev *bdev = NULL;
+	struct spdk_lvol *lvol = NULL;
+	struct spdk_lvol_store *lvs = NULL;
+	struct lvol_task *task = NULL;
+
+	io = calloc(1, sizeof(*io));
+	bdev = calloc(1, sizeof(struct spdk_bdev));
+	lvol = calloc(1, sizeof(struct spdk_lvol));
+	lvs = calloc(1, sizeof(struct spdk_lvol_store));
+	task = calloc(1, sizeof(struct lvol_task));
+
+	io->type = SPDK_BDEV_IO_TYPE_WRITE;
+	io->bdev = bdev;
+	bdev->ctxt = lvol;
+	lvol->lvol_store = lvs;
+//	lvs->page_size = 4096;
+	*(struct lvol_task **)io->driver_ctx = task;
+
+	/* Successful write to lvol */
+	/* lvol_write(lvol, NULL, io); */
+
+	CU_ASSERT(task->status != SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	free(io);
+	free(bdev);
+	free(lvol);
+	free(lvs);
+	free(task);
+}
+
+static void
+ut_lvol_flush(void)
+{
+	struct spdk_bdev_io *io = NULL;
+	struct lvol_task *task = NULL;
+
+	io = calloc(1, sizeof(struct spdk_bdev_io));
+	task = calloc(1, sizeof(struct lvol_task));
+
+	*(struct lvol_task **)io->driver_ctx = task;
+	/* Successful flush to lvol */
+	/* lvol_flush(NULL, io); */
+
+	CU_ASSERT(task->status != SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	free(io);
+	free(task);
+}
+
+static void
+ut_lvol_op_comp(void)
+{
+	struct lvol_task *task;
+	task = calloc(1, sizeof(struct lvol_task));
+
+	lvol_op_comp(task, 1);
+	CU_ASSERT(task->status == SPDK_BDEV_IO_STATUS_FAILED);
+	/* task->num_outstanding */
+
+	free(task);
+
+}
+
+static void
+ut_vbdev_lvol_get_io_channel(void)
+{
+	struct spdk_io_channel *ch;
+	ch = vbdev_lvol_get_io_channel(g_lvol);
+	CU_ASSERT(ch == NULL);
+
+}
+
+static void
+ut_vbdev_lvol_io_type_supported(void)
+{
+	struct spdk_lvol *lvol = g_lvol;
+	bool ret;
+	/* Supported types */
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_READ);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_WRITE);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_FLUSH);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_RESET);
+	CU_ASSERT(ret == true);
+
+	/* Unsupported types */
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_UNMAP);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_ADMIN);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_IO);
+	CU_ASSERT(ret == false);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -527,7 +672,14 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_lvs_init", ut_lvs_init) == NULL ||
 		CU_add_test(suite, "ut_lvol_init", ut_lvol_init) == NULL ||
 		CU_add_test(suite, "ut_lvol_resize", ut_lvol_resize) == NULL ||
-		CU_add_test(suite, "lvol_hotremove", ut_lvol_hotremove) == NULL
+		CU_add_test(suite, "lvol_hotremove", ut_lvol_hotremove) == NULL ||
+		CU_add_test(suite, "ut_vbdev_lvol_get_io_channel", ut_vbdev_lvol_get_io_channel) == NULL ||
+		CU_add_test(suite, "ut_vbdev_lvol_io_type_supported", ut_vbdev_lvol_io_type_supported) == NULL ||
+		CU_add_test(suite, "ut_lvol_op_comp", ut_lvol_op_comp) == NULL ||
+		CU_add_test(suite, "ut_lvol_flush", ut_lvol_flush) == NULL ||
+		CU_add_test(suite, "ut_lvol_read", ut_lvol_read) == NULL ||
+		CU_add_test(suite, "ut_lvol_write", ut_lvol_write) == NULL ||
+		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
