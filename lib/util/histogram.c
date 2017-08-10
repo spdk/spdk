@@ -61,7 +61,7 @@ spdk_histogram_alloc(bool enable, const char *name, const char *class_name,
 		return NULL;
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "class_name %s, name %s unit_name %s \n",
+	SPDK_DEBUGLOG(SPDK_TRACE_HISTOGRAM, "class_name %s, name %s unit_name %s \n",
 		      class_name, name, unit_name);
 
 	/* Allocate memory for a histogram. */
@@ -193,3 +193,4 @@ spdk_hist_list_ids(struct spdk_json_write_ctx *w)
 		spdk_json_write_object_end(w);
 	}
 }
+SPDK_LOG_REGISTER_TRACE_FLAG("histogram", SPDK_TRACE_HISTOGRAM)

@@ -77,7 +77,7 @@ hist_rpc_enable(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, spdk_hist_id_decoders,
 				    sizeof(spdk_hist_id_decoders) / sizeof(*spdk_hist_id_decoders), &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_HIST_RPC, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
@@ -90,7 +90,7 @@ hist_rpc_enable(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_end_result(request, w);
 		return;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "histogram with ID %u do not exist", req.hist_id);
+	SPDK_DEBUGLOG(SPDK_TRACE_HIST_RPC, "histogram with ID %u do not exist", req.hist_id);
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -107,7 +107,7 @@ hist_rpc_disable(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, spdk_hist_id_decoders,
 				    sizeof(spdk_hist_id_decoders) / sizeof(*spdk_hist_id_decoders), &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_HIST_RPC, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
@@ -120,7 +120,7 @@ hist_rpc_disable(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_end_result(request, w);
 		return;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "histogram with ID %u doesn't exist", req.hist_id);
+	SPDK_DEBUGLOG(SPDK_TRACE_HIST_RPC, "histogram with ID %u doesn't exist", req.hist_id);
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -137,7 +137,7 @@ hist_rpc_clear(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, spdk_hist_id_decoders,
 				    sizeof(spdk_hist_id_decoders) / sizeof(*spdk_hist_id_decoders), &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_HIST_RPC, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
@@ -150,7 +150,7 @@ hist_rpc_clear(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_end_result(request, w);
 		return;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "histogram with ID %u doesn't exist", req.hist_id);
+	SPDK_DEBUGLOG(SPDK_TRACE_HIST_RPC, "histogram with ID %u doesn't exist", req.hist_id);
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
@@ -186,7 +186,7 @@ hist_rpc_get_stats(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, spdk_hist_id_decoders,
 				    sizeof(spdk_hist_id_decoders) / sizeof(*spdk_hist_id_decoders), &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_HIST_RPC, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
@@ -197,9 +197,10 @@ hist_rpc_get_stats(struct spdk_jsonrpc_request *request,
 		spdk_jsonrpc_end_result(request, w);
 		return;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "histogram with ID %u doesn't exist\n", req.hist_id);
+	SPDK_DEBUGLOG(SPDK_TRACE_HIST_RPC, "histogram with ID %u doesn't exist\n", req.hist_id);
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
+SPDK_LOG_REGISTER_TRACE_FLAG("hist_rpc", SPDK_TRACE_HIST_RPC)
 SPDK_RPC_REGISTER("hist_get_stats", hist_rpc_get_stats)
