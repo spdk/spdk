@@ -111,7 +111,7 @@ bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
 int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 				 uint16_t *iov_index, const struct vring_desc *desc);
-
+bool spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned flag);
 struct spdk_vhost_dev *spdk_vhost_dev_find_by_vid(int vid);
 
 int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t cpumask,
