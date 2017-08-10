@@ -77,6 +77,24 @@ case $param in
 	--test-type=spdk_vhost_scsi \
 	--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
     ;;
+	-hrb|--blk-hotremove)
+	echo Running hotplug tests suite...
+	./hotplug/blk_hotremove.sh --fio-bin=/home/sys_sgsw/fio_universal \
+	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0 \
+	--vm=1,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p1 \
+	--test-type=spdk_vhost_blk \
+	--fio-jobs=/home/sys_sgsw/spdk_repo/spdk/test/vhost/hotfeatures/fio_jobs/default_integrity.job \
+	--test-case=all -x
+    ;;
+	-hrs|--scsi-hotremove)
+	echo Running hotplug tests suite...
+	./hotplug/scsi_hotremove.sh --fio-bin=/home/sys_sgsw/fio_universal \
+	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0 \
+	--vm=1,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p1 \
+	--test-type=spdk_vhost_scsi \
+	--fio-jobs=/home/sys_sgsw/spdk_repo/spdk/test/vhost/hotfeatures/fio_jobs/default_integrity.job \
+	--test-case=all -x
+    ;;
     -h|--help)
 	echo "-i |--integrity             for running an integrity test with vhost scsi"
 	echo "-fs|--fs-integrity-scsi     for running an integrity test with filesystem"
