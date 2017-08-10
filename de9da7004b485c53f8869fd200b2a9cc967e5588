@@ -294,6 +294,98 @@
     },
     {
       "key": {
+        "uuid": "4bc18f75_9f65164b",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-10T07:28:56Z",
+      "side": 1,
+      "message": "It is not must have, but can we replace this with\n\ncat \u003c\u003c END_OF_CONFIG \u003e\u003e $BASE_DIR/vhost.conf.in\n[Split]\n  Split Nvme0n1 8\n\n[VhostScsi0]\n  Name naa.Nvme0n1p0.0\n  Dev 0 Nvme0n1p0\n  Dev 1 Nvme0n1p1\n\n[[ Rest of config ]]\nEND_OF_CONFIG",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 59
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "487eecc6_ea10fc52",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-10T07:28:56Z",
+      "side": 1,
+      "message": "It would be much much esier to remove those sections from teplate file and add them here using\necho \"[job_name]\" \u003e\u003e $fio_job\necho \"filename\u003ddisc\" \u003e\u003e $fio_job",
+      "range": {
+        "startLine": 60,
+        "startChar": 24,
+        "endLine": 60,
+        "endChar": 164
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40b6e93c_bb2ed1cc",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-10T07:28:56Z",
+      "side": 1,
+      "message": "Just use\n(( j++ ))",
+      "range": {
+        "startLine": 61,
+        "startChar": 24,
+        "endLine": 61,
+        "endChar": 37
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97b0069a_c65e39ac",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-10T07:28:56Z",
+      "side": 1,
+      "message": "There is nice wraper vm_ssh. You should create the analogue vm_scp.",
+      "range": {
+        "startLine": 80,
+        "startChar": 16,
+        "endLine": 80,
+        "endChar": 107
+      },
+      "revId": "de9da7004b485c53f8869fd200b2a9cc967e5588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec4523d3_1b17f914",
         "filename": "test/vhost/hotfeatures/test_plan.md",
         "patchSetId": 6
