@@ -55,10 +55,44 @@ void spdk_vhost_shutdown_cb(void);
 /* Forward declaration */
 struct spdk_vhost_dev;
 
+/** Synchronized vhost event used for user callbacks */
 typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_dev *, void *);
 
+/**
+ * Get name of the vhost controller. This is equal to the filename
+ * of socket file. The name is constant throughout the lifetime of
+ * a controller.
+ *
+ * \param ctrlr vhost controller
+ * \return name of the controller. This string is owned by vhost
+ * and should not be modified or freed.
+ */
 const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *ctrl);
+
+/**
+ * Get cpumask of the vhost controller. The mask is constant
+ * throughout the lifetime of a controller. It will be a subset
+ * of SPDK cpumask vhost was started with.
+ *
+ * \param ctrlr vhost controller
+ * \return cpumask of the controller. This is a number greater or
+ * equal than 0 and lesser than number of logical CPU cores.
+ */
 uint64_t spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *ctrl);
+
+/**
+ * Try to convert cpumask string into valid mask number. Given mask
+ * must be a subset of SPDK cpumask vhost was started with.
+ *
+ * \param mask string containing cpumask in either hex or base 10
+ * to be parsed. The format will be detected automatically. In case
+ * of hex format the leading *0x* is allowed but not required.
+ * \param cpumask pointer where parsed mask will be put. In case
+ * this function returns -1, the value under this pointer is
+ * undefined.
+ * \return 0 on success, -1 on failure. This function will print
+ * error message describing the failure.
+ */
 int spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask);
 
 int spdk_vhost_scsi_dev_construct(const char *name, uint64_t cpumask);
