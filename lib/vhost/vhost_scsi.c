@@ -176,6 +176,8 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_
 	struct rte_vhost_vring *vq;
 	struct vring_desc *desc;
 	struct virtio_scsi_event *desc_ev;
+	struct vring_desc *desc_table;
+	uint32_t desc_table_size;
 	uint32_t req_size;
 	uint16_t req;
 
@@ -189,7 +191,10 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_
 		return;
 	}
 
-	desc =  spdk_vhost_vq_get_desc(vq, req);
+	if (spdk_vhost_vq_get_desc(&svdev->vdev, vq, req, &desc, &desc_table, &desc_table_size)) {
+		goto out;
+	}
+
 	desc_ev = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
 
 	if (desc->len < sizeof(*desc_ev) || desc_ev == NULL) {
@@ -212,6 +217,7 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_
 		req_size = sizeof(*desc_ev);
 	}
 
+out:
 	spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, req, req_size);
 }
 
@@ -308,10 +314,16 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	struct vring_desc *desc;
 	struct virtio_scsi_ctrl_tmf_req *ctrl_req;
 	struct virtio_scsi_ctrl_an_resp *an_resp;
+	struct vring_desc *desc_table;
+	uint32_t desc_table_size;
 
 	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_mgmt_cpl, spdk_vhost_scsi_task_free_cb,
 				 NULL);
-	desc = spdk_vhost_vq_get_desc(task->vq, task->req_idx);
+	if (spdk_vhost_vq_get_desc(&task->svdev->vdev, task->vq, task->req_idx, &desc, &desc_table,
+				   &desc_table_size)) {
+		goto out;
+	}
+
 	ctrl_req = spdk_vhost_gpa_to_vva(&task->svdev->vdev, desc->addr);
 
 	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI_QUEUE,
@@ -328,7 +340,10 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	case VIRTIO_SCSI_T_TMF:
 		/* Get the response buffer */
 		assert(spdk_vhost_vring_desc_has_next(desc));
-		desc = spdk_vhost_vring_desc_get_next(task->vq->desc, desc);
+		desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+		if (desc == NULL) {
+			break;
+		}
 		task->tmf_resp = spdk_vhost_gpa_to_vva(&task->svdev->vdev, desc->addr);
 
 		/* Check if we are processing a valid request */
@@ -353,7 +368,10 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 		break;
 	case VIRTIO_SCSI_T_AN_QUERY:
 	case VIRTIO_SCSI_T_AN_SUBSCRIBE: {
-		desc = spdk_vhost_vring_desc_get_next(task->vq->desc, desc);
+		desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+		if (desc == NULL) {
+			break;
+		}
 		an_resp = spdk_vhost_gpa_to_vva(&task->svdev->vdev, desc->addr);
 		an_resp->response = VIRTIO_SCSI_S_ABORTED;
 		break;
@@ -363,6 +381,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 		break;
 	}
 
+out:
 	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, 0);
 	spdk_vhost_scsi_task_put(task);
 }
@@ -379,22 +398,32 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 {
 	struct rte_vhost_vring *vq = task->vq;
 	struct spdk_vhost_dev *vdev = &task->svdev->vdev;
-	struct vring_desc *desc =  spdk_vhost_vq_get_desc(task->vq, task->req_idx);
+	struct vring_desc *desc;
+	struct vring_desc *desc_table;
 	struct iovec *iovs = task->iovs;
 	uint16_t iovcnt = 0, iovcnt_max = SPDK_VHOST_IOVS_MAX;
+	uint32_t desc_table_size;
 	uint32_t len = 0;
+
+	if (spdk_unlikely(spdk_vhost_vq_get_desc(vdev, vq, task->req_idx, &desc, &desc_table,
+			  &desc_table_size))) {
+		goto invalid_task;
+	}
 
 	/* Sanity check. First descriptor must be readable and must have next one. */
 	if (spdk_unlikely(spdk_vhost_vring_desc_is_wr(desc) || !spdk_vhost_vring_desc_has_next(desc))) {
 		SPDK_WARNLOG("Invalid first (request) descriptor.\n");
-		task->resp = NULL;
-		goto abort_task;
+		goto invalid_task;
 	}
 
 	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_cpl, spdk_vhost_scsi_task_free_cb, NULL);
 	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 
-	desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+	desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+	if (spdk_unlikely(desc == NULL)) {
+		goto invalid_task;
+	}
+
 	task->scsi.dxfer_dir = spdk_vhost_vring_desc_is_wr(desc) ? SPDK_SCSI_DIR_FROM_DEV :
 			       SPDK_SCSI_DIR_TO_DEV;
 	task->scsi.iovs = iovs;
@@ -418,24 +447,29 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			return 0;
 		}
 
-		desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+		desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+		if (spdk_unlikely(desc == NULL)) {
+			goto invalid_task;
+		}
 
 		/* All remaining descriptors are data. */
 		while (iovcnt < iovcnt_max) {
 			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &iovcnt, desc))) {
-				task->resp = NULL;
-				goto abort_task;
+				goto invalid_task;
 			}
 			len += desc->len;
 
 			if (!spdk_vhost_vring_desc_has_next(desc))
 				break;
 
-			desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+			desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+			if (spdk_unlikely(desc == NULL)) {
+				goto invalid_task;
+			}
+
 			if (spdk_unlikely(!spdk_vhost_vring_desc_is_wr(desc))) {
 				SPDK_WARNLOG("FROM DEV cmd: descriptor nr %" PRIu16" in payload chain is read only.\n", iovcnt);
-				task->resp = NULL;
-				goto abort_task;
+				goto invalid_task;
 			}
 		}
 	} else {
@@ -448,18 +482,19 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		/* Process descriptors up to response. */
 		while (!spdk_vhost_vring_desc_is_wr(desc) && iovcnt < iovcnt_max) {
 			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &iovcnt, desc))) {
-				task->resp = NULL;
-				goto abort_task;
+				goto invalid_task;
 			}
 			len += desc->len;
 
 			if (!spdk_vhost_vring_desc_has_next(desc)) {
 				SPDK_WARNLOG("TO_DEV cmd: no response descriptor.\n");
-				task->resp = NULL;
-				goto abort_task;
+				goto invalid_task;
 			}
 
-			desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
+			desc = spdk_vhost_vring_desc_get_next(desc_table, desc_table_size, desc);
+			if (spdk_unlikely(desc == NULL)) {
+				goto invalid_task;
+			}
 		}
 
 		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
@@ -468,9 +503,10 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		}
 	}
 
-	if (iovcnt == iovcnt_max) {
+	if (spdk_unlikely(iovcnt == iovcnt_max)) {
 		SPDK_WARNLOG("Too many IO vectors in chain!\n");
-		goto abort_task;
+		task->resp->response = VIRTIO_SCSI_S_ABORTED;
+		return -1;
 	}
 
 	task->scsi.iovcnt = iovcnt;
@@ -478,11 +514,8 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 	task->scsi.transfer_len = len;
 	return 0;
 
-abort_task:
-	if (task->resp) {
-		task->resp->response = VIRTIO_SCSI_S_ABORTED;
-	}
-
+invalid_task:
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI_DATA, "Invalid task.\n");
 	return -1;
 }
 
@@ -922,14 +955,6 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 	int rc;
 
 	for (i = 0; i < svdev->vdev.num_queues; i++) {
-		/*
-		 * FIXME:
-		 * this is too big because we need only size/2 from each queue but for now
-		 * lets leave it as is to be sure we are not mistaken.
-		 *
-		 * Limit the pool size to 1024 * num_queues. This should be enough as QEMU have the
-		 * same hard limit for queue size.
-		 */
 		task_cnt += spdk_min(svdev->vdev.virtqueue[i].size, 1024);
 	}
 
