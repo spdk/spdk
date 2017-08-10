@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d76d3dbd_d3ddd9ea",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-10T09:38:06Z",
+      "side": 1,
+      "message": "Thank you for your suggestion, I updated the code. Although the redundant code increase, each function is relatively independent.",
+      "parentUuid": "bfa6c91c_945beeeb",
+      "revId": "c930174b1f736e77cb40f3dcea8940836b40fbad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a86ee820_14eaab0c",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 17
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "f269ead1_13e864dd",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-10T09:38:06Z",
+      "side": 1,
+      "message": "I moved gpt \"allocate\" and \"free\" into respective function.",
+      "parentUuid": "a86ee820_14eaab0c",
+      "revId": "c930174b1f736e77cb40f3dcea8940836b40fbad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4905f96a_7dbaac59",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 17
@@ -47,6 +83,24 @@
       "writtenOn": "2017-08-09T17:15:23Z",
       "side": 1,
       "message": "the name convention for these functions should be \"test_\u003cname of function being tested\" \n\nThis is pretty consistently followed in all the other test code and makes it easy for anyone to jump back and forth between UT code and code under test and know what goes with what.\n\nI have a series of UT patches that are pending now, please review one of them for an example of what we\u0027re going for with all UT moving forward.  https://review.gerrithub.io/#/c/372554/",
+      "revId": "c930174b1f736e77cb40f3dcea8940836b40fbad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab68bac5_d0725ae4",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-10T09:38:06Z",
+      "side": 1,
+      "message": "Refer to your example I follow your specification to modify them.  If you have our UT specification document, please send me, thanks. It will let me to avoid other inappropriate writing format.",
+      "parentUuid": "4905f96a_7dbaac59",
       "revId": "c930174b1f736e77cb40f3dcea8940836b40fbad",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
