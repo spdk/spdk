@@ -143,6 +143,7 @@ spdk_get_uevent(int fd, struct spdk_uevent *uevent)
 {
 	int ret;
 	char buf[SPDK_UEVENT_MSG_LEN];
+	char errbuf[64];
 
 	memset(uevent, 0, sizeof(struct spdk_uevent));
 	memset(buf, 0, SPDK_UEVENT_MSG_LEN);
@@ -156,7 +157,8 @@ spdk_get_uevent(int fd, struct spdk_uevent *uevent)
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
 		} else {
-			SPDK_ERRLOG("Socket read error(%d): %s\n", errno, strerror(errno));
+			strerror_r(errno, buf, sizeof(errbuf));
+			SPDK_ERRLOG("Socket read error(%d): %s\n", errno, errbuf);
 			return -1;
 		}
 	}
