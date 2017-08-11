@@ -2,6 +2,98 @@
   "comments": [
     {
       "key": {
+        "uuid": "b8bc471e_4f4c6cbd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:33:48Z",
+      "side": 1,
+      "message": "for",
+      "range": {
+        "startLine": 9,
+        "startChar": 26,
+        "endLine": 9,
+        "endChar": 30
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15c33bab_50e21e8f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:33:48Z",
+      "side": 1,
+      "message": "adds",
+      "range": {
+        "startLine": 9,
+        "startChar": 10,
+        "endLine": 9,
+        "endChar": 15
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c302f0cf_6a2e49e7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:33:48Z",
+      "side": 1,
+      "message": "Not much information in this sentence, as we do not know what the function does. But I think you may remove this line.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 47
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ffbfeda_987cfcb9",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:33:48Z",
+      "side": 1,
+      "message": "Why do we need that?",
+      "range": {
+        "startLine": 849,
+        "startChar": 9,
+        "endLine": 849,
+        "endChar": 27
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59f8a630_6314c1dd",
         "filename": "test/vhost/common/common.sh",
         "patchSetId": 1
@@ -18,6 +110,29 @@
         "startChar": 0,
         "endLine": 858,
         "endChar": 1
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cff9d1c8_a315924b",
+        "filename": "test/vhost/hotfeatures/blk_hotremove_multi_vm.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:33:48Z",
+      "side": 1,
+      "message": "This part is in most of the files. Pretty sure we don\u0027t want to have multiple parsers, only one will suffice in single script used for starting the tests.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 4
       },
       "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
