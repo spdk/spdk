@@ -314,9 +314,14 @@ function part_dev_by_gpt () {
 		conf=$1
 		devname=$2
 		rootdir=$3
+		operation=$4
 
 		if [ ! -e $conf ]; then
 			return 1
+		fi
+
+		if [ -z "$operation" ]; then
+			operation="create"
 		fi
 
 		cp $conf ${conf}.gpt
@@ -331,10 +336,15 @@ function part_dev_by_gpt () {
 		waitforbdev $devname "python $rootdir/scripts/rpc.py"
 
 		if [ -e /dev/nbd0 ]; then
-			parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
-			# change the GUID to SPDK GUID value
-			sgdisk -t 1:$SPDK_GPT_GUID /dev/nbd0
-			sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0
+			if [ "$operation" = create ]; then
+				parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
+				# change the GUID to SPDK GUID value
+				sgdisk -t 1:$SPDK_GPT_GUID /dev/nbd0
+				sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0
+			elif [ "$operation" = reset ]; then
+				# clear the partition table
+				dd if=/dev/zero of=/dev/nbd0 bs=4096 count=8 oflag=direct
+			fi
 		fi
 		killprocess $nbd_pid
 		rm -f ${conf}.gpt
