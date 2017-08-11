@@ -1,0 +1,320 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59f8a630_6314c1dd",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 858,
+        "startChar": 0,
+        "endLine": 858,
+        "endChar": 1
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc6bb405_4230ecb4",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "Similar code is in here: https://review.gerrithub.io/#/c/372268/6/test/vhost/hotfeatures/cmdline_parser.sh\n\nPlease sync and remove redundant code.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 1
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "591e91a4_f52a8971",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "I\u0027d leave vhost.conf.in untouched because it\u0027s something that we will use as a base. Instead - copy vhost.conf.in as vhost.conf, add split if needed, and remove vhost.conf after the test is done.",
+      "range": {
+        "startLine": 86,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 54
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d9f3f1b_8b58d387",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "I think rpc_py should be declared in common functions somewhere, not here",
+      "range": {
+        "startLine": 109,
+        "startChar": 4,
+        "endLine": 110,
+        "endChar": 27
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "189447d4_20745227",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "What is happening in here?",
+      "range": {
+        "startLine": 111,
+        "startChar": 4,
+        "endLine": 111,
+        "endChar": 76
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8f815ff_ccf311b4",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "use tabs only for indentation",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 112,
+        "endChar": 25
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7499d7c8_eb51db55",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "It won\u0027t work because in loop you try to create multiple NVMe bdevs with the same name",
+      "range": {
+        "startLine": 113,
+        "startChar": 32,
+        "endLine": 113,
+        "endChar": 41
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "604a7add_c5c92be3",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "Why not just use RPC for that kind of stuff?",
+      "range": {
+        "startLine": 123,
+        "startChar": 1,
+        "endLine": 128,
+        "endChar": 54
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc5ccf19_237cf16e",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "Remove if not needed.",
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71c52e73_4e16995b",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "This is duplicated in some other patch I think.\nAlso - naming. As suggested before, prefix should come first, so vms_setup would be better",
+      "range": {
+        "startLine": 165,
+        "startChar": 0,
+        "endLine": 165,
+        "endChar": 22
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d07143ad_1ccee163",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": ";)",
+      "range": {
+        "startLine": 193,
+        "startChar": 4,
+        "endLine": 193,
+        "endChar": 14
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea98aa7e_c93a4490",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "Remove if not needed.",
+      "range": {
+        "startLine": 210,
+        "startChar": 16,
+        "endLine": 210,
+        "endChar": 47
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2544fb3c_4da8fe49",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "Instead of sed-ing multiple times in a loop - wouldn\u0027t it be better to save all diska as a string, e.g. /dev/sda:/dev/sdb:/dev/sdc and then just call sed once?",
+      "range": {
+        "startLine": 290,
+        "startChar": 24,
+        "endLine": 290,
+        "endChar": 101
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e32a4aa3_faa421bb",
+        "filename": "test/vhost/hotfeatures/common_hotfeatures.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-11T07:28:20Z",
+      "side": 1,
+      "message": "Nope. Avoid piping if possible. Also - wouldn\u0027t it be better to just modify argument parsing? It doesn\u0027t have to be exactly the same as in fiotest.",
+      "range": {
+        "startLine": 296,
+        "startChar": 17,
+        "endLine": 296,
+        "endChar": 56
+      },
+      "revId": "067d7c51e23709e0eec6a9d934a9af0e0e1daf01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
