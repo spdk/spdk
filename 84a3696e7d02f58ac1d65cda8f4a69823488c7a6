@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "539fd00e_a5b50eda",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-11T18:10:39Z",
+      "side": 1,
+      "message": "Why error code is ignored here?",
+      "range": {
+        "startLine": 52,
+        "startChar": 28,
+        "endLine": 52,
+        "endChar": 35
+      },
+      "revId": "84a3696e7d02f58ac1d65cda8f4a69823488c7a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d00dd92d_22b26255",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-11T18:10:39Z",
+      "side": 1,
+      "message": "This should check if VM really did shut down. 5s might not always be sufficient.",
+      "range": {
+        "startLine": 53,
+        "startChar": 4,
+        "endLine": 53,
+        "endChar": 11
+      },
+      "revId": "84a3696e7d02f58ac1d65cda8f4a69823488c7a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c21bf568_a9941fc2",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-11T18:10:39Z",
+      "side": 1,
+      "message": "This is leftover of old approach when all commands were executed by ssh. But now the script is executed on VM so why play with \ndevs\u003d$(echo \"$script\" | bash -s)\nand not just replace\necho -n \"$fname \"\nwith\ndevs\u003d\"$dev $fname\"\nand execute body of those scripts?",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 34
+      },
+      "revId": "84a3696e7d02f58ac1d65cda8f4a69823488c7a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3be777b_ad131de6",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-11T18:10:39Z",
+      "side": 1,
+      "message": "With change in line 54 this is not true.",
+      "range": {
+        "startLine": 5,
+        "startChar": 10,
+        "endLine": 5,
+        "endChar": 47
+      },
+      "revId": "84a3696e7d02f58ac1d65cda8f4a69823488c7a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6cd30e0_93468458",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-11T18:10:39Z",
+      "side": 1,
+      "message": "Can we make this path variable like VM_IMAGE with default value /home/sys_sgsw/vhost_vm_image.qcow2? The same for fio-bin.",
+      "range": {
+        "startLine": 23,
+        "startChar": 8,
+        "endLine": 23,
+        "endChar": 43
+      },
+      "revId": "84a3696e7d02f58ac1d65cda8f4a69823488c7a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd15dd7c_356a8be4",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-11T18:10:39Z",
+      "side": 1,
+      "message": "Is this path OK? Also don\u0027t like setting those env variables. They should be passed as parameters.",
+      "range": {
+        "startLine": 54,
+        "startChar": 8,
+        "endLine": 54,
+        "endChar": 43
+      },
+      "revId": "84a3696e7d02f58ac1d65cda8f4a69823488c7a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
