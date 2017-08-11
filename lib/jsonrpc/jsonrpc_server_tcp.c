@@ -32,6 +32,7 @@
  */
 
 #include "jsonrpc_internal.h"
+#include "spdk/string.h"
 
 struct spdk_jsonrpc_server *
 spdk_jsonrpc_server_listen(int domain, int protocol,
@@ -40,6 +41,7 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 {
 	struct spdk_jsonrpc_server *server;
 	int rc, val;
+	char buf[64];
 
 	server = calloc(1, sizeof(struct spdk_jsonrpc_server));
 	if (server == NULL) {
@@ -72,7 +74,8 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 
 	rc = bind(server->sockfd, listen_addr, addrlen);
 	if (rc != 0) {
-		SPDK_ERRLOG("could not bind JSON-RPC server: %s\n", strerror(errno));
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("could not bind JSON-RPC server: %s\n", buf);
 		close(server->sockfd);
 		free(server);
 		return NULL;
@@ -219,14 +222,15 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 {
 	ssize_t rc;
 	size_t recv_avail = SPDK_JSONRPC_RECV_BUF_SIZE - conn->recv_len;
+	char buf[64];
 
 	rc = recv(conn->sockfd, conn->recv_buf + conn->recv_len, recv_avail, 0);
 	if (rc == -1) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 			return 0;
 		}
-
-		SPDK_TRACELOG(SPDK_TRACE_RPC, "recv() failed: %s\n", strerror(errno));
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_TRACELOG(SPDK_TRACE_RPC, "recv() failed: %s\n", buf);
 		return -1;
 	}
 
@@ -269,6 +273,7 @@ spdk_jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
 {
 	struct spdk_jsonrpc_request *request;
 	ssize_t rc;
+	char buf[64];
 
 more:
 	if (conn->outstanding_requests == 0) {
@@ -294,7 +299,8 @@ more:
 			return 0;
 		}
 
-		SPDK_TRACELOG(SPDK_TRACE_RPC, "send() failed: %s\n", strerror(errno));
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_TRACELOG(SPDK_TRACE_RPC, "send() failed: %s\n", buf);
 		return -1;
 	}
 
