@@ -320,6 +320,15 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 					 (struct malloc_task *)bdev_io->driver_ctx,
 					 bdev_io->u.unmap.offset,
 					 bdev_io->u.unmap.len);
+
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		/* bdev_malloc_unmap is implemented with a call to mem_cpy_fill which zeroes out all of the requested bytes. */
+		return bdev_malloc_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
+					 ch,
+					 (struct malloc_task *)bdev_io->driver_ctx,
+					 bdev_io->u.write.offset,
+					 bdev_io->u.write.len);
+
 	default:
 		return -1;
 	}
@@ -342,6 +351,7 @@ bdev_malloc_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return true;
 
 	default:
