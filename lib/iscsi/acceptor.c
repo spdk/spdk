@@ -50,6 +50,7 @@ static void
 spdk_iscsi_portal_accept(struct spdk_iscsi_portal *portal)
 {
 	int				rc, sock;
+	char buf[64];
 
 	if (portal->sock < 0) {
 		return;
@@ -67,7 +68,8 @@ spdk_iscsi_portal_accept(struct spdk_iscsi_portal *portal)
 			}
 		} else {
 			if (errno != EAGAIN && errno != EWOULDBLOCK) {
-				SPDK_ERRLOG("accept error(%d): %s\n", errno, strerror(errno));
+				strerror_r(errno, buf, sizeof(buf));
+				SPDK_ERRLOG("accept error(%d): %s\n", errno, buf);
 			}
 			break;
 		}

@@ -125,6 +125,7 @@ vfio_pci_memory_region_map(int vfio_container_fd, uint64_t vaddr, uint64_t phys_
 {
 	struct vfio_iommu_type1_dma_map dma_map;
 	int ret;
+	char buf[64];
 
 	dma_map.argsz = sizeof(dma_map);
 	dma_map.flags = VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE;
@@ -137,7 +138,8 @@ vfio_pci_memory_region_map(int vfio_container_fd, uint64_t vaddr, uint64_t phys_
 	ret = ioctl(vfio_container_fd, VFIO_IOMMU_MAP_DMA, &dma_map);
 
 	if (ret) {
-		SPDK_ERRLOG("Cannot set up DMA mapping, error %d (%s)\n", errno, strerror(errno));
+		strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("Cannot set up DMA mapping, error %d (%s)\n", errno, buf);
 	}
 
 	return ret;
@@ -148,6 +150,7 @@ vfio_pci_memory_region_unmap(int vfio_container_fd, uint64_t phys_addr, uint64_t
 {
 	struct vfio_iommu_type1_dma_unmap dma_unmap;
 	int ret;
+	char buf[64];
 
 	dma_unmap.argsz = sizeof(dma_unmap);
 	dma_unmap.flags = 0;
@@ -158,7 +161,8 @@ vfio_pci_memory_region_unmap(int vfio_container_fd, uint64_t phys_addr, uint64_t
 	ret = ioctl(vfio_container_fd, VFIO_IOMMU_UNMAP_DMA, &dma_unmap);
 
 	if (ret) {
-		SPDK_ERRLOG("Cannot clear DMA mapping, error %d (%s)\n", errno, strerror(errno));
+		strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("Cannot clear DMA mapping, error %d (%s)\n", errno, buf);
 	}
 
 	return ret;

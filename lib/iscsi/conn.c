@@ -928,6 +928,7 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 			  void *buf)
 {
 	int ret;
+	char errbuf[64];
 
 	if (bytes == 0) {
 		return 0;
@@ -942,8 +943,10 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 	if (ret < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
-		} else
-			SPDK_ERRLOG("Socket read error(%d): %s\n", errno, strerror(errno));
+		} else {
+			strerror_r(errno, errbuf, sizeof(errbuf));
+			SPDK_ERRLOG("Socket read error(%d): %s\n", errno, errbuf);
+		}
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 

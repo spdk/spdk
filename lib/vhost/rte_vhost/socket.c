@@ -303,6 +303,7 @@ create_unix_socket(struct vhost_user_socket *vsocket)
 {
 	int fd;
 	struct sockaddr_un *un = &vsocket->un;
+	char buf[64];
 
 	fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (fd < 0)
@@ -311,9 +312,10 @@ create_unix_socket(struct vhost_user_socket *vsocket)
 		vsocket->is_server ? "server" : "client", fd);
 
 	if (!vsocket->is_server && fcntl(fd, F_SETFL, O_NONBLOCK)) {
+		strerror_r(errno, buf, sizeof(buf));
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"vhost-user: can't set nonblocking mode for socket, fd: "
-			"%d (%s)\n", fd, strerror(errno));
+			"%d (%s)\n", fd, buf);
 		close(fd);
 		return -1;
 	}
@@ -333,12 +335,14 @@ vhost_user_start_server(struct vhost_user_socket *vsocket)
 	int ret;
 	int fd = vsocket->socket_fd;
 	const char *path = vsocket->path;
+	char buf[64];
 
 	ret = bind(fd, (struct sockaddr *)&vsocket->un, sizeof(vsocket->un));
 	if (ret < 0) {
+		strerror_r(errno, buf, sizeof(buf));
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"failed to bind to %s: %s; remove it and try again\n",
-			path, strerror(errno));
+			path, buf);
 		goto err;
 	}
 	RTE_LOG(INFO, VHOST_CONFIG, "bind to %s\n", path);
@@ -471,6 +475,7 @@ vhost_user_start_client(struct vhost_user_socket *vsocket)
 	int fd = vsocket->socket_fd;
 	const char *path = vsocket->path;
 	struct vhost_user_reconnect *reconn;
+	char buf[64];
 
 	ret = vhost_user_connect_nonblock(fd, (struct sockaddr *)&vsocket->un,
 					  sizeof(vsocket->un));
@@ -479,9 +484,10 @@ vhost_user_start_client(struct vhost_user_socket *vsocket)
 		return 0;
 	}
 
+	strerror_r(errno, buf, sizeof(buf));
 	RTE_LOG(WARNING, VHOST_CONFIG,
 		"failed to connect to %s: %s\n",
-		path, strerror(errno));
+		path, buf);
 
 	if (ret == -2 || !vsocket->reconnect) {
 		close(fd);

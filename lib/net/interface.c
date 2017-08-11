@@ -50,6 +50,7 @@ static uint32_t spdk_get_ifc_ipv4(void)
 	int ret;
 	int rtattrlen;
 	int netlink_fd;
+	char errbuf[64];
 	uint32_t ipv4_addr;
 
 	struct {
@@ -89,14 +90,16 @@ static uint32_t spdk_get_ifc_ipv4(void)
 	/* Send and recv the message from kernel */
 	ret = send(netlink_fd, &req, req.n.nlmsg_len, 0);
 	if (ret < 0) {
-		SPDK_ERRLOG("netlink send failed: %s\n", strerror(errno));
+		strerror_r(errno, errbuf, sizeof(errbuf));
+		SPDK_ERRLOG("netlink send failed: %s\n", errbuf);
 		ret = 1;
 		goto exit;
 	}
 
 	ret = recv(netlink_fd, buf, sizeof(buf), 0);
 	if (ret <= 0) {
-		SPDK_ERRLOG("netlink recv failed: %s\n", strerror(errno));
+		strerror_r(errno, errbuf, sizeof(errbuf));
+		SPDK_ERRLOG("netlink recv failed: %s\n", errbuf);
 		ret = 1;
 		goto exit;
 	}
