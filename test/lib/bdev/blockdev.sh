@@ -60,5 +60,9 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_exit unmap
 fi
 
+if grep -q Nvme0 $testdir/bdev.conf; then
+	clear_partitions $testdir/bdev.conf Nvme0n1 $rootdir
+fi
+
 rm -f $testdir/bdev.conf
 timing_exit bdev
