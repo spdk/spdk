@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/string.h"
 
 #include <linux/nbd.h>
 
@@ -323,19 +324,22 @@ static void
 nbd_start_kernel(int nbd_fd, int *sp)
 {
 	int rc;
+	char buf[64];
 
 	close(sp[0]);
 
 	rc = ioctl(nbd_fd, NBD_SET_SOCK, sp[1]);
 	if (rc == -1) {
-		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", strerror(errno));
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", buf);
 		exit(-1);
 	}
 
 #ifdef NBD_FLAG_SEND_TRIM
 	rc = ioctl(nbd_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
 	if (rc == -1) {
-		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", strerror(errno));
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", buf);
 		exit(-1);
 	}
 #endif
@@ -355,6 +359,7 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 	struct spdk_nbd_disk	*nbd;
 	int			rc;
 	int			sp[2] = { -1, -1 }, nbd_fd = -1;
+	char buf[64];
 
 	nbd = calloc(1, sizeof(*nbd));
 	if (nbd == NULL) {
@@ -380,25 +385,29 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 
 	nbd_fd = open(nbd_path, O_RDWR);
 	if (nbd_fd == -1) {
-		SPDK_ERRLOG("open(\"%s\") failed: %s\n", nbd_path, strerror(errno));
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("open(\"%s\") failed: %s\n", nbd_path, buf);
 		goto err;
 	}
 
 	rc = ioctl(nbd_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(bdev));
 	if (rc == -1) {
-		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", strerror(errno));
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", buf);
 		goto err;
 	}
 
 	rc = ioctl(nbd_fd, NBD_SET_SIZE_BLOCKS, spdk_bdev_get_num_blocks(bdev));
 	if (rc == -1) {
-		SPDK_ERRLOG("ioctl(NBD_SET_SIZE_BLOCKS) failed: %s\n", strerror(errno));
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("ioctl(NBD_SET_SIZE_BLOCKS) failed: %s\n", buf);
 		goto err;
 	}
 
 	rc = ioctl(nbd_fd, NBD_CLEAR_SOCK);
 	if (rc == -1) {
-		SPDK_ERRLOG("ioctl(NBD_CLEAR_SOCK) failed: %s\n", strerror(errno));
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("ioctl(NBD_CLEAR_SOCK) failed: %s\n", buf);
 		goto err;
 	}
 
@@ -411,7 +420,8 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 		nbd_start_kernel(nbd_fd, sp);
 		break;
 	case -1:
-		SPDK_ERRLOG("could not fork: %s\n", strerror(errno));
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("could not fork: %s\n", buf);
 		goto err;
 	default:
 		close(nbd_fd);

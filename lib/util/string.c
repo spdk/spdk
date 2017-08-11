@@ -326,3 +326,19 @@ spdk_str_chomp(char *s)
 
 	return removed;
 }
+
+int
+spdk_strerror_r(int errnum, char *buf, size_t buflen)
+{
+# if defined(__USE_GNU)
+	char *new_buffer;
+	new_buffer = strerror_r(errnum, buf, buflen);
+	if (new_buffer != NULL) {
+		snprintf(buf, buflen, "%s", new_buffer);
+		return 0;
+	}
+	return 0;
+# else
+	return strerror_r(errnum, buf, buflen);
+# endif
+}
