@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee2cae57_c876cfda",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-08-11T04:05:39Z",
+      "side": 1,
+      "message": "There\u0027s no assert at this line.",
+      "revId": "51a7074dc5f1d85be9466855ae3c6ba38aac9b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
