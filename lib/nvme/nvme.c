@@ -422,7 +422,11 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 
 	nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb);
 
-	if (!spdk_process_is_primary()) {
+	/*
+	 * The RDMA trtype will always construct the ctrlr and go through the
+	 *  normal process.
+	 */
+	if (!spdk_process_is_primary() && (trid->trtype == SPDK_NVME_TRANSPORT_PCIE)) {
 		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
 			nvme_ctrlr_proc_get_ref(ctrlr);
 
