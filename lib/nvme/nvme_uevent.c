@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/string.h"
 
 #include "spdk/log.h"
 #include "spdk/event.h"
@@ -143,6 +144,7 @@ spdk_get_uevent(int fd, struct spdk_uevent *uevent)
 {
 	int ret;
 	char buf[SPDK_UEVENT_MSG_LEN];
+	char errbuf[64];
 
 	memset(uevent, 0, sizeof(struct spdk_uevent));
 	memset(buf, 0, SPDK_UEVENT_MSG_LEN);
@@ -156,7 +158,8 @@ spdk_get_uevent(int fd, struct spdk_uevent *uevent)
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
 		} else {
-			SPDK_ERRLOG("Socket read error(%d): %s\n", errno, strerror(errno));
+			spdk_strerror_r(errno, errbuf, sizeof(errbuf));
+			SPDK_ERRLOG("Socket read error(%d): %s\n", errno, errbuf);
 			return -1;
 		}
 	}
