@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "068f469c_d29afae7",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-11T23:38:44Z",
+      "side": 1,
+      "message": "Can we combine these two lines? Currently, it is printing out two WARNLOGs on a single line, since this message doesn\u0027t have a \\n.  Also, the WARNLOG message automatically includes \"WARNING\", so you can probably simplify it to just \"Reactor %d: %ld involuntary context switches in the last second.\\n\" or something like that.",
+      "revId": "c7287a45280e9fd66c865092f1c317e19b3d9dfa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
