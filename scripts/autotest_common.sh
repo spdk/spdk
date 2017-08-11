@@ -343,6 +343,32 @@ function part_dev_by_gpt () {
 	return 0
 }
 
+function clear_partitions()
+{
+	if [ $(uname -s) != Linux ]; then
+		echo "TODO: non-Linux clear_partitions support"
+		return 0
+	fi
+
+	conf="$1"
+	devname="$2"
+	rootdir="$3"
+
+	if [ ! -e $conf ]; then
+		return 1
+	fi
+
+	modprobe nbd
+	$rootdir/test/lib/bdev/nbd/nbd -c "$conf" -b "$devname" -n /dev/nbd0 &
+	nbd_pid=$!
+	waitforlisten $nbd_pid 5260
+	waitforbdev $devname "$rootdir/scripts/rpc.py"
+
+	dd if=/dev/zero of=/dev/nbd0 bs=4096 count=10 oflag=direct
+
+	killprocess $nbd_pid
+}
+
 function discover_bdevs()
 {
 	local rootdir=$1
