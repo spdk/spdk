@@ -253,11 +253,11 @@ nvme_rdma_free_rsps(struct nvme_rdma_qpair *rqpair)
 	}
 	rqpair->rsp_mr = NULL;
 
-	free(rqpair->rsps);
+	spdk_dma_free(rqpair->rsps);
 	rqpair->rsps = NULL;
-	free(rqpair->rsp_sgls);
+	spdk_dma_free(rqpair->rsp_sgls);
 	rqpair->rsp_sgls = NULL;
-	free(rqpair->rsp_recv_wrs);
+	spdk_dma_free(rqpair->rsp_recv_wrs);
 	rqpair->rsp_recv_wrs = NULL;
 }
 
@@ -270,20 +270,21 @@ nvme_rdma_alloc_rsps(struct nvme_rdma_qpair *rqpair)
 	rqpair->rsps = NULL;
 	rqpair->rsp_recv_wrs = NULL;
 
-	rqpair->rsp_sgls = calloc(rqpair->num_entries, sizeof(*rqpair->rsp_sgls));
+	rqpair->rsp_sgls = spdk_dma_zmalloc(rqpair->num_entries * sizeof(*rqpair->rsp_sgls),
+					    0, NULL);
 	if (!rqpair->rsp_sgls) {
 		SPDK_ERRLOG("Failed to allocate rsp_sgls\n");
 		goto fail;
 	}
 
-	rqpair->rsp_recv_wrs = calloc(rqpair->num_entries,
-				      sizeof(*rqpair->rsp_recv_wrs));
+	rqpair->rsp_recv_wrs = spdk_dma_zmalloc(rqpair->num_entries * sizeof(*rqpair->rsp_recv_wrs),
+						0, NULL);
 	if (!rqpair->rsp_recv_wrs) {
 		SPDK_ERRLOG("Failed to allocate rsp_recv_wrs\n");
 		goto fail;
 	}
 
-	rqpair->rsps = calloc(rqpair->num_entries, sizeof(*rqpair->rsps));
+	rqpair->rsps = spdk_dma_zmalloc(rqpair->num_entries * sizeof(*rqpair->rsps), 0, NULL);
 	if (!rqpair->rsps) {
 		SPDK_ERRLOG("can not allocate rdma rsps\n");
 		goto fail;
@@ -333,10 +334,10 @@ nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 	}
 	rqpair->cmd_mr = NULL;
 
-	free(rqpair->cmds);
+	spdk_dma_free(rqpair->cmds);
 	rqpair->cmds = NULL;
 
-	free(rqpair->rdma_reqs);
+	spdk_dma_free(rqpair->rdma_reqs);
 	rqpair->rdma_reqs = NULL;
 }
 
@@ -345,13 +346,14 @@ nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 {
 	int i;
 
-	rqpair->rdma_reqs = calloc(rqpair->num_entries, sizeof(struct spdk_nvme_rdma_req));
+	rqpair->rdma_reqs = spdk_dma_zmalloc(rqpair->num_entries * sizeof(struct spdk_nvme_rdma_req),
+					     0, NULL);
 	if (rqpair->rdma_reqs == NULL) {
 		SPDK_ERRLOG("Failed to allocate rdma_reqs\n");
 		goto fail;
 	}
 
-	rqpair->cmds = calloc(rqpair->num_entries, sizeof(*rqpair->cmds));
+	rqpair->cmds = spdk_dma_zmalloc(rqpair->num_entries * sizeof(*rqpair->cmds), 0, NULL);
 	if (!rqpair->cmds) {
 		SPDK_ERRLOG("Failed to allocate RDMA cmds\n");
 		goto fail;
@@ -991,7 +993,7 @@ nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 	struct spdk_nvme_qpair *qpair;
 	int rc;
 
-	rqpair = calloc(1, sizeof(struct nvme_rdma_qpair));
+	rqpair = spdk_dma_zmalloc(sizeof(struct nvme_rdma_qpair), 0, NULL);
 	if (!rqpair) {
 		SPDK_ERRLOG("failed to get create rqpair\n");
 		return NULL;
@@ -1045,7 +1047,7 @@ nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair)
 		rdma_destroy_event_channel(rqpair->cm_channel);
 	}
 
-	free(rqpair);
+	spdk_dma_free(rqpair);
 
 	return 0;
 }
@@ -1262,7 +1264,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 	union spdk_nvme_cap_register cap;
 	int rc;
 
-	rctrlr = calloc(1, sizeof(struct nvme_rdma_ctrlr));
+	rctrlr = spdk_dma_zmalloc(sizeof(struct nvme_rdma_ctrlr), 0, NULL);
 	if (rctrlr == NULL) {
 		SPDK_ERRLOG("could not allocate ctrlr\n");
 		return NULL;
@@ -1306,7 +1308,7 @@ nvme_rdma_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 		nvme_rdma_qpair_destroy(ctrlr->adminq);
 	}
 
-	free(rctrlr);
+	spdk_dma_free(rctrlr);
 
 	return 0;
 }
