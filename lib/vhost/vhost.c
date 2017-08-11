@@ -35,6 +35,7 @@
 
 #include "spdk/env.h"
 #include "spdk/likely.h"
+#include "spdk/string.h"
 #include "spdk/util.h"
 
 #include "spdk/vhost.h"
@@ -286,6 +287,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
 	struct stat file_stat;
+	char buf[64];
 
 	assert(vdev);
 
@@ -363,8 +365,9 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 	g_spdk_vhost_devices[ctrlr_num] = vdev;
 
 	if (rte_vhost_driver_start(path) != 0) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s", name, errno,
-			    strerror(errno));
+			    buf);
 		rte_vhost_driver_unregister(path);
 		return -EIO;
 	}
@@ -646,8 +649,11 @@ void
 spdk_vhost_shutdown_cb(void)
 {
 	pthread_t tid;
+	char buf[64];
+
 	if (pthread_create(&tid, NULL, &session_shutdown, NULL) < 0) {
-		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s", errno, strerror(errno));
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s", errno, buf);
 		abort();
 	}
 	pthread_detach(tid);

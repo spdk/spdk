@@ -90,6 +90,18 @@ char *spdk_strsepq(char **stringp, const char *delim);
 char *spdk_str_trim(char *s);
 
 /**
+ * Copy the string version of an error into the user supplied buffer
+ *
+ * \param errnum Error code
+ * \param buf Pointer to a buffer in which to place the error message
+ * \param buflen the size of the buffer in bytes
+ *
+ * \return 0 upon success, a positive error number or -1 upon failure.
+ */
+
+int spdk_strerror_r(int errnum, char *buf, size_t buflen);
+
+/**
  * Remove trailing newlines from the end of a string in place.
  *
  * Any sequence of trailing \r and \n characters is removed from the end of the string.
