@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6cc5ce6_2ce36605",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-11T18:23:09Z",
+      "side": 1,
+      "message": "The reason I put attention here was that you write in rpc.py that size is MiB. Correct me if I am wrong here but you are comparing MiB with # of clusters.",
+      "range": {
+        "startLine": 311,
+        "startChar": 5,
+        "endLine": 311,
+        "endChar": 23
+      },
+      "revId": "4df5b04e5716455cab71a6d3670382a74da5d375",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
