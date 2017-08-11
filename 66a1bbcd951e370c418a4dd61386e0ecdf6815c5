@@ -107,6 +107,23 @@
     },
     {
       "key": {
+        "uuid": "08b71ef2_1bd758d2",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-08-11T03:47:07Z",
+      "side": 1,
+      "message": "Can we get rid of this assert?",
+      "revId": "66a1bbcd951e370c418a4dd61386e0ecdf6815c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c8a0c590_2cfc616d",
         "filename": "lib/util/rpc/histogram_rpc.c",
         "patchSetId": 5
