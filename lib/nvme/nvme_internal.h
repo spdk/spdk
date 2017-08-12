@@ -396,6 +396,8 @@ struct spdk_nvme_ctrlr {
 
 	union spdk_nvme_cap_register	cap;
 
+	pid_t				pid; /* process that created this ctrlr */
+
 	enum nvme_ctrlr_state		state;
 	uint64_t			state_timeout_tsc;
 

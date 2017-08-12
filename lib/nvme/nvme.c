@@ -340,6 +340,14 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 	/* Initialize all new controllers in the init_ctrlrs list in parallel. */
 	while (!TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs)) {
 		TAILQ_FOREACH_SAFE(ctrlr, &g_spdk_nvme_driver->init_ctrlrs, tailq, ctrlr_tmp) {
+			/*
+			 * Don't try to initialize non-PCIe controllers from other processes.
+			 * Only PCIe controllers work across the muli-process boundary.
+			 */
+			if (ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE && ctrlr->pid != getpid()) {
+				continue;
+			}
+
 			/* Drop the driver lock while calling nvme_ctrlr_process_init()
 			 *  since it needs to acquire the driver lock internally when calling
 			 *  nvme_ctrlr_start().
