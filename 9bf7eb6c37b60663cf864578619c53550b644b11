@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fcaef07_8cca25d1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:32:38Z",
+      "side": 1,
+      "message": "} else {\n\nshould be one line",
+      "revId": "9bf7eb6c37b60663cf864578619c53550b644b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e84eb238_81fa2ef6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 977,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:32:38Z",
+      "side": 1,
+      "message": "Since you allocate a 4KB buffer, you should use that as the divisor here instead - a lot of NVMe namespaces will be 512-byte formatted meaning this code as-is will create a separate iov for every 512 bytes when it could just do one for every 4KB.\n\nThis will also avoid unnecessary splitting on PRP-only NVMe controllers - since an array of a bunch of iovs with 512 bytes each will need to be split into separate commands for each 512 byte buffer.  If you use the 4KB buffer (which is 4KB aligned) no splitting will be necessary.",
+      "revId": "9bf7eb6c37b60663cf864578619c53550b644b11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
