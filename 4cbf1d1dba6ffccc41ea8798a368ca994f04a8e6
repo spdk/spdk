@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0df1dc7_7eefc8e7",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-14T08:49:37Z",
+      "side": 1,
+      "message": "Not sure if that\u0027s what you meant Pawel",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 26
+      },
+      "revId": "4cbf1d1dba6ffccc41ea8798a368ca994f04a8e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
