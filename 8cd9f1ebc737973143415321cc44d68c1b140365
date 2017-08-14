@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8c98ac0_8c98650f",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-14T20:35:03Z",
+      "side": 1,
+      "message": "This indentation looks funky. ch should line up with the ( in (struct nvme_bdev *) from the previous line.",
+      "revId": "8cd9f1ebc737973143415321cc44d68c1b140365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
