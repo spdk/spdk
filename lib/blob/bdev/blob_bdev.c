@@ -39,6 +39,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
 #include "spdk/endian.h"
+#include "../blobstore.h"
 
 struct blob_bdev {
 	struct spdk_bs_dev	bs_dev;
@@ -172,6 +173,14 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev)
 	b->bs_dev.read = bdev_blob_read;
 	b->bs_dev.write = bdev_blob_write;
 	b->bs_dev.unmap = bdev_blob_unmap;
+
+	if ((sizeof(struct spdk_blob_md_page) % b->bs_dev.blocklen) != 0) {
+		SPDK_ERRLOG("unsupported bdev block length of %d\n",
+			    b->bs_dev.blocklen);
+		spdk_bdev_close(desc);
+		free(b);
+		return NULL;
+	}
 
 	return &b->bs_dev;
 }
