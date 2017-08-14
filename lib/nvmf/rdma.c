@@ -59,10 +59,6 @@
 #define NVMF_DEFAULT_TX_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
 
-struct spdk_nvmf_rdma_buf {
-	SLIST_ENTRY(spdk_nvmf_rdma_buf) link;
-};
-
 /* This structure holds commands as they are received off the wire.
  * It must be dynamically paired with a full request object
  * (spdk_nvmf_rdma_request) to service a request. It is separate
@@ -171,18 +167,16 @@ static TAILQ_HEAD(, spdk_nvmf_rdma_qpair) g_pending_conns = TAILQ_HEAD_INITIALIZ
 struct spdk_nvmf_rdma_poll_group {
 	struct spdk_nvmf_poll_group		group;
 
-	SLIST_HEAD(, spdk_nvmf_rdma_buf)	data_buf_pool;
-
 	struct spdk_nvmf_rdma_device		*device;
-
-	uint8_t					*buf;
-	struct ibv_mr				*buf_mr;
 };
 
 /* Assuming rdma_cm uses just one protection domain per ibv_context. */
 struct spdk_nvmf_rdma_device {
 	struct ibv_device_attr			attr;
 	struct ibv_context			*context;
+
+	struct spdk_mem_map			*map;
+	struct ibv_pd				*pd;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_device)	link;
 };
@@ -199,6 +193,8 @@ struct spdk_nvmf_rdma_transport {
 	struct spdk_nvmf_transport	transport;
 
 	struct rdma_event_channel	*event_channel;
+
+	struct spdk_mempool		*data_buf_pool;
 
 	pthread_mutex_t 		lock;
 
@@ -811,19 +807,18 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 			rdma_req->data_from_pool = false;
 		} else {
 			rgroup = SPDK_CONTAINEROF(req->qpair->ctrlr->group, struct spdk_nvmf_rdma_poll_group, group);
-			req->data = SLIST_FIRST(&rgroup->data_buf_pool);
-			rdma_req->data.sgl[0].lkey = rgroup->buf_mr->lkey;
-			rdma_req->data_from_pool = true;
+			req->data = spdk_mempool_get(rtransport->data_buf_pool);
 			if (!req->data) {
 				/* No available buffers. Queue this request up. */
 				SPDK_TRACELOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", req);
-				/* This will get assigned when we actually obtain a buffer */
-				rdma_req->data.sgl[0].addr = (uintptr_t)NULL;
 				return SPDK_NVMF_REQUEST_PREP_PENDING_BUFFER;
 			}
 
+			rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(rgroup->device->map,
+						      (uint64_t)req->data))->lkey;
+			rdma_req->data_from_pool = true;
+
 			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p took buffer from central pool\n", req);
-			SLIST_REMOVE_HEAD(&rgroup->data_buf_pool, link);
 		}
 
 		rdma_req->data.sgl[0].addr = (uintptr_t)req->data;
@@ -877,24 +872,26 @@ static int
 spdk_nvmf_rdma_handle_pending_rdma_rw(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_qpair		*rdma_qpair;
-	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct spdk_nvmf_rdma_transport		*rtransport;
 	struct spdk_nvmf_rdma_request		*rdma_req, *tmp;
 	int 					rc;
 	int 					count = 0;
 
 	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 
 	/* First, try to assign free data buffers to requests that need one */
 	if (qpair->ctrlr) {
-		rgroup = SPDK_CONTAINEROF(qpair->ctrlr->group, struct spdk_nvmf_rdma_poll_group, group);
 		TAILQ_FOREACH_SAFE(rdma_req, &rdma_qpair->pending_data_buf_queue, link, tmp) {
 			assert(rdma_req->req.data == NULL);
-			rdma_req->req.data = SLIST_FIRST(&rgroup->data_buf_pool);
+			rdma_req->req.data = spdk_mempool_get(rtransport->data_buf_pool);
 			if (!rdma_req->req.data) {
 				break;
 			}
-			SLIST_REMOVE_HEAD(&rgroup->data_buf_pool, link);
 			rdma_req->data.sgl[0].addr = (uintptr_t)rdma_req->req.data;
+			rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(rdma_qpair->port->device->map,
+						      (uint64_t)rdma_req->req.data))->lkey;
+			rdma_req->data_from_pool = true;
 			TAILQ_REMOVE(&rdma_qpair->pending_data_buf_queue, rdma_req, link);
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 				TAILQ_INSERT_TAIL(&rdma_qpair->pending_rdma_rw_queue, rdma_req, link);
@@ -938,7 +935,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	struct spdk_nvmf_rdma_device	*device, *tmp;
 	struct ibv_context		**contexts;
 	uint32_t			i;
-	char buf[64];
+	char				buf[64];
 
 	rtransport = calloc(1, sizeof(*rtransport));
 	if (!rtransport) {
@@ -973,6 +970,17 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		return NULL;
 	}
 
+	rtransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_rdma",
+				    rtransport->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
+				    rtransport->max_io_size,
+				    rtransport->max_queue_depth / 2 / spdk_env_get_core_count(),
+				    SPDK_ENV_SOCKET_ID_ANY);
+	if (!rtransport->data_buf_pool) {
+		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
+		free(rtransport);
+		return NULL;
+	}
+
 	contexts = rdma_get_devices(NULL);
 	i = 0;
 	rc = 0;
@@ -991,6 +999,10 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 			break;
 
 		}
+
+		device->pd = NULL;
+		device->map = NULL;
+
 		TAILQ_INSERT_TAIL(&rtransport->devices, device, link);
 		i++;
 	}
@@ -1000,6 +1012,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 			TAILQ_REMOVE(&rtransport->devices, device, link);
 			free(device);
 		}
+		spdk_mempool_free(rtransport->data_buf_pool);
 		rdma_destroy_event_channel(rtransport->event_channel);
 		free(rtransport);
 		rdma_free_devices(contexts);
@@ -1026,9 +1039,13 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 
 	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, device_tmp) {
 		TAILQ_REMOVE(&rtransport->devices, device, link);
+		if (device->map) {
+			spdk_mem_map_free(&device->map);
+		}
 		free(device);
 	}
 
+	spdk_mempool_free(rtransport->data_buf_pool);
 	free(rtransport);
 
 	return 0;
@@ -1256,34 +1273,11 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
 static struct spdk_nvmf_poll_group *
 spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 {
-	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
-	int				i;
-	struct spdk_nvmf_rdma_buf	*buf;
-
-	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
 	rgroup = calloc(1, sizeof(*rgroup));
 	if (!rgroup) {
 		return NULL;
-	}
-
-	/* TODO: Make the number of elements in this pool configurable. For now, one full queue
-	 *       worth seems reasonable.
-	 */
-	rgroup->buf = spdk_dma_zmalloc(rtransport->max_queue_depth * rtransport->max_io_size,
-				       0x20000, NULL);
-	if (!rgroup->buf) {
-		SPDK_ERRLOG("Large buffer pool allocation failed (%d x %d)\n",
-			    rtransport->max_queue_depth, rtransport->max_io_size);
-		free(rgroup);
-		return NULL;
-	}
-
-	SLIST_INIT(&rgroup->data_buf_pool);
-	for (i = 0; i < rtransport->max_queue_depth; i++) {
-		buf = (struct spdk_nvmf_rdma_buf *)(rgroup->buf + (i * rtransport->max_io_size));
-		SLIST_INSERT_HEAD(&rgroup->data_buf_pool, buf, link);
 	}
 
 	return &rgroup->group;
@@ -1300,9 +1294,41 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_poll_group *group)
 		return;
 	}
 
-	ibv_dereg_mr(rgroup->buf_mr);
-	spdk_dma_free(rgroup->buf);
 	free(rgroup);
+}
+
+static int
+spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
+			  enum spdk_mem_map_notify_action action,
+			  void *vaddr, size_t size)
+{
+	struct spdk_nvmf_rdma_device *device = cb_ctx;
+	struct ibv_pd *pd = device->pd;
+	struct ibv_mr *mr;
+
+	switch (action) {
+	case SPDK_MEM_MAP_NOTIFY_REGISTER:
+		mr = ibv_reg_mr(pd, vaddr, size,
+				IBV_ACCESS_LOCAL_WRITE |
+				IBV_ACCESS_REMOTE_READ |
+				IBV_ACCESS_REMOTE_WRITE);
+		if (mr == NULL) {
+			SPDK_ERRLOG("ibv_reg_mr() failed\n");
+			return -1;
+		} else {
+			spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
+		}
+		break;
+	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr);
+		spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
+		if (mr) {
+			ibv_dereg_mr(mr);
+		}
+		break;
+	}
+
+	return 0;
 }
 
 static int
@@ -1324,8 +1350,11 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_poll_group *group,
 			return -1;
 		}
 
-		/* TODO: This actually needs to add the qpairs to an internal list! */
-		/* Nothing else to do. */
+		if (rgroup->device->pd != rdma_qpair->cm_id->pd) {
+			SPDK_ERRLOG("Mismatched protection domains\n");
+			return -1;
+		}
+
 		return 0;
 	}
 
@@ -1339,21 +1368,16 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_poll_group *group,
 		return -EINVAL;
 	}
 
-	rgroup->device = device;
-	rgroup->buf_mr = ibv_reg_mr(rdma_qpair->cm_id->pd, rgroup->buf,
-				    rtransport->max_queue_depth * rtransport->max_io_size,
-				    IBV_ACCESS_LOCAL_WRITE |
-				    IBV_ACCESS_REMOTE_WRITE);
-	if (!rgroup->buf_mr) {
-		SPDK_ERRLOG("Large buffer pool registration failed (%d x %d)\n",
-			    rtransport->max_queue_depth, rtransport->max_io_size);
-		spdk_dma_free(rgroup->buf);
-		free(rgroup);
-		return -1;
+	if (!device->map) {
+		device->pd = rdma_qpair->cm_id->pd;
+		device->map = spdk_mem_map_alloc(0, spdk_nvmf_rdma_mem_notify, device);
+		if (!device->map) {
+			SPDK_ERRLOG("Unable to allocate memory map for new poll group\n");
+			return -1;
+		}
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Controller session Shared Data Pool: %p Length: %x LKey: %x\n",
-		      rgroup->buf,  rtransport->max_queue_depth * rtransport->max_io_size, rgroup->buf_mr->lkey);
+	rgroup->device = device;
 
 	return 0;
 }
@@ -1386,17 +1410,14 @@ request_release_buffer(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair		*qpair = req->qpair;
-	struct spdk_nvmf_rdma_poll_group	*rgroup;
-	struct spdk_nvmf_rdma_buf	*buf;
+	struct spdk_nvmf_rdma_transport	*rtransport;
 
 	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
+	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 
 	if (rdma_req->data_from_pool) {
 		/* Put the buffer back in the pool */
-		rgroup = SPDK_CONTAINEROF(qpair->ctrlr->group, struct spdk_nvmf_rdma_poll_group, group);
-		buf = req->data;
-
-		SLIST_INSERT_HEAD(&rgroup->data_buf_pool, buf, link);
+		spdk_mempool_put(rtransport->data_buf_pool, req->data);
 		req->data = NULL;
 		req->length = 0;
 		rdma_req->data_from_pool = false;
