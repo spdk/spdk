@@ -1,0 +1,225 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33d23778_bee700de",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "you can call spdk_gpt_check_mbr() here instead (same for rest of calls in this function)",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80eb6746_14ee9047",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "you should just call spdk_gpt_read_header() here - then you do not need to worry about first creating a valid mbr - same for other calls to spdk_gpt_parse() in this function",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d21e5a7c_c58a106c",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "use sizeof(*head) here instead?  to avoid magic number",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8367323f_2d82b642",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "This comment is not clear - what failure test is it testing?",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42ba4674_fb5725c4",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "these should technically use to_le64 - it works fine here but on big-endian architectures the test would need to swap bytes (see how spdk_gpt_lba_range_check does from_le64 to convert the values)",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea477404_0d7c1fd6",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "is this assignment needed?  we free gpt right after this",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef9bec2b_b8d7c0f7",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "should we have a passing test case at the end?",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29732c52_663b9c0b",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "this is not really a mismatch - it is testing what happens if num_partition_entries is too big (\u003e MAX_NUM_PARTITION_ENTRIES) - should probably say that a GPT can only support up to 128 entries, which will make it more clear why 256 is invalid.",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a23f5146_323e4242",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "Should use to_le32().",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6e111e0_7bd0bf61",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "this should call spdk_gpt_read_partitions() instead - then you can avoid having to set up a valid mbr, gpt signature, etc.",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f2cb0c3_bf0e77fa",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "maybe explicitly do head-\u003esize_of_partition_entry \u003d 0 to make it clear that you are setting an invalid partition entry size",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d33e2525_f57c769c",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "maybe explicit do head-\u003epartition_entry_la \u003d 0 to make it clear that you are setting an invalid start lba",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c046c1b_d194930c",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:18:42Z",
+      "side": 1,
+      "message": "why do we need to set sector_size again here?",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
