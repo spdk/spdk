@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67980658_7455316a",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2729,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:39:25Z",
+      "side": 1,
+      "message": "Can you describe this in more detail?  If the parent task is successful, but two child tasks fail, will this result in data_in_cnt being decremented too many times?\n\nWe really need unit test code for this file.  :)\n\nAlso \"sucess\" \u003d\u003e \"success\".",
+      "revId": "d32b8442e5e9d51776bc0527f626e2d6dbf57459",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
