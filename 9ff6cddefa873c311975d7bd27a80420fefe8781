@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34b30cc7_01affbd4",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1261,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T19:28:05Z",
+      "side": 1,
+      "message": "I think this should just call bdev_nvme_unmap for now - that makes it really clear that we are really doing an unmap here and avoids code duplication.  Then when we really do support write_zeroes, that code can be added here (still with a call to bdev_nvme_unmap if we are choosing to unmap instead).",
+      "revId": "9ff6cddefa873c311975d7bd27a80420fefe8781",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
