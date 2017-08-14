@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1242ba6_27e415c9",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-14T20:22:59Z",
+      "side": 1,
+      "message": "I\u0027m not the blobstore expert, so we should get Ben or Jim to weigh in on this, but it looks like the blocklen limits all come from needing to be divisible into sizeof(struct spdk_blob_md_page), which is 4096.  Maybe something like:\n\n    if (b-\u003ebs_dev.blocklen \u003e sizeof(struct spdk_blob_md_page) ||\n       (sizeof(struct spdk_blob_md_page) / b-\u003ebs_dev.blocklen) * b-\u003ebs_dev.blocklen !\u003d sizeof(struct spdk_blob_md_page)) {\n       SPDK_ERRLOG(...);\n\n(This could probably be more readable with some temporary variables with shorter names.)\n\nThat said, 512 and 4096 should cover the common block sizes that will actually be encountered in the real world.",
+      "revId": "4e8c9b880e47ba7d143918a143cef5f6860ce0ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d013c2e_a08ef91c",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-14T20:22:59Z",
+      "side": 1,
+      "message": "This error path also needs to close the bdev that we opened above.  Alternatively, we could reorder the check so that it is validated before we call spdk_bdev_open(). (You could even put it before the calloc() call to eliminate the free() as well.)",
+      "revId": "4e8c9b880e47ba7d143918a143cef5f6860ce0ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
