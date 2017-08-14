@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9c013352_37a7783a",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-14T08:35:43Z",
+      "side": 1,
+      "message": "Because the VM might have not started yet and shutdown would end with error. And later because of -e flag the function would exit and \"net-destroy\" and \"rm\" would not be called.",
+      "parentUuid": "539fd00e_a5b50eda",
+      "range": {
+        "startLine": 52,
+        "startChar": 28,
+        "endLine": 52,
+        "endChar": 35
+      },
+      "revId": "84a3696e7d02f58ac1d65cda8f4a69823488c7a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d00dd92d_22b26255",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 1
@@ -117,6 +141,30 @@
     },
     {
       "key": {
+        "uuid": "77346d54_3a9908fd",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-14T08:35:43Z",
+      "side": 1,
+      "message": "Separate patch",
+      "parentUuid": "e6cd30e0_93468458",
+      "range": {
+        "startLine": 23,
+        "startChar": 8,
+        "endLine": 23,
+        "endChar": 43
+      },
+      "revId": "84a3696e7d02f58ac1d65cda8f4a69823488c7a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd15dd7c_356a8be4",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 1
@@ -128,6 +176,30 @@
       "writtenOn": "2017-08-11T18:10:39Z",
       "side": 1,
       "message": "Is this path OK? Also don\u0027t like setting those env variables. They should be passed as parameters.",
+      "range": {
+        "startLine": 54,
+        "startChar": 8,
+        "endLine": 54,
+        "endChar": 43
+      },
+      "revId": "84a3696e7d02f58ac1d65cda8f4a69823488c7a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc95f51c_b58c6a8e",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-14T08:35:43Z",
+      "side": 1,
+      "message": "Well that shouldnt be here of course:)",
+      "parentUuid": "fd15dd7c_356a8be4",
       "range": {
         "startLine": 54,
         "startChar": 8,
