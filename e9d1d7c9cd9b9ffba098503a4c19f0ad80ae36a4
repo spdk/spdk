@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6443672_2d2c184e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-14T17:34:15Z",
+      "side": 1,
+      "message": "Device -\u003e device?",
+      "range": {
+        "startLine": 994,
+        "startChar": 8,
+        "endLine": 994,
+        "endChar": 14
+      },
+      "revId": "e9d1d7c9cd9b9ffba098503a4c19f0ad80ae36a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
