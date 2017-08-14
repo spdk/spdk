@@ -175,7 +175,6 @@ struct spdk_nvmf_rdma_device {
 	struct ibv_device_attr			attr;
 	struct ibv_context			*context;
 
-	struct spdk_mempool			*data_buf_pool;
 	struct spdk_mem_map			*map;
 	struct ibv_pd				*pd;
 
@@ -194,6 +193,8 @@ struct spdk_nvmf_rdma_transport {
 	struct spdk_nvmf_transport	transport;
 
 	struct rdma_event_channel	*event_channel;
+
+	struct spdk_mempool		*data_buf_pool;
 
 	pthread_mutex_t 		lock;
 
@@ -806,6 +807,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 			rdma_req->data_from_pool = false;
 		} else {
 			rgroup = SPDK_CONTAINEROF(req->qpair->ctrlr->group, struct spdk_nvmf_rdma_poll_group, group);
+			req->data = spdk_mempool_get(rtransport->data_buf_pool);
 			if (!req->data) {
 				/* No available buffers. Queue this request up. */
 				SPDK_TRACELOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", req);
@@ -870,24 +872,24 @@ static int
 spdk_nvmf_rdma_handle_pending_rdma_rw(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_qpair		*rdma_qpair;
-	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct spdk_nvmf_rdma_transport		*rtransport;
 	struct spdk_nvmf_rdma_request		*rdma_req, *tmp;
 	int 					rc;
 	int 					count = 0;
 
 	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 
 	/* First, try to assign free data buffers to requests that need one */
 	if (qpair->ctrlr) {
-		rgroup = SPDK_CONTAINEROF(qpair->ctrlr->group, struct spdk_nvmf_rdma_poll_group, group);
 		TAILQ_FOREACH_SAFE(rdma_req, &rdma_qpair->pending_data_buf_queue, link, tmp) {
 			assert(rdma_req->req.data == NULL);
-			rdma_req->req.data = spdk_mempool_get(rgroup->device->data_buf_pool);
+			rdma_req->req.data = spdk_mempool_get(rtransport->data_buf_pool);
 			if (!rdma_req->req.data) {
 				break;
 			}
 			rdma_req->data.sgl[0].addr = (uintptr_t)rdma_req->req.data;
-			rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(rgroup->device->map,
+			rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(rdma_qpair->port->device->map,
 						      (uint64_t)rdma_req->req.data))->lkey;
 			rdma_req->data_from_pool = true;
 			TAILQ_REMOVE(&rdma_qpair->pending_data_buf_queue, rdma_req, link);
@@ -934,7 +936,6 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	struct ibv_context		**contexts;
 	uint32_t			i;
 	char				buf[64];
-	char				pool_name[32];
 
 	rtransport = calloc(1, sizeof(*rtransport));
 	if (!rtransport) {
@@ -969,6 +970,17 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		return NULL;
 	}
 
+	rtransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_rdma",
+				    rtransport->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
+				    rtransport->max_io_size,
+				    rtransport->max_queue_depth / 2,
+				    SPDK_ENV_SOCKET_ID_ANY);
+	if (!rtransport->data_buf_pool) {
+		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
+		free(rtransport);
+		return NULL;
+	}
+
 	contexts = rdma_get_devices(NULL);
 	i = 0;
 	rc = 0;
@@ -988,19 +1000,6 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 
 		}
 
-		snprintf(pool_name, sizeof(pool_name), "spdk_dev_pool%d", i);
-
-		device->data_buf_pool = spdk_mempool_create(pool_name,
-					rtransport->max_queue_depth,
-					rtransport->max_io_size,
-					rtransport->max_queue_depth / 2,
-					SPDK_ENV_SOCKET_ID_ANY);
-		if (!device->data_buf_pool) {
-			SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
-			free(device);
-			break;
-		}
-
 		device->pd = NULL;
 		device->map = NULL;
 
@@ -1011,9 +1010,9 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	if (rc < 0) {
 		TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
 			TAILQ_REMOVE(&rtransport->devices, device, link);
-			spdk_mempool_free(device->data_buf_pool);
 			free(device);
 		}
+		spdk_mempool_free(rtransport->data_buf_pool);
 		rdma_destroy_event_channel(rtransport->event_channel);
 		free(rtransport);
 		rdma_free_devices(contexts);
@@ -1043,10 +1042,10 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 		if (device->map) {
 			spdk_mem_map_free(&device->map);
 		}
-		spdk_mempool_free(device->data_buf_pool);
 		free(device);
 	}
 
+	spdk_mempool_free(rtransport->data_buf_pool);
 	free(rtransport);
 
 	return 0;
@@ -1411,14 +1410,14 @@ request_release_buffer(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair		*qpair = req->qpair;
-	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct spdk_nvmf_rdma_transport	*rtransport;
 
 	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
+	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 
 	if (rdma_req->data_from_pool) {
 		/* Put the buffer back in the pool */
-		rgroup = SPDK_CONTAINEROF(qpair->ctrlr->group, struct spdk_nvmf_rdma_poll_group, group);
-		spdk_mempool_put(rgroup->device->data_buf_pool, req->data);
+		spdk_mempool_put(rtransport->data_buf_pool, req->data);
 		req->data = NULL;
 		req->length = 0;
 		rdma_req->data_from_pool = false;
