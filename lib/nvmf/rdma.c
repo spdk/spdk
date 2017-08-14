@@ -167,18 +167,17 @@ static TAILQ_HEAD(, spdk_nvmf_rdma_qpair) g_pending_conns = TAILQ_HEAD_INITIALIZ
 struct spdk_nvmf_rdma_poll_group {
 	struct spdk_nvmf_poll_group		group;
 
-	struct spdk_mempool			*data_buf_pool;
-
 	struct spdk_nvmf_rdma_device		*device;
-
-	struct spdk_mem_map			*map;
-	struct ibv_pd				*pd;
 };
 
 /* Assuming rdma_cm uses just one protection domain per ibv_context. */
 struct spdk_nvmf_rdma_device {
 	struct ibv_device_attr			attr;
 	struct ibv_context			*context;
+
+	struct spdk_mempool			*data_buf_pool;
+	struct spdk_mem_map			*map;
+	struct ibv_pd				*pd;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_device)	link;
 };
@@ -804,8 +803,8 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 			rdma_req->data_from_pool = false;
 		} else {
 			rgroup = SPDK_CONTAINEROF(req->qpair->ctrlr->group, struct spdk_nvmf_rdma_poll_group, group);
-			req->data = spdk_mempool_get(rgroup->data_buf_pool);
-			rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(rgroup->map,
+			req->data = spdk_mempool_get(rgroup->device->data_buf_pool);
+			rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(rgroup->device->map,
 						      (uint64_t)req->data))->lkey;
 			rdma_req->data_from_pool = true;
 			if (!req->data) {
@@ -882,7 +881,7 @@ spdk_nvmf_rdma_handle_pending_rdma_rw(struct spdk_nvmf_qpair *qpair)
 		rgroup = SPDK_CONTAINEROF(qpair->ctrlr->group, struct spdk_nvmf_rdma_poll_group, group);
 		TAILQ_FOREACH_SAFE(rdma_req, &rdma_qpair->pending_data_buf_queue, link, tmp) {
 			assert(rdma_req->req.data == NULL);
-			rdma_req->req.data = spdk_mempool_get(rgroup->data_buf_pool);
+			rdma_req->req.data = spdk_mempool_get(rgroup->device->data_buf_pool);
 			if (!rdma_req->req.data) {
 				break;
 			}
@@ -930,6 +929,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	struct spdk_nvmf_rdma_device	*device, *tmp;
 	struct ibv_context		**contexts;
 	uint32_t			i;
+	char				pool_name[32];
 
 	rtransport = calloc(1, sizeof(*rtransport));
 	if (!rtransport) {
@@ -981,6 +981,23 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 			break;
 
 		}
+
+		snprintf(pool_name, sizeof(pool_name), "spdk_dev_pool%d", i);
+
+		device->data_buf_pool = spdk_mempool_create(pool_name,
+					rtransport->max_queue_depth,
+					rtransport->max_io_size,
+					rtransport->max_queue_depth / 2,
+					SPDK_ENV_SOCKET_ID_ANY);
+		if (!device->data_buf_pool) {
+			SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
+			free(device);
+			break;
+		}
+
+		device->pd = NULL;
+		device->map = NULL;
+
 		TAILQ_INSERT_TAIL(&rtransport->devices, device, link);
 		i++;
 	}
@@ -988,6 +1005,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	if (rc < 0) {
 		TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, tmp) {
 			TAILQ_REMOVE(&rtransport->devices, device, link);
+			spdk_mempool_free(device->data_buf_pool);
 			free(device);
 		}
 		rdma_destroy_event_channel(rtransport->event_channel);
@@ -1016,6 +1034,10 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 
 	TAILQ_FOREACH_SAFE(device, &rtransport->devices, link, device_tmp) {
 		TAILQ_REMOVE(&rtransport->devices, device, link);
+		if (device->map) {
+			spdk_mem_map_free(&device->map);
+		}
+		spdk_mempool_free(device->data_buf_pool);
 		free(device);
 	}
 
@@ -1244,24 +1266,10 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
 static struct spdk_nvmf_poll_group *
 spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 {
-	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
-
-	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
 	rgroup = calloc(1, sizeof(*rgroup));
 	if (!rgroup) {
-		return NULL;
-	}
-
-	rgroup->data_buf_pool = spdk_mempool_create(NULL,
-				rtransport->max_queue_depth,
-				rtransport->max_io_size,
-				rtransport->max_queue_depth / 2,
-				SPDK_ENV_SOCKET_ID_ANY);
-	if (!rgroup->data_buf_pool) {
-		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
-		free(rgroup);
 		return NULL;
 	}
 
@@ -1279,10 +1287,6 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_poll_group *group)
 		return;
 	}
 
-	if (rgroup->map) {
-		spdk_mem_map_free(&rgroup->map);
-	}
-	spdk_mempool_free(rgroup->data_buf_pool);
 	free(rgroup);
 }
 
@@ -1291,8 +1295,8 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 			  enum spdk_mem_map_notify_action action,
 			  void *vaddr, size_t size)
 {
-	struct spdk_nvmf_rdma_poll_group *rgroup = cb_ctx;
-	struct ibv_pd *pd = rgroup->pd;
+	struct spdk_nvmf_rdma_device *device = cb_ctx;
+	struct ibv_pd *pd = device->pd;
 	struct ibv_mr *mr;
 
 	switch (action) {
@@ -1339,8 +1343,11 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_poll_group *group,
 			return -1;
 		}
 
-		/* TODO: This actually needs to add the qpairs to an internal list! */
-		/* Nothing else to do. */
+		if (rgroup->device->pd != rdma_qpair->cm_id->pd) {
+			SPDK_ERRLOG("Mismatched protection domains\n");
+			return -1;
+		}
+
 		return 0;
 	}
 
@@ -1354,13 +1361,16 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_poll_group *group,
 		return -EINVAL;
 	}
 
-	rgroup->device = device;
-	rgroup->pd = rdma_qpair->cm_id->pd;
-	rgroup->map = spdk_mem_map_alloc(0, spdk_nvmf_rdma_mem_notify, rgroup);
-	if (!rgroup->map) {
-		SPDK_ERRLOG("Unable to allocate memory map for new poll group\n");
-		return -1;
+	if (!device->map) {
+		device->pd = rdma_qpair->cm_id->pd;
+		device->map = spdk_mem_map_alloc(0, spdk_nvmf_rdma_mem_notify, device);
+		if (!device->map) {
+			SPDK_ERRLOG("Unable to allocate memory map for new poll group\n");
+			return -1;
+		}
 	}
+
+	rgroup->device = device;
 
 	return 0;
 }
@@ -1400,7 +1410,7 @@ request_release_buffer(struct spdk_nvmf_request *req)
 	if (rdma_req->data_from_pool) {
 		/* Put the buffer back in the pool */
 		rgroup = SPDK_CONTAINEROF(qpair->ctrlr->group, struct spdk_nvmf_rdma_poll_group, group);
-		spdk_mempool_put(rgroup->data_buf_pool, req->data);
+		spdk_mempool_put(rgroup->device->data_buf_pool, req->data);
 		req->data = NULL;
 		req->length = 0;
 		rdma_req->data_from_pool = false;
