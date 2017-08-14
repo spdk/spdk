@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01ebdd80_115d7aca",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T20:02:19Z",
+      "side": 1,
+      "message": "Could we make this a TAILQ instead of a DPDK ring?  Then we can treat the free task list like a stack instead of a queue, reducing memory pressure.\n\nThe original code used a ring so this is fine for now - I think the TAILQ could be a performance improvement though.",
+      "revId": "652372fdd871f0708dffa2f91a4c2ea872d0b853",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
