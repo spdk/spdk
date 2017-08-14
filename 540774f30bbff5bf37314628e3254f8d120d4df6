@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be525451_695d211c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 975,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-14T20:36:50Z",
+      "side": 1,
+      "message": "The \"else {\" should go on the same line as the previous }.",
+      "revId": "540774f30bbff5bf37314628e3254f8d120d4df6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
