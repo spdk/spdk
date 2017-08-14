@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9aa9e6d4_172070de",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1649,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-14T20:27:03Z",
+      "side": 1,
+      "message": "Can you describe the test case that fails without this?\n\nI do not think this change is correct.  Consider case where file points to buffer for offset 0 and this is the last buffer for the file currently.  We allocate new buffer for offset 256K.  This new code, will set the next buffer for offset 256K to the buffer for offset 0K.\n\nBut actually I think the fix should just be to remove this \"next\" field completely.  It is not actually used anywhere.",
+      "revId": "bc60887417008f5cce85b413c698ebe91f926f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
