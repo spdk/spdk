@@ -61,15 +61,9 @@ struct hello_context_t {
 static void
 hello_cleanup(struct hello_context_t *hello_context)
 {
-	if (hello_context->read_buff) {
-		spdk_dma_free(hello_context->read_buff);
-	}
-	if (hello_context->write_buff) {
-		spdk_dma_free(hello_context->write_buff);
-	}
-	if (hello_context) {
-		free(hello_context);
-	}
+	spdk_dma_free(hello_context->read_buff);
+	spdk_dma_free(hello_context->write_buff);
+	free(hello_context);
 }
 
 /*
