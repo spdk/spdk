@@ -173,5 +173,12 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev)
 	b->bs_dev.write = bdev_blob_write;
 	b->bs_dev.unmap = bdev_blob_unmap;
 
+	if (!(b->bs_dev.blocklen == 512 || b->bs_dev.blocklen == 4096)) {
+		SPDK_ERRLOG("unsupported bdev block length of %d\n",
+			    b->bs_dev.blocklen);
+		free(b);
+		return NULL;
+	}
+
 	return &b->bs_dev;
 }
