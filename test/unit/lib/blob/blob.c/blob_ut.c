@@ -95,6 +95,12 @@ blob_init(void)
 
 	init_dev(&dev);
 
+	/* should fail for an unsupported blocklen */
+	dev.blocklen = 500;
+	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
+
+	init_dev(&dev);
 	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
