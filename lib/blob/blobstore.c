@@ -1480,6 +1480,13 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 	SPDK_TRACELOG(SPDK_TRACE_BLOB, "Initializing blobstore on dev %p\n", dev);
 
+	if ((sizeof(struct spdk_blob_md_page) % dev->blocklen) != 0) {
+		SPDK_ERRLOG("unsupported bdev block length of %d\n",
+			    dev->blocklen);
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
+
 	if (o) {
 		opts = *o;
 	} else {
