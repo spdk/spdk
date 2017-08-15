@@ -51,6 +51,40 @@
       "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a578b09_eda1f44a",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-15T22:16:05Z",
+      "side": 1,
+      "message": "While you\u0027re rebasing this patch anyway, I think some stronger comments outlining what you are testing would be good. For example, this one could say:\n\n/* Test attempting to allocate a request when no requests are available */",
+      "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21b8d2c3_f76c8860",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-15T22:16:05Z",
+      "side": 1,
+      "message": "I think this should verify that req-\u003epayload is the same pointer that we passed it (i.e. \u0026payload), not that the value it points to matches the value pointed to by the one we passed it.\n\nBasically, I think this should say CU_ASSERT(req-\u003epayload \u003d\u003d \u0026payload);\n\nIf you do that check, you can just make payload a dummy value like cb_fn and cb_arg, drop payload_size, get rid of the memset, etc.",
+      "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
