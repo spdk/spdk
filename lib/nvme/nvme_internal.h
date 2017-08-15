@@ -416,6 +416,9 @@ struct spdk_nvme_ctrlr {
 	/** minimum page size supported by this controller in bytes */
 	uint32_t			min_page_size;
 
+	/** selected memory page size for this controller in bytes */
+	uint32_t			page_size;
+
 	uint32_t			num_aers;
 	struct nvme_async_event_request	aer[NVME_MAX_ASYNC_EVENTS];
 	spdk_nvme_aer_cb		aer_cb_fn;
@@ -634,9 +637,9 @@ void	nvme_ctrlr_proc_put_ref(struct spdk_nvme_ctrlr *ctrlr);
 int	nvme_ctrlr_get_ref_count(struct spdk_nvme_ctrlr *ctrlr);
 
 static inline bool
-_is_page_aligned(uint64_t address)
+_is_page_aligned(uint64_t address, uint64_t page_size)
 {
-	return (address & (PAGE_SIZE - 1)) == 0;
+	return (address & (page_size - 1)) == 0;
 }
 
 #endif /* __NVME_INTERNAL_H__ */

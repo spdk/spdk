@@ -502,7 +502,7 @@ nvme_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 	cc.bits.iocqes = 4; /* CQ entry size == 16 == 2^4 */
 
 	/* Page size is 2 ^ (12 + mps). */
-	cc.bits.mps = spdk_u32log2(PAGE_SIZE) - 12;
+	cc.bits.mps = spdk_u32log2(ctrlr->page_size) - 12;
 
 	switch (ctrlr->opts.arb_mechanism) {
 	case SPDK_NVME_CC_AMS_RR:
@@ -1432,6 +1432,9 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_reg
 	ctrlr->cap = *cap;
 
 	ctrlr->min_page_size = 1u << (12 + ctrlr->cap.bits.mpsmin);
+
+	/* For now, always select page_size == min_page_size. */
+	ctrlr->page_size = ctrlr->min_page_size;
 
 	ctrlr->opts.io_queue_size = spdk_max(ctrlr->opts.io_queue_size, SPDK_NVME_IO_QUEUE_MIN_ENTRIES);
 	ctrlr->opts.io_queue_size = spdk_min(ctrlr->opts.io_queue_size, ctrlr->cap.bits.mqes + 1u);
