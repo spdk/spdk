@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "6e9c5285_1fd45d65",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-15T18:08:54Z",
+      "side": 1,
+      "message": "Remove the blank line between the doc comment and the function.",
+      "revId": "d22c0253689a132ceb71bc46de650cbc0130e9fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d457dfc3_adaa38e7",
         "filename": "lib/util/string.c",
         "patchSetId": 5
