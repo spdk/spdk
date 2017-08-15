@@ -85,6 +85,24 @@
       "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41c0ff9a_d1f184c7",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-15T22:18:26Z",
+      "side": 1,
+      "message": "Nevermind - the payload is copied so you\u0027re right here.",
+      "parentUuid": "21b8d2c3_f76c8860",
+      "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
