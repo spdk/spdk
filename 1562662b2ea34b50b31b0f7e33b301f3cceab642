@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2493bf12_c261b4d2",
+        "filename": "test/nvmf/host/identify_kernel_nvmf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:41:44Z",
+      "side": 1,
+      "message": "Do we need this to be 5 seconds?\n\nI know sometimes we need delays.  But all of these 5 second delays add up over time.  Is 1 or 2 seconds sufficient?   If this test almost always passes, then I\u0027m guessing a 1 second delay would be sufficient.",
+      "revId": "1562662b2ea34b50b31b0f7e33b301f3cceab642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
