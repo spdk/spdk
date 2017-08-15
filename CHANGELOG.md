@@ -14,6 +14,12 @@ unmap descriptors. This limits unmaps to a single contiguous range.
 
 The AIO bdev now allows the user to override the auto-detected block size.
 
+### General changes
+
+Set up the scheduler priority of process which based on SPDK as SCHED_FIFO in function
+spdk_env_init(), this make sure the process will run on a high priority and reduce the
+involuntary context switches.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
