@@ -717,15 +717,49 @@ typedef enum _spdk_nvmf_request_prep_type {
 	SPDK_NVMF_REQUEST_PREP_PENDING_DATA = 2,
 } spdk_nvmf_request_prep_type;
 
+static int
+spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
+			  enum spdk_mem_map_notify_action action,
+			  void *vaddr, size_t size)
+{
+	struct spdk_nvmf_rdma_device *device = cb_ctx;
+	struct ibv_pd *pd = device->pd;
+	struct ibv_mr *mr;
+
+	switch (action) {
+	case SPDK_MEM_MAP_NOTIFY_REGISTER:
+		mr = ibv_reg_mr(pd, vaddr, size,
+				IBV_ACCESS_LOCAL_WRITE |
+				IBV_ACCESS_REMOTE_READ |
+				IBV_ACCESS_REMOTE_WRITE);
+		if (mr == NULL) {
+			SPDK_ERRLOG("ibv_reg_mr() failed\n");
+			return -1;
+		} else {
+			spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
+		}
+		break;
+	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr);
+		spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
+		if (mr) {
+			ibv_dereg_mr(mr);
+		}
+		break;
+	}
+
+	return 0;
+}
+
 static spdk_nvmf_request_prep_type
 spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd			*cmd;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvmf_rdma_request		*rdma_req;
-	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvme_sgl_descriptor		*sgl;
 	struct spdk_nvmf_rdma_transport		*rtransport;
+	struct spdk_nvmf_rdma_device		*device;
 
 	cmd = &req->cmd->nvme_cmd;
 	rsp = &req->rsp->nvme_cpl;
@@ -758,6 +792,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 	}
 
 	rtransport = SPDK_CONTAINEROF(req->qpair->transport, struct spdk_nvmf_rdma_transport, transport);
+	device = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_rdma_qpair, qpair)->port->device;
 	sgl = &cmd->dptr.sgl1;
 
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
@@ -776,41 +811,22 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 		}
 
 		req->length = sgl->keyed.length;
+		req->data = spdk_mempool_get(rtransport->data_buf_pool);
+		if (!req->data) {
+			/* No available buffers. Queue this request up. */
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", req);
+			return SPDK_NVMF_REQUEST_PREP_PENDING_BUFFER;
+		}
+
+		rdma_req->data_from_pool = true;
+		rdma_req->data.sgl[0].addr = (uintptr_t)req->data;
 		rdma_req->data.sgl[0].length = sgl->keyed.length;
+		rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
+					      (uint64_t)req->data))->lkey;
 		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
 		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
 
-		if (!req->qpair->ctrlr) {
-			/* The only time a connection won't have a ctrlr
-			 * is when this is the CONNECT request.
-			 */
-			assert(cmd->opc == SPDK_NVME_OPC_FABRIC);
-			assert(req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
-			assert(req->length <= rtransport->in_capsule_data_size);
-
-			/* Use the in capsule data buffer, even though this isn't in capsule data. */
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request using in capsule buffer for non-capsule data\n");
-			req->data = rdma_req->recv->buf;
-			rdma_req->data.sgl[0].lkey = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_rdma_qpair,
-						     qpair)->bufs_mr->lkey;
-			rdma_req->data_from_pool = false;
-		} else {
-			rgroup = SPDK_CONTAINEROF(req->qpair->ctrlr->group, struct spdk_nvmf_rdma_poll_group, group);
-			req->data = spdk_mempool_get(rtransport->data_buf_pool);
-			if (!req->data) {
-				/* No available buffers. Queue this request up. */
-				SPDK_TRACELOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", req);
-				return SPDK_NVMF_REQUEST_PREP_PENDING_BUFFER;
-			}
-
-			rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(rgroup->device->map,
-						      (uint64_t)req->data))->lkey;
-			rdma_req->data_from_pool = true;
-
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p took buffer from central pool\n", req);
-		}
-
-		rdma_req->data.sgl[0].addr = (uintptr_t)req->data;
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p took buffer from central pool\n", req);
 
 		if (req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 			return SPDK_NVMF_REQUEST_PREP_PENDING_DATA;
@@ -1122,6 +1138,17 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		return -EINVAL;
 	}
 
+	if (!device->map) {
+		device->pd = port->id->pd;
+		device->map = spdk_mem_map_alloc(0, spdk_nvmf_rdma_mem_notify, device);
+		if (!device->map) {
+			SPDK_ERRLOG("Unable to allocate memory map for new poll group\n");
+			return -1;
+		}
+	} else {
+		assert(device->pd == port->id->pd);
+	}
+
 	SPDK_NOTICELOG("*** NVMf Target Listening on %s port %d ***\n",
 		       port->trid.traddr, ntohs(rdma_get_src_port(port->id)));
 
@@ -1287,40 +1314,6 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_poll_group *group)
 }
 
 static int
-spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
-			  enum spdk_mem_map_notify_action action,
-			  void *vaddr, size_t size)
-{
-	struct spdk_nvmf_rdma_device *device = cb_ctx;
-	struct ibv_pd *pd = device->pd;
-	struct ibv_mr *mr;
-
-	switch (action) {
-	case SPDK_MEM_MAP_NOTIFY_REGISTER:
-		mr = ibv_reg_mr(pd, vaddr, size,
-				IBV_ACCESS_LOCAL_WRITE |
-				IBV_ACCESS_REMOTE_READ |
-				IBV_ACCESS_REMOTE_WRITE);
-		if (mr == NULL) {
-			SPDK_ERRLOG("ibv_reg_mr() failed\n");
-			return -1;
-		} else {
-			spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
-		}
-		break;
-	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr);
-		spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
-		if (mr) {
-			ibv_dereg_mr(mr);
-		}
-		break;
-	}
-
-	return 0;
-}
-
-static int
 spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_poll_group *group,
 			      struct spdk_nvmf_qpair *qpair)
 {
@@ -1355,15 +1348,6 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_poll_group *group,
 	if (!device) {
 		SPDK_ERRLOG("Attempted to add a qpair with an unknown device\n");
 		return -EINVAL;
-	}
-
-	if (!device->map) {
-		device->pd = rdma_qpair->cm_id->pd;
-		device->map = spdk_mem_map_alloc(0, spdk_nvmf_rdma_mem_notify, device);
-		if (!device->map) {
-			SPDK_ERRLOG("Unable to allocate memory map for new poll group\n");
-			return -1;
-		}
 	}
 
 	rgroup->device = device;
