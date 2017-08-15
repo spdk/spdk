@@ -202,6 +202,8 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 	 *  so that we test the SGL splitting path.
 	 */
 	ctrlr->flags = 0;
+	ctrlr->min_page_size = 4096;
+	ctrlr->page_size = 4096;
 	memset(ns, 0, sizeof(*ns));
 	ns->ctrlr = ctrlr;
 	ns->sector_size = sector_size;
@@ -215,6 +217,7 @@ prepare_for_test(struct spdk_nvme_ns *ns, struct spdk_nvme_ctrlr *ctrlr,
 	ns->sectors_per_stripe = stripe_size / ns->extended_lba_size;
 
 	memset(qpair, 0, sizeof(*qpair));
+	qpair->ctrlr = ctrlr;
 	qpair->req_buf = calloc(num_requests, sizeof(struct nvme_request));
 	SPDK_CU_ASSERT_FATAL(qpair->req_buf != NULL);
 

@@ -60,15 +60,6 @@
 
 #define NVME_MAX_PRP_LIST_ENTRIES	(506)
 
-/*
- * For commands requiring more than 2 PRP entries, one PRP will be
- *  embedded in the command (prp1), and the rest of the PRP entries
- *  will be in a list pointed to by the command (prp2).  This means
- *  that real max number of PRP entries we support is 506+1, which
- *  results in a max xfer size of 506*PAGE_SIZE.
- */
-#define NVME_MAX_XFER_SIZE	NVME_MAX_PRP_LIST_ENTRIES * PAGE_SIZE
-
 struct nvme_pcie_enum_ctx {
 	spdk_nvme_probe_cb probe_cb;
 	void *cb_ctx;
@@ -397,7 +388,14 @@ nvme_pcie_ctrlr_get_cmbsz(struct nvme_pcie_ctrlr *pctrlr, union spdk_nvme_cmbsz_
 uint32_t
 nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
-	return NVME_MAX_XFER_SIZE;
+	/*
+	 * For commands requiring more than 2 PRP entries, one PRP will be
+	 *  embedded in the command (prp1), and the rest of the PRP entries
+	 *  will be in a list pointed to by the command (prp2).  This means
+	 *  that real max number of PRP entries we support is 506+1, which
+	 *  results in a max xfer size of 506*ctrlr->page_size.
+	 */
+	return NVME_MAX_PRP_LIST_ENTRIES * ctrlr->page_size;
 }
 
 uint32_t
@@ -1524,9 +1522,11 @@ nvme_pcie_fail_request_bad_vtophys(struct spdk_nvme_qpair *qpair, struct nvme_tr
  * *prp_index will be updated to account for the number of PRP entries used.
  */
 static int
-nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *virt_addr, size_t len)
+nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *virt_addr, size_t len,
+			  uint32_t page_size)
 {
 	struct spdk_nvme_cmd *cmd = &tr->req->cmd;
+	uintptr_t page_mask = page_size - 1;
 	uint64_t phys_addr;
 	uint32_t i;
 
@@ -1560,9 +1560,9 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 		if (i == 0) {
 			SPDK_TRACELOG(SPDK_TRACE_NVME, "prp1 = %p\n", (void *)phys_addr);
 			cmd->dptr.prp.prp1 = phys_addr;
-			seg_len = PAGE_SIZE - ((uintptr_t)virt_addr & (PAGE_SIZE - 1));
+			seg_len = page_size - ((uintptr_t)virt_addr & page_mask);
 		} else {
-			if ((phys_addr & (PAGE_SIZE - 1)) != 0) {
+			if ((phys_addr & page_mask) != 0) {
 				SPDK_TRACELOG(SPDK_TRACE_NVME, "PRP %u not page aligned (%p)\n",
 					      i, virt_addr);
 				return -EINVAL;
@@ -1570,7 +1570,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 
 			SPDK_TRACELOG(SPDK_TRACE_NVME, "prp[%u] = %p\n", i - 1, (void *)phys_addr);
 			tr->u.prp[i - 1] = phys_addr;
-			seg_len = PAGE_SIZE;
+			seg_len = page_size;
 		}
 
 		seg_len = spdk_min(seg_len, len);
@@ -1605,7 +1605,7 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	int rc;
 
 	rc = nvme_pcie_prp_list_append(tr, &prp_index, req->payload.u.contig + req->payload_offset,
-				       req->payload_size);
+				       req->payload_size, qpair->ctrlr->page_size);
 	if (rc) {
 		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 		return rc;
@@ -1704,6 +1704,7 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 	void *virt_addr;
 	uint32_t remaining_transfer_len, length;
 	uint32_t prp_index = 0;
+	uint32_t page_size = qpair->ctrlr->page_size;
 
 	/*
 	 * Build scattered payloads.
@@ -1729,9 +1730,10 @@ nvme_pcie_qpair_build_prps_sgl_request(struct spdk_nvme_qpair *qpair, struct nvm
 		 *
 		 * All SGEs except last must end on a page boundary.
 		 */
-		assert((length == remaining_transfer_len) || _is_page_aligned((uintptr_t)virt_addr + length));
+		assert((length == remaining_transfer_len) ||
+		       _is_page_aligned((uintptr_t)virt_addr + length, page_size));
 
-		rc = nvme_pcie_prp_list_append(tr, &prp_index, virt_addr, length);
+		rc = nvme_pcie_prp_list_append(tr, &prp_index, virt_addr, length, page_size);
 		if (rc) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			return rc;

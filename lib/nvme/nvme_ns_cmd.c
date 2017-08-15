@@ -221,6 +221,7 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 	uint32_t req_current_length = 0;
 	uint32_t child_length = 0;
 	uint32_t sge_length;
+	uint32_t page_size = qpair->ctrlr->page_size;
 	uintptr_t address;
 
 	args = &req->payload.u.sgl;
@@ -239,7 +240,7 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 		 * The start of the SGE is invalid if the start address is not page aligned,
 		 *  unless it is the first SGE in the child request.
 		 */
-		start_valid = child_length == 0 || _is_page_aligned(address);
+		start_valid = child_length == 0 || _is_page_aligned(address, page_size);
 
 		/* Boolean for whether this is the last SGE in the parent request. */
 		last_sge = (req_current_length + sge_length == req->payload_size);
@@ -248,7 +249,7 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 		 * The end of the SGE is invalid if the end address is not page aligned,
 		 *  unless it is the last SGE in the parent request.
 		 */
-		end_valid = last_sge || _is_page_aligned(address + sge_length);
+		end_valid = last_sge || _is_page_aligned(address + sge_length, page_size);
 
 		/*
 		 * This child request equals the parent request, meaning that no splitting
@@ -276,7 +277,7 @@ _nvme_ns_cmd_split_request_prp(struct spdk_nvme_ns *ns,
 			 *  request for what we have so far, and then start a new child request for
 			 *  the next SGE.
 			 */
-			start_valid = _is_page_aligned(address);
+			start_valid = _is_page_aligned(address, page_size);
 		}
 
 		if (start_valid && end_valid && !last_sge) {
