@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3963ba5b_606d866f",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:08:04Z",
+      "side": 1,
+      "message": "is there any way to test that when trid \u003d\u003d NULL, that we default to PCIE transport?  that\u0027s a key assumption in this function",
+      "revId": "d6ff6ee1fae8e5911b3973dd3819717054801a6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b82058d_fc2416d0",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:08:04Z",
+      "side": 1,
+      "message": "this comment could use some more wording - if I\u0027m a new SPDK user and am looking to make changes to the NVMe driver, this comment doesn\u0027t really help me understand what this is trying to really test:\n\nThis would be a better comment:\n\n/* For secondary processes, the attach_cb should automatically get called for any controllers already initialized by the primary process. */",
+      "revId": "d6ff6ee1fae8e5911b3973dd3819717054801a6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d46cc09_3d28188f",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:08:04Z",
+      "side": 1,
+      "message": "since you\u0027ll need to rebase, go ahead and move this line into the patch that added this unit test",
+      "revId": "d6ff6ee1fae8e5911b3973dd3819717054801a6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
