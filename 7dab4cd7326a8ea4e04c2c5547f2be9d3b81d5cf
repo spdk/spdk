@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d4c73e2_8428ea6a",
+        "filename": "examples/blob/hello_world/hello_blob.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-15T19:44:33Z",
+      "side": 1,
+      "message": "these first two, read_buff and write_buff may not be allocated so if spdk_free doesn\u0027t care then we don\u0027t need to check.  The third one isn\u0027t needed though",
+      "revId": "7dab4cd7326a8ea4e04c2c5547f2be9d3b81d5cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
