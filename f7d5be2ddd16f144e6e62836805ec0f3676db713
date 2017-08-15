@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f643a1a1_b9caa226",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 991,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T23:50:35Z",
+      "side": 1,
+      "message": "same as previous patch - maybe rdma_dev_pool?",
+      "revId": "f7d5be2ddd16f144e6e62836805ec0f3676db713",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89496a2d_7ad4137c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1373,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T23:50:35Z",
+      "side": 1,
+      "message": "Just curious why you don\u0027t set pd and map when you create the buffer pool?",
+      "revId": "f7d5be2ddd16f144e6e62836805ec0f3676db713",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
