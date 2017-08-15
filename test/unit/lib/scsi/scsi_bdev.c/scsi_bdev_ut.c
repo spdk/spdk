@@ -672,6 +672,24 @@ xfer_len_test(void)
 	CU_ASSERT((task.sense_data[2] & 0xf) == SPDK_SCSI_SENSE_ILLEGAL_REQUEST);
 	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB);
 
+	/* zero transfer length (valid) */
+	to_be64(&cdb[2], 0); /* LBA */
+	to_be32(&cdb[10], 0); /* transfer length */
+	task.transfer_len = 0;
+	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
+	CU_ASSERT(task.status == SPDK_SCSI_STATUS_GOOD);
+	CU_ASSERT(task.data_transferred == 0);
+
+	/* zero transfer length past end of disk (invalid) */
+	to_be64(&cdb[2], g_test_bdev_num_blocks); /* LBA */
+	to_be32(&cdb[10], 0); /* transfer length */
+	task.transfer_len = 0;
+	rc = spdk_bdev_scsi_execute(&bdev, &task);
+	CU_ASSERT(rc == SPDK_SCSI_TASK_COMPLETE);
+	CU_ASSERT(task.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT(task.sense_data[12] == SPDK_SCSI_ASC_LOGICAL_BLOCK_ADDRESS_OUT_OF_RANGE);
+
 	spdk_put_task(&task);
 }
 

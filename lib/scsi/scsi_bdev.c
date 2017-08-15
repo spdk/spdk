@@ -1338,15 +1338,6 @@ spdk_bdev_scsi_write(struct spdk_bdev *bdev,
 	int rc;
 	struct spdk_scsi_task *primary = task->parent;
 
-	if (len == 0) {
-		task->data_transferred = 0;
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_NO_SENSE,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		return SPDK_SCSI_TASK_COMPLETE;
-	}
-
 	blen = spdk_bdev_get_block_size(bdev);
 	offset = lba * blen;
 	nbytes = ((uint64_t)len) * blen;
@@ -1458,6 +1449,11 @@ spdk_bdev_scsi_readwrite(struct spdk_bdev *bdev,
 	if (spdk_bdev_scsi_read_write_lba_check(task->parent, task, lba,
 						xfer_len, spdk_bdev_get_num_blocks(bdev)) < 0) {
 		/* spdk_bdev_scsi_read_write_lba_check() already set the correct sense code */
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
+	if (xfer_len == 0) {
+		task->status = SPDK_SCSI_STATUS_GOOD;
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
