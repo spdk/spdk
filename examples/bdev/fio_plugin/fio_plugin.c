@@ -189,7 +189,7 @@ spdk_fio_init_thread(struct thread_data *td)
 	fio_thread->td = td;
 	td->io_ops_data = fio_thread;
 
-	fio_thread->ring = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 128, SPDK_ENV_SOCKET_ID_ANY);
+	fio_thread->ring = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 4096, SPDK_ENV_SOCKET_ID_ANY);
 	if (!fio_thread->ring) {
 		SPDK_ERRLOG("failed to allocate ring\n");
 		free(fio_thread);
