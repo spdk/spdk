@@ -63,6 +63,7 @@
   #MaxQueueDepth 128
 
   # Set the maximum in-capsule data size. Must be a multiple of 16.
+  # 0 is a valid choice.
   #InCapsuleDataSize 4096
 
   # Set the maximum I/O size. Must be a multiple of 4096.

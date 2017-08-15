@@ -31,6 +31,12 @@ The NVMe driver now recognizes the NVMe 1.3 Namespace Optimal I/O Boundary field
 NVMe 1.3 devices may report an optimal I/O boundary, which the driver will take
 into account when splitting I/O requests.
 
+### NVMe-oF Target (nvmf)
+
+The NVMe-oF target no longer requires any in capsule data buffers to run, and
+the feature is now entirely optional. Previously, at least 4KiB in capsule
+data buffers were required.
+
 ### Environment Abstraction Layer
 
 A new default value, SPDK_MEMPOOL_DEFAULT_CACHE_SIZE, was added to provide
