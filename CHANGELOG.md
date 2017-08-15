@@ -20,6 +20,12 @@ currently only supported by NVMe block devices.
 
 The AIO bdev now allows the user to override the auto-detected block size.
 
+### NVMe-oF Target (nvmf)
+
+The NVMe-oF target no longer requires any in capsule data buffers to run, and
+the feature is now entirely optional. Previously, at least 4KiB in capsule
+data buffers were required.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
