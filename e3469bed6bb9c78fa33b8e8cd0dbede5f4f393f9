@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06f90700_6b949b2c",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T21:25:21Z",
+      "side": 1,
+      "message": "same as last patch",
+      "revId": "e3469bed6bb9c78fa33b8e8cd0dbede5f4f393f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9966a3d_23a134cf",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T21:25:21Z",
+      "side": 1,
+      "message": "we also need a check that payload.u.contig \u003d NULL",
+      "revId": "e3469bed6bb9c78fa33b8e8cd0dbede5f4f393f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
