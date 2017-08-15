@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c76b62f7_927cebf6",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-15T22:56:41Z",
+      "side": 1,
+      "message": "Don\u0027t intermingle statements and declarations.",
+      "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65909d50_606d30ae",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-15T22:56:41Z",
+      "side": 1,
+      "message": "I think it\u0027s often clearer in the code to not assign dummy_attach_cb to a variable and instead just write it out in each place you pass it to a function.\n\nThe same for cb_ctx - it\u0027s always NULL so just write NULL instead of cb_ctx below.",
+      "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1671975_90681485",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-15T22:56:41Z",
+      "side": 1,
+      "message": "A better comment here is warranted. Something along the lines of, \"Try to initialize, but nvme_ctrlr_process_init will fail. Verify correct behavior when it does.\"",
+      "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc2d9737_f834cfd8",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-15T22:56:41Z",
+      "side": 1,
+      "message": "The fact that nvme_ctrlr_destruct was called is, in my opinion, an implementation detail. I could imagine an implementation of nvme_init_controllers that never calls that function and releases the controller memory some other way.",
+      "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1944653_7078b8af",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-15T22:56:41Z",
+      "side": 1,
+      "message": "Explain what setting ctrlr.state to READY accomplishes (i.e. gets through the state machine)",
+      "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
