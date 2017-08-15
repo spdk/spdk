@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "644a700a_e288033e",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T21:42:22Z",
+      "side": 1,
+      "message": "This is OK, but I\u0027m wondering if we need to add this kind of capability into the DEFINE_STUB_V.  Otherwise I see a ton of cases where we will just not use DEFINE_STUB_V and do what\u0027s here in this patch instead.",
+      "revId": "d89886a85c1e4e27b3b53072b6a17347bbb04de2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
