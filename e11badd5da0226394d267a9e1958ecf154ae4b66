@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c1fae0c_89aa6af1",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:56:16Z",
+      "side": 1,
+      "message": "Hi Pawel,\n\nGreat additional tests to add more coverage.  Comments are mostly just cleaning up the language.\n\nThanks,\n\n-Jim",
+      "revId": "e11badd5da0226394d267a9e1958ecf154ae4b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea9d735b_8a30e146",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:56:16Z",
+      "side": 1,
+      "message": "succeded \u003d\u003e succeeded",
+      "revId": "e11badd5da0226394d267a9e1958ecf154ae4b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "773acd78_60757e9b",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:56:16Z",
+      "side": 1,
+      "message": "nonexistent instead of inexistent (same change in next two lines)",
+      "revId": "e11badd5da0226394d267a9e1958ecf154ae4b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "859f4701_b76b25b8",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:56:16Z",
+      "side": 1,
+      "message": "same here (nonexistent)",
+      "revId": "e11badd5da0226394d267a9e1958ecf154ae4b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d611dd4_69eb5aab",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:56:16Z",
+      "side": 1,
+      "message": "succeeded",
+      "revId": "e11badd5da0226394d267a9e1958ecf154ae4b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35ec6b75_a09e997e",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:56:16Z",
+      "side": 1,
+      "message": "succeded \u003d\u003e succeeded",
+      "revId": "e11badd5da0226394d267a9e1958ecf154ae4b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f85b7377_0cfd71dc",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:56:16Z",
+      "side": 1,
+      "message": "succeeded",
+      "revId": "e11badd5da0226394d267a9e1958ecf154ae4b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cca9a75_6809b679",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:56:16Z",
+      "side": 1,
+      "message": "nonexistent",
+      "revId": "e11badd5da0226394d267a9e1958ecf154ae4b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9032344_b5189fbe",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:56:16Z",
+      "side": 1,
+      "message": "succeeded",
+      "revId": "e11badd5da0226394d267a9e1958ecf154ae4b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
