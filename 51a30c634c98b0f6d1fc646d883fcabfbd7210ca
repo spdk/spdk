@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3c95885e_51cfcc05",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "33d23778_bee700de",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "80eb6746_14ee9047",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 18
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-14T19:18:42Z",
       "side": 1,
       "message": "you should just call spdk_gpt_read_header() here - then you do not need to worry about first creating a valid mbr - same for other calls to spdk_gpt_parse() in this function",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8da5c43b_3e236669",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "80eb6746_14ee9047",
       "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "08e0550b_cd79cbac",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d21e5a7c_c58a106c",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8367323f_2d82b642",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 18
@@ -64,6 +118,24 @@
       "writtenOn": "2017-08-14T19:18:42Z",
       "side": 1,
       "message": "This comment is not clear - what failure test is it testing?",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "490b1992_87edc724",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Modified to passing case.",
+      "parentUuid": "8367323f_2d82b642",
       "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "aa977a38_66e5e1b0",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "42ba4674_fb5725c4",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea477404_0d7c1fd6",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 18
@@ -98,6 +188,24 @@
       "writtenOn": "2017-08-14T19:18:42Z",
       "side": 1,
       "message": "is this assignment needed?  we free gpt right after this",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b193e8f_9d9acac2",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "ea477404_0d7c1fd6",
       "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "296724dd_8f89e7f4",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Yes. As a relatively independent UT function, I try to make failing and passing case complete, even if the passing case is repeated in test_parse(). Since we use spdk_gpt_read_partitions(), it is fixed to CU_ASSERT(re \u003d\u003d 0).",
+      "parentUuid": "ef9bec2b_b8d7c0f7",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "29732c52_663b9c0b",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 18
@@ -132,6 +258,24 @@
       "writtenOn": "2017-08-14T19:18:42Z",
       "side": 1,
       "message": "this is not really a mismatch - it is testing what happens if num_partition_entries is too big (\u003e MAX_NUM_PARTITION_ENTRIES) - should probably say that a GPT can only support up to 128 entries, which will make it more clear why 256 is invalid.",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a49e712_bac2125d",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "29732c52_663b9c0b",
       "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "5d7045e1_388ca6ea",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a23f5146_323e4242",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6e111e0_7bd0bf61",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 18
@@ -166,6 +328,24 @@
       "writtenOn": "2017-08-14T19:18:42Z",
       "side": 1,
       "message": "this should call spdk_gpt_read_partitions() instead - then you can avoid having to set up a valid mbr, gpt signature, etc.",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28dbad72_ab8013a5",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f6e111e0_7bd0bf61",
       "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "cccb3e2b_35ee9daa",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7f2cb0c3_bf0e77fa",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d33e2525_f57c769c",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 18
@@ -206,6 +404,24 @@
     },
     {
       "key": {
+        "uuid": "99c8c992_d4bfe0b8",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "About the invalid partition_entry_lba value, 0 isn\u0027t suitable, I set it to 100. Thanks.",
+      "parentUuid": "d33e2525_f57c769c",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c046c1b_d194930c",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 18
@@ -217,6 +433,24 @@
       "writtenOn": "2017-08-14T19:18:42Z",
       "side": 1,
       "message": "why do we need to set sector_size again here?",
+      "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d601c8c_de2aa5bc",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-15T10:36:31Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "4c046c1b_d194930c",
       "revId": "51a30c634c98b0f6d1fc646d883fcabfbd7210ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
