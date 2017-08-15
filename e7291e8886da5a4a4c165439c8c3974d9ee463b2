@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4915d6c2_333c4499",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:33:03Z",
+      "side": 1,
+      "message": "DPDK uses a wmb before changing vq-\u003eused-\u003eidx - why do we only do a compiler barrier here?  I think we need the wmb to ensure any data written to the used ring is globally visible before we move the used-\u003eidx.",
+      "revId": "e7291e8886da5a4a4c165439c8c3974d9ee463b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9872e326_0f6a693f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T22:33:03Z",
+      "side": 1,
+      "message": "I\u0027m not sure about this change.  Why should we move the last_used_idx until after the barrier?",
+      "revId": "e7291e8886da5a4a4c165439c8c3974d9ee463b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
