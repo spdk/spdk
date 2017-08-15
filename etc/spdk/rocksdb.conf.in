@@ -12,14 +12,9 @@
 #  Ex. [TargetNode1] = TargetNode section key with tag number 1
 [Global]
   # Users can restrict work items to only run on certain cores by
-  #  specifying a WorkerMask.  Default is to allow work items to run
+  #  specifying a ReactorMask.  Default is to allow work items to run
   #  on all cores.
-  #WorkerMask 0xFFFF
-
-  # Event mask for ids history buffers
-  # Default: 0x0 (all events disabled)
-  # Set to 0xFFFFFFFFFFFFFFFF to enable all events.
-  #EventMask 0x0
+  #ReactorMask 0x1
 
 [Rpc]
   # Defines whether spdk will enable configuration via RPC.
