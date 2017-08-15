@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "ab1d9ad3_6d507851",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-15T22:13:31Z",
+      "side": 1,
+      "message": "payload_size is the size of the data buffer, not the size of struct nvme_payload itself.  Since this test won\u0027t actually read/write any of the data, you can just pick an arbitrary number here.",
+      "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e10ba1ac_ec0877ab",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -13,6 +30,24 @@
       "writtenOn": "2017-08-15T21:21:27Z",
       "side": 1,
       "message": "If req-\u003ecb_fn got set to cb_arg accidentally, picking these same values would mask that issue.  Better to pick different values for cb_fn and cb_arg.",
+      "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80126778_32058859",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-15T22:13:31Z",
+      "side": 1,
+      "message": "Agreed - it would be good to go back and fix up test_nvme_allocate_request_user_copy() as well.",
+      "parentUuid": "e10ba1ac_ec0877ab",
       "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
