@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b971c707_5288b983",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T21:14:16Z",
+      "side": 1,
+      "message": "Instead of picking a threshold of 10 here, let\u0027s use a new trace flag instead (you can call it \"reactor\").  Then always do the SPDK_TRACELOG if nivcsw incremented.  So by default, it will not get printed but we can enable it easily with a trace flag.\n\nCan you also print out differences in ru_nvcsw as well?\n\nNote to other reviewers: we do get very intermittent context switches especially when running on core 0.  For example, igb has a watchdog that runs on core 0 every 2 seconds.  There\u0027s also a pci_pme_list_scan routine that gets scheduled every 2 seconds on core 0 - at least on my system.  And then when these things get scheduled, we might do a debug print here, and the debug print also kicks the worker thread to run flush_to_ldisc.",
+      "revId": "35d69dbbae0d30926752aa4c4aec70a01c72efab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f64c512_13678d2c",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T21:14:16Z",
+      "side": 1,
+      "message": "Why is this NULL check needed?",
+      "revId": "35d69dbbae0d30926752aa4c4aec70a01c72efab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
