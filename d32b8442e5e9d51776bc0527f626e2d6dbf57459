@@ -16,6 +16,24 @@
       "revId": "d32b8442e5e9d51776bc0527f626e2d6dbf57459",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e871483_0201294d",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2729,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-08-15T03:20:05Z",
+      "side": 1,
+      "message": "for the normal io process, the last data in pdu will also carry the status of the command to the client, and we will reduce the data_in_cnt in the fuction spdk_iscsi_conn_free_pdu() for the primary task, but if the child tasks failed, we will return the staus to the client by using one response PDU, not carry the status in the data in pdu, so we will have no chance to reduce the data_in_cnt for the primary task. so we could just reduce the data_in_cnt here.",
+      "parentUuid": "67980658_7455316a",
+      "revId": "d32b8442e5e9d51776bc0527f626e2d6dbf57459",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
