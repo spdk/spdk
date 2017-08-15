@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10e3e601_93dc568b",
+        "filename": "include/spdk_internal/mock.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T21:52:34Z",
+      "side": 1,
+      "message": "why all of these whitespace changes?  personally I preferred them indented\n\nif we need these whitespace changes they should probably go in a separate patch so we can differentiate the new functionality from the whitespace changes",
+      "revId": "6ddc97c5ea667e78dbe739326003c8a946385bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c87018e0_c8735c80",
+        "filename": "include/spdk_internal/mock.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T21:52:34Z",
+      "side": 1,
+      "message": "you can get rid of the \"ret\" parameter since it will always be void",
+      "revId": "6ddc97c5ea667e78dbe739326003c8a946385bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
