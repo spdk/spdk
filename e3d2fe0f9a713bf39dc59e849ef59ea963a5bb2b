@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "87b5defe_e04c7012",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T23:38:17Z",
+      "side": 1,
+      "message": "i\u0027d use something more specific to nvmf and/or rdma, since these names need to be unique.  spdk_pool could apply to any mempool created in SPDK.",
+      "revId": "e3d2fe0f9a713bf39dc59e849ef59ea963a5bb2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "132a8b7d_b867f786",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-15T23:38:17Z",
+      "side": 1,
+      "message": "Maybe we should have an SPDK_MEMPOOL_CACHE_DEFAULT which is set to -1?  Then you have a nice default to use and don\u0027t have to come up with one yourself.",
+      "revId": "e3d2fe0f9a713bf39dc59e849ef59ea963a5bb2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
