@@ -32,6 +32,7 @@
  */
 
 #include "rocksdb/env.h"
+#include <set>
 
 extern "C" {
 #include "spdk/env.h"
@@ -87,12 +88,6 @@ public:
 	virtual Status Skip(uint64_t n) override;
 	virtual Status InvalidateCache(size_t offset, size_t length) override;
 };
-
-static std::string
-basename(std::string full)
-{
-	return full.substr(full.rfind("/") + 1);
-}
 
 SpdkSequentialFile::~SpdkSequentialFile(void)
 {
@@ -288,7 +283,7 @@ public:
 			int rc;
 
 			rc = spdk_fs_open_file(g_fs, g_sync_args.channel,
-					       basename(fname).c_str(), 0, &file);
+					       fname.c_str(), 0, &file);
 			if (rc == 0) {
 				result->reset(new SpdkSequentialFile(file));
 				return Status::OK();
@@ -310,7 +305,7 @@ public:
 					   const EnvOptions &options) override
 	{
 		if (fname.compare(0, mDirectory.length(), mDirectory) == 0) {
-			result->reset(new SpdkRandomAccessFile(basename(fname), options));
+			result->reset(new SpdkRandomAccessFile(fname, options));
 			return Status::OK();
 		} else {
 			return EnvWrapper::NewRandomAccessFile(fname, result, options);
@@ -322,7 +317,7 @@ public:
 				       const EnvOptions &options) override
 	{
 		if (fname.compare(0, mDirectory.length(), mDirectory) == 0) {
-			result->reset(new SpdkWritableFile(basename(fname), options));
+			result->reset(new SpdkWritableFile(fname, options));
 			return Status::OK();
 		} else {
 			return EnvWrapper::NewWritableFile(fname, result, options);
@@ -346,10 +341,9 @@ public:
 	virtual Status FileExists(const std::string &fname) override
 	{
 		struct spdk_file_stat stat;
-		std::string fname_base = basename(fname);
 		int rc;
 
-		rc = spdk_fs_file_stat(g_fs, g_sync_args.channel, fname_base.c_str(), &stat);
+		rc = spdk_fs_file_stat(g_fs, g_sync_args.channel, fname.c_str(), &stat);
 		if (rc == 0) {
 			return Status::OK();
 		}
@@ -357,12 +351,10 @@ public:
 	}
 	virtual Status RenameFile(const std::string &src, const std::string &target) override
 	{
-		std::string target_base = basename(target);
-		std::string src_base = basename(src);
 		int rc;
 
 		rc = spdk_fs_rename_file(g_fs, g_sync_args.channel,
-					 src_base.c_str(), target_base.c_str());
+					 src.c_str(), target.c_str());
 		if (rc == -ENOENT) {
 			return EnvWrapper::RenameFile(src, target);
 		}
@@ -375,10 +367,9 @@ public:
 	virtual Status GetFileSize(const std::string &fname, uint64_t *size) override
 	{
 		struct spdk_file_stat stat;
-		std::string fname_base = basename(fname);
 		int rc;
 
-		rc = spdk_fs_file_stat(g_fs, g_sync_args.channel, fname_base.c_str(), &stat);
+		rc = spdk_fs_file_stat(g_fs, g_sync_args.channel, fname.c_str(), &stat);
 		if (rc == -ENOENT) {
 			return EnvWrapper::GetFileSize(fname, size);
 		}
@@ -388,8 +379,15 @@ public:
 	virtual Status DeleteFile(const std::string &fname) override
 	{
 		int rc;
-		std::string fname_base = basename(fname);
-		rc = spdk_fs_delete_file(g_fs, g_sync_args.channel, fname_base.c_str());
+		std::string::size_type index;
+		std::string name(fname);
+
+		index = name.find("//", 0);
+		if (index != std::string::npos) {
+			name.replace(index, 2, "/");
+		}
+
+		rc = spdk_fs_delete_file(g_fs, g_sync_args.channel, name.c_str());
 		if (rc == -ENOENT) {
 			return EnvWrapper::DeleteFile(fname);
 		}
@@ -398,7 +396,7 @@ public:
 	virtual void StartThread(void (*function)(void *arg), void *arg) override;
 	virtual Status LockFile(const std::string &fname, FileLock **lock) override
 	{
-		spdk_fs_open_file(g_fs, g_sync_args.channel, basename(fname).c_str(),
+		spdk_fs_open_file(g_fs, g_sync_args.channel, fname.c_str(),
 				  SPDK_BLOBFS_OPEN_CREATE, (struct spdk_file **)lock);
 		return Status::OK();
 	}
@@ -410,6 +408,12 @@ public:
 	virtual Status GetChildren(const std::string &dir,
 				   std::vector<std::string> *result) override
 	{
+		std::string::size_type pos;
+		std::set<std::string> dir_and_file_set;
+		std::set<std::string>::iterator dir_iter;
+		std::string full_path;
+		std::string filename;
+
 		if (dir.find("archive") != std::string::npos) {
 			return Status::OK();
 		}
@@ -420,9 +424,27 @@ public:
 			iter = spdk_fs_iter_first(g_fs);
 			while (iter != NULL) {
 				file = spdk_fs_iter_get_file(iter);
-				result->push_back(std::string(spdk_file_get_name(file)));
+				if (strncmp(dir.c_str(), spdk_file_get_name(file), dir.length())) {
+					iter = spdk_fs_iter_next(iter);
+					continue;
+				}
+				full_path = spdk_file_get_name(file);
+				pos = full_path.find("/", dir.length() + 1);
+
+				if (pos != std::string::npos) {
+					filename = full_path.substr(dir.length(), pos - dir.length());
+				} else {
+					filename = full_path.substr(dir.length() + 1);
+				}
+				dir_and_file_set.insert(filename);
 				iter = spdk_fs_iter_next(iter);
 			}
+			for (dir_iter = dir_and_file_set.begin() ; dir_iter != dir_and_file_set.end() ; ++dir_iter) {
+				result->push_back(*dir_iter);
+			}
+			result->push_back(".");
+			result->push_back("..");
+			fflush(stdout);
 			return Status::OK();
 		}
 		return EnvWrapper::GetChildren(dir, result);
