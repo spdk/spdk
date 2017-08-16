@@ -751,6 +751,62 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 	return 0;
 }
 
+typedef enum spdk_nvme_data_transfer spdk_nvme_data_transfer_t;
+
+static spdk_nvme_data_transfer_t
+spdk_nvmf_rdma_request_get_xfer(struct spdk_nvmf_rdma_request *rdma_req)
+{
+	enum spdk_nvme_data_transfer xfer;
+	struct spdk_nvme_cmd *cmd = &rdma_req->req.cmd->nvme_cmd;
+	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
+
+	/* Figure out data transfer direction */
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
+		xfer = spdk_nvme_opc_get_data_transfer(rdma_req->req.cmd->nvmf_cmd.fctype);
+	} else {
+		xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
+
+		/* Some admin commands are special cases */
+		if ((rdma_req->req.qpair->qid == 0) &&
+		    ((cmd->opc == SPDK_NVME_OPC_GET_FEATURES) ||
+		     (cmd->opc == SPDK_NVME_OPC_SET_FEATURES))) {
+			switch (cmd->cdw10 & 0xff) {
+			case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
+			case SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION:
+			case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+				break;
+			default:
+				xfer = SPDK_NVME_DATA_NONE;
+			}
+		}
+	}
+
+	if (xfer == SPDK_NVME_DATA_NONE) {
+		return xfer;
+	}
+
+	/* Even for commands that may transfer data, they could have specified 0 length.
+	 * We want those to show up with xfer SPDK_NVME_DATA_NONE.
+	 */
+	switch (sgl->generic.type) {
+	case SPDK_NVME_SGL_TYPE_DATA_BLOCK:
+	case SPDK_NVME_SGL_TYPE_BIT_BUCKET:
+	case SPDK_NVME_SGL_TYPE_SEGMENT:
+	case SPDK_NVME_SGL_TYPE_LAST_SEGMENT:
+		if (sgl->unkeyed.length == 0) {
+			xfer = SPDK_NVME_DATA_NONE;
+		}
+		break;
+	case SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK:
+		if (sgl->keyed.length == 0) {
+			xfer = SPDK_NVME_DATA_NONE;
+		}
+		break;
+	}
+
+	return xfer;
+}
+
 static spdk_nvmf_request_prep_type
 spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 {
@@ -768,25 +824,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 	req->length = 0;
 	req->data = NULL;
 
-	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
-		req->xfer = spdk_nvme_opc_get_data_transfer(req->cmd->nvmf_cmd.fctype);
-	} else {
-		req->xfer = spdk_nvme_opc_get_data_transfer(cmd->opc);
-		if ((req->qpair->type == QPAIR_TYPE_AQ) &&
-		    ((cmd->opc == SPDK_NVME_OPC_GET_FEATURES) ||
-		     (cmd->opc == SPDK_NVME_OPC_SET_FEATURES))) {
-			switch (cmd->cdw10 & 0xff) {
-			case SPDK_NVME_FEAT_LBA_RANGE_TYPE:
-			case SPDK_NVME_FEAT_AUTONOMOUS_POWER_STATE_TRANSITION:
-			case SPDK_NVME_FEAT_HOST_IDENTIFIER:
-				break;
-			default:
-				req->xfer = SPDK_NVME_DATA_NONE;
-				break;
-			}
-		}
-	}
-
+	req->xfer = spdk_nvmf_rdma_request_get_xfer(rdma_req);
 	if (req->xfer == SPDK_NVME_DATA_NONE) {
 		return SPDK_NVMF_REQUEST_PREP_READY;
 	}
@@ -803,11 +841,6 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 				    sgl->keyed.length, rtransport->max_io_size);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return SPDK_NVMF_REQUEST_PREP_ERROR;
-		}
-
-		if (sgl->keyed.length == 0) {
-			req->xfer = SPDK_NVME_DATA_NONE;
-			return SPDK_NVMF_REQUEST_PREP_READY;
 		}
 
 		req->length = sgl->keyed.length;
@@ -854,11 +887,6 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 				    sgl->unkeyed.length, max_len);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return SPDK_NVMF_REQUEST_PREP_ERROR;
-		}
-
-		if (sgl->unkeyed.length == 0) {
-			req->xfer = SPDK_NVME_DATA_NONE;
-			return SPDK_NVMF_REQUEST_PREP_READY;
 		}
 
 		req->data = rdma_req->recv->buf + offset;
