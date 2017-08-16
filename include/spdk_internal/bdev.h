@@ -193,6 +193,11 @@ struct spdk_bdev {
 	int need_aligned_buffer;
 
 	/**
+	 * Optimal I/O boundary in blocks, or 0 for no value reported.
+	 */
+	uint32_t optimal_io_boundary;
+
+	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
 	struct spdk_bdev_module_if *module;

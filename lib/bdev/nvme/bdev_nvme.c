@@ -1138,6 +1138,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		}
 		bdev->disk.blocklen = spdk_nvme_ns_get_sector_size(ns);
 		bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
+		bdev->disk.optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
 		bdev->disk.ctxt = bdev;
 		bdev->disk.fn_table = &nvmelib_fn_table;
 		bdev->disk.module = SPDK_GET_BDEV_MODULE(nvme);

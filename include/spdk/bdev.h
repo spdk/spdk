@@ -220,6 +220,15 @@ uint64_t spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev);
 size_t spdk_bdev_get_buf_align(const struct spdk_bdev *bdev);
 
 /**
+ * Get optimal I/O boundary for a bdev.
+ *
+ * \param bdev Block device to query.
+ * \return Optimal I/O boundary in blocks that should not be crossed for best performance, or 0 if
+ *         no optimal boundary is reported.
+ */
+uint32_t spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev);
+
+/**
  * Query whether block device has an enabled write cache.
  *
  * \param bdev Block device to query.

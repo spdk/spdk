@@ -740,6 +740,12 @@ spdk_bdev_get_buf_align(const struct spdk_bdev *bdev)
 	return 1;
 }
 
+uint32_t
+spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev)
+{
+	return bdev->optimal_io_boundary;
+}
+
 bool
 spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
 {
