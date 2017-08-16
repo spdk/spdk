@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee10479a_11b10dde",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 976,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-16T00:07:16Z",
+      "side": 1,
+      "message": "I\u0027d just set this to rtransport-\u003emax_queue_depth and add a comment saying that spdk_env will clamp it.\n\nOr alternatively add a patch that adds a new SPDK_MEMPOOL_DEFAULT_CACHE set to -1.  If spdk_mempool_create sees this value it can automatically apply the / 2 / core_count default.\n\n(Note: the *4 should be * 4 - guessing the style checker will catch this though.",
+      "revId": "7ad8975749f79ef53acdf777b3093f10d4d09911",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
