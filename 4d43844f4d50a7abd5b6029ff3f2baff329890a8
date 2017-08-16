@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db6768b3_5a8a36dd",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 616,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-16T19:53:38Z",
+      "side": 0,
+      "message": "This is dropping VIRTIO_BLK_F_MQ, which I don\u0027t think is intentional.",
+      "revId": "4d43844f4d50a7abd5b6029ff3f2baff329890a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
