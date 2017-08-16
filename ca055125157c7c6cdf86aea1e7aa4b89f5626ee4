@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "796fa209_c936865e",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-16T00:27:28Z",
+      "side": 1,
+      "message": "Hi Pawel,\n\nGood test additions.  I just have comments on the print messages.  I think making them a bit more descriptive might help if someone has a log file so they know exactly which test failed.\n\nThanks,\n\n-Jim",
+      "revId": "ca055125157c7c6cdf86aea1e7aa4b89f5626ee4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6a8dee2_af88c022",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-16T00:27:28Z",
+      "side": 1,
+      "message": "how about \"vhost started when specifying invalid config file\"",
+      "revId": "ca055125157c7c6cdf86aea1e7aa4b89f5626ee4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2c0f428_52d9c035",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-16T00:27:28Z",
+      "side": 1,
+      "message": "how about \"vhost started with invalid -x command line option\"",
+      "revId": "ca055125157c7c6cdf86aea1e7aa4b89f5626ee4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9854b87_ef4ffa8f",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-16T00:27:28Z",
+      "side": 1,
+      "message": "how about \"vhost started with trace flag in CONFIG_DEBUG\u003dn build\"",
+      "revId": "ca055125157c7c6cdf86aea1e7aa4b89f5626ee4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd1ee1b3_b6f89c3b",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-16T00:27:28Z",
+      "side": 1,
+      "message": "Starting",
+      "revId": "ca055125157c7c6cdf86aea1e7aa4b89f5626ee4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
