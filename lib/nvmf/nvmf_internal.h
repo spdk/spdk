@@ -51,11 +51,6 @@ struct spdk_nvmf_ctrlr_ops {
 	int (*attach)(struct spdk_nvmf_subsystem *subsystem);
 
 	/**
-	 * Get NVMe identify controller data.
-	 */
-	void (*ctrlr_get_data)(struct spdk_nvmf_ctrlr *ctrlr);
-
-	/**
 	 * Process admin command.
 	 */
 	int (*process_admin_cmd)(struct spdk_nvmf_request *req);

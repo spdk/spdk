@@ -41,34 +41,68 @@
 
 #include "spdk/trace.h"
 #include "spdk/nvme_spec.h"
+#include "spdk/string.h"
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
 
 #define MIN_KEEP_ALIVE_TIMEOUT 10000
 
-static void
-nvmf_init_discovery_ctrlr_properties(struct spdk_nvmf_ctrlr *ctrlr)
+#define MODEL_NUMBER "SPDK bdev Controller"
+#define FW_VERSION "FFFFFFFF"
+
+static uint16_t spdk_nvmf_ctrlr_gen_cntlid(void);
+
+static struct spdk_nvmf_ctrlr *
+spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
+		       struct spdk_nvmf_qpair *admin_qpair,
+		       struct spdk_nvmf_fabric_connect_cmd *connect_cmd,
+		       struct spdk_nvmf_fabric_connect_data *connect_data)
 {
-	ctrlr->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
-	/* extended data for get log page supportted */
-	ctrlr->vcdata.lpa.edlp = 1;
-	ctrlr->vcdata.cntlid = ctrlr->cntlid;
-	ctrlr->vcdata.nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
-	ctrlr->vcdata.nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
-	ctrlr->vcdata.nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
-	ctrlr->vcdata.nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
-	ctrlr->vcdata.nvmf_specific.msdbd = 1; /* target supports single SGL in capsule */
-	ctrlr->vcdata.sgls.keyed_sgl = 1;
-	ctrlr->vcdata.sgls.sgl_offset = 1;
+	struct spdk_nvmf_ctrlr *ctrlr;
 
-	strncpy((char *)ctrlr->vcdata.subnqn, SPDK_NVMF_DISCOVERY_NQN, sizeof(ctrlr->vcdata.subnqn));
+	ctrlr = calloc(1, sizeof(*ctrlr));
+	if (ctrlr == NULL) {
+		SPDK_ERRLOG("Memory allocation failed\n");
+		return NULL;
+	}
 
-	/* Properties */
+	ctrlr->group = spdk_nvmf_transport_poll_group_create(admin_qpair->transport);
+	if (ctrlr->group == NULL) {
+		SPDK_ERRLOG("spdk_nvmf_transport_poll_group_create() failed\n");
+		free(ctrlr);
+		return NULL;
+	}
+
+	ctrlr->cntlid = spdk_nvmf_ctrlr_gen_cntlid();
+	if (ctrlr->cntlid == 0) {
+		/* Unable to get a cntlid */
+		SPDK_ERRLOG("Reached max simultaneous ctrlrs\n");
+		spdk_nvmf_transport_poll_group_destroy(ctrlr->group);
+		free(ctrlr);
+		return NULL;
+	}
+
+	TAILQ_INIT(&ctrlr->qpairs);
+	ctrlr->kato = connect_cmd->kato;
+	ctrlr->async_event_config.raw = 0;
+	ctrlr->num_qpairs = 0;
+	ctrlr->subsys = subsystem;
+	ctrlr->max_qpairs_allowed = g_nvmf_tgt.max_qpairs_per_ctrlr;
+
+	memcpy(ctrlr->hostid, connect_data->hostid, sizeof(ctrlr->hostid));
+
+	if (spdk_nvmf_transport_poll_group_add(ctrlr->group, admin_qpair)) {
+		spdk_nvmf_transport_poll_group_destroy(ctrlr->group);
+		free(ctrlr);
+		return NULL;
+	}
+
 	ctrlr->vcprop.cap.raw = 0;
 	ctrlr->vcprop.cap.bits.cqr = 1; /* NVMe-oF specification required */
-	ctrlr->vcprop.cap.bits.mqes = ctrlr->vcdata.maxcmd - 1; /* max queue depth */
+	ctrlr->vcprop.cap.bits.mqes = g_nvmf_tgt.max_queue_depth - 1; /* max queue depth */
 	ctrlr->vcprop.cap.bits.ams = 0; /* optional arb mechanisms */
+	ctrlr->vcprop.cap.bits.to = 1; /* ready timeout - 500 msec units */
 	ctrlr->vcprop.cap.bits.dstrd = 0; /* fixed to 0 for NVMe-oF */
 	ctrlr->vcprop.cap.bits.css_nvm = 1; /* NVM command set */
 	ctrlr->vcprop.cap.bits.mpsmin = 0; /* 2 ^ (12 + mpsmin) == 4k */
@@ -78,73 +112,6 @@ nvmf_init_discovery_ctrlr_properties(struct spdk_nvmf_ctrlr *ctrlr)
 	ctrlr->vcprop.vs.bits.mjr = 1;
 	ctrlr->vcprop.vs.bits.mnr = 2;
 	ctrlr->vcprop.vs.bits.ter = 1;
-	ctrlr->vcdata.ver = ctrlr->vcprop.vs;
-
-	ctrlr->vcprop.cc.raw = 0;
-
-	ctrlr->vcprop.csts.raw = 0;
-	ctrlr->vcprop.csts.bits.rdy = 0; /* Init controller as not ready */
-}
-
-static void
-nvmf_init_nvme_ctrlr_properties(struct spdk_nvmf_ctrlr *ctrlr)
-{
-	assert((g_nvmf_tgt.max_io_size % 4096) == 0);
-
-	/* Init the controller details */
-	ctrlr->subsys->ops->ctrlr_get_data(ctrlr);
-
-	ctrlr->vcdata.aerl = 0;
-	ctrlr->vcdata.cntlid = ctrlr->cntlid;
-	ctrlr->vcdata.kas = 10;
-	ctrlr->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
-	ctrlr->vcdata.mdts = spdk_u32log2(g_nvmf_tgt.max_io_size / 4096);
-	ctrlr->vcdata.sgls.keyed_sgl = 1;
-	ctrlr->vcdata.sgls.sgl_offset = 1;
-
-	ctrlr->vcdata.nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
-	ctrlr->vcdata.nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
-	ctrlr->vcdata.nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
-	ctrlr->vcdata.nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
-	ctrlr->vcdata.nvmf_specific.msdbd = 1; /* target supports single SGL in capsule */
-
-	/* TODO: this should be set by the transport */
-	ctrlr->vcdata.nvmf_specific.ioccsz += g_nvmf_tgt.in_capsule_data_size / 16;
-
-	strncpy((char *)ctrlr->vcdata.subnqn, ctrlr->subsys->subnqn, sizeof(ctrlr->vcdata.subnqn));
-
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ctrlr data: maxcmd %x\n",
-		      ctrlr->vcdata.maxcmd);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: ioccsz %x\n",
-		      ctrlr->vcdata.nvmf_specific.ioccsz);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: iorcsz %x\n",
-		      ctrlr->vcdata.nvmf_specific.iorcsz);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: icdoff %x\n",
-		      ctrlr->vcdata.nvmf_specific.icdoff);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: ctrattr %x\n",
-		      *(uint8_t *)&ctrlr->vcdata.nvmf_specific.ctrattr);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	ext ctrlr data: msdbd %x\n",
-		      ctrlr->vcdata.nvmf_specific.msdbd);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	sgls data: 0x%x\n",
-		      *(uint32_t *)&ctrlr->vcdata.sgls);
-
-	ctrlr->vcprop.cap.raw = 0;
-	ctrlr->vcprop.cap.bits.cqr = 1;
-	ctrlr->vcprop.cap.bits.mqes = ctrlr->vcdata.maxcmd - 1; /* max queue depth */
-	ctrlr->vcprop.cap.bits.ams = 0; /* optional arb mechanisms */
-	ctrlr->vcprop.cap.bits.to = 1; /* ready timeout - 500 msec units */
-	ctrlr->vcprop.cap.bits.dstrd = 0; /* fixed to 0 for NVMe-oF */
-	ctrlr->vcprop.cap.bits.css_nvm = 1; /* NVM command set */
-	ctrlr->vcprop.cap.bits.mpsmin = 0; /* 2 ^ (12 + mpsmin) == 4k */
-	ctrlr->vcprop.cap.bits.mpsmax = 0; /* 2 ^ (12 + mpsmax) == 4k */
-
-	/* Report at least version 1.2.1 */
-	if (ctrlr->vcprop.vs.raw < SPDK_NVME_VERSION(1, 2, 1)) {
-		ctrlr->vcprop.vs.bits.mjr = 1;
-		ctrlr->vcprop.vs.bits.mnr = 2;
-		ctrlr->vcprop.vs.bits.ter = 1;
-		ctrlr->vcdata.ver = ctrlr->vcprop.vs;
-	}
 
 	ctrlr->vcprop.cc.raw = 0;
 	ctrlr->vcprop.cc.bits.en = 0; /* Init controller disabled */
@@ -152,12 +119,78 @@ nvmf_init_nvme_ctrlr_properties(struct spdk_nvmf_ctrlr *ctrlr)
 	ctrlr->vcprop.csts.raw = 0;
 	ctrlr->vcprop.csts.bits.rdy = 0; /* Init controller as not ready */
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	cap %" PRIx64 "\n",
-		      ctrlr->vcprop.cap.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	vs %x\n", ctrlr->vcprop.vs.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	cc %x\n", ctrlr->vcprop.cc.raw);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "	csts %x\n",
-		      ctrlr->vcprop.csts.raw);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "cap 0x%" PRIx64 "\n", ctrlr->vcprop.cap.raw);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "vs 0x%x\n", ctrlr->vcprop.vs.raw);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "cc 0x%x\n", ctrlr->vcprop.cc.raw);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "csts 0x%x\n", ctrlr->vcprop.csts.raw);
+
+	/*
+	 * Common fields for discovery and NVM subsystems
+	 */
+	spdk_strcpy_pad(ctrlr->vcdata.fr, FW_VERSION, sizeof(ctrlr->vcdata.fr), ' ');
+	assert((g_nvmf_tgt.max_io_size % 4096) == 0);
+	ctrlr->vcdata.mdts = spdk_u32log2(g_nvmf_tgt.max_io_size / 4096);
+	ctrlr->vcdata.cntlid = ctrlr->cntlid;
+	ctrlr->vcdata.ver = ctrlr->vcprop.vs;
+	ctrlr->vcdata.lpa.edlp = 1;
+	ctrlr->vcdata.elpe = 127;
+	ctrlr->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
+	ctrlr->vcdata.sgls.supported = 1;
+	ctrlr->vcdata.sgls.keyed_sgl = 1;
+	ctrlr->vcdata.sgls.sgl_offset = 1;
+	spdk_strcpy_pad(ctrlr->vcdata.subnqn, subsystem->subnqn, sizeof(ctrlr->vcdata.subnqn), '\0');
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "ctrlr data: maxcmd 0x%x\n", ctrlr->vcdata.maxcmd);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "sgls data: 0x%x\n", *(uint32_t *)&ctrlr->vcdata.sgls);
+
+	/*
+	 * NVM subsystem fields (reserved for discovery subsystems)
+	 */
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+		spdk_strcpy_pad(ctrlr->vcdata.mn, MODEL_NUMBER, sizeof(ctrlr->vcdata.mn), ' ');
+		spdk_strcpy_pad(ctrlr->vcdata.sn, spdk_nvmf_subsystem_get_sn(subsystem),
+				sizeof(ctrlr->vcdata.sn), ' ');
+		ctrlr->vcdata.aerl = 0;
+		ctrlr->vcdata.kas = 10;
+
+		ctrlr->vcdata.rab = 6;
+		ctrlr->vcdata.ctratt.host_id_exhid_supported = 1;
+		ctrlr->vcdata.aerl = 0;
+		ctrlr->vcdata.frmw.slot1_ro = 1;
+		ctrlr->vcdata.frmw.num_slots = 1;
+
+		ctrlr->vcdata.sqes.min = 6;
+		ctrlr->vcdata.sqes.max = 6;
+		ctrlr->vcdata.cqes.min = 4;
+		ctrlr->vcdata.cqes.max = 4;
+		ctrlr->vcdata.nn = subsystem->dev.max_nsid;
+		ctrlr->vcdata.vwc.present = 1;
+
+		ctrlr->vcdata.nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
+		ctrlr->vcdata.nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
+		ctrlr->vcdata.nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
+		ctrlr->vcdata.nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
+		ctrlr->vcdata.nvmf_specific.msdbd = 1; /* target supports single SGL in capsule */
+
+		/* TODO: this should be set by the transport */
+		ctrlr->vcdata.nvmf_specific.ioccsz += g_nvmf_tgt.in_capsule_data_size / 16;
+
+		spdk_nvmf_ctrlr_set_dsm(ctrlr);
+
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: ioccsz 0x%x\n",
+			      ctrlr->vcdata.nvmf_specific.ioccsz);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: iorcsz 0x%x\n",
+			      ctrlr->vcdata.nvmf_specific.iorcsz);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: icdoff 0x%x\n",
+			      ctrlr->vcdata.nvmf_specific.icdoff);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: ctrattr 0x%x\n",
+			      *(uint8_t *)&ctrlr->vcdata.nvmf_specific.ctrattr);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: msdbd 0x%x\n",
+			      ctrlr->vcdata.nvmf_specific.msdbd);
+	}
+
+	TAILQ_INSERT_TAIL(&subsystem->ctrlrs, ctrlr, link);
+	return ctrlr;
 }
 
 static void ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
@@ -289,55 +322,12 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 		}
 
 		/* Establish a new ctrlr */
-		ctrlr = calloc(1, sizeof(*ctrlr));
+		ctrlr = spdk_nvmf_ctrlr_create(subsystem, qpair, cmd, data);
 		if (!ctrlr) {
-			SPDK_ERRLOG("Memory allocation failure\n");
+			SPDK_ERRLOG("spdk_nvmf_ctrlr_create() failed\n");
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return;
 		}
-
-		ctrlr->group = spdk_nvmf_transport_poll_group_create(qpair->transport);
-		if (ctrlr->group == NULL) {
-			SPDK_ERRLOG("Memory allocation failure\n");
-			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			free(ctrlr);
-			return;
-		}
-
-		TAILQ_INIT(&ctrlr->qpairs);
-
-		ctrlr->cntlid = spdk_nvmf_ctrlr_gen_cntlid();
-		if (ctrlr->cntlid == 0) {
-			/* Unable to get a cntlid */
-			SPDK_ERRLOG("Reached max simultaneous ctrlrs\n");
-			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			spdk_nvmf_transport_poll_group_destroy(ctrlr->group);
-			free(ctrlr);
-			return;
-		}
-
-		ctrlr->kato = cmd->kato;
-		ctrlr->async_event_config.raw = 0;
-		ctrlr->num_qpairs = 0;
-		ctrlr->subsys = subsystem;
-		ctrlr->max_qpairs_allowed = g_nvmf_tgt.max_qpairs_per_ctrlr;
-
-		memcpy(ctrlr->hostid, data->hostid, sizeof(ctrlr->hostid));
-
-		if (spdk_nvmf_transport_poll_group_add(ctrlr->group, qpair)) {
-			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			spdk_nvmf_transport_poll_group_destroy(ctrlr->group);
-			free(ctrlr);
-			return;
-		}
-
-		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-			nvmf_init_nvme_ctrlr_properties(ctrlr);
-		} else {
-			nvmf_init_discovery_ctrlr_properties(ctrlr);
-		}
-
-		TAILQ_INSERT_TAIL(&subsystem->ctrlrs, ctrlr, link);
 	} else {
 		struct spdk_nvmf_ctrlr *tmp;
 
