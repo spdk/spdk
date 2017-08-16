@@ -89,6 +89,7 @@ struct io_target {
 };
 
 struct io_target *head[RTE_MAX_LCORE];
+uint32_t coremap[RTE_MAX_LCORE];
 static int g_target_count = 0;
 
 /*
@@ -102,10 +103,15 @@ static size_t g_min_alignment = 8;
 static void
 blockdev_heads_init(void)
 {
-	int i;
+	uint32_t i, idx;
 
 	for (i = 0; i < RTE_MAX_LCORE; i++) {
 		head[i] = NULL;
+	}
+
+	idx = 0;
+	SPDK_ENV_FOREACH_CORE(i) {
+		coremap[idx++] = i;
 	}
 }
 
@@ -145,7 +151,7 @@ bdevperf_construct_targets(void)
 		/* Mapping each target to lcore */
 		index = g_target_count % spdk_env_get_core_count();
 		target->next = head[index];
-		target->lcore = index;
+		target->lcore = coremap[index];
 		target->io_completed = 0;
 		target->current_queue_depth = 0;
 		target->offset_in_ios = 0;
@@ -530,6 +536,7 @@ bdevperf_run(void *arg1, void *arg2)
 	struct io_target *target;
 	struct spdk_event *event;
 
+	blockdev_heads_init();
 	bdevperf_construct_targets();
 
 	/*
@@ -552,13 +559,14 @@ bdevperf_run(void *arg1, void *arg2)
 	}
 
 	/* Send events to start all I/O */
-	SPDK_ENV_FOREACH_CORE(i) {
+	for (i = 0; i < spdk_env_get_core_count(); i++) {
 		target = head[i];
-		if (target != NULL) {
-			event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
-						    target, NULL);
-			spdk_event_call(event);
+		if (target == NULL) {
+			break;
 		}
+		event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
+					    target, NULL);
+		spdk_event_call(event);
 	}
 }
 
@@ -722,8 +730,6 @@ main(int argc, char **argv)
 		fprintf(stdout, "Zero copy mechanism will not be used.\n");
 		g_zcopy = false;
 	}
-
-	blockdev_heads_init();
 
 	bdevtest_init(config_file, core_mask, &opts);
 
