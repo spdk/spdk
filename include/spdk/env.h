@@ -137,11 +137,15 @@ void spdk_memzone_dump(FILE *f);
 
 struct spdk_mempool;
 
+#define SPDK_MEMPOOL_DEFAULT_CACHE_SIZE	UINT_MAX
+
 /**
  * Create a thread-safe memory pool. Cache size is the number of
  * elements in a thread-local cache. Can be 0 for no caching, or -1
  * for unspecified.
  *
+ * \param cache_size How many elements may be cached in per-core caches. USe
+ *        SPDK_MEMPOOL_DEFAULT_CACHE_SIZE for a reasonable default.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY for any socket.
  */
 struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
