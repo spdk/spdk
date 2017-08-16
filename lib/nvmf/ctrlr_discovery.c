@@ -225,11 +225,6 @@ nvmf_discovery_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 }
 
 static void
-nvmf_discovery_ctrlr_get_data(struct spdk_nvmf_ctrlr *ctrlr)
-{
-}
-
-static void
 nvmf_discovery_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 {
 }
@@ -242,7 +237,6 @@ nvmf_discovery_ctrlr_attach(struct spdk_nvmf_subsystem *subsystem)
 
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_discovery_ctrlr_ops = {
 	.attach				= nvmf_discovery_ctrlr_attach,
-	.ctrlr_get_data			= nvmf_discovery_ctrlr_get_data,
 	.process_admin_cmd		= nvmf_discovery_ctrlr_process_admin_cmd,
 	.process_io_cmd			= nvmf_discovery_ctrlr_process_io_cmd,
 	.detach				= nvmf_discovery_ctrlr_detach,

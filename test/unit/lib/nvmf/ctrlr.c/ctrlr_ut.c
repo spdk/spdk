@@ -95,6 +95,19 @@ spdk_nvmf_transport_qpair_poll(struct spdk_nvmf_qpair *qpair)
 	return 0;
 }
 
+const char *
+spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
+{
+	abort();
+	return NULL;
+}
+
+void
+spdk_nvmf_ctrlr_set_dsm(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	abort();
+}
+
 static void
 test_foobar(void)
 {

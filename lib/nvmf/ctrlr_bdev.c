@@ -49,9 +49,6 @@
 
 #include "spdk_internal/log.h"
 
-#define MODEL_NUMBER "SPDK bdev Controller"
-#define FW_VERSION "FFFFFFFF"
-
 /* read command dword 12 */
 struct __attribute__((packed)) nvme_read_cdw12 {
 	uint16_t	nlb;		/* number of logical blocks */
@@ -61,7 +58,8 @@ struct __attribute__((packed)) nvme_read_cdw12 {
 	uint8_t		lr	: 1;	/* limited retry */
 };
 
-static void nvmf_bdev_set_dsm(struct spdk_nvmf_ctrlr *ctrlr)
+void
+spdk_nvmf_ctrlr_set_dsm(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	uint32_t i;
 
@@ -83,38 +81,6 @@ static void nvmf_bdev_set_dsm(struct spdk_nvmf_ctrlr *ctrlr)
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support unmap - enabling DSM\n",
 		      spdk_nvmf_subsystem_get_nqn(ctrlr->subsys));
 	ctrlr->vcdata.oncs.dsm = 1;
-}
-
-static void
-nvmf_bdev_ctrlr_get_data(struct spdk_nvmf_ctrlr *ctrlr)
-{
-	struct spdk_nvmf_subsystem *subsys = ctrlr->subsys;
-
-	memset(&ctrlr->vcdata, 0, sizeof(struct spdk_nvme_ctrlr_data));
-	spdk_strcpy_pad(ctrlr->vcdata.fr, FW_VERSION, sizeof(ctrlr->vcdata.fr), ' ');
-	spdk_strcpy_pad(ctrlr->vcdata.mn, MODEL_NUMBER, sizeof(ctrlr->vcdata.mn), ' ');
-	spdk_strcpy_pad(ctrlr->vcdata.sn, spdk_nvmf_subsystem_get_sn(subsys),
-			sizeof(ctrlr->vcdata.sn), ' ');
-	ctrlr->vcdata.rab = 6;
-	ctrlr->vcdata.ver.bits.mjr = 1;
-	ctrlr->vcdata.ver.bits.mnr = 2;
-	ctrlr->vcdata.ver.bits.ter = 1;
-	ctrlr->vcdata.ctratt.host_id_exhid_supported = 1;
-	ctrlr->vcdata.aerl = 0;
-	ctrlr->vcdata.frmw.slot1_ro = 1;
-	ctrlr->vcdata.frmw.num_slots = 1;
-	ctrlr->vcdata.lpa.edlp = 1;
-	ctrlr->vcdata.elpe = 127;
-	ctrlr->vcdata.sqes.min = 0x06;
-	ctrlr->vcdata.sqes.max = 0x06;
-	ctrlr->vcdata.cqes.min = 0x04;
-	ctrlr->vcdata.cqes.max = 0x04;
-	ctrlr->vcdata.maxcmd = 1024;
-	ctrlr->vcdata.nn = subsys->dev.max_nsid;
-	ctrlr->vcdata.vwc.present = 1;
-	ctrlr->vcdata.sgls.supported = 1;
-	strncpy(ctrlr->vcdata.subnqn, ctrlr->subsys->subnqn, sizeof(ctrlr->vcdata.subnqn));
-	nvmf_bdev_set_dsm(ctrlr);
 }
 
 static void
@@ -692,7 +658,6 @@ nvmf_bdev_ctrlr_detach(struct spdk_nvmf_subsystem *subsystem)
 
 const struct spdk_nvmf_ctrlr_ops spdk_nvmf_bdev_ctrlr_ops = {
 	.attach				= nvmf_bdev_ctrlr_attach,
-	.ctrlr_get_data			= nvmf_bdev_ctrlr_get_data,
 	.process_admin_cmd		= nvmf_bdev_ctrlr_process_admin_cmd,
 	.process_io_cmd			= nvmf_bdev_ctrlr_process_io_cmd,
 	.poll_for_completions		= nvmf_bdev_ctrlr_poll_for_completions,
