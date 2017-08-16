@@ -197,7 +197,9 @@ __initialize_cache(void)
 
 	g_cache_pool = spdk_mempool_create("spdk_fs_cache",
 					   g_fs_cache_size / CACHE_BUFFER_SIZE,
-					   CACHE_BUFFER_SIZE, -1, SPDK_ENV_SOCKET_ID_ANY);
+					   CACHE_BUFFER_SIZE,
+					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+					   SPDK_ENV_SOCKET_ID_ANY);
 	TAILQ_INIT(&g_caches);
 	pthread_spin_init(&g_caches_lock, 0);
 }

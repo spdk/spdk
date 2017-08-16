@@ -31,6 +31,13 @@ The NVMe driver now recognizes the NVMe 1.3 Namespace Optimal I/O Boundary field
 NVMe 1.3 devices may report an optimal I/O boundary, which the driver will take
 into account when splitting I/O requests.
 
+### Environment Abstraction Layer
+
+A new default value, SPDK_MEMPOOL_DEFAULT_CACHE_SIZE, was added to provide
+additional clarity when constructing spdk_mempools. Previously, -1 could be
+passed and the library would choose a reasonable default, but this new value
+makes it explicit that the default is being used.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
