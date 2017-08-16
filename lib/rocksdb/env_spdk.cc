@@ -49,6 +49,7 @@ namespace rocksdb
 
 struct spdk_filesystem *g_fs = NULL;
 struct spdk_bs_dev *g_bs_dev;
+uint32_t g_lcore = 0;
 std::string g_bdev_name;
 volatile bool g_spdk_ready = false;
 struct sync_args {
@@ -71,7 +72,7 @@ __send_request(fs_request_fn fn, void *arg)
 {
 	struct spdk_event *event;
 
-	event = spdk_event_allocate(0, __call_fn, (void *)fn, arg);
+	event = spdk_event_allocate(g_lcore, __call_fn, (void *)fn, arg);
 	spdk_event_call(event);
 }
 
@@ -487,6 +488,8 @@ spdk_rocksdb_run(void *arg1, void *arg2)
 		SPDK_ERRLOG("bdev %s not found\n", g_bdev_name.c_str());
 		exit(1);
 	}
+
+	g_lcore = spdk_env_get_first_core();
 
 	g_bs_dev = spdk_bdev_create_bs_dev(bdev);
 	printf("using bdev %s\n", g_bdev_name.c_str());
