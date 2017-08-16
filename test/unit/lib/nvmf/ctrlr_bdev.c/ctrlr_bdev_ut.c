@@ -136,6 +136,13 @@ spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 	return 0;
 }
 
+uint32_t
+spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev)
+{
+	abort();
+	return 0;
+}
+
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {

@@ -206,6 +206,7 @@ identify_ns(struct spdk_nvmf_subsystem *subsystem,
 	nsdata->nlbaf = 0;
 	nsdata->flbas.format = 0;
 	nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_block_size(bdev));
+	nsdata->noiob = spdk_bdev_get_optimal_io_boundary(bdev);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
