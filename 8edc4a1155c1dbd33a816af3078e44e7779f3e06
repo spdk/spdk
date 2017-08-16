@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89aea7ce_5e86d3df",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-16T22:24:15Z",
+      "side": 1,
+      "message": "oops, missing some things here... will fix",
+      "revId": "8edc4a1155c1dbd33a816af3078e44e7779f3e06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
