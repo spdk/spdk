@@ -71,7 +71,7 @@ __send_request(fs_request_fn fn, void *arg)
 {
 	struct spdk_event *event;
 
-	event = spdk_event_allocate(0, __call_fn, (void *)fn, arg);
+	event = spdk_event_allocate(spdk_env_get_first_core(), __call_fn, (void *)fn, arg);
 	spdk_event_call(event);
 }
 
