@@ -148,7 +148,8 @@ function spdk_vhost_run()
 	cp $vhost_conf_template $vhost_conf_file
 	$BASE_DIR/../../../scripts/gen_nvme.sh >> $vhost_conf_file
 
-	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
+	echo -e "set confirm off\nbreak lib/bdev/nvme/bdev_nvme.c:1223\ncommands\nbt full\nq\nend\nc\n" > /tmp/gdb1
+	local cmd="gdb -x /tmp/gdb1 --args $vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
 
 	echo "INFO: Loging to:   $vhost_log_file"
 	echo "INFO: Config file: $vhost_conf_file"

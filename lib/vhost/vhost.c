@@ -101,13 +101,18 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, 
 		assert(spdk_vhost_dev_has_feature(vdev, VIRTIO_RING_F_INDIRECT_DESC));
 		*desc_table = spdk_vhost_gpa_to_vva(vdev, (*desc)->addr);
 		*desc_table_size = (*desc)->len / sizeof(**desc);
+		SPDK_NOTICELOG("desc_table_size = %"PRIu32"\n", *desc_table_size);
 		if ((*desc)->len % sizeof(**desc) != 0) {
 			SPDK_ERRLOG("invalid desc table len %"PRIu32"\n", (*desc)->len);
 		}
 		*desc = *desc_table;
+		SPDK_NOTICELOG("indirect initial desc id=%"PRIu16": addr=%llu, len=%"PRIu32", flags=%"PRIu16", next=%"PRIu16"\n",
+			       req_idx, (*desc)->addr, (*desc)->len, (*desc)->flags, (*desc)->next);
 		return;
 	}
 
+	SPDK_NOTICELOG("DIRECT initial desc id=%"PRIu16": addr=%llu, len=%"PRIu32", flags=%"PRIu16", next=%"PRIu16"\n",
+		       req_idx, (*desc)->addr, (*desc)->len, (*desc)->flags, (*desc)->next);
 	*desc_table = vq->desc;
 	*desc_table_size = vq->size;
 }
@@ -157,7 +162,10 @@ spdk_vhost_vring_desc_get_next(struct vring_desc *desc_table, uint32_t desc_tabl
 			       struct vring_desc *cur_desc)
 {
 	assert(spdk_vhost_vring_desc_has_next(cur_desc));
-	return &desc_table[cur_desc->next];
+	struct vring_desc *desc = &desc_table[cur_desc->next];
+	SPDK_NOTICELOG("next desc id=%"PRIu16": addr=%llu, len=%"PRIu32", flags=%"PRIu16", next=%"PRIu16"\n",
+		       cur_desc->next, (desc)->addr, (desc)->len, (desc)->flags, (desc)->next);
+	return desc;
 }
 
 bool
