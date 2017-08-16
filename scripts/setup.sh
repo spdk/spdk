@@ -4,15 +4,18 @@ set -e
 
 rootdir=$(readlink -f $(dirname $0))/..
 
+lspci --version || true
+lspci -h || true
+
 function linux_iter_pci_class_code {
 	# Argument is the class code
-	lspci -mm -n -D | tr -d '"' | awk -v cc="$1" -F " " '{if (cc == $2) print $1}'
+	lspci -mm -n -D -d "::$1" | cut -d ' ' -f 1
 }
 
 function linux_iter_pci_dev_id {
 	# Argument 1 is the vendor id
 	# Argument 2 is the device id
-	lspci -mm -n -D | tr -d '"' | awk -v ven="$1" -v dev="$2" -F " " '{if (ven == $3 && dev == $4) print $1}'
+	lspci -mm -n -D -d $1:$2 | cut -d ' ' -f 1
 }
 
 function linux_bind_driver() {
