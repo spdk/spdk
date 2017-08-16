@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69fc3def_d9625c4e",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-16T15:38:41Z",
+      "side": 1,
+      "message": "Think this should be moved to vhost_internal.h and don\u0027t let user to even see those descriptions.",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 26
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2e99d89_c008c541",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-16T15:38:41Z",
+      "side": 1,
+      "message": "This is not quite true. Currently this is called from spdk_app_start() by vhost app but need to be called during start_fn callback passed to spdk_app_start()",
+      "range": {
+        "startLine": 59,
+        "startChar": 3,
+        "endLine": 59,
+        "endChar": 47
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b86e117f_d8c99aac",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-16T15:38:41Z",
+      "side": 1,
+      "message": "\"path to directory where sockets will be created\"",
+      "range": {
+        "startLine": 61,
+        "startChar": 27,
+        "endLine": 61,
+        "endChar": 47
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31f506b6_272d8cb6",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-16T15:38:41Z",
+      "side": 1,
+      "message": "Can you describe the parameters?",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 55
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bb447e2_e164a6ac",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-16T15:38:41Z",
+      "side": 1,
+      "message": "Error logging is quite common and not worth mentioning. Aloso this might rise questions \"What message will be printed when?\".",
+      "range": {
+        "startLine": 118,
+        "startChar": 40,
+        "endLine": 119,
+        "endChar": 40
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26964d73_1bf8a8f4",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-16T15:38:41Z",
+      "side": 1,
+      "message": "I would rather move this to spdk_vhost_event_fn.",
+      "range": {
+        "startLine": 263,
+        "startChar": 36,
+        "endLine": 266,
+        "endChar": 58
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32077099_581e4265",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-16T15:38:41Z",
+      "side": 1,
+      "message": "This function also want to be documented :)",
+      "range": {
+        "startLine": 271,
+        "startChar": 5,
+        "endLine": 271,
+        "endChar": 43
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
