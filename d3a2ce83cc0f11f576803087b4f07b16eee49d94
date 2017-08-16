@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b74073bf_f3305c88",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-16T18:57:49Z",
+      "side": 1,
+      "message": "Why do you need to replace \"//\" with \"/\" here, but not potentially everywhere? I think to make this really work, we need to write a utility function to \"normalize\" all of the filenames. This function should:\n\n1) Remove repeated \"/\" characters.\n2) Resolve \"/./\" and \"/../\" sequences.\n3) Make sure all paths start with \"/\"\n\nOnce we have that, we should call it on any fname we\u0027re passed before doing any blobstore operations.",
+      "revId": "d3a2ce83cc0f11f576803087b4f07b16eee49d94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74360938_d12f5bd9",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-16T18:57:49Z",
+      "side": 1,
+      "message": "In our C style guidelines we do require that all variables are declared at the top of a scope. However, for C++ I think we should code with a different style, especially now that the \u0027auto\u0027 keyword is available (since 2011). For instance, you can write line 431 as:\n\nauto full_path \u003d spdk_file_get_name(file);\n\nWithout ever declaring it at the top, that will work. The \u0027auto\u0027 keyword will deduce the correct type.",
+      "revId": "d3a2ce83cc0f11f576803087b4f07b16eee49d94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
