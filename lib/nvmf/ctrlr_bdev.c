@@ -96,9 +96,6 @@ nvmf_bdev_ctrlr_get_data(struct spdk_nvmf_ctrlr *ctrlr)
 	spdk_strcpy_pad(ctrlr->vcdata.sn, spdk_nvmf_subsystem_get_sn(subsys),
 			sizeof(ctrlr->vcdata.sn), ' ');
 	ctrlr->vcdata.rab = 6;
-	ctrlr->vcdata.ver.bits.mjr = 1;
-	ctrlr->vcdata.ver.bits.mnr = 2;
-	ctrlr->vcdata.ver.bits.ter = 1;
 	ctrlr->vcdata.ctratt.host_id_exhid_supported = 1;
 	ctrlr->vcdata.aerl = 0;
 	ctrlr->vcdata.frmw.slot1_ro = 1;

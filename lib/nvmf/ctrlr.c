@@ -138,13 +138,11 @@ nvmf_init_nvme_ctrlr_properties(struct spdk_nvmf_ctrlr *ctrlr)
 	ctrlr->vcprop.cap.bits.mpsmin = 0; /* 2 ^ (12 + mpsmin) == 4k */
 	ctrlr->vcprop.cap.bits.mpsmax = 0; /* 2 ^ (12 + mpsmax) == 4k */
 
-	/* Report at least version 1.2.1 */
-	if (ctrlr->vcprop.vs.raw < SPDK_NVME_VERSION(1, 2, 1)) {
-		ctrlr->vcprop.vs.bits.mjr = 1;
-		ctrlr->vcprop.vs.bits.mnr = 2;
-		ctrlr->vcprop.vs.bits.ter = 1;
-		ctrlr->vcdata.ver = ctrlr->vcprop.vs;
-	}
+	/* Report version 1.2.1 */
+	ctrlr->vcprop.vs.bits.mjr = 1;
+	ctrlr->vcprop.vs.bits.mnr = 2;
+	ctrlr->vcprop.vs.bits.ter = 1;
+	ctrlr->vcdata.ver = ctrlr->vcprop.vs;
 
 	ctrlr->vcprop.cc.raw = 0;
 	ctrlr->vcprop.cc.bits.en = 0; /* Init controller disabled */
