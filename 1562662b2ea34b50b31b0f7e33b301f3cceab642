@@ -16,6 +16,24 @@
       "revId": "1562662b2ea34b50b31b0f7e33b301f3cceab642",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ef2ce72_83e253a6",
+        "filename": "test/nvmf/host/identify_kernel_nvmf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-08-16T15:34:41Z",
+      "side": 1,
+      "message": "I tried it with a 1 second delay, and the Soft-RoCE vm still failed. You\u0027re right about the delay though, I will move it to 2 seconds and run it a few times to make sure that it consistently solves the problem.",
+      "parentUuid": "2493bf12_c261b4d2",
+      "revId": "1562662b2ea34b50b31b0f7e33b301f3cceab642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
