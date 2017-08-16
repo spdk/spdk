@@ -541,8 +541,12 @@ parse_args(int argc, char **argv)
 	g_io_size_bytes = 0;
 	g_time_in_sec = 0;
 
-	while ((op = getopt(argc, argv, "s:t:H")) != -1) {
+	while ((op = getopt(argc, argv, "hs:t:H")) != -1) {
 		switch (op) {
+		case 'h':
+			usage(argv[0]);
+			exit(0);
+			break;
 		case 's':
 			g_io_size_bytes = atoi(optarg);
 			break;
@@ -610,6 +614,11 @@ register_controllers(void)
 		return 1;
 	}
 
+	if (g_ns == NULL) {
+		fprintf(stderr, "no NVMe controller found - check that device is bound to uio/vfio\n");
+		return 1;
+	}
+
 	return 0;
 }
 
@@ -618,16 +627,16 @@ int main(int argc, char **argv)
 	int 			rc;
 	struct spdk_env_opts	opts;
 
+	rc = parse_args(argc, argv);
+	if (rc != 0) {
+		return rc;
+	}
+
 	spdk_env_opts_init(&opts);
 	opts.name = "overhead";
 	opts.core_mask = "0x1";
 	opts.shm_id = 0;
 	spdk_env_init(&opts);
-
-	rc = parse_args(argc, argv);
-	if (rc != 0) {
-		return rc;
-	}
 
 	g_task = spdk_dma_zmalloc(sizeof(struct perf_task), 0, NULL);
 	if (g_task == NULL) {
