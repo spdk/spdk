@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4166f7a_af8b243b",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1008,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-16T19:50:01Z",
+      "side": 1,
+      "message": "I\u0027m OK with changing the default, but we should change the etc/spdk/*.conf.in files to match, and this should also have a changelog entry, since it\u0027s a pretty major user-visible change.\n\nWhile we\u0027re at it, it would be a good idea to add HotplugEnable and the other hotplug-related options to the NVMe section of doc/bdev.md - they are currently undocumented.",
+      "revId": "81c6d5fbed0775651b10b19b0e6343385104fe9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
