@@ -49,6 +49,7 @@ namespace rocksdb
 
 struct spdk_filesystem *g_fs = NULL;
 struct spdk_bs_dev *g_bs_dev;
+uint32_t g_lcore = 0;
 std::string g_bdev_name;
 volatile bool g_spdk_ready = false;
 struct sync_args {
@@ -71,7 +72,7 @@ __send_request(fs_request_fn fn, void *arg)
 {
 	struct spdk_event *event;
 
-	event = spdk_event_allocate(0, __call_fn, (void *)fn, arg);
+	event = spdk_event_allocate(g_lcore, __call_fn, (void *)fn, arg);
 	spdk_event_call(event);
 }
 
@@ -479,6 +480,15 @@ static void
 spdk_rocksdb_run(void *arg1, void *arg2)
 {
 	struct spdk_bdev *bdev;
+	uint32_t lcore = 0;
+	struct spdk_app_opts *opts = (struct spdk_app_opts *)arg1;
+
+	if (opts->reactor_mask != NULL) {
+		lcore = strtol(opts->reactor_mask, NULL, 16);
+		while (!(lcore & (1 << g_lcore))) {
+			g_lcore++;
+		}
+	}
 
 	pthread_setname_np(pthread_self(), "spdk");
 	bdev = spdk_bdev_get_by_name(g_bdev_name.c_str());
@@ -516,7 +526,7 @@ initialize_spdk(void *arg)
 {
 	struct spdk_app_opts *opts = (struct spdk_app_opts *)arg;
 
-	spdk_app_start(opts, spdk_rocksdb_run, NULL, NULL);
+	spdk_app_start(opts, spdk_rocksdb_run, arg, NULL);
 	spdk_app_fini();
 
 	delete opts;
