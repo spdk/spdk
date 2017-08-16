@@ -80,7 +80,6 @@ struct spdk_file {
 	struct spdk_blob	*blob;
 	char			*name;
 	uint64_t		length;
-	bool			open_for_writing;
 	uint64_t		length_flushed;
 	uint64_t		append_pos;
 	uint64_t		seq_byte_count;
@@ -1537,24 +1536,8 @@ alloc_cache_memory_buffer(struct spdk_file *context)
 
 	pthread_spin_lock(&g_caches_lock);
 	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
-		if (!file->open_for_writing &&
-		    file->priority == SPDK_FILE_PRIORITY_LOW &&
+		if (file->priority == SPDK_FILE_PRIORITY_LOW &&
 		    file != context) {
-			break;
-		}
-	}
-	pthread_spin_unlock(&g_caches_lock);
-	if (file != NULL) {
-		cache_free_buffers(file);
-		buf = spdk_mempool_get(g_cache_pool);
-		if (buf != NULL) {
-			return buf;
-		}
-	}
-
-	pthread_spin_lock(&g_caches_lock);
-	TAILQ_FOREACH(file, &g_caches, cache_tailq) {
-		if (!file->open_for_writing && file != context) {
 			break;
 		}
 	}
@@ -1894,7 +1877,6 @@ spdk_file_write(struct spdk_file *file, struct spdk_io_channel *_channel,
 	}
 
 	pthread_spin_lock(&file->lock);
-	file->open_for_writing = true;
 
 	if (file->last == NULL) {
 		if (file->append_pos % CACHE_BUFFER_SIZE == 0) {
@@ -2090,8 +2072,6 @@ spdk_file_read(struct spdk_file *file, struct spdk_io_channel *_channel,
 	pthread_spin_lock(&file->lock);
 
 	BLOBFS_TRACE_RW(file, "offset=%ju length=%ju\n", offset, length);
-
-	file->open_for_writing = false;
 
 	if (length == 0 || offset >= file->append_pos) {
 		pthread_spin_unlock(&file->lock);
