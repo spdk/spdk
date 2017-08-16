@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "badfabc9_8a031631",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-16T00:49:21Z",
+      "side": 1,
+      "message": "spdk_split_io_type should go right after enum\nsplit_type should be aligned with the other members like num_children and payload_size",
+      "revId": "fbf9e73c6a98bc0a431193d40ab4ae0721eb6428",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b6b0b0a_23565f42",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-16T00:49:21Z",
+      "side": 1,
+      "message": "We should only set this split type if the request actually gets split within _nvme_ns_cmd_split_request_sgl().",
+      "revId": "fbf9e73c6a98bc0a431193d40ab4ae0721eb6428",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56f29c56_dc190c5c",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-16T00:49:21Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "fbf9e73c6a98bc0a431193d40ab4ae0721eb6428",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c073c6b3_9bbb016f",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 538,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-16T00:49:21Z",
+      "side": 1,
+      "message": "current_lba_count is a uint so cannot be less than 0",
+      "revId": "fbf9e73c6a98bc0a431193d40ab4ae0721eb6428",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
