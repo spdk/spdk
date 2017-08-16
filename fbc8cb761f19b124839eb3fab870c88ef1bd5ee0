@@ -1,0 +1,475 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14f5ced8_16dcecfe",
+        "filename": "test/vhost/fiotest/autotest.config",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "This commit was supposed to be rebased onto this commit: https://review.gerrithub.io/#/c/372545/. All work should be done based on it because of possibility to use scripts and fuctions from common directory.",
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb54c7a2_106d088e",
+        "filename": "test/vhost/fiotest/autotest.config",
+        "patchSetId": 7
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "Modifying this file is pointless because in https://review.gerrithub.io/#/c/372545/ it is moved to common/autotest.config",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 21
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d042a70_0865a637",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "Unnecessary args were to be removed ad pointed in previous comments",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 69
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92bff664_58334205",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "tabs instead of spaces",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 3
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e74fcd0e_543e3ae9",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "If i remember correctly from other comments - this was supposed to  be removed, as we won\u0027t be building everything from scratch. When running tests we require that dependencies are provided.",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 104,
+        "endChar": 1
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "731363b8_e4beba2c",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "vms_setup() ?",
+      "range": {
+        "startLine": 128,
+        "startChar": 9,
+        "endLine": 128,
+        "endChar": 21
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e9c82ee_1b0ab319",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "Why not put ssh config in some common place and then use it here?",
+      "range": {
+        "startLine": 157,
+        "startChar": 1,
+        "endLine": 171,
+        "endChar": 3
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14591dda_5e20edc0",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "shoudl be spaces",
+      "range": {
+        "startLine": 154,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 1
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ac73645_fb27c1f6",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "vms_setup_and_run ?",
+      "range": {
+        "startLine": 180,
+        "startChar": 9,
+        "endLine": 180,
+        "endChar": 29
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7aaef9b5_c6988897",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "vms_prepare?",
+      "range": {
+        "startLine": 187,
+        "startChar": 9,
+        "endLine": 187,
+        "endChar": 23
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f241a724_948a95d9",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "Remove if not needed",
+      "range": {
+        "startLine": 197,
+        "startChar": 16,
+        "endLine": 197,
+        "endChar": 47
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf441666_9927cea5",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "vms_reboot_all ?",
+      "range": {
+        "startLine": 201,
+        "startChar": 9,
+        "endLine": 201,
+        "endChar": 26
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7863ae7f_182d62ab",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "I am concerned about doing clean ups if you exit - you still have to shutdown / kill VM, shutdown Vhost, etc. and you will be unable to do so if you exit from script.",
+      "range": {
+        "startLine": 217,
+        "startChar": 24,
+        "endLine": 217,
+        "endChar": 30
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1b7aa9b_4c42df28",
+        "filename": "test/vhost/hotfeatures/fio_jobs/default_integrity.job",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "should this be hardcoded? what about cases where there\u0027s 1 VM with more than 1 disk? It\u0027d be more readable to replace just \"filename\u003d\" than full path",
+      "range": {
+        "startLine": 9,
+        "startChar": 9,
+        "endLine": 9,
+        "endChar": 17
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa535675_0ee01563",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "This should be in some common place",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 59
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5aeac21_c7f7976a",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 5
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fc21fba_e83cec0e",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "I think using RPC would be better",
+      "range": {
+        "startLine": 15,
+        "startChar": 8,
+        "endLine": 26,
+        "endChar": 13
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c5bad24_2fdf13b2",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "Commit message only says about hot attach.\nPlease move this file to next commit in series which would add detach tests.",
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ab4deaa_8e65af51",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "RPC?",
+      "range": {
+        "startLine": 15,
+        "startChar": 8,
+        "endLine": 30,
+        "endChar": 25
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "708e7467_f96e5fee",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 59,
+        "startChar": 3,
+        "endLine": 63,
+        "endChar": 6
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4b0c300_e237b41a",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-16T12:41:39Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 80,
+        "startChar": 34,
+        "endLine": 81,
+        "endChar": 39
+      },
+      "revId": "fbc8cb761f19b124839eb3fab870c88ef1bd5ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
