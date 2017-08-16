@@ -1,0 +1,308 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "620916da_ffbed4c6",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "Please fix white space at end of the line here and in any similar instance below.",
+      "range": {
+        "startLine": 4,
+        "startChar": 92,
+        "endLine": 4,
+        "endChar": 94
+      },
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a2b4f88_4d62208d",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "I meant to include expected error code here as well - like in expected result in case above :) Same for all such instances below.\nHere I believe best would be EEXIST.",
+      "range": {
+        "startLine": 61,
+        "startChar": 2,
+        "endLine": 61,
+        "endChar": 12
+      },
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "482953bf_b87f0e5f",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "ENODEV",
+      "range": {
+        "startLine": 108,
+        "startChar": 2,
+        "endLine": 108,
+        "endChar": 12
+      },
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54240683_ca9979ef",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "resizing",
+      "range": {
+        "startLine": 130,
+        "startChar": 18,
+        "endLine": 130,
+        "endChar": 24
+      },
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84b3324b_0c7d813d",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "Still unsure if more sizes needed. One unit higher than size of the device should be enough to verify.",
+      "range": {
+        "startLine": 175,
+        "startChar": 28,
+        "endLine": 175,
+        "endChar": 55
+      },
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71f79891_9e2a6ef8",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "destroying",
+      "range": {
+        "startLine": 187,
+        "startChar": 18,
+        "endLine": 187,
+        "endChar": 25
+      },
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f47d37c5_9212354b",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "No name for test below ?",
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a639309b_f05c35a8",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "destroying",
+      "range": {
+        "startLine": 201,
+        "startChar": 18,
+        "endLine": 201,
+        "endChar": 25
+      },
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4b431f8_bab7c7cf",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "Isn\u0027t this case the same as the one above, with exception of size of lvol ?",
+      "range": {
+        "startLine": 201,
+        "startChar": 0,
+        "endLine": 209,
+        "endChar": 20
+      },
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3856f234_f4e10e75",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "No name for test below ?",
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13ef70b1_fa777f85",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "Multiple",
+      "range": {
+        "startLine": 211,
+        "startChar": 50,
+        "endLine": 211,
+        "endChar": 55
+      },
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a323ac4_cc25d14e",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "\"destroying single\"",
+      "range": {
+        "startLine": 211,
+        "startChar": 18,
+        "endLine": 211,
+        "endChar": 31
+      },
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89991113_8f43a292",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "Unnecessary \"- \"",
+      "range": {
+        "startLine": 220,
+        "startChar": 2,
+        "endLine": 220,
+        "endChar": 4
+      },
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03c922c7_efd82df5",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-08-16T12:48:42Z",
+      "side": 1,
+      "message": "Expected results missing",
+      "revId": "b093172bbc2faa6b76456b37145104af12b127a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
