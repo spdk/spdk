@@ -148,6 +148,7 @@ function spdk_vhost_run()
 	cp $vhost_conf_template $vhost_conf_file
 	$BASE_DIR/../../../scripts/gen_nvme.sh >> $vhost_conf_file
 
+	echo -e "set confirm off\nbreak bdev_nvme.c:1223\ncommands\nbt full\nq\nend\nq\n" > /tmp/gdb1
 	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
 
 	echo "INFO: Loging to:   $vhost_log_file"
@@ -158,6 +159,8 @@ function spdk_vhost_run()
 	cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd &
 	vhost_pid=$!
 	echo $vhost_pid > $vhost_pid_file
+	gdb -x /tmp/gdb1 "$vhost_app" "$vhost_pid"
+
 
 	echo "INFO: waiting for app to run..."
 	waitforlisten "$vhost_pid" ${RPC_PORT}
