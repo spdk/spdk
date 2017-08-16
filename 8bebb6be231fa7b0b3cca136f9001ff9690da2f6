@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc98d471_e1864bc3",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-16T14:42:50Z",
+      "side": 1,
+      "message": "The same need to be fixed in spdk_vhost_scsi_dev_remove()",
+      "range": {
+        "startLine": 735,
+        "startChar": 1,
+        "endLine": 735,
+        "endChar": 6
+      },
+      "revId": "8bebb6be231fa7b0b3cca136f9001ff9690da2f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
