@@ -47,7 +47,7 @@ Fedora/CentOS:
 ~~~{.sh}
 sudo dnf install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
 	git astyle-devel python-pep8 lcov python clang-analyzer
-# Additional dependencies for NVMe over Fabrics
+# Additional dependencies for RDMA (NVMe over Fabrics)
 sudo dnf install -y libibverbs-devel librdmacm-devel
 # Additional dependencies for building docs
 sudo dnf install -y doxygen mscgen
@@ -58,7 +58,7 @@ Ubuntu/Debian:
 ~~~{.sh}
 sudo apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
 	git astyle pep8 lcov clang
-# Additional dependencies for NVMe over Fabrics
+# Additional dependencies for RDMA (NVMe over Fabrics)
 sudo apt-get install -y libibverbs-dev librdmacm
 # Additional dependencies for building docs
 sudo apt-get install -y doxygen mscgen
