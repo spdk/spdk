@@ -33,15 +33,14 @@ echo DISTRIB_CODENAME: $DISTRIB_CODENAME
 echo DISTRIB_DESCRIPTION: $DISTRIB_DESCRIPTION
 
 if [ -f /etc/lsb-release ]; then
-    apt-get install -y gcc g++ git make libcunit1-dev libaio-dev libssl-dev
+    apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev
 elif [ -f /etc/redhat-release ]; then
     # Add EPEL repository for CUnit-devel
     yum --enablerepo=extras install -y epel-release
-    yum install -y gcc gcc-c++ git CUnit-devel libaio-devel openssl-devel
+    yum install -y gcc gcc-c++ CUnit-devel libaio-devel openssl-devel
 fi
 
 cd $SPDK_DIR
-git submodule update --init
 $SUDOCMD ./configure --enable-debug
 $SUDOCMD make clean
 $SUDOCMD make -j2
