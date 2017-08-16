@@ -807,31 +807,14 @@ spdk_nvmf_rdma_request_get_xfer(struct spdk_nvmf_rdma_request *rdma_req)
 	return xfer;
 }
 
-static spdk_nvmf_request_prep_type
-spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
+static int
+spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
+				 struct spdk_nvmf_rdma_device *device,
+				 struct spdk_nvmf_rdma_request *rdma_req)
 {
-	struct spdk_nvme_cmd			*cmd;
-	struct spdk_nvme_cpl			*rsp;
-	struct spdk_nvmf_rdma_request		*rdma_req;
-	struct spdk_nvme_sgl_descriptor		*sgl;
-	struct spdk_nvmf_rdma_transport		*rtransport;
-	struct spdk_nvmf_rdma_device		*device;
-
-	cmd = &req->cmd->nvme_cmd;
-	rsp = &req->rsp->nvme_cpl;
-	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
-
-	req->length = 0;
-	req->data = NULL;
-
-	req->xfer = spdk_nvmf_rdma_request_get_xfer(rdma_req);
-	if (req->xfer == SPDK_NVME_DATA_NONE) {
-		return SPDK_NVMF_REQUEST_PREP_READY;
-	}
-
-	rtransport = SPDK_CONTAINEROF(req->qpair->transport, struct spdk_nvmf_rdma_transport, transport);
-	device = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_rdma_qpair, qpair)->port->device;
-	sgl = &cmd->dptr.sgl1;
+	struct spdk_nvme_cmd *cmd = &rdma_req->req.cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &rdma_req->req.rsp->nvme_cpl;
+	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
 
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK &&
 	    (sgl->keyed.subtype == SPDK_NVME_SGL_SUBTYPE_ADDRESS ||
@@ -840,32 +823,27 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 			SPDK_ERRLOG("SGL length 0x%x exceeds max io size 0x%x\n",
 				    sgl->keyed.length, rtransport->max_io_size);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-			return SPDK_NVMF_REQUEST_PREP_ERROR;
+			return -1;
 		}
 
-		req->length = sgl->keyed.length;
-		req->data = spdk_mempool_get(rtransport->data_buf_pool);
-		if (!req->data) {
+		rdma_req->req.length = sgl->keyed.length;
+		rdma_req->req.data = spdk_mempool_get(rtransport->data_buf_pool);
+		if (!rdma_req->req.data) {
 			/* No available buffers. Queue this request up. */
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", req);
-			return SPDK_NVMF_REQUEST_PREP_PENDING_BUFFER;
+			SPDK_TRACELOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
+			return 0;
 		}
 
 		rdma_req->data_from_pool = true;
-		rdma_req->data.sgl[0].addr = (uintptr_t)req->data;
+		rdma_req->data.sgl[0].addr = (uintptr_t)rdma_req->req.data;
 		rdma_req->data.sgl[0].length = sgl->keyed.length;
 		rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-					      (uint64_t)req->data))->lkey;
+					      (uint64_t)rdma_req->req.data))->lkey;
 		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
 		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
 
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p took buffer from central pool\n", req);
-
-		if (req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-			return SPDK_NVMF_REQUEST_PREP_PENDING_DATA;
-		} else {
-			return SPDK_NVMF_REQUEST_PREP_READY;
-		}
+		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p took buffer from central pool\n", rdma_req);
+		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 		uint64_t offset = sgl->address;
@@ -878,7 +856,7 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 			SPDK_ERRLOG("In-capsule offset 0x%" PRIx64 " exceeds capsule length 0x%x\n",
 				    offset, max_len);
 			rsp->status.sc = SPDK_NVME_SC_INVALID_SGL_OFFSET;
-			return SPDK_NVMF_REQUEST_PREP_ERROR;
+			return -1;
 		}
 		max_len -= (uint32_t)offset;
 
@@ -886,19 +864,55 @@ spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
 			SPDK_ERRLOG("In-capsule data length 0x%x exceeds capsule length 0x%x\n",
 				    sgl->unkeyed.length, max_len);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
-			return SPDK_NVMF_REQUEST_PREP_ERROR;
+			return -1;
 		}
 
-		req->data = rdma_req->recv->buf + offset;
+		rdma_req->req.data = rdma_req->recv->buf + offset;
 		rdma_req->data_from_pool = false;
-		req->length = sgl->unkeyed.length;
-		return SPDK_NVMF_REQUEST_PREP_READY;
+		rdma_req->req.length = sgl->unkeyed.length;
+		return 0;
 	}
 
 	SPDK_ERRLOG("Invalid NVMf I/O Command SGL:  Type 0x%x, Subtype 0x%x\n",
 		    sgl->generic.type, sgl->generic.subtype);
 	rsp->status.sc = SPDK_NVME_SC_SGL_DESCRIPTOR_TYPE_INVALID;
-	return SPDK_NVMF_REQUEST_PREP_ERROR;
+	return -1;
+}
+
+static spdk_nvmf_request_prep_type
+spdk_nvmf_request_prep_data(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_rdma_request		*rdma_req;
+	struct spdk_nvmf_rdma_transport		*rtransport;
+	struct spdk_nvmf_rdma_device		*device;
+	int					rc;
+
+	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
+	rtransport = SPDK_CONTAINEROF(req->qpair->transport, struct spdk_nvmf_rdma_transport, transport);
+	device = SPDK_CONTAINEROF(req->qpair, struct spdk_nvmf_rdma_qpair, qpair)->port->device;
+
+	req->length = 0;
+	req->data = NULL;
+
+	req->xfer = spdk_nvmf_rdma_request_get_xfer(rdma_req);
+	if (req->xfer == SPDK_NVME_DATA_NONE) {
+		return SPDK_NVMF_REQUEST_PREP_READY;
+	}
+
+	rc = spdk_nvmf_rdma_request_parse_sgl(rtransport, device, rdma_req);
+	if (rc < 0) {
+		return SPDK_NVMF_REQUEST_PREP_ERROR;
+	}
+
+	if (!req->data) {
+		return SPDK_NVMF_REQUEST_PREP_PENDING_BUFFER;
+	}
+
+	if (req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+		return SPDK_NVMF_REQUEST_PREP_PENDING_DATA;
+	}
+
+	return SPDK_NVMF_REQUEST_PREP_READY;
 }
 
 static int
