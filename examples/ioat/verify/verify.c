@@ -332,10 +332,13 @@ work_fn(void *arg)
 
 	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", rte_lcore_id());
 	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", rte_lcore_id());
-	t->data_pool = spdk_mempool_create(buf_pool_name, g_user_config.queue_depth, SRC_BUFFER_SIZE, -1,
+	t->data_pool = spdk_mempool_create(buf_pool_name, g_user_config.queue_depth, SRC_BUFFER_SIZE,
+					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					   SPDK_ENV_SOCKET_ID_ANY);
 	t->task_pool = spdk_mempool_create(task_pool_name, g_user_config.queue_depth,
-					   sizeof(struct ioat_task), -1, SPDK_ENV_SOCKET_ID_ANY);
+					   sizeof(struct ioat_task),
+					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+					   SPDK_ENV_SOCKET_ID_ANY);
 	if (!t->data_pool || !t->task_pool) {
 		fprintf(stderr, "Could not allocate buffer pool.\n");
 		return 1;
