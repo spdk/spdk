@@ -39,6 +39,8 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
+struct spdk_bdev;
+
 /* define a virtual controller limit to the number of QPs supported */
 #define MAX_QPAIRS_PER_CTRLR 64
 
@@ -76,7 +78,6 @@ struct spdk_nvmf_ctrlr {
 		union spdk_nvme_cc_register	cc;
 		union spdk_nvme_csts_register	csts;
 	} vcprop; /* virtual controller properties */
-	struct spdk_nvme_ctrlr_data	vcdata; /* virtual controller data */
 
 	TAILQ_HEAD(, spdk_nvmf_qpair) qpairs;
 	int num_qpairs;
@@ -136,6 +137,10 @@ int spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req);
 
 int spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req);
 
-void spdk_nvmf_ctrlr_set_dsm(struct spdk_nvmf_ctrlr *ctrlr);
+int spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req);
+
+bool spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr);
+
+int spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns_data *nsdata);
 
 #endif

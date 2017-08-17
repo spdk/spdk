@@ -124,71 +124,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "cc 0x%x\n", ctrlr->vcprop.cc.raw);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "csts 0x%x\n", ctrlr->vcprop.csts.raw);
 
-	/*
-	 * Common fields for discovery and NVM subsystems
-	 */
-	spdk_strcpy_pad(ctrlr->vcdata.fr, FW_VERSION, sizeof(ctrlr->vcdata.fr), ' ');
-	assert((g_nvmf_tgt.max_io_size % 4096) == 0);
-	ctrlr->vcdata.mdts = spdk_u32log2(g_nvmf_tgt.max_io_size / 4096);
-	ctrlr->vcdata.cntlid = ctrlr->cntlid;
-	ctrlr->vcdata.ver = ctrlr->vcprop.vs;
-	ctrlr->vcdata.lpa.edlp = 1;
-	ctrlr->vcdata.elpe = 127;
-	ctrlr->vcdata.maxcmd = g_nvmf_tgt.max_queue_depth;
-	ctrlr->vcdata.sgls.supported = 1;
-	ctrlr->vcdata.sgls.keyed_sgl = 1;
-	ctrlr->vcdata.sgls.sgl_offset = 1;
-	spdk_strcpy_pad(ctrlr->vcdata.subnqn, subsystem->subnqn, sizeof(ctrlr->vcdata.subnqn), '\0');
-
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "ctrlr data: maxcmd 0x%x\n", ctrlr->vcdata.maxcmd);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "sgls data: 0x%x\n", *(uint32_t *)&ctrlr->vcdata.sgls);
-
-	/*
-	 * NVM subsystem fields (reserved for discovery subsystems)
-	 */
-	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-		spdk_strcpy_pad(ctrlr->vcdata.mn, MODEL_NUMBER, sizeof(ctrlr->vcdata.mn), ' ');
-		spdk_strcpy_pad(ctrlr->vcdata.sn, spdk_nvmf_subsystem_get_sn(subsystem),
-				sizeof(ctrlr->vcdata.sn), ' ');
-		ctrlr->vcdata.aerl = 0;
-		ctrlr->vcdata.kas = 10;
-
-		ctrlr->vcdata.rab = 6;
-		ctrlr->vcdata.ctratt.host_id_exhid_supported = 1;
-		ctrlr->vcdata.aerl = 0;
-		ctrlr->vcdata.frmw.slot1_ro = 1;
-		ctrlr->vcdata.frmw.num_slots = 1;
-
-		ctrlr->vcdata.sqes.min = 6;
-		ctrlr->vcdata.sqes.max = 6;
-		ctrlr->vcdata.cqes.min = 4;
-		ctrlr->vcdata.cqes.max = 4;
-		ctrlr->vcdata.nn = subsystem->dev.max_nsid;
-		ctrlr->vcdata.vwc.present = 1;
-
-		ctrlr->vcdata.nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
-		ctrlr->vcdata.nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
-		ctrlr->vcdata.nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
-		ctrlr->vcdata.nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
-		ctrlr->vcdata.nvmf_specific.msdbd = 1; /* target supports single SGL in capsule */
-
-		/* TODO: this should be set by the transport */
-		ctrlr->vcdata.nvmf_specific.ioccsz += g_nvmf_tgt.in_capsule_data_size / 16;
-
-		spdk_nvmf_ctrlr_set_dsm(ctrlr);
-
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: ioccsz 0x%x\n",
-			      ctrlr->vcdata.nvmf_specific.ioccsz);
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: iorcsz 0x%x\n",
-			      ctrlr->vcdata.nvmf_specific.iorcsz);
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: icdoff 0x%x\n",
-			      ctrlr->vcdata.nvmf_specific.icdoff);
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: ctrattr 0x%x\n",
-			      *(uint8_t *)&ctrlr->vcdata.nvmf_specific.ctrattr);
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: msdbd 0x%x\n",
-			      ctrlr->vcdata.nvmf_specific.msdbd);
-	}
-
 	TAILQ_INSERT_TAIL(&subsystem->ctrlrs, ctrlr, link);
 	return ctrlr;
 }
@@ -386,7 +321,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 	qpair->ctrlr = ctrlr;
 
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
-	rsp->status_code_specific.success.cntlid = ctrlr->vcdata.cntlid;
+	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
 		      rsp->status_code_specific.success.cntlid);
 }
@@ -807,7 +742,7 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Async Event Request\n");
 
-	assert(ctrlr->vcdata.aerl + 1 == 1);
+	/* Only one asynchronous event is supported for now */
 	if (ctrlr->aer_req != NULL) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "AERL exceeded\n");
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
@@ -885,5 +820,179 @@ invalid_log_page:
 	SPDK_ERRLOG("Unsupported Get Log Page 0x%02X\n", lid);
 	response->status.sct = SPDK_NVME_SCT_GENERIC;
 	response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_subsystem *subsystem,
+			    struct spdk_nvme_cmd *cmd,
+			    struct spdk_nvme_cpl *rsp,
+			    struct spdk_nvme_ns_data *nsdata)
+{
+	struct spdk_bdev *bdev;
+
+	if (cmd->nsid > subsystem->dev.max_nsid || cmd->nsid == 0) {
+		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
+		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	bdev = subsystem->dev.ns_list[cmd->nsid - 1];
+
+	if (bdev == NULL) {
+		memset(nsdata, 0, sizeof(*nsdata));
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return spdk_nvmf_bdev_ctrlr_identify_ns(bdev, nsdata);
+}
+
+static int
+spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_ctrlr_data *cdata)
+{
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+
+	/*
+	 * Common fields for discovery and NVM subsystems
+	 */
+	spdk_strcpy_pad(cdata->fr, FW_VERSION, sizeof(cdata->fr), ' ');
+	assert((g_nvmf_tgt.max_io_size % 4096) == 0);
+	cdata->mdts = spdk_u32log2(g_nvmf_tgt.max_io_size / 4096);
+	cdata->cntlid = ctrlr->cntlid;
+	cdata->ver = ctrlr->vcprop.vs;
+	cdata->lpa.edlp = 1;
+	cdata->elpe = 127;
+	cdata->maxcmd = g_nvmf_tgt.max_queue_depth;
+	cdata->sgls.supported = 1;
+	cdata->sgls.keyed_sgl = 1;
+	cdata->sgls.sgl_offset = 1;
+	spdk_strcpy_pad(cdata->subnqn, subsystem->subnqn, sizeof(cdata->subnqn), '\0');
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "ctrlr data: maxcmd 0x%x\n", cdata->maxcmd);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "sgls data: 0x%x\n", *(uint32_t *)&cdata->sgls);
+
+	/*
+	 * NVM subsystem fields (reserved for discovery subsystems)
+	 */
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
+		spdk_strcpy_pad(cdata->mn, MODEL_NUMBER, sizeof(cdata->mn), ' ');
+		spdk_strcpy_pad(cdata->sn, spdk_nvmf_subsystem_get_sn(subsystem), sizeof(cdata->sn), ' ');
+		cdata->aerl = 0;
+		cdata->kas = 10;
+
+		cdata->rab = 6;
+		cdata->ctratt.host_id_exhid_supported = 1;
+		cdata->aerl = 0;
+		cdata->frmw.slot1_ro = 1;
+		cdata->frmw.num_slots = 1;
+
+		cdata->sqes.min = 6;
+		cdata->sqes.max = 6;
+		cdata->cqes.min = 4;
+		cdata->cqes.max = 4;
+		cdata->nn = subsystem->dev.max_nsid;
+		cdata->vwc.present = 1;
+
+		cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
+		cdata->nvmf_specific.iorcsz = sizeof(struct spdk_nvme_cpl) / 16;
+		cdata->nvmf_specific.icdoff = 0; /* offset starts directly after SQE */
+		cdata->nvmf_specific.ctrattr.ctrlr_model = SPDK_NVMF_CTRLR_MODEL_DYNAMIC;
+		cdata->nvmf_specific.msdbd = 1; /* target supports single SGL in capsule */
+
+		/* TODO: this should be set by the transport */
+		cdata->nvmf_specific.ioccsz += g_nvmf_tgt.in_capsule_data_size / 16;
+
+		cdata->oncs.dsm = spdk_nvmf_ctrlr_dsm_supported(ctrlr);
+
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: ioccsz 0x%x\n",
+			      cdata->nvmf_specific.ioccsz);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: iorcsz 0x%x\n",
+			      cdata->nvmf_specific.iorcsz);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: icdoff 0x%x\n",
+			      cdata->nvmf_specific.icdoff);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: ctrattr 0x%x\n",
+			      *(uint8_t *)&cdata->nvmf_specific.ctrattr);
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "ext ctrlr data: msdbd 0x%x\n",
+			      cdata->nvmf_specific.msdbd);
+	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
+					struct spdk_nvme_cmd *cmd,
+					struct spdk_nvme_cpl *rsp,
+					struct spdk_nvme_ns_list *ns_list)
+{
+	uint32_t i, num_ns, count = 0;
+
+	if (cmd->nsid >= 0xfffffffeUL) {
+		SPDK_ERRLOG("Identify Active Namespace List with invalid NSID %u\n", cmd->nsid);
+		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	num_ns = subsystem->dev.max_nsid;
+
+	for (i = 1; i <= num_ns; i++) {
+		if (i <= cmd->nsid) {
+			continue;
+		}
+		if (subsystem->dev.ns_list[i - 1] == NULL) {
+			continue;
+		}
+		ns_list->ns_list[count++] = i;
+		if (count == SPDK_COUNTOF(ns_list->ns_list)) {
+			break;
+		}
+	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
+{
+	uint8_t cns;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+
+	if (req->data) {
+		memset(req->data, 0, req->length);
+	}
+
+	if (req->data == NULL || req->length < 4096) {
+		SPDK_ERRLOG("identify command with invalid buffer\n");
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	cns = cmd->cdw10 & 0xFF;
+
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY &&
+	    cns != SPDK_NVME_IDENTIFY_CTRLR) {
+		/* Discovery controllers only support Identify Controller */
+		goto invalid_cns;
+	}
+
+	switch (cns) {
+	case SPDK_NVME_IDENTIFY_NS:
+		return spdk_nvmf_ctrlr_identify_ns(subsystem, cmd, rsp, req->data);
+	case SPDK_NVME_IDENTIFY_CTRLR:
+		return spdk_nvmf_ctrlr_identify_ctrlr(ctrlr, req->data);
+	case SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST:
+		return spdk_nvmf_ctrlr_identify_active_ns_list(subsystem, cmd, rsp, req->data);
+	default:
+		goto invalid_cns;
+	}
+
+invalid_cns:
+	SPDK_ERRLOG("Identify command with unsupported CNS 0x%02x\n", cns);
+	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }

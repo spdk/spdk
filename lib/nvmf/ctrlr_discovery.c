@@ -147,7 +147,6 @@ spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 static int
 nvmf_discovery_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 
@@ -162,17 +161,7 @@ nvmf_discovery_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_IDENTIFY:
-		/* Only identify controller can be supported */
-		if ((cmd->cdw10 & 0xFF) == SPDK_NVME_IDENTIFY_CTRLR) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Identify Controller\n");
-			memcpy(req->data, (char *)&ctrlr->vcdata, sizeof(struct spdk_nvme_ctrlr_data));
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		} else {
-			SPDK_ERRLOG("Unsupported identify command\n");
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-		break;
+		return spdk_nvmf_ctrlr_identify(req);
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
 		return spdk_nvmf_ctrlr_get_log_page(req);
 	default:
