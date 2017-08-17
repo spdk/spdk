@@ -59,6 +59,18 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 }
 
 int
+spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
+{
+	return -1;
+}
+
+int
+spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
+{
+	return -1;
+}
+
+int
 spdk_nvme_ctrlr_cmd_admin_raw(struct spdk_nvme_ctrlr *ctrlr,
 			      struct spdk_nvme_cmd *cmd,
 			      void *buf, uint32_t len,

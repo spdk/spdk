@@ -61,7 +61,6 @@ struct spdk_nvmf_qpair;
 struct spdk_nvmf_request;
 struct spdk_bdev;
 struct spdk_nvmf_request;
-struct spdk_nvmf_ctrlr_ops;
 
 typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_request *req);
 typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_qpair *qpair);
@@ -99,8 +98,6 @@ struct spdk_nvmf_subsystem {
 		struct spdk_io_channel *ch[MAX_VIRTUAL_NAMESPACE];
 		uint32_t max_nsid;
 	} dev;
-
-	const struct spdk_nvmf_ctrlr_ops *ops;
 
 	void					*cb_ctx;
 	spdk_nvmf_subsystem_connect_fn		connect_cb;

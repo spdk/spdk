@@ -356,7 +356,7 @@ spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid)
 	return NULL;
 }
 
-struct spdk_nvmf_request *
+static struct spdk_nvmf_request *
 spdk_nvmf_qpair_get_request(struct spdk_nvmf_qpair *qpair, uint16_t cid)
 {
 	/* TODO: track list of outstanding requests in qpair? */
@@ -599,7 +599,7 @@ spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 	return 0;
 }
 
-int
+static int
 spdk_nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -609,7 +609,7 @@ spdk_nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
+static int
 spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -634,7 +634,7 @@ spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
+static int
 spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -656,7 +656,7 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
+static int
 spdk_nvmf_ctrlr_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -667,7 +667,7 @@ spdk_nvmf_ctrlr_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
+static int
 spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -693,7 +693,7 @@ spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
+static int
 spdk_nvmf_ctrlr_get_features_number_of_queues(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -711,7 +711,17 @@ spdk_nvmf_ctrlr_get_features_number_of_queues(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
+static int
+spdk_nvmf_ctrlr_get_features_write_cache(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get Features - Write Cache\n");
+	rsp->cdw0 = 1;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -723,7 +733,7 @@ spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
+static int
 spdk_nvmf_ctrlr_get_features_async_event_configuration(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -734,7 +744,7 @@ spdk_nvmf_ctrlr_get_features_async_event_configuration(struct spdk_nvmf_request 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
+static int
 spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -754,7 +764,7 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
-int
+static int
 spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_subsystem *subsystem = req->qpair->ctrlr->subsys;
@@ -951,7 +961,7 @@ spdk_nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
+static int
 spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 {
 	uint8_t cns;
@@ -994,5 +1004,169 @@ invalid_cns:
 	SPDK_ERRLOG("Identify command with unsupported CNS 0x%02x\n", cns);
 	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 	rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_abort(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	uint32_t cdw10 = cmd->cdw10;
+	uint16_t cid = cdw10 >> 16;
+	uint16_t sqid = cdw10 & 0xFFFFu;
+	struct spdk_nvmf_qpair *qpair;
+	struct spdk_nvmf_request *req_to_abort;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "abort sqid=%u cid=%u\n", sqid, cid);
+
+	rsp->cdw0 = 1; /* Command not aborted */
+
+	qpair = spdk_nvmf_ctrlr_get_qpair(ctrlr, sqid);
+	if (qpair == NULL) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "sqid %u not found\n", sqid);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/*
+	 * NOTE: This relies on the assumption that all connections for a ctrlr will be handled
+	 * on the same thread.  If this assumption becomes untrue, this will need to pass a message
+	 * to the thread handling qpair, and the abort will need to be asynchronous.
+	 */
+	req_to_abort = spdk_nvmf_qpair_get_request(qpair, cid);
+	if (req_to_abort == NULL) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "cid %u not found\n", cid);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (spdk_nvmf_request_abort(req_to_abort) == 0) {
+		SPDK_TRACELOG(SPDK_TRACE_NVMF, "abort ctrlr=%p req=%p sqid=%u cid=%u successful\n",
+			      ctrlr, req_to_abort, sqid, cid);
+		rsp->cdw0 = 0; /* Command successfully aborted */
+	}
+	rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
+{
+	uint8_t feature;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
+	switch (feature) {
+	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
+		return spdk_nvmf_ctrlr_get_features_number_of_queues(req);
+	case SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE:
+		return spdk_nvmf_ctrlr_get_features_write_cache(req);
+	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
+		return spdk_nvmf_ctrlr_get_features_keep_alive_timer(req);
+	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+		return spdk_nvmf_ctrlr_get_features_async_event_configuration(req);
+	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+		return spdk_nvmf_ctrlr_get_features_host_identifier(req);
+	default:
+		SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+}
+
+static int
+spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
+{
+	uint8_t feature;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	feature = cmd->cdw10 & 0xff; /* mask out the FID value */
+	switch (feature) {
+	case SPDK_NVME_FEAT_NUMBER_OF_QUEUES:
+		return spdk_nvmf_ctrlr_set_features_number_of_queues(req);
+	case SPDK_NVME_FEAT_KEEP_ALIVE_TIMER:
+		return spdk_nvmf_ctrlr_set_features_keep_alive_timer(req);
+	case SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION:
+		return spdk_nvmf_ctrlr_set_features_async_event_configuration(req);
+	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
+		return spdk_nvmf_ctrlr_set_features_host_identifier(req);
+	default:
+		SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+}
+
+static int
+spdk_nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
+{
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Keep Alive\n");
+	/*
+	 * To handle keep alive just clear or reset the
+	 * ctrlr based keep alive duration counter.
+	 * When added, a separate timer based process
+	 * will monitor if the time since last recorded
+	 * keep alive has exceeded the max duration and
+	 * take appropriate action.
+	 */
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_subsystem *subsystem = req->qpair->ctrlr->subsys;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		/* Discovery controllers only support Get Log Page and Identify */
+		switch (cmd->opc) {
+		case SPDK_NVME_OPC_IDENTIFY:
+		case SPDK_NVME_OPC_GET_LOG_PAGE:
+			break;
+		default:
+			goto invalid_opcode;
+		}
+	}
+
+	switch (cmd->opc) {
+	case SPDK_NVME_OPC_GET_LOG_PAGE:
+		return spdk_nvmf_ctrlr_get_log_page(req);
+	case SPDK_NVME_OPC_IDENTIFY:
+		return spdk_nvmf_ctrlr_identify(req);
+	case SPDK_NVME_OPC_ABORT:
+		return spdk_nvmf_ctrlr_abort(req);
+	case SPDK_NVME_OPC_GET_FEATURES:
+		return spdk_nvmf_ctrlr_get_features(req);
+	case SPDK_NVME_OPC_SET_FEATURES:
+		return spdk_nvmf_ctrlr_set_features(req);
+	case SPDK_NVME_OPC_ASYNC_EVENT_REQUEST:
+		return spdk_nvmf_ctrlr_async_event_request(req);
+	case SPDK_NVME_OPC_KEEP_ALIVE:
+		return spdk_nvmf_ctrlr_keep_alive(req);
+
+	case SPDK_NVME_OPC_CREATE_IO_SQ:
+	case SPDK_NVME_OPC_CREATE_IO_CQ:
+	case SPDK_NVME_OPC_DELETE_IO_SQ:
+	case SPDK_NVME_OPC_DELETE_IO_CQ:
+		/* Create and Delete I/O CQ/SQ not allowed in NVMe-oF */
+		goto invalid_opcode;
+
+	default:
+		goto invalid_opcode;
+	}
+
+invalid_opcode:
+	SPDK_ERRLOG("Unsupported admin opcode 0x%x\n", cmd->opc);
+	response->status.sct = SPDK_NVME_SCT_GENERIC;
+	response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }

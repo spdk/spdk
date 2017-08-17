@@ -36,14 +36,22 @@
 #include "spdk_cunit.h"
 #include "subsystem.h"
 
-const struct spdk_nvmf_ctrlr_ops spdk_nvmf_bdev_ctrlr_ops;
-const struct spdk_nvmf_ctrlr_ops spdk_nvmf_discovery_ctrlr_ops;
-
 #include "subsystem.c"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 struct spdk_nvmf_tgt g_nvmf_tgt;
+
+int
+spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
+{
+	return -1;
+}
+
+void
+spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem)
+{
+}
 
 struct spdk_nvmf_listen_addr *
 spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid)
