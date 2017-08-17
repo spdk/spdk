@@ -106,7 +106,7 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 int
 spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->ops->attach(subsystem);
+	return spdk_nvmf_subsystem_bdev_attach(subsystem);
 }
 
 static bool
@@ -133,20 +133,13 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_ctrlr *ctrlr;
 
-	/* Check the backing physical device for completions. */
-	if (subsystem->ops->poll_for_completions) {
-		subsystem->ops->poll_for_completions(subsystem);
-	}
-
 	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 		/* For each connection in the ctrlr, check for completions */
 		spdk_nvmf_ctrlr_poll(ctrlr);
 	}
 
 	if (nvmf_subsystem_removable(subsystem)) {
-		if (subsystem->ops->detach) {
-			subsystem->ops->detach(subsystem);
-		}
+		spdk_nvmf_subsystem_bdev_detach(subsystem);
 	}
 }
 
@@ -206,12 +199,6 @@ spdk_nvmf_create_subsystem(const char *nqn,
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->ctrlrs);
 
-	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY) {
-		subsystem->ops = &spdk_nvmf_discovery_ctrlr_ops;
-	} else {
-		subsystem->ops = &spdk_nvmf_bdev_ctrlr_ops;
-	}
-
 	TAILQ_INSERT_TAIL(&g_nvmf_tgt.subsystems, subsystem, entries);
 	g_nvmf_tgt.discovery_genctr++;
 
@@ -248,9 +235,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		spdk_nvmf_ctrlr_destruct(ctrlr);
 	}
 
-	if (subsystem->ops->detach) {
-		subsystem->ops->detach(subsystem);
-	}
+	spdk_nvmf_subsystem_bdev_detach(subsystem);
 
 	TAILQ_REMOVE(&g_nvmf_tgt.subsystems, subsystem, entries);
 	g_nvmf_tgt.discovery_genctr++;

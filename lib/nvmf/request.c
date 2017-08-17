@@ -293,9 +293,9 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 			rsp->status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
 			status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		} else if (req->qpair->type == QPAIR_TYPE_AQ) {
-			status = subsystem->ops->process_admin_cmd(req);
+			status = spdk_nvmf_ctrlr_process_admin_cmd(req);
 		} else {
-			status = subsystem->ops->process_io_cmd(req);
+			status = spdk_nvmf_ctrlr_process_io_cmd(req);
 		}
 	}
 

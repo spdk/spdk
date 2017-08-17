@@ -46,84 +46,8 @@ spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid)
 	return NULL;
 }
 
-struct spdk_nvmf_request *
-spdk_nvmf_qpair_get_request(struct spdk_nvmf_qpair *qpair, uint16_t cid)
-{
-	return NULL;
-}
-
-int
-spdk_nvmf_ctrlr_get_features_number_of_queues(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
-int spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
-int
-spdk_nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
-int
-spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-int
-spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
-int
-spdk_nvmf_ctrlr_get_features_keep_alive_timer(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
-int
-spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
-int
-spdk_nvmf_ctrlr_get_features_async_event_configuration(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
-int
-spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
-int
-spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
-int
-spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
 int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
-
-int
-spdk_nvmf_request_abort(struct spdk_nvmf_request *req)
 {
 	return -1;
 }

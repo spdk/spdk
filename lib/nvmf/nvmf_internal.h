@@ -44,33 +44,6 @@
 
 #define SPDK_NVMF_DEFAULT_NUM_CTRLRS_PER_LCORE 1
 
-struct spdk_nvmf_ctrlr_ops {
-	/**
-	 * Initialize the controller.
-	 */
-	int (*attach)(struct spdk_nvmf_subsystem *subsystem);
-
-	/**
-	 * Process admin command.
-	 */
-	int (*process_admin_cmd)(struct spdk_nvmf_request *req);
-
-	/**
-	 * Process IO command.
-	 */
-	int (*process_io_cmd)(struct spdk_nvmf_request *req);
-
-	/**
-	 * Poll for completions.
-	 */
-	void (*poll_for_completions)(struct spdk_nvmf_subsystem *subsystem);
-
-	/**
-	 * Detach the controller.
-	 */
-	void (*detach)(struct spdk_nvmf_subsystem *subsystem);
-};
-
 struct spdk_nvmf_tgt {
 	uint16_t				max_queue_depth;
 	uint16_t				max_qpairs_per_ctrlr;
