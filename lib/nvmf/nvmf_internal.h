@@ -95,6 +95,45 @@ struct spdk_nvmf_poll_group {
 	TAILQ_ENTRY(spdk_nvmf_poll_group)	link;
 };
 
+struct spdk_nvmf_host {
+	char				*nqn;
+	TAILQ_ENTRY(spdk_nvmf_host)	link;
+};
+
+struct spdk_nvmf_subsystem_allowed_listener {
+	struct spdk_nvmf_listen_addr				*listen_addr;
+	TAILQ_ENTRY(spdk_nvmf_subsystem_allowed_listener)	link;
+};
+
+struct spdk_nvmf_subsystem {
+	uint32_t id;
+	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	enum spdk_nvmf_subtype subtype;
+	bool is_removed;
+
+	struct {
+		char sn[MAX_SN_LEN + 1];
+		struct spdk_bdev *ns_list[MAX_VIRTUAL_NAMESPACE];
+		struct spdk_bdev_desc *desc[MAX_VIRTUAL_NAMESPACE];
+		struct spdk_io_channel *ch[MAX_VIRTUAL_NAMESPACE];
+		uint32_t max_nsid;
+	} dev;
+
+	const struct spdk_nvmf_ctrlr_ops *ops;
+
+	void					*cb_ctx;
+	spdk_nvmf_subsystem_connect_fn		connect_cb;
+	spdk_nvmf_subsystem_disconnect_fn	disconnect_cb;
+
+	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
+
+	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
+
+	TAILQ_HEAD(, spdk_nvmf_subsystem_allowed_listener)	allowed_listeners;
+
+	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
+};
+
 extern struct spdk_nvmf_tgt g_nvmf_tgt;
 
 struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid);
