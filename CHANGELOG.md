@@ -2,6 +2,11 @@
 
 ## v17.10: (Upcoming Release)
 
+### NVMe driver
+
+Disable HotplugEnable option by default, users can enable it with
+`HotplugEnable Yes` in `[Nvme]` section of the configuration file.
+
 An [fio](http://github.com/axboe/fio) plugin was added that can route
 I/O to the bdev layer. See the [plugin documentation](https://github.com/spdk/spdk/blob/master/examples/bdev/fio_plugin/README.md)
 for more information.
