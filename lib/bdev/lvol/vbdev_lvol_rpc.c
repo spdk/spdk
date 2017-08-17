@@ -364,3 +364,47 @@ invalid:
 }
 
 SPDK_RPC_REGISTER("resize_lvol_bdev", spdk_rpc_resize_lvol_bdev)
+
+static void
+spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct lvol_store_bdev *lvs_bdev;
+	char *uuid;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_lvol_stores requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	uuid = calloc(37, sizeof(char));
+
+	spdk_json_write_array_begin(w);
+
+	for (lvs_bdev = vbdev_lvol_store_first(); lvs_bdev != NULL;
+	     lvs_bdev = vbdev_lvol_store_next(lvs_bdev)) {
+		spdk_json_write_object_begin(w);
+
+		uuid_unparse(lvs_bdev->lvs->uuid, uuid);
+		spdk_json_write_name(w, "UUID");
+		spdk_json_write_string(w, uuid);
+
+		spdk_json_write_name(w, "base_bdev");
+		spdk_json_write_string(w, spdk_bdev_get_name(lvs_bdev->bdev));
+
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+	free(uuid);
+}
+
+SPDK_RPC_REGISTER("get_lvol_stores", spdk_rpc_get_lvol_stores)
