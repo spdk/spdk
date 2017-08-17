@@ -16,6 +16,24 @@
       "revId": "e304f4fc3078f3f1c4753061fb919338f7e7a5a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "268dacf5_3c5788a5",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-17T01:30:50Z",
+      "side": 1,
+      "message": "For 0x3, it will get the g_clore as 0 (the 1st core). This is similar to the master_core logic, pick the first core here to get the related events from the assigned reactor.\n\nThe major purpose is that so that the event allocation is hard corded on core 0 and we need to get it properly from the assigned core. This fix will get the event from the first assigned core if there is a case multiple cores are set for this.\n\nBy the way, do we have the scenario to set a multiple cores mask for this usage?",
+      "parentUuid": "39491c41_a5dbd40d",
+      "revId": "e304f4fc3078f3f1c4753061fb919338f7e7a5a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
