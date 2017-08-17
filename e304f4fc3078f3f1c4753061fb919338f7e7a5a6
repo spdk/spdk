@@ -34,6 +34,24 @@
       "revId": "e304f4fc3078f3f1c4753061fb919338f7e7a5a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "351000b2_8be724ce",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-17T01:47:00Z",
+      "side": 1,
+      "message": "oh~~, I thought you are calculating the number of lcores, this make sense.",
+      "parentUuid": "268dacf5_3c5788a5",
+      "revId": "e304f4fc3078f3f1c4753061fb919338f7e7a5a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
