@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd038f7f_a3123c22",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-17T20:37:55Z",
+      "side": 1,
+      "message": "Add a space after the \":\" in the commit message.\n\nThis could also probably use some more explanation - describe what is actually checked: \"Log a message in the reactor if any context switches occur.\" or something to that effect.",
+      "revId": "b1d5582ef1a90d3546afe6ef331475c8cfbefec1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15150a73_3e014098",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-17T20:37:55Z",
+      "side": 1,
+      "message": "This should check the return code of getrusage() - if it fails, we\u0027ll be accessing uninitialized data in rusage.",
+      "revId": "b1d5582ef1a90d3546afe6ef331475c8cfbefec1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "413ba31e_45989672",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 344,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-17T20:37:55Z",
+      "side": 1,
+      "message": "We should initialize reactor-\u003erusage here to avoid spuriously printing out a message on the first get_rusage poller call.\n\nIt also might be a good idea to only do this #ifdef DEBUG - since the output is only via tracelog, the call to getrusage() will be essentially dead code in release builds.",
+      "revId": "b1d5582ef1a90d3546afe6ef331475c8cfbefec1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bef0b6b3_86351ed5",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 797,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-17T20:37:55Z",
+      "side": 1,
+      "message": "The trace flag name should just be \"reactor\" for consistency with the other trace flag names.",
+      "range": {
+        "startLine": 797,
+        "startChar": 30,
+        "endLine": 797,
+        "endChar": 42
+      },
+      "revId": "b1d5582ef1a90d3546afe6ef331475c8cfbefec1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
