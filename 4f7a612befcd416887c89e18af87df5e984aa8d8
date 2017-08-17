@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a59b6758_d5371f12",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-17T16:57:14Z",
+      "side": 1,
+      "message": "so what I was doing here was filling the struct with 0x5a, nonsense data so that when the FUT derefernces the * to the req-\u003epayload struct I can memcmp that every byte of the struct is what I think it is.  It\u0027s a bit of a hack in that I\u0027m not addressing elements of the payload struct but its effective for testing.\n\nDoes that make sense?",
+      "parentUuid": "ab1d9ad3_6d507851",
+      "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e10ba1ac_ec0877ab",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -54,6 +72,42 @@
     },
     {
       "key": {
+        "uuid": "ffc955e6_63cc4a89",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-17T16:57:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e10ba1ac_ec0877ab",
+      "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcb359a3_8bba2741",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-17T16:57:14Z",
+      "side": 1,
+      "message": "will do!",
+      "parentUuid": "80126778_32058859",
+      "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4a578b09_eda1f44a",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -65,6 +119,24 @@
       "writtenOn": "2017-08-15T22:16:05Z",
       "side": 1,
       "message": "While you\u0027re rebasing this patch anyway, I think some stronger comments outlining what you are testing would be good. For example, this one could say:\n\n/* Test attempting to allocate a request when no requests are available */",
+      "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74303a51_3ff60266",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-17T16:57:14Z",
+      "side": 1,
+      "message": "cool",
+      "parentUuid": "4a578b09_eda1f44a",
       "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -100,6 +172,42 @@
       "side": 1,
       "message": "Nevermind - the payload is copied so you\u0027re right here.",
       "parentUuid": "21b8d2c3_f76c8860",
+      "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4019709_824c8270",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-17T16:57:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "21b8d2c3_f76c8860",
+      "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0929d4d3_635ae70f",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-17T16:57:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "41c0ff9a_d1f184c7",
       "revId": "4f7a612befcd416887c89e18af87df5e984aa8d8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
