@@ -111,6 +111,12 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 }
 
 int
+spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
+{
+	return -1;
+}
+
+int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	return -1;

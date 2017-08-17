@@ -58,8 +58,8 @@ struct __attribute__((packed)) nvme_read_cdw12 {
 	uint8_t		lr	: 1;	/* limited retry */
 };
 
-void
-spdk_nvmf_ctrlr_set_dsm(struct spdk_nvmf_ctrlr *ctrlr)
+bool
+spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	uint32_t i;
 
@@ -74,13 +74,13 @@ spdk_nvmf_ctrlr_set_dsm(struct spdk_nvmf_ctrlr *ctrlr)
 			SPDK_TRACELOG(SPDK_TRACE_NVMF,
 				      "Subsystem%u Namespace %s does not support unmap - not enabling DSM\n",
 				      i, spdk_bdev_get_name(bdev));
-			return;
+			return false;
 		}
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support unmap - enabling DSM\n",
 		      spdk_nvmf_subsystem_get_nqn(ctrlr->subsys));
-	ctrlr->vcdata.oncs.dsm = 1;
+	return true;
 }
 
 static void
@@ -105,27 +105,10 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	spdk_bdev_free_io(bdev_io);
 }
 
-static int
-identify_ns(struct spdk_nvmf_subsystem *subsystem,
-	    struct spdk_nvme_cmd *cmd,
-	    struct spdk_nvme_cpl *rsp,
-	    struct spdk_nvme_ns_data *nsdata)
+int
+spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns_data *nsdata)
 {
-	struct spdk_bdev *bdev;
 	uint64_t num_blocks;
-
-	if (cmd->nsid > subsystem->dev.max_nsid || cmd->nsid == 0) {
-		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
-		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	bdev = subsystem->dev.ns_list[cmd->nsid - 1];
-
-	if (bdev == NULL) {
-		memset(nsdata, 0, sizeof(*nsdata));
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
 
 	num_blocks = spdk_bdev_get_num_blocks(bdev);
 
@@ -138,77 +121,6 @@ identify_ns(struct spdk_nvmf_subsystem *subsystem,
 	nsdata->noiob = spdk_bdev_get_optimal_io_boundary(bdev);
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-}
-
-static int
-identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_ctrlr_data *cdata)
-{
-	*cdata = ctrlr->vcdata;
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-}
-
-static int
-identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
-			struct spdk_nvme_cmd *cmd,
-			struct spdk_nvme_cpl *rsp,
-			struct spdk_nvme_ns_list *ns_list)
-{
-	uint32_t i, num_ns, count = 0;
-
-	if (cmd->nsid >= 0xfffffffeUL) {
-		SPDK_ERRLOG("Identify Active Namespace List with invalid NSID %u\n", cmd->nsid);
-		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	num_ns = subsystem->dev.max_nsid;
-
-	for (i = 1; i <= num_ns; i++) {
-		if (i <= cmd->nsid) {
-			continue;
-		}
-		if (subsystem->dev.ns_list[i - 1] == NULL) {
-			continue;
-		}
-		ns_list->ns_list[count++] = i;
-		if (count == SPDK_COUNTOF(ns_list->ns_list)) {
-			break;
-		}
-	}
-
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-}
-
-static int
-nvmf_bdev_ctrlr_identify(struct spdk_nvmf_request *req)
-{
-	uint8_t cns;
-	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
-
-	if (req->data == NULL || req->length < 4096) {
-		SPDK_ERRLOG("identify command with invalid buffer\n");
-		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	memset(req->data, 0, req->length);
-
-	cns = cmd->cdw10 & 0xFF;
-	switch (cns) {
-	case SPDK_NVME_IDENTIFY_NS:
-		return identify_ns(subsystem, cmd, rsp, req->data);
-	case SPDK_NVME_IDENTIFY_CTRLR:
-		return identify_ctrlr(ctrlr, req->data);
-	case SPDK_NVME_IDENTIFY_ACTIVE_NS_LIST:
-		return identify_active_ns_list(subsystem, cmd, rsp, req->data);
-	default:
-		SPDK_ERRLOG("Identify command with unsupported CNS 0x%02x\n", cns);
-		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
 }
 
 static int
@@ -322,7 +234,7 @@ nvmf_bdev_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
 		return spdk_nvmf_ctrlr_get_log_page(req);
 	case SPDK_NVME_OPC_IDENTIFY:
-		return nvmf_bdev_ctrlr_identify(req);
+		return spdk_nvmf_ctrlr_identify(req);
 	case SPDK_NVME_OPC_ABORT:
 		return nvmf_bdev_ctrlr_abort(req);
 	case SPDK_NVME_OPC_GET_FEATURES:
