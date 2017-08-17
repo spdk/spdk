@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a16d9bb0_69279207",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-17T19:58:13Z",
+      "side": 1,
+      "message": "OK, I\u0027ll agree w/you on that.  Since you made comments below though I\u0027ll address them and push this anyways.  God only knows what would happen to my series if I abandon a patch!  :)",
+      "parentUuid": "e8d229c1_4d74cc56",
+      "revId": "3cbddb439e2f6e29327292a288adbee26fcb4c03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "06c10d70_0200484e",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-15T21:37:07Z",
       "side": 1,
       "message": "req.user_cb_arg should get set to some non-zero value so you can assert it gets passed to dummy_cb\n\nsomething in cpl should probably get set too, to make sure the cpl gets passed correctly to dummy_cb too",
+      "revId": "3cbddb439e2f6e29327292a288adbee26fcb4c03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "907aaff9_aae60cb3",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-17T19:58:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "06c10d70_0200484e",
       "revId": "3cbddb439e2f6e29327292a288adbee26fcb4c03",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "ad309c82_6b60ec4a",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-17T19:58:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0eb56326_33fb3c00",
+      "revId": "3cbddb439e2f6e29327292a288adbee26fcb4c03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92334f15_0596bd32",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -64,6 +118,24 @@
       "writtenOn": "2017-08-15T21:37:07Z",
       "side": 1,
       "message": "should there be a case here too where xfer will be HOST_TO_CONTROLLER to confirm that the data does *not* get copied?",
+      "revId": "3cbddb439e2f6e29327292a288adbee26fcb4c03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9db36347_97891e7f",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-17T19:58:13Z",
+      "side": 1,
+      "message": "yup, thanks for catching",
+      "parentUuid": "92334f15_0596bd32",
       "revId": "3cbddb439e2f6e29327292a288adbee26fcb4c03",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
