@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "247cd52f_e38c6f2d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-17T18:11:44Z",
+      "side": 1,
+      "message": "I don\u0027t think this should be nested inside the buf_large_pool failure check.",
+      "revId": "1ee9be0b80e0555e1b49424288d844b293a4896b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37023ceb_692cf253",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 976,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-17T18:11:44Z",
+      "side": 1,
+      "message": "This sizeof will return the size of the pointer, but I think you actually want 4096. We should probably store this as a variable, maybe named g_bdev_mgr.zero_buffer_size.",
+      "revId": "1ee9be0b80e0555e1b49424288d844b293a4896b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
