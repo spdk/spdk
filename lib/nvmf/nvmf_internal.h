@@ -74,6 +74,38 @@ struct spdk_nvmf_poll_group {
 	TAILQ_ENTRY(spdk_nvmf_poll_group)	link;
 };
 
+struct spdk_nvmf_ns {
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	uint32_t id;
+	bool allocated;
+};
+
+struct spdk_nvmf_subsystem {
+	uint32_t id;
+	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	enum spdk_nvmf_subtype subtype;
+	bool is_removed;
+
+	char sn[MAX_SN_LEN + 1];
+
+	struct spdk_nvmf_ns			ns[MAX_VIRTUAL_NAMESPACE];
+	uint32_t 				max_nsid;
+
+	void					*cb_ctx;
+	spdk_nvmf_subsystem_connect_fn		connect_cb;
+	spdk_nvmf_subsystem_disconnect_fn	disconnect_cb;
+
+	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
+
+	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
+
+	TAILQ_HEAD(, spdk_nvmf_listener)	listeners;
+
+	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
+};
+
 extern struct spdk_nvmf_tgt g_nvmf_tgt;
 
 struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid);
