@@ -37,6 +37,9 @@
 #include "spdk/lvol.h"
 #include "spdk_internal/bdev.h"
 
+/* Length of string returned from uuid_unparse() */
+#define UUID_STRING_LEN 37
+
 struct spdk_lvol_store_req {
 	union {
 		struct {
@@ -88,5 +91,8 @@ struct spdk_lvol {
 struct lvol_task {
 	enum spdk_bdev_io_status	status;
 };
+
+struct lvol_store_bdev *vbdev_lvol_store_first(void);
+struct lvol_store_bdev *vbdev_lvol_store_next(struct lvol_store_bdev *prev);
 
 #endif /* SPDK_LVOLSTORE_H */
