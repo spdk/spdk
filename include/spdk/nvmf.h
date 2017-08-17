@@ -48,8 +48,16 @@
 #define MAX_VIRTUAL_NAMESPACE 16
 #define MAX_SN_LEN 20
 
-int spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_qpair_per_ctrlr,
-		       uint32_t in_capsule_data_size, uint32_t max_io_size);
+struct spdk_nvmf_tgt_opts {
+	uint16_t max_queue_depth;
+	uint16_t max_qpairs_per_ctrlr;
+	uint32_t in_capsule_data_size;
+	uint32_t max_io_size;
+};
+
+void spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts);
+
+int spdk_nvmf_tgt_init(struct spdk_nvmf_tgt_opts *opts);
 
 int spdk_nvmf_tgt_fini(void);
 
