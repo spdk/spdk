@@ -102,10 +102,18 @@ spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 	return NULL;
 }
 
-void
-spdk_nvmf_ctrlr_set_dsm(struct spdk_nvmf_ctrlr *ctrlr)
+bool
+spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	abort();
+	return false;
+}
+
+int
+spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns_data *nsdata)
+{
+	abort();
+	return -1;
 }
 
 void
