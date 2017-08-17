@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "b2e19413_d907fc64",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-17T20:35:57Z",
+      "side": 1,
+      "message": "You can remove \"spdk\" from the member name.",
+      "revId": "1ee9be0b80e0555e1b49424288d844b293a4896b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "247cd52f_e38c6f2d",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 7
@@ -30,6 +47,74 @@
       "writtenOn": "2017-08-17T18:11:44Z",
       "side": 1,
       "message": "This sizeof will return the size of the pointer, but I think you actually want 4096. We should probably store this as a variable, maybe named g_bdev_mgr.zero_buffer_size.",
+      "revId": "1ee9be0b80e0555e1b49424288d844b293a4896b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "028befb4_3fa3f8f9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 980,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-17T20:35:57Z",
+      "side": 1,
+      "message": "This should be len / buffer_size.",
+      "revId": "1ee9be0b80e0555e1b49424288d844b293a4896b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d90c40df_388b9223",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 986,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-17T20:35:57Z",
+      "side": 1,
+      "message": "malloc() would be better here, so we don\u0027t spend time zeroing the buffer (we are going to overwrite the whole buffer just after this).",
+      "revId": "1ee9be0b80e0555e1b49424288d844b293a4896b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77cac839_98056a94",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 994,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-17T20:35:57Z",
+      "side": 1,
+      "message": "This should be buffer_size.",
+      "revId": "1ee9be0b80e0555e1b49424288d844b293a4896b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cee30bab_718372ac",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 998,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-17T20:35:57Z",
+      "side": 1,
+      "message": "You need to set the iov_base here too.",
       "revId": "1ee9be0b80e0555e1b49424288d844b293a4896b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
