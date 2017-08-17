@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "91db3e7c_3766837f",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-17T14:10:58Z",
+      "side": 1,
+      "message": "yup, but that would require moving vhost_internal.h to spdk_internal/",
+      "parentUuid": "69fc3def_d9625c4e",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 26
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b2e99d89_c008c541",
         "filename": "include/spdk/vhost.h",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-08-16T15:38:41Z",
       "side": 1,
       "message": "This is not quite true. Currently this is called from spdk_app_start() by vhost app but need to be called during start_fn callback passed to spdk_app_start()",
+      "range": {
+        "startLine": 59,
+        "startChar": 3,
+        "endLine": 59,
+        "endChar": 47
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f6731f1_4bc43277",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-17T14:10:58Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b2e99d89_c008c541",
       "range": {
         "startLine": 59,
         "startChar": 3,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "7be190fd_9f52f42b",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-17T14:10:58Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b86e117f_d8c99aac",
+      "range": {
+        "startLine": 61,
+        "startChar": 27,
+        "endLine": 61,
+        "endChar": 47
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31f506b6_272d8cb6",
         "filename": "include/spdk/vhost.h",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2017-08-16T15:38:41Z",
       "side": 1,
       "message": "Can you describe the parameters?",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 55
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be3f3d22_ccd51549",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-17T14:10:58Z",
+      "side": 1,
+      "message": "not really, but at least I\u0027ll provide some doxygen here",
+      "parentUuid": "31f506b6_272d8cb6",
       "range": {
         "startLine": 84,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "6cf735d6_5e47b009",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-17T14:10:58Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0bb447e2_e164a6ac",
+      "range": {
+        "startLine": 118,
+        "startChar": 40,
+        "endLine": 119,
+        "endChar": 40
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "26964d73_1bf8a8f4",
         "filename": "include/spdk/vhost.h",
         "patchSetId": 3
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "47e86d7c_ac8357ec",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-17T14:10:58Z",
+      "side": 1,
+      "message": "nope, this is specific to call_external_event",
+      "parentUuid": "26964d73_1bf8a8f4",
+      "range": {
+        "startLine": 263,
+        "startChar": 36,
+        "endLine": 266,
+        "endChar": 58
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "32077099_581e4265",
         "filename": "include/spdk/vhost.h",
         "patchSetId": 3
@@ -151,6 +295,30 @@
       "writtenOn": "2017-08-16T15:38:41Z",
       "side": 1,
       "message": "This function also want to be documented :)",
+      "range": {
+        "startLine": 271,
+        "startChar": 5,
+        "endLine": 271,
+        "endChar": 43
+      },
+      "revId": "4bf2f2367bd58922dce04e3450a06b3c20b071c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "056fca42_0d927034",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-17T14:10:58Z",
+      "side": 1,
+      "message": "This is experimental API, but sure, will do.",
+      "parentUuid": "32077099_581e4265",
       "range": {
         "startLine": 271,
         "startChar": 5,
