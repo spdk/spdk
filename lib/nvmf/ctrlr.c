@@ -282,6 +282,12 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			return;
 		}
 
+		if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+			SPDK_ERRLOG("I/O connect not allowed on discovery controller\n");
+			INVALID_CONNECT_CMD(qid);
+			return;
+		}
+
 		if (!ctrlr->vcprop.cc.bits.en) {
 			SPDK_ERRLOG("Got I/O connect before ctrlr was enabled\n");
 			INVALID_CONNECT_CMD(qid);
