@@ -72,43 +72,11 @@ struct spdk_nvmf_listen_addr {
 	TAILQ_ENTRY(spdk_nvmf_listen_addr)	link;
 };
 
-struct spdk_nvmf_ns {
-	struct spdk_bdev *bdev;
-	struct spdk_bdev_desc *desc;
-	struct spdk_io_channel *ch;
-	uint32_t id;
-	bool allocated;
-};
-
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
  * of controllers.  Any individual controller has
  * access to all the NVMe device/namespaces maintained by the subsystem.
  */
-struct spdk_nvmf_subsystem {
-	uint32_t id;
-	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
-	enum spdk_nvmf_subtype subtype;
-	bool is_removed;
-
-	char sn[MAX_SN_LEN + 1];
-
-	struct spdk_nvmf_ns			ns[MAX_VIRTUAL_NAMESPACE];
-	uint32_t 				max_nsid;
-
-	void					*cb_ctx;
-	spdk_nvmf_subsystem_connect_fn		connect_cb;
-	spdk_nvmf_subsystem_disconnect_fn	disconnect_cb;
-
-	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
-
-	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
-
-	TAILQ_HEAD(, spdk_nvmf_listener)	listeners;
-
-	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
-};
-
 struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(const char *nqn,
 		enum spdk_nvmf_subtype type,
 		void *cb_ctx,
@@ -221,6 +189,7 @@ struct spdk_nvmf_listener *spdk_nvmf_subsystem_get_next_listener(struct spdk_nvm
  */
 const struct spdk_nvme_transport_id *spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener
 		*listener);
+
 
 void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
 
