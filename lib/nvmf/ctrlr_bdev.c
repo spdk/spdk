@@ -106,43 +106,6 @@ nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 static int
-nvmf_bdev_ctrlr_get_log_page(struct spdk_nvmf_request *req)
-{
-	uint8_t lid;
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
-	uint64_t log_page_offset;
-
-	if (req->data == NULL) {
-		SPDK_ERRLOG("get log command with no buffer\n");
-		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	memset(req->data, 0, req->length);
-
-	log_page_offset = (uint64_t)cmd->cdw12 | ((uint64_t)cmd->cdw13 << 32);
-	if (log_page_offset & 3) {
-		SPDK_ERRLOG("Invalid log page offset 0x%" PRIx64 "\n", log_page_offset);
-		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	lid = cmd->cdw10 & 0xFF;
-	switch (lid) {
-	case SPDK_NVME_LOG_ERROR:
-	case SPDK_NVME_LOG_HEALTH_INFORMATION:
-	case SPDK_NVME_LOG_FIRMWARE_SLOT:
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	default:
-		SPDK_ERRLOG("Unsupported Get Log Page 0x%02X\n", lid);
-		response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		response->status.sc = SPDK_NVME_SC_INVALID_LOG_PAGE;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-}
-
-static int
 identify_ns(struct spdk_nvmf_subsystem *subsystem,
 	    struct spdk_nvme_cmd *cmd,
 	    struct spdk_nvme_cpl *rsp,
@@ -357,7 +320,7 @@ nvmf_bdev_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
-		return nvmf_bdev_ctrlr_get_log_page(req);
+		return spdk_nvmf_ctrlr_get_log_page(req);
 	case SPDK_NVME_OPC_IDENTIFY:
 		return nvmf_bdev_ctrlr_identify(req);
 	case SPDK_NVME_OPC_ABORT:

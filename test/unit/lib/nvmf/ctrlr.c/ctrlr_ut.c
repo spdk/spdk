@@ -108,15 +108,79 @@ spdk_nvmf_ctrlr_set_dsm(struct spdk_nvmf_ctrlr *ctrlr)
 	abort();
 }
 
-static void
-test_foobar(void)
+void
+spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 {
+	abort();
 }
 
 int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	return -1;
+}
+
+static void
+test_get_log_page(void)
+{
+	struct spdk_nvmf_subsystem subsystem = {};
+	struct spdk_nvmf_request req = {};
+	struct spdk_nvmf_qpair qpair = {};
+	struct spdk_nvmf_ctrlr ctrlr = {};
+	union nvmf_h2c_msg cmd = {};
+	union nvmf_c2h_msg rsp = {};
+	char data[4096];
+
+	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+
+	ctrlr.subsys = &subsystem;
+
+	qpair.ctrlr = &ctrlr;
+
+	req.qpair = &qpair;
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+	req.data = &data;
+	req.length = sizeof(data);
+
+	/* Get Log Page - all valid */
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	cmd.nvme_cmd.cdw10 = SPDK_NVME_LOG_ERROR | (req.length / 4 - 1) << 16;
+	CU_ASSERT(spdk_nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_SUCCESS);
+
+	/* Get Log Page with invalid log ID */
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	cmd.nvme_cmd.cdw10 = 0;
+	CU_ASSERT(spdk_nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Get Log Page with invalid offset (not dword aligned) */
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	cmd.nvme_cmd.cdw10 = SPDK_NVME_LOG_ERROR | (req.length / 4 - 1) << 16;
+	cmd.nvme_cmd.cdw12 = 2;
+	CU_ASSERT(spdk_nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+
+	/* Get Log Page without data buffer */
+	memset(&cmd, 0, sizeof(cmd));
+	memset(&rsp, 0, sizeof(rsp));
+	req.data = NULL;
+	cmd.nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
+	cmd.nvme_cmd.cdw10 = SPDK_NVME_LOG_ERROR | (req.length / 4 - 1) << 16;
+	CU_ASSERT(spdk_nvmf_ctrlr_get_log_page(&req) == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(req.rsp->nvme_cpl.status.sc == SPDK_NVME_SC_INVALID_FIELD);
+	req.data = data;
 }
 
 int main(int argc, char **argv)
@@ -135,7 +199,7 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "foobar", test_foobar) == NULL) {
+		CU_add_test(suite, "get_log_page", test_get_log_page) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}

@@ -818,3 +818,72 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 	ctrlr->aer_req = req;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
+
+int
+spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_subsystem *subsystem = req->qpair->ctrlr->subsys;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	uint64_t offset, len;
+	uint32_t numdl, numdu;
+	uint8_t lid;
+
+	if (req->data == NULL) {
+		SPDK_ERRLOG("get log command with no buffer\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	memset(req->data, 0, req->length);
+
+	offset = (uint64_t)cmd->cdw12 | ((uint64_t)cmd->cdw13 << 32);
+	if (offset & 3) {
+		SPDK_ERRLOG("Invalid log page offset 0x%" PRIx64 "\n", offset);
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	numdl = (cmd->cdw10 >> 16) & 0xFFFFu;
+	numdu = (cmd->cdw11) & 0xFFFFu;
+	len = ((numdu << 16) + numdl + (uint64_t)1) * 4;
+	if (len > req->length) {
+		SPDK_ERRLOG("Get log page: len (%" PRIu64 ") > buf size (%u)\n",
+			    len, req->length);
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	lid = cmd->cdw10 & 0xFF;
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Get log page: LID=0x%02X offset=0x%" PRIx64 " len=0x%" PRIx64 "\n",
+		      lid, offset, len);
+
+	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		switch (lid) {
+		case SPDK_NVME_LOG_DISCOVERY:
+			spdk_nvmf_get_discovery_log_page(req->data, offset, len);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		default:
+			goto invalid_log_page;
+		}
+	} else {
+		switch (lid) {
+		case SPDK_NVME_LOG_ERROR:
+		case SPDK_NVME_LOG_HEALTH_INFORMATION:
+		case SPDK_NVME_LOG_FIRMWARE_SLOT:
+			/* TODO: actually fill out log page data */
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		default:
+			goto invalid_log_page;
+		}
+	}
+
+invalid_log_page:
+	SPDK_ERRLOG("Unsupported Get Log Page 0x%02X\n", lid);
+	response->status.sct = SPDK_NVME_SCT_GENERIC;
+	response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}

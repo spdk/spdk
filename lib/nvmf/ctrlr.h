@@ -134,6 +134,8 @@ int spdk_nvmf_ctrlr_get_features_async_event_configuration(struct spdk_nvmf_requ
 
 int spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req);
 
+int spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req);
+
 void spdk_nvmf_ctrlr_set_dsm(struct spdk_nvmf_ctrlr *ctrlr);
 
 #endif

@@ -155,17 +155,21 @@ spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 	return -1;
 }
 
+int
+spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
+{
+	abort();
+	return -1;
+}
+
 static void
 test_process_discovery_cmd(void)
 {
 	struct	spdk_nvmf_request req = {};
 	int	ret;
-	/* random request length value for testing */
-	int	req_length = 122;
 	struct	spdk_nvmf_qpair req_qpair = {};
 	struct	spdk_nvmf_ctrlr req_ctrlr = {};
 	struct	spdk_nvme_ctrlr_data req_data = {};
-	struct	spdk_nvmf_discovery_log_page req_page = {};
 	union	nvmf_h2c_msg  req_cmd = {};
 	union	nvmf_c2h_msg   req_rsp = {};
 
@@ -185,19 +189,6 @@ test_process_discovery_cmd(void)
 	req.data = &req_data;
 	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
 	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_SUCCESS);
-	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
-
-	/* GET_LOG_PAGE opcode return value check */
-	req.cmd->nvme_cmd.opc = SPDK_NVME_OPC_GET_LOG_PAGE;
-	req.cmd->nvme_cmd.cdw10 = SPDK_NVME_LOG_DISCOVERY;
-	req.data = &req_page;
-	req.length = req_length;
-	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
-	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_SUCCESS);
-	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
-	req.cmd->nvme_cmd.cdw10 = 15;
-	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
-	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_FIELD);
 	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 
 	/* Invalid opcode return value check */
