@@ -2,16 +2,11 @@
 
 ## v17.10: (Upcoming Release)
 
-### NVMe driver
-
-Disable HotplugEnable option by default, users can enable it with
-`HotplugEnable Yes` in `[Nvme]` section of the configuration file.
+### Block Device Abstraction Layer (bdev)
 
 An [fio](http://github.com/axboe/fio) plugin was added that can route
 I/O to the bdev layer. See the [plugin documentation](https://github.com/spdk/spdk/blob/master/examples/bdev/fio_plugin/README.md)
 for more information.
-
-### Block Device Abstraction Layer (bdev)
 
 spdk_bdev_unmap() was modified to take an offset and a length in bytes as
 arguments instead of requiring the user to provide an array of SCSI
@@ -30,6 +25,9 @@ The AIO bdev now allows the user to override the auto-detected block size.
 The NVMe driver now recognizes the NVMe 1.3 Namespace Optimal I/O Boundary field.
 NVMe 1.3 devices may report an optimal I/O boundary, which the driver will take
 into account when splitting I/O requests.
+
+The HotplugEnable option in `[Nvme]` sections of the configuration file is now
+"No" by default. It was previously "Yes".
 
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
