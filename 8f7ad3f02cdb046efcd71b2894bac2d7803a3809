@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c32381cd_30d1a142",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-17T14:20:47Z",
+      "side": 1,
+      "message": "should be 16k as stated in commit msg",
+      "range": {
+        "startLine": 111,
+        "startChar": 35,
+        "endLine": 111,
+        "endChar": 40
+      },
+      "revId": "8f7ad3f02cdb046efcd71b2894bac2d7803a3809",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
