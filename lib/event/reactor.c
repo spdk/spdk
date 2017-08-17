@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_internal/event.h"
+#include "spdk_internal/log.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -94,7 +95,13 @@ struct spdk_reactor {
 
 	/* Socket ID for this reactor. */
 	uint32_t					socket_id;
+#ifdef DEBUG
+	/* Poller for get the rusage for the reactor. */
+	struct spdk_poller				*rusage_poller;
 
+	/* The last known rusage values */
+	struct rusage 					rusage;
+#endif
 	/*
 	 * Contains pollers actively running on this reactor.  Pollers
 	 *  are run round-robin. The reactor takes one poller from the head
@@ -276,6 +283,27 @@ _spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	spdk_event_call(event);
 }
 
+#ifdef DEBUG
+static void
+get_rusage(void *arg)
+{
+	struct spdk_reactor	*reactor = arg;
+	struct rusage		rusage;
+
+	if (getrusage(RUSAGE_THREAD, &rusage) != 0) {
+		return;
+	}
+
+	if (rusage.ru_nvcsw != reactor->rusage.ru_nvcsw || rusage.ru_nivcsw != reactor->rusage.ru_nivcsw) {
+		SPDK_TRACELOG(SPDK_TRACE_REACTOR,
+			      "Reactor %d: %ld voluntary context switches and  %ld involuntary context switches in the last second.\n",
+			      reactor->lcore, rusage.ru_nvcsw - reactor->rusage.ru_nvcsw,
+			      rusage.ru_nivcsw - reactor->rusage.ru_nivcsw);
+	}
+	reactor->rusage = rusage;
+}
+#endif
+
 /**
  *
  * \brief This is the main function of the reactor thread.
@@ -317,7 +345,10 @@ _spdk_reactor_run(void *arg)
 	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / 1000000ULL;
 	idle_started = 0;
 	timer_poll_count = 0;
-
+#ifdef DEBUG
+	getrusage(RUSAGE_THREAD, &reactor->rusage);
+	spdk_poller_register(&reactor->rusage_poller, get_rusage, reactor, reactor->lcore, 1000000);
+#endif
 	while (1) {
 		bool took_action = false;
 
@@ -400,6 +431,9 @@ _spdk_reactor_run(void *arg)
 		}
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
+#ifdef DEBUG
+			spdk_poller_unregister(&reactor->rusage_poller, NULL);
+#endif
 			break;
 		}
 	}
@@ -768,3 +802,5 @@ spdk_poller_unregister(struct spdk_poller **ppoller,
 		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_remove_poller, poller, complete));
 	}
 }
+
+SPDK_LOG_REGISTER_TRACE_FLAG("reactor", SPDK_TRACE_REACTOR)
