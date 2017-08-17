@@ -108,8 +108,10 @@
   # Units in microseconds.
   AdminPollRate 100000
 
-  # Enable handling of hotplug (runtime insert and remove) events
-  HotplugEnable Yes
+  # Disable handling of hotplug (runtime insert and remove) events,
+  # users can set to Yes if want to enable it.
+  # Default: No
+  HotplugEnable No
 
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
