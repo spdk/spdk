@@ -46,16 +46,31 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 #define MAX_SUBSYSTEMS 4
 
+#define SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH 128
+#define SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR 64
+#define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
+#define SPDK_NVMF_DEFAULT_MAX_IO_SIZE 131072
+
 struct spdk_nvmf_tgt g_nvmf_tgt;
 
-int
-spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_qpairs_per_ctrlr,
-		   uint32_t in_capsule_data_size, uint32_t max_io_size)
+void
+spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 {
-	g_nvmf_tgt.max_qpairs_per_ctrlr = max_qpairs_per_ctrlr;
-	g_nvmf_tgt.max_queue_depth = max_queue_depth;
-	g_nvmf_tgt.in_capsule_data_size = in_capsule_data_size;
-	g_nvmf_tgt.max_io_size = max_io_size;
+	opts->max_queue_depth = SPDK_NVMF_DEFAULT_MAX_QUEUE_DEPTH;
+	opts->max_qpairs_per_ctrlr = SPDK_NVMF_DEFAULT_MAX_QPAIRS_PER_CTRLR;
+	opts->in_capsule_data_size = SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE;
+	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
+}
+
+int
+spdk_nvmf_tgt_init(struct spdk_nvmf_tgt_opts *opts)
+{
+	if (!opts) {
+		spdk_nvmf_tgt_opts_init(&g_nvmf_tgt.opts);
+	} else {
+		g_nvmf_tgt.opts = *opts;
+	}
+
 	g_nvmf_tgt.discovery_genctr = 0;
 	g_nvmf_tgt.discovery_log_page = NULL;
 	g_nvmf_tgt.discovery_log_page_size = 0;
@@ -64,10 +79,12 @@ spdk_nvmf_tgt_init(uint16_t max_queue_depth, uint16_t max_qpairs_per_ctrlr,
 	TAILQ_INIT(&g_nvmf_tgt.listen_addrs);
 	TAILQ_INIT(&g_nvmf_tgt.transports);
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Pairs Per Controller: %d\n", max_qpairs_per_ctrlr);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", max_queue_depth);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n", in_capsule_data_size);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", max_io_size);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Pairs Per Controller: %d\n",
+		      g_nvmf_tgt.opts.max_qpairs_per_ctrlr);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", g_nvmf_tgt.opts.max_queue_depth);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n",
+		      g_nvmf_tgt.opts.in_capsule_data_size);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", g_nvmf_tgt.opts.max_io_size);
 
 	return 0;
 }
