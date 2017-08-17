@@ -46,10 +46,8 @@
 #define SPDK_NVMF_DEFAULT_NUM_CTRLRS_PER_LCORE 1
 
 struct spdk_nvmf_tgt {
-	uint16_t				max_queue_depth;
-	uint16_t				max_qpairs_per_ctrlr;
-	uint32_t				in_capsule_data_size;
-	uint32_t				max_io_size;
+	struct spdk_nvmf_tgt_opts		opts;
+
 	uint64_t				discovery_genctr;
 	TAILQ_HEAD(, spdk_nvmf_subsystem)	subsystems;
 	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
