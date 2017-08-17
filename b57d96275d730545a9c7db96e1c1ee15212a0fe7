@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "334a3f6c_3388ee9d",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-17T01:23:28Z",
+      "side": 1,
+      "message": "The -1 in the descriptive text at the top should also be changed to use the new name (and/or deleted).  If the \"0 for no caching\" part is true, we should also put that into the \\param cache_size description.\n\n(The first line of the doc comment is used as the one-line brief, so it should probably be cleaned up anyway to make it more concise.)",
+      "range": {
+        "startLine": 144,
+        "startChar": 65,
+        "endLine": 144,
+        "endChar": 67
+      },
+      "revId": "b57d96275d730545a9c7db96e1c1ee15212a0fe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
