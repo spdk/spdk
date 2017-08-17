@@ -69,6 +69,24 @@
       "revId": "d3a2ce83cc0f11f576803087b4f07b16eee49d94",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b233c0b_f14a9532",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-08-17T01:55:20Z",
+      "side": 1,
+      "message": "It seems have some issue when I try to use auto type, error message as below:\nrequest for member ‘find’ in ‘full_path’",
+      "parentUuid": "74360938_d12f5bd9",
+      "revId": "d3a2ce83cc0f11f576803087b4f07b16eee49d94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
