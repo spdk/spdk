@@ -424,6 +424,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 {
 	int cache_size;
 	int rc = 0;
+	char mempool_name[32];
 
 	assert(cb_fn != NULL);
 
@@ -433,7 +434,9 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 	g_bdev_mgr.start_poller_fn = start_poller_fn;
 	g_bdev_mgr.stop_poller_fn = stop_poller_fn;
 
-	g_bdev_mgr.bdev_io_pool = spdk_mempool_create("bdev_io",
+	snprintf(mempool_name, sizeof(mempool_name), "bdev_io_%d", getpid());
+
+	g_bdev_mgr.bdev_io_pool = spdk_mempool_create(mempool_name,
 				  SPDK_BDEV_IO_POOL_SIZE,
 				  sizeof(struct spdk_bdev_io) +
 				  spdk_bdev_module_get_max_ctx_size(),
@@ -452,7 +455,9 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 	 *   to account for.
 	 */
 	cache_size = BUF_SMALL_POOL_SIZE / (2 * spdk_env_get_core_count());
-	g_bdev_mgr.buf_small_pool = spdk_mempool_create("buf_small_pool",
+	snprintf(mempool_name, sizeof(mempool_name), "buf_small_pool_%d", getpid());
+
+	g_bdev_mgr.buf_small_pool = spdk_mempool_create(mempool_name,
 				    BUF_SMALL_POOL_SIZE,
 				    SPDK_BDEV_SMALL_BUF_MAX_SIZE + 512,
 				    cache_size,
@@ -464,7 +469,9 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 	}
 
 	cache_size = BUF_LARGE_POOL_SIZE / (2 * spdk_env_get_core_count());
-	g_bdev_mgr.buf_large_pool = spdk_mempool_create("buf_large_pool",
+	snprintf(mempool_name, sizeof(mempool_name), "buf_large_pool_%d", getpid());
+
+	g_bdev_mgr.buf_large_pool = spdk_mempool_create(mempool_name,
 				    BUF_LARGE_POOL_SIZE,
 				    SPDK_BDEV_LARGE_BUF_MAX_SIZE + 512,
 				    cache_size,
