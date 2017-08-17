@@ -1005,7 +1005,7 @@ bdev_nvme_library_init(void)
 	}
 
 	if (spdk_process_is_primary()) {
-		g_nvme_hotplug_enabled = spdk_conf_section_get_boolval(sp, "HotplugEnable", true);
+		g_nvme_hotplug_enabled = spdk_conf_section_get_boolval(sp, "HotplugEnable", false);
 	}
 
 	g_nvme_hotplug_poll_timeout_us = spdk_conf_section_get_intval(sp, "HotplugPollRate");
