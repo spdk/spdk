@@ -71,49 +71,12 @@ struct spdk_nvmf_listen_addr {
 	TAILQ_ENTRY(spdk_nvmf_listen_addr)	link;
 };
 
-struct spdk_nvmf_host {
-	char				*nqn;
-	TAILQ_ENTRY(spdk_nvmf_host)	link;
-};
-
-struct spdk_nvmf_subsystem_allowed_listener {
-	struct spdk_nvmf_listen_addr				*listen_addr;
-	TAILQ_ENTRY(spdk_nvmf_subsystem_allowed_listener)	link;
-};
-
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
  * of controllers.  Any individual controller has
  * access to all the NVMe device/namespaces maintained by the subsystem.
  */
-struct spdk_nvmf_subsystem {
-	uint32_t id;
-	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
-	enum spdk_nvmf_subtype subtype;
-	bool is_removed;
-
-	struct {
-		char sn[MAX_SN_LEN + 1];
-		struct spdk_bdev *ns_list[MAX_VIRTUAL_NAMESPACE];
-		struct spdk_bdev_desc *desc[MAX_VIRTUAL_NAMESPACE];
-		struct spdk_io_channel *ch[MAX_VIRTUAL_NAMESPACE];
-		uint32_t max_nsid;
-	} dev;
-
-	const struct spdk_nvmf_ctrlr_ops *ops;
-
-	void					*cb_ctx;
-	spdk_nvmf_subsystem_connect_fn		connect_cb;
-	spdk_nvmf_subsystem_disconnect_fn	disconnect_cb;
-
-	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
-
-	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
-
-	TAILQ_HEAD(, spdk_nvmf_subsystem_allowed_listener)	allowed_listeners;
-
-	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
-};
+struct spdk_nvmf_subsystem;
 
 struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(const char *nqn,
 		enum spdk_nvmf_subtype type,
@@ -142,8 +105,18 @@ int spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 bool spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 		struct spdk_nvmf_listen_addr *listen_addr);
 
+const struct spdk_nvmf_listen_addr *spdk_nvmf_subsystem_first_listener(
+	struct spdk_nvmf_subsystem *subsystem);
+const struct spdk_nvmf_listen_addr *spdk_nvmf_subsystem_next_listener(
+	struct spdk_nvmf_subsystem *subsystem,
+	const struct spdk_nvmf_listen_addr *listen_addr);
+
 int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 				 const char *host_nqn);
+
+const char *spdk_nvmf_subsystem_first_host(struct spdk_nvmf_subsystem *subsystem);
+const char *spdk_nvmf_subsystem_next_host(struct spdk_nvmf_subsystem *subsystem,
+		const char *host_nqn);
 
 void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
 
@@ -159,6 +132,12 @@ void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
  */
 uint32_t spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
 				    uint32_t nsid);
+
+uint32_t spdk_nvmf_subsystem_first_ns(struct spdk_nvmf_subsystem *subsystem,
+				      struct spdk_bdev **bdev);
+uint32_t spdk_nvmf_subsystem_next_ns(struct spdk_nvmf_subsystem *subsystem,
+				     uint32_t nsid,
+				     struct spdk_bdev **bdev);
 
 const char *spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem);
 

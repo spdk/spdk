@@ -46,10 +46,9 @@
 static void
 dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tgt_subsystem)
 {
-	struct spdk_nvmf_listen_addr 	*listen_addr;
-	struct spdk_nvmf_host		*host;
-	struct spdk_nvmf_subsystem	*subsystem = tgt_subsystem->subsystem;
-	struct spdk_nvmf_subsystem_allowed_listener 	*allowed_listener;
+	const struct spdk_nvmf_listen_addr 	*listen_addr;
+	const char				*host;
+	struct spdk_nvmf_subsystem		*subsystem = tgt_subsystem->subsystem;
 
 	spdk_json_write_object_begin(w);
 
@@ -68,9 +67,8 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 	spdk_json_write_name(w, "listen_addresses");
 	spdk_json_write_array_begin(w);
 
-	TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
-		listen_addr = allowed_listener->listen_addr;
-
+	listen_addr = spdk_nvmf_subsystem_first_listener(subsystem);
+	while (listen_addr) {
 		spdk_json_write_object_begin(w);
 		/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
 		spdk_json_write_name(w, "transport");
@@ -84,38 +82,43 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 		spdk_json_write_name(w, "trsvcid");
 		spdk_json_write_string(w, listen_addr->trid.trsvcid);
 		spdk_json_write_object_end(w);
+
+		listen_addr = spdk_nvmf_subsystem_next_listener(subsystem, listen_addr);
 	}
 	spdk_json_write_array_end(w);
 
 	spdk_json_write_name(w, "hosts");
 	spdk_json_write_array_begin(w);
 
-	TAILQ_FOREACH(host, &subsystem->hosts, link) {
+	host = spdk_nvmf_subsystem_first_host(subsystem);
+	while (host) {
 		spdk_json_write_object_begin(w);
 		spdk_json_write_name(w, "nqn");
-		spdk_json_write_string(w, host->nqn);
+		spdk_json_write_string(w, host);
 		spdk_json_write_object_end(w);
+
+		host = spdk_nvmf_subsystem_next_host(subsystem, host);
 	}
 	spdk_json_write_array_end(w);
 
 	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
-		uint32_t i;
+		uint32_t nsid;
+		struct spdk_bdev *bdev;
 
 		spdk_json_write_name(w, "serial_number");
 		spdk_json_write_string(w, spdk_nvmf_subsystem_get_sn(subsystem));
 		spdk_json_write_name(w, "namespaces");
 		spdk_json_write_array_begin(w);
-		for (i = 0; i < subsystem->dev.max_nsid; i++) {
-			if (subsystem->dev.ns_list[i] == NULL) {
-				continue;
-			}
-
+		nsid = spdk_nvmf_subsystem_first_ns(subsystem, &bdev);
+		while (nsid > 0) {
 			spdk_json_write_object_begin(w);
 			spdk_json_write_name(w, "nsid");
-			spdk_json_write_int32(w, i + 1);
+			spdk_json_write_int32(w, nsid);
 			spdk_json_write_name(w, "name");
-			spdk_json_write_string(w, spdk_bdev_get_name(subsystem->dev.ns_list[i]));
+			spdk_json_write_string(w, spdk_bdev_get_name(bdev));
 			spdk_json_write_object_end(w);
+
+			nsid = spdk_nvmf_subsystem_next_ns(subsystem, nsid, &bdev);
 		}
 		spdk_json_write_array_end(w);
 	}

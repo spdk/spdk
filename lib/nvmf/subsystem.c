@@ -340,6 +340,38 @@ spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 	return false;
 }
 
+const struct spdk_nvmf_listen_addr *
+spdk_nvmf_subsystem_first_listener(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_subsystem_allowed_listener *allowed_listener;
+
+	allowed_listener = TAILQ_FIRST(&subsystem->allowed_listeners);
+	if (allowed_listener) {
+		return allowed_listener->listen_addr;
+	}
+
+	return NULL;
+}
+
+const struct spdk_nvmf_listen_addr *
+spdk_nvmf_subsystem_next_listener(struct spdk_nvmf_subsystem *subsystem,
+				  const struct spdk_nvmf_listen_addr *listen_addr)
+{
+	struct spdk_nvmf_subsystem_allowed_listener *allowed_listener;
+
+	TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
+		if (allowed_listener->listen_addr == listen_addr) {
+			allowed_listener = TAILQ_NEXT(allowed_listener, link);
+			if (allowed_listener) {
+				return allowed_listener->listen_addr;
+			}
+			break;
+		}
+	}
+
+	return NULL;
+}
+
 int
 spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *host_nqn)
 {
@@ -363,6 +395,38 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	g_nvmf_tgt.discovery_genctr++;
 
 	return 0;
+}
+
+const char *
+spdk_nvmf_subsystem_first_host(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_host *host;
+
+	host = TAILQ_FIRST(&subsystem->hosts);
+	if (host) {
+		return host->nqn;
+	}
+
+	return NULL;
+}
+
+const char *
+spdk_nvmf_subsystem_next_host(struct spdk_nvmf_subsystem *subsystem,
+			      const char *host_nqn)
+{
+	struct spdk_nvmf_host *host;
+
+	TAILQ_FOREACH(host, &subsystem->hosts, link) {
+		if (strcmp(host->nqn, host_nqn) == 0) {
+			host = TAILQ_NEXT(host, link);
+			if (host) {
+				return host->nqn;
+			}
+			break;
+		}
+	}
+
+	return NULL;
 }
 
 static void spdk_nvmf_ctrlr_hot_remove(void *remove_ctx)
@@ -421,6 +485,44 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	subsystem->dev.ns_list[i] = bdev;
 	subsystem->dev.max_nsid = spdk_max(subsystem->dev.max_nsid, nsid);
 	return nsid;
+}
+
+uint32_t
+spdk_nvmf_subsystem_first_ns(struct spdk_nvmf_subsystem *subsystem,
+			     struct spdk_bdev **bdev)
+{
+	uint32_t i;
+
+	for (i = 0; i < subsystem->dev.max_nsid; i++) {
+		if (subsystem->dev.ns_list[i] != NULL) {
+			*bdev = subsystem->dev.ns_list[i];
+			return (i + 1);
+		}
+	}
+
+	*bdev = NULL;
+	return 0;
+}
+
+uint32_t
+spdk_nvmf_subsystem_next_ns(struct spdk_nvmf_subsystem *subsystem,
+			    uint32_t nsid,
+			    struct spdk_bdev **bdev)
+{
+	uint32_t i;
+
+	assert(nsid != 0);
+	i = nsid - 1;
+
+	for (; i < subsystem->dev.max_nsid; i++) {
+		if (subsystem->dev.ns_list[i] != NULL) {
+			*bdev = subsystem->dev.ns_list[i];
+			return (i + 1);
+		}
+	}
+
+	*bdev = NULL;
+	return 0;
 }
 
 const char *
