@@ -96,7 +96,7 @@ nvmf_update_discovery_log(void)
 			memset(entry, 0, sizeof(*entry));
 			entry->portid = numrec;
 			entry->cntlid = 0xffff;
-			entry->asqsz = g_nvmf_tgt.max_queue_depth;
+			entry->asqsz = g_nvmf_tgt.opts.max_queue_depth;
 			entry->subtype = subsystem->subtype;
 			snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
