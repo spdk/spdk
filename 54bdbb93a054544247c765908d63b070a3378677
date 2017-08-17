@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcb83332_bc92afef",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-17T18:02:57Z",
+      "side": 1,
+      "message": "Let\u0027s call this function \"sanitize_path\"",
+      "revId": "54bdbb93a054544247c765908d63b070a3378677",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef2e07b5_fb054da0",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-17T18:02:57Z",
+      "side": 1,
+      "message": "You can write this using a range-based for loop:\n\nfor (const char \u0026c: input) {\n   if (c !\u003d \u0027/\u0027) {\n...\n}\n\nPrior to C++11, the \"correct\" way to write the loop over the iterators would have been:\n\nfor (std::string::const_iterator ptr \u003d input.begin(), ptr !\u003d input.end(), ptr++) {\n...\n\n}",
+      "revId": "54bdbb93a054544247c765908d63b070a3378677",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4df61498_2eec1deb",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-17T18:02:57Z",
+      "side": 1,
+      "message": "You should also make sure that the last character is not a \u0027/\u0027",
+      "revId": "54bdbb93a054544247c765908d63b070a3378677",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17de9c6e_f019a12f",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 469,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-17T18:02:57Z",
+      "side": 1,
+      "message": "You should do this above the if statement so you don\u0027t have to call spdk_file_get_name twice.",
+      "revId": "54bdbb93a054544247c765908d63b070a3378677",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4345b28f_d69cac2c",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-17T18:02:57Z",
+      "side": 1,
+      "message": "If there is another \"/\" after the directory, then the file is in a subdirectory and should not be returned here.",
+      "revId": "54bdbb93a054544247c765908d63b070a3378677",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "579133d2_4bcb2026",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-17T18:02:57Z",
+      "side": 1,
+      "message": "You can again use a range-based for loop:\n\nfor (auto\u0026 s : dir_and_file_set) {\n    result-\u003epush_back(s);\n}\n\n(I didn\u0027t test this)",
+      "revId": "54bdbb93a054544247c765908d63b070a3378677",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
