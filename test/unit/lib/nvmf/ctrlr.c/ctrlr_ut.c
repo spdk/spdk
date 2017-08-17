@@ -128,6 +128,12 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	return -1;
 }
 
+int
+spdk_nvmf_request_abort(struct spdk_nvmf_request *req)
+{
+	return -1;
+}
+
 static void
 test_get_log_page(void)
 {

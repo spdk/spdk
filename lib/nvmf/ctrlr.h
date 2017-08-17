@@ -105,8 +105,6 @@ void spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 
 struct spdk_nvmf_qpair *spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid);
 
-struct spdk_nvmf_request *spdk_nvmf_qpair_get_request(struct spdk_nvmf_qpair *qpair, uint16_t cid);
-
 void
 spdk_nvmf_property_get(struct spdk_nvmf_ctrlr *ctrlr,
 		       struct spdk_nvmf_fabric_prop_get_cmd *cmd,
@@ -121,23 +119,9 @@ int spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr);
 
 void spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
 
-int spdk_nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req);
-int spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req);
 
-int spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req);
-int spdk_nvmf_ctrlr_get_features_keep_alive_timer(struct spdk_nvmf_request *req);
-
-int spdk_nvmf_ctrlr_set_features_number_of_queues(struct spdk_nvmf_request *req);
-int spdk_nvmf_ctrlr_get_features_number_of_queues(struct spdk_nvmf_request *req);
-
-int spdk_nvmf_ctrlr_set_features_async_event_configuration(struct spdk_nvmf_request *req);
-int spdk_nvmf_ctrlr_get_features_async_event_configuration(struct spdk_nvmf_request *req);
-
-int spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req);
-
-int spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req);
-
-int spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req);
 
 bool spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr);
 

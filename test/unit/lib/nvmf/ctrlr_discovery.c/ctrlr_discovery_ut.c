@@ -39,8 +39,6 @@
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
-const struct spdk_nvmf_ctrlr_ops spdk_nvmf_bdev_ctrlr_ops;
-
 struct spdk_nvmf_tgt g_nvmf_tgt = {
 	.subsystems = TAILQ_HEAD_INITIALIZER(g_nvmf_tgt.subsystems)
 };
@@ -156,47 +154,14 @@ spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 int
-spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
+spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
 {
-	abort();
 	return -1;
 }
 
-int
-spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
+void
+spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem)
 {
-	abort();
-	return -1;
-}
-
-static void
-test_process_discovery_cmd(void)
-{
-	struct	spdk_nvmf_request req = {};
-	int	ret;
-	struct	spdk_nvmf_qpair req_qpair = {};
-	struct	spdk_nvmf_ctrlr req_ctrlr = {};
-	struct	spdk_nvme_ctrlr_data req_data = {};
-	union	nvmf_h2c_msg  req_cmd = {};
-	union	nvmf_c2h_msg   req_rsp = {};
-
-	req.qpair = &req_qpair;
-	req.cmd  = &req_cmd;
-	req.rsp  = &req_rsp;
-
-	/* no request data check */
-	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
-	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
-	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_FIELD);
-
-	req.qpair->ctrlr = &req_ctrlr;
-	req.data = &req_data;
-
-	/* Invalid opcode return value check */
-	req.cmd->nvme_cmd.opc = 100;
-	ret = nvmf_discovery_ctrlr_process_admin_cmd(&req);
-	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_INVALID_OPCODE);
-	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 }
 
 static bool
@@ -301,7 +266,6 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "process_discovery_command", test_process_discovery_cmd) == NULL ||
 		CU_add_test(suite, "discovery_log", test_discovery_log) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
