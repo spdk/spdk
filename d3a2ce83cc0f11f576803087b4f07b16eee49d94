@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "43c36365_bfebb854",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-08-17T01:16:20Z",
+      "side": 1,
+      "message": "yes, there are some delete operation such as:\n/rocksdb/db/3//MANIFEST-000001",
+      "parentUuid": "b74073bf_f3305c88",
+      "revId": "d3a2ce83cc0f11f576803087b4f07b16eee49d94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74360938_d12f5bd9",
         "filename": "lib/rocksdb/env_spdk.cc",
         "patchSetId": 1
