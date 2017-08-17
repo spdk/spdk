@@ -144,22 +144,12 @@ spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
 	assert(copy_len + zero_len == length);
 }
 
-static inline uint32_t
-nvmf_get_log_page_len(struct spdk_nvme_cmd *cmd)
-{
-	uint32_t numdl = (cmd->cdw10 >> 16) & 0xFFFFu;
-	uint32_t numdu = (cmd->cdw11) & 0xFFFFu;
-	return ((numdu << 16) + numdl + 1) * sizeof(uint32_t);
-}
-
 static int
 nvmf_discovery_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
-	uint64_t log_page_offset;
-	uint32_t len;
 
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
@@ -184,30 +174,7 @@ nvmf_discovery_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 		}
 		break;
 	case SPDK_NVME_OPC_GET_LOG_PAGE:
-		log_page_offset = (uint64_t)cmd->cdw12 | ((uint64_t)cmd->cdw13 << 32);
-		if (log_page_offset & 3) {
-			SPDK_ERRLOG("Invalid log page offset 0x%" PRIx64 "\n", log_page_offset);
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-
-		len = nvmf_get_log_page_len(cmd);
-		if (len > req->length) {
-			SPDK_ERRLOG("Get log page: len (%u) > buf size (%u)\n",
-				    len, req->length);
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-
-		if ((cmd->cdw10 & 0xFF) == SPDK_NVME_LOG_DISCOVERY) {
-			spdk_nvmf_get_discovery_log_page(req->data, log_page_offset, len);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		} else {
-			SPDK_ERRLOG("Unsupported log page %u\n", cmd->cdw10 & 0xFF);
-			response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-		break;
+		return spdk_nvmf_ctrlr_get_log_page(req);
 	default:
 		SPDK_ERRLOG("Unsupported Opcode 0x%x for Discovery service\n", cmd->opc);
 		response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
