@@ -1099,9 +1099,9 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 
 	SPDK_NOTICELOG("*** RDMA Transport Init ***\n");
 
-	rtransport->max_queue_depth = tgt->max_queue_depth;
-	rtransport->max_io_size = tgt->max_io_size;
-	rtransport->in_capsule_data_size = tgt->in_capsule_data_size;
+	rtransport->max_queue_depth = tgt->opts.max_queue_depth;
+	rtransport->max_io_size = tgt->opts.max_io_size;
+	rtransport->in_capsule_data_size = tgt->opts.in_capsule_data_size;
 
 	rtransport->event_channel = rdma_create_event_channel();
 	if (rtransport->event_channel == NULL) {
