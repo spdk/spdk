@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "76d132cc_a948e089",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T15:33:14Z",
+      "side": 1,
+      "message": "since its passed in as a const* I don\u0027t so.",
+      "parentUuid": "3963ba5b_606d866f",
+      "revId": "d6ff6ee1fae8e5911b3973dd3819717054801a6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6b82058d_fc2416d0",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 6
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "72e831b7_cb05703e",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T15:33:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6b82058d_fc2416d0",
+      "revId": "d6ff6ee1fae8e5911b3973dd3819717054801a6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3d46cc09_3d28188f",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 6
@@ -47,6 +83,24 @@
       "writtenOn": "2017-08-15T22:08:04Z",
       "side": 1,
       "message": "since you\u0027ll need to rebase, go ahead and move this line into the patch that added this unit test",
+      "revId": "d6ff6ee1fae8e5911b3973dd3819717054801a6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5528164f_2644e9c4",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T15:33:14Z",
+      "side": 1,
+      "message": "well, I cant take it out here due to the order of the patches, tests wont pass on this patch.  However I can go back and add it to the correct earlier patch and hope that will make it show up there for the first time when all this is merged.  Sorry, result of all this chain learning process",
+      "parentUuid": "3d46cc09_3d28188f",
       "revId": "d6ff6ee1fae8e5911b3973dd3819717054801a6a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
