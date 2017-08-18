@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce8684e3_863c3c9f",
+        "filename": "test/vhost/fiotest/run_vhost.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-18T12:47:36Z",
+      "side": 1,
+      "message": "if ! $VHOST_APP -t vhost_scsi -h; then\n  echo \"vhost did not started with -t - ignoring as this might not be a debug build\".\nfi\n\nor something like that.",
+      "range": {
+        "startLine": 66,
+        "startChar": 3,
+        "endLine": 66,
+        "endChar": 62
+      },
+      "revId": "a362907c8c0cfc20cfedaf9437e06d6eebeccf07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
