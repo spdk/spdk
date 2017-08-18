@@ -148,7 +148,8 @@ spdk_nvmf_valid_nqn(const char *nqn)
 }
 
 struct spdk_nvmf_subsystem *
-spdk_nvmf_create_subsystem(const char *nqn,
+spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
+			   const char *nqn,
 			   enum spdk_nvmf_subtype type,
 			   void *cb_ctx,
 			   spdk_nvmf_subsystem_connect_fn connect_cb,
@@ -165,11 +166,11 @@ spdk_nvmf_create_subsystem(const char *nqn,
 		return NULL;
 	}
 
-	subsystem->tgt = &g_nvmf_tgt;
+	subsystem->tgt = tgt;
 
-	subsystem->tgt->current_subsystem_id++;
+	tgt->current_subsystem_id++;
 
-	subsystem->id = subsystem->tgt->current_subsystem_id;
+	subsystem->id = tgt->current_subsystem_id;
 	subsystem->subtype = type;
 	subsystem->cb_ctx = cb_ctx;
 	subsystem->connect_cb = connect_cb;
@@ -179,8 +180,8 @@ spdk_nvmf_create_subsystem(const char *nqn,
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->ctrlrs);
 
-	TAILQ_INSERT_TAIL(&subsystem->tgt->subsystems, subsystem, entries);
-	subsystem->tgt->discovery_genctr++;
+	TAILQ_INSERT_TAIL(&tgt->subsystems, subsystem, entries);
+	tgt->discovery_genctr++;
 
 	return subsystem;
 }
