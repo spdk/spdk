@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "f2bf7acf_8084a950",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T22:38:32Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nI think the overall change is a good idea, but I believe you can use spdk_env_get_first_core() to simplify the implementation.",
+      "revId": "e304f4fc3078f3f1c4753061fb919338f7e7a5a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "39491c41_a5dbd40d",
         "filename": "lib/rocksdb/env_spdk.cc",
         "patchSetId": 1
