@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de246526_211de088",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-18T15:36:43Z",
+      "side": 1,
+      "message": "possibility",
+      "revId": "848ab0120b2fa9a977121697899da681e14e738b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "108917f2_3e1bd244",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-18T15:36:43Z",
+      "side": 1,
+      "message": "immediately",
+      "revId": "848ab0120b2fa9a977121697899da681e14e738b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82a5c5c1_f7fbada1",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-18T15:36:43Z",
+      "side": 1,
+      "message": "untill \u003d\u003e until",
+      "revId": "848ab0120b2fa9a977121697899da681e14e738b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1063839f_4f3c19dc",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 769,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-18T15:36:43Z",
+      "side": 1,
+      "message": "should reset g_bserrno \u003d -1 here\n\nI\u0027d actually suggest setting it to some crazy value - like 12345.  Then after spdk_bs_unload is called, you should assert that g_bserrno still equals 12345 (meaning bs_op_complete was *not* called).\n\nThen after you call _bs_flush_scheduler(), assert that g_bserrno \u003d 0.",
+      "revId": "848ab0120b2fa9a977121697899da681e14e738b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
