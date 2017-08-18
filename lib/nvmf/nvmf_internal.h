@@ -36,6 +36,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/likely.h"
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/assert.h"
@@ -70,6 +71,24 @@ void spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr);
 
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
 		enum spdk_nvme_transport_type);
+
+static inline struct spdk_nvmf_ns *
+_spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
+{
+	struct spdk_nvmf_ns *ns;
+
+	/* NOTE: This implicitly also checks for 0, since 0 - 1 wraps around to UINT32_MAX. */
+	if (spdk_unlikely(nsid - 1 >= subsystem->max_nsid)) {
+		return NULL;
+	}
+
+	ns = &subsystem->ns[nsid - 1];
+	if (!ns->allocated) {
+		return NULL;
+	}
+
+	return ns;
+}
 
 #define OBJECT_NVMF_IO				0x30
 
