@@ -181,9 +181,9 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	}
 	g_spdk_nvmf_tgt_conf.acceptor_poll_rate = acceptor_poll_rate;
 
-	rc = spdk_nvmf_tgt_init(&opts);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_nvmf_tgt_init() failed\n");
+	g_tgt = spdk_nvmf_tgt_create(&opts);
+	if (!g_tgt) {
+		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");
 		return rc;
 	}
 

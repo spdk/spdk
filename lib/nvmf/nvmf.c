@@ -62,8 +62,8 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
 }
 
-int
-spdk_nvmf_tgt_init(struct spdk_nvmf_tgt_opts *opts)
+struct spdk_nvmf_tgt *
+spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 {
 	if (!opts) {
 		spdk_nvmf_tgt_opts_init(&g_nvmf_tgt.opts);
@@ -84,11 +84,11 @@ spdk_nvmf_tgt_init(struct spdk_nvmf_tgt_opts *opts)
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n", opts->in_capsule_data_size);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", opts->max_io_size);
 
-	return 0;
+	return &g_nvmf_tgt;
 }
 
-int
-spdk_nvmf_tgt_fini(void)
+void
+spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 {
 	struct spdk_nvmf_listen_addr *listen_addr, *listen_addr_tmp;
 	struct spdk_nvmf_transport *transport, *transport_tmp;
@@ -104,8 +104,6 @@ spdk_nvmf_tgt_fini(void)
 		TAILQ_REMOVE(&g_nvmf_tgt.transports, transport, link);
 		spdk_nvmf_transport_destroy(transport);
 	}
-
-	return 0;
 }
 
 struct spdk_nvmf_transport *
