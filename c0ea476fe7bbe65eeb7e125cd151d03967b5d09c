@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e84bd764_3ecabdf6",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T14:31:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c76b62f7_927cebf6",
+      "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65909d50_606d30ae",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-15T22:56:41Z",
       "side": 1,
       "message": "I think it\u0027s often clearer in the code to not assign dummy_attach_cb to a variable and instead just write it out in each place you pass it to a function.\n\nThe same for cb_ctx - it\u0027s always NULL so just write NULL instead of cb_ctx below.",
+      "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "472b271c_4853562b",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T14:31:20Z",
+      "side": 1,
+      "message": "So I did that on purpose so that the parms in the function calls have names instead of just values. Would agree w/you for functional code but here in the test code I wanted it to be easy to look at a call to the FUT and see what is being passed",
+      "parentUuid": "65909d50_606d30ae",
       "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "be2a2be1_134bf148",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T14:31:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f1671975_90681485",
+      "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fc2d9737_f834cfd8",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 9
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "3a114aba_dcedf87a",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T14:31:20Z",
+      "side": 1,
+      "message": "agree but to be consistent w/all the other UT in nvme_ut.c I think this belongs here",
+      "parentUuid": "fc2d9737_f834cfd8",
+      "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1944653_7078b8af",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 9
@@ -81,6 +153,24 @@
       "writtenOn": "2017-08-15T22:56:41Z",
       "side": 1,
       "message": "Explain what setting ctrlr.state to READY accomplishes (i.e. gets through the state machine)",
+      "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69bd3014_05bb2655",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T14:31:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c1944653_7078b8af",
       "revId": "c0ea476fe7bbe65eeb7e125cd151d03967b5d09c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
