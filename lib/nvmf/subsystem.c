@@ -81,29 +81,6 @@ spdk_nvmf_find_subsystem_with_cntlid(uint16_t cntlid)
 	return NULL;
 }
 
-bool
-spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
-{
-	struct spdk_nvmf_host *host;
-
-	if (!hostnqn) {
-		return false;
-	}
-
-	if (TAILQ_EMPTY(&subsystem->hosts)) {
-		/* No hosts means any host can connect */
-		return true;
-	}
-
-	TAILQ_FOREACH(host, &subsystem->hosts, link) {
-		if (strcmp(hostnqn, host->nqn) == 0) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
 int
 spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 {
@@ -244,6 +221,75 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	free(subsystem);
 }
 
+
+int
+spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
+{
+	struct spdk_nvmf_host *host;
+
+	if (!spdk_nvmf_valid_nqn(hostnqn)) {
+		return -1;
+	}
+
+	host = calloc(1, sizeof(*host));
+	if (!host) {
+		return -1;
+	}
+	host->nqn = strdup(hostnqn);
+	if (!host->nqn) {
+		free(host);
+		return -1;
+	}
+
+	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
+	g_nvmf_tgt.discovery_genctr++;
+
+	return 0;
+}
+
+bool
+spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
+{
+	struct spdk_nvmf_host *host;
+
+	if (!hostnqn) {
+		return false;
+	}
+
+	if (TAILQ_EMPTY(&subsystem->hosts)) {
+		/* No hosts means any host can connect */
+		return true;
+	}
+
+	TAILQ_FOREACH(host, &subsystem->hosts, link) {
+		if (strcmp(hostnqn, host->nqn) == 0) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+struct spdk_nvmf_host *
+spdk_nvmf_subsystem_get_first_host(struct spdk_nvmf_subsystem *subsystem)
+{
+	return TAILQ_FIRST(&subsystem->hosts);
+}
+
+
+struct spdk_nvmf_host *
+spdk_nvmf_subsystem_get_next_host(struct spdk_nvmf_subsystem *subsystem,
+				  struct spdk_nvmf_host *prev_host)
+{
+	return TAILQ_NEXT(prev_host, link);
+}
+
+const char *
+spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host)
+{
+	return host->nqn;
+}
+
 struct spdk_nvmf_listen_addr *
 spdk_nvmf_tgt_listen(struct spdk_nvme_transport_id *trid)
 {
@@ -324,31 +370,6 @@ spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	return false;
-}
-
-int
-spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *host_nqn)
-{
-	struct spdk_nvmf_host *host;
-
-	if (!spdk_nvmf_valid_nqn(host_nqn)) {
-		return -1;
-	}
-
-	host = calloc(1, sizeof(*host));
-	if (!host) {
-		return -1;
-	}
-	host->nqn = strdup(host_nqn);
-	if (!host->nqn) {
-		free(host);
-		return -1;
-	}
-
-	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
-	g_nvmf_tgt.discovery_genctr++;
-
-	return 0;
 }
 
 static void spdk_nvmf_ctrlr_hot_remove(void *remove_ctx)
