@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed420055_59055379",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-18T17:51:48Z",
+      "side": 1,
+      "message": "Use the new API to iterate namespaces.",
+      "revId": "faffaee0fbdd922860aa2c574570ffa10d96197c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
