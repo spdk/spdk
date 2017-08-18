@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5b1af52_99b87e77",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:51:35Z",
+      "side": 1,
+      "message": "This can probably be a stack buffer since it\u0027s a small fixed size. (Also probably should use the #define UUID_STRING_LEN.)\n\nOtherwise, it needs an allocation failure check.",
+      "range": {
+        "startLine": 387,
+        "startChar": 1,
+        "endLine": 387,
+        "endChar": 33
+      },
+      "revId": "2be55f873401c497342ea2b0d6818f3133438f46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec4ee103_2a926ee7",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:51:35Z",
+      "side": 1,
+      "message": "This should probably be \"uuid\" (lowercase) for consistency with the rest of the RPCs.",
+      "range": {
+        "startLine": 396,
+        "startChar": 27,
+        "endLine": 396,
+        "endChar": 31
+      },
+      "revId": "2be55f873401c497342ea2b0d6818f3133438f46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
