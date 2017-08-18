@@ -106,6 +106,12 @@ struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt
 		spdk_nvmf_subsystem_disconnect_fn disconnect_cb);
 
 /**
+ * Search the target for a subsystem with the given NQN
+ */
+struct spdk_nvmf_subsystem *spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt,
+		const char *subnqn);
+
+/**
  * Initialize the subsystem on the thread that will be used to poll it.
  *
  * \param subsystem Subsystem that will be polled on this core.
@@ -113,8 +119,6 @@ struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt
 int spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem);
 
 void spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
-
-struct spdk_nvmf_subsystem *spdk_nvmf_find_subsystem(const char *subnqn);
 
 /**
  * Allow the given host NQN to connect to the given subsystem.

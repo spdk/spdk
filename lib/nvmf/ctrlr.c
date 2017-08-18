@@ -205,6 +205,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			struct spdk_nvmf_fabric_connect_data *data,
 			struct spdk_nvmf_fabric_connect_rsp *rsp)
 {
+	struct spdk_nvmf_tgt *tgt;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_subsystem *subsystem;
 
@@ -227,7 +228,9 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  subnqn: \"%s\"\n", data->subnqn);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostnqn: \"%s\"\n", data->hostnqn);
 
-	subsystem = spdk_nvmf_find_subsystem(data->subnqn);
+	tgt = qpair->transport->tgt;
+
+	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
 		INVALID_CONNECT_DATA(subnqn);
@@ -238,9 +241,9 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 	 * SQSIZE is a 0-based value, so it must be at least 1 (minimum queue depth is 2) and
 	 *  strictly less than max_queue_depth.
 	 */
-	if (cmd->sqsize == 0 || cmd->sqsize >= subsystem->tgt->opts.max_queue_depth) {
+	if (cmd->sqsize == 0 || cmd->sqsize >= tgt->opts.max_queue_depth) {
 		SPDK_ERRLOG("Invalid SQSIZE %u (min 1, max %u)\n",
-			    cmd->sqsize, subsystem->tgt->opts.max_queue_depth - 1);
+			    cmd->sqsize, tgt->opts.max_queue_depth - 1);
 		INVALID_CONNECT_CMD(sqsize);
 		return;
 	}
