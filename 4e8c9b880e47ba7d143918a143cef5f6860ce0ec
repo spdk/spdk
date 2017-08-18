@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3d6b1c5a_af4a1810",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T22:45:29Z",
+      "side": 1,
+      "message": "Done, had to include a private header but that seemed OK since I don\u0027t see any other need for an accessor function from blobstore for the size of a metadata page, dunno though",
+      "parentUuid": "d1242ba6_27e415c9",
+      "revId": "4e8c9b880e47ba7d143918a143cef5f6860ce0ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d013c2e_a08ef91c",
         "filename": "lib/blob/bdev/blob_bdev.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-14T20:22:59Z",
       "side": 1,
       "message": "This error path also needs to close the bdev that we opened above.  Alternatively, we could reorder the check so that it is validated before we call spdk_bdev_open(). (You could even put it before the calloc() call to eliminate the free() as well.)",
+      "revId": "4e8c9b880e47ba7d143918a143cef5f6860ce0ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d075abf8_8bc0b320",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T22:45:29Z",
+      "side": 1,
+      "message": "cool, added the close.  Need to open it though to get the LBA size so can\u0027t move it up - unless I\u0027m seeing things which happens more often than not :)",
+      "parentUuid": "2d013c2e_a08ef91c",
       "revId": "4e8c9b880e47ba7d143918a143cef5f6860ce0ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
