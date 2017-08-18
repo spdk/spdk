@@ -98,7 +98,8 @@ struct spdk_nvmf_listen_addr {
  * of controllers.  Any individual controller has
  * access to all the NVMe device/namespaces maintained by the subsystem.
  */
-struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(const char *nqn,
+struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
+		const char *nqn,
 		enum spdk_nvmf_subtype type,
 		void *cb_ctx,
 		spdk_nvmf_subsystem_connect_fn connect_cb,
