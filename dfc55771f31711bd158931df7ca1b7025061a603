@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a55b2b85_ae470de7",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:20:45Z",
+      "side": 1,
+      "message": "General comment: should this be called bdev_virtio_scsi if it only supports SCSI? (in case we want to add virtio-blk support later)",
+      "revId": "dfc55771f31711bd158931df7ca1b7025061a603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "033cb93e_b5f0941f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:20:45Z",
+      "side": 1,
+      "message": "Needs allocation failure checks everywhere :)",
+      "revId": "dfc55771f31711bd158931df7ca1b7025061a603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea646089_8bb760f2",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:20:45Z",
+      "side": 1,
+      "message": "We should probably support READ (16)/WRITE (16) as well.",
+      "revId": "dfc55771f31711bd158931df7ca1b7025061a603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f1eb7d7_7c3604c6",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:20:45Z",
+      "side": 1,
+      "message": "Is there any way to do this in a poller instead of blocking?",
+      "revId": "dfc55771f31711bd158931df7ca1b7025061a603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81bc488d_be8bc1f0",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:20:45Z",
+      "side": 1,
+      "message": "If this isn\u0027t successful, we should probably just bail out early to avoid the extra level of indent (also need to free the allocations from above).",
+      "revId": "dfc55771f31711bd158931df7ca1b7025061a603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9753aca_98c4514c",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:20:45Z",
+      "side": 1,
+      "message": "Does this need a fallback to READ CAPACITY (10), or does virtio-scsi require support for READ CAPACITY (16)?",
+      "revId": "dfc55771f31711bd158931df7ca1b7025061a603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8403deb8_8aa322a6",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:20:45Z",
+      "side": 1,
+      "message": "This path probably needs to free the iov spdk_dma_malloc()s from above.",
+      "revId": "dfc55771f31711bd158931df7ca1b7025061a603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59b590a6_d26e151e",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:20:45Z",
+      "side": 1,
+      "message": "printf -\u003e SPDK_TRACELOG (or remove)",
+      "revId": "dfc55771f31711bd158931df7ca1b7025061a603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0f006bc_03efa29b",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:20:45Z",
+      "side": 1,
+      "message": "The name should probably be specified in the config file like our other bdevs.",
+      "revId": "dfc55771f31711bd158931df7ca1b7025061a603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
