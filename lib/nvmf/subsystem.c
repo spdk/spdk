@@ -165,9 +165,11 @@ spdk_nvmf_create_subsystem(const char *nqn,
 		return NULL;
 	}
 
-	g_nvmf_tgt.current_subsystem_id++;
+	subsystem->tgt = &g_nvmf_tgt;
 
-	subsystem->id = g_nvmf_tgt.current_subsystem_id;
+	subsystem->tgt->current_subsystem_id++;
+
+	subsystem->id = subsystem->tgt->current_subsystem_id;
 	subsystem->subtype = type;
 	subsystem->cb_ctx = cb_ctx;
 	subsystem->connect_cb = connect_cb;
@@ -177,8 +179,8 @@ spdk_nvmf_create_subsystem(const char *nqn,
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->ctrlrs);
 
-	TAILQ_INSERT_TAIL(&g_nvmf_tgt.subsystems, subsystem, entries);
-	g_nvmf_tgt.discovery_genctr++;
+	TAILQ_INSERT_TAIL(&subsystem->tgt->subsystems, subsystem, entries);
+	subsystem->tgt->discovery_genctr++;
 
 	return subsystem;
 }
@@ -213,8 +215,8 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 	spdk_nvmf_subsystem_bdev_detach(subsystem);
 
-	TAILQ_REMOVE(&g_nvmf_tgt.subsystems, subsystem, entries);
-	g_nvmf_tgt.discovery_genctr++;
+	TAILQ_REMOVE(&subsystem->tgt->subsystems, subsystem, entries);
+	subsystem->tgt->discovery_genctr++;
 
 	free(subsystem);
 }
@@ -240,7 +242,7 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	}
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
-	g_nvmf_tgt.discovery_genctr++;
+	subsystem->tgt->discovery_genctr++;
 
 	return 0;
 }
