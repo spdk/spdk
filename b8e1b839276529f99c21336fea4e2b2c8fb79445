@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e9ebbda_dd548a27",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 970,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T19:51:57Z",
+      "side": 1,
+      "message": "This might be clearer if it were named iovcnt_u64 or something similar.",
+      "range": {
+        "startLine": 970,
+        "startChar": 10,
+        "endLine": 970,
+        "endChar": 26
+      },
+      "revId": "b8e1b839276529f99c21336fea4e2b2c8fb79445",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "276b18fc_83be9a1a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T19:51:57Z",
+      "side": 1,
+      "message": "All of the error paths need to call spdk_bdev_put_io().",
+      "revId": "b8e1b839276529f99c21336fea4e2b2c8fb79445",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d27a6332_39b9c851",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T19:51:57Z",
+      "side": 1,
+      "message": "If iovcnt is already INT_MAX, this will overflow.",
+      "revId": "b8e1b839276529f99c21336fea4e2b2c8fb79445",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d494f6b0_0cbc5862",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1008,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T19:51:57Z",
+      "side": 1,
+      "message": "This would be clearer written as:\n\n   (size_t)iovcnt \u003e SIZE_MAX / sizeof(struct iovec)\n\nAlso, we know that it is \u003e\u003d 0 at this point; the \u003d\u003d 0 case should be handled by checking len \u003d\u003d 0 earlier on.",
+      "range": {
+        "startLine": 1008,
+        "startChar": 30,
+        "endLine": 1008,
+        "endChar": 46
+      },
+      "revId": "b8e1b839276529f99c21336fea4e2b2c8fb79445",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
