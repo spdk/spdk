@@ -90,10 +90,11 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 	spdk_json_write_name(w, "hosts");
 	spdk_json_write_array_begin(w);
 
-	TAILQ_FOREACH(host, &subsystem->hosts, link) {
+	for (host = spdk_nvmf_subsystem_get_first_host(subsystem); host != NULL;
+	     host = spdk_nvmf_subsystem_get_next_host(subsystem, host)) {
 		spdk_json_write_object_begin(w);
 		spdk_json_write_name(w, "nqn");
-		spdk_json_write_string(w, host->nqn);
+		spdk_json_write_string(w, spdk_nvmf_host_get_nqn(host));
 		spdk_json_write_object_end(w);
 	}
 	spdk_json_write_array_end(w);
