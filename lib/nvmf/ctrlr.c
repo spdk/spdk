@@ -845,22 +845,16 @@ spdk_nvmf_ctrlr_identify_ns(struct spdk_nvmf_subsystem *subsystem,
 			    struct spdk_nvme_cpl *rsp,
 			    struct spdk_nvme_ns_data *nsdata)
 {
-	struct spdk_bdev *bdev;
+	struct spdk_nvmf_ns *ns;
 
-	if (cmd->nsid > subsystem->dev.max_nsid || cmd->nsid == 0) {
+	ns = _spdk_nvmf_subsystem_get_ns(subsystem, cmd->nsid);
+	if (ns == NULL || ns->bdev == NULL) {
 		SPDK_ERRLOG("Identify Namespace for invalid NSID %u\n", cmd->nsid);
 		rsp->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	bdev = subsystem->dev.ns_list[cmd->nsid - 1];
-
-	if (bdev == NULL) {
-		memset(nsdata, 0, sizeof(*nsdata));
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	return spdk_nvmf_bdev_ctrlr_identify_ns(bdev, nsdata);
+	return spdk_nvmf_bdev_ctrlr_identify_ns(ns->bdev, nsdata);
 }
 
 static int
@@ -906,7 +900,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->sqes.max = 6;
 		cdata->cqes.min = 4;
 		cdata->cqes.max = 4;
-		cdata->nn = subsystem->dev.max_nsid;
+		cdata->nn = subsystem->max_nsid;
 		cdata->vwc.present = 1;
 
 		cdata->nvmf_specific.ioccsz = sizeof(struct spdk_nvme_cmd) / 16;
@@ -941,7 +935,8 @@ spdk_nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
 					struct spdk_nvme_cpl *rsp,
 					struct spdk_nvme_ns_list *ns_list)
 {
-	uint32_t i, num_ns, count = 0;
+	struct spdk_nvmf_ns *ns;
+	uint32_t count = 0;
 
 	if (cmd->nsid >= 0xfffffffeUL) {
 		SPDK_ERRLOG("Identify Active Namespace List with invalid NSID %u\n", cmd->nsid);
@@ -949,16 +944,13 @@ spdk_nvmf_ctrlr_identify_active_ns_list(struct spdk_nvmf_subsystem *subsystem,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	num_ns = subsystem->dev.max_nsid;
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		if (ns->id <= cmd->nsid) {
+			continue;
+		}
 
-	for (i = 1; i <= num_ns; i++) {
-		if (i <= cmd->nsid) {
-			continue;
-		}
-		if (subsystem->dev.ns_list[i - 1] == NULL) {
-			continue;
-		}
-		ns_list->ns_list[count++] = i;
+		ns_list->ns_list[count++] = ns->id;
 		if (count == SPDK_COUNTOF(ns_list->ns_list)) {
 			break;
 		}

@@ -61,25 +61,26 @@ struct __attribute__((packed)) nvme_read_cdw12 {
 bool
 spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	uint32_t i;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvmf_ns *ns;
 
-	for (i = 0; i < ctrlr->subsys->dev.max_nsid; i++) {
-		struct spdk_bdev *bdev = ctrlr->subsys->dev.ns_list[i];
-
-		if (bdev == NULL) {
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		if (ns->bdev == NULL) {
 			continue;
 		}
 
-		if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		if (!spdk_bdev_io_type_supported(ns->bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 			SPDK_TRACELOG(SPDK_TRACE_NVMF,
-				      "Subsystem%u Namespace %s does not support unmap - not enabling DSM\n",
-				      i, spdk_bdev_get_name(bdev));
+				      "Subsystem %s namespace %u (%s) does not support unmap - not enabling DSM\n",
+				      spdk_nvmf_subsystem_get_nqn(subsystem),
+				      ns->id, spdk_bdev_get_name(ns->bdev));
 			return false;
 		}
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support unmap - enabling DSM\n",
-		      spdk_nvmf_subsystem_get_nqn(ctrlr->subsys));
+		      spdk_nvmf_subsystem_get_nqn(subsystem));
 	return true;
 }
 
@@ -296,6 +297,7 @@ int
 spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {
 	uint32_t nsid;
+	struct spdk_nvmf_ns *ns;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
@@ -307,20 +309,16 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
 	nsid = cmd->nsid;
 
-	if (nsid > subsystem->dev.max_nsid || nsid == 0) {
+	ns = _spdk_nvmf_subsystem_get_ns(subsystem, nsid);
+	if (ns == NULL || ns->bdev == NULL) {
 		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	bdev = subsystem->dev.ns_list[nsid - 1];
-	if (bdev == NULL) {
-		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	desc = subsystem->dev.desc[nsid - 1];
-	ch = subsystem->dev.ch[nsid - 1];
+	bdev = ns->bdev;
+	desc = ns->desc;
+	ch = ns->ch;
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 	case SPDK_NVME_OPC_WRITE:
@@ -334,25 +332,50 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	}
 }
 
+static int
+spdk_nvmf_ns_bdev_attach(struct spdk_nvmf_ns *ns)
+{
+	if (ns->bdev == NULL) {
+		return 0;
+	}
+
+	ns->ch = spdk_bdev_get_io_channel(ns->desc);
+	if (ns->ch == NULL) {
+		SPDK_ERRLOG("io_channel allocation failed\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+spdk_nvmf_ns_bdev_detach(struct spdk_nvmf_ns *ns)
+{
+	if (ns->bdev == NULL) {
+		return;
+	}
+
+	if (ns->ch) {
+		spdk_put_io_channel(ns->ch);
+		ns->ch = NULL;
+	}
+	if (ns->desc) {
+		spdk_bdev_close(ns->desc);
+		ns->desc = NULL;
+	}
+	ns->bdev = NULL;
+}
+
 int
 spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_bdev *bdev;
-	struct spdk_io_channel *ch;
-	uint32_t i;
+	struct spdk_nvmf_ns *ns;
 
-	for (i = 0; i < subsystem->dev.max_nsid; i++) {
-		bdev = subsystem->dev.ns_list[i];
-		if (bdev == NULL) {
-			continue;
-		}
-
-		ch = spdk_bdev_get_io_channel(subsystem->dev.desc[i]);
-		if (ch == NULL) {
-			SPDK_ERRLOG("io_channel allocation failed\n");
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		if (spdk_nvmf_ns_bdev_attach(ns)) {
 			return -1;
 		}
-		subsystem->dev.ch[i] = ch;
 	}
 
 	return 0;
@@ -361,20 +384,11 @@ spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
 void
 spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem)
 {
-	uint32_t i;
+	struct spdk_nvmf_ns *ns;
 
-	for (i = 0; i < subsystem->dev.max_nsid; i++) {
-		if (subsystem->dev.ns_list[i]) {
-			if (subsystem->dev.ch[i]) {
-				spdk_put_io_channel(subsystem->dev.ch[i]);
-				subsystem->dev.ch[i] = NULL;
-			}
-			if (subsystem->dev.desc[i]) {
-				spdk_bdev_close(subsystem->dev.desc[i]);
-				subsystem->dev.desc[i] = NULL;
-			}
-			subsystem->dev.ns_list[i] = NULL;
-		}
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		spdk_nvmf_ns_bdev_detach(ns);
 	}
-	subsystem->dev.max_nsid = 0;
+	subsystem->max_nsid = 0;
 }
