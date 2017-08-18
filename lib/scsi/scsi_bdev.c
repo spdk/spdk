@@ -1524,7 +1524,7 @@ __copy_desc(struct spdk_bdev_scsi_unmap_ctx *ctx, uint8_t *data, size_t data_len
 	desc_count = desc_data_len / 16;
 
 	if (desc_data_len > (data_len - 8)) {
-		SPDK_ERRLOG("Error - desc_data_len (%u) > data_len (%lu) - 8",
+		SPDK_ERRLOG("Error - desc_data_len (%u) > data_len (%lu) - 8\n",
 			    desc_data_len, data_len);
 		return -EINVAL;
 	}

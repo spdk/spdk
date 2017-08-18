@@ -383,7 +383,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, uint64_t
 
 	if (rte_vhost_driver_start(path) != 0) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s", name, errno,
+		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n", name, errno,
 			    buf);
 		rte_vhost_driver_unregister(path);
 		return -EIO;
@@ -698,7 +698,7 @@ spdk_vhost_shutdown_cb(void)
 
 	if (pthread_create(&tid, NULL, &session_shutdown, NULL) < 0) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s", errno, buf);
+		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s\n", errno, buf);
 		abort();
 	}
 	pthread_detach(tid);

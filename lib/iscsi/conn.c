@@ -889,7 +889,7 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 					    conn->target->name, conn_match);
 			}
 
-			SPDK_ERRLOG("exiting conn by %s (%s)",
+			SPDK_ERRLOG("exiting conn by %s (%s)\n",
 				    xconn_match, xconn->initiator_addr);
 			if (xconn->sess != NULL) {
 				SPDK_TRACELOG(SPDK_TRACE_ISCSI, "TSIH=%u\n", xconn->sess->tsih);

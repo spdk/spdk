@@ -247,7 +247,7 @@ spdk_fio_init_env(struct thread_data *td)
 		return -1;
 	}
 	if (spdk_conf_first_section(config) == NULL) {
-		SPDK_ERRLOG("Invalid configuration file format");
+		SPDK_ERRLOG("Invalid configuration file format\n");
 		spdk_conf_free(config);
 		return -1;
 	}

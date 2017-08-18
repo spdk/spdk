@@ -1110,14 +1110,14 @@ new_device(struct spdk_vhost_dev *vdev)
 
 	rc = alloc_task_pool(svdev);
 	if (rc != 0) {
-		SPDK_ERRLOG("%s: failed to alloc task pool.", vdev->name);
+		SPDK_ERRLOG("%s: failed to alloc task pool.\n", vdev->name);
 		return -1;
 	}
 
 	svdev->vhost_events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 16,
 					       spdk_env_get_socket_id(vdev->lcore));
 	if (svdev->vhost_events == NULL) {
-		SPDK_ERRLOG("%s: failed to alloc event pool.", vdev->name);
+		SPDK_ERRLOG("%s: failed to alloc event pool.\n", vdev->name);
 		return -1;
 	}
 

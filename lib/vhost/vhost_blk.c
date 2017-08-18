@@ -534,7 +534,7 @@ new_device(struct spdk_vhost_dev *vdev)
 
 	rc = alloc_task_pool(bvdev);
 	if (rc != 0) {
-		SPDK_ERRLOG("%s: failed to alloc task pool.", bvdev->vdev.name);
+		SPDK_ERRLOG("%s: failed to alloc task pool.\n", bvdev->vdev.name);
 		return -1;
 	}
 

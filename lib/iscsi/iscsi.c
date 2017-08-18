@@ -4087,7 +4087,7 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 	}
 
 	if (pdu->data_segment_len > task->desired_data_transfer_length) {
-		SPDK_ERRLOG("the dataout pdu data length is larger than the value sent by R2T PDU");
+		SPDK_ERRLOG("the dataout pdu data length is larger than the value sent by R2T PDU\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 
