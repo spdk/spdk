@@ -36,8 +36,9 @@
 #include "CUnit/Basic.h"
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
-
+//#include "vhost_rpc.c"
 #include "vhost.c"
+#include "vhost_blk.c"
 
 DEFINE_STUB(rte_vhost_driver_unregister, int, (const char *path), 0);
 DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
@@ -65,9 +66,46 @@ DEFINE_STUB(rte_vhost_driver_disable_features, int, (const char *path, uint64_t 
 DEFINE_STUB(rte_vhost_driver_set_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_register, int, (const char *path, uint64_t flags), 0);
 DEFINE_STUB(spdk_vhost_scsi_controller_construct, int, (void), 0);
-DEFINE_STUB(spdk_vhost_blk_controller_construct, int, (void), 0);
+//DEFINE_STUB(spdk_vhost_blk_controller_construct, int, (void), 0);
 DEFINE_STUB(rte_vhost_set_vhost_vring_last_idx, int,
 	    (int vid, uint16_t vring_idx, uint16_t last_avail_idx, uint16_t last_used_idx), 0);
+
+DEFINE_STUB(spdk_ring_dequeue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);
+DEFINE_STUB(spdk_ring_enqueue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);
+DEFINE_STUB(spdk_bdev_free_io, int, (struct spdk_bdev_io *bdev_io), 0);
+DEFINE_STUB(spdk_bdev_readv, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes,
+		spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_writev, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		 struct iovec *iov, int iovcnt,
+		 uint64_t offset, uint64_t len,
+		 spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_get_product_name, const char *, (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc), 0);
+DEFINE_STUB_V(spdk_poller_register, (struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
+	     uint32_t lcore, uint64_t period_microseconds));
+DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
+DEFINE_STUB_V(spdk_poller_unregister,(struct spdk_poller **ppoller,
+	       struct spdk_event *complete));
+DEFINE_STUB_V(spdk_dma_free,(void *buf));
+DEFINE_STUB_V(spdk_ring_free, (struct spdk_ring *ring));
+DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
+DEFINE_STUB(spdk_ring_create, struct spdk_ring *, (enum spdk_ring_type type, size_t count, int socket_id), 0);
+//DEFINE_STUB_P(spdk_dma_malloc_socket, void, (size_t size, size_t align, uint64_t *phys_addr, int socket_id), {0});
+DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
+DEFINE_STUB(spdk_json_write_string, int, (struct spdk_json_write_ctx *w, const char *val), 0);
+DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_json_write_string_fmt, int, (struct spdk_json_write_ctx *w, const char *fmt, ...), 0);
+DEFINE_STUB(spdk_json_write_name_raw, int, (struct spdk_json_write_ctx *w, const char *name, size_t len), 0);
+DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB(spdk_json_write_bool, int, (struct spdk_json_write_ctx *w, bool val), 0);
+DEFINE_STUB(spdk_json_write_null, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB_P(spdk_bdev_get_name, const char, (const struct spdk_bdev *bdev), {0});
+DEFINE_STUB_P(spdk_conf_first_section, struct spdk_conf_section, (struct spdk_conf *cp), {0});
+
+
 
 static int
 test_setup(void)
@@ -198,6 +236,13 @@ desc_to_iov_test(void)
 	CU_ASSERT(true);
 }
 
+static void
+test_f(void)
+{
+
+	CU_ASSERT(false);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -210,6 +255,17 @@ main(int argc, char **argv)
 
 	suite = CU_add_suite("vhost_suite", test_setup, NULL);
 	if (suite == NULL) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	suite = CU_add_suite("vhost_suite_test", test_setup, NULL);
+	if (suite == NULL) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	if (CU_add_test(suite, "test_f", test_f) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
