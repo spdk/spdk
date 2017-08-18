@@ -1,0 +1,278 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5977899f_88729bdf",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "Since this file is public API, it should have doc comments for all functions and types.",
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63186fb8_62fedc4e",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "Public API headers should #include \"spdk/stdinc.h\" first.",
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cec75f9_a9e00d92",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "It doesn\u0027t look like this header needs spdk/queue.h",
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "552f00ee_00f5095c",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "spdk/blob.h also probably isn\u0027t necessary - you can just forward declare struct spdk_bs_dev",
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36525d30_78a4a6f9",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "What unit is \"sz\" in? Based on the code, it looks like clusters, but currently there\u0027s no way to query the cluster size of a lvol store in the public API.",
+      "range": {
+        "startLine": 56,
+        "startChar": 50,
+        "endLine": 56,
+        "endChar": 59
+      },
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35a4f633_d1c24fdc",
+        "filename": "include/spdk/stdinc.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "uuid.h is not a POSIX or C standard header, so it shouldn\u0027t be in stdinc.h - please include this as needed in individual .c files.",
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be7845ff_a2ccbf84",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "Please consistently use tabs or spaces for padding.",
+      "range": {
+        "startLine": 44,
+        "startChar": 8,
+        "endLine": 44,
+        "endChar": 26
+      },
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d90f19f_1e702358",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "Inconsistent spacing here as well.",
+      "range": {
+        "startLine": 70,
+        "startChar": 19,
+        "endLine": 70,
+        "endChar": 33
+      },
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82af2abe_9d6cc3a5",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "This is an errno value, not a getaddrinfo() error, so it should presumably not use gai_strerror() - please use spdk_strerror_r(). (Same for all of the gai_strerror() instances in this file.)",
+      "range": {
+        "startLine": 82,
+        "startChar": 6,
+        "endLine": 82,
+        "endChar": 18
+      },
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b7de78f_54e2fd7e",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "base_name is a required JSON-RPC parameter, so spdk_json_decode_object() will fail if it is missing; this check is then dead code.",
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c665b29_48c037d1",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "Can this print out req.lvol_store_uuid as %s instead, like the previous error message?",
+      "range": {
+        "startLine": 191,
+        "startChar": 59,
+        "endLine": 191,
+        "endChar": 61
+      },
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e3d9454_4558c16a",
+        "filename": "lib/lvol/bdev/lvs_bdev.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "I think this is handled by the examine path - maybe the comment should at least be moved to vbdev_lvs_examine().",
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "461dcdaa_cc61d2ee",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 36
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "We need to add libuuid to the dependency list in README.md and mention it in CHANGELOG.md.",
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd9efe64_bf6c02ef",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 36
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:36:38Z",
+      "side": 1,
+      "message": "Is this actually in MiB? The implementation looks like it is used as units of clusters, which can be other sizes depending on the blobstore configuration (lvol probably wants to use a much larger cluster size, like 1 GiB).",
+      "range": {
+        "startLine": 267,
+        "startChar": 29,
+        "endLine": 267,
+        "endChar": 54
+      },
+      "revId": "b61487329bc1851b75988bf3b1eefd29c905f8b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
