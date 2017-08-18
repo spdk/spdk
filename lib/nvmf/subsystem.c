@@ -38,6 +38,7 @@
 #include "subsystem.h"
 #include "transport.h"
 
+#include "spdk/likely.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
@@ -361,13 +362,14 @@ uint32_t
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
 			   uint32_t nsid)
 {
+	struct spdk_nvmf_ns *ns;
 	uint32_t i;
 	int rc;
 
 	if (nsid == 0) {
 		/* NSID not specified - find a free index */
 		for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
-			if (subsystem->dev.ns_list[i] == NULL) {
+			if (spdk_nvmf_subsystem_get_ns(subsystem, i + 1) == NULL) {
 				nsid = i + 1;
 				break;
 			}
@@ -384,34 +386,103 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 			return 0;
 		}
 
-		if (subsystem->dev.ns_list[i]) {
+		if (spdk_nvmf_subsystem_get_ns(subsystem, nsid)) {
 			SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", nsid);
 			return 0;
 		}
 	}
 
-	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ctrlr_hot_remove, subsystem,
-			    &subsystem->dev.desc[i]);
+	ns = &subsystem->ns[i];
+	ns->bdev = bdev;
+	ns->id = nsid;
+	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ctrlr_hot_remove, subsystem, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
 		return 0;
 	}
+	ns->allocated = true;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),
 		      spdk_bdev_get_name(bdev),
 		      nsid);
 
-	subsystem->dev.ns_list[i] = bdev;
-	subsystem->dev.max_nsid = spdk_max(subsystem->dev.max_nsid, nsid);
+	subsystem->max_nsid = spdk_max(subsystem->max_nsid, nsid);
 	return nsid;
+}
+
+static uint32_t
+spdk_nvmf_subsystem_get_next_allocated_nsid(struct spdk_nvmf_subsystem *subsystem,
+		uint32_t prev_nsid)
+{
+	uint32_t nsid;
+
+	if (prev_nsid >= subsystem->max_nsid) {
+		return 0;
+	}
+
+	for (nsid = prev_nsid + 1; nsid <= subsystem->max_nsid; nsid++) {
+		if (subsystem->ns[nsid - 1].allocated) {
+			return nsid;
+		}
+	}
+
+	return 0;
+}
+
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_first_ns(struct spdk_nvmf_subsystem *subsystem)
+{
+	uint32_t first_nsid;
+
+	first_nsid = spdk_nvmf_subsystem_get_next_allocated_nsid(subsystem, 0);
+	return spdk_nvmf_subsystem_get_ns(subsystem, first_nsid);
+}
+
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem,
+				struct spdk_nvmf_ns *prev_ns)
+{
+	uint32_t next_nsid;
+
+	next_nsid = spdk_nvmf_subsystem_get_next_allocated_nsid(subsystem, prev_ns->id);
+	return spdk_nvmf_subsystem_get_ns(subsystem, next_nsid);
+}
+
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
+{
+	struct spdk_nvmf_ns *ns;
+
+	if (spdk_unlikely(nsid == 0 || nsid > subsystem->max_nsid)) {
+		return NULL;
+	}
+
+	ns = &subsystem->ns[nsid - 1];
+	if (!ns->allocated) {
+		return NULL;
+	}
+
+	return ns;
+}
+
+uint32_t
+spdk_nvmf_ns_get_id(const struct spdk_nvmf_ns *ns)
+{
+	return ns->id;
+}
+
+struct spdk_bdev *
+spdk_nvmf_ns_get_bdev(struct spdk_nvmf_ns *ns)
+{
+	return ns->bdev;
 }
 
 const char *
 spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 {
-	return subsystem->dev.sn;
+	return subsystem->sn;
 }
 
 int
@@ -419,7 +490,7 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 {
 	size_t len, max_len;
 
-	max_len = sizeof(subsystem->dev.sn) - 1;
+	max_len = sizeof(subsystem->sn) - 1;
 	len = strlen(sn);
 	if (len > max_len) {
 		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Invalid sn \"%s\": length %zu > max %zu\n",
@@ -427,7 +498,7 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 		return -1;
 	}
 
-	snprintf(subsystem->dev.sn, sizeof(subsystem->dev.sn), "%s", sn);
+	snprintf(subsystem->sn, sizeof(subsystem->sn), "%s", sn);
 
 	return 0;
 }
