@@ -44,6 +44,7 @@
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
 #include "spdk/histogram_data.h"
+#include "spdk/util.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -146,6 +147,7 @@ struct worker_thread {
 
 static int g_outstanding_commands;
 
+static bool g_adjust_requests = false;
 static bool g_latency_ssd_tracking_enable = false;
 static int g_latency_sw_tracking_level = 0;
 
@@ -163,7 +165,7 @@ static uint32_t g_io_align = 0x200;
 static uint32_t g_io_size_bytes;
 static int g_rw_percentage;
 static int g_is_random;
-static int g_queue_depth;
+static uint32_t g_queue_depth;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
@@ -555,7 +557,7 @@ check_io(struct ns_worker_ctx *ns_ctx)
 }
 
 static void
-submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
+submit_io(struct ns_worker_ctx *ns_ctx, uint32_t queue_depth)
 {
 	while (queue_depth-- > 0) {
 		submit_single_io(ns_ctx);
@@ -574,6 +576,11 @@ drain_io(struct ns_worker_ctx *ns_ctx)
 static int
 init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
+	struct spdk_nvme_io_qpair_opts  qpair_opts;
+	unsigned int orig_io_queue_requests;
+	unsigned int max_xfer_size;
+	unsigned int reqs_per_io;
+
 	if (ns_ctx->entry->type == ENTRY_TYPE_AIO_FILE) {
 #ifdef HAVE_LIBAIO
 		ns_ctx->u.aio.events = calloc(g_queue_depth, sizeof(struct io_event));
@@ -592,7 +599,28 @@ init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 		 * TODO: If a controller has multiple namespaces, they could all use the same queue.
 		 *  For now, give each namespace/thread combination its own queue.
 		 */
-		ns_ctx->u.nvme.qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_ctx->entry->u.nvme.ctrlr, NULL, 0);
+
+		spdk_nvme_ctrlr_get_default_io_qpair_opts(ns_ctx->entry->u.nvme.ctrlr, &qpair_opts,
+				sizeof(qpair_opts));
+		if (qpair_opts.io_queue_size < g_queue_depth) {
+			printf("NOTICE:  Driver reduced NVMe queue depth to %u\n", qpair_opts.io_queue_size);
+		}
+		if (g_adjust_requests) {
+			orig_io_queue_requests = qpair_opts.io_queue_requests;
+			max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns_ctx->entry->u.nvme.ns);
+			if (g_io_size_bytes <= max_xfer_size)
+				reqs_per_io = 1;
+			else
+				reqs_per_io = (g_io_size_bytes / max_xfer_size) + 1;
+			qpair_opts.io_queue_requests = (g_queue_depth + 1) * reqs_per_io;
+
+			if (orig_io_queue_requests < qpair_opts.io_queue_requests) {
+				printf("NOTICE:  Increasing queue requests to %u\n",
+				       qpair_opts.io_queue_requests);
+			}
+		}
+		ns_ctx->u.nvme.qpair = spdk_nvme_ctrlr_alloc_io_qpair(ns_ctx->entry->u.nvme.ctrlr, &qpair_opts,
+				       sizeof(qpair_opts));
 		if (!ns_ctx->u.nvme.qpair) {
 			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
 			return -1;
@@ -677,6 +705,7 @@ static void usage(char *program_name)
 	printf(" [AIO device(s)]...");
 #endif
 	printf("\n");
+	printf("\t[-a for auto adjusting io requests]\n");
 	printf("\t[-q io depth]\n");
 	printf("\t[-s io size in bytes]\n");
 	printf("\t[-w io pattern type, must be one of\n");
@@ -975,8 +1004,11 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:DLM:")) != -1) {
+	while ((op = getopt(argc, argv, "ac:d:i:lm:q:r:s:t:w:DLM:")) != -1) {
 		switch (op) {
+		case 'a':
+			g_adjust_requests = true;
+			break;
 		case 'c':
 			g_core_mask = optarg;
 			break;
