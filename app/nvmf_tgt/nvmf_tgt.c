@@ -40,6 +40,8 @@
 #include "spdk/log.h"
 #include "spdk/nvme.h"
 
+struct spdk_nvmf_tgt *g_tgt = NULL;
+
 static struct spdk_poller *g_acceptor_poller = NULL;
 
 static TAILQ_HEAD(, nvmf_tgt_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
@@ -63,7 +65,7 @@ subsystem_delete_event(void *arg1, void *arg2)
 	spdk_nvmf_delete_subsystem(subsystem);
 
 	if (g_subsystems_shutdown && TAILQ_EMPTY(&g_subsystems)) {
-		spdk_nvmf_tgt_fini();
+		spdk_nvmf_tgt_destroy(g_tgt);
 		/* Finished shutting down all subsystems - continue the shutdown process. */
 		shutdown_complete();
 	}
