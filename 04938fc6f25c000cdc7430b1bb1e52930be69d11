@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "289c49b1_4aab8b3c",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T18:32:02Z",
+      "side": 1,
+      "message": "This could use SPDK_VERSION_STRING from spdk/version.h if you want the version to match the SPDK release.",
+      "revId": "04938fc6f25c000cdc7430b1bb1e52930be69d11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e34a25f4_359b150b",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T18:32:02Z",
+      "side": 1,
+      "message": "Since this is a CLI tool and not a library, it\u0027s fine to just use printf() - unless you actually want all of the extra filename and line number stuff that SPDK_NOTICELOG() prints.",
+      "range": {
+        "startLine": 290,
+        "startChar": 1,
+        "endLine": 290,
+        "endChar": 15
+      },
+      "revId": "04938fc6f25c000cdc7430b1bb1e52930be69d11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4dacd02f_c637f336",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T18:32:02Z",
+      "side": 1,
+      "message": "This probably needs a bounds check to make sure value_len + 1 \u003c sizeof(data).",
+      "revId": "04938fc6f25c000cdc7430b1bb1e52930be69d11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1b769f1_5201ffd9",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T18:32:02Z",
+      "side": 1,
+      "message": "Why the (int) cast?",
+      "revId": "04938fc6f25c000cdc7430b1bb1e52930be69d11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b5dbe6a_c9d23ed6",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T18:32:02Z",
+      "side": 1,
+      "message": "data may not actually be a printable string - maybe we should print it out as a hex dump instead?  That would eliminate the need to copy it to another buffer and add a null terminator as well.",
+      "revId": "04938fc6f25c000cdc7430b1bb1e52930be69d11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ee444da_da791a60",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 716,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T18:32:02Z",
+      "side": 1,
+      "message": "This is fine for now, but we should probably use fseeko()/ftello() and do all of the _FILE_OFFSET_BITS preprocessor dance so this works correctly for large files on 32-bit platforms. (We probably don\u0027t care very much, since we mainly target x86-64, but if it doesn\u0027t hurt too much to support 32-bit platforms, we should try to keep compatibility.)",
+      "revId": "04938fc6f25c000cdc7430b1bb1e52930be69d11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
