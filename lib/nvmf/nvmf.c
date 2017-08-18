@@ -62,52 +62,54 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
 }
 
-int
-spdk_nvmf_tgt_init(struct spdk_nvmf_tgt_opts *opts)
+struct spdk_nvmf_tgt *
+spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 {
+	struct spdk_nvmf_tgt *tgt;
+
+	tgt = &g_nvmf_tgt;
+
 	if (!opts) {
-		spdk_nvmf_tgt_opts_init(&g_nvmf_tgt.opts);
+		spdk_nvmf_tgt_opts_init(&tgt->opts);
 	} else {
-		g_nvmf_tgt.opts = *opts;
+		tgt->opts = *opts;
 	}
 
-	g_nvmf_tgt.discovery_genctr = 0;
-	g_nvmf_tgt.discovery_log_page = NULL;
-	g_nvmf_tgt.discovery_log_page_size = 0;
-	g_nvmf_tgt.current_subsystem_id = 0;
-	TAILQ_INIT(&g_nvmf_tgt.subsystems);
-	TAILQ_INIT(&g_nvmf_tgt.listen_addrs);
-	TAILQ_INIT(&g_nvmf_tgt.transports);
+	tgt->discovery_genctr = 0;
+	tgt->discovery_log_page = NULL;
+	tgt->discovery_log_page_size = 0;
+	tgt->current_subsystem_id = 0;
+	TAILQ_INIT(&tgt->subsystems);
+	TAILQ_INIT(&tgt->listen_addrs);
+	TAILQ_INIT(&tgt->transports);
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Pairs Per Controller: %d\n",
-		      g_nvmf_tgt.opts.max_qpairs_per_ctrlr);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", g_nvmf_tgt.opts.max_queue_depth);
+		      tgt->opts.max_qpairs_per_ctrlr);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", tgt->opts.max_queue_depth);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n",
-		      g_nvmf_tgt.opts.in_capsule_data_size);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", g_nvmf_tgt.opts.max_io_size);
+		      tgt->opts.in_capsule_data_size);
+	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", tgt->opts.max_io_size);
 
-	return 0;
+	return tgt;
 }
 
-int
-spdk_nvmf_tgt_fini(void)
+void
+spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 {
 	struct spdk_nvmf_listen_addr *listen_addr, *listen_addr_tmp;
 	struct spdk_nvmf_transport *transport, *transport_tmp;
 
-	TAILQ_FOREACH_SAFE(listen_addr, &g_nvmf_tgt.listen_addrs, link, listen_addr_tmp) {
-		TAILQ_REMOVE(&g_nvmf_tgt.listen_addrs, listen_addr, link);
-		g_nvmf_tgt.discovery_genctr++;
+	TAILQ_FOREACH_SAFE(listen_addr, &tgt->listen_addrs, link, listen_addr_tmp) {
+		TAILQ_REMOVE(&tgt->listen_addrs, listen_addr, link);
+		tgt->discovery_genctr++;
 
 		spdk_nvmf_listen_addr_destroy(listen_addr);
 	}
 
-	TAILQ_FOREACH_SAFE(transport, &g_nvmf_tgt.transports, link, transport_tmp) {
-		TAILQ_REMOVE(&g_nvmf_tgt.transports, transport, link);
+	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, transport_tmp) {
+		TAILQ_REMOVE(&tgt->transports, transport, link);
 		spdk_nvmf_transport_destroy(transport);
 	}
-
-	return 0;
 }
 
 struct spdk_nvmf_transport *
