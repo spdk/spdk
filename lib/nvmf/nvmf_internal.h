@@ -86,6 +86,8 @@ struct spdk_nvmf_subsystem {
 	enum spdk_nvmf_subtype subtype;
 	bool is_removed;
 
+	struct spdk_nvmf_tgt			*tgt;
+
 	char sn[MAX_SN_LEN + 1];
 
 	struct spdk_nvmf_ns			ns[MAX_VIRTUAL_NAMESPACE];

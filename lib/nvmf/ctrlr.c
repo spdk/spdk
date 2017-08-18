@@ -59,7 +59,10 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		       struct spdk_nvmf_fabric_connect_cmd *connect_cmd,
 		       struct spdk_nvmf_fabric_connect_data *connect_data)
 {
-	struct spdk_nvmf_ctrlr *ctrlr;
+	struct spdk_nvmf_ctrlr	*ctrlr;
+	struct spdk_nvmf_tgt	*tgt;
+
+	tgt = subsystem->tgt;
 
 	ctrlr = calloc(1, sizeof(*ctrlr));
 	if (ctrlr == NULL) {
@@ -88,7 +91,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->async_event_config.raw = 0;
 	ctrlr->num_qpairs = 0;
 	ctrlr->subsys = subsystem;
-	ctrlr->max_qpairs_allowed = g_nvmf_tgt.opts.max_qpairs_per_ctrlr;
+	ctrlr->max_qpairs_allowed = tgt->opts.max_qpairs_per_ctrlr;
 
 	memcpy(ctrlr->hostid, connect_data->hostid, sizeof(ctrlr->hostid));
 
@@ -100,7 +103,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	ctrlr->vcprop.cap.raw = 0;
 	ctrlr->vcprop.cap.bits.cqr = 1; /* NVMe-oF specification required */
-	ctrlr->vcprop.cap.bits.mqes = g_nvmf_tgt.opts.max_queue_depth - 1; /* max queue depth */
+	ctrlr->vcprop.cap.bits.mqes = tgt->opts.max_queue_depth - 1; /* max queue depth */
 	ctrlr->vcprop.cap.bits.ams = 0; /* optional arb mechanisms */
 	ctrlr->vcprop.cap.bits.to = 1; /* ready timeout - 500 msec units */
 	ctrlr->vcprop.cap.bits.dstrd = 0; /* fixed to 0 for NVMe-oF */
@@ -235,9 +238,9 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 	 * SQSIZE is a 0-based value, so it must be at least 1 (minimum queue depth is 2) and
 	 *  strictly less than max_queue_depth.
 	 */
-	if (cmd->sqsize == 0 || cmd->sqsize >= g_nvmf_tgt.opts.max_queue_depth) {
+	if (cmd->sqsize == 0 || cmd->sqsize >= subsystem->tgt->opts.max_queue_depth) {
 		SPDK_ERRLOG("Invalid SQSIZE %u (min 1, max %u)\n",
-			    cmd->sqsize, g_nvmf_tgt.opts.max_queue_depth - 1);
+			    cmd->sqsize, subsystem->tgt->opts.max_queue_depth - 1);
 		INVALID_CONNECT_CMD(sqsize);
 		return;
 	}
