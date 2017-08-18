@@ -64,6 +64,11 @@ struct spdk_nvmf_host {
 	TAILQ_ENTRY(spdk_nvmf_host)	link;
 };
 
+struct spdk_nvmf_listener {
+	struct spdk_nvmf_listen_addr	*listen_addr;
+	TAILQ_ENTRY(spdk_nvmf_listener)	link;
+};
+
 struct spdk_nvmf_poll_group {
 	struct spdk_nvmf_transport		*transport;
 	TAILQ_ENTRY(spdk_nvmf_poll_group)	link;

@@ -62,6 +62,7 @@ struct spdk_nvmf_request;
 struct spdk_bdev;
 struct spdk_nvmf_request;
 struct spdk_nvmf_host;
+struct spdk_nvmf_listener;
 
 typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_request *req);
 typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_qpair *qpair);
@@ -69,11 +70,6 @@ typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf
 struct spdk_nvmf_listen_addr {
 	struct spdk_nvme_transport_id		trid;
 	TAILQ_ENTRY(spdk_nvmf_listen_addr)	link;
-};
-
-struct spdk_nvmf_subsystem_allowed_listener {
-	struct spdk_nvmf_listen_addr				*listen_addr;
-	TAILQ_ENTRY(spdk_nvmf_subsystem_allowed_listener)	link;
 };
 
 struct spdk_nvmf_ns {
@@ -108,7 +104,7 @@ struct spdk_nvmf_subsystem {
 
 	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
 
-	TAILQ_HEAD(, spdk_nvmf_subsystem_allowed_listener)	allowed_listeners;
+	TAILQ_HEAD(, spdk_nvmf_listener)	listeners;
 
 	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
 };
@@ -162,7 +158,7 @@ struct spdk_nvmf_host *spdk_nvmf_subsystem_get_first_host(struct spdk_nvmf_subsy
  *
  * \param subsystem Subsystem to query.
  * \param prev_host Previous host returned from this function.
- * \return Next allowed host in this subsystem, or NULL if prev_host was the last namespace.
+ * \return Next allowed host in this subsystem, or NULL if prev_host was the last host.
  */
 struct spdk_nvmf_host *spdk_nvmf_subsystem_get_next_host(struct spdk_nvmf_subsystem *subsystem,
 		struct spdk_nvmf_host *prev_host);
@@ -177,13 +173,54 @@ const char *spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host);
 
 struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(struct spdk_nvme_transport_id *trid);
 
+/**
+ * Accept new connections on the address provided
+ *
+ * \param subsystem Subsystem to add listener to
+ * \param listen_addr The address to listen on.
+ * \return 0 on success. Negated errno value on failure.
+ */
 int spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				     struct spdk_nvmf_listen_addr *listen_addr);
 
+/**
+ * Check if connections originated from the given address are allowed to connect to the subsystem.
+ *
+ * \param subsystem The subsystem to query
+ * \param listen_addr The listen address
+ * \return true if allowed, false if not.
+ */
 bool spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 		struct spdk_nvmf_listen_addr *listen_addr);
 
+/**
+ * Return the first allowed listen address in the subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ * \return First allowed listen address in this subsystem, or NULL if none allowed.
+ */
+struct spdk_nvmf_listener *spdk_nvmf_subsystem_get_first_listener(struct spdk_nvmf_subsystem
+		*subsystem);
 
+/**
+ * Return the next allowed listen address in a subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ * \param prev_listener Previous listen address for this subsystem
+ * \return Next allowed listen address in this subsystem, or NULL if prev_listener was the last address.
+ */
+struct spdk_nvmf_listener *spdk_nvmf_subsystem_get_next_listener(struct spdk_nvmf_subsystem
+		*subsystem,
+		struct spdk_nvmf_listener *prev_listener);
+
+/**
+ * Get a listen address' transport ID
+ *
+ * \param listener This listener
+ * \return The transport ID for this listener
+ */
+const struct spdk_nvme_transport_id *spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener
+		*listener);
 
 void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
 

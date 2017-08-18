@@ -55,7 +55,7 @@ nvmf_update_discovery_log(void)
 {
 	uint64_t numrec = 0;
 	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_nvmf_subsystem_allowed_listener *allowed_listener;
+	struct spdk_nvmf_listener *listener;
 	struct spdk_nvmf_listen_addr *listen_addr;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 	struct spdk_nvmf_transport *transport;
@@ -77,7 +77,8 @@ nvmf_update_discovery_log(void)
 			continue;
 		}
 
-		TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
+		for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
+		     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
 			size_t new_size = cur_size + sizeof(*entry);
 			void *new_log_page = realloc(disc_log, new_size);
 
@@ -86,7 +87,7 @@ nvmf_update_discovery_log(void)
 				break;
 			}
 
-			listen_addr = allowed_listener->listen_addr;
+			listen_addr = listener->listen_addr;
 
 			disc_log = new_log_page;
 			cur_size = new_size;

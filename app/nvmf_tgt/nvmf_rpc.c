@@ -46,10 +46,9 @@
 static void
 dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tgt_subsystem)
 {
-	struct spdk_nvmf_listen_addr 	*listen_addr;
 	struct spdk_nvmf_host		*host;
 	struct spdk_nvmf_subsystem	*subsystem = tgt_subsystem->subsystem;
-	struct spdk_nvmf_subsystem_allowed_listener 	*allowed_listener;
+	struct spdk_nvmf_listener 	*listener;
 
 	spdk_json_write_object_begin(w);
 
@@ -68,21 +67,24 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 	spdk_json_write_name(w, "listen_addresses");
 	spdk_json_write_array_begin(w);
 
-	TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
-		listen_addr = allowed_listener->listen_addr;
+	for (listener = spdk_nvmf_subsystem_get_first_listener(subsystem); listener != NULL;
+	     listener = spdk_nvmf_subsystem_get_next_listener(subsystem, listener)) {
+		const struct spdk_nvme_transport_id *trid;
+
+		trid = spdk_nvmf_listener_get_trid(listener);
 
 		spdk_json_write_object_begin(w);
 		/* NOTE: "transport" is kept for compatibility; new code should use "trtype" */
 		spdk_json_write_name(w, "transport");
-		spdk_json_write_string(w, spdk_nvme_transport_id_trtype_str(listen_addr->trid.trtype));
+		spdk_json_write_string(w, spdk_nvme_transport_id_trtype_str(trid->trtype));
 		spdk_json_write_name(w, "trtype");
-		spdk_json_write_string(w, spdk_nvme_transport_id_trtype_str(listen_addr->trid.trtype));
+		spdk_json_write_string(w, spdk_nvme_transport_id_trtype_str(trid->trtype));
 		spdk_json_write_name(w, "adrfam");
-		spdk_json_write_string(w, spdk_nvme_transport_id_adrfam_str(listen_addr->trid.adrfam));
+		spdk_json_write_string(w, spdk_nvme_transport_id_adrfam_str(trid->adrfam));
 		spdk_json_write_name(w, "traddr");
-		spdk_json_write_string(w, listen_addr->trid.traddr);
+		spdk_json_write_string(w, trid->traddr);
 		spdk_json_write_name(w, "trsvcid");
-		spdk_json_write_string(w, listen_addr->trid.trsvcid);
+		spdk_json_write_string(w, trid->trsvcid);
 		spdk_json_write_object_end(w);
 	}
 	spdk_json_write_array_end(w);
