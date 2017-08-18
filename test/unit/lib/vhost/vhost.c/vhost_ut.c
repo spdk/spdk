@@ -95,6 +95,7 @@ alloc_vdev(void)
 	vdev->mem->regions[1].guest_phys_addr = 0x400000;
 	vdev->mem->regions[1].size = 0x400000; /* 4 MB */
 	vdev->mem->regions[1].host_user_addr = 0x2000000;
+	vdev->vid = 0x10;
 
 	return vdev;
 }
@@ -194,6 +195,12 @@ desc_to_iov_test(void)
 	memset(iov, 0, sizeof(iov));
 
 	free_vdev(vdev);
+
+	g_spdk_vhost_devices[0] = alloc_vdev();
+	vdev = spdk_vhost_dev_find_by_vid(0x10);
+	CU_ASSERT(vdev != NULL);
+	vdev = spdk_vhost_dev_find_by_vid(0xFF);
+	CU_ASSERT(vdev == NULL);
 
 	CU_ASSERT(true);
 }
