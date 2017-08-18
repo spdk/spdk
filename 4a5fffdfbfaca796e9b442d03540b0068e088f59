@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45a4473f_3ad283c6",
+        "filename": "test/lib/blobfs/blobfs_async_ut/blobfs_async_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:00:58Z",
+      "side": 1,
+      "message": "Please add a fatal assert to make sure the allocation worked:\n\n    SPDK_CU_ASSERT_FATAL(dev !\u003d NULL);",
+      "revId": "4a5fffdfbfaca796e9b442d03540b0068e088f59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bea83701_4028a794",
+        "filename": "test/lib/blobfs/blobfs_async_ut/blobfs_async_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:00:58Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "4a5fffdfbfaca796e9b442d03540b0068e088f59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99c31a61_1c1861d6",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T17:00:58Z",
+      "side": 1,
+      "message": "This needs a NULL check for allocation failure.",
+      "revId": "4a5fffdfbfaca796e9b442d03540b0068e088f59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
