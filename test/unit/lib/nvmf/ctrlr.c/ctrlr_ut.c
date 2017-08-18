@@ -102,6 +102,27 @@ spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 	return NULL;
 }
 
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
+{
+	abort();
+	return NULL;
+}
+
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_first_ns(struct spdk_nvmf_subsystem *subsystem)
+{
+	abort();
+	return NULL;
+}
+
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ns *prev_ns)
+{
+	abort();
+	return NULL;
+}
+
 bool
 spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
 {

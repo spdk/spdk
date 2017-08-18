@@ -150,6 +150,27 @@ const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem)
 	return NULL;
 }
 
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
+{
+	abort();
+	return NULL;
+}
+
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_first_ns(struct spdk_nvmf_subsystem *subsystem)
+{
+	abort();
+	return NULL;
+}
+
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ns *prev_ns)
+{
+	abort();
+	return NULL;
+}
+
 void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *sc)
 {
 }

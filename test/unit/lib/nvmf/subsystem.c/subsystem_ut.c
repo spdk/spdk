@@ -212,8 +212,8 @@ static void
 test_spdk_nvmf_subsystem_add_ns(void)
 {
 	struct spdk_nvmf_subsystem subsystem = {
-		.dev.max_nsid = 0,
-		.dev.ns_list = {},
+		.max_nsid = 0,
+		.ns = {},
 	};
 	struct spdk_bdev bdev1 = {}, bdev2 = {};
 	uint32_t nsid;
@@ -222,19 +222,19 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev1, 0);
 	/* NSID 1 is the first unused ID */
 	CU_ASSERT(nsid == 1);
-	CU_ASSERT(subsystem.dev.max_nsid == 1);
-	CU_ASSERT(subsystem.dev.ns_list[nsid - 1] == &bdev1);
+	CU_ASSERT(subsystem.max_nsid == 1);
+	CU_ASSERT(subsystem.ns[nsid - 1].bdev == &bdev1);
 
 	/* Request a specific NSID */
 	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, 5);
 	CU_ASSERT(nsid == 5);
-	CU_ASSERT(subsystem.dev.max_nsid == 5);
-	CU_ASSERT(subsystem.dev.ns_list[nsid - 1] == &bdev2);
+	CU_ASSERT(subsystem.max_nsid == 5);
+	CU_ASSERT(subsystem.ns[nsid - 1].bdev == &bdev2);
 
 	/* Request an NSID that is already in use */
 	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, 5);
 	CU_ASSERT(nsid == 0);
-	CU_ASSERT(subsystem.dev.max_nsid == 5);
+	CU_ASSERT(subsystem.max_nsid == 5);
 }
 
 static void
