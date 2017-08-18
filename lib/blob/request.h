@@ -139,6 +139,14 @@ void spdk_bs_sequence_write(spdk_bs_sequence_t *seq, void *payload,
 			    uint64_t lba, uint32_t lba_count,
 			    spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 
+void spdk_bs_sequence_readv(spdk_bs_batch_t *batch, struct iovec *iov, int iovcnt,
+			    uint64_t lba, uint32_t lba_count,
+			    spdk_bs_sequence_cpl cb_fn, void *cb_arg);
+
+void spdk_bs_sequence_writev(spdk_bs_batch_t *batch, struct iovec *iov, int iovcnt,
+			     uint64_t lba, uint32_t lba_count,
+			     spdk_bs_sequence_cpl cb_fn, void *cb_arg);
+
 void spdk_bs_sequence_flush(spdk_bs_sequence_t *seq,
 			    spdk_bs_sequence_cpl cb_fn, void *cb_arg);
 

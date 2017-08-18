@@ -39,3 +39,5 @@ DEFINE_WRAPPER(pthread_mutex_init, int,
 
 DEFINE_WRAPPER(pthread_mutexattr_init, int,
 	       (pthread_mutexattr_t *attr), (attr), MOCK_PASS_THRU)
+
+DEFINE_WRAPPER(calloc, void *, (size_t nmemb, size_t size), (nmemb, size), (void *)MOCK_PASS_THRU)

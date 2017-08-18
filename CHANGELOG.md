@@ -45,6 +45,10 @@ additional clarity when constructing spdk_mempools. Previously, -1 could be
 passed and the library would choose a reasonable default, but this new value
 makes it explicit that the default is being used.
 
+### Blobstore
+
+spdk_bs_io_readv_blob() and spdk_bs_io_writev_blob() were added to enable
+scattered payloads.
 
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 

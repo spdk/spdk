@@ -81,6 +81,62 @@ dev_write(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payloa
 }
 
 static void
+__check_iov(struct iovec *iov, int iovcnt, uint64_t length)
+{
+	int i;
+
+	for (i = 0; i < iovcnt; i++) {
+		length -= iov[i].iov_len;
+	}
+
+	CU_ASSERT(length == 0);
+}
+
+static void
+dev_readv(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+	  struct iovec *iov, int iovcnt,
+	  uint64_t lba, uint32_t lba_count,
+	  struct spdk_bs_dev_cb_args *cb_args)
+{
+	uint64_t offset, length;
+	int i;
+
+	offset = lba * DEV_BUFFER_BLOCKLEN;
+	length = lba_count * DEV_BUFFER_BLOCKLEN;
+	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
+	__check_iov(iov, iovcnt, length);
+
+	for (i = 0; i < iovcnt; i++) {
+		memcpy(iov[i].iov_base, &g_dev_buffer[offset], iov[i].iov_len);
+		offset += iov[i].iov_len;
+	}
+
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
+}
+
+static void
+dev_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+	   struct iovec *iov, int iovcnt,
+	   uint64_t lba, uint32_t lba_count,
+	   struct spdk_bs_dev_cb_args *cb_args)
+{
+	uint64_t offset, length;
+	int i;
+
+	offset = lba * DEV_BUFFER_BLOCKLEN;
+	length = lba_count * DEV_BUFFER_BLOCKLEN;
+	SPDK_CU_ASSERT_FATAL(offset + length <= DEV_BUFFER_SIZE);
+	__check_iov(iov, iovcnt, length);
+
+	for (i = 0; i < iovcnt; i++) {
+		memcpy(&g_dev_buffer[offset], iov[i].iov_base, iov[i].iov_len);
+		offset += iov[i].iov_len;
+	}
+
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
+}
+
+static void
 dev_flush(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	  struct spdk_bs_dev_cb_args *cb_args)
 {
@@ -109,6 +165,8 @@ init_dev(struct spdk_bs_dev *dev)
 	dev->destroy = dev_destroy;
 	dev->read = dev_read;
 	dev->write = dev_write;
+	dev->readv = dev_readv;
+	dev->writev = dev_writev;
 	dev->flush = dev_flush;
 	dev->unmap = dev_unmap;
 	dev->blockcnt = DEV_BUFFER_BLOCKCNT;

@@ -118,6 +118,16 @@ struct spdk_bs_dev {
 		      uint64_t lba, uint32_t lba_count,
 		      struct spdk_bs_dev_cb_args *cb_args);
 
+	void (*readv)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		      struct iovec *iov, int iovcnt,
+		      uint64_t lba, uint32_t lba_count,
+		      struct spdk_bs_dev_cb_args *cb_args);
+
+	void (*writev)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		       struct iovec *iov, int iovcnt,
+		       uint64_t lba, uint32_t lba_count,
+		       struct spdk_bs_dev_cb_args *cb_args);
+
 	void (*flush)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 		      struct spdk_bs_dev_cb_args *cb_args);
 
@@ -233,11 +243,20 @@ void spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *chann
 			   void *payload, uint64_t offset, uint64_t length,
 			   spdk_blob_op_complete cb_fn, void *cb_arg);
 
-
 /* Read data from a blob. Offset is in pages from the beginning of the blob. */
 void spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 			  void *payload, uint64_t offset, uint64_t length,
 			  spdk_blob_op_complete cb_fn, void *cb_arg);
+
+/* Write data to a blob. Offset is in pages from the beginning of the blob. */
+void spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			    spdk_blob_op_complete cb_fn, void *cb_arg);
+
+/* Read data from a blob. Offset is in pages from the beginning of the blob. */
+void spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			   spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Iterate through all blobs */
 void spdk_bs_md_iter_first(struct spdk_blob_store *bs,
