@@ -512,6 +512,173 @@ blob_rw_verify(void)
 }
 
 static void
+blob_rw_verify_iov(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev dev;
+	struct spdk_blob *blob;
+	struct spdk_io_channel *channel;
+	spdk_blob_id blobid;
+	uint8_t payload_read[10 * 4096];
+	uint8_t payload_write[10 * 4096];
+	struct iovec iov_read[3];
+	struct iovec iov_write[3];
+	void *buf;
+	int rc;
+
+	init_dev(&dev);
+	memset(g_dev_buffer, 0, DEV_BUFFER_SIZE);
+
+	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	CU_ASSERT(channel != NULL);
+
+	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_md_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	rc = spdk_bs_md_resize_blob(blob, 2);
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * Manually adjust the offset of the blob's second cluster.  This allows
+	 *  us to make sure that the readv/write code correctly accounts for I/O
+	 *  that cross cluster boundaries.  Start by asserting that the allocated
+	 *  clusters are where we expect before modifying the second cluster.
+	 */
+	CU_ASSERT(blob->active.clusters[0] == 1 * 256);
+	CU_ASSERT(blob->active.clusters[1] == 2 * 256);
+	blob->active.clusters[1] = 3 * 256;
+
+	memset(payload_write, 0xE5, sizeof(payload_write));
+	iov_write[0].iov_base = payload_write;
+	iov_write[0].iov_len = 1 * 4096;
+	iov_write[1].iov_base = payload_write + 1 * 4096;
+	iov_write[1].iov_len = 5 * 4096;
+	iov_write[2].iov_base = payload_write + 6 * 4096;
+	iov_write[2].iov_len = 4 * 4096;
+	/*
+	 * Choose a page offset just before the cluster boundary.  The first 6 pages of payload
+	 *  will get written to the first cluster, the last 4 to the second cluster.
+	 */
+	spdk_bs_io_writev_blob(blob, channel, iov_write, 3, 250, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	memset(payload_read, 0xAA, sizeof(payload_read));
+	iov_read[0].iov_base = payload_read;
+	iov_read[0].iov_len = 3 * 4096;
+	iov_read[1].iov_base = payload_read + 3 * 4096;
+	iov_read[1].iov_len = 4 * 4096;
+	iov_read[2].iov_base = payload_read + 7 * 4096;
+	iov_read[2].iov_len = 3 * 4096;
+	spdk_bs_io_readv_blob(blob, channel, iov_read, 3, 250, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 10 * 4096) == 0);
+
+	buf = calloc(1, 256 * 4096);
+	/* Check that cluster 2 on "disk" was not modified. */
+	CU_ASSERT(memcmp(buf, &g_dev_buffer[512 * 4096], 256 * 4096) == 0);
+	free(buf);
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_free_io_channel(channel);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static uint32_t
+bs_channel_get_req_count(struct spdk_io_channel *_channel)
+{
+	struct spdk_bs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_bs_request_set *set;
+	uint32_t count = 0;
+
+	TAILQ_FOREACH(set, &channel->reqs, link) {
+		count++;
+	}
+
+	return count;
+}
+
+static void
+blob_rw_verify_iov_nomem(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev dev;
+	struct spdk_blob *blob;
+	struct spdk_io_channel *channel;
+	spdk_blob_id blobid;
+	uint8_t payload_write[10 * 4096];
+	struct iovec iov_write[3];
+	uint32_t req_count;
+	int rc;
+
+	init_dev(&dev);
+	memset(g_dev_buffer, 0, DEV_BUFFER_SIZE);
+
+	spdk_bs_init(&dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	CU_ASSERT(channel != NULL);
+
+	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_md_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	rc = spdk_bs_md_resize_blob(blob, 2);
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * Choose a page offset just before the cluster boundary.  The first 6 pages of payload
+	 *  will get written to the first cluster, the last 4 to the second cluster.
+	 */
+	iov_write[0].iov_base = payload_write;
+	iov_write[0].iov_len = 1 * 4096;
+	iov_write[1].iov_base = payload_write + 1 * 4096;
+	iov_write[1].iov_len = 5 * 4096;
+	iov_write[2].iov_base = payload_write + 6 * 4096;
+	iov_write[2].iov_len = 4 * 4096;
+	MOCK_SET(calloc, void *, NULL);
+	req_count = bs_channel_get_req_count(channel);
+	spdk_bs_io_writev_blob(blob, channel, iov_write, 3, 250, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno = -ENOMEM);
+	CU_ASSERT(req_count == bs_channel_get_req_count(channel));
+	MOCK_SET(calloc, void *, (void *)MOCK_PASS_THRU);
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_free_io_channel(channel);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
 blob_iter(void)
 {
 	struct spdk_blob_store *bs;
@@ -957,6 +1124,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_write", blob_write) == NULL ||
 		CU_add_test(suite, "blob_read", blob_read) == NULL ||
 		CU_add_test(suite, "blob_rw_verify", blob_rw_verify) == NULL ||
+		CU_add_test(suite, "blob_rw_verify_iov", blob_rw_verify_iov) == NULL ||
+		CU_add_test(suite, "blob_rw_verify_iov_nomem", blob_rw_verify_iov_nomem) == NULL ||
 		CU_add_test(suite, "blob_iter", blob_iter) == NULL ||
 		CU_add_test(suite, "blob_xattr", blob_xattr) == NULL ||
 		CU_add_test(suite, "bs_load", bs_load) == NULL ||
