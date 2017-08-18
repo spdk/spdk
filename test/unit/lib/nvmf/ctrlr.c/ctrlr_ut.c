@@ -102,6 +102,13 @@ spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 	return NULL;
 }
 
+struct spdk_nvmf_ns *
+spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
+{
+	abort();
+	return NULL;
+}
+
 bool
 spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
 {

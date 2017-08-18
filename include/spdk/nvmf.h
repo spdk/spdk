@@ -80,6 +80,14 @@ struct spdk_nvmf_subsystem_allowed_listener {
 	TAILQ_ENTRY(spdk_nvmf_subsystem_allowed_listener)	link;
 };
 
+struct spdk_nvmf_ns {
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	uint32_t id;
+	bool allocated;
+};
+
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
  * of controllers.  Any individual controller has
@@ -91,13 +99,10 @@ struct spdk_nvmf_subsystem {
 	enum spdk_nvmf_subtype subtype;
 	bool is_removed;
 
-	struct {
-		char sn[MAX_SN_LEN + 1];
-		struct spdk_bdev *ns_list[MAX_VIRTUAL_NAMESPACE];
-		struct spdk_bdev_desc *desc[MAX_VIRTUAL_NAMESPACE];
-		struct spdk_io_channel *ch[MAX_VIRTUAL_NAMESPACE];
-		uint32_t max_nsid;
-	} dev;
+	char sn[MAX_SN_LEN + 1];
+
+	struct spdk_nvmf_ns			ns[MAX_VIRTUAL_NAMESPACE];
+	uint32_t 				max_nsid;
 
 	void					*cb_ctx;
 	spdk_nvmf_subsystem_connect_fn		connect_cb;
@@ -156,6 +161,61 @@ void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
  */
 uint32_t spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
 				    uint32_t nsid);
+
+/**
+ * Return the maximum valid NSID for a subsystem.
+ *
+ * This is equivalent to the NVMe Identify Controller NN (Number of Namespaces) field.
+ * Note that not all NSIDs are necessarily in use; there may be unallocated NSIDs.
+ *
+ * \param subsystem Subsystem to query.
+ * \return Maximum namespace ID for this subsystem.
+ */
+uint32_t spdk_nvmf_subsystem_get_max_nsid(struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Return the first allocated namespace in a subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ * \return First allocated namespace in this subsystem, or NULL if this subsystem has no namespaces.
+ */
+struct spdk_nvmf_ns *spdk_nvmf_subsystem_get_first_ns(struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Return the next allocated namespace in a subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ * \param prev_ns Previous ns returned from this function.
+ * \return Next allocated namespace in this subsystem, or NULL if prev_ns was the last namespace.
+ */
+struct spdk_nvmf_ns *spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem,
+		struct spdk_nvmf_ns *prev_ns);
+
+/**
+ * Get a namespace in a subsystem by NSID.
+ *
+ * \param subsystem Subsystem to search.
+ * \param nsid Namespace ID to find.
+ * \return Namespace matching nsid, or NULL if nsid was not found.
+ */
+struct spdk_nvmf_ns *spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem,
+		uint32_t nsid);
+
+/**
+ * Get a namespace's NSID.
+ *
+ * \param ns Namespace to query.
+ * \return NSID of ns.
+ */
+uint32_t spdk_nvmf_ns_get_id(const struct spdk_nvmf_ns *ns);
+
+/**
+ * Get a namespace's associated bdev.
+ *
+ * \param ns Namespace to query
+ * \return Backing bdev of ns.
+ */
+struct spdk_bdev *spdk_nvmf_ns_get_bdev(struct spdk_nvmf_ns *ns);
 
 const char *spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem);
 
