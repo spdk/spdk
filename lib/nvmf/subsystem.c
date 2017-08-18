@@ -173,7 +173,7 @@ spdk_nvmf_create_subsystem(const char *nqn,
 	subsystem->connect_cb = connect_cb;
 	subsystem->disconnect_cb = disconnect_cb;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
-	TAILQ_INIT(&subsystem->allowed_listeners);
+	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->ctrlrs);
 
@@ -186,7 +186,7 @@ spdk_nvmf_create_subsystem(const char *nqn,
 void
 spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_subsystem_allowed_listener	*allowed_listener, *allowed_listener_tmp;
+	struct spdk_nvmf_listener	*listener, *listener_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
 	struct spdk_nvmf_ctrlr		*ctrlr, *ctrlr_tmp;
 
@@ -196,11 +196,9 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "subsystem is %p\n", subsystem);
 
-	TAILQ_FOREACH_SAFE(allowed_listener,
-			   &subsystem->allowed_listeners, link, allowed_listener_tmp) {
-		TAILQ_REMOVE(&subsystem->allowed_listeners, allowed_listener, link);
-
-		free(allowed_listener);
+	TAILQ_FOREACH_SAFE(listener, &subsystem->listeners, link, listener_tmp) {
+		TAILQ_REMOVE(&subsystem->listeners, listener, link);
+		free(listener);
 	}
 
 	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
@@ -336,16 +334,16 @@ int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				 struct spdk_nvmf_listen_addr *listen_addr)
 {
-	struct spdk_nvmf_subsystem_allowed_listener *allowed_listener;
+	struct spdk_nvmf_listener *listener;
 
-	allowed_listener = calloc(1, sizeof(*allowed_listener));
-	if (!allowed_listener) {
+	listener = calloc(1, sizeof(*listener));
+	if (!listener) {
 		return -1;
 	}
 
-	allowed_listener->listen_addr = listen_addr;
+	listener->listen_addr = listen_addr;
 
-	TAILQ_INSERT_HEAD(&subsystem->allowed_listeners, allowed_listener, link);
+	TAILQ_INSERT_HEAD(&subsystem->listeners, listener, link);
 
 	return 0;
 }
@@ -357,19 +355,39 @@ bool
 spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 				     struct spdk_nvmf_listen_addr *listen_addr)
 {
-	struct spdk_nvmf_subsystem_allowed_listener *allowed_listener;
+	struct spdk_nvmf_listener *listener;
 
-	if (TAILQ_EMPTY(&subsystem->allowed_listeners)) {
+	if (TAILQ_EMPTY(&subsystem->listeners)) {
 		return true;
 	}
 
-	TAILQ_FOREACH(allowed_listener, &subsystem->allowed_listeners, link) {
-		if (allowed_listener->listen_addr == listen_addr) {
+	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
+		if (listener->listen_addr == listen_addr) {
 			return true;
 		}
 	}
 
 	return false;
+}
+
+struct spdk_nvmf_listener *
+spdk_nvmf_subsystem_get_first_listener(struct spdk_nvmf_subsystem *subsystem)
+{
+	return TAILQ_FIRST(&subsystem->listeners);
+}
+
+struct spdk_nvmf_listener *
+spdk_nvmf_subsystem_get_next_listener(struct spdk_nvmf_subsystem *subsystem,
+				      struct spdk_nvmf_listener *prev_listener)
+{
+	return TAILQ_NEXT(prev_listener, link);
+}
+
+
+const struct spdk_nvme_transport_id *
+spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener *listener)
+{
+	return &listener->listen_addr->trid;
 }
 
 static void spdk_nvmf_ctrlr_hot_remove(void *remove_ctx)
