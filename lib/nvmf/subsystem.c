@@ -47,24 +47,6 @@
 #include "spdk_internal/log.h"
 
 struct spdk_nvmf_subsystem *
-spdk_nvmf_find_subsystem(const char *subnqn)
-{
-	struct spdk_nvmf_subsystem	*subsystem;
-
-	if (!subnqn) {
-		return NULL;
-	}
-
-	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
-		if (strcmp(subnqn, subsystem->subnqn) == 0) {
-			return subsystem;
-		}
-	}
-
-	return NULL;
-}
-
-struct spdk_nvmf_subsystem *
 spdk_nvmf_find_subsystem_with_cntlid(uint16_t cntlid)
 {
 	struct spdk_nvmf_subsystem	*subsystem;

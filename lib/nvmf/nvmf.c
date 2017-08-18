@@ -112,6 +112,24 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 	}
 }
 
+struct spdk_nvmf_subsystem *
+spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
+{
+	struct spdk_nvmf_subsystem	*subsystem;
+
+	if (!subnqn) {
+		return NULL;
+	}
+
+	TAILQ_FOREACH(subsystem, &tgt->subsystems, entries) {
+		if (strcmp(subnqn, subsystem->subnqn) == 0) {
+			return subsystem;
+		}
+	}
+
+	return NULL;
+}
+
 struct spdk_nvmf_transport *
 spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_type type)
 {

@@ -191,7 +191,7 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype,
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
 
-	if (spdk_nvmf_find_subsystem(name)) {
+	if (spdk_nvmf_tgt_find_subsystem(g_tgt, name)) {
 		SPDK_ERRLOG("Subsystem already exist\n");
 		return NULL;
 	}
