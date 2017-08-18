@@ -1,0 +1,284 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "555839bd_99fe8e14",
+        "filename": "include/spdk/histogram_data.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "Adding another copyright line is fine, but the existing one should be kept too.",
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a7e98b8_11136f51",
+        "filename": "include/spdk/histogram_data.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "The idea of creating a separate histogram.h and histogram_data.h was that histogram_data.h would have just the raw histogram data structure that holds the buckets, and histogram.h would have the registration machinery for creating named histograms, etc.\n\nCan you split the new additions back into histogram.h and just use struct spdk_histogram_data from within it?",
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99f64144_079d7389",
+        "filename": "lib/jsonrpc/jsonrpc_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "This change is probably fine, but it should be in a separate commit with an explanation of why it is needed.",
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e919f3f7_d2dee2d4",
+        "filename": "lib/util/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "I think it would be better to put the histogram functions into a new library (spdk_histogram) rather than into spdk_util.",
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "696e59ed_56752eb6",
+        "filename": "lib/util/histogram.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "\"ID\" -\u003e \"hist_id\" to match the name used in the other RPC functions.",
+      "range": {
+        "startLine": 126,
+        "startChar": 26,
+        "endLine": 126,
+        "endChar": 28
+      },
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aec5168_08381183",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "The return value of spdk_jsonrpc_begin_result() must be checked.",
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b57b39e_9673c960",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "Check spdk_jsonrpc_begin_result() return value.",
+      "range": {
+        "startLine": 87,
+        "startChar": 6,
+        "endLine": 87,
+        "endChar": 31
+      },
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6ad1ad0_7f113ff7",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "\"do not exist\" -\u003e \"doesn\u0027t exist\" like the other cases.\n\nAlso, SPDK_TRACELOG() messages should end in a \\n.",
+      "range": {
+        "startLine": 93,
+        "startChar": 55,
+        "endLine": 93,
+        "endChar": 67
+      },
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "378df12b_c1563e4b",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "Check spdk_jsonrpc_begin_result() return value.",
+      "range": {
+        "startLine": 117,
+        "startChar": 6,
+        "endLine": 117,
+        "endChar": 31
+      },
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4744ff1e_8eddb6f7",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "Add \\n",
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c38fa63_b70c5bd5",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "Check spdk_jsonrpc_begin_result() return value.",
+      "range": {
+        "startLine": 147,
+        "startChar": 6,
+        "endLine": 147,
+        "endChar": 31
+      },
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0ae7508_1ae3fefb",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "Add \\n",
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e200e51_1eebf018",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "Check spdk_jsonrpc_begin_result() return value.",
+      "range": {
+        "startLine": 172,
+        "startChar": 5,
+        "endLine": 172,
+        "endChar": 30
+      },
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d357b801_1a69ff0d",
+        "filename": "lib/util/rpc/histogram_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T23:48:33Z",
+      "side": 1,
+      "message": "Check spdk_jsonrpc_begin_result() return value.",
+      "range": {
+        "startLine": 195,
+        "startChar": 6,
+        "endLine": 195,
+        "endChar": 31
+      },
+      "revId": "834fee659a285ec9c8f1b125779b5a4476471dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
