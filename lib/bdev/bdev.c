@@ -444,7 +444,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 				  SPDK_ENV_SOCKET_ID_ANY);
 
 	if (g_bdev_mgr.bdev_io_pool == NULL) {
-		SPDK_ERRLOG("could not allocate spdk_bdev_io pool");
+		SPDK_ERRLOG("could not allocate spdk_bdev_io pool\n");
 		spdk_bdev_module_init_complete(-1);
 		return;
 	}

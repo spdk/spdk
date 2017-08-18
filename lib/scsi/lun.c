@@ -352,7 +352,7 @@ spdk_scsi_lun_delete(const char *lun_name)
 	pthread_mutex_lock(&g_spdk_scsi.mutex);
 	lun = spdk_lun_db_get_lun(lun_name);
 	if (lun == NULL) {
-		SPDK_ERRLOG("LUN '%s' not found", lun_name);
+		SPDK_ERRLOG("LUN '%s' not found\n", lun_name);
 		pthread_mutex_unlock(&g_spdk_scsi.mutex);
 		return -1;
 	}
