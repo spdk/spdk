@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "eef16aa8_45db16fb",
+        "filename": "include/spdk_internal/mock.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T00:42:13Z",
+      "side": 1,
+      "message": "hmm, I dont know how that happened.  I\u0027ll fix",
+      "parentUuid": "10e3e601_93dc568b",
+      "revId": "6ddc97c5ea667e78dbe739326003c8a946385bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c87018e0_c8735c80",
         "filename": "include/spdk_internal/mock.h",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-15T21:52:34Z",
       "side": 1,
       "message": "you can get rid of the \"ret\" parameter since it will always be void",
+      "revId": "6ddc97c5ea667e78dbe739326003c8a946385bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52410093_3597b3a9",
+        "filename": "include/spdk_internal/mock.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T00:42:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c87018e0_c8735c80",
       "revId": "6ddc97c5ea667e78dbe739326003c8a946385bf0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0616f5e3_7f74bd26",
+        "filename": "test/lib/test_env.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T00:42:13Z",
+      "side": 1,
+      "message": "I moved them so that all the functions using the mock library are listed first, that\u0027s what the comments above each are intended to indicate.  I can move them back but this seemed pretty logical to me at least",
+      "parentUuid": "bc04eb43_69cc8636",
+      "revId": "6ddc97c5ea667e78dbe739326003c8a946385bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c346c16b_b5a1df43",
         "filename": "test/lib/test_env.c",
         "patchSetId": 7
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "2d81d840_a6f6afc4",
+        "filename": "test/lib/test_env.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T00:42:13Z",
+      "side": 1,
+      "message": "I didn\u0027t, they are at the top of the file defined with the movk macros",
+      "parentUuid": "c346c16b_b5a1df43",
+      "revId": "6ddc97c5ea667e78dbe739326003c8a946385bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea8cb986_f5d30c83",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -81,6 +153,24 @@
       "writtenOn": "2017-08-15T22:47:27Z",
       "side": 1,
       "message": "This comment ends in the middle of the sentence",
+      "revId": "6ddc97c5ea667e78dbe739326003c8a946385bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af6d5db4_044357b8",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T00:42:13Z",
+      "side": 1,
+      "message": "LOL, that *is* is the end of the sentence.  \"It\u0027s not yet reserved and can\u0027t be\" meaning memzone_reserve fails.  I\u0027ll actually use my words this time",
+      "parentUuid": "ea8cb986_f5d30c83",
       "revId": "6ddc97c5ea667e78dbe739326003c8a946385bf0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
