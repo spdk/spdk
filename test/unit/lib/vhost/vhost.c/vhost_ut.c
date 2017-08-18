@@ -95,6 +95,7 @@ alloc_vdev(void)
 	vdev->mem->regions[1].guest_phys_addr = 0x400000;
 	vdev->mem->regions[1].size = 0x400000; /* 4 MB */
 	vdev->mem->regions[1].host_user_addr = 0x2000000;
+	vdev->vid = 0x10;
 
 	return vdev;
 }
@@ -198,6 +199,20 @@ desc_to_iov_test(void)
 	CU_ASSERT(true);
 }
 
+static void
+dev_find_by_vid_test(void)
+{
+	struct spdk_vhost_dev *vdev;
+
+	g_spdk_vhost_devices[0] = alloc_vdev();
+	vdev = spdk_vhost_dev_find_by_vid(0x10);
+	CU_ASSERT(vdev != NULL);
+	vdev = spdk_vhost_dev_find_by_vid(0xFF);
+	CU_ASSERT(vdev == NULL);
+
+	CU_ASSERT(true);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -216,6 +231,13 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "desc_to_iov", desc_to_iov_test) == NULL
+	) {
+		CU_cleanup_registry();
+		return CU_get_error();
+	}
+
+	if (
+		CU_add_test(suite, "dev_find_by_vid", dev_find_by_vid_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
