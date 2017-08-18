@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2f3a8413_f2e9af89",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T00:17:48Z",
+      "side": 1,
+      "message": "OK, I made a note of it and will play with something on a separate patch if that\u0027s cool.  Would like to end this series ;)",
+      "parentUuid": "644a700a_e288033e",
+      "revId": "d89886a85c1e4e27b3b53072b6a17347bbb04de2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d6b3774f_1469f079",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-15T22:43:43Z",
       "side": 1,
       "message": "I think a better name than \u0027dummy\u0027 is warranted - maybe call it \u0027driver\u0027",
+      "revId": "d89886a85c1e4e27b3b53072b6a17347bbb04de2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0e696ec_445e2f6a",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T00:17:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d6b3774f_1469f079",
       "revId": "d89886a85c1e4e27b3b53072b6a17347bbb04de2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "6b910720_8dbaa320",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T00:17:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a8c0f074_0847e127",
+      "revId": "d89886a85c1e4e27b3b53072b6a17347bbb04de2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bfe1827_11fda461",
         "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
         "patchSetId": 7
@@ -64,6 +118,24 @@
       "writtenOn": "2017-08-15T22:43:43Z",
       "side": 1,
       "message": "Expanding on the comments here would be useful. Explain that the controllers are ref counted, so calling detach should only actually attempt to free the controller if the refcount is 0.\n\nAnother part that was initially not clear to me was that ctrlr is on the stack, but spdk_nvme_detach is going to attempt to free that memory. Your solution is that nvme_ctrlr_destruct is overridden to do nothing except set ut_destruct_called to true, and you verify that it was successfully called. Explaining that would be very useful.",
+      "revId": "d89886a85c1e4e27b3b53072b6a17347bbb04de2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e2c5634_43557723",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-18T00:17:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9bfe1827_11fda461",
       "revId": "d89886a85c1e4e27b3b53072b6a17347bbb04de2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
