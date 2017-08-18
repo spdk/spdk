@@ -59,6 +59,11 @@ struct spdk_nvmf_tgt {
 	TAILQ_HEAD(, spdk_nvmf_transport)	transports;
 };
 
+struct spdk_nvmf_host {
+	char				*nqn;
+	TAILQ_ENTRY(spdk_nvmf_host)	link;
+};
+
 struct spdk_nvmf_poll_group {
 	struct spdk_nvmf_transport		*transport;
 	TAILQ_ENTRY(spdk_nvmf_poll_group)	link;

@@ -61,6 +61,7 @@ struct spdk_nvmf_qpair;
 struct spdk_nvmf_request;
 struct spdk_bdev;
 struct spdk_nvmf_request;
+struct spdk_nvmf_host;
 
 typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_request *req);
 typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_qpair *qpair);
@@ -68,11 +69,6 @@ typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf
 struct spdk_nvmf_listen_addr {
 	struct spdk_nvme_transport_id		trid;
 	TAILQ_ENTRY(spdk_nvmf_listen_addr)	link;
-};
-
-struct spdk_nvmf_host {
-	char				*nqn;
-	TAILQ_ENTRY(spdk_nvmf_host)	link;
 };
 
 struct spdk_nvmf_subsystem_allowed_listener {
@@ -134,7 +130,50 @@ void spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
 
 struct spdk_nvmf_subsystem *spdk_nvmf_find_subsystem(const char *subnqn);
 
+/**
+ * Allow the given host NQN to connect to the given subsystem.
+ *
+ * \param subsystem Subsystem to add host to
+ * \param host_nqn The NQN for the host
+ * \return 0 on success. Negated errno value on failure.
+ */
+int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
+				 const char *hostnqn);
+
+/**
+ * Check if the given host is allowed to connect to the subsystem.
+ *
+ * \param subsystem The subsystem to query
+ * \param hostnqn The NQN of the host
+ * \return true if allowed, false if not.
+ */
 bool spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn);
+
+/**
+ * Return the first allowed host in a subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ * \return First allowed host in this subsystem, or NULL if none allowed.
+ */
+struct spdk_nvmf_host *spdk_nvmf_subsystem_get_first_host(struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Return the next allowed host in a subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ * \param prev_host Previous host returned from this function.
+ * \return Next allowed host in this subsystem, or NULL if prev_host was the last namespace.
+ */
+struct spdk_nvmf_host *spdk_nvmf_subsystem_get_next_host(struct spdk_nvmf_subsystem *subsystem,
+		struct spdk_nvmf_host *prev_host);
+
+/**
+ * Get a host's NQN
+ *
+ * \param host Host to query.
+ * \return NQN of host.
+ */
+const char *spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host);
 
 struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(struct spdk_nvme_transport_id *trid);
 
@@ -144,8 +183,7 @@ int spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 bool spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 		struct spdk_nvmf_listen_addr *listen_addr);
 
-int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
-				 const char *host_nqn);
+
 
 void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
 
