@@ -157,6 +157,40 @@ spdk_bs_sequence_write(spdk_bs_sequence_t *seq, void *payload,
 }
 
 void
+spdk_bs_sequence_readv(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
+		       uint64_t lba, uint32_t lba_count,
+		       spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+{
+	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
+	struct spdk_bs_channel       *channel = set->channel;
+
+	SPDK_TRACELOG(SPDK_TRACE_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
+
+	set->u.sequence.cb_fn = cb_fn;
+	set->u.sequence.cb_arg = cb_arg;
+
+	channel->dev->readv(channel->dev, channel->dev_channel, iov, iovcnt, lba, lba_count,
+			    &set->cb_args);
+}
+
+void
+spdk_bs_sequence_writev(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
+			uint64_t lba, uint32_t lba_count,
+			spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+{
+	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
+	struct spdk_bs_channel       *channel = set->channel;
+
+	SPDK_TRACELOG(SPDK_TRACE_BLOB_RW, "Writing %u blocks to LBA %lu\n", lba_count, lba);
+
+	set->u.sequence.cb_fn = cb_fn;
+	set->u.sequence.cb_arg = cb_arg;
+
+	channel->dev->writev(channel->dev, channel->dev_channel, iov, iovcnt, lba, lba_count,
+			     &set->cb_args);
+}
+
+void
 spdk_bs_sequence_flush(spdk_bs_sequence_t *seq,
 		       spdk_bs_sequence_cpl cb_fn, void *cb_arg)
 {

@@ -38,6 +38,7 @@
 #include "spdk/queue.h"
 #include "spdk/io_channel.h"
 #include "spdk/bit_array.h"
+#include "spdk/likely.h"
 
 #include "spdk_internal/log.h"
 
@@ -1060,6 +1061,161 @@ _spdk_blob_request_submit_rw(struct spdk_blob *blob, struct spdk_io_channel *_ch
 	}
 
 	spdk_bs_batch_close(batch);
+}
+
+struct rw_iov_ctx {
+	struct spdk_blob *blob;
+	bool read;
+	int iovcnt;
+	struct iovec *orig_iov;
+	uint64_t page_offset;
+	uint64_t pages_remaining;
+	uint64_t pages_done;
+	struct iovec iov[0];
+};
+
+static void
+_spdk_rw_iov_done(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	assert(cb_arg == NULL);
+	spdk_bs_sequence_finish(seq, bserrno);
+}
+
+static void
+_spdk_rw_iov_split_next(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct rw_iov_ctx *ctx = cb_arg;
+	struct iovec *iov, *orig_iov;
+	int iovcnt;
+	size_t orig_iovoff;
+	uint64_t lba;
+	uint64_t page_count, pages_to_boundary;
+	uint32_t lba_count;
+	uint64_t byte_count;
+
+	if (bserrno != 0 || ctx->pages_remaining == 0) {
+		free(ctx);
+		spdk_bs_sequence_finish(seq, bserrno);
+		return;
+	}
+
+	pages_to_boundary = _spdk_bs_num_pages_to_cluster_boundary(ctx->blob, ctx->page_offset);
+	page_count = spdk_min(ctx->pages_remaining, pages_to_boundary);
+	lba = _spdk_bs_blob_page_to_lba(ctx->blob, ctx->page_offset);
+	lba_count = _spdk_bs_page_to_lba(ctx->blob->bs, page_count);
+
+	/*
+	 * Get index and offset into the original iov array for our current position in the I/O sequence.
+	 *  byte_count will keep track of how many bytes remaining until orig_iov and orig_iovoff will
+	 *  point to the current position in the I/O sequence.
+	 */
+	byte_count = ctx->pages_done * sizeof(struct spdk_blob_md_page);
+	orig_iov = &ctx->orig_iov[0];
+	orig_iovoff = 0;
+	while (byte_count > 0) {
+		if (byte_count >= orig_iov->iov_len) {
+			byte_count -= orig_iov->iov_len;
+			orig_iov++;
+		} else {
+			orig_iovoff = byte_count;
+			byte_count = 0;
+		}
+	}
+
+	/*
+	 * Build an iov array for the next I/O in the sequence.  byte_count will keep track of how many
+	 *  bytes of this next I/O remain to be accounted for in the new iov array.
+	 */
+	byte_count = page_count * sizeof(struct spdk_blob_md_page);
+	iov = &ctx->iov[0];
+	iovcnt = 0;
+	while (byte_count > 0) {
+		iov->iov_len = spdk_min(byte_count, orig_iov->iov_len - orig_iovoff);
+		iov->iov_base = orig_iov->iov_base + orig_iovoff;
+		byte_count -= iov->iov_len;
+		orig_iovoff = 0;
+		orig_iov++;
+		iov++;
+		iovcnt++;
+	}
+
+	ctx->page_offset += page_count;
+	ctx->pages_done += page_count;
+	ctx->pages_remaining -= page_count;
+	iov = &ctx->iov[0];
+
+	if (ctx->read) {
+		spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
+	} else {
+		spdk_bs_sequence_writev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
+	}
+}
+
+static void
+_spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel *_channel,
+				 struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+				 spdk_blob_op_complete cb_fn, void *cb_arg, bool read)
+{
+	spdk_bs_sequence_t		*seq;
+	struct spdk_bs_cpl		cpl;
+
+	assert(blob != NULL);
+
+	if (length == 0) {
+		cb_fn(cb_arg, 0);
+		return;
+	}
+
+	if (offset + length > blob->active.num_clusters * blob->bs->pages_per_cluster) {
+		cb_fn(cb_arg, -EINVAL);
+		return;
+	}
+
+	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	cpl.u.blob_basic.cb_fn = cb_fn;
+	cpl.u.blob_basic.cb_arg = cb_arg;
+
+	seq = spdk_bs_sequence_start(_channel, &cpl);
+	if (!seq) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	if (spdk_likely(length < _spdk_bs_num_pages_to_cluster_boundary(blob, offset))) {
+		uint64_t lba = _spdk_bs_blob_page_to_lba(blob, offset);
+		uint32_t lba_count = _spdk_bs_page_to_lba(blob->bs, length);
+
+		if (read) {
+			spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
+		} else {
+			spdk_bs_sequence_writev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
+		}
+	} else {
+		/*
+		 * This IO spans a cluster boundary and will need to be split into multiple IO to the
+		 *  underlying block device since the LBAs may not be contiguous.  This requires extra
+		 *  work to allocate a temporary iovec array to describe the payload for each of the
+		 *  resulting IO.
+		 */
+		struct rw_iov_ctx *ctx;
+
+		ctx = calloc(1, sizeof(struct rw_iov_ctx) + iovcnt * sizeof(struct iovec));
+		if (ctx == NULL) {
+			spdk_bs_sequence_finish(seq, -ENOMEM);
+			return;
+		}
+
+		ctx->blob = blob;
+		ctx->read = read;
+		ctx->orig_iov = iov;
+		ctx->iovcnt = iovcnt;
+		memcpy(&ctx->iov[0], iov, sizeof(struct iovec) * iovcnt);
+		ctx->page_offset = offset;
+		ctx->pages_remaining = length;
+		ctx->pages_done = 0;
+
+		_spdk_rw_iov_split_next(seq, ctx, 0);
+	}
 }
 
 static struct spdk_blob *
@@ -2158,6 +2314,20 @@ void spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channe
 			  spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	_spdk_blob_request_submit_rw(blob, channel, payload, offset, length, cb_fn, cb_arg, true);
+}
+
+void spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			    spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	_spdk_blob_request_submit_rw_iov(blob, channel, iov, iovcnt, offset, length, cb_fn, cb_arg, false);
+}
+
+void spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			   spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	_spdk_blob_request_submit_rw_iov(blob, channel, iov, iovcnt, offset, length, cb_fn, cb_arg, true);
 }
 
 struct spdk_bs_iter_ctx {

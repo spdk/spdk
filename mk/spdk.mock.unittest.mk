@@ -30,4 +30,5 @@
 #  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
-LDFLAGS += -Wl,--wrap,pthread_mutexattr_init -Wl,--wrap,pthread_mutex_init
+LDFLAGS += -Wl,--wrap,pthread_mutexattr_init -Wl,--wrap,pthread_mutex_init \
+	   -Wl,--wrap,calloc

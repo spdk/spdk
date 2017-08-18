@@ -102,6 +102,8 @@
 	}
 
 /* declare wrapper protos (alphabetically please) here */
+DECLARE_WRAPPER(calloc, void *, (size_t nmemb, size_t size));
+
 DECLARE_WRAPPER(pthread_mutex_init, int,
 		(pthread_mutex_t *mtx, const pthread_mutexattr_t *attr));
 
