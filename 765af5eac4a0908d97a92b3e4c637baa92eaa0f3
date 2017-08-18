@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2fe0367f_cd19eedf",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:59:01Z",
+      "side": 1,
+      "message": "This needs an spdk_ prefix (should probably be spdk_bdev_is_opened() for consistency).",
+      "range": {
+        "startLine": 436,
+        "startChar": 5,
+        "endLine": 436,
+        "endChar": 19
+      },
+      "revId": "765af5eac4a0908d97a92b3e4c637baa92eaa0f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5a8ac09_c11ced98",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:59:01Z",
+      "side": 1,
+      "message": "Please use spdk_strerror_r() for thread safety.",
+      "range": {
+        "startLine": 362,
+        "startChar": 78,
+        "endLine": 362,
+        "endChar": 86
+      },
+      "revId": "765af5eac4a0908d97a92b3e4c637baa92eaa0f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "008cd294_ff5a83a6",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-18T21:59:01Z",
+      "side": 1,
+      "message": "This should probably at least use a fixed-width integer (e.g. uint64_t) rather than a size_t; otherwise, the on-disk format depends on the size of size_t.  For bonus points, use the endian.h accessors to make it a defined endianness (e.g. to_le64()).",
+      "range": {
+        "startLine": 334,
+        "startChar": 41,
+        "endLine": 334,
+        "endChar": 43
+      },
+      "revId": "765af5eac4a0908d97a92b3e4c637baa92eaa0f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
