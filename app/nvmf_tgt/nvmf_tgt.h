@@ -63,6 +63,8 @@ struct nvmf_tgt_subsystem {
 
 extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
+extern struct spdk_nvmf_tgt *g_tgt;
+
 struct nvmf_tgt_subsystem *
 nvmf_tgt_subsystem_first(void);
 

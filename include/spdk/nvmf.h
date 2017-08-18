@@ -48,6 +48,8 @@
 #define MAX_VIRTUAL_NAMESPACE 16
 #define MAX_SN_LEN 20
 
+struct spdk_nvmf_tgt;
+
 struct spdk_nvmf_tgt_opts {
 	uint16_t max_queue_depth;
 	uint16_t max_qpairs_per_ctrlr;
@@ -57,9 +59,20 @@ struct spdk_nvmf_tgt_opts {
 
 void spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts);
 
-int spdk_nvmf_tgt_init(struct spdk_nvmf_tgt_opts *opts);
+/**
+ * Construct an NVMe-oF target
+ *
+ * \param opts Options
+ * \return An spdk_nvmf_tgt on success, NULL on failure.
+ */
+struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts);
 
-int spdk_nvmf_tgt_fini(void);
+/**
+ * Destroy an NVMe-oF target
+ *
+ * \param tgt The target to destroy. This releases all resources.
+ */
+void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
 
 int spdk_nvmf_check_pools(void);
 
