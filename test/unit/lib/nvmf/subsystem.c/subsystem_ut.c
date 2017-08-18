@@ -273,13 +273,6 @@ nvmf_test_create_subsystem(void)
 	CU_ASSERT(subsystem == NULL);
 }
 
-static void
-nvmf_test_find_subsystem(void)
-{
-	CU_ASSERT_PTR_NULL(spdk_nvmf_find_subsystem(NULL));
-	CU_ASSERT_PTR_NULL(spdk_nvmf_find_subsystem("fake"));
-}
-
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -298,8 +291,7 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "create_subsystem", nvmf_test_create_subsystem) == NULL ||
 		CU_add_test(suite, "nvmf_tgt_listen", test_spdk_nvmf_tgt_listen) == NULL ||
-		CU_add_test(suite, "nvmf_subsystem_add_ns", test_spdk_nvmf_subsystem_add_ns) == NULL ||
-		CU_add_test(suite, "find_subsystem", nvmf_test_find_subsystem) == NULL) {
+		CU_add_test(suite, "nvmf_subsystem_add_ns", test_spdk_nvmf_subsystem_add_ns) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}

@@ -123,6 +123,7 @@ invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp, uint8_t iattr
 static spdk_nvmf_request_exec_status
 nvmf_process_connect(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_tgt		*tgt;
 	struct spdk_nvmf_subsystem	*subsystem;
 	struct spdk_nvmf_fabric_connect_data *data = (struct spdk_nvmf_fabric_connect_data *)
 			req->data;
@@ -160,7 +161,9 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	subsystem = spdk_nvmf_find_subsystem(data->subnqn);
+	tgt = req->qpair->transport->tgt;
+
+	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
 		INVALID_CONNECT_DATA(subnqn);
