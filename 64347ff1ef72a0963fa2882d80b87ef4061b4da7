@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d31f5a2c_53a88c55",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1108,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-19T17:39:26Z",
+      "side": 1,
+      "message": "so we use the sizeof a MD page as the page size for this blobstore?\n\nalso \"pages_done\" might be a better name than \"length_done\"",
+      "revId": "64347ff1ef72a0963fa2882d80b87ef4061b4da7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed797a8e_4271dc1d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-19T17:39:26Z",
+      "side": 1,
+      "message": "just so I\u0027m clear, the bytes_done above is actually the total number of bytes already transferred whereas bytes_done here means bytes_to_process in terms of constructing the next IOV array right?",
+      "revId": "64347ff1ef72a0963fa2882d80b87ef4061b4da7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e2c917e_295baa48",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-19T17:39:26Z",
+      "side": 1,
+      "message": "is any protection/consideration needed here for the case where somehow the iov-\u003elen is messed up somewhere (I didn\u0027t fully think this through) and you end up where a bytes_done \u003c iov-\u003eiov_len? Wouldn\u0027t you end up in the loop forever?",
+      "revId": "64347ff1ef72a0963fa2882d80b87ef4061b4da7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd566265_03c2d991",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1137,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-19T17:39:26Z",
+      "side": 1,
+      "message": "maybe pages_remaining instead of length_remaining?  Could just be me but I\u0027m used to thinking bytes when I read length, offset, etc.",
+      "revId": "64347ff1ef72a0963fa2882d80b87ef4061b4da7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "113edd2e_52ebe377",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1171,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-19T17:39:26Z",
+      "side": 1,
+      "message": "educational question: why can\u0027t this be a batch instead of a sequence? wouldn\u0027t that be more performant and isn\u0027t the basic requirement that the IOs in the set not have dependencies in order to define a batch?\n\nI was thinking, before I read the rest of the code above, that you would build all of the split IOs in advance and submit them as a batch",
+      "revId": "64347ff1ef72a0963fa2882d80b87ef4061b4da7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "728f6517_fd492c2c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1197,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-19T17:39:26Z",
+      "side": 1,
+      "message": "no need to clean up the open seq with spdk_bs_sequence_finish() or something?",
+      "revId": "64347ff1ef72a0963fa2882d80b87ef4061b4da7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
