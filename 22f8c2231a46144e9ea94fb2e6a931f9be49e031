@@ -22,6 +22,23 @@
       "revId": "22f8c2231a46144e9ea94fb2e6a931f9be49e031",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15a998e5_3d6e6f38",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-19T19:42:56Z",
+      "side": 1,
+      "message": "Do we have some handle on the root cause for the failures? Wrt the failure count I\u0027d say if we think we need to retry \u003e1 time we should just temporarily pull the test...",
+      "revId": "22f8c2231a46144e9ea94fb2e6a931f9be49e031",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
