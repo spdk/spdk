@@ -218,11 +218,11 @@ spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
 }
 
 void
-spdk_nvmf_tgt_poll(void)
+spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt)
 {
 	struct spdk_nvmf_transport *transport, *tmp;
 
-	TAILQ_FOREACH_SAFE(transport, &g_nvmf_tgt.transports, link, tmp) {
+	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
 		spdk_nvmf_transport_accept(transport);
 	}
 }
