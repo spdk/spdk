@@ -265,7 +265,9 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 static void
 acceptor_poll(void *arg)
 {
-	spdk_nvmf_tgt_poll();
+	struct spdk_nvmf_tgt *tgt = arg;
+
+	spdk_nvmf_tgt_accept(tgt);
 }
 
 static void
@@ -284,7 +286,7 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 		goto initialize_error;
 	}
 
-	spdk_poller_register(&g_acceptor_poller, acceptor_poll, NULL,
+	spdk_poller_register(&g_acceptor_poller, acceptor_poll, g_tgt,
 			     g_spdk_nvmf_tgt_conf.acceptor_lcore,
 			     g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 

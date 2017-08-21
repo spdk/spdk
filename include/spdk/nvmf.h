@@ -84,6 +84,11 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
 struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 		struct spdk_nvme_transport_id *trid);
 
+/**
+ * Poll the target for incoming connections.
+ */
+void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt);
+
 struct spdk_nvmf_subsystem;
 struct spdk_nvmf_ctrlr;
 struct spdk_nvmf_qpair;
@@ -288,8 +293,6 @@ int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char
 
 const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem);
 enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem);
-
-void spdk_nvmf_tgt_poll(void);
 
 void spdk_nvmf_handle_connect(struct spdk_nvmf_request *req);
 
