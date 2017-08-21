@@ -16,6 +16,24 @@
       "revId": "766e288b2aa2d036de0f3df64b05537bcf55c3b4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a47255bc_24a6e15d",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-21T17:53:53Z",
+      "side": 1,
+      "message": "good call!",
+      "parentUuid": "e48573e5_5b893f02",
+      "revId": "766e288b2aa2d036de0f3df64b05537bcf55c3b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
