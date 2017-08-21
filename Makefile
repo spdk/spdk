@@ -54,6 +54,10 @@ lib: $(DPDKBUILD)
 app: lib
 test: lib
 examples: lib
+pkgdep:
+	@pwd
+	sh ./scripts/pkgdep.sh
+	@pwd
 
 $(DIRS-y): mk/cc.mk config.h
 
