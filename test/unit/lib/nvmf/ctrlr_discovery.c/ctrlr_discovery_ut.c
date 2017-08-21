@@ -186,8 +186,7 @@ test_discovery_log(void)
 	uint8_t buffer[8192];
 	struct spdk_nvmf_discovery_log_page *disc_log;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
-	struct spdk_nvmf_listen_addr *listen_addr;
-	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvmf_listen_addr listen_addr = {};
 
 	/* Reset discovery-related globals */
 	g_nvmf_tgt.discovery_genctr = 0;
@@ -201,26 +200,23 @@ test_discovery_log(void)
 					       NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
-	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	snprintf(trid.traddr, sizeof(trid.traddr), "1234");
-	snprintf(trid.trsvcid, sizeof(trid.trsvcid), "5678");
-	listen_addr = spdk_nvmf_tgt_listen(&trid);
-	SPDK_CU_ASSERT_FATAL(listen_addr != NULL);
-
-	SPDK_CU_ASSERT_FATAL(spdk_nvmf_subsystem_add_listener(subsystem, listen_addr) == 0);
+	listen_addr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	listen_addr.trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	snprintf(listen_addr.trid.traddr, sizeof(listen_addr.trid.traddr), "1234");
+	snprintf(listen_addr.trid.trsvcid, sizeof(listen_addr.trid.trsvcid), "5678");
+	SPDK_CU_ASSERT_FATAL(spdk_nvmf_subsystem_add_listener(subsystem, &listen_addr) == 0);
 
 	/* Get only genctr (first field in the header) */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
 	spdk_nvmf_get_discovery_log_page(buffer, 0, sizeof(disc_log->genctr));
-	CU_ASSERT(disc_log->genctr == 2); /* one added subsystem + one added listen address */
+	CU_ASSERT(disc_log->genctr == 1); /* one added subsystem */
 
 	/* Get only the header, no entries */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
 	spdk_nvmf_get_discovery_log_page(buffer, 0, sizeof(*disc_log));
-	CU_ASSERT(disc_log->genctr == 2);
+	CU_ASSERT(disc_log->genctr == 1);
 	CU_ASSERT(disc_log->numrec == 1);
 
 	/* Offset 0, exact size match */

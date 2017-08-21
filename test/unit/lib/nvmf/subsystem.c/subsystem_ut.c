@@ -186,29 +186,6 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 }
 
 static void
-test_spdk_nvmf_tgt_listen(void)
-{
-	struct spdk_nvmf_listen_addr *listen_addr;
-	struct spdk_nvme_transport_id trid = {};
-
-	/* Invalid trtype */
-	trid.trtype = 55;
-	trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	snprintf(trid.traddr, sizeof(trid.traddr), "192.168.100.1");
-	snprintf(trid.trsvcid, sizeof(trid.trsvcid), "4420");
-	CU_ASSERT(spdk_nvmf_tgt_listen(&trid) == NULL);
-
-	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	snprintf(trid.traddr, sizeof(trid.traddr), "192.168.100.1");
-	snprintf(trid.trsvcid, sizeof(trid.trsvcid), "4420");
-	listen_addr = spdk_nvmf_tgt_listen(&trid);
-	SPDK_CU_ASSERT_FATAL(listen_addr != NULL);
-	spdk_nvmf_listen_addr_destroy(listen_addr);
-
-}
-
-static void
 test_spdk_nvmf_subsystem_add_ns(void)
 {
 	struct spdk_nvmf_subsystem subsystem = {
@@ -290,7 +267,6 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "create_subsystem", nvmf_test_create_subsystem) == NULL ||
-		CU_add_test(suite, "nvmf_tgt_listen", test_spdk_nvmf_tgt_listen) == NULL ||
 		CU_add_test(suite, "nvmf_subsystem_add_ns", test_spdk_nvmf_subsystem_add_ns) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
