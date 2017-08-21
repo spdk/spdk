@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3481bcd_3e7a2f31",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2017-08-21T16:12:18Z",
+      "side": 1,
+      "message": "The reason for adding one for io_queue_requests beyond the queue size covers the case when (previously) the number of io requests equaled the io queue size.  In that scenario, when perf launches the io queue depth number of I/Os initially and first calls the completion API, the driver completion path invokes the callback BEFORE free\u0027ing up the corresponding I/O request entry.  As such, for this corner case, there\u0027d be no available I/O request entry and so the new I/O submitted in perf\u0027s callback would fail.  Allocating a entry request (or requests (plural) for the case of multiple cmd\u0027s for an I/O exceeding the max xfer size), we avoid that scenario.",
+      "revId": "8544251b301dbf5f02882cf3baa9530dc2cba587",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
