@@ -274,6 +274,7 @@ const char * const vhost_msg_strings[] = {
 	[VHOST_USER_SET_VRING_KICK] = "VHOST_SET_VRING_KICK",
 	[VHOST_USER_SET_MEM_TABLE] = "VHOST_SET_MEM_TABLE",
 	[VHOST_USER_SET_VRING_ENABLE] = "VHOST_SET_VRING_ENABLE",
+	[VHOST_USER_GET_QUEUE_NUM] = "VHOST_USER_GET_QUEUE_NUM"
 };
 
 static int
@@ -291,7 +292,7 @@ vhost_user_sock(struct virtio_user_dev *dev,
 
 	RTE_SET_USED(m);
 
-	PMD_DRV_LOG(INFO, "%s", vhost_msg_strings[req]);
+	PMD_DRV_LOG(INFO, "%d = %s", req, vhost_msg_strings[req]);
 
 	msg.request = req;
 	msg.flags = VHOST_USER_VERSION;
