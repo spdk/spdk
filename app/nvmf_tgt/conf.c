@@ -427,7 +427,7 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 		snprintf(trid.traddr, sizeof(trid.traddr), "%s", addresses[i].traddr);
 		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", addresses[i].trsvcid);
 
-		listen_addr = spdk_nvmf_tgt_listen(&trid);
+		listen_addr = spdk_nvmf_tgt_listen(g_tgt, &trid);
 		if (listen_addr == NULL) {
 			SPDK_ERRLOG("Failed to listen on transport %s, adrfam %s, traddr %s, trsvcid %s\n",
 				    addresses[i].transport,

@@ -112,6 +112,49 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 	}
 }
 
+struct spdk_nvmf_listen_addr *
+spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
+		     struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvmf_listen_addr *listen_addr;
+	struct spdk_nvmf_transport *transport;
+	int rc;
+
+	TAILQ_FOREACH(listen_addr, &tgt->listen_addrs, link) {
+		if (spdk_nvme_transport_id_compare(&listen_addr->trid, trid) == 0) {
+			return listen_addr;
+		}
+	}
+
+	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trtype);
+	if (!transport) {
+		transport = spdk_nvmf_transport_create(tgt, trid->trtype);
+		if (!transport) {
+			SPDK_ERRLOG("Transport initialization failed\n");
+			return NULL;
+		}
+		TAILQ_INSERT_TAIL(&tgt->transports, transport, link);
+	}
+
+
+	listen_addr = spdk_nvmf_listen_addr_create(trid);
+	if (!listen_addr) {
+		return NULL;
+	}
+
+	rc = spdk_nvmf_transport_listen(transport, trid);
+	if (rc < 0) {
+		free(listen_addr);
+		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
+		return NULL;
+	}
+
+	TAILQ_INSERT_HEAD(&tgt->listen_addrs, listen_addr, link);
+	tgt->discovery_genctr++;
+
+	return listen_addr;
+}
+
 struct spdk_nvmf_subsystem *
 spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 {
