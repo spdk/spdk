@@ -88,7 +88,6 @@ struct virtqueue {
 	uint16_t vq_nentries;  /**< vring desc numbers */
 	uint16_t vq_free_cnt;  /**< num of desc available */
 	uint16_t vq_avail_idx; /**< sync until needed */
-	uint16_t vq_free_thresh; /**< free threshold */
 
 	void *vq_ring_virt_mem;  /**< linear address of vring*/
 	unsigned int vq_ring_size;
@@ -106,7 +105,6 @@ struct virtqueue {
 	uint16_t  vq_desc_head_idx;
 	uint16_t  vq_desc_tail_idx;
 	uint16_t  vq_queue_index;   /**< PCI queue index */
-	uint16_t offset; /**< relative offset to obtain addr in mbuf */
 	uint16_t  *notify_addr;
 
 	struct vq_desc_extra vq_descx[0];
@@ -131,20 +129,6 @@ virtqueue_disable_intr(struct virtqueue *vq)
 {
 	vq->vq_ring.avail->flags |= VRING_AVAIL_F_NO_INTERRUPT;
 }
-
-/**
- * Tell the backend to interrupt us.
- */
-static inline void
-virtqueue_enable_intr(struct virtqueue *vq)
-{
-	vq->vq_ring.avail->flags &= (~VRING_AVAIL_F_NO_INTERRUPT);
-}
-
-/**
- *  Dump virtqueue internal structures, for debug purpose only.
- */
-void virtqueue_dump(struct virtqueue *vq);
 
 static inline int
 virtqueue_full(const struct virtqueue *vq)
