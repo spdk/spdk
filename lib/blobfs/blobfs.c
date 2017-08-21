@@ -80,6 +80,7 @@ struct spdk_file {
 	struct spdk_blob	*blob;
 	char			*name;
 	uint64_t		length;
+	bool                    is_deleted;
 	bool			open_for_writing;
 	uint64_t		length_flushed;
 	uint64_t		append_pos;
@@ -1162,6 +1163,7 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 
 	if (f->ref_count > 0) {
 		/* For now, do not allow deleting files with open references. */
+		f->is_deleted = true;
 		cb_fn(cb_arg, -EBUSY);
 		return;
 	}
@@ -2313,6 +2315,10 @@ spdk_file_close(struct spdk_file *file, struct spdk_io_channel *_channel)
 	args->arg = req;
 	channel->send_request(__file_close, req);
 	sem_wait(&channel->sem);
+
+	if (file->is_deleted == true) {
+		rc = spdk_fs_delete_file(file->fs, _channel, file->name);
+	}
 
 	return args->rc;
 }
