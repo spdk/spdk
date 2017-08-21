@@ -26,6 +26,11 @@ The NVMe driver now recognizes the NVMe 1.3 Namespace Optimal I/O Boundary field
 NVMe 1.3 devices may report an optimal I/O boundary, which the driver will take
 into account when splitting I/O requests.
 
+### NVMe library
+
+The NVMe library now includes a function spdk_nvme_ns_get_ctrlr which returns the
+NVMe Controller associated with a given namespace.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
