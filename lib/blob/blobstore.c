@@ -2353,7 +2353,6 @@ void spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *chann
 struct spdk_bs_iter_ctx {
 	int64_t page_num;
 	struct spdk_blob_store *bs;
-
 	spdk_blob_op_with_handle_complete cb_fn;
 	void *cb_arg;
 };
