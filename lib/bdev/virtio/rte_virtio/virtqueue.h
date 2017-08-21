@@ -44,7 +44,6 @@
 #include "virtio_pci.h"
 #include "virtio_ring.h"
 #include "virtio_logs.h"
-#include "virtio_rxtx.h"
 
 /*
  * Per virtio_config.h in Linux.
@@ -93,9 +92,7 @@ struct virtqueue {
 	void *vq_ring_virt_mem;  /**< linear address of vring*/
 	unsigned int vq_ring_size;
 
-	union {
-		struct virtnet_tx txq;
-	};
+	const struct rte_memzone *mz;    /**< mem zone to populate TX ring. */
 
 	phys_addr_t vq_ring_mem; /**< physical address of vring,
 				  * or virtual address for virtio_user. */
@@ -109,6 +106,7 @@ struct virtqueue {
 	uint16_t  vq_desc_tail_idx;
 	uint16_t  vq_queue_index;   /**< PCI queue index */
 	uint16_t  *notify_addr;
+
 	struct vq_desc_extra vq_descx[0];
 };
 
