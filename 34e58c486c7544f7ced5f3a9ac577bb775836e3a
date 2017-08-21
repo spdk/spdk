@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c052c0b_96dd6603",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1166,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T17:24:00Z",
+      "side": 1,
+      "message": "Is it possible to remove the name from lookups here so that it matches unlink() behavior? (The contents of the file should still be available to currently open handles, but no new handles may be opened.)",
+      "revId": "34e58c486c7544f7ced5f3a9ac577bb775836e3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3266011c_3d9fc4e9",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2319,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T17:24:00Z",
+      "side": 1,
+      "message": "Does this also need to check if f-\u003eref_count \u003d\u003d 0?",
+      "revId": "34e58c486c7544f7ced5f3a9ac577bb775836e3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
