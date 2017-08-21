@@ -16,6 +16,24 @@
       "revId": "05e1d831bf822768ba771cc4284907de97519320",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11c33acc_cb81be1c",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-08-21T23:14:56Z",
+      "side": 1,
+      "message": "yes, we use the full path here, I will get this fixed as you mentioned.",
+      "parentUuid": "59b085a9_73575deb",
+      "revId": "05e1d831bf822768ba771cc4284907de97519320",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
