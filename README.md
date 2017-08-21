@@ -41,36 +41,11 @@ and operating systems.
 
 Note: The requirements for building the docs can take a while to
 install so you may want to skip them unless you need them.
-
-Fedora/CentOS:
-
-~~~{.sh}
-sudo dnf install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-	git astyle-devel python-pep8 lcov python clang-analyzer
-# Additional dependencies for NVMe over Fabrics
-sudo dnf install -y libibverbs-devel librdmacm-devel
-# Additional dependencies for building docs
-sudo dnf install -y doxygen mscgen
-~~~
-
-Ubuntu/Debian:
+Currently supports Fedora/CentOS, Ubuntu/Debian and FreeBSD.
 
 ~~~{.sh}
-sudo apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
-	git astyle pep8 lcov clang
-# Additional dependencies for NVMe over Fabrics
-sudo apt-get install -y libibverbs-dev librdmacm
-# Additional dependencies for building docs
-sudo apt-get install -y doxygen mscgen
-~~~
-
-FreeBSD:
-
-~~~{.sh}
-sudo pkg install gmake cunit openssl git devel/astyle bash devel/pep8 \
-	python
-# Additional dependencies for building docs
-sudo pkg install doxygen mscgen
+cd scripts/vagrant
+make pkgdep
 ~~~
 
 <a id="source"></a>
