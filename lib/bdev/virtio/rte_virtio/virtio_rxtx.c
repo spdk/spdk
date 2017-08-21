@@ -47,7 +47,6 @@
 #include "virtio_ethdev.h"
 #include "virtio_pci.h"
 #include "virtqueue.h"
-#include "virtio_rxtx.h"
 
 #include "spdk/env.h"
 
@@ -129,10 +128,9 @@ virtqueue_dequeue_burst_rx(struct virtqueue *vq, struct virtio_req **rx_pkts,
 } while (0)
 
 static inline void
-virtqueue_enqueue_xmit(struct virtnet_tx *txvq, struct virtio_req *req)
+virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 {
 	struct vq_desc_extra *dxp;
-	struct virtqueue *vq = txvq->vq;
 	struct vring_desc *start_dp;
 	uint32_t i;
 	uint16_t head_idx, idx;
@@ -181,28 +179,20 @@ virtio_dev_tx_queue_setup(struct virtio_hw *hw,
 			unsigned int socket_id __rte_unused)
 {
 	struct virtqueue *vq = hw->vqs[queue_idx];
-	struct virtnet_tx *txvq;
 
 	PMD_INIT_FUNC_TRACE();
 
 	if (nb_desc == 0 || nb_desc > vq->vq_nentries)
 		nb_desc = vq->vq_nentries;
 	vq->vq_free_cnt = RTE_MIN(vq->vq_free_cnt, nb_desc);
-
-	txvq = &vq->txq;
-	txvq->queue_id = queue_idx;
-
-	hw->tx_queues[queue_idx] = txvq;
 	return 0;
 }
 
 #define VIRTIO_MBUF_BURST_SZ 64
 #define DESC_PER_CACHELINE (RTE_CACHE_LINE_SIZE / sizeof(struct vring_desc))
 uint16_t
-virtio_recv_pkts(void *rx_queue, struct virtio_req **reqs, uint16_t nb_pkts)
+virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkts)
 {
-	struct virtnet_tx *rxvq = rx_queue;
-	struct virtqueue *vq = rxvq->vq;
 	struct virtio_hw *hw = vq->hw;
 	struct virtio_req *rxm;
 	uint16_t nb_used, num, nb_rx;
@@ -240,10 +230,8 @@ virtio_recv_pkts(void *rx_queue, struct virtio_req **reqs, uint16_t nb_pkts)
 }
 
 uint16_t
-virtio_xmit_pkts(void *tx_queue, struct virtio_req *req)
+virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req)
 {
-	struct virtnet_tx *txvq = tx_queue;
-	struct virtqueue *vq = txvq->vq;
 	struct virtio_hw *hw = vq->hw;
 
 	if (unlikely(hw->started == 0))
@@ -251,7 +239,7 @@ virtio_xmit_pkts(void *tx_queue, struct virtio_req *req)
 
 	virtio_rmb();
 
-	virtqueue_enqueue_xmit(txvq, req);
+	virtqueue_enqueue_xmit(vq, req);
 
 	vq_update_avail_idx(vq);
 

@@ -66,10 +66,10 @@ struct virtio_req {
 int  virtio_dev_tx_queue_setup(struct virtio_hw *hw, uint16_t tx_queue_id,
 		uint16_t nb_tx_desc, unsigned int socket_id);
 
-uint16_t virtio_recv_pkts(void *rx_queue, struct virtio_req **reqs,
+uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 		uint16_t nb_pkts);
 
-uint16_t virtio_xmit_pkts(void *tx_queue, struct virtio_req *req);
+uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
 
 int eth_virtio_dev_init(struct virtio_hw *hw, int num_queues);
 int virtio_dev_start(struct virtio_hw *hw);
