@@ -1,0 +1,146 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37d6e043_38d9c053",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T18:15:53Z",
+      "side": 1,
+      "message": "This note is no longer relevant if we always install everything in \u0027make pkgdep\u0027.",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14d199d7_a9db7209",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T18:15:53Z",
+      "side": 1,
+      "message": "This should probably be reworded so it\u0027s clear that the pkgdep target is what currently supports the listed distributions; SPDK should build on any Linux distribution, not just the ones listed.",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66264628_97a22a47",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T18:15:53Z",
+      "side": 1,
+      "message": "I think it would make more sense if this were added somewhere generic; the dependencies aren\u0027t specific to Vagrant.\n\nAlso, if we use a file from within the SPDK repo to install the deps, we should probably reorder the sections so this is after the section about how to clone the source code.",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a902abc1_a683261b",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T18:15:53Z",
+      "side": 1,
+      "message": "This case statement seems a little bit more complex than necessary - we definitely don\u0027t support HP-UX, AIX, or SunOS, so it is probably not necessary to detect them.",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51c2e8f4_ac6425b7",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T18:15:53Z",
+      "side": 1,
+      "message": "Please use consistent indentation (tabs).",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48fcb8c2_c4e25a40",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T18:15:53Z",
+      "side": 1,
+      "message": "We do the same thing for CentOS and RedHat below, so I don\u0027t think we need to distinguish between them - just detect if /etc/redhat-release exists and use the RHEL/CentOS case below.  This would also add support for Fedora, which is what most of our test pool machines are using.",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19c4be36_a934b4ce",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T18:15:53Z",
+      "side": 1,
+      "message": "I don\u0027t think it makes sense for the FreeBSD check to be inside the Linux case. (Also, I don\u0027t believe FreeBSD installs an /etc/os-release file.)",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d035f8a7_4103dd74",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T18:15:53Z",
+      "side": 1,
+      "message": "Rather than calling \u0027sudo\u0027 many times, we should just require the user to run this script as root.",
+      "range": {
+        "startLine": 38,
+        "startChar": 1,
+        "endLine": 38,
+        "endChar": 5
+      },
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

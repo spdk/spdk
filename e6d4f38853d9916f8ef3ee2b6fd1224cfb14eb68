@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6d261de_2ac127ea",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T18:15:53Z",
+      "side": 0,
+      "message": "It looks like the new script drops the addition of the epel-release repo. We should continue to add it either here or in pkgdep.",
+      "revId": "e6d4f38853d9916f8ef3ee2b6fd1224cfb14eb68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
