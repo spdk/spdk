@@ -152,21 +152,11 @@ fs_open(void)
 	g_fserrno = 0;
 	/* Delete should fail, since we have an open reference. */
 	spdk_fs_delete_file_async(fs, "file1", delete_cb, NULL);
-	CU_ASSERT(g_fserrno == -EBUSY);
+	CU_ASSERT(g_fserrno == 0);
 	CU_ASSERT(!TAILQ_EMPTY(&fs->files));
 
 	g_fserrno = 1;
 	spdk_file_close_async(g_file, fs_op_complete, NULL);
-	CU_ASSERT(g_fserrno == 0);
-	CU_ASSERT(g_file->ref_count == 0);
-
-	g_fserrno = 0;
-	spdk_file_close_async(g_file, fs_op_complete, NULL);
-	CU_ASSERT(g_fserrno == -EBADF);
-	CU_ASSERT(g_file->ref_count == 0);
-
-	g_fserrno = 1;
-	spdk_fs_delete_file_async(fs, "file1", delete_cb, NULL);
 	CU_ASSERT(g_fserrno == 0);
 	CU_ASSERT(TAILQ_EMPTY(&fs->files));
 
