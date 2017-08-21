@@ -143,6 +143,12 @@ spdk_nvme_ns_is_active(struct spdk_nvme_ns *ns)
 	return nsdata->ncap != 0;
 }
 
+struct spdk_nvme_ctrlr *
+spdk_nvme_ns_get_ctrlr(struct spdk_nvme_ns *ns)
+{
+	return ns->ctrlr;
+}
+
 uint32_t
 spdk_nvme_ns_get_max_io_xfer_size(struct spdk_nvme_ns *ns)
 {

@@ -29,6 +29,9 @@ into account when splitting I/O requests.
 The HotplugEnable option in `[Nvme]` sections of the configuration file is now
 "No" by default. It was previously "Yes".
 
+The NVMe library now includes a function spdk_nvme_ns_get_ctrlr which returns the
+NVMe Controller associated with a given namespace.
+
 ### NVMe-oF Target (nvmf)
 
 The NVMe-oF target no longer requires any in capsule data buffers to run, and
@@ -41,6 +44,7 @@ A new default value, SPDK_MEMPOOL_DEFAULT_CACHE_SIZE, was added to provide
 additional clarity when constructing spdk_mempools. Previously, -1 could be
 passed and the library would choose a reasonable default, but this new value
 makes it explicit that the default is being used.
+
 
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 

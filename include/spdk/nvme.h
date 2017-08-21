@@ -848,6 +848,14 @@ const struct spdk_nvme_ns_data *spdk_nvme_ns_get_data(struct spdk_nvme_ns *ns);
 uint32_t spdk_nvme_ns_get_id(struct spdk_nvme_ns *ns);
 
 /**
+ * \brief Get the Controller with which this namespace is associated.
+ *
+ * This function is thread safe and can be called at any point while the controller is attached to
+ *  the SPDK NVMe driver.
+ */
+struct spdk_nvme_ctrlr *spdk_nvme_ns_get_ctrlr(struct spdk_nvme_ns *ns);
+
+/**
  * \brief Determine whether a namespace is active.
  *
  * Inactive namespaces cannot be the target of I/O commands.
