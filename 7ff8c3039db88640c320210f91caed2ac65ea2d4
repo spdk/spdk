@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e2dc54e_83ef6eea",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1211,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-21T18:13:00Z",
+      "side": 1,
+      "message": "I think you can skip copying the original iov data to the new iov. You have a reference to it in orig_iov and you always repopulate the data in the new iov in _spdk_rw_iov_split_next",
+      "revId": "7ff8c3039db88640c320210f91caed2ac65ea2d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
