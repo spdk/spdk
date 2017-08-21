@@ -2353,7 +2353,8 @@ void spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *chann
 struct spdk_bs_iter_ctx {
 	int64_t page_num;
 	struct spdk_blob_store *bs;
-
+	bool is_deleted;
+	struct spdk_blob_store *bs;
 	spdk_blob_op_with_handle_complete cb_fn;
 	void *cb_arg;
 };
@@ -2413,11 +2414,23 @@ spdk_bs_md_iter_first(struct spdk_blob_store *bs,
 }
 
 static void
-_spdk_bs_iter_close_cpl(void *cb_arg, int bserrno)
+_spdk_bs_iter_delete_cb(void *cb_arg, int bserrno)
 {
 	struct spdk_bs_iter_ctx *ctx = cb_arg;
 
 	_spdk_bs_iter_cpl(ctx, NULL, -1);
+}
+
+static void
+_spdk_bs_iter_close_cpl(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_iter_ctx *ctx = cb_arg;
+
+	if (ctx->is_deleted == true) {
+		spdk_bs_md_delete_blob(ctx->bs, ctx->id, _spdk_bs_iter_delete_cb, ctx);
+	} else {
+		_spdk_bs_iter_cpl(ctx, NULL, -1);
+	}
 }
 
 void
@@ -2426,6 +2439,8 @@ spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
 {
 	struct spdk_bs_iter_ctx *ctx;
 	struct spdk_blob	*blob;
+	bool			*is_deleted;
+	size_t			value_len;
 
 	assert(b != NULL);
 	blob = *b;
@@ -2439,9 +2454,13 @@ spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
 
 	ctx->page_num = _spdk_bs_blobid_to_page(blob->id);
 	ctx->bs = bs;
+	ctx->id = blob->id;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
-
+	spdk_bs_md_get_xattr_value(blob, "is_deleted", (const void **)&is_deleted, &value_len);
+	if (is_deleted && *is_deleted == true) {
+		ctx->is_deleted = true;
+	}
 	/* Close the existing blob */
 	spdk_bs_md_close_blob(b, _spdk_bs_iter_close_cpl, ctx);
 }
