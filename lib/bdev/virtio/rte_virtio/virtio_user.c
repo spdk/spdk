@@ -37,6 +37,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <string.h>
 
 #include <linux/virtio_scsi.h>
 
