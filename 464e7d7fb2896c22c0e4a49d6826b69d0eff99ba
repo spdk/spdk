@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47c544e5_b708d3dd",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-21T08:22:22Z",
+      "side": 1,
+      "message": "Since we have \"get_lvol_store\" command available - update the tests to use it in appropriate test cases",
+      "range": {
+        "startLine": 21,
+        "startChar": 4,
+        "endLine": 21,
+        "endChar": 24
+      },
+      "revId": "464e7d7fb2896c22c0e4a49d6826b69d0eff99ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "601fd650_942a2575",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-21T08:22:22Z",
+      "side": 1,
+      "message": "Could also use get_lvol_stores besides get_bdevs",
+      "range": {
+        "startLine": 33,
+        "startChar": 2,
+        "endLine": 33,
+        "endChar": 12
+      },
+      "revId": "464e7d7fb2896c22c0e4a49d6826b69d0eff99ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49afb6e1_ed38a827",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-21T08:22:22Z",
+      "side": 1,
+      "message": "Which specific error code do we expect? \nThis comment applies to all other similar places in test plan.",
+      "range": {
+        "startLine": 124,
+        "startChar": 2,
+        "endLine": 124,
+        "endChar": 39
+      },
+      "revId": "464e7d7fb2896c22c0e4a49d6826b69d0eff99ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04d56c61_c16d8472",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-21T08:22:22Z",
+      "side": 1,
+      "message": "What do you mean by \"no change\"? Get_bdevs should print the new size you used for lvol store, so there is a change.\n\nAlso: since it\u0027s operation on lvol store - we could possibly also use get_lvol_stores here for verification",
+      "range": {
+        "startLine": 152,
+        "startChar": 2,
+        "endLine": 152,
+        "endChar": 22
+      },
+      "revId": "464e7d7fb2896c22c0e4a49d6826b69d0eff99ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27833a66_aae56c02",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-21T08:22:22Z",
+      "side": 1,
+      "message": "Which specific error code do we expect?",
+      "range": {
+        "startLine": 181,
+        "startChar": 1,
+        "endLine": 181,
+        "endChar": 39
+      },
+      "revId": "464e7d7fb2896c22c0e4a49d6826b69d0eff99ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41bb352b_03db7e10",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-21T08:22:22Z",
+      "side": 1,
+      "message": "What do you mean by \"no change\"? You destroyed an lvol store, so now it should not be listed in get_bdevs.",
+      "range": {
+        "startLine": 198,
+        "startChar": 2,
+        "endLine": 198,
+        "endChar": 22
+      },
+      "revId": "464e7d7fb2896c22c0e4a49d6826b69d0eff99ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac1f7cd3_e72d2b56",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-21T08:22:22Z",
+      "side": 1,
+      "message": "\"exist in configuration\" - remove that",
+      "range": {
+        "startLine": 220,
+        "startChar": 0,
+        "endLine": 220,
+        "endChar": 23
+      },
+      "revId": "464e7d7fb2896c22c0e4a49d6826b69d0eff99ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b5a07b0_55bd17ae",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-21T08:22:22Z",
+      "side": 1,
+      "message": "Which one? (I suppose should be ENODEV?)",
+      "range": {
+        "startLine": 226,
+        "startChar": 2,
+        "endLine": 226,
+        "endChar": 12
+      },
+      "revId": "464e7d7fb2896c22c0e4a49d6826b69d0eff99ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65860c1b_c58c0c19",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-21T08:22:22Z",
+      "side": 1,
+      "message": "Duplicate sentence",
+      "range": {
+        "startLine": 297,
+        "startChar": 0,
+        "endLine": 298,
+        "endChar": 16
+      },
+      "revId": "464e7d7fb2896c22c0e4a49d6826b69d0eff99ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
