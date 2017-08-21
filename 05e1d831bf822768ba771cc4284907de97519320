@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59b085a9_73575deb",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 6
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-21T19:27:44Z",
+      "side": 1,
+      "message": "It looks like this will now store the full path in BlobFS, instead of just the portion of the filename after our mount point.  Is that right?\n\nIf so, I think we really should keep the current behavior and strip off the mount directory from the filenames stored in BlobFS.  Then a user can still use the BlobFS even if it\u0027s mounted at a different mount point.  These changes would also break (or drastically alter) using the FUSE module to view the files in a BlobFS.",
+      "revId": "05e1d831bf822768ba771cc4284907de97519320",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
