@@ -74,6 +74,16 @@ struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts);
  */
 void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
 
+/**
+ * Begin accepting new connections at the address provided.
+ *
+ * The connections will be matched with a subsystem, which may or may not allow
+ * the connection based on a subsystem-specific whitelist. See
+ * spdk_nvmf_subsystem_add_host() and spdk_nvmf_subsystem_add_listener()
+ */
+struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
+		struct spdk_nvme_transport_id *trid);
+
 int spdk_nvmf_check_pools(void);
 
 struct spdk_nvmf_subsystem;
@@ -164,8 +174,6 @@ struct spdk_nvmf_host *spdk_nvmf_subsystem_get_next_host(struct spdk_nvmf_subsys
  * \return NQN of host.
  */
 const char *spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host);
-
-struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(struct spdk_nvme_transport_id *trid);
 
 /**
  * Accept new connections on the address provided
