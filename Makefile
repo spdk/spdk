@@ -45,6 +45,8 @@ DPDKBUILD = dpdkbuild
 DIRS-y += dpdkbuild
 endif
 
+SHELL := /bin/sh
+
 all: $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
@@ -54,6 +56,10 @@ lib: $(DPDKBUILD)
 app: lib
 test: lib
 examples: lib
+pkgdep:
+	@pwd
+	sh ./scripts/pkgdep.sh
+	@pwd
 
 $(DIRS-y): mk/cc.mk config.h
 
