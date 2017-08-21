@@ -266,7 +266,7 @@ virtio_user_dev_init(char *path, int queues, int queue_size)
 	}
 
 	if (dev->max_queues > max_queues) {
-		PMD_INIT_LOG(ERR, "%d queues requested but only %d supported", dev->max_queues, max_queues);
+		PMD_INIT_LOG(ERR, "%u queues requested but only %lu supported", dev->max_queues, max_queues);
 		free(hw);
 		free(dev);
 		return NULL;
