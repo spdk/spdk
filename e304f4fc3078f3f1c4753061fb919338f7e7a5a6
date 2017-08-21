@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "11b740f8_d3f7fbed",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 1
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-21T02:19:12Z",
+      "side": 1,
+      "message": "Thanks Daniel, once rte is initialized, we can use this API directly.",
+      "parentUuid": "f2bf7acf_8084a950",
+      "revId": "e304f4fc3078f3f1c4753061fb919338f7e7a5a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "39491c41_a5dbd40d",
         "filename": "lib/rocksdb/env_spdk.cc",
         "patchSetId": 1
