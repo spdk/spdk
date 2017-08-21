@@ -44,10 +44,11 @@
 #define VIRTIO_MIN_RX_BUFSIZE 64
 
 struct virtio_req {
-	struct iovec	*iov;
+	struct iovec	iov[128];
 	uint32_t	iovcnt;
 	uint32_t	start_write;
 	uint32_t	data_transferred;
+	void		*ctx;
 };
 
 /* Features desired/implemented by this driver. */
