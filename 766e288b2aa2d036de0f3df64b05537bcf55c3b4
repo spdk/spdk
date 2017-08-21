@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e48573e5_5b893f02",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-21T17:32:17Z",
+      "side": 1,
+      "message": "All of this math and both of these checks can be written as:\n\nif ((sizeof(struct spdk_blob_md_page) % b-\u003ebs_dev.blocklen) !\u003d 0) {\n    ...\n}",
+      "revId": "766e288b2aa2d036de0f3df64b05537bcf55c3b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
