@@ -64,6 +64,11 @@ struct virtio_scsi_disk {
 	uint32_t		block_size;
 };
 
+struct bdev_virtio_io_channel {
+	struct virtio_hw *hw;
+	struct spdk_bdev_poller	*poller;
+};
+
 static int
 bdev_virtio_get_ctx_size(void)
 {
@@ -76,17 +81,16 @@ SPDK_BDEV_MODULE_REGISTER(virtio_scsi, bdev_virtio_initialize, bdev_virtio_finis
 static void
 bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct iovec iov[128];
-	struct virtio_req vreq;
+	struct iovec *iov;
+	struct virtio_req *vreq;
 	struct virtio_scsi_cmd_req *req;
 	struct virtio_scsi_cmd_resp *resp;
-	uint16_t cnt;
-	struct virtio_req *complete;
 	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
 	bool is_read = (bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
 
-	vreq.iov = iov;
-
+	/* TODO: get these from some pool? */
+	vreq = spdk_dma_zmalloc(sizeof(*vreq), 64, NULL);
+	iov = vreq->iov;
 	req = spdk_dma_malloc(4096, 64, NULL);
 	resp = spdk_dma_malloc(4096, 64, NULL);
 
@@ -97,14 +101,14 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		iov[1].iov_base = (void *)resp;
 		iov[1].iov_len = sizeof(struct virtio_scsi_cmd_resp);
 		memcpy(&iov[2], bdev_io->u.read.iovs, sizeof(struct iovec) * bdev_io->u.read.iovcnt);
-		vreq.iovcnt = 2 + bdev_io->u.read.iovcnt;
-		vreq.start_write = 1;
+		vreq->iovcnt = 2 + bdev_io->u.read.iovcnt;
+		vreq->start_write = 1;
 	} else {
 		memcpy(&iov[1], bdev_io->u.write.iovs, sizeof(struct iovec) * bdev_io->u.write.iovcnt);
 		iov[1 + bdev_io->u.write.iovcnt].iov_base = (void *)resp;
 		iov[1 + bdev_io->u.write.iovcnt].iov_len = sizeof(struct virtio_scsi_cmd_resp);
-		vreq.iovcnt = 2 + bdev_io->u.write.iovcnt;
-		vreq.start_write = vreq.iovcnt - 1;
+		vreq->iovcnt = 2 + bdev_io->u.write.iovcnt;
+		vreq->start_write = vreq->iovcnt - 1;
 	}
 
 	memset(req, 0, sizeof(*req));
@@ -121,15 +125,8 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		to_be16(&req->cdb[7], bdev_io->u.write.len / disk->block_size);
 	}
 
-	virtio_xmit_pkts(disk->hw->vqs[2], &vreq);
-
-	do {
-		cnt = virtio_recv_pkts(disk->hw->vqs[2], &complete, 32);
-	} while (cnt == 0);
-
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-	spdk_dma_free(req);
-	spdk_dma_free(resp);
+	vreq->ctx = bdev_io;
+	virtio_xmit_pkts(disk->hw->vqs[2], vreq);
 }
 
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -196,22 +193,55 @@ static const struct spdk_bdev_fn_table virtio_fn_table = {
 	.get_io_channel		= bdev_virtio_get_io_channel,
 };
 
+static void
+bdev_virtio_io_cpl(struct virtio_req *req)
+{
+	struct spdk_bdev_io *bdev_io = req->ctx;
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	/* TODO walk iovecs and free req & resp  */
+	spdk_dma_free(req);
+}
+
+
+static void
+bdev_virtio_poll(void *arg)
+{
+	struct bdev_virtio_io_channel *ch = arg;
+	struct virtio_req *req[32];
+	uint16_t i, cnt;
+
+	cnt = virtio_recv_pkts(ch->hw->vqs[2], req, 32);
+	for (i = 0; i < cnt; ++i) {
+		bdev_virtio_io_cpl(req[i]);
+	}
+}
+
 static int
 bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 {
+	struct virtio_hw **hw = io_device;
+	struct bdev_virtio_io_channel *ch = ctx_buf;
+
+	ch->hw = *hw;
+	spdk_bdev_poller_start(&ch->poller, bdev_virtio_poll, ch,
+			       spdk_env_get_current_core(), 0);
 	return 0;
 }
 
 static void
 bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 {
+	struct bdev_virtio_io_channel *io_channel = ctx_buf;
+
+	spdk_bdev_poller_stop(&io_channel->poller);
 }
 
 static void
 scan_target(struct virtio_hw *hw, uint8_t target)
 {
-	struct iovec iov[3];
-	struct virtio_req vreq;
+	struct iovec *iov;
+	struct virtio_req *vreq;
 	struct virtio_scsi_cmd_req *req;
 	struct virtio_scsi_cmd_resp *resp;
 	struct spdk_scsi_cdb_inquiry *cdb;
@@ -220,9 +250,11 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	struct virtio_scsi_disk *disk;
 	struct spdk_bdev *bdev;
 
-	vreq.iov = iov;
-	vreq.iovcnt = 3;
-	vreq.start_write = 1;
+	/* TODO get these from some object pool */
+	vreq = spdk_dma_zmalloc(sizeof(*vreq), 64, NULL);
+	vreq->iovcnt = 3;
+	vreq->start_write = 1;
+	iov = vreq->iov;
 
 	iov[0].iov_base = spdk_dma_malloc(4096, 64, NULL);
 	iov[1].iov_base = spdk_dma_malloc(4096, 64, NULL);
@@ -243,7 +275,7 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	iov[1].iov_len = sizeof(struct virtio_scsi_cmd_resp);
 	iov[2].iov_len = 255;
 
-	virtio_xmit_pkts(hw->vqs[2], &vreq);
+	virtio_xmit_pkts(hw->vqs[2], vreq);
 
 	do {
 		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 32);
@@ -265,7 +297,7 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	iov[2].iov_len = 32;
 	to_be32(&req->cdb[10], iov[2].iov_len);
 
-	virtio_xmit_pkts(hw->vqs[2], &vreq);
+	virtio_xmit_pkts(hw->vqs[2], vreq);
 
 	do {
 		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 32);
@@ -284,7 +316,7 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 
 	bdev = &disk->bdev;
 	bdev->name = spdk_sprintf_alloc("Virtio0");
-	bdev->name = "Virtio SCSI Disk";
+	bdev->product_name = "Virtio SCSI Disk";
 	bdev->write_cache = 0;
 	bdev->blocklen = disk->block_size;
 	bdev->blockcnt = disk->num_blocks;
@@ -293,7 +325,8 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	bdev->fn_table = &virtio_fn_table;
 	bdev->module = SPDK_GET_BDEV_MODULE(virtio_scsi);
 
-	spdk_io_device_register(&disk->hw, bdev_virtio_create_cb, bdev_virtio_destroy_cb, 0);
+	spdk_io_device_register(&disk->hw, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
+			sizeof(struct bdev_virtio_io_channel));
 	spdk_bdev_register(bdev);
 }
 
