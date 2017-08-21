@@ -57,7 +57,6 @@
 #include "virtio_pci.h"
 #include "virtio_logs.h"
 #include "virtqueue.h"
-#include "virtio_rxtx.h"
 
 /*
  * The set of PCI devices this driver supports
@@ -108,7 +107,6 @@ virtio_init_queue(struct virtio_hw *hw, uint16_t vtpci_queue_idx)
 	char vq_name[VIRTQUEUE_MAX_NAME_SZ];
 	const struct rte_memzone *mz = NULL;
 	unsigned int vq_size, size;
-	struct virtnet_tx *txvq = NULL;
 	struct virtqueue *vq;
 	int ret;
 
@@ -180,10 +178,7 @@ virtio_init_queue(struct virtio_hw *hw, uint16_t vtpci_queue_idx)
 
 	virtio_init_vring(vq);
 
-	txvq = &vq->txq;
-	txvq->vq = vq;
-	txvq->port_id = hw->port_id;
-	txvq->mz = mz;
+	vq->mz = mz;
 
 	/* For virtio_user case (that is when hw->dev is NULL), we use
 	 * virtual address. And we need properly set _offset_, please see
@@ -222,7 +217,7 @@ virtio_free_queues(struct virtio_hw *hw)
 		if (!vq)
 			continue;
 
-		rte_memzone_free(vq->txq.mz);
+		rte_memzone_free(vq->mz);
 
 		rte_free(vq);
 		hw->vqs[i] = NULL;
@@ -367,7 +362,6 @@ eth_virtio_dev_init(struct virtio_hw *hw, int num_queues)
 	if (ret < 0)
 		return ret;
 
-	hw->tx_queues = rte_zmalloc("tx_queues", sizeof(hw->tx_queues[0]) * num_queues, RTE_CACHE_LINE_SIZE);
 	hw->nb_tx_queues = num_queues;
 
 	for (i = 0; i < num_queues; i++) {

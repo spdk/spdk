@@ -121,10 +121,10 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		to_be16(&req->cdb[7], bdev_io->u.write.len / disk->block_size);
 	}
 
-	virtio_xmit_pkts(disk->hw->tx_queues[2], &vreq);
+	virtio_xmit_pkts(disk->hw->vqs[2], &vreq);
 
 	do {
-		cnt = virtio_recv_pkts(disk->hw->tx_queues[2], &complete, 32);
+		cnt = virtio_recv_pkts(disk->hw->vqs[2], &complete, 32);
 	} while (cnt == 0);
 
 	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
@@ -243,10 +243,10 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	iov[1].iov_len = sizeof(struct virtio_scsi_cmd_resp);
 	iov[2].iov_len = 255;
 
-	virtio_xmit_pkts(hw->tx_queues[2], &vreq);
+	virtio_xmit_pkts(hw->vqs[2], &vreq);
 
 	do {
-		cnt = virtio_recv_pkts(hw->tx_queues[2], &complete, 32);
+		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 32);
 	} while (cnt == 0);
 
 	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
@@ -265,10 +265,10 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	iov[2].iov_len = 32;
 	to_be32(&req->cdb[10], iov[2].iov_len);
 
-	virtio_xmit_pkts(hw->tx_queues[2], &vreq);
+	virtio_xmit_pkts(hw->vqs[2], &vreq);
 
 	do {
-		cnt = virtio_recv_pkts(hw->tx_queues[2], &complete, 32);
+		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 32);
 	} while (cnt == 0);
 
 	disk = calloc(1, sizeof(*disk));
