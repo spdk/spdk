@@ -80,6 +80,7 @@ struct spdk_file {
 	struct spdk_blob	*blob;
 	char			*name;
 	uint64_t		length;
+	bool                    is_deleted;
 	bool			open_for_writing;
 	uint64_t		length_flushed;
 	uint64_t		append_pos;
@@ -494,6 +495,7 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 	uint64_t *length;
 	const char *name;
 	size_t value_len;
+	bool *is_deleted = NULL;
 
 	if (rc == -ENOENT) {
 		/* Finished iterating */
@@ -520,6 +522,7 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 		return;
 	}
 	assert(value_len == 8);
+	spdk_bs_md_get_xattr_value(blob, "is_deleted", (const void **)&is_deleted, &value_len);
 
 	f = file_alloc(fs);
 	if (f == NULL) {
@@ -533,6 +536,9 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 	f->length = *length;
 	f->length_flushed = *length;
 	f->append_pos = *length;
+	if (is_deleted && *is_deleted == true) {
+		f->is_deleted = true;
+	}
 	SPDK_TRACELOG(SPDK_TRACE_BLOBFS, "added file %s length=%ju\n", f->name, f->length);
 
 	spdk_bs_md_iter_next(fs->bs, &blob, iter_cb, req);
@@ -563,6 +569,7 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	struct spdk_filesystem *fs;
 	struct spdk_fs_cb_args *args;
 	struct spdk_fs_request *req;
+	struct spdk_file *file;
 
 	fs = fs_alloc(dev, send_request_fn);
 	if (fs == NULL) {
@@ -588,6 +595,11 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	args->fs = fs;
 
 	spdk_bs_load(dev, load_cb, req);
+	TAILQ_FOREACH(file, &fs->files, tailq) {
+		if (file->is_deleted) {
+			spdk_fs_delete_file(fs, fs->sync_target.sync_io_channel, file->name);
+		}
+	}
 }
 
 static void
@@ -1138,6 +1150,18 @@ blob_delete_cb(void *ctx, int bserrno)
 	free_fs_request(req);
 }
 
+static void
+fs_delete_complete_cb(void *ctx, int bserrno)
+{
+	struct spdk_fs_request *req = ctx;
+	struct spdk_fs_cb_args *args = &req->args;
+
+	args->fn.file_op(args->arg, -EBUSY);
+	free_fs_request(req);
+
+	return;
+}
+
 void
 spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 			  spdk_file_op_complete cb_fn, void *cb_arg)
@@ -1160,15 +1184,21 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 		return;
 	}
 
-	if (f->ref_count > 0) {
-		/* For now, do not allow deleting files with open references. */
-		cb_fn(cb_arg, -EBUSY);
-		return;
-	}
-
 	req = alloc_fs_request(fs->md_target.md_fs_channel);
 	if (req == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	args = &req->args;
+	args->fn.file_op = cb_fn;
+	args->arg = cb_arg;
+
+	if (f->ref_count > 0) {
+		/* For now, do not allow deleting files with open references. */
+		f->is_deleted = true;
+		spdk_blob_md_set_xattr(f->blob, "is_deleted", &f->is_deleted, sizeof(bool));
+		spdk_bs_md_sync_blob(f->blob, fs_delete_complete_cb, args);
 		return;
 	}
 
@@ -1182,9 +1212,6 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	free(f->tree);
 	free(f);
 
-	args = &req->args;
-	args->fn.file_op = cb_fn;
-	args->arg = cb_arg;
 	spdk_bs_md_delete_blob(fs->bs, blobid, blob_delete_cb, req);
 }
 
@@ -2313,6 +2340,10 @@ spdk_file_close(struct spdk_file *file, struct spdk_io_channel *_channel)
 	args->arg = req;
 	channel->send_request(__file_close, req);
 	sem_wait(&channel->sem);
+
+	if (file->is_deleted == true) {
+		spdk_fs_delete_file(file->fs, _channel, file->name);
+	}
 
 	return args->rc;
 }
