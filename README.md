@@ -36,50 +36,23 @@ The development kit currently includes:
 well as a [Porting Guide](http://www.spdk.io/doc/porting.html) for porting SPDK to different frameworks
 and operating systems.
 
-<a id="prerequisites"></a>
-## Prerequisites
-
-Note: The requirements for building the docs can take a while to
-install so you may want to skip them unless you need them.
-
-Fedora/CentOS:
-
-~~~{.sh}
-sudo dnf install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-	git astyle-devel python-pep8 lcov python clang-analyzer
-# Additional dependencies for RDMA (NVMe over Fabrics)
-sudo dnf install -y libibverbs-devel librdmacm-devel
-# Additional dependencies for building docs
-sudo dnf install -y doxygen mscgen
-~~~
-
-Ubuntu/Debian:
-
-~~~{.sh}
-sudo apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
-	git astyle pep8 lcov clang
-# Additional dependencies for RDMA (NVMe over Fabrics)
-sudo apt-get install -y libibverbs-dev librdmacm
-# Additional dependencies for building docs
-sudo apt-get install -y doxygen mscgen
-~~~
-
-FreeBSD:
-
-~~~{.sh}
-sudo pkg install gmake cunit openssl git devel/astyle bash devel/pep8 \
-	python
-# Additional dependencies for building docs
-sudo pkg install doxygen mscgen
-~~~
-
 <a id="source"></a>
 ## Source Code
 
 ~~~{.sh}
-git clone https://github.com/spdk/spdk
+git clone https://review.gerrithub.io/spdk/spdk
 cd spdk
 git submodule update --init
+~~~
+
+<a id="prerequisites"></a>
+## Prerequisites
+
+Note: The dependencies can be installed automatically by "make pkgdep".
+
+~~~{.sh}
+cd spdk/scripts
+make pkgdep
 ~~~
 
 <a id="libraries"></a>
