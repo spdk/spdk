@@ -70,6 +70,11 @@ struct virtio_scsi_io_ctx {
 	struct virtio_scsi_cmd_resp resp;
 };
 
+struct bdev_virtio_io_channel {
+	struct virtio_hw *hw;
+	struct spdk_bdev_poller	*poller;
+};
+
 static int
 bdev_virtio_get_ctx_size(void)
 {
@@ -86,8 +91,6 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	struct virtio_req *vreq;
 	struct virtio_scsi_cmd_req *req;
 	struct virtio_scsi_cmd_resp *resp;
-	uint16_t cnt;
-	struct virtio_req *complete;
 	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
 	struct virtio_scsi_io_ctx *io_ctx = (struct virtio_scsi_io_ctx *)bdev_io->driver_ctx;
 	bool is_read = (bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
@@ -129,12 +132,6 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	}
 
 	virtio_xmit_pkts(disk->hw->vqs[2], vreq);
-
-	do {
-		cnt = virtio_recv_pkts(disk->hw->vqs[2], &complete, 1);
-	} while (cnt == 0);
-
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -201,22 +198,55 @@ static const struct spdk_bdev_fn_table virtio_fn_table = {
 	.get_io_channel		= bdev_virtio_get_io_channel,
 };
 
+static void
+bdev_virtio_io_cpl(struct virtio_req *req)
+{
+	struct virtio_scsi_io_ctx *io_ctx = (struct virtio_scsi_io_ctx *)
+			       ((uintptr_t)req - offsetof(struct virtio_scsi_io_ctx, vreq));
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(io_ctx);
+
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+}
+
+
+static void
+bdev_virtio_poll(void *arg)
+{
+	struct bdev_virtio_io_channel *ch = arg;
+	struct virtio_req *req[32];
+	uint16_t i, cnt;
+
+	cnt = virtio_recv_pkts(ch->hw->vqs[2], req, 32);
+	for (i = 0; i < cnt; ++i) {
+		bdev_virtio_io_cpl(req[i]);
+	}
+}
+
 static int
 bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 {
+	struct virtio_hw **hw = io_device;
+	struct bdev_virtio_io_channel *ch = ctx_buf;
+
+	ch->hw = *hw;
+	spdk_bdev_poller_start(&ch->poller, bdev_virtio_poll, ch,
+			       spdk_env_get_current_core(), 0);
 	return 0;
 }
 
 static void
 bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 {
+	struct bdev_virtio_io_channel *io_channel = ctx_buf;
+
+	spdk_bdev_poller_stop(&io_channel->poller);
 }
 
 static void
 scan_target(struct virtio_hw *hw, uint8_t target)
 {
 	struct iovec *iov;
-	struct virtio_req vreq;
+	struct virtio_req *vreq;
 	struct virtio_scsi_cmd_req *req;
 	struct virtio_scsi_cmd_resp *resp;
 	struct spdk_scsi_cdb_inquiry *cdb;
@@ -225,9 +255,10 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	struct virtio_scsi_disk *disk;
 	struct spdk_bdev *bdev;
 
-	iov = vreq.iov;
-	vreq.iovcnt = 3;
-	vreq.start_write = 1;
+	vreq = spdk_dma_zmalloc(sizeof(*vreq), 64, NULL);
+	vreq->iovcnt = 3;
+	vreq->start_write = 1;
+	iov = vreq->iov;
 
 	iov[0].iov_base = spdk_dma_malloc(4096, 64, NULL);
 	iov[1].iov_base = spdk_dma_malloc(4096, 64, NULL);
@@ -248,7 +279,7 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	iov[1].iov_len = sizeof(struct virtio_scsi_cmd_resp);
 	iov[2].iov_len = 255;
 
-	virtio_xmit_pkts(hw->vqs[2], &vreq);
+	virtio_xmit_pkts(hw->vqs[2], vreq);
 
 	do {
 		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 1);
@@ -270,7 +301,7 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	iov[2].iov_len = 32;
 	to_be32(&req->cdb[10], iov[2].iov_len);
 
-	virtio_xmit_pkts(hw->vqs[2], &vreq);
+	virtio_xmit_pkts(hw->vqs[2], vreq);
 
 	do {
 		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 1);
@@ -298,7 +329,8 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	bdev->fn_table = &virtio_fn_table;
 	bdev->module = SPDK_GET_BDEV_MODULE(virtio_scsi);
 
-	spdk_io_device_register(&disk->hw, bdev_virtio_create_cb, bdev_virtio_destroy_cb, 0);
+	spdk_io_device_register(&disk->hw, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
+			sizeof(struct bdev_virtio_io_channel));
 	spdk_bdev_register(bdev);
 }
 
