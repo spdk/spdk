@@ -138,7 +138,8 @@ spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns_dat
 }
 
 void
-spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
+spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
+				 uint64_t offset, uint32_t length)
 {
 	abort();
 }

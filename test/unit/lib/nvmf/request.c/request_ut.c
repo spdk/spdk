@@ -134,7 +134,8 @@ spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
 }
 
 void
-spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
+spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
+				 uint64_t offset, uint32_t length)
 {
 }
 
