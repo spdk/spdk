@@ -41,7 +41,9 @@
 
 struct spdk_nvmf_subsystem *spdk_nvmf_find_subsystem_with_cntlid(uint16_t cntlid);
 
-void spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length);
+void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt,
+				      void *buffer, uint64_t offset,
+				      uint32_t length);
 
 int spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem);
 void spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem);

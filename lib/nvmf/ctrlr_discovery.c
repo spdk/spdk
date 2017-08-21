@@ -51,7 +51,7 @@
 #include "spdk_internal/log.h"
 
 static void
-nvmf_update_discovery_log(void)
+nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 {
 	uint64_t numrec = 0;
 	struct spdk_nvmf_subsystem *subsystem;
@@ -63,7 +63,7 @@ nvmf_update_discovery_log(void)
 	size_t cur_size;
 
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Generating log page for genctr %" PRIu64 "\n",
-		      g_nvmf_tgt.discovery_genctr);
+		      tgt->discovery_genctr);
 
 	cur_size = sizeof(struct spdk_nvmf_discovery_log_page);
 	disc_log = calloc(1, cur_size);
@@ -72,7 +72,7 @@ nvmf_update_discovery_log(void)
 		return;
 	}
 
-	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
+	TAILQ_FOREACH(subsystem, &tgt->subsystems, entries) {
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			continue;
 		}
@@ -96,11 +96,11 @@ nvmf_update_discovery_log(void)
 			memset(entry, 0, sizeof(*entry));
 			entry->portid = numrec;
 			entry->cntlid = 0xffff;
-			entry->asqsz = g_nvmf_tgt.opts.max_queue_depth;
+			entry->asqsz = tgt->opts.max_queue_depth;
 			entry->subtype = subsystem->subtype;
 			snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
-			transport = spdk_nvmf_tgt_get_transport(&g_nvmf_tgt, listen_addr->trid.trtype);
+			transport = spdk_nvmf_tgt_get_transport(tgt, listen_addr->trid.trtype);
 			assert(transport != NULL);
 
 			spdk_nvmf_transport_listen_addr_discover(transport, listen_addr, entry);
@@ -110,30 +110,31 @@ nvmf_update_discovery_log(void)
 	}
 
 	disc_log->numrec = numrec;
-	disc_log->genctr = g_nvmf_tgt.discovery_genctr;
+	disc_log->genctr = tgt->discovery_genctr;
 
-	free(g_nvmf_tgt.discovery_log_page);
+	free(tgt->discovery_log_page);
 
-	g_nvmf_tgt.discovery_log_page = disc_log;
-	g_nvmf_tgt.discovery_log_page_size = cur_size;
+	tgt->discovery_log_page = disc_log;
+	tgt->discovery_log_page_size = cur_size;
 }
 
 void
-spdk_nvmf_get_discovery_log_page(void *buffer, uint64_t offset, uint32_t length)
+spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
+				 uint64_t offset, uint32_t length)
 {
 	size_t copy_len = 0;
 	size_t zero_len = length;
 
-	if (g_nvmf_tgt.discovery_log_page == NULL ||
-	    g_nvmf_tgt.discovery_log_page->genctr != g_nvmf_tgt.discovery_genctr) {
-		nvmf_update_discovery_log();
+	if (tgt->discovery_log_page == NULL ||
+	    tgt->discovery_log_page->genctr != tgt->discovery_genctr) {
+		nvmf_update_discovery_log(tgt);
 	}
 
 	/* Copy the valid part of the discovery log page, if any */
-	if (g_nvmf_tgt.discovery_log_page && offset < g_nvmf_tgt.discovery_log_page_size) {
-		copy_len = spdk_min(g_nvmf_tgt.discovery_log_page_size - offset, length);
+	if (tgt->discovery_log_page && offset < tgt->discovery_log_page_size) {
+		copy_len = spdk_min(tgt->discovery_log_page_size - offset, length);
 		zero_len -= copy_len;
-		memcpy(buffer, (char *)g_nvmf_tgt.discovery_log_page + offset, copy_len);
+		memcpy(buffer, (char *)tgt->discovery_log_page + offset, copy_len);
 	}
 
 	/* Zero out the rest of the buffer */
