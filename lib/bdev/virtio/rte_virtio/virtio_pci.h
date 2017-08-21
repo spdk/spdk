@@ -230,7 +230,6 @@ struct virtio_hw {
 	void	    *virtio_user_dev;
 
 	struct virtqueue **vqs;
-	void **tx_queues;
 	uint32_t nb_tx_queues;
 };
 

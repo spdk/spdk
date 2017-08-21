@@ -48,7 +48,6 @@
 #include "virtio_logs.h"
 #include "virtio_pci.h"
 #include "virtqueue.h"
-#include "virtio_rxtx.h"
 #include "virtio_user/virtio_user_dev.h"
 
 #define virtio_user_get_dev(hw) \
