@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "f5bd6e6d_8186b6ec",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T18:20:02Z",
+      "side": 1,
+      "message": "inshall -\u003e install",
+      "range": {
+        "startLine": 7,
+        "startChar": 31,
+        "endLine": 7,
+        "endChar": 38
+      },
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "37d6e043_38d9c053",
         "filename": "README.md",
         "patchSetId": 1
@@ -47,6 +70,29 @@
       "writtenOn": "2017-08-21T18:15:53Z",
       "side": 1,
       "message": "I think it would make more sense if this were added somewhere generic; the dependencies aren\u0027t specific to Vagrant.\n\nAlso, if we use a file from within the SPDK repo to install the deps, we should probably reorder the sections so this is after the section about how to clone the source code.",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b381d1e5_c0382cf4",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-21T18:20:02Z",
+      "side": 1,
+      "message": "uname is not usually in /bin (e.g. on FreeBSD, it is in /usr/bin/uname) - this can just be PLATFORM\u003d`uname`.",
+      "range": {
+        "startLine": 3,
+        "startChar": 10,
+        "endLine": 3,
+        "endChar": 20
+      },
       "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
