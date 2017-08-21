@@ -124,7 +124,7 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	virtio_xmit_pkts(disk->hw->tx_queues[2], &vreq);
 
 	do {
-		cnt = virtio_recv_pkts(disk->hw->tx_queues[2], &complete, 32);
+		cnt = virtio_recv_pkts(disk->hw->tx_queues[2], &complete, 1);
 	} while (cnt == 0);
 
 	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
@@ -246,7 +246,7 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	virtio_xmit_pkts(hw->tx_queues[2], &vreq);
 
 	do {
-		cnt = virtio_recv_pkts(hw->tx_queues[2], &complete, 32);
+		cnt = virtio_recv_pkts(hw->tx_queues[2], &complete, 1);
 	} while (cnt == 0);
 
 	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
@@ -268,7 +268,7 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	virtio_xmit_pkts(hw->tx_queues[2], &vreq);
 
 	do {
-		cnt = virtio_recv_pkts(hw->tx_queues[2], &complete, 32);
+		cnt = virtio_recv_pkts(hw->tx_queues[2], &complete, 1);
 	} while (cnt == 0);
 
 	disk = calloc(1, sizeof(*disk));
@@ -284,7 +284,7 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 
 	bdev = &disk->bdev;
 	bdev->name = spdk_sprintf_alloc("Virtio0");
-	bdev->name = "Virtio SCSI Disk";
+	bdev->product_name = "Virtio SCSI Disk";
 	bdev->write_cache = 0;
 	bdev->blocklen = disk->block_size;
 	bdev->blockcnt = disk->num_blocks;
