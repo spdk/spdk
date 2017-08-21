@@ -84,8 +84,6 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
 struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 		struct spdk_nvme_transport_id *trid);
 
-int spdk_nvmf_check_pools(void);
-
 struct spdk_nvmf_subsystem;
 struct spdk_nvmf_ctrlr;
 struct spdk_nvmf_qpair;
