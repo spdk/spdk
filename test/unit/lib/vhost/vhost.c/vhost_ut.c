@@ -95,6 +95,7 @@ alloc_vdev(void)
 	vdev->mem->regions[1].guest_phys_addr = 0x400000;
 	vdev->mem->regions[1].size = 0x400000; /* 4 MB */
 	vdev->mem->regions[1].host_user_addr = 0x2000000;
+	vdev->vid = 0x10;
 
 	return vdev;
 }
@@ -198,6 +199,51 @@ desc_to_iov_test(void)
 	CU_ASSERT(true);
 }
 
+static void
+create_controller_test(void)
+{
+	struct spdk_vhost_dev *vdev;
+	int ret = 0;
+	unsigned ctrlr_num;
+	char *name;
+	struct spdk_vhost_dev_backend backend;
+	uint64_t cpumask = 0;
+
+	/* Create device with no name */
+	vdev = alloc_vdev();
+	name = NULL;
+	ret = spdk_vhost_dev_construct(vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK, &backend);
+	CU_ASSERT(ret != 0);
+
+	/* create device with incorrect cpumask */
+	name = "vdev_name_0";
+	cpumask = 0x01;
+	ret = spdk_vhost_dev_construct(vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK, &backend);
+	CU_ASSERT(ret != 0);
+
+	/* Create device when device name is already taken */
+	cpumask = 0x00;
+	g_spdk_vhost_devices[0] = vdev;
+	g_spdk_vhost_devices[0]-> name = "vdev_name_0";
+	ret = spdk_vhost_dev_construct(vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK, &backend);
+	CU_ASSERT(ret != 0);
+
+	/* Create device when max number of devices is reached */
+	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num ++) {
+		g_spdk_vhost_devices[ctrlr_num] = vdev;
+	}
+
+	name = "vdev_name_1";
+	ret = spdk_vhost_dev_construct(vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK, &backend);
+	CU_ASSERT(ret != 0);
+
+	free_vdev(vdev);
+	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
+		g_spdk_vhost_devices[ctrlr_num] = NULL;
+	}
+
+}
+
 int
 main(int argc, char **argv)
 {
@@ -215,7 +261,8 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "desc_to_iov", desc_to_iov_test) == NULL
+		CU_add_test(suite, "desc_to_iov", desc_to_iov_test) == NULL ||
+		CU_add_test(suite, "create_controller", create_controller_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
