@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eae7747f_538f49a6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1786,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-22T00:55:27Z",
+      "side": 1,
+      "message": "I think you should just get rid of this function, since the page size is not dependent on the blobstore at all (meaning different blobstores cannot have different page sizes).\n\nMeans you\u0027ll need to modify a small handful of cases that call this function to use your new #define instead.",
+      "revId": "72da41813708e71079b8921c82821fd3521e7c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ade01b85_a932378d",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-22T00:55:27Z",
+      "side": 1,
+      "message": "I think you should put this in include/spdk/blob.h instead.",
+      "revId": "72da41813708e71079b8921c82821fd3521e7c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
