@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cc6ad9f_db7478f0",
+        "filename": "lib/nvme/nvme_quirks.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-22T15:30:51Z",
+      "side": 1,
+      "message": "Should we also add INTEL_QUIRK_STRIPING and QUIRK_READ_ZERO_AFTER_DEALLOCATE?",
+      "revId": "972b70ef8073d5413e2a0cd16792d025e321e6c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
