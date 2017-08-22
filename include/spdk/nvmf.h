@@ -368,6 +368,24 @@ struct spdk_nvmf_listener *spdk_nvmf_subsystem_get_next_listener(
 const struct spdk_nvme_transport_id *spdk_nvmf_listener_get_trid(
 	struct spdk_nvmf_listener *listener);
 
+/** NVMe-oF target namespace creation options */
+struct spdk_nvmf_ns_opts {
+	/**
+	 * Namespace ID
+	 *
+	 * Set to 0 to automatically assign a free NSID.
+	 */
+	uint32_t nsid;
+};
+
+/**
+ * Get default namespace creation options.
+ *
+ * \param opts Namespace options to fill with defaults.
+ * \param opts_size sizeof(struct spdk_nvmf_ns_opts)
+ */
+void spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size);
+
 /**
  * Add a namespace to a subsytem.
  *
@@ -375,13 +393,13 @@ const struct spdk_nvme_transport_id *spdk_nvmf_listener_get_trid(
  *
  * \param subsystem Subsystem to add namespace to.
  * \param bdev Block device to add as a namespace.
- * \param nsid Namespace ID to assign to the new namespace, or 0 to automatically use an available
- *             NSID.
+ * \param opts Namespace options, or NULL to use defaults.
+ * \param opts_size sizeof(*opts)
  *
  * \return Newly added NSID on success or 0 on failure.
  */
 uint32_t spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
-				    uint32_t nsid);
+				    const struct spdk_nvmf_ns_opts *opts, size_t opts_size);
 
 /**
  * Remove a namespace from a subsytem.
@@ -438,6 +456,16 @@ uint32_t spdk_nvmf_ns_get_id(const struct spdk_nvmf_ns *ns);
  * \return Backing bdev of ns.
  */
 struct spdk_bdev *spdk_nvmf_ns_get_bdev(struct spdk_nvmf_ns *ns);
+
+/**
+ * Get the options specified for a namespace.
+ *
+ * \param ns Namespace to query.
+ * \param opts Output parameter for options.
+ * \param opts_size sizeof(*opts)
+ */
+void spdk_nvmf_ns_get_opts(const struct spdk_nvmf_ns *ns, struct spdk_nvmf_ns_opts *opts,
+			   size_t opts_size);
 
 const char *spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem);
 

@@ -393,6 +393,7 @@ struct spdk_nvmf_subsystem *
 
 	for (j = 0; j < num_ns; j++) {
 		struct spdk_nvmf_ns_params *ns_params = &ns_list[j];
+		struct spdk_nvmf_ns_opts ns_opts;
 
 		if (!ns_params->bdev_name) {
 			SPDK_ERRLOG("Namespace missing bdev name\n");
@@ -405,7 +406,10 @@ struct spdk_nvmf_subsystem *
 			goto error;
 		}
 
-		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, ns_params->nsid) == 0) {
+		spdk_nvmf_ns_opts_get_defaults(&ns_opts, sizeof(ns_opts));
+		ns_opts.nsid = ns_params->nsid;
+
+		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, &ns_opts, sizeof(ns_opts)) == 0) {
 			goto error;
 		}
 
