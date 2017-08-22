@@ -450,11 +450,6 @@ vtophys_get_paddr(uint64_t vaddr)
 	struct rte_memseg *seg;
 	uint32_t seg_idx;
 
-	paddr = vtophys_get_dpdk_paddr((void *)vaddr);
-	if (paddr != RTE_BAD_PHYS_ADDR) {
-		return paddr;
-	}
-
 	mcfg = rte_eal_get_configuration()->mem_config;
 
 	for (seg_idx = 0; seg_idx < RTE_MAX_MEMSEG; seg_idx++) {
@@ -469,6 +464,15 @@ vtophys_get_paddr(uint64_t vaddr)
 			paddr += (vaddr - (uintptr_t)seg->addr);
 			return paddr;
 		}
+	}
+
+	/*
+	 * The memory is not registered with DPDK. Try to look it up
+	 * in /proc/self/pagemap.
+	 */
+	paddr = vtophys_get_dpdk_paddr((void *)vaddr);
+	if (paddr != RTE_BAD_PHYS_ADDR) {
+		return paddr;
 	}
 
 #ifdef DEBUG
