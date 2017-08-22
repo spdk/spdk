@@ -423,6 +423,7 @@ vhost_user_setup(struct virtio_user_dev *dev)
 	int fd;
 	int flag;
 	struct sockaddr_un un;
+	ssize_t rc;
 
 	fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (fd < 0) {
@@ -436,7 +437,12 @@ vhost_user_setup(struct virtio_user_dev *dev)
 
 	memset(&un, 0, sizeof(un));
 	un.sun_family = AF_UNIX;
-	snprintf(un.sun_path, sizeof(un.sun_path), "%s", dev->path);
+	rc = snprintf(un.sun_path, sizeof(un.sun_path), "%s", dev->path);
+	if (rc < 0 || (size_t)rc >= sizeof(un.sun_path)) {
+		PMD_DRV_LOG(ERR, "socket path too long");
+		close(fd);
+		return -1;
+	}
 	if (connect(fd, (struct sockaddr *)&un, sizeof(un)) < 0) {
 		PMD_DRV_LOG(ERR, "connect error, %s", strerror(errno));
 		close(fd);
