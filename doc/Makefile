@@ -4,9 +4,12 @@ all: doc
 
 doc: output
 
-output: Doxyfile
+changelog.md: ../CHANGELOG.md
+	sed -e 's/# Changelog/# Changelog {#changelog}/' < $< > $@
+
+output: Doxyfile changelog.md
 	rm -rf $@
 	doxygen Doxyfile
 
 clean:
-	rm -rf output
+	rm -rf output changelog.md
