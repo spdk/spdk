@@ -111,6 +111,8 @@ extern struct spdk_nvmf_tgt g_nvmf_tgt;
 struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid);
 void spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr);
 
+uint16_t spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt);
+
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
 		enum spdk_nvme_transport_type);
 

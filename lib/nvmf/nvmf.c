@@ -39,6 +39,7 @@
 
 #include "spdk_internal/log.h"
 
+#include "ctrlr.h"
 #include "subsystem.h"
 #include "transport.h"
 
@@ -171,6 +172,51 @@ spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 	}
 
 	return NULL;
+}
+
+uint16_t
+spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt)
+{
+	static uint16_t cntlid = 0; /* cntlid is static, so its value is preserved */
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_nvmf_ctrlr *ctrlr;
+	uint16_t count;
+
+	count = UINT16_MAX - 1;
+	do {
+		/* cntlid is an unsigned 16-bit integer, so let it overflow
+		 * back to 0 if necessary.
+		 */
+		cntlid++;
+		if (cntlid == 0) {
+			/* 0 is not a valid cntlid because it is the reserved value in the RDMA
+			 * private data for cntlid. This is the value sent by pre-NVMe-oF 1.1
+			 * initiators.
+			 */
+			cntlid++;
+		}
+
+		/* Check if a subsystem with this cntlid currently exists. This could
+		 * happen for a very long-lived ctrlr on a target with many short-lived
+		 * ctrlrs, where cntlid wraps around.
+		 */
+		TAILQ_FOREACH(subsystem, &tgt->subsystems, entries) {
+			TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+				if (ctrlr->cntlid == cntlid) {
+					break;
+				}
+			}
+		}
+
+		count--;
+
+	} while (subsystem != NULL && count > 0);
+
+	if (count == 0) {
+		return 0;
+	}
+
+	return cntlid;
 }
 
 struct spdk_nvmf_transport *
