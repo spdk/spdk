@@ -86,7 +86,7 @@ Steps:
 - resize_lvol_bdev on correct lvs_uuid and size is
   equal half of size malloc bdev
 - check size of the lvol bdev by command RPC : get_bdevs
-- resize_lvol_bdev on the correct lvs_uuid and the size is smaller by 1 MB 
+- resize_lvol_bdev on the correct lvs_uuid and the size is smaller by 1 MB
   from the full size malloc bdev
 - check size of the lvol bdev by command RPC : get_bdevs
 - resize_lvol_bdev on the correct lvs_uuid and size is equal 0 MiB
@@ -193,7 +193,7 @@ Steps:
 - resize_lvol_bdev on correct lvs_uuid and size is
   equal half of size malloc bdev
 - check size of the lvol bdev by command RPC : get_bdevs
-- Resize_lvol_bdev on the correct lvs_uuid and the size is smaller by 1 MB 
+- Resize_lvol_bdev on the correct lvs_uuid and the size is smaller by 1 MB
   from the full size malloc bdev
 - check size of the lvol bdev by command RPC : get_bdevs
 - resize_lvol_bdev on the correct lvs_uuid and size is equal 0 MiB
@@ -256,7 +256,7 @@ Steps:
 - create a malloc bdev
 - construct_lvol_store on created malloc bdev
 - check correct uuid values in response get_lvol_stores command
-- construct_lvol_bdev on correct lvs_uuid and size is smaller by 1 MB 
+- construct_lvol_bdev on correct lvs_uuid and size is smaller by 1 MB
   from the full size malloc bdev
 - construct_lvol_bdev on the same lvs_uuid as in last step
 - destroy_lvol_store
