@@ -95,6 +95,7 @@ alloc_vdev(void)
 	vdev->mem->regions[1].guest_phys_addr = 0x400000;
 	vdev->mem->regions[1].size = 0x400000; /* 4 MB */
 	vdev->mem->regions[1].host_user_addr = 0x2000000;
+	vdev->vid = 0x10;
 
 	return vdev;
 }
@@ -198,6 +199,106 @@ desc_to_iov_test(void)
 	CU_ASSERT(true);
 }
 
+static void
+create_controller_test(void)
+{
+	struct spdk_vhost_dev *vdev;
+	int ret = 0;
+	unsigned ctrlr_num;
+	char *name;
+	struct spdk_vhost_dev_backend backend;
+	uint64_t cpumask = 0;
+
+	/* Create device with no name */
+	vdev = alloc_vdev();
+	name = NULL;
+	ret = spdk_vhost_dev_construct(vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK, &backend);
+	CU_ASSERT(ret != 0);
+
+	/* Create device with incorrect cpumask */
+	name = "vdev_name_0";
+	cpumask = 0x01;
+	ret = spdk_vhost_dev_construct(vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK, &backend);
+	CU_ASSERT(ret != 0);
+
+	/* Create device when device name is already taken */
+	cpumask = 0x00;
+	vdev->name = strdup(name);
+	g_spdk_vhost_devices[0] = vdev;
+
+	ret = spdk_vhost_dev_construct(vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK, &backend);
+	CU_ASSERT(ret != 0);
+
+	/* Create device when max number of devices is reached */
+	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num ++) {
+		g_spdk_vhost_devices[ctrlr_num] = vdev;
+	}
+
+	name = "vdev_name_1";
+	ret = spdk_vhost_dev_construct(vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK, &backend);
+	CU_ASSERT(ret != 0);
+
+	free(vdev->name);
+	free_vdev(vdev);
+	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
+		g_spdk_vhost_devices[ctrlr_num] = NULL;
+	}
+
+}
+
+static void
+dev_find_by_vid_test(void)
+{
+	struct spdk_vhost_dev *vdev;
+
+	g_spdk_vhost_devices[0] = alloc_vdev();
+
+	vdev = spdk_vhost_dev_find_by_vid(0x10);
+	CU_ASSERT(vdev != NULL);
+
+	/* Search for a device with incorrect vid */
+	vdev = spdk_vhost_dev_find_by_vid(0xFF);
+	CU_ASSERT(vdev == NULL);
+
+	free_vdev(g_spdk_vhost_devices[0]);
+	g_spdk_vhost_devices[0] = NULL;
+}
+
+static void
+remove_controller_test(void)
+{
+	struct spdk_vhost_dev *vdev;
+	char path[PATH_MAX];
+	int ret = 0;
+	char *name;
+
+	vdev = alloc_vdev();
+	vdev->lcore = 0;
+	name = "vdev_name_0";
+	vdev->name = strdup(name);
+
+	/* Remove device when controller is in use */
+	ret = spdk_vhost_dev_remove(vdev);
+	CU_ASSERT(ret != 0);
+
+	/* Remove nonexistent device */
+	vdev->lcore = -1;
+	ret = spdk_vhost_dev_remove(vdev);
+	CU_ASSERT(ret != 0);
+	free(vdev->name);
+
+	/* Remove device with too long name and path */
+	memset(path, 'x', sizeof(path));
+	vdev->name = strdup(path);
+	g_spdk_vhost_devices[0] = vdev;
+	ret = spdk_vhost_dev_remove(vdev);
+	CU_ASSERT(ret != 0);
+
+	free(vdev->name);
+	free_vdev(vdev);
+	g_spdk_vhost_devices[0] = NULL;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -215,7 +316,10 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "desc_to_iov", desc_to_iov_test) == NULL
+		CU_add_test(suite, "desc_to_iov", desc_to_iov_test) == NULL ||
+		CU_add_test(suite, "create_controller", create_controller_test) == NULL ||
+		CU_add_test(suite, "dev_find_by_vid", dev_find_by_vid_test) == NULL ||
+		CU_add_test(suite, "remove_controller", remove_controller_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
