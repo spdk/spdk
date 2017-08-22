@@ -41,7 +41,6 @@
 
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
-#include "vhost_iommu.h"
 
 static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
 
@@ -234,10 +233,6 @@ spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
 				     i);
 			continue;
 		}
-
-		if (spdk_iommu_mem_register(region->host_user_addr, region->size)) {
-			abort();
-		}
 	}
 }
 
@@ -256,10 +251,6 @@ spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev)
 
 		if (spdk_vtophys((void *) start) == SPDK_MEM_TRANSLATION_ERROR) {
 			continue; /* region has not been registered */
-		}
-
-		if (spdk_iommu_mem_unregister(region->host_user_addr, region->size)) {
-			abort();
 		}
 
 		if (spdk_mem_unregister((void *)start, len) != 0) {
