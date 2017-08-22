@@ -62,6 +62,7 @@
 
 #define SHIFT_2MB	21 /* (1 << 21) == 2MB */
 #define MASK_2MB	((1ULL << SHIFT_2MB) - 1)
+#define VALUE_2MB	(1 << SHIFT_2MB)
 
 #define SHIFT_4KB	12 /* (1 << 12) == 4KB */
 #define MASK_4KB	((1ULL << SHIFT_4KB) - 1)
@@ -461,98 +462,53 @@ vtophys_get_paddr(uint64_t vaddr)
 }
 
 static int
-spdk_vtophys_register(void *vaddr, uint64_t len)
-{
-	uint64_t vfn_2mb;
-	int rc;
-
-	if ((uintptr_t)vaddr & ~MASK_128TB) {
-		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
-		return -EINVAL;
-	}
-
-	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
-		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
-			    __func__, vaddr, len);
-		return -EINVAL;
-	}
-
-	vfn_2mb = (uintptr_t)vaddr >> SHIFT_2MB;
-	len = len >> SHIFT_2MB;
-
-	while (len > 0) {
-		uint64_t vaddr = vfn_2mb << SHIFT_2MB;
-		uint64_t paddr = vtophys_get_paddr(vaddr);
-
-		if (paddr == RTE_BAD_PHYS_ADDR) {
-			DEBUG_PRINT("could not get phys addr for 0x%" PRIx64 "\n", vaddr);
-			return -EFAULT;
-		}
-
-		if (paddr & MASK_2MB) {
-			DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
-			return -EINVAL;
-		}
-
-		rc = spdk_mem_map_set_translation(g_vtophys_map, vaddr, 1 << SHIFT_2MB, paddr);
-		if (rc != 0) {
-			return rc;
-		}
-		vfn_2mb++;
-		len--;
-	}
-
-	return 0;
-}
-
-static int
-spdk_vtophys_unregister(void *vaddr, uint64_t len)
-{
-	uint64_t vfn_2mb;
-	int rc;
-
-	if ((uintptr_t)vaddr & ~MASK_128TB) {
-		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
-		return -EINVAL;
-	}
-
-	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
-		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
-			    __func__, vaddr, len);
-		return -EINVAL;
-	}
-
-	vfn_2mb = (uintptr_t)vaddr >> SHIFT_2MB;
-	len = len >> SHIFT_2MB;
-
-	while (len > 0) {
-		rc = spdk_mem_map_clear_translation(g_vtophys_map, vfn_2mb << SHIFT_2MB, 1 << SHIFT_2MB);
-		if (rc != 0) {
-			return rc;
-		}
-		vfn_2mb++;
-		len--;
-	}
-
-	return 0;
-}
-
-static int
 spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		    enum spdk_mem_map_notify_action action,
 		    void *vaddr, size_t len)
 {
-	int rc;
+	int rc = 0;
+	uint64_t paddr;
 
-	switch (action) {
-	case SPDK_MEM_MAP_NOTIFY_REGISTER:
-		rc = spdk_vtophys_register(vaddr, len);
-		break;
-	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		rc = spdk_vtophys_unregister(vaddr, len);
-		break;
-	default:
-		SPDK_UNREACHABLE();
+	if ((uintptr_t)vaddr & ~MASK_128TB) {
+		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
+		return -EINVAL;
+	}
+
+	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
+			    __func__, vaddr, len);
+		return -EINVAL;
+	}
+
+	while (len > 0) {
+		switch (action) {
+		case SPDK_MEM_MAP_NOTIFY_REGISTER:
+			paddr = vtophys_get_paddr((uint64_t)vaddr);
+
+			if (paddr == RTE_BAD_PHYS_ADDR) {
+				DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
+				return -EFAULT;
+			}
+
+			if (paddr & MASK_2MB) {
+				DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
+				return -EINVAL;
+			}
+
+			rc = spdk_mem_map_set_translation(g_vtophys_map, (uint64_t)vaddr, VALUE_2MB, paddr);
+			break;
+		case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+			rc = spdk_mem_map_clear_translation(g_vtophys_map, (uint64_t)vaddr, VALUE_2MB);
+			break;
+		default:
+			SPDK_UNREACHABLE();
+		}
+
+		if (rc != 0) {
+			return rc;
+		}
+		vaddr += VALUE_2MB;
+		len -= VALUE_2MB;
 	}
 
 	return rc;
@@ -579,7 +535,8 @@ spdk_vtophys_register_dpdk_mem(void)
 			break;
 		}
 
-		spdk_vtophys_register(seg->addr, seg->len);
+		spdk_vtophys_notify(NULL, g_vtophys_map, SPDK_MEM_MAP_NOTIFY_REGISTER,
+				    seg->addr, seg->len);
 	}
 }
 
