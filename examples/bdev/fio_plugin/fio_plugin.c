@@ -41,6 +41,7 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"
+#include "spdk/event.h"
 
 #include "config-host.h"
 #include "fio.h"
