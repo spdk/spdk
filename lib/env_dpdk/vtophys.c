@@ -45,15 +45,76 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
+#ifdef __FreeBSD__
+#define SPDK_VFIO_ENABLED 0
+#else
+#include <linux/version.h>
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
+#define SPDK_VFIO_ENABLED 1
+#include <linux/vfio.h>
+int pci_vfio_is_enabled(void); /* Internal DPDK function forward declaration */
+#else
+#define SPDK_VFIO_ENABLED 0
+#endif
+#endif
+
 #if DEBUG
 #define DEBUG_PRINT(...) fprintf(stderr, __VA_ARGS__)
 #else
 #define DEBUG_PRINT(...)
 #endif
 
+struct vfio_cfg {
+	int fd;
+	bool enabled;
+};
+
+static struct vfio_cfg g_vfio = {};
 static struct spdk_mem_map *g_vtophys_map;
 
-/* Try to get the paddr from the DPDK memsegs */
+#if SPDK_VFIO_ENABLED
+static int
+vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
+{
+	struct vfio_iommu_type1_dma_map dma_map;
+	int ret;
+
+	dma_map.argsz = sizeof(dma_map);
+	dma_map.flags = VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE;
+	dma_map.vaddr = vaddr;
+	dma_map.iova = iova;
+	dma_map.size = size;
+
+	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map);
+
+	if (ret) {
+		DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);
+	}
+
+	return ret;
+}
+
+static int
+vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
+{
+	struct vfio_iommu_type1_dma_unmap dma_unmap;
+	int ret;
+
+	dma_unmap.argsz = sizeof(dma_unmap);
+	dma_unmap.flags = 0;
+	dma_unmap.iova = iova;
+	dma_unmap.size = size;
+
+	ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_unmap);
+
+	if (ret) {
+		DEBUG_PRINT("Cannot clear DMA mapping, error %d\n", errno);
+	}
+
+	return ret;
+}
+#endif
+
 static uint64_t
 vtophys_get_paddr_memseg(uint64_t vaddr)
 {
@@ -97,11 +158,12 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 		rte_atomic64_read((rte_atomic64_t *)vaddr);
 		paddr = rte_mem_virt2phy((void *)vaddr);
 	}
-	if (paddr != RTE_BAD_PHYS_ADDR) {
-		return paddr;
+	if (paddr == RTE_BAD_PHYS_ADDR) {
+		/* Unable to get to the physical address. */
+		return SPDK_VTOPHYS_ERROR;
 	}
 
-	return SPDK_VTOPHYS_ERROR;
+	return paddr;
 }
 
 static int
@@ -130,11 +192,28 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 		switch (action) {
 		case SPDK_MEM_MAP_NOTIFY_REGISTER:
 			if (paddr == SPDK_VTOPHYS_ERROR) {
+				/*
+				 * This is not an address that DPDK is managing. Get
+				 * the physical address from /proc/self/pagemap.
+				 */
 				paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
 				if (paddr == SPDK_VTOPHYS_ERROR) {
 					DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
 					return -EFAULT;
 				}
+
+#if SPDK_VFIO_ENABLED
+				/*
+				 * DPDK is not managing this memory, so if the IOMMU is enabled
+				 * we need to register this memory to be able to use it.
+				 */
+				if (g_vfio.enabled) {
+					rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, VALUE_2MB);
+					if (rc) {
+						return -EFAULT;
+					}
+				}
+#endif
 			}
 
 			if (paddr & MASK_2MB) {
@@ -145,6 +224,21 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 			rc = spdk_mem_map_set_translation(g_vtophys_map, (uint64_t)vaddr, VALUE_2MB, paddr);
 			break;
 		case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
+#if SPDK_VFIO_ENABLED
+			if (paddr == SPDK_VTOPHYS_ERROR) {
+				/*
+				 * This is not an address that DPDK is managing. If vfio is enabled,
+				 * we need to unmap the range from the IOMMU
+				 */
+				if (g_vfio.enabled) {
+					paddr = spdk_mem_map_translate(g_vtophys_map, (uint64_t)vaddr);
+					rc = vtophys_iommu_unmap_dma(paddr, VALUE_2MB);
+					if (rc) {
+						return -EFAULT;
+					}
+				}
+			}
+#endif
 			rc = spdk_mem_map_clear_translation(g_vtophys_map, (uint64_t)vaddr, VALUE_2MB);
 			break;
 		default:
@@ -161,9 +255,61 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	return rc;
 }
 
+#if SPDK_VFIO_ENABLED
+static void
+spdk_vtophys_iommu_init(void)
+{
+	char proc_fd_path[PATH_MAX + 1];
+	char link_path[PATH_MAX + 1];
+	const char vfio_path[] = "/dev/vfio/vfio";
+	DIR *dir;
+	struct dirent *d;
+
+	dir = opendir("/proc/self/fd");
+	if (!dir) {
+		DEBUG_PRINT("Failed to open /proc/self/fd (%d)\n", errno);
+		return;
+	}
+
+	while ((d = readdir(dir)) != NULL) {
+		if (d->d_type != DT_LNK)
+			continue;
+
+		snprintf(proc_fd_path, sizeof(proc_fd_path), "/proc/self/fd/%s", d->d_name);
+		if (readlink(proc_fd_path, link_path, sizeof(link_path)) != (sizeof(vfio_path) - 1)) {
+			continue;
+		}
+
+		if (memcmp(link_path, vfio_path, sizeof(vfio_path) - 1) == 0) {
+			sscanf(d->d_name, "%d", &g_vfio.fd);
+			break;
+		}
+	}
+
+	closedir(dir);
+
+	if (g_vfio.fd < 0) {
+		DEBUG_PRINT("Failed to discover DPDK VFIO container fd.\n");
+		return;
+	}
+
+	g_vfio.enabled = true;
+
+	return;
+}
+#endif
+
 void
 spdk_vtophys_init(void)
 {
+#if SPDK_VFIO_ENABLED
+	if (pci_vfio_is_enabled()) {
+		spdk_vtophys_iommu_init();
+	}
+#else
+	g_vfio.enabled = false;
+#endif
+
 	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, spdk_vtophys_notify, NULL);
 	if (g_vtophys_map == NULL) {
 		DEBUG_PRINT("vtophys map allocation failed\n");
