@@ -196,7 +196,7 @@ spdk_fio_init_thread(struct thread_data *td)
 		return -1;
 	}
 
-	fio_thread->thread = spdk_allocate_thread(spdk_fio_send_msg, fio_thread);
+	fio_thread->thread = spdk_allocate_thread(spdk_fio_send_msg, fio_thread, "fio_thread");
 	if (!fio_thread->thread) {
 		spdk_ring_free(fio_thread->ring);
 		free(fio_thread);

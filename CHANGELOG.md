@@ -50,6 +50,13 @@ makes it explicit that the default is being used.
 spdk_bs_io_readv_blob() and spdk_bs_io_writev_blob() were added to enable
 scattered payloads.
 
+### Event Framework
+
+The ability to set a thread name, previously only used by the reactor code, is
+now part of the `spdk_thread_allocate()` API.  Users may specify a thread name
+which will show up in tools like `gdb`.
+
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
