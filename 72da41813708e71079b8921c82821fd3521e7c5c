@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "d8ceee39_473a7ff4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1786,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-22T15:26:32Z",
+      "side": 1,
+      "message": "I\u0027m OK leaving it in, although I think there\u0027s 0% chance of us ever supporting anything other a 4KB page size.",
+      "parentUuid": "082b5c87_a32f47a2",
+      "revId": "72da41813708e71079b8921c82821fd3521e7c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ade01b85_a932378d",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 1
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "So there are a bunch of other values defined at the top of this file? Why just this one?",
       "parentUuid": "ade01b85_a932378d",
+      "revId": "72da41813708e71079b8921c82821fd3521e7c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c6c8385_02b5cdad",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-22T15:26:32Z",
+      "side": 1,
+      "message": "If you keep the spdk_bs_get_page_size() API call, then this #define should stay here in this file.  I suggested moving it based on getting rid of spdk_bs_get_page_size() (this #define would be the effective replacement in the public API).",
+      "parentUuid": "ffd3bb16_a2835a94",
       "revId": "72da41813708e71079b8921c82821fd3521e7c5c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
