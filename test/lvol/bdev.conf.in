@@ -1,0 +1,10 @@
+[Global]
+   LogFacility "local7"
+
+[Malloc]
+  NumberOfLuns 1
+  LunSizeInMB 64
+
+[Rpc]
+  Enable Yes
+  Listen 127.0.0.1
