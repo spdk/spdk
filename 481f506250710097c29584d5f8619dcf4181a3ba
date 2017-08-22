@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc467804_7c8a8ee8",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-22T06:31:11Z",
+      "side": 1,
+      "message": "this results in virtio_hw ** being passed, is this intended? do we need it?",
+      "range": {
+        "startLine": 183,
+        "startChar": 28,
+        "endLine": 183,
+        "endChar": 29
+      },
+      "revId": "481f506250710097c29584d5f8619dcf4181a3ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2711735f_e4551695",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-22T06:31:11Z",
+      "side": 1,
+      "message": "1\notherwise virtio_recv_pkts will use \u0026complete as 32-element array",
+      "range": {
+        "startLine": 249,
+        "startChar": 54,
+        "endLine": 249,
+        "endChar": 56
+      },
+      "revId": "481f506250710097c29584d5f8619dcf4181a3ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "261abf1f_2c0d117c",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-22T06:31:11Z",
+      "side": 1,
+      "message": "1",
+      "range": {
+        "startLine": 271,
+        "startChar": 54,
+        "endLine": 271,
+        "endChar": 56
+      },
+      "revId": "481f506250710097c29584d5f8619dcf4181a3ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c73eecb_88505aae",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-22T06:31:11Z",
+      "side": 1,
+      "message": "product_name",
+      "range": {
+        "startLine": 287,
+        "startChar": 7,
+        "endLine": 287,
+        "endChar": 12
+      },
+      "revId": "481f506250710097c29584d5f8619dcf4181a3ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
