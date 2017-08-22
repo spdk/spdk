@@ -43,13 +43,19 @@
 #include "spdk/nvme_spec.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/version.h"
 
 #include "spdk_internal/log.h"
 
 #define MIN_KEEP_ALIVE_TIMEOUT 10000
 
 #define MODEL_NUMBER "SPDK bdev Controller"
-#define FW_VERSION "FFFFFFFF"
+
+/*
+ * Report the SPDK version as the firmware revision.
+ * SPDK_VERSION_STRING won't fit into FR (only 8 bytes), so try to fit the most important parts.
+ */
+#define FW_VERSION SPDK_VERSION_MAJOR_STRING SPDK_VERSION_MINOR_STRING SPDK_VERSION_PATCH_STRING
 
 static uint16_t spdk_nvmf_ctrlr_gen_cntlid(void);
 
