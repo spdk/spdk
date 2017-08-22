@@ -117,6 +117,9 @@ struct spdk_bdev_channel {
 
 	struct spdk_bdev_io_stat stat;
 
+	/* Denotes if a reset is currently in progress on this bdev. */
+	bool reset_in_progress;
+
 	/*
 	 * Count of I/O submitted to bdev module and waiting for completion.
 	 * Incremented before submit_request() is called on an spdk_bdev_io.
@@ -645,6 +648,14 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
 
+	/*
+	 * Initialize reset_in_progress with correct value - it is possible
+	 *  that this I/O channel could be created while a reset is in progress.
+	 */
+	pthread_mutex_lock(&bdev->mutex);
+	ch->reset_in_progress = bdev->reset_in_progress;
+	pthread_mutex_unlock(&bdev->mutex);
+
 #ifdef SPDK_CONFIG_VTUNE
 	{
 		char *name;
@@ -1064,15 +1075,16 @@ _spdk_bdev_reset_dev(void *io_device, void *ctx)
 }
 
 static void
-_spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
+_spdk_bdev_channel_start_reset(void *io_device, struct spdk_io_channel *ch,
 			       void *ctx)
 {
 	struct spdk_bdev_channel	*channel;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
 
 	channel = spdk_io_channel_get_ctx(ch);
-	mgmt_channel = spdk_io_channel_get_ctx(channel->mgmt_channel);
+	channel->reset_in_progress = true;
 
+	mgmt_channel = spdk_io_channel_get_ctx(channel->mgmt_channel);
 	_spdk_bdev_abort_io(&mgmt_channel->need_buf_small, channel);
 	_spdk_bdev_abort_io(&mgmt_channel->need_buf_large, channel);
 }
@@ -1082,7 +1094,7 @@ _spdk_bdev_start_reset(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
-	spdk_for_each_channel(bdev_io->bdev, _spdk_bdev_reset_abort_channel,
+	spdk_for_each_channel(bdev_io->bdev, _spdk_bdev_channel_start_reset,
 			      bdev_io, _spdk_bdev_reset_dev);
 }
 
@@ -1106,6 +1118,26 @@ _spdk_bdev_start_next_reset(struct spdk_bdev *bdev)
 	}
 
 	pthread_mutex_unlock(&bdev->mutex);
+}
+
+static void
+_spdk_bdev_reset_dev_done(void *io_device, void *ctx)
+{
+	struct spdk_bdev *bdev = ctx;
+
+	pthread_mutex_lock(&bdev->mutex);
+	bdev->reset_in_progress = false;
+	pthread_mutex_unlock(&bdev->mutex);
+	_spdk_bdev_start_next_reset(bdev);
+}
+
+static void
+_spdk_bdev_channel_stop_reset(void *io_device, struct spdk_io_channel *ch,
+			      void *ctx)
+{
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	channel->reset_in_progress = false;
 }
 
 int
@@ -1266,8 +1298,8 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	assert(bdev_io->ch->io_outstanding > 0);
 	bdev_io->ch->io_outstanding--;
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
-		bdev_io->bdev->reset_in_progress = false;
-		_spdk_bdev_start_next_reset(bdev_io->bdev);
+		spdk_for_each_channel(bdev_io->bdev, _spdk_bdev_channel_stop_reset,
+				      bdev_io->bdev, _spdk_bdev_reset_dev_done);
 	}
 
 	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {

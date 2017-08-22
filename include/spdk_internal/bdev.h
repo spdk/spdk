@@ -234,7 +234,11 @@ struct spdk_bdev {
 
 	TAILQ_ENTRY(spdk_bdev) link;
 
-	/** denotes if a reset is currently in progress on this bdev */
+	/** Denotes if a reset is currently in progress on this bdev.  Note that
+	 *  individual channels have their own reset_in_progress flag - this value here
+	 *  is used to provide the initial value for new I/O channels which could get
+	 *  allocated while a reset is in progress.
+	 */
 	bool reset_in_progress;
 
 	TAILQ_HEAD(, spdk_bdev_io) queued_resets;
