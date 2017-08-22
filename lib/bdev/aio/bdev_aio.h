@@ -58,6 +58,7 @@ struct file_disk {
 	struct spdk_bdev	disk;
 	char			*filename;
 	int			fd;
+	TAILQ_ENTRY(file_disk)  fd_link;
 };
 
 struct spdk_bdev *create_aio_disk(const char *name, const char *filename, uint32_t block_size);
