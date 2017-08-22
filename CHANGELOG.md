@@ -45,6 +45,12 @@ additional clarity when constructing spdk_mempools. Previously, -1 could be
 passed and the library would choose a reasonable default, but this new value
 makes it explicit that the default is being used.
 
+### Event Framework
+
+The ability to set a thread name, previously only used by the reactor code, is
+now part of the `spdk_thread_allocate()` API.  Users may specify a thread name
+which will show up in tools like `gdb`.
+
 
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 

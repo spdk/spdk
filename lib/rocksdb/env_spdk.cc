@@ -439,7 +439,7 @@ _spdk_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 void SpdkInitializeThread(void)
 {
 	if (g_fs != NULL) {
-		spdk_allocate_thread(_spdk_send_msg, NULL);
+		spdk_allocate_thread(_spdk_send_msg, NULL, "rocksdb_thread");
 		g_sync_args.channel = spdk_fs_alloc_io_channel_sync(g_fs);
 	}
 }
