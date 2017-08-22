@@ -33,6 +33,7 @@
 
 #include "spdk/log.h"
 #include "spdk/rpc.h"
+#include "spdk/io_channel.h"
 
 #include "spdk_internal/bdev.h"
 
@@ -42,6 +43,8 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
+	struct spdk_io_channel *io_channel;
+	struct spdk_bdev_io_stat stat;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -73,6 +76,20 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 
 		spdk_json_write_name(w, "bdev_opened_for_write");
 		spdk_json_write_bool(w, bdev->bdev_opened_for_write);
+
+		spdk_json_write_name(w, "current_io_stats");
+		spdk_json_write_object_begin(w);
+		io_channel = spdk_get_io_channel(bdev);
+		spdk_bdev_get_io_stat(bdev, io_channel, &stat);
+		spdk_json_write_name(w, "bytes_read");
+		spdk_json_write_uint64(w, stat.bytes_read);
+		spdk_json_write_name(w, "num_read_ops");
+		spdk_json_write_uint64(w, stat.num_read_ops);
+		spdk_json_write_name(w, "bytes_written");
+		spdk_json_write_uint64(w, stat.bytes_written);
+		spdk_json_write_name(w, "num_write_ops");
+		spdk_json_write_uint64(w, stat.num_write_ops);
+		spdk_json_write_object_end(w);
 
 		spdk_json_write_name(w, "supported_io_types");
 		spdk_json_write_object_begin(w);
