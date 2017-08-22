@@ -18,8 +18,9 @@ results.
 
 ## Tests
 
-#### TEST CASE 1
-#### Name: construct_lvs_positive
+### construct_lvol_store  - positive tests
+
+#### TEST CASE 1 - Name: construct_lvs_positive
 Positive test for constructing a new lvol store.
 Call construct_lvol_store with correct base bdev name.
 Steps:
@@ -30,12 +31,13 @@ Steps:
 
 Expected result:
 - call successfull, return code = 0, uuid printed to stdout
-- get_bdevs: backend used for construct_lvol_store has uuid
+- get_lvol_stores: backend used for construct_lvol_store has uuid
   field set with the same uuid as returned from RPC call
 - no other operation fails
 
-#### TEST CASE 2
-#### Name: construct_logical_volume_positive
+### construct_lvol_bdev - positive tests
+
+#### TEST CASE 2 - Name: construct_logical_volume_positive
 Positive test for constructing a new logical volume.
 Call construct_lvol_bdev with correct lvol store UUID and size in MiB for this bdev.
 Steps:
@@ -51,8 +53,7 @@ Expected result:
   field set with the same name as returned value from call RPC method: construct_lvol_bdev
 - no other operation fails
 
-#### TEST CASE 3
-#### Name: construct_multi_logical_volumes_positive
+#### TEST CASE 3 - Name: construct_multi_logical_volumes_positive
 Positive test for constructing a multi logical volumes.
 Call construct_lvol_bdev with correct lvol store UUID and
 size is equal one quarter of the this bdev size.
@@ -71,8 +72,9 @@ Expected result:
   field set with the same name as returned from RPC call for all repeat
 - no other operation fails
 
-#### TEST CASE 4
-#### Name: resize_logical_volume_positive
+### resize_lvol_store - positive tests
+
+#### TEST CASE 4 - Name: resize_logical_volume_positive
 Positive test for resizing a logical_volume.
 Call resize_lvol_bdev with correct logical_volumes name and new size.
 Steps:
@@ -86,7 +88,7 @@ Steps:
 - resize_lvol_bdev on correct lvs_uuid and size is
   equal half of size malloc bdev
 - check size of the lvol bdev by command RPC : get_bdevs
-- resize_lvol_bdev on the correct lvs_uuid and the size is smaller by 1 MB 
+- resize_lvol_bdev on the correct lvs_uuid and size is smaller by 1 MB
   from the full size malloc bdev
 - check size of the lvol bdev by command RPC : get_bdevs
 - resize_lvol_bdev on the correct lvs_uuid and size is equal 0 MiB
@@ -98,8 +100,9 @@ Expected result:
 - calls successfull, return code = 0
 - no other operation fails
 
-#### TEST CASE 5
-#### Name: destroy_lvol_store_positive
+### destroy_lvol_store - positive tests
+
+#### TEST CASE 5 - Name: destroy_lvol_store_positive
 Positive test for destroying a logical volume store.
 Call destroy_lvol_store with correct logical_volumes name
 Steps:
@@ -115,8 +118,7 @@ Expected result:
 - get_lvol_stores: response should be of no value after destroyed lvol store
 - no other operation fails
 
-#### TEST CASE 6
-#### Name: destroy_lvol_store_with_lvol_bdev_positive
+#### TEST CASE 6 - Name: destroy_lvol_store_with_lvol_bdev_positive
 Positive test for destroying a logical volume store.
 Call destroy_lvol_store with correct logical_volumes name
 Steps:
@@ -133,8 +135,7 @@ Expected result:
 - get_lvol_stores: response should be of no value after destroyed lvol store
 - no other operation fails
 
-#### TEST CASE 7
-#### Name: destroy_multi_logical_volumes_positive
+#### TEST CASE 7 - Name: destroy_multi_logical_volumes_positive
 Positive test for constructing a multi logical volumes.
 Call construct_lvol_bdev with correct lvol store UUID and
 size is equal one quarter of the this bdev size.
@@ -155,8 +156,9 @@ Expected result:
   field set with the same name as returned from RPC call for all repeat
 - no other operation fails
 
-#### TEST CASE 8
-#### Name: nested construct_logical_volume_positive
+### nested_construct_logical_volume - positive tests
+
+#### TEST CASE 8 - Name: nested_construct_logical_volume_positive
 Positive test for constructing a nested new lvol store.
 Call construct_lvol_store with correct base bdev name.
 Steps:
@@ -165,10 +167,12 @@ Steps:
 - check correct uuid values in response get_lvol_stores command
 - construct_lvol_bdev on correct lvs_uuid and size is
   equal of size malloc bdev
-- check size of the lvol bdev
-- construct_lvol_store on created lvol_bdev
-- check size of the lvol bdev by command RPC : get_bdevs
-- destroy all lvol_store
+- construct_first_nested_lvol_store on created lvol_bdev
+- check correct uuid values in response get_lvol_stores command
+- construct_first_nested_lvol_bdev on correct lvs_uuid and size
+- construct_second_nested_lvol_store on created first_nested_lvol_bdev
+- check correct uuid values in response get_lvol_stores command
+- construct_second_nested_lvol_bdev on correct first_nested_lvs_uuid and size
 - delete malloc bdev
 
 Expected result:
@@ -179,8 +183,9 @@ Expected result:
   field set with the same UUID as returned from RPC call
 - no other operation fails
 
-#### TEST CASE 9
-#### Name: destroy_resize_logical_volume_positive
+### destroy_lvol_store - positive tests
+
+#### TEST CASE 9 - Name: destroy_resize_logical_volume_positive
 Positive test for destroying a logical_volume after resizing.
 Call destroy_lvol_store with correct logical_volumes name.
 Steps:
@@ -193,12 +198,12 @@ Steps:
 - resize_lvol_bdev on correct lvs_uuid and size is
   equal half of size malloc bdev
 - check size of the lvol bdev by command RPC : get_bdevs
-- Resize_lvol_bdev on the correct lvs_uuid and the size is smaller by 1 MB 
+- Resize_lvol_bdev on the correct lvs_uuid and the size is smaller by 1 MB
   from the full size malloc bdev
 - check size of the lvol bdev by command RPC : get_bdevs
 - resize_lvol_bdev on the correct lvs_uuid and size is equal 0 MiB
 - check size of the lvol bdev by command RPC : get_bdevs
-- delete malloc bdev
+- destroy_lvol_store
 
 Expected result:
 - lvol bdev should change size after resize operations
@@ -206,8 +211,9 @@ Expected result:
 - no other operation fails
 - get_lvol_stores: response should be of no value after destroyed lvol store
 
-#### TEST CASE 10
-#### Name: construct_lvs_nonexistent_bdev
+### construct_lvol_store - negative tests
+
+#### TEST CASE 10 - Name: construct_lvs_nonexistent_bdev
 Negative test for constructing a new lvol store.
 Call construct_lvol_store with base bdev name which does not
 exist in configuration.
@@ -218,8 +224,9 @@ Expected result:
 - return code != 0
 - Error code: ENODEV ("No such device") response printed to stdout
 
-#### TEST CASE 11
-#### Name: construct_lvs_on_bdev_twice
+### construct_lvol_bdev - negative tests
+
+#### TEST CASE 11 Name: construct_lvs_on_bdev_twice
 Negative test for constructing a new lvol store.
 Call construct_lvol_store with base bdev name twice.
 Steps:
@@ -236,10 +243,9 @@ Expected result:
 - EEXIST response printed to stdout
 - no other operation fails
 
-#### TEST CASE 12
-#### Name: construct_logical_volume_nonexistent_lvs_uuid
+#### TEST CASE 12 - Name: construct_logical_volume_nonexistent_lvs_uuid
 Negative test for constructing a new logical_volume.
-Call construct_lvol_bdevs with lvs_uuid which does not
+Call construct_lvol_bdev with lvs_uuid which does not
 exist in configuration.
 Steps:
 - try to call construct_lvol_bdev with lvs_uuid which does not exist
@@ -248,15 +254,14 @@ Expected result:
 - return code != 0
 - ENODEV response printed to stdout
 
-#### TEST CASE 13
-#### Name: construct_logical_volumes_on_busy_bdev
+#### TEST CASE 13 - Name: construct_logical_volumes_on_busy_bdev
 Negative test for constructing a new logical volume.
 Call construct_lvol_bdev on a busy malloc bdev.
 Steps:
 - create a malloc bdev
 - construct_lvol_store on created malloc bdev
-- check correct uuid values in response get_lvol_stores command
-- construct_lvol_bdev on correct lvs_uuid and size is smaller by 1 MB 
+- check correct uuid values in response from get_lvol_stores command
+- construct_lvol_bdev on correct lvs_uuid and size is smaller by 1 MB
   from the full size malloc bdev
 - construct_lvol_bdev on the same lvs_uuid as in last step
 - destroy_lvol_store
@@ -268,8 +273,9 @@ Expected result:
 - EEXIST response printed to stdout
 - no other operation fails
 
-#### TEST CASE 14
-#### Name: resize_logical_volume_nonexistent_logical_volume
+### resize_lvol_store - negative tests
+
+#### TEST CASE 14 - Name: resize_logical_volume_nonexistent_logical_volume
 Negative test for resizing a logical_volume.
 Call resize_lvol_bdev with logical volume which does not
 exist in configuration.
@@ -280,8 +286,7 @@ Expected result:
 - return code != 0
 - Error code: ENODEV ("No such device") response printed to stdout
 
-#### TEST CASE 15
-#### Name: resize_logical_volume_with_size_out_of_range
+#### TEST CASE 15 - Name: resize_logical_volume_with_size_out_of_range
 Negative test for constructing a new lvol store.
 Call construct_lvol_store with base bdev name twice.
 Steps:
@@ -297,11 +302,13 @@ Steps:
 
 Expected result:
 - fourth call return code != 0 for all cases
-- Error code response printed to stdout
+- Error code: ENODEV ("Not enough free clusters left on lvol store")
+  response printed to stdout
 - no other operation fails
 
-#### TEST CASE 16
-#### Name: destroy_lvol_store_nonexistent_lvs_uuid
+### destroy_lvol_store - negative tests
+
+#### TEST CASE 16 - Name: destroy_lvol_store_nonexistent_lvs_uuid
 Call destroy_lvol_store with nonexistent logical_volumes name
 exist in configuration.
 Steps:
@@ -311,13 +318,11 @@ Expected result:
 - return code != 0
 - Error code response printed to stdout
 
-#### TEST CASE 17
-#### Name: destroy_lvol_store_nonexistent_bdev
+#### TEST CASE 17 - Name: destroy_lvol_store_nonexistent_bdev
 Call destroy_lvol_store with nonexistent bdevs
 Steps:
 - create a malloc bdev
 - construct_lvol_store on created malloc bdev
-- check correct uuid values in response get_lvol_stores command
 - check correct uuid values in response get_lvol_stores command
 - delete malloc bdev
 - destroy_lvol_store
@@ -326,8 +331,9 @@ Expected result:
 - Error code: ENODEV ("No such device") response printed to stdout
 - no other operation fails
 
-#### TEST CASE 18
-#### Name: nested construct_logical_volume_nonexistent
+### nested construct_lvol_bdev - test negative
+
+#### TEST CASE 18 - Name: nested_construct_logical_volumes_on_busy_bdev
 Negative test for constructing lvol store with a nonexistent lvol bdevs.
 Call construct_lvol_store with base bdev name which does not
 exist in configuration.
@@ -337,19 +343,23 @@ Steps:
 - check correct uuid values in response get_lvol_stores command
 - construct_lvol_bdev on correct lvs_uuid and size is
   equal of size malloc bdev
-- check size of the lvol bdev
-- construct_lvol_store on created lvol_bdev
+- construct_first_nested_lvol_store on created lvol_bdev
 - check correct uuid values in response get_lvol_stores command
-- repeat construct_lvol_store on created lvol_bdev
-- destroy all lvol_store
+- construct_first_nested_lvol_bdev on correct lvs_uuid and size
+- construct_second_nested_lvol_store on created first_nested_lvol_bdev
+- check correct uuid values in response get_lvol_stores command
+- construct_second_nested_lvol_bdev on correct first_nested_lvs_uuid and size
+- construct_third_nested_lvol_bdev on parameters as in last step
+- destroy first nested lvol_store
 - delete malloc bdev
 
 Expected result:
 - return code != 0
 - EEXIST response printed to stdout
 
-#### TEST CASE 19
-#### Name: nested destroy_logical_volume_negative
+### destroy_lvol_store - negative tests
+
+#### TEST CASE 19 - Name: nested_destroy_logical_volume_negative
 Negative test for destroying a nested first lvol store.
 Call destroy_lvol_store with correct base bdev name.
 Steps:
@@ -368,11 +378,12 @@ Steps:
 - delete malloc bdev
 
 Expected result:
-- Error code response printed to stdout
+- Error code: ENODEV ("the device is busy") response printed to stdout
 - no other operation fails
 
-#### TEST CASE 20
-#### Name: delete_bdev_positive
+### delete_bdev - positive tests
+
+#### TEST CASE 20 - Name: delete_bdev_positive
 Positive test for deleting malloc bdev.
 Call construct_lvol_store with correct base bdev name.
 Steps:
@@ -386,10 +397,10 @@ Expected result:
 - get_lvol_stores: response should be of no value after destroyed lvol store
 - no other operation fails
 
-#### TEST CASE 21
-#### Name: SIGTERM
-Call CTRL+C (SIGTERM) occurs after creating lvol store
+### SIGTERM
 
+#### TEST CASE 21 - Name: SIGTERM
+Call CTRL+C (SIGTERM) occurs after creating lvol store
 Steps:
 - create a malloc bdev
 - construct_lvol_store on created malloc bdev
