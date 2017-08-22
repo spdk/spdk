@@ -799,7 +799,7 @@ _spdk_nvmf_ns_hot_remove(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct spdk_nvmf_ns *ns = cb_arg;
 
-	spdk_nvmf_subsystem_remove_ns(ns->subsystem, ns->id);
+	spdk_nvmf_subsystem_remove_ns(ns->subsystem, ns->opts.nsid);
 
 	spdk_nvmf_subsystem_resume(subsystem, NULL, NULL);
 }
@@ -816,10 +816,18 @@ spdk_nvmf_ns_hot_remove(void *remove_ctx)
 	}
 }
 
+void
+spdk_nvmf_ns_opts_get_defaults(struct spdk_nvmf_ns_opts *opts, size_t opts_size)
+{
+	/* All current fields are set to 0 by default. */
+	memset(opts, 0, opts_size);
+}
+
 uint32_t
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
-			   uint32_t nsid)
+			   const struct spdk_nvmf_ns_opts *user_opts, size_t opts_size)
 {
+	struct spdk_nvmf_ns_opts opts;
 	struct spdk_nvmf_ns *ns;
 	uint32_t i;
 	int rc;
@@ -829,18 +837,23 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		return 0;
 	}
 
-	if (nsid == SPDK_NVME_GLOBAL_NS_TAG) {
-		SPDK_ERRLOG("Invalid NSID %" PRIu32 "\n", nsid);
+	spdk_nvmf_ns_opts_get_defaults(&opts, sizeof(opts));
+	if (user_opts) {
+		memcpy(&opts, user_opts, spdk_min(sizeof(opts), opts_size));
+	}
+
+	if (opts.nsid == SPDK_NVME_GLOBAL_NS_TAG) {
+		SPDK_ERRLOG("Invalid NSID %" PRIu32 "\n", opts.nsid);
 		return 0;
 	}
 
-	if (nsid > subsystem->max_nsid ||
-	    (nsid == 0 && subsystem->num_allocated_nsid == subsystem->max_nsid)) {
+	if (opts.nsid > subsystem->max_nsid ||
+	    (opts.nsid == 0 && subsystem->num_allocated_nsid == subsystem->max_nsid)) {
 		struct spdk_nvmf_ns *new_ns_array;
 		uint32_t new_max_nsid;
 
-		if (nsid > subsystem->max_nsid) {
-			new_max_nsid = nsid;
+		if (opts.nsid > subsystem->max_nsid) {
+			new_max_nsid = opts.nsid;
 		} else {
 			new_max_nsid = subsystem->max_nsid + 1;
 		}
@@ -862,31 +875,31 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		subsystem->max_nsid = new_max_nsid;
 	}
 
-	if (nsid == 0) {
+	if (opts.nsid == 0) {
 		/* NSID not specified - find a free index */
 		for (i = 0; i < subsystem->max_nsid; i++) {
 			if (_spdk_nvmf_subsystem_get_ns(subsystem, i + 1) == NULL) {
-				nsid = i + 1;
+				opts.nsid = i + 1;
 				break;
 			}
 		}
-		if (nsid == 0) {
+		if (opts.nsid == 0) {
 			SPDK_ERRLOG("All available NSIDs in use\n");
 			return 0;
 		}
 	} else {
 		/* Specific NSID requested */
-		if (_spdk_nvmf_subsystem_get_ns(subsystem, nsid)) {
-			SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", nsid);
+		if (_spdk_nvmf_subsystem_get_ns(subsystem, opts.nsid)) {
+			SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", opts.nsid);
 			return 0;
 		}
 	}
 
-	ns = &subsystem->ns[nsid - 1];
+	ns = &subsystem->ns[opts.nsid - 1];
 	memset(ns, 0, sizeof(*ns));
 	ns->bdev = bdev;
-	ns->id = nsid;
 	ns->subsystem = subsystem;
+	ns->opts = opts;
 	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ns_hot_remove, ns, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
@@ -898,12 +911,12 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),
 		      spdk_bdev_get_name(bdev),
-		      nsid);
+		      opts.nsid);
 
-	subsystem->max_nsid = spdk_max(subsystem->max_nsid, nsid);
+	subsystem->max_nsid = spdk_max(subsystem->max_nsid, opts.nsid);
 	subsystem->num_allocated_nsid++;
 
-	return nsid;
+	return opts.nsid;
 }
 
 static uint32_t
@@ -940,7 +953,7 @@ spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem,
 {
 	uint32_t next_nsid;
 
-	next_nsid = spdk_nvmf_subsystem_get_next_allocated_nsid(subsystem, prev_ns->id);
+	next_nsid = spdk_nvmf_subsystem_get_next_allocated_nsid(subsystem, prev_ns->opts.nsid);
 	return _spdk_nvmf_subsystem_get_ns(subsystem, next_nsid);
 }
 
@@ -953,7 +966,7 @@ spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 uint32_t
 spdk_nvmf_ns_get_id(const struct spdk_nvmf_ns *ns)
 {
-	return ns->id;
+	return ns->opts.nsid;
 }
 
 struct spdk_bdev *

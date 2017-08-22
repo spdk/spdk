@@ -64,7 +64,7 @@ spdk_nvmf_subsystem_bdev_io_type_supported(struct spdk_nvmf_subsystem *subsystem
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF,
 				      "Subsystem %s namespace %u (%s) does not support io_type %d\n",
 				      spdk_nvmf_subsystem_get_nqn(subsystem),
-				      ns->id, spdk_bdev_get_name(ns->bdev), (int)io_type);
+				      ns->opts.nsid, spdk_bdev_get_name(ns->bdev), (int)io_type);
 			return false;
 		}
 	}
