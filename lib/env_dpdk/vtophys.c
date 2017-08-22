@@ -424,25 +424,6 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 }
 
 static uint64_t
-vtophys_get_dpdk_paddr(void *vaddr)
-{
-	uintptr_t paddr;
-
-	paddr = rte_mem_virt2phy(vaddr);
-	if (paddr == 0) {
-		/*
-		 * The vaddr was valid but returned 0.  Touch the page
-		 *  to ensure a backing page gets assigned, then call
-		 *  rte_mem_virt2phy() again.
-		 */
-		rte_atomic64_read((rte_atomic64_t *)vaddr);
-		paddr = rte_mem_virt2phy(vaddr);
-	}
-
-	return paddr;
-}
-
-static uint64_t
 vtophys_get_paddr(uint64_t vaddr)
 {
 	uintptr_t paddr;
@@ -467,9 +448,19 @@ vtophys_get_paddr(uint64_t vaddr)
 	}
 
 	/* The memory is not registered with DPDK. Try to look it up
-	 * in /proc/self/pagemap.
+	 * in /proc/self/pagemap. DPDK provides a utility function
+	 * to do this.
 	 */
-	paddr = vtophys_get_dpdk_paddr((void *)vaddr);
+	paddr = rte_mem_virt2phy((void *)vaddr);
+	if (paddr == 0) {
+		/*
+		* The vaddr was valid but returned 0.  Touch the page
+		*  to ensure a backing page gets assigned, then call
+		*  rte_mem_virt2phy() again.
+		*/
+		rte_atomic64_read((rte_atomic64_t *)vaddr);
+		paddr = rte_mem_virt2phy((void *)vaddr);
+	}
 	if (paddr != RTE_BAD_PHYS_ADDR) {
 		return paddr;
 	}
