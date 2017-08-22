@@ -418,8 +418,9 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 	return map_2mb->translation_2mb;
 }
 
+/* Try to get the paddr from the DPDK memsegs */
 static uint64_t
-vtophys_get_paddr(uint64_t vaddr)
+vtophys_get_paddr_memseg(uint64_t vaddr)
 {
 	uintptr_t paddr;
 	struct rte_mem_config *mcfg;
@@ -442,10 +443,15 @@ vtophys_get_paddr(uint64_t vaddr)
 		}
 	}
 
-	/* The memory is not registered with DPDK. Try to look it up
-	 * in /proc/self/pagemap. DPDK provides a utility function
-	 * to do this.
-	 */
+	return SPDK_VTOPHYS_ERROR;
+}
+
+/* Try to get the paddr from /proc/self/pagemap */
+static uint64_t
+vtophys_get_paddr_pagemap(uint64_t vaddr)
+{
+	uintptr_t paddr;
+
 	paddr = rte_mem_virt2phy((void *)vaddr);
 	if (paddr == 0) {
 		/*
@@ -460,7 +466,6 @@ vtophys_get_paddr(uint64_t vaddr)
 		return paddr;
 	}
 
-	DEBUG_PRINT("could not find vaddr 0x%" PRIx64 " in DPDK mem config\n", vaddr);
 	return SPDK_VTOPHYS_ERROR;
 }
 
@@ -484,13 +489,17 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 	}
 
 	while (len > 0) {
+		/* Get the physical address from the DPDK memsegs */
+		paddr = vtophys_get_paddr_memseg((uint64_t)vaddr);
+
 		switch (action) {
 		case SPDK_MEM_MAP_NOTIFY_REGISTER:
-			paddr = vtophys_get_paddr((uint64_t)vaddr);
-
-			if (paddr == RTE_BAD_PHYS_ADDR) {
-				DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
-				return -EFAULT;
+			if (paddr == SPDK_VTOPHYS_ERROR) {
+				paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
+				if (paddr == SPDK_VTOPHYS_ERROR) {
+					DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
+					return -EFAULT;
+				}
 			}
 
 			if (paddr & MASK_2MB) {
