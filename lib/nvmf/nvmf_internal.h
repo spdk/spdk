@@ -143,7 +143,7 @@ struct spdk_nvmf_ns {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_nvmf_ns_remove_ctx *remove_ctx;
-	uint32_t id;
+	struct spdk_nvmf_ns_opts opts;
 	bool allocated;
 };
 
