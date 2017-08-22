@@ -1142,6 +1142,47 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return 0;
 }
 
+static void
+_spdk_bdev_complete_get_io_stat(void *io_device, void *ctx)
+{
+	struct spdk_bdev *bdev = io_device;
+
+	bdev->get_io_stat_in_progress = false;
+}
+
+static void
+_spdk_bdev_start_get_io_stat(void *io_device, struct spdk_io_channel *ch, void *ctx)
+{
+	struct spdk_bdev *bdev = io_device;
+	struct spdk_bdev_io_stat stat;
+
+	spdk_bdev_get_io_stat(bdev, ch, &stat);
+
+	bdev->io_stat.bytes_read += stat.bytes_read;
+	bdev->io_stat.bytes_written += stat.bytes_written;
+	bdev->io_stat.num_read_ops += stat.num_read_ops;
+	bdev->io_stat.num_write_ops += stat.num_write_ops;
+}
+
+void
+spdk_bdev_get_all_io_stats(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat)
+{
+	if (bdev->get_io_stat_in_progress == false) {
+		*stat = bdev->io_stat;
+
+		memset(&bdev->io_stat, 0, sizeof(bdev->io_stat));
+
+		bdev->get_io_stat_in_progress = true;
+
+		spdk_for_each_channel(bdev,
+				      _spdk_bdev_start_get_io_stat,
+				      NULL,
+				      _spdk_bdev_complete_get_io_stat);
+	} else {
+		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "Previous io_stats query still in progress.\n");
+	}
+}
+
 void
 spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 		      struct spdk_bdev_io_stat *stat)
@@ -1442,6 +1483,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	bdev->reset_in_progress = false;
 	TAILQ_INIT(&bdev->queued_resets);
+
+	bdev->get_io_stat_in_progress = false;
 
 	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));
