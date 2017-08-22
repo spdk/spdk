@@ -244,6 +244,11 @@ struct spdk_bdev {
 
 	/** points to a reset bdev_io if one is in progress. */
 	struct spdk_bdev_io *reset_in_progress;
+
+	/** denotes if a io_stat query is currently in progress on this bdev */
+	bool get_io_stat_in_progress;
+
+	struct spdk_bdev_io_stat io_stat;
 };
 
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
