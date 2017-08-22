@@ -1,0 +1,9 @@
+[Global]
+  # syslog facility
+   LogFacility "local7"
+[Rpc]
+  # RPC in non-trusted environments.
+  Enable Yes
+  # Listen address for the RPC service.
+  # May be an IP address or an absolute path to a Unix socket.
+  Listen 127.0.0.1
