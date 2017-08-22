@@ -45,6 +45,8 @@
 
 #include "spdk_internal/log.h"
 
+struct file_disk *g_aio_disk_head = NULL;
+
 static int bdev_aio_initialize(void);
 static void aio_free_disk(struct file_disk *fdisk);
 
@@ -56,7 +58,8 @@ bdev_aio_get_ctx_size(void)
 	return sizeof(struct bdev_aio_task);
 }
 
-SPDK_BDEV_MODULE_REGISTER(aio, bdev_aio_initialize, NULL, NULL, bdev_aio_get_ctx_size, NULL)
+SPDK_BDEV_MODULE_REGISTER(aio, bdev_aio_initialize, NULL, blockdev_aio_get_spdk_running_config,
+			  bdev_aio_get_ctx_size, NULL)
 
 static int
 bdev_aio_open(struct file_disk *disk)
@@ -165,6 +168,24 @@ static int
 bdev_aio_destruct(void *ctx)
 {
 	struct file_disk *fdisk = ctx;
+
+	//delete from list
+	struct file_disk *node = g_aio_disk_head;
+	struct file_disk *prev = NULL;
+
+	while (node != NULL) {
+		if (node == fdisk) {
+			if (prev == NULL) {
+				g_aio_disk_head = fdisk->next;
+			} else {
+				prev->next = node->next;
+			}
+			break;
+		}
+		prev = node;
+		node = node->next;
+	}
+
 	int rc = 0;
 
 	rc = bdev_aio_close(fdisk);
@@ -437,6 +458,9 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 	spdk_io_device_register(&fdisk->fd, bdev_aio_create_cb, bdev_aio_destroy_cb,
 				sizeof(struct bdev_aio_io_channel));
 	spdk_bdev_register(&fdisk->disk);
+
+	fdisk->next = g_aio_disk_head;
+	g_aio_disk_head = fdisk;
 	return &fdisk->disk;
 
 error_return:
@@ -493,5 +517,32 @@ bdev_aio_initialize(void)
 
 	return 0;
 }
+
+static void
+blockdev_aio_get_spdk_running_config(FILE *fp)
+{
+
+	char *file;
+	char *name;
+	struct file_disk *fdisk = g_aio_disk_head;
+	fprintf(fp,
+		"\n"
+		"# Users must change this section to match the /dev/sdX devices to be\n"
+		"# exported as iSCSI LUNs. The devices are accessed using Linux AIO.\n"
+		"# The format is:\n"
+		"# AIO <file name> <bdev name>\n"
+		"# The file name is the backing device\n"
+		"# The bdev name can be referenced from elsewhere in the configuration file.\n"
+		"[AIO]\n");
+
+	while (fdisk != NULL) {
+		file = fdisk->filename;
+		name = fdisk->disk.name;
+		fdisk = fdisk->next;
+		fprintf(fp, "AIO %s %s\n", file, name);
+	}
+
+}
+
 
 SPDK_LOG_REGISTER_TRACE_FLAG("aio", SPDK_TRACE_AIO)
