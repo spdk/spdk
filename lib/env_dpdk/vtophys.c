@@ -45,6 +45,12 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
+#if DEBUG
+#define DEBUG_PRINT(...) fprintf(stderr, __VA_ARGS__)
+#else
+#define DEBUG_PRINT(...)
+#endif
+
 /* x86-64 userspace virtual addresses use only the low 47 bits [0..46],
  * which is enough to cover 128 TB.
  */
@@ -288,9 +294,7 @@ spdk_mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 		pthread_mutex_unlock(&map->mutex);
 
 		if (!map_1gb) {
-#ifdef DEBUG
-			printf("allocation failed\n");
-#endif
+			DEBUG_PRINT("allocation failed\n");
 			return NULL;
 		}
 	}
@@ -317,9 +321,7 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	while (size) {
 		map_1gb = spdk_mem_map_get_map_1gb(map, vfn_2mb);
 		if (!map_1gb) {
-#ifdef DEBUG
-			fprintf(stderr, "could not get %p map\n", (void *)vaddr);
-#endif
+			DEBUG_PRINT("could not get %p map\n", (void *)vaddr);
 			return -ENOMEM;
 		}
 
@@ -328,10 +330,8 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 		ref_count = &map_1gb->ref_count[idx_1gb];
 
 		if (*ref_count == VTOPHYS_MAX_REF_COUNT) {
-#ifdef DEBUG
-			fprintf(stderr, "ref count for %p already at %d\n",
-				(void *)vaddr, VTOPHYS_MAX_REF_COUNT);
-#endif
+			DEBUG_PRINT("ref count for %p already at %d\n",
+				    (void *)vaddr, VTOPHYS_MAX_REF_COUNT);
 			return -EBUSY;
 		}
 
@@ -364,9 +364,7 @@ spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_
 	while (size) {
 		map_1gb = spdk_mem_map_get_map_1gb(map, vfn_2mb);
 		if (!map_1gb) {
-#ifdef DEBUG
-			fprintf(stderr, "could not get %p map\n", (void *)vaddr);
-#endif
+			DEBUG_PRINT("could not get %p map\n", (void *)vaddr);
 			return -ENOMEM;
 		}
 
@@ -375,9 +373,7 @@ spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_
 		ref_count = &map_1gb->ref_count[idx_1gb];
 
 		if (*ref_count == 0) {
-#ifdef DEBUG
-			fprintf(stderr, "vaddr %p not registered\n", (void *)vaddr);
-#endif
+			DEBUG_PRINT("vaddr %p not registered\n", (void *)vaddr);
 			return -EINVAL;
 		}
 
@@ -403,9 +399,7 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 	uint64_t vfn_2mb;
 
 	if (spdk_unlikely(vaddr & ~MASK_128TB)) {
-#ifdef DEBUG
-		printf("invalid usermode virtual address %p\n", (void *)vaddr);
-#endif
+		DEBUG_PRINT("invalid usermode virtual address %p\n", (void *)vaddr);
 		return map->default_translation;
 	}
 
@@ -462,9 +456,7 @@ vtophys_get_paddr(uint64_t vaddr)
 		return paddr;
 	}
 
-#ifdef DEBUG
-	fprintf(stderr, "could not find vaddr 0x%" PRIx64 " in DPDK mem config\n", vaddr);
-#endif
+	DEBUG_PRINT("could not find vaddr 0x%" PRIx64 " in DPDK mem config\n", vaddr);
 	return SPDK_VTOPHYS_ERROR;
 }
 
@@ -475,17 +467,13 @@ spdk_vtophys_register(void *vaddr, uint64_t len)
 	int rc;
 
 	if ((uintptr_t)vaddr & ~MASK_128TB) {
-#ifdef DEBUG
-		printf("invalid usermode virtual address %p\n", vaddr);
-#endif
+		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
 		return -EINVAL;
 	}
 
 	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
-#ifdef DEBUG
-		fprintf(stderr, "invalid %s parameters, vaddr=%p len=%ju\n",
-			__func__, vaddr, len);
-#endif
+		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
+			    __func__, vaddr, len);
 		return -EINVAL;
 	}
 
@@ -497,16 +485,12 @@ spdk_vtophys_register(void *vaddr, uint64_t len)
 		uint64_t paddr = vtophys_get_paddr(vaddr);
 
 		if (paddr == RTE_BAD_PHYS_ADDR) {
-#ifdef DEBUG
-			fprintf(stderr, "could not get phys addr for 0x%" PRIx64 "\n", vaddr);
-#endif
+			DEBUG_PRINT("could not get phys addr for 0x%" PRIx64 "\n", vaddr);
 			return -EFAULT;
 		}
 
 		if (paddr & MASK_2MB) {
-#ifdef DEBUG
-			fprintf(stderr, "invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
-#endif
+			DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
 			return -EINVAL;
 		}
 
@@ -528,17 +512,13 @@ spdk_vtophys_unregister(void *vaddr, uint64_t len)
 	int rc;
 
 	if ((uintptr_t)vaddr & ~MASK_128TB) {
-#ifdef DEBUG
-		printf("invalid usermode virtual address %p\n", vaddr);
-#endif
+		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
 		return -EINVAL;
 	}
 
 	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
-#ifdef DEBUG
-		fprintf(stderr, "invalid %s parameters, vaddr=%p len=%ju\n",
-			__func__, vaddr, len);
-#endif
+		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
+			    __func__, vaddr, len);
 		return -EINVAL;
 	}
 
@@ -586,7 +566,7 @@ spdk_vtophys_register_dpdk_mem(void)
 
 	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, spdk_vtophys_notify, NULL);
 	if (g_vtophys_map == NULL) {
-		fprintf(stderr, "vtophys map allocation failed\n");
+		DEBUG_PRINT("vtophys map allocation failed\n");
 		abort();
 	}
 
