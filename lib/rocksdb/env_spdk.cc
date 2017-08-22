@@ -439,7 +439,7 @@ _spdk_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 void SpdkInitializeThread(void)
 {
 	if (g_fs != NULL) {
-		spdk_allocate_thread(_spdk_send_msg, NULL);
+		spdk_allocate_thread(_spdk_send_msg, NULL, "spdk_rocksdb");
 		g_sync_args.channel = spdk_fs_alloc_io_channel_sync(g_fs);
 	}
 }
@@ -480,7 +480,6 @@ spdk_rocksdb_run(void *arg1, void *arg2)
 {
 	struct spdk_bdev *bdev;
 
-	pthread_setname_np(pthread_self(), "spdk");
 	bdev = spdk_bdev_get_by_name(g_bdev_name.c_str());
 
 	if (bdev == NULL) {
