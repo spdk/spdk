@@ -47,6 +47,8 @@
 
 static int bdev_aio_initialize(void);
 static void aio_free_disk(struct file_disk *fdisk);
+static void blockdev_aio_get_spdk_running_config(FILE *fp);
+static TAILQ_HEAD(, file_disk) g_aio_disk_head;
 
 #define SPDK_AIO_QUEUE_DEPTH 128
 
@@ -56,7 +58,8 @@ bdev_aio_get_ctx_size(void)
 	return sizeof(struct bdev_aio_task);
 }
 
-SPDK_BDEV_MODULE_REGISTER(aio, bdev_aio_initialize, NULL, NULL, bdev_aio_get_ctx_size, NULL)
+SPDK_BDEV_MODULE_REGISTER(aio, bdev_aio_initialize, NULL, blockdev_aio_get_spdk_running_config,
+			  bdev_aio_get_ctx_size, NULL)
 
 static int
 bdev_aio_open(struct file_disk *disk)
@@ -167,6 +170,7 @@ bdev_aio_destruct(void *ctx)
 	struct file_disk *fdisk = ctx;
 	int rc = 0;
 
+	TAILQ_REMOVE(&g_aio_disk_head, fdisk, link);
 	rc = bdev_aio_close(fdisk);
 	if (rc < 0) {
 		SPDK_ERRLOG("bdev_aio_close() failed\n");
@@ -397,8 +401,10 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 			SPDK_ERRLOG("Block size could not be auto-detected\n");
 			goto error_return;
 		}
+		fdisk->override = 0;
 		block_size = detected_block_size;
 	} else {
+		fdisk->override = 1;
 		if (block_size < detected_block_size) {
 			SPDK_ERRLOG("Specified block size %" PRIu32 " is smaller than "
 				    "auto-detected block size %" PRIu32 "\n",
@@ -437,6 +443,8 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 	spdk_io_device_register(&fdisk->fd, bdev_aio_create_cb, bdev_aio_destroy_cb,
 				sizeof(struct bdev_aio_io_channel));
 	spdk_bdev_register(&fdisk->disk);
+
+	TAILQ_INSERT_TAIL(&g_aio_disk_head, fdisk, link);
 	return &fdisk->disk;
 
 error_return:
@@ -452,6 +460,7 @@ bdev_aio_initialize(void)
 	struct spdk_conf_section *sp;
 	struct spdk_bdev *bdev;
 
+	TAILQ_INIT(&g_aio_disk_head);
 	sp = spdk_conf_find_section(NULL, "AIO");
 	if (!sp) {
 		return 0;
@@ -492,6 +501,37 @@ bdev_aio_initialize(void)
 	}
 
 	return 0;
+}
+
+static void
+blockdev_aio_get_spdk_running_config(FILE *fp)
+{
+	char 	*file;
+	char 	*name;
+	uint32_t blk_size;
+	struct 	 file_disk *fdisk;
+
+	fprintf(fp,
+		"\n"
+		"# Users must change this section to match the /dev/sdX devices to be\n"
+		"# exported as iSCSI LUNs. The devices are accessed using Linux AIO.\n"
+		"# The format is:\n"
+		"# AIO <file name> <bdev name> [<block size>]\n"
+		"# The file name is the backing device\n"
+		"# The bdev name can be referenced from elsewhere in the configuration file.\n"
+		"# Block size may be omitted to automatically detect the block size of a disk.\n"
+		"[AIO]\n");
+
+	TAILQ_FOREACH(fdisk, &g_aio_disk_head, link) {
+		file = fdisk->filename;
+		name = fdisk->disk.name;
+		blk_size = fdisk->disk.blocklen;
+		fprintf(fp, "  AIO %s %s ", file, name);
+		if (fdisk->override)
+			fprintf(fp, "%d", blk_size);
+		fprintf(fp, "\n");
+	}
+	fprintf(fp, "\n");
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("aio", SPDK_TRACE_AIO)
