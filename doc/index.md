@@ -17,6 +17,7 @@ handling overhead.
  - @ref directory_structure
  - @ref memory
  - @ref porting
+ - @ref changelog
  - [Public API header files](files.html)
 
 ## Modules {#modules}
