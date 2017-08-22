@@ -43,7 +43,6 @@
 #include "spdk/vhost.h"
 
 #include "vhost_internal.h"
-#include "vhost_iommu.h"
 
 struct spdk_vhost_blk_task {
 	struct spdk_bdev_io *bdev_io;
