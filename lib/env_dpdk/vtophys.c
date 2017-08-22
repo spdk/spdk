@@ -449,15 +449,12 @@ vtophys_get_paddr(uint64_t vaddr)
 
 	/* The memory is not registered with DPDK. Try to look it up
 	 * in /proc/self/pagemap. DPDK provides a utility function
-	 * to do this.
-	 */
+	 * to do this. */
 	paddr = rte_mem_virt2phy((void *)vaddr);
 	if (paddr == 0) {
-		/*
-		* The vaddr was valid but returned 0.  Touch the page
-		*  to ensure a backing page gets assigned, then call
-		*  rte_mem_virt2phy() again.
-		*/
+		/* The vaddr was valid but returned 0.  Touch the page
+		* to ensure a backing page gets assigned, then call
+		* rte_mem_virt2phy() again. */
 		rte_atomic64_read((rte_atomic64_t *)vaddr);
 		paddr = rte_mem_virt2phy((void *)vaddr);
 	}
@@ -469,25 +466,6 @@ vtophys_get_paddr(uint64_t vaddr)
 	fprintf(stderr, "could not find vaddr 0x%" PRIx64 " in DPDK mem config\n", vaddr);
 #endif
 	return SPDK_VTOPHYS_ERROR;
-}
-
-static int
-_spdk_vtophys_register_one(uint64_t vfn_2mb, uint64_t paddr)
-{
-	if (paddr & MASK_2MB) {
-#ifdef DEBUG
-		fprintf(stderr, "invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
-#endif
-		return -EINVAL;
-	}
-
-	return spdk_mem_map_set_translation(g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024, paddr);
-}
-
-static int
-_spdk_vtophys_unregister_one(uint64_t vfn_2mb)
-{
-	return spdk_mem_map_clear_translation(g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024);
 }
 
 static int
@@ -525,7 +503,14 @@ spdk_vtophys_register(void *vaddr, uint64_t len)
 			return -EFAULT;
 		}
 
-		rc = _spdk_vtophys_register_one(vfn_2mb, paddr);
+		if (paddr & MASK_2MB) {
+#ifdef DEBUG
+			fprintf(stderr, "invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
+#endif
+			return -EINVAL;
+		}
+
+		rc = spdk_mem_map_set_translation(g_vtophys_map, vaddr, 1 << SHIFT_2MB, paddr);
 		if (rc != 0) {
 			return rc;
 		}
@@ -561,7 +546,7 @@ spdk_vtophys_unregister(void *vaddr, uint64_t len)
 	len = len >> SHIFT_2MB;
 
 	while (len > 0) {
-		rc = _spdk_vtophys_unregister_one(vfn_2mb);
+		rc = spdk_mem_map_clear_translation(g_vtophys_map, vfn_2mb << SHIFT_2MB, 1 << SHIFT_2MB);
 		if (rc != 0) {
 			return rc;
 		}
