@@ -241,6 +241,11 @@ struct spdk_bdev {
 	bool reset_in_progress;
 
 	TAILQ_HEAD(, spdk_bdev_io) queued_resets;
+
+	/** denotes if a io_stat query is currently in progress on this bdev */
+	bool get_io_stat_in_progress;
+
+	struct spdk_bdev_io_stat io_stat;
 };
 
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
