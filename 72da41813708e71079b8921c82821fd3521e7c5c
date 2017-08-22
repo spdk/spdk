@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "082b5c87_a32f47a2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1786,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-22T01:03:15Z",
+      "side": 1,
+      "message": "Not sure why I replied on IRC :) Does it make sense to keep the API here in case we want to make page size configurable one day?",
+      "parentUuid": "eae7747f_538f49a6",
+      "revId": "72da41813708e71079b8921c82821fd3521e7c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ade01b85_a932378d",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-22T00:55:27Z",
       "side": 1,
       "message": "I think you should put this in include/spdk/blob.h instead.",
+      "revId": "72da41813708e71079b8921c82821fd3521e7c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffd3bb16_a2835a94",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-08-22T01:03:15Z",
+      "side": 1,
+      "message": "So there are a bunch of other values defined at the top of this file? Why just this one?",
+      "parentUuid": "ade01b85_a932378d",
       "revId": "72da41813708e71079b8921c82821fd3521e7c5c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
