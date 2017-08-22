@@ -674,9 +674,8 @@ static int
 nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_completion_poll_status	status;
-	int					cq_allocated, sq_allocated;
-	int					rc;
-	uint32_t				i;
+	uint32_t cq_allocated, sq_allocated, min_allocated, i;
+	int rc;
 
 	status.done = false;
 
@@ -703,6 +702,21 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 		return -ENXIO;
 	}
 
+	/* Obtain the number of queues allocated using Get Features. */
+	status.done = false;
+	rc = nvme_ctrlr_cmd_get_num_queues(ctrlr, nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return rc;
+	}
+
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		SPDK_ERRLOG("nvme_set_num_queues failed!\n");
+		return -ENXIO;
+	}
+
 	/*
 	 * Data in cdw0 is 0-based.
 	 * Lower 16-bits indicate number of submission queues allocated.
@@ -711,7 +725,14 @@ nvme_ctrlr_set_num_qpairs(struct spdk_nvme_ctrlr *ctrlr)
 	sq_allocated = (status.cpl.cdw0 & 0xFFFF) + 1;
 	cq_allocated = (status.cpl.cdw0 >> 16) + 1;
 
-	ctrlr->opts.num_io_queues = spdk_min(sq_allocated, cq_allocated);
+	/*
+	 * For 1:1 queue mapping, set number of allocated queues to be minimum of
+	 * submission and completion queues.
+	 */
+	min_allocated = spdk_min(sq_allocated, cq_allocated);
+
+	/* Set number of queues to be minimum of requested and actually allocated. */
+	ctrlr->opts.num_io_queues = spdk_min(min_allocated, ctrlr->opts.num_io_queues);
 
 	ctrlr->free_io_qids = spdk_bit_array_create(ctrlr->opts.num_io_queues + 1);
 	if (ctrlr->free_io_qids == NULL) {
