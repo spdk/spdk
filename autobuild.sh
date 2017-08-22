@@ -86,6 +86,7 @@ if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
 	if [ -f "$rootdir"/doc/output/latex/refman.pdf ]; then
 		mv "$rootdir"/doc/output/latex/refman.pdf "$out"/doc/spdk.pdf
 	fi
+	(cd "$rootdir"/doc; $MAKE $MAKEFLAGS clean) &>> "$out"/doxygen.log
 	rm -rf "$rootdir"/doc/output
 fi
 timing_exit doxygen
