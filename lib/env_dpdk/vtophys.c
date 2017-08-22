@@ -469,25 +469,6 @@ vtophys_get_paddr(uint64_t vaddr)
 }
 
 static int
-_spdk_vtophys_register_one(uint64_t vfn_2mb, uint64_t paddr)
-{
-	if (paddr & MASK_2MB) {
-#ifdef DEBUG
-		fprintf(stderr, "invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
-#endif
-		return -EINVAL;
-	}
-
-	return spdk_mem_map_set_translation(g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024, paddr);
-}
-
-static int
-_spdk_vtophys_unregister_one(uint64_t vfn_2mb)
-{
-	return spdk_mem_map_clear_translation(g_vtophys_map, vfn_2mb << SHIFT_2MB, 2 * 1024 * 1024);
-}
-
-static int
 spdk_vtophys_register(void *vaddr, uint64_t len)
 {
 	uint64_t vfn_2mb;
@@ -522,7 +503,14 @@ spdk_vtophys_register(void *vaddr, uint64_t len)
 			return -EFAULT;
 		}
 
-		rc = _spdk_vtophys_register_one(vfn_2mb, paddr);
+		if (paddr & MASK_2MB) {
+#ifdef DEBUG
+			fprintf(stderr, "invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
+#endif
+			return -EINVAL;
+		}
+
+		rc = spdk_mem_map_set_translation(g_vtophys_map, vaddr, 1 << SHIFT_2MB, paddr);
 		if (rc != 0) {
 			return rc;
 		}
@@ -558,7 +546,7 @@ spdk_vtophys_unregister(void *vaddr, uint64_t len)
 	len = len >> SHIFT_2MB;
 
 	while (len > 0) {
-		rc = _spdk_vtophys_unregister_one(vfn_2mb);
+		rc = spdk_mem_map_clear_translation(g_vtophys_map, vfn_2mb << SHIFT_2MB, 1 << SHIFT_2MB);
 		if (rc != 0) {
 			return rc;
 		}
