@@ -37,6 +37,117 @@
 #include "spdk_internal/bdev.h"
 
 static void
+spdk_rpc_construct_bdev_iostat_info(struct spdk_json_write_ctx *w,
+				    struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_io_stat stat = {0};
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+
+	spdk_json_write_name(w, "product_name");
+	spdk_json_write_string(w, spdk_bdev_get_product_name(bdev));
+
+	spdk_json_write_name(w, "block_size");
+	spdk_json_write_uint32(w, spdk_bdev_get_block_size(bdev));
+
+	spdk_json_write_name(w, "num_blocks");
+	spdk_json_write_uint64(w, spdk_bdev_get_num_blocks(bdev));
+
+	spdk_bdev_get_all_io_stats(bdev, &stat);
+
+	spdk_json_write_name(w, "current_io_stats");
+	spdk_json_write_object_begin(w);
+	spdk_json_write_name(w, "bytes_read");
+	spdk_json_write_uint64(w, stat.bytes_read);
+	spdk_json_write_name(w, "num_read_ops");
+	spdk_json_write_uint64(w, stat.num_read_ops);
+	spdk_json_write_name(w, "bytes_written");
+	spdk_json_write_uint64(w, stat.bytes_written);
+	spdk_json_write_name(w, "num_write_ops");
+	spdk_json_write_uint64(w, stat.num_write_ops);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+struct rpc_get_bdevs_iostats {
+	char *name;
+};
+
+static void
+free_rpc_get_bdevs_iostats(struct rpc_get_bdevs_iostats *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_get_bdevs_iostats_decoders[] = {
+	{"name", offsetof(struct rpc_get_bdevs_iostats, name), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_get_bdevs_iostats(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_get_bdevs_iostats req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev = NULL;
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_get_bdevs_iostats_decoders,
+					    sizeof(rpc_get_bdevs_iostats_decoders) /
+					    sizeof(*rpc_get_bdevs_iostats_decoders),
+					    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			goto invalid;
+		} else {
+			if (req.name == NULL) {
+				SPDK_ERRLOG("missing name param\n");
+				goto invalid;
+			}
+
+			bdev = spdk_bdev_get_by_name(req.name);
+			if (bdev == NULL) {
+				SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+				goto invalid;
+			}
+
+			free_rpc_get_bdevs_iostats(&req);
+		}
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	if (bdev != NULL) {
+		spdk_rpc_construct_bdev_iostat_info(w, bdev);
+	} else {
+		for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+			spdk_rpc_construct_bdev_iostat_info(w, bdev);
+		}
+	}
+
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+
+	free_rpc_get_bdevs_iostats(&req);
+}
+SPDK_RPC_REGISTER("get_bdevs_iostats", spdk_rpc_get_bdevs_iostats)
+
+
+static void
 spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
 {

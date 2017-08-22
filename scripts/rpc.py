@@ -384,6 +384,17 @@ p = subparsers.add_parser('get_bdevs', help='Display current blockdev list')
 p.set_defaults(func=get_bdevs)
 
 
+def get_bdevs_iostats(args):
+    params = {}
+    if args.name:
+        params.['name'] = args.name
+    print_dict(jsonrpc_call('get_bdevs_iostats', params))
+
+p = subparsers.add_parser('get_bdevs_iostats', help='Display iostats on current blockdev list or required blockdev')
+p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
+p.set_defaults(func=get_bdevs_iostats)
+
+
 def delete_bdev(args):
     params = {'name': args.bdev_name}
     jsonrpc_call('delete_bdev', params)
