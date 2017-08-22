@@ -57,8 +57,6 @@
  */
 #define FW_VERSION SPDK_VERSION_MAJOR_STRING SPDK_VERSION_MINOR_STRING SPDK_VERSION_PATCH_STRING
 
-static uint16_t spdk_nvmf_ctrlr_gen_cntlid(void);
-
 static struct spdk_nvmf_ctrlr *
 spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		       struct spdk_nvmf_qpair *admin_qpair,
@@ -83,7 +81,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
-	ctrlr->cntlid = spdk_nvmf_ctrlr_gen_cntlid();
+	ctrlr->cntlid = spdk_nvmf_tgt_gen_cntlid(tgt);
 	if (ctrlr->cntlid == 0) {
 		/* Unable to get a cntlid */
 		SPDK_ERRLOG("Reached max simultaneous ctrlrs\n");
@@ -165,44 +163,6 @@ invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp, uint8_t iattr
 	rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
 	rsp->status_code_specific.invalid.iattr = iattr;
 	rsp->status_code_specific.invalid.ipo = ipo;
-}
-
-static uint16_t
-spdk_nvmf_ctrlr_gen_cntlid(void)
-{
-	static uint16_t cntlid = 0; /* cntlid is static, so its value is preserved */
-	struct spdk_nvmf_subsystem *subsystem;
-	uint16_t count;
-
-	count = UINT16_MAX - 1;
-	do {
-		/* cntlid is an unsigned 16-bit integer, so let it overflow
-		 * back to 0 if necessary.
-		 */
-		cntlid++;
-		if (cntlid == 0) {
-			/* 0 is not a valid cntlid because it is the reserved value in the RDMA
-			 * private data for cntlid. This is the value sent by pre-NVMe-oF 1.1
-			 * initiators.
-			 */
-			cntlid++;
-		}
-
-		/* Check if a subsystem with this cntlid currently exists. This could
-		 * happen for a very long-lived ctrlr on a target with many short-lived
-		 * ctrlrs, where cntlid wraps around.
-		 */
-		subsystem = spdk_nvmf_find_subsystem_with_cntlid(cntlid);
-
-		count--;
-
-	} while (subsystem != NULL && count > 0);
-
-	if (count == 0) {
-		return 0;
-	}
-
-	return cntlid;
 }
 
 void

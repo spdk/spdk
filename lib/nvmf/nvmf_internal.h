@@ -48,6 +48,7 @@
 struct spdk_nvmf_tgt {
 	struct spdk_nvmf_tgt_opts		opts;
 
+	uint16_t				next_cntlid;
 	uint64_t				discovery_genctr;
 	TAILQ_HEAD(, spdk_nvmf_subsystem)	subsystems;
 	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
@@ -110,6 +111,8 @@ extern struct spdk_nvmf_tgt g_nvmf_tgt;
 
 struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid);
 void spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr);
+
+uint16_t spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt);
 
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
 		enum spdk_nvme_transport_type);
