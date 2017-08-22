@@ -157,7 +157,7 @@ cache_write(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread(_fs_send_msg, NULL);
+	spdk_allocate_thread(_fs_send_msg, NULL, "thread0");
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
 	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
@@ -195,7 +195,7 @@ cache_write_null_buffer(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread(_fs_send_msg, NULL);
+	spdk_allocate_thread(_fs_send_msg, NULL, "thread0");
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
 	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
@@ -226,7 +226,7 @@ fs_create_sync(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread(_fs_send_msg, NULL);
+	spdk_allocate_thread(_fs_send_msg, NULL, "thread0");
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 	CU_ASSERT(channel != NULL);
 
@@ -255,7 +255,7 @@ cache_append_no_cache(void)
 
 	ut_send_request(_fs_init, NULL);
 
-	spdk_allocate_thread(_fs_send_msg, NULL);
+	spdk_allocate_thread(_fs_send_msg, NULL, "thread0");
 	channel = spdk_fs_alloc_io_channel_sync(g_fs);
 
 	rc = spdk_fs_open_file(g_fs, channel, "testfile", SPDK_BLOBFS_OPEN_CREATE, &g_file);
@@ -297,7 +297,7 @@ spdk_thread(void *arg)
 {
 	struct ut_request *req;
 
-	spdk_allocate_thread(_fs_send_msg, NULL);
+	spdk_allocate_thread(_fs_send_msg, NULL, "thread0");
 
 	while (1) {
 		pthread_mutex_lock(&g_mutex);

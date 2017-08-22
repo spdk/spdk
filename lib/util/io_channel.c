@@ -36,6 +36,14 @@
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
 
+#ifdef __linux__
+#include <sys/prctl.h>
+#endif
+
+#ifdef __FreeBSD__
+#include <pthread_np.h>
+#endif
+
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct io_device {
@@ -72,6 +80,7 @@ struct spdk_thread {
 	void *thread_ctx;
 	TAILQ_HEAD(, spdk_io_channel) io_channels;
 	TAILQ_ENTRY(spdk_thread) tailq;
+	char *name;
 };
 
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
@@ -94,8 +103,20 @@ _get_thread(void)
 	return NULL;
 }
 
+static void
+_set_thread_name(const char *thread_name)
+{
+#if defined(__linux__)
+	prctl(PR_SET_NAME, thread_name, 0, 0, 0);
+#elif defined(__FreeBSD__)
+	pthread_set_name_np(pthread_self(), thread_name);
+#else
+#error missing platform support for thread name
+#endif
+}
+
 struct spdk_thread *
-spdk_allocate_thread(spdk_thread_pass_msg fn, void *thread_ctx)
+spdk_allocate_thread(spdk_thread_pass_msg fn, void *thread_ctx, const char *name)
 {
 	struct spdk_thread *thread;
 
@@ -120,6 +141,10 @@ spdk_allocate_thread(spdk_thread_pass_msg fn, void *thread_ctx)
 	thread->thread_ctx = thread_ctx;
 	TAILQ_INIT(&thread->io_channels);
 	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
+	if (name) {
+		_set_thread_name(name);
+		thread->name = strdup(name);
+	}
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 
@@ -141,6 +166,7 @@ spdk_free_thread(void)
 	}
 
 	TAILQ_REMOVE(&g_threads, thread, tailq);
+	free(thread->name);
 	free(thread);
 
 	pthread_mutex_unlock(&g_devlist_mutex);
@@ -161,6 +187,12 @@ spdk_get_thread(void)
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	return thread;
+}
+
+const char *
+spdk_thread_get_name(const struct spdk_thread *thread)
+{
+	return thread->name;
 }
 
 void
