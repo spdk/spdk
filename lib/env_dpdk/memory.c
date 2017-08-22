@@ -268,6 +268,16 @@ spdk_mem_register(void *vaddr, size_t len)
 		len -= VALUE_2MB;
 	}
 
+	if (seg_len > 0) {
+		TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+			rc = map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, seg_vaddr, seg_len);
+			if (rc != 0) {
+				pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+				return rc;
+			}
+		}
+	}
+
 	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 	return 0;
 }
@@ -312,6 +322,16 @@ spdk_mem_unregister(void *vaddr, size_t len)
 
 		vaddr += VALUE_2MB;
 		len -= VALUE_2MB;
+	}
+
+	if (seg_len > 0) {
+		TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+			rc = map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, seg_vaddr, seg_len);
+			if (rc != 0) {
+				pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+				return rc;
+			}
+		}
 	}
 
 	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
