@@ -610,6 +610,23 @@ SpdkEnv::SpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
 
 SpdkEnv::~SpdkEnv()
 {
+	/* This is a workaround for rocksdb test, we close the files if the rocksdb not
+	 * do the work before the test quit.
+	 */
+	if (g_fs != NULL) {
+		spdk_fs_iter iter;
+		struct spdk_file *file;
+
+		if (!g_sync_args.channel)
+			SpdkInitializeThread();
+		iter = spdk_fs_iter_first(g_fs);
+		while (iter != NULL) {
+			file = spdk_fs_iter_get_file(iter);
+			spdk_file_close(file, g_sync_args.channel);
+			iter = spdk_fs_iter_next(iter);
+		}
+	}
+
 	spdk_app_start_shutdown();
 	pthread_join(mSpdkTid, NULL);
 }
