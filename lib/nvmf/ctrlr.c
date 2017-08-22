@@ -873,18 +873,19 @@ static int
 spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_ctrlr_data *cdata)
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvmf_tgt *tgt = subsystem->tgt;
 
 	/*
 	 * Common fields for discovery and NVM subsystems
 	 */
 	spdk_strcpy_pad(cdata->fr, FW_VERSION, sizeof(cdata->fr), ' ');
-	assert((g_nvmf_tgt.opts.max_io_size % 4096) == 0);
-	cdata->mdts = spdk_u32log2(g_nvmf_tgt.opts.max_io_size / 4096);
+	assert((tgt->opts.max_io_size % 4096) == 0);
+	cdata->mdts = spdk_u32log2(tgt->opts.max_io_size / 4096);
 	cdata->cntlid = ctrlr->cntlid;
 	cdata->ver = ctrlr->vcprop.vs;
 	cdata->lpa.edlp = 1;
 	cdata->elpe = 127;
-	cdata->maxcmd = g_nvmf_tgt.opts.max_queue_depth;
+	cdata->maxcmd = tgt->opts.max_queue_depth;
 	cdata->sgls.supported = 1;
 	cdata->sgls.keyed_sgl = 1;
 	cdata->sgls.sgl_offset = 1;
@@ -922,7 +923,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 		cdata->nvmf_specific.msdbd = 1; /* target supports single SGL in capsule */
 
 		/* TODO: this should be set by the transport */
-		cdata->nvmf_specific.ioccsz += g_nvmf_tgt.opts.in_capsule_data_size / 16;
+		cdata->nvmf_specific.ioccsz += tgt->opts.in_capsule_data_size / 16;
 
 		cdata->oncs.dsm = spdk_nvmf_ctrlr_dsm_supported(ctrlr);
 
