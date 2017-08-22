@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "07e8be2b_d6ed5cc4",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-22T09:08:18Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "37d6e043_38d9c053",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "14d199d7_a9db7209",
         "filename": "README.md",
         "patchSetId": 1
@@ -59,6 +77,24 @@
     },
     {
       "key": {
+        "uuid": "c710c9d5_87a888c5",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-22T09:08:18Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "14d199d7_a9db7209",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66264628_97a22a47",
         "filename": "README.md",
         "patchSetId": 1
@@ -70,6 +106,24 @@
       "writtenOn": "2017-08-21T18:15:53Z",
       "side": 1,
       "message": "I think it would make more sense if this were added somewhere generic; the dependencies aren\u0027t specific to Vagrant.\n\nAlso, if we use a file from within the SPDK repo to install the deps, we should probably reorder the sections so this is after the section about how to clone the source code.",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b11b5b27_036d4ab2",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-22T09:08:18Z",
+      "side": 1,
+      "message": "Reordered the sections and moved \"pkgdep makefile\" to \"/scripts/\"(because root dir have included a makefile).",
+      "parentUuid": "66264628_97a22a47",
       "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -99,6 +153,30 @@
     },
     {
       "key": {
+        "uuid": "8fcd2936_8a88f475",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-22T09:08:18Z",
+      "side": 1,
+      "message": "Fixed.",
+      "parentUuid": "b381d1e5_c0382cf4",
+      "range": {
+        "startLine": 3,
+        "startChar": 10,
+        "endLine": 3,
+        "endChar": 20
+      },
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a902abc1_a683261b",
         "filename": "scripts/vagrant/pkgdep.sh",
         "patchSetId": 1
@@ -110,6 +188,24 @@
       "writtenOn": "2017-08-21T18:15:53Z",
       "side": 1,
       "message": "This case statement seems a little bit more complex than necessary - we definitely don\u0027t support HP-UX, AIX, or SunOS, so it is probably not necessary to detect them.",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e474d65a_0fd43dc2",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-22T09:08:18Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "a902abc1_a683261b",
       "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -133,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "ea566091_6c51d4a6",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-22T09:08:18Z",
+      "side": 1,
+      "message": "Fixed.",
+      "parentUuid": "51c2e8f4_ac6425b7",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48fcb8c2_c4e25a40",
         "filename": "scripts/vagrant/pkgdep.sh",
         "patchSetId": 1
@@ -144,6 +258,24 @@
       "writtenOn": "2017-08-21T18:15:53Z",
       "side": 1,
       "message": "We do the same thing for CentOS and RedHat below, so I don\u0027t think we need to distinguish between them - just detect if /etc/redhat-release exists and use the RHEL/CentOS case below.  This would also add support for Fedora, which is what most of our test pool machines are using.",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1a4b0a4_f1d29818",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-22T09:08:18Z",
+      "side": 1,
+      "message": "Only reserved if /etc/redhat-release.",
+      "parentUuid": "48fcb8c2_c4e25a40",
       "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -167,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "a641a655_16772cba",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-22T09:08:18Z",
+      "side": 1,
+      "message": "You are right, this line is just a temporary writing, until yesterday FreeBSD has not been ready(this is told with Jim in email), I will modify the code after checking.",
+      "parentUuid": "19c4be36_a934b4ce",
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d035f8a7_4103dd74",
         "filename": "scripts/vagrant/pkgdep.sh",
         "patchSetId": 1
@@ -178,6 +328,30 @@
       "writtenOn": "2017-08-21T18:15:53Z",
       "side": 1,
       "message": "Rather than calling \u0027sudo\u0027 many times, we should just require the user to run this script as root.",
+      "range": {
+        "startLine": 38,
+        "startChar": 1,
+        "endLine": 38,
+        "endChar": 5
+      },
+      "revId": "a1a64ec52019d9cb1f7f58877170799bb76fd315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fd47e83_7c3d7737",
+        "filename": "scripts/vagrant/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-22T09:08:18Z",
+      "side": 1,
+      "message": "Removed \u0027sudo\u0027.",
+      "parentUuid": "d035f8a7_4103dd74",
       "range": {
         "startLine": 38,
         "startChar": 1,
