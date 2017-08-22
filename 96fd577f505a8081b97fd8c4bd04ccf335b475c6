@@ -22,6 +22,29 @@
       "revId": "96fd577f505a8081b97fd8c4bd04ccf335b475c6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32ead5d9_8000b3c2",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-22T17:24:38Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nThis will get an I/O channel for the current thread (wherever the RPC is running), but I think it would be more useful to use spdk_for_each_channel() to retrieve the stats from all of the bdev\u0027s channels.  This should be possible now that the RPC interface allows asynchronous completion of RPCs.",
+      "range": {
+        "startLine": 82,
+        "startChar": 15,
+        "endLine": 82,
+        "endChar": 34
+      },
+      "revId": "96fd577f505a8081b97fd8c4bd04ccf335b475c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
