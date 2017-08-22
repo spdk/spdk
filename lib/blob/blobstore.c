@@ -296,15 +296,15 @@ _spdk_blob_serialize_add_page(const struct spdk_blob *blob,
 	if (*page_count == 0) {
 		assert(*pages == NULL);
 		*page_count = 1;
-		*pages = spdk_dma_malloc(sizeof(struct spdk_blob_md_page),
-					 sizeof(struct spdk_blob_md_page),
+		*pages = spdk_dma_malloc(SPDK_BS_PAGE_SIZE,
+					 SPDK_BS_PAGE_SIZE,
 					 NULL);
 	} else {
 		assert(*pages != NULL);
 		(*page_count)++;
 		*pages = spdk_dma_realloc(*pages,
-					  sizeof(struct spdk_blob_md_page) * (*page_count),
-					  sizeof(struct spdk_blob_md_page),
+					  SPDK_BS_PAGE_SIZE * (*page_count),
+					  SPDK_BS_PAGE_SIZE,
 					  NULL);
 	}
 
@@ -586,8 +586,8 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	}
 
 	ctx->blob = blob;
-	ctx->pages = spdk_dma_realloc(ctx->pages, sizeof(struct spdk_blob_md_page),
-				      sizeof(struct spdk_blob_md_page), NULL);
+	ctx->pages = spdk_dma_realloc(ctx->pages, SPDK_BS_PAGE_SIZE,
+				      SPDK_BS_PAGE_SIZE, NULL);
 	if (!ctx->pages) {
 		free(ctx);
 		cb_fn(seq, cb_arg, -ENOMEM);
@@ -603,7 +603,7 @@ _spdk_blob_load(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 	blob->state = SPDK_BLOB_STATE_LOADING;
 
 	spdk_bs_sequence_read(seq, &ctx->pages[0], lba,
-			      _spdk_bs_byte_to_lba(bs, sizeof(struct spdk_blob_md_page)),
+			      _spdk_bs_byte_to_lba(bs, SPDK_BS_PAGE_SIZE),
 			      _spdk_blob_load_cpl, ctx);
 }
 
@@ -758,7 +758,7 @@ _spdk_blob_persist_unmap_pages(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 
 	batch = spdk_bs_sequence_to_batch(seq, _spdk_blob_persist_unmap_pages_cpl, ctx);
 
-	lba_count = _spdk_bs_byte_to_lba(bs, sizeof(struct spdk_blob_md_page));
+	lba_count = _spdk_bs_byte_to_lba(bs, SPDK_BS_PAGE_SIZE);
 
 	/* This loop starts at 1 because the first page is special and handled
 	 * below. The pages (except the first) are never written in place,
@@ -1184,7 +1184,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	 */
 	bs->cluster_sz = opts->cluster_sz;
 	bs->total_clusters = dev->blockcnt / (bs->cluster_sz / dev->blocklen);
-	bs->pages_per_cluster = bs->cluster_sz / sizeof(struct spdk_blob_md_page);
+	bs->pages_per_cluster = bs->cluster_sz / SPDK_BS_PAGE_SIZE;
 	bs->num_free_clusters = bs->total_clusters;
 	bs->used_clusters = spdk_bit_array_create(bs->total_clusters);
 	if (bs->used_clusters == NULL) {
@@ -1274,7 +1274,7 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	/* The type must be correct */
 	assert(ctx->mask->type == SPDK_MD_MASK_TYPE_USED_PAGES);
 	/* The length of the mask (in bits) must not be greater than the length of the buffer (converted to bits) */
-	assert(ctx->mask->length <= (ctx->super->used_page_mask_len * sizeof(struct spdk_blob_md_page) *
+	assert(ctx->mask->length <= (ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE *
 				     8));
 	/* The length of the mask must be exactly equal to the size (in pages) of the metadata region */
 	assert(ctx->mask->length == ctx->super->md_len);
@@ -1301,7 +1301,7 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_dma_free(ctx->mask);
 
 	/* Read the used clusters mask */
-	mask_size = ctx->super->used_cluster_mask_len * sizeof(struct spdk_blob_md_page);
+	mask_size = ctx->super->used_cluster_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
 	if (!ctx->mask) {
 		spdk_dma_free(ctx->super);
@@ -1356,13 +1356,13 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	/* Parse the super block */
 	ctx->bs->cluster_sz = ctx->super->cluster_size;
 	ctx->bs->total_clusters = ctx->bs->dev->blockcnt / (ctx->bs->cluster_sz / ctx->bs->dev->blocklen);
-	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / sizeof(struct spdk_blob_md_page);
+	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
 	ctx->bs->md_start = ctx->super->md_start;
 	ctx->bs->md_len = ctx->super->md_len;
 	ctx->bs->super_blob = ctx->super->super_blob;
 
 	/* Read the used pages mask */
-	mask_size = ctx->super->used_page_mask_len * sizeof(struct spdk_blob_md_page);
+	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
 	if (!ctx->mask) {
 		spdk_dma_free(ctx->super);
@@ -1480,7 +1480,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 	SPDK_TRACELOG(SPDK_TRACE_BLOB, "Initializing blobstore on dev %p\n", dev);
 
-	if ((sizeof(struct spdk_blob_md_page) % dev->blocklen) != 0) {
+	if ((SPDK_BS_PAGE_SIZE % dev->blocklen) != 0) {
 		SPDK_ERRLOG("unsupported dev block length of %d\n",
 			    dev->blocklen);
 		cb_fn(cb_arg, NULL, -EINVAL);
@@ -1555,7 +1555,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->used_page_mask_start = num_md_pages;
 	ctx->super->used_page_mask_len = divide_round_up(sizeof(struct spdk_bs_md_mask) +
 					 divide_round_up(bs->md_len, 8),
-					 sizeof(struct spdk_blob_md_page));
+					 SPDK_BS_PAGE_SIZE);
 	num_md_pages += ctx->super->used_page_mask_len;
 
 	/* The used_clusters mask requires 1 bit per cluster, rounded
@@ -1564,7 +1564,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->used_cluster_mask_start = num_md_pages;
 	ctx->super->used_cluster_mask_len = divide_round_up(sizeof(struct spdk_bs_md_mask) +
 					    divide_round_up(bs->total_clusters, 8),
-					    sizeof(struct spdk_blob_md_page));
+					    SPDK_BS_PAGE_SIZE);
 	num_md_pages += ctx->super->used_cluster_mask_len;
 
 	/* The metadata region size was chosen above */
@@ -1645,7 +1645,7 @@ _spdk_bs_unload_write_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int 
 	spdk_dma_free(ctx->mask);
 
 	/* Write out the used clusters mask */
-	mask_size = ctx->super->used_cluster_mask_len * sizeof(struct spdk_blob_md_page);
+	mask_size = ctx->super->used_cluster_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
 	if (!ctx->mask) {
 		spdk_dma_free(ctx->super);
@@ -1682,7 +1682,7 @@ _spdk_bs_unload_read_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 	uint64_t			lba, lba_count, mask_size;
 
 	/* Write out the used page mask */
-	mask_size = ctx->super->used_page_mask_len * sizeof(struct spdk_blob_md_page);
+	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
 	if (!ctx->mask) {
 		spdk_dma_free(ctx->super);
@@ -1785,7 +1785,7 @@ spdk_bs_get_cluster_size(struct spdk_blob_store *bs)
 uint64_t
 spdk_bs_get_page_size(struct spdk_blob_store *bs)
 {
-	return sizeof(struct spdk_blob_md_page);
+	return SPDK_BS_PAGE_SIZE;
 }
 
 uint64_t

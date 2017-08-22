@@ -230,7 +230,8 @@ struct spdk_blob_md_page {
 	uint32_t	next;
 	uint32_t	crc;
 };
-SPDK_STATIC_ASSERT(sizeof(struct spdk_blob_md_page) == 0x1000, "Invalid md page size");
+#define SPDK_BS_PAGE_SIZE 0x1000
+SPDK_STATIC_ASSERT(SPDK_BS_PAGE_SIZE == sizeof(struct spdk_blob_md_page), "Invalid md page size");
 
 #define SPDK_BS_SUPER_BLOCK_SIG "SPDKBLOB"
 
@@ -292,7 +293,7 @@ _spdk_bs_lba_to_byte(struct spdk_blob_store *bs, uint64_t lba)
 static inline uint64_t
 _spdk_bs_page_to_lba(struct spdk_blob_store *bs, uint64_t page)
 {
-	return page * sizeof(struct spdk_blob_md_page) / bs->dev->blocklen;
+	return page * SPDK_BS_PAGE_SIZE / bs->dev->blocklen;
 }
 
 static inline uint32_t
@@ -300,7 +301,7 @@ _spdk_bs_lba_to_page(struct spdk_blob_store *bs, uint64_t lba)
 {
 	uint64_t	lbas_per_page;
 
-	lbas_per_page = sizeof(struct spdk_blob_md_page) / bs->dev->blocklen;
+	lbas_per_page = SPDK_BS_PAGE_SIZE / bs->dev->blocklen;
 
 	assert(lba % lbas_per_page == 0);
 
