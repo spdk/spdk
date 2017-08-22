@@ -36,14 +36,6 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
-#ifdef __linux__
-#include <sys/prctl.h>
-#endif
-
-#ifdef __FreeBSD__
-#include <pthread_np.h>
-#endif
-
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
 #include "spdk/env.h"
@@ -207,27 +199,6 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 	return count;
 }
 
-/**
- *
- * \brief Set current reactor thread name to "reactor <cpu #>".
- *
- * This makes the reactor threads distinguishable in top and gdb.
- */
-static void set_reactor_thread_name(uint32_t lcore)
-{
-	char thread_name[16];
-
-	snprintf(thread_name, sizeof(thread_name), "reactor_%u", lcore);
-
-#if defined(__linux__)
-	prctl(PR_SET_NAME, thread_name, 0, 0, 0);
-#elif defined(__FreeBSD__)
-	pthread_set_name_np(pthread_self(), thread_name);
-#else
-#error missing platform support for thread name
-#endif
-}
-
 static void
 spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poller, uint64_t now)
 {
@@ -335,9 +306,10 @@ _spdk_reactor_run(void *arg)
 	uint64_t		spin_cycles, sleep_cycles;
 	uint32_t		sleep_us;
 	uint32_t 		timer_poll_count;
+	char			thread_name[32];
 
-	spdk_allocate_thread(_spdk_reactor_send_msg, &reactor->lcore);
-	set_reactor_thread_name(reactor->lcore);
+	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
+	spdk_allocate_thread(_spdk_reactor_send_msg, &reactor->lcore, thread_name);
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
 		       reactor->socket_id);
 

@@ -66,8 +66,12 @@ typedef void (*spdk_channel_for_each_cpl)(void *io_device, void *ctx);
  *          called on the same thread that spdk_allocate_thread
  *          was called from.
  * @param thread_ctx Context that will be passed to fn.
+ * @param name Human-readable name for the thread; can be retrieved with spdk_thread_get_name().
+ *             The string is copied, so the pointed-to data only needs to be valid during the
+ *             spdk_allocate_thread() call.  May be NULL to specify no name.
  */
-struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg fn, void *thread_ctx);
+struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg fn, void *thread_ctx,
+		const char *name);
 
 /**
  * \brief Releases any resources related to the calling thread for I/O channel allocation.
@@ -84,6 +88,11 @@ void spdk_free_thread(void);
  * \sa spdk_io_channel_get_thread()
  */
 struct spdk_thread *spdk_get_thread(void);
+
+/**
+ * \brief Get a thread's name.
+ */
+const char *spdk_thread_get_name(const struct spdk_thread *thread);
 
 /**
  * \brief Send a message to the given thread. The message
