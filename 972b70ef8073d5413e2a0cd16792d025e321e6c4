@@ -16,6 +16,24 @@
       "revId": "972b70ef8073d5413e2a0cd16792d025e321e6c4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e87f41db_e3f8a312",
+        "filename": "lib/nvme/nvme_quirks.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-08-22T22:44:40Z",
+      "side": 1,
+      "message": "the spec shows that driver assisted striping not supported by fw?",
+      "parentUuid": "7cc6ad9f_db7478f0",
+      "revId": "972b70ef8073d5413e2a0cd16792d025e321e6c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
