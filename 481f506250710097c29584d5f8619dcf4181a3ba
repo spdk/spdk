@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "828dc510_c53585ab",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-22T08:01:05Z",
+      "side": 1,
+      "message": "i see it now, we need to pass ** to be able to register multiple LUNs",
+      "parentUuid": "cc467804_7c8a8ee8",
+      "range": {
+        "startLine": 183,
+        "startChar": 28,
+        "endLine": 183,
+        "endChar": 29
+      },
+      "revId": "481f506250710097c29584d5f8619dcf4181a3ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2711735f_e4551695",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 7
