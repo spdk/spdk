@@ -124,6 +124,7 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_enter vhost
 	run_test ./test/vhost/spdk_vhost.sh --integrity-blk
 	run_test ./test/vhost/spdk_vhost.sh --integrity
+	run_test ./test/lvol/lvol.sh --test-cases=1,2,3,4,5,6,7
 	timing_exit vhost
 fi
 
