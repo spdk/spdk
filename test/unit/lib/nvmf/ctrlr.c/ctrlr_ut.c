@@ -42,15 +42,15 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 struct spdk_nvmf_tgt g_nvmf_tgt;
 
 struct spdk_nvmf_subsystem *
-spdk_nvmf_find_subsystem_with_cntlid(uint16_t cntlid)
+spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 {
 	return NULL;
 }
 
-struct spdk_nvmf_subsystem *
-spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
+uint16_t
+spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt)
 {
-	return NULL;
+	return 0;
 }
 
 const struct spdk_nvme_ctrlr_data *

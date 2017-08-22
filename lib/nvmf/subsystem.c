@@ -46,23 +46,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-struct spdk_nvmf_subsystem *
-spdk_nvmf_find_subsystem_with_cntlid(uint16_t cntlid)
-{
-	struct spdk_nvmf_subsystem	*subsystem;
-	struct spdk_nvmf_ctrlr 	*ctrlr;
-
-	TAILQ_FOREACH(subsystem, &g_nvmf_tgt.subsystems, entries) {
-		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-			if (ctrlr->cntlid == cntlid) {
-				return subsystem;
-			}
-		}
-	}
-
-	return NULL;
-}
-
 int
 spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 {
