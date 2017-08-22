@@ -40,6 +40,7 @@
 #include "spdk/string.h"
 #include "spdk/endian.h"
 #include "spdk/stdinc.h"
+#include "spdk/event.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -56,6 +57,12 @@
 
 static int bdev_virtio_initialize(void);
 static void bdev_virtio_finish(void);
+
+struct virtio_scsi_target {
+	struct virtio_hw *hw;
+	struct spdk_poller *scan_poller;
+	unsigned refcount;
+};
 
 struct virtio_scsi_disk {
 	struct spdk_bdev	bdev;
@@ -208,7 +215,6 @@ bdev_virtio_io_cpl(struct virtio_req *req)
 	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
-
 static void
 bdev_virtio_poll(void *arg)
 {
@@ -243,55 +249,39 @@ bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 static void
-scan_target(struct virtio_hw *hw, uint8_t target)
+target_scan_put_ref(struct virtio_scsi_target *target)
 {
-	struct iovec *iov;
-	struct virtio_req *vreq;
+	assert(target->refcount > 0);
+	target->refcount--;
+
+	if (target->refcount == 0) {
+		spdk_poller_unregister(&target->scan_poller, NULL);
+		spdk_dma_free(target);
+	}
+}
+
+static void
+process_scan_inquiry(struct virtio_scsi_target *target, struct virtio_req *vreq)
+{
+	struct iovec *iov = vreq->iov;
 	struct virtio_scsi_cmd_req *req;
 	struct virtio_scsi_cmd_resp *resp;
-	struct spdk_scsi_cdb_inquiry *cdb;
-	uint16_t cnt;
-	struct virtio_req *complete;
-	struct virtio_scsi_disk *disk;
-	struct spdk_bdev *bdev;
+	uint8_t lun_id;
 
-	vreq = spdk_dma_zmalloc(sizeof(*vreq), 64, NULL);
-	vreq->iovcnt = 3;
-	vreq->start_write = 1;
-	iov = vreq->iov;
-
-	iov[0].iov_base = spdk_dma_malloc(4096, 64, NULL);
-	iov[1].iov_base = spdk_dma_malloc(4096, 64, NULL);
-	iov[2].iov_base = spdk_dma_malloc(4096, 64, NULL);
-
-	req = iov[0].iov_base;
-	resp = iov[1].iov_base;
-
-	memset(req, 0, sizeof(*req));
-	req->lun[0] = 1;
-	req->lun[1] = target;
-	iov[0].iov_len = sizeof(*req);
-
-	cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
-	cdb->opcode = SPDK_SPC_INQUIRY;
-	cdb->alloc_len[1] = 255;
-
-	iov[1].iov_len = sizeof(struct virtio_scsi_cmd_resp);
-	iov[2].iov_len = 255;
-
-	virtio_xmit_pkts(hw->vqs[2], vreq);
-
-	do {
-		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 1);
-	} while (cnt == 0);
+	req = vreq->iov[0].iov_base;
+	resp = vreq->iov[1].iov_base;
 
 	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
+		/* fixme free vreq */
+		target_scan_put_ref(target);
 		return;
 	}
 
+	lun_id = req->lun[1];
+	/* reuse vreq for the next request */
 	memset(req, 0, sizeof(*req));
 	req->lun[0] = 1;
-	req->lun[1] = target;
+	req->lun[1] = lun_id;
 	iov[0].iov_len = sizeof(*req);
 
 	req->cdb[0] = SPDK_SPC_SERVICE_ACTION_IN_16;
@@ -301,11 +291,16 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	iov[2].iov_len = 32;
 	to_be32(&req->cdb[10], iov[2].iov_len);
 
-	virtio_xmit_pkts(hw->vqs[2], vreq);
+	virtio_xmit_pkts(target->hw->vqs[2], vreq);
+}
 
-	do {
-		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 1);
-	} while (cnt == 0);
+static void
+process_read_cap(struct virtio_scsi_target *target, struct virtio_req *vreq)
+{
+	struct virtio_scsi_disk *disk;
+	struct spdk_bdev *bdev;
+
+	/* fixme check response */
 
 	disk = calloc(1, sizeof(*disk));
 	if (disk == NULL) {
@@ -313,10 +308,10 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 		return;
 	}
 
-	disk->num_blocks = from_be64((uint64_t *)(iov[2].iov_base)) + 1;
-	disk->block_size = from_be32((uint32_t *)(iov[2].iov_base + 8));
+	disk->num_blocks = from_be64((uint64_t *)(vreq->iov[2].iov_base)) + 1;
+	disk->block_size = from_be32((uint32_t *)(vreq->iov[2].iov_base + 8));
 
-	disk->hw = hw;
+	disk->hw = target->hw;
 
 	bdev = &disk->bdev;
 	bdev->name = spdk_sprintf_alloc("Virtio0");
@@ -332,6 +327,112 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	spdk_io_device_register(&disk->hw, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
 			sizeof(struct bdev_virtio_io_channel));
 	spdk_bdev_register(bdev);
+
+	/* fixme free vreq */
+	target_scan_put_ref(target);
+}
+
+static void
+process_scan_resp(struct virtio_scsi_target *target, struct virtio_req *vreq)
+{
+	struct iovec *iov = vreq->iov;
+	struct virtio_scsi_cmd_req *req = iov[0].iov_base;
+
+	/* READs only: first iov is always a request, second always a response */
+	if (iov[0].iov_len < sizeof(struct virtio_scsi_cmd_req)) {
+		abort();
+	}
+
+	if (iov[1].iov_len < sizeof(struct virtio_scsi_cmd_resp)) {
+		abort();
+	}
+
+	switch (req->cdb[0]) {
+	case SPDK_SPC_INQUIRY:
+		process_scan_inquiry(target, vreq);
+		break;
+	case SPDK_SPC_SERVICE_ACTION_IN_16:
+		process_read_cap(target, vreq);
+		break;
+	}
+}
+
+static void
+bdev_scan_poll(void *arg)
+{
+	struct virtio_scsi_target *target = arg;
+	struct virtio_req *req[32];
+	uint16_t i, cnt;
+
+	cnt = virtio_recv_pkts(target->hw->vqs[2], req, 32);
+	if (cnt > target->refcount) {
+		abort();
+	}
+
+	for (i = 0; i < cnt; ++i) {
+		process_scan_resp(target, req[i]);
+	}
+}
+
+static void
+scan_target(struct virtio_hw *hw, uint8_t target)
+{
+	struct iovec *iov;
+	struct virtio_req *vreq;
+	struct virtio_scsi_cmd_req *req;
+	struct spdk_scsi_cdb_inquiry *cdb;
+
+	/* TODO get these from some object pool */
+	vreq = spdk_dma_zmalloc(sizeof(*vreq), 64, NULL);
+	vreq->iovcnt = 3;
+	vreq->start_write = 1;
+	iov = vreq->iov;
+
+	iov[0].iov_base = spdk_dma_malloc(4096, 64, NULL);
+	iov[1].iov_base = spdk_dma_malloc(4096, 64, NULL);
+	iov[2].iov_base = spdk_dma_malloc(4096, 64, NULL);
+
+	req = iov[0].iov_base;
+
+	memset(req, 0, sizeof(*req));
+	req->lun[0] = 1;
+	req->lun[1] = target;
+	iov[0].iov_len = sizeof(*req);
+
+	cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
+	cdb->opcode = SPDK_SPC_INQUIRY;
+	cdb->alloc_len[1] = 255;
+
+	iov[1].iov_len = sizeof(struct virtio_scsi_cmd_resp);
+	iov[2].iov_len = 255;
+
+	virtio_xmit_pkts(hw->vqs[2], vreq);
+}
+
+static void
+init_hw(struct virtio_hw *hw)
+{
+	struct virtio_scsi_target *target;
+	uint32_t i;
+
+	target = spdk_dma_zmalloc(sizeof(*target), 64, NULL);
+	if (target == NULL) {
+		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
+		return;
+	}
+
+	target->hw = hw;
+	target->refcount = 64;
+	spdk_poller_register(&target->scan_poller, bdev_scan_poll, target,
+			       spdk_env_get_current_core(), 0);
+
+	/* TODO check rc, add virtio_dev_deinit() */
+	eth_virtio_dev_init(hw, 3);
+	virtio_dev_start(hw);
+
+	for (i = 0; i < 64; i++) {
+		scan_target(hw, i);
+	}
 }
 
 static int
@@ -365,17 +466,12 @@ bdev_virtio_initialize(void)
 			SPDK_ERRLOG("Invalid type %s specified for index %d\n", type, i);
 			continue;
 		}
-	}
 
-	if (hw == NULL) {
-		return 0;
-	}
+		if (hw == NULL) {
+			continue;
+		}
 
-	eth_virtio_dev_init(hw, 3);
-	virtio_dev_start(hw);
-
-	for (i = 0; i < 64; i++) {
-		scan_target(hw, i);
+		init_hw(hw);
 	}
 
 	return 0;
