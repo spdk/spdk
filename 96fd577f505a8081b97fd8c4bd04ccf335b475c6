@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "343c3515_035980d4",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-22T07:49:24Z",
+      "side": 1,
+      "message": "RPC output as following:\n\n    \"current_io_stats\": {\n      \"num_write_ops\": 0,\n      \"bytes_read\": 0,\n      \"bytes_written\": 0,\n      \"num_read_ops\": 0\n    },",
+      "range": {
+        "startLine": 80,
+        "startChar": 2,
+        "endLine": 80,
+        "endChar": 46
+      },
+      "revId": "96fd577f505a8081b97fd8c4bd04ccf335b475c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
