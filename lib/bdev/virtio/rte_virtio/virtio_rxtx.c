@@ -128,6 +128,18 @@ virtqueue_dequeue_burst_rx(struct virtqueue *vq, struct virtio_req **rx_pkts,
 } while (0)
 
 static inline void
+virtqueue_iov_to_desc(struct virtqueue *vq, uint16_t desc_idx, struct iovec *iov)
+{
+	if (vq->hw->virtio_user_dev) {
+		vq->vq_ring.desc[desc_idx].addr  = (uintptr_t)iov->iov_base;
+	} else {
+		vq->vq_ring.desc[desc_idx].addr = spdk_vtophys(iov->iov_base);
+	}
+
+	vq->vq_ring.desc[desc_idx].len = iov->iov_len;
+}
+
+static inline void
 virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 {
 	struct vq_desc_extra *dxp;
@@ -144,17 +156,32 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 
 	start_dp = vq->vq_ring.desc;
 
+	virtqueue_iov_to_desc(vq, idx, &req->iov_req);
+	start_dp[idx].flags = VRING_DESC_F_NEXT;
+	idx = start_dp[idx].next;
+
+	if (!req->is_write) {
+		virtqueue_iov_to_desc(vq, idx, &req->iov_resp);
+		start_dp[idx].flags = VRING_DESC_F_WRITE | VRING_DESC_F_NEXT;
+		idx = start_dp[idx].next;
+	}
+
 	for (i = 0; i < req->iovcnt; i++) {
-		if (vq->hw->virtio_user_dev) {
-			start_dp[idx].addr  = (uintptr_t)iov[i].iov_base;
+		virtqueue_iov_to_desc(vq, idx, &iov[i]);
+		if (!req->is_write) {
+			start_dp[idx].flags = VRING_DESC_F_WRITE;
+			if ((i + 1) != req->iovcnt) {
+				start_dp[idx].flags |= VRING_DESC_F_NEXT;
+			}
 		} else {
-			start_dp[idx].addr = spdk_vtophys(iov[i].iov_base);
+			start_dp[idx].flags = VRING_DESC_F_NEXT;
 		}
-		start_dp[idx].len   = iov[i].iov_len;
-		start_dp[idx].flags = (i >= req->start_write ? VRING_DESC_F_WRITE : 0);
-		if ((i + 1) != req->iovcnt) {
-			start_dp[idx].flags |= VRING_DESC_F_NEXT;
-		}
+		idx = start_dp[idx].next;
+	}
+
+	if (req->is_write) {
+		virtqueue_iov_to_desc(vq, idx, &req->iov_resp);
+		start_dp[idx].flags = VRING_DESC_F_WRITE | VRING_DESC_F_NEXT;
 		idx = start_dp[idx].next;
 	}
 
