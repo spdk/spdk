@@ -360,8 +360,7 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
-	struct spdk_nvmf_listen_addr *listen_addr;
-	int i;
+	int i, rc;
 	uint64_t mask;
 	struct spdk_bdev *bdev;
 	const char *namespace;
@@ -427,8 +426,8 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 		snprintf(trid.traddr, sizeof(trid.traddr), "%s", addresses[i].traddr);
 		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", addresses[i].trsvcid);
 
-		listen_addr = spdk_nvmf_tgt_listen(g_tgt, &trid);
-		if (listen_addr == NULL) {
+		rc = spdk_nvmf_tgt_listen(g_tgt, &trid);
+		if (rc) {
 			SPDK_ERRLOG("Failed to listen on transport %s, adrfam %s, traddr %s, trsvcid %s\n",
 				    addresses[i].transport,
 				    addresses[i].adrfam,
@@ -436,7 +435,7 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 				    addresses[i].trsvcid);
 			goto error;
 		}
-		spdk_nvmf_subsystem_add_listener(subsystem, listen_addr);
+		spdk_nvmf_subsystem_add_listener(subsystem, &trid);
 	}
 
 	/* Parse Host sections */

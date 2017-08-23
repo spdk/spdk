@@ -53,7 +53,6 @@ struct spdk_nvmf_tgt {
 	TAILQ_HEAD(, spdk_nvmf_subsystem)	subsystems;
 	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
 	size_t					discovery_log_page_size;
-	TAILQ_HEAD(, spdk_nvmf_listen_addr)	listen_addrs;
 	uint32_t				current_subsystem_id;
 	TAILQ_HEAD(, spdk_nvmf_transport)	transports;
 };
@@ -64,7 +63,7 @@ struct spdk_nvmf_host {
 };
 
 struct spdk_nvmf_listener {
-	struct spdk_nvmf_listen_addr	*listen_addr;
+	struct spdk_nvme_transport_id	trid;
 	TAILQ_ENTRY(spdk_nvmf_listener)	link;
 };
 
@@ -108,9 +107,6 @@ struct spdk_nvmf_subsystem {
 };
 
 extern struct spdk_nvmf_tgt g_nvmf_tgt;
-
-struct spdk_nvmf_listen_addr *spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid);
-void spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr);
 
 uint16_t spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt);
 
