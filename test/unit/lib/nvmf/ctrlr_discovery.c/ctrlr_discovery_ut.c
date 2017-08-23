@@ -43,27 +43,6 @@ struct spdk_nvmf_tgt g_nvmf_tgt = {
 	.subsystems = TAILQ_HEAD_INITIALIZER(g_nvmf_tgt.subsystems)
 };
 
-struct spdk_nvmf_listen_addr *
-spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid)
-{
-	struct spdk_nvmf_listen_addr *listen_addr;
-
-	listen_addr = calloc(1, sizeof(*listen_addr));
-	if (!listen_addr) {
-		return NULL;
-	}
-
-	listen_addr->trid = *trid;
-
-	return listen_addr;
-}
-
-void
-spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
-{
-	free(addr);
-}
-
 int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 	       void *remove_ctx, struct spdk_bdev_desc **desc)
@@ -85,9 +64,9 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 }
 
 void
-spdk_nvmf_transport_listen_addr_discover(struct spdk_nvmf_transport *transport,
-		struct spdk_nvmf_listen_addr *listen_addr,
-		struct spdk_nvmf_discovery_log_page_entry *entry)
+spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
+				      struct spdk_nvme_transport_id *trid,
+				      struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	entry->trtype = 42;
 }
@@ -186,7 +165,7 @@ test_discovery_log(void)
 	uint8_t buffer[8192];
 	struct spdk_nvmf_discovery_log_page *disc_log;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
-	struct spdk_nvmf_listen_addr listen_addr = {};
+	struct spdk_nvme_transport_id trid = {};
 
 	/* Reset discovery-related globals */
 	g_nvmf_tgt.discovery_genctr = 0;
@@ -200,11 +179,11 @@ test_discovery_log(void)
 					       NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
-	listen_addr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	listen_addr.trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
-	snprintf(listen_addr.trid.traddr, sizeof(listen_addr.trid.traddr), "1234");
-	snprintf(listen_addr.trid.trsvcid, sizeof(listen_addr.trid.trsvcid), "5678");
-	SPDK_CU_ASSERT_FATAL(spdk_nvmf_subsystem_add_listener(subsystem, &listen_addr) == 0);
+	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	trid.adrfam = SPDK_NVMF_ADRFAM_IPV4;
+	snprintf(trid.traddr, sizeof(trid.traddr), "1234");
+	snprintf(trid.trsvcid, sizeof(trid.trsvcid), "5678");
+	SPDK_CU_ASSERT_FATAL(spdk_nvmf_subsystem_add_listener(subsystem, &trid) == 0);
 
 	/* Get only genctr (first field in the header) */
 	memset(buffer, 0xCC, sizeof(buffer));

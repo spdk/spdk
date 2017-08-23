@@ -53,27 +53,6 @@ spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem)
 {
 }
 
-struct spdk_nvmf_listen_addr *
-spdk_nvmf_listen_addr_create(struct spdk_nvme_transport_id *trid)
-{
-	struct spdk_nvmf_listen_addr *listen_addr;
-
-	listen_addr = calloc(1, sizeof(*listen_addr));
-	if (!listen_addr) {
-		return NULL;
-	}
-
-	listen_addr->trid = *trid;
-
-	return listen_addr;
-}
-
-void
-spdk_nvmf_listen_addr_destroy(struct spdk_nvmf_listen_addr *addr)
-{
-	free(addr);
-}
-
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 			   const struct spdk_nvme_transport_id *trid)
@@ -82,9 +61,9 @@ spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 }
 
 void
-spdk_nvmf_transport_listen_addr_discover(struct spdk_nvmf_transport *transport,
-		struct spdk_nvmf_listen_addr *listen_addr,
-		struct spdk_nvmf_discovery_log_page_entry *entry)
+spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
+				      struct spdk_nvme_transport_id *trid,
+				      struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	entry->trtype = 42;
 }

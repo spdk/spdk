@@ -113,11 +113,11 @@ spdk_nvmf_transport_accept(struct spdk_nvmf_transport *transport)
 }
 
 void
-spdk_nvmf_transport_listen_addr_discover(struct spdk_nvmf_transport *transport,
-		struct spdk_nvmf_listen_addr *listen_addr,
-		struct spdk_nvmf_discovery_log_page_entry *entry)
+spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
+				      struct spdk_nvme_transport_id *trid,
+				      struct spdk_nvmf_discovery_log_page_entry *entry)
 {
-	transport->ops->listen_addr_discover(transport, listen_addr, entry);
+	transport->ops->listener_discover(transport, trid, entry);
 }
 
 struct spdk_nvmf_poll_group *
