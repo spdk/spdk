@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e91ecee7_e1eae310",
+        "filename": "examples/blob/nvme_blob/nvme_blob.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-23T20:59:27Z",
+      "side": 1,
+      "message": "Do this in spdk_bdev_nvme_create_bs_dev",
+      "revId": "6dc35526642033976ffd0b6a77fe2ca57ba84277",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
