@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b990aa5_318bba22",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T10:20:16Z",
+      "side": 1,
+      "message": "Commit message does not reflect current status of commit contents. \nEither update commit message or put positive tests into separate commit.",
+      "range": {
+        "startLine": 7,
+        "startChar": 10,
+        "endLine": 7,
+        "endChar": 34
+      },
+      "revId": "662626851a61ee23093462488b35a3e0f697a85f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca219d8a_d765c60e",
+        "filename": "test/lvol/Commands_Rpc_Lib.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T10:20:16Z",
+      "side": 1,
+      "message": "4 spaces instead of tab",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 1
+      },
+      "revId": "662626851a61ee23093462488b35a3e0f697a85f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "513996c6_522d08e4",
+        "filename": "test/lvol/Commands_Rpc_Lib.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T10:20:16Z",
+      "side": 1,
+      "message": "Whitespaces",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 1
+      },
+      "revId": "662626851a61ee23093462488b35a3e0f697a85f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0586925f_f8da2607",
+        "filename": "test/lvol/Commands_Rpc_Lib.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T10:20:16Z",
+      "side": 1,
+      "message": "Don\u0027t put space in front of function parentheses",
+      "range": {
+        "startLine": 12,
+        "startChar": 23,
+        "endLine": 12,
+        "endChar": 24
+      },
+      "revId": "662626851a61ee23093462488b35a3e0f697a85f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44095bf6_625e4d91",
+        "filename": "test/lvol/Commands_Rpc_Lib.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T10:20:16Z",
+      "side": 1,
+      "message": "What if check_output fails? Need to handle the exception.",
+      "range": {
+        "startLine": 13,
+        "startChar": 3,
+        "endLine": 13,
+        "endChar": 40
+      },
+      "revId": "662626851a61ee23093462488b35a3e0f697a85f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f109a0d6_565a6da6",
+        "filename": "test/lvol/Commands_Rpc_Lib.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T10:20:16Z",
+      "side": 1,
+      "message": "You only print the results - failed or passed, which is human-readable only. What about return codes for the script?",
+      "range": {
+        "startLine": 40,
+        "startChar": 4,
+        "endLine": 41,
+        "endChar": 63
+      },
+      "revId": "662626851a61ee23093462488b35a3e0f697a85f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe20f687_f2b8427e",
+        "filename": "test/lvol/Commands_Rpc_Lib.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T10:20:16Z",
+      "side": 1,
+      "message": "Indentation",
+      "range": {
+        "startLine": 46,
+        "startChar": 11,
+        "endLine": 46,
+        "endChar": 13
+      },
+      "revId": "662626851a61ee23093462488b35a3e0f697a85f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d5c1fe8_3430b0d0",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T10:20:16Z",
+      "side": 1,
+      "message": "whitespaces",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 4
+      },
+      "revId": "662626851a61ee23093462488b35a3e0f697a85f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d4efab7_7c32ceeb",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T10:20:16Z",
+      "side": 1,
+      "message": "Print flood makes everything very hard to read. Either modify it to be an element of some wrapper function or remove it entirely and just print messages in case of fail.",
+      "range": {
+        "startLine": 15,
+        "startChar": 8,
+        "endLine": 15,
+        "endChar": 60
+      },
+      "revId": "662626851a61ee23093462488b35a3e0f697a85f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16e339a0_a477866d",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T10:20:16Z",
+      "side": 1,
+      "message": "After re-thinking we could also call get_lvol_stores here to make sure that it\u0027s gone from configuration.",
+      "range": {
+        "startLine": 19,
+        "startChar": 8,
+        "endLine": 19,
+        "endChar": 37
+      },
+      "revId": "662626851a61ee23093462488b35a3e0f697a85f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
