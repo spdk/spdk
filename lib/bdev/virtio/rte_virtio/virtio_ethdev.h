@@ -45,8 +45,10 @@
 
 struct virtio_req {
 	struct iovec	*iov;
+	struct iovec	iov_req;
+	struct iovec	iov_resp;
 	uint32_t	iovcnt;
-	uint32_t	start_write;
+	int		is_write;
 	uint32_t	data_transferred;
 };
 
