@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "904d9c46_7f6ccfa0",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T16:24:44Z",
+      "side": 1,
+      "message": "Following up on my comment from previous patch:\n\nIf you pass NULL as the trid, spdk_nvme_probe should default to PCIe transport.  This is a key assumption for this spdk_nvme_probe().  You can test this by creating a non-default stub for nvme_transport_ctrlr_scan, and checking the trid that gets passed to that function.  It should have trid-\u003etrtype \u003d\u003d SPDK_NVME_TRANSPORT_PCIE.",
+      "revId": "8b280005342423065a83d513ad7788cdd24c8613",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
