@@ -105,8 +105,6 @@ struct spdk_nvmf_subsystem {
 	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
 };
 
-extern struct spdk_nvmf_tgt g_nvmf_tgt;
-
 uint16_t spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt);
 
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
