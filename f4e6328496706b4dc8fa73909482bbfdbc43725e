@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "223938b2_47057406",
+        "filename": "lib/nvme/nvme_quirks.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T16:16:05Z",
+      "side": 1,
+      "message": "If this patch is being edited anyway, it would be nice to sort these in device ID order per vendor (so this would go after SPDK_PCI_VID_INTEL, 0x0A54).",
+      "revId": "f4e6328496706b4dc8fa73909482bbfdbc43725e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
