@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c2af58a8_8ad27650",
+        "filename": "README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T17:20:07Z",
+      "side": 1,
+      "message": "Even for people who contribute patches, it isn\u0027t necessary to clone from GerritHub - only the \u0027review\u0027 pushes need to go there.  It is preferred to use the GitHub remote for cloning/fetching.",
+      "parentUuid": "6b2bd466_12e2fb4b",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21dc1d7f_9a92c0b7",
         "filename": "scripts/Makefile",
         "patchSetId": 5
@@ -30,6 +48,57 @@
       "writtenOn": "2017-08-23T17:07:55Z",
       "side": 1,
       "message": "We do not need this extra Makefile.  We can just add a target to the top level Makefile.",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a362929_f63640aa",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T17:20:07Z",
+      "side": 1,
+      "message": "This can just use /bin/sh rather than telling the user to change it manually.",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74f574e6_d4ba6b55",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T17:20:07Z",
+      "side": 1,
+      "message": "I think it would be clearer if these were \u0027elif\u0027 rather than separate \u0027if\u0027 statements (only one should be executed).",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdc537c4_96bb4e33",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T17:20:07Z",
+      "side": 1,
+      "message": "Unrelated changes?",
       "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
