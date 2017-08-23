@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96de5659_92ba041a",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T17:27:13Z",
+      "side": 1,
+      "message": "If this is in a performance-critical path, we should call the spdk_env_get_first_core() function once and store it in a global.",
+      "range": {
+        "startLine": 74,
+        "startChar": 29,
+        "endLine": 74,
+        "endChar": 52
+      },
+      "revId": "c8cfd6eccc2187c6721bac6bff9d13b94f36d002",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
