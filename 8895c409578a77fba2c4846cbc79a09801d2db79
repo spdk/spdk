@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93154f99_2e0ec73f",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-23T03:39:29Z",
+      "side": 1,
+      "message": "TAILQ_HEAD structure should be better.",
+      "revId": "8895c409578a77fba2c4846cbc79a09801d2db79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ac3fcdc_bae8cfe7",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-23T03:39:29Z",
+      "side": 1,
+      "message": "For the simple function, seems that we don\u0027t need to add comments.",
+      "revId": "8895c409578a77fba2c4846cbc79a09801d2db79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dcbe77e1_04b03867",
+        "filename": "lib/bdev/aio/bdev_aio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-23T03:39:29Z",
+      "side": 1,
+      "message": "LIST structure should be better than *next pointer.",
+      "revId": "8895c409578a77fba2c4846cbc79a09801d2db79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
