@@ -33,6 +33,24 @@
       "revId": "9dcd2bb2e4aa45ef3233b367155fb96ecce3dca6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b507949f_7347c65b",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 9
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-08-23T00:02:36Z",
+      "side": 1,
+      "message": "I think the intention here is to make sure replace \"//\" with \"/\", this actually caused by rocksdb, rocksdb add \u0027/\u0027 after the mount point, so if we use /rocksdb/db as the mount point in config file, it will not go into this branch.",
+      "parentUuid": "c90e4fef_6676147c",
+      "revId": "9dcd2bb2e4aa45ef3233b367155fb96ecce3dca6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
