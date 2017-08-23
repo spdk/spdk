@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b2bd466_12e2fb4b",
+        "filename": "README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T16:59:42Z",
+      "side": 1,
+      "message": "This might be a good change, but it is not related to this patch.  We should make this change in a separate patch.  (I\u0027m not sure we want to point to gerrithub in the main README - github is OK for users - gerrithub is only needed for anyone pushing or tracking changes).",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f681401_2b191644",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T16:59:42Z",
+      "side": 1,
+      "message": "need to run scripts/pkgdep.sh here",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
