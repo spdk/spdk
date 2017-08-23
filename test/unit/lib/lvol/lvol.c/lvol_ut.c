@@ -52,6 +52,11 @@ struct spdk_lvol *g_lvol;
 struct spdk_blob_store {
 };
 
+struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
+{
+	return NULL;
+}
+
 int
 spdk_blob_md_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 		       uint16_t value_len)
