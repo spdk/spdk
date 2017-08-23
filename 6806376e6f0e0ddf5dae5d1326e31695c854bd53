@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98df9fc2_3586a462",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T16:13:25Z",
+      "side": 1,
+      "message": "I think it would be more clear to use g_spdk_nvme_driver here.  It avoids the mental jump to remember that \u0026test_driver and g_spdk_nvme_driver are the same thing.",
+      "revId": "6806376e6f0e0ddf5dae5d1326e31695c854bd53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a83da806_1a33c95d",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T16:13:25Z",
+      "side": 1,
+      "message": "Might be good to clarify that this is checking that since the controller could not be initialized, we need to check that it was removed from the list and destructed.",
+      "revId": "6806376e6f0e0ddf5dae5d1326e31695c854bd53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
