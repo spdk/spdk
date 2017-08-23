@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdd74a8d_e4c78afc",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 513,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T18:24:43Z",
+      "side": 1,
+      "message": "Should we pass \"vfn_2mb \u003c\u003c SHIFT_2MB\" here instead of vaddr?  Just to make it clear that this will be a 2MB aligned address.\n\nThat would be inline with how spdk_mem_map_clear_translation is called below.  We could also just get rid of the local vaddr variable that shadows the vaddr function parameter as well (which would require using a shifted vfn_2mb in a couple of other places above).",
+      "revId": "7c48aaa7d42d650516edfb0e657b4e5b2c8198d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
