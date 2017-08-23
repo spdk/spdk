@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7225f32f_05b2eeea",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T18:08:02Z",
+      "side": 1,
+      "message": "Can this just be a regular malloc()/calloc()? I don\u0027t think we need to DMA to the request.",
+      "revId": "ca33ff5a520180fbb7c388c88c4454f382b86bf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
