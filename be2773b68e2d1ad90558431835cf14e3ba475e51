@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dba2dd93_5c93fd6c",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T18:37:09Z",
+      "side": 1,
+      "message": "This doesn\u0027t look right.  Shouldn\u0027t this be return paddr?",
+      "revId": "be2773b68e2d1ad90558431835cf14e3ba475e51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36bd10d4_9f0f8ce9",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T18:37:09Z",
+      "side": 1,
+      "message": "You should add to this comment like you did for the unregister case below, clarifying that since this is not an address DPDK is managing, we need to take care of registering it with the IOMMU.",
+      "revId": "be2773b68e2d1ad90558431835cf14e3ba475e51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
