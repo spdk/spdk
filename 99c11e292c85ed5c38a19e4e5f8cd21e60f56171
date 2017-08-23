@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ebe6daf_049c9977",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T18:29:43Z",
+      "side": 1,
+      "message": "cntlid looks like it should be stored in spdk_nvmf_tgt rather than being static.",
+      "range": {
+        "startLine": 180,
+        "startChar": 1,
+        "endLine": 180,
+        "endChar": 78
+      },
+      "revId": "99c11e292c85ed5c38a19e4e5f8cd21e60f56171",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
