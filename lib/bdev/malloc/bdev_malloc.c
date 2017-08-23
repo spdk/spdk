@@ -312,7 +312,7 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 		return bdev_malloc_flush((struct malloc_disk *)bdev_io->bdev->ctxt,
 					 (struct malloc_task *)bdev_io->driver_ctx,
 					 bdev_io->u.flush.offset,
-					 bdev_io->u.flush.length);
+					 bdev_io->u.flush.len);
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return bdev_malloc_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
