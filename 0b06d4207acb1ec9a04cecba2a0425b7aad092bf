@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "bcbbbe11_44ba49ab",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 14
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T11:37:00Z",
+      "side": 1,
+      "message": "This is not related with changes described in commit message, so please update the description why you add this here",
+      "revId": "0b06d4207acb1ec9a04cecba2a0425b7aad092bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c08df74_b675c27f",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T11:37:00Z",
+      "side": 1,
+      "message": "Whole file uses tabs, not spaces",
+      "range": {
+        "startLine": 285,
+        "startChar": 0,
+        "endLine": 285,
+        "endChar": 8
+      },
+      "revId": "0b06d4207acb1ec9a04cecba2a0425b7aad092bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c6261bcc_8f75c6ef",
         "filename": "test/vhost/hotfeatures/vhost.conf.base",
         "patchSetId": 14
