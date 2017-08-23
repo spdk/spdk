@@ -42,9 +42,10 @@
 #define VIRTIO_MAX_RX_QUEUES 128U
 #define VIRTIO_MAX_TX_QUEUES 128U
 #define VIRTIO_MIN_RX_BUFSIZE 64
+#define VIRTIO_MAX_IOVS 128
 
 struct virtio_req {
-	struct iovec	*iov;
+	struct iovec	iov[VIRTIO_MAX_IOVS];
 	uint32_t	iovcnt;
 	uint32_t	start_write;
 	uint32_t	data_transferred;

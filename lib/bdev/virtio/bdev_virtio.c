@@ -64,10 +64,16 @@ struct virtio_scsi_disk {
 	uint32_t		block_size;
 };
 
+struct virtio_scsi_io_ctx {
+	struct virtio_req vreq;
+	struct virtio_scsi_cmd_req req;
+	struct virtio_scsi_cmd_resp resp;
+};
+
 static int
 bdev_virtio_get_ctx_size(void)
 {
-	return 0;
+	return sizeof(struct virtio_scsi_io_ctx);
 }
 
 SPDK_BDEV_MODULE_REGISTER(virtio_scsi, bdev_virtio_initialize, bdev_virtio_finish,
@@ -76,19 +82,20 @@ SPDK_BDEV_MODULE_REGISTER(virtio_scsi, bdev_virtio_initialize, bdev_virtio_finis
 static void
 bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct iovec iov[128];
-	struct virtio_req vreq;
+	struct iovec *iov;
+	struct virtio_req *vreq;
 	struct virtio_scsi_cmd_req *req;
 	struct virtio_scsi_cmd_resp *resp;
 	uint16_t cnt;
 	struct virtio_req *complete;
 	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
+	struct virtio_scsi_io_ctx *io_ctx = (struct virtio_scsi_io_ctx *)bdev_io->driver_ctx;
 	bool is_read = (bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
 
-	vreq.iov = iov;
-
-	req = spdk_dma_malloc(4096, 64, NULL);
-	resp = spdk_dma_malloc(4096, 64, NULL);
+	vreq = &io_ctx->vreq;
+	req = &io_ctx->req;
+	resp = &io_ctx->resp;
+	iov = vreq->iov;
 
 	iov[0].iov_base = (void *)req;
 	iov[0].iov_len = sizeof(*req);
@@ -97,14 +104,14 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		iov[1].iov_base = (void *)resp;
 		iov[1].iov_len = sizeof(struct virtio_scsi_cmd_resp);
 		memcpy(&iov[2], bdev_io->u.read.iovs, sizeof(struct iovec) * bdev_io->u.read.iovcnt);
-		vreq.iovcnt = 2 + bdev_io->u.read.iovcnt;
-		vreq.start_write = 1;
+		vreq->iovcnt = 2 + bdev_io->u.read.iovcnt;
+		vreq->start_write = 1;
 	} else {
 		memcpy(&iov[1], bdev_io->u.write.iovs, sizeof(struct iovec) * bdev_io->u.write.iovcnt);
 		iov[1 + bdev_io->u.write.iovcnt].iov_base = (void *)resp;
 		iov[1 + bdev_io->u.write.iovcnt].iov_len = sizeof(struct virtio_scsi_cmd_resp);
-		vreq.iovcnt = 2 + bdev_io->u.write.iovcnt;
-		vreq.start_write = vreq.iovcnt - 1;
+		vreq->iovcnt = 2 + bdev_io->u.write.iovcnt;
+		vreq->start_write = vreq->iovcnt - 1;
 	}
 
 	memset(req, 0, sizeof(*req));
@@ -121,15 +128,13 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		to_be16(&req->cdb[7], bdev_io->u.write.len / disk->block_size);
 	}
 
-	virtio_xmit_pkts(disk->hw->vqs[2], &vreq);
+	virtio_xmit_pkts(disk->hw->vqs[2], vreq);
 
 	do {
 		cnt = virtio_recv_pkts(disk->hw->vqs[2], &complete, 1);
 	} while (cnt == 0);
 
 	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-	spdk_dma_free(req);
-	spdk_dma_free(resp);
 }
 
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -210,7 +215,7 @@ bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 static void
 scan_target(struct virtio_hw *hw, uint8_t target)
 {
-	struct iovec iov[3];
+	struct iovec *iov;
 	struct virtio_req vreq;
 	struct virtio_scsi_cmd_req *req;
 	struct virtio_scsi_cmd_resp *resp;
@@ -220,7 +225,7 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	struct virtio_scsi_disk *disk;
 	struct spdk_bdev *bdev;
 
-	vreq.iov = iov;
+	iov = vreq.iov;
 	vreq.iovcnt = 3;
 	vreq.start_write = 1;
 
