@@ -34,7 +34,7 @@ timing_exit start_iscsi_tgt
 
 $rpc_config_py $rpc_py
 
-$rpc_py get_bdevs
+$rpc_py get_bdevs All
 
 trap - SIGINT SIGTERM EXIT
 

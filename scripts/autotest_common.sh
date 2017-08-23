@@ -202,7 +202,7 @@ function waitforbdev() {
 	rpc_py=$2
 
 	for ((i=1; i<=10; i++)); do
-		if [ ! -z "`$rpc_py get_bdevs | grep $bdev_name`" ]; then
+		if [ ! -z "`$rpc_py get_bdevs All | grep $bdev_name`" ]; then
 			return 0
 		else
 			sleep 0.1
@@ -373,7 +373,7 @@ function discover_bdevs()
 	done
 
 	# Get all of the bdevs
-	$rootdir/scripts/rpc.py get_bdevs
+	$rootdir/scripts/rpc.py get_bdevs All
 
 	# Shut down the bdev service
 	kill $stubpid
