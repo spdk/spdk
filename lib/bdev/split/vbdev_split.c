@@ -51,7 +51,7 @@ SPDK_DECLARE_BDEV_MODULE(split);
 
 /* Base block device split context */
 struct split_base {
-	struct spdk_bdev	*base_bdev;
+	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*desc;
 	uint32_t		ref;
 };
@@ -59,8 +59,7 @@ struct split_base {
 /* Context for each split virtual bdev */
 struct split_disk {
 	struct spdk_bdev	disk;
-	struct spdk_bdev	*base_bdev;
-	struct split_base	*split_base;
+	struct split_base	*base;
 	uint64_t		offset_blocks;
 	uint64_t		offset_bytes;
 	TAILQ_ENTRY(split_disk)	tailq;
@@ -124,9 +123,9 @@ vbdev_split_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		split_flush(split_disk, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
-		base_ch = spdk_get_io_channel(split_disk->base_bdev);
+		base_ch = spdk_get_io_channel(split_disk->base->bdev);
 		*(struct spdk_io_channel **)bdev_io->driver_ctx = base_ch;
-		spdk_bdev_reset(split_disk->split_base->desc, base_ch,
+		spdk_bdev_reset(split_disk->base->desc, base_ch,
 				_vbdev_split_complete_reset, bdev_io);
 		return;
 	default:
@@ -136,22 +135,22 @@ vbdev_split_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	}
 
 	/* Submit the modified I/O to the underlying bdev. */
-	spdk_bdev_io_resubmit(bdev_io, split_disk->split_base->desc);
+	spdk_bdev_io_resubmit(bdev_io, split_disk->base->desc);
 }
 
 static void
 vbdev_split_base_get_ref(struct split_base *split_base, struct split_disk *split_disk)
 {
 	__sync_fetch_and_add(&split_base->ref, 1);
-	split_disk->split_base = split_base;
+	split_disk->base = split_base;
 }
 
 static void
 vbdev_split_base_free(struct split_base *split_base)
 {
-	assert(split_base->base_bdev);
+	assert(split_base->bdev);
 	assert(split_base->desc);
-	spdk_bdev_module_release_bdev(split_base->base_bdev);
+	spdk_bdev_module_release_bdev(split_base->bdev);
 	spdk_bdev_close(split_base->desc);
 	free(split_base);
 }
@@ -173,7 +172,7 @@ vbdev_split_free(struct split_disk *split_disk)
 		return;
 	}
 
-	split_base = split_disk->split_base;
+	split_base = split_disk->base;
 
 	TAILQ_REMOVE(&g_split_disks, split_disk, tailq);
 	free(split_disk->disk.name);
@@ -200,7 +199,7 @@ vbdev_split_base_bdev_hotremove_cb(void *remove_ctx)
 	struct split_disk *split_disk, *tmp;
 
 	TAILQ_FOREACH_SAFE(split_disk, &g_split_disks, tailq, tmp) {
-		if (split_disk->base_bdev == base_bdev) {
+		if (split_disk->base->bdev == base_bdev) {
 			spdk_bdev_unregister(&split_disk->disk);
 		}
 	}
@@ -211,7 +210,7 @@ vbdev_split_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	struct split_disk *split_disk = ctx;
 
-	return split_disk->base_bdev->fn_table->io_type_supported(split_disk->base_bdev, io_type);
+	return split_disk->base->bdev->fn_table->io_type_supported(split_disk->base->bdev, io_type);
 }
 
 static struct spdk_io_channel *
@@ -219,7 +218,7 @@ vbdev_split_get_io_channel(void *ctx)
 {
 	struct split_disk *split_disk = ctx;
 
-	return split_disk->base_bdev->fn_table->get_io_channel(split_disk->base_bdev);
+	return split_disk->base->bdev->fn_table->get_io_channel(split_disk->base->bdev);
 }
 
 static int
@@ -231,7 +230,7 @@ vbdev_split_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "base_bdev");
-	spdk_json_write_string(w, spdk_bdev_get_name(split_disk->base_bdev));
+	spdk_json_write_string(w, spdk_bdev_get_name(split_disk->base->bdev));
 	spdk_json_write_name(w, "offset_blocks");
 	spdk_json_write_uint64(w, split_disk->offset_blocks);
 
@@ -291,7 +290,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 		SPDK_ERRLOG("Cannot alloc memory for split base pointer\n");
 		return -1;
 	}
-	split_base->base_bdev = base_bdev;
+	split_base->bdev = base_bdev;
 	split_base->ref = 0;
 
 	rc = spdk_bdev_open(base_bdev, false, vbdev_split_base_bdev_hotremove_cb, base_bdev,
@@ -335,7 +334,6 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 			goto cleanup;
 		}
 		d->disk.product_name = "Split Disk";
-		d->base_bdev = base_bdev;
 		d->offset_bytes = offset_bytes;
 		d->offset_blocks = offset_blocks;
 		d->disk.blockcnt = split_size_blocks;
