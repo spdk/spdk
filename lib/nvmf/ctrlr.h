@@ -57,6 +57,8 @@ struct spdk_nvmf_qpair {
 	struct spdk_nvmf_ctrlr			*ctrlr;
 	enum spdk_nvmf_qpair_type		type;
 
+	struct spdk_thread			*thread;
+
 	uint16_t				qid;
 	uint16_t				sq_head;
 	uint16_t				sq_head_max;
