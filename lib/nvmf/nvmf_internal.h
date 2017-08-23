@@ -48,6 +48,8 @@
 struct spdk_nvmf_tgt {
 	struct spdk_nvmf_tgt_opts		opts;
 
+	struct spdk_thread			*master_thread;
+
 	uint16_t				next_cntlid;
 	uint64_t				discovery_genctr;
 	TAILQ_HEAD(, spdk_nvmf_subsystem)	subsystems;

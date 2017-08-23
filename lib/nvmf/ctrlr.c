@@ -39,6 +39,7 @@
 #include "subsystem.h"
 #include "transport.h"
 
+#include "spdk/io_channel.h"
 #include "spdk/trace.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/string.h"
@@ -193,6 +194,9 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 		      ntohl(*(uint32_t *)&data->hostid[12]));
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  subnqn: \"%s\"\n", data->subnqn);
 	SPDK_TRACELOG(SPDK_TRACE_NVMF, "  hostnqn: \"%s\"\n", data->hostnqn);
+
+	assert(qpair->thread == NULL);
+	qpair->thread = spdk_get_thread();
 
 	tgt = qpair->transport->tgt;
 
