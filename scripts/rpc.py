@@ -377,10 +377,13 @@ def get_interfaces(args):
 p = subparsers.add_parser('get_interfaces', help='Display current interface list')
 p.set_defaults(func=get_interfaces)
 
-def get_bdevs(args):
-    print_dict(jsonrpc_call('get_bdevs'))
 
-p = subparsers.add_parser('get_bdevs', help='Display current blockdev list')
+def get_bdevs(args):
+    params = {'name': args.name}
+    print_dict(jsonrpc_call('get_bdevs', params))
+
+p = subparsers.add_parser('get_bdevs', help='Display current blockdev list or required blockdev')
+p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
 p.set_defaults(func=get_bdevs)
 
 
