@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a87a749_57b680a5",
+        "filename": "lib/vhost/rte_vhost/socket.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T17:48:42Z",
+      "side": 1,
+      "message": "Previous code would still insert the connection into the vsocket-\u003econn_list.  This looks like a change in that behavior.  Maybe this new code is correct but I\u0027d suggest making that kind of change in a separate patch.",
+      "revId": "adc93d327079830152f3c8fd9d943500b1c466d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
