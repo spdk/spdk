@@ -39,8 +39,6 @@
 #include "spdk/nvme.h"
 #include "spdk/nvmf.h"
 
-struct spdk_nvmf_listen_addr;
-
 struct spdk_nvmf_transport {
 	struct spdk_nvmf_tgt			*tgt;
 	const struct spdk_nvmf_transport_ops	*ops;
@@ -85,9 +83,9 @@ struct spdk_nvmf_transport_ops {
 	/**
 	 * Fill out a discovery log entry for a specific listen address.
 	 */
-	void (*listen_addr_discover)(struct spdk_nvmf_transport *transport,
-				     struct spdk_nvmf_listen_addr *listen_addr,
-				     struct spdk_nvmf_discovery_log_page_entry *entry);
+	void (*listener_discover)(struct spdk_nvmf_transport *transport,
+				  struct spdk_nvme_transport_id *trid,
+				  struct spdk_nvmf_discovery_log_page_entry *entry);
 
 	/**
 	 * Create a new poll group
@@ -145,8 +143,8 @@ int spdk_nvmf_transport_stop_listen(struct spdk_nvmf_transport *transport,
 
 void spdk_nvmf_transport_accept(struct spdk_nvmf_transport *transport);
 
-void spdk_nvmf_transport_listen_addr_discover(struct spdk_nvmf_transport *transport,
-		struct spdk_nvmf_listen_addr *listen_addr,
+void spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
+		struct spdk_nvme_transport_id *trid,
 		struct spdk_nvmf_discovery_log_page_entry *entry);
 
 struct spdk_nvmf_poll_group *spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport

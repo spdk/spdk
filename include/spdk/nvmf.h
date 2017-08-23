@@ -80,9 +80,14 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
  * The connections will be matched with a subsystem, which may or may not allow
  * the connection based on a subsystem-specific whitelist. See
  * spdk_nvmf_subsystem_add_host() and spdk_nvmf_subsystem_add_listener()
+ *
+ * \param tgt The target associated with this listen address
+ * \param trid The address to listen at
+ *
+ * \return 0 on success. Negated errno on failure.
  */
-struct spdk_nvmf_listen_addr *spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
-		struct spdk_nvme_transport_id *trid);
+int spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
+			 struct spdk_nvme_transport_id *trid);
 
 /**
  * Poll the target for incoming connections.
@@ -100,11 +105,6 @@ struct spdk_nvmf_listener;
 
 typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_request *req);
 typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_qpair *qpair);
-
-struct spdk_nvmf_listen_addr {
-	struct spdk_nvme_transport_id		trid;
-	TAILQ_ENTRY(spdk_nvmf_listen_addr)	link;
-};
 
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
@@ -182,21 +182,21 @@ const char *spdk_nvmf_host_get_nqn(struct spdk_nvmf_host *host);
  * Accept new connections on the address provided
  *
  * \param subsystem Subsystem to add listener to
- * \param listen_addr The address to listen on.
+ * \param trid The address to accept connections from
  * \return 0 on success. Negated errno value on failure.
  */
 int spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
-				     struct spdk_nvmf_listen_addr *listen_addr);
+				     struct spdk_nvme_transport_id *trid);
 
 /**
  * Check if connections originated from the given address are allowed to connect to the subsystem.
  *
  * \param subsystem The subsystem to query
- * \param listen_addr The listen address
+ * \param trid The listen address
  * \return true if allowed, false if not.
  */
 bool spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
-		struct spdk_nvmf_listen_addr *listen_addr);
+		struct spdk_nvme_transport_id *trid);
 
 /**
  * Return the first allowed listen address in the subsystem.

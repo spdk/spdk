@@ -1414,15 +1414,15 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 
 static void
 spdk_nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
-			struct spdk_nvmf_listen_addr *port,
+			struct spdk_nvme_transport_id *trid,
 			struct spdk_nvmf_discovery_log_page_entry *entry)
 {
 	entry->trtype = SPDK_NVMF_TRTYPE_RDMA;
-	entry->adrfam = port->trid.adrfam;
+	entry->adrfam = trid->adrfam;
 	entry->treq.secure_channel = SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_SPECIFIED;
 
-	spdk_strcpy_pad(entry->trsvcid, port->trid.trsvcid, sizeof(entry->trsvcid), ' ');
-	spdk_strcpy_pad(entry->traddr, port->trid.traddr, sizeof(entry->traddr), ' ');
+	spdk_strcpy_pad(entry->trsvcid, trid->trsvcid, sizeof(entry->trsvcid), ' ');
+	spdk_strcpy_pad(entry->traddr, trid->traddr, sizeof(entry->traddr), ' ');
 
 	entry->tsas.rdma.rdma_qptype = SPDK_NVMF_RDMA_QPTYPE_RELIABLE_CONNECTED;
 	entry->tsas.rdma.rdma_prtype = SPDK_NVMF_RDMA_PRTYPE_NONE;
@@ -1703,7 +1703,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.stop_listen = spdk_nvmf_rdma_stop_listen,
 	.accept = spdk_nvmf_rdma_accept,
 
-	.listen_addr_discover = spdk_nvmf_rdma_discover,
+	.listener_discover = spdk_nvmf_rdma_discover,
 
 	.poll_group_create = spdk_nvmf_rdma_poll_group_create,
 	.poll_group_destroy = spdk_nvmf_rdma_poll_group_destroy,
