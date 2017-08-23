@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50045319_9881ede4",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T18:00:03Z",
+      "side": 1,
+      "message": "The code here all looks fine and I like this idea of separating connection establishment from start/pause of I/O processing.  I also understand that we do not want to change the names \"new_device\" and \"destroy_device\" in the DPDK code.\n\nBut to make this more clear, maybe we should change our SPDK function names from \"new_device\" and \"destroy_device\" to \"start_device\" and \"stop_device\"?  Because that\u0027s really what these functions do now - they don\u0027t actually create or destroy any devices, they just start or stop a device that already exists.  It also matches the error messages in \"destroy_device\" for example.",
+      "revId": "cf2fd6398c016a6f53415ffc3f11215587098315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
