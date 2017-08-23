@@ -77,6 +77,10 @@ typedef enum VhostUserRequest {
 	VHOST_USER_SET_VRING_ENABLE = 18,
 	VHOST_USER_SEND_RARP = 19,
 	VHOST_USER_NET_SET_MTU = 20,
+	VHOST_USER_NVME_ADMIN = 24,
+	VHOST_USER_NVME_SET_CQ_CALL = 25,
+	VHOST_USER_NVME_GET_CAP = 26,
+	VHOST_USER_NVME_START_STOP = 27,
 	VHOST_USER_MAX
 } VhostUserRequest;
 
@@ -114,6 +118,13 @@ typedef struct VhostUserMsg {
 		struct vhost_vring_addr addr;
 		VhostUserMemory memory;
 		VhostUserLog    log;
+		struct nvme {
+			union {
+				uint8_t req[64];
+                		uint8_t cqe[16];
+			} cmd;
+            		uint8_t buf[4096];
+		} nvme;
 	} payload;
 	int fds[VHOST_MEMORY_MAX_NREGIONS];
 } __attribute((packed)) VhostUserMsg;
