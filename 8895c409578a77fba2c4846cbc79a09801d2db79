@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "13684692_3bbfa0ca",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T20:18:16Z",
+      "side": 1,
+      "message": "This should also be static.",
+      "parentUuid": "93154f99_2e0ec73f",
+      "revId": "8895c409578a77fba2c4846cbc79a09801d2db79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ac3fcdc_bae8cfe7",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 1
@@ -30,6 +48,74 @@
       "writtenOn": "2017-08-23T03:39:29Z",
       "side": 1,
       "message": "For the simple function, seems that we don\u0027t need to add comments.",
+      "revId": "8895c409578a77fba2c4846cbc79a09801d2db79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75bc6a92_5887fac0",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T20:18:16Z",
+      "side": 1,
+      "message": "If you follow Changpeng\u0027s suggestion to use a TAILQ, this will become much simpler - you can use TAILQ_REMOVE.",
+      "revId": "8895c409578a77fba2c4846cbc79a09801d2db79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14c83434_13bfc8d2",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T20:18:16Z",
+      "side": 1,
+      "message": "Keep all of the variable declarations at the top of the function.",
+      "revId": "8895c409578a77fba2c4846cbc79a09801d2db79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54b28952_6d2b6f58",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T20:18:16Z",
+      "side": 1,
+      "message": "Remove the blank line before the local variables and add a blank line between variable declarations and code (after the last variable and before the fprintf).",
+      "revId": "8895c409578a77fba2c4846cbc79a09801d2db79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35ef25ba_2ab800dd",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 542,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T20:18:16Z",
+      "side": 1,
+      "message": "This is missing support for user-specified block size - we will have to record the provided block_size in the file_disk and only add it to the AIO line if it is not 0.",
       "revId": "8895c409578a77fba2c4846cbc79a09801d2db79",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
