@@ -37,16 +37,91 @@
 #include "spdk_internal/bdev.h"
 
 static void
+spdk_rpc_construct_bdev_info(struct spdk_json_write_ctx *w,
+			     struct spdk_bdev *bdev)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+
+	spdk_json_write_name(w, "product_name");
+	spdk_json_write_string(w, spdk_bdev_get_product_name(bdev));
+
+	spdk_json_write_name(w, "block_size");
+	spdk_json_write_uint32(w, spdk_bdev_get_block_size(bdev));
+
+	spdk_json_write_name(w, "num_blocks");
+	spdk_json_write_uint64(w, spdk_bdev_get_num_blocks(bdev));
+
+	spdk_json_write_name(w, "bdev_opened_for_write");
+	spdk_json_write_bool(w, bdev->bdev_opened_for_write);
+
+	spdk_json_write_name(w, "supported_io_types");
+	spdk_json_write_object_begin(w);
+	spdk_json_write_name(w, "read");
+	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ));
+	spdk_json_write_name(w, "write");
+	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
+	spdk_json_write_name(w, "unmap");
+	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP));
+	spdk_json_write_name(w, "write_zeroes");
+	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES));
+	spdk_json_write_name(w, "flush");
+	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
+	spdk_json_write_name(w, "reset");
+	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET));
+	spdk_json_write_name(w, "nvme_admin");
+	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN));
+	spdk_json_write_name(w, "nvme_io");
+	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO));
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_name(w, "driver_specific");
+	spdk_json_write_object_begin(w);
+	spdk_bdev_dump_config_json(bdev, w);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+struct rpc_get_bdevs {
+	char *name;
+};
+
+static void
+free_rpc_get_bdevs(struct rpc_get_bdevs *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_get_bdevs_decoders[] = {
+	{"name", offsetof(struct rpc_get_bdevs, name), spdk_json_decode_string},
+};
+
+static void
 spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 		   const struct spdk_json_val *params)
 {
+	struct rpc_get_bdevs req = {};
 	struct spdk_json_write_ctx *w;
-	struct spdk_bdev *bdev;
+	struct spdk_bdev *bdev = NULL;
 
-	if (params != NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_bdevs requires no parameters");
-		return;
+	if (spdk_json_decode_object(params, rpc_get_bdevs_decoders,
+				    sizeof(rpc_get_bdevs_decoders) / sizeof(*rpc_get_bdevs_decoders),
+				    &req)) {
+		SPDK_ERRLOG("return all the bdevs on the current list\n");
+	} else {
+		if (req.name == NULL) {
+			SPDK_ERRLOG("missing name param\n");
+			goto invalid;
+		}
+
+		bdev = spdk_bdev_get_by_name(req.name);
+		if (bdev == NULL) {
+			SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+			goto invalid;
+		}
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -56,54 +131,23 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_array_begin(w);
 
-	for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
-		spdk_json_write_object_begin(w);
-
-		spdk_json_write_name(w, "name");
-		spdk_json_write_string(w, spdk_bdev_get_name(bdev));
-
-		spdk_json_write_name(w, "product_name");
-		spdk_json_write_string(w, spdk_bdev_get_product_name(bdev));
-
-		spdk_json_write_name(w, "block_size");
-		spdk_json_write_uint32(w, spdk_bdev_get_block_size(bdev));
-
-		spdk_json_write_name(w, "num_blocks");
-		spdk_json_write_uint64(w, spdk_bdev_get_num_blocks(bdev));
-
-		spdk_json_write_name(w, "bdev_opened_for_write");
-		spdk_json_write_bool(w, bdev->bdev_opened_for_write);
-
-		spdk_json_write_name(w, "supported_io_types");
-		spdk_json_write_object_begin(w);
-		spdk_json_write_name(w, "read");
-		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ));
-		spdk_json_write_name(w, "write");
-		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
-		spdk_json_write_name(w, "unmap");
-		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP));
-		spdk_json_write_name(w, "write_zeroes");
-		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES));
-		spdk_json_write_name(w, "flush");
-		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
-		spdk_json_write_name(w, "reset");
-		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET));
-		spdk_json_write_name(w, "nvme_admin");
-		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN));
-		spdk_json_write_name(w, "nvme_io");
-		spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO));
-		spdk_json_write_object_end(w);
-
-		spdk_json_write_name(w, "driver_specific");
-		spdk_json_write_object_begin(w);
-		spdk_bdev_dump_config_json(bdev, w);
-		spdk_json_write_object_end(w);
-
-		spdk_json_write_object_end(w);
+	if (bdev != NULL) {
+		spdk_rpc_construct_bdev_info(w, bdev);
+	} else {
+		for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+			spdk_rpc_construct_bdev_info(w, bdev);
+		}
 	}
+
 	spdk_json_write_array_end(w);
 
 	spdk_jsonrpc_end_result(request, w);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_get_bdevs(&req);
 }
 SPDK_RPC_REGISTER("get_bdevs", spdk_rpc_get_bdevs)
 
