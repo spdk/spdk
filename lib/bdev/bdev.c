@@ -597,12 +597,6 @@ spdk_bdev_io_resubmit(struct spdk_bdev_io *bdev_io, struct spdk_bdev_desc *new_b
 	bdev_io->bdev = new_bdev;
 
 	/*
-	 * These fields are normally set during spdk_bdev_io_init(), but since bdev is
-	 * being switched, they need to be reinitialized.
-	 */
-	bdev_io->gencnt = new_bdev->gencnt;
-
-	/*
 	 * This bdev_io was already submitted so decrement io_outstanding to ensure it
 	 *  does not get double-counted.
 	 */
@@ -619,7 +613,6 @@ spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 	bdev_io->bdev = bdev;
 	bdev_io->caller_ctx = cb_arg;
 	bdev_io->cb = cb;
-	bdev_io->gencnt = bdev->gencnt;
 	bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
 	bdev_io->in_submit_request = false;
 }
@@ -1273,24 +1266,8 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	assert(bdev_io->ch->io_outstanding > 0);
 	bdev_io->ch->io_outstanding--;
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
-		/* Successful reset */
-		if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-			/* Increase the bdev generation */
-			bdev_io->bdev->gencnt++;
-		}
 		bdev_io->bdev->reset_in_progress = false;
 		_spdk_bdev_start_next_reset(bdev_io->bdev);
-	} else {
-		/*
-		 * Check the gencnt, to see if this I/O was issued before the most
-		 * recent reset. If the gencnt is not equal, then just free the I/O
-		 * without calling the callback, since the caller will have already
-		 * freed its context for this I/O.
-		 */
-		if (bdev_io->bdev->gencnt != bdev_io->gencnt) {
-			spdk_bdev_put_io(bdev_io);
-			return;
-		}
 	}
 
 	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
@@ -1432,8 +1409,6 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	bdev->status = SPDK_BDEV_STATUS_READY;
 
-	/* initialize the reset generation value to zero */
-	bdev->gencnt = 0;
 	TAILQ_INIT(&bdev->open_descs);
 	bdev->bdev_opened_for_write = false;
 
