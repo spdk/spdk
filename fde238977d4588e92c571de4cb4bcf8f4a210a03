@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "019f0b06_9c8bf609",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T16:24:31Z",
+      "side": 1,
+      "message": "This can probably use SPDK_CONTAINEROF.",
+      "range": {
+        "startLine": 198,
+        "startChar": 9,
+        "endLine": 198,
+        "endChar": 70
+      },
+      "revId": "fde238977d4588e92c571de4cb4bcf8f4a210a03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56875609_cf86b687",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T16:24:31Z",
+      "side": 1,
+      "message": "Is the 32 here SPDK_COUNTOF(req)?",
+      "range": {
+        "startLine": 212,
+        "startChar": 45,
+        "endLine": 212,
+        "endChar": 47
+      },
+      "revId": "fde238977d4588e92c571de4cb4bcf8f4a210a03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
