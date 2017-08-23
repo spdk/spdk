@@ -88,7 +88,7 @@ struct spdk_nvmf_subsystem {
 
 	struct spdk_nvmf_tgt			*tgt;
 
-	char sn[MAX_SN_LEN + 1];
+	char sn[SPDK_NVME_CTRLR_SN_LEN + 1];
 
 	struct spdk_nvmf_ns			ns[MAX_VIRTUAL_NAMESPACE];
 	uint32_t 				max_nsid;

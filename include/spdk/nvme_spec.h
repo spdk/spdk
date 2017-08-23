@@ -845,6 +845,10 @@ enum spdk_nvmf_ctrlr_model {
 	SPDK_NVMF_CTRLR_MODEL_STATIC			= 1,
 };
 
+#define SPDK_NVME_CTRLR_SN_LEN	20
+#define SPDK_NVME_CTRLR_MN_LEN	40
+#define SPDK_NVME_CTRLR_FR_LEN	8
+
 struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
@@ -855,13 +859,13 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	uint16_t		ssvid;
 
 	/** serial number */
-	int8_t			sn[20];
+	int8_t			sn[SPDK_NVME_CTRLR_SN_LEN];
 
 	/** model number */
-	int8_t			mn[40];
+	int8_t			mn[SPDK_NVME_CTRLR_MN_LEN];
 
 	/** firmware revision */
-	uint8_t			fr[8];
+	uint8_t			fr[SPDK_NVME_CTRLR_FR_LEN];
 
 	/** recommended arbitration burst */
 	uint8_t			rab;

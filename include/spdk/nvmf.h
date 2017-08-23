@@ -46,7 +46,6 @@
 #include "spdk/queue.h"
 
 #define MAX_VIRTUAL_NAMESPACE 16
-#define MAX_SN_LEN 20
 
 struct spdk_nvmf_tgt;
 
