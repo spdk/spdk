@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "05ce2310_c6bb7c39",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 979,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-08-23T22:24:26Z",
+      "side": 1,
+      "message": "True. Thanks.",
+      "parentUuid": "f46a0263_457218e2",
+      "revId": "0fb8cff4b9fd050cb6c46c5cabadc6f0a0c423d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c86d4954_faaa7096",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 12
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "b8dbe145_8f082799",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 995,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-08-23T22:24:26Z",
+      "side": 1,
+      "message": "Jim suggested that I do it this way in patch set 2. I have included his comment.\n\n\"Since you allocate a 4KB buffer, you should use that as the divisor here instead - a lot of NVMe namespaces will be 512-byte formatted meaning this code as-is will create a separate iov for every 512 bytes when it could just do one for every 4KB.\nThis will also avoid unnecessary splitting on PRP-only NVMe controllers - since an array of a bunch of iovs with 512 bytes each will need to be split into separate commands for each 512 byte buffer.  If you use the 4KB buffer (which is 4KB aligned) no splitting will be necessary.\"\n\nI agree with Jim\u0027s reasoning on this one, it will reduce splitting and complexity on the lower levels of the bdev layer.",
+      "parentUuid": "c86d4954_faaa7096",
+      "revId": "0fb8cff4b9fd050cb6c46c5cabadc6f0a0c423d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a6a6dce3_b7c21a3c",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 12
@@ -64,6 +100,24 @@
       "writtenOn": "2017-08-23T21:27:44Z",
       "side": 1,
       "message": "This is a redundant check - if iovcnt can be represented by an int (which it can from the check at 997) then it is valid.",
+      "revId": "0fb8cff4b9fd050cb6c46c5cabadc6f0a0c423d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ab6bacd_7bff5e25",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1015,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-08-23T22:24:26Z",
+      "side": 1,
+      "message": "good point. The iovec object would have to be really really large to overrun that value.",
+      "parentUuid": "a6a6dce3_b7c21a3c",
       "revId": "0fb8cff4b9fd050cb6c46c5cabadc6f0a0c423d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
