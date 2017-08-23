@@ -16,6 +16,24 @@
       "revId": "ea00beee87b9ef3b8a5f20a24d045ee584f3e2bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33eb54cf_cf26ad45",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-23T17:40:04Z",
+      "side": 1,
+      "message": "Yeah, I don\u0027t think this makes sense to be static, but we can fix it in another commit. (It shouldn\u0027t cause any problems since this function is only called once.)",
+      "parentUuid": "220a2229_db300132",
+      "revId": "ea00beee87b9ef3b8a5f20a24d045ee584f3e2bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
