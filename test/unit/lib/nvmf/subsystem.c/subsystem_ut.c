@@ -40,8 +40,6 @@
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
-struct spdk_nvmf_tgt g_nvmf_tgt;
-
 int
 spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
 {

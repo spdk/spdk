@@ -52,8 +52,6 @@ SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 #define SPDK_NVMF_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_DEFAULT_MAX_IO_SIZE 131072
 
-struct spdk_nvmf_tgt g_nvmf_tgt;
-
 void
 spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 {
@@ -68,7 +66,10 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 {
 	struct spdk_nvmf_tgt *tgt;
 
-	tgt = &g_nvmf_tgt;
+	tgt = calloc(1, sizeof(*tgt));
+	if (!tgt) {
+		return NULL;
+	}
 
 	if (!opts) {
 		spdk_nvmf_tgt_opts_init(&tgt->opts);
@@ -102,6 +103,11 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 		TAILQ_REMOVE(&tgt->transports, transport, link);
 		spdk_nvmf_transport_destroy(transport);
 	}
+
+	if (tgt->discovery_log_page) {
+		free(tgt->discovery_log_page);
+	}
+	free(tgt);
 }
 
 int
