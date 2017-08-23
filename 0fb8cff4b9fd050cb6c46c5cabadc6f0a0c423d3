@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26c89481_47faa4db",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-23T21:27:44Z",
+      "side": 1,
+      "message": "Technically, you can get the same behavior, not the same performance.",
+      "revId": "0fb8cff4b9fd050cb6c46c5cabadc6f0a0c423d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f46a0263_457218e2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 979,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-23T21:27:44Z",
+      "side": 1,
+      "message": "This line isn\u0027t doing anything - bdev_io is NULL so spdk_bdev_put_io does nothing.",
+      "revId": "0fb8cff4b9fd050cb6c46c5cabadc6f0a0c423d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c86d4954_faaa7096",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 995,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-23T21:27:44Z",
+      "side": 1,
+      "message": "I think there is a simpler algorithm than what you\u0027re doing here. Instead of creating one iov entry per zero_buffer, create one iov entry per block being written. If the block size is smaller than the zero_buffer that\u0027s ok - the iov can just describe the first part of the buffer.\n\nThat will eliminate this remnant stuff.",
+      "revId": "0fb8cff4b9fd050cb6c46c5cabadc6f0a0c423d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6a6dce3_b7c21a3c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1015,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-23T21:27:44Z",
+      "side": 1,
+      "message": "This is a redundant check - if iovcnt can be represented by an int (which it can from the check at 997) then it is valid.",
+      "revId": "0fb8cff4b9fd050cb6c46c5cabadc6f0a0c423d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
