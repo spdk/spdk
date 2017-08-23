@@ -127,6 +127,7 @@ CFLAGS   += $(COMMON_CFLAGS) -Wno-pointer-sign -Wstrict-prototypes -Wold-style-d
 CXXFLAGS += $(COMMON_CFLAGS) -std=c++0x
 
 SYS_LIBS += -lrt
+SYS_LIBS += -luuid
 
 MAKEFLAGS += --no-print-directory
 
