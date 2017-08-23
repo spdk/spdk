@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4f850971_b9dcdadc",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 582,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T18:15:11Z",
+      "side": 1,
+      "message": "Hi Darek,\n\nCould you rework this patch so that the entire contents of this function are not both moved and modified?  It makes the patch a lot bigger and more difficult to review.\n\nEven things like taking the struct timespec out of the ctx object and making it a local variable can be done in a separate patch.\n\nAnything you can do to reduce the size of diffs (in general - not just this patch) makes it much easier on reviewers and will get patches reviewed and committed much more quickly.  It is much easier to review and comprehend a 30-40 line patch than a 150 line patch.  When the function moves like this, I need to check line-by-line what has changed since there is no diff available.\n\nThanks,\n\n-Jim",
+      "revId": "065fa97ea702d492f6f25d11506604feff32c4c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
