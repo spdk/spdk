@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "21dc1d7f_9a92c0b7",
+        "filename": "scripts/Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T17:07:55Z",
+      "side": 1,
+      "message": "We do not need this extra Makefile.  We can just add a target to the top level Makefile.",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f681401_2b191644",
         "filename": "scripts/vagrant/build.sh",
         "patchSetId": 5
