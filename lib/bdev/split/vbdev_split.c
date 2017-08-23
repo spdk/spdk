@@ -43,6 +43,7 @@
 #include "spdk/endian.h"
 #include "spdk/string.h"
 #include "spdk/io_channel.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -67,75 +68,70 @@ struct split_disk {
 
 static TAILQ_HEAD(, split_disk) g_split_disks = TAILQ_HEAD_INITIALIZER(g_split_disks);
 
-static void
-split_read(struct split_disk *split_disk, struct spdk_bdev_io *bdev_io)
-{
-	bdev_io->u.read.offset += split_disk->offset_bytes;
-}
+struct split_channel {
+	struct split_disk	*disk;
+	struct spdk_io_channel	*base_ch;
+};
 
 static void
-split_write(struct split_disk *split_disk, struct spdk_bdev_io *bdev_io)
-{
-	bdev_io->u.write.offset += split_disk->offset_bytes;
-}
-
-static void
-split_unmap(struct split_disk *split_disk, struct spdk_bdev_io *bdev_io)
-{
-	bdev_io->u.unmap.offset += split_disk->offset_bytes;
-}
-
-static void
-split_flush(struct split_disk *split_disk, struct spdk_bdev_io *bdev_io)
-{
-	bdev_io->u.flush.offset += split_disk->offset_bytes;
-}
-
-static void
-_vbdev_split_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+vbdev_split_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *split_io = cb_arg;
-	struct spdk_io_channel *base_ch = *(struct spdk_io_channel **)split_io->driver_ctx;
+	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 
-	spdk_put_io_channel(base_ch);
-	spdk_bdev_io_complete(split_io, success);
+	spdk_bdev_io_complete(split_io, status);
 	spdk_bdev_free_io(bdev_io);
 }
 
 static void
 vbdev_split_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct split_disk *split_disk = bdev_io->bdev->ctxt;
-	struct spdk_io_channel *base_ch;
+	struct split_channel *split_ch = spdk_io_channel_get_ctx(ch);
+	struct split_disk *split_disk = split_ch->disk;
+	struct spdk_io_channel *base_ch = split_ch->base_ch;
+	struct spdk_bdev_desc *base_desc = split_disk->base->desc;
+	uint64_t offset;
+	int rc = 0;
 
 	/* Modify the I/O to adjust for the offset within the base bdev. */
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		split_read(split_disk, bdev_io);
+		offset = bdev_io->u.read.offset + split_disk->offset_bytes;
+		rc = spdk_bdev_readv(base_desc, base_ch, bdev_io->u.read.iovs,
+				     bdev_io->u.read.iovcnt, offset,
+				     bdev_io->u.read.len, vbdev_split_complete_io,
+				     bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		split_write(split_disk, bdev_io);
+		offset = bdev_io->u.write.offset + split_disk->offset_bytes;
+		rc = spdk_bdev_writev(base_desc, base_ch, bdev_io->u.write.iovs,
+				      bdev_io->u.write.iovcnt, offset,
+				      bdev_io->u.write.len, vbdev_split_complete_io,
+				      bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		split_unmap(split_disk, bdev_io);
+		offset = bdev_io->u.unmap.offset + split_disk->offset_bytes;
+		rc = spdk_bdev_unmap(base_desc, base_ch, offset, bdev_io->u.unmap.len,
+				     vbdev_split_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		split_flush(split_disk, bdev_io);
+		offset = bdev_io->u.flush.offset + split_disk->offset_bytes;
+		rc = spdk_bdev_flush(base_desc, base_ch, offset, bdev_io->u.flush.len,
+				     vbdev_split_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
-		base_ch = spdk_get_io_channel(split_disk->base->bdev);
-		*(struct spdk_io_channel **)bdev_io->driver_ctx = base_ch;
-		spdk_bdev_reset(split_disk->base->desc, base_ch,
-				_vbdev_split_complete_reset, bdev_io);
-		return;
+		rc = spdk_bdev_reset(split_disk->base->desc, base_ch,
+				     vbdev_split_complete_io, bdev_io);
+		break;
 	default:
 		SPDK_ERRLOG("split: unknown I/O type %d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
 
-	/* Submit the modified I/O to the underlying bdev. */
-	spdk_bdev_io_resubmit(bdev_io, split_disk->base->desc);
+	if (rc != 0) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
 }
 
 static void
@@ -174,6 +170,7 @@ vbdev_split_free(struct split_disk *split_disk)
 
 	split_base = split_disk->base;
 
+	spdk_io_device_unregister(&split_disk->base, NULL);
 	TAILQ_REMOVE(&g_split_disks, split_disk, tailq);
 	free(split_disk->disk.name);
 	free(split_disk);
@@ -218,7 +215,7 @@ vbdev_split_get_io_channel(void *ctx)
 {
 	struct split_disk *split_disk = ctx;
 
-	return split_disk->base->bdev->fn_table->get_io_channel(split_disk->base->bdev);
+	return spdk_get_io_channel(&split_disk->base);
 }
 
 static int
@@ -246,6 +243,29 @@ static struct spdk_bdev_fn_table vbdev_split_fn_table = {
 	.get_io_channel		= vbdev_split_get_io_channel,
 	.dump_config_json	= vbdev_split_dump_config_json,
 };
+
+static int
+split_channel_create_cb(void *io_device, void *ctx_buf)
+{
+	struct split_disk *disk = SPDK_CONTAINEROF(io_device, struct split_disk, base);
+	struct split_channel *ch = ctx_buf;
+
+	ch->disk = disk;
+	ch->base_ch = spdk_bdev_get_io_channel(disk->base->desc);
+	if (ch->base_ch == NULL) {
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+split_channel_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct split_channel *ch = ctx_buf;
+
+	spdk_put_io_channel(ch->base_ch);
+}
 
 static int
 vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t split_size_mb)
@@ -347,6 +367,9 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 
 		vbdev_split_base_get_ref(split_base, d);
 
+		spdk_io_device_register(&d->base, split_channel_create_cb, split_channel_destroy_cb,
+					sizeof(struct split_channel));
+
 		spdk_vbdev_register(&d->disk, &base_bdev, 1);
 
 		TAILQ_INSERT_TAIL(&g_split_disks, d, tailq);
@@ -447,11 +470,7 @@ vbdev_split_fini(void)
 static int
 vbdev_split_get_ctx_size(void)
 {
-	/*
-	 * Note: this context is only used for RESET operations, since it is the only
-	 *  I/O type that does not just resubmit to the base bdev.
-	 */
-	return sizeof(struct spdk_io_channel *);
+	return 0;
 }
 
 SPDK_BDEV_MODULE_REGISTER(split, vbdev_split_init, vbdev_split_fini, NULL,
