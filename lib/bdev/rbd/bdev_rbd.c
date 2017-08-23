@@ -288,7 +288,7 @@ static int _bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 				      ch,
 				      bdev_io,
 				      bdev_io->u.flush.offset,
-				      bdev_io->u.flush.length);
+				      bdev_io->u.flush.len);
 	default:
 		return -1;
 	}

@@ -256,7 +256,7 @@ static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 		bdev_aio_flush((struct file_disk *)bdev_io->bdev->ctxt,
 			       (struct bdev_aio_task *)bdev_io->driver_ctx,
 			       bdev_io->u.flush.offset,
-			       bdev_io->u.flush.length);
+			       bdev_io->u.flush.len);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_RESET:

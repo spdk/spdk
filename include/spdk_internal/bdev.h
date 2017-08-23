@@ -306,7 +306,7 @@ struct spdk_bdev_io {
 			uint64_t offset;
 
 			/** Represents the number of bytes to be flushed, starting at offset. */
-			uint64_t length;
+			uint64_t len;
 		} flush;
 		struct {
 			/* The NVMe command to execute */
