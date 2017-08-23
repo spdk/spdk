@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6130a364_949921e9",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T15:05:37Z",
+      "side": 0,
+      "message": "The iSCSI equivalent is pretty useful - could we add that functionality for the NVMe-oF target?  We don\u0027t need a separate function - just a call to check that all of the data buffers from data_buf_pool are in the pool before we free it.\n\nI\u0027m OK if it\u0027s a separate patch.",
+      "revId": "25be7364a0b02a2c208ad8c16c556b000467cfc4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
