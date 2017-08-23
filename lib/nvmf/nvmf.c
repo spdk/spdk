@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/conf.h"
+#include "spdk/io_channel.h"
 #include "spdk/nvmf.h"
 #include "spdk/trace.h"
 
@@ -75,6 +76,12 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 		spdk_nvmf_tgt_opts_init(&tgt->opts);
 	} else {
 		tgt->opts = *opts;
+	}
+
+	tgt->master_thread = spdk_get_thread();
+	if (!tgt->master_thread) {
+		SPDK_ERRLOG("Call spdk_allocate_thread() prior to calling spdk_nvmf_tgt_create()\n");
+		return NULL;
 	}
 
 	tgt->discovery_genctr = 0;

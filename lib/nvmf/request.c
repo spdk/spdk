@@ -39,29 +39,47 @@
 #include "subsystem.h"
 #include "transport.h"
 
+#include "spdk/io_channel.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
 
+#include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
+
+static void
+spdk_nvmf_request_complete_on_qpair(void *ctx)
+{
+	struct spdk_nvmf_request *req = ctx;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	rsp->sqid = 0;
+	rsp->status.p = 0;
+	rsp->cid = req->cmd->nvme_cmd.cid;
+
+	SPDK_TRACELOG(SPDK_TRACE_NVMF,
+		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u status=0x%04x\n",
+		      rsp->cid, rsp->cdw0, rsp->rsvd1,
+		      *(uint16_t *)&rsp->status);
+
+	if (spdk_nvmf_transport_req_complete(req)) {
+		SPDK_ERRLOG("Transport request completion error!\n");
+	}
+}
 
 int
 spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	response->sqid = 0;
-	response->status.p = 0;
-	response->cid = req->cmd->nvme_cmd.cid;
-
-	SPDK_TRACELOG(SPDK_TRACE_NVMF,
-		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u status=0x%04x\n",
-		      response->cid, response->cdw0, response->rsvd1,
-		      *(uint16_t *)&response->status);
-
-	if (spdk_nvmf_transport_req_complete(req)) {
-		SPDK_ERRLOG("Transport request completion error!\n");
-		return -1;
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC ||
+	    req->qpair->type == QPAIR_TYPE_AQ) {
+		/* Pass a message back to the originating thread. */
+		spdk_thread_send_msg(req->qpair->thread,
+				     spdk_nvmf_request_complete_on_qpair,
+				     req);
+	} else {
+		spdk_nvmf_request_complete_on_qpair(req);
 	}
 
 	return 0;
@@ -269,15 +287,14 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum spdk_nvmf_qpair_type qpair_
 	}
 }
 
-int
-spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
+static void
+spdk_nvmf_request_exec_on_master(void *ctx)
 {
+	struct spdk_nvmf_request *req = ctx;
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	spdk_nvmf_request_exec_status status;
-
-	nvmf_trace_command(req->cmd, req->qpair->type);
 
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		status = nvmf_process_fabrics_command(req);
@@ -295,8 +312,64 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		if (subsystem->is_removed) {
 			rsp->status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
 			status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		} else if (req->qpair->type == QPAIR_TYPE_AQ) {
+		} else {
 			status = spdk_nvmf_ctrlr_process_admin_cmd(req);
+		}
+	}
+
+	switch (status) {
+	case SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE:
+		spdk_nvmf_request_complete(req);
+		break;
+	case SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS:
+		break;
+	default:
+		SPDK_UNREACHABLE();
+	}
+}
+
+int
+spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	spdk_nvmf_request_exec_status status;
+
+	nvmf_trace_command(req->cmd, req->qpair->type);
+
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC ||
+	    req->qpair->type == QPAIR_TYPE_AQ) {
+		/* Fabric and admin commands are sent
+		 * to the master core for synchronization
+		 * reasons.
+		 */
+		spdk_thread_send_msg(req->qpair->transport->tgt->master_thread,
+				     spdk_nvmf_request_exec_on_master,
+				     req);
+		status = SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+	} else {
+		struct spdk_nvmf_subsystem *subsystem;
+
+		if (req->qpair->ctrlr == NULL ||
+		    !req->qpair->ctrlr->vcprop.cc.bits.en) {
+			/* TODO: The EN bit is modified by the master thread. This needs
+			 * stronger synchronization.
+			 */
+			SPDK_ERRLOG("Non-Fabric command sent to disabled controller\n");
+			rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+			status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+
+		subsystem = ctrlr->subsys;
+		assert(subsystem != NULL);
+
+		/* TODO: subsystem->is_removed is touched by multiple threads.
+		 * This needs stronger synchronization.
+		 */
+		if (subsystem->is_removed) {
+			rsp->status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
+			status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		} else {
 			status = spdk_nvmf_ctrlr_process_io_cmd(req);
 		}
@@ -308,8 +381,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 	case SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS:
 		return 0;
 	default:
-		SPDK_ERRLOG("Unknown request exec status: 0x%x\n", status);
-		return -1;
+		SPDK_UNREACHABLE();
 	}
 
 	return 0;
