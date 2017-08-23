@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47210b1f_4e2c9581",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-23T17:07:04Z",
+      "side": 1,
+      "message": "This won\u0027t really work.  What happens if there are two open file descriptors for a file?  It also assumes that a file was already opened, and just tries to close all files even if they weren\u0027t opened.  This kind of works but is a bit tacky.\n\nCan you describe the problem if there are still open files?  Is it the delete case - i.e. file is open, app deletes it, blobfs waits for last descriptor to close, but app shuts down without closing the file?",
+      "revId": "426534d6ff6566ae1801867f3459912c153513ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
