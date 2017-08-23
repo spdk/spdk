@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6261bcc_8f75c6ef",
+        "filename": "test/vhost/hotfeatures/vhost.conf.base",
+        "patchSetId": 14
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-23T11:30:58Z",
+      "side": 1,
+      "message": "Rename to vhost.conf.in",
+      "revId": "0b06d4207acb1ec9a04cecba2a0425b7aad092bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
