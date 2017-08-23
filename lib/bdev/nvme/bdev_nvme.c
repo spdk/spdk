@@ -398,7 +398,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		return bdev_nvme_flush((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
 				       bdev_io->u.flush.offset,
-				       bdev_io->u.flush.length);
+				       bdev_io->u.flush.len);
 
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
 		return bdev_nvme_admin_passthru((struct nvme_bdev *)bdev_io->bdev->ctxt,
