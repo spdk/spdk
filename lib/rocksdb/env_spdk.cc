@@ -425,6 +425,11 @@ public:
 		if (rc == -ENOENT) {
 			return EnvWrapper::DeleteFile(fname);
 		}
+
+		if (rc == -EBUSY) {
+			return Status::Busy();
+		}
+
 		return Status::OK();
 	}
 	virtual void StartThread(void (*function)(void *arg), void *arg) override;
