@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "368abdfd_30499e7a",
+        "filename": "README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-24T09:24:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8b159a97_301ab9c4",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21dc1d7f_9a92c0b7",
         "filename": "scripts/Makefile",
         "patchSetId": 5
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "Merged to the top level Makefile.",
       "parentUuid": "21dc1d7f_9a92c0b7",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7654b95d_74b553c1",
+        "filename": "scripts/Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-24T09:24:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bff5adf3_54560972",
       "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -143,6 +179,24 @@
     },
     {
       "key": {
+        "uuid": "8378a6d1_7b0736fd",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-24T09:24:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79536455_edef0be8",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74f574e6_d4ba6b55",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 5
@@ -172,6 +226,24 @@
       "side": 1,
       "message": "Fixed to elif. \nI found that Debian can\u0027t recognize /etc/lsb-release by default, so I added an extra Debian judgment.\nIn addition, CentOS can\u0027t recognize dnf by default, so I modified it to yum for compatibility.",
       "parentUuid": "74f574e6_d4ba6b55",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e780ea7_18c87a03",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-24T09:24:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "366764fb_8fb652e3",
       "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
