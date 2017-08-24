@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa38c700_c4597490",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-24T10:49:38Z",
+      "side": 1,
+      "message": "Wrong commit message. This is new content, so \"update\" doesn\u0027t seem accurate.",
+      "range": {
+        "startLine": 7,
+        "startChar": 11,
+        "endLine": 7,
+        "endChar": 28
+      },
+      "revId": "8e01e358735b0fb5b752023c2b76ccb467896b0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb378b9b_b5781f74",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-24T10:49:38Z",
+      "side": 1,
+      "message": "Tabs or spaces? Decide and be consistent",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 1
+      },
+      "revId": "8e01e358735b0fb5b752023c2b76ccb467896b0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55fcba1a_3641ba7b",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-24T10:49:38Z",
+      "side": 1,
+      "message": "waitforlisten @ scripts/autotest_common.sh",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 7
+      },
+      "revId": "8e01e358735b0fb5b752023c2b76ccb467896b0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28cd7f58_e6c3b20d",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-24T10:49:38Z",
+      "side": 1,
+      "message": "Indent",
+      "range": {
+        "startLine": 20,
+        "startChar": 1,
+        "endLine": 21,
+        "endChar": 2
+      },
+      "revId": "8e01e358735b0fb5b752023c2b76ccb467896b0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "beaef306_6eff0093",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-24T10:49:38Z",
+      "side": 1,
+      "message": "Send SIGTERM, then wait for graceful close. Send SIGKILL only when spdk did not close in time.",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 39
+      },
+      "revId": "8e01e358735b0fb5b752023c2b76ccb467896b0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aacc68b4_87fd5957",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-24T10:49:38Z",
+      "side": 1,
+      "message": "Indent",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 4
+      },
+      "revId": "8e01e358735b0fb5b752023c2b76ccb467896b0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e1f7756_6aa0b957",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-24T10:49:38Z",
+      "side": 1,
+      "message": "Multiple empty lines at the end of file",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 0
+      },
+      "revId": "8e01e358735b0fb5b752023c2b76ccb467896b0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cce70e8e_364b1096",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-24T10:49:38Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 4
+      },
+      "revId": "8e01e358735b0fb5b752023c2b76ccb467896b0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52a0e2fd_e07141d9",
+        "filename": "test/lvol/vhost.conf.in",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-24T10:49:38Z",
+      "side": 1,
+      "message": "Do we need all those commented lines from example config file?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 38
+      },
+      "revId": "8e01e358735b0fb5b752023c2b76ccb467896b0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c56c6738_ec446f90",
+        "filename": "test/lvol/vhost.conf.in",
+        "patchSetId": 5
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-24T10:49:38Z",
+      "side": 1,
+      "message": "Remove empty lines",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 0
+      },
+      "revId": "8e01e358735b0fb5b752023c2b76ccb467896b0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
