@@ -196,7 +196,7 @@ test_discovery_log(void)
 
 	/* Add one subsystem and verify that the discovery log contains it */
 	subsystem = spdk_nvmf_create_subsystem(&g_nvmf_tgt, "nqn.2016-06.io.spdk:subsystem1",
-					       SPDK_NVMF_SUBTYPE_NVME,
+					       SPDK_NVMF_SUBTYPE_NVME, 0,
 					       NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 

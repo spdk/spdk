@@ -117,7 +117,7 @@ spdk_add_nvmf_discovery_subsystem(void)
 {
 	struct nvmf_tgt_subsystem *app_subsys;
 
-	app_subsys = nvmf_tgt_create_subsystem(SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY,
+	app_subsys = nvmf_tgt_create_subsystem(SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY, 0,
 					       g_spdk_nvmf_tgt_conf.acceptor_lcore);
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
@@ -392,7 +392,7 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
 	g_last_core = lcore;
 
-	app_subsys = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME, lcore);
+	app_subsys = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME, num_devs, lcore);
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
 		return -1;

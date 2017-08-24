@@ -133,6 +133,7 @@ struct spdk_nvmf_subsystem *
 spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 			   const char *nqn,
 			   enum spdk_nvmf_subtype type,
+			   uint32_t num_ns,
 			   void *cb_ctx,
 			   spdk_nvmf_subsystem_connect_fn connect_cb,
 			   spdk_nvmf_subsystem_disconnect_fn disconnect_cb)
@@ -140,6 +141,11 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 	struct spdk_nvmf_subsystem	*subsystem;
 
 	if (!spdk_nvmf_valid_nqn(nqn)) {
+		return NULL;
+	}
+
+	if (type == SPDK_NVMF_SUBTYPE_DISCOVERY && num_ns != 0) {
+		SPDK_ERRLOG("Discovery subsystem cannot have namespaces.\n");
 		return NULL;
 	}
 
@@ -154,6 +160,8 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 
 	subsystem->id = tgt->current_subsystem_id;
 	subsystem->subtype = type;
+	subsystem->max_nsid = num_ns;
+	subsystem->num_allocated_nsid = 0;
 	subsystem->cb_ctx = cb_ctx;
 	subsystem->connect_cb = connect_cb;
 	subsystem->disconnect_cb = disconnect_cb;
@@ -161,6 +169,15 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->ctrlrs);
+
+	if (num_ns != 0) {
+		subsystem->ns = calloc(num_ns, sizeof(struct spdk_nvmf_ns));
+		if (subsystem->ns == NULL) {
+			SPDK_ERRLOG("Namespace memory allocation failed\n");
+			free(subsystem);
+			return NULL;
+		}
+	}
 
 	TAILQ_INSERT_TAIL(&tgt->subsystems, subsystem, entries);
 	tgt->discovery_genctr++;
@@ -197,6 +214,8 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	}
 
 	spdk_nvmf_subsystem_bdev_detach(subsystem);
+
+	free(subsystem->ns);
 
 	TAILQ_REMOVE(&subsystem->tgt->subsystems, subsystem, entries);
 	subsystem->tgt->discovery_genctr++;
@@ -348,9 +367,37 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	uint32_t i;
 	int rc;
 
+	if (nsid > subsystem->max_nsid ||
+	    (nsid == 0 && subsystem->num_allocated_nsid == subsystem->max_nsid)) {
+		struct spdk_nvmf_ns *new_ns_array;
+		uint32_t new_max_nsid;
+
+		if (nsid > subsystem->max_nsid) {
+			new_max_nsid = nsid;
+		} else {
+			new_max_nsid = subsystem->max_nsid + 1;
+		}
+
+		if (!TAILQ_EMPTY(&subsystem->ctrlrs)) {
+			SPDK_ERRLOG("Can't extend NSID range with active connections\n");
+			return 0;
+		}
+
+		new_ns_array = realloc(subsystem->ns, sizeof(struct spdk_nvmf_ns) * new_max_nsid);
+		if (new_ns_array == NULL) {
+			SPDK_ERRLOG("Memory allocation error while resizing namespace array.\n");
+			return 0;
+		}
+
+		memset(new_ns_array + subsystem->max_nsid, 0,
+		       sizeof(struct spdk_nvmf_ns) * (new_max_nsid - subsystem->max_nsid));
+		subsystem->ns = new_ns_array;
+		subsystem->max_nsid = new_max_nsid;
+	}
+
 	if (nsid == 0) {
 		/* NSID not specified - find a free index */
-		for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
+		for (i = 0; i < subsystem->max_nsid; i++) {
 			if (_spdk_nvmf_subsystem_get_ns(subsystem, i + 1) == NULL) {
 				nsid = i + 1;
 				break;
@@ -362,19 +409,13 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		}
 	} else {
 		/* Specific NSID requested */
-		i = nsid - 1;
-		if (i >= MAX_VIRTUAL_NAMESPACE) {
-			SPDK_ERRLOG("Requested NSID %" PRIu32 " out of range\n", nsid);
-			return 0;
-		}
-
 		if (_spdk_nvmf_subsystem_get_ns(subsystem, nsid)) {
 			SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", nsid);
 			return 0;
 		}
 	}
 
-	ns = &subsystem->ns[i];
+	ns = &subsystem->ns[nsid - 1];
 	memset(ns, 0, sizeof(*ns));
 	ns->bdev = bdev;
 	ns->id = nsid;
@@ -392,6 +433,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		      nsid);
 
 	subsystem->max_nsid = spdk_max(subsystem->max_nsid, nsid);
+	subsystem->num_allocated_nsid++;
 	return nsid;
 }
 
