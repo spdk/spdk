@@ -233,6 +233,18 @@ virtio_user_dev_setup(struct virtio_user_dev *dev)
 	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
 	 1ULL << VIRTIO_F_VERSION_1)
 
+void
+virtio_hw_free(struct virtio_hw *hw)
+{
+	virtio_free_queues(hw);
+
+	if (hw->virtio_user_dev) {
+		free(hw->virtio_user_dev);
+	}
+
+	free(hw);
+}
+
 struct virtio_hw *
 virtio_user_dev_init(char *path, int queues, int queue_size)
 {

@@ -497,6 +497,7 @@ bdev_virtio_initialize(void)
 
 	rc = init_hw(hw);
 	if (rc != 0) {
+		virtio_hw_free(hw);
 		goto out;
 	}
 
