@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3189dc26_f636aa12",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-24T12:29:20Z",
+      "side": 1,
+      "message": "good catch, thanks",
+      "parentUuid": "c0a3f7c2_06ebce6c",
+      "range": {
+        "startLine": 75,
+        "startChar": 24,
+        "endLine": 75,
+        "endChar": 25
+      },
+      "revId": "fde238977d4588e92c571de4cb4bcf8f4a210a03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "019f0b06_9c8bf609",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2017-08-23T16:24:31Z",
       "side": 1,
       "message": "This can probably use SPDK_CONTAINEROF.",
+      "range": {
+        "startLine": 198,
+        "startChar": 9,
+        "endLine": 198,
+        "endChar": 70
+      },
+      "revId": "fde238977d4588e92c571de4cb4bcf8f4a210a03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce7d65db_db21e63d",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-24T12:29:20Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "019f0b06_9c8bf609",
       "range": {
         "startLine": 198,
         "startChar": 9,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "4145d2f4_852ac8ae",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-24T12:29:20Z",
+      "side": 1,
+      "message": "\u003e does the virtio_req indicate success/failure somehow?\n\nYes, virtio_req-\u003eiov_resp is a virtio_scsi_cmd_resp, it contains both virtio and scsi status.\nI should check it just as it is e.g. in line #280. I plan to do so in next patch.",
+      "parentUuid": "b761137c_c2f5c1ef",
+      "range": {
+        "startLine": 201,
+        "startChar": 32,
+        "endLine": 201,
+        "endChar": 59
+      },
+      "revId": "fde238977d4588e92c571de4cb4bcf8f4a210a03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56875609_cf86b687",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 6
@@ -82,6 +154,30 @@
       "writtenOn": "2017-08-23T16:24:31Z",
       "side": 1,
       "message": "Is the 32 here SPDK_COUNTOF(req)?",
+      "range": {
+        "startLine": 212,
+        "startChar": 45,
+        "endLine": 212,
+        "endChar": 47
+      },
+      "revId": "fde238977d4588e92c571de4cb4bcf8f4a210a03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78b6724c_5c899689",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-24T12:29:20Z",
+      "side": 1,
+      "message": "yes, ack",
+      "parentUuid": "56875609_cf86b687",
       "range": {
         "startLine": 212,
         "startChar": 45,
