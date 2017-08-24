@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "347a87f1_3600796a",
+        "filename": "lib/vhost/rte_vhost/socket.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-24T08:35:46Z",
+      "side": 1,
+      "message": "Line 224 also has failed return, should replace with goto err as well.",
+      "revId": "adc93d327079830152f3c8fd9d943500b1c466d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a87a749_57b680a5",
         "filename": "lib/vhost/rte_vhost/socket.c",
         "patchSetId": 15
