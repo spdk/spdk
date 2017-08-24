@@ -57,9 +57,6 @@
 #define MAP_128TB_IDX(vfn_2mb)	((vfn_2mb) >> (SHIFT_1GB - SHIFT_2MB))
 #define MAP_1GB_IDX(vfn_2mb)	((vfn_2mb) & ((1ULL << (SHIFT_1GB - SHIFT_2MB + 1)) - 1))
 
-/* Max value for a 16-bit ref count. */
-#define VTOPHYS_MAX_REF_COUNT (0xFFFF)
-
 #define SPDK_MEM_NOT_REGISTERED	(0xFFFFFFFFFFFFFFFFULL)
 
 /* Translation of a single 2MB page. */
@@ -73,7 +70,6 @@ struct map_2mb {
  */
 struct map_1gb {
 	struct map_2mb map[1ULL << (SHIFT_1GB - SHIFT_2MB + 1)];
-	uint16_t ref_count[1ULL << (SHIFT_1GB - SHIFT_2MB + 1)];
 };
 
 /* Top-level map table indexed by bits [30..46] of the virtual address.
@@ -343,7 +339,6 @@ spdk_mem_map_get_map_1gb(struct spdk_mem_map *map, uint64_t vfn_2mb)
 				for (i = 0; i < SPDK_COUNTOF(map_1gb->map); i++) {
 					map_1gb->map[i].translation_2mb = map->default_translation;
 				}
-				memset(map_1gb->ref_count, 0, sizeof(map_1gb->ref_count));
 				map->map_128tb.map[idx_128tb] = map_1gb;
 			}
 		}
@@ -367,7 +362,6 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	struct map_1gb *map_1gb;
 	uint64_t idx_1gb;
 	struct map_2mb *map_2mb;
-	uint16_t *ref_count;
 
 	/* For now, only 2 MB-aligned registrations are supported */
 	assert(size % (2 * 1024 * 1024) == 0);
@@ -384,17 +378,7 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 
 		idx_1gb = MAP_1GB_IDX(vfn_2mb);
 		map_2mb = &map_1gb->map[idx_1gb];
-		ref_count = &map_1gb->ref_count[idx_1gb];
-
-		if (*ref_count == VTOPHYS_MAX_REF_COUNT) {
-			DEBUG_PRINT("ref count for %p already at %d\n",
-				    (void *)vaddr, VTOPHYS_MAX_REF_COUNT);
-			return -EBUSY;
-		}
-
 		map_2mb->translation_2mb = translation;
-
-		(*ref_count)++;
 
 		size -= 2 * 1024 * 1024;
 		vfn_2mb++;
@@ -410,7 +394,6 @@ spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_
 	struct map_1gb *map_1gb;
 	uint64_t idx_1gb;
 	struct map_2mb *map_2mb;
-	uint16_t *ref_count;
 
 	/* For now, only 2 MB-aligned registrations are supported */
 	assert(size % (2 * 1024 * 1024) == 0);
@@ -427,17 +410,7 @@ spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_
 
 		idx_1gb = MAP_1GB_IDX(vfn_2mb);
 		map_2mb = &map_1gb->map[idx_1gb];
-		ref_count = &map_1gb->ref_count[idx_1gb];
-
-		if (*ref_count == 0) {
-			DEBUG_PRINT("vaddr %p not registered\n", (void *)vaddr);
-			return -EINVAL;
-		}
-
-		(*ref_count)--;
-		if (*ref_count == 0) {
-			map_2mb->translation_2mb = map->default_translation;
-		}
+		map_2mb->translation_2mb = map->default_translation;
 
 		size -= 2 * 1024 * 1024;
 		vfn_2mb++;
