@@ -37,6 +37,42 @@
     },
     {
       "key": {
+        "uuid": "8b159a97_301ab9c4",
+        "filename": "README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-24T08:54:31Z",
+      "side": 1,
+      "message": "Fixed back to \"https://github.com/spdk/spdk\".",
+      "parentUuid": "6b2bd466_12e2fb4b",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67f4fc91_7899e509",
+        "filename": "README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-24T08:54:31Z",
+      "side": 1,
+      "message": "Fixed.",
+      "parentUuid": "c2af58a8_8ad27650",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21dc1d7f_9a92c0b7",
         "filename": "scripts/Makefile",
         "patchSetId": 5
@@ -48,6 +84,24 @@
       "writtenOn": "2017-08-23T17:07:55Z",
       "side": 1,
       "message": "We do not need this extra Makefile.  We can just add a target to the top level Makefile.",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bff5adf3_54560972",
+        "filename": "scripts/Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-24T08:54:31Z",
+      "side": 1,
+      "message": "Merged to the top level Makefile.",
+      "parentUuid": "21dc1d7f_9a92c0b7",
       "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -71,6 +125,24 @@
     },
     {
       "key": {
+        "uuid": "79536455_edef0be8",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-24T08:54:31Z",
+      "side": 1,
+      "message": "Fixed to \"#! /bin/sh\".",
+      "parentUuid": "7a362929_f63640aa",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74f574e6_d4ba6b55",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 5
@@ -82,6 +154,24 @@
       "writtenOn": "2017-08-23T17:20:07Z",
       "side": 1,
       "message": "I think it would be clearer if these were \u0027elif\u0027 rather than separate \u0027if\u0027 statements (only one should be executed).",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "366764fb_8fb652e3",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-24T08:54:31Z",
+      "side": 1,
+      "message": "Fixed to elif. \nI found that Debian can\u0027t recognize /etc/lsb-release by default, so I added an extra Debian judgment.\nIn addition, CentOS can\u0027t recognize dnf by default, so I modified it to yum for compatibility.",
+      "parentUuid": "74f574e6_d4ba6b55",
       "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -105,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "f882213d_3632c559",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-24T08:54:31Z",
+      "side": 1,
+      "message": "Unrelated,fixed back to \" \".",
+      "parentUuid": "cdc537c4_96bb4e33",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f681401_2b191644",
         "filename": "scripts/vagrant/build.sh",
         "patchSetId": 5
@@ -116,6 +224,24 @@
       "writtenOn": "2017-08-23T16:59:42Z",
       "side": 1,
       "message": "need to run scripts/pkgdep.sh here",
+      "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e298b47b_20f69360",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-24T08:54:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f681401_2b191644",
       "revId": "d2122cd4be38cf3173773b10002309261ab1624d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
