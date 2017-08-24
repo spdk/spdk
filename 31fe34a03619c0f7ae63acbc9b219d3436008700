@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cb08a45_f3d3fbea",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-24T17:51:36Z",
+      "side": 1,
+      "message": "Maybe \"dump\" rather than \"construct\" would be clearer.",
+      "range": {
+        "startLine": 40,
+        "startChar": 9,
+        "endLine": 40,
+        "endChar": 28
+      },
+      "revId": "31fe34a03619c0f7ae63acbc9b219d3436008700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20f01b9b_30f8e2c9",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-24T17:51:36Z",
+      "side": 1,
+      "message": "I don\u0027t think this needs to be an error.  You can make it a TRACELOG or just remove it.",
+      "revId": "31fe34a03619c0f7ae63acbc9b219d3436008700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2bf01d4_918c9c1d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-24T17:51:36Z",
+      "side": 1,
+      "message": "Since name is optional, you should only set it if the user specified it - something like this:\n\n  params \u003d {}\n  if args.name:\n      params[\u0027name\u0027] \u003d args.name\n\nThen the name will be omitted in the JSON-RPC arguments.",
+      "revId": "31fe34a03619c0f7ae63acbc9b219d3436008700",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
