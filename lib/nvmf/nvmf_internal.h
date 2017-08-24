@@ -90,8 +90,10 @@ struct spdk_nvmf_subsystem {
 
 	char sn[SPDK_NVME_CTRLR_SN_LEN + 1];
 
-	struct spdk_nvmf_ns			ns[MAX_VIRTUAL_NAMESPACE];
+	/* Array of namespaces of size max_nsid indexed by nsid - 1 */
+	struct spdk_nvmf_ns			*ns;
 	uint32_t 				max_nsid;
+	uint32_t				num_allocated_nsid;
 
 	void					*cb_ctx;
 	spdk_nvmf_subsystem_connect_fn		connect_cb;

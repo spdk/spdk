@@ -45,8 +45,6 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
-#define MAX_VIRTUAL_NAMESPACE 16
-
 struct spdk_nvmf_tgt;
 
 struct spdk_nvmf_tgt_opts {
@@ -113,6 +111,7 @@ struct spdk_nvmf_listen_addr {
 struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 		const char *nqn,
 		enum spdk_nvmf_subtype type,
+		uint32_t num_ns,
 		void *cb_ctx,
 		spdk_nvmf_subsystem_connect_fn connect_cb,
 		spdk_nvmf_subsystem_disconnect_fn disconnect_cb);

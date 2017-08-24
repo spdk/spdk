@@ -185,7 +185,7 @@ nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 }
 
 struct nvmf_tgt_subsystem *
-nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype,
+nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype, uint32_t num_ns,
 			  uint32_t lcore)
 {
 	struct spdk_nvmf_subsystem *subsystem;
@@ -202,7 +202,7 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype,
 		return NULL;
 	}
 
-	subsystem = spdk_nvmf_create_subsystem(g_tgt, name, subtype, app_subsys, connect_cb,
+	subsystem = spdk_nvmf_create_subsystem(g_tgt, name, subtype, num_ns, app_subsys, connect_cb,
 					       disconnect_cb);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
