@@ -369,6 +369,7 @@ spdk_bdev_module_init_complete(int rc)
 
 	if (rc != 0) {
 		spdk_bdev_init_complete(rc);
+		return;
 	}
 
 	/*
@@ -445,7 +446,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 
 	if (g_bdev_mgr.bdev_io_pool == NULL) {
 		SPDK_ERRLOG("could not allocate spdk_bdev_io pool\n");
-		spdk_bdev_module_init_complete(-1);
+		spdk_bdev_init_complete(-1);
 		return;
 	}
 
@@ -464,7 +465,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_small_pool) {
 		SPDK_ERRLOG("create rbuf small pool failed\n");
-		spdk_bdev_module_init_complete(-1);
+		spdk_bdev_init_complete(-1);
 		return;
 	}
 
@@ -478,7 +479,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_large_pool) {
 		SPDK_ERRLOG("create rbuf large pool failed\n");
-		spdk_bdev_module_init_complete(-1);
+		spdk_bdev_init_complete(-1);
 		return;
 	}
 
