@@ -16,6 +16,24 @@
       "revId": "adc93d327079830152f3c8fd9d943500b1c466d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4fd62ca_b2a91bff",
+        "filename": "lib/vhost/rte_vhost/socket.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-24T06:08:05Z",
+      "side": 1,
+      "message": "The exact same patch has been already sent to DPDK and is still waiting for ack. If it gets accepted there I\u0027d rather leave this patch as is. \n\nthe old behavior here was incorrect. we would segfault everytime we touch that conn.",
+      "parentUuid": "5a87a749_57b680a5",
+      "revId": "adc93d327079830152f3c8fd9d943500b1c466d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
