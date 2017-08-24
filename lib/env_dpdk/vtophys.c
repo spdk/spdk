@@ -82,7 +82,7 @@ struct map_2mb {
 };
 
 /* Second-level map table indexed by bits [21..29] of the virtual address.
- * Each entry contains the address translation or SPDK_VTOPHYS_ERROR for entries that haven't
+ * Each entry contains the address translation or error for entries that haven't
  * been retrieved yet.
  */
 struct map_1gb {
@@ -107,44 +107,45 @@ struct spdk_mem_map {
 	TAILQ_ENTRY(spdk_mem_map) tailq;
 };
 
+static struct spdk_mem_map *g_mem_reg_map;
 static struct spdk_mem_map *g_vtophys_map;
 static TAILQ_HEAD(, spdk_mem_map) g_spdk_mem_maps = TAILQ_HEAD_INITIALIZER(g_spdk_mem_maps);
 static pthread_mutex_t g_spdk_mem_map_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*
- * Walk the currently registered memory via the main vtophys map
+ * Walk the currently registered memory via the main memory registration map
  * and call the new map's notify callback for each virtually contiguous region.
  */
 static void
 spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action action)
 {
 	size_t idx_128tb;
-	uint64_t contig_start = SPDK_VTOPHYS_ERROR;
-	uint64_t contig_end = SPDK_VTOPHYS_ERROR;
+	uint64_t contig_start = 0;
+	uint64_t contig_end = 0;
 
 #define END_RANGE()										\
 	do {											\
-		if (contig_start != SPDK_VTOPHYS_ERROR) {					\
+		if (contig_start != 0) {							\
 			/* End of of a virtually contiguous range */				\
 			map->notify_cb(map->cb_ctx, map, action,				\
 				       (void *)contig_start,					\
 				       contig_end - contig_start + 2 * 1024 * 1024);		\
 		}										\
-		contig_start = SPDK_VTOPHYS_ERROR;						\
+		contig_start = 0;								\
 	} while (0)
 
 
-	if (!g_vtophys_map) {
+	if (!g_mem_reg_map) {
 		return;
 	}
 
-	/* Hold the vtophys mutex so no new registrations can be added while we are looping. */
-	pthread_mutex_lock(&g_vtophys_map->mutex);
+	/* Hold the memory registration map mutex so no new registrations can be added while we are looping. */
+	pthread_mutex_lock(&g_mem_reg_map->mutex);
 
 	for (idx_128tb = 0;
-	     idx_128tb < sizeof(g_vtophys_map->map_128tb.map) / sizeof(g_vtophys_map->map_128tb.map[0]);
+	     idx_128tb < sizeof(g_mem_reg_map->map_128tb.map) / sizeof(g_mem_reg_map->map_128tb.map[0]);
 	     idx_128tb++) {
-		const struct map_1gb *map_1gb = g_vtophys_map->map_128tb.map[idx_128tb];
+		const struct map_1gb *map_1gb = g_mem_reg_map->map_128tb.map[idx_128tb];
 		uint64_t idx_1gb;
 
 		if (!map_1gb) {
@@ -153,11 +154,11 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 		}
 
 		for (idx_1gb = 0; idx_1gb < sizeof(map_1gb->map) / sizeof(map_1gb->map[0]); idx_1gb++) {
-			if (map_1gb->map[idx_1gb].translation_2mb != SPDK_VTOPHYS_ERROR) {
+			if (map_1gb->map[idx_1gb].translation_2mb != 0) {
 				/* Rebuild the virtual address from the indexes */
 				uint64_t vaddr = (idx_128tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 
-				if (contig_start == SPDK_VTOPHYS_ERROR) {
+				if (contig_start == 0) {
 					contig_start = vaddr;
 				}
 				contig_end = vaddr;
@@ -167,7 +168,7 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 		}
 	}
 
-	pthread_mutex_unlock(&g_vtophys_map->mutex);
+	pthread_mutex_unlock(&g_mem_reg_map->mutex);
 }
 
 struct spdk_mem_map *
@@ -191,8 +192,10 @@ spdk_mem_map_alloc(uint64_t default_translation, spdk_mem_map_notify_cb notify_c
 
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
 
-	spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_REGISTER);
-	TAILQ_INSERT_TAIL(&g_spdk_mem_maps, map, tailq);
+	if (notify_cb) {
+		spdk_mem_map_notify_walk(map, SPDK_MEM_MAP_NOTIFY_REGISTER);
+		TAILQ_INSERT_TAIL(&g_spdk_mem_maps, map, tailq);
+	}
 
 	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 
@@ -235,15 +238,62 @@ spdk_mem_register(void *vaddr, size_t len)
 {
 	struct spdk_mem_map *map;
 	int rc;
+	void *seg_vaddr;
+	size_t seg_len;
+
+	if ((uintptr_t)vaddr & ~MASK_128TB) {
+		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
+		return -EINVAL;
+	}
+
+	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
+			    __func__, vaddr, len);
+		return -EINVAL;
+	}
 
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
-	TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
-		rc = map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, vaddr, len);
-		if (rc != 0) {
-			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
-			return rc;
+
+	seg_vaddr = vaddr;
+	seg_len = 0;
+	while (len > 0) {
+		uint64_t ref_count;
+
+		/* In g_mem_reg_map, the "translation" is the reference count */
+		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr);
+		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB, ref_count + 1);
+
+		if (ref_count > 0) {
+			if (seg_len > 0) {
+				TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+					rc = map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, seg_vaddr, seg_len);
+					if (rc != 0) {
+						pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+						return rc;
+					}
+				}
+			}
+
+			seg_vaddr = vaddr + VALUE_2MB;
+			seg_len = 0;
+		} else {
+			seg_len += VALUE_2MB;
+		}
+
+		vaddr += VALUE_2MB;
+		len -= VALUE_2MB;
+	}
+
+	if (seg_len > 0) {
+		TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+			rc = map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_REGISTER, seg_vaddr, seg_len);
+			if (rc != 0) {
+				pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+				return rc;
+			}
 		}
 	}
+
 	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 	return 0;
 }
@@ -253,15 +303,73 @@ spdk_mem_unregister(void *vaddr, size_t len)
 {
 	struct spdk_mem_map *map;
 	int rc;
+	void *seg_vaddr;
+	size_t seg_len;
+	uint64_t ref_count;
+
+	if ((uintptr_t)vaddr & ~MASK_128TB) {
+		DEBUG_PRINT("invalid usermode virtual address %p\n", vaddr);
+		return -EINVAL;
+	}
+
+	if (((uintptr_t)vaddr & MASK_2MB) || (len & MASK_2MB)) {
+		DEBUG_PRINT("invalid %s parameters, vaddr=%p len=%ju\n",
+			    __func__, vaddr, len);
+		return -EINVAL;
+	}
 
 	pthread_mutex_lock(&g_spdk_mem_map_mutex);
-	TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
-		rc = map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, vaddr, len);
-		if (rc != 0) {
+
+	seg_vaddr = vaddr;
+	seg_len = len;
+	while (seg_len > 0) {
+		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)seg_vaddr);
+		if (ref_count == 0) {
 			pthread_mutex_unlock(&g_spdk_mem_map_mutex);
-			return rc;
+			return -EINVAL;
+		}
+		seg_vaddr += VALUE_2MB;
+		seg_len -= VALUE_2MB;
+	}
+
+	seg_vaddr = vaddr;
+	seg_len = 0;
+	while (len > 0) {
+		/* In g_mem_reg_map, the "translation" is the reference count */
+		ref_count = spdk_mem_map_translate(g_mem_reg_map, (uint64_t)vaddr);
+		spdk_mem_map_set_translation(g_mem_reg_map, (uint64_t)vaddr, VALUE_2MB, ref_count - 1);
+
+		if (ref_count > 1) {
+			if (seg_len > 0) {
+				TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+					rc = map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, seg_vaddr, seg_len);
+					if (rc != 0) {
+						pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+						return rc;
+					}
+				}
+			}
+
+			seg_vaddr = vaddr + VALUE_2MB;
+			seg_len = 0;
+		} else {
+			seg_len += VALUE_2MB;
+		}
+
+		vaddr += VALUE_2MB;
+		len -= VALUE_2MB;
+	}
+
+	if (seg_len > 0) {
+		TAILQ_FOREACH(map, &g_spdk_mem_maps, tailq) {
+			rc = map->notify_cb(map->cb_ctx, map, SPDK_MEM_MAP_NOTIFY_UNREGISTER, seg_vaddr, seg_len);
+			if (rc != 0) {
+				pthread_mutex_unlock(&g_spdk_mem_map_mutex);
+				return rc;
+			}
 		}
 	}
+
 	pthread_mutex_unlock(&g_spdk_mem_map_mutex);
 	return 0;
 }
@@ -348,7 +456,7 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 
 		(*ref_count)++;
 
-		size -= 2 * 1024 * 1024;
+		size -= VALUE_2MB;
 		vfn_2mb++;
 	}
 
@@ -399,7 +507,7 @@ spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_
 			map_2mb->translation_2mb = map->default_translation;
 		}
 
-		size -= 2 * 1024 * 1024;
+		size -= VALUE_2MB;
 		vfn_2mb++;
 	}
 
@@ -523,10 +631,10 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 				return -EINVAL;
 			}
 
-			rc = spdk_mem_map_set_translation(g_vtophys_map, (uint64_t)vaddr, VALUE_2MB, paddr);
+			rc = spdk_mem_map_set_translation(map, (uint64_t)vaddr, VALUE_2MB, paddr);
 			break;
 		case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-			rc = spdk_mem_map_clear_translation(g_vtophys_map, (uint64_t)vaddr, VALUE_2MB);
+			rc = spdk_mem_map_clear_translation(map, (uint64_t)vaddr, VALUE_2MB);
 			break;
 		default:
 			SPDK_UNREACHABLE();
@@ -548,12 +656,16 @@ spdk_vtophys_register_dpdk_mem(void)
 	struct rte_mem_config *mcfg;
 	size_t seg_idx;
 
-	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, spdk_vtophys_notify, NULL);
-	if (g_vtophys_map == NULL) {
-		DEBUG_PRINT("vtophys map allocation failed\n");
+	g_mem_reg_map = spdk_mem_map_alloc(0, NULL, NULL);
+	if (g_mem_reg_map == NULL) {
+		DEBUG_PRINT("memory registration map allocation failed\n");
 		abort();
 	}
 
+	/*
+	 * Walk all DPDK memory segments and register them
+	 * with the master memory map
+	 */
 	mcfg = rte_eal_get_configuration()->mem_config;
 
 	for (seg_idx = 0; seg_idx < RTE_MAX_MEMSEG; seg_idx++) {
@@ -563,8 +675,13 @@ spdk_vtophys_register_dpdk_mem(void)
 			break;
 		}
 
-		spdk_vtophys_notify(NULL, g_vtophys_map, SPDK_MEM_MAP_NOTIFY_REGISTER,
-				    seg->addr, seg->len);
+		spdk_mem_register(seg->addr, seg->len);
+	}
+
+	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, spdk_vtophys_notify, NULL);
+	if (g_vtophys_map == NULL) {
+		DEBUG_PRINT("vtophys map allocation failed\n");
+		abort();
 	}
 }
 
