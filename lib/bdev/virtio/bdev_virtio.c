@@ -204,8 +204,13 @@ bdev_virtio_io_cpl(struct virtio_req *req)
 {
 	struct virtio_scsi_io_ctx *io_ctx = SPDK_CONTAINEROF(req, struct virtio_scsi_io_ctx, vreq);
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(io_ctx);
+	enum spdk_bdev_io_status io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	if (io_ctx->resp.response != VIRTIO_SCSI_S_OK || io_ctx->resp.status != SPDK_SCSI_STATUS_GOOD) {
+		io_status = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+
+	spdk_bdev_io_complete(bdev_io, io_status);
 }
 
 static void
