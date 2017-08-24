@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5392b4ec_f0851fa2",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-24T21:23:42Z",
+      "side": 0,
+      "message": "Please help my feeble mind by simplifying the patches.  :)\n\nThe size of this patch can be significantly reduced in a couple of ways:\n\n1) Keep the entire scan_target() implementation in the same place in the file.  Then the reviewer does not have to scan back and forth to check what has changed in the implementation.  The diff doesn\u0027t work at this point.\n2) Do a temporary patch that changes the current vreq to _vreq, and create a new vreq variable that is just \u0026_vreq.  Then you can do all of the . to -\u003e changes in that patch which will significantly reduce the size of this patch - the scan_target() changes will just be replacing the stack allocation with the calloc.\n3) Do the work breaking out inquiry and read_cap into separate functions in a separate patch.  Then this patch can just be focused on the async aspects.\n\nThis really is great work and I think the changes look good but the better that patches are broken up, we will be able to do more thorough reviews.\n\nThanks,\n\n-Jim",
+      "revId": "100addebb114342334bad536c69adc64dd947942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
