@@ -115,10 +115,10 @@ struct spdk_bdev_module_if {
 	void (*examine)(struct spdk_bdev *bdev);
 
 	/**
-	 * Count of bdev examinations in progress.  Used by generic bdev layer and must
-	 * not be modified by bdev modules.
+	 * Count of bdev inits/examinations in progress. Used by generic bdev
+	 * layer and must not be modified by bdev modules.
 	 */
-	uint32_t examine_in_progress;
+	uint32_t action_in_progress;
 
 	TAILQ_ENTRY(spdk_bdev_module_if) tailq;
 };
@@ -390,7 +390,7 @@ void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 void spdk_vbdev_unregister(struct spdk_bdev *vbdev);
 
 void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module);
-
+void spdk_bdev_module_init_done(struct spdk_bdev_module_if *module);
 int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				struct spdk_bdev_module_if *module);
 void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
@@ -443,7 +443,7 @@ spdk_bdev_io_from_ctx(void *ctx)
 	       ((uintptr_t)ctx - offsetof(struct spdk_bdev_io, driver_ctx));
 }
 
-#define SPDK_BDEV_MODULE_REGISTER(_name, init_fn, fini_fn, config_fn, ctx_size_fn, examine_fn)\
+#define SPDK_BDEV_MODULE_REGISTER(_name, init_fn, fini_fn, config_fn, ctx_size_fn, examine_fn)	\
 	static struct spdk_bdev_module_if _name ## _if = {					\
 	.name		= #_name,								\
 	.module_init 	= init_fn,								\
@@ -457,7 +457,17 @@ spdk_bdev_io_from_ctx(void *ctx)
 	    spdk_bdev_module_list_add(&_name ## _if);                  				\
 	}
 
-#define SPDK_GET_BDEV_MODULE(name) &name ## _if
+#define SPDK_GET_BDEV_MODULE(name) (&name ## _if)
+
+/*
+ * Set module initialization to be asynchronous. After using this macro, the module
+ * initialization has to be explicitly finished by calling spdk_bdev_module_init_done().
+ */
+#define SPDK_BDEV_MODULE_ASYNC_INIT(name)							\
+	__attribute__((constructor)) static void name ## _async_init(void)				\
+	{											\
+		SPDK_GET_BDEV_MODULE(name)->action_in_progress = 1;				\
+	}											\
 
 /*
  * Modules are not required to use this macro.  It allows modules to reference the module with
