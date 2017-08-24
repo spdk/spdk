@@ -16,6 +16,23 @@
       "revId": "100addebb114342334bad536c69adc64dd947942",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b05fa1d0_f49146b3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-24T21:13:56Z",
+      "side": 1,
+      "message": "I like these changes - just calling spdk_bdev_init_complete().\n\nI\u0027m wondering if they should go in the previous patch?  This is a nice simplification but isn\u0027t specifically related to making this patch do async inits.  The previous patch is just one line so I think it\u0027s fine to do this clean up there instead of another separate patch.",
+      "revId": "100addebb114342334bad536c69adc64dd947942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
