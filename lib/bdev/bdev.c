@@ -363,24 +363,58 @@ spdk_bdev_module_action_complete(void)
 	struct spdk_bdev_module_if *m;
 
 	/*
-	 * Check all bdev modules for an examinations in progress.  If any
+	 * Bdev subsystem is only waiting for completion when module init
+	 * succeeded. Otherwise completion will be (or already has been)
+	 * handled internally.
+	 */
+	if (!g_bdev_mgr.module_init_complete) {
+		return;
+	}
+
+	/*
+	 * Check all bdev modules for inits/examinations in progress. If any
 	 * exist, return immediately since we cannot finish bdev subsystem
 	 * initialization until all are completed.
 	 */
 	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, tailq) {
-		if (m->examine_in_progress > 0) {
+		if (m->action_in_progress > 0) {
 			return;
 		}
 	}
 
+	/*
+	 * Modules already finished initialization - now that all
+	 * the bdev modules have finished their asynchronous I/O
+	 * processing, the entire bdev layer can be marked as complete.
+	 */
 	spdk_bdev_init_complete(0);
+}
+
+static void
+spdk_bdev_module_action_done(struct spdk_bdev_module_if *module)
+{
+	assert(module->action_in_progress > 0);
+	module->action_in_progress--;
+	spdk_bdev_module_action_complete();
+}
+
+void
+spdk_bdev_module_init_done(struct spdk_bdev_module_if *module)
+{
+	spdk_bdev_module_action_done(module);
+}
+
+void
+spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
+{
+	spdk_bdev_module_init_done(module);
 }
 
 static int
 spdk_bdev_modules_init(void)
 {
 	struct spdk_bdev_module_if *module;
-	int rc;
+	int rc = 0;
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
 		rc = module->module_init();
@@ -1450,7 +1484,7 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
 		if (module->examine) {
-			module->examine_in_progress++;
+			module->action_in_progress++;
 			module->examine(bdev);
 		}
 	}
@@ -1525,24 +1559,6 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 		TAILQ_REMOVE(&base_bdev->vbdevs, vbdev, vbdev_link);
 	}
 	spdk_bdev_unregister(vbdev);
-}
-
-void
-spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
-{
-	assert(module->examine_in_progress > 0);
-	module->examine_in_progress--;
-
-	/*
-	 * Bdev subsystem is only waiting for completion when module init
-	 * succeeded. Otherwise completion will be (or already has been)
-	 * handled internally.
-	 */
-	if (!g_bdev_mgr.module_init_complete) {
-		return;
-	}
-
-	spdk_bdev_module_action_complete();
 }
 
 int
