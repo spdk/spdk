@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "77d02467_6e9276de",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-24T02:48:52Z",
+      "side": 1,
+      "message": "Thanks for this suggestion.",
+      "parentUuid": "bcec1b4a_a4a39ffd",
+      "revId": "946ad5b1c145595c40bd2ed5520a6cc625fcbea7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b6fceed9_82d67594",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-23T16:40:42Z",
       "side": 1,
       "message": "If we have a single bdev name, we should use spdk_bdev_get_by_name() rather than looping over all of the bdevs.  You can split the per-bdev writing code below into a helper function to simplify that.",
+      "revId": "946ad5b1c145595c40bd2ed5520a6cc625fcbea7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21ea49c4_d3a8c93d",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-24T02:48:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b6fceed9_82d67594",
       "revId": "946ad5b1c145595c40bd2ed5520a6cc625fcbea7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
