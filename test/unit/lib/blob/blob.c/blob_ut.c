@@ -65,6 +65,7 @@ _bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	if (g_scheduler_delay) {
 		struct scheduled_ops *ops = calloc(1, sizeof(*ops));
 
+		SPDK_CU_ASSERT_FATAL(ops != NULL);
 		ops->fn = fn;
 		ops->ctx = ctx;
 		TAILQ_INSERT_TAIL(&g_scheduled_ops, ops, ops_queue);
@@ -630,6 +631,7 @@ blob_rw_verify_iov(void)
 	CU_ASSERT(memcmp(payload_write, payload_read, 10 * 4096) == 0);
 
 	buf = calloc(1, 256 * 4096);
+	SPDK_CU_ASSERT_FATAL(buf != NULL);
 	/* Check that cluster 2 on "disk" was not modified. */
 	CU_ASSERT(memcmp(buf, &g_dev_buffer[512 * 4096], 256 * 4096) == 0);
 	free(buf);
