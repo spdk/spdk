@@ -134,12 +134,7 @@ test_mem_map_translation(void)
 	rc = spdk_mem_map_set_translation(map, 0, 3 * VALUE_2MB, 0);
 	CU_ASSERT(rc == 0);
 
-	/*
-	 * Clear translation for the middle page of the larger region.
-	 * It was set twice, so clear it twice.
-	 */
-	rc = spdk_mem_map_clear_translation(map, VALUE_2MB, VALUE_2MB);
-	CU_ASSERT(rc == 0);
+	/* Clear translation for the middle page of the larger region. */
 	rc = spdk_mem_map_clear_translation(map, VALUE_2MB, VALUE_2MB);
 	CU_ASSERT(rc == 0);
 
