@@ -369,6 +369,7 @@ spdk_bdev_module_init_complete(int rc)
 
 	if (rc != 0) {
 		spdk_bdev_init_complete(rc);
+		return;
 	}
 
 	/*
