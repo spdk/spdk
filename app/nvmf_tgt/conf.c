@@ -45,6 +45,7 @@
 
 #define MAX_LISTEN_ADDRESSES 255
 #define MAX_HOSTS 255
+#define MAX_NAMESPACES 255
 #define PORTNUMSTRLEN 32
 #define SPDK_NVMF_DEFAULT_SIN_PORT ((uint16_t)4420)
 
@@ -221,7 +222,8 @@ static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
 	const char *nqn, *mode;
-	int i, ret;
+	size_t i;
+	int ret;
 	int lcore;
 	int num_listen_addrs;
 	struct rpc_listen_address listen_addrs[MAX_LISTEN_ADDRESSES] = {};
@@ -230,7 +232,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	char *hosts[MAX_HOSTS];
 	const char *sn;
 	int num_devs;
-	char *devs[MAX_VIRTUAL_NAMESPACE];
+	char *devs[MAX_NAMESPACES];
 
 	nqn = spdk_conf_section_get_val(sp, "NQN");
 	mode = spdk_conf_section_get_val(sp, "Mode");
@@ -291,7 +293,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	sn = spdk_conf_section_get_val(sp, "SN");
 
 	num_devs = 0;
-	for (i = 0; i < MAX_VIRTUAL_NAMESPACE; i++) {
+	for (i = 0; i < SPDK_COUNTOF(devs); i++) {
 		devs[i] = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
 		if (!devs[i]) {
 			break;
