@@ -78,7 +78,7 @@ vtophys_get_paddr_memseg(uint64_t vaddr)
 		}
 	}
 
-	return SPDK_VTOPHYS_ERROR;
+	return SPDK_MEM_TRANSLATION_ERROR;
 }
 
 /* Try to get the paddr from /proc/self/pagemap */
@@ -101,7 +101,7 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 		return paddr;
 	}
 
-	return SPDK_VTOPHYS_ERROR;
+	return SPDK_MEM_TRANSLATION_ERROR;
 }
 
 static int
@@ -129,9 +129,9 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 
 		switch (action) {
 		case SPDK_MEM_MAP_NOTIFY_REGISTER:
-			if (paddr == SPDK_VTOPHYS_ERROR) {
+			if (paddr == SPDK_MEM_TRANSLATION_ERROR) {
 				paddr = vtophys_get_paddr_pagemap((uint64_t)vaddr);
-				if (paddr == SPDK_VTOPHYS_ERROR) {
+				if (paddr == SPDK_MEM_TRANSLATION_ERROR) {
 					DEBUG_PRINT("could not get phys addr for %p\n", vaddr);
 					return -EFAULT;
 				}
@@ -164,7 +164,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 void
 spdk_vtophys_init(void)
 {
-	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, spdk_vtophys_notify, NULL);
+	g_vtophys_map = spdk_mem_map_alloc(SPDK_MEM_TRANSLATION_ERROR, spdk_vtophys_notify, NULL);
 	if (g_vtophys_map == NULL) {
 		DEBUG_PRINT("vtophys map allocation failed\n");
 		abort();
@@ -181,10 +181,11 @@ spdk_vtophys(void *buf)
 	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr);
 
 	/*
-	 * SPDK_VTOPHYS_ERROR has all bits set, so if the lookup returned SPDK_VTOPHYS_ERROR,
+	 * SPDK_MEM_TRANSLATION_ERROR has all bits set, so if the lookup returned SPDK_MEM_TRANSLATION_ERROR,
 	 * we will still bitwise-or it with the buf offset below, but the result will still be
-	 * SPDK_VTOPHYS_ERROR.
+	 * SPDK_MEM_TRANSLATION_ERROR.
 	 */
-	SPDK_STATIC_ASSERT(SPDK_VTOPHYS_ERROR == UINT64_C(-1), "SPDK_VTOPHYS_ERROR should be all 1s");
+	SPDK_STATIC_ASSERT(SPDK_MEM_TRANSLATION_ERROR == UINT64_C(-1),
+			   "SPDK_MEM_TRANSLATION_ERROR should be all 1s");
 	return paddr_2mb | ((uint64_t)buf & MASK_2MB);
 }

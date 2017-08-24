@@ -58,7 +58,7 @@
 #define MAP_1GB_IDX(vfn_2mb)	((vfn_2mb) & ((1ULL << (SHIFT_1GB - SHIFT_2MB + 1)) - 1))
 
 /* Max value for a 16-bit ref count. */
-#define VTOPHYS_MAX_REF_COUNT (0xFFFF)
+#define MEM_MAX_REF_COUNT (0xFFFF)
 
 /* Translation of a single 2MB page. */
 struct map_2mb {
@@ -66,7 +66,7 @@ struct map_2mb {
 };
 
 /* Second-level map table indexed by bits [21..29] of the virtual address.
- * Each entry contains the address translation or SPDK_VTOPHYS_ERROR for entries that haven't
+ * Each entry contains the address translation or SPDK_MEM_TRANSLATION_ERROR for entries that haven't
  * been retrieved yet.
  */
 struct map_1gb {
@@ -103,18 +103,18 @@ static void
 spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_action action)
 {
 	size_t idx_128tb;
-	uint64_t contig_start = SPDK_VTOPHYS_ERROR;
-	uint64_t contig_end = SPDK_VTOPHYS_ERROR;
+	uint64_t contig_start = SPDK_MEM_TRANSLATION_ERROR;
+	uint64_t contig_end = SPDK_MEM_TRANSLATION_ERROR;
 
 #define END_RANGE()										\
          do {											\
-                 if (contig_start != SPDK_VTOPHYS_ERROR) {					\
+                 if (contig_start != SPDK_MEM_TRANSLATION_ERROR) {					\
                          /* End of of a virtually contiguous range */				\
                          map->notify_cb(map->cb_ctx, map, action,				\
                                         (void *)contig_start,					\
                                         contig_end - contig_start + 2 * 1024 * 1024);		\
                  }										\
-                 contig_start = SPDK_VTOPHYS_ERROR;						\
+                 contig_start = SPDK_MEM_TRANSLATION_ERROR;						\
          } while (0)
 
 
@@ -137,11 +137,11 @@ spdk_mem_map_notify_walk(struct spdk_mem_map *map, enum spdk_mem_map_notify_acti
 		}
 
 		for (idx_1gb = 0; idx_1gb < sizeof(map_1gb->map) / sizeof(map_1gb->map[0]); idx_1gb++) {
-			if (map_1gb->map[idx_1gb].translation_2mb != SPDK_VTOPHYS_ERROR) {
+			if (map_1gb->map[idx_1gb].translation_2mb != SPDK_MEM_TRANSLATION_ERROR) {
 				/* Rebuild the virtual address from the indexes */
 				uint64_t vaddr = (idx_128tb << SHIFT_1GB) | (idx_1gb << SHIFT_2MB);
 
-				if (contig_start == SPDK_VTOPHYS_ERROR) {
+				if (contig_start == SPDK_MEM_TRANSLATION_ERROR) {
 					contig_start = vaddr;
 				}
 				contig_end = vaddr;
@@ -380,9 +380,9 @@ spdk_mem_map_set_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 		map_2mb = &map_1gb->map[idx_1gb];
 		ref_count = &map_1gb->ref_count[idx_1gb];
 
-		if (*ref_count == VTOPHYS_MAX_REF_COUNT) {
+		if (*ref_count == MEM_MAX_REF_COUNT) {
 			DEBUG_PRINT("ref count for %p already at %d\n",
-				    (void *)vaddr, VTOPHYS_MAX_REF_COUNT);
+				    (void *)vaddr, MEM_MAX_REF_COUNT);
 			return -EBUSY;
 		}
 
@@ -474,7 +474,7 @@ spdk_mem_map_init(void)
 	struct rte_mem_config *mcfg;
 	size_t seg_idx;
 
-	g_mem_reg_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, NULL, NULL);
+	g_mem_reg_map = spdk_mem_map_alloc(SPDK_MEM_TRANSLATION_ERROR, NULL, NULL);
 	if (g_mem_reg_map == NULL) {
 		DEBUG_PRINT("memory registration map allocation failed\n");
 		abort();

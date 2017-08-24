@@ -593,7 +593,7 @@ spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 	vdst = (uint64_t)dst;
 	vsrc = (uint64_t)src;
 	vdst_page = vsrc_page = 0;
-	pdst_page = psrc_page = SPDK_VTOPHYS_ERROR;
+	pdst_page = psrc_page = SPDK_MEM_TRANSLATION_ERROR;
 
 	remaining = nbytes;
 	while (remaining) {

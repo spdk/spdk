@@ -48,7 +48,7 @@ vtophys_negative_test(void)
 		if (p == NULL)
 			continue;
 
-		if (spdk_vtophys(p) != SPDK_VTOPHYS_ERROR) {
+		if (spdk_vtophys(p) != SPDK_MEM_TRANSLATION_ERROR) {
 			rc = -1;
 			printf("Err: VA=%p is mapped to a huge_page,\n", p);
 			free(p);
@@ -61,7 +61,7 @@ vtophys_negative_test(void)
 
 	/* Test addresses that are not in the valid x86-64 usermode range */
 
-	if (spdk_vtophys((void *)0x0000800000000000ULL) != SPDK_VTOPHYS_ERROR) {
+	if (spdk_vtophys((void *)0x0000800000000000ULL) != SPDK_MEM_TRANSLATION_ERROR) {
 		rc = -1;
 		printf("Err: kernel-mode address incorrectly allowed\n");
 	}
@@ -87,7 +87,7 @@ vtophys_positive_test(void)
 		if (p == NULL)
 			continue;
 
-		if (spdk_vtophys(p) == SPDK_VTOPHYS_ERROR) {
+		if (spdk_vtophys(p) == SPDK_MEM_TRANSLATION_ERROR) {
 			rc = -1;
 			printf("Err: VA=%p is not mapped to a huge_page,\n", p);
 			spdk_dma_free(p);

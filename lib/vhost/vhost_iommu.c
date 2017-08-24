@@ -274,7 +274,7 @@ spdk_vfio_mem_op(uint64_t addr, uint64_t len, int dma_op)
 		phaddr = spdk_vtophys((void *)vaddr);
 		phend = spdk_vtophys((void *)(vend - 1));
 
-		if (phaddr == SPDK_VTOPHYS_ERROR || phend == SPDK_VTOPHYS_ERROR ||
+		if (phaddr == SPDK_MEM_TRANSLATION_ERROR || phend == SPDK_MEM_TRANSLATION_ERROR ||
 		    phend - phaddr > vlen - 1) {
 			SPDK_ERRLOG("Invalid memory region addr: %p len:%"PRIu64" "
 				    "spdk_vtophys(%p) = %p spdk_vtophys(%p) = %p\n",

@@ -1552,7 +1552,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 		}
 
 		phys_addr = spdk_vtophys(virt_addr);
-		if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR)) {
+		if (spdk_unlikely(phys_addr == SPDK_MEM_TRANSLATION_ERROR)) {
 			SPDK_TRACELOG(SPDK_TRACE_NVME, "vtophys(%p) failed\n", virt_addr);
 			return -EINVAL;
 		}
@@ -1656,7 +1656,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 		}
 
 		phys_addr = spdk_vtophys(virt_addr);
-		if (phys_addr == SPDK_VTOPHYS_ERROR) {
+		if (phys_addr == SPDK_MEM_TRANSLATION_ERROR) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			return -1;
 		}

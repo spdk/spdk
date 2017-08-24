@@ -280,7 +280,7 @@ size_t spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count);
  */
 size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
 
-#define SPDK_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
+#define SPDK_MEM_TRANSLATION_ERROR	(0xFFFFFFFFFFFFFFFFULL)
 
 uint64_t spdk_vtophys(void *buf);
 
