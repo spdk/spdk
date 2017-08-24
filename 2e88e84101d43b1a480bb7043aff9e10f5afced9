@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf9ef869_4c900123",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-24T02:48:52Z",
+      "side": 1,
+      "message": "Although the \"params\" is optional, it will always be there. In this case, if the decode is failure, it will get all the bdevs information back. If decode succeeds, it will get the required bdev name for the single bdev information.",
+      "range": {
+        "startLine": 110,
+        "startChar": 1,
+        "endLine": 110,
+        "endChar": 60
+      },
+      "revId": "2e88e84101d43b1a480bb7043aff9e10f5afced9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0054b84_afce6f28",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-24T02:48:52Z",
+      "side": 1,
+      "message": "The help information as following on using this method:\n\npython ./scripts/rpc.py get_bdevs -h\nusage: rpc.py get_bdevs [-h] [-b NAME]\n\noptional arguments:\n  -h, --help            show this help message and exit\n  -b NAME, --name NAME  Name of the Blockdev. Example: Nvme0n1",
+      "range": {
+        "startLine": 387,
+        "startChar": 0,
+        "endLine": 387,
+        "endChar": 30
+      },
+      "revId": "2e88e84101d43b1a480bb7043aff9e10f5afced9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
