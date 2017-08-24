@@ -284,5 +284,6 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 		exit(-1);
 	}
 
-	spdk_vtophys_register_dpdk_mem();
+	spdk_mem_map_init();
+	spdk_vtophys_init();
 }
