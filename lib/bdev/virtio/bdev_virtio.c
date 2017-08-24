@@ -202,12 +202,23 @@ static const struct spdk_bdev_fn_table virtio_fn_table = {
 };
 
 static void
+get_scsi_status(struct virtio_scsi_cmd_resp *resp, int *sk, int *asc, int *ascq)
+{
+	/* see spdk_scsi_task_build_sense_data() for sense data details */
+	*sk = resp->sense[2];
+	*asc = resp->sense[12];
+	*ascq = resp->sense[13];
+}
+
+static void
 bdev_virtio_io_cpl(struct virtio_req *req)
 {
 	struct virtio_scsi_io_ctx *io_ctx = SPDK_CONTAINEROF(req, struct virtio_scsi_io_ctx, vreq);
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(io_ctx);
+	int sk, asc, ascq;
 
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	get_scsi_status(&io_ctx->resp, &sk, &asc, &ascq);
+	spdk_bdev_io_complete_scsi_status(bdev_io, io_ctx->resp.status, sk, asc, ascq);
 }
 
 static void
