@@ -50,6 +50,22 @@ extern struct rte_pci_bus rte_pci_bus;
 #include <rte_pci.h>
 #include <rte_dev.h>
 
+/* x86-64 userspace virtual addresses use only the low 47 bits [0..46],
+ * which is enough to cover 128 TB.
+ */
+#define SHIFT_128TB	47 /* (1 << 47) == 128 TB */
+#define MASK_128TB	((1ULL << SHIFT_128TB) - 1)
+
+#define SHIFT_1GB	30 /* (1 << 30) == 1 GB */
+#define MASK_1GB	((1ULL << SHIFT_1GB) - 1)
+
+#define SHIFT_2MB	21 /* (1 << 21) == 2MB */
+#define MASK_2MB	((1ULL << SHIFT_2MB) - 1)
+#define VALUE_2MB	(1 << SHIFT_2MB)
+
+#define SHIFT_4KB	12 /* (1 << 12) == 4KB */
+#define MASK_4KB	((1ULL << SHIFT_4KB) - 1)
+
 struct spdk_pci_enum_ctx {
 	struct rte_pci_driver	driver;
 	spdk_pci_enum_cb	cb_fn;
@@ -65,6 +81,7 @@ int spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx, spdk_pci_enum_cb enum_cb, 
 int spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx, spdk_pci_enum_cb enum_cb, void *enum_ctx,
 			   struct spdk_pci_addr *pci_address);
 
-void spdk_vtophys_register_dpdk_mem(void);
+void spdk_mem_map_init(void);
+void spdk_vtophys_init(void);
 
 #endif
