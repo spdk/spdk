@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7795074e_47ef4cb3",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-24T18:32:10Z",
+      "side": 1,
+      "message": "If the virtio request failed outright, just setting the status to FAILED is fine.\n\nHowever, it looks like virtio_scsi_cmd_resp has the full SCSI status, so we can do better in the case where the virtio request succeeded but returned a SCSI status. spdk_bdev_io_complete_scsi_status() can record the more specific SCSI error information for callers who want it. (io_ctx-\u003eresp.status is \"sc\", and the rest of the parameters can be extracted from the sense data - see spdk_scsi_task_build_sense_data() to find how the sense data is stored.)\n\nIt also handles the SPDK_SCSI_STATUS_GOOD case automatically, so you can just unconditionally call spdk_bdev_io_complete_scsi_status() if the virtio request provided a SCSI response.",
+      "revId": "6137935f6aedadb3a4f62d488f110acf3bebb33f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
