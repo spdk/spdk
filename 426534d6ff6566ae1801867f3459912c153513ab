@@ -16,6 +16,24 @@
       "revId": "426534d6ff6566ae1801867f3459912c153513ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27c58001_a50e386e",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 3
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-08-24T00:33:30Z",
+      "side": 1,
+      "message": "The scenario is when we test with facebook\u0027s script with multiple DB, when we try to use fillrandom benchmark to create the db, at the end of test, all the sst and some other file will not be closed and all the lock will not be unlock, this is the same if we test with posix env. But we have the assert(TAILQ_EMPTY(\u0026bs-\u003eblobs)); in spdk_bs_unload(), so I am trying to close all file before we un_load the filesystem.",
+      "parentUuid": "47210b1f_4e2c9581",
+      "revId": "426534d6ff6566ae1801867f3459912c153513ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
