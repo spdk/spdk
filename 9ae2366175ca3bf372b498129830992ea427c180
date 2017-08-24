@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d73b9403_70925b5a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-24T18:06:38Z",
+      "side": 1,
+      "message": "I\u0027m not sure the mutex actually helps at all here - what if bdev-\u003ereset_in_progress transitions to true after we unlock but before this channel is added to the io_device\u0027s list?",
+      "revId": "9ae2366175ca3bf372b498129830992ea427c180",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
