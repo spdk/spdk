@@ -468,6 +468,7 @@ static int bdev_malloc_initialize(void)
 	}
 
 end:
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(malloc));
 	return rc;
 }
 

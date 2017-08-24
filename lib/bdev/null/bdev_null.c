@@ -256,6 +256,7 @@ bdev_null_initialize(void)
 	}
 
 end:
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(null));
 	return rc;
 }
 

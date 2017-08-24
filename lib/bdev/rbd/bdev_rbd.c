@@ -615,5 +615,6 @@ bdev_rbd_library_init(void)
 	}
 
 end:
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(rbd));
 	return rc;
 }

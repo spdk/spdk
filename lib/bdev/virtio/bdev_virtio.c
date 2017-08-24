@@ -333,7 +333,7 @@ bdev_virtio_initialize(void)
 	uint32_t i;
 
 	if (sp == NULL) {
-		return 0;
+		goto out;
 	}
 
 	for (i = 0; spdk_conf_section_get_nval(sp, "Dev", i) != NULL; i++) {
@@ -358,7 +358,7 @@ bdev_virtio_initialize(void)
 	}
 
 	if (hw == NULL) {
-		return 0;
+		goto out;
 	}
 
 	eth_virtio_dev_init(hw, 3);
@@ -368,6 +368,8 @@ bdev_virtio_initialize(void)
 		scan_target(hw, i);
 	}
 
+out:
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 	return 0;
 }
 

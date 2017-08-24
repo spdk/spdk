@@ -454,7 +454,7 @@ bdev_aio_initialize(void)
 
 	sp = spdk_conf_find_section(NULL, "AIO");
 	if (!sp) {
-		return 0;
+		goto out;
 	}
 
 	i = 0;
@@ -491,6 +491,8 @@ bdev_aio_initialize(void)
 		i++;
 	}
 
+out:
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(aio));
 	return 0;
 }
 

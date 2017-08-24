@@ -371,6 +371,7 @@ cleanup:
 static int
 vbdev_split_init(void)
 {
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(split));
 	return 0;
 }
 

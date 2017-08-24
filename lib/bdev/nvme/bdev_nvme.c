@@ -1074,6 +1074,7 @@ bdev_nvme_library_init(void)
 
 end:
 	free(probe_ctx);
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(nvme));
 	return rc;
 }
 

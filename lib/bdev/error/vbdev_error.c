@@ -306,6 +306,7 @@ cleanup:
 static int
 vbdev_error_init(void)
 {
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(error));
 	return 0;
 }
 

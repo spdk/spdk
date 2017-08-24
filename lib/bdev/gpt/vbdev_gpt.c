@@ -506,6 +506,7 @@ vbdev_gpt_init(void)
 		g_gpt_disabled = true;
 	}
 
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(gpt));
 	return 0;
 }
 

@@ -115,10 +115,10 @@ struct spdk_bdev_module_if {
 	void (*examine)(struct spdk_bdev *bdev);
 
 	/**
-	 * Count of bdev examinations in progress.  Used by generic bdev layer and must
-	 * not be modified by bdev modules.
+	 * Count of bdev inits/examinations in progress. Used by generic bdev
+	 * layer and must not be modified by bdev modules.
 	 */
-	uint32_t examine_in_progress;
+	uint32_t action_in_progress;
 
 	TAILQ_ENTRY(spdk_bdev_module_if) tailq;
 };
@@ -390,7 +390,7 @@ void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 void spdk_vbdev_unregister(struct spdk_bdev *vbdev);
 
 void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module);
-
+void spdk_bdev_module_init_done(struct spdk_bdev_module_if *module);
 int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				struct spdk_bdev_module_if *module);
 void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
