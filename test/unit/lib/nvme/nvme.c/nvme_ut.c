@@ -397,6 +397,7 @@ test_nvme_allocate_request_null(void)
 	 * Compare the req with the parmaters that we passed in
 	 * as well as what the function is supposed to update.
 	 */
+	SPDK_CU_ASSERT_FATAL(req != NULL);
 	CU_ASSERT(req->cb_fn == cb_fn);
 	CU_ASSERT(req->cb_arg == cb_arg);
 	CU_ASSERT(req->pid == getpid());
@@ -432,6 +433,7 @@ test_nvme_allocate_request(void)
 				    cb_fn, cb_arg);
 
 	/* all the req elements should now match the passed in paramters */
+	SPDK_CU_ASSERT_FATAL(req != NULL);
 	CU_ASSERT(req->cb_fn == cb_fn);
 	CU_ASSERT(req->cb_arg == cb_arg);
 	CU_ASSERT(memcmp(&req->payload, &payload, payload_struct_size) == 0);
@@ -490,6 +492,7 @@ test_nvme_allocate_request_user_copy(void)
 
 	req = nvme_allocate_request_user_copy(&qpair, buffer, payload_size, cb_fn,
 					      cb_arg, host_to_controller);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
 	CU_ASSERT(req->user_cb_fn == cb_fn);
 	CU_ASSERT(req->user_cb_arg == cb_arg);
 	CU_ASSERT(req->user_buffer == buffer);
@@ -503,6 +506,7 @@ test_nvme_allocate_request_user_copy(void)
 
 	req = nvme_allocate_request_user_copy(&qpair, buffer, payload_size, cb_fn,
 					      cb_arg, host_to_controller);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
 	CU_ASSERT(req->user_cb_fn == cb_fn);
 	CU_ASSERT(req->user_cb_arg == cb_arg);
 	CU_ASSERT(req->user_buffer == buffer);
