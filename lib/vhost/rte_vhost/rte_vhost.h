@@ -190,6 +190,17 @@ int rte_vhost_driver_register(const char *path, uint64_t flags);
 int rte_vhost_driver_unregister(const char *path);
 
 /**
+ * Get the number of current socket connections.
+ *
+ * @param path
+ *  The vhost-user socket file path
+ *
+ * @return
+ *  The number of connections, -1 on failure
+ */
+int rte_vhost_get_conn_count(const char *path);
+
+/**
  * Set the feature bits the vhost-user driver supports.
  *
  * @param path
