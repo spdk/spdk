@@ -432,13 +432,14 @@ nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
 
 static int
 nvme_rdma_resolve_addr(struct nvme_rdma_qpair *rqpair,
-		       struct sockaddr_storage *sin,
+		       struct sockaddr *src_addr,
+		       struct sockaddr *dst_addr,
 		       struct rdma_event_channel *cm_channel)
 {
 	int ret;
 	struct rdma_cm_event *event;
 
-	ret = rdma_resolve_addr(rqpair->cm_id, NULL, (struct sockaddr *) sin,
+	ret = rdma_resolve_addr(rqpair->cm_id, src_addr, dst_addr,
 				NVME_RDMA_TIME_OUT_IN_MS);
 	if (ret) {
 		SPDK_ERRLOG("rdma_resolve_addr, %d\n", errno);
@@ -699,7 +700,8 @@ nvme_rdma_unregister_mem(struct nvme_rdma_qpair *rqpair)
 static int
 nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 {
-	struct sockaddr_storage  sin;
+	struct sockaddr_storage dst_addr;
+	struct sockaddr *src_addr;
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr;
 	int family;
@@ -726,10 +728,10 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 
 	SPDK_TRACELOG(SPDK_TRACE_NVME, "adrfam %d ai_family %d\n", ctrlr->trid.adrfam, family);
 
-	memset(&sin, 0, sizeof(struct sockaddr_storage));
+	memset(&dst_addr, 0, sizeof(dst_addr));
 
 	SPDK_TRACELOG(SPDK_TRACE_DEBUG, "trsvcid is %s\n", ctrlr->trid.trsvcid);
-	rc = nvme_rdma_parse_addr(&sin, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
+	rc = nvme_rdma_parse_addr(&dst_addr, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvme_rdma_parse_addr() failed\n");
 		return -1;
@@ -741,7 +743,13 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 		return -1;
 	}
 
-	rc = nvme_rdma_resolve_addr(rqpair, &sin, rqpair->cm_channel);
+	if (ctrlr->opts.src_addr_size) {
+		src_addr = (struct sockaddr *)&ctrlr->opts.src_addr;
+	} else {
+		src_addr = NULL;
+	}
+
+	rc = nvme_rdma_resolve_addr(rqpair, src_addr, (struct sockaddr *)&dst_addr, rqpair->cm_channel);
 	if (rc < 0) {
 		SPDK_ERRLOG("nvme_rdma_resolve_addr() failed\n");
 		return -1;
