@@ -230,12 +230,12 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 			return 0;
 		}
 		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_TRACELOG(SPDK_TRACE_RPC, "recv() failed: %s\n", buf);
+		SPDK_DEBUGLOG(SPDK_TRACE_RPC, "recv() failed: %s\n", buf);
 		return -1;
 	}
 
 	if (rc == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_RPC, "remote closed connection\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_RPC, "remote closed connection\n");
 		return -1;
 	}
 
@@ -300,7 +300,7 @@ more:
 		}
 
 		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_TRACELOG(SPDK_TRACE_RPC, "send() failed: %s\n", buf);
+		SPDK_DEBUGLOG(SPDK_TRACE_RPC, "send() failed: %s\n", buf);
 		return -1;
 	}
 
@@ -349,7 +349,7 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 			}
 
 			if (conn->outstanding_requests == 0) {
-				SPDK_TRACELOG(SPDK_TRACE_RPC, "all outstanding requests completed\n");
+				SPDK_DEBUGLOG(SPDK_TRACE_RPC, "all outstanding requests completed\n");
 				spdk_jsonrpc_server_conn_remove(conn);
 			}
 		}

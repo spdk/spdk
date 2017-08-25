@@ -167,7 +167,7 @@ spdk_gpt_check_mbr(struct spdk_gpt *gpt)
 
 	mbr = (struct spdk_mbr *)gpt->buf;
 	if (from_le16(&mbr->mbr_signature) != SPDK_MBR_SIGNATURE) {
-		SPDK_TRACELOG(SPDK_TRACE_GPT_PARSE, "Signature mismatch, provided=%x,"
+		SPDK_DEBUGLOG(SPDK_TRACE_GPT_PARSE, "Signature mismatch, provided=%x,"
 			      "expected=%x\n", from_le16(&mbr->disk_signature),
 			      SPDK_MBR_SIGNATURE);
 		return -1;
@@ -184,7 +184,7 @@ spdk_gpt_check_mbr(struct spdk_gpt *gpt)
 	if (ret == GPT_PROTECTIVE_MBR) {
 		expected_start_lba = GPT_PRIMARY_PARTITION_TABLE_LBA;
 		if (from_le32(&mbr->partitions[primary_partition].start_lba) != expected_start_lba) {
-			SPDK_TRACELOG(SPDK_TRACE_GPT_PARSE, "start lba mismatch, provided=%u, expected=%u\n",
+			SPDK_DEBUGLOG(SPDK_TRACE_GPT_PARSE, "start lba mismatch, provided=%u, expected=%u\n",
 				      from_le32(&mbr->partitions[primary_partition].start_lba),
 				      expected_start_lba);
 			return -1;
@@ -217,7 +217,7 @@ spdk_gpt_parse(struct spdk_gpt *gpt)
 
 	rc = spdk_gpt_check_mbr(gpt);
 	if (rc) {
-		SPDK_TRACELOG(SPDK_TRACE_GPT_PARSE, "Failed to detect gpt in MBR\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_GPT_PARSE, "Failed to detect gpt in MBR\n");
 		return rc;
 	}
 

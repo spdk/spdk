@@ -54,7 +54,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	response->status.p = 0;
 	response->cid = req->cmd->nvme_cmd.cid;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF,
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF,
 		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u status=0x%04x\n",
 		      response->cid, response->cdw0, response->rsvd1,
 		      *(uint16_t *)&response->status);
@@ -104,7 +104,7 @@ spdk_nvmf_handle_connect(struct spdk_nvmf_request *req)
 
 	spdk_nvmf_ctrlr_connect(qpair, connect, connect_data, response);
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
 		      response->status_code_specific.success.cntlid);
 
 	spdk_nvmf_request_complete(req);
@@ -195,7 +195,7 @@ nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 		if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
 			return nvmf_process_connect(req);
 		} else {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "Got fctype 0x%x, expected Connect\n",
+			SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Got fctype 0x%x, expected Connect\n",
 				      cap_hdr->fctype);
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -211,7 +211,7 @@ nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 		case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET:
 			return nvmf_process_property_get(req);
 		default:
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "recv capsule header type invalid [%x]!\n",
+			SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "recv capsule header type invalid [%x]!\n",
 				      cap_hdr->fctype);
 			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
@@ -219,7 +219,7 @@ nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 	} else {
 		/* Controller session is established, and this is an I/O queue */
 		/* For now, no I/O-specific Fabrics commands are implemented (other than Connect) */
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Unexpected I/O fctype 0x%x\n", cap_hdr->fctype);
+		SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Unexpected I/O fctype 0x%x\n", cap_hdr->fctype);
 		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
@@ -235,35 +235,35 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum spdk_nvmf_qpair_type qpair_
 
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
 		opc = cap_hdr->fctype;
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s Fabrics cmd: fctype 0x%02x cid %u\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "%s Fabrics cmd: fctype 0x%02x cid %u\n",
 			      qpair_type == QPAIR_TYPE_AQ ? "Admin" : "I/O",
 			      cap_hdr->fctype, cap_hdr->cid);
 	} else {
 		opc = cmd->opc;
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "%s cmd: opc 0x%02x fuse %u cid %u nsid %u cdw10 0x%08x\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "%s cmd: opc 0x%02x fuse %u cid %u nsid %u cdw10 0x%08x\n",
 			      qpair_type == QPAIR_TYPE_AQ ? "Admin" : "I/O",
 			      cmd->opc, cmd->fuse, cmd->cid, cmd->nsid, cmd->cdw10);
 		if (cmd->mptr) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "mptr 0x%" PRIx64 "\n", cmd->mptr);
+			SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "mptr 0x%" PRIx64 "\n", cmd->mptr);
 		}
 		if (cmd->psdt != SPDK_NVME_PSDT_SGL_MPTR_CONTIG &&
 		    cmd->psdt != SPDK_NVME_PSDT_SGL_MPTR_SGL) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "psdt %u\n", cmd->psdt);
+			SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "psdt %u\n", cmd->psdt);
 		}
 	}
 
 	if (spdk_nvme_opc_get_data_transfer(opc) != SPDK_NVME_DATA_NONE) {
 		if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF,
+			SPDK_DEBUGLOG(SPDK_TRACE_NVMF,
 				      "SGL: Keyed%s: addr 0x%" PRIx64 " key 0x%x len 0x%x\n",
 				      sgl->generic.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY ? " (Inv)" : "",
 				      sgl->address, sgl->keyed.key, sgl->keyed.length);
 		} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "SGL: Data block: %s 0x%" PRIx64 " len 0x%x\n",
+			SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "SGL: Data block: %s 0x%" PRIx64 " len 0x%x\n",
 				      sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET ? "offs" : "addr",
 				      sgl->address, sgl->unkeyed.length);
 		} else {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF, "SGL type 0x%x subtype 0x%x\n",
+			SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "SGL type 0x%x subtype 0x%x\n",
 				      sgl->generic.type, sgl->generic.subtype);
 		}
 	}

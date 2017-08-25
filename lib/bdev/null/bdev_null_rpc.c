@@ -62,7 +62,7 @@ spdk_rpc_construct_null_bdev(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_null_decoders,
 				    SPDK_COUNTOF(rpc_construct_null_decoders),
 				    &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 

@@ -343,7 +343,7 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 	id->context = qpair;
 	rdma_qpair->cm_id = id;
 
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "New RDMA Connection: %p\n", qpair);
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "New RDMA Connection: %p\n", qpair);
 
 	rdma_qpair->reqs = calloc(max_queue_depth, sizeof(*rdma_qpair->reqs));
 	rdma_qpair->recvs = calloc(max_queue_depth, sizeof(*rdma_qpair->recvs));
@@ -375,11 +375,11 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 		spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
 		return NULL;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Command Array: %p Length: %lx LKey: %x\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Command Array: %p Length: %lx LKey: %x\n",
 		      rdma_qpair->cmds, max_queue_depth * sizeof(*rdma_qpair->cmds), rdma_qpair->cmds_mr->lkey);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Completion Array: %p Length: %lx LKey: %x\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Completion Array: %p Length: %lx LKey: %x\n",
 		      rdma_qpair->cpls, max_queue_depth * sizeof(*rdma_qpair->cpls), rdma_qpair->cpls_mr->lkey);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "In Capsule Data Array: %p Length: %x LKey: %x\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "In Capsule Data Array: %p Length: %x LKey: %x\n",
 		      rdma_qpair->bufs, max_queue_depth * rtransport->in_capsule_data_size, rdma_qpair->bufs_mr->lkey);
 
 	for (i = 0; i < max_queue_depth; i++) {
@@ -460,7 +460,7 @@ request_transfer_in(struct spdk_nvmf_request *req)
 
 	rdma_qpair->cur_rdma_rw_depth++;
 
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, qpair);
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, qpair);
 	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uintptr_t)req, 0);
 
 	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
@@ -500,7 +500,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 
 	/* Post the capsule to the recv buffer */
 	assert(rdma_req->recv != NULL);
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Recv: %p Connection: %p\n", rdma_req->recv,
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Recv: %p Connection: %p\n", rdma_req->recv,
 		      rdma_qpair);
 	rc = ibv_post_recv(rdma_qpair->cm_id->qp, &rdma_req->recv->wr, &bad_recv_wr);
 	if (rc) {
@@ -517,7 +517,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 
 	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
 	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, qpair);
+		SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, qpair);
 		spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uintptr_t)req, 0);
 
 		rdma_qpair->cur_rdma_rw_depth++;
@@ -527,7 +527,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 		send_wr = &rdma_req->data.wr;
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, qpair);
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, qpair);
 	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uintptr_t)req, 0);
 
 	/* Send the completion */
@@ -575,33 +575,33 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	}
 	private_data = rdma_param->private_data;
 
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Connect Recv on fabric intf name %s, dev_name %s\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Connect Recv on fabric intf name %s, dev_name %s\n",
 		      event->id->verbs->device->name, event->id->verbs->device->dev_name);
 
 	port = event->listen_id->context;
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Listen Id was %p with verbs %p. ListenAddr: %p\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Listen Id was %p with verbs %p. ListenAddr: %p\n",
 		      event->listen_id, event->listen_id->verbs, port);
 
 	/* Figure out the supported queue depth. This is a multi-step process
 	 * that takes into account hardware maximums, host provided values,
 	 * and our target's internal memory limits */
 
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Calculating Queue Depth\n");
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Calculating Queue Depth\n");
 
 	/* Start with the maximum queue depth allowed by the target */
 	max_queue_depth = rtransport->max_queue_depth;
 	max_rw_depth = rtransport->max_queue_depth;
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Target Max Queue Depth: %d\n", rtransport->max_queue_depth);
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Target Max Queue Depth: %d\n", rtransport->max_queue_depth);
 
 	/* Next check the local NIC's hardware limitations */
-	SPDK_TRACELOG(SPDK_TRACE_RDMA,
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA,
 		      "Local NIC Max Send/Recv Queue Depth: %d Max Read/Write Queue Depth: %d\n",
 		      port->device->attr.max_qp_wr, port->device->attr.max_qp_rd_atom);
 	max_queue_depth = spdk_min(max_queue_depth, port->device->attr.max_qp_wr);
 	max_rw_depth = spdk_min(max_rw_depth, port->device->attr.max_qp_rd_atom);
 
 	/* Next check the remote NIC's hardware limitations */
-	SPDK_TRACELOG(SPDK_TRACE_RDMA,
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA,
 		      "Host (Initiator) NIC Max Incoming RDMA R/W operations: %d Max Outgoing RDMA R/W operations: %d\n",
 		      rdma_param->initiator_depth, rdma_param->responder_resources);
 	if (rdma_param->initiator_depth > 0) {
@@ -612,13 +612,13 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	 * optional. */
 	if (rdma_param->private_data != NULL &&
 	    rdma_param->private_data_len >= sizeof(struct spdk_nvmf_rdma_request_private_data)) {
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Receive Queue Size: %d\n", private_data->hrqsize);
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Host Send Queue Size: %d\n", private_data->hsqsize);
+		SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Host Receive Queue Size: %d\n", private_data->hrqsize);
+		SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Host Send Queue Size: %d\n", private_data->hsqsize);
 		max_queue_depth = spdk_min(max_queue_depth, private_data->hrqsize);
 		max_queue_depth = spdk_min(max_queue_depth, private_data->hsqsize + 1);
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d R/W Depth: %d\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d R/W Depth: %d\n",
 		      max_queue_depth, max_rw_depth);
 
 	/* Init the NVMf rdma transport connection */
@@ -644,7 +644,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 		SPDK_ERRLOG("Error %d on rdma_accept\n", errno);
 		goto err2;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_RDMA, "Sent back the accept\n");
+	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Sent back the accept\n");
 
 	/* Add this RDMA connection to the global list until a CONNECT capsule
 	 * is received. */
@@ -694,7 +694,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	 */
 	TAILQ_FOREACH_SAFE(r, &g_pending_conns, link, t) {
 		if (r == rdma_qpair) {
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Received disconnect for qpair %p before first SEND ack\n",
+			SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Received disconnect for qpair %p before first SEND ack\n",
 				      rdma_qpair);
 			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, link);
 			break;
@@ -855,7 +855,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		rdma_req->req.data = spdk_mempool_get(rtransport->data_buf_pool);
 		if (!rdma_req->req.data) {
 			/* No available buffers. Queue this request up. */
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
+			SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
 			return 0;
 		}
 
@@ -867,7 +867,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
 		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
 
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p took buffer from central pool\n", rdma_req);
+		SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Request %p took buffer from central pool\n", rdma_req);
 
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
@@ -875,7 +875,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		uint64_t offset = sgl->address;
 		uint32_t max_len = rtransport->in_capsule_data_size;
 
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 			      offset, sgl->unkeyed.length);
 
 		if (offset > max_len) {
@@ -926,7 +926,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 	do {
 		prev_state = rdma_req->state;
 
-		SPDK_TRACELOG(SPDK_TRACE_RDMA, "Request %p entering state %d\n", rdma_req, prev_state);
+		SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Request %p entering state %d\n", rdma_req, prev_state);
 
 		switch (rdma_req->state) {
 		case RDMA_REQUEST_STATE_FREE:
@@ -1374,7 +1374,7 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 	while (1) {
 		rc = rdma_get_cm_event(rtransport->event_channel, &event);
 		if (rc == 0) {
-			SPDK_TRACELOG(SPDK_TRACE_RDMA, "Acceptor Event: %s\n", CM_EVENT_STR[event->event]);
+			SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Acceptor Event: %s\n", CM_EVENT_STR[event->event]);
 
 			switch (event->event) {
 			case RDMA_CM_EVENT_CONNECT_REQUEST:

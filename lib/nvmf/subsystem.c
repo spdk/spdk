@@ -179,7 +179,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		return;
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "subsystem is %p\n", subsystem);
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "subsystem is %p\n", subsystem);
 
 	TAILQ_FOREACH_SAFE(listener, &subsystem->listeners, link, listener_tmp) {
 		TAILQ_REMOVE(&subsystem->listeners, listener, link);
@@ -386,7 +386,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	}
 	ns->allocated = true;
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),
 		      spdk_bdev_get_name(bdev),
 		      nsid);
@@ -465,7 +465,7 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 	max_len = sizeof(subsystem->sn) - 1;
 	len = strlen(sn);
 	if (len > max_len) {
-		SPDK_TRACELOG(SPDK_TRACE_NVMF, "Invalid sn \"%s\": length %zu > max %zu\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Invalid sn \"%s\": length %zu > max %zu\n",
 			      sn, len, max_len);
 		return -1;
 	}

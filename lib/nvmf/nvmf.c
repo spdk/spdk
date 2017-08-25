@@ -83,12 +83,12 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	TAILQ_INIT(&tgt->listen_addrs);
 	TAILQ_INIT(&tgt->transports);
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Pairs Per Controller: %d\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Max Queue Pairs Per Controller: %d\n",
 		      tgt->opts.max_qpairs_per_ctrlr);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", tgt->opts.max_queue_depth);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", tgt->opts.max_queue_depth);
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n",
 		      tgt->opts.in_capsule_data_size);
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", tgt->opts.max_io_size);
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", tgt->opts.max_io_size);
 
 	return tgt;
 }

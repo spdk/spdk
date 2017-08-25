@@ -87,7 +87,7 @@ spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs, uint16_
 		reqs[i] = vq->avail->ring[(last_idx + i) & size_mask];
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_RING,
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
 		      "AVAIL: last_idx=%"PRIu16" avail_idx=%"PRIu16" count=%"PRIu16"\n",
 		      last_idx, avail_idx, count);
 
@@ -113,7 +113,7 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vr
 	struct vring_used *used = vq->used;
 	uint16_t last_idx = vq->last_used_idx & (vq->size - 1);
 
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_RING, "USED: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING, "USED: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
 		      vq->last_used_idx, id, len);
 
 	vq->last_used_idx++;

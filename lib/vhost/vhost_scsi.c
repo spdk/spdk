@@ -306,7 +306,7 @@ submit_completion(struct spdk_vhost_scsi_task *task)
 {
 	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx,
 					task->scsi.data_transferred);
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "Finished task (%p) req_idx=%d\n", task, task->req_idx);
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI, "Finished task (%p) req_idx=%d\n", task, task->req_idx);
 
 	spdk_vhost_scsi_task_put(task);
 }
@@ -363,7 +363,7 @@ invalid_request(struct spdk_vhost_scsi_task *task)
 	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx, 0);
 	spdk_vhost_scsi_task_put(task);
 
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "Invalid request (status=%" PRIu8")\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI, "Invalid request (status=%" PRIu8")\n",
 		      task->resp ? task->resp->response : -1);
 }
 
@@ -405,7 +405,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	desc = spdk_vhost_vq_get_desc(task->vq, task->req_idx);
 	ctrl_req = spdk_vhost_gpa_to_vva(&task->svdev->vdev, desc->addr);
 
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_QUEUE,
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI_QUEUE,
 		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
 		      task->req_idx, desc, (void *)desc->addr, desc->len, desc->flags, task->vq->last_used_idx,
 		      task->vq->kickfd, task->vq->size);
@@ -431,14 +431,14 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 		switch (ctrl_req->subtype) {
 		case VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET:
 			/* Handle LUN reset */
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_QUEUE, "LUN reset\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI_QUEUE, "LUN reset\n");
 
 			mgmt_task_submit(task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
 			return;
 		default:
 			task->tmf_resp->response = VIRTIO_SCSI_S_ABORTED;
 			/* Unsupported command */
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_QUEUE, "Unsupported TMF command %x\n", ctrl_req->subtype);
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI_QUEUE, "Unsupported TMF command %x\n", ctrl_req->subtype);
 			break;
 		}
 		break;
@@ -450,7 +450,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 		break;
 	}
 	default:
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_QUEUE, "Unsupported control command %x\n", ctrl_req->type);
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI_QUEUE, "Unsupported control command %x\n", ctrl_req->type);
 		break;
 	}
 
@@ -499,7 +499,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			/*
 			 * TEST UNIT READY command and some others might not contain any payload and this is not an error.
 			 */
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_DATA,
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI_DATA,
 				      "No payload descriptors for FROM DEV command req_idx=%"PRIu16".\n", task->req_idx);
 			SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_DATA, "CDB=", (*req)->cdb, VIRTIO_SCSI_CDB_SIZE);
 			task->scsi.iovcnt = 1;
@@ -530,7 +530,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			}
 		}
 	} else {
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI_DATA, "TO DEV");
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI_DATA, "TO DEV");
 		/*
 		 * TO_DEV (WRITE):[RD_req][RD_buf0]...[RD_bufN][WR_resp]
 		 * No need to check descriptor WR flag as this is done while setting scsi.dxfer_dir.
@@ -642,7 +642,7 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 	spdk_vhost_get_tasks(svdev, tasks, reqs_cnt);
 
 	for (i = 0; i < reqs_cnt; i++) {
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Starting processing request idx %"PRIu16"======\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI, "====== Starting processing request idx %"PRIu16"======\n",
 			      reqs[i]);
 
 		task = tasks[i];
@@ -653,15 +653,15 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 		result = process_request(task);
 		if (likely(result == 0)) {
 			task_submit(task);
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d submitted ======\n", task,
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d submitted ======\n", task,
 				      task->req_idx);
 		} else if (result > 0) {
 			spdk_vhost_scsi_task_cpl(&task->scsi);
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d finished early ======\n", task,
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d finished early ======\n", task,
 				      task->req_idx);
 		} else {
 			invalid_request(task);
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d failed ======\n", task,
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI, "====== Task %p req_idx %d failed ======\n", task,
 				      task->req_idx);
 		}
 	}
