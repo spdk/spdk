@@ -72,6 +72,7 @@ struct spdk_lvol_store_req {
 struct spdk_lvol_store {
 	struct spdk_bs_dev              *bs_dev;
 	struct spdk_blob_store          *blobstore;
+	struct spdk_blob				*super_blob;
 	uuid_t				uuid;
 	uint64_t			page_size;
 	struct spdk_lvol_store_req *destruct_req;
