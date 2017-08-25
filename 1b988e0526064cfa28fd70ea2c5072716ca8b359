@@ -1,0 +1,363 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df1ccf72_8bb59d48",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "This file is part of the public API and needs doc comments.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ec77ffc_4a287489",
+        "filename": "include/spdk/stdinc.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "uuid/uuid.h is not a C standard library or POSIX header, so it should not be included in stdinc.h - please include this as necessary in .c files.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76de69eb_8be5eb88",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "The bdev_opened-related changes look fine, but that should be in a separate patch.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c596830b_cfc3868e",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "This should be SPDK_INTERNAL_LVOLSTORE_H to match the convention used elsewhere (and to avoid conflicts in case we ever add a public spdk/lvolstore.h).",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 24
+      },
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f923647f_0a7f304d",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "Mixed spaces and tabs (also elsewhere in this file).",
+      "range": {
+        "startLine": 43,
+        "startChar": 23,
+        "endLine": 43,
+        "endChar": 27
+      },
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "377d990a_df356c6b",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "This \u0027sz\u0027 fields seems to be in bytes; can we store it in clusters to be consistent with the other places \u0027sz\u0027 is used? (At the very least, this needs a comment.)\n\nAlso, this probably should be uint64_t rather than size_t, since it\u0027s not the size of a memory object (also, we don\u0027t want to arbitrarily limit lvol size on 32-bit platforms).",
+      "range": {
+        "startLine": 81,
+        "startChar": 1,
+        "endLine": 81,
+        "endChar": 14
+      },
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "432345f5_b44e2a08",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "It\u0027s not necessary to list the unimplemented types here - default will catch them.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d1f2bf0_ac8485f3",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "num_pages should just be bdev_io-\u003eu.read.len / page_size.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2223efaa_ece2525a",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "It\u0027s not necessary to list the unimplemented types here - default will catch them.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "109c0074_8461b135",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "Is lvol-\u003esz in bytes here? It seems to be clusters elsewhere.",
+      "range": {
+        "startLine": 237,
+        "startChar": 9,
+        "endLine": 237,
+        "endChar": 17
+      },
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef02cd77_c69b4a84",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "gai_strerror() is for getaddrinfo() errors; please use spdk_strerror_r() instead.",
+      "range": {
+        "startLine": 82,
+        "startChar": 6,
+        "endLine": 82,
+        "endChar": 18
+      },
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b794902a_7dc5f446",
+        "filename": "lib/lvol/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "Delete this first blank line so the license header starts at the beginning of the file.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d293fc9c_070bc44c",
+        "filename": "lib/lvol/bdev/lvs_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "Trim the blank lines above and remove the pointless return.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7173edb3_7cc24ae5",
+        "filename": "lib/lvol/bdev/lvs_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "This TODO should go in vbdev_lvs_examine().",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "458f09e0_83a5d4ce",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "This size is the number of clusters (I guess - it\u0027s not actually documented anywhere); it should probably be a uint64_t rather than a size_t, since it\u0027s the size of something on disk, not the size of a memory object.  This type change should be propagated back up to all callers as well.",
+      "range": {
+        "startLine": 265,
+        "startChar": 46,
+        "endLine": 265,
+        "endChar": 55
+      },
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "921aebe6_2b7dd651",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 7
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "This new dependency needs to be documented in README.md.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4eb4b35_646b3edb",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "Maybe the user should be able to provide lvol_store_uuid when creating the lvol_store - otherwise, how do they know what it is when calling the other RPCs that require it?",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f82143f2_bd84bdb0",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "I don\u0027t think an empty struct is valid C - we should probably put at least a placeholder field in here to avoid problems if a strict compiler rejects this.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b66a2394_b0b71d5f",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:20:15Z",
+      "side": 1,
+      "message": "Please use /* */-style comments for consistency.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
