@@ -201,7 +201,6 @@ bdev_virtio_io_cpl(struct virtio_req *req)
 	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 }
 
-
 static void
 bdev_virtio_poll(void *arg)
 {
@@ -238,8 +237,10 @@ bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 static void
 scan_target(struct virtio_hw *hw, uint8_t target)
 {
-	struct iovec iov;
-	struct virtio_req vreq;
+	struct iovec _iov;
+	struct iovec *iov;
+	struct virtio_req _vreq;
+	struct virtio_req *vreq;
 	struct virtio_scsi_cmd_req *req;
 	struct virtio_scsi_cmd_resp *resp;
 	struct spdk_scsi_cdb_inquiry *cdb;
@@ -248,21 +249,23 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	struct virtio_scsi_disk *disk;
 	struct spdk_bdev *bdev;
 
-	vreq.iov = &iov;
-	vreq.iovcnt = 1;
-	vreq.is_write = 0;
+	iov = &_iov;
+	vreq = &_vreq;
+	vreq->iov = iov;
+	vreq->iovcnt = 1;
+	vreq->is_write = 0;
 
 	req = spdk_dma_zmalloc(sizeof(*req), 64, NULL);
 	resp = spdk_dma_malloc(sizeof(*resp), 64, NULL);
 
-	vreq.iov_req.iov_base = (void *)req;
-	vreq.iov_req.iov_len = sizeof(*req);
+	vreq->iov_req.iov_base = (void *)req;
+	vreq->iov_req.iov_len = sizeof(*req);
 
-	vreq.iov_resp.iov_base = (void *)resp;
-	vreq.iov_resp.iov_len = sizeof(*resp);
+	vreq->iov_resp.iov_base = (void *)resp;
+	vreq->iov_resp.iov_len = sizeof(*resp);
 
-	iov.iov_base = spdk_dma_malloc(4096, 64, NULL);
-	iov.iov_len = 255;
+	iov[0].iov_base = spdk_dma_malloc(4096, 64, NULL);
+	iov[0].iov_len = 255;
 
 	req->lun[0] = 1;
 	req->lun[1] = target;
@@ -271,7 +274,7 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	cdb->opcode = SPDK_SPC_INQUIRY;
 	cdb->alloc_len[1] = 255;
 
-	virtio_xmit_pkts(hw->vqs[2], &vreq);
+	virtio_xmit_pkts(hw->vqs[2], vreq);
 
 	do {
 		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 1);
@@ -288,10 +291,10 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	req->cdb[0] = SPDK_SPC_SERVICE_ACTION_IN_16;
 	req->cdb[1] = SPDK_SBC_SAI_READ_CAPACITY_16;
 
-	iov.iov_len = 32;
-	to_be32(&req->cdb[10], iov.iov_len);
+	iov[0].iov_len = 32;
+	to_be32(&req->cdb[10], iov[0].iov_len);
 
-	virtio_xmit_pkts(hw->vqs[2], &vreq);
+	virtio_xmit_pkts(hw->vqs[2], vreq);
 
 	do {
 		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 1);
@@ -303,8 +306,8 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 		return;
 	}
 
-	disk->num_blocks = from_be64((uint64_t *)(iov.iov_base)) + 1;
-	disk->block_size = from_be32((uint32_t *)(iov.iov_base + 8));
+	disk->num_blocks = from_be64((uint64_t *)(iov[0].iov_base)) + 1;
+	disk->block_size = from_be32((uint32_t *)(iov[0].iov_base + 8));
 
 	disk->hw = hw;
 
