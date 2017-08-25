@@ -1791,14 +1791,14 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 			break;
 		}
 
-		SPDK_TRACEDUMP(SPDK_TRACE_DEBUG, "INQUIRY", data, data_len);
+		SPDK_TRACEDUMP(SPDK_TRACE_SCSI, "INQUIRY", data, data_len);
 		break;
 
 	case SPDK_SPC_REPORT_LUNS: {
 		int sel;
 
 		sel = cdb[2];
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "sel=%x\n", sel);
+		SPDK_DEBUGLOG(SPDK_TRACE_SCSI, "sel=%x\n", sel);
 
 		alloc_len = from_be32(&cdb[6]);
 		rc = spdk_bdev_scsi_check_len(task, alloc_len, 16);
@@ -1819,7 +1819,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 			break;
 		}
 
-		SPDK_TRACEDUMP(SPDK_TRACE_DEBUG, "REPORT LUNS", data, data_len);
+		SPDK_TRACEDUMP(SPDK_TRACE_SCSI, "REPORT LUNS", data, data_len);
 		break;
 	}
 

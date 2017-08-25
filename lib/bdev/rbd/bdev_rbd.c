@@ -41,13 +41,13 @@
 
 #include "spdk/conf.h"
 #include "spdk/env.h"
-#include "spdk/log.h"
 #include "spdk/bdev.h"
 #include "spdk/io_channel.h"
 #include "spdk/json.h"
 #include "spdk/string.h"
 
 #include "spdk_internal/bdev.h"
+#include "spdk_internal/log.h"
 
 #define SPDK_RBD_QUEUE_DEPTH 128
 
@@ -617,3 +617,5 @@ bdev_rbd_library_init(void)
 end:
 	return rc;
 }
+
+SPDK_LOG_REGISTER_TRACE_FLAG("bdev_rbd", SPDK_TRACE_BDEV_RBD)
