@@ -1,0 +1,251 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8e57d25_c334de4e",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 858,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-25T11:44:52Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 858,
+        "startChar": 0,
+        "endLine": 858,
+        "endChar": 1
+      },
+      "revId": "d3b7bb2f1bee3923c0f73ac9a7628614f3564c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f92be859_6a04833f",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-25T11:44:52Z",
+      "side": 1,
+      "message": "spaces or tabs, be consistent",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 1
+      },
+      "revId": "d3b7bb2f1bee3923c0f73ac9a7628614f3564c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4bca03e1_6867c4e9",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-25T11:44:52Z",
+      "side": 1,
+      "message": "Why not just create one base config for vhost with [Split] section \ninstead of copying, calling gen_nvme.sh and adding [Split] in every test?\nAll of test cases in this file use a config file with at least 1 NVMe split, so why not have a common config file for them?",
+      "range": {
+        "startLine": 48,
+        "startChar": 1,
+        "endLine": 51,
+        "endChar": 44
+      },
+      "revId": "d3b7bb2f1bee3923c0f73ac9a7628614f3564c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81baa7ab_7e33992b",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-25T11:44:52Z",
+      "side": 1,
+      "message": "could this be called by RPC, as it is available from common.sh?",
+      "range": {
+        "startLine": 54,
+        "startChar": 1,
+        "endLine": 55,
+        "endChar": 59
+      },
+      "revId": "d3b7bb2f1bee3923c0f73ac9a7628614f3564c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b92280b7_590eda90",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-25T11:44:52Z",
+      "side": 1,
+      "message": "Don\u0027t. Update the file itself in the commit if needed.",
+      "range": {
+        "startLine": 85,
+        "startChar": 1,
+        "endLine": 85,
+        "endChar": 81
+      },
+      "revId": "d3b7bb2f1bee3923c0f73ac9a7628614f3564c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dab0c684_75b1312e",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-25T11:44:52Z",
+      "side": 1,
+      "message": "Indentation",
+      "range": {
+        "startLine": 145,
+        "startChar": 3,
+        "endLine": 147,
+        "endChar": 6
+      },
+      "revId": "d3b7bb2f1bee3923c0f73ac9a7628614f3564c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "232b2914_7bda24ef",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-25T11:44:52Z",
+      "side": 1,
+      "message": "Indentation",
+      "range": {
+        "startLine": 186,
+        "startChar": 1,
+        "endLine": 198,
+        "endChar": 8
+      },
+      "revId": "d3b7bb2f1bee3923c0f73ac9a7628614f3564c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75bbfbcc_b188e080",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-25T11:44:52Z",
+      "side": 1,
+      "message": "I don\u0027t see these functions in other files - does that work?",
+      "range": {
+        "startLine": 226,
+        "startChar": 0,
+        "endLine": 227,
+        "endChar": 10
+      },
+      "revId": "d3b7bb2f1bee3923c0f73ac9a7628614f3564c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b3c03e4_7e8c3492",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-25T11:44:52Z",
+      "side": 1,
+      "message": "Where do we set that variable?",
+      "range": {
+        "startLine": 229,
+        "startChar": 3,
+        "endLine": 229,
+        "endChar": 12
+      },
+      "revId": "d3b7bb2f1bee3923c0f73ac9a7628614f3564c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb46f54e_3fba39c0",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-25T11:44:52Z",
+      "side": 1,
+      "message": "Not a correct form of bash \u0027if\u0027, use brackets",
+      "range": {
+        "startLine": 234,
+        "startChar": 0,
+        "endLine": 234,
+        "endChar": 42
+      },
+      "revId": "d3b7bb2f1bee3923c0f73ac9a7628614f3564c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4785dc24_55e457e0",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-25T11:44:52Z",
+      "side": 1,
+      "message": "Some of the comments from previous file apply here as well",
+      "revId": "d3b7bb2f1bee3923c0f73ac9a7628614f3564c1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
