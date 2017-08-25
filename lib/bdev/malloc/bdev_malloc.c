@@ -174,7 +174,7 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		return;
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_MALLOC, "read %lu bytes from offset %#lx\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_BDEV_MALLOC, "read %lu bytes from offset %#lx\n",
 		      len, offset);
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -209,7 +209,7 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		return;
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_MALLOC, "wrote %lu bytes to offset %#lx\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_BDEV_MALLOC, "wrote %lu bytes to offset %#lx\n",
 		      len, offset);
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
@@ -517,4 +517,4 @@ bdev_malloc_get_spdk_running_config(FILE *fp)
 	}
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("malloc", SPDK_TRACE_MALLOC)
+SPDK_LOG_REGISTER_TRACE_FLAG("bdev_malloc", SPDK_TRACE_BDEV_MALLOC)

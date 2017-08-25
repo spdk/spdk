@@ -228,7 +228,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 
 #define nvme_rdma_trace_ibv_sge(sg_list) \
 	if (sg_list) { \
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "local addr %p length 0x%x lkey 0x%x\n", \
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "local addr %p length 0x%x lkey 0x%x\n", \
 			      (void *)(sg_list)->addr, (sg_list)->length, (sg_list)->lkey); \
 	}
 
@@ -728,7 +728,7 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 
 	memset(&sin, 0, sizeof(struct sockaddr_storage));
 
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "trsvcid is %s\n", ctrlr->trid.trsvcid);
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "trsvcid is %s\n", ctrlr->trid.trsvcid);
 	rc = nvme_rdma_parse_addr(&sin, family, ctrlr->trid.traddr, ctrlr->trid.trsvcid);
 	if (rc != 0) {
 		SPDK_ERRLOG("nvme_rdma_parse_addr() failed\n");
@@ -760,20 +760,20 @@ nvme_rdma_qpair_connect(struct nvme_rdma_qpair *rqpair)
 	}
 
 	rc = nvme_rdma_alloc_reqs(rqpair);
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "rc =%d\n", rc);
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "rc =%d\n", rc);
 	if (rc) {
 		SPDK_ERRLOG("Unable to allocate rqpair  RDMA requests\n");
 		return -1;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "RDMA requests allocated\n");
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "RDMA requests allocated\n");
 
 	rc = nvme_rdma_alloc_rsps(rqpair);
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "rc =%d\n", rc);
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "rc =%d\n", rc);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to allocate rqpair RDMA responses\n");
 		return -1;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "RDMA responses allocated\n");
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "RDMA responses allocated\n");
 
 	rc = nvme_rdma_register_mem(rqpair);
 	if (rc < 0) {
@@ -1145,7 +1145,7 @@ nvme_rdma_discovery_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
 		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Trailing newlines removed from discovery TRSVCID\n");
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "subnqn=%s, trtype=%u, traddr=%s, trsvcid=%s\n",
 		      trid.subnqn, trid.trtype,
 		      trid.traddr, trid.trsvcid);
 
@@ -1297,7 +1297,7 @@ struct spdk_nvme_ctrlr *nvme_rdma_ctrlr_construct(const struct spdk_nvme_transpo
 
 	nvme_ctrlr_init_cap(&rctrlr->ctrlr, &cap);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "succesully initialized the nvmf ctrlr\n");
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "succesully initialized the nvmf ctrlr\n");
 	return &rctrlr->ctrlr;
 }
 
@@ -1473,7 +1473,7 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 
 			switch (wc[i].opcode) {
 			case IBV_WC_RECV:
-				SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "CQ recv completion\n");
+				SPDK_DEBUGLOG(SPDK_TRACE_NVME, "CQ recv completion\n");
 
 				reaped++;
 

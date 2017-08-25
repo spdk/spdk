@@ -138,7 +138,7 @@ spdk_bdev_first(void)
 
 	bdev = TAILQ_FIRST(&g_bdev_mgr.bdevs);
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "Starting bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Starting bdev iteration at %s\n", bdev->name);
 	}
 
 	return bdev;
@@ -151,7 +151,7 @@ spdk_bdev_next(struct spdk_bdev *prev)
 
 	bdev = TAILQ_NEXT(prev, link);
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "Continuing bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Continuing bdev iteration at %s\n", bdev->name);
 	}
 
 	return bdev;
@@ -179,7 +179,7 @@ spdk_bdev_first_leaf(void)
 	bdev = _bdev_next_leaf(TAILQ_FIRST(&g_bdev_mgr.bdevs));
 
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "Starting bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Starting bdev iteration at %s\n", bdev->name);
 	}
 
 	return bdev;
@@ -193,7 +193,7 @@ spdk_bdev_next_leaf(struct spdk_bdev *prev)
 	bdev = _bdev_next_leaf(TAILQ_NEXT(prev, link));
 
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "Continuing bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Continuing bdev iteration at %s\n", bdev->name);
 	}
 
 	return bdev;
@@ -1422,7 +1422,7 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 				sizeof(struct spdk_bdev_channel));
 
 	pthread_mutex_init(&bdev->mutex, NULL);
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "Inserting bdev %s into list\n", bdev->name);
+	SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Inserting bdev %s into list\n", bdev->name);
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
@@ -1459,7 +1459,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 	int			rc;
 	bool			do_destruct = true;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "Removing bdev %s from list\n", bdev->name);
+	SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Removing bdev %s from list\n", bdev->name);
 
 	pthread_mutex_lock(&bdev->mutex);
 
@@ -1680,3 +1680,5 @@ spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 		TAILQ_INSERT_TAIL(&g_bdev_mgr.bdev_modules, bdev_module, tailq);
 	}
 }
+
+SPDK_LOG_REGISTER_TRACE_FLAG("bdev", SPDK_TRACE_BDEV)

@@ -72,7 +72,7 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_vhost_ctrlr,
 				    SPDK_COUNTOF(rpc_construct_vhost_ctrlr),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RPC, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -127,7 +127,7 @@ spdk_rpc_remove_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_remove_vhost_ctrlr,
 				    SPDK_COUNTOF(rpc_remove_vhost_ctrlr),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RPC, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -192,7 +192,7 @@ spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_vhost_add_lun,
 				    SPDK_COUNTOF(rpc_vhost_add_lun),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RPC, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -249,7 +249,7 @@ spdk_rpc_remove_vhost_scsi_dev(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_vhost_remove_dev,
 				    SPDK_COUNTOF(rpc_vhost_remove_dev),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RPC, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -316,7 +316,7 @@ spdk_rpc_construct_vhost_blk_controller(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_vhost_blk_ctrlr,
 				    SPDK_COUNTOF(rpc_construct_vhost_blk_ctrlr),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RPC, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -372,7 +372,7 @@ spdk_rpc_remove_vhost_blk_controller(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, rpc_remove_vhost_blk_ctrlr,
 				    SPDK_COUNTOF(rpc_remove_vhost_blk_ctrlr), &req)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RPC, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
@@ -448,3 +448,5 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_vhost_controllers", spdk_rpc_get_vhost_controllers)
+
+SPDK_LOG_REGISTER_TRACE_FLAG("vhost_rpc", SPDK_TRACE_VHOST_RPC)

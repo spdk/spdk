@@ -56,11 +56,11 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 	char **initiators = NULL, **netmasks = NULL;
 	int tag = spdk_conf_section_get_num(sp);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "add initiator group %d\n", tag);
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "add initiator group %d\n", tag);
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "Comment %s\n", val);
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "Comment %s\n", val);
 	}
 
 	/* counts number of definitions */
@@ -105,7 +105,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 			rc = -EINVAL;
 			goto cleanup;
 		}
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "InitiatorName %s\n", val);
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "InitiatorName %s\n", val);
 		initiators[i] = strdup(val);
 		if (!initiators[i]) {
 			perror("initiator name copy");
@@ -126,7 +126,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 			rc = -EINVAL;
 			goto cleanup;
 		}
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "Netmask %s\n", val);
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "Netmask %s\n", val);
 		netmasks[i] = strdup(val);
 		if (!netmasks[i]) {
 			perror("initiator netmask copy");
@@ -196,7 +196,7 @@ spdk_iscsi_init_grp_create_from_initiator_list(int tag,
 		goto cleanup;
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG,
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
 		      "add initiator group (from initiator list) tag=%d, #initiators=%d, #masks=%d\n",
 		      tag, num_initiator_names, num_initiator_masks);
 
@@ -215,12 +215,12 @@ spdk_iscsi_init_grp_create_from_initiator_list(int tag,
 	ig->nnetmasks = num_initiator_masks;
 	ig->initiators = initiator_names;
 	for (i = 0; i < num_initiator_names; i++)
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "InitiatorName %s\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "InitiatorName %s\n",
 			      ig->initiators[i]);
 
 	ig->netmasks = initiator_masks;
 	for (i = 0; i < num_initiator_masks; i++)
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "Netmask %s\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "Netmask %s\n",
 			      ig->netmasks[i]);
 
 	ig->state = GROUP_INIT;
@@ -317,7 +317,7 @@ spdk_iscsi_init_grp_array_destroy(void)
 {
 	struct spdk_iscsi_init_grp *ig, *tmp;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_iscsi_init_grp_array_destroy\n");
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_init_grp_array_destroy\n");
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH_SAFE(ig, &g_spdk_iscsi.ig_head, tailq, tmp) {
 		ig->state = GROUP_DESTROY;
