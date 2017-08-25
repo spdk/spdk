@@ -303,7 +303,7 @@ for vm_num in $used_vms; do
 
 	if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 		vm_check_scsi_location $vm_num
-		vm_reset_scsi_devices $vm_num $SCSI_DISK
+		#vm_reset_scsi_devices $vm_num $SCSI_DISK
 	elif [[ "$test_type" == "spdk_vhost_blk" ]]; then
 		vm_check_blk_location $vm_num
 	fi
