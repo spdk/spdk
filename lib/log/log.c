@@ -40,7 +40,7 @@ static TAILQ_HEAD(, spdk_trace_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_tr
 static enum spdk_log_level g_spdk_log_level = SPDK_LOG_NOTICE;
 static enum spdk_log_level g_spdk_log_print_level = SPDK_LOG_NOTICE;
 
-SPDK_LOG_REGISTER_TRACE_FLAG("debug", SPDK_TRACE_DEBUG)
+SPDK_LOG_REGISTER_TRACE_FLAG("log", SPDK_TRACE_LOG)
 
 #define MAX_TMPBUF 1024
 
