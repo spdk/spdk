@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02f0baac_73ff9b59",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:21:45Z",
+      "side": 1,
+      "message": "This 37 should use the #define instead (or better yet, just use a stack variable rather than calloc()).\n\nIf you do keep calloc(), it needs a NULL check to catch allocation failures.",
+      "range": {
+        "startLine": 387,
+        "startChar": 15,
+        "endLine": 387,
+        "endChar": 17
+      },
+      "revId": "b5919370d61ce1eb264a31b51a4aa8983f0908e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c6c8158_5694ce08",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T18:21:45Z",
+      "side": 1,
+      "message": "UUID -\u003e uuid for consistency with other JSON-RPC fields.",
+      "range": {
+        "startLine": 396,
+        "startChar": 27,
+        "endLine": 396,
+        "endChar": 31
+      },
+      "revId": "b5919370d61ce1eb264a31b51a4aa8983f0908e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
