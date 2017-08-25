@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbea478d_1b8b5ced",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T19:43:32Z",
+      "side": 1,
+      "message": "As you mentioned, we should probably pull this out into a common place at some point (it is fine to keep it here for now).",
+      "revId": "58a3944072f888ebd2c4920ddbbb77c51c93bf94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32a83c67_f07550c9",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T19:43:32Z",
+      "side": 1,
+      "message": "Do we need to first check resp-\u003esense_len? I\u0027m not sure if it always returns enough sense data for all of these fields to be valid.",
+      "revId": "58a3944072f888ebd2c4920ddbbb77c51c93bf94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be95083a_fee8f64d",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-25T19:43:32Z",
+      "side": 1,
+      "message": "Sense key is the low 4 bits of sense[2] only - we should mask it against 0xF to be sure that we don\u0027t accidentally get other bits.\n\nThis is defined in the SPC part of the SCSI spec (\"Fixed format sense data\") if you want to double check.",
+      "revId": "58a3944072f888ebd2c4920ddbbb77c51c93bf94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
