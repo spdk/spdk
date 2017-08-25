@@ -72,7 +72,6 @@ struct spdk_bdev_mgr {
 	spdk_bdev_poller_start_cb start_poller_fn;
 	spdk_bdev_poller_stop_cb stop_poller_fn;
 
-	bool init_complete;
 	bool module_init_complete;
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -85,7 +84,6 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
 	.start_poller_fn = NULL,
 	.stop_poller_fn = NULL,
-	.init_complete = false,
 	.module_init_complete = false,
 };
 
@@ -353,7 +351,6 @@ spdk_bdev_init_complete(int rc)
 	spdk_bdev_init_cb cb_fn = g_cb_fn;
 	void *cb_arg = g_cb_arg;
 
-	g_bdev_mgr.init_complete = true;
 	g_cb_fn = NULL;
 	g_cb_arg = NULL;
 
@@ -364,8 +361,6 @@ static void
 spdk_bdev_module_init_complete(int rc)
 {
 	struct spdk_bdev_module_if *m;
-
-	g_bdev_mgr.module_init_complete = true;
 
 	if (rc != 0) {
 		spdk_bdev_init_complete(rc);
@@ -399,6 +394,7 @@ spdk_bdev_modules_init(void)
 		}
 	}
 
+	g_bdev_mgr.module_init_complete = true;
 	return 0;
 }
 
@@ -1539,6 +1535,16 @@ spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
 	module->examine_in_progress--;
 
 	/*
+	 * Bdev subsystem is only waiting for completion when module init
+	 * succeeded. Otherwise completion will be (or already has been)
+	 * handled internally.
+	 */
+	if (!g_bdev_mgr.module_init_complete) {
+		return;
+	}
+
+
+	/*
 	 * Check all bdev modules for an examinations in progress.  If any
 	 * exist, return immediately since we cannot finish bdev subsystem
 	 * initialization until all are completed.
@@ -1549,14 +1555,12 @@ spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
 		}
 	}
 
-	if (g_bdev_mgr.module_init_complete && !g_bdev_mgr.init_complete) {
-		/*
-		 * Modules already finished initialization - now that all
-		 * the bdev moduless have finished their asynchronous I/O
-		 * processing, the entire bdev layer can be marked as complete.
-		 */
-		spdk_bdev_init_complete(0);
-	}
+	/*
+	 * Modules already finished initialization - now that all
+	 * the bdev moduless have finished their asynchronous I/O
+	 * processing, the entire bdev layer can be marked as complete.
+	 */
+	spdk_bdev_init_complete(0);
 }
 
 int
