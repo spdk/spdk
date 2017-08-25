@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9638dec_a2ea5312",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-25T04:19:48Z",
+      "side": 1,
+      "message": "TAILQ_INSERT_TAIL is better.",
+      "revId": "2f1b8ba1d14aebc2ba665a6cd9ea94ea8c99a5e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91854d0a_8e8ae2ec",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-25T04:19:48Z",
+      "side": 1,
+      "message": "Remove the extra empty line.",
+      "revId": "2f1b8ba1d14aebc2ba665a6cd9ea94ea8c99a5e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3d429c6_19f69abd",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-25T04:19:48Z",
+      "side": 1,
+      "message": "TAILQ_FOREACH_SAFE maybe better",
+      "revId": "2f1b8ba1d14aebc2ba665a6cd9ea94ea8c99a5e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ac210ff_51061392",
+        "filename": "lib/bdev/aio/bdev_aio.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-25T04:19:48Z",
+      "side": 1,
+      "message": "Just link is okay, for the purpose to make code style to be consistent with other part.",
+      "revId": "2f1b8ba1d14aebc2ba665a6cd9ea94ea8c99a5e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
