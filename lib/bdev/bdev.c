@@ -361,16 +361,9 @@ spdk_bdev_init_complete(int rc)
 }
 
 static void
-spdk_bdev_module_init_complete(int rc)
+spdk_bdev_module_action_complete(void)
 {
 	struct spdk_bdev_module_if *m;
-
-	g_bdev_mgr.module_init_complete = true;
-
-	if (rc != 0) {
-		spdk_bdev_init_complete(rc);
-		return;
-	}
 
 	/*
 	 * Check all bdev modules for an examinations in progress.  If any
@@ -383,6 +376,11 @@ spdk_bdev_module_init_complete(int rc)
 		}
 	}
 
+	/*
+	 * Modules already finished initialization - now that all
+	 * the bdev moduless have finished their asynchronous I/O
+	 * processing, the entire bdev layer can be marked as complete.
+	 */
 	spdk_bdev_init_complete(0);
 }
 
@@ -390,16 +388,17 @@ static int
 spdk_bdev_modules_init(void)
 {
 	struct spdk_bdev_module_if *module;
-	int rc;
+	int rc = 0;
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
 		rc = module->module_init();
 		if (rc != 0) {
-			return rc;
+			break;
 		}
 	}
 
-	return 0;
+	g_bdev_mgr.module_init_complete = true;
+	return rc;
 }
 
 void
@@ -492,7 +491,13 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 				sizeof(struct spdk_bdev_mgmt_channel));
 
 	rc = spdk_bdev_modules_init();
-	spdk_bdev_module_init_complete(rc);
+	if (rc != 0) {
+		SPDK_ERRLOG("bdev modules init failed\n");
+		spdk_bdev_init_complete(-1);
+		return;
+	}
+
+	spdk_bdev_module_action_complete();
 }
 
 int
@@ -1533,30 +1538,19 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 void
 spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
 {
-	struct spdk_bdev_module_if *m;
-
 	assert(module->examine_in_progress > 0);
 	module->examine_in_progress--;
 
-	/*
-	 * Check all bdev modules for an examinations in progress.  If any
-	 * exist, return immediately since we cannot finish bdev subsystem
-	 * initialization until all are completed.
-	 */
-	TAILQ_FOREACH(m, &g_bdev_mgr.bdev_modules, tailq) {
-		if (m->examine_in_progress > 0) {
-			return;
-		}
+	if (!g_bdev_mgr.module_init_complete || g_bdev_mgr.init_complete) {
+		/*
+		 * Don't finish bdev subsystem initialization if
+		 * module initialization is still in progress, or
+		 * the subsystem been already initialized.
+		 */
+		return;
 	}
 
-	if (g_bdev_mgr.module_init_complete && !g_bdev_mgr.init_complete) {
-		/*
-		 * Modules already finished initialization - now that all
-		 * the bdev moduless have finished their asynchronous I/O
-		 * processing, the entire bdev layer can be marked as complete.
-		 */
-		spdk_bdev_init_complete(0);
-	}
+	spdk_bdev_module_action_complete();
 }
 
 int
