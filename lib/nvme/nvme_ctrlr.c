@@ -85,6 +85,8 @@ spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 	opts->io_queue_size = DEFAULT_IO_QUEUE_SIZE;
 	strncpy(opts->hostnqn, DEFAULT_HOSTNQN, sizeof(opts->hostnqn));
 	opts->io_queue_requests = DEFAULT_IO_QUEUE_REQUESTS;
+	memset(&opts->src_addr, 0, sizeof(opts->src_addr));
+	opts->src_addr_size = 0;
 }
 
 /**
