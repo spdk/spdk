@@ -63,5 +63,6 @@ struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol);
 struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig);
 struct spdk_lvol *vbdev_get_lvol_by_name(const char *name);
 struct spdk_lvol_store *vbdev_get_lvol_store_by_uuid(uuid_t uuid);
+void spdk_lvs_examine_cb(void *cb_arg, struct spdk_blob_store *bs, int bserrno);
 
 #endif  /* SPDK_LVOL_H */
