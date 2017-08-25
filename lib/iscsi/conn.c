@@ -345,7 +345,7 @@ int spdk_initialize_iscsi_conns(void)
 	int conns_array_fd;
 	int i, rc;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_iscsi_init\n");
+	SPDK_DEBUGLOG(SPDK_TRACE_SCSI, "spdk_iscsi_init\n");
 
 	rc = pthread_mutex_init(&g_conns_mutex, NULL);
 	if (rc != 0) {
@@ -638,13 +638,13 @@ static void spdk_iscsi_remove_conn(struct spdk_iscsi_conn *conn)
 
 	if (sess->connections == 0) {
 		/* cleanup last connection */
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG,
+		SPDK_DEBUGLOG(SPDK_TRACE_SCSI,
 			      "cleanup last conn free sess\n");
 		spdk_free_sess(sess);
 	}
 
 
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "cleanup free conn\n");
+	SPDK_DEBUGLOG(SPDK_TRACE_SCSI, "cleanup free conn\n");
 	spdk_iscsi_conn_free(conn);
 }
 
@@ -858,7 +858,7 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 	const char			*xconn_match;
 	int				i, num;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_iscsi_drop_conns\n");
+	SPDK_DEBUGLOG(SPDK_TRACE_SCSI, "spdk_iscsi_drop_conns\n");
 
 	num = 0;
 	pthread_mutex_lock(&g_conns_mutex);
@@ -1229,7 +1229,7 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 			if ((conn->full_feature) &&
 			    (conn->sess->ErrorRecoveryLevel >= 1) &&
 			    spdk_iscsi_is_deferred_free_pdu(pdu)) {
-				SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "stat_sn=%d\n",
+				SPDK_DEBUGLOG(SPDK_TRACE_SCSI, "stat_sn=%d\n",
 					      from_be32(&pdu->bhs.stat_sn));
 				TAILQ_INSERT_TAIL(&conn->snack_pdu_list, pdu,
 						  tailq);
@@ -1508,7 +1508,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 			spdk_net_framework_clear_socket_association(tconn->sock);
 			spdk_event_call(spdk_iscsi_conn_get_migrate_event(tconn, &lcore));
 			__sync_fetch_and_add(&g_num_connections[lcore], 1);
-			SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "add conn id = %d, cid = %d poller = %p to lcore = %d active\n",
+			SPDK_DEBUGLOG(SPDK_TRACE_SCSI, "add conn id = %d, cid = %d poller = %p to lcore = %d active\n",
 				      tconn->id, tconn->cid, &tconn->poller, lcore);
 		}
 	} /* for each conn in idle list */
@@ -1533,7 +1533,7 @@ __add_idle_conn(void *arg1, void *arg2)
 
 	rc = add_idle_conn(conn);
 	if (rc == 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "add conn id = %d, cid = %d poller = %p to idle\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_SCSI, "add conn id = %d, cid = %d poller = %p to idle\n",
 			      conn->id, conn->cid, conn->poller);
 		conn->is_idle = 1;
 		STAILQ_INSERT_TAIL(&g_idle_conn_list_head, conn, link);
