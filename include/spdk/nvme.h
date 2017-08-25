@@ -116,6 +116,20 @@ struct spdk_nvme_ctrlr_opts {
 	 * or driver-assisted striping.
 	 */
 	uint32_t io_queue_requests;
+
+	/**
+	 * Source address for NVMe-oF connections.
+	 * Set src_addr and src_svcid to empty strings if no source address should be
+	 * specified.
+	 */
+	char src_addr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
+
+	/**
+	 * Source service ID (port) for NVMe-oF connections.
+	 * Set src_addr and src_svcid to empty strings if no source address should be
+	 * specified.
+	 */
+	char src_svcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
 };
 
 /**
