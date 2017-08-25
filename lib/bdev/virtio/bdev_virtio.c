@@ -234,6 +234,76 @@ bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 	spdk_bdev_poller_stop(&io_channel->poller);
 }
 
+static int
+process_scan_inquiry(struct virtio_hw *hw, struct virtio_req *vreq)
+{
+	struct iovec *iov = vreq->iov;
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
+	uint8_t lun_id;
+
+	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
+		return -1;
+	}
+
+	lun_id = req->lun[1];
+	/* reuse vreq for next request */
+	memset(req, 0, sizeof(*req));
+	req->lun[0] = 1;
+	req->lun[1] = lun_id;
+
+	req->cdb[0] = SPDK_SPC_SERVICE_ACTION_IN_16;
+	req->cdb[1] = SPDK_SBC_SAI_READ_CAPACITY_16;
+
+	iov[0].iov_len = 32;
+	to_be32(&req->cdb[10], iov[0].iov_len);
+
+	virtio_xmit_pkts(hw->vqs[2], vreq);
+	return 0;
+}
+
+static int
+process_read_cap(struct virtio_hw *hw, struct virtio_req *vreq)
+{
+	struct virtio_scsi_disk *disk;
+	struct spdk_bdev *bdev;
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
+
+	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
+		SPDK_ERRLOG("read capacity failed for target %"PRIu8".\n", req->lun[1]);
+		return -1;
+	}
+
+	disk = calloc(1, sizeof(*disk));
+	if (disk == NULL) {
+		SPDK_ERRLOG("could not allocate disk\n");
+		return -1;
+	}
+
+	disk->num_blocks = from_be64((uint64_t *)(vreq->iov[0].iov_base)) + 1;
+	disk->block_size = from_be32((uint32_t *)(vreq->iov[0].iov_base + 8));
+
+	disk->hw = hw;
+
+	bdev = &disk->bdev;
+	bdev->name = spdk_sprintf_alloc("Virtio0");
+	bdev->product_name = "Virtio SCSI Disk";
+	bdev->write_cache = 0;
+	bdev->blocklen = disk->block_size;
+	bdev->blockcnt = disk->num_blocks;
+
+	bdev->ctxt = disk;
+	bdev->fn_table = &virtio_fn_table;
+	bdev->module = SPDK_GET_BDEV_MODULE(virtio_scsi);
+
+	spdk_io_device_register(&disk->hw, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
+				sizeof(struct bdev_virtio_io_channel));
+	spdk_bdev_register(bdev);
+
+	return 0;
+}
+
 static void
 scan_target(struct virtio_hw *hw, uint8_t target)
 {
@@ -246,8 +316,6 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 	struct spdk_scsi_cdb_inquiry *cdb;
 	uint16_t cnt;
 	struct virtio_req *complete;
-	struct virtio_scsi_disk *disk;
-	struct spdk_bdev *bdev;
 
 	iov = &_iov;
 	vreq = &_vreq;
@@ -280,51 +348,15 @@ scan_target(struct virtio_hw *hw, uint8_t target)
 		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 1);
 	} while (cnt == 0);
 
-	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
+	if (process_scan_inquiry(hw, vreq) != 0) {
 		return;
 	}
-
-	memset(req, 0, sizeof(*req));
-	req->lun[0] = 1;
-	req->lun[1] = target;
-
-	req->cdb[0] = SPDK_SPC_SERVICE_ACTION_IN_16;
-	req->cdb[1] = SPDK_SBC_SAI_READ_CAPACITY_16;
-
-	iov[0].iov_len = 32;
-	to_be32(&req->cdb[10], iov[0].iov_len);
-
-	virtio_xmit_pkts(hw->vqs[2], vreq);
 
 	do {
 		cnt = virtio_recv_pkts(hw->vqs[2], &complete, 1);
 	} while (cnt == 0);
 
-	disk = calloc(1, sizeof(*disk));
-	if (disk == NULL) {
-		SPDK_ERRLOG("could not allocate disk\n");
-		return;
-	}
-
-	disk->num_blocks = from_be64((uint64_t *)(iov[0].iov_base)) + 1;
-	disk->block_size = from_be32((uint32_t *)(iov[0].iov_base + 8));
-
-	disk->hw = hw;
-
-	bdev = &disk->bdev;
-	bdev->name = spdk_sprintf_alloc("Virtio0");
-	bdev->product_name = "Virtio SCSI Disk";
-	bdev->write_cache = 0;
-	bdev->blocklen = disk->block_size;
-	bdev->blockcnt = disk->num_blocks;
-
-	bdev->ctxt = disk;
-	bdev->fn_table = &virtio_fn_table;
-	bdev->module = SPDK_GET_BDEV_MODULE(virtio_scsi);
-
-	spdk_io_device_register(&disk->hw, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
-				sizeof(struct bdev_virtio_io_channel));
-	spdk_bdev_register(bdev);
+	process_read_cap(hw, vreq);
 }
 
 static int
