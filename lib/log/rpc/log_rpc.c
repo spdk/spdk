@@ -59,12 +59,12 @@ spdk_rpc_set_trace_flag(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, rpc_trace_flag_decoders,
 				    SPDK_COUNTOF(rpc_trace_flag_decoders), &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
 	if (req.flag == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "flag was 0\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "flag was 0\n");
 		goto invalid;
 	}
 
@@ -95,12 +95,12 @@ spdk_rpc_clear_trace_flag(struct spdk_jsonrpc_request *request,
 
 	if (spdk_json_decode_object(params, rpc_trace_flag_decoders,
 				    SPDK_COUNTOF(rpc_trace_flag_decoders), &req)) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
 	if (req.flag == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "flag was 0\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_DEBUG, "flag was 0\n");
 		goto invalid;
 	}
 

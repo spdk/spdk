@@ -462,7 +462,7 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 		}
 
 		if (csts.bits.shst == SPDK_NVME_SHST_COMPLETE) {
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "shutdown complete\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "shutdown complete\n");
 			return;
 		}
 
@@ -559,11 +559,11 @@ nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 {
 	ctrlr->state = state;
 	if (timeout_in_ms == NVME_TIMEOUT_INFINITE) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "setting state to %s (no timeout)\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "setting state to %s (no timeout)\n",
 			      nvme_ctrlr_state_string(ctrlr->state));
 		ctrlr->state_timeout_tsc = NVME_TIMEOUT_INFINITE;
 	} else {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "setting state to %s (timeout %" PRIu64 " ms)\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "setting state to %s (timeout %" PRIu64 " ms)\n",
 			      nvme_ctrlr_state_string(ctrlr->state), timeout_in_ms);
 		ctrlr->state_timeout_tsc = spdk_get_ticks() + (timeout_in_ms * spdk_get_ticks_hz()) / 1000;
 	}
@@ -660,11 +660,11 @@ nvme_ctrlr_identify(struct spdk_nvme_ctrlr *ctrlr)
 	 *  controller supports.
 	 */
 	ctrlr->max_xfer_size = nvme_transport_ctrlr_get_max_xfer_size(ctrlr);
-	SPDK_TRACELOG(SPDK_TRACE_NVME, "transport max_xfer_size %u\n", ctrlr->max_xfer_size);
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "transport max_xfer_size %u\n", ctrlr->max_xfer_size);
 	if (ctrlr->cdata.mdts > 0) {
 		ctrlr->max_xfer_size = spdk_min(ctrlr->max_xfer_size,
 						ctrlr->min_page_size * (1 << (ctrlr->cdata.mdts)));
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "MDTS max_xfer_size %u\n", ctrlr->max_xfer_size);
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "MDTS max_xfer_size %u\n", ctrlr->max_xfer_size);
 	}
 
 	return 0;
@@ -760,7 +760,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (ctrlr->cdata.kas == 0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "Controller KAS is 0 - not enabling Keep Alive\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Controller KAS is 0 - not enabling Keep Alive\n");
 		ctrlr->opts.keep_alive_timeout_ms = 0;
 		return 0;
 	}
@@ -786,7 +786,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (ctrlr->opts.keep_alive_timeout_ms != status.cpl.cdw0) {
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "Controller adjusted keep alive timeout to %u ms\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Controller adjusted keep alive timeout to %u ms\n",
 			      status.cpl.cdw0);
 	}
 
@@ -796,7 +796,7 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	if (keep_alive_interval_ms == 0) {
 		keep_alive_interval_ms = 1;
 	}
-	SPDK_TRACELOG(SPDK_TRACE_NVME, "Sending keep alive every %u ms\n", keep_alive_interval_ms);
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Sending keep alive every %u ms\n", keep_alive_interval_ms);
 
 	ctrlr->keep_alive_interval_ticks = (keep_alive_interval_ms * spdk_get_ticks_hz()) / UINT64_C(1000);
 
@@ -1232,7 +1232,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			/* While a device is resetting, it may be unable to service MMIO reads
 			 * temporarily. Allow for this case.
 			 */
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "Get registers failed while waiting for CSTS.RDY == 0\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Get registers failed while waiting for CSTS.RDY == 0\n");
 			goto init_timeout;
 		}
 		SPDK_ERRLOG("Failed to read CC and CSTS in state %d\n", ctrlr->state);
@@ -1249,7 +1249,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	case NVME_CTRLR_STATE_INIT:
 		/* Begin the hardware initialization by making sure the controller is disabled. */
 		if (cc.bits.en) {
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "CC.EN = 1\n");
 			/*
 			 * Controller is currently enabled. We need to disable it to cause a reset.
 			 *
@@ -1257,13 +1257,13 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 *  Wait for the ready bit to be 1 before disabling the controller.
 			 */
 			if (csts.bits.rdy == 0) {
-				SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 0 - waiting for reset to complete\n");
+				SPDK_DEBUGLOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 0 - waiting for reset to complete\n");
 				nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 				return 0;
 			}
 
 			/* CC.EN = 1 && CSTS.RDY == 1, so we can immediately disable the controller. */
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting CC.EN = 0\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Setting CC.EN = 0\n");
 			cc.bits.en = 0;
 			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
 				SPDK_ERRLOG("set_cc() failed\n");
@@ -1277,13 +1277,13 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			 * Not using sleep() to avoid blocking other controller's initialization.
 			 */
 			if (ctrlr->quirks & NVME_QUIRK_DELAY_BEFORE_CHK_RDY) {
-				SPDK_TRACELOG(SPDK_TRACE_NVME, "Applying quirk: delay 2 seconds before reading registers\n");
+				SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Applying quirk: delay 2 seconds before reading registers\n");
 				ctrlr->sleep_timeout_tsc = spdk_get_ticks() + 2 * spdk_get_ticks_hz();
 			}
 			return 0;
 		} else {
 			if (csts.bits.rdy == 1) {
-				SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 1 - waiting for shutdown to complete\n");
+				SPDK_DEBUGLOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 1 - waiting for shutdown to complete\n");
 			}
 
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0, ready_timeout_in_ms);
@@ -1293,9 +1293,9 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_1:
 		if (csts.bits.rdy == 1) {
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 1 - disabling controller\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 1 - disabling controller\n");
 			/* CC.EN = 1 && CSTS.RDY = 1, so we can set CC.EN = 0 now. */
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting CC.EN = 0\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Setting CC.EN = 0\n");
 			cc.bits.en = 0;
 			if (nvme_ctrlr_set_cc(ctrlr, &cc)) {
 				SPDK_ERRLOG("set_cc() failed\n");
@@ -1309,7 +1309,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 
 	case NVME_CTRLR_STATE_DISABLE_WAIT_FOR_READY_0:
 		if (csts.bits.rdy == 0) {
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 0\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "CC.EN = 0 && CSTS.RDY = 0\n");
 			nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE, ready_timeout_in_ms);
 			/*
 			 * Delay 100us before setting CC.EN = 1.  Some NVMe SSDs miss CC.EN getting
@@ -1321,14 +1321,14 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_ENABLE:
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "Setting CC.EN = 1\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Setting CC.EN = 1\n");
 		rc = nvme_ctrlr_enable(ctrlr);
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1, ready_timeout_in_ms);
 		return rc;
 
 	case NVME_CTRLR_STATE_ENABLE_WAIT_FOR_READY_1:
 		if (csts.bits.rdy == 1) {
-			SPDK_TRACELOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 1 - controller is ready\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "CC.EN = 1 && CSTS.RDY = 1 - controller is ready\n");
 			/*
 			 * The controller has been enabled.
 			 *  Perform the rest of initialization in nvme_ctrlr_start() serially.

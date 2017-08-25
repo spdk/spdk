@@ -82,7 +82,7 @@ spdk_vhost_blk_get_tasks(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_blk
 	assert(res_count == count);
 
 	for (res_count = 0; res_count < count; res_count++) {
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK_TASK, "GET task %p\n", tasks[res_count]);
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK_TASK, "GET task %p\n", tasks[res_count]);
 	}
 }
 
@@ -93,7 +93,7 @@ spdk_vhost_blk_put_tasks(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_blk
 	size_t res_count;
 
 	for (res_count = 0; res_count < count; res_count++) {
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK_TASK, "PUT task %p\n", tasks[res_count]);
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK_TASK, "PUT task %p\n", tasks[res_count]);
 	}
 
 	res_count = spdk_ring_enqueue(bvdev->tasks_pool, (void **)tasks, count);
@@ -112,7 +112,7 @@ invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
 
 	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, task->vq, task->req_idx, 0);
 	spdk_vhost_blk_put_tasks(task->bvdev, &task, 1);
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK_DATA, "Invalid request (status=%" PRIu8")\n", status);
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK_DATA, "Invalid request (status=%" PRIu8")\n", status);
 }
 
 /*
@@ -136,13 +136,13 @@ blk_iovs_setup(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t
 		 * Should not happen if request is well formatted, otherwise this is a BUG.
 		 */
 		if (spdk_unlikely(cnt == *iovs_cnt)) {
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Max IOVs in request reached (req_idx = %"PRIu16").\n",
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Max IOVs in request reached (req_idx = %"PRIu16").\n",
 				      req_idx);
 			return -1;
 		}
 
 		if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &cnt, desc))) {
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Invalid descriptor %" PRIu16" (req_idx = %"PRIu16").\n",
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Invalid descriptor %" PRIu16" (req_idx = %"PRIu16").\n",
 				      req_idx, cnt);
 			return -1;
 		}
@@ -178,7 +178,7 @@ blk_request_finish(bool success, struct spdk_vhost_blk_task *task)
 	*task->status = success ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR;
 	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, task->vq, task->req_idx,
 					task->length);
-	SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Finished task (%p) req_idx=%d\n status: %s\n", task,
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Finished task (%p) req_idx=%d\n status: %s\n", task,
 		      task->req_idx, success ? "OK" : "FAIL");
 	spdk_vhost_blk_put_tasks(task->bvdev, &task, 1);
 }
@@ -209,7 +209,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 	task->status = NULL;
 
 	if (blk_iovs_setup(&bvdev->vdev, vq, req_idx, task->iovs, &task->iovcnt, &task->length)) {
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Invalid request (req_idx = %"PRIu16").\n", req_idx);
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Invalid request (req_idx = %"PRIu16").\n", req_idx);
 		/* Only READ and WRITE are supported for now. */
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
 		return -1;
@@ -217,7 +217,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 
 	iov = &task->iovs[0];
 	if (spdk_unlikely(iov->iov_len != sizeof(*req))) {
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK,
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK,
 			      "First descriptor size is %zu but expected %zu (req_idx = %"PRIu16").\n",
 			      iov->iov_len, sizeof(*req), req_idx);
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
@@ -228,7 +228,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 
 	iov = &task->iovs[task->iovcnt - 1];
 	if (spdk_unlikely(iov->iov_len != 1)) {
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK,
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK,
 			      "Last descriptor size is %zu but expected %d (req_idx = %"PRIu16").\n",
 			      iov->iov_len, 1, req_idx);
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
@@ -264,7 +264,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 					      &task->iovs[1], task->iovcnt, req->sector * 512,
 					      task->length, blk_request_complete_cb, task);
 		} else {
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Device is in read-only mode!\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Device is in read-only mode!\n");
 			rc = -1;
 		}
 
@@ -283,7 +283,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 		blk_request_finish(true, task);
 		break;
 	default:
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "Not supported request type '%"PRIu32"'.\n", type);
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Not supported request type '%"PRIu32"'.\n", type);
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
 		return -1;
 	}
@@ -306,14 +306,14 @@ process_vq(struct spdk_vhost_blk_dev *bvdev, struct rte_vhost_vring *vq)
 
 	spdk_vhost_blk_get_tasks(bvdev, tasks, reqs_cnt);
 	for (i = 0; i < reqs_cnt; i++) {
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "====== Starting processing request idx %"PRIu16"======\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "====== Starting processing request idx %"PRIu16"======\n",
 			      reqs[i]);
 		rc = process_blk_request(tasks[i], bvdev, vq, reqs[i]);
 		if (rc == 0) {
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", tasks[i],
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", tasks[i],
 				      reqs[i]);
 		} else {
-			SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK, "====== Task %p req_idx %d failed ======\n", tasks[i], reqs[i]);
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "====== Task %p req_idx %d failed ======\n", tasks[i], reqs[i]);
 		}
 	}
 }
@@ -343,7 +343,7 @@ no_bdev_process_vq(struct spdk_vhost_blk_dev *bvdev, struct rte_vhost_vring *vq)
 	iovcnt = SPDK_COUNTOF(iovs);
 	if (blk_iovs_setup(&bvdev->vdev, vq, req_idx, iovs, &iovcnt, &length) == 0) {
 		*(volatile uint8_t *)iovs[iovcnt - 1].iov_base = VIRTIO_BLK_S_IOERR;
-		SPDK_TRACELOG(SPDK_TRACE_VHOST_BLK_DATA, "Aborting request %" PRIu16"\n", req_idx);
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK_DATA, "Aborting request %" PRIu16"\n", req_idx);
 	}
 
 	spdk_vhost_vq_used_ring_enqueue(&bvdev->vdev, vq, req_idx, 0);

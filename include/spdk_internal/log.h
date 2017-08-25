@@ -64,7 +64,7 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 	spdk_log_register_trace_flag(str, &flag); \
 }
 
-#define SPDK_TRACELOG(FLAG, ...)								\
+#define SPDK_DEBUGLOG(FLAG, ...)								\
 	do {											\
 		extern struct spdk_trace_flag FLAG;						\
 		if (FLAG.enabled) {								\
@@ -82,7 +82,7 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 
 #else
 #define SPDK_LOG_REGISTER_TRACE_FLAG(str, flag)
-#define SPDK_TRACELOG(...) do { } while (0)
+#define SPDK_DEBUGLOG(...) do { } while (0)
 #define SPDK_TRACEDUMP(...) do { } while (0)
 #endif
 

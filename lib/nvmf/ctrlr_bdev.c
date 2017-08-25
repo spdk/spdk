@@ -71,7 +71,7 @@ spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
 		}
 
 		if (!spdk_bdev_io_type_supported(ns->bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-			SPDK_TRACELOG(SPDK_TRACE_NVMF,
+			SPDK_DEBUGLOG(SPDK_TRACE_NVMF,
 				      "Subsystem %s namespace %u (%s) does not support unmap - not enabling DSM\n",
 				      spdk_nvmf_subsystem_get_nqn(subsystem),
 				      ns->id, spdk_bdev_get_name(ns->bdev));
@@ -79,7 +79,7 @@ spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
 		}
 	}
 
-	SPDK_TRACELOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support unmap - enabling DSM\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support unmap - enabling DSM\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem));
 	return true;
 }

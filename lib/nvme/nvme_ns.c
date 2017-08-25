@@ -88,13 +88,13 @@ int nvme_ns_identify_update(struct spdk_nvme_ns *ns)
 
 	if (nsdata->noiob) {
 		ns->sectors_per_stripe = nsdata->noiob;
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "ns %u optimal IO boundary %" PRIu32 " blocks\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "ns %u optimal IO boundary %" PRIu32 " blocks\n",
 			      ns->id, ns->sectors_per_stripe);
 	} else if (ns->ctrlr->quirks & NVME_INTEL_QUIRK_STRIPING &&
 		   ns->ctrlr->cdata.vs[3] != 0) {
 		ns->sectors_per_stripe = (1ULL << ns->ctrlr->cdata.vs[3]) * ns->ctrlr->min_page_size /
 					 ns->sector_size;
-		SPDK_TRACELOG(SPDK_TRACE_NVME, "ns %u stripe size quirk %" PRIu32 " blocks\n",
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "ns %u stripe size quirk %" PRIu32 " blocks\n",
 			      ns->id, ns->sectors_per_stripe);
 	} else {
 		ns->sectors_per_stripe = 0;
