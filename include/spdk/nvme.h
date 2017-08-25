@@ -57,68 +57,6 @@ extern int32_t		spdk_nvme_retry_count;
 struct spdk_nvme_ctrlr;
 
 /**
- * \brief NVMe controller initialization options.
- *
- * A pointer to this structure will be provided for each probe callback from spdk_nvme_probe() to
- * allow the user to request non-default options, and the actual options enabled on the controller
- * will be provided during the attach callback.
- */
-struct spdk_nvme_ctrlr_opts {
-	/**
-	 * Number of I/O queues to request (used to set Number of Queues feature)
-	 */
-	uint32_t num_io_queues;
-
-	/**
-	 * Enable submission queue in controller memory buffer
-	 */
-	bool use_cmb_sqs;
-
-	/**
-	 * Type of arbitration mechanism
-	 */
-	enum spdk_nvme_cc_ams arb_mechanism;
-
-	/**
-	 * Keep alive timeout in milliseconds (0 = disabled).
-	 *
-	 * The NVMe library will set the Keep Alive Timer feature to this value and automatically
-	 * send Keep Alive commands as needed.  The library user must call
-	 * spdk_nvme_ctrlr_process_admin_completions() periodically to ensure Keep Alive commands
-	 * are sent.
-	 */
-	uint32_t keep_alive_timeout_ms;
-
-	/**
-	 * Specify the retry number when there is issue with the transport
-	 */
-	int transport_retry_count;
-
-	/**
-	 * The queue depth of each NVMe I/O queue.
-	 */
-	uint32_t io_queue_size;
-
-	/**
-	 * The host NQN to use when connecting to NVMe over Fabrics controllers.
-	 *
-	 * Unused for local PCIe-attached NVMe devices.
-	 */
-	char hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
-
-	/**
-	 * The number of requests to allocate for each NVMe I/O queue.
-	 *
-	 * This should be at least as large as io_queue_size.
-	 *
-	 * A single I/O may allocate more than one request, since splitting may be necessary to
-	 * conform to the device's maximum transfer size, PRP list compatibility requirements,
-	 * or driver-assisted striping.
-	 */
-	uint32_t io_queue_requests;
-};
-
-/**
  * NVMe library transports
  *
  * NOTE: These are mapped directly to the NVMe over Fabrics TRTYPE values, except for PCIe,
@@ -179,6 +117,75 @@ struct spdk_nvme_transport_id {
 	 * Subsystem NQN of the NVMe over Fabrics endpoint. May be a zero length string.
 	 */
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+};
+
+/**
+ * \brief NVMe controller initialization options.
+ *
+ * A pointer to this structure will be provided for each probe callback from spdk_nvme_probe() to
+ * allow the user to request non-default options, and the actual options enabled on the controller
+ * will be provided during the attach callback.
+ */
+struct spdk_nvme_ctrlr_opts {
+	/**
+	 * Number of I/O queues to request (used to set Number of Queues feature)
+	 */
+	uint32_t num_io_queues;
+
+	/**
+	 * Enable submission queue in controller memory buffer
+	 */
+	bool use_cmb_sqs;
+
+	/**
+	 * Type of arbitration mechanism
+	 */
+	enum spdk_nvme_cc_ams arb_mechanism;
+
+	/**
+	 * Keep alive timeout in milliseconds (0 = disabled).
+	 *
+	 * The NVMe library will set the Keep Alive Timer feature to this value and automatically
+	 * send Keep Alive commands as needed.  The library user must call
+	 * spdk_nvme_ctrlr_process_admin_completions() periodically to ensure Keep Alive commands
+	 * are sent.
+	 */
+	uint32_t keep_alive_timeout_ms;
+
+	/**
+	 * Specify the retry number when there is issue with the transport
+	 */
+	int transport_retry_count;
+
+	/**
+	 * The queue depth of each NVMe I/O queue.
+	 */
+	uint32_t io_queue_size;
+
+	/**
+	 * The host NQN to use when connecting to NVMe over Fabrics controllers.
+	 *
+	 * Unused for local PCIe-attached NVMe devices.
+	 */
+	char hostnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+
+	/**
+	 * The number of requests to allocate for each NVMe I/O queue.
+	 *
+	 * This should be at least as large as io_queue_size.
+	 *
+	 * A single I/O may allocate more than one request, since splitting may be necessary to
+	 * conform to the device's maximum transfer size, PRP list compatibility requirements,
+	 * or driver-assisted striping.
+	 */
+	uint32_t io_queue_requests;
+
+	/**
+	 * Source address for NVMe-oF connections.
+	 * Set src_addr.traddr and src_addr.trsvcid to empty string if no source address should be
+	 * specified.
+	 */
+	struct spdk_nvme_transport_id src_addr;
 };
 
 /**
