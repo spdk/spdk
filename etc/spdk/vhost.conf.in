@@ -87,6 +87,10 @@
   # Units in microseconds.
   AdminPollRate 100000
 
+  # Enable handling of hotplug (runtime insert and remove) events
+  # vhost currently does not support hotplug
+  HotplugEnable No
+
 # The Split virtual block device slices block devices into multiple smaller bdevs.
 [Split]
   # Syntax:
@@ -123,7 +127,7 @@
 
 #[VhostScsi1]
 #  Name vhost.1
-#  Dev 0 AIO1
+#  Dev0 AIO1
 #  Cpumask 0x1
 
 #[VhostBlk0]
