@@ -202,7 +202,7 @@ function waitforbdev() {
 	rpc_py=$2
 
 	for ((i=1; i<=10; i++)); do
-		if [ ! -z "`$rpc_py get_bdevs | grep $bdev_name`" ]; then
+		if $rpc_py get_bdevs -b "$bdev_name" &>/dev/null; then
 			return 0
 		else
 			sleep 0.1
