@@ -81,6 +81,7 @@ struct spdk_fio_thread {
 	struct thread_data	*td;
 
 	struct spdk_fio_qpair	*fio_qpair;
+	struct spdk_fio_qpair	*fio_qpair_current; // the current fio_qpair to be handled.
 
 	struct io_u		**iocq;	// io completion queue
 	unsigned int		iocq_count;	// number of iocq entries filled by last getevents
@@ -417,7 +418,7 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 			      unsigned int max, const struct timespec *t)
 {
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
-	struct spdk_fio_qpair *fio_qpair;
+	struct spdk_fio_qpair *fio_qpair = NULL;
 	struct timespec t0, t1;
 	uint64_t timeout = 0;
 
@@ -428,12 +429,22 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 
 	fio_thread->iocq_count = 0;
 
+	/* fetch the next qpair */
+	if (fio_thread->fio_qpair_current) {
+		fio_qpair = fio_thread->fio_qpair_current->next;
+	}
+
 	for (;;) {
-		fio_qpair = fio_thread->fio_qpair;
+		if (fio_qpair == NULL) {
+			fio_qpair = fio_thread->fio_qpair;
+		}
+
 		while (fio_qpair != NULL) {
 			spdk_nvme_qpair_process_completions(fio_qpair->qpair, max - fio_thread->iocq_count);
 
 			if (fio_thread->iocq_count >= min) {
+				/* reset the currrent handling qpair */
+				fio_thread->fio_qpair_current = fio_qpair;
 				return fio_thread->iocq_count;
 			}
 
@@ -452,6 +463,8 @@ static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		}
 	}
 
+	/* reset the currrent handling qpair */
+	fio_thread->fio_qpair_current = fio_qpair;
 	return fio_thread->iocq_count;
 }
 
