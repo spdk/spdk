@@ -74,6 +74,7 @@ struct spdk_fio_qpair {
 	struct spdk_nvme_qpair	*qpair;
 	struct spdk_nvme_ns	*ns;
 	struct spdk_fio_qpair 	*next;
+	struct spdk_fio_ctrlr   *fio_ctrlr;
 };
 
 struct spdk_fio_thread {
@@ -155,7 +156,9 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	fio_qpair = fio_thread->fio_qpair;
 	while (fio_qpair != NULL) {
-		if (fio_qpair->f == f) {
+		if ((fio_qpair->f == f) ||
+		    ((spdk_nvme_transport_id_compare(trid, &fio_qpair->fio_ctrlr->tr_id) == 0) &&
+		     (spdk_nvme_ns_get_id(fio_qpair->ns) == ns_id))) {
 			return;
 		}
 		fio_qpair = fio_qpair->next;
@@ -170,6 +173,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	fio_qpair->qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_ctrlr->ctrlr, NULL, 0);
 	fio_qpair->ns = ns;
 	fio_qpair->f = f;
+	fio_qpair->fio_ctrlr = fio_ctrlr;
 	fio_qpair->next = fio_thread->fio_qpair;
 	fio_thread->fio_qpair = fio_qpair;
 
