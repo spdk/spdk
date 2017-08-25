@@ -52,6 +52,34 @@ struct spdk_lvol *g_lvol;
 struct spdk_blob_store {
 };
 
+void
+spdk_bs_md_iter_first(struct spdk_blob_store *bs,
+		      spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	return;
+}
+
+void
+spdk_bs_get_super(struct spdk_blob_store *bs,
+		  spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	return;
+}
+
+void
+spdk_bs_set_super(struct spdk_blob_store *bs, spdk_blob_id blobid,
+		  spdk_bs_op_complete cb_fn, void *cb_arg)
+{
+	return;
+}
+
+int
+spdk_bs_md_get_xattr_value(struct spdk_blob *blob, const char *name,
+			   const void **value, size_t *value_len)
+{
+	return 0;
+}
+
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
 	return NULL;
