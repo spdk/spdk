@@ -165,6 +165,37 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	return;
 }
 
+static void
+vbdev_lvs_add(void *arg, struct spdk_lvol_store *lvol_store, int lvserrno)
+{
+	struct lvol_store_bdev *lvs_bdev;
+	struct spdk_lvol_store_req *req = (struct spdk_lvol_store_req *)arg;
+
+	if (lvserrno != 0) {
+		SPDK_ERRLOG("Error while parsing lvol store\n");
+		free(req);
+		return;
+	}
+
+	lvs_bdev = calloc(1, sizeof(*lvs_bdev));
+	if (!lvs_bdev) {
+		SPDK_ERRLOG("Cannot alloc memory for lvs_bdev\n");
+		free(req);
+		return;
+	}
+
+	lvs_bdev->lvs = lvol_store;
+	lvs_bdev->bdev = req->u.lvs_handle.base_bdev;
+
+	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+
+	free(req);
+
+	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvs));
+
+	return;
+}
+
 static int
 vbdev_lvs_init(void)
 {
@@ -186,7 +217,25 @@ vbdev_lvs_fini(void)
 static void
 vbdev_lvs_examine(struct spdk_bdev *bdev)
 {
-	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvs));
+	struct spdk_bs_dev *bs_dev;
+	struct spdk_lvol_store_req *req;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		return;
+	}
+
+	bs_dev = spdk_bdev_create_bs_dev(bdev);
+	if (!bs_dev) {
+		SPDK_ERRLOG("Cannot create bs dev\n");
+		return;
+	}
+
+	req->u.lvs_handle.bs_dev = bs_dev;
+	req->u.lvs_handle.base_bdev = bdev;
+	req->u.lvs_handle.cb_fn =  vbdev_lvs_add;
+
+	spdk_bs_load(bs_dev, spdk_lvs_examine_cb, req);
 }
 
 struct lvol_store_bdev *

@@ -45,6 +45,19 @@ bool lvol_store_initialize_cb_fail = false;
 bool lvol_already_opened = false;
 
 void
+spdk_lvs_examine_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
+{
+	return;
+}
+
+void
+spdk_bs_load(struct spdk_bs_dev *dev,
+	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	return;
+}
+
+void
 spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
 {
 	return;
