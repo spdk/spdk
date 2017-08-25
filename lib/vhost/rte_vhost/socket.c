@@ -691,6 +691,31 @@ vhost_user_remove_reconnect(struct vhost_user_socket *vsocket)
 	return found;
 }
 
+int
+rte_vhost_get_conn_count(const char *path)
+{
+	struct vhost_user_socket *vsocket;
+	struct vhost_user_connection *conn;
+	int count = 0;
+
+	pthread_mutex_lock(&vhost_user.mutex);
+	vsocket = find_vhost_user_socket(path);
+	if (vsocket == NULL) {
+		RTE_LOG(ERR, VHOST_CONFIG,
+			"socket file %s is not registered.\n", path);
+		pthread_mutex_unlock(&vhost_user.mutex);
+		return -1;
+	}
+
+	pthread_mutex_lock(&vsocket->conn_mutex);
+	TAILQ_FOREACH(conn, &vsocket->conn_list, next) {
+		count++;
+	}
+	pthread_mutex_unlock(&vsocket->conn_mutex);
+	pthread_mutex_unlock(&vhost_user.mutex);
+	return count;
+}
+
 /**
  * Unregister the specified vhost socket
  */
