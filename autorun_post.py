@@ -4,6 +4,7 @@ import subprocess
 import argparse
 import os
 import glob
+import re
 
 def main(output_dir, repo_dir):
     with open(os.path.join(output_dir, 'coverage.log'), 'w+') as log_file:
