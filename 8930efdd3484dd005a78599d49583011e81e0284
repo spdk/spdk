@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "879a5b36_8111f5b4",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2017-08-28T05:44:58Z",
+      "side": 1,
+      "message": "Thanks for reviewing my code.",
+      "parentUuid": "380da300_024d8661",
+      "revId": "8930efdd3484dd005a78599d49583011e81e0284",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c662b0e_d74c225b",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 7
@@ -53,6 +71,24 @@
       "writtenOn": "2017-08-25T17:09:05Z",
       "side": 1,
       "message": "We should only output the optional block size if the user specified a block size override when creating the bdev.  This will have to be stored separately in file_disk (we can\u0027t tell whether the user specified a block size or if it was auto-detected just based on disk.blocklen).  You can either store the user-specified block size itself, or just a bool to indicate whether they provided a block size override.\n\nAlso, please indent the AIO line with two spaces to match the example configuration files.",
+      "revId": "8930efdd3484dd005a78599d49583011e81e0284",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b94f745_2026b904",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2017-08-28T05:44:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dec8f265_3575c57c",
       "revId": "8930efdd3484dd005a78599d49583011e81e0284",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
