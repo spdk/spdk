@@ -303,6 +303,30 @@ open_write_test(void)
 }
 
 static void
+bytes_to_blocks_test(void)
+{
+	struct spdk_bdev bdev;
+	uint64_t offset_blocks, num_blocks;
+
+	memset(&bdev, 0, sizeof(bdev));
+
+	bdev.blocklen = 512;
+
+	/* All parameters valid */
+	offset_blocks = 0;
+	num_blocks = 0;
+	CU_ASSERT(spdk_bdev_bytes_to_blocks(&bdev, 512, &offset_blocks, 1024, &num_blocks) == 0);
+	CU_ASSERT(offset_blocks == 1);
+	CU_ASSERT(num_blocks == 2);
+
+	/* Offset not a block multiple */
+	CU_ASSERT(spdk_bdev_bytes_to_blocks(&bdev, 3, &offset_blocks, 512, &num_blocks) != 0);
+
+	/* Length not a block multiple */
+	CU_ASSERT(spdk_bdev_bytes_to_blocks(&bdev, 512, &offset_blocks, 3, &num_blocks) != 0);
+}
+
+static void
 io_valid_test(void)
 {
 	struct spdk_bdev bdev;
@@ -313,25 +337,19 @@ io_valid_test(void)
 	bdev.blockcnt = 100;
 
 	/* All parameters valid */
-	CU_ASSERT(spdk_bdev_io_valid(&bdev, 512, 1024) == true);
-
-	/* Offset not a block multiple */
-	CU_ASSERT(spdk_bdev_io_valid(&bdev, 3, 512) == false);
-
-	/* Length not a block multiple */
-	CU_ASSERT(spdk_bdev_io_valid(&bdev, 512, 3) == false);
+	CU_ASSERT(spdk_bdev_io_valid_blocks(&bdev, 1, 2) == true);
 
 	/* Last valid block */
-	CU_ASSERT(spdk_bdev_io_valid(&bdev, 50688, 512) == true);
+	CU_ASSERT(spdk_bdev_io_valid_blocks(&bdev, 99, 1) == true);
 
 	/* Offset past end of bdev */
-	CU_ASSERT(spdk_bdev_io_valid(&bdev, 51200, 512) == false);
+	CU_ASSERT(spdk_bdev_io_valid_blocks(&bdev, 100, 1) == false);
 
 	/* Offset + length past end of bdev */
-	CU_ASSERT(spdk_bdev_io_valid(&bdev, 50688, 1024) == false);
+	CU_ASSERT(spdk_bdev_io_valid_blocks(&bdev, 99, 2) == false);
 
-	/* Offset near end of uint64_t range (2^64 - 512) */
-	CU_ASSERT(spdk_bdev_io_valid(&bdev, 18446744073709551104ULL, 512) == false);
+	/* Offset near end of uint64_t range (2^64 - 1) */
+	CU_ASSERT(spdk_bdev_io_valid_blocks(&bdev, 18446744073709551615ULL, 1) == false);
 }
 
 int
@@ -351,6 +369,7 @@ main(int argc, char **argv)
 	}
 
 	if (
+		CU_add_test(suite, "bytes_to_blocks_test", bytes_to_blocks_test) == NULL ||
 		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
 		CU_add_test(suite, "open_write", open_write_test) == NULL
 	) {

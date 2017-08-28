@@ -271,6 +271,25 @@ int spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
+ * Submit a read request to the bdev on the given channel.
+ *
+ * \param desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param buf Data buffer to read into.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to read.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ */
+int spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			  void *buf, uint64_t offset_blocks, uint64_t num_blocks,
+			  spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
  * Submit a read request to the bdev on the given channel. This differs from
  * spdk_bdev_read by allowing the data buffer to be described in a scatter
  * gather list. Some physical devices place memory alignment requirements on
@@ -296,6 +315,31 @@ int spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
+ * Submit a read request to the bdev on the given channel. This differs from
+ * spdk_bdev_read by allowing the data buffer to be described in a scatter
+ * gather list. Some physical devices place memory alignment requirements on
+ * data and may not be able to directly transfer into the buffers provided. In
+ * this case, the request may fail.
+ *
+ * \param desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be read into.
+ * \param iovcnt The number of elements in iov.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to read.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ */
+int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			   struct iovec *iov, int iovcnt,
+			   uint64_t offset_blocks, uint64_t num_blocks,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
  * Submit a write request to the bdev on the given channel.
  *
  * \param bdev Block device
@@ -313,6 +357,25 @@ int spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 int spdk_bdev_write(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    void *buf, uint64_t offset, uint64_t nbytes,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a write request to the bdev on the given channel.
+ *
+ * \param desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param buf Data buffer to written from.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to write. buf must be greater than or equal to this size.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ */
+int spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			   void *buf, uint64_t offset_blocks, uint64_t num_blocks,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit a write request to the bdev on the given channel. This differs from
@@ -340,6 +403,31 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		     spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
+ * Submit a write request to the bdev on the given channel. This differs from
+ * spdk_bdev_write by allowing the data buffer to be described in a scatter
+ * gather list. Some physical devices place memory alignment requirements on
+ * data and may not be able to directly transfer out of the buffers provided. In
+ * this case, the request may fail.
+ *
+ * \param desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param iov A scatter gather list of buffers to be written from.
+ * \param iovcnt The number of elements in iov.
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to write. buf must be greater than or equal to this size.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ */
+int spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			    struct iovec *iov, int iovcnt,
+			    uint64_t offset_blocks, uint64_t num_blocks,
+			    spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
  * Submit a write zeroes request to the bdev on the given channel. This command
  *  ensures that all bytes in the specified range are set to 00h
  *
@@ -357,6 +445,25 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 int spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			   uint64_t offset, uint64_t len,
 			   spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a write zeroes request to the bdev on the given channel. This command
+ *  ensures that all bytes in the specified range are set to 00h
+ *
+ * \param desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to zero.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ */
+int spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				  uint64_t offset_blocks, uint64_t num_blocks,
+				  spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit an unmap request to the block device. Unmap is sometimes also called trim or
@@ -379,6 +486,26 @@ int spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
+ * Submit an unmap request to the block device. Unmap is sometimes also called trim or
+ * deallocate. This notifies the device that the data in the blocks described is no
+ * longer valid. Reading blocks that have been unmapped results in indeterminate data.
+ *
+ * \param desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks to unmap.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ */
+int spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			   uint64_t offset_blocks, uint64_t num_blocks,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
  * Submit a flush request to the bdev on the given channel. For devices with volatile
  * caches, data is not guaranteed to be persistent until the completion of a flush
  * request. Call spdk_bdev_has_write_cache() to check if the bdev has a volatile cache.
@@ -397,6 +524,26 @@ int spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 int spdk_bdev_flush(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    uint64_t offset, uint64_t length,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a flush request to the bdev on the given channel. For devices with volatile
+ * caches, data is not guaranteed to be persistent until the completion of a flush
+ * request. Call spdk_bdev_has_write_cache() to check if the bdev has a volatile cache.
+ *
+ * \param desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ */
+int spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			   uint64_t offset_blocks, uint64_t num_blocks,
+			   spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit a reset request to the bdev on the given channel.
