@@ -1,0 +1,285 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "261a3c83_5b60c7f9",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "why is this global (instead of being in main()) and why isn\u0027t this static?",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 31
+      },
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1baef3c2_0615c94d",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "#defines might suit better here",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 37
+      },
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58f6afd6_92efb95c",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "This entire enum could be deleted. I guess we are keeping it just for readability, but how about keeping the codebase as small as possible here?",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 2
+      },
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "362442e6_2c09d8ff",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "this can be deleted. it\u0027s always set to app_bdev_req_free",
+      "range": {
+        "startLine": 81,
+        "startChar": 1,
+        "endLine": 81,
+        "endChar": 39
+      },
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "451dcb56_8e0a74ee",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "you could memset entire req instead",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 23
+      },
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "549d6a58_952091bd",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "How about: \"Bdev hot-removed, aborting\"",
+      "range": {
+        "startLine": 116,
+        "startChar": 14,
+        "endLine": 116,
+        "endChar": 25
+      },
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8583010f_eb9cd160",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "goto out;",
+      "range": {
+        "startLine": 140,
+        "startChar": 2,
+        "endLine": 141,
+        "endChar": 9
+      },
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88eaa5b2_bde91ede",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "bdev_close()\ngoto out;",
+      "range": {
+        "startLine": 147,
+        "startChar": 2,
+        "endLine": 148,
+        "endChar": 9
+      },
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5c8764f_939985c7",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "unreachable, delete",
+      "range": {
+        "startLine": 165,
+        "startChar": 0,
+        "endLine": 165,
+        "endChar": 21
+      },
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "553a531c_c1aba76c",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "missing return;",
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "37492b91_d4012cf4",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "remove lvol references, they\u0027re not required here",
+      "range": {
+        "startLine": 376,
+        "startChar": 0,
+        "endLine": 383,
+        "endChar": 1
+      },
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de5f7170_5048b6b0",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "check req and goto invalid",
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36b8ddbe_c2384785",
+        "filename": "examples/bdev/io/bdev_io.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-28T06:31:29Z",
+      "side": 1,
+      "message": "check req and goto invalid",
+      "revId": "f7c206ad32a9cfe1e7e868ee21132471c1792906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
