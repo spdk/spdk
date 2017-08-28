@@ -69,8 +69,14 @@ struct spdk_nvmf_listener {
 	TAILQ_ENTRY(spdk_nvmf_listener)	link;
 };
 
+struct spdk_nvmf_transport_poll_group {
+	struct spdk_nvmf_transport			*transport;
+	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)	link;
+};
+
 struct spdk_nvmf_poll_group {
-	struct spdk_nvmf_transport		*transport;
+	TAILQ_HEAD(, spdk_nvmf_transport_poll_group) tgroups;
+
 	TAILQ_ENTRY(spdk_nvmf_poll_group)	link;
 };
 
@@ -110,6 +116,19 @@ uint16_t spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt);
 
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
 		enum spdk_nvme_transport_type);
+
+struct spdk_nvmf_poll_group *spdk_nvmf_poll_group_create(
+	struct spdk_nvmf_tgt *tgt);
+
+void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group);
+
+int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
+			     struct spdk_nvmf_qpair *qpair);
+
+int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
+				struct spdk_nvmf_qpair *qpair);
+
+int spdk_nvmf_poll_group_poll(struct spdk_nvmf_poll_group *group);
 
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
