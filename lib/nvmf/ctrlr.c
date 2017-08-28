@@ -156,15 +156,6 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 	ctrlr_destruct(ctrlr);
 }
 
-static void
-invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp, uint8_t iattr, uint16_t ipo)
-{
-	rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-	rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-	rsp->status_code_specific.invalid.iattr = iattr;
-	rsp->status_code_specific.invalid.ipo = ipo;
-}
-
 void
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			struct spdk_nvmf_fabric_connect_cmd *cmd,
@@ -174,9 +165,6 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 	struct spdk_nvmf_tgt *tgt;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_subsystem *subsystem;
-
-#define INVALID_CONNECT_CMD(field) invalid_connect_response(rsp, 0, offsetof(struct spdk_nvmf_fabric_connect_cmd, field))
-#define INVALID_CONNECT_DATA(field) invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
 
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "recfmt 0x%x qid %u sqsize %u\n",
 		      cmd->recfmt, cmd->qid, cmd->sqsize);
@@ -199,7 +187,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
-		INVALID_CONNECT_DATA(subnqn);
+		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
 		return;
 	}
 
@@ -210,7 +198,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 	if (cmd->sqsize == 0 || cmd->sqsize >= tgt->opts.max_queue_depth) {
 		SPDK_ERRLOG("Invalid SQSIZE %u (min 1, max %u)\n",
 			    cmd->sqsize, tgt->opts.max_queue_depth - 1);
-		INVALID_CONNECT_CMD(sqsize);
+		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, sqsize);
 		return;
 	}
 	qpair->sq_head_max = cmd->sqsize;
@@ -224,7 +212,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 		if (data->cntlid != 0xFFFF) {
 			/* This NVMf target only supports dynamic mode. */
 			SPDK_ERRLOG("The NVMf target only supports dynamic mode (CNTLID = 0x%x).\n", data->cntlid);
-			INVALID_CONNECT_DATA(cntlid);
+			SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);
 			return;
 		}
 
@@ -250,33 +238,33 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 		}
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Unknown controller ID 0x%x\n", data->cntlid);
-			INVALID_CONNECT_DATA(cntlid);
+			SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);
 			return;
 		}
 
 		if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			SPDK_ERRLOG("I/O connect not allowed on discovery controller\n");
-			INVALID_CONNECT_CMD(qid);
+			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
 			return;
 		}
 
 		if (!ctrlr->vcprop.cc.bits.en) {
 			SPDK_ERRLOG("Got I/O connect before ctrlr was enabled\n");
-			INVALID_CONNECT_CMD(qid);
+			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
 			return;
 		}
 
 		if (1u << ctrlr->vcprop.cc.bits.iosqes != sizeof(struct spdk_nvme_cmd)) {
 			SPDK_ERRLOG("Got I/O connect with invalid IOSQES %u\n",
 				    ctrlr->vcprop.cc.bits.iosqes);
-			INVALID_CONNECT_CMD(qid);
+			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
 			return;
 		}
 
 		if (1u << ctrlr->vcprop.cc.bits.iocqes != sizeof(struct spdk_nvme_cpl)) {
 			SPDK_ERRLOG("Got I/O connect with invalid IOCQES %u\n",
 				    ctrlr->vcprop.cc.bits.iocqes);
-			INVALID_CONNECT_CMD(qid);
+			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
 			return;
 		}
 
@@ -289,7 +277,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 		}
 
 		if (spdk_nvmf_transport_poll_group_add(ctrlr->group, qpair)) {
-			INVALID_CONNECT_CMD(qid);
+			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
 			return;
 		}
 	}
