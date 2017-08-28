@@ -90,29 +90,29 @@ struct spdk_nvmf_transport_ops {
 	/**
 	 * Create a new poll group
 	 */
-	struct spdk_nvmf_poll_group *(*poll_group_create)(struct spdk_nvmf_transport *transport);
+	struct spdk_nvmf_transport_poll_group *(*poll_group_create)(struct spdk_nvmf_transport *transport);
 
 	/**
 	 * Destroy a poll group
 	 */
-	void (*poll_group_destroy)(struct spdk_nvmf_poll_group *group);
+	void (*poll_group_destroy)(struct spdk_nvmf_transport_poll_group *group);
 
 	/**
 	 * Add a qpair to a poll group
 	 */
-	int (*poll_group_add)(struct spdk_nvmf_poll_group *group,
+	int (*poll_group_add)(struct spdk_nvmf_transport_poll_group *group,
 			      struct spdk_nvmf_qpair *qpair);
 
 	/**
 	 * Remove a qpair from a poll group
 	 */
-	int (*poll_group_remove)(struct spdk_nvmf_poll_group *group,
+	int (*poll_group_remove)(struct spdk_nvmf_transport_poll_group *group,
 				 struct spdk_nvmf_qpair *qpair);
 
 	/**
 	 * Poll the group to process I/O
 	 */
-	int (*poll_group_poll)(struct spdk_nvmf_poll_group *group);
+	int (*poll_group_poll)(struct spdk_nvmf_transport_poll_group *group);
 
 	/*
 	 * Signal request completion, which sends a response
@@ -147,18 +147,18 @@ void spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport
 		struct spdk_nvme_transport_id *trid,
 		struct spdk_nvmf_discovery_log_page_entry *entry);
 
-struct spdk_nvmf_poll_group *spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport
-		*transport);
+struct spdk_nvmf_transport_poll_group *spdk_nvmf_transport_poll_group_create(
+	struct spdk_nvmf_transport *transport);
 
-void spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_poll_group *group);
+void spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group);
 
-int spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_poll_group *group,
+int spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 				       struct spdk_nvmf_qpair *qpair);
 
-int spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_poll_group *group,
+int spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 		struct spdk_nvmf_qpair *qpair);
 
-int spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_poll_group *group);
+int spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group);
 
 int spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req);
 

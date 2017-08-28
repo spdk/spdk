@@ -120,10 +120,10 @@ spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 	transport->ops->listener_discover(transport, trid, entry);
 }
 
-struct spdk_nvmf_poll_group *
+struct spdk_nvmf_transport_poll_group *
 spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 {
-	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_transport_poll_group *group;
 
 	group = transport->ops->poll_group_create(transport);
 	group->transport = transport;
@@ -132,13 +132,13 @@ spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 }
 
 void
-spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_poll_group *group)
+spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	group->transport->ops->poll_group_destroy(group);
 }
 
 int
-spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_poll_group *group,
+spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 				   struct spdk_nvmf_qpair *qpair)
 {
 	if (qpair->transport) {
@@ -154,14 +154,14 @@ spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_poll_group *group,
 }
 
 int
-spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_poll_group *group,
+spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 				      struct spdk_nvmf_qpair *qpair)
 {
 	return group->transport->ops->poll_group_remove(group, qpair);
 }
 
 int
-spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_poll_group *group)
+spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	return group->transport->ops->poll_group_poll(group);
 }
