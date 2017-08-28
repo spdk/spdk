@@ -97,10 +97,6 @@ struct spdk_nvmf_subsystem {
 	uint32_t 				max_nsid;
 	uint32_t				num_allocated_nsid;
 
-	void					*cb_ctx;
-	spdk_nvmf_subsystem_connect_fn		connect_cb;
-	spdk_nvmf_subsystem_disconnect_fn	disconnect_cb;
-
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
 
 	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
