@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7286c483_a84927fa",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-28T17:41:29Z",
+      "side": 1,
+      "message": "The only place this is used already has a reference to the fio_ctrlr object by other means, so you can remove this.",
+      "revId": "eaae87d3203090be091137bab22e6375848fcde7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec0ddb4b_e7e9f8c0",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-28T17:41:29Z",
+      "side": 1,
+      "message": "Under what circumstances can your new check be true but the original check is false? If the transport ID is the same, shouldn\u0027t they have the same fio_file? Are you seeing fio create multiple fio_file structs for the same filename?",
+      "revId": "eaae87d3203090be091137bab22e6375848fcde7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
