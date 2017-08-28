@@ -109,6 +109,11 @@ struct spdk_nvmf_transport_ops {
 	int (*poll_group_remove)(struct spdk_nvmf_poll_group *group,
 				 struct spdk_nvmf_qpair *qpair);
 
+	/**
+	 * Poll the group to process I/O
+	 */
+	int (*poll_group_poll)(struct spdk_nvmf_poll_group *group);
+
 	/*
 	 * Signal request completion, which sends a response
 	 * to the originator.
@@ -119,11 +124,6 @@ struct spdk_nvmf_transport_ops {
 	 * Deinitialize a connection.
 	 */
 	void (*qpair_fini)(struct spdk_nvmf_qpair *qpair);
-
-	/*
-	 * Poll a connection for events.
-	 */
-	int (*qpair_poll)(struct spdk_nvmf_qpair *qpair);
 
 	/*
 	 * True if the qpair has no pending IO.
@@ -158,11 +158,11 @@ int spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_poll_group *group,
 int spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_qpair *qpair);
 
+int spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_poll_group *group);
+
 int spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req);
 
 void spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair);
-
-int spdk_nvmf_transport_qpair_poll(struct spdk_nvmf_qpair *qpair);
 
 bool spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair);
 
