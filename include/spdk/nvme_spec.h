@@ -849,6 +849,18 @@ enum spdk_nvmf_ctrlr_model {
 #define SPDK_NVME_CTRLR_MN_LEN	40
 #define SPDK_NVME_CTRLR_FR_LEN	8
 
+/** Identify Controller data sgls.supported values */
+enum spdk_nvme_sgls_supported {
+	/** SGLs are not supported */
+	SPDK_NVME_SGLS_NOT_SUPPORTED			= 0,
+
+	/** SGLs are supported with no alignment or granularity requirement. */
+	SPDK_NVME_SGLS_SUPPORTED			= 1,
+
+	/** SGLs are supported with a DWORD alignment and granularity requirement. */
+	SPDK_NVME_SGLS_SUPPORTED_DWORD_ALIGNED		= 2,
+};
+
 struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 	/* bytes 0-255: controller capabilities and features */
 
@@ -1174,8 +1186,7 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 
 	/** SGL support */
 	struct {
-		uint32_t	supported : 1;
-		uint32_t	reserved0 : 1;
+		uint32_t	supported : 2;
 		uint32_t	keyed_sgl : 1;
 		uint32_t	reserved1 : 13;
 		uint32_t	bit_bucket_descriptor : 1;

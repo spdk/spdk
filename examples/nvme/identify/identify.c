@@ -622,7 +622,9 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("Atomic Write Unit (PFail):   %d\n", cdata->awupf + 1);
 	printf("Scatter-Gather List\n");
 	printf("  SGL Command Set:           %s\n",
-	       cdata->sgls.supported ? "Supported" : "Not Supported");
+	       cdata->sgls.supported == SPDK_NVME_SGLS_SUPPORTED ? "Supported" :
+	       cdata->sgls.supported == SPDK_NVME_SGLS_SUPPORTED_DWORD_ALIGNED ? "Supported (Dword aligned)" :
+	       "Not Supported");
 	printf("  SGL Keyed:                 %s\n",
 	       cdata->sgls.keyed_sgl ? "Supported" : "Not Supported");
 	printf("  SGL Bit Bucket Descriptor: %s\n",
