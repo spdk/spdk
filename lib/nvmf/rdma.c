@@ -198,6 +198,7 @@ struct spdk_nvmf_rdma_qpair {
 	void					*bufs;
 	struct ibv_mr				*bufs_mr;
 
+	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	pending_link;
 	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	link;
 };
 
@@ -657,7 +658,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	/* Add this RDMA connection to the global list until a CONNECT capsule
 	 * is received. */
-	TAILQ_INSERT_TAIL(&g_pending_conns, rdma_qpair, link);
+	TAILQ_INSERT_TAIL(&g_pending_conns, rdma_qpair, pending_link);
 
 	return 0;
 
@@ -701,11 +702,11 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	/* The connection may still be in this pending list when a disconnect
 	 * event arrives. Search for it and remove it if it is found.
 	 */
-	TAILQ_FOREACH_SAFE(r, &g_pending_conns, link, t) {
+	TAILQ_FOREACH_SAFE(r, &g_pending_conns, pending_link, t) {
 		if (r == rdma_qpair) {
 			SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Received disconnect for qpair %p before first SEND ack\n",
 				      rdma_qpair);
-			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, link);
+			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, pending_link);
 			break;
 		}
 	}
@@ -1355,7 +1356,8 @@ spdk_nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 }
 
 static int
-spdk_nvmf_rdma_poll(struct spdk_nvmf_qpair *qpair);
+spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
+			  struct spdk_nvmf_rdma_qpair *rqpair);
 
 static void
 spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
@@ -1374,15 +1376,15 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 
 	/* Process pending connections for incoming capsules. The only capsule
 	 * this should ever find is a CONNECT request. */
-	TAILQ_FOREACH_SAFE(rdma_qpair, &g_pending_conns, link, tmp) {
-		rc = spdk_nvmf_rdma_poll(&rdma_qpair->qpair);
+	TAILQ_FOREACH_SAFE(rdma_qpair, &g_pending_conns, pending_link, tmp) {
+		rc = spdk_nvmf_rdma_qpair_poll(rtransport, rdma_qpair);
 		if (rc < 0) {
-			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, link);
+			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, pending_link);
 			spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
 		} else if (rc > 0) {
 			/* At least one request was processed which is assumed to be
 			 * a CONNECT. Remove this connection from our list. */
-			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, link);
+			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, pending_link);
 		}
 	}
 
@@ -1676,11 +1678,10 @@ get_rdma_recv_from_wc(struct spdk_nvmf_rdma_qpair *rdma_qpair,
 }
 
 static int
-spdk_nvmf_rdma_poll(struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
+			  struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	struct ibv_wc wc[32];
-	struct spdk_nvmf_rdma_transport *rtransport;
-	struct spdk_nvmf_rdma_qpair	*rdma_qpair;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
 	int reaped, i;
@@ -1688,11 +1689,8 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_qpair *qpair)
 	bool error = false;
 	char buf[64];
 
-	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
-	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
 	/* Poll for completing operations. */
-	reaped = ibv_poll_cq(rdma_qpair->cq, 32, wc);
+	reaped = ibv_poll_cq(rqpair->cq, 32, wc);
 	if (reaped < 0) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
@@ -1703,14 +1701,14 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_qpair *qpair)
 	for (i = 0; i < reaped; i++) {
 		if (wc[i].status) {
 			SPDK_ERRLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
-				    rdma_qpair->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+				    rqpair->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 			error = true;
 			continue;
 		}
 
 		switch (wc[i].opcode) {
 		case IBV_WC_SEND:
-			rdma_req = get_rdma_req_from_wc(rdma_qpair, &wc[i]);
+			rdma_req = get_rdma_req_from_wc(rqpair, &wc[i]);
 
 			assert(rdma_req->state == RDMA_REQUEST_STATE_COMPLETING);
 			rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
@@ -1720,36 +1718,36 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_qpair *qpair)
 			count++;
 
 			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rdma_qpair);
+			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
 			break;
 
 		case IBV_WC_RDMA_WRITE:
-			rdma_qpair->cur_rdma_rw_depth--;
+			rqpair->cur_rdma_rw_depth--;
 
 			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rdma_qpair);
+			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
 			break;
 
 		case IBV_WC_RDMA_READ:
-			rdma_req = get_rdma_req_from_wc(rdma_qpair, &wc[i]);
+			rdma_req = get_rdma_req_from_wc(rqpair, &wc[i]);
 
 			assert(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-			rdma_qpair->cur_rdma_rw_depth--;
+			rqpair->cur_rdma_rw_depth--;
 			rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
 
 			spdk_nvmf_rdma_request_process(rtransport, rdma_req);
 
 			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rdma_qpair);
+			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
 			break;
 
 		case IBV_WC_RECV:
-			rdma_recv = get_rdma_recv_from_wc(rdma_qpair, &wc[i]);
+			rdma_recv = get_rdma_recv_from_wc(rqpair, &wc[i]);
 
-			TAILQ_INSERT_TAIL(&rdma_qpair->incoming_queue, rdma_recv, link);
+			TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
 
 			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rdma_qpair);
+			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
 			break;
 
 		default:
@@ -1760,6 +1758,32 @@ spdk_nvmf_rdma_poll(struct spdk_nvmf_qpair *qpair)
 
 	if (error == true) {
 		return -1;
+	}
+
+	return count;
+}
+
+static int
+spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_poll_group *group)
+{
+	struct spdk_nvmf_rdma_transport *rtransport;
+	struct spdk_nvmf_rdma_poll_group *rgroup;
+	struct spdk_nvmf_rdma_poller	*rpoller;
+	struct spdk_nvmf_rdma_qpair	*rqpair;
+	int				count, rc;
+
+	rtransport = SPDK_CONTAINEROF(group->transport, struct spdk_nvmf_rdma_transport, transport);
+	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
+
+	count = 0;
+	TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
+		TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+			rc = spdk_nvmf_rdma_qpair_poll(rtransport, rqpair);
+			if (rc < 0) {
+				return rc;
+			}
+			count += rc;
+		}
 	}
 
 	return count;
@@ -1793,11 +1817,11 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.poll_group_destroy = spdk_nvmf_rdma_poll_group_destroy,
 	.poll_group_add = spdk_nvmf_rdma_poll_group_add,
 	.poll_group_remove = spdk_nvmf_rdma_poll_group_remove,
+	.poll_group_poll = spdk_nvmf_rdma_poll_group_poll,
 
 	.req_complete = spdk_nvmf_rdma_request_complete,
 
 	.qpair_fini = spdk_nvmf_rdma_close_qpair,
-	.qpair_poll = spdk_nvmf_rdma_poll,
 	.qpair_is_idle = spdk_nvmf_rdma_qpair_is_idle,
 
 };
