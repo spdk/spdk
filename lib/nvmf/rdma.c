@@ -199,15 +199,25 @@ struct spdk_nvmf_rdma_qpair {
 	struct ibv_mr				*bufs_mr;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	link;
+	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	pending_link;
 };
 
 /* List of RDMA connections that have not yet received a CONNECT capsule */
 static TAILQ_HEAD(, spdk_nvmf_rdma_qpair) g_pending_conns = TAILQ_HEAD_INITIALIZER(g_pending_conns);
 
+struct spdk_nvmf_rdma_poller {
+	struct spdk_nvmf_rdma_device		*device;
+	struct spdk_nvmf_rdma_poll_group	*group;
+
+	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
+
+	TAILQ_ENTRY(spdk_nvmf_rdma_poller)	link;
+};
+
 struct spdk_nvmf_rdma_poll_group {
 	struct spdk_nvmf_poll_group		group;
 
-	struct spdk_nvmf_rdma_device		*device;
+	TAILQ_HEAD(, spdk_nvmf_rdma_poller)	pollers;
 };
 
 /* Assuming rdma_cm uses just one protection domain per ibv_context. */
@@ -648,7 +658,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	/* Add this RDMA connection to the global list until a CONNECT capsule
 	 * is received. */
-	TAILQ_INSERT_TAIL(&g_pending_conns, rdma_qpair, link);
+	TAILQ_INSERT_TAIL(&g_pending_conns, rdma_qpair, pending_link);
 
 	return 0;
 
@@ -692,11 +702,11 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	/* The connection may still be in this pending list when a disconnect
 	 * event arrives. Search for it and remove it if it is found.
 	 */
-	TAILQ_FOREACH_SAFE(r, &g_pending_conns, link, t) {
+	TAILQ_FOREACH_SAFE(r, &g_pending_conns, pending_link, t) {
 		if (r == rdma_qpair) {
 			SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Received disconnect for qpair %p before first SEND ack\n",
 				      rdma_qpair);
-			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, link);
+			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, pending_link);
 			break;
 		}
 	}
@@ -1365,15 +1375,15 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 
 	/* Process pending connections for incoming capsules. The only capsule
 	 * this should ever find is a CONNECT request. */
-	TAILQ_FOREACH_SAFE(rdma_qpair, &g_pending_conns, link, tmp) {
+	TAILQ_FOREACH_SAFE(rdma_qpair, &g_pending_conns, pending_link, tmp) {
 		rc = spdk_nvmf_rdma_poll(&rdma_qpair->qpair);
 		if (rc < 0) {
-			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, link);
+			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, pending_link);
 			spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
 		} else if (rc > 0) {
 			/* At least one request was processed which is assumed to be
 			 * a CONNECT. Remove this connection from our list. */
-			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, link);
+			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, pending_link);
 		}
 	}
 
@@ -1438,13 +1448,49 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
 static struct spdk_nvmf_poll_group *
 spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 {
+	struct spdk_nvmf_rdma_transport		*rtransport;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct spdk_nvmf_rdma_poller		*poller;
+	struct spdk_nvmf_rdma_device		*device;
+
+	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
 	rgroup = calloc(1, sizeof(*rgroup));
 	if (!rgroup) {
 		return NULL;
 	}
 
+	TAILQ_INIT(&rgroup->pollers);
+
+	pthread_mutex_lock(&rtransport->lock);
+	TAILQ_FOREACH(device, &rtransport->devices, link) {
+		if (device->map == NULL) {
+			/*
+			 * The device is not in use (no listeners),
+			 * so no protection domain has been constructed.
+			 * Skip it.
+			 */
+			SPDK_NOTICELOG("Skipping unused RDMA device when creating poll group.\n");
+			continue;
+		}
+
+		poller = calloc(1, sizeof(*poller));
+		if (!poller) {
+			SPDK_ERRLOG("Unable to allocate memory for new RDMA poller\n");
+			free(rgroup);
+			pthread_mutex_unlock(&rtransport->lock);
+			return NULL;
+		}
+
+		poller->device = device;
+		poller->group = rgroup;
+
+		TAILQ_INIT(&poller->qpairs);
+
+		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
+	}
+
+	pthread_mutex_unlock(&rtransport->lock);
 	return &rgroup->group;
 }
 
@@ -1452,11 +1498,17 @@ static void
 spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_poll_group *group)
 {
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct spdk_nvmf_rdma_poller		*poller, *tmp;
 
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
 
 	if (!rgroup) {
 		return;
+	}
+
+	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tmp) {
+		TAILQ_REMOVE(&rgroup->pollers, poller, link);
+		free(poller);
 	}
 
 	free(rgroup);
@@ -1467,39 +1519,32 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_poll_group *group,
 			      struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
-	struct spdk_nvmf_rdma_qpair 		*rdma_qpair;
-	struct spdk_nvmf_rdma_transport		*rtransport;
+	struct spdk_nvmf_rdma_qpair 		*rqpair;
 	struct spdk_nvmf_rdma_device 		*device;
+	struct spdk_nvmf_rdma_poller		*poller;
 
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
-	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	rtransport = SPDK_CONTAINEROF(group->transport, struct spdk_nvmf_rdma_transport, transport);
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
-	if (rgroup->device != NULL) {
-		if (rgroup->device->context != rdma_qpair->cm_id->verbs) {
-			SPDK_ERRLOG("Attempted to add a qpair to a poll group with mismatched RDMA devices.\n");
-			return -1;
-		}
+	device = rqpair->port->device;
 
-		if (rgroup->device->pd != rdma_qpair->cm_id->pd) {
-			SPDK_ERRLOG("Mismatched protection domains\n");
-			return -1;
-		}
-
-		return 0;
+	if (device->pd != rqpair->cm_id->pd) {
+		SPDK_ERRLOG("Mismatched protection domains\n");
+		return -1;
 	}
 
-	TAILQ_FOREACH(device, &rtransport->devices, link) {
-		if (device->context == rdma_qpair->cm_id->verbs) {
+	TAILQ_FOREACH(poller, &rgroup->pollers, link) {
+		if (poller->device == device) {
 			break;
 		}
 	}
-	if (!device) {
-		SPDK_ERRLOG("Attempted to add a qpair with an unknown device\n");
-		return -EINVAL;
+
+	if (!poller) {
+		SPDK_ERRLOG("No poller found for device.\n");
+		return -1;
 	}
 
-	rgroup->device = device;
+	TAILQ_INSERT_TAIL(&poller->qpairs, rqpair, link);
 
 	return 0;
 }
@@ -1508,6 +1553,40 @@ static int
 spdk_nvmf_rdma_poll_group_remove(struct spdk_nvmf_poll_group *group,
 				 struct spdk_nvmf_qpair *qpair)
 {
+	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct spdk_nvmf_rdma_qpair 		*rqpair;
+	struct spdk_nvmf_rdma_device 		*device;
+	struct spdk_nvmf_rdma_poller		*poller;
+	struct spdk_nvmf_rdma_qpair		*rq, *trq;
+
+	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	device = rqpair->port->device;
+
+	TAILQ_FOREACH(poller, &rgroup->pollers, link) {
+		if (poller->device == device) {
+			break;
+		}
+	}
+
+	if (!poller) {
+		SPDK_ERRLOG("No poller found for device.\n");
+		return -1;
+	}
+
+	TAILQ_FOREACH_SAFE(rq, &poller->qpairs, link, trq) {
+		if (rq == rqpair) {
+			TAILQ_REMOVE(&poller->qpairs, rqpair, link);
+			break;
+		}
+	}
+
+	if (rq == NULL) {
+		SPDK_ERRLOG("RDMA qpair cannot be removed from group (not in group).\n");
+		return -1;
+	}
+
 	return 0;
 }
 
