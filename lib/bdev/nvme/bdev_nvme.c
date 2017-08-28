@@ -234,13 +234,20 @@ bdev_nvme_unregister_cb(void *io_device)
 static int
 bdev_nvme_destruct(void *ctx)
 {
+	struct nvme_bdev *nvme_disk_iter;
 	struct nvme_bdev *nvme_disk = ctx;
 	struct nvme_ctrlr *nvme_ctrlr = nvme_disk->nvme_ctrlr;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	nvme_ctrlr->ref--;
 
-	TAILQ_REMOVE(&g_nvme_bdevs, nvme_disk, link);
+	TAILQ_FOREACH(nvme_disk_iter, &g_nvme_bdevs, link) {
+		if (nvme_disk_iter == nvme_disk) {
+			TAILQ_REMOVE(&g_nvme_bdevs, nvme_disk_iter, link);
+			break;
+		}
+	}
+
 	free(nvme_disk->disk.name);
 	free(nvme_disk);
 
