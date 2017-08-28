@@ -125,44 +125,6 @@ subsystem_poll(void *arg)
 }
 
 static void
-connect_event(void *arg1, void *arg2)
-{
-	struct spdk_nvmf_request *req = arg1;
-
-	spdk_nvmf_handle_connect(req);
-}
-
-static void
-connect_cb(void *cb_ctx, struct spdk_nvmf_request *req)
-{
-	struct nvmf_tgt_subsystem *app_subsys = cb_ctx;
-	struct spdk_event *event;
-
-	/* Pass an event to the lcore that owns this subsystem */
-	event = spdk_event_allocate(app_subsys->lcore, connect_event, req, NULL);
-	spdk_event_call(event);
-}
-
-static void
-disconnect_event(void *arg1, void *arg2)
-{
-	struct spdk_nvmf_qpair *qpair = arg1;
-
-	spdk_nvmf_ctrlr_disconnect(qpair);
-}
-
-static void
-disconnect_cb(void *cb_ctx, struct spdk_nvmf_qpair *qpair)
-{
-	struct nvmf_tgt_subsystem *app_subsys = cb_ctx;
-	struct spdk_event *event;
-
-	/* Pass an event to the core that owns this connection */
-	event = spdk_event_allocate(app_subsys->lcore, disconnect_event, qpair, NULL);
-	spdk_event_call(event);
-}
-
-static void
 _nvmf_tgt_start_subsystem(void *arg1, void *arg2)
 {
 	struct nvmf_tgt_subsystem *app_subsys = arg1;
@@ -202,8 +164,7 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype, uint
 		return NULL;
 	}
 
-	subsystem = spdk_nvmf_create_subsystem(g_tgt, name, subtype, num_ns, app_subsys, connect_cb,
-					       disconnect_cb);
+	subsystem = spdk_nvmf_create_subsystem(g_tgt, name, subtype, num_ns);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
 		free(app_subsys);

@@ -116,10 +116,7 @@ struct spdk_nvmf_subsystem *
 spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 			   const char *nqn,
 			   enum spdk_nvmf_subtype type,
-			   uint32_t num_ns,
-			   void *cb_ctx,
-			   spdk_nvmf_subsystem_connect_fn connect_cb,
-			   spdk_nvmf_subsystem_disconnect_fn disconnect_cb)
+			   uint32_t num_ns)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
 
@@ -145,9 +142,6 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 	subsystem->subtype = type;
 	subsystem->max_nsid = num_ns;
 	subsystem->num_allocated_nsid = 0;
-	subsystem->cb_ctx = cb_ctx;
-	subsystem->connect_cb = connect_cb;
-	subsystem->disconnect_cb = disconnect_cb;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);

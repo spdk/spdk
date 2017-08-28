@@ -44,6 +44,7 @@
 #include "transport.h"
 
 #include "spdk/assert.h"
+#include "spdk/io_channel.h"
 #include "spdk/nvmf.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/string.h"
@@ -675,12 +676,19 @@ err0:
 	return -1;
 }
 
+static void
+nvmf_rdma_handle_disconnect(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+
+	spdk_nvmf_ctrlr_disconnect(qpair);
+}
+
 static int
 nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 {
 	struct spdk_nvmf_qpair		*qpair;
 	struct spdk_nvmf_ctrlr		*ctrlr;
-	struct spdk_nvmf_subsystem	*subsystem;
 	struct spdk_nvmf_rdma_qpair 	*rdma_qpair;
 	struct spdk_nvmf_rdma_qpair	*r, *t;
 
@@ -720,9 +728,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 		return 0;
 	}
 
-	subsystem = ctrlr->subsys;
-
-	subsystem->disconnect_cb(subsystem->cb_ctx, qpair);
+	spdk_thread_send_msg(qpair->thread, nvmf_rdma_handle_disconnect, qpair);
 
 	return 0;
 }

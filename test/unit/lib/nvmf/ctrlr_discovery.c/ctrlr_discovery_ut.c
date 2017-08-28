@@ -168,8 +168,7 @@ test_discovery_log(void)
 
 	/* Add one subsystem and verify that the discovery log contains it */
 	subsystem = spdk_nvmf_create_subsystem(&tgt, "nqn.2016-06.io.spdk:subsystem1",
-					       SPDK_NVMF_SUBTYPE_NVME, 0,
-					       NULL, NULL, NULL);
+					       SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
 	trid.trtype = SPDK_NVME_TRANSPORT_RDMA;

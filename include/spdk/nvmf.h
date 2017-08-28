@@ -100,9 +100,6 @@ struct spdk_nvmf_request;
 struct spdk_nvmf_host;
 struct spdk_nvmf_listener;
 
-typedef void (*spdk_nvmf_subsystem_connect_fn)(void *cb_ctx, struct spdk_nvmf_request *req);
-typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf_qpair *qpair);
-
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
  * of controllers.  Any individual controller has
@@ -111,10 +108,7 @@ typedef void (*spdk_nvmf_subsystem_disconnect_fn)(void *cb_ctx, struct spdk_nvmf
 struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 		const char *nqn,
 		enum spdk_nvmf_subtype type,
-		uint32_t num_ns,
-		void *cb_ctx,
-		spdk_nvmf_subsystem_connect_fn connect_cb,
-		spdk_nvmf_subsystem_disconnect_fn disconnect_cb);
+		uint32_t num_ns);
 
 /**
  * Search the target for a subsystem with the given NQN
