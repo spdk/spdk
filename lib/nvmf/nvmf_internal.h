@@ -132,6 +132,21 @@ _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid
 	return ns;
 }
 
+static inline void
+spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
+				   uint8_t iattr, uint16_t ipo)
+{
+	rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+	rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
+	rsp->status_code_specific.invalid.iattr = iattr;
+	rsp->status_code_specific.invalid.ipo = ipo;
+}
+
+#define SPDK_NVMF_INVALID_CONNECT_CMD(rsp, field)	\
+	spdk_nvmf_invalid_connect_response(rsp, 0, offsetof(struct spdk_nvmf_fabric_connect_cmd, field))
+#define SPDK_NVMF_INVALID_CONNECT_DATA(rsp, field)	\
+	spdk_nvmf_invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
+
 #define OBJECT_NVMF_IO				0x30
 
 #define TRACE_GROUP_NVMF			0x3
