@@ -88,7 +88,7 @@ spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_poll_group *group,
 }
 
 int
-spdk_nvmf_transport_qpair_poll(struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_poll_group *group)
 {
 	return 0;
 }

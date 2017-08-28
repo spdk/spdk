@@ -161,6 +161,12 @@ spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_poll_group *group,
 }
 
 int
+spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_poll_group *group)
+{
+	return group->transport->ops->poll_group_poll(group);
+}
+
+int
 spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req)
 {
 	return req->qpair->transport->ops->req_complete(req);
@@ -170,12 +176,6 @@ void
 spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair)
 {
 	qpair->transport->ops->qpair_fini(qpair);
-}
-
-int
-spdk_nvmf_transport_qpair_poll(struct spdk_nvmf_qpair *qpair)
-{
-	return qpair->transport->ops->qpair_poll(qpair);
 }
 
 bool

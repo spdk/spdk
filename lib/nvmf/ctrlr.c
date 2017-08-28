@@ -556,7 +556,6 @@ spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
 int
 spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	struct spdk_nvmf_qpair		*qpair, *tmp;
 	struct spdk_nvmf_subsystem 	*subsys = ctrlr->subsys;
 
 	if (subsys->is_removed) {
@@ -571,14 +570,7 @@ spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 		}
 	}
 
-	TAILQ_FOREACH_SAFE(qpair, &ctrlr->qpairs, link, tmp) {
-		if (spdk_nvmf_transport_qpair_poll(qpair) < 0) {
-			SPDK_ERRLOG("Transport poll failed for qpair %p; closing connection\n", qpair);
-			spdk_nvmf_ctrlr_disconnect(qpair);
-		}
-	}
-
-	return 0;
+	return spdk_nvmf_transport_poll_group_poll(ctrlr->group);
 }
 
 static int
