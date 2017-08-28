@@ -108,15 +108,6 @@ nvmf_process_property_set(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-static void
-invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp, uint8_t iattr, uint16_t ipo)
-{
-	rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-	rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-	rsp->status_code_specific.invalid.iattr = iattr;
-	rsp->status_code_specific.invalid.ipo = ipo;
-}
-
 static spdk_nvmf_request_exec_status
 nvmf_process_connect(struct spdk_nvmf_request *req)
 {
@@ -127,8 +118,6 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	void *end;
-
-#define INVALID_CONNECT_DATA(field) invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
 
 	if (cmd->recfmt != 0) {
 		SPDK_ERRLOG("Connect command unsupported RECFMT %u\n", cmd->recfmt);
@@ -147,14 +136,14 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 	end = memchr(data->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
 	if (!end) {
 		SPDK_ERRLOG("Connect SUBNQN is not null terminated\n");
-		INVALID_CONNECT_DATA(subnqn);
+		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	end = memchr(data->hostnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
 	if (!end) {
 		SPDK_ERRLOG("Connect HOSTNQN is not null terminated\n");
-		INVALID_CONNECT_DATA(hostnqn);
+		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, hostnqn);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
@@ -163,7 +152,7 @@ nvmf_process_connect(struct spdk_nvmf_request *req)
 	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
-		INVALID_CONNECT_DATA(subnqn);
+		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
