@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e008cb2_e07d24ba",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-28T21:37:53Z",
+      "side": 1,
+      "message": "\"Fair\" doesn\u0027t really describe what this patch does - I think the commit message should say poll qpairs on the same thread round-robin.",
+      "revId": "0202fc0817548bf2349a1d6a31c4a3e2021fe356",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
