@@ -239,11 +239,8 @@ bdev_nvme_destruct(void *ctx)
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	nvme_ctrlr->ref--;
-
-	TAILQ_REMOVE(&g_nvme_bdevs, nvme_disk, link);
 	free(nvme_disk->disk.name);
 	free(nvme_disk);
-
 	if (nvme_ctrlr->ref == 0) {
 		TAILQ_REMOVE(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
@@ -1087,6 +1084,7 @@ bdev_nvme_library_fini(void)
 	}
 
 	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
+		TAILQ_REMOVE(&g_nvme_bdevs, nvme_bdev, link);
 		bdev_nvme_destruct(&nvme_bdev->disk);
 	}
 }
