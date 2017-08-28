@@ -16,6 +16,13 @@ spdk_bdev_write_zeroes() was introduced as an alternative to spdk_bdev_unmap().
 It ensures that all unmapped blocks will be zeroed out. This function is
 currently only supported by NVMe block devices.
 
+New API functions that accept I/O parameters in units of blocks instead of bytes
+have been added:
+- spdk_bdev_read_blocks(), spdk_bdev_readv_blocks()
+- spdk_bdev_write_blocks(), spdk_bdev_writev_blocks()
+- spdk_bdev_write_zeroes_blocks()
+- spdk_bdev_unmap_blocks()
+
 ### Linux AIO bdev
 
 The AIO bdev now allows the user to override the auto-detected block size.
