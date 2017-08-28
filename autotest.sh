@@ -127,6 +127,10 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_exit vhost
 fi
 
+if [ $SPDK_TEST_VHOST -eq 1 ] && [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
+	run_test test/lib/bdev/blockdev.sh
+fi
+
 timing_enter cleanup
 rbd_cleanup
 ./scripts/setup.sh reset
