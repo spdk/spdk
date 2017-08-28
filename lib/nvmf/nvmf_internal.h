@@ -133,6 +133,9 @@ _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid
 	return ns;
 }
 
+struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+		uint16_t cntlid);
+
 #define OBJECT_NVMF_IO				0x30
 
 #define TRACE_GROUP_NVMF			0x3

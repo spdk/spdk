@@ -46,6 +46,20 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
+struct spdk_nvmf_ctrlr *
+spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid)
+{
+	struct spdk_nvmf_ctrlr *ctrlr;
+
+	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+		if (ctrlr->cntlid == cntlid) {
+			return ctrlr;
+		}
+	}
+
+	return NULL;
+}
+
 int
 spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 {

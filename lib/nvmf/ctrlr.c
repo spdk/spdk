@@ -236,18 +236,10 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			return;
 		}
 	} else {
-		struct spdk_nvmf_ctrlr *tmp;
-
 		qpair->type = QPAIR_TYPE_IOQ;
 		SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
-		ctrlr = NULL;
-		TAILQ_FOREACH(tmp, &subsystem->ctrlrs, link) {
-			if (tmp->cntlid == data->cntlid) {
-				ctrlr = tmp;
-				break;
-			}
-		}
+		ctrlr = spdk_nvmf_subsystem_get_ctrlr(subsystem, data->cntlid);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Unknown controller ID 0x%x\n", data->cntlid);
 			INVALID_CONNECT_DATA(cntlid);
