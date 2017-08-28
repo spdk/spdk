@@ -167,6 +167,20 @@ enum spdk_bdev_io_status {
 	SPDK_BDEV_IO_STATUS_SUCCESS = 1,
 };
 
+/** bdev I/O priority */
+enum spdk_bdev_io_priority {
+	SPDK_BDEV_IO_PRIORITY_URGENT = 0,
+	SPDK_BDEV_IO_PRIORITY_HIGH = 1,
+	SPDK_BDEV_IO_PRIORITY_MEDIUM = 2,
+	SPDK_BDEV_IO_PRIORITY_LOW = 3,
+};
+
+/** bdev I/O quality of service  */
+struct spdk_bdev_qos {
+	enum spdk_bdev_io_priority prio;
+	uint32_t queue_depth;
+};
+
 struct spdk_bdev {
 	/** User context passed in by the backend */
 	void *ctxt;
@@ -243,6 +257,9 @@ struct spdk_bdev {
 	bool get_io_stat_in_progress;
 
 	struct spdk_bdev_io_stat io_stat;
+
+	/** The QoS setting */
+	struct spdk_bdev_qos qos;
 };
 
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);

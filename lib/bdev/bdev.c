@@ -739,6 +739,33 @@ spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev)
 	return bdev->optimal_io_boundary;
 }
 
+uint32_t
+spdk_bdev_get_io_queue_depth(const struct spdk_bdev *bdev)
+{
+	return bdev->qos.queue_depth;
+}
+
+const char *
+spdk_bdev_get_io_priority(const struct spdk_bdev *bdev)
+{
+	switch (bdev->qos.prio) {
+	case SPDK_BDEV_IO_PRIORITY_URGENT:
+		return "urgent";
+
+	case SPDK_BDEV_IO_PRIORITY_HIGH:
+		return "high";
+
+	case SPDK_BDEV_IO_PRIORITY_MEDIUM:
+		return "medium";
+
+	case SPDK_BDEV_IO_PRIORITY_LOW:
+		return "low";
+
+	default:
+		return "N/A";
+	}
+}
+
 bool
 spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
 {
@@ -1460,6 +1487,9 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INIT(&bdev->queued_resets);
 
 	bdev->get_io_stat_in_progress = false;
+
+	bdev->qos.prio = SPDK_BDEV_IO_PRIORITY_URGENT;
+	bdev->qos.queue_depth = 0;
 
 	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));

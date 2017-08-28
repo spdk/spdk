@@ -56,6 +56,14 @@ spdk_rpc_construct_bdev_iostat_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_name(w, "num_blocks");
 	spdk_json_write_uint64(w, spdk_bdev_get_num_blocks(bdev));
 
+	spdk_json_write_name(w, "qos");
+	spdk_json_write_object_begin(w);
+	spdk_json_write_name(w, "priority");
+	spdk_json_write_string(w, spdk_bdev_get_io_priority(bdev));
+	spdk_json_write_name(w, "queue_depth");
+	spdk_json_write_uint32(w, spdk_bdev_get_io_queue_depth(bdev));
+	spdk_json_write_object_end(w);
+
 	spdk_bdev_get_all_io_stats(bdev, &stat);
 
 	spdk_json_write_name(w, "current_io_stats");
