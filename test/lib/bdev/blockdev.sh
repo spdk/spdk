@@ -6,6 +6,17 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
 
+function run_fio()
+{
+	if [ $RUN_NIGHTLY -eq 0 ]; then
+		LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio "$@"
+	else
+		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
+		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
+		LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio "$@"
+	fi
+}
+
 source $rootdir/scripts/autotest_common.sh
 
 timing_enter bdev
@@ -40,13 +51,7 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	if [ $RUN_NIGHTLY -eq 0 ]; then
-		LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --spdk_conf=./test/lib/bdev/bdev.conf --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio
-	else
-		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
-		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
-		LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --spdk_conf=./test/lib/bdev/bdev.conf --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio
-	fi
+	run_fio --spdk_conf=./test/lib/bdev/bdev.conf
 
 	rm -f *.state
 	rm -f $testdir/bdev.fio
@@ -59,13 +64,7 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 		fio_config_add_job $testdir/bdev.fio $b
 	done
 
-	if [ $RUN_NIGHTLY -eq 0 ]; then
-		LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --spdk_conf=./test/lib/bdev/bdev.conf --iodepth=8 --bs=4k --runtime=10 $testdir/bdev.fio
-	else
-		# Use size 192KB which both exceeds typical 128KB max NVMe I/O
-		#  size and will cross 128KB Intel DC P3700 stripe boundaries.
-		LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --spdk_conf=./test/lib/bdev/bdev.conf --iodepth=128 --bs=192k --runtime=100 $testdir/bdev.fio
-	fi
+	run_fio --spdk_conf=./test/lib/bdev/bdev.conf
 
 	rm -f *.state
 	rm -f $testdir/bdev.fio
