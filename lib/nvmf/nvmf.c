@@ -233,6 +233,99 @@ spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt)
 	}
 }
 
+struct spdk_nvmf_poll_group *
+spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
+{
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	group = calloc(1, sizeof(*group));
+	if (!group) {
+		return NULL;
+	}
+
+	TAILQ_INIT(&group->tgroups);
+
+	TAILQ_FOREACH(transport, &tgt->transports, link) {
+		tgroup = spdk_nvmf_transport_poll_group_create(transport);
+		if (!tgroup) {
+			SPDK_ERRLOG("Unable to create poll group for transport\n");
+			continue;
+		}
+
+		TAILQ_INSERT_TAIL(&group->tgroups, tgroup, link);
+	}
+
+	return group;
+}
+
+void
+spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group)
+{
+	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
+
+	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
+		TAILQ_REMOVE(&group->tgroups, tgroup, link);
+		spdk_nvmf_transport_poll_group_destroy(tgroup);
+	}
+
+	free(group);
+}
+
+int
+spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
+			 struct spdk_nvmf_qpair *qpair)
+{
+	int rc = -1;
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		if (tgroup->transport == qpair->transport) {
+			rc = spdk_nvmf_transport_poll_group_add(tgroup, qpair);
+			break;
+		}
+	}
+
+	return rc;
+}
+
+int
+spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
+			    struct spdk_nvmf_qpair *qpair)
+{
+	int rc = -1;
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		if (tgroup->transport == qpair->transport) {
+			rc = spdk_nvmf_transport_poll_group_remove(tgroup, qpair);
+			break;
+		}
+	}
+
+	return rc;
+}
+
+int
+spdk_nvmf_poll_group_poll(struct spdk_nvmf_poll_group *group)
+{
+	int rc;
+	int count = 0;
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		rc = spdk_nvmf_transport_poll_group_poll(tgroup);
+		if (rc < 0) {
+			return rc;
+		}
+		count += rc;
+		break;
+	}
+
+	return count;
+}
+
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
 {
 	spdk_trace_register_object(OBJECT_NVMF_IO, 'r');

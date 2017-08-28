@@ -216,7 +216,7 @@ struct spdk_nvmf_rdma_poller {
 };
 
 struct spdk_nvmf_rdma_poll_group {
-	struct spdk_nvmf_poll_group		group;
+	struct spdk_nvmf_transport_poll_group	group;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_poller)	pollers;
 };
@@ -1452,7 +1452,7 @@ spdk_nvmf_rdma_discover(struct spdk_nvmf_transport *transport,
 	entry->tsas.rdma.rdma_cms = SPDK_NVMF_RDMA_CMS_RDMA_CM;
 }
 
-static struct spdk_nvmf_poll_group *
+static struct spdk_nvmf_transport_poll_group *
 spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 {
 	struct spdk_nvmf_rdma_transport		*rtransport;
@@ -1502,7 +1502,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 }
 
 static void
-spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_poll_group *group)
+spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_rdma_poller		*poller, *tmp;
@@ -1522,7 +1522,7 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_poll_group *group)
 }
 
 static int
-spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_poll_group *group,
+spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 			      struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
@@ -1557,7 +1557,7 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_poll_group *group,
 }
 
 static int
-spdk_nvmf_rdma_poll_group_remove(struct spdk_nvmf_poll_group *group,
+spdk_nvmf_rdma_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 				 struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
@@ -1770,7 +1770,7 @@ spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
 }
 
 static int
-spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_poll_group *group)
+spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_poll_group *rgroup;

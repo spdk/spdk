@@ -58,13 +58,13 @@ spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 struct spdk_nvmf_poll_group *
-spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
+spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
 {
 	return NULL;
 }
 
 void
-spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_poll_group *group)
+spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group)
 {
 }
 
@@ -74,21 +74,21 @@ spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair)
 }
 
 int
-spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_poll_group *group,
-				   struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
+			 struct spdk_nvmf_qpair *qpair)
 {
 	return 0;
 }
 
 int
-spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_poll_group *group,
-				      struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
+			    struct spdk_nvmf_qpair *qpair)
 {
 	return 0;
 }
 
 int
-spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_poll_group *group)
+spdk_nvmf_poll_group_poll(struct spdk_nvmf_poll_group *group)
 {
 	return 0;
 }
