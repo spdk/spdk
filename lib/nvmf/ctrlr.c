@@ -799,8 +799,6 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	memset(req->data, 0, req->length);
-
 	offset = (uint64_t)cmd->cdw12 | ((uint64_t)cmd->cdw13 << 32);
 	if (offset & 3) {
 		SPDK_ERRLOG("Invalid log page offset 0x%" PRIx64 "\n", offset);
@@ -980,10 +978,6 @@ spdk_nvmf_ctrlr_identify(struct spdk_nvmf_request *req)
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 
-	if (req->data) {
-		memset(req->data, 0, req->length);
-	}
-
 	if (req->data == NULL || req->length < 4096) {
 		SPDK_ERRLOG("identify command with invalid buffer\n");
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -1135,6 +1129,10 @@ spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_subsystem *subsystem = req->qpair->ctrlr->subsys;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	if (req->data && spdk_nvme_opc_get_data_transfer(cmd->opc) == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+		memset(req->data, 0, req->length);
+	}
 
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		/* Discovery controllers only support Get Log Page and Identify */
