@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b2e6b05_39ba241a",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-28T18:28:25Z",
+      "side": 1,
+      "message": "This looks like it\u0027s missing a break - otherwise it will fall through and call _nvme_ns_cmd_split_request() as well.\n\nIt might be better to just use an if/else here.",
+      "revId": "645adceef5e3f330497aa66bbbc3d5f7c7a75a20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
