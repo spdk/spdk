@@ -94,6 +94,7 @@ $valgrind test/unit/lib/util/string.c/string_ut
 
 if [ $(uname -s) = Linux ]; then
 $valgrind test/unit/lib/vhost/vhost.c/vhost_ut
+$valgrind test/unit/lib/vhost/vhost_scsi.c/vhost_scsi_ut
 fi
 
 # local unit test coverage
