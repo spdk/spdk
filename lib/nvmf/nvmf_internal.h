@@ -51,7 +51,11 @@ struct spdk_nvmf_tgt {
 	struct spdk_thread			*master_thread;
 
 	uint64_t				discovery_genctr;
-	TAILQ_HEAD(, spdk_nvmf_subsystem)	subsystems;
+
+	/* Array of subsystem pointers of size max_sid indexed by sid */
+	struct spdk_nvmf_subsystem		**subsystems;
+	uint32_t 				max_sid;
+
 	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
 	size_t					discovery_log_page_size;
 	TAILQ_HEAD(, spdk_nvmf_transport)	transports;
@@ -171,6 +175,7 @@ struct spdk_nvmf_ctrlr {
 };
 
 struct spdk_nvmf_subsystem {
+	uint32_t id;
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	enum spdk_nvmf_subtype subtype;
 	uint16_t next_cntlid;

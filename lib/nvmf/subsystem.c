@@ -94,6 +94,7 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 			   uint32_t num_ns)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
+	uint32_t			sid;
 
 	if (!spdk_nvmf_valid_nqn(nqn)) {
 		return NULL;
@@ -104,12 +105,31 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 		return NULL;
 	}
 
+	/* Find a free subsystem id (sid) */
+	for (sid = 0; sid < tgt->max_sid; sid++) {
+		if (tgt->subsystems[sid] == NULL) {
+			break;
+		}
+	}
+	if (sid == tgt->max_sid) {
+		struct spdk_nvmf_subsystem **subsys_array;
+		/* No free slots. Add more. */
+		tgt->max_sid++;
+		subsys_array = realloc(tgt->subsystems, tgt->max_sid * sizeof(struct spdk_nvmf_subsystem *));
+		if (!subsys_array) {
+			return NULL;
+		}
+		tgt->subsystems = subsys_array;
+		sid = tgt->max_sid - 1;
+	}
+
 	subsystem = calloc(1, sizeof(struct spdk_nvmf_subsystem));
 	if (subsystem == NULL) {
 		return NULL;
 	}
 
 	subsystem->tgt = tgt;
+	subsystem->id = sid;
 	subsystem->subtype = type;
 	subsystem->max_nsid = num_ns;
 	subsystem->num_allocated_nsid = 0;
@@ -128,7 +148,7 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 		}
 	}
 
-	TAILQ_INSERT_TAIL(&tgt->subsystems, subsystem, entries);
+	tgt->subsystems[sid] = subsystem;
 	tgt->discovery_genctr++;
 
 	return subsystem;
@@ -166,7 +186,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 	free(subsystem->ns);
 
-	TAILQ_REMOVE(&subsystem->tgt->subsystems, subsystem, entries);
+	subsystem->tgt->subsystems[subsystem->id] = NULL;
 	subsystem->tgt->discovery_genctr++;
 
 	free(subsystem);

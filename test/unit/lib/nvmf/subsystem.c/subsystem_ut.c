@@ -203,7 +203,6 @@ nvmf_test_create_subsystem(void)
 	struct spdk_nvmf_tgt tgt = {};
 	char nqn[256];
 	struct spdk_nvmf_subsystem *subsystem;
-	TAILQ_INIT(&tgt.subsystems);
 
 	strncpy(nqn, "nqn.2016-06.io.spdk:subsystem1", sizeof(nqn));
 	subsystem = spdk_nvmf_create_subsystem(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
@@ -228,6 +227,8 @@ nvmf_test_create_subsystem(void)
 	CU_ASSERT(strlen(nqn) == 224);
 	subsystem = spdk_nvmf_create_subsystem(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	CU_ASSERT(subsystem == NULL);
+
+	free(tgt.subsystems);
 }
 
 int main(int argc, char **argv)
