@@ -50,7 +50,6 @@ struct spdk_nvmf_tgt {
 
 	struct spdk_thread			*master_thread;
 
-	uint16_t				next_cntlid;
 	uint64_t				discovery_genctr;
 	TAILQ_HEAD(, spdk_nvmf_subsystem)	subsystems;
 	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
@@ -175,6 +174,7 @@ struct spdk_nvmf_subsystem {
 	uint32_t id;
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	enum spdk_nvmf_subtype subtype;
+	uint16_t next_cntlid;
 	bool allow_any_host;
 
 	struct spdk_nvmf_tgt			*tgt;
@@ -195,7 +195,6 @@ struct spdk_nvmf_subsystem {
 	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
 };
 
-uint16_t spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt);
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
 		enum spdk_nvme_transport_type);
 
@@ -239,6 +238,7 @@ int spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns
 
 int spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem);
 void spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem);
+uint16_t spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem);
 
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)

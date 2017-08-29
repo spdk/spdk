@@ -164,44 +164,6 @@ spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 	return NULL;
 }
 
-uint16_t
-spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt)
-{
-	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_nvmf_ctrlr *ctrlr;
-	uint16_t count;
-
-	count = 0xFFF0 - 1;
-	do {
-		tgt->next_cntlid++;
-		if (tgt->next_cntlid >= 0xFFF0) {
-			/* The spec reserves cntlid values in the range FFF0h to FFFFh. */
-			tgt->next_cntlid = 1;
-		}
-
-		/* Check if a subsystem with this cntlid currently exists. This could
-		 * happen for a very long-lived ctrlr on a target with many short-lived
-		 * ctrlrs, where cntlid wraps around.
-		 */
-		TAILQ_FOREACH(subsystem, &tgt->subsystems, entries) {
-			TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-				if (ctrlr->cntlid == tgt->next_cntlid) {
-					break;
-				}
-			}
-		}
-
-		count--;
-
-	} while (subsystem != NULL && count > 0);
-
-	if (count == 0) {
-		return 0;
-	}
-
-	return tgt->next_cntlid;
-}
-
 struct spdk_nvmf_transport *
 spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_type type)
 {
