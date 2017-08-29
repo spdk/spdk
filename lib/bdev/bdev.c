@@ -223,7 +223,7 @@ spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf)
 
 	bdev_io->buf = buf;
 	bdev_io->u.read.iovs[0].iov_base = (void *)((unsigned long)((char *)buf + 512) & ~511UL);
-	bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.len;
+	bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.num_blocks * bdev_io->bdev->blocklen;
 	bdev_io->get_buf_cb(bdev_io->ch->channel, bdev_io);
 }
 
@@ -239,7 +239,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 
 	assert(bdev_io->u.read.iovcnt == 1);
 
-	length = bdev_io->u.read.len;
+	length = bdev_io->u.read.num_blocks * bdev_io->bdev->blocklen;
 	buf = bdev_io->buf;
 
 	ch = spdk_io_channel_get_ctx(bdev_io->ch->mgmt_channel);
@@ -264,7 +264,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb)
 {
-	uint64_t len = bdev_io->u.read.len;
+	uint64_t len = bdev_io->u.read.num_blocks * bdev_io->bdev->blocklen;
 	struct spdk_mempool *pool;
 	need_buf_tailq_t *tailq;
 	void *buf = NULL;
@@ -798,8 +798,8 @@ spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.read.iov.iov_len = nbytes;
 	bdev_io->u.read.iovs = &bdev_io->u.read.iov;
 	bdev_io->u.read.iovcnt = 1;
-	bdev_io->u.read.len = nbytes;
-	bdev_io->u.read.offset = offset;
+	bdev_io->u.read.num_blocks = nbytes / bdev->blocklen;
+	bdev_io->u.read.offset_blocks = offset / bdev->blocklen;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
@@ -836,8 +836,8 @@ spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
 	bdev_io->u.read.iovs = iov;
 	bdev_io->u.read.iovcnt = iovcnt;
-	bdev_io->u.read.len = nbytes;
-	bdev_io->u.read.offset = offset;
+	bdev_io->u.read.num_blocks = nbytes / bdev->blocklen;
+	bdev_io->u.read.offset_blocks = offset / bdev->blocklen;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
@@ -879,8 +879,8 @@ spdk_bdev_write(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.write.iov.iov_len = nbytes;
 	bdev_io->u.write.iovs = &bdev_io->u.write.iov;
 	bdev_io->u.write.iovcnt = 1;
-	bdev_io->u.write.len = nbytes;
-	bdev_io->u.write.offset = offset;
+	bdev_io->u.write.num_blocks = nbytes / bdev->blocklen;
+	bdev_io->u.write.offset_blocks = offset / bdev->blocklen;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
@@ -921,8 +921,8 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	bdev_io->u.write.iovs = iov;
 	bdev_io->u.write.iovcnt = iovcnt;
-	bdev_io->u.write.len = len;
-	bdev_io->u.write.offset = offset;
+	bdev_io->u.write.num_blocks = len / bdev->blocklen;
+	bdev_io->u.write.offset_blocks = offset / bdev->blocklen;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
@@ -955,8 +955,8 @@ spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	}
 
 	bdev_io->ch = channel;
-	bdev_io->u.write.len = len;
-	bdev_io->u.write.offset = offset;
+	bdev_io->u.write.num_blocks = len / bdev->blocklen;
+	bdev_io->u.write.offset_blocks = offset / bdev->blocklen;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
 
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
@@ -1001,8 +1001,8 @@ spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
-	bdev_io->u.unmap.offset = offset;
-	bdev_io->u.unmap.len = nbytes;
+	bdev_io->u.unmap.offset_blocks = offset / bdev->blocklen;
+	bdev_io->u.unmap.num_blocks = nbytes / bdev->blocklen;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
@@ -1036,8 +1036,8 @@ spdk_bdev_flush(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_FLUSH;
-	bdev_io->u.flush.offset = offset;
-	bdev_io->u.flush.len = length;
+	bdev_io->u.flush.offset_blocks = offset / bdev->blocklen;
+	bdev_io->u.flush.num_blocks = length / bdev->blocklen;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	rc = spdk_bdev_io_submit(bdev_io);
@@ -1273,11 +1273,11 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
-			bdev_io->ch->stat.bytes_read += bdev_io->u.read.len;
+			bdev_io->ch->stat.bytes_read += bdev_io->u.read.num_blocks * bdev_io->bdev->blocklen;
 			bdev_io->ch->stat.num_read_ops++;
 			break;
 		case SPDK_BDEV_IO_TYPE_WRITE:
-			bdev_io->ch->stat.bytes_written += bdev_io->u.write.len;
+			bdev_io->ch->stat.bytes_written += bdev_io->u.write.num_blocks * bdev_io->bdev->blocklen;
 			bdev_io->ch->stat.num_write_ops++;
 			break;
 		default:
