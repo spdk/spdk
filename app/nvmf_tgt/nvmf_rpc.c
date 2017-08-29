@@ -103,9 +103,11 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 
 	if (spdk_nvmf_subsystem_get_type(subsystem) == SPDK_NVMF_SUBTYPE_NVME) {
 		struct spdk_nvmf_ns *ns;
+		char sn[SPDK_NVME_CTRLR_SN_LEN + 1];
 
 		spdk_json_write_name(w, "serial_number");
-		spdk_json_write_string(w, spdk_nvmf_subsystem_get_sn(subsystem));
+		spdk_nvmf_subsystem_get_sn(subsystem, sn, sizeof(sn));
+		spdk_json_write_string(w, sn);
 		spdk_json_write_name(w, "namespaces");
 		spdk_json_write_array_begin(w);
 		for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;

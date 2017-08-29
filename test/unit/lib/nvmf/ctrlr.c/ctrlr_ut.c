@@ -87,11 +87,12 @@ spdk_nvmf_poll_group_poll(struct spdk_nvmf_poll_group *group)
 	return 0;
 }
 
-const char *
-spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
+int
+spdk_nvmf_subsystem_get_sn(struct spdk_nvmf_subsystem *subsystem,
+			   char *sn, size_t sz)
 {
 	abort();
-	return NULL;
+	return 0;
 }
 
 struct spdk_nvmf_ns *
