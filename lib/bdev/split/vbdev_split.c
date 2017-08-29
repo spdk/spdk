@@ -137,13 +137,6 @@ vbdev_split_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 }
 
 static void
-vbdev_split_base_get_ref(struct split_base *split_base, struct split_disk *split_disk)
-{
-	__sync_fetch_and_add(&split_base->ref, 1);
-	split_disk->base = split_base;
-}
-
-static void
 vbdev_split_base_free(struct split_base *split_base)
 {
 	assert(split_base->bdev);
@@ -154,21 +147,12 @@ vbdev_split_base_free(struct split_base *split_base)
 }
 
 static void
-vbdev_split_base_put_ref(struct split_base *split_base)
-{
-	if (__sync_sub_and_fetch(&split_base->ref, 1) == 0) {
-		vbdev_split_base_free(split_base);
-	}
-}
-
-static void
 vbdev_split_free(struct split_disk *split_disk)
 {
 	struct split_base *split_base;
 
-	if (!split_disk) {
-		return;
-	}
+	assert(split_disk);
+	assert(split_disk->base);
 
 	split_base = split_disk->base;
 
@@ -177,8 +161,8 @@ vbdev_split_free(struct split_disk *split_disk)
 	free(split_disk->disk.name);
 	free(split_disk);
 
-	if (split_base) {
-		vbdev_split_base_put_ref(split_base);
+	if (__sync_sub_and_fetch(&split_base->ref, 1) == 0) {
+		vbdev_split_base_free(split_base);
 	}
 }
 
@@ -363,7 +347,8 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 			      " offset_blocks: %" PRIu64 "\n",
 			      d->disk.name, spdk_bdev_get_name(base_bdev), d->offset_blocks);
 
-		vbdev_split_base_get_ref(split_base, d);
+		__sync_fetch_and_add(&split_base->ref, 1);
+		d->base = split_base;
 
 		spdk_io_device_register(&d->base, split_channel_create_cb, split_channel_destroy_cb,
 					sizeof(struct split_channel));
