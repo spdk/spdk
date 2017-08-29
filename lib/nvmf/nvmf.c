@@ -87,8 +87,8 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	tgt->discovery_genctr = 0;
 	tgt->discovery_log_page = NULL;
 	tgt->discovery_log_page_size = 0;
-	tgt->current_subsystem_id = 0;
-	TAILQ_INIT(&tgt->subsystems);
+	tgt->subsystems = NULL;
+	tgt->max_sid = 0;
 	TAILQ_INIT(&tgt->transports);
 
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Max Queue Pairs Per Controller: %d\n",
@@ -114,6 +114,11 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 	if (tgt->discovery_log_page) {
 		free(tgt->discovery_log_page);
 	}
+
+	if (tgt->subsystems) {
+		free(tgt->subsystems);
+	}
+
 	free(tgt);
 }
 
@@ -150,12 +155,18 @@ struct spdk_nvmf_subsystem *
 spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 {
 	struct spdk_nvmf_subsystem	*subsystem;
+	uint32_t sid;
 
 	if (!subnqn) {
 		return NULL;
 	}
 
-	TAILQ_FOREACH(subsystem, &tgt->subsystems, entries) {
+	for (sid = 0; sid < tgt->max_sid; sid++) {
+		subsystem = tgt->subsystems[sid];
+		if (subsystem == NULL) {
+			continue;
+		}
+
 		if (strcmp(subnqn, subsystem->subnqn) == 0) {
 			return subsystem;
 		}
