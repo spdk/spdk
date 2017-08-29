@@ -139,8 +139,8 @@ static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
 static int bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
 			       struct nvme_bdev_io *bio,
-			       int direction, struct iovec *iov, int iovcnt, uint64_t nbytes,
-			       uint64_t offset);
+			       int direction, struct iovec *iov, int iovcnt, uint64_t lba_count,
+			       uint64_t lba);
 static int bdev_nvme_admin_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes);
@@ -161,29 +161,29 @@ SPDK_BDEV_MODULE_REGISTER(nvme, bdev_nvme_library_init, bdev_nvme_library_fini,
 static int
 bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		struct nvme_bdev_io *bio,
-		struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
+		struct iovec *iov, int iovcnt, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 
-	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "read %lu bytes with offset %#lx\n",
-		      nbytes, offset);
+	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "read %lu blocks with offset %#lx\n",
+		      lba_count, lba);
 
 	return bdev_nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_READ,
-				   iov, iovcnt, nbytes, offset);
+				   iov, iovcnt, lba_count, lba);
 }
 
 static int
 bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		 struct nvme_bdev_io *bio,
-		 struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
+		 struct iovec *iov, int iovcnt, uint64_t lba_count, uint64_t lba)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 
-	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "write %lu bytes with offset %#lx\n",
-		      len, offset);
+	SPDK_TRACELOG(SPDK_TRACE_BDEV_NVME, "write %lu blocks with offset %#lx\n",
+		      lba_count, lba);
 
 	return bdev_nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_WRITE,
-				   iov, iovcnt, len, offset);
+				   iov, iovcnt, lba_count, lba);
 }
 
 static void
@@ -345,8 +345,8 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 			      (struct nvme_bdev_io *)bdev_io->driver_ctx,
 			      bdev_io->u.read.iovs,
 			      bdev_io->u.read.iovcnt,
-			      bdev_io->u.read.len,
-			      bdev_io->u.read.offset);
+			      bdev_io->u.read.num_blocks,
+			      bdev_io->u.read.offset_blocks);
 
 	if (ret < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -373,22 +373,22 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 					(struct nvme_bdev_io *)bdev_io->driver_ctx,
 					bdev_io->u.write.iovs,
 					bdev_io->u.write.iovcnt,
-					bdev_io->u.write.len,
-					bdev_io->u.write.offset);
+					bdev_io->u.write.num_blocks,
+					bdev_io->u.write.offset_blocks);
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       ch,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
-				       bdev_io->u.write.len,
-				       bdev_io->u.write.offset);
+				       bdev_io->u.write.num_blocks,
+				       bdev_io->u.write.offset_blocks);
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       ch,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
-				       bdev_io->u.unmap.offset,
-				       bdev_io->u.unmap.len);
+				       bdev_io->u.unmap.offset_blocks,
+				       bdev_io->u.unmap.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_RESET:
 		return bdev_nvme_reset((struct nvme_bdev *)bdev_io->bdev->ctxt,
@@ -397,8 +397,8 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return bdev_nvme_flush((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
-				       bdev_io->u.flush.offset,
-				       bdev_io->u.flush.len);
+				       bdev_io->u.flush.offset_blocks,
+				       bdev_io->u.flush.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
 		return bdev_nvme_admin_passthru((struct nvme_bdev *)bdev_io->bdev->ctxt,
@@ -1222,11 +1222,9 @@ bdev_nvme_queued_next_sge(void *ref, void **address, uint32_t *length)
 static int
 bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
 		    struct nvme_bdev_io *bio,
-		    int direction, struct iovec *iov, int iovcnt, uint64_t nbytes,
-		    uint64_t offset)
+		    int direction, struct iovec *iov, int iovcnt, uint64_t lba,
+		    uint64_t lba_count)
 {
-	uint32_t lba_count = nbytes / bdev->disk.blocklen;
-	uint64_t lba = offset / bdev->disk.blocklen;
 	int rc;
 
 	bio->iovs = iov;
