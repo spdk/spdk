@@ -45,8 +45,12 @@
 struct spdk_lvol_store;
 struct spdk_lvol;
 
+/* Must include null terminator. */
+#define SPDK_LVS_NAME_MAX	64
+
 struct spdk_lvs_opts {
-	uint32_t cluster_sz;
+	uint32_t	cluster_sz;
+	char		name[SPDK_LVS_NAME_MAX];
 };
 
 /* Initialize an spdk_lvs_opts structure to the default logical volume store option values. */

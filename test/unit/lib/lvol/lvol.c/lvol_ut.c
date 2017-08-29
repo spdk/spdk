@@ -61,6 +61,7 @@ struct spdk_blob {
 	int			open_status;
 	TAILQ_ENTRY(spdk_blob)	link;
 	char			uuid[UUID_STRING_LEN];
+	char			name[SPDK_LVS_NAME_MAX];
 };
 
 int g_lvolerrno;
@@ -164,6 +165,9 @@ spdk_blob_md_set_xattr(struct spdk_blob *blob, const char *name, const void *val
 	if (!strcmp(name, "uuid")) {
 		CU_ASSERT(value_len == UUID_STRING_LEN);
 		memcpy(blob->uuid, value, UUID_STRING_LEN);
+	} else if (!strcmp(name, "name")) {
+		CU_ASSERT(value_len <= SPDK_LVS_NAME_MAX);
+		memcpy(blob->name, value, value_len);
 	}
 
 	return 0;
@@ -177,6 +181,10 @@ spdk_bs_md_get_xattr_value(struct spdk_blob *blob, const char *name,
 		CU_ASSERT(strnlen(blob->uuid, UUID_STRING_LEN) == (UUID_STRING_LEN - 1));
 		*value = blob->uuid;
 		*value_len = UUID_STRING_LEN;
+		return 0;
+	} else if (!strcmp(name, "name") && strnlen(blob->name, SPDK_LVS_NAME_MAX) != 0) {
+		*value = blob->name;
+		*value_len = strnlen(blob->name, SPDK_LVS_NAME_MAX) + 1;
 		return 0;
 	}
 
@@ -394,6 +402,7 @@ lvs_init_unload_success(void)
 
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
 
 	g_lvserrno = -1;
 
@@ -443,6 +452,7 @@ lvs_init_destroy_success(void)
 
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
 
 	g_lvserrno = -1;
 
@@ -489,7 +499,10 @@ lvs_init_opts_success(void)
 
 	g_lvserrno = -1;
 
+	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
 	opts.cluster_sz = 8192;
+
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
@@ -523,6 +536,115 @@ lvs_unload_lvs_is_null_fail(void)
 }
 
 static void
+lvs_names(void)
+{
+	struct lvol_ut_bs_dev dev_x, dev_y, dev_x2;
+	struct spdk_lvs_opts opts_none, opts_x, opts_y, opts_full;
+	struct spdk_lvol_store *lvs_x, *lvs_y, *lvs_x2;
+	int rc = 0;
+
+	init_dev(&dev_x);
+	init_dev(&dev_y);
+	init_dev(&dev_x2);
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
+
+	spdk_lvs_opts_init(&opts_none);
+	spdk_lvs_opts_init(&opts_x);
+	opts_x.name[0] = 'x';
+	spdk_lvs_opts_init(&opts_y);
+	opts_y.name[0] = 'y';
+	spdk_lvs_opts_init(&opts_full);
+	memset(opts_full.name, 'a', sizeof(opts_full.name));
+
+	/* Test that opts with no name fails spdk_lvs_init(). */
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
+	rc = spdk_lvs_init(&dev_x.bs_dev, &opts_none, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
+
+	/* Test that opts with no null terminator for name fails spdk_lvs_init(). */
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
+	rc = spdk_lvs_init(&dev_x.bs_dev, &opts_full, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc != 0);
+	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
+
+	/* Test that we can create an lvolstore with name 'x'. */
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
+	g_lvol_store = NULL;
+	rc = spdk_lvs_init(&dev_x.bs_dev, &opts_x, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(!TAILQ_EMPTY(&g_lvol_stores));
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs_x = g_lvol_store;
+
+	/* Test that we can create an lvolstore with name 'y'. */
+	g_lvol_store = NULL;
+	rc = spdk_lvs_init(&dev_y.bs_dev, &opts_y, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs_y = g_lvol_store;
+
+	/* Test that we cannot create another lvolstore with name 'x'. */
+	rc = spdk_lvs_init(&dev_x2.bs_dev, &opts_x, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Now destroy lvolstore 'x' and then confirm we can create a new lvolstore with name 'x'. */
+	g_lvserrno = -1;
+	rc = spdk_lvs_destroy(lvs_x, false, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+	rc = spdk_lvs_init(&dev_x.bs_dev, &opts_x, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs_x = g_lvol_store;
+
+	/*
+	 * Unload lvolstore 'x'.  Then we should be able to create another lvolstore with name 'x'.
+	 */
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(lvs_x, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+	rc = spdk_lvs_init(&dev_x2.bs_dev, &opts_x, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs_x2 = g_lvol_store;
+
+	/* Confirm that we cannot load the first lvolstore 'x'. */
+	g_lvserrno = 0;
+	spdk_lvs_load(&dev_x.bs_dev, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno != 0);
+
+	/* Destroy the second lvolstore 'x'.  Then we should be able to load the first lvolstore 'x'. */
+	g_lvserrno = -1;
+	rc = spdk_lvs_destroy(lvs_x2, false, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvserrno = -1;
+	spdk_lvs_load(&dev_x.bs_dev, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	lvs_x = g_lvol_store;
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_destroy(lvs_x, false, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_destroy(lvs_y, false, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+
+	spdk_free_thread();
+}
+
+static void
 lvol_create_destroy_success(void)
 {
 	struct lvol_ut_bs_dev dev;
@@ -534,6 +656,7 @@ lvol_create_destroy_success(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
@@ -573,6 +696,7 @@ lvol_create_fail(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
 
 	g_lvol_store = NULL;
 	g_lvserrno = 0;
@@ -616,6 +740,7 @@ lvol_destroy_fail(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
 
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
@@ -654,6 +779,7 @@ lvol_close_fail(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
 
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
@@ -690,6 +816,7 @@ lvol_close_success(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
@@ -727,6 +854,7 @@ lvol_resize(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
 	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
 
 	g_resize_rc = 0;
 	g_lvserrno = -1;
@@ -848,9 +976,17 @@ lvs_load(void)
 	CU_ASSERT(g_lvol_store == NULL);
 	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 
-	/* Fail on closing super blob */
+	/* Fail on getting name */
 	g_lvserrno = 0;
 	spdk_blob_md_set_xattr(super_blob, "uuid", uuid, UUID_STRING_LEN);
+	spdk_lvs_load(&dev.bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno == -ENODEV);
+	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
+
+	/* Fail on closing super blob */
+	g_lvserrno = 0;
+	spdk_blob_md_set_xattr(super_blob, "name", "lvs", strnlen("lvs", SPDK_LVS_NAME_MAX) + 1);
 	super_blob->close_status = -1;
 	spdk_lvs_load(&dev.bs_dev, lvol_store_op_with_handle_complete, req);
 	CU_ASSERT(g_lvserrno == -ENODEV);
@@ -896,6 +1032,7 @@ lvols_load(void)
 	super_blob = calloc(1, sizeof(*super_blob));
 	super_blob->id = 0x100;
 	spdk_blob_md_set_xattr(super_blob, "uuid", uuid, UUID_STRING_LEN);
+	spdk_blob_md_set_xattr(super_blob, "name", "lvs", strnlen("lvs", SPDK_LVS_NAME_MAX) + 1);
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, super_blob, link);
 	dev.bs->super_blobid = 0x100;
 
@@ -978,6 +1115,7 @@ lvol_open(void)
 	super_blob = calloc(1, sizeof(*super_blob));
 	super_blob->id = 0x100;
 	spdk_blob_md_set_xattr(super_blob, "uuid", uuid, UUID_STRING_LEN);
+	spdk_blob_md_set_xattr(super_blob, "name", "lvs", strnlen("lvs", SPDK_LVS_NAME_MAX) + 1);
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, super_blob, link);
 	dev.bs->super_blobid = 0x100;
 
@@ -1063,6 +1201,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "lvs_init_destroy_success", lvs_init_destroy_success) == NULL ||
 		CU_add_test(suite, "lvs_init_opts_success", lvs_init_opts_success) == NULL ||
 		CU_add_test(suite, "lvs_unload_lvs_is_null_fail", lvs_unload_lvs_is_null_fail) == NULL ||
+		CU_add_test(suite, "lvs_names", lvs_names) == NULL ||
 		CU_add_test(suite, "lvol_create_destroy_success", lvol_create_destroy_success) == NULL ||
 		CU_add_test(suite, "lvol_create_fail", lvol_create_fail) == NULL ||
 		CU_add_test(suite, "lvol_destroy_fail", lvol_destroy_fail) == NULL ||
