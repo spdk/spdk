@@ -421,6 +421,11 @@ spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 		return -EINVAL;
 	}
 
+	if (rte_vhost_get_conn_count(path) > 0) {
+		SPDK_ERRLOG("Controller %s has still connected client and hotremove is not supported.\n", vdev->name);
+		return -EBUSY;
+	}
+
 	if (rte_vhost_driver_unregister(path) != 0) {
 		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
 			    "Check if domain socket %s still exists\n", vdev->name, path);
