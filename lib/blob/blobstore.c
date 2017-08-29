@@ -1883,6 +1883,12 @@ _spdk_bs_unload_read_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 }
 
 static void
+_spdk_sync_super_block_cb(void *ctx, int bserrno)
+{
+	spdk_bs_sequence_finish((spdk_bs_sequence_t *)ctx, bserrno);
+}
+
+static void
 _spdk_sync_super_block(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_arg,
 		       bool unload)
 {
@@ -2014,10 +2020,11 @@ static void
 _spdk_bs_md_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob *blob = cb_arg;
+	struct spdk_blob_store *bs =  blob->bs;
 
 	_spdk_blob_free(blob);
 
-	spdk_bs_sequence_finish(seq, bserrno);
+	_spdk_sync_super_block(bs, _spdk_sync_super_block_cb, seq, false);
 }
 
 void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
@@ -2098,10 +2105,11 @@ static void
 _spdk_bs_md_delete_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob *blob = cb_arg;
+	struct spdk_blob_store *bs = blob->bs;
 
 	_spdk_blob_free(blob);
 
-	spdk_bs_sequence_finish(seq, bserrno);
+	_spdk_sync_super_block(bs, _spdk_sync_super_block_cb, seq, false);
 }
 
 static void
@@ -2218,7 +2226,9 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 static void
 _spdk_blob_sync_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	spdk_bs_sequence_finish(seq, bserrno);
+	struct spdk_blob *blob = cb_arg;
+
+	_spdk_sync_super_block(blob->bs, _spdk_sync_super_block_cb, seq, false);
 }
 
 void spdk_bs_md_sync_blob(struct spdk_blob *blob,
@@ -2260,6 +2270,7 @@ static void
 _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob **blob = cb_arg;
+	struct spdk_blob_store *bs = (*blob)->bs;
 
 	if ((*blob)->open_ref == 0) {
 		TAILQ_REMOVE(&(*blob)->bs->blobs, (*blob), link);
@@ -2267,8 +2278,7 @@ _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 
 	*blob = NULL;
-
-	spdk_bs_sequence_finish(seq, bserrno);
+	_spdk_sync_super_block(bs, _spdk_sync_super_block_cb, seq, false);
 }
 
 void spdk_bs_md_close_blob(struct spdk_blob **b,
