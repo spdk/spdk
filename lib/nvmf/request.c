@@ -273,17 +273,7 @@ spdk_nvmf_request_exec_on_master(void *ctx)
 		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 		status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	} else {
-		struct spdk_nvmf_subsystem *subsystem;
-
-		subsystem = ctrlr->subsys;
-		assert(subsystem != NULL);
-
-		if (subsystem->is_removed) {
-			rsp->status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
-			status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		} else {
-			status = spdk_nvmf_ctrlr_process_admin_cmd(req);
-		}
+		status = spdk_nvmf_ctrlr_process_admin_cmd(req);
 	}
 
 	switch (status) {
@@ -326,19 +316,7 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
 		status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	} else {
-		struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
-
-		assert(subsystem != NULL);
-
-		/* TODO: subsystem->is_removed is touched by multiple threads.
-		 * This needs stronger synchronization.
-		 */
-		if (subsystem->is_removed) {
-			rsp->status.sc = SPDK_NVME_SC_ABORTED_BY_REQUEST;
-			status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		} else {
-			status = spdk_nvmf_ctrlr_process_io_cmd(req);
-		}
+		status = spdk_nvmf_ctrlr_process_io_cmd(req);
 	}
 
 	switch (status) {

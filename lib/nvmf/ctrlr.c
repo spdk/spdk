@@ -542,20 +542,6 @@ spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
 int
 spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	struct spdk_nvmf_subsystem 	*subsys = ctrlr->subsys;
-
-	if (subsys->is_removed) {
-		if (ctrlr->aer_req) {
-			struct spdk_nvmf_request *aer = ctrlr->aer_req;
-
-			aer->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
-			aer->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
-			aer->rsp->nvme_cpl.status.dnr = 0;
-			spdk_nvmf_request_complete(aer);
-			ctrlr->aer_req = NULL;
-		}
-	}
-
 	return spdk_nvmf_poll_group_poll(ctrlr->group);
 }
 
