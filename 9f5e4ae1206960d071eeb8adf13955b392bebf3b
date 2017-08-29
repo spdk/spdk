@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d8f8122_f55d19f8",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-29T16:46:58Z",
+      "side": 1,
+      "message": "I think you need to look at io_ctx-\u003eresp here to check SCSI status instead of always returning SUCCESS.",
+      "revId": "9f5e4ae1206960d071eeb8adf13955b392bebf3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
