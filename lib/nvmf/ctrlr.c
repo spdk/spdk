@@ -33,10 +33,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "ctrlr.h"
 #include "nvmf_internal.h"
-#include "request.h"
-#include "subsystem.h"
 #include "transport.h"
 
 #include "spdk/io_channel.h"

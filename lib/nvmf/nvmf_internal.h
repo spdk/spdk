@@ -80,12 +80,95 @@ struct spdk_nvmf_poll_group {
 	TAILQ_ENTRY(spdk_nvmf_poll_group)	link;
 };
 
+typedef enum _spdk_nvmf_request_exec_status {
+	SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE,
+	SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS,
+} spdk_nvmf_request_exec_status;
+
+union nvmf_h2c_msg {
+	struct spdk_nvmf_capsule_cmd			nvmf_cmd;
+	struct spdk_nvme_cmd				nvme_cmd;
+	struct spdk_nvmf_fabric_prop_set_cmd		prop_set_cmd;
+	struct spdk_nvmf_fabric_prop_get_cmd		prop_get_cmd;
+	struct spdk_nvmf_fabric_connect_cmd		connect_cmd;
+};
+SPDK_STATIC_ASSERT(sizeof(union nvmf_h2c_msg) == 64, "Incorrect size");
+
+union nvmf_c2h_msg {
+	struct spdk_nvme_cpl				nvme_cpl;
+	struct spdk_nvmf_fabric_prop_get_rsp		prop_get_rsp;
+	struct spdk_nvmf_fabric_connect_rsp		connect_rsp;
+};
+SPDK_STATIC_ASSERT(sizeof(union nvmf_c2h_msg) == 16, "Incorrect size");
+
+struct spdk_nvmf_request {
+	struct spdk_nvmf_qpair		*qpair;
+	uint32_t			length;
+	enum spdk_nvme_data_transfer	xfer;
+	void				*data;
+	union nvmf_h2c_msg		*cmd;
+	union nvmf_c2h_msg		*rsp;
+};
+
 struct spdk_nvmf_ns {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
 	uint32_t id;
 	bool allocated;
+};
+
+enum spdk_nvmf_qpair_type {
+	QPAIR_TYPE_AQ = 0,
+	QPAIR_TYPE_IOQ = 1,
+};
+
+struct spdk_nvmf_qpair {
+	struct spdk_nvmf_transport		*transport;
+	struct spdk_nvmf_ctrlr			*ctrlr;
+	enum spdk_nvmf_qpair_type		type;
+
+	struct spdk_thread			*thread;
+
+	uint16_t				qid;
+	uint16_t				sq_head;
+	uint16_t				sq_head_max;
+
+	TAILQ_ENTRY(spdk_nvmf_qpair) 		link;
+};
+
+/*
+ * This structure represents an NVMe-oF controller,
+ * which is like a "session" in networking terms.
+ */
+struct spdk_nvmf_ctrlr {
+	uint16_t			cntlid;
+	struct spdk_nvmf_subsystem 	*subsys;
+
+	struct {
+		union spdk_nvme_cap_register	cap;
+		union spdk_nvme_vs_register	vs;
+		union spdk_nvme_cc_register	cc;
+		union spdk_nvme_csts_register	csts;
+	} vcprop; /* virtual controller properties */
+
+	TAILQ_HEAD(, spdk_nvmf_qpair) qpairs;
+	int num_qpairs;
+	int max_qpairs_allowed;
+	uint32_t kato;
+	union {
+		uint32_t raw;
+		struct {
+			union spdk_nvme_critical_warning_state crit_warn;
+			uint8_t ns_attr_notice : 1;
+			uint8_t fw_activation_notice : 1;
+		} bits;
+	} async_event_config;
+	struct spdk_nvmf_request *aer_req;
+	uint8_t hostid[16];
+	struct spdk_nvmf_poll_group		*group;
+
+	TAILQ_ENTRY(spdk_nvmf_ctrlr) 		link;
 };
 
 struct spdk_nvmf_subsystem {
@@ -113,22 +196,49 @@ struct spdk_nvmf_subsystem {
 };
 
 uint16_t spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt);
-
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
 		enum spdk_nvme_transport_type);
 
 struct spdk_nvmf_poll_group *spdk_nvmf_poll_group_create(
 	struct spdk_nvmf_tgt *tgt);
-
 void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group);
-
 int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 			     struct spdk_nvmf_qpair *qpair);
-
 int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 				struct spdk_nvmf_qpair *qpair);
-
 int spdk_nvmf_poll_group_poll(struct spdk_nvmf_poll_group *group);
+
+int spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
+int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
+int spdk_nvmf_request_abort(struct spdk_nvmf_request *req);
+
+void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt,
+				      void *buffer, uint64_t offset,
+				      uint32_t length);
+
+void spdk_nvmf_property_get(struct spdk_nvmf_ctrlr *ctrlr,
+			    struct spdk_nvmf_fabric_prop_get_cmd *cmd,
+			    struct spdk_nvmf_fabric_prop_get_rsp *response);
+
+void spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
+			    struct spdk_nvmf_fabric_prop_set_cmd *cmd,
+			    struct spdk_nvme_cpl *rsp);
+
+void spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
+			     struct spdk_nvmf_fabric_connect_cmd *cmd,
+			     struct spdk_nvmf_fabric_connect_data *data,
+			     struct spdk_nvmf_fabric_connect_rsp *rsp);
+struct spdk_nvmf_qpair *spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid);
+int spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr);
+void spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
+int spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req);
+int spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req);
+bool spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr);
+
+int spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns_data *nsdata);
+
+int spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem);
+void spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem);
 
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
