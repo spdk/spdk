@@ -400,6 +400,32 @@ p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", re
 p.set_defaults(func=get_bdevs_iostats)
 
 
+def set_bdev_io_prio(args):
+    params = {
+        'name': args.bdev_name,
+        'prio': args.bdev_io_prio,
+    }
+    print_dict(jsonrpc_call('set_bdev_io_prio', params))
+
+p = subparsers.add_parser('set_bdev_io_prio', help='Set I/O priority on required blockdev')
+p.add_argument('bdev_name', help='Blockdev name to be managed. Example: Malloc0.')
+p.add_argument('bdev_io_prio', help='IO priority. 0: urgent; 1: high; 2: medium; 3: low.', type=int)
+p.set_defaults(func=set_bdev_io_prio)
+
+
+def set_bdev_io_qd(args):
+    params = {
+        'name': args.bdev_name,
+        'qd': args.bdev_io_qd,
+    }
+    print_dict(jsonrpc_call('set_bdev_io_qd', params))
+
+p = subparsers.add_parser('set_bdev_io_qd', help='Set I/O queue depth on required blockdev')
+p.add_argument('bdev_name', help='Blockdev name to be managed. Example: Malloc0.')
+p.add_argument('bdev_io_qd', help='IO queue depth, value <= 0 is ignored.', type=int)
+p.set_defaults(func=set_bdev_io_qd)
+
+
 def delete_bdev(args):
     params = {'name': args.bdev_name}
     jsonrpc_call('delete_bdev', params)
