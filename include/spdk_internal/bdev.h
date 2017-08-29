@@ -273,10 +273,10 @@ struct spdk_bdev_io {
 			int iovcnt;
 
 			/** Total size of data to be transferred. */
-			size_t len;
+			uint64_t num_blocks;
 
-			/** Starting offset (in bytes) of the bdev for this I/O. */
-			uint64_t offset;
+			/** Starting offset (in blocks) of the bdev for this I/O. */
+			uint64_t offset_blocks;
 		} read;
 		struct {
 			/** For basic write case, use our own iovec element */
@@ -289,24 +289,24 @@ struct spdk_bdev_io {
 			int iovcnt;
 
 			/** Total size of data to be transferred. */
-			size_t len;
+			uint64_t num_blocks;
 
-			/** Starting offset (in bytes) of the bdev for this I/O. */
-			uint64_t offset;
+			/** Starting offset (in blocks) of the bdev for this I/O. */
+			uint64_t offset_blocks;
 		} write;
 		struct {
 			/** Total size of region to be unmapped. */
-			uint64_t len;
+			uint64_t num_blocks;
 
-			/** Starting offset (in bytes) of the bdev for this I/O. */
-			uint64_t offset;
+			/** Starting offset (in blocks) of the bdev for this I/O. */
+			uint64_t offset_blocks;
 		} unmap;
 		struct {
-			/** Represents starting offset in bytes of the range to be flushed. */
-			uint64_t offset;
+			/** Represents starting offset in blocks of the range to be flushed. */
+			uint64_t offset_blocks;
 
-			/** Represents the number of bytes to be flushed, starting at offset. */
-			uint64_t len;
+			/** Represents the number of blocks to be flushed, starting at offset_blocks. */
+			uint64_t num_blocks;
 		} flush;
 		struct {
 			/* The NVMe command to execute */
