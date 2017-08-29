@@ -16,6 +16,24 @@
       "revId": "9f5e4ae1206960d071eeb8adf13955b392bebf3b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8087c34_deaca8f2",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-29T16:48:08Z",
+      "side": 1,
+      "message": "But now I see this is just matching the code we had earlier.  So if you want to do the SCSI status check in a separate patch I\u0027m OK with that.",
+      "parentUuid": "2d8f8122_f55d19f8",
+      "revId": "9f5e4ae1206960d071eeb8adf13955b392bebf3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
