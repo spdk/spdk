@@ -506,3 +506,28 @@ spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->subtype;
 }
+
+uint16_t
+spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_ctrlr *ctrlr;
+	uint16_t cntlid;
+
+	/*
+	 * Valid cntlid values are 1 to 0xFFF0 according
+	 * to the NVMe specification. 0 is used as
+	 * a reserved value to mean unspecified.
+	 */
+	for (cntlid = 1; cntlid < 0xFFF0; cntlid++) {
+		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+			if (ctrlr->cntlid == cntlid) {
+				break;
+			}
+		}
+		if (!ctrlr) {
+			return cntlid;
+		}
+	}
+
+	return 0;
+}
