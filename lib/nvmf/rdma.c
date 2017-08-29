@@ -38,9 +38,6 @@
 #include <rdma/rdma_verbs.h>
 
 #include "nvmf_internal.h"
-#include "request.h"
-#include "ctrlr.h"
-#include "subsystem.h"
 #include "transport.h"
 
 #include "spdk/assert.h"
