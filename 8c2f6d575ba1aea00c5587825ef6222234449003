@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12adee12_017df2cb",
+        "filename": "Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-29T18:54:24Z",
+      "side": 1,
+      "message": "You defined SHELL but never used it",
+      "revId": "8c2f6d575ba1aea00c5587825ef6222234449003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29c5e49d_6f770150",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-08-29T18:54:24Z",
+      "side": 1,
+      "message": "This should prefer \u0027dnf\u0027 to \u0027yum\u0027 if it is available.",
+      "revId": "8c2f6d575ba1aea00c5587825ef6222234449003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
