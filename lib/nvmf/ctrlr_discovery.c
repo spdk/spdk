@@ -54,7 +54,6 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_listener *listener;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
-	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_discovery_log_page *disc_log;
 	size_t cur_size;
 	uint32_t sid;
@@ -100,10 +99,7 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 			entry->subtype = subsystem->subtype;
 			snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
-			transport = spdk_nvmf_tgt_get_transport(tgt, listener->trid.trtype);
-			assert(transport != NULL);
-
-			spdk_nvmf_transport_listener_discover(transport, &listener->trid, entry);
+			spdk_nvmf_transport_listener_discover(listener->transport, &listener->trid, entry);
 
 			numrec++;
 		}
@@ -125,6 +121,8 @@ spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
 	size_t copy_len = 0;
 	size_t zero_len = length;
 
+	pthread_mutex_lock(&tgt->lock);
+
 	if (tgt->discovery_log_page == NULL ||
 	    tgt->discovery_log_page->genctr != tgt->discovery_genctr) {
 		nvmf_update_discovery_log(tgt);
@@ -144,4 +142,6 @@ spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
 
 	/* We should have copied or zeroed every byte of the output buffer. */
 	assert(copy_len + zero_len == length);
+
+	pthread_mutex_unlock(&tgt->lock);
 }

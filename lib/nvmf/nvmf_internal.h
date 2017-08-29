@@ -46,10 +46,19 @@
 #define SPDK_NVMF_DEFAULT_NUM_CTRLRS_PER_LCORE 1
 
 struct spdk_nvmf_tgt {
+	/*
+	 * These members are immutable after the target is
+	 * initialized, so they can be read without a lock.
+	 */
 	struct spdk_nvmf_tgt_opts		opts;
-
 	struct spdk_thread			*master_thread;
 
+	pthread_mutex_t				lock;
+
+	/*
+	 * Members after this point are mutable. Hold the above
+	 * lock when accessing them.
+	 */
 	uint64_t				discovery_genctr;
 
 	/* Array of subsystem pointers of size max_sid indexed by sid */
@@ -69,6 +78,7 @@ struct spdk_nvmf_host {
 
 struct spdk_nvmf_listener {
 	struct spdk_nvme_transport_id	trid;
+	struct spdk_nvmf_transport	*transport;
 	TAILQ_ENTRY(spdk_nvmf_listener)	link;
 };
 

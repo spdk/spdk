@@ -84,6 +84,8 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 		return NULL;
 	}
 
+	pthread_mutex_init(&tgt->lock, NULL);
+
 	tgt->discovery_genctr = 0;
 	tgt->discovery_log_page = NULL;
 	tgt->discovery_log_page_size = 0;
@@ -136,7 +138,9 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 			SPDK_ERRLOG("Transport initialization failed\n");
 			return -EINVAL;
 		}
+		pthread_mutex_lock(&tgt->lock);
 		TAILQ_INSERT_TAIL(&tgt->transports, transport, link);
+		pthread_mutex_unlock(&tgt->lock);
 	}
 
 
@@ -146,7 +150,9 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 		return -EINVAL;
 	}
 
+	pthread_mutex_lock(&tgt->lock);
 	tgt->discovery_genctr++;
+	pthread_mutex_unlock(&tgt->lock);
 
 	return 0;
 }
@@ -161,6 +167,8 @@ spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 		return NULL;
 	}
 
+	pthread_mutex_lock(&tgt->lock);
+
 	for (sid = 0; sid < tgt->max_sid; sid++) {
 		subsystem = tgt->subsystems[sid];
 		if (subsystem == NULL) {
@@ -168,10 +176,12 @@ spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 		}
 
 		if (strcmp(subnqn, subsystem->subnqn) == 0) {
+			pthread_mutex_unlock(&tgt->lock);
 			return subsystem;
 		}
 	}
 
+	pthread_mutex_unlock(&tgt->lock);
 	return NULL;
 }
 
@@ -180,11 +190,16 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_
 {
 	struct spdk_nvmf_transport *transport;
 
+	pthread_mutex_lock(&tgt->lock);
+
 	TAILQ_FOREACH(transport, &tgt->transports, link) {
 		if (transport->ops->type == type) {
+			pthread_mutex_unlock(&tgt->lock);
 			return transport;
 		}
 	}
+
+	pthread_mutex_unlock(&tgt->lock);
 
 	return NULL;
 }
@@ -194,16 +209,22 @@ spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt)
 {
 	struct spdk_nvmf_transport *transport, *tmp;
 
+	pthread_mutex_lock(&tgt->lock);
+
 	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
+		pthread_mutex_unlock(&tgt->lock);
 		spdk_nvmf_transport_accept(transport);
+		pthread_mutex_lock(&tgt->lock);
 	}
+
+	pthread_mutex_unlock(&tgt->lock);
 }
 
 struct spdk_nvmf_poll_group *
 spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
 {
 	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_transport *transport;
+	struct spdk_nvmf_transport *transport, *tmp;
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
 	group = calloc(1, sizeof(*group));
@@ -213,8 +234,11 @@ spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
 
 	TAILQ_INIT(&group->tgroups);
 
-	TAILQ_FOREACH(transport, &tgt->transports, link) {
+	pthread_mutex_lock(&tgt->lock);
+	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
+		pthread_mutex_unlock(&tgt->lock);
 		tgroup = spdk_nvmf_transport_poll_group_create(transport);
+		pthread_mutex_lock(&tgt->lock);
 		if (!tgroup) {
 			SPDK_ERRLOG("Unable to create poll group for transport\n");
 			continue;
@@ -223,6 +247,7 @@ spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
 		TAILQ_INSERT_TAIL(&group->tgroups, tgroup, link);
 	}
 
+	pthread_mutex_unlock(&tgt->lock);
 	return group;
 }
 
