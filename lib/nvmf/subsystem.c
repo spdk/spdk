@@ -105,31 +105,12 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 		return NULL;
 	}
 
-	/* Find a free subsystem id (sid) */
-	for (sid = 0; sid < tgt->max_sid; sid++) {
-		if (tgt->subsystems[sid] == NULL) {
-			break;
-		}
-	}
-	if (sid == tgt->max_sid) {
-		struct spdk_nvmf_subsystem **subsys_array;
-		/* No free slots. Add more. */
-		tgt->max_sid++;
-		subsys_array = realloc(tgt->subsystems, tgt->max_sid * sizeof(struct spdk_nvmf_subsystem *));
-		if (!subsys_array) {
-			return NULL;
-		}
-		tgt->subsystems = subsys_array;
-		sid = tgt->max_sid - 1;
-	}
-
 	subsystem = calloc(1, sizeof(struct spdk_nvmf_subsystem));
 	if (subsystem == NULL) {
 		return NULL;
 	}
 
 	subsystem->tgt = tgt;
-	subsystem->id = sid;
 	subsystem->subtype = type;
 	subsystem->max_nsid = num_ns;
 	subsystem->num_allocated_nsid = 0;
@@ -147,8 +128,32 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 		}
 	}
 
+	pthread_mutex_lock(&tgt->lock);
+
+	/* Find a free subsystem id (sid) */
+	for (sid = 0; sid < tgt->max_sid; sid++) {
+		if (tgt->subsystems[sid] == NULL) {
+			break;
+		}
+	}
+	if (sid == tgt->max_sid) {
+		struct spdk_nvmf_subsystem **subsys_array;
+		/* No free slots. Add more. */
+		tgt->max_sid++;
+		subsys_array = realloc(tgt->subsystems, tgt->max_sid * sizeof(struct spdk_nvmf_subsystem *));
+		if (!subsys_array) {
+			pthread_mutex_unlock(&tgt->lock);
+			return NULL;
+		}
+		tgt->subsystems = subsys_array;
+		sid = tgt->max_sid - 1;
+	}
+
+	subsystem->id = sid;
 	tgt->subsystems[sid] = subsystem;
 	tgt->discovery_genctr++;
+
+	pthread_mutex_unlock(&tgt->lock);
 
 	return subsystem;
 }
@@ -156,6 +161,7 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 void
 spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 {
+	struct spdk_nvmf_tgt		*tgt;
 	struct spdk_nvmf_listener	*listener, *listener_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
 	struct spdk_nvmf_ctrlr		*ctrlr, *ctrlr_tmp;
@@ -185,8 +191,12 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 	free(subsystem->ns);
 
+	tgt = subsystem->tgt;
+
+	pthread_mutex_lock(&tgt->lock);
 	subsystem->tgt->subsystems[subsystem->id] = NULL;
 	subsystem->tgt->discovery_genctr++;
+	pthread_mutex_unlock(&tgt->lock);
 
 	free(subsystem);
 }
@@ -195,6 +205,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 int
 spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
 {
+	struct spdk_nvmf_tgt *tgt;
 	struct spdk_nvmf_host *host;
 
 	if (!spdk_nvmf_valid_nqn(hostnqn)) {
@@ -212,7 +223,12 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	}
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
-	subsystem->tgt->discovery_genctr++;
+
+	tgt = subsystem->tgt;
+
+	pthread_mutex_lock(&tgt->lock);
+	tgt->discovery_genctr++;
+	pthread_mutex_unlock(&tgt->lock);
 
 	return 0;
 }
@@ -272,6 +288,9 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	listener->trid = *trid;
+
+	listener->transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, listener->trid.trtype);
+	assert(listener->transport != NULL);
 
 	TAILQ_INSERT_HEAD(&subsystem->listeners, listener, link);
 
