@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba6777ea_bdbaf523",
+        "filename": "test/unit/lib/vhost/vhost.c/vhost_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-29T08:28:49Z",
+      "side": 1,
+      "message": "empty line",
+      "revId": "f657b73e5e60792aac4aea09757809a66e8949f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
