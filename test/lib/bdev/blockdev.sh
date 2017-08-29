@@ -17,9 +17,13 @@ function run_fio()
 	fi
 }
 
+source $rootdir/test/vhost/fiotest/common.sh
 source $rootdir/scripts/autotest_common.sh
 
 timing_enter bdev
+
+# Start background vhost for bdev_virtio module
+spdk_vhost_run -S /tmp
 
 # Create a file to be used as an AIO backend
 dd if=/dev/zero of=/tmp/aiofile bs=2048 count=5000
@@ -69,7 +73,6 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 	rm -f *.state
 	rm -f $testdir/bdev.fio
 	timing_exit fio_trim
-
 	timing_exit fio
 fi
 
@@ -84,6 +87,8 @@ fi
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
 fi
+
+spdk_vhost_kill
 
 rm -f /tmp/aiofile
 rm -f $testdir/bdev.conf
