@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bb2d8a1a_a237eba6",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 860,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-29T17:04:04Z",
+      "side": 1,
+      "message": "This is a typo (supposed -\u003e supported) - uploading a new revision to fix it.",
+      "range": {
+        "startLine": 860,
+        "startChar": 14,
+        "endLine": 860,
+        "endChar": 22
+      },
+      "revId": "3894496ec67ee9b5273ef76620176d2625c4ec30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
