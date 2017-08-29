@@ -437,6 +437,43 @@ spdk_bdev_io_from_ctx(void *ctx)
 	       ((uintptr_t)ctx - offsetof(struct spdk_bdev_io, driver_ctx));
 }
 
+struct spdk_bdev_part_base {
+	struct spdk_bdev		*bdev;
+	struct spdk_bdev_desc		*desc;
+	uint32_t			ref;
+	struct spdk_bdev_module_if	*module;
+	struct spdk_bdev_fn_table	*fn_table;
+	struct bdev_part_tailq		*tailq;
+};
+
+struct spdk_bdev_part {
+	struct spdk_bdev		bdev;
+	struct spdk_bdev_part_base	*base;
+	uint64_t			offset_blocks;
+	uint64_t			offset_bytes;
+	TAILQ_ENTRY(spdk_bdev_part)	tailq;
+};
+
+struct spdk_bdev_part_channel {
+	struct spdk_bdev_part		*part;
+	struct spdk_io_channel		*base_ch;
+};
+
+typedef TAILQ_HEAD(bdev_part_tailq, spdk_bdev_part)	SPDK_BDEV_PART_TAILQ;
+
+void spdk_bdev_part_base_free(struct spdk_bdev_part_base *base);
+void spdk_bdev_part_free(struct spdk_bdev_part *part, struct bdev_part_tailq *tailq);
+void spdk_bdev_part_tailq_fini(struct bdev_part_tailq *tailq);
+void spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tailq *tailq);
+struct spdk_bdev_part_base *spdk_bdev_part_base_construct(struct spdk_bdev *bdev,
+		spdk_bdev_remove_cb_t remove_cb,
+		struct spdk_bdev_module_if *module,
+		struct spdk_bdev_fn_table *fn_table,
+		struct bdev_part_tailq *tailq);
+struct spdk_bdev_part *spdk_bdev_part_construct(struct spdk_bdev_part_base *base, uint64_t partno,
+		uint64_t offset_blocks, uint64_t num_blocks,
+		char *product_name);
+
 #define SPDK_BDEV_MODULE_REGISTER(_name, init_fn, fini_fn, config_fn, ctx_size_fn, examine_fn)\
 	static struct spdk_bdev_module_if _name ## _if = {					\
 	.name		= #_name,								\
