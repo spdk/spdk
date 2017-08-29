@@ -232,8 +232,8 @@ static void bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io 
 		       (struct bdev_aio_task *)bdev_io->driver_ctx,
 		       bdev_io->u.read.iovs,
 		       bdev_io->u.read.iovcnt,
-		       bdev_io->u.read.len,
-		       bdev_io->u.read.offset);
+		       bdev_io->u.read.num_blocks * bdev_io->bdev->blocklen,
+		       bdev_io->u.read.offset_blocks * bdev_io->bdev->blocklen);
 }
 
 static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -249,14 +249,14 @@ static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 				(struct bdev_aio_task *)bdev_io->driver_ctx,
 				bdev_io->u.write.iovs,
 				bdev_io->u.write.iovcnt,
-				bdev_io->u.write.len,
-				bdev_io->u.write.offset);
+				bdev_io->u.write.num_blocks * bdev_io->bdev->blocklen,
+				bdev_io->u.write.offset_blocks * bdev_io->bdev->blocklen);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		bdev_aio_flush((struct file_disk *)bdev_io->bdev->ctxt,
 			       (struct bdev_aio_task *)bdev_io->driver_ctx,
-			       bdev_io->u.flush.offset,
-			       bdev_io->u.flush.len);
+			       bdev_io->u.flush.offset_blocks * bdev_io->bdev->blocklen,
+			       bdev_io->u.flush.num_blocks * bdev_io->bdev->blocklen);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
