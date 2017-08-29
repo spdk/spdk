@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53983a78_ba10e662",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-29T18:59:24Z",
+      "side": 1,
+      "message": "Could we just embed discovery_log_page in spdk_nvmf_tgt instead of allocating it separately?",
+      "revId": "6df9bb3dba5b735dba097fd0df22af125cf2f4ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
