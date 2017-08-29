@@ -115,6 +115,8 @@ spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
 	size_t copy_len = 0;
 	size_t zero_len = length;
 
+	pthread_mutex_lock(&tgt->lock);
+
 	if (tgt->discovery_log_page == NULL ||
 	    tgt->discovery_log_page->genctr != tgt->discovery_genctr) {
 		nvmf_update_discovery_log(tgt);
@@ -134,4 +136,6 @@ spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
 
 	/* We should have copied or zeroed every byte of the output buffer. */
 	assert(copy_len + zero_len == length);
+
+	pthread_mutex_unlock(&tgt->lock);
 }
