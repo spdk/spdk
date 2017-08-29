@@ -56,6 +56,7 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 	struct spdk_nvmf_discovery_log_page *disc_log;
 	size_t cur_size;
+	uint32_t sid;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Generating log page for genctr %" PRIu64 "\n",
 		      tgt->discovery_genctr);
@@ -67,7 +68,12 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 		return;
 	}
 
-	TAILQ_FOREACH(subsystem, &tgt->subsystems, entries) {
+	for (sid = 0; sid < tgt->max_sid; sid++) {
+		subsystem = tgt->subsystems[sid];
+		if (subsystem == NULL) {
+			continue;
+		}
+
 		if (subsystem->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			continue;
 		}
