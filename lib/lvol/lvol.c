@@ -54,12 +54,22 @@ divide_round_up(size_t num, size_t divisor)
 static int
 _spdk_add_lvs_to_list(struct spdk_lvol_store *lvs)
 {
+	struct spdk_lvol_store *tmp;
+	bool name_conflict = false;
+
 	pthread_mutex_lock(&g_lvol_stores_mutex);
-	lvs->on_list = true;
-	TAILQ_INSERT_TAIL(&g_lvol_stores, lvs, link);
+	TAILQ_FOREACH(tmp, &g_lvol_stores, link) {
+		if (!strncmp(lvs->name, tmp->name, SPDK_LVS_NAME_MAX)) {
+			name_conflict = true;
+		}
+	}
+	if (!name_conflict) {
+		lvs->on_list = true;
+		TAILQ_INSERT_TAIL(&g_lvol_stores, lvs, link);
+	}
 	pthread_mutex_unlock(&g_lvol_stores_mutex);
 
-	return 0;
+	return name_conflict ? -1 : 0;
 }
 
 static void
@@ -259,12 +269,21 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		return;
 	}
 
-	/*
-	 * Wait to put lvs on the global list until this point, because a future patch
-	 * will add lvolstore name uniqueness checking - and we don't know a loaded
-	 * lvolstore's name until this point.
-	 */
-	_spdk_add_lvs_to_list(lvs);
+	rc = spdk_bs_md_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
+	if (rc != 0 || value_len > SPDK_LVS_NAME_MAX) {
+		SPDK_INFOLOG(SPDK_TRACE_LVOL, "missing or invalid name\n");
+		spdk_bs_md_close_blob(&blob, _spdk_close_super_blob_with_error_cb, req);
+		return;
+	}
+
+	strncpy(lvs->name, attr, value_len);
+
+	rc = _spdk_add_lvs_to_list(lvs);
+	if (rc) {
+		SPDK_INFOLOG(SPDK_TRACE_LVOL, "lvolstore with name %s already exists\n", lvs->name);
+		spdk_bs_md_close_blob(&blob, _spdk_close_super_blob_with_error_cb, req);
+		return;
+	}
 
 	lvs->super_blob_id = spdk_blob_get_id(blob);
 
@@ -402,6 +421,7 @@ _spdk_super_blob_init_cb(void *cb_arg, int lvolerrno)
 	uuid_unparse(lvs->uuid, uuid);
 
 	spdk_blob_md_set_xattr(blob, "uuid", uuid, UUID_STRING_LEN);
+	spdk_blob_md_set_xattr(blob, "name", lvs->name, strnlen(lvs->name, SPDK_LVS_NAME_MAX) + 1);
 	spdk_bs_md_sync_blob(blob, _spdk_super_blob_set_cb, req);
 }
 
@@ -476,6 +496,7 @@ void
 spdk_lvs_opts_init(struct spdk_lvs_opts *o)
 {
 	o->cluster_sz = SPDK_LVS_OPTS_CLUSTER_SZ;
+	memset(o->name, 0, sizeof(o->name));
 }
 
 static void
@@ -493,6 +514,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvs_with_handle_req *lvs_req;
 	struct spdk_bs_opts opts = {};
+	int rc;
 
 	if (bs_dev == NULL) {
 		SPDK_ERRLOG("Blobstore device does not exist\n");
@@ -506,6 +528,16 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 
 	_spdk_setup_lvs_opts(&opts, o);
 
+	if (strnlen(o->name, SPDK_LVS_NAME_MAX) == SPDK_LVS_NAME_MAX) {
+		SPDK_ERRLOG("Name has no null terminator.\n");
+		return -EINVAL;
+	}
+
+	if (strnlen(o->name, SPDK_LVS_NAME_MAX) == 0) {
+		SPDK_ERRLOG("No name specified.\n");
+		return -EINVAL;
+	}
+
 	lvs = calloc(1, sizeof(*lvs));
 	if (!lvs) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol store base pointer\n");
@@ -513,6 +545,15 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	}
 
 	uuid_generate_time(lvs->uuid);
+	strncpy(lvs->name, o->name, SPDK_LVS_NAME_MAX);
+
+	rc = _spdk_add_lvs_to_list(lvs);
+
+	if (rc) {
+		SPDK_ERRLOG("lvolstore with name %s already exists\n", lvs->name);
+		_spdk_lvs_free(lvs);
+		return -EINVAL;
+	}
 
 	_spdk_add_lvs_to_list(lvs);
 

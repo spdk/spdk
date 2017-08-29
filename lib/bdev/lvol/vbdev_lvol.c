@@ -107,6 +107,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *lvs_req;
 	struct spdk_lvs_opts opts;
+	uuid_t uuid;
 	int rc;
 
 	if (base_bdev == NULL) {
@@ -118,6 +119,13 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
 	if (cluster_sz != 0) {
 		opts.cluster_sz = cluster_sz;
 	}
+
+	/*
+	 * This is temporary until the RPCs take a name parameter for creating
+	 *  an lvolstore.
+	 */
+	uuid_generate(uuid);
+	uuid_unparse(uuid, opts.name);
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
 	if (!lvs_req) {
