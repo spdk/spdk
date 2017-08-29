@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bda2968d_14f75f70",
+        "filename": "doc/getting_started.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-29T17:49:20Z",
+      "side": 1,
+      "message": "You also need to add this file to the list in doc/Doxyfile.",
+      "revId": "6d426a2bade0ec0a2b066704b412e8f11ba987f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36533885_45b45365",
+        "filename": "doc/getting_started.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-29T17:49:20Z",
+      "side": 1,
+      "message": "I think this has the same issue as the other page - at least one of these these headings should be a first-level heading (# rather than ##) to make Doxygen happy.\n\nAlso, the #section_names need to be globally unique, so we usually prefix them with the one used in the title (e.g. #getting_started_prerequisites, #getting_started_source, ...).",
+      "revId": "6d426a2bade0ec0a2b066704b412e8f11ba987f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05104fb3_f87a37a6",
+        "filename": "doc/index.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-29T17:49:20Z",
+      "side": 1,
+      "message": "Keep a blank line after headings.\n\nI think we also need to have at least one other first-level heading (#) in addition to the very first line (which is used as the page title) - Doxygen\u0027s Markdown parser is weird.",
+      "revId": "6d426a2bade0ec0a2b066704b412e8f11ba987f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
