@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "5c1dd639_e2955ea3",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-29T17:59:35Z",
+      "side": 1,
+      "message": "I checked this part and this always returning me true i domain is deffined but not really running and don\u0027t think this is what you want. I think that this works because you don\u0027t deffine domaine but only create it so it is walking on Thin ice :)\n\nI think it should be:\nif ! virsh list --all | grep -Eq \"${VM_NAME}\\s*shut off\"; then\n...\nfi\n\nthe same for line 63",
+      "range": {
+        "startLine": 60,
+        "startChar": 10,
+        "endLine": 60,
+        "endChar": 35
+      },
+      "revId": "4cbf1d1dba6ffccc41ea8798a368ca994f04a8e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e603a4f_363b2442",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-29T17:59:35Z",
+      "side": 1,
+      "message": "I think this (or similar) will be much simpler solution.\nset -xe\ntrap \"cleanup_virsh; killprocess $pid; exit 1\" SIGINT SIGTERM EXIT\n\nwhile ! $SSHCMD root@$VM_IP -q -oStrictHostKeyChecking\u003dno \u0027echo Hello\u0027; do\n    \tif ! (( TIMEO -\u003d 1 )); then\n\t\techo \"ERROR: VM did not boot properly, exiting\"\n\t\texit 1\n\tfi\ndone",
+      "range": {
+        "startLine": 130,
+        "startChar": 0,
+        "endLine": 144,
+        "endChar": 2
+      },
+      "revId": "4cbf1d1dba6ffccc41ea8798a368ca994f04a8e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0df1dc7_7eefc8e7",
         "filename": "test/vhost/integrity/integrity_vm.sh",
         "patchSetId": 2
@@ -13,6 +59,30 @@
       "writtenOn": "2017-08-14T08:49:37Z",
       "side": 1,
       "message": "Not sure if that\u0027s what you meant Pawel",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 26
+      },
+      "revId": "4cbf1d1dba6ffccc41ea8798a368ca994f04a8e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8055785_a4d90a04",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-29T17:59:35Z",
+      "side": 1,
+      "message": "I mean something like this:\n\nif [[ $1 \u003d\u003d \"scsi\" ]];then\n    devs\u003d\"\"\n    for entry in $(shopt -s nullglob; echo /sys/block/sd*); do\n           if grep -Eq \u0027(INTEL|RAWSCSI|LIO-ORG)\u0027 $entry/device/vendor; then\n                devs+\u003d\"$(basename $entry) \";\n           fi;\n    done\nelse\n    devs\u003d$(shopt -s nullglob; cd /sys/block; echo vd*)\nfi",
+      "parentUuid": "c0df1dc7_7eefc8e7",
       "range": {
         "startLine": 7,
         "startChar": 0,
