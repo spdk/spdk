@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50c2dd9d_316b800a",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-29T17:03:47Z",
+      "side": 1,
+      "message": "I think this file should have used SPDK_TRACE_ISCSI instead.",
+      "revId": "70d56289efec6a507864c13078d602a8ad95bbe9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
