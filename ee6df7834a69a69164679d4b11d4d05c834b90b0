@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e33b3618_473cc3df",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-29T13:29:07Z",
+      "side": 1,
+      "message": "is this print required?\nits also missing newline, i don\u0027t think if that\u0027s intentional",
+      "revId": "ee6df7834a69a69164679d4b11d4d05c834b90b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2ff6acb_c7fb7e7e",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-29T13:29:07Z",
+      "side": 1,
+      "message": "it seems to be 0 by default,\ncould you set g_vfio.fd to -1 before opendir?",
+      "range": {
+        "startLine": 295,
+        "startChar": 5,
+        "endLine": 295,
+        "endChar": 17
+      },
+      "revId": "ee6df7834a69a69164679d4b11d4d05c834b90b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b5efd43_e5876a8c",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-29T13:29:07Z",
+      "side": 1,
+      "message": "g_vfio seems to be unused without SPDK_VFIO_ENABLED",
+      "range": {
+        "startLine": 314,
+        "startChar": 1,
+        "endLine": 314,
+        "endChar": 24
+      },
+      "revId": "ee6df7834a69a69164679d4b11d4d05c834b90b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
