@@ -50,25 +50,6 @@ spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 	return spdk_nvmf_subsystem_bdev_attach(subsystem);
 }
 
-static bool
-nvmf_subsystem_removable(struct spdk_nvmf_subsystem *subsystem)
-{
-	struct spdk_nvmf_ctrlr	*ctrlr;
-	struct spdk_nvmf_qpair	*qpair;
-
-	if (subsystem->is_removed) {
-		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-			TAILQ_FOREACH(qpair, &ctrlr->qpairs, link) {
-				if (!spdk_nvmf_transport_qpair_is_idle(qpair)) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
-	return false;
-}
-
 void
 spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
@@ -77,10 +58,6 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 		/* For each connection in the ctrlr, check for completions */
 		spdk_nvmf_ctrlr_poll(ctrlr);
-	}
-
-	if (nvmf_subsystem_removable(subsystem)) {
-		spdk_nvmf_subsystem_bdev_detach(subsystem);
 	}
 }
 
@@ -338,13 +315,6 @@ spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener *listener)
 	return &listener->trid;
 }
 
-static void spdk_nvmf_ctrlr_hot_remove(void *remove_ctx)
-{
-	struct spdk_nvmf_subsystem *subsystem = (struct spdk_nvmf_subsystem *)remove_ctx;
-
-	subsystem->is_removed = true;
-}
-
 uint32_t
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
 			   uint32_t nsid)
@@ -405,7 +375,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	memset(ns, 0, sizeof(*ns));
 	ns->bdev = bdev;
 	ns->id = nsid;
-	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ctrlr_hot_remove, subsystem, &ns->desc);
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
