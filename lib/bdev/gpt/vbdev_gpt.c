@@ -67,7 +67,6 @@ struct gpt_partition_disk {
 	uint32_t		partition_index;
 	struct spdk_gpt_bdev	*gpt_base;
 	uint64_t		offset_blocks;
-	uint64_t		offset_bytes;
 	TAILQ_ENTRY(gpt_partition_disk)	tailq;
 };
 
@@ -159,25 +158,25 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 static void
 gpt_read(struct gpt_partition_disk *gpt_partition_disk, struct spdk_bdev_io *bdev_io)
 {
-	bdev_io->u.read.offset += gpt_partition_disk->offset_bytes;
+	bdev_io->u.read.offset_blocks += gpt_partition_disk->offset_blocks;
 }
 
 static void
 gpt_write(struct gpt_partition_disk *gpt_partition_disk, struct spdk_bdev_io *bdev_io)
 {
-	bdev_io->u.write.offset += gpt_partition_disk->offset_bytes;
+	bdev_io->u.write.offset_blocks += gpt_partition_disk->offset_blocks;
 }
 
 static void
 gpt_unmap(struct gpt_partition_disk *gpt_partition_disk, struct spdk_bdev_io *bdev_io)
 {
-	bdev_io->u.unmap.offset += gpt_partition_disk->offset_bytes;
+	bdev_io->u.unmap.offset_blocks += gpt_partition_disk->offset_blocks;
 }
 
 static void
 gpt_flush(struct gpt_partition_disk *gpt_partition_disk, struct spdk_bdev_io *bdev_io)
 {
-	bdev_io->u.flush.offset += gpt_partition_disk->offset_bytes;
+	bdev_io->u.flush.offset_blocks += gpt_partition_disk->offset_blocks;
 }
 
 
@@ -403,16 +402,15 @@ vbdev_gpt_create_bdevs(struct spdk_gpt_bdev *gpt_bdev)
 		d->partition_index = i;
 		d->disk.product_name = "GPT Disk";
 		d->base_bdev = base_bdev;
-		d->offset_bytes = lba_start * gpt->sector_size;
 		d->offset_blocks = lba_start;
 		d->disk.blockcnt = lba_end - lba_start;
 		d->disk.ctxt = d;
 		d->disk.fn_table = &vbdev_gpt_fn_table;
 		d->disk.module = SPDK_GET_BDEV_MODULE(gpt);
 
-		SPDK_TRACELOG(SPDK_TRACE_VBDEV_GPT, "gpt vbdev %s: base bdev: %s offset_bytes: "
-			      "%" PRIu64 " offset_blocks: %" PRIu64 "\n",
-			      d->disk.name, spdk_bdev_get_name(base_bdev), d->offset_bytes, d->offset_blocks);
+		SPDK_TRACELOG(SPDK_TRACE_VBDEV_GPT, "gpt vbdev %s: base bdev: %s"
+			      " offset_blocks: %" PRIu64 "\n",
+			      d->disk.name, spdk_bdev_get_name(base_bdev), d->offset_blocks);
 
 		vbdev_gpt_base_get_ref(gpt_bdev, d);
 

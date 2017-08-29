@@ -62,7 +62,6 @@ struct split_disk {
 	struct spdk_bdev	disk;
 	struct split_base	*base;
 	uint64_t		offset_blocks;
-	uint64_t		offset_bytes;
 	TAILQ_ENTRY(split_disk)	tailq;
 };
 
@@ -90,33 +89,34 @@ vbdev_split_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	struct split_disk *split_disk = split_ch->disk;
 	struct spdk_io_channel *base_ch = split_ch->base_ch;
 	struct spdk_bdev_desc *base_desc = split_disk->base->desc;
-	uint64_t offset;
+	uint32_t block_size = split_disk->disk.blocklen;
+	uint64_t offset_blocks;
 	int rc = 0;
 
 	/* Modify the I/O to adjust for the offset within the base bdev. */
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		offset = bdev_io->u.read.offset + split_disk->offset_bytes;
+		offset_blocks = bdev_io->u.read.offset_blocks + split_disk->offset_blocks;
 		rc = spdk_bdev_readv(base_desc, base_ch, bdev_io->u.read.iovs,
-				     bdev_io->u.read.iovcnt, offset,
-				     bdev_io->u.read.len, vbdev_split_complete_io,
+				     bdev_io->u.read.iovcnt, offset_blocks * block_size,
+				     bdev_io->u.read.num_blocks * block_size, vbdev_split_complete_io,
 				     bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		offset = bdev_io->u.write.offset + split_disk->offset_bytes;
+		offset_blocks = bdev_io->u.write.offset_blocks + split_disk->offset_blocks;
 		rc = spdk_bdev_writev(base_desc, base_ch, bdev_io->u.write.iovs,
-				      bdev_io->u.write.iovcnt, offset,
-				      bdev_io->u.write.len, vbdev_split_complete_io,
+				      bdev_io->u.write.iovcnt, offset_blocks * block_size,
+				      bdev_io->u.write.num_blocks * block_size, vbdev_split_complete_io,
 				      bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		offset = bdev_io->u.unmap.offset + split_disk->offset_bytes;
-		rc = spdk_bdev_unmap(base_desc, base_ch, offset, bdev_io->u.unmap.len,
+		offset_blocks = bdev_io->u.unmap.offset_blocks + split_disk->offset_blocks;
+		rc = spdk_bdev_unmap(base_desc, base_ch, offset_blocks * block_size, bdev_io->u.unmap.num_blocks * block_size,
 				     vbdev_split_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		offset = bdev_io->u.flush.offset + split_disk->offset_bytes;
-		rc = spdk_bdev_flush(base_desc, base_ch, offset, bdev_io->u.flush.len,
+		offset_blocks = bdev_io->u.flush.offset_blocks + split_disk->offset_blocks;
+		rc = spdk_bdev_flush(base_desc, base_ch, offset_blocks * block_size, bdev_io->u.flush.num_blocks * block_size,
 				     vbdev_split_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
@@ -270,7 +270,7 @@ split_channel_destroy_cb(void *io_device, void *ctx_buf)
 static int
 vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t split_size_mb)
 {
-	uint64_t split_size_bytes, split_size_blocks, offset_bytes, offset_blocks;
+	uint64_t split_size_blocks, offset_blocks;
 	uint64_t max_split_count;
 	uint64_t mb = 1024 * 1024;
 	uint64_t i;
@@ -292,8 +292,6 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 		SPDK_TRACELOG(SPDK_TRACE_VBDEV_SPLIT, "Split size not specified by user\n");
 	}
 
-	split_size_bytes = split_size_blocks * base_bdev->blocklen;
-
 	max_split_count = base_bdev->blockcnt / split_size_blocks;
 	if (split_count > max_split_count) {
 		SPDK_WARNLOG("Split count %" PRIu64 " is greater than maximum possible split count "
@@ -302,8 +300,8 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	}
 
 	SPDK_TRACELOG(SPDK_TRACE_VBDEV_SPLIT, "base_bdev: %s split_count: %" PRIu64
-		      " split_size_bytes: %" PRIu64 "\n",
-		      spdk_bdev_get_name(base_bdev), split_count, split_size_bytes);
+		      " split_size_blocks: %" PRIu64 "\n",
+		      spdk_bdev_get_name(base_bdev), split_count, split_size_blocks);
 
 	split_base = calloc(1, sizeof(*split_base));
 	if (!split_base) {
@@ -329,7 +327,6 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 		return -1;
 	}
 
-	offset_bytes = 0;
 	offset_blocks = 0;
 	for (i = 0; i < split_count; i++) {
 		struct split_disk *d;
@@ -354,16 +351,15 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 			goto cleanup;
 		}
 		d->disk.product_name = "Split Disk";
-		d->offset_bytes = offset_bytes;
 		d->offset_blocks = offset_blocks;
 		d->disk.blockcnt = split_size_blocks;
 		d->disk.ctxt = d;
 		d->disk.fn_table = &vbdev_split_fn_table;
 		d->disk.module = SPDK_GET_BDEV_MODULE(split);
 
-		SPDK_TRACELOG(SPDK_TRACE_VBDEV_SPLIT, "Split vbdev %s: base bdev: %s offset_bytes: "
-			      "%" PRIu64 " offset_blocks: %" PRIu64 "\n",
-			      d->disk.name, spdk_bdev_get_name(base_bdev), d->offset_bytes, d->offset_blocks);
+		SPDK_TRACELOG(SPDK_TRACE_VBDEV_SPLIT, "Split vbdev %s: base bdev: %s"
+			      " offset_blocks: %" PRIu64 "\n",
+			      d->disk.name, spdk_bdev_get_name(base_bdev), d->offset_blocks);
 
 		vbdev_split_base_get_ref(split_base, d);
 
@@ -374,7 +370,6 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 
 		TAILQ_INSERT_TAIL(&g_split_disks, d, tailq);
 
-		offset_bytes += split_size_bytes;
 		offset_blocks += split_size_blocks;
 	}
 
