@@ -164,8 +164,6 @@ test_discovery_log(void)
 	struct spdk_nvmf_discovery_log_page_entry *entry;
 	struct spdk_nvme_transport_id trid = {};
 
-	TAILQ_INIT(&tgt.subsystems);
-
 	/* Add one subsystem and verify that the discovery log contains it */
 	subsystem = spdk_nvmf_create_subsystem(&tgt, "nqn.2016-06.io.spdk:subsystem1",
 					       SPDK_NVMF_SUBTYPE_NVME, 0);
@@ -217,6 +215,7 @@ test_discovery_log(void)
 					 sizeof(*entry));
 	CU_ASSERT(entry->trtype == 42);
 	spdk_nvmf_delete_subsystem(subsystem);
+	free(tgt.subsystems);
 	free(tgt.discovery_log_page);
 }
 
