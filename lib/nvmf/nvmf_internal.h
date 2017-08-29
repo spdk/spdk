@@ -178,7 +178,6 @@ struct spdk_nvmf_subsystem {
 	uint32_t id;
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	enum spdk_nvmf_subtype subtype;
-	bool is_removed;
 
 	struct spdk_nvmf_tgt			*tgt;
 
