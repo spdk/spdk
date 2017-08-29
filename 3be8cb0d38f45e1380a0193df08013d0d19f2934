@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8c50a74_24b7304a",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-29T09:36:39Z",
+      "side": 1,
+      "message": "may use \"bdev\" instead of \"blockdev\" here to be consistent with other existed functions.",
+      "range": {
+        "startLine": 51,
+        "startChar": 12,
+        "endLine": 51,
+        "endChar": 20
+      },
+      "revId": "3be8cb0d38f45e1380a0193df08013d0d19f2934",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb554b11_6a7e6920",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-29T09:36:39Z",
+      "side": 1,
+      "message": "Maybe we can have another name like \"override_bs\" to be more clear describe what this variable is for?",
+      "range": {
+        "startLine": 404,
+        "startChar": 9,
+        "endLine": 404,
+        "endChar": 17
+      },
+      "revId": "3be8cb0d38f45e1380a0193df08013d0d19f2934",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea68a5cb_bf0307d1",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-08-29T09:36:39Z",
+      "side": 1,
+      "message": "move this to line 417 after the below error check.",
+      "range": {
+        "startLine": 407,
+        "startChar": 2,
+        "endLine": 407,
+        "endChar": 25
+      },
+      "revId": "3be8cb0d38f45e1380a0193df08013d0d19f2934",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
