@@ -237,12 +237,30 @@ uint32_t spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev);
 const char *spdk_bdev_get_io_priority(const struct spdk_bdev *bdev);
 
 /**
+ * Set block device I/O priority.
+ *
+ * \param bdev Block device to manage.
+ * \param prio I/O priority to set.
+ * \return 0 on success.
+ */
+int spdk_bdev_set_io_priority(struct spdk_bdev *bdev, int32_t prio);
+
+/**
  * Get block device I/O overall assigned queue depth
  *
  * \param bdev Block device to query.
  * \return assigned I/O queue depth of bdev, 0 means no restriction.
  */
 uint32_t spdk_bdev_get_io_queue_depth(const struct spdk_bdev *bdev);
+
+/**
+ * Set block device I/O queue depth.
+ *
+ * \param bdev Block device to manage.
+ * \param qd I/O queue depth to set.
+ * \return 0 on success.
+ */
+int spdk_bdev_set_io_queue_depth(struct spdk_bdev *bdev, int32_t qd);
 
 /**
  * Query whether block device has an enabled write cache.

@@ -766,6 +766,34 @@ spdk_bdev_get_io_priority(const struct spdk_bdev *bdev)
 	}
 }
 
+int
+spdk_bdev_set_io_priority(struct spdk_bdev *bdev, int32_t prio)
+{
+	if (prio < SPDK_BDEV_IO_PRIORITY_URGENT || prio > SPDK_BDEV_IO_PRIORITY_LOW) {
+		return -1;
+	}
+
+	bdev->qos.prio = (enum spdk_bdev_io_priority)prio;
+
+	return 0;
+}
+
+int
+spdk_bdev_set_io_queue_depth(struct spdk_bdev *bdev, int32_t qd)
+{
+	if (qd < 0) {
+		return -1;
+	}
+
+	if (bdev->qos.prio != SPDK_BDEV_IO_PRIORITY_URGENT && qd == 0) {
+		return -1;
+	}
+
+	bdev->qos.queue_depth = qd;
+
+	return 0;
+}
+
 bool
 spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
 {

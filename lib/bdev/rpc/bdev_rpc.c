@@ -36,6 +36,155 @@
 
 #include "spdk_internal/bdev.h"
 
+struct rpc_set_bdev_io_prio {
+	char *name;
+	enum spdk_bdev_io_priority prio;
+};
+
+static void
+free_rpc_set_bdev_io_prio(struct rpc_set_bdev_io_prio *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_set_bdev_io_prio_decoders[] = {
+	{"name", offsetof(struct rpc_set_bdev_io_prio, name), spdk_json_decode_string},
+	{"prio", offsetof(struct rpc_set_bdev_io_prio, prio), spdk_json_decode_int32},
+};
+
+static void
+spdk_rpc_set_bdev_io_prio(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_set_bdev_io_prio req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev = NULL;
+
+	if (spdk_json_decode_object(params, rpc_set_bdev_io_prio_decoders,
+				    sizeof(rpc_set_bdev_io_prio_decoders) /
+				    sizeof(*rpc_set_bdev_io_prio_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	} else {
+		if (req.name == NULL) {
+			SPDK_ERRLOG("missing name param\n");
+			goto invalid;
+		}
+
+		bdev = spdk_bdev_get_by_name(req.name);
+		if (bdev == NULL) {
+			SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+			goto invalid;
+		}
+
+		if (req.prio < SPDK_BDEV_IO_PRIORITY_URGENT ||
+		    req.prio > SPDK_BDEV_IO_PRIORITY_LOW) {
+			SPDK_ERRLOG("invalid '%d' IO priority\n", req.prio);
+			goto invalid;
+		}
+
+		if (spdk_bdev_set_io_priority(bdev, req.prio)) {
+			SPDK_ERRLOG("invalid '%d' IO priority\n", req.prio);
+			goto invalid;
+		}
+
+		free_rpc_set_bdev_io_prio(&req);
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_string(w, "Success");
+
+	spdk_jsonrpc_end_result(request, w);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+
+	free_rpc_set_bdev_io_prio(&req);
+}
+SPDK_RPC_REGISTER("set_bdev_io_prio", spdk_rpc_set_bdev_io_prio)
+
+
+struct rpc_set_bdev_io_qd {
+	char *name;
+	int32_t qd;
+};
+
+static void
+free_rpc_set_bdev_io_qd(struct rpc_set_bdev_io_qd *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_set_bdev_io_qd_decoders[] = {
+	{"name", offsetof(struct rpc_set_bdev_io_qd, name), spdk_json_decode_string},
+	{"qd", offsetof(struct rpc_set_bdev_io_qd, qd), spdk_json_decode_int32},
+};
+
+static void
+spdk_rpc_set_bdev_io_qd(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
+{
+	struct rpc_set_bdev_io_qd req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev = NULL;
+
+	if (spdk_json_decode_object(params, rpc_set_bdev_io_qd_decoders,
+				    sizeof(rpc_set_bdev_io_qd_decoders) /
+				    sizeof(*rpc_set_bdev_io_qd_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	} else {
+		if (req.name == NULL) {
+			SPDK_ERRLOG("missing name param\n");
+			goto invalid;
+		}
+
+		bdev = spdk_bdev_get_by_name(req.name);
+		if (bdev == NULL) {
+			SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
+			goto invalid;
+		}
+
+		if (req.qd <= 0) {
+			SPDK_ERRLOG("invalid '%d' IO queue depth\n", req.qd);
+			goto invalid;
+		}
+
+		if (spdk_bdev_set_io_queue_depth(bdev, req.qd)) {
+			SPDK_ERRLOG("invalid '%d' IO queue depth\n", req.qd);
+			goto invalid;
+		}
+
+		free_rpc_set_bdev_io_qd(&req);
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_string(w, "Success");
+
+	spdk_jsonrpc_end_result(request, w);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+
+	free_rpc_set_bdev_io_qd(&req);
+}
+SPDK_RPC_REGISTER("set_bdev_io_qd", spdk_rpc_set_bdev_io_qd)
+
+
 static void
 spdk_rpc_construct_bdev_iostat_info(struct spdk_json_write_ctx *w,
 				    struct spdk_bdev *bdev)
