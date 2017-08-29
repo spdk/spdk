@@ -128,8 +128,12 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 		}
 	}
 
+	pthread_mutex_lock(&tgt->lock);
+
 	TAILQ_INSERT_TAIL(&tgt->subsystems, subsystem, entries);
 	tgt->discovery_genctr++;
+
+	pthread_mutex_unlock(&tgt->lock);
 
 	return subsystem;
 }
@@ -137,6 +141,7 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 void
 spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 {
+	struct spdk_nvmf_tgt		*tgt;
 	struct spdk_nvmf_listener	*listener, *listener_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
 	struct spdk_nvmf_ctrlr		*ctrlr, *ctrlr_tmp;
@@ -146,6 +151,8 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	}
 
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "subsystem is %p\n", subsystem);
+
+	tgt = subsystem->tgt;
 
 	TAILQ_FOREACH_SAFE(listener, &subsystem->listeners, link, listener_tmp) {
 		TAILQ_REMOVE(&subsystem->listeners, listener, link);
@@ -166,8 +173,12 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 
 	free(subsystem->ns);
 
+	pthread_mutex_lock(&tgt->lock);
+
 	TAILQ_REMOVE(&subsystem->tgt->subsystems, subsystem, entries);
 	subsystem->tgt->discovery_genctr++;
+
+	pthread_mutex_unlock(&tgt->lock);
 
 	free(subsystem);
 }
@@ -193,7 +204,10 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	}
 
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
+
+	pthread_mutex_lock(&subsystem->tgt->lock);
 	subsystem->tgt->discovery_genctr++;
+	pthread_mutex_unlock(&subsystem->tgt->lock);
 
 	return 0;
 }
