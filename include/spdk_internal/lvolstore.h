@@ -88,6 +88,7 @@ struct spdk_lvol_store {
 	TAILQ_HEAD(, spdk_lvol)		lvols;
 	bool				on_list;
 	TAILQ_ENTRY(spdk_lvol_store)	link;
+	char				name[SPDK_LVS_NAME_MAX];
 };
 
 struct spdk_lvol {
