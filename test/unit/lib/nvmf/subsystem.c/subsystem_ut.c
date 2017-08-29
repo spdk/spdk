@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
-#include "subsystem.h"
 
 #include "subsystem.c"
 

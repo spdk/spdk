@@ -38,9 +38,6 @@
 #include "spdk/stdinc.h"
 
 #include "nvmf_internal.h"
-#include "ctrlr.h"
-#include "subsystem.h"
-#include "request.h"
 #include "transport.h"
 
 #include "spdk/string.h"

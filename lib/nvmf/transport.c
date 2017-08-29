@@ -33,16 +33,13 @@
 
 #include "spdk/stdinc.h"
 
+#include "nvmf_internal.h"
 #include "transport.h"
 
 #include "spdk/log.h"
 #include "spdk/nvmf.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
-
-#include "ctrlr.h"
-#include "nvmf_internal.h"
-#include "request.h"
 
 static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
 #ifdef SPDK_CONFIG_RDMA

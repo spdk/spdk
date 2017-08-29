@@ -40,8 +40,7 @@
 
 #include "spdk_internal/log.h"
 
-#include "ctrlr.h"
-#include "subsystem.h"
+#include "nvmf_internal.h"
 #include "transport.h"
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)

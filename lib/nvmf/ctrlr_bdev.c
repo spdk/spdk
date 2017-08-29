@@ -33,9 +33,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "subsystem.h"
-#include "ctrlr.h"
-#include "request.h"
+#include "nvmf_internal.h"
 
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
