@@ -784,6 +784,7 @@ INPUT                  = ../include/spdk \
                          index.md \
                          changelog.md \
                          directory_structure.md \
+                         getting_started.md \
                          memory.md \
                          porting.md \
                          blob.md \
