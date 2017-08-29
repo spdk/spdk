@@ -127,6 +127,10 @@ struct ns_worker_ctx {
 	struct ns_worker_ctx	*next;
 
 	struct spdk_histogram_data	histogram;
+
+	uint64_t		io_submitted_cnt;
+	uint64_t		io_limit_time;
+	uint32_t		io_limit;
 };
 
 struct perf_task {
@@ -179,6 +183,7 @@ static uint32_t g_max_completions;
 static uint64_t g_ddr_size;
 static int      g_n_ddr;
 static int      g_n_port;
+static uint32_t g_io_limit;
 struct fpga_addr g_fpga_addrs[3];
 static int g_current_ddr;
 static int g_dpdk_mem;
@@ -475,6 +480,21 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 	uint64_t		offset_in_ios;
 	int			rc;
 	struct ns_entry		*entry = ns_ctx->entry;
+	uint64_t current_time;
+
+	if (ns_ctx->io_limit) {
+		current_time = spdk_get_ticks();
+		if ((current_time - ns_ctx->io_limit_time) > g_tsc_rate) {
+			ns_ctx->io_submitted_cnt = 0;
+			ns_ctx->io_limit_time = current_time;
+		}
+
+		if (ns_ctx->io_submitted_cnt > ns_ctx->io_limit) {
+			return;
+		}
+
+		ns_ctx->io_submitted_cnt++;
+	}
 
 	if (rte_mempool_get(task_pool, (void **)&task) != 0) {
 		fprintf(stderr, "task_pool rte_mempool_get failed\n");
@@ -625,6 +645,9 @@ init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 		}
 	}
 
+	ns_ctx->io_limit_time = spdk_get_ticks();
+	ns_ctx->io_limit = g_io_limit / g_num_namespaces;
+
 	return 0;
 }
 
@@ -678,6 +701,11 @@ work_fn(void *arg)
 		ns_ctx = worker->ns_ctx;
 		while (ns_ctx != NULL) {
 			check_io(ns_ctx);
+
+			if (!ns_ctx->is_draining && (ns_ctx->current_queue_depth == 0)) {
+				submit_single_io(ns_ctx);
+			}
+
 			ns_ctx = ns_ctx->next;
 		}
 
@@ -732,6 +760,7 @@ static void usage(char *program_name)
 	printf("\t[-N number of ddrs (default 3)]\n");
 	printf("\t[-P number of pci ports (default 2)]\n");
 	printf("\t[-S ddr_size (default %lu)]\n", DDR_SIZE);
+	printf("\t[-I IOPS limitation]\n");
 }
 
 static void
@@ -1006,8 +1035,9 @@ parse_args(int argc, char **argv)
 	g_n_ddr = 3;
 	g_n_port = 2;
 	g_ddr_size = DDR_SIZE;
+	g_io_limit = 0;
 
-	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:DLM:a:b:P:S:N:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:DLM:a:b:P:S:N:I:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
@@ -1081,6 +1111,9 @@ parse_args(int argc, char **argv)
 			g_fpga_addrs[0].start_addr_port[1] = atoll(optarg);
 			g_fpga_addrs[1].start_addr_port[1] = atoll(optarg);
 			g_fpga_addrs[2].start_addr_port[1] = atoll(optarg);
+			break;
+		case 'I':
+			g_io_limit = atoi(optarg);
 			break;
 		default:
 			usage(argv[0]);
