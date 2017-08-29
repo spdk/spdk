@@ -177,12 +177,14 @@ spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt)
 		 * back to 0 if necessary.
 		 */
 		tgt->next_cntlid++;
-		if (tgt->next_cntlid == 0) {
+		if (tgt->next_cntlid == 0 || tgt->next_cntlid >= 0xFFF0) {
 			/* 0 is not a valid cntlid because it is the reserved value in the RDMA
 			 * private data for cntlid. This is the value sent by pre-NVMe-oF 1.1
 			 * initiators.
+			 *
+			 * The spec also reserves cntlid values in the range FFF0h to FFFFh.
 			 */
-			tgt->next_cntlid++;
+			tgt->next_cntlid = 1;
 		}
 
 		/* Check if a subsystem with this cntlid currently exists. This could
