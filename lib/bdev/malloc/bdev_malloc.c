@@ -272,14 +272,16 @@ bdev_malloc_reset(struct malloc_disk *mdisk, struct malloc_task *task)
 
 static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	uint32_t block_size = bdev_io->bdev->blocklen;
+
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (bdev_io->u.read.iovs[0].iov_base == NULL) {
 			assert(bdev_io->u.read.iovcnt == 1);
 			bdev_io->u.read.iovs[0].iov_base =
 				((struct malloc_disk *)bdev_io->bdev->ctxt)->malloc_buf +
-				bdev_io->u.read.offset;
-			bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.len;
+				bdev_io->u.read.offset_blocks * block_size;
+			bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.num_blocks * block_size;
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bdev_io->driver_ctx),
 					      SPDK_BDEV_IO_STATUS_SUCCESS);
 			return 0;
@@ -290,8 +292,8 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 				  (struct malloc_task *)bdev_io->driver_ctx,
 				  bdev_io->u.read.iovs,
 				  bdev_io->u.read.iovcnt,
-				  bdev_io->u.read.len,
-				  bdev_io->u.read.offset);
+				  bdev_io->u.read.num_blocks * block_size,
+				  bdev_io->u.read.offset_blocks * block_size);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
@@ -300,8 +302,8 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 				   (struct malloc_task *)bdev_io->driver_ctx,
 				   bdev_io->u.write.iovs,
 				   bdev_io->u.write.iovcnt,
-				   bdev_io->u.write.len,
-				   bdev_io->u.write.offset);
+				   bdev_io->u.write.num_blocks * block_size,
+				   bdev_io->u.write.offset_blocks * block_size);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
@@ -311,23 +313,23 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return bdev_malloc_flush((struct malloc_disk *)bdev_io->bdev->ctxt,
 					 (struct malloc_task *)bdev_io->driver_ctx,
-					 bdev_io->u.flush.offset,
-					 bdev_io->u.flush.len);
+					 bdev_io->u.flush.offset_blocks * block_size,
+					 bdev_io->u.flush.num_blocks * block_size);
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return bdev_malloc_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
 					 ch,
 					 (struct malloc_task *)bdev_io->driver_ctx,
-					 bdev_io->u.unmap.offset,
-					 bdev_io->u.unmap.len);
+					 bdev_io->u.unmap.offset_blocks * block_size,
+					 bdev_io->u.unmap.num_blocks * block_size);
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		/* bdev_malloc_unmap is implemented with a call to mem_cpy_fill which zeroes out all of the requested bytes. */
 		return bdev_malloc_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
 					 ch,
 					 (struct malloc_task *)bdev_io->driver_ctx,
-					 bdev_io->u.write.offset,
-					 bdev_io->u.write.len);
+					 bdev_io->u.write.offset_blocks * block_size,
+					 bdev_io->u.write.num_blocks * block_size);
 
 	default:
 		return -1;
