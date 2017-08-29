@@ -2,6 +2,7 @@
 
 # Introduction {#intro}
 - @ref getting_started
+- @ref vagrant
 - @ref changelog
 - [Source Code (GitHub)](https://github.com/spdk/spdk/)
 
