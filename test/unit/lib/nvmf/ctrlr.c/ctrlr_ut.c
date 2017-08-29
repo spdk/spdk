@@ -45,12 +45,6 @@ spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 	return NULL;
 }
 
-uint16_t
-spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt)
-{
-	return 0;
-}
-
 const struct spdk_nvme_ctrlr_data *
 spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
 {

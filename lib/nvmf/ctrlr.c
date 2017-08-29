@@ -79,14 +79,8 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
-	ctrlr->cntlid = spdk_nvmf_tgt_gen_cntlid(tgt);
-	if (ctrlr->cntlid == 0) {
-		/* Unable to get a cntlid */
-		SPDK_ERRLOG("Reached max simultaneous ctrlrs\n");
-		spdk_nvmf_poll_group_destroy(ctrlr->group);
-		free(ctrlr);
-		return NULL;
-	}
+	subsystem->next_cntlid++;
+	ctrlr->cntlid = subsystem->next_cntlid;
 
 	TAILQ_INIT(&ctrlr->qpairs);
 	ctrlr->kato = connect_cmd->kato;

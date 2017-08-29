@@ -50,7 +50,6 @@ struct spdk_nvmf_tgt {
 
 	struct spdk_thread			*master_thread;
 
-	uint16_t				next_cntlid;
 	uint64_t				discovery_genctr;
 	TAILQ_HEAD(, spdk_nvmf_subsystem)	subsystems;
 	struct spdk_nvmf_discovery_log_page	*discovery_log_page;
@@ -187,6 +186,7 @@ struct spdk_nvmf_subsystem {
 	uint32_t				num_allocated_nsid;
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
+	uint16_t				next_cntlid;
 
 	TAILQ_HEAD(, spdk_nvmf_host)		hosts;
 
@@ -195,7 +195,6 @@ struct spdk_nvmf_subsystem {
 	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
 };
 
-uint16_t spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt);
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
 		enum spdk_nvme_transport_type);
 
