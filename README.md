@@ -124,7 +124,7 @@ with the [VirtualBox](https://www.virtualbox.org/wiki/Downloads) provider.  The
 also be installed in order to get the required NVMe support.
 
 Details on the Vagrant setup can be found in
-[scripts/vagrant/README.md](scripts/vagrant/README.md).
+[here](http://spdk.io/doc/vagrant.html).
 
 <a id="advanced"></a>
 ## Advanced Build Options

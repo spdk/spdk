@@ -1,20 +1,19 @@
-Introduction
-============
+# Vagrant Development Environment {#vagrant}
 
-The idea behind our use of vagrant is to provide a quick way to get a basic
-NVMe enabled sandbox going without the need for any special hardware.
+[Vagrant](https://www.vagrantup.com/) provides a quick way to get a basic
+NVMe enabled virtual machine sandbox running without the need for any
+special hardware.
 The vagrant environment for SPDK has support for Ubuntu 16.04 and
 Centos 7.2. This environment requires vagrant 1.9.4 or newer and
 VirtualBox 5.1 or newer with the matching VirtualBox extension pack.
 
-The VM builds SPDK and DPDK from source which can be located at /spdk.
+The VM builds SPDK and DPDK from source which are located at /spdk.
 
 Note: If you are behind a corporate firewall, set http_proxy and https_proxy in
 your environment before trying to start up the VM.  Also make sure that you
 have installed the optional vagrant module 'vagrant-proxyconf'.
 
-VM Configuration
-================
+## VM Configuration {#vagrant_config}
 
 This vagrant environment creates a VM based on environment variables found in ./env.sh
 To use, edit env.sh then
@@ -46,13 +45,11 @@ By default, the VM created is/has:
 - 4G of RAM
 - 2 NICs (1 x NAT - host access, 1 x private network)
 
-Providers
-=========
+## Providers {#vagrant_providers}
 
 Currently only the Virtualbox provider is supported.
 
-Hello World
-===========
+## Running An Examle {#vagrant_example}
 
 The following shows sample output from starting up a VM and running
 the NVMe sample application "hello world". If you don't see the
