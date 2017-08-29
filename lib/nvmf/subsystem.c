@@ -117,6 +117,7 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 	subsystem->subtype = type;
 	subsystem->max_nsid = num_ns;
 	subsystem->num_allocated_nsid = 0;
+	subsystem->next_cntlid = 0;
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);
@@ -494,4 +495,43 @@ nvmf_subtype_t
 spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->subtype;
+}
+
+uint16_t
+spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_ctrlr *ctrlr;
+	uint16_t count;
+	bool in_use = true;
+
+	/*
+	 * In the worst case, we might have to try all CNTLID values between 1 and 0xFFF0 - 1
+	 * before we find one that is unused (or find that all values are in use).
+	 */
+	count = 0xFFF0 - 1;
+	do {
+		subsystem->next_cntlid++;
+		if (subsystem->next_cntlid >= 0xFFF0) {
+			/* The spec reserves cntlid values in the range FFF0h to FFFFh. */
+			subsystem->next_cntlid = 1;
+		}
+
+		/* Check if a controller with this cntlid currently exists. */
+		in_use = false;
+		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+			if (ctrlr->cntlid == subsystem->next_cntlid) {
+				in_use = true;
+				break;
+			}
+		}
+
+		count--;
+	} while (in_use && count > 0);
+
+	if (count == 0) {
+		/* All valid cntlid values are in use. */
+		return 0xFFFF;
+	}
+
+	return subsystem->next_cntlid;
 }
