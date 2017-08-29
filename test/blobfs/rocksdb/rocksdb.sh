@@ -118,6 +118,17 @@ timing_enter rocksdb_randread
 run_step randread
 timing_exit rocksdb_randread
 
+$rootdir/test/lib/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
+
+$rootdir/test/lib/blobfs/blobfs_power_failure_test/blobfs_power_failure_test $ROCKSDB_CONF Nvme0n1 power_failure_simulation
+$rootdir/test/lib/blobfs/blobfs_power_failure_test/blobfs_power_failure_test $ROCKSDB_CONF Nvme0n1 power_recover_check
+if [ $? -eq 0 ]; then
+	echo "power failure test success"
+else
+	echo "power failure test fail"
+	exit 1
+fi
+
 trap - SIGINT SIGTERM EXIT
 
 rm -f $ROCKSDB_CONF

@@ -31,19 +31,28 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y = blobfs_async_ut blobfs_sync_ut mkfs blobfs_power_failure_test
+APP = blobfs_power_failure_test
 
-# TODO: do not check a hardcoded path here
-ifneq (,$(wildcard /usr/local/include/fuse3))
-DIRS-y += fuse
-endif
+C_SRCS := blobfs_power_failure_test.c
 
-.PHONY: all clean $(DIRS-y)
+SPDK_LIB_LIST = event_bdev event_copy event_rpc
+SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event util conf trace \
+		log jsonrpc json rpc
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+all : $(APP)
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
