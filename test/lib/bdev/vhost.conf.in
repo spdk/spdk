@@ -1,0 +1,10 @@
+[Malloc]
+  NumberOfLuns 1
+  LunSizeInMB 64
+  
+[VhostScsi0]
+  Name vhostctrlr0
+  Dev 0 Malloc0
+
+[Ioat]
+  Disable Yes
