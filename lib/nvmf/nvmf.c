@@ -171,18 +171,12 @@ spdk_nvmf_tgt_gen_cntlid(struct spdk_nvmf_tgt *tgt)
 	struct spdk_nvmf_ctrlr *ctrlr;
 	uint16_t count;
 
-	count = UINT16_MAX - 1;
+	count = 0xFFF0 - 1;
 	do {
-		/* cntlid is an unsigned 16-bit integer, so let it overflow
-		 * back to 0 if necessary.
-		 */
 		tgt->next_cntlid++;
-		if (tgt->next_cntlid == 0) {
-			/* 0 is not a valid cntlid because it is the reserved value in the RDMA
-			 * private data for cntlid. This is the value sent by pre-NVMe-oF 1.1
-			 * initiators.
-			 */
-			tgt->next_cntlid++;
+		if (tgt->next_cntlid >= 0xFFF0) {
+			/* The spec reserves cntlid values in the range FFF0h to FFFFh. */
+			tgt->next_cntlid = 1;
 		}
 
 		/* Check if a subsystem with this cntlid currently exists. This could
