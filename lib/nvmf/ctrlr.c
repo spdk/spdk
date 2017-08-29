@@ -79,8 +79,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
-	ctrlr->cntlid = spdk_nvmf_subsystem_gen_cntlid(subsystem);
-
 	TAILQ_INIT(&ctrlr->qpairs);
 	ctrlr->kato = connect_cmd->kato;
 	ctrlr->async_event_config.raw = 0;
@@ -122,7 +120,10 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "cc 0x%x\n", ctrlr->vcprop.cc.raw);
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "csts 0x%x\n", ctrlr->vcprop.csts.raw);
 
+	pthread_mutex_lock(&subsystem->lock);
+	ctrlr->cntlid = spdk_nvmf_subsystem_gen_cntlid(subsystem);
 	TAILQ_INSERT_TAIL(&subsystem->ctrlrs, ctrlr, link);
+	pthread_mutex_unlock(&subsystem->lock);
 	return ctrlr;
 }
 
@@ -236,12 +237,14 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 		SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
 		ctrlr = NULL;
+		pthread_mutex_lock(&subsystem->lock);
 		TAILQ_FOREACH(tmp, &subsystem->ctrlrs, link) {
 			if (tmp->cntlid == data->cntlid) {
 				ctrlr = tmp;
 				break;
 			}
 		}
+		pthread_mutex_unlock(&subsystem->lock);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Unknown controller ID 0x%x\n", data->cntlid);
 			INVALID_CONNECT_DATA(cntlid);
@@ -829,7 +832,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	 */
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
 		spdk_strcpy_pad(cdata->mn, MODEL_NUMBER, sizeof(cdata->mn), ' ');
-		spdk_strcpy_pad(cdata->sn, spdk_nvmf_subsystem_get_sn(subsystem), sizeof(cdata->sn), ' ');
+		spdk_nvmf_subsystem_get_sn(subsystem, cdata->sn, sizeof(cdata->sn));
 		cdata->aerl = 0;
 		cdata->kas = 10;
 

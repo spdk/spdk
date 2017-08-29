@@ -185,13 +185,23 @@ struct spdk_nvmf_ctrlr {
 };
 
 struct spdk_nvmf_subsystem {
-	uint32_t id;
-	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
-	enum spdk_nvmf_subtype subtype;
-
+	/*
+	 * These members are immutable after the subsystem
+	 * has been constructed and can be read without
+	 * taking the lock.
+	 */
+	uint32_t 				id;
+	char 					subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+	enum spdk_nvmf_subtype			subtype;
 	struct spdk_nvmf_tgt			*tgt;
 
-	char sn[SPDK_NVME_CTRLR_SN_LEN + 1];
+	pthread_mutex_t				lock;
+
+	/*
+	 * Below this point, all members are considered mutable
+	 * and must only be referenced under the lock above.
+	 */
+	char 					sn[SPDK_NVME_CTRLR_SN_LEN + 1];
 
 	/* Array of namespaces of size max_nsid indexed by nsid - 1 */
 	struct spdk_nvmf_ns			*ns;
@@ -252,6 +262,17 @@ int spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem);
 void spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem);
 uint16_t spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem);
 
+/* TODO:
+ * It is not safe to call this function without holding the
+ * subsystem lock. However, in a number of places we currently do
+ * today because it is done in the I/O path. The real solution is
+ * to have a thread-local lookup table for namespaces (in the
+ * poll group?) that is safe to use without a lock. If it needs
+ * to be modified, events can be sent.
+ *
+ * For now, this is fine as long as the user doesn't add namespaces
+ * while I/O is happening.
+ */
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {

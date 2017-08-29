@@ -279,7 +279,8 @@ uint32_t spdk_nvmf_ns_get_id(const struct spdk_nvmf_ns *ns);
  */
 struct spdk_bdev *spdk_nvmf_ns_get_bdev(struct spdk_nvmf_ns *ns);
 
-const char *spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem);
+int spdk_nvmf_subsystem_get_sn(struct spdk_nvmf_subsystem *subsystem,
+			       char *sn, size_t sz);
 
 int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn);
 

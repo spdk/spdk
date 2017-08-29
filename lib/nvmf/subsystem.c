@@ -55,6 +55,13 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_ctrlr *ctrlr;
 
+	/*
+	 * TODO: Looping over this list is not thread safe, so
+	 * the subsystem lock should be taken. For now, we know
+	 * that only a single thread is accessing each subsystem,
+	 * so let this slide. When that changes, this will need
+	 * to be done differently.
+	 */
 	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 		/* For each connection in the ctrlr, check for completions */
 		spdk_nvmf_ctrlr_poll(ctrlr);
@@ -109,6 +116,8 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 	if (subsystem == NULL) {
 		return NULL;
 	}
+
+	pthread_mutex_init(&subsystem->lock, NULL);
 
 	subsystem->tgt = tgt;
 	subsystem->subtype = type;
@@ -222,7 +231,9 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 		return -1;
 	}
 
+	pthread_mutex_lock(&subsystem->lock);
 	TAILQ_INSERT_HEAD(&subsystem->hosts, host, link);
+	pthread_mutex_unlock(&subsystem->lock);
 
 	tgt = subsystem->tgt;
 
@@ -242,24 +253,36 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 		return false;
 	}
 
+	pthread_mutex_lock(&subsystem->lock);
+
 	if (TAILQ_EMPTY(&subsystem->hosts)) {
 		/* No hosts means any host can connect */
+		pthread_mutex_unlock(&subsystem->lock);
 		return true;
 	}
 
+	pthread_mutex_lock(&subsystem->lock);
 	TAILQ_FOREACH(host, &subsystem->hosts, link) {
 		if (strcmp(hostnqn, host->nqn) == 0) {
+			pthread_mutex_unlock(&subsystem->lock);
 			return true;
 		}
 	}
 
+	pthread_mutex_unlock(&subsystem->lock);
 	return false;
 }
 
 struct spdk_nvmf_host *
 spdk_nvmf_subsystem_get_first_host(struct spdk_nvmf_subsystem *subsystem)
 {
-	return TAILQ_FIRST(&subsystem->hosts);
+	struct spdk_nvmf_host *host;
+
+	pthread_mutex_lock(&subsystem->lock);
+	host = TAILQ_FIRST(&subsystem->hosts);
+	pthread_mutex_unlock(&subsystem->lock);
+
+	return host;
 }
 
 
@@ -267,7 +290,13 @@ struct spdk_nvmf_host *
 spdk_nvmf_subsystem_get_next_host(struct spdk_nvmf_subsystem *subsystem,
 				  struct spdk_nvmf_host *prev_host)
 {
-	return TAILQ_NEXT(prev_host, link);
+	struct spdk_nvmf_host *host;
+
+	pthread_mutex_lock(&subsystem->lock);
+	host = TAILQ_NEXT(prev_host, link);
+	pthread_mutex_unlock(&subsystem->lock);
+
+	return host;
 }
 
 const char *
@@ -292,7 +321,9 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	listener->transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, listener->trid.trtype);
 	assert(listener->transport != NULL);
 
+	pthread_mutex_lock(&subsystem->lock);
 	TAILQ_INSERT_HEAD(&subsystem->listeners, listener, link);
+	pthread_mutex_unlock(&subsystem->lock);
 
 	return 0;
 }
@@ -306,30 +337,47 @@ spdk_nvmf_subsystem_listener_allowed(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct spdk_nvmf_listener *listener;
 
+	pthread_mutex_lock(&subsystem->lock);
+
 	if (TAILQ_EMPTY(&subsystem->listeners)) {
+		pthread_mutex_unlock(&subsystem->lock);
 		return true;
 	}
 
 	TAILQ_FOREACH(listener, &subsystem->listeners, link) {
 		if (spdk_nvme_transport_id_compare(&listener->trid, trid) == 0) {
+			pthread_mutex_unlock(&subsystem->lock);
 			return true;
 		}
 	}
 
+	pthread_mutex_unlock(&subsystem->lock);
 	return false;
 }
 
 struct spdk_nvmf_listener *
 spdk_nvmf_subsystem_get_first_listener(struct spdk_nvmf_subsystem *subsystem)
 {
-	return TAILQ_FIRST(&subsystem->listeners);
+	struct spdk_nvmf_listener *listener;
+
+	pthread_mutex_lock(&subsystem->lock);
+	listener = TAILQ_FIRST(&subsystem->listeners);
+	pthread_mutex_unlock(&subsystem->lock);
+
+	return listener;
 }
 
 struct spdk_nvmf_listener *
 spdk_nvmf_subsystem_get_next_listener(struct spdk_nvmf_subsystem *subsystem,
 				      struct spdk_nvmf_listener *prev_listener)
 {
-	return TAILQ_NEXT(prev_listener, link);
+	struct spdk_nvmf_listener *listener;
+
+	pthread_mutex_lock(&subsystem->lock);
+	listener = TAILQ_NEXT(prev_listener, link);
+	pthread_mutex_unlock(&subsystem->lock);
+
+	return listener;
 }
 
 
@@ -347,6 +395,8 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	uint32_t i;
 	int rc;
 
+	pthread_mutex_lock(&subsystem->lock);
+
 	if (nsid > subsystem->max_nsid ||
 	    (nsid == 0 && subsystem->num_allocated_nsid == subsystem->max_nsid)) {
 		struct spdk_nvmf_ns *new_ns_array;
@@ -360,12 +410,14 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 		if (!TAILQ_EMPTY(&subsystem->ctrlrs)) {
 			SPDK_ERRLOG("Can't extend NSID range with active connections\n");
+			pthread_mutex_unlock(&subsystem->lock);
 			return 0;
 		}
 
 		new_ns_array = realloc(subsystem->ns, sizeof(struct spdk_nvmf_ns) * new_max_nsid);
 		if (new_ns_array == NULL) {
 			SPDK_ERRLOG("Memory allocation error while resizing namespace array.\n");
+			pthread_mutex_unlock(&subsystem->lock);
 			return 0;
 		}
 
@@ -385,12 +437,14 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		}
 		if (nsid == 0) {
 			SPDK_ERRLOG("All available NSIDs in use\n");
+			pthread_mutex_unlock(&subsystem->lock);
 			return 0;
 		}
 	} else {
 		/* Specific NSID requested */
 		if (_spdk_nvmf_subsystem_get_ns(subsystem, nsid)) {
 			SPDK_ERRLOG("Requested NSID %" PRIu32 " already in use\n", nsid);
+			pthread_mutex_unlock(&subsystem->lock);
 			return 0;
 		}
 	}
@@ -403,8 +457,10 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
+		pthread_mutex_unlock(&subsystem->lock);
 		return 0;
 	}
+
 	ns->allocated = true;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
@@ -414,6 +470,8 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 	subsystem->max_nsid = spdk_max(subsystem->max_nsid, nsid);
 	subsystem->num_allocated_nsid++;
+
+	pthread_mutex_unlock(&subsystem->lock);
 	return nsid;
 }
 
@@ -423,16 +481,21 @@ spdk_nvmf_subsystem_get_next_allocated_nsid(struct spdk_nvmf_subsystem *subsyste
 {
 	uint32_t nsid;
 
+	pthread_mutex_lock(&subsystem->lock);
+
 	if (prev_nsid >= subsystem->max_nsid) {
+		pthread_mutex_unlock(&subsystem->lock);
 		return 0;
 	}
 
 	for (nsid = prev_nsid + 1; nsid <= subsystem->max_nsid; nsid++) {
 		if (subsystem->ns[nsid - 1].allocated) {
+			pthread_mutex_unlock(&subsystem->lock);
 			return nsid;
 		}
 	}
 
+	pthread_mutex_unlock(&subsystem->lock);
 	return 0;
 }
 
@@ -473,10 +536,14 @@ spdk_nvmf_ns_get_bdev(struct spdk_nvmf_ns *ns)
 	return ns->bdev;
 }
 
-const char *
-spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
+int
+spdk_nvmf_subsystem_get_sn(struct spdk_nvmf_subsystem *subsystem,
+			   char *sn, size_t sz)
 {
-	return subsystem->sn;
+	pthread_mutex_lock(&subsystem->lock);
+	spdk_strcpy_pad(sn, subsystem->sn, sz, ' ');
+	pthread_mutex_unlock(&subsystem->lock);
+	return 0;
 }
 
 int
@@ -492,7 +559,9 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 		return -1;
 	}
 
+	pthread_mutex_lock(&subsystem->lock);
 	snprintf(subsystem->sn, sizeof(subsystem->sn), "%s", sn);
+	pthread_mutex_unlock(&subsystem->lock);
 
 	return 0;
 }
@@ -512,6 +581,7 @@ spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->subtype;
 }
 
+/* The subsystem lock must be held while caling this function */
 uint16_t
 spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 {
