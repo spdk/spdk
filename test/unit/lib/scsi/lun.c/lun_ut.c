@@ -39,6 +39,8 @@
 #include "lun.c"
 #include "lun_db.c"
 
+#include "spdk_internal/mock.h"
+
 /* Unit test bdev mockup */
 struct spdk_bdev {
 	int x;
@@ -193,6 +195,9 @@ void
 spdk_put_io_channel(struct spdk_io_channel *ch)
 {
 }
+
+DEFINE_STUB(spdk_io_channel_get_thread, struct spdk_thread *, (struct spdk_io_channel *ch), NULL)
+DEFINE_STUB(spdk_get_thread, struct spdk_thread *, (void), NULL)
 
 static _spdk_scsi_lun *
 lun_construct(void)
