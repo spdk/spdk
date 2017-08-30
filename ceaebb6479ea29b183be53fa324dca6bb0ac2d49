@@ -67,6 +67,41 @@
       "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4593ed35_8bc8a880",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-30T17:22:08Z",
+      "side": 1,
+      "message": "I\u0027m not sure looking at Hugepagesize is the right thing to do anyway.  I believe it is possible to configure a system with multiple supported hugepage sizes.  The value in /proc/meminfo\u0027s Hugepagesize is just the default.\n\nFor example, I booted my system with \u0027hugepagesz\u003d1GB hugepages\u003d4\u0027 on the Linux command line and ran the current scripts/setup.sh, and I get:\n\n    $ hugeadm --pool-list\n          Size  Minimum  Current  Maximum  Default\n       2097152     1024     1024     1024        *\n    1073741824        4        4        4\n\n/proc/meminfo Hugepagesize still says 2048 kB, but I have both 2 MB and 1 GB hugepages available.  We might need to extend scripts/setup.sh with more options if we want to fully support this kind of configuration.",
+      "parentUuid": "965d210a_46fa3c29",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea1cae60_f2c2fe8c",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-30T17:22:08Z",
+      "side": 1,
+      "message": "You can simplify this to:\n\n  NRHUGE\u003d$((HUGEMEM / 2))\n\nThe \u0027expr\u0027 isn\u0027t doing anything, since you already calculated HUGEMEM/2 in the $(()), and the $ variable prefix isn\u0027t necessary in $(()).",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
