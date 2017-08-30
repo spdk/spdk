@@ -180,29 +180,6 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 	vq_update_avail_ring(vq, head_idx);
 }
 
-/*
- * struct rte_eth_dev *dev: Used to update dev
- * uint16_t nb_desc: Defaults to values read from config space
- * unsigned int socket_id: Used to allocate memzone
- * const struct rte_eth_txconf *tx_conf: Used to setup tx engine
- * uint16_t queue_idx: Just used as an index in dev txq list
- */
-int
-virtio_dev_tx_queue_setup(struct virtio_hw *hw,
-			uint16_t queue_idx,
-			uint16_t nb_desc,
-			unsigned int socket_id __rte_unused)
-{
-	struct virtqueue *vq = hw->vqs[queue_idx];
-
-	PMD_INIT_FUNC_TRACE();
-
-	if (nb_desc == 0 || nb_desc > vq->vq_nentries)
-		nb_desc = vq->vq_nentries;
-	vq->vq_free_cnt = RTE_MIN(vq->vq_free_cnt, nb_desc);
-	return 0;
-}
-
 #define VIRTIO_MBUF_BURST_SZ 64
 #define DESC_PER_CACHELINE (RTE_CACHE_LINE_SIZE / sizeof(struct vring_desc))
 uint16_t

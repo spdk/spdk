@@ -345,7 +345,7 @@ virtio_set_vtpci_ops(struct virtio_hw *hw)
 int
 eth_virtio_dev_init(struct virtio_hw *hw)
 {
-	int ret, i;
+	int ret;
 
 	if (rte_eal_process_type() == RTE_PROC_SECONDARY) {
 		virtio_set_vtpci_ops(hw);
@@ -362,12 +362,6 @@ eth_virtio_dev_init(struct virtio_hw *hw)
 	ret = virtio_init_device(hw, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
 	if (ret < 0)
 		return ret;
-
-	hw->nb_tx_queues = num_queues;
-
-	for (i = 0; i < num_queues; i++) {
-		virtio_dev_tx_queue_setup(hw, i, 512, -1);
-	}
 
 	return 0;
 }
