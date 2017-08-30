@@ -71,9 +71,9 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 
 	if ((cmd->opc == SPDK_NVME_OPC_FABRIC ||
 	     req->qpair->type == QPAIR_TYPE_AQ) &&
-	    req->qpair->thread) {
+	    req->qpair->group->thread) {
 		/* Pass a message back to the originating thread. */
-		spdk_thread_send_msg(req->qpair->thread,
+		spdk_thread_send_msg(req->qpair->group->thread,
 				     spdk_nvmf_request_complete_on_qpair,
 				     req);
 	} else {

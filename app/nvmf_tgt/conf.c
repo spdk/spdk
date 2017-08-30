@@ -125,7 +125,6 @@ spdk_add_nvmf_discovery_subsystem(void)
 	}
 
 	spdk_nvmf_subsystem_set_allow_any_host(app_subsys->subsystem, true);
-	nvmf_tgt_start_subsystem(app_subsys);
 
 	return 0;
 }
@@ -505,8 +504,6 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 			       spdk_bdev_get_name(bdev), spdk_nvmf_subsystem_get_nqn(subsystem));
 
 	}
-
-	nvmf_tgt_start_subsystem(app_subsys);
 
 	return 0;
 
