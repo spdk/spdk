@@ -78,6 +78,8 @@ struct nvmf_tgt {
 	enum nvmf_tgt_state state;
 
 	struct spdk_nvmf_tgt *tgt;
+
+	uint32_t core; // Round-robin tracking of cores for qpair assignment
 };
 
 extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
@@ -91,8 +93,6 @@ struct nvmf_tgt_subsystem *
 nvmf_tgt_subsystem_next(struct nvmf_tgt_subsystem *subsystem);
 
 int spdk_nvmf_parse_conf(void);
-
-void nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *subsystem);
 
 struct nvmf_tgt_subsystem *nvmf_tgt_create_subsystem(const char *name,
 		enum spdk_nvmf_subtype subtype, uint32_t num_ns,

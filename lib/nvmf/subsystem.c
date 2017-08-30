@@ -44,12 +44,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-int
-spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
-{
-	return spdk_nvmf_subsystem_bdev_attach(subsystem);
-}
-
 static bool
 spdk_nvmf_valid_nqn(const char *nqn)
 {
@@ -177,8 +171,15 @@ spdk_nvmf_subsystem_delete_done(void *io_device, void *ctx, int status)
 {
 	struct spdk_nvmf_tgt *tgt = io_device;
 	struct spdk_nvmf_subsystem *subsystem = ctx;
+	struct spdk_nvmf_ns *ns;
 
-	spdk_nvmf_subsystem_bdev_detach(subsystem);
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem);
+	     ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		if (ns->desc) {
+			spdk_bdev_close(ns->desc);
+		}
+	}
 
 	free(subsystem->ns);
 
@@ -239,8 +240,6 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 			      spdk_nvmf_subsystem_remove_from_poll_group,
 			      subsystem,
 			      spdk_nvmf_subsystem_delete_done);
-
-
 }
 
 
