@@ -64,5 +64,9 @@ struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_or
 struct spdk_lvol *vbdev_get_lvol_by_name(const char *name);
 struct spdk_lvol_store *vbdev_get_lvol_store_by_uuid(uuid_t uuid);
 void spdk_lvs_examine_cb(void *cb_arg, struct spdk_blob_store *bs, int bserrno);
+void spdk_blob_iter_next(struct spdk_blob_store *bs, struct spdk_blob **blob,
+			 spdk_blob_op_with_handle_complete cb_fn, struct spdk_lvol_store *lvs);
+void spdk_blob_iter_first(struct spdk_blob_store *bs, spdk_blob_op_with_handle_complete cb_fn,
+			  struct spdk_lvol_store *lvs);
 
 #endif  /* SPDK_LVOL_H */
