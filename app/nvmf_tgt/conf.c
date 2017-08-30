@@ -230,6 +230,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	char *listen_addrs_str[MAX_LISTEN_ADDRESSES] = {};
 	int num_hosts;
 	char *hosts[MAX_HOSTS];
+	bool allow_any_host;
 	const char *sn;
 	int num_devs;
 	char *devs[MAX_NAMESPACES];
@@ -290,6 +291,8 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	}
 	num_hosts = i;
 
+	allow_any_host = spdk_conf_section_get_boolval(sp, "AllowAnyHost", false);
+
 	sn = spdk_conf_section_get_val(sp, "SN");
 
 	num_devs = 0;
@@ -304,7 +307,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 	ret = spdk_nvmf_construct_subsystem(nqn, lcore,
 					    num_listen_addrs, listen_addrs,
-					    num_hosts, hosts,
+					    num_hosts, hosts, allow_any_host,
 					    sn,
 					    num_devs, devs);
 
@@ -357,7 +360,7 @@ spdk_nvmf_parse_conf(void)
 int
 spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 			      int num_listen_addresses, struct rpc_listen_address *addresses,
-			      int num_hosts, char *hosts[],
+			      int num_hosts, char *hosts[], bool allow_any_host,
 			      const char *sn, int num_devs, char *dev_list[])
 {
 	struct spdk_nvmf_subsystem *subsystem;
@@ -444,6 +447,7 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 	for (i = 0; i < num_hosts; i++) {
 		spdk_nvmf_subsystem_add_host(subsystem, hosts[i]);
 	}
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, allow_any_host);
 
 	if (sn == NULL) {
 		SPDK_ERRLOG("Subsystem %s: missing serial number\n", name);
