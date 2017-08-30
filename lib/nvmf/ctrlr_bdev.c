@@ -299,6 +299,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
+	struct spdk_nvmf_poll_group *group = req->qpair->ctrlr->group;
 	struct spdk_nvmf_subsystem *subsystem = req->qpair->ctrlr->subsys;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -316,7 +317,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 
 	bdev = ns->bdev;
 	desc = ns->desc;
-	ch = ns->ch;
+	ch = group->sgroups[subsystem->id].channels[nsid - 1];
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 	case SPDK_NVME_OPC_WRITE:
@@ -353,10 +354,6 @@ spdk_nvmf_ns_bdev_detach(struct spdk_nvmf_ns *ns)
 		return;
 	}
 
-	if (ns->ch) {
-		spdk_put_io_channel(ns->ch);
-		ns->ch = NULL;
-	}
 	if (ns->desc) {
 		spdk_bdev_close(ns->desc);
 		ns->desc = NULL;
