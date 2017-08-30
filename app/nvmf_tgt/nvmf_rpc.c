@@ -116,6 +116,9 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct nvmf_tgt_subsystem *tg
 			spdk_json_write_object_begin(w);
 			spdk_json_write_name(w, "nsid");
 			spdk_json_write_int32(w, spdk_nvmf_ns_get_id(ns));
+			spdk_json_write_name(w, "bdev_name");
+			spdk_json_write_string(w, spdk_bdev_get_name(spdk_nvmf_ns_get_bdev(ns)));
+			/* NOTE: "name" is kept for compatibility only - new code should use bdev_name. */
 			spdk_json_write_name(w, "name");
 			spdk_json_write_string(w, spdk_bdev_get_name(spdk_nvmf_ns_get_bdev(ns)));
 			spdk_json_write_object_end(w);
@@ -210,29 +213,72 @@ decode_rpc_hosts(const struct spdk_json_val *val, void *out)
 
 
 
-struct rpc_dev_names {
-	size_t num_names;
-	char *names[RPC_MAX_NAMESPACES];
+struct rpc_namespaces {
+	size_t num_ns;
+	struct spdk_nvmf_ns_params ns_params[RPC_MAX_NAMESPACES];
 };
 
-static int
-decode_rpc_dev_names(const struct spdk_json_val *val, void *out)
-{
-	struct rpc_dev_names *dev_names = out;
 
-	return spdk_json_decode_array(val, spdk_json_decode_string, dev_names->names,
-				      SPDK_COUNTOF(dev_names->names),
-				      &dev_names->num_names, sizeof(char *));
-}
+static const struct spdk_json_object_decoder rpc_ns_params_decoders[] = {
+	{"nsid", offsetof(struct spdk_nvmf_ns_params, nsid), spdk_json_decode_uint32, true},
+	{"bdev_name", offsetof(struct spdk_nvmf_ns_params, bdev_name), spdk_json_decode_string},
+};
 
 static void
-free_rpc_dev_names(struct rpc_dev_names *r)
+free_rpc_namespaces(struct rpc_namespaces *r)
 {
 	size_t i;
 
-	for (i = 0; i < r->num_names; i++) {
-		free(r->names[i]);
+	for (i = 0; i < r->num_ns; i++) {
+		free(r->ns_params[i].bdev_name);
 	}
+}
+
+static int
+decode_rpc_ns_params(const struct spdk_json_val *val, void *out)
+{
+	struct spdk_nvmf_ns_params *ns_params = out;
+
+	return spdk_json_decode_object(val, rpc_ns_params_decoders,
+				       SPDK_COUNTOF(rpc_ns_params_decoders),
+				       ns_params);
+}
+
+static int
+decode_rpc_namespaces(const struct spdk_json_val *val, void *out)
+{
+	struct rpc_namespaces *namespaces = out;
+	char *names[RPC_MAX_NAMESPACES]; /* old format - array of strings (bdev names) */
+	size_t i;
+	int rc;
+
+	/* First try to decode namespaces as an array of objects (new format) */
+	if (spdk_json_decode_array(val, decode_rpc_ns_params, namespaces->ns_params,
+				   SPDK_COUNTOF(namespaces->ns_params),
+				   &namespaces->num_ns, sizeof(*namespaces->ns_params)) == 0) {
+		return 0;
+	}
+
+	/* If that fails, try to decode namespaces as an array of strings (old format) */
+	free_rpc_namespaces(namespaces);
+	memset(namespaces, 0, sizeof(*namespaces));
+	rc = spdk_json_decode_array(val, spdk_json_decode_string, names,
+				    SPDK_COUNTOF(names),
+				    &namespaces->num_ns, sizeof(char *));
+	if (rc == 0) {
+		/* Decoded old format - copy to ns_params (new format) */
+		for (i = 0; i < namespaces->num_ns; i++) {
+			namespaces->ns_params[i].bdev_name = names[i];
+		}
+		return 0;
+	}
+
+	/* Failed to decode - don't leave dangling string pointers around */
+	for (i = 0; i < namespaces->num_ns; i++) {
+		free(names[i]);
+	}
+
+	return rc;
 }
 
 static void
@@ -267,7 +313,7 @@ struct rpc_subsystem {
 	bool allow_any_host;
 	char *pci_address;
 	char *serial_number;
-	struct rpc_dev_names namespaces;
+	struct rpc_namespaces namespaces;
 };
 
 static void
@@ -276,7 +322,7 @@ free_rpc_subsystem(struct rpc_subsystem *req)
 	free(req->mode);
 	free(req->nqn);
 	free(req->serial_number);
-	free_rpc_dev_names(&req->namespaces);
+	free_rpc_namespaces(&req->namespaces);
 	free_rpc_listen_addresses(&req->listen_addresses);
 	free_rpc_hosts(&req->hosts);
 }
@@ -289,7 +335,7 @@ static const struct spdk_json_object_decoder rpc_subsystem_decoders[] = {
 	{"hosts", offsetof(struct rpc_subsystem, hosts), decode_rpc_hosts, true},
 	{"allow_any_host", offsetof(struct rpc_subsystem, allow_any_host), spdk_json_decode_bool, true},
 	{"serial_number", offsetof(struct rpc_subsystem, serial_number), spdk_json_decode_string, true},
-	{"namespaces", offsetof(struct rpc_subsystem, namespaces), decode_rpc_dev_names, true},
+	{"namespaces", offsetof(struct rpc_subsystem, namespaces), decode_rpc_namespaces, true},
 };
 
 static void
@@ -328,7 +374,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 					    req.listen_addresses.addresses,
 					    req.hosts.num_hosts, req.hosts.hosts, req.allow_any_host,
 					    req.serial_number,
-					    req.namespaces.num_names, req.namespaces.names);
+					    req.namespaces.num_ns, req.namespaces.ns_params);
 	if (ret) {
 		goto invalid;
 	}

@@ -130,9 +130,14 @@
 # - Between 0 and 255 Host directives are allowed. This defines the
 #   NQNs of allowed hosts. If no Host directive is specified, all hosts
 #   are allowed to connect.
-# - Exactly 1 NVMe directive specifying an NVMe device by PCI BDF. The
-#   PCI domain:bus:device.function can be replaced by "*" to indicate
-#   any PCI device.
+# - Between 0 and 255 Namespace directives are allowed.  These define the
+#   namespaces accessible from this subsystem.
+#   The user must specify a bdev name for each namespace, and may optionally
+#   specify a namespace ID.  If nsid is omitted, the namespace will be
+#   assigned the next available NSID.  The NSID must be unique within the
+#   subsystem.
+#   Syntax:
+#     Namespace <bdev_name> [<nsid>]
 
 # Namespaces backed by physical NVMe devices
 [Subsystem1]
@@ -142,8 +147,8 @@
   AllowAnyHost No
   Host nqn.2016-06.io.spdk:init
   SN SPDK00000000000001
-  Namespace Nvme0n1
-  Namespace Nvme1n1
+  Namespace Nvme0n1 1
+  Namespace Nvme1n1 2
 
 # Multiple subsystems are allowed.
 # Namespaces backed by non-NVMe devices

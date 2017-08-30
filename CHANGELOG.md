@@ -45,6 +45,9 @@ connection will be denied; this is a behavior change from previous releases,
 which allowed any host NQN to connect if the Host list was empty.
 AllowAnyHost is disabled by default.
 
+NVMe-oF namespaces may now be assigned arbitrary namespace IDs, and the number
+of namespaces per subsystem is no longer limited.
+
 ### Environment Abstraction Layer
 
 A new default value, SPDK_MEMPOOL_DEFAULT_CACHE_SIZE, was added to provide
