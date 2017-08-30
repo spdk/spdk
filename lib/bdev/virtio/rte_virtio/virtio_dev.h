@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _VIRTIO_ETHDEV_H_
-#define _VIRTIO_ETHDEV_H_
+#ifndef _VIRTIO_DEV_H_
+#define _VIRTIO_DEV_H_
 
 #include <stdint.h>
 #include <sys/uio.h>
@@ -72,4 +72,4 @@ struct virtio_hw *get_pci_virtio_hw(void);
 
 void virtio_interrupt_handler(void *param);
 
-#endif /* _VIRTIO_ETHDEV_H_ */
+#endif /* _VIRTIO_DEV_H_ */
