@@ -342,7 +342,7 @@ virtio_set_vtpci_ops(struct virtio_hw *hw)
  * It returns 0 on success.
  */
 int
-eth_virtio_dev_init(struct virtio_hw *hw, int num_queues)
+eth_virtio_dev_init(struct virtio_hw *hw)
 {
 	int ret;
 
