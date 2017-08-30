@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f61d0425_b4b3de38",
+        "filename": "doc/blobfs.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-30T15:25:02Z",
+      "side": 1,
+      "message": "I propose we just remove reference to 2MB huge pages in this description.  We also do not need to reference HRHUGE at all - this is an implementation detail of setup.sh script.\n\nSo you can just make this:\n\n7. Make sure you have at least 5GB of memory allocated for huge pages.  By default the SPDK setup.sh script only allocates 2GB of huge page memory.  The following will allocate 5GB of huge page memory (in addition to binding the NVMe devices to uio/vfio).\n\nHUGEMEM\u003d5120 scripts/setup.sh",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a83735bf_4ef0e687",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-30T15:25:02Z",
+      "side": 1,
+      "message": "Why make this change?",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d529db67_090ab0c9",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-30T15:25:02Z",
+      "side": 1,
+      "message": "As Pawel suggested in previous review, we should check that HUGEMEM % 2 \u003d\u003d 0 (if using 2MB huge pages) and HUGEMEM % 1024 \u003d\u003d 0 (if using 1GB huge pages).  If this is not true, the script should print an error and exit.",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
