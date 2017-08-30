@@ -87,6 +87,7 @@ struct spdk_nvmf_subsystem {
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	enum spdk_nvmf_subtype subtype;
 	bool is_removed;
+	bool allow_any_host;
 
 	struct spdk_nvmf_tgt			*tgt;
 

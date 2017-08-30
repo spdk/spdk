@@ -160,6 +160,7 @@ TransportID "trtype:PCIe traddr:0000:82:00.0" Nvme1
 NQN nqn.2016-06.io.spdk:cnode1
 Core 25
 Listen RDMA 192.168.100.8:4420
+AllowAnyHost No
 Host nqn.2016-06.io.spdk:init
 SN SPDK00000000000001
 Namespace Nvme0n1
@@ -168,6 +169,7 @@ Namespace Nvme0n1
 NQN nqn.2016-06.io.spdk:cnode2
 Core 26
 Listen RDMA 192.168.100.9:4420
+AllowAnyHost Yes
 SN SPDK00000000000002
 Namespace Nvme1n1
 ~~~
@@ -193,6 +195,7 @@ virtual controller with two namespaces backed by the malloc LUNs named Malloc0 a
   NQN nqn.2016-06.io.spdk:cnode2
   Core 0
   Listen RDMA 192.168.2.21:4420
+  AllowAnyHost No
   Host nqn.2016-06.io.spdk:init
   SN SPDK00000000000001
   Namespace Malloc0
