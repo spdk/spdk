@@ -248,7 +248,14 @@ function reset_freebsd {
 	kldunload nic_uio.ko || true
 }
 
-: ${NRHUGE:=1024}
+: ${HUGEMEM:=2048}
+
+hugepagesize=`grep Hugepagesize /proc/meminfo | tr -cd "[0-9]"`
+if [ "$hugepagesize" = 2048 ]; then
+	NRHUGE=`expr $(($HUGEMEM/2))`
+elif [ "$hugepagesize" = 1048576 ]; then
+	NRHUGE=`expr $(($HUGEMEM/1024))`
+fi
 
 username=$1
 mode=$2
