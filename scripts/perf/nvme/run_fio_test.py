@@ -69,14 +69,14 @@ def parse_results(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_ti
         # print "FIO job name: ", job_name
         read_iops = float(data['jobs'][job_pos]['read']['iops'])
         read_bw = float(data['jobs'][job_pos]['read']['bw'])
-        read_avg_lat = float(data['jobs'][job_pos]['read']['lat']['mean'])
-        read_min_lat = float(data['jobs'][job_pos]['read']['lat']['min'])
-        read_max_lat = float(data['jobs'][job_pos]['read']['lat']['max'])
+        read_avg_lat = float(data['jobs'][job_pos]['read']['lat_ns']['mean'])
+        read_min_lat = float(data['jobs'][job_pos]['read']['lat_ns']['min'])
+        read_max_lat = float(data['jobs'][job_pos]['read']['lat_ns']['max'])
         write_iops = float(data['jobs'][job_pos]['write']['iops'])
         write_bw = float(data['jobs'][job_pos]['write']['bw'])
-        write_avg_lat = float(data['jobs'][job_pos]['write']['lat']['mean'])
-        write_min_lat = float(data['jobs'][job_pos]['write']['lat']['min'])
-        write_max_lat = float(data['jobs'][job_pos]['write']['lat']['max'])
+        write_avg_lat = float(data['jobs'][job_pos]['write']['lat_ns']['mean'])
+        write_min_lat = float(data['jobs'][job_pos]['write']['lat_ns']['min'])
+        write_max_lat = float(data['jobs'][job_pos]['write']['lat_ns']['max'])
         print "%-10s" % "IO Size", "%-10s" % "QD", "%-10s" % "Mix", \
             "%-10s" % "Workload Type", "%-10s" % "CPU Mask", \
             "%-10s" % "Run Time", "%-10s" % "Run Num", "%-15s" % "Read IOps", \
