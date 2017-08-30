@@ -61,10 +61,10 @@ struct virtio_req {
 #define VIRTIO_PMD_SUPPORTED_GUEST_FEATURES	\
 	(VIRTIO_PMD_DEFAULT_GUEST_FEATURES)
 
-uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
+uint16_t virtqueue_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 		uint16_t nb_pkts);
 
-uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
+uint16_t virtqueue_send_pkt(struct virtqueue *vq, struct virtio_req *req);
 
 int eth_virtio_dev_init(struct virtio_hw *hw);
 int virtio_dev_start(struct virtio_hw *hw);
