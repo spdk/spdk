@@ -291,13 +291,13 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 
 	rc = spdk_gpt_parse(&gpt_base->gpt);
 	if (rc) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_GPT, "Failed to parse gpt\n");
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse gpt\n");
 		goto end;
 	}
 
 	rc = vbdev_gpt_create_bdevs(gpt_base);
 	if (rc < 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_GPT, "Failed to split dev=%s by gpt table\n",
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to split dev=%s by gpt table\n",
 			      spdk_bdev_get_name(bdev));
 	}
 
@@ -383,4 +383,4 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 
 SPDK_BDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, vbdev_gpt_fini, NULL,
 			  NULL, vbdev_gpt_examine)
-SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_gpt", SPDK_TRACE_VBDEV_GPT)
+SPDK_LOG_REGISTER_COMPONENT("vbdev_gpt", SPDK_LOG_VBDEV_GPT)

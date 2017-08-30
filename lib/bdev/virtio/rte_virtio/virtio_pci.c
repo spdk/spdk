@@ -260,11 +260,11 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_enable, 1);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "queue %"PRIu16" addresses:\n", vq->vq_queue_index);
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "\t desc_addr: %" PRIx64 "\n", desc_addr);
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "\t aval_addr: %" PRIx64 "\n", avail_addr);
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "\t used_addr: %" PRIx64 "\n", used_addr);
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "\t notify addr: %p (notify offset: %"PRIu16")\n",
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "queue %"PRIu16" addresses:\n", vq->vq_queue_index);
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "\t desc_addr: %" PRIx64 "\n", desc_addr);
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "\t aval_addr: %" PRIx64 "\n", avail_addr);
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "\t used_addr: %" PRIx64 "\n", used_addr);
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "\t notify addr: %p (notify offset: %"PRIu16")\n",
 		      vq->notify_addr, notify_off);
 
 	return 0;
@@ -349,7 +349,7 @@ virtio_read_caps(struct virtio_hw *hw)
 
 	ret = spdk_pci_device_cfg_read(hw->pci_dev, &pos, 1, PCI_CAPABILITY_LIST);
 	if (ret < 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "failed to read pci capability list\n");
+		SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "failed to read pci capability list\n");
 		return -1;
 	}
 
@@ -364,13 +364,13 @@ virtio_read_caps(struct virtio_hw *hw)
 			hw->use_msix = 1;
 
 		if (cap.cap_vndr != PCI_CAP_ID_VNDR) {
-			SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI,
+			SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI,
 				      "[%2"PRIx8"] skipping non VNDR cap id: %02"PRIx8"\n",
 				      pos, cap.cap_vndr);
 			goto next;
 		}
 
-		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI,
+		SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI,
 			      "[%2"PRIx8"] cfg type: %"PRIu8", bar: %"PRIu8", offset: %04"PRIx32", len: %"PRIu32"\n",
 			      pos, cap.cfg_type, cap.bar, cap.offset, cap.length);
 
@@ -397,16 +397,16 @@ next:
 
 	if (hw->common_cfg == NULL || hw->notify_base == NULL ||
 	    hw->dev_cfg == NULL    || hw->isr == NULL) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "no modern virtio pci device found.\n");
+		SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "no modern virtio pci device found.\n");
 		return -1;
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "found modern virtio pci device.\n");
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "found modern virtio pci device.\n");
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "common cfg mapped at: %p\n", hw->common_cfg);
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "device cfg mapped at: %p\n", hw->dev_cfg);
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "isr cfg mapped at: %p\n", hw->isr);
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "notify base: %p, notify off multiplier: %u\n",
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "common cfg mapped at: %p\n", hw->common_cfg);
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "device cfg mapped at: %p\n", hw->dev_cfg);
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "isr cfg mapped at: %p\n", hw->isr);
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI, "notify base: %p, notify off multiplier: %u\n",
 		      hw->notify_base, hw->notify_off_multiplier);
 
 	return 0;
@@ -510,4 +510,4 @@ virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
 	return 0;
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("virtio_pci", SPDK_TRACE_VIRTIO_PCI)
+SPDK_LOG_REGISTER_COMPONENT("virtio_pci", SPDK_LOG_VIRTIO_PCI)

@@ -38,7 +38,7 @@
 
 #include "spdk_cunit.h"
 
-SPDK_LOG_REGISTER_TRACE_FLAG("scsi", SPDK_TRACE_SCSI)
+SPDK_LOG_REGISTER_COMPONENT("scsi", SPDK_LOG_SCSI)
 
 struct spdk_scsi_globals g_spdk_scsi;
 

@@ -69,7 +69,7 @@ spdk_rpc_construct_pmem_bdev(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_construct_pmem_decoders,
 				    SPDK_COUNTOF(rpc_construct_pmem_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_BDEV_PMEM, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_PMEM, "spdk_json_decode_object failed\n");
 		rc = EINVAL;
 		goto invalid;
 	}
@@ -133,7 +133,7 @@ spdk_rpc_create_pmem_pool(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_create_pmem_pool_decoders,
 				    SPDK_COUNTOF(rpc_create_pmem_pool_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_BDEV_PMEM, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_PMEM, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
@@ -197,7 +197,7 @@ spdk_rpc_pmem_pool_info(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_pmem_pool_info_decoders,
 				    SPDK_COUNTOF(rpc_pmem_pool_info_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_BDEV_PMEM, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_PMEM, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
@@ -265,7 +265,7 @@ spdk_rpc_delete_pmem_pool(struct spdk_jsonrpc_request *request,
 	if (spdk_json_decode_object(params, rpc_delete_pmem_pool_decoders,
 				    SPDK_COUNTOF(rpc_delete_pmem_pool_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_BDEV_PMEM, "spdk_json_decode_object failed\n");
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_PMEM, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 

@@ -39,7 +39,7 @@
 
 #include "lib/test_env.c"
 
-SPDK_LOG_REGISTER_TRACE_FLAG("nvme", SPDK_TRACE_NVME)
+SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
 int
 nvme_ctrlr_cmd_identify_namespace(struct spdk_nvme_ctrlr *ctrlr, uint16_t nsid, void *payload,
