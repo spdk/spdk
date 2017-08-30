@@ -53,7 +53,7 @@
 #include <rte_eal.h>
 #include <rte_dev.h>
 
-#include "virtio_ethdev.h"
+#include "virtio_dev.h"
 #include "virtio_pci.h"
 #include "virtio_logs.h"
 #include "virtqueue.h"
