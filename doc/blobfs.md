@@ -46,12 +46,11 @@ Verify the configuration file has specified the correct NVMe SSD.
 If there are any NVMe SSDs you do not wish to use for RocksDB/SPDK testing, remove them from the configuration file.
 
 Make sure you have at least 5GB of memory allocated for huge pages.
-By default, the SPDK `setup.sh` script only allocates 2GB (1024 huge pages).
-The following will allocate 5GB worth of 2MB huge pages (in addition to binding the NVMe devices to uio/vfio).
-If using 1GB huge pages, adjust the `NRHUGE` value accordingly.
+By default, the SPDK `setup.sh` script only allocates 2GB.
+The following will allocate 5GB of huge page memory (in addition to binding the NVMe devices to uio/vfio).
 
 ~~~{.sh}
-NRHUGE=2560 scripts/setup.sh
+HUGEMEM=5120 scripts/setup.sh
 ~~~
 
 Create an empty SPDK blobfs for testing.

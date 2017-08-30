@@ -43,8 +43,8 @@ export SPDK_GPT_GUID=`grep SPDK_GPT_PART_TYPE_GUID $rootdir/lib/bdev/gpt/gpt.h \
 			| awk -F "(" '{ print $2}' | sed 's/)//g' \
 			| awk -F ", " '{ print $1 "-" $2 "-" $3 "-" $4 "-" $5}' | sed 's/0x//g'`
 
-# Override the default NRHUGE in scripts/setup.sh
-export NRHUGE=4096
+# Override the default HUGEMEM in scripts/setup.sh
+export HUGEMEM=8192
 
 case `uname` in
 	FreeBSD)

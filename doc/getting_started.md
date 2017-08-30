@@ -105,12 +105,15 @@ To rebind devices back to the kernel, you can run
 sudo scripts/setup.sh reset
 ~~~
 
-By default, the script allocates 1024 2MB hugepages. To change this number,
-specify NRHUGE as follows:
+By default, the script allocates 2048MB of hugepages. To change this number,
+specify HUGEMEM (in MB) as follows:
 
 ~~~{.sh}
-sudo NRHUGE=4096 scripts/setup.sh
+sudo HUGEMEM=4096 scripts/setup.sh
 ~~~
+
+On Linux machines HUGEMEM will be rounded up to system-default huge page
+size boundary.
 
 Example code is located in the examples directory. The examples are compiled
 automatically as part of the build process. Simply call any of the examples
