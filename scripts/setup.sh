@@ -49,6 +49,10 @@ function linux_hugetlbfs_mount() {
 	mount | grep ' type hugetlbfs ' | awk '{ print $3 }'
 }
 
+function linux_hugetlbfs_mount_count() {
+	mount | grep ' type hugetlbfs ' | wc -l
+}
+
 function configure_linux {
 	driver_name=vfio-pci
 	if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
@@ -92,19 +96,32 @@ function configure_linux {
 	echo "1" > "/sys/bus/pci/rescan"
 
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
-
 	if [ -z "$hugetlbfs_mount" ]; then
 		hugetlbfs_mount=/mnt/huge
 		echo "Mounting hugetlbfs at $hugetlbfs_mount"
 		mkdir -p "$hugetlbfs_mount"
 		mount -t hugetlbfs nodev "$hugetlbfs_mount"
 	fi
+
+
+	hugetlbfs_mount_count=$(linux_hugetlbfs_mount_count)
+	if [ "$hugetlbfs_mount_count" -lt 2 ]; then
+		hugetlbfs2_mount=/mnt/huge_2mb
+		echo "Mounting hugetlbfs at $hugetlbfs2_mount"
+		mkdir -p "$hugetlbfs2_mount"
+		mount -t hugetlbfs nodev "$hugetlbfs2_mount"
+	fi
+
 	echo "$NRHUGE" > /proc/sys/vm/nr_hugepages
 
 	if [ "$driver_name" = "vfio-pci" ]; then
 		if [ "$username" != "" ]; then
 			chown "$username" "$hugetlbfs_mount"
 			chmod g+w "$hugetlbfs_mount"
+			if [ -e $hugetlbfs2_mount ]; then
+				chown "$username" "$hugetlbfs2_mount"
+				chmod g+w "$hugetlbfs2_mount"
+			fi
 		fi
 
 		MEMLOCK_AMNT=`ulimit -l`
@@ -168,6 +185,9 @@ function reset_linux {
 
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
 	rm -f "$hugetlbfs_mount"/spdk*map_*
+	if [ 2 -eq "$hugetlbfs_mount" ]; then
+		rm -f "$hugetlbfs2_mount"/spdk*map_*
+	fi
 	rm -f /run/.spdk*
 }
 
@@ -239,7 +259,7 @@ function configure_freebsd {
 	rm $TMP
 
 	kldunload contigmem.ko || true
-	kenv hw.contigmem.num_buffers=$((NRHUGE * 2 / 256))
+	kenv hw.contigmem.num_buffers=$((HUGEMEM / 256))
 	kenv hw.contigmem.buffer_size=$((256 * 1024 * 1024))
 	kldload contigmem.ko
 }
@@ -249,7 +269,27 @@ function reset_freebsd {
 	kldunload nic_uio.ko || true
 }
 
-: ${NRHUGE:=1024}
+: ${HUGEMEM:=2048}
+: ${HUGEPAGESZ:=2048}
+
+if [ "$HUGEPAGESZ" == 2048 ]; then
+	if [ $(($HUGEMEM % 2)) == 0 ]; then
+		NRHUGE=$((HUGEMEM / 2))
+	else
+		echo "ERROR: HUGEMEM should be an integer multiple of 2."
+		exit
+	fi
+elif [ "$HUGEPAGESZ" == 1048576 ]; then
+	if [ $((HUGEMEM % 1024)) == 0 ]; then
+		NRHUGE=$((HUGEMEM / 1024))
+	else
+		echo "ERROR: HUGEMEM should be an integer multiple of 1024."
+		exit
+	fi
+else
+	echo "ERROR: HUGEPAGESZ should be 2048 or 1048576(K)."
+	exit
+fi
 
 username=$1
 mode=$2
