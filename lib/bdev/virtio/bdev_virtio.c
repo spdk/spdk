@@ -439,4 +439,4 @@ static void bdev_virtio_finish(void)
 {
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("virtio", SPDK_TRACE_VIRTIO)
+SPDK_LOG_REGISTER_COMPONENT("virtio", SPDK_LOG_VIRTIO)

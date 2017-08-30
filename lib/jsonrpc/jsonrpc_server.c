@@ -90,7 +90,7 @@ parse_single_request(struct spdk_jsonrpc_request *request, struct spdk_json_val 
 				request->id.len = req.id->len;
 				memcpy(request->id.start, req.id->start, req.id->len);
 			} else {
-				SPDK_DEBUGLOG(SPDK_TRACE_RPC, "JSON-RPC request id too long (%u)\n",
+				SPDK_DEBUGLOG(SPDK_LOG_RPC, "JSON-RPC request id too long (%u)\n",
 					      req.id->len);
 				invalid = true;
 			}
@@ -132,7 +132,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 
 	request = calloc(1, sizeof(*request));
 	if (request == NULL) {
-		SPDK_DEBUGLOG(SPDK_TRACE_RPC, "Out of memory allocating request\n");
+		SPDK_DEBUGLOG(SPDK_LOG_RPC, "Out of memory allocating request\n");
 		return -1;
 	}
 
@@ -146,7 +146,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 	request->send_len = 0;
 
 	if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
-		SPDK_DEBUGLOG(SPDK_TRACE_RPC, "JSON parse error\n");
+		SPDK_DEBUGLOG(SPDK_LOG_RPC, "JSON parse error\n");
 		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_PARSE_ERROR);
 
 		/*
@@ -160,7 +160,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 	rc = spdk_json_parse(json, size, conn->values, SPDK_JSONRPC_MAX_VALUES, &end,
 			     SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
 	if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
-		SPDK_DEBUGLOG(SPDK_TRACE_RPC, "JSON parse error on second pass\n");
+		SPDK_DEBUGLOG(SPDK_LOG_RPC, "JSON parse error on second pass\n");
 		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_PARSE_ERROR);
 		return -1;
 	}
@@ -170,10 +170,10 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 	if (conn->values[0].type == SPDK_JSON_VAL_OBJECT_BEGIN) {
 		parse_single_request(request, conn->values);
 	} else if (conn->values[0].type == SPDK_JSON_VAL_ARRAY_BEGIN) {
-		SPDK_DEBUGLOG(SPDK_TRACE_RPC, "Got batch array (not currently supported)\n");
+		SPDK_DEBUGLOG(SPDK_LOG_RPC, "Got batch array (not currently supported)\n");
 		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	} else {
-		SPDK_DEBUGLOG(SPDK_TRACE_RPC, "top-level JSON value was not array or object\n");
+		SPDK_DEBUGLOG(SPDK_LOG_RPC, "top-level JSON value was not array or object\n");
 		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	}
 
@@ -290,4 +290,4 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 	end_response(request, w);
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("rpc", SPDK_TRACE_RPC)
+SPDK_LOG_REGISTER_COMPONENT("rpc", SPDK_LOG_RPC)

@@ -38,7 +38,7 @@
 #include "lib/test_env.c"
 
 bool trace_flag = false;
-#define SPDK_TRACE_NVME trace_flag
+#define SPDK_LOG_NVME trace_flag
 
 #include "nvme/nvme_qpair.c"
 

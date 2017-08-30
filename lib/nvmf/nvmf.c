@@ -43,7 +43,7 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
-SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
+SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
 #define MAX_SUBSYSTEMS 4
 
@@ -91,12 +91,12 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	TAILQ_INIT(&tgt->subsystems);
 	TAILQ_INIT(&tgt->transports);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Max Queue Pairs Per Controller: %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max Queue Pairs Per Controller: %d\n",
 		      tgt->opts.max_qpairs_per_ctrlr);
-	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Max Queue Depth: %d\n", tgt->opts.max_queue_depth);
-	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Max In Capsule Data: %d bytes\n",
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max Queue Depth: %d\n", tgt->opts.max_queue_depth);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max In Capsule Data: %d bytes\n",
 		      tgt->opts.in_capsule_data_size);
-	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Max I/O Size: %d bytes\n", tgt->opts.max_io_size);
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Max I/O Size: %d bytes\n", tgt->opts.max_io_size);
 
 	return tgt;
 }
