@@ -53,53 +53,49 @@ SPDK_DECLARE_BDEV_MODULE(gpt);
 
 /* Base block device gpt context */
 struct gpt_base {
-	struct spdk_bdev_desc *desc;
-	struct spdk_bdev *bdev;
-	struct spdk_gpt gpt;
-	struct spdk_io_channel *ch;
-	uint32_t ref;
+	struct spdk_bdev_part_base	part_base;
+	struct spdk_gpt			gpt;
+
+	/* This channel is only used for reading the partition table. */
+	struct spdk_io_channel		*ch;
 };
 
 /* Context for each gpt virtual bdev */
 struct gpt_disk {
-	struct spdk_bdev	disk;
+	struct spdk_bdev_part	part;
 	uint32_t		partition_index;
-	struct gpt_base		*base;
-	uint64_t		offset_blocks;
-	TAILQ_ENTRY(gpt_disk)	tailq;
 };
 
-static TAILQ_HEAD(, gpt_disk) g_gpt_disks = TAILQ_HEAD_INITIALIZER(g_gpt_disks);
-static TAILQ_HEAD(, spdk_bdev) g_bdevs = TAILQ_HEAD_INITIALIZER(g_bdevs);
+struct gpt_channel {
+	struct spdk_bdev_part_channel	part_ch;
+};
+
+static SPDK_BDEV_PART_TAILQ g_gpt_disks = TAILQ_HEAD_INITIALIZER(g_gpt_disks);
 
 static bool g_gpt_disabled;
 
 static void
 spdk_gpt_base_free(struct gpt_base *gpt_base)
 {
-	assert(gpt_base->ch == NULL);
-	assert(gpt_base->bdev);
-	assert(gpt_base->desc);
-	if (gpt_base->bdev->claim_module == SPDK_GET_BDEV_MODULE(gpt)) {
-		spdk_bdev_module_release_bdev(gpt_base->bdev);
-	}
-	spdk_bdev_close(gpt_base->desc);
 	spdk_dma_free(gpt_base->gpt.buf);
 	free(gpt_base);
 }
 
 static void
-spdk_gpt_base_bdev_hotremove_cb(void *remove_ctx)
+spdk_gpt_base_bdev_hotremove_cb(void *_base_bdev)
 {
-	struct spdk_bdev *base_bdev = remove_ctx;
-	struct gpt_disk *gpt_disk, *tmp;
-
-	TAILQ_FOREACH_SAFE(gpt_disk, &g_gpt_disks, tailq, tmp) {
-		if (gpt_disk->base->bdev == base_bdev) {
-			spdk_bdev_unregister(&gpt_disk->disk);
-		}
-	}
+	spdk_bdev_part_base_hotremove(_base_bdev, &g_gpt_disks);
 }
+
+static int vbdev_gpt_destruct(void *ctx);
+static void vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
+static int vbdev_gpt_dump_config_json(void *ctx, struct spdk_json_write_ctx *w);
+
+static struct spdk_bdev_fn_table vbdev_gpt_fn_table = {
+	.destruct		= vbdev_gpt_destruct,
+	.submit_request		= vbdev_gpt_submit_request,
+	.dump_config_json	= vbdev_gpt_dump_config_json,
+};
 
 static struct gpt_base *
 spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
@@ -114,8 +110,16 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 		return NULL;
 	}
 
-	gpt_base->bdev = bdev;
-	gpt_base->ref = 0;
+	rc = spdk_bdev_part_base_construct(&gpt_base->part_base, bdev,
+					   spdk_gpt_base_bdev_hotremove_cb,
+					   SPDK_GET_BDEV_MODULE(gpt), &vbdev_gpt_fn_table,
+					   &g_gpt_disks, sizeof(struct gpt_channel),
+					   NULL, NULL);
+	if (rc) {
+		SPDK_ERRLOG("cannot construct gpt_base");
+		free(gpt_base);
+		return NULL;
+	}
 
 	gpt = &gpt_base->gpt;
 	gpt->buf = spdk_dma_zmalloc(SPDK_GPT_BUFFER_SIZE, 0x1000, NULL);
@@ -130,134 +134,7 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 	gpt->lba_start = 0;
 	gpt->lba_end = gpt->total_sectors - 1;
 
-	rc = spdk_bdev_open(gpt_base->bdev, false, spdk_gpt_base_bdev_hotremove_cb, bdev,
-			    &gpt_base->desc);
-	if (rc != 0) {
-		SPDK_ERRLOG("Could not open bdev %s, error=%d\n",
-			    spdk_bdev_get_name(gpt_base->bdev), rc);
-		spdk_dma_free(gpt->buf);
-		free(gpt_base);
-		return NULL;
-	}
-
-	gpt_base->ch = spdk_bdev_get_io_channel(gpt_base->desc);
-	if (!gpt_base->ch) {
-		SPDK_ERRLOG("Cannot allocate ch\n");
-		spdk_bdev_close(gpt_base->desc);
-		spdk_dma_free(gpt->buf);
-		free(gpt_base);
-		return NULL;
-	}
-
 	return gpt_base;
-
-}
-
-static void
-gpt_read(struct gpt_disk *gpt_disk, struct spdk_bdev_io *bdev_io)
-{
-	bdev_io->u.read.offset_blocks += gpt_disk->offset_blocks;
-}
-
-static void
-gpt_write(struct gpt_disk *gpt_disk, struct spdk_bdev_io *bdev_io)
-{
-	bdev_io->u.write.offset_blocks += gpt_disk->offset_blocks;
-}
-
-static void
-gpt_unmap(struct gpt_disk *gpt_disk, struct spdk_bdev_io *bdev_io)
-{
-	bdev_io->u.unmap.offset_blocks += gpt_disk->offset_blocks;
-}
-
-static void
-gpt_flush(struct gpt_disk *gpt_disk, struct spdk_bdev_io *bdev_io)
-{
-	bdev_io->u.flush.offset_blocks += gpt_disk->offset_blocks;
-}
-
-
-static void
-_vbdev_gpt_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
-{
-	struct spdk_bdev_io *gpt_io = cb_arg;
-	struct spdk_io_channel *base_ch = *(struct spdk_io_channel **)gpt_io->driver_ctx;
-
-	spdk_put_io_channel(base_ch);
-	spdk_bdev_io_complete(gpt_io, success);
-	spdk_bdev_free_io(bdev_io);
-}
-
-static void
-vbdev_gpt_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
-{
-	struct gpt_disk *gpt_disk = bdev_io->bdev->ctxt;
-	struct spdk_io_channel *base_ch;
-
-	/* Modify the I/O to adjust for the offset within the base bdev. */
-	switch (bdev_io->type) {
-	case SPDK_BDEV_IO_TYPE_READ:
-		gpt_read(gpt_disk, bdev_io);
-		break;
-	case SPDK_BDEV_IO_TYPE_WRITE:
-		gpt_write(gpt_disk, bdev_io);
-		break;
-	case SPDK_BDEV_IO_TYPE_UNMAP:
-		gpt_unmap(gpt_disk, bdev_io);
-		break;
-	case SPDK_BDEV_IO_TYPE_FLUSH:
-		gpt_flush(gpt_disk, bdev_io);
-		break;
-	case SPDK_BDEV_IO_TYPE_RESET:
-		base_ch = spdk_get_io_channel(gpt_disk->base->bdev);
-		*(struct spdk_io_channel **)bdev_io->driver_ctx = base_ch;
-		spdk_bdev_reset(gpt_disk->base->desc, base_ch,
-				_vbdev_gpt_complete_reset, bdev_io);
-		return;
-	default:
-		SPDK_ERRLOG("gpt: unknown I/O type %d\n", bdev_io->type);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
-	}
-
-	/* Submit the modified I/O to the underlying bdev. */
-	spdk_bdev_io_resubmit(bdev_io, gpt_disk->base->desc);
-}
-
-static void
-vbdev_gpt_base_get_ref(struct gpt_base *gpt_base,
-		       struct gpt_disk *gpt_disk)
-{
-	__sync_fetch_and_add(&gpt_base->ref, 1);
-	gpt_disk->base = gpt_base;
-}
-
-static void
-vbdev_gpt_base_put_ref(struct gpt_base *gpt_base)
-{
-	if (__sync_sub_and_fetch(&gpt_base->ref, 1) == 0) {
-		spdk_gpt_base_free(gpt_base);
-	}
-}
-
-static void
-vbdev_gpt_free(struct gpt_disk *gpt_disk)
-{
-	struct gpt_base *gpt_base;
-
-	if (!gpt_disk) {
-		return;
-	}
-
-	gpt_base = gpt_disk->base;
-
-	TAILQ_REMOVE(&g_gpt_disks, gpt_disk, tailq);
-	free(gpt_disk->disk.name);
-	free(gpt_disk);
-
-	assert(gpt_base != NULL);
-	vbdev_gpt_base_put_ref(gpt_base);
 }
 
 static int
@@ -265,25 +142,16 @@ vbdev_gpt_destruct(void *ctx)
 {
 	struct gpt_disk *gpt_disk = ctx;
 
-	vbdev_gpt_free(gpt_disk);
+	spdk_bdev_part_free(&gpt_disk->part);
 	return 0;
 }
 
-static bool
-vbdev_gpt_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
+static void
+vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
-	struct gpt_disk *gpt_disk = ctx;
+	struct gpt_channel *ch = spdk_io_channel_get_ctx(_ch);
 
-	return gpt_disk->base->bdev->fn_table->io_type_supported(gpt_disk->base->bdev,
-			io_type);
-}
-
-static struct spdk_io_channel *
-vbdev_gpt_get_io_channel(void *ctx)
-{
-	struct gpt_disk *gpt_disk = ctx;
-
-	return gpt_disk->base->bdev->fn_table->get_io_channel(gpt_disk->base->bdev);
+	spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
 }
 
 static void
@@ -315,17 +183,18 @@ static int
 vbdev_gpt_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct gpt_disk *gpt_disk = ctx;
-	struct spdk_gpt *gpt = &gpt_disk->base->gpt;
+	struct gpt_base *gpt_base = (struct gpt_base *)gpt_disk->part.base;
+	struct spdk_gpt *gpt = &gpt_base->gpt;
 	struct spdk_gpt_partition_entry *gpt_entry = &gpt->partitions[gpt_disk->partition_index];
 
 	spdk_json_write_name(w, "gpt");
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "base_bdev");
-	spdk_json_write_string(w, spdk_bdev_get_name(gpt_disk->base->bdev));
+	spdk_json_write_string(w, spdk_bdev_get_name(gpt_disk->part.base->bdev));
 
 	spdk_json_write_name(w, "offset_blocks");
-	spdk_json_write_uint64(w, gpt_disk->offset_blocks);
+	spdk_json_write_uint64(w, gpt_disk->part.offset_blocks);
 
 	spdk_json_write_name(w, "partition_type_guid");
 	write_guid(w, &gpt_entry->part_type_guid);
@@ -341,14 +210,6 @@ vbdev_gpt_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
-static struct spdk_bdev_fn_table vbdev_gpt_fn_table = {
-	.destruct		= vbdev_gpt_destruct,
-	.io_type_supported	= vbdev_gpt_io_type_supported,
-	.submit_request		= vbdev_gpt_submit_request,
-	.get_io_channel		= vbdev_gpt_get_io_channel,
-	.dump_config_json	= vbdev_gpt_dump_config_json,
-};
-
 static int
 vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 {
@@ -356,8 +217,10 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 	uint64_t i, head_lba_start, head_lba_end;
 	struct spdk_gpt_partition_entry *p;
 	struct gpt_disk *d;
-	struct spdk_bdev *base_bdev = gpt_base->bdev;
 	struct spdk_gpt *gpt;
+	char *name;
+	struct spdk_bdev *base_bdev;
+	int rc;
 
 	gpt = &gpt_base->gpt;
 	num_partition_entries = from_le32(&gpt->header->num_partition_entries);
@@ -384,36 +247,25 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 			return -1;
 		}
 
-		/* Copy properties of the base bdev */
-		d->disk.blocklen = base_bdev->blocklen;
-		d->disk.write_cache = base_bdev->write_cache;
-		d->disk.need_aligned_buffer = base_bdev->need_aligned_buffer;
-
 		/* index start at 1 instead of 0 to match the existing style */
-		d->disk.name = spdk_sprintf_alloc("%sp%" PRIu64, spdk_bdev_get_name(base_bdev), i + 1);
-		if (!d->disk.name) {
+		base_bdev = gpt_base->part_base.bdev;
+		name = spdk_sprintf_alloc("%sp%" PRIu64, spdk_bdev_get_name(base_bdev), i + 1);
+		if (!name) {
+			SPDK_ERRLOG("name allocation failure\n");
 			free(d);
-			SPDK_ERRLOG("Failed to allocate disk name\n");
+			return -1;
+		}
+
+		rc = spdk_bdev_part_construct(&d->part, &gpt_base->part_base, name,
+					      lba_start, lba_end - lba_start, "GPT Disk");
+		if (rc) {
+			SPDK_ERRLOG("could not construct bdev part\n");
+			/* spdk_bdev_part_construct will free name on failure */
+			free(d);
 			return -1;
 		}
 
 		d->partition_index = i;
-		d->disk.product_name = "GPT Disk";
-		d->offset_blocks = lba_start;
-		d->disk.blockcnt = lba_end - lba_start;
-		d->disk.ctxt = d;
-		d->disk.fn_table = &vbdev_gpt_fn_table;
-		d->disk.module = SPDK_GET_BDEV_MODULE(gpt);
-
-		SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_GPT, "gpt vbdev %s: base bdev: %s"
-			      " offset_blocks: %" PRIu64 "\n",
-			      d->disk.name, spdk_bdev_get_name(base_bdev), d->offset_blocks);
-
-		vbdev_gpt_base_get_ref(gpt_base, d);
-
-		spdk_vbdev_register(&d->disk, &base_bdev, 1);
-
-		TAILQ_INSERT_TAIL(&g_gpt_disks, d, tailq);
 	}
 
 	return 0;
@@ -423,13 +275,12 @@ static void
 spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 {
 	struct gpt_base *gpt_base = (struct gpt_base *)arg;
-	struct spdk_bdev *bdev = gpt_base->bdev;
+	struct spdk_bdev *bdev = gpt_base->part_base.bdev;
 	int rc;
 
-	/* free the ch and also close the bdev_desc */
+	spdk_bdev_free_io(bdev_io);
 	spdk_put_io_channel(gpt_base->ch);
 	gpt_base->ch = NULL;
-	spdk_bdev_free_io(bdev_io);
 
 	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
 		SPDK_ERRLOG("Gpt: bdev=%s io error status=%d\n",
@@ -440,12 +291,6 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 	rc = spdk_gpt_parse(&gpt_base->gpt);
 	if (rc) {
 		SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_GPT, "Failed to parse gpt\n");
-		goto end;
-	}
-
-	rc = spdk_bdev_module_claim_bdev(bdev, gpt_base->desc, SPDK_GET_BDEV_MODULE(gpt));
-	if (rc) {
-		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
 		goto end;
 	}
 
@@ -462,7 +307,7 @@ end:
 	 */
 	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(gpt));
 
-	if (gpt_base->ref == 0) {
+	if (gpt_base->part_base.ref == 0) {
 		/* If no gpt_disk instances were created, free the base context */
 		spdk_gpt_base_free(gpt_base);
 	}
@@ -480,8 +325,10 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 		return -1;
 	}
 
-	rc = spdk_bdev_read(gpt_base->desc, gpt_base->ch, gpt_base->gpt.buf, 0, SPDK_GPT_BUFFER_SIZE,
-			    spdk_gpt_bdev_complete, gpt_base);
+	gpt_base->ch = spdk_bdev_get_io_channel(gpt_base->part_base.desc);
+
+	rc = spdk_bdev_read(gpt_base->part_base.desc, gpt_base->ch, gpt_base->gpt.buf, 0,
+			    SPDK_GPT_BUFFER_SIZE, spdk_gpt_bdev_complete, gpt_base);
 	if (rc < 0) {
 		spdk_gpt_base_free(gpt_base);
 		SPDK_ERRLOG("Failed to send bdev_io command\n");
@@ -507,11 +354,7 @@ vbdev_gpt_init(void)
 static void
 vbdev_gpt_fini(void)
 {
-	struct gpt_disk *gpt_disk, *tmp;
-
-	TAILQ_FOREACH_SAFE(gpt_disk, &g_gpt_disks, tailq, tmp) {
-		vbdev_gpt_free(gpt_disk);
-	}
+	spdk_bdev_part_tailq_fini(&g_gpt_disks);
 }
 
 static void
@@ -534,11 +377,7 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 static int
 vbdev_gpt_get_ctx_size(void)
 {
-	/*
-	 * Note: this context is only used for RESET operations, since it is the only
-	 *  I/O type that does not just resubmit to the base bdev.
-	 */
-	return sizeof(struct spdk_io_channel *);
+	return 0;
 }
 
 SPDK_BDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, vbdev_gpt_fini, NULL,
