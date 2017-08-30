@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62dd9cae_2980df11",
+        "filename": "test/lvol/Commands_Rpc_Lib.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-30T11:20:35Z",
+      "side": 1,
+      "message": "What if check_output fails? Need to handle the exception.",
+      "range": {
+        "startLine": 13,
+        "startChar": 12,
+        "endLine": 13,
+        "endChar": 48
+      },
+      "revId": "3c2bb963e6a02d599150bf97619fff1a1b5a3cc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "641eeb9b_ae48d150",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-30T11:20:35Z",
+      "side": 1,
+      "message": "wrong filename, we dont use vhost",
+      "range": {
+        "startLine": 13,
+        "startChar": 52,
+        "endLine": 13,
+        "endChar": 67
+      },
+      "revId": "3c2bb963e6a02d599150bf97619fff1a1b5a3cc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ecbdfb3_fea85f14",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-30T11:20:35Z",
+      "side": 1,
+      "message": "After re-thinking we could also call get_lvol_stores here to make sure that it\u0027s gone from configuration.",
+      "range": {
+        "startLine": 57,
+        "startChar": 8,
+        "endLine": 57,
+        "endChar": 37
+      },
+      "revId": "3c2bb963e6a02d599150bf97619fff1a1b5a3cc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b60e7071_7eb36b27",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-30T11:20:35Z",
+      "side": 1,
+      "message": "Why is that here? Test plan is in other commit https://review.gerrithub.io/#/c/372290/10/test/lvol/testplan.md",
+      "revId": "3c2bb963e6a02d599150bf97619fff1a1b5a3cc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79f340c0_f5807547",
+        "filename": "test/lvol/vhost.conf.in",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-30T11:20:35Z",
+      "side": 1,
+      "message": "wrong filename, we dont use vhost",
+      "revId": "3c2bb963e6a02d599150bf97619fff1a1b5a3cc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa2c9dc7_326835ae",
+        "filename": "test/lvol/vhost.conf.in",
+        "patchSetId": 8
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-30T11:20:35Z",
+      "side": 1,
+      "message": "Remove commented lines, we dont need them",
+      "range": {
+        "startLine": 2,
+        "startChar": 1,
+        "endLine": 12,
+        "endChar": 22
+      },
+      "revId": "3c2bb963e6a02d599150bf97619fff1a1b5a3cc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
