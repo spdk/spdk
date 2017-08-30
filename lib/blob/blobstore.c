@@ -1486,10 +1486,40 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static void
+_spdk_bs_load_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx	*ctx = cb_arg;
+	uint64_t lba, lba_count, mask_size;
+
+	/* Parse the super block */
+	ctx->bs->cluster_sz = ctx->super->cluster_size;
+	ctx->bs->total_clusters = ctx->bs->dev->blockcnt / (ctx->bs->cluster_sz / ctx->bs->dev->blocklen);
+	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
+	ctx->bs->md_start = ctx->super->md_start;
+	ctx->bs->md_len = ctx->super->md_len;
+	ctx->bs->super_blob = ctx->super->super_blob;
+
+	/* Read the used pages mask */
+	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
+	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
+	if (!ctx->mask) {
+		spdk_dma_free(ctx->super);
+		_spdk_bs_free(ctx->bs);
+		free(ctx);
+		spdk_bs_sequence_finish(seq, -ENOMEM);
+		return;
+	}
+
+	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_page_mask_start);
+	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_page_mask_len);
+	spdk_bs_sequence_read(seq, ctx->mask, lba, lba_count,
+			      _spdk_bs_load_used_pages_cpl, ctx);
+}
+
+static void
 _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
-	uint64_t		lba, lba_count, mask_size;
 
 	if (ctx->super->version != SPDK_BS_VERSION) {
 		spdk_dma_free(ctx->super);
@@ -1520,30 +1550,12 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		spdk_bs_sequence_finish(seq, -EILSEQ);
 		return;
 	}
+
 	ctx->super->clean = 0;
 
-	/* Parse the super block */
-	ctx->bs->cluster_sz = ctx->super->cluster_size;
-	ctx->bs->total_clusters = ctx->bs->dev->blockcnt / (ctx->bs->cluster_sz / ctx->bs->dev->blocklen);
-	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
-	ctx->bs->md_start = ctx->super->md_start;
-	ctx->bs->md_len = ctx->super->md_len;
-	ctx->bs->super_blob = ctx->super->super_blob;
-
-	/* Read the used pages mask */
-	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
-	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
-	if (!ctx->mask) {
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENOMEM);
-		return;
-	}
-	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_page_mask_start);
-	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_page_mask_len);
-	spdk_bs_sequence_read(seq, ctx->mask, lba, lba_count,
-			      _spdk_bs_load_used_pages_cpl, ctx);
+	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
+			       _spdk_bs_byte_to_lba(ctx->bs, sizeof(*ctx->super)),
+			       _spdk_bs_load_write_super_cpl, ctx);
 }
 
 void
