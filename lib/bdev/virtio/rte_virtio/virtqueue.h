@@ -56,12 +56,6 @@
 #define virtio_rmb()	rte_smp_rmb()
 #define virtio_wmb()	rte_smp_wmb()
 
-#ifdef RTE_PMD_PACKET_PREFETCH
-#define rte_packet_prefetch(p)  rte_prefetch1(p)
-#else
-#define rte_packet_prefetch(p)  do {} while(0)
-#endif
-
 #define VIRTQUEUE_MAX_NAME_SZ 32
 
 /**

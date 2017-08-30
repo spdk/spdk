@@ -211,8 +211,6 @@ struct virtio_pci_ops {
 	void (*notify_queue)(struct virtio_hw *hw, struct virtqueue *vq);
 };
 
-struct virtio_net_config;
-
 struct virtio_hw {
 	uint64_t    req_guest_features;
 	uint64_t    guest_features;
