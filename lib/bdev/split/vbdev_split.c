@@ -285,11 +285,11 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 			return -1;
 		}
 		split_size_blocks = (split_size_mb * mb) / base_bdev->blocklen;
-		SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_SPLIT, "Split size %" PRIu64 " MB specified by user\n",
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_SPLIT, "Split size %" PRIu64 " MB specified by user\n",
 			      split_size_mb);
 	} else {
 		split_size_blocks = base_bdev->blockcnt / split_count;
-		SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_SPLIT, "Split size not specified by user\n");
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_SPLIT, "Split size not specified by user\n");
 	}
 
 	split_size_bytes = split_size_blocks * base_bdev->blocklen;
@@ -301,7 +301,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 		split_count = max_split_count;
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_SPLIT, "base_bdev: %s split_count: %" PRIu64
+	SPDK_DEBUGLOG(SPDK_LOG_VBDEV_SPLIT, "base_bdev: %s split_count: %" PRIu64
 		      " split_size_bytes: %" PRIu64 "\n",
 		      spdk_bdev_get_name(base_bdev), split_count, split_size_bytes);
 
@@ -361,7 +361,7 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 		d->disk.fn_table = &vbdev_split_fn_table;
 		d->disk.module = SPDK_GET_BDEV_MODULE(split);
 
-		SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_SPLIT, "Split vbdev %s: base bdev: %s offset_bytes: "
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_SPLIT, "Split vbdev %s: base bdev: %s offset_bytes: "
 			      "%" PRIu64 " offset_blocks: %" PRIu64 "\n",
 			      d->disk.name, spdk_bdev_get_name(base_bdev), d->offset_bytes, d->offset_blocks);
 
@@ -475,4 +475,4 @@ vbdev_split_get_ctx_size(void)
 
 SPDK_BDEV_MODULE_REGISTER(split, vbdev_split_init, vbdev_split_fini, NULL,
 			  vbdev_split_get_ctx_size, vbdev_split_examine)
-SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_split", SPDK_TRACE_VBDEV_SPLIT)
+SPDK_LOG_REGISTER_COMPONENT("vbdev_split", SPDK_LOG_VBDEV_SPLIT)
