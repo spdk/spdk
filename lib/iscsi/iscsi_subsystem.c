@@ -563,7 +563,7 @@ spdk_iscsi_app_read_parameters(void)
 	unsigned long flush_timeout = 0;
 
 	/* Process parameters */
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_app_read_parameters\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_app_read_parameters\n");
 	sp = spdk_conf_find_section(NULL, "iSCSI");
 	if (sp == NULL) {
 		SPDK_ERRLOG("iSCSI config section not found.\n");
@@ -572,7 +572,7 @@ spdk_iscsi_app_read_parameters(void)
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "Comment %s\n", val);
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Comment %s\n", val);
 	}
 
 	val = spdk_conf_section_get_val(sp, "AuthFile");
@@ -585,7 +585,7 @@ spdk_iscsi_app_read_parameters(void)
 		perror("authfile");
 		return -ENOMEM;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AuthFile %s\n", g_spdk_iscsi.authfile);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthFile %s\n", g_spdk_iscsi.authfile);
 
 	/* ISCSI Global */
 	val = spdk_conf_section_get_val(sp, "NodeBase");
@@ -600,7 +600,7 @@ spdk_iscsi_app_read_parameters(void)
 		return -ENOMEM;
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "NodeBase %s\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NodeBase %s\n",
 		      g_spdk_iscsi.nodebase);
 
 	MaxSessions = spdk_conf_section_get_intval(sp, "MaxSessions");
@@ -612,7 +612,7 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 	g_spdk_iscsi.MaxSessions = MaxSessions;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxSessions %d\n", g_spdk_iscsi.MaxSessions);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxSessions %d\n", g_spdk_iscsi.MaxSessions);
 
 	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
@@ -625,7 +625,7 @@ spdk_iscsi_app_read_parameters(void)
 		MaxConnectionsPerSession = DEFAULT_MAX_CONNECTIONS_PER_SESSION;
 	}
 	g_spdk_iscsi.MaxConnectionsPerSession = MaxConnectionsPerSession;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxConnectionsPerSession %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxConnectionsPerSession %d\n",
 		      g_spdk_iscsi.MaxConnectionsPerSession);
 
 	if (MaxConnectionsPerSession > 0xffff) {
@@ -646,7 +646,7 @@ spdk_iscsi_app_read_parameters(void)
 		DefaultTime2Wait = DEFAULT_DEFAULTTIME2WAIT;
 	}
 	g_spdk_iscsi.DefaultTime2Wait = DefaultTime2Wait;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DefaultTime2Wait %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DefaultTime2Wait %d\n",
 		      g_spdk_iscsi.DefaultTime2Wait);
 
 	DefaultTime2Retain = spdk_conf_section_get_intval(sp, "DefaultTime2Retain");
@@ -654,7 +654,7 @@ spdk_iscsi_app_read_parameters(void)
 		DefaultTime2Retain = DEFAULT_DEFAULTTIME2RETAIN;
 	}
 	g_spdk_iscsi.DefaultTime2Retain = DefaultTime2Retain;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DefaultTime2Retain %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DefaultTime2Retain %d\n",
 		      g_spdk_iscsi.DefaultTime2Retain);
 
 	/* check size limit - RFC3720(12.15, 12.16, 12.17) */
@@ -672,15 +672,15 @@ spdk_iscsi_app_read_parameters(void)
 	}
 
 	g_spdk_iscsi.FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "FirstBurstLength %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "FirstBurstLength %d\n",
 		      g_spdk_iscsi.FirstBurstLength);
 
 	g_spdk_iscsi.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxBurstLength %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxBurstLength %d\n",
 		      g_spdk_iscsi.MaxBurstLength);
 
 	g_spdk_iscsi.MaxRecvDataSegmentLength = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxRecvDataSegmentLength %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MaxRecvDataSegmentLength %d\n",
 		      g_spdk_iscsi.MaxRecvDataSegmentLength);
 
 	/* check size limit (up to 24bits - RFC3720(12.12)) */
@@ -719,7 +719,7 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 	g_spdk_iscsi.InitialR2T = InitialR2T;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "InitialR2T %s\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "InitialR2T %s\n",
 		      g_spdk_iscsi.InitialR2T ? "Yes" : "No");
 
 	val = spdk_conf_section_get_val(sp, "ImmediateData");
@@ -734,7 +734,7 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 	g_spdk_iscsi.ImmediateData = ImmediateData;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "ImmediateData %s\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ImmediateData %s\n",
 		      g_spdk_iscsi.ImmediateData ? "Yes" : "No");
 
 	val = spdk_conf_section_get_val(sp, "DataPDUInOrder");
@@ -754,7 +754,7 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 	g_spdk_iscsi.DataPDUInOrder = DataPDUInOrder;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DataPDUInOrder %s\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DataPDUInOrder %s\n",
 		      g_spdk_iscsi.DataPDUInOrder ? "Yes" : "No");
 
 	/* This option is only for test.
@@ -773,7 +773,7 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 	g_spdk_iscsi.AllowDuplicateIsid = AllowDuplicateIsid;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AllowDuplicateIsid %s\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AllowDuplicateIsid %s\n",
 		      g_spdk_iscsi.AllowDuplicateIsid ? "Yes" : "No");
 
 	val = spdk_conf_section_get_val(sp, "DataSequenceInOrder");
@@ -793,7 +793,7 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 	g_spdk_iscsi.DataSequenceInOrder = DataSequenceInOrder;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DataSequenceInOrder %s\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DataSequenceInOrder %s\n",
 		      g_spdk_iscsi.DataSequenceInOrder ? "Yes" : "No");
 
 	ErrorRecoveryLevel = spdk_conf_section_get_intval(sp, "ErrorRecoveryLevel");
@@ -804,7 +804,7 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 	g_spdk_iscsi.ErrorRecoveryLevel = ErrorRecoveryLevel;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "ErrorRecoveryLevel %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "ErrorRecoveryLevel %d\n",
 		      g_spdk_iscsi.ErrorRecoveryLevel);
 
 	timeout = spdk_conf_section_get_intval(sp, "Timeout");
@@ -812,7 +812,7 @@ spdk_iscsi_app_read_parameters(void)
 		timeout = DEFAULT_TIMEOUT;
 	}
 	g_spdk_iscsi.timeout = timeout;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "Timeout %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Timeout %d\n",
 		      g_spdk_iscsi.timeout);
 
 	val = spdk_conf_section_get_val(sp, "FlushTimeout");
@@ -823,7 +823,7 @@ spdk_iscsi_app_read_parameters(void)
 		flush_timeout = DEFAULT_FLUSH_TIMEOUT;
 	}
 	g_spdk_iscsi.flush_timeout = flush_timeout * (spdk_get_ticks_hz() >> 20);
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "FlushTimeout %"PRIu64"\n", g_spdk_iscsi.flush_timeout);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "FlushTimeout %"PRIu64"\n", g_spdk_iscsi.flush_timeout);
 
 	nopininterval = spdk_conf_section_get_intval(sp, "NopInInterval");
 	if (nopininterval < 0) {
@@ -836,7 +836,7 @@ spdk_iscsi_app_read_parameters(void)
 	}
 
 	g_spdk_iscsi.nopininterval = nopininterval;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "NopInInterval %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "NopInInterval %d\n",
 		      g_spdk_iscsi.nopininterval);
 
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
@@ -872,13 +872,13 @@ spdk_iscsi_app_read_parameters(void)
 		}
 	}
 	if (g_spdk_iscsi.no_discovery_auth != 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod None\n");
 	} else if (g_spdk_iscsi.req_discovery_auth == 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod Auto\n");
 	} else {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthMethod %s %s\n",
 			      g_spdk_iscsi.req_discovery_auth ? "CHAP" : "",
 			      g_spdk_iscsi.req_discovery_auth_mutual ? "Mutual" : "");
@@ -906,10 +906,10 @@ spdk_iscsi_app_read_parameters(void)
 		g_spdk_iscsi.discovery_auth_group = ag_tag_i;
 	}
 	if (g_spdk_iscsi.discovery_auth_group == 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthGroup None\n");
 	} else {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "DiscoveryAuthGroup AuthGroup%d\n",
 			      g_spdk_iscsi.discovery_auth_group);
 	}
@@ -1025,4 +1025,4 @@ spdk_iscsi_config_text(FILE *fp)
 	spdk_iscsi_config_dump_target_nodes(fp);
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("iscsi", SPDK_TRACE_ISCSI)
+SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)

@@ -134,7 +134,7 @@ vfio_pci_memory_region_map(int vfio_container_fd, uint64_t vaddr, uint64_t phys_
 	dma_map.iova = phys_addr;
 	dma_map.size = size;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_VFIO, "MAP vaddr:%p phys:%p len:%#"PRIx64"\n", (void *)vaddr,
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_VFIO, "MAP vaddr:%p phys:%p len:%#"PRIx64"\n", (void *)vaddr,
 		      (void *)phys_addr, size);
 	ret = ioctl(vfio_container_fd, VFIO_IOMMU_MAP_DMA, &dma_map);
 
@@ -158,7 +158,7 @@ vfio_pci_memory_region_unmap(int vfio_container_fd, uint64_t phys_addr, uint64_t
 	dma_unmap.iova = phys_addr;
 	dma_unmap.size = size;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_VFIO, "UNMAP phys:%p len:%#"PRIx64"\n", (void *)phys_addr, size);
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_VFIO, "UNMAP phys:%p len:%#"PRIx64"\n", (void *)phys_addr, size);
 	ret = ioctl(vfio_container_fd, VFIO_IOMMU_UNMAP_DMA, &dma_unmap);
 
 	if (ret) {
@@ -325,7 +325,7 @@ int spdk_iommu_mem_unregister(uint64_t addr, uint64_t len)
 	return ret;
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("vhost_vfio", SPDK_TRACE_VHOST_VFIO)
+SPDK_LOG_REGISTER_COMPONENT("vhost_vfio", SPDK_LOG_VHOST_VFIO)
 
 #else
 

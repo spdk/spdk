@@ -39,7 +39,7 @@
 
 #include "nvme/nvme_pcie.c"
 
-struct spdk_trace_flag SPDK_TRACE_NVME = {
+struct spdk_trace_flag SPDK_LOG_NVME = {
 	.name = "nvme",
 	.enabled = false,
 };

@@ -410,7 +410,7 @@ vbdev_gpt_create_bdevs(struct spdk_gpt_bdev *gpt_bdev)
 		d->disk.fn_table = &vbdev_gpt_fn_table;
 		d->disk.module = SPDK_GET_BDEV_MODULE(gpt);
 
-		SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_GPT, "gpt vbdev %s: base bdev: %s offset_bytes: "
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "gpt vbdev %s: base bdev: %s offset_bytes: "
 			      "%" PRIu64 " offset_blocks: %" PRIu64 "\n",
 			      d->disk.name, spdk_bdev_get_name(base_bdev), d->offset_bytes, d->offset_blocks);
 
@@ -444,7 +444,7 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 
 	rc = spdk_gpt_parse(&gpt_bdev->gpt);
 	if (rc) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_GPT, "Failed to parse gpt\n");
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse gpt\n");
 		goto end;
 	}
 
@@ -456,7 +456,7 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 
 	rc = vbdev_gpt_create_bdevs(gpt_bdev);
 	if (rc < 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_GPT, "Failed to split dev=%s by gpt table\n",
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to split dev=%s by gpt table\n",
 			      spdk_bdev_get_name(bdev));
 	}
 
@@ -548,4 +548,4 @@ vbdev_gpt_get_ctx_size(void)
 
 SPDK_BDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, vbdev_gpt_fini, NULL,
 			  vbdev_gpt_get_ctx_size, vbdev_gpt_examine)
-SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_gpt", SPDK_TRACE_VBDEV_GPT)
+SPDK_LOG_REGISTER_COMPONENT("vbdev_gpt", SPDK_LOG_VBDEV_GPT)
