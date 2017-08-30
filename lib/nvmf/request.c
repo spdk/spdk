@@ -69,11 +69,13 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	if ((cmd->opc == SPDK_NVME_OPC_FABRIC ||
-	     req->qpair->type == QPAIR_TYPE_AQ) &&
-	    req->qpair->thread) {
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC ||
+	    req->qpair->type == QPAIR_TYPE_AQ) {
+		struct spdk_io_channel *ch;
+
+		ch = spdk_io_channel_from_ctx(req->qpair->group);
 		/* Pass a message back to the originating thread. */
-		spdk_thread_send_msg(req->qpair->thread,
+		spdk_thread_send_msg(spdk_io_channel_get_thread(ch),
 				     spdk_nvmf_request_complete_on_qpair,
 				     req);
 	} else {

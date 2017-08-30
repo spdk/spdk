@@ -128,7 +128,6 @@ struct spdk_nvmf_request {
 struct spdk_nvmf_ns {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
-	struct spdk_io_channel *ch;
 	uint32_t id;
 	bool allocated;
 };
@@ -141,9 +140,8 @@ enum spdk_nvmf_qpair_type {
 struct spdk_nvmf_qpair {
 	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_ctrlr			*ctrlr;
+	struct spdk_nvmf_poll_group		*group;
 	enum spdk_nvmf_qpair_type		type;
-
-	struct spdk_thread			*thread;
 
 	uint16_t				qid;
 	uint16_t				sq_head;
@@ -181,7 +179,6 @@ struct spdk_nvmf_ctrlr {
 	} async_event_config;
 	struct spdk_nvmf_request *aer_req;
 	uint8_t hostid[16];
-	struct spdk_nvmf_poll_group		*group;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr) 		link;
 };
@@ -214,10 +211,6 @@ struct spdk_nvmf_subsystem {
 struct spdk_nvmf_transport *spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt,
 		enum spdk_nvme_transport_type);
 
-int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
-			     struct spdk_nvmf_qpair *qpair);
-int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
-				struct spdk_nvmf_qpair *qpair);
 void spdk_nvmf_poll_group_poll(void *ctx);
 int spdk_nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 				       struct spdk_nvmf_transport *transport);
@@ -245,8 +238,6 @@ bool spdk_nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr);
 
 int spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns_data *nsdata);
 
-int spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem);
-void spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem);
 int spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 				  struct spdk_nvmf_ctrlr *ctrlr);
 void spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
