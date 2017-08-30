@@ -69,9 +69,8 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 
-	if ((cmd->opc == SPDK_NVME_OPC_FABRIC ||
-	     req->qpair->type == QPAIR_TYPE_AQ) &&
-	    req->qpair->group) {
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC ||
+	    req->qpair->type == QPAIR_TYPE_AQ) {
 		struct spdk_io_channel *ch;
 
 		ch = spdk_io_channel_from_ctx(req->qpair->group);

@@ -77,6 +77,8 @@ struct nvmf_tgt {
 	enum nvmf_tgt_state state;
 
 	struct spdk_nvmf_tgt *tgt;
+
+	uint32_t core; /* Round-robin tracking of cores for qpair assignment */
 };
 
 extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
