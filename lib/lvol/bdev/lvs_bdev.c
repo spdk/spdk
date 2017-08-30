@@ -37,6 +37,7 @@
 #include "spdk_internal/log.h"
 
 #include "lvs_bdev.h"
+#include "../../bdev/lvol/vbdev_lvol.h"
 
 SPDK_DECLARE_BDEV_MODULE(lvs);
 
@@ -204,7 +205,7 @@ vbdev_lvs_add(void *arg, struct spdk_lvol_store *lvol_store, int lvserrno)
 
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
 
-	free(req);
+	spdk_load_lvols(lvol_store);
 
 	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvs));
 
@@ -248,7 +249,7 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 
 	req->u.lvs_handle.bs_dev = bs_dev;
 	req->u.lvs_handle.base_bdev = bdev;
-	req->u.lvs_handle.cb_fn =  vbdev_lvs_add;
+	req->u.lvs_handle.cb_fn = vbdev_lvs_add;
 
 	spdk_bs_load(bs_dev, spdk_lvs_examine_cb, req);
 }
