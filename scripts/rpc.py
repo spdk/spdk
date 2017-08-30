@@ -420,6 +420,9 @@ def construct_nvmf_subsystem(args):
             hosts.append(u)
         params['hosts'] = hosts
 
+    if args.allow_any_host:
+        params['allow_any_host'] = True
+
     if args.namespaces:
         namespaces = []
         for u in args.namespaces.strip().split(" "):
@@ -437,6 +440,7 @@ Example: 'trtype:RDMA traddr:192.168.100.8 trsvcid:4420,trtype:RDMA traddr:192.1
 p.add_argument('hosts', help="""Whitespace-separated list of host nqn list.
 Format:  'nqn1 nqn2' etc
 Example: 'nqn.2016-06.io.spdk:init nqn.2016-07.io.spdk:init'""")
+p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any host to connect (don't enforce host NQN whitelist)")
 p.add_argument("-s", "--serial_number", help="""
 Format:  'sn' etc
 Example: 'SPDK00000000000001'""", default='0000:00:01.0')

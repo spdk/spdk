@@ -32,11 +32,18 @@ The HotplugEnable option in `[Nvme]` sections of the configuration file is now
 The NVMe library now includes a function spdk_nvme_ns_get_ctrlr which returns the
 NVMe Controller associated with a given namespace.
 
-### NVMe-oF Target (nvmf)
+### NVMe-oF Target (nvmf_tgt)
 
 The NVMe-oF target no longer requires any in capsule data buffers to run, and
 the feature is now entirely optional. Previously, at least 4KiB in capsule
 data buffers were required.
+
+NVMe-oF subsytems have a new configuration option, AllowAnyHost, to control
+whether the host NQN whitelist is enforced when accepting new connections.
+If no Host options have been specified and AllowAnyHost is disabled, the
+connection will be denied; this is a behavior change from previous releases,
+which allowed any host NQN to connect if the Host list was empty.
+AllowAnyHost is disabled by default.
 
 ### Environment Abstraction Layer
 

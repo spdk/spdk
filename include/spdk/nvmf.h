@@ -136,6 +136,25 @@ int spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem,
 				 const char *hostnqn);
 
 /**
+ * Set whether a subsystem should allow any host or only hosts in the allowed list.
+ *
+ * \param subsystem Subsystem to modify.
+ * \param allow_any_host true to allow any host to connect to this subsystem, or false to enforce
+ *                       the whitelist configured with spdk_nvmf_subsystem_add_host().
+ */
+void spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem,
+		bool allow_any_host);
+
+/**
+ * Check whether a subsystem should allow any host or only hosts in the allowed list.
+ *
+ * \param subsystem Subsystem to modify.
+ * \return true if any host is allowed to connect to this subsystem, or false if connecting hosts
+ *         must be in the whitelist configured with spdk_nvmf_subsystem_add_host().
+ */
+bool spdk_nvmf_subsystem_get_allow_any_host(const struct spdk_nvmf_subsystem *subsystem);
+
+/**
  * Check if the given host is allowed to connect to the subsystem.
  *
  * \param subsystem The subsystem to query
