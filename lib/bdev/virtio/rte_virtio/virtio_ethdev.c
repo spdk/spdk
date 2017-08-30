@@ -297,7 +297,6 @@ virtio_negotiate_features(struct virtio_hw *hw, uint64_t req_features)
 static int
 virtio_init_device(struct virtio_hw *hw, uint64_t req_features)
 {
-	struct rte_pci_device *pci_dev = NULL;
 	int ret;
 
 	/* Reset the device although not necessary at startup */
@@ -322,12 +321,6 @@ virtio_init_device(struct virtio_hw *hw, uint64_t req_features)
 		return ret;
 
 	vtpci_reinit_complete(hw);
-
-	if (pci_dev)
-		PMD_INIT_LOG(DEBUG, "port %d vendorID=0x%x deviceID=0x%x",
-			hw->port_id, pci_dev->id.vendor_id,
-			pci_dev->id.device_id);
-
 	return 0;
 }
 
@@ -342,7 +335,7 @@ virtio_set_vtpci_ops(struct virtio_hw *hw)
  * It returns 0 on success.
  */
 int
-eth_virtio_dev_init(struct virtio_hw *hw, int num_queues)
+eth_virtio_dev_init(struct virtio_hw *hw)
 {
 	int ret;
 
