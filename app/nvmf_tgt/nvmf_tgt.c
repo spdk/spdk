@@ -115,36 +115,6 @@ spdk_nvmf_shutdown_cb(void)
 	nvmf_tgt_advance_state(NULL, NULL);
 }
 
-static void
-subsystem_poll(void *arg)
-{
-	struct nvmf_tgt_subsystem *app_subsys = arg;
-
-	spdk_nvmf_subsystem_poll(app_subsys->subsystem);
-}
-
-static void
-_nvmf_tgt_start_subsystem(void *arg1, void *arg2)
-{
-	struct nvmf_tgt_subsystem *app_subsys = arg1;
-	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
-	int lcore = spdk_env_get_current_core();
-
-	spdk_nvmf_subsystem_start(subsystem);
-
-	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, lcore, 0);
-}
-
-void
-nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *app_subsys)
-{
-	struct spdk_event *event;
-
-	event = spdk_event_allocate(app_subsys->lcore, _nvmf_tgt_start_subsystem,
-				    app_subsys, NULL);
-	spdk_event_call(event);
-}
-
 struct nvmf_tgt_subsystem *
 nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype, uint32_t num_ns,
 			  uint32_t lcore)
@@ -208,11 +178,40 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 }
 
 static void
+nvmf_tgt_poll_group_add(void *arg1, void *arg2)
+{
+	struct spdk_nvmf_qpair *qpair = arg1;
+	struct nvmf_tgt_poll_group *pg = arg2;
+
+	spdk_nvmf_poll_group_add(pg->group, qpair);
+}
+
+static void
+new_qpair(struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_event *event;
+	struct nvmf_tgt_poll_group *pg;
+	uint32_t core;
+
+	core = g_tgt.core;
+	g_tgt.core = spdk_env_get_next_core(core);
+	if (g_tgt.core == UINT32_MAX) {
+		g_tgt.core = spdk_env_get_first_core();
+	}
+
+	pg = &g_poll_groups[core];
+	assert(pg != NULL);
+
+	event = spdk_event_allocate(core, nvmf_tgt_poll_group_add, qpair, pg);
+	spdk_event_call(event);
+}
+
+static void
 acceptor_poll(void *arg)
 {
 	struct spdk_nvmf_tgt *tgt = arg;
 
-	spdk_nvmf_tgt_accept(tgt);
+	spdk_nvmf_tgt_accept(tgt, new_qpair);
 }
 
 static void
@@ -379,6 +378,8 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			break;
 		case NVMF_TGT_FINI_STOP_ACCEPTOR: {
 			struct spdk_event *event;
+
+			g_tgt.core = spdk_env_get_first_core();
 
 			event = spdk_event_allocate(spdk_env_get_current_core(), acceptor_poller_unregistered_event,
 						    NULL, NULL);
