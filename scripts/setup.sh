@@ -239,7 +239,7 @@ function configure_freebsd {
 	rm $TMP
 
 	kldunload contigmem.ko || true
-	kenv hw.contigmem.num_buffers=$((NRHUGE * 2 / 256))
+	kenv hw.contigmem.num_buffers=$((HUGEMEM / 256))
 	kenv hw.contigmem.buffer_size=$((256 * 1024 * 1024))
 	kldload contigmem.ko
 }
@@ -248,8 +248,6 @@ function reset_freebsd {
 	kldunload contigmem.ko || true
 	kldunload nic_uio.ko || true
 }
-
-: ${NRHUGE:=1024}
 
 username=$1
 mode=$2
@@ -270,7 +268,12 @@ if [ "$username" = "" ]; then
 	fi
 fi
 
+: ${HUGEMEM:=2048}
+
 if [ `uname` = Linux ]; then
+	HUGEPGSZ=$(( `grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9'` / 1024 ))
+	: ${NRHUGE=$(( (HUGEMEM + HUGEPGSZ - 1) / HUGEPGSZ ))}
+
 	if [ "$mode" == "config" ]; then
 		configure_linux
 	elif [ "$mode" == "reset" ]; then
