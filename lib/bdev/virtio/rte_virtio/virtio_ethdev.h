@@ -35,22 +35,12 @@
 #define _VIRTIO_ETHDEV_H_
 
 #include <stdint.h>
-#include <sys/uio.h>
 
 #include "virtio_pci.h"
 
 #define VIRTIO_MAX_RX_QUEUES 128U
 #define VIRTIO_MAX_TX_QUEUES 128U
 #define VIRTIO_MIN_RX_BUFSIZE 64
-
-struct virtio_req {
-	struct iovec	*iov;
-	struct iovec	iov_req;
-	struct iovec	iov_resp;
-	uint32_t	iovcnt;
-	int		is_write;
-	uint32_t	data_transferred;
-};
 
 /* Features desired/implemented by this driver. */
 #define VIRTIO_PMD_DEFAULT_GUEST_FEATURES	\
@@ -60,11 +50,6 @@ struct virtio_req {
 
 #define VIRTIO_PMD_SUPPORTED_GUEST_FEATURES	\
 	(VIRTIO_PMD_DEFAULT_GUEST_FEATURES)
-
-uint16_t virtqueue_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
-		uint16_t nb_pkts);
-
-uint16_t virtqueue_send_pkt(struct virtqueue *vq, struct virtio_req *req);
 
 int eth_virtio_dev_init(struct virtio_hw *hw);
 int virtio_dev_start(struct virtio_hw *hw);

@@ -35,6 +35,7 @@
 #define _VIRTQUEUE_H_
 
 #include <stdint.h>
+#include <sys/uio.h>
 
 #include <rte_atomic.h>
 #include <rte_memory.h>
@@ -102,6 +103,15 @@ struct virtqueue {
 	uint16_t  *notify_addr;
 
 	struct vq_desc_extra vq_descx[0];
+};
+
+struct virtio_req {
+	struct iovec	*iov;
+	struct iovec	iov_req;
+	struct iovec	iov_resp;
+	uint32_t	iovcnt;
+	int		is_write;
+	uint32_t	data_transferred;
 };
 
 /* Chain all the descriptors in the ring with an END */
@@ -172,5 +182,10 @@ virtqueue_notify(struct virtqueue *vq)
 	 */
 	VTPCI_OPS(vq->hw)->notify_queue(vq->hw, vq);
 }
+
+uint16_t virtqueue_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
+		uint16_t nb_pkts);
+
+uint16_t virtqueue_send_pkt(struct virtqueue *vq, struct virtio_req *req);
 
 #endif /* _VIRTQUEUE_H_ */
