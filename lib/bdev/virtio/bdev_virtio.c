@@ -498,7 +498,7 @@ bdev_virtio_initialize(void)
 	}
 
 	/* TODO check rc, add virtio_dev_deinit() */
-	eth_virtio_dev_init(hw, 3);
+	eth_virtio_dev_init(hw);
 	virtio_dev_start(hw);
 
 	base->hw = hw;
