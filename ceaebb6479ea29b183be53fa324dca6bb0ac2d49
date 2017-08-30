@@ -50,6 +50,23 @@
       "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "965d210a_46fa3c29",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-30T15:27:34Z",
+      "side": 1,
+      "message": "This needs to be done inside of configure_linux function, since /proc/meminfo is not available on FreeBSD.\n\nFor FreeBSD, all huge pages are 256MB.",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
