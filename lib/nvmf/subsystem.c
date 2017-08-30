@@ -226,6 +226,18 @@ spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *
 	return 0;
 }
 
+void
+spdk_nvmf_subsystem_set_allow_any_host(struct spdk_nvmf_subsystem *subsystem, bool allow_any_host)
+{
+	subsystem->allow_any_host = allow_any_host;
+}
+
+bool
+spdk_nvmf_subsystem_get_allow_any_host(const struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->allow_any_host;
+}
+
 bool
 spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
 {
@@ -235,8 +247,7 @@ spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const ch
 		return false;
 	}
 
-	if (TAILQ_EMPTY(&subsystem->hosts)) {
-		/* No hosts means any host can connect */
+	if (subsystem->allow_any_host) {
 		return true;
 	}
 

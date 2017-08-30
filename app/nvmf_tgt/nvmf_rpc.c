@@ -261,6 +261,7 @@ struct rpc_subsystem {
 	char *nqn;
 	struct rpc_listen_addresses listen_addresses;
 	struct rpc_hosts hosts;
+	bool allow_any_host;
 	char *pci_address;
 	char *serial_number;
 	struct rpc_dev_names namespaces;
@@ -283,6 +284,7 @@ static const struct spdk_json_object_decoder rpc_subsystem_decoders[] = {
 	{"nqn", offsetof(struct rpc_subsystem, nqn), spdk_json_decode_string},
 	{"listen_addresses", offsetof(struct rpc_subsystem, listen_addresses), decode_rpc_listen_addresses},
 	{"hosts", offsetof(struct rpc_subsystem, hosts), decode_rpc_hosts, true},
+	{"allow_any_host", offsetof(struct rpc_subsystem, allow_any_host), spdk_json_decode_bool, true},
 	{"serial_number", offsetof(struct rpc_subsystem, serial_number), spdk_json_decode_string, true},
 	{"namespaces", offsetof(struct rpc_subsystem, namespaces), decode_rpc_dev_names, true},
 };
@@ -321,7 +323,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 	ret = spdk_nvmf_construct_subsystem(req.nqn, req.core,
 					    req.listen_addresses.num_listen_address,
 					    req.listen_addresses.addresses,
-					    req.hosts.num_hosts, req.hosts.hosts,
+					    req.hosts.num_hosts, req.hosts.hosts, req.allow_any_host,
 					    req.serial_number,
 					    req.namespaces.num_names, req.namespaces.names);
 	if (ret) {
