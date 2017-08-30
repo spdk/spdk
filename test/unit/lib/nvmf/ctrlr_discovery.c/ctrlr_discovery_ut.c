@@ -46,6 +46,12 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	return 0;
 }
 
+void
+spdk_bdev_close(struct spdk_bdev_desc *desc)
+{
+
+}
+
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
@@ -142,17 +148,6 @@ spdk_nvmf_poll_group_add_ns(struct spdk_nvmf_poll_group *group,
 			    struct spdk_nvmf_ns *ns)
 {
 	return 0;
-}
-
-int
-spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
-{
-	return -1;
-}
-
-void
-spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem)
-{
 }
 
 static bool
