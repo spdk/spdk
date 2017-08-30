@@ -152,10 +152,6 @@ int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	return -1;
 }
 
-void spdk_bdev_close(struct spdk_bdev_desc *desc)
-{
-}
-
 const char *spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem)
 {
 	return NULL;
