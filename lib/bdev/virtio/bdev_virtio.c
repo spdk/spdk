@@ -143,7 +143,7 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		to_be16(&req->cdb[7], bdev_io->u.write.len / disk->block_size);
 	}
 
-	virtio_xmit_pkts(disk->hw->vqs[2], vreq);
+	virtqueue_send_pkt(disk->hw->vqs[2], vreq);
 }
 
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -255,7 +255,7 @@ bdev_virtio_poll(void *arg)
 	struct virtio_req *req[32];
 	uint16_t i, cnt;
 
-	cnt = virtio_recv_pkts(ch->hw->vqs[2], req, SPDK_COUNTOF(req));
+	cnt = virtqueue_recv_pkts(ch->hw->vqs[2], req, SPDK_COUNTOF(req));
 	for (i = 0; i < cnt; ++i) {
 		bdev_virtio_io_cpl(req[i]);
 	}
@@ -317,7 +317,7 @@ process_scan_inquiry(struct virtio_scsi_scan_base *base, struct virtio_req *vreq
 	iov[0].iov_len = 32;
 	to_be32(&req->cdb[10], iov[0].iov_len);
 
-	virtio_xmit_pkts(base->hw->vqs[2], vreq);
+	virtqueue_send_pkt(base->hw->vqs[2], vreq);
 	return 0;
 }
 
@@ -402,7 +402,7 @@ bdev_scan_poll(void *arg)
 	struct virtio_req *req[32];
 	uint16_t i, cnt;
 
-	cnt = virtio_recv_pkts(base->hw->vqs[2], req, SPDK_COUNTOF(req));
+	cnt = virtqueue_recv_pkts(base->hw->vqs[2], req, SPDK_COUNTOF(req));
 	if (cnt > base->refcount) {
 		SPDK_ERRLOG("Received too many virtio messages. Got %"PRIu16", expected %u",
 			    cnt, base->refcount);
@@ -448,7 +448,7 @@ scan_target(struct virtio_scsi_scan_base *base, uint8_t target)
 	cdb->opcode = SPDK_SPC_INQUIRY;
 	cdb->alloc_len[1] = 255;
 
-	virtio_xmit_pkts(base->hw->vqs[2], vreq);
+	virtqueue_send_pkt(base->hw->vqs[2], vreq);
 }
 
 static int
