@@ -18,6 +18,7 @@
  - @ref memory
  - @ref porting
  - [Public API header files](files.html)
+ - @ref jsonrpc
 
 # Modules {#modules}
 
