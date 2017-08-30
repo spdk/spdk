@@ -67,29 +67,37 @@ def parse_results(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_ti
         data = json.load(json_file)
         job_name = data['jobs'][job_pos]['jobname']
         # print "FIO job name: ", job_name
+        if 'lat_ns' in data['jobs'][job_pos]['read']:
+            lat='lat_ns'
+            lat_units='ns'
+        else:
+            lat='lat'
+            lat_units='us'
         read_iops = float(data['jobs'][job_pos]['read']['iops'])
         read_bw = float(data['jobs'][job_pos]['read']['bw'])
-        read_avg_lat = float(data['jobs'][job_pos]['read']['lat']['mean'])
-        read_min_lat = float(data['jobs'][job_pos]['read']['lat']['min'])
-        read_max_lat = float(data['jobs'][job_pos]['read']['lat']['max'])
+        read_avg_lat = float(data['jobs'][job_pos]['read'][lat]['mean'])
+        read_min_lat = float(data['jobs'][job_pos]['read'][lat]['min'])
+        read_max_lat = float(data['jobs'][job_pos]['read'][lat]['max'])
         write_iops = float(data['jobs'][job_pos]['write']['iops'])
         write_bw = float(data['jobs'][job_pos]['write']['bw'])
-        write_avg_lat = float(data['jobs'][job_pos]['write']['lat']['mean'])
-        write_min_lat = float(data['jobs'][job_pos]['write']['lat']['min'])
-        write_max_lat = float(data['jobs'][job_pos]['write']['lat']['max'])
+        write_avg_lat = float(data['jobs'][job_pos]['write'][lat]['mean'])
+        write_min_lat = float(data['jobs'][job_pos]['write'][lat]['min'])
+        write_max_lat = float(data['jobs'][job_pos]['write'][lat]['max'])
         print "%-10s" % "IO Size", "%-10s" % "QD", "%-10s" % "Mix", \
             "%-10s" % "Workload Type", "%-10s" % "CPU Mask", \
-            "%-10s" % "Run Time", "%-10s" % "Run Num", "%-15s" % "Read IOps", \
-            "%-10s" % "Read MBps", "%-15s" % "Read Avg. Lat(us)", \
-            "%-15s" % "Read Min. Lat(us)", "%-15s" % "Read Max. Lat(us)", "%-15s" % "Write IOps", \
-            "%-10s" % "Write MBps", "%-15s" % "Write Avg. Lat(us)", \
-            "%-15s" % "Write Min. Lat(us)", "%-15s" % "Write Max. Lat(us)"
+            "%-10s" % "Run Time", "%-10s" % "Run Num", \
+            "%-15s" % "Read IOps", \
+            "%-10s" % "Read MBps", "%-15s" % "Read Avg. Lat("+lat_units+")", \
+            "%-15s" % "Read Min. Lat("+lat_units+")", "%-15s" % "Read Max. Lat("+lat_units+")", \
+            "%-15s" % "Write IOps", \
+            "%-10s" % "Write MBps", "%-15s" % "Write Avg. Lat("+lat_units+")", \
+            "%-15s" % "Write Min. Lat("+lat_units+")", "%-15s" % "Write Max. Lat("+lat_units+")"
         print "%-10s" % io_size_bytes, "%-10s" % qd, "%-10s" % rw_mix, \
             "%-10s" % workload, "%-10s" % cpu_mask, "%-10s" % run_time_sec, \
             "%-10s" % run_num, "%-15s" % read_iops, "%-10s" % read_bw, \
             "%-15s" % read_avg_lat, "%-15s" % read_min_lat, "%-15s" % read_max_lat, \
-            "%-15s" % read_iops, "%-10s" % read_bw, "%-15s" % read_avg_lat, \
-            "%-15s" % read_min_lat, "%-15s" % read_max_lat
+            "%-15s" % write_iops, "%-10s" % write_bw, "%-15s" % write_avg_lat, \
+            "%-15s" % write_min_lat, "%-15s" % write_max_lat
         results = results + "," + str(read_iops) + "," + str(read_bw) + "," \
             + str(read_avg_lat) + "," + str(read_min_lat) + "," + str(read_max_lat) \
             + "," + str(write_iops) + "," + str(write_bw) + "," + str(write_avg_lat) \
