@@ -37,7 +37,7 @@
    The following will allocate 5GB worth of 2MB huge pages (in addition to binding the NVMe devices to uio/vfio).  If using 1GB huge pages, the HUGEMEM value is the same, while the NRHUGE value will be 5 accordingly.
 
   HUGEMEM=5120 scripts/setup.sh
-  (NRHUGE will be 2560.)
+  (NRHUGE will be 2560)
 
 8. Create an empty SPDK blobfs for testing.
 
