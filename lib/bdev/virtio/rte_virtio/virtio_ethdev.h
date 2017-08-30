@@ -61,13 +61,6 @@ struct virtio_req {
 #define VIRTIO_PMD_SUPPORTED_GUEST_FEATURES	\
 	(VIRTIO_PMD_DEFAULT_GUEST_FEATURES)
 
-/*
- * RX/TX function prototypes
- */
-
-int  virtio_dev_tx_queue_setup(struct virtio_hw *hw, uint16_t tx_queue_id,
-		uint16_t nb_tx_desc, unsigned int socket_id);
-
 uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 		uint16_t nb_pkts);
 
