@@ -44,7 +44,7 @@
 #include <rte_prefetch.h>
 
 #include "virtio_logs.h"
-#include "virtio_ethdev.h"
+#include "virtio_dev.h"
 #include "virtio_pci.h"
 #include "virtqueue.h"
 
