@@ -50,6 +50,25 @@ function linux_hugetlbfs_mount() {
 }
 
 function configure_linux {
+	if [ "$hugepagesz" == 2048 ]; then
+		if [ $(($HUGEMEM % 2)) == 0 ]; then
+			NRHUGE=$((HUGEMEM / 2))
+		else
+			echo "ERROR: HUGEMEM should be an integer multiple of 2."
+			exit
+		fi
+	elif [ "$hugepagesz" == 1048576 ]; then
+		if [ $((HUGEMEM % 1024)) == 0 ]; then
+			NRHUGE=$((HUGEMEM / 1024))
+		else
+			echo "ERROR: HUGEMEM should be an integer multiple of 1024."
+			exit
+		fi
+	else
+		echo "ERROR: hugepagesz should be 2048 or 1048576."
+		exit
+	fi
+	
 	driver_name=vfio-pci
 	if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
 		# No IOMMU. Use uio.
@@ -95,16 +114,23 @@ function configure_linux {
 
 	if [ -z "$hugetlbfs_mount" ]; then
 		hugetlbfs_mount=/mnt/huge
+		hugetlbfs_mount2=/mnt/huge_2mb
 		echo "Mounting hugetlbfs at $hugetlbfs_mount"
+		echo "Mounting hugetlbfs at $hugetlbfs_mount2"
 		mkdir -p "$hugetlbfs_mount"
+		mkdir -p "$hugetlbfs_mount2"
 		mount -t hugetlbfs nodev "$hugetlbfs_mount"
+		mount -t hugetlbfs nodev "$hugetlbfs_mount2" -o pagesize=2MB
 	fi
+
 	echo "$NRHUGE" > /proc/sys/vm/nr_hugepages
 
 	if [ "$driver_name" = "vfio-pci" ]; then
 		if [ "$username" != "" ]; then
 			chown "$username" "$hugetlbfs_mount"
 			chmod g+w "$hugetlbfs_mount"
+			chown "$username" "$hugetlbfs_mount2"
+			chmod g+w "$hugetlbfs_mount2"
 		fi
 
 		MEMLOCK_AMNT=`ulimit -l`
@@ -248,7 +274,8 @@ function reset_freebsd {
 	kldunload nic_uio.ko || true
 }
 
-: ${NRHUGE:=1024}
+: ${HUGEMEM:=2048}
+: ${hugepagesz:=2048}
 
 username=$1
 mode=$2
