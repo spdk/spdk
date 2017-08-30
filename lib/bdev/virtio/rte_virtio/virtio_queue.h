@@ -36,6 +36,7 @@
 
 #include <stdint.h>
 #include <sys/uio.h>
+#include <linux/virtio_ring.h>
 
 #include <rte_atomic.h>
 #include <rte_memory.h>
@@ -43,7 +44,6 @@
 #include <rte_mempool.h>
 
 #include "virtio_pci.h"
-#include "virtio_ring.h"
 #include "virtio_logs.h"
 
 /*
