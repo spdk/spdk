@@ -128,7 +128,7 @@ bdev_pmem_submit_io(struct spdk_bdev_io *bdev_io, struct pmem_disk *pdisk,
 		goto end;
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BDEV_PMEM, "io %lu bytes from offset %#lx\n",
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_PMEM, "io %lu bytes from offset %#lx\n",
 		      num_blocks, offset_blocks);
 
 	for (nbytes = num_blocks * block_size; nbytes > 0; iov++) {
@@ -398,4 +398,4 @@ bdev_pmem_finish(void)
 	spdk_io_device_unregister(&g_pmem_disks, bdev_pmem_finish_done);
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("bdev_pmem", SPDK_TRACE_BDEV_PMEM)
+SPDK_LOG_REGISTER_COMPONENT("bdev_pmem", SPDK_LOG_BDEV_PMEM)

@@ -61,7 +61,7 @@ spdk_nvmf_subsystem_bdev_io_type_supported(struct spdk_nvmf_subsystem *subsystem
 		}
 
 		if (!spdk_bdev_io_type_supported(ns->bdev, io_type)) {
-			SPDK_DEBUGLOG(SPDK_TRACE_NVMF,
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF,
 				      "Subsystem %s namespace %u (%s) does not support io_type %d\n",
 				      spdk_nvmf_subsystem_get_nqn(subsystem),
 				      ns->id, spdk_bdev_get_name(ns->bdev), (int)io_type);
@@ -69,7 +69,7 @@ spdk_nvmf_subsystem_bdev_io_type_supported(struct spdk_nvmf_subsystem *subsystem
 		}
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support io_type %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "All devices in Subsystem %s support io_type %d\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem), (int)io_type);
 	return true;
 }

@@ -87,7 +87,7 @@ invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
 
 	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, task->vq, task->req_idx, 0);
 	blk_task_finish(task);
-	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK_DATA, "Invalid request (status=%" PRIu8")\n", status);
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK_DATA, "Invalid request (status=%" PRIu8")\n", status);
 }
 
 /*
@@ -118,13 +118,13 @@ blk_iovs_setup(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq, uin
 		 * Should not happen if request is well formatted, otherwise this is a BUG.
 		 */
 		if (spdk_unlikely(cnt == *iovs_cnt)) {
-			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Max IOVs in request reached (req_idx = %"PRIu16").\n",
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Max IOVs in request reached (req_idx = %"PRIu16").\n",
 				      req_idx);
 			return -1;
 		}
 
 		if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &cnt, desc))) {
-			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Invalid descriptor %" PRIu16" (req_idx = %"PRIu16").\n",
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Invalid descriptor %" PRIu16" (req_idx = %"PRIu16").\n",
 				      req_idx, cnt);
 			return -1;
 		}
@@ -163,7 +163,7 @@ blk_request_finish(bool success, struct spdk_vhost_blk_task *task)
 	*task->status = success ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR;
 	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, task->vq, task->req_idx,
 					task->length);
-	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Finished task (%p) req_idx=%d\n status: %s\n", task,
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Finished task (%p) req_idx=%d\n status: %s\n", task,
 		      task->req_idx, success ? "OK" : "FAIL");
 	blk_task_finish(task);
 }
@@ -187,7 +187,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 	int rc;
 
 	if (blk_iovs_setup(&bvdev->vdev, vq, task->req_idx, task->iovs, &task->iovcnt, &task->length)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
 		return -1;
@@ -195,7 +195,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 
 	iov = &task->iovs[0];
 	if (spdk_unlikely(iov->iov_len != sizeof(*req))) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK,
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK,
 			      "First descriptor size is %zu but expected %zu (req_idx = %"PRIu16").\n",
 			      iov->iov_len, sizeof(*req), task->req_idx);
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
@@ -206,7 +206,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 
 	iov = &task->iovs[task->iovcnt - 1];
 	if (spdk_unlikely(iov->iov_len != 1)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK,
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK,
 			      "Last descriptor size is %zu but expected %d (req_idx = %"PRIu16").\n",
 			      iov->iov_len, 1, task->req_idx);
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
@@ -242,7 +242,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 					      &task->iovs[1], task->iovcnt, req->sector * 512,
 					      task->length, blk_request_complete_cb, task);
 		} else {
-			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Device is in read-only mode!\n");
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Device is in read-only mode!\n");
 			rc = -1;
 		}
 
@@ -261,7 +261,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 		blk_request_finish(true, task);
 		break;
 	default:
-		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Not supported request type '%"PRIu32"'.\n", type);
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Not supported request type '%"PRIu32"'.\n", type);
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
 		return -1;
 	}
@@ -283,7 +283,7 @@ process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
 	}
 
 	for (i = 0; i < reqs_cnt; i++) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "====== Starting processing request idx %"PRIu16"======\n",
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Starting processing request idx %"PRIu16"======\n",
 			      reqs[i]);
 
 		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
@@ -309,10 +309,10 @@ process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
 
 		rc = process_blk_request(task, bvdev, vq);
 		if (rc == 0) {
-			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", task,
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", task,
 				      reqs[i]);
 		} else {
-			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "====== Task %p req_idx %d failed ======\n", task, reqs[i]);
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p req_idx %d failed ======\n", task, reqs[i]);
 		}
 	}
 }
@@ -344,7 +344,7 @@ no_bdev_process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue
 	iovcnt = SPDK_COUNTOF(iovs);
 	if (blk_iovs_setup(&bvdev->vdev, vq, req_idx, iovs, &iovcnt, &length) == 0) {
 		*(volatile uint8_t *)iovs[iovcnt - 1].iov_base = VIRTIO_BLK_S_IOERR;
-		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK_DATA, "Aborting request %" PRIu16"\n", req_idx);
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK_DATA, "Aborting request %" PRIu16"\n", req_idx);
 	}
 
 	spdk_vhost_vq_used_ring_enqueue(&bvdev->vdev, vq, req_idx, 0);
@@ -745,5 +745,5 @@ spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 	return 0;
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("vhost_blk", SPDK_TRACE_VHOST_BLK)
-SPDK_LOG_REGISTER_TRACE_FLAG("vhost_blk_data", SPDK_TRACE_VHOST_BLK_DATA)
+SPDK_LOG_REGISTER_COMPONENT("vhost_blk", SPDK_LOG_VHOST_BLK)
+SPDK_LOG_REGISTER_COMPONENT("vhost_blk_data", SPDK_LOG_VHOST_BLK_DATA)

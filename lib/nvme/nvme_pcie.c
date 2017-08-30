@@ -243,7 +243,7 @@ _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO ||
 		    event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_VFIO) {
 			if (event.action == SPDK_NVME_UEVENT_ADD) {
-				SPDK_DEBUGLOG(SPDK_TRACE_NVME, "add nvme address: %s\n",
+				SPDK_DEBUGLOG(SPDK_LOG_NVME, "add nvme address: %s\n",
 					      event.traddr);
 				if (spdk_process_is_primary()) {
 					if (!spdk_pci_addr_parse(&pci_addr, event.traddr)) {
@@ -261,7 +261,7 @@ _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 				if (ctrlr == NULL) {
 					return 0;
 				}
-				SPDK_DEBUGLOG(SPDK_TRACE_NVME, "remove nvme address: %s\n",
+				SPDK_DEBUGLOG(SPDK_LOG_NVME, "remove nvme address: %s\n",
 					      event.traddr);
 
 				nvme_ctrlr_fail(ctrlr, true);
@@ -640,7 +640,7 @@ nvme_pcie_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 	if (hotplug_fd < 0) {
 		hotplug_fd = spdk_uevent_connect();
 		if (hotplug_fd < 0) {
-			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Failed to open uevent netlink socket\n");
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Failed to open uevent netlink socket\n");
 		}
 	} else {
 		_nvme_pcie_hotplug_monitor(cb_ctx, probe_cb, remove_cb);
@@ -1585,7 +1585,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 	uint64_t phys_addr;
 	uint32_t i;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "prp_index:%u virt_addr:%p len:%u\n",
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "prp_index:%u virt_addr:%p len:%u\n",
 		      *prp_index, virt_addr, (uint32_t)len);
 
 	if (spdk_unlikely(((uintptr_t)virt_addr & 3) != 0)) {
@@ -1613,7 +1613,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 		}
 
 		if (i == 0) {
-			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "prp1 = %p\n", (void *)phys_addr);
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "prp1 = %p\n", (void *)phys_addr);
 			cmd->dptr.prp.prp1 = phys_addr;
 			seg_len = page_size - ((uintptr_t)virt_addr & page_mask);
 		} else {
@@ -1622,7 +1622,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 				return -EINVAL;
 			}
 
-			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "prp[%u] = %p\n", i - 1, (void *)phys_addr);
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "prp[%u] = %p\n", i - 1, (void *)phys_addr);
 			tr->u.prp[i - 1] = phys_addr;
 			seg_len = page_size;
 		}
@@ -1638,10 +1638,10 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 		cmd->dptr.prp.prp2 = 0;
 	} else if (i == 2) {
 		cmd->dptr.prp.prp2 = tr->u.prp[0];
-		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "prp2 = %p\n", (void *)cmd->dptr.prp.prp2);
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "prp2 = %p\n", (void *)cmd->dptr.prp.prp2);
 	} else {
 		cmd->dptr.prp.prp2 = tr->prp_sgl_bus_addr;
-		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "prp2 = %p (PRP list)\n", (void *)cmd->dptr.prp.prp2);
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "prp2 = %p (PRP list)\n", (void *)cmd->dptr.prp.prp2);
 	}
 
 	*prp_index = i;

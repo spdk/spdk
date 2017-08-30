@@ -36,7 +36,7 @@
 
 #include "iscsi/init_grp.c"
 
-SPDK_LOG_REGISTER_TRACE_FLAG("iscsi", SPDK_TRACE_ISCSI)
+SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
 struct spdk_iscsi_globals g_spdk_iscsi;
 

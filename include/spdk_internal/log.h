@@ -56,7 +56,7 @@ void spdk_log_register_trace_flag(const char *name, struct spdk_trace_flag *flag
 struct spdk_trace_flag *spdk_log_get_first_trace_flag(void);
 struct spdk_trace_flag *spdk_log_get_next_trace_flag(struct spdk_trace_flag *flag);
 
-#define SPDK_LOG_REGISTER_TRACE_FLAG(str, flag) \
+#define SPDK_LOG_REGISTER_COMPONENT(str, flag) \
 struct spdk_trace_flag flag = { \
 	.enabled = false, \
 	.name = str, \

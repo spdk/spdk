@@ -133,7 +133,7 @@ spdk_bs_sequence_read(spdk_bs_sequence_t *seq, void *payload,
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
 
 	set->u.sequence.cb_fn = cb_fn;
 	set->u.sequence.cb_arg = cb_arg;
@@ -150,7 +150,7 @@ spdk_bs_sequence_write(spdk_bs_sequence_t *seq, void *payload,
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Writing %u blocks to LBA %lu\n", lba_count, lba);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Writing %u blocks to LBA %lu\n", lba_count, lba);
 
 	set->u.sequence.cb_fn = cb_fn;
 	set->u.sequence.cb_arg = cb_arg;
@@ -167,7 +167,7 @@ spdk_bs_sequence_readv(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
 
 	set->u.sequence.cb_fn = cb_fn;
 	set->u.sequence.cb_arg = cb_arg;
@@ -184,7 +184,7 @@ spdk_bs_sequence_writev(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Writing %u blocks to LBA %lu\n", lba_count, lba);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Writing %u blocks to LBA %lu\n", lba_count, lba);
 
 	set->u.sequence.cb_fn = cb_fn;
 	set->u.sequence.cb_arg = cb_arg;
@@ -200,7 +200,7 @@ spdk_bs_sequence_flush(spdk_bs_sequence_t *seq,
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Flushing\n");
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Flushing\n");
 
 	set->u.sequence.cb_fn = cb_fn;
 	set->u.sequence.cb_arg = cb_arg;
@@ -217,7 +217,7 @@ spdk_bs_sequence_unmap(spdk_bs_sequence_t *seq,
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Unmapping %u blocks at LBA %lu\n", lba_count, lba);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Unmapping %u blocks at LBA %lu\n", lba_count, lba);
 
 	set->u.sequence.cb_fn = cb_fn;
 	set->u.sequence.cb_arg = cb_arg;
@@ -234,7 +234,7 @@ spdk_bs_sequence_write_zeroes(spdk_bs_sequence_t *seq,
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "writing zeroes to %u blocks at LBA %lu\n", lba_count, lba);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "writing zeroes to %u blocks at LBA %lu\n", lba_count, lba);
 
 	set->u.sequence.cb_fn = cb_fn;
 	set->u.sequence.cb_arg = cb_arg;
@@ -311,7 +311,7 @@ spdk_bs_batch_read(spdk_bs_batch_t *batch, void *payload,
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
 
 	set->u.batch.outstanding_ops++;
 	channel->dev->read(channel->dev, channel->dev_channel, payload, lba, lba_count,
@@ -325,7 +325,7 @@ spdk_bs_batch_write(spdk_bs_batch_t *batch, void *payload,
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Writing %u blocks to LBA %lu\n", lba_count, lba);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Writing %u blocks to LBA %lu\n", lba_count, lba);
 
 	set->u.batch.outstanding_ops++;
 	channel->dev->write(channel->dev, channel->dev_channel, payload, lba, lba_count,
@@ -338,7 +338,7 @@ spdk_bs_batch_flush(spdk_bs_batch_t *batch)
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Flushing\n");
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Flushing\n");
 
 	set->u.batch.outstanding_ops++;
 	channel->dev->flush(channel->dev, channel->dev_channel,
@@ -352,7 +352,7 @@ spdk_bs_batch_unmap(spdk_bs_batch_t *batch,
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Unmapping %u blocks at LBA %lu\n", lba_count, lba);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Unmapping %u blocks at LBA %lu\n", lba_count, lba);
 
 	set->u.batch.outstanding_ops++;
 	channel->dev->unmap(channel->dev, channel->dev_channel, lba, lba_count,
@@ -366,7 +366,7 @@ spdk_bs_batch_write_zeroes(spdk_bs_batch_t *batch,
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Zeroing %u blocks at LBA %lu\n", lba_count, lba);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Zeroing %u blocks at LBA %lu\n", lba_count, lba);
 
 	set->u.batch.outstanding_ops++;
 	channel->dev->write_zeroes(channel->dev, channel->dev_channel, lba, lba_count,
@@ -405,4 +405,4 @@ spdk_bs_sequence_to_batch(spdk_bs_sequence_t *seq, spdk_bs_sequence_cpl cb_fn, v
 	return set;
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("blob_rw", SPDK_TRACE_BLOB_RW);
+SPDK_LOG_REGISTER_COMPONENT("blob_rw", SPDK_LOG_BLOB_RW)
