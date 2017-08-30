@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3478196_7903e40d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-30T00:30:47Z",
+      "side": 1,
+      "message": "cntlid is only 16 bits, so this could reasonably wrap (64K onnections is not a whole lot for a long-running server).  I think we still need to do something similar to what we did before, except only check controller IDs in this subsystem.",
+      "revId": "daff36a2a36d959944e2ca192c820168b12b0b12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
