@@ -266,7 +266,7 @@ get_rusage(void *arg)
 	}
 
 	if (rusage.ru_nvcsw != reactor->rusage.ru_nvcsw || rusage.ru_nivcsw != reactor->rusage.ru_nivcsw) {
-		SPDK_DEBUGLOG(SPDK_TRACE_REACTOR,
+		SPDK_DEBUGLOG(SPDK_LOG_REACTOR,
 			      "Reactor %d: %ld voluntary context switches and  %ld involuntary context switches in the last second.\n",
 			      reactor->lcore, rusage.ru_nvcsw - reactor->rusage.ru_nvcsw,
 			      rusage.ru_nivcsw - reactor->rusage.ru_nivcsw);
@@ -775,4 +775,4 @@ spdk_poller_unregister(struct spdk_poller **ppoller,
 	}
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("reactor", SPDK_TRACE_REACTOR)
+SPDK_LOG_REGISTER_COMPONENT("reactor", SPDK_LOG_REACTOR)
