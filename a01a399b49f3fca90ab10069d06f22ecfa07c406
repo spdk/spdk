@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52d706b4_922713e7",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-30T11:15:49Z",
+      "side": 1,
+      "message": "And here? :)",
+      "range": {
+        "startLine": 63,
+        "startChar": 12,
+        "endLine": 63,
+        "endChar": 48
+      },
+      "revId": "a01a399b49f3fca90ab10069d06f22ecfa07c406",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d9783f3_eea863de",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-30T11:15:49Z",
+      "side": 1,
+      "message": "This is string compare. You should use -eq or arithmetic context (( timeo \u003d\u003d 10 )).",
+      "range": {
+        "startLine": 66,
+        "startChar": 15,
+        "endLine": 66,
+        "endChar": 33
+      },
+      "revId": "a01a399b49f3fca90ab10069d06f22ecfa07c406",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62c665e1_a23b770b",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-30T11:15:49Z",
+      "side": 1,
+      "message": "What about this part ?\n\nset -xe\ntrap \"cleanup_virsh; killprocess $pid; exit 1\" SIGINT SIGTERM EXIT",
+      "revId": "a01a399b49f3fca90ab10069d06f22ecfa07c406",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
