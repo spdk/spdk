@@ -426,7 +426,18 @@ def construct_nvmf_subsystem(args):
     if args.namespaces:
         namespaces = []
         for u in args.namespaces.strip().split(" "):
-            namespaces.append(u)
+            bdev_name = u
+            nsid = 0
+            if ':' in u:
+                (bdev_name, nsid) = u.split(":")
+
+            ns_params = {'bdev_name': bdev_name}
+
+            nsid = int(nsid)
+            if nsid != 0:
+                ns_params['nsid'] = nsid
+
+            namespaces.append(ns_params)
         params['namespaces'] = namespaces
 
     jsonrpc_call('construct_nvmf_subsystem', params)
@@ -444,9 +455,9 @@ p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any ho
 p.add_argument("-s", "--serial_number", help="""
 Format:  'sn' etc
 Example: 'SPDK00000000000001'""", default='0000:00:01.0')
-p.add_argument("-n", "--namespaces", help="""Whitespace-separated list of namespaces.
-Format:  'dev1 dev2 dev3' etc
-Example: 'Malloc0 Malloc1 Malloc2'
+p.add_argument("-n", "--namespaces", help="""Whitespace-separated list of namespaces
+Format:  'bdev_name1[:nsid1] bdev_name2[:nsid2] bdev_name3[:nsid3]' etc
+Example: '1:Malloc0 2:Malloc1 3:Malloc2'
 *** The devices must pre-exist ***""")
 p.set_defaults(func=construct_nvmf_subsystem)
 
