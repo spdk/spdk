@@ -147,6 +147,7 @@ struct spdk_nvmf_rdma_qpair {
 	struct spdk_nvmf_qpair			qpair;
 
 	struct spdk_nvmf_rdma_port		*port;
+	struct spdk_nvmf_rdma_poller		*poller;
 
 	struct rdma_cm_id			*cm_id;
 	struct ibv_cq				*cq;
@@ -207,9 +208,6 @@ struct spdk_nvmf_rdma_qpair {
 	struct spdk_nvmf_rdma_mgmt_channel	*ch;
 	struct spdk_thread                      *thread;
 };
-
-/* List of RDMA connections that have not yet received a CONNECT capsule */
-static TAILQ_HEAD(, spdk_nvmf_rdma_qpair) g_pending_conns = TAILQ_HEAD_INITIALIZER(g_pending_conns);
 
 struct spdk_nvmf_rdma_poller {
 	struct spdk_nvmf_rdma_device		*device;
@@ -286,24 +284,13 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 	}
 }
 
-static int
-spdk_nvmf_rdma_qpair_allocate_channel(struct spdk_nvmf_rdma_qpair *rqpair,
-				      struct spdk_nvmf_rdma_transport *rtransport)
-{
-	rqpair->mgmt_channel = spdk_get_io_channel(rtransport);
-	if (!rqpair->mgmt_channel) {
-		return -1;
-	}
-
-	rqpair->thread = spdk_get_thread();
-	rqpair->ch = spdk_io_channel_get_ctx(rqpair->mgmt_channel);
-	assert(rqpair->ch != NULL);
-	return 0;
-}
-
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
+	if (rqpair->poller) {
+		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
+	}
+
 	if (rqpair->cmds_mr) {
 		ibv_dereg_mr(rqpair->cmds_mr);
 	}
@@ -616,7 +603,8 @@ spdk_nvmf_rdma_event_reject(struct rdma_cm_id *id, enum spdk_nvmf_rdma_transport
 }
 
 static int
-nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *event)
+nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *event,
+		  new_qpair_fn cb_fn)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_qpair	*rqpair = NULL;
@@ -625,7 +613,6 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	const struct spdk_nvmf_rdma_request_private_data *private_data = NULL;
 	uint16_t			max_queue_depth;
 	uint16_t			max_rw_depth;
-	int 				rc;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
@@ -711,26 +698,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	event->id->context = &rqpair->qpair;
 
-	spdk_nvmf_rdma_qpair_initialize(&rqpair->qpair);
-
-	rc = spdk_nvmf_rdma_event_accept(rqpair->cm_id, rqpair);
-	if (rc) {
-		/* Try to reject, but we probably can't */
-		spdk_nvmf_rdma_event_reject(event->id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return -1;
-	}
-
-	/* Add this RDMA connection to the global list until a CONNECT capsule
-	 * is received. */
-	TAILQ_INSERT_TAIL(&g_pending_conns, rqpair, pending_link);
-
-	rc = spdk_nvmf_rdma_qpair_allocate_channel(rqpair, rtransport);
-	if (rc) {
-		spdk_nvmf_rdma_event_reject(event->id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return -1;
-	}
+	cb_fn(&rqpair->qpair);
 
 	return 0;
 }
@@ -738,7 +706,20 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 static void
 nvmf_rdma_handle_disconnect(void *ctx)
 {
-	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_qpair 		*qpair = ctx;
+	struct spdk_nvmf_ctrlr		*ctrlr;
+	struct spdk_nvmf_rdma_qpair 	*rqpair;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	ctrlr = qpair->ctrlr;
+	if (ctrlr == NULL) {
+		/* No ctrlr has been established yet, so destroy
+		 * the connection.
+		 */
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		return;
+	}
 
 	spdk_nvmf_ctrlr_disconnect(qpair);
 }
@@ -746,11 +727,8 @@ nvmf_rdma_handle_disconnect(void *ctx)
 static int
 nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 {
-	struct spdk_nvmf_qpair		*qpair;
-	struct spdk_nvmf_ctrlr		*ctrlr;
-	struct spdk_nvmf_rdma_qpair 	*rqpair;
-	struct spdk_nvmf_rdma_qpair	*r, *t;
-	struct spdk_io_channel		*ch;
+	struct spdk_nvmf_qpair	*qpair;
+	struct spdk_io_channel 	*ch;
 
 	if (evt->id == NULL) {
 		SPDK_ERRLOG("disconnect request: missing cm_id\n");
@@ -764,29 +742,6 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	}
 	/* ack the disconnect event before rdma_destroy_id */
 	rdma_ack_cm_event(evt);
-
-	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
-	/* The connection may still be in this pending list when a disconnect
-	 * event arrives. Search for it and remove it if it is found.
-	 */
-	TAILQ_FOREACH_SAFE(r, &g_pending_conns, pending_link, t) {
-		if (r == rqpair) {
-			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Received disconnect for qpair %p before first SEND ack\n",
-				      rqpair);
-			TAILQ_REMOVE(&g_pending_conns, rqpair, pending_link);
-			break;
-		}
-	}
-
-	ctrlr = qpair->ctrlr;
-	if (ctrlr == NULL) {
-		/* No ctrlr has been established yet, so destroy
-		 * the connection immediately.
-		 */
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return 0;
-	}
 
 	ch = spdk_io_channel_from_ctx(qpair->group);
 	spdk_thread_send_msg(spdk_io_channel_get_thread(ch), nvmf_rdma_handle_disconnect, qpair);
@@ -1443,34 +1398,17 @@ spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			  struct spdk_nvmf_rdma_qpair *rqpair);
 
 static void
-spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
+spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct rdma_cm_event		*event;
 	int				rc;
-	struct spdk_nvmf_rdma_qpair	*rqpair, *tmp;
 	char buf[64];
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
 	if (rtransport->event_channel == NULL) {
 		return;
-	}
-
-	/* Process pending connections for incoming capsules. The only capsule
-	 * this should ever find is a CONNECT request. */
-	TAILQ_FOREACH_SAFE(rqpair, &g_pending_conns, pending_link, tmp) {
-		rc = spdk_nvmf_rdma_qpair_poll(rtransport, rqpair);
-		if (rc < 0) {
-			TAILQ_REMOVE(&g_pending_conns, rqpair, pending_link);
-			spdk_nvmf_rdma_qpair_destroy(rqpair);
-		} else if (rc > 0) {
-			spdk_put_io_channel(rqpair->mgmt_channel);
-			rqpair->mgmt_channel = NULL;
-			/* At least one request was processed which is assumed to be
-			 * a CONNECT. Remove this connection from our list. */
-			TAILQ_REMOVE(&g_pending_conns, rqpair, pending_link);
-		}
 	}
 
 	while (1) {
@@ -1480,7 +1418,7 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 
 			switch (event->event) {
 			case RDMA_CM_EVENT_CONNECT_REQUEST:
-				rc = nvmf_rdma_connect(transport, event);
+				rc = nvmf_rdma_connect(transport, event, cb_fn);
 				if (rc < 0) {
 					SPDK_ERRLOG("Unable to process connect event. rc: %d\n", rc);
 					break;
@@ -1604,11 +1542,14 @@ static int
 spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 			      struct spdk_nvmf_qpair *qpair)
 {
+	struct spdk_nvmf_rdma_transport		*rtransport;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_rdma_qpair 		*rqpair;
 	struct spdk_nvmf_rdma_device 		*device;
 	struct spdk_nvmf_rdma_poller		*poller;
+	int					rc;
 
+	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
@@ -1631,6 +1572,27 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	}
 
 	TAILQ_INSERT_TAIL(&poller->qpairs, rqpair, link);
+	rqpair->poller = poller;
+
+	spdk_nvmf_rdma_qpair_initialize(qpair);
+
+	rqpair->mgmt_channel = spdk_get_io_channel(rtransport);
+	if (!rqpair->mgmt_channel) {
+		spdk_nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		return -1;
+	}
+
+	rqpair->ch = spdk_io_channel_get_ctx(rqpair->mgmt_channel);
+	assert(rqpair->ch != NULL);
+
+	rc = spdk_nvmf_rdma_event_accept(rqpair->cm_id, rqpair);
+	if (rc) {
+		/* Try to reject, but we probably can't */
+		spdk_nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		return -1;
+	}
 
 	return 0;
 }
@@ -1773,15 +1735,6 @@ spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	int count = 0;
 	bool error = false;
 	char buf[64];
-
-	/* reset the mgmt_channel and thread info of qpair */
-	if (rqpair->mgmt_channel != NULL) {
-		if (rqpair->thread != spdk_get_thread()) {
-			return 0;
-		}
-	} else if (spdk_nvmf_rdma_qpair_allocate_channel(rqpair, rtransport)) {
-		return -1;
-	}
 
 	/* Poll for completing operations. */
 	reaped = ibv_poll_cq(rqpair->cq, 32, wc);

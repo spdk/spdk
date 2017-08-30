@@ -99,10 +99,16 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
 int spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 			 struct spdk_nvme_transport_id *trid);
 
+typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
+
 /**
  * Poll the target for incoming connections.
+ *
+ * The new_qpair_fn cb_fn will be called for each newly discovered
+ * qpair. The user is expected to add that qpair to a poll group
+ * to establish the connection.
  */
-void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt);
+void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn);
 
 /**
  * Create a poll group.
@@ -125,7 +131,6 @@ int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
  */
 int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 				struct spdk_nvmf_qpair *qpair);
-
 
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
