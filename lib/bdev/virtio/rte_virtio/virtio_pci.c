@@ -41,7 +41,7 @@
 
 #include "virtio_pci.h"
 #include "virtio_logs.h"
-#include "virtqueue.h"
+#include "virtio_queue.h"
 
 struct virtio_hw_internal virtio_hw_internal[128];
 

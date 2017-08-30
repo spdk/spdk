@@ -1,3 +1,5 @@
+#include "virtio_queue.h"
+
 /*-
  *   BSD LICENSE
  *
@@ -46,8 +48,6 @@
 #include "virtio_logs.h"
 #include "virtio_ethdev.h"
 #include "virtio_pci.h"
-#include "virtqueue.h"
-
 #include "spdk/env.h"
 
 static void
