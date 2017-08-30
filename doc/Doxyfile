@@ -793,6 +793,7 @@ INPUT                  = ../include/spdk \
                          event.md \
                          ioat.md \
                          iscsi.md \
+                         jsonrpc.md \
                          lvol.md \
                          nvme.md \
                          nvme-cli.md \
