@@ -380,6 +380,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
 	struct spdk_nvmf_subsystem *subsystem = req->qpair->ctrlr->subsys;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -397,7 +398,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 
 	bdev = ns->bdev;
 	desc = ns->desc;
-	ch = ns->ch;
+	ch = group->sgroups[subsystem->id].channels[nsid - 1];
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 		return nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
@@ -412,65 +413,4 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	default:
 		return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
 	}
-}
-
-static int
-spdk_nvmf_ns_bdev_attach(struct spdk_nvmf_ns *ns)
-{
-	if (ns->bdev == NULL) {
-		return 0;
-	}
-
-	ns->ch = spdk_bdev_get_io_channel(ns->desc);
-	if (ns->ch == NULL) {
-		SPDK_ERRLOG("io_channel allocation failed\n");
-		return -1;
-	}
-
-	return 0;
-}
-
-static void
-spdk_nvmf_ns_bdev_detach(struct spdk_nvmf_ns *ns)
-{
-	if (ns->bdev == NULL) {
-		return;
-	}
-
-	if (ns->ch) {
-		spdk_put_io_channel(ns->ch);
-		ns->ch = NULL;
-	}
-	if (ns->desc) {
-		spdk_bdev_close(ns->desc);
-		ns->desc = NULL;
-	}
-	ns->bdev = NULL;
-}
-
-int
-spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
-{
-	struct spdk_nvmf_ns *ns;
-
-	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
-	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
-		if (spdk_nvmf_ns_bdev_attach(ns)) {
-			return -1;
-		}
-	}
-
-	return 0;
-}
-
-void
-spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem)
-{
-	struct spdk_nvmf_ns *ns;
-
-	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
-	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
-		spdk_nvmf_ns_bdev_detach(ns);
-	}
-	subsystem->max_nsid = 0;
 }
