@@ -46,6 +46,12 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	return 0;
 }
 
+void
+spdk_bdev_close(struct spdk_bdev_desc *desc)
+{
+
+}
+
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
@@ -126,17 +132,6 @@ int
 spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	return -1;
-}
-
-int
-spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
-{
-	return -1;
-}
-
-void
-spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem)
-{
 }
 
 static bool
