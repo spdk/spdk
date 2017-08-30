@@ -34,6 +34,24 @@
       "revId": "6df9bb3dba5b735dba097fd0df22af125cf2f4ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ba1dd5e_200e69b8",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-08-30T18:43:44Z",
+      "side": 1,
+      "message": "It looks to me like discovery_log_page is always allocated as sizeof(struct spdk_nvmf_discovery_log_page).",
+      "parentUuid": "7b72e4cc_fc58ada3",
+      "revId": "6df9bb3dba5b735dba097fd0df22af125cf2f4ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
