@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1b9be3d_756ec723",
+        "filename": "test/vhost/fiotest/lvol_test.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-30T05:37:07Z",
+      "side": 1,
+      "message": "Comment for review:\nOf course it\u0027d be best if this patch was put into a separate directory than fio test. It\u0027s best to move it after this commit is  merged https://review.gerrithub.io/#/c/372545/.",
+      "revId": "aff2f772a9df3ffb1f88032690bd2f37b5622016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3caa1f1d_d0fc16a7",
+        "filename": "test/vhost/fiotest/lvol_test.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-30T05:37:07Z",
+      "side": 1,
+      "message": "remove",
+      "range": {
+        "startLine": 53,
+        "startChar": 12,
+        "endLine": 53,
+        "endChar": 34
+      },
+      "revId": "aff2f772a9df3ffb1f88032690bd2f37b5622016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55dbceb1_28b5a565",
+        "filename": "test/vhost/fiotest/lvol_test.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-30T05:37:07Z",
+      "side": 1,
+      "message": "Temporary until script can be moved to separate directory and have it\u0027s own vhost.conf.in",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 13
+      },
+      "revId": "aff2f772a9df3ffb1f88032690bd2f37b5622016",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
