@@ -183,7 +183,7 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 #define VIRTIO_MBUF_BURST_SZ 64
 #define DESC_PER_CACHELINE (RTE_CACHE_LINE_SIZE / sizeof(struct vring_desc))
 uint16_t
-virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkts)
+virtqueue_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkts)
 {
 	struct virtio_hw *hw = vq->hw;
 	struct virtio_req *rxm;
@@ -222,7 +222,7 @@ virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkt
 }
 
 uint16_t
-virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req)
+virtqueue_send_pkt(struct virtqueue *vq, struct virtio_req *req)
 {
 	struct virtio_hw *hw = vq->hw;
 
