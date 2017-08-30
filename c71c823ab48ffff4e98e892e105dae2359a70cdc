@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db6f878b_017c7234",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-30T11:42:03Z",
+      "side": 1,
+      "message": "This could be replaced by dividing hugepagesize by 1024. This way \u0027if\u0027 is not needed.\n\nAlso checki that HUGEMEM % hugepagesize \u003d\u003d 0. This is needed if someone specify eg 512M memory but use 1G huge pages.",
+      "range": {
+        "startLine": 254,
+        "startChar": 0,
+        "endLine": 254,
+        "endChar": 35
+      },
+      "revId": "c71c823ab48ffff4e98e892e105dae2359a70cdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a25dd66_96b9c6bc",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-08-30T11:42:03Z",
+      "side": 1,
+      "message": "I don\u0027t like \u0027expr\u0027. In bash you can use arihmetic context.\n(( HUGE\u003dHUGEMEM/2 ))",
+      "range": {
+        "startLine": 255,
+        "startChar": 1,
+        "endLine": 255,
+        "endChar": 30
+      },
+      "revId": "c71c823ab48ffff4e98e892e105dae2359a70cdc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
