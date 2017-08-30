@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7ed7df3f_fdbe77cd",
+        "filename": "Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-30T09:47:46Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "12adee12_017df2cb",
+      "revId": "8c2f6d575ba1aea00c5587825ef6222234449003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "29c5e49d_6f770150",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-29T18:54:24Z",
       "side": 1,
       "message": "This should prefer \u0027dnf\u0027 to \u0027yum\u0027 if it is available.",
+      "revId": "8c2f6d575ba1aea00c5587825ef6222234449003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a755082_4a698052",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-08-30T09:47:46Z",
+      "side": 1,
+      "message": "Thank you for your reminder. CentOS can\u0027t recognize \u0027dnf\u0027 by default, so I modified \u0027dnf\u0027 to \u0027yum\u0027 for compatibility. Need I add a condition of \u0027Fedora\u0027 or \u0027CentOS\u0027?",
+      "parentUuid": "29c5e49d_6f770150",
       "revId": "8c2f6d575ba1aea00c5587825ef6222234449003",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
