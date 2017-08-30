@@ -34,9 +34,10 @@
 #ifndef _VIRTIO_USER_DEV_H
 #define _VIRTIO_USER_DEV_H
 
+#include <linux/virtio_ring.h>
+
 #include <limits.h>
 #include "../virtio_pci.h"
-#include "../virtio_ring.h"
 #include "vhost.h"
 
 #define VIRTIO_MAX_VIRTQUEUES 0x100
