@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "13c87975_727cb925",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-30T09:08:13Z",
+      "side": 1,
+      "message": "you\u0027re right.\nit won\u0027t overflow, but linux does a check here and uses zeros for data beyond resp-\u003esense_len\nfaulty device might write beyond resp-\u003esense_len, so let\u0027s mimic linux on this behavior.",
+      "parentUuid": "32a83c67_f07550c9",
+      "revId": "58a3944072f888ebd2c4920ddbbb77c51c93bf94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be95083a_fee8f64d",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 4
@@ -47,6 +65,24 @@
       "writtenOn": "2017-08-25T19:43:32Z",
       "side": 1,
       "message": "Sense key is the low 4 bits of sense[2] only - we should mask it against 0xF to be sure that we don\u0027t accidentally get other bits.\n\nThis is defined in the SPC part of the SCSI spec (\"Fixed format sense data\") if you want to double check.",
+      "revId": "58a3944072f888ebd2c4920ddbbb77c51c93bf94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88d4f70e_d8a77b37",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-08-30T09:08:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be95083a_fee8f64d",
       "revId": "58a3944072f888ebd2c4920ddbbb77c51c93bf94",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
