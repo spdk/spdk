@@ -163,7 +163,7 @@ Listen RDMA 192.168.100.8:4420
 AllowAnyHost No
 Host nqn.2016-06.io.spdk:init
 SN SPDK00000000000001
-Namespace Nvme0n1
+Namespace Nvme0n1 1
 
 [Subsystem2]
 NQN nqn.2016-06.io.spdk:cnode2
@@ -171,7 +171,7 @@ Core 26
 Listen RDMA 192.168.100.9:4420
 AllowAnyHost Yes
 SN SPDK00000000000002
-Namespace Nvme1n1
+Namespace Nvme1n1 1
 ~~~
 SPDK executes all code for an NVMe-oF subsystem on a single thread. Different subsystems may execute
 on different threads. SPDK gives the user maximum control to determine how many CPU cores are used
@@ -188,7 +188,8 @@ file as follows:
 **Create malloc LUNs:** See @ref bdev_getting_started for details on creating Malloc block devices.
 
 **Create a virtual controller:** Any bdev may be presented as a namespace. For example, to create a
-virtual controller with two namespaces backed by the malloc LUNs named Malloc0 and Malloc1:
+virtual controller with two namespaces backed by the malloc LUNs named Malloc0 and Malloc1 and made
+available as NSID 1 and 2:
 ~~~{.sh}
 # Virtual controller
 [Subsystem2]
@@ -198,6 +199,6 @@ virtual controller with two namespaces backed by the malloc LUNs named Malloc0 a
   AllowAnyHost No
   Host nqn.2016-06.io.spdk:init
   SN SPDK00000000000001
-  Namespace Malloc0
-  Namespace Malloc1
+  Namespace Malloc0 1
+  Namespace Malloc1 2
 ~~~

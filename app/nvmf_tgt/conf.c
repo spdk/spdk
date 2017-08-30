@@ -233,8 +233,8 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	char *hosts[MAX_HOSTS];
 	bool allow_any_host;
 	const char *sn;
-	int num_devs;
-	char *devs[MAX_NAMESPACES];
+	size_t num_ns;
+	struct spdk_nvmf_ns_params ns_list[MAX_NAMESPACES] = {};
 
 	nqn = spdk_conf_section_get_val(sp, "NQN");
 	mode = spdk_conf_section_get_val(sp, "Mode");
@@ -296,21 +296,39 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 	sn = spdk_conf_section_get_val(sp, "SN");
 
-	num_devs = 0;
-	for (i = 0; i < SPDK_COUNTOF(devs); i++) {
-		devs[i] = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
-		if (!devs[i]) {
+	num_ns = 0;
+	for (i = 0; i < SPDK_COUNTOF(ns_list); i++) {
+		char *nsid_str;
+
+		ns_list[i].bdev_name = spdk_conf_section_get_nmval(sp, "Namespace", i, 0);
+		if (!ns_list[i].bdev_name) {
 			break;
 		}
 
-		num_devs++;
+		nsid_str = spdk_conf_section_get_nmval(sp, "Namespace", i, 1);
+		if (nsid_str) {
+			char *end;
+			unsigned long nsid_ul = strtoul(nsid_str, &end, 0);
+
+			if (*end != '\0' || nsid_ul == 0 || nsid_ul >= UINT32_MAX) {
+				SPDK_ERRLOG("Invalid NSID %s\n", nsid_str);
+				return -1;
+			}
+
+			ns_list[i].nsid = (uint32_t)nsid_ul;
+		} else {
+			/* Automatically assign the next available NSID. */
+			ns_list[i].nsid = 0;
+		}
+
+		num_ns++;
 	}
 
 	ret = spdk_nvmf_construct_subsystem(nqn, lcore,
 					    num_listen_addrs, listen_addrs,
 					    num_hosts, hosts, allow_any_host,
 					    sn,
-					    num_devs, devs);
+					    num_ns, ns_list);
 
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
 		free(listen_addrs_str[i]);
@@ -362,14 +380,14 @@ int
 spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 			      int num_listen_addresses, struct rpc_listen_address *addresses,
 			      int num_hosts, char *hosts[], bool allow_any_host,
-			      const char *sn, int num_devs, char *dev_list[])
+			      const char *sn, size_t num_ns, struct spdk_nvmf_ns_params *ns_list)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
 	int i, rc;
+	size_t j;
 	uint64_t mask;
 	struct spdk_bdev *bdev;
-	const char *namespace;
 
 	if (name == NULL) {
 		SPDK_ERRLOG("No NQN specified for subsystem\n");
@@ -395,7 +413,7 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
 	g_last_core = lcore;
 
-	app_subsys = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME, num_devs, lcore);
+	app_subsys = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME, num_ns, lcore);
 	if (app_subsys == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
 		return -1;
@@ -460,18 +478,21 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 		goto error;
 	}
 
-	for (i = 0; i < num_devs; i++) {
-		namespace = dev_list[i];
-		if (!namespace) {
-			SPDK_ERRLOG("Namespace %d: missing block device\n", i);
+	for (j = 0; j < num_ns; j++) {
+		struct spdk_nvmf_ns_params *ns_params = &ns_list[j];
+
+		if (!ns_params->bdev_name) {
+			SPDK_ERRLOG("Namespace missing bdev name\n");
 			goto error;
 		}
-		bdev = spdk_bdev_get_by_name(namespace);
+
+		bdev = spdk_bdev_get_by_name(ns_params->bdev_name);
 		if (bdev == NULL) {
-			SPDK_ERRLOG("Could not find namespace bdev '%s'\n", namespace);
+			SPDK_ERRLOG("Could not find namespace bdev '%s'\n", ns_params->bdev_name);
 			goto error;
 		}
-		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, 0) == 0) {
+
+		if (spdk_nvmf_subsystem_add_ns(subsystem, bdev, ns_params->nsid) == 0) {
 			goto error;
 		}
 
