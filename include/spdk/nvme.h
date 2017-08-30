@@ -744,7 +744,7 @@ int spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr,
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
  *
- * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
  *
  * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
  * of commands submitted through this function.
@@ -761,7 +761,7 @@ int spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
  *
- * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
  *
  * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
  * of commands submitted through this function.
@@ -777,7 +777,7 @@ int spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
  *
  * \return Namespace ID (>= 1) if successfully created, or 0 if the request failed.
  *
- * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
  */
 uint32_t spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr,
 				   struct spdk_nvme_ns_data *payload);
@@ -790,7 +790,7 @@ uint32_t spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr,
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
  *
- * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
  *
  * Call \ref spdk_nvme_ctrlr_process_admin_completions() to poll for completion
  * of commands submitted through this function.
@@ -808,7 +808,7 @@ int spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid);
  *
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request
  *
- * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
  */
 int spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 			   struct spdk_nvme_format *format);
@@ -825,7 +825,7 @@ int spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
  * \return 0 if successfully submitted, ENOMEM if resources could not be allocated for this request,
  * -1 if the size is not multiple of 4.
  *
- * This function is thread safe and can be called at any point after spdk_nvme_attach().
+ * This function is thread safe and can be called at any point after spdk_nvme_probe().
  */
 int spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, uint32_t size,
 				    int slot, enum spdk_nvme_fw_commit_action commit_action,
