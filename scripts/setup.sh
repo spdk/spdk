@@ -91,6 +91,16 @@ function configure_linux {
 
 	echo "1" > "/sys/bus/pci/rescan"
 
+	set +e
+	grep '/mnt/huge' /proc/mounts > /dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		mkdir -p /mnt/huge
+		mount -t hugetlbfs hugetlbfs /mnt/huge
+		mkdir -p /mnt/huge_2mb
+		mount -t hugetlbfs none /mnt/huge_2mb -o pagesize=2MB
+	fi
+	set -e
+
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
 
 	if [ -z "$hugetlbfs_mount" ]; then
@@ -99,12 +109,15 @@ function configure_linux {
 		mkdir -p "$hugetlbfs_mount"
 		mount -t hugetlbfs nodev "$hugetlbfs_mount"
 	fi
+
 	echo "$NRHUGE" > /proc/sys/vm/nr_hugepages
 
 	if [ "$driver_name" = "vfio-pci" ]; then
 		if [ "$username" != "" ]; then
 			chown "$username" "$hugetlbfs_mount"
 			chmod g+w "$hugetlbfs_mount"
+			chown "$username" "$hugetlbfs_mount2"
+			chmod g+w "$hugetlbfs_mount2"
 		fi
 
 		MEMLOCK_AMNT=`ulimit -l`
@@ -165,6 +178,11 @@ function reset_linux {
 	rm $TMP
 
 	echo "1" > "/sys/bus/pci/rescan"
+
+	umount /mnt/huge
+	rm -r /mnt/huge
+	umount /mnt/huge_2mb
+	rm -r /mnt/huge_2mb
 
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
 	rm -f "$hugetlbfs_mount"/spdk*map_*
@@ -239,7 +257,7 @@ function configure_freebsd {
 	rm $TMP
 
 	kldunload contigmem.ko || true
-	kenv hw.contigmem.num_buffers=$((NRHUGE * 2 / 256))
+	kenv hw.contigmem.num_buffers=$((HUGEMEM / 256))
 	kenv hw.contigmem.buffer_size=$((256 * 1024 * 1024))
 	kldload contigmem.ko
 }
@@ -249,7 +267,27 @@ function reset_freebsd {
 	kldunload nic_uio.ko || true
 }
 
-: ${NRHUGE:=1024}
+: ${HUGEMEM:=2048}
+: ${HUGEPAGESZ:=2048}
+
+if [ "$HUGEPAGESZ" == 2048 ]; then
+	if [ $(($HUGEMEM % 2)) == 0 ]; then
+		NRHUGE=$((HUGEMEM / 2))
+	else
+		echo "ERROR: HUGEMEM should be an integer multiple of 2."
+		exit
+	fi
+elif [ "$HUGEPAGESZ" == 1048576 ]; then
+	if [ $((HUGEMEM % 1024)) == 0 ]; then
+		NRHUGE=$((HUGEMEM / 1024))
+	else
+		echo "ERROR: HUGEMEM should be an integer multiple of 1024."
+		exit
+	fi
+else
+	echo "ERROR: HUGEPAGESZ should be 2048 or 1048576(K)."
+	exit
+fi
 
 username=$1
 mode=$2
