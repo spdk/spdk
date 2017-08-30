@@ -45,7 +45,7 @@
 
 #include "vhost.h"
 #include "virtio_user_dev.h"
-#include "../virtio_ethdev.h"
+#include "../virtio_dev.h"
 
 static int
 virtio_user_create_queue(struct virtio_user_dev *dev, uint32_t queue_sel)

@@ -44,7 +44,7 @@
 #include <rte_vdev.h>
 #include <rte_alarm.h>
 
-#include "virtio_ethdev.h"
+#include "virtio_dev.h"
 #include "virtio_logs.h"
 #include "virtio_pci.h"
 #include "virtio_queue.h"
