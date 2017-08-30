@@ -849,6 +849,7 @@ bs_load(void)
 	struct spdk_bs_dev *dev;
 	spdk_blob_id blobid;
 	struct spdk_blob *blob;
+	struct spdk_bs_super_block *super_blob;
 	uint64_t length;
 	int rc;
 	const void *value;
@@ -897,11 +898,16 @@ bs_load(void)
 	g_blob = NULL;
 	g_blobid = 0;
 
+	super_blob = (struct spdk_bs_super_block *)g_dev_buffer;
+	CU_ASSERT(super_blob->clean == 1);
 	dev = init_dev();
 	/* Load an existing blob store */
 	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	super_blob = (struct spdk_bs_super_block *)g_dev_buffer;
+	CU_ASSERT(super_blob->clean == 0);
 
 	spdk_bs_md_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
