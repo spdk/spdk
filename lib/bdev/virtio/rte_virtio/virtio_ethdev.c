@@ -146,6 +146,7 @@ virtio_init_queue(struct virtio_hw *hw, uint16_t vtpci_queue_idx)
 	vq->hw = hw;
 	vq->vq_queue_index = vtpci_queue_idx;
 	vq->vq_nentries = vq_size;
+	vq->vq_free_cnt = vq_size;
 
 	/*
 	 * Reserve a memzone for vring elements
@@ -342,7 +343,7 @@ virtio_set_vtpci_ops(struct virtio_hw *hw)
  * It returns 0 on success.
  */
 int
-eth_virtio_dev_init(struct virtio_hw *hw, int num_queues)
+eth_virtio_dev_init(struct virtio_hw *hw)
 {
 	int ret, i;
 

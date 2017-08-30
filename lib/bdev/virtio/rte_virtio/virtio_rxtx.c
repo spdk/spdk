@@ -117,16 +117,6 @@ virtqueue_dequeue_burst_rx(struct virtqueue *vq, struct virtio_req **rx_pkts,
 	return i;
 }
 
-#ifndef DEFAULT_TX_FREE_THRESH
-#define DEFAULT_TX_FREE_THRESH 32
-#endif
-
-/* avoid write operation when necessary, to lessen cache issues */
-#define ASSIGN_UNLESS_EQUAL(var, val) do {	\
-	if ((var) != (val))			\
-		(var) = (val);			\
-} while (0)
-
 static inline void
 virtqueue_iov_to_desc(struct virtqueue *vq, uint16_t desc_idx, struct iovec *iov)
 {
