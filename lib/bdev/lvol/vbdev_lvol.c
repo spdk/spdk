@@ -90,13 +90,13 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 
 	if (lvserrno != 0) {
 		assert(lvs == NULL);
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Cannot create lvol store bdev\n");
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Cannot create lvol store bdev\n");
 		goto end;
 	}
 
 	lvserrno = spdk_bs_bdev_claim(bs_dev, SPDK_GET_BDEV_MODULE(lvol));
 	if (lvserrno != 0) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store base bdev already claimed by another bdev\n");
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store base bdev already claimed by another bdev\n");
 		req->bs_dev->destroy(req->bs_dev);
 		goto end;
 	}
@@ -113,7 +113,7 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 	lvs_bdev->req = NULL;
 
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev inserted\n");
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store bdev inserted\n");
 
 end:
 	req->cb_fn(req->cb_arg, lvs, lvserrno);
@@ -190,7 +190,7 @@ _vbdev_lvs_remove_cb(void *cb_arg, int lvserrno)
 	struct spdk_lvs_req *req = lvs_bdev->req;
 
 	if (lvserrno != 0) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Could not remove lvol store bdev\n");
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Could not remove lvol store bdev\n");
 	} else {
 		TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
 		free(lvs_bdev);
@@ -278,7 +278,7 @@ vbdev_lvol_store_first(void)
 
 	lvs_bdev = TAILQ_FIRST(&g_spdk_lvol_pairs);
 	if (lvs_bdev) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Starting lvolstore iteration at %p\n", lvs_bdev->lvs);
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Starting lvolstore iteration at %p\n", lvs_bdev->lvs);
 	}
 
 	return lvs_bdev;
@@ -296,7 +296,7 @@ vbdev_lvol_store_next(struct lvol_store_bdev *prev)
 
 	lvs_bdev = TAILQ_NEXT(prev, lvol_stores);
 	if (lvs_bdev) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Continuing lvolstore iteration at %p\n", lvs_bdev->lvs);
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Continuing lvolstore iteration at %p\n", lvs_bdev->lvs);
 	}
 
 	return lvs_bdev;
@@ -382,7 +382,7 @@ _vbdev_lvol_close_cb(void *cb_arg, int lvserrno)
 	lvs = cb_arg;
 
 	if (lvs->lvols_opened >= lvs->lvol_count) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Opening lvols finished\n");
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvols finished\n");
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
 	}
 }
@@ -392,7 +392,7 @@ _vbdev_lvol_destroy_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_bdev *bdev = cb_arg;
 
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol destroyed\n");
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol destroyed\n");
 
 	spdk_bdev_unregister_done(bdev, lvserrno);
 	free(bdev->name);
@@ -406,14 +406,14 @@ _vbdev_lvol_destroy_after_close_cb(void *cb_arg, int lvserrno)
 	struct spdk_bdev *bdev = lvol->bdev;
 
 	if (lvserrno != 0) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Could not close Lvol %s\n", lvol->old_name);
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Could not close Lvol %s\n", lvol->old_name);
 		spdk_bdev_unregister_done(bdev, lvserrno);
 		free(bdev->name);
 		free(bdev);
 		return;
 	}
 
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol %s closed, begin destroying\n", lvol->old_name);
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol %s closed, begin destroying\n", lvol->old_name);
 	spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, bdev);
 }
 
@@ -498,7 +498,7 @@ lvol_op_comp(void *cb_arg, int bserrno)
 		task->status = SPDK_BDEV_IO_STATUS_FAILED;
 	}
 
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Vbdev processing callback on device %s with type %d\n",
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Vbdev processing callback on device %s with type %d\n",
 		     bdev_io->bdev->name, bdev_io->type);
 	spdk_bdev_io_complete(bdev_io, task->status);
 }
@@ -515,7 +515,7 @@ lvol_unmap(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL,
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing unmap at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
 	spdk_bs_io_unmap_blob(blob, ch, start_page, num_pages, lvol_op_comp, task);
@@ -533,7 +533,7 @@ lvol_write_zeroes(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spd
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL,
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing write zeros at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
 	spdk_bs_io_write_zeroes_blob(blob, ch, start_page, num_pages, lvol_op_comp, task);
@@ -552,7 +552,7 @@ lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL,
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing read at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
 	spdk_bs_io_readv_blob(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
@@ -572,7 +572,7 @@ lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL,
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 		     "Vbdev doing write at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
 	spdk_bs_io_writev_blob(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
@@ -602,7 +602,7 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 {
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
 
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Vbdev request type %d submitted\n", bdev_io->type);
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Vbdev request type %d submitted\n", bdev_io->type);
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -625,7 +625,7 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		lvol_write_zeroes(lvol, ch, bdev_io);
 		break;
 	default:
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "lvol: unsupported I/O type %d\n", bdev_io->type);
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "lvol: unsupported I/O type %d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		return;
 	}
@@ -840,7 +840,7 @@ _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
 		lvs->lvol_count--;
 		spdk_bs_md_close_blob(&lvol->blob, _vbdev_lvol_close_cb, lvs);
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Opening lvol %s failed\n", lvol->old_name);
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvol %s failed\n", lvol->old_name);
 		free(lvol->old_name);
 		free(lvol);
 		return;
@@ -848,12 +848,12 @@ _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 
 	lvol->bdev = bdev;
 	lvs->lvols_opened++;
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Opening lvol %s succeeded\n", lvol->old_name);
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvol %s succeeded\n", lvol->old_name);
 
 end:
 
 	if (lvs->lvols_opened >= lvs->lvol_count) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Opening lvols finished\n");
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvols finished\n");
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
 	}
 }
@@ -866,20 +866,20 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 	struct spdk_lvol *lvol, *tmp;
 
 	if (lvserrno == -EEXIST) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL,
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL,
 			     "Name for lvolstore on device %s conflicts with name for already loaded lvs\n",
 			     req->base_bdev->name);
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
 		goto end;
 	} else if (lvserrno != 0) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store not found on %s\n", req->base_bdev->name);
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store not found on %s\n", req->base_bdev->name);
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
 		goto end;
 	}
 
 	lvserrno = spdk_bs_bdev_claim(lvol_store->bs_dev, SPDK_GET_BDEV_MODULE(lvol));
 	if (lvserrno != 0) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store base bdev already claimed by another bdev\n");
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store base bdev already claimed by another bdev\n");
 		lvol_store->bs_dev->destroy(lvol_store->bs_dev);
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
 		goto end;
@@ -897,13 +897,13 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
 
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store found on %s - begin parsing\n",
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store found on %s - begin parsing\n",
 		     req->base_bdev->name);
 
 	lvol_store->lvols_opened = 0;
 
 	if (TAILQ_EMPTY(&lvol_store->lvols)) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store examination done\n");
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store examination done\n");
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
 	} else {
 		/* Open all lvols */
@@ -931,7 +931,7 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 
 	bs_dev = spdk_bdev_create_bs_dev(bdev, vbdev_lvs_hotremove_cb, bdev);
 	if (!bs_dev) {
-		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Cannot create bs dev on %s\n", bdev->name);
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Cannot create bs dev on %s\n", bdev->name);
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
 		free(req);
 		return;
@@ -944,4 +944,4 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 SPDK_BDEV_MODULE_REGISTER(lvol, vbdev_lvs_init, vbdev_lvs_fini, NULL, vbdev_lvs_get_ctx_size,
 			  vbdev_lvs_examine)
 SPDK_BDEV_MODULE_ASYNC_FINI(lvol);
-SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_lvol", SPDK_TRACE_VBDEV_LVOL);
+SPDK_LOG_REGISTER_COMPONENT("vbdev_lvol", SPDK_LOG_VBDEV_LVOL);

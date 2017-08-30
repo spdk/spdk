@@ -85,8 +85,8 @@ spdk_iscsi_ipv6_netmask_allow_addr(const char *netmask, const char *addr)
 	}
 
 #if 0
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "input %s\n", addr);
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "mask  %s / %d\n", mask, bits);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "input %s\n", addr);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "mask  %s / %d\n", mask, bits);
 #endif
 
 	/* presentation to network order binary */
@@ -181,7 +181,7 @@ spdk_iscsi_init_grp_allow_addr(struct spdk_iscsi_init_grp *igp,
 	struct spdk_iscsi_initiator_netmask *imask;
 
 	TAILQ_FOREACH(imask, &igp->netmask_head, tailq) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "netmask=%s, addr=%s\n",
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "netmask=%s, addr=%s\n",
 			      imask->mask, addr);
 		if (spdk_iscsi_netmask_allow_addr(imask->mask, addr)) {
 			return true;
@@ -232,7 +232,7 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 		return false;
 	pg = conn->portal->group;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "pg=%d, iqn=%s, addr=%s\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "pg=%d, iqn=%s, addr=%s\n",
 		      pg->tag, iqn, addr);
 	pg_map = spdk_iscsi_tgt_node_find_pg_map(target, pg);
 	if (pg_map == NULL) {
@@ -254,7 +254,7 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 	}
 
 denied:
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "access denied from %s (%s) to %s (%s:%s,%d)\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "access denied from %s (%s) to %s (%s:%s,%d)\n",
 		      iqn, addr, target->name, conn->portal->host,
 		      conn->portal->port, conn->portal->group->tag);
 	return false;
@@ -358,7 +358,7 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 						continue;
 					}
 				}
-				SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+				SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 					      "TargetAddress=%s:%s,%d\n",
 					      host, p->port, pg->tag);
 				len = snprintf((char *) data + total,
@@ -393,7 +393,7 @@ spdk_iscsi_find_tgt_node(const char *target_name)
 			return target;
 		}
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "can't find target %s\n", target_name);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "can't find target %s\n", target_name);
 	return NULL;
 }
 
@@ -832,7 +832,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	if (queue_depth > 0 && ((uint32_t)queue_depth <= g_spdk_iscsi.MaxQueueDepth)) {
 		target->queue_depth = queue_depth;
 	} else {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "QueueDepth %d is invalid and %d is used instead.\n",
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "QueueDepth %d is invalid and %d is used instead.\n",
 			      queue_depth, g_spdk_iscsi.MaxQueueDepth);
 		target->queue_depth = g_spdk_iscsi.MaxQueueDepth;
 	}
@@ -868,7 +868,7 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 
 	target_num = spdk_conf_section_get_num(sp);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "add unit %d\n", target_num);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add unit %d\n", target_num);
 
 	data_digest = 0;
 	header_digest = 0;
@@ -955,11 +955,11 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 		}
 	}
 	if (auth_chap_disabled == 1) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AuthMethod None\n");
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthMethod None\n");
 	} else if (auth_chap_required == 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AuthMethod Auto\n");
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthMethod Auto\n");
 	} else {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AuthMethod CHAP %s\n",
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthMethod CHAP %s\n",
 			      auth_chap_mutual ? "Mutual" : "");
 	}
 
@@ -984,9 +984,9 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 		}
 	}
 	if (auth_group == 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AuthGroup None\n");
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthGroup None\n");
 	} else {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AuthGroup AuthGroup%d\n",
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AuthGroup AuthGroup%d\n",
 			      auth_group);
 	}
 
@@ -1010,9 +1010,9 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 		}
 	}
 	if (header_digest == 0 && data_digest == 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "UseDigest Auto\n");
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "UseDigest Auto\n");
 	} else {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "UseDigest %s %s\n",
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "UseDigest %s %s\n",
 			      header_digest ? "Header" : "",
 			      data_digest ? "Data" : "");
 	}
@@ -1065,7 +1065,7 @@ int spdk_iscsi_init_tgt_nodes(void)
 	struct spdk_conf_section *sp;
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_init_tgt_nodes\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init_tgt_nodes\n");
 
 	spdk_iscsi_tgt_node_list_init();
 

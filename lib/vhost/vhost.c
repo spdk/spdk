@@ -109,7 +109,7 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *r
 		reqs[i] = vring->avail->ring[(last_idx + i) & size_mask];
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "AVAIL: last_idx=%"PRIu16" avail_idx=%"PRIu16" count=%"PRIu16"\n",
 		      last_idx, avail_idx, count);
 
@@ -161,7 +161,7 @@ spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtque
 	virtqueue->req_cnt += virtqueue->used_req_cnt;
 	virtqueue->used_req_cnt = 0;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "Queue %td - USED RING: sending IRQ: last used %"PRIu16"\n",
 		      virtqueue - vdev->virtqueue, virtqueue->vring.last_used_idx);
 
@@ -273,7 +273,7 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	struct vring_used *used = vring->used;
 	uint16_t last_idx = vring->last_used_idx & (vring->size - 1);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "Queue %td - USED RING: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
 		      virtqueue - vdev->virtqueue, vring->last_used_idx, id, len);
 
@@ -1177,4 +1177,4 @@ spdk_vhost_fini(void)
 {
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
+SPDK_LOG_REGISTER_COMPONENT("vhost_ring", SPDK_LOG_VHOST_RING)

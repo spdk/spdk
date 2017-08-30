@@ -291,7 +291,7 @@ vhost_user_sock(struct virtio_user_dev *dev,
 	int i, len;
 	int vhostfd = dev->vhostfd;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_USER, "sent message %d = %s\n", req, vhost_msg_strings[req]);
+	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_USER, "sent message %d = %s\n", req, vhost_msg_strings[req]);
 
 	msg.request = req;
 	msg.flags = VHOST_USER_VERSION;
@@ -464,4 +464,4 @@ struct virtio_user_backend_ops ops_user = {
 	.send_request = vhost_user_sock,
 };
 
-SPDK_LOG_REGISTER_TRACE_FLAG("virtio_user", SPDK_TRACE_VIRTIO_USER)
+SPDK_LOG_REGISTER_COMPONENT("virtio_user", SPDK_LOG_VIRTIO_USER)

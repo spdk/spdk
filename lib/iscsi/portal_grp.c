@@ -116,7 +116,7 @@ spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 {
 	assert(p != NULL);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_portal_destroy\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_destroy\n");
 	TAILQ_REMOVE(&g_spdk_iscsi.portal_head, p, g_tailq);
 	free(p->host);
 	free(p->port);
@@ -152,7 +152,7 @@ static void
 spdk_iscsi_portal_close(struct spdk_iscsi_portal *p)
 {
 	if (p->sock >= 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_NET, "close portal (%s, %s)\n",
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "close portal (%s, %s)\n",
 			      p->host, p->port);
 		spdk_iscsi_acceptor_stop(p);
 		spdk_sock_close(p->sock);
@@ -343,7 +343,7 @@ spdk_iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg)
 
 	assert(pg != NULL);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_portal_grp_destroy\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grp_destroy\n");
 	while (!TAILQ_EMPTY(&pg->head)) {
 		p = TAILQ_FIRST(&pg->head);
 		TAILQ_REMOVE(&pg->head, p, per_pg_tailq);
@@ -374,7 +374,7 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 	int i = 0, rc = 0;
 	struct spdk_iscsi_portal_grp *pg;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "add portal group (from portal list) %d\n", tag);
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add portal group (from portal list) %d\n", tag);
 
 	if (num_portals > MAX_PORTAL) {
 		SPDK_ERRLOG("%d > MAX_PORTAL\n", num_portals);
@@ -390,7 +390,7 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 	for (i = 0; i < num_portals; i++) {
 		struct spdk_iscsi_portal *p = portal_list[i];
 
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "RIndex=%d, Host=%s, Port=%s, Tag=%d\n",
 			      i, p->host, p->port, tag);
 		rc = spdk_iscsi_portal_open(p);
@@ -429,12 +429,12 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 	char *label, *portal;
 	int portals = 0, i = 0, rc = 0;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "add portal group (from config file) %d\n",
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add portal group (from config file) %d\n",
 		      spdk_conf_section_get_num(sp));
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "Comment %s\n", val);
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Comment %s\n", val);
 	}
 
 	/* counts number of definitions */
@@ -483,7 +483,7 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 			goto error_out;
 		}
 
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 			      "RIndex=%d, Host=%s, Port=%s, Tag=%d\n",
 			      i, p->host, p->port, spdk_conf_section_get_num(sp));
 
@@ -557,7 +557,7 @@ spdk_iscsi_portal_grp_array_destroy(void)
 {
 	struct spdk_iscsi_portal_grp *pg, *tmp;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_portal_grp_array_destroy\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grp_array_destroy\n");
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH_SAFE(pg, &g_spdk_iscsi.pg_head, tailq, tmp) {
 		TAILQ_REMOVE(&g_spdk_iscsi.pg_head, pg, tailq);
@@ -587,7 +587,7 @@ spdk_iscsi_portal_grp_open_all(void)
 	struct spdk_iscsi_portal_grp *pg;
 	int rc;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_portal_grp_open_all\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grp_open_all\n");
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
 		rc = spdk_iscsi_portal_grp_open(pg);
@@ -615,7 +615,7 @@ spdk_iscsi_portal_grp_close_all(void)
 {
 	struct spdk_iscsi_portal_grp *pg;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_portal_grp_close_all\n");
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_portal_grp_close_all\n");
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
 		spdk_iscsi_portal_grp_close(pg);

@@ -37,7 +37,7 @@
 
 #include "subsystem.c"
 
-SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
+SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,

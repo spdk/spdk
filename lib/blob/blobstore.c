@@ -60,7 +60,7 @@ _spdk_bs_claim_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 	assert(spdk_bit_array_get(bs->used_clusters, cluster_num) == false);
 	assert(bs->num_free_clusters > 0);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Claiming cluster %u\n", cluster_num);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %u\n", cluster_num);
 
 	spdk_bit_array_set(bs->used_clusters, cluster_num);
 	bs->num_free_clusters--;
@@ -73,7 +73,7 @@ _spdk_bs_release_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 	assert(spdk_bit_array_get(bs->used_clusters, cluster_num) == true);
 	assert(bs->num_free_clusters < bs->total_clusters);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Releasing cluster %u\n", cluster_num);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Releasing cluster %u\n", cluster_num);
 
 	spdk_bit_array_clear(bs->used_clusters, cluster_num);
 	bs->num_free_clusters++;
@@ -1029,7 +1029,7 @@ _spdk_resize_blob(struct spdk_blob *blob, uint64_t sz)
 	lfc = 0;
 	for (i = blob->active.num_clusters; i < sz; i++) {
 		lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
-		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Claiming cluster %lu for blob %lu\n", lfc, blob->id);
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", lfc, blob->id);
 		_spdk_bs_claim_cluster(bs, lfc);
 		blob->active.clusters[i] = _spdk_bs_cluster_to_lba(bs, lfc);
 		lfc++;
@@ -1128,7 +1128,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 		ctx->pages[i - 1].crc = _spdk_blob_md_page_calc_crc(&ctx->pages[i - 1]);
 		blob->active.pages[i] = page_num;
 		spdk_bit_array_set(bs->used_md_pages, page_num);
-		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Claiming page %u for blob %lu\n", page_num, blob->id);
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming page %u for blob %lu\n", page_num, blob->id);
 		page_num++;
 	}
 	ctx->pages[i - 1].crc = _spdk_blob_md_page_calc_crc(&ctx->pages[i - 1]);
@@ -2020,13 +2020,13 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 
 	if (memcmp(&ctx->bs->bstype, &ctx->super->bstype, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Bstype matched - loading blobstore\n");
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Bstype matched - loading blobstore\n");
 	} else if (memcmp(&ctx->bs->bstype, zeros, SPDK_BLOBSTORE_TYPE_LENGTH) == 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Bstype wildcard used - loading blobstore regardless bstype\n");
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Bstype wildcard used - loading blobstore regardless bstype\n");
 	} else {
-		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Unexpected bstype\n");
-		SPDK_TRACEDUMP(SPDK_TRACE_BLOB, "Expected:", ctx->bs->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
-		SPDK_TRACEDUMP(SPDK_TRACE_BLOB, "Found:", ctx->super->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Unexpected bstype\n");
+		SPDK_TRACEDUMP(SPDK_LOG_BLOB, "Expected:", ctx->bs->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
+		SPDK_TRACEDUMP(SPDK_LOG_BLOB, "Found:", ctx->super->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
 		spdk_dma_free(ctx->super);
 		_spdk_bs_free(ctx->bs);
 		free(ctx);
@@ -2063,7 +2063,7 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	struct spdk_bs_load_ctx *ctx;
 	struct spdk_bs_opts	opts = {};
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Loading blobstore from dev %p\n", dev);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Loading blobstore from dev %p\n", dev);
 
 	if (o) {
 		opts = *o;
@@ -2166,7 +2166,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	struct spdk_bs_opts	opts = {};
 	int			rc;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Initializing blobstore on dev %p\n", dev);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Initializing blobstore on dev %p\n", dev);
 
 	if ((SPDK_BS_PAGE_SIZE % dev->blocklen) != 0) {
 		SPDK_ERRLOG("unsupported dev block length of %d\n",
@@ -2346,7 +2346,7 @@ spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 	spdk_bs_sequence_t	*seq;
 	struct spdk_bs_init_ctx *ctx;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Destroying blobstore\n");
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Destroying blobstore\n");
 
 	if (!TAILQ_EMPTY(&bs->blobs)) {
 		SPDK_ERRLOG("Blobstore still has open blobs\n");
@@ -2439,7 +2439,7 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 	spdk_bs_sequence_t	*seq;
 	struct spdk_bs_load_ctx *ctx;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Syncing blobstore\n");
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Syncing blobstore\n");
 
 	if (!TAILQ_EMPTY(&bs->blobs)) {
 		SPDK_ERRLOG("Blobstore still has open blobs\n");
@@ -2594,7 +2594,7 @@ void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
 
 	id = _spdk_bs_page_to_blobid(page_idx);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Creating blob with id %lu at page %u\n", id, page_idx);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Creating blob with id %lu at page %u\n", id, page_idx);
 
 	blob = _spdk_blob_alloc(bs, id);
 	if (!blob) {
@@ -2627,7 +2627,7 @@ spdk_bs_md_resize_blob(struct spdk_blob *blob, uint64_t sz)
 
 	assert(blob != NULL);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Resizing blob %lu to %lu clusters\n", blob->id, sz);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Resizing blob %lu to %lu clusters\n", blob->id, sz);
 
 	if (blob->md_ro) {
 		return -EPERM;
@@ -2685,7 +2685,7 @@ spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t 	*seq;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Deleting blob %lu\n", blobid);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Deleting blob %lu\n", blobid);
 
 	blob = _spdk_blob_lookup(bs, blobid);
 	if (blob) {
@@ -2745,7 +2745,7 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	spdk_bs_sequence_t		*seq;
 	uint32_t			page_num;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Opening blob %lu\n", blobid);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Opening blob %lu\n", blobid);
 
 	blob = _spdk_blob_lookup(bs, blobid);
 	if (blob) {
@@ -2797,7 +2797,7 @@ void spdk_bs_md_sync_blob(struct spdk_blob *blob,
 
 	assert(blob != NULL);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Syncing blob %lu\n", blob->id);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Syncing blob %lu\n", blob->id);
 
 	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
 	       blob->state != SPDK_BLOB_STATE_SYNCING);
@@ -2855,7 +2855,7 @@ void spdk_bs_md_close_blob(struct spdk_blob **b,
 	blob = *b;
 	assert(blob != NULL);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Closing blob %lu\n", blob->id);
+	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Closing blob %lu\n", blob->id);
 
 	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
 	       blob->state != SPDK_BLOB_STATE_SYNCING);
@@ -3203,4 +3203,4 @@ spdk_bs_set_bstype(struct spdk_blob_store *bs, struct spdk_bs_type bstype)
 	memcpy(&bs->bstype, &bstype, sizeof(bstype));
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("blob", SPDK_TRACE_BLOB);
+SPDK_LOG_REGISTER_COMPONENT("blob", SPDK_LOG_BLOB)

@@ -115,7 +115,7 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_AIO, "read %d iovs size %lu to off: %#lx\n",
+	SPDK_DEBUGLOG(SPDK_LOG_AIO, "read %d iovs size %lu to off: %#lx\n",
 		      iovcnt, nbytes, offset);
 
 	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
@@ -145,7 +145,7 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	iocb->data = aio_task;
 	aio_task->len = len;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_AIO, "write %d iovs size %lu from off: %#lx\n",
+	SPDK_DEBUGLOG(SPDK_LOG_AIO, "write %d iovs size %lu from off: %#lx\n",
 		      iovcnt, len, offset);
 
 	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
@@ -547,4 +547,4 @@ bdev_aio_get_spdk_running_config(FILE *fp)
 	fprintf(fp, "\n");
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("aio", SPDK_TRACE_AIO)
+SPDK_LOG_REGISTER_COMPONENT("aio", SPDK_LOG_AIO)

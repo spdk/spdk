@@ -169,7 +169,7 @@ bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BDEV_NVME, "read %lu blocks with offset %#lx\n",
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "read %lu blocks with offset %#lx\n",
 		      lba_count, lba);
 
 	return bdev_nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_READ,
@@ -183,7 +183,7 @@ bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BDEV_NVME, "write %lu blocks with offset %#lx\n",
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "write %lu blocks with offset %#lx\n",
 		      lba_count, lba);
 
 	return bdev_nvme_queue_cmd(nbdev, nvme_ch->qpair, bio, BDEV_DISK_WRITE,
@@ -723,7 +723,7 @@ static bool
 hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		 struct spdk_nvme_ctrlr_opts *opts)
 {
-	SPDK_DEBUGLOG(SPDK_TRACE_BDEV_NVME, "Attaching to %s\n", trid->traddr);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attaching to %s\n", trid->traddr);
 
 	return true;
 }
@@ -747,7 +747,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BDEV_NVME, "Probing device %s\n", trid->traddr);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Probing device %s\n", trid->traddr);
 
 	if (nvme_ctrlr_get(trid)) {
 		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n",
@@ -768,7 +768,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		}
 
 		if (!claim_device) {
-			SPDK_DEBUGLOG(SPDK_TRACE_BDEV_NVME, "Not claiming device at %s\n", trid->traddr);
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Not claiming device at %s\n", trid->traddr);
 			return false;
 		}
 	}
@@ -847,7 +847,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
 
 	nvme_ctrlr = calloc(1, sizeof(*nvme_ctrlr));
 	if (nvme_ctrlr == NULL) {
@@ -1134,12 +1134,12 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 	for (ns_id = 1; ns_id <= num_ns; ns_id++) {
 		ns = spdk_nvme_ctrlr_get_ns(ctrlr, ns_id);
 		if (!ns) {
-			SPDK_DEBUGLOG(SPDK_TRACE_BDEV_NVME, "Skipping invalid NS %d\n", ns_id);
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Skipping invalid NS %d\n", ns_id);
 			continue;
 		}
 
 		if (!spdk_nvme_ns_is_active(ns)) {
-			SPDK_DEBUGLOG(SPDK_TRACE_BDEV_NVME, "Skipping inactive NS %d\n", ns_id);
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Skipping inactive NS %d\n", ns_id);
 			continue;
 		}
 
@@ -1417,4 +1417,4 @@ spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev)
 	return SPDK_CONTAINEROF(bdev, struct nvme_bdev, disk)->nvme_ctrlr->ctrlr;
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("bdev_nvme", SPDK_TRACE_BDEV_NVME)
+SPDK_LOG_REGISTER_COMPONENT("bdev_nvme", SPDK_LOG_BDEV_NVME)

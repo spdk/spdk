@@ -58,7 +58,7 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 	size_t cur_size;
 	uint32_t sid;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Generating log page for genctr %" PRIu64 "\n",
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Generating log page for genctr %" PRIu64 "\n",
 		      tgt->discovery_genctr);
 
 	cur_size = sizeof(struct spdk_nvmf_discovery_log_page);
