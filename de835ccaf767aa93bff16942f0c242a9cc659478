@@ -67,6 +67,24 @@
       "revId": "de835ccaf767aa93bff16942f0c242a9cc659478",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c18cf8b3_e24601fa",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-31T11:59:00Z",
+      "side": 1,
+      "message": "It is aligned depending on the tabstop you have;) Changing to spaces for sake of any future update in this part.",
+      "parentUuid": "56ef6abe_30ed8db9",
+      "revId": "de835ccaf767aa93bff16942f0c242a9cc659478",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
