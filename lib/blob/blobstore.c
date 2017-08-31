@@ -1455,6 +1455,10 @@ struct spdk_bs_load_ctx {
 	struct spdk_bs_super_block	*super;
 
 	struct spdk_bs_md_mask		*mask;
+	bool				in_page_chain;
+	uint32_t			page_index;
+	uint32_t			cur_page;
+	struct spdk_blob_md_page	*page;
 };
 
 static void
@@ -1640,15 +1644,6 @@ _spdk_bs_load_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	struct spdk_bs_load_ctx	*ctx = cb_arg;
 	uint64_t lba, lba_count, mask_size;
 
-	/* Parse the super block */
-	ctx->bs->cluster_sz = ctx->super->cluster_size;
-	ctx->bs->total_clusters = ctx->bs->dev->blockcnt / (ctx->bs->cluster_sz / ctx->bs->dev->blocklen);
-	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
-	ctx->bs->md_start = ctx->super->md_start;
-	ctx->bs->md_len = ctx->super->md_len;
-	ctx->bs->super_blob = ctx->super->super_blob;
-	memcpy(&ctx->bs->bstype, &ctx->super->bstype, sizeof(ctx->super->bstype));
-
 	/* Read the used pages mask */
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
@@ -1664,6 +1659,210 @@ _spdk_bs_load_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_page_mask_len);
 	spdk_bs_sequence_read(seq, ctx->mask, lba, lba_count,
 			      _spdk_bs_load_used_pages_cpl, ctx);
+}
+
+static int
+_spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob_store *bs)
+{
+	struct spdk_blob_md_descriptor *desc;
+	size_t	cur_desc = 0;
+
+	desc = (struct spdk_blob_md_descriptor *)page->descriptors;
+	while (cur_desc < sizeof(page->descriptors)) {
+		if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_PADDING) {
+			if (desc->length == 0) {
+				/* If padding and length are 0, this terminates the page */
+				break;
+			}
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
+			struct spdk_blob_md_descriptor_extent	*desc_extent;
+			unsigned int				i, j;
+			unsigned int				cluster_count = 0;
+
+			desc_extent = (struct spdk_blob_md_descriptor_extent *)desc;
+
+			for (i = 0; i < desc_extent->length / sizeof(desc_extent->extents[0]); i++) {
+				for (j = 0; j < desc_extent->extents[i].length; j++) {
+					spdk_bit_array_set(bs->used_clusters, desc_extent->extents[i].cluster_idx + j);
+					if (bs->num_free_clusters == 0) {
+						return -1;
+					}
+					bs->num_free_clusters--;
+					cluster_count++;
+				}
+			}
+			if (cluster_count == 0) {
+				return -1;
+			}
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
+			/* Skip this item */
+		} else {
+			/* Error */
+			return -1;
+		}
+		/* Advance to the next descriptor */
+		cur_desc += sizeof(*desc) + desc->length;
+		if (cur_desc + sizeof(*desc) > sizeof(page->descriptors)) {
+			break;
+		}
+		desc = (struct spdk_blob_md_descriptor *)((uintptr_t)page->descriptors + cur_desc);
+	}
+	return 0;
+}
+
+static bool _spdk_bs_load_cur_md_page_valid(struct spdk_bs_load_ctx *ctx)
+{
+	uint32_t crc;
+
+	crc = _spdk_blob_md_page_calc_crc(ctx->page);
+	if (crc != ctx->page->crc) {
+		return false;
+	}
+
+	if (_spdk_bs_page_to_blobid(ctx->cur_page) != ctx->page->id) {
+		return false;
+	}
+	return true;
+}
+
+static void
+_spdk_bs_load_replay_cur_md_page(spdk_bs_sequence_t *seq, void *cb_arg);
+
+static void
+_spdk_bs_load_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx	*ctx = cb_arg;
+
+	spdk_dma_free(ctx->mask);
+	spdk_dma_free(ctx->super);
+	spdk_bs_sequence_finish(seq, bserrno);
+	free(ctx);
+}
+
+static void
+_spdk_bs_load_write_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx	*ctx = cb_arg;
+
+	spdk_dma_free(ctx->mask);
+
+	_spdk_bs_write_used_clusters(seq, cb_arg, _spdk_bs_load_write_used_clusters_cpl);
+}
+
+static void
+_spdk_bs_load_write_used_md(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	_spdk_bs_write_used_md(seq, cb_arg, _spdk_bs_load_write_used_pages_cpl);
+}
+
+static void
+_spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint32_t page_num;
+
+	if (bserrno != 0) {
+		spdk_dma_free(ctx->super);
+		_spdk_bs_free(ctx->bs);
+		free(ctx);
+		spdk_bs_sequence_finish(seq, bserrno);
+		return;
+	}
+
+	page_num = ctx->cur_page;
+	if (_spdk_bs_load_cur_md_page_valid(ctx) == true) {
+		if (ctx->page->sequence_num == 0 || ctx->in_page_chain == true) {
+			spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
+			if (_spdk_bs_load_replay_md_parse_page(ctx->page, ctx->bs)) {
+				spdk_dma_free(ctx->super);
+				_spdk_bs_free(ctx->bs);
+				free(ctx);
+				spdk_bs_sequence_finish(seq, -EILSEQ);
+				return;
+			}
+			if (ctx->page->next != SPDK_INVALID_MD_PAGE) {
+				ctx->in_page_chain = true;
+				ctx->cur_page = ctx->page->next;
+				_spdk_bs_load_replay_cur_md_page(seq, cb_arg);
+				return;
+			}
+		}
+	}
+
+	ctx->in_page_chain = false;
+
+	do {
+		ctx->page_index++;
+	} while (spdk_bit_array_get(ctx->bs->used_md_pages, ctx->page_index) == true)
+
+	if (ctx->page_index < ctx->super->md_len) {
+		ctx->cur_page = ctx->page_index;
+		_spdk_bs_load_replay_cur_md_page(seq, cb_arg);
+	} else {
+		spdk_dma_free(ctx->page);
+		_spdk_bs_load_write_used_md(seq, ctx, bserrno);
+	}
+}
+
+static void
+_spdk_bs_load_replay_cur_md_page(spdk_bs_sequence_t *seq, void *cb_arg)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint64_t lba;
+
+	assert(ctx->cur_page < ctx->super->md_len);
+	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->md_start + ctx->cur_page);
+	spdk_bs_sequence_read(seq, ctx->page, lba,
+			      _spdk_bs_byte_to_lba(ctx->bs, SPDK_BS_PAGE_SIZE),
+			      _spdk_bs_load_replay_md_cpl, ctx);
+}
+
+static void
+_spdk_bs_load_replay_md(spdk_bs_sequence_t *seq, void *cb_arg)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+
+	ctx->page_index = 0;
+	ctx->cur_page = 0;
+	ctx->page = spdk_dma_zmalloc(SPDK_BS_PAGE_SIZE,
+				     SPDK_BS_PAGE_SIZE,
+				     NULL);
+	if (!ctx->page) {
+		spdk_dma_free(ctx->super);
+		_spdk_bs_free(ctx->bs);
+		free(ctx);
+		spdk_bs_sequence_finish(seq, -ENOMEM);
+		return;
+	}
+	_spdk_bs_load_replay_cur_md_page(seq, cb_arg);
+}
+
+static void
+_spdk_bs_recover(spdk_bs_sequence_t *seq, void *cb_arg)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	int 		rc;
+
+	rc = spdk_bit_array_resize(&ctx->bs->used_md_pages, ctx->super->md_len);
+	if (rc < 0) {
+		spdk_dma_free(ctx->super);
+		_spdk_bs_free(ctx->bs);
+		free(ctx);
+		spdk_bs_sequence_finish(seq, -ENOMEM);
+		return;
+	}
+
+	rc = spdk_bit_array_resize(&ctx->bs->used_clusters, ctx->bs->total_clusters);
+	if (rc < 0) {
+		spdk_dma_free(ctx->super);
+		_spdk_bs_free(ctx->bs);
+		free(ctx);
+		spdk_bs_sequence_finish(seq, -ENOMEM);
+		return;
+	}
+
+	ctx->bs->num_free_clusters = ctx->bs->total_clusters;
+	_spdk_bs_load_replay_md(seq, cb_arg);
 }
 
 static void
@@ -1715,21 +1914,20 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
-	if (ctx->super->clean != 1) {
-		/* TODO: ONLY CLEAN SHUTDOWN IS CURRENTLY SUPPORTED.
-		 * All of the necessary data to recover is available
-		 * on disk - the code just has not been written yet.
-		 */
-		assert(false);
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -EILSEQ);
-		return;
-	}
+	/* Parse the super block */
+	ctx->bs->cluster_sz = ctx->super->cluster_size;
+	ctx->bs->total_clusters = ctx->bs->dev->blockcnt / (ctx->bs->cluster_sz / ctx->bs->dev->blocklen);
+	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
+	ctx->bs->md_start = ctx->super->md_start;
+	ctx->bs->md_len = ctx->super->md_len;
+	ctx->bs->super_blob = ctx->super->super_blob;
 
-	ctx->super->clean = 0;
-	_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_load_write_super_cpl, ctx);
+	if (ctx->super->clean == 1) {
+		ctx->super->clean = 0;
+		_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_load_write_super_cpl, ctx);
+	} else {
+		_spdk_bs_recover(seq, ctx);
+	}
 }
 
 void
