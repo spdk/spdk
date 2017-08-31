@@ -1283,6 +1283,278 @@ super_block_crc(void)
 	g_scheduler_delay = false;
 }
 
+static void
+blob_dirty_shutdown(void)
+{
+	int rc;
+	int index;
+	struct spdk_bs_dev *dev;
+	spdk_blob_id blobid1, blobid2, blobid3;
+	struct spdk_blob *blob;
+	uint64_t length;
+	const void *value;
+	size_t value_len;
+	uint32_t page_num;
+	struct spdk_blob_md_page *page;
+
+	dev = init_dev();
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Create first blob */
+	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid1 = g_blobid;
+
+	spdk_bs_md_open_blob(g_bs, blobid1, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Set some xattrs */
+	rc = spdk_blob_md_set_xattr(blob, "name", "log.txt", strlen("log.txt") + 1);
+	CU_ASSERT(rc == 0);
+
+	length = 2345;
+	rc = spdk_blob_md_set_xattr(blob, "length", &length, sizeof(length));
+	CU_ASSERT(rc == 0);
+
+	/* Resize the blob */
+	rc = spdk_bs_md_resize_blob(blob, 10);
+	CU_ASSERT(rc == 0);
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	/* Dirty shutdown */
+	_spdk_bs_free(g_bs);
+
+	/* reload blobstore */
+	dev = init_dev();
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_md_open_blob(g_bs, blobid1, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Get the xattrs */
+	value = NULL;
+	rc = spdk_bs_md_get_xattr_value(blob, "length", &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(*(uint64_t *)value == length);
+	CU_ASSERT(value_len == 8);
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
+
+	/* Resize the blob */
+	rc = spdk_bs_md_resize_blob(blob, 20);
+	CU_ASSERT(rc == 0);
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	/* Dirty shutdown */
+	_spdk_bs_free(g_bs);
+
+	/* reload the blobstore */
+	dev = init_dev();
+	/* Load an existing blob store */
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	spdk_bs_md_open_blob(g_bs, blobid1, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 20);
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	/* Create second blob */
+	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid2 = g_blobid;
+
+	spdk_bs_md_open_blob(g_bs, blobid2, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Set some xattrs */
+	rc = spdk_blob_md_set_xattr(blob, "name", "log1.txt", strlen("log1.txt") + 1);
+	CU_ASSERT(rc == 0);
+
+	length = 5432;
+	rc = spdk_blob_md_set_xattr(blob, "length", &length, sizeof(length));
+	CU_ASSERT(rc == 0);
+
+	/* Resize the blob */
+	rc = spdk_bs_md_resize_blob(blob, 10);
+	CU_ASSERT(rc == 0);
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	/* Dirty shutdown */
+	_spdk_bs_free(g_bs);
+
+	/* reload the blobstore */
+	dev = init_dev();
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_md_open_blob(g_bs, blobid2, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Get the xattrs */
+	value = NULL;
+	rc = spdk_bs_md_get_xattr_value(blob, "length", &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(*(uint64_t *)value == length);
+	CU_ASSERT(value_len == 8);
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	spdk_bs_md_delete_blob(g_bs, blobid2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Dirty shutdown */
+	_spdk_bs_free(g_bs);
+	/* reload the blobstore */
+	dev = init_dev();
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_md_open_blob(g_bs, blobid2, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+	CU_ASSERT(g_blob == NULL);
+
+	spdk_bs_md_open_blob(g_bs, blobid1, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	spdk_bs_md_close_blob(&g_blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	/* reload the blobstore */
+	dev = init_dev();
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Delete the first blob */
+	spdk_bs_md_delete_blob(g_bs, blobid1, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Create second blob */
+	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid2 = g_blobid;
+
+	/* Create third blob */
+	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid3 = g_blobid;
+
+	spdk_bs_md_open_blob(g_bs, blobid2, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Set some xattrs for second blob */
+	rc = spdk_blob_md_set_xattr(blob, "name", "log1.txt", strlen("log1.txt") + 1);
+	CU_ASSERT(rc == 0);
+
+	length = 5432;
+	rc = spdk_blob_md_set_xattr(blob, "length", &length, sizeof(length));
+	CU_ASSERT(rc == 0);
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	spdk_bs_md_open_blob(g_bs, blobid3, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Set some xattrs for third blob */
+	rc = spdk_blob_md_set_xattr(blob, "name", "log2.txt", strlen("log2.txt") + 1);
+	CU_ASSERT(rc == 0);
+
+	length = 5432;
+	rc = spdk_blob_md_set_xattr(blob, "length", &length, sizeof(length));
+	CU_ASSERT(rc == 0);
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	/* Mark second blob as invalid */
+	page_num = _spdk_bs_blobid_to_page(blobid2);
+
+	index = DEV_BUFFER_BLOCKLEN * (g_bs->md_start + page_num);
+	page = (struct spdk_blob_md_page *)&g_dev_buffer[index];
+	page->sequence_num = 1;
+	page->crc = _spdk_blob_md_page_calc_crc(page);
+
+	/* Dirty shutdown */
+	_spdk_bs_free(g_bs);
+	/* reload the blobstore */
+	dev = init_dev();
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_md_open_blob(g_bs, blobid1, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+	CU_ASSERT(g_blob == NULL);
+
+	spdk_bs_md_open_blob(g_bs, blobid2, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+	CU_ASSERT(g_blob == NULL);
+
+	spdk_bs_md_open_blob(g_bs, blobid3, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1318,7 +1590,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "bs_resize_md", bs_resize_md) == NULL ||
 		CU_add_test(suite, "blob_serialize", blob_serialize) == NULL ||
 		CU_add_test(suite, "blob_crc", blob_crc) == NULL ||
-		CU_add_test(suite, "super_block_crc", super_block_crc) == NULL
+		CU_add_test(suite, "super_block_crc", super_block_crc) == NULL ||
+		CU_add_test(suite, "blob_dirty_shutdown", blob_dirty_shutdown) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
