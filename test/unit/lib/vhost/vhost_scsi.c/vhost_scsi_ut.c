@@ -57,14 +57,14 @@ DEFINE_STUB(spdk_ring_dequeue, size_t, (struct spdk_ring *ring, void **objs, siz
 DEFINE_STUB(spdk_scsi_dev_allocate_io_channels, int, (struct spdk_scsi_dev *dev), 0);
 DEFINE_STUB_P(spdk_scsi_lun_get_name, const char, (const struct spdk_scsi_lun *lun), {0});
 DEFINE_STUB(spdk_scsi_lun_get_id, int, (const struct spdk_scsi_lun *lun), 0);
-DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct rte_vhost_vring *vq, uint16_t *reqs,
-		uint16_t reqs_len), 0);
-DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
-		uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
-		uint32_t *desc_table_size), 0);
+DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct spdk_vhost_virtqueue *vq,
+		uint16_t *reqs, uint16_t reqs_len), 0);
+DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct spdk_vhost_dev *vdev,
+		struct spdk_vhost_virtqueue *vq, uint16_t req_idx, struct vring_desc **desc,
+		struct vring_desc **desc_table, uint32_t *desc_table_size), 0);
 DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, uint64_t addr), {0});
 DEFINE_STUB_V(spdk_vhost_vq_used_ring_enqueue, (struct spdk_vhost_dev *vdev,
-		struct rte_vhost_vring *vq, uint16_t id, uint32_t len));
+		struct spdk_vhost_virtqueue *vq, uint16_t id, uint32_t len));
 DEFINE_STUB(spdk_scsi_dev_has_pending_tasks, bool, (const struct spdk_scsi_dev *dev), false);
 DEFINE_STUB_V(spdk_scsi_dev_free_io_channels, (struct spdk_scsi_dev *dev));
 DEFINE_STUB_V(spdk_scsi_dev_destruct, (struct spdk_scsi_dev *dev));
