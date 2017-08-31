@@ -101,7 +101,7 @@
  * Human-readable version string.
  */
 #define SPDK_VERSION_STRING	\
-	"SPDK " \
+	"SPDK v" \
 	SPDK_VERSION_MAJOR_STRING \
 	SPDK_VERSION_MINOR_STRING \
 	SPDK_VERSION_PATCH_STRING \
