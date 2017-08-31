@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3f55c4e_71606c29",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-31T20:10:14Z",
+      "side": 1,
+      "message": "Seems OK, although it seems unlikely that this would make a measurable difference in performance.\n\nIf it\u0027s clearer to read, I\u0027m fine with changing it to this.",
+      "revId": "278c9aec45b9f88682060ef86d28c9c0883f420b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
