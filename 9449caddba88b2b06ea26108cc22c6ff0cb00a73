@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e1bb0c1_4633f8fa",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-31T20:07:37Z",
+      "side": 1,
+      "message": "This fixes a static analysis warning (since cpumask was explicitly compared to NULL above, it complained that dereferencing *cpumask below would crash).",
+      "revId": "9449caddba88b2b06ea26108cc22c6ff0cb00a73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
