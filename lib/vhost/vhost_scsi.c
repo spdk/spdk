@@ -94,7 +94,7 @@ struct spdk_vhost_scsi_task {
 
 	int req_idx;
 
-	struct rte_vhost_vring *vq;
+	struct spdk_vhost_vring *vq;
 };
 
 enum spdk_vhost_scsi_event_type {
@@ -214,7 +214,7 @@ process_event(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_scsi_event *e
 	struct virtio_scsi_event *desc_ev;
 	uint32_t req_size;
 	uint16_t req;
-	struct rte_vhost_vring *vq = &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ];
+	struct spdk_vhost_vring *vq = &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ];
 	struct vring_desc *desc_table;
 	uint32_t desc_table_size;
 
@@ -473,7 +473,7 @@ static int
 task_data_setup(struct spdk_vhost_scsi_task *task,
 		struct virtio_scsi_cmd_req **req)
 {
-	struct rte_vhost_vring *vq = task->vq;
+	struct spdk_vhost_vring *vq = task->vq;
 	struct spdk_vhost_dev *vdev = &task->svdev->vdev;
 	struct vring_desc *desc;
 	struct vring_desc *desc_table;
@@ -616,7 +616,7 @@ process_request(struct spdk_vhost_scsi_task *task)
 }
 
 static void
-process_controlq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
+process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_vring *vq)
 {
 	struct spdk_vhost_scsi_task *tasks[32];
 	struct spdk_vhost_scsi_task *task;
@@ -637,7 +637,7 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 }
 
 static void
-process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
+process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_vring *vq)
 {
 	struct spdk_vhost_scsi_task *tasks[32];
 	struct spdk_vhost_scsi_task *task;
@@ -1054,7 +1054,7 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 	int rc;
 
 	for (i = 0; i < svdev->vdev.num_queues; i++) {
-		task_cnt += spdk_min(svdev->vdev.virtqueue[i].size, 1024);
+		task_cnt += spdk_min(svdev->vdev.virtqueue[i].vq.size, 1024);
 	}
 
 	ring_size = spdk_align32pow2(task_cnt + 1);
