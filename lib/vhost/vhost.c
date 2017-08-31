@@ -70,8 +70,9 @@ void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
  * Get available requests from avail ring.
  */
 uint16_t
-spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs, uint16_t reqs_len)
+spdk_vhost_vq_avail_ring_get(struct spdk_vhost_vring *virt_queue, uint16_t *reqs, uint16_t reqs_len)
 {
+	struct rte_vhost_vring *vq = &virt_queue->vq;
 	struct vring_avail *avail = vq->avail;
 	uint16_t size_mask = vq->size - 1;
 	uint16_t last_idx = vq->last_avail_idx, avail_idx = avail->idx;
@@ -101,12 +102,12 @@ spdk_vhost_vring_desc_is_indirect(struct vring_desc *cur_desc)
 }
 
 void
-spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t req_idx,
+spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_vring *vq, uint16_t req_idx,
 		       struct vring_desc **desc, struct vring_desc **desc_table, uint32_t *desc_table_size)
 {
-	assert(req_idx < vq->size);
+	assert(req_idx < vq->vq.size);
 
-	*desc = &vq->desc[req_idx];
+	*desc = &vq->vq.desc[req_idx];
 
 	if (spdk_vhost_vring_desc_is_indirect(*desc)) {
 		assert(spdk_vhost_dev_has_feature(vdev, VIRTIO_RING_F_INDIRECT_DESC));
@@ -116,19 +117,20 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, 
 		return;
 	}
 
-	*desc_table = vq->desc;
-	*desc_table_size = vq->size;
+	*desc_table = vq->vq.desc;
+	*desc_table_size = vq->vq.size;
 }
 
 /*
  * Enqueue id and len to used ring.
  */
 void
-spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
+spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_vring *virt_queue,
 				uint16_t id,
 				uint32_t len)
 {
 	int need_event = 0;
+	struct rte_vhost_vring *vq = &virt_queue->vq;
 	struct vring_used *used = vq->used;
 	uint16_t last_idx = vq->last_used_idx & (vq->size - 1);
 
@@ -569,7 +571,7 @@ destroy_device(int vid)
 	}
 
 	for (i = 0; i < vdev->num_queues; i++) {
-		q = &vdev->virtqueue[i];
+		q = &vdev->virtqueue[i].vq;
 		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
 
@@ -614,8 +616,9 @@ new_device(int vid)
 		goto out;
 	}
 
+	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
 	for (i = 0; i < num_queues; i++) {
-		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i])) {
+		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i].vq)) {
 			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
 			goto out;
 		}
