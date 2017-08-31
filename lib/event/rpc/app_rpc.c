@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/event.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
@@ -108,3 +109,47 @@ invalid:
 	free_rpc_kill_instance(&req);
 }
 SPDK_RPC_REGISTER("kill_instance", spdk_rpc_kill_instance)
+
+
+struct rpc_context_switch_monitor {
+	bool enabled;
+};
+
+static const struct spdk_json_object_decoder rpc_context_switch_monitor_decoders[] = {
+	{"enabled", offsetof(struct rpc_context_switch_monitor, enabled), spdk_json_decode_bool},
+};
+
+static void
+spdk_rpc_context_switch_monitor(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	struct rpc_context_switch_monitor req = {};
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_context_switch_monitor_decoders,
+					    SPDK_COUNTOF(rpc_context_switch_monitor_decoders),
+					    &req)) {
+			SPDK_DEBUGLOG(SPDK_TRACE_REACTOR, "spdk_json_decode_object failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+			return;
+		}
+
+		spdk_reactor_enable_context_switch_monitor(req.enabled);
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "enabled");
+	spdk_json_write_bool(w, spdk_reactor_context_switch_monitor_enabled());
+
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+SPDK_RPC_REGISTER("context_switch_monitor", spdk_rpc_context_switch_monitor)

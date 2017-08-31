@@ -564,5 +564,18 @@ def get_rpc_methods(args):
 p = subparsers.add_parser('get_rpc_methods', help='Get list of supported RPC methods')
 p.set_defaults(func=get_rpc_methods)
 
+def context_switch_monitor(args):
+    params = {}
+    if args.enable:
+        params['enabled'] = True
+    if args.disable:
+        params['enabled'] = False
+    print_dict(jsonrpc_call('context_switch_monitor', params))
+
+p = subparsers.add_parser('context_switch_monitor', help='Control whether the context switch monitor is enabled')
+p.add_argument('-e', '--enable', action='store_true', help='Enable context switch monitoring')
+p.add_argument('-d', '--disable', action='store_true', help='Disable context switch monitoring')
+p.set_defaults(func=context_switch_monitor)
+
 args = parser.parse_args()
 args.func(args)
