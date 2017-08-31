@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4daafab4_f987436f",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-31T11:59:00Z",
+      "side": 1,
+      "message": "my bad",
+      "parentUuid": "52d706b4_922713e7",
+      "range": {
+        "startLine": 63,
+        "startChar": 12,
+        "endLine": 63,
+        "endChar": 48
+      },
+      "revId": "a01a399b49f3fca90ab10069d06f22ecfa07c406",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d9783f3_eea863de",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 6
@@ -59,6 +83,24 @@
       "writtenOn": "2017-08-30T11:15:49Z",
       "side": 1,
       "message": "What about this part ?\n\nset -xe\ntrap \"cleanup_virsh; killprocess $pid; exit 1\" SIGINT SIGTERM EXIT",
+      "revId": "a01a399b49f3fca90ab10069d06f22ecfa07c406",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80f8e556_f765cc12",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-08-31T11:59:00Z",
+      "side": 1,
+      "message": "I removed the lines which disabled xe flags and trap, so there\u0027s no need to re-enable them once more.\nTrap is enabled in line 104. \"xe\" is inheridet after sourcing autotest_common.sh, but I\u0027ve added explicit set -xe in next patch set.",
+      "parentUuid": "62c665e1_a23b770b",
       "revId": "a01a399b49f3fca90ab10069d06f22ecfa07c406",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
