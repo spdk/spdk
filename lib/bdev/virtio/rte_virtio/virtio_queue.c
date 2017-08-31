@@ -46,9 +46,8 @@
 #include "virtio_logs.h"
 #include "virtio_dev.h"
 #include "virtio_pci.h"
-#include "virtqueue.h"
-
 #include "spdk/env.h"
+#include "virtio_queue.h"
 
 static void
 vq_ring_free_chain(struct virtqueue *vq, uint16_t desc_idx)

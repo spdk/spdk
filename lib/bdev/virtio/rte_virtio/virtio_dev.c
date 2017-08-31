@@ -56,7 +56,7 @@
 #include "virtio_dev.h"
 #include "virtio_pci.h"
 #include "virtio_logs.h"
-#include "virtqueue.h"
+#include "virtio_queue.h"
 
 /*
  * The set of PCI devices this driver supports
