@@ -48,7 +48,7 @@
 struct spdk_vhost_blk_task {
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_vhost_blk_dev *bvdev;
-	struct rte_vhost_vring *vq;
+	struct spdk_vhost_vring *vq;
 
 	volatile uint8_t *status;
 
@@ -123,7 +123,7 @@ invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
  *   FIXME: Make this function return to rd_cnt and wr_cnt
  */
 static int
-blk_iovs_setup(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t req_idx,
+blk_iovs_setup(struct spdk_vhost_dev *vdev, struct spdk_vhost_vring *vq, uint16_t req_idx,
 	       struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
 {
 	struct vring_desc *desc_table;
@@ -197,7 +197,7 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 
 static int
 process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev *bvdev,
-		    struct rte_vhost_vring *vq,
+		    struct spdk_vhost_vring *vq,
 		    uint16_t req_idx)
 {
 	const struct virtio_blk_outhdr *req;
@@ -295,7 +295,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 }
 
 static void
-process_vq(struct spdk_vhost_blk_dev *bvdev, struct rte_vhost_vring *vq)
+process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_vring *vq)
 {
 	struct spdk_vhost_blk_task *tasks[32] = {0};
 	int rc;
@@ -333,7 +333,7 @@ vdev_worker(void *arg)
 }
 
 static void
-no_bdev_process_vq(struct spdk_vhost_blk_dev *bvdev, struct rte_vhost_vring *vq)
+no_bdev_process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_vring *vq)
 {
 	struct iovec iovs[SPDK_VHOST_IOVS_MAX];
 	uint32_t length;
@@ -473,7 +473,7 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
 	int rc;
 
 	for (i = 0; i < bvdev->vdev.num_queues; i++) {
-		task_cnt += spdk_min(bvdev->vdev.virtqueue[i].size, 1024);
+		task_cnt += spdk_min(bvdev->vdev.virtqueue[i].vq.size, 1024);
 	}
 
 	ring_size = spdk_align32pow2(task_cnt + 1);
