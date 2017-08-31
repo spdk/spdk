@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "822be4d7_26d556af",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2460,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-31T17:51:46Z",
+      "side": 1,
+      "message": "I don\u0027t think blobstore.c should be checking for this xattr - it is specific to blobfs.",
+      "revId": "d594819a66fb84160f7a37d0147bd30f4f23ca29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89c76e0e_82b883e1",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-31T17:51:46Z",
+      "side": 1,
+      "message": "Can we just use the existence of this xattr to indicate that the blob was deleted?\n\nIf we check the return value and it is 0, that means the \"is_deleted\" xattr exists and the blob was deleted; otherwise (e.g. -ENOENT) the xattr doesn\u0027t exist and the blob wasn\u0027t deleted.\n\nIt doesn\u0027t really make sense to store the \"is_deleted\" xattr but have its value be false.",
+      "revId": "d594819a66fb84160f7a37d0147bd30f4f23ca29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "377a0320_84f20427",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-31T17:51:46Z",
+      "side": 1,
+      "message": "I think fs_find_file() needs to be modified so that it doesn\u0027t find files that have been deleted (but still have open handles).",
+      "revId": "d594819a66fb84160f7a37d0147bd30f4f23ca29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
