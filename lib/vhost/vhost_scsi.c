@@ -96,7 +96,7 @@ struct spdk_vhost_scsi_task {
 
 	int req_idx;
 
-	struct rte_vhost_vring *vq;
+	struct spdk_vhost_virtqueue *vq;
 };
 
 static int spdk_vhost_scsi_start(struct spdk_vhost_dev *, void *);
@@ -173,7 +173,7 @@ static void
 eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_t event,
 	       uint32_t reason)
 {
-	struct rte_vhost_vring *vq;
+	struct spdk_vhost_virtqueue *vq;
 	struct vring_desc *desc, *desc_table;
 	struct virtio_scsi_event *desc_ev;
 	uint32_t desc_table_size, req_size = 0;
@@ -334,8 +334,8 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 
 	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI_QUEUE,
 		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
-		      task->req_idx, desc, (void *)desc->addr, desc->len, desc->flags, task->vq->last_used_idx,
-		      task->vq->kickfd, task->vq->size);
+		      task->req_idx, desc, (void *)desc->addr, desc->len, desc->flags, task->vq->vring.last_used_idx,
+		      task->vq->vring.kickfd, task->vq->vring.size);
 	SPDK_TRACEDUMP(SPDK_TRACE_VHOST_SCSI_QUEUE, "Request descriptor", (uint8_t *)ctrl_req,
 		       desc->len);
 
@@ -554,7 +554,7 @@ process_request(struct spdk_vhost_scsi_task *task)
 }
 
 static void
-process_controlq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
+process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_scsi_task *tasks[32];
 	struct spdk_vhost_scsi_task *task;
@@ -575,7 +575,7 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 }
 
 static void
-process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
+process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_scsi_task *tasks[32];
 	struct spdk_vhost_scsi_task *task;
@@ -968,7 +968,7 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 		 * Limit the pool size to 1024 * num_queues. This should be enough as QEMU have the
 		 * same hard limit for queue size.
 		 */
-		task_cnt += spdk_min(svdev->vdev.virtqueue[i].size, 1024);
+		task_cnt += spdk_min(svdev->vdev.virtqueue[i].vring.size, 1024);
 	}
 
 	ring_size = spdk_align32pow2(task_cnt + 1);
