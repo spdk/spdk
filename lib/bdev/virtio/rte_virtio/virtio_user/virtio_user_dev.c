@@ -253,43 +253,38 @@ virtio_user_dev_init(char *path, int queues, int queue_size)
 
 	if (virtio_user_dev_setup(dev) < 0) {
 		PMD_INIT_LOG(ERR, "backend set up fails");
-		free(hw);
-		free(dev);
-		return NULL;
+		goto err;
 	}
 
 	if (dev->ops->send_request(dev, VHOST_USER_GET_QUEUE_NUM, &max_queues) < 0) {
 		PMD_INIT_LOG(ERR, "get_queue_num fails: %s", strerror(errno));
-		free(hw);
-		free(dev);
-		return NULL;
+		goto err;
 	}
 
 	if (dev->max_queues > max_queues) {
 		PMD_INIT_LOG(ERR, "%d queues requested but only %lu supported", dev->max_queues, max_queues);
-		free(hw);
-		free(dev);
-		return NULL;
+		goto err;
 	}
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
 		PMD_INIT_LOG(ERR, "set_owner fails: %s", strerror(errno));
-		free(hw);
-		free(dev);
-		return NULL;
+		goto err;
 	}
 
 	if (dev->ops->send_request(dev, VHOST_USER_GET_FEATURES,
 			    &dev->device_features) < 0) {
 		PMD_INIT_LOG(ERR, "get_features failed: %s", strerror(errno));
-		free(hw);
-		free(dev);
-		return NULL;
+		goto err;
 	}
 
 	dev->device_features &= VIRTIO_USER_SUPPORTED_FEATURES;
 
 	return hw;
+
+err:
+	free(hw);
+	free(dev);
+	return NULL;
 }
 
 void
