@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c694119_ddcc6ba3",
+        "filename": "lib/nvme/nvme_quirks.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-31T16:04:04Z",
+      "side": 1,
+      "message": "These look OK assuming you have tested them (e.g. perf with -l).",
+      "revId": "c18f0986edcba06428970bfd6487f3250fe643fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d06b9411_f65ef9e4",
+        "filename": "lib/nvme/nvme_quirks.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-31T16:04:04Z",
+      "side": 1,
+      "message": "If this device doesn\u0027t have any quirks, we can just remove it from the list.",
+      "revId": "c18f0986edcba06428970bfd6487f3250fe643fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
