@@ -66,7 +66,7 @@ uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 
 uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
 
-int eth_virtio_dev_init(struct virtio_hw *hw);
+int virtio_init_device(struct virtio_hw *hw, uint64_t req_features);
 int virtio_dev_start(struct virtio_hw *hw);
 struct virtio_hw *get_pci_virtio_hw(void);
 
