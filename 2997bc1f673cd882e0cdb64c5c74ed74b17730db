@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64edaa8c_31e2db59",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-08-31T23:57:21Z",
+      "side": 1,
+      "message": "I think the macro is already used for qpair, and 32768 is bigger than the hardware\u0027s limit(4096) for most Intel SSDs.",
+      "revId": "2997bc1f673cd882e0cdb64c5c74ed74b17730db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
