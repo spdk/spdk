@@ -245,6 +245,7 @@ test_nvme_driver_init(void)
 
 	g_spdk_nvme_driver = NULL;
 	MOCK_SET_P(spdk_memzone_reserve, void *, MOCK_PASS_THRU_P);
+	MOCK_SET_P(spdk_memzone_lookup, void *, NULL);
 }
 
 static void
