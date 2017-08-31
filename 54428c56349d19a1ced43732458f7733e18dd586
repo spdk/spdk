@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41ed250c_7c98de8b",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-31T18:24:37Z",
+      "side": 1,
+      "message": "I\u0027m not sure it makes sense to have a separate version for an individual tool (as opposed to SPDK as a whole).",
+      "revId": "54428c56349d19a1ced43732458f7733e18dd586",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2ef62f0_20941d6f",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-31T18:24:37Z",
+      "side": 1,
+      "message": "SPDK_VERSION_STRING already includes \"SPDK\", so this will be a little bit redundant.  You could probably just:\n\n    printf(\"%s\", SPDK_VERSION_STRING);",
+      "revId": "54428c56349d19a1ced43732458f7733e18dd586",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
