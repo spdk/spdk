@@ -83,6 +83,7 @@ enum spdk_vhost_dev_type {
 
 struct spdk_vhost_vring {
 	struct rte_vhost_vring vq;
+	uint16_t size_mask;
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_dev_backend {
