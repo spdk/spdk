@@ -503,7 +503,7 @@ bdev_virtio_initialize(void)
 			       spdk_env_get_current_core(), 0);
 
 	/* TODO check rc, add virtio_dev_deinit() */
-	eth_virtio_dev_init(hw);
+	virtio_init_device(hw, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
 	virtio_dev_start(hw);
 
 	for (i = 0; i < 64; i++) {
