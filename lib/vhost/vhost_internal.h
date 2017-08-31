@@ -82,6 +82,10 @@ enum spdk_vhost_dev_type {
 	SPDK_VHOST_DEV_T_BLK,
 };
 
+struct spdk_vhost_virtqueue {
+	struct rte_vhost_vring vring;
+} __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
+
 struct spdk_vhost_dev_backend {
 	uint64_t virtio_features;
 	uint64_t disabled_features;
@@ -114,8 +118,7 @@ struct spdk_vhost_dev {
 
 	uint16_t num_queues;
 	uint64_t negotiated_features;
-	struct rte_vhost_vring virtqueue[SPDK_VHOST_MAX_VQUEUES] __attribute((aligned(
-				SPDK_CACHE_LINE_SIZE)));
+	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 };
 
 struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
@@ -124,9 +127,9 @@ void spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev);
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr);
 
-uint16_t spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs,
+uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs,
 				      uint16_t reqs_len);
-bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq);
+bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq);
 
 /**
  * Get a virtio descriptor at given index in given virtqueue.
@@ -145,10 +148,10 @@ bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_v
  * \return 0 on success, -1 if given index is invalid.
  * If -1 is returned, the params won't be changed.
  */
-int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
-			   uint16_t req_idx,
-			   struct vring_desc **desc, struct vring_desc **desc_table, uint32_t *desc_table_size);
-void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
+int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
+			   uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
+			   uint32_t *desc_table_size);
+void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
 				     uint16_t id, uint32_t len);
 
 /**
