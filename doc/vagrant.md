@@ -5,20 +5,20 @@
 [Vagrant](https://www.vagrantup.com/) provides a quick way to get a basic
 NVMe enabled virtual machine sandbox running without the need for any
 special hardware.
-The vagrant environment for SPDK has support for Ubuntu 16.04 and
-Centos 7.2. This environment requires vagrant 1.9.4 or newer and
+The Vagrant environment for SPDK has support for Ubuntu 16.04 and
+CentOS 7.2. This environment requires Vagrant 1.9.4 or newer and
 VirtualBox 5.1 or newer with the matching VirtualBox extension pack.
 
-The VM builds SPDK and DPDK from source which are located at /spdk.
+The VM builds SPDK and DPDK from source which are located at `/spdk`.
 
-Note: If you are behind a corporate firewall, set http_proxy and https_proxy in
+Note: If you are behind a corporate firewall, set `http_proxy` and `https_proxy` in
 your environment before trying to start up the VM.  Also make sure that you
 have installed the optional vagrant module 'vagrant-proxyconf'.
 
 # VM Configuration {#vagrant_config}
 
-This vagrant environment creates a VM based on environment variables found in ./env.sh
-To use, edit env.sh then
+This vagrant environment creates a VM based on environment variables found in `env.sh`.
+To use, edit `env.sh`, then:
 
 ~~~{.sh}
     cd scripts/vagrant
@@ -26,14 +26,14 @@ To use, edit env.sh then
     vagrant up
 ~~~
 
-At this point you can use "vagrant ssh" to ssh into the VM. The /spdk directory is
+At this point you can use `vagrant ssh` to ssh into the VM. The `/spdk` directory is
 sync'd from the host system and the build is automatically done.  Other notable files:
 
-    build.sh : is executed on the VM automatically when provisioned
-    Vagrantfile : startup parameters/commands for the VM
+- `build.sh`: executed on the VM automatically when provisioned
+- `Vagrantfile`: startup parameters/commands for the VM
 
-The few commands we mention here are enough to get you up and running, for additional
-support just use the vagrant help function to learn how to destroy, restart, etc.  Further
+The few commands we mention here are enough to get you up and running; for additional
+support, use the Vagrant help function to learn how to destroy, restart, etc.  Further
 below is sample output from a successful VM launch and execution of the NVMe hello
 world example application.
 
@@ -41,7 +41,7 @@ world example application.
     vagrant --help
 ~~~
 
-By default, the VM created is/has:
+By default, the VM created is configured with:
 - Ubuntu 16.04
 - 2 vCPUs
 - 4G of RAM
@@ -49,14 +49,14 @@ By default, the VM created is/has:
 
 # Providers {#vagrant_providers}
 
-Currently only the Virtualbox provider is supported.
+Currently only the VirtualBox provider is supported.
 
 # Running An Example {#vagrant_example}
 
 The following shows sample output from starting up a VM and running
-the NVMe sample application "hello world". If you don't see the
-NVMe device as seen below in both the lspci output as well as the
-application output you likely have a VirtualBox and/or Vagrant
+the NVMe sample application `hello_world`. If you don't see the
+NVMe device as seen below in both the `lspci` output as well as the
+application output, you likely have a VirtualBox and/or Vagrant
 versioning issue.
 
 ~~~{.sh}
