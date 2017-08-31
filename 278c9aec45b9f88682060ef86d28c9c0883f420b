@@ -16,6 +16,29 @@
       "revId": "278c9aec45b9f88682060ef86d28c9c0883f420b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d11d7892_e800a88f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-08-31T20:11:35Z",
+      "side": 1,
+      "message": "vq is not defined here.  Should this be dev-\u003evirtqueue[i].vq.size?",
+      "range": {
+        "startLine": 626,
+        "startChar": 26,
+        "endLine": 626,
+        "endChar": 34
+      },
+      "revId": "278c9aec45b9f88682060ef86d28c9c0883f420b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
