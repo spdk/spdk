@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ef4720e6_3b119d2e",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-08-31T02:21:05Z",
+      "side": 1,
+      "message": "This referenced cannot be moved, we need to reply this to find the ctrlr created by the qpair, which will be used by line 160",
+      "parentUuid": "7286c483_a84927fa",
+      "revId": "eaae87d3203090be091137bab22e6375848fcde7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec0ddb4b_e7e9f8c0",
         "filename": "examples/nvme/fio_plugin/fio_plugin.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2017-08-28T17:41:29Z",
       "side": 1,
       "message": "Under what circumstances can your new check be true but the original check is false? If the transport ID is the same, shouldn\u0027t they have the same fio_file? Are you seeing fio create multiple fio_file structs for the same filename?",
+      "revId": "eaae87d3203090be091137bab22e6375848fcde7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49737093_f14d1142",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-08-31T02:21:05Z",
+      "side": 1,
+      "message": "Yes, I see that case. The reason is that the users do not pass the subnqn info in the filename, it means that it will use the discovery ctrlr since we will provide the discovery nqn in default. If there is multiple subsystems, it should be mapped to the same file name, and this check can avoid this, it will make one file will be mapping into to one nvme subsystem (actually randomly select the first one returned). Naturally, we can restrict the users to pass subnqn in the filename, but if there is only one nvme subsystem, I think that we can still pass the discovery subnqn, so I would prefer to add the change here.",
+      "parentUuid": "ec0ddb4b_e7e9f8c0",
       "revId": "eaae87d3203090be091137bab22e6375848fcde7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
