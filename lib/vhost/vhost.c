@@ -74,7 +74,7 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_vring *virt_queue, uint16_t *reqs
 {
 	struct rte_vhost_vring *vq = &virt_queue->vq;
 	struct vring_avail *avail = vq->avail;
-	uint16_t size_mask = vq->size - 1;
+	uint16_t size_mask = virt_queue->size_mask;
 	uint16_t last_idx = vq->last_avail_idx, avail_idx = avail->idx;
 	uint16_t count = RTE_MIN((avail_idx - last_idx) & size_mask, reqs_len);
 	uint16_t i;
@@ -132,7 +132,7 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	int need_event = 0;
 	struct rte_vhost_vring *vq = &virt_queue->vq;
 	struct vring_used *used = vq->used;
-	uint16_t last_idx = vq->last_used_idx & (vq->size - 1);
+	uint16_t last_idx = vq->last_used_idx & virt_queue->size_mask;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING, "USED: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
 		      vq->last_used_idx, id, len);
@@ -622,6 +622,9 @@ new_device(int vid)
 			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
 			goto out;
 		}
+
+		assert(spdk_align32pow2(vq->size) == vq->size);
+		vdev->virtqueue[i].size_mask = vq->size - 1;
 
 		/* Disable notifications. */
 		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
