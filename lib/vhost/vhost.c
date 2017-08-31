@@ -314,7 +314,7 @@ spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask)
 {
 	char *end;
 
-	if (mask == NULL || cpumask == NULL) {
+	if (mask == NULL) {
 		*cpumask = spdk_app_get_core_mask();
 		return 0;
 	}
