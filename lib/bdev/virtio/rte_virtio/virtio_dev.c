@@ -294,7 +294,7 @@ virtio_negotiate_features(struct virtio_hw *hw, uint64_t req_features)
 }
 
 /* reset device and renegotiate features if needed */
-static int
+int
 virtio_init_device(struct virtio_hw *hw, uint64_t req_features)
 {
 	struct rte_pci_device *pci_dev = NULL;
@@ -327,40 +327,6 @@ virtio_init_device(struct virtio_hw *hw, uint64_t req_features)
 		PMD_INIT_LOG(DEBUG, "port %d vendorID=0x%x deviceID=0x%x",
 			hw->port_id, pci_dev->id.vendor_id,
 			pci_dev->id.device_id);
-
-	return 0;
-}
-
-static void
-virtio_set_vtpci_ops(struct virtio_hw *hw)
-{
-	VTPCI_OPS(hw) = &virtio_user_ops;
-}
-
-/*
- * This function is based on probe() function in virtio_pci.c
- * It returns 0 on success.
- */
-int
-eth_virtio_dev_init(struct virtio_hw *hw)
-{
-	int ret;
-
-	if (rte_eal_process_type() == RTE_PROC_SECONDARY) {
-		virtio_set_vtpci_ops(hw);
-		return 0;
-	}
-
-	if (!hw->virtio_user_dev) {
-		ret = vtpci_init(hw->pci_dev, hw);
-		if (ret)
-			return ret;
-	}
-
-	/* reset device and negotiate default features */
-	ret = virtio_init_device(hw, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
-	if (ret < 0)
-		return ret;
 
 	return 0;
 }
@@ -399,7 +365,18 @@ static struct virtio_hw *g_pci_hw = NULL;
 struct virtio_hw *
 get_pci_virtio_hw(void)
 {
+	int ret;
+
 	printf("%s[%d] %p\n", __func__, __LINE__, g_pci_hw);
+	if (rte_eal_process_type() == RTE_PROC_SECONDARY) {
+		PMD_DRV_LOG(ERR, "rte secondary process support is not implemented yet");
+		return NULL;
+	}
+
+	ret = vtpci_init(g_pci_hw->pci_dev, g_pci_hw);
+	if (ret)
+		return NULL;
+
 	return g_pci_hw;
 }
 
