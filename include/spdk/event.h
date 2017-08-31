@@ -176,4 +176,14 @@ void spdk_poller_register(struct spdk_poller **ppoller,
 void spdk_poller_unregister(struct spdk_poller **ppoller,
 			    struct spdk_event *complete);
 
+/**
+ * \brief Enable or disable monitoring of context switches.
+ */
+void spdk_reactor_enable_context_switch_monitor(bool enabled);
+
+/**
+ * \brief Return whether context switch monitoring is enabled.
+ */
+bool spdk_reactor_context_switch_monitor_enabled(void);
+
 #endif

@@ -87,13 +87,13 @@ struct spdk_reactor {
 
 	/* Socket ID for this reactor. */
 	uint32_t					socket_id;
-#ifdef DEBUG
+
 	/* Poller for get the rusage for the reactor. */
 	struct spdk_poller				*rusage_poller;
 
 	/* The last known rusage values */
 	struct rusage 					rusage;
-#endif
+
 	/*
 	 * Contains pollers actively running on this reactor.  Pollers
 	 *  are run round-robin. The reactor takes one poller from the head
@@ -118,6 +118,8 @@ struct spdk_reactor {
 static struct spdk_reactor g_reactors[SPDK_MAX_REACTORS];
 
 static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
+
+static bool g_context_switch_monitor_enabled = true;
 
 static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore,
 				   uint64_t max_delay_us);
@@ -254,7 +256,6 @@ _spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	spdk_event_call(event);
 }
 
-#ifdef DEBUG
 static void
 get_rusage(void *arg)
 {
@@ -266,14 +267,61 @@ get_rusage(void *arg)
 	}
 
 	if (rusage.ru_nvcsw != reactor->rusage.ru_nvcsw || rusage.ru_nivcsw != reactor->rusage.ru_nivcsw) {
-		SPDK_DEBUGLOG(SPDK_TRACE_REACTOR,
-			      "Reactor %d: %ld voluntary context switches and  %ld involuntary context switches in the last second.\n",
-			      reactor->lcore, rusage.ru_nvcsw - reactor->rusage.ru_nvcsw,
-			      rusage.ru_nivcsw - reactor->rusage.ru_nivcsw);
+		SPDK_INFOLOG(SPDK_TRACE_REACTOR,
+			     "Reactor %d: %ld voluntary context switches and %ld involuntary context switches in the last second.\n",
+			     reactor->lcore, rusage.ru_nvcsw - reactor->rusage.ru_nvcsw,
+			     rusage.ru_nivcsw - reactor->rusage.ru_nivcsw);
 	}
 	reactor->rusage = rusage;
 }
-#endif
+
+static void
+_spdk_reactor_context_switch_monitor_start(void *arg1, void *arg2)
+{
+	struct spdk_reactor *reactor = arg1;
+
+	if (reactor->rusage_poller == NULL) {
+		getrusage(RUSAGE_THREAD, &reactor->rusage);
+		spdk_poller_register(&reactor->rusage_poller, get_rusage, reactor, reactor->lcore, 1000000);
+	}
+}
+
+static void
+_spdk_reactor_context_switch_monitor_stop(void *arg1, void *arg2)
+{
+	struct spdk_reactor *reactor = arg1;
+
+	if (reactor->rusage_poller != NULL) {
+		spdk_poller_unregister(&reactor->rusage_poller, NULL);
+	}
+}
+
+void
+spdk_reactor_enable_context_switch_monitor(bool enable)
+{
+	struct spdk_reactor *reactor;
+	spdk_event_fn fn;
+	uint32_t core;
+
+	if (enable != g_context_switch_monitor_enabled) {
+		g_context_switch_monitor_enabled = enable;
+		if (enable) {
+			fn = _spdk_reactor_context_switch_monitor_start;
+		} else {
+			fn = _spdk_reactor_context_switch_monitor_stop;
+		}
+		SPDK_ENV_FOREACH_CORE(core) {
+			reactor = spdk_reactor_get(core);
+			spdk_event_call(spdk_event_allocate(core, fn, reactor, NULL));
+		}
+	}
+}
+
+bool
+spdk_reactor_context_switch_monitor_enabled(void)
+{
+	return g_context_switch_monitor_enabled;
+}
 
 /**
  *
@@ -317,10 +365,9 @@ _spdk_reactor_run(void *arg)
 	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / 1000000ULL;
 	idle_started = 0;
 	timer_poll_count = 0;
-#ifdef DEBUG
-	getrusage(RUSAGE_THREAD, &reactor->rusage);
-	spdk_poller_register(&reactor->rusage_poller, get_rusage, reactor, reactor->lcore, 1000000);
-#endif
+	if (g_context_switch_monitor_enabled) {
+		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
+	}
 	while (1) {
 		bool took_action = false;
 
@@ -403,13 +450,11 @@ _spdk_reactor_run(void *arg)
 		}
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
-#ifdef DEBUG
-			spdk_poller_unregister(&reactor->rusage_poller, NULL);
-#endif
 			break;
 		}
 	}
 
+	_spdk_reactor_context_switch_monitor_stop(reactor, NULL);
 	spdk_free_thread();
 	return 0;
 }
