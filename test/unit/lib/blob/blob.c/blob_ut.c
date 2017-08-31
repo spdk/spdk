@@ -851,6 +851,7 @@ bs_load(void)
 	struct spdk_blob *blob;
 	struct spdk_bs_super_block *super_blob;
 	uint64_t length;
+	uint32_t foobar;
 	int rc;
 	const void *value;
 	size_t value_len;
@@ -925,6 +926,61 @@ bs_load(void)
 	rc = spdk_bs_md_get_xattr_value(blob, "foobar", &value, &value_len);
 	CU_ASSERT(rc == -ENOENT);
 
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	/* Dirty shutdown */
+	dev = init_dev();
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	spdk_bs_md_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Set new xattr */
+	foobar = 1234;
+	rc = spdk_blob_md_set_xattr(blob, "foobar", &foobar, sizeof(foobar));
+	CU_ASSERT(rc == 0);
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	_spdk_bs_free(g_bs);
+
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+	/* Dirty shutdown now */
+	dev = init_dev();
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_md_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Get the xattrs */
+	value = NULL;
+	rc = spdk_bs_md_get_xattr_value(blob, "length", &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(*(uint64_t *)value == length);
+	CU_ASSERT(value_len == 8);
+
+	rc = spdk_bs_md_get_xattr_value(blob, "foobar", &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(*(uint32_t *)value == foobar);
+	CU_ASSERT(value_len == 4);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 
 	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
