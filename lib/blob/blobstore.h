@@ -222,7 +222,7 @@ struct spdk_blob_md_page {
 	spdk_blob_id     id;
 
 	uint32_t        sequence_num;
-	uint32_t	reserved0;
+	uint32_t	valid;
 
 	/* Descriptors here */
 	uint8_t		descriptors[4072];
