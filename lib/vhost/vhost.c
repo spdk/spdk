@@ -69,8 +69,9 @@ void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
  * Get available requests from avail ring.
  */
 uint16_t
-spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs, uint16_t reqs_len)
+spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs, uint16_t reqs_len)
 {
+	struct rte_vhost_vring *vq = &virtqueue->vring;
 	struct vring_avail *avail = vq->avail;
 	uint16_t size_mask = vq->size - 1;
 	uint16_t last_idx = vq->last_avail_idx, avail_idx = avail->idx;
@@ -100,12 +101,12 @@ spdk_vhost_vring_desc_is_indirect(struct vring_desc *cur_desc)
 }
 
 void
-spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t req_idx,
+spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue, uint16_t req_idx,
 		       struct vring_desc **desc, struct vring_desc **desc_table, uint32_t *desc_table_size)
 {
-	assert(req_idx < vq->size);
+	assert(req_idx < virtqueue->vring.size);
 
-	*desc = &vq->desc[req_idx];
+	*desc = &virtqueue->vring.desc[req_idx];
 
 	if (spdk_vhost_vring_desc_is_indirect(*desc)) {
 		assert(spdk_vhost_dev_has_feature(vdev, VIRTIO_RING_F_INDIRECT_DESC));
@@ -115,42 +116,43 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, 
 		return;
 	}
 
-	*desc_table = vq->desc;
-	*desc_table_size = vq->size;
+	*desc_table = virtqueue->vring.desc;
+	*desc_table_size = virtqueue->vring.size;
 }
 
 /*
  * Enqueue id and len to used ring.
  */
 void
-spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
+spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
 				uint16_t id,
 				uint32_t len)
 {
 	int need_event = 0;
-	struct vring_used *used = vq->used;
-	uint16_t last_idx = vq->last_used_idx & (vq->size - 1);
+	struct rte_vhost_vring *vring = &virtqueue->vring;
+	struct vring_used *used = vring->used;
+	uint16_t last_idx = vring->last_used_idx & (vring->size - 1);
 
 	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING, "USED: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
-		      vq->last_used_idx, id, len);
+			vring->last_used_idx, id, len);
 
-	vq->last_used_idx++;
+	vring->last_used_idx++;
 	used->ring[last_idx].id = id;
 	used->ring[last_idx].len = len;
 
 	spdk_wmb();
-	* (volatile uint16_t *) &used->idx = vq->last_used_idx;
+	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
 
 	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
-	    spdk_unlikely(vq->avail->idx == vq->last_avail_idx)) {
+	    spdk_unlikely(vring->avail->idx == vring->last_avail_idx)) {
 		need_event = 1;
 	} else {
 		spdk_mb();
-		need_event = !(vq->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
+		need_event = !(vring->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
 	}
 
 	if (need_event) {
-		eventfd_write(vq->callfd, (eventfd_t)1);
+		eventfd_write(vring->callfd, (eventfd_t)1);
 	}
 }
 
@@ -560,7 +562,7 @@ destroy_device(int vid)
 	}
 
 	for (i = 0; i < vdev->num_queues; i++) {
-		q = &vdev->virtqueue[i];
+		q = &vdev->virtqueue[i].vring;
 		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
 
@@ -605,8 +607,9 @@ new_device(int vid)
 		goto out;
 	}
 
+	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
 	for (i = 0; i < num_queues; i++) {
-		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i])) {
+		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i].vring)) {
 			SPDK_ERRLOG("vhost device %d: Failed to get information of queue %"PRIu16"\n", vid, i);
 			goto out;
 		}
