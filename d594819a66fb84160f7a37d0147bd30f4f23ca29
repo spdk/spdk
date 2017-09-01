@@ -68,6 +68,24 @@
       "revId": "d594819a66fb84160f7a37d0147bd30f4f23ca29",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef3101a5_3dbe2f10",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-01T03:19:59Z",
+      "side": 1,
+      "message": "actually, we need to find the \"deleted\" in the list, because later the upper level application may try to close the \"deleted\" file. It will also try to find the file first.",
+      "parentUuid": "377a0320_84f20427",
+      "revId": "d594819a66fb84160f7a37d0147bd30f4f23ca29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
