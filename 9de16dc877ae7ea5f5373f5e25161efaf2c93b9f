@@ -69,6 +69,24 @@
       "revId": "9de16dc877ae7ea5f5373f5e25161efaf2c93b9f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b0295c6_c94e178e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-01T21:46:56Z",
+      "side": 1,
+      "message": "True.  The function names are a bit confusing though which is why I was looking to simplify.  Instead of spdk_bdev_module_action_complete(), should it be spdk_bdev_module_check_complete()?  action_complete and action_done sound the same to me, and the call at line #529 really has nothing to do with completing a module action.",
+      "parentUuid": "f344c640_1550acee",
+      "revId": "9de16dc877ae7ea5f5373f5e25161efaf2c93b9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
