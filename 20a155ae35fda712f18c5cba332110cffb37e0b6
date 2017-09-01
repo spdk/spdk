@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4a4cd5b2_a393ed85",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-01T22:08:39Z",
+      "side": 1,
+      "message": "It\u0027s related to the 64 in the for loop below.  Agree - we should have a #define for this and should probably be 256 to cover the full target list (I think I picked 64 originally when just getting this up and running and didn\u0027t want 256 commands in the debug log.)",
+      "parentUuid": "5d8fefc0_814152c2",
+      "revId": "20a155ae35fda712f18c5cba332110cffb37e0b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbf03582_8ea6d3d5",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 15
