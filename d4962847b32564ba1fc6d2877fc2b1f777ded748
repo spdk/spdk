@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f36cfa3b_faa63f93",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-01T20:39:15Z",
+      "side": 1,
+      "message": "Tab",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 1
+      },
+      "revId": "d4962847b32564ba1fc6d2877fc2b1f777ded748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
