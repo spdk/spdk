@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3ea3af2b_27e0c62f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2460,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-01T01:30:46Z",
+      "side": 1,
+      "message": "for this part, I think we still need the logic here, \"is_deleted\" is not only the attribute for the file but also the attribute for the blob, and the most important, we need get this attribute here to make sure if we should delete the blob after we close it(in the function _spdk_bs_iter_close_cpl()).",
+      "parentUuid": "822be4d7_26d556af",
+      "revId": "d594819a66fb84160f7a37d0147bd30f4f23ca29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "89c76e0e_82b883e1",
         "filename": "lib/blobfs/blobfs.c",
         "patchSetId": 16
