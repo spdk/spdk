@@ -22,6 +22,29 @@
       "revId": "d4962847b32564ba1fc6d2877fc2b1f777ded748",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d50ea9b5_4a92a09b",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-01T20:43:39Z",
+      "side": 1,
+      "message": "hugetlbfs_mount2 is set only when condition in line 115 is true.",
+      "range": {
+        "startLine": 132,
+        "startChar": 23,
+        "endLine": 132,
+        "endChar": 39
+      },
+      "revId": "d4962847b32564ba1fc6d2877fc2b1f777ded748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
