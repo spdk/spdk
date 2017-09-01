@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97bf146d_11cd4c02",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-01T22:52:59Z",
+      "side": 1,
+      "message": "This doesn\u0027t check for failure anymore - what if we get 0?",
+      "revId": "6da759837f82454856f0da65977a223113a6a35a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0dde282_23d4d857",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-01T22:52:59Z",
+      "side": 1,
+      "message": "0xFFF0 is not valid, so this should be 0xFFEF (or clarify that the range is exclusive).\n\n0 is actually a valid cntlid; we were avoiding it to enable future spec changes that would have sent cntlid in the Connect capsule (if I remember correctly). 0xFFFF is the value that\u0027s used for unspecified (dynamic controller model).",
+      "range": {
+        "startLine": 517,
+        "startChar": 33,
+        "endLine": 517,
+        "endChar": 39
+      },
+      "revId": "6da759837f82454856f0da65977a223113a6a35a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
