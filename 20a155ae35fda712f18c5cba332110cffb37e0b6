@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "5d8fefc0_814152c2",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-01T22:04:15Z",
+      "side": 1,
+      "message": "Why is refcount set to 64 here? Does that correspond to some  limit that has a #define somewhere?",
+      "revId": "20a155ae35fda712f18c5cba332110cffb37e0b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbf03582_8ea6d3d5",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 15
