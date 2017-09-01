@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ba0fd041_77e14137",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-01T22:43:56Z",
+      "side": 1,
+      "message": "Good question John.  My guess is that Ben is thinking that when this code is added back in, it might not go back into this same place in the code.  So putting the TODO here might not be a good place to put it.",
+      "parentUuid": "616b496f_7c2e4720",
+      "range": {
+        "startLine": 285,
+        "startChar": 3,
+        "endLine": 287,
+        "endChar": 2
+      },
+      "revId": "140744a00209e2d02344be4bbe917308d3621d95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e443612_79e5720f",
         "filename": "lib/nvmf/request.c",
         "patchSetId": 2
