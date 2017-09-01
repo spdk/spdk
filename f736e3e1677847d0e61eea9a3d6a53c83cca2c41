@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0095cf6a_cc28a1f9",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-01T19:29:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0c7df697_f3333a94",
+      "range": {
+        "startLine": 612,
+        "startChar": 39,
+        "endLine": 612,
+        "endChar": 84
+      },
+      "revId": "f736e3e1677847d0e61eea9a3d6a53c83cca2c41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a0b7060c_cd0b7e96",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 12
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "cb19981f_157ffdd3",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-01T19:29:22Z",
+      "side": 1,
+      "message": "Ack, I\u0027ll just add a couple of words about second arg here.",
+      "parentUuid": "a0b7060c_cd0b7e96",
+      "range": {
+        "startLine": 88,
+        "startChar": 1,
+        "endLine": 89,
+        "endChar": 36
+      },
+      "revId": "f736e3e1677847d0e61eea9a3d6a53c83cca2c41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3166988_1024f59b",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 12
@@ -59,6 +107,30 @@
       "writtenOn": "2017-09-01T19:10:55Z",
       "side": 1,
       "message": "free_task_pool needed.",
+      "range": {
+        "startLine": 1085,
+        "startChar": 2,
+        "endLine": 1085,
+        "endChar": 12
+      },
+      "revId": "f736e3e1677847d0e61eea9a3d6a53c83cca2c41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e4dd98b_5928258c",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-01T19:29:22Z",
+      "side": 1,
+      "message": "I believe I\u0027m removing entire vhost_events pool in one of the later patches, so this won\u0027t be an issue.",
+      "parentUuid": "c3166988_1024f59b",
       "range": {
         "startLine": 1085,
         "startChar": 2,
