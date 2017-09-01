@@ -16,6 +16,24 @@
       "revId": "2997bc1f673cd882e0cdb64c5c74ed74b17730db",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "edc0f1d2_3f65ccdd",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-01T06:11:32Z",
+      "side": 1,
+      "message": "However, this macro defines software limit. It\u0027s used to allocate nvme_request pool.\nSending these requests to NVMe can be queued for later. That\u0027s why the logic has to be refactored here - there\u0027s no sane upper limit for DEFAULT_IO_QUEUE_REQUESTS.",
+      "parentUuid": "64edaa8c_31e2db59",
+      "revId": "2997bc1f673cd882e0cdb64c5c74ed74b17730db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
