@@ -1234,7 +1234,7 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 			/* While a device is resetting, it may be unable to service MMIO reads
 			 * temporarily. Allow for this case.
 			 */
-			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Get registers failed while waiting for CSTS.RDY == 0\n");
+			SPDK_ERRLOG("Get registers failed while waiting for CSTS.RDY == 0\n");
 			goto init_timeout;
 		}
 		SPDK_ERRLOG("Failed to read CC and CSTS in state %d\n", ctrlr->state);

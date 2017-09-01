@@ -1534,7 +1534,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 		      *prp_index, virt_addr, (uint32_t)len);
 
 	if (spdk_unlikely(((uintptr_t)virt_addr & 3) != 0)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "virt_addr %p not dword aligned\n", virt_addr);
+		SPDK_ERRLOG("virt_addr %p not dword aligned\n", virt_addr);
 		return -EINVAL;
 	}
 
@@ -1547,13 +1547,13 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 		 * so prp_index == count is valid.
 		 */
 		if (spdk_unlikely(i > SPDK_COUNTOF(tr->u.prp))) {
-			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "out of PRP entries\n");
+			SPDK_ERRLOG("out of PRP entries\n");
 			return -EINVAL;
 		}
 
 		phys_addr = spdk_vtophys(virt_addr);
 		if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR)) {
-			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "vtophys(%p) failed\n", virt_addr);
+			SPDK_ERRLOG("vtophys(%p) failed\n", virt_addr);
 			return -EINVAL;
 		}
 
@@ -1563,8 +1563,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 			seg_len = page_size - ((uintptr_t)virt_addr & page_mask);
 		} else {
 			if ((phys_addr & page_mask) != 0) {
-				SPDK_DEBUGLOG(SPDK_TRACE_NVME, "PRP %u not page aligned (%p)\n",
-					      i, virt_addr);
+				SPDK_ERRLOG("PRP %u not page aligned (%p)\n", i, virt_addr);
 				return -EINVAL;
 			}
 
