@@ -180,14 +180,6 @@ virtio_init_queue(struct virtio_hw *hw, uint16_t vtpci_queue_idx)
 
 	vq->mz = mz;
 
-	/* For virtio_user case (that is when hw->dev is NULL), we use
-	 * virtual address. And we need properly set _offset_, please see
-	 * VIRTIO_MBUF_DATA_DMA_ADDR in virtqueue.h for more information.
-	 */
-	if (hw->virtio_user_dev) {
-		vq->vq_ring_mem = (uintptr_t)mz->addr;
-	}
-
 	if (VTPCI_OPS(hw)->setup_queue(hw, vq) < 0) {
 		PMD_INIT_LOG(ERR, "setup_queue failed");
 		return -EINVAL;
@@ -312,9 +304,12 @@ virtio_init_device(struct virtio_hw *hw, uint64_t req_features)
 
 	vtpci_read_dev_config(hw, offsetof(struct virtio_scsi_config, num_queues),
 			      &hw->max_queues, sizeof(hw->max_queues));
-	if (!hw->virtio_user_dev) {
-		hw->max_queues = 3;
-	}
+	/* FIXME
+	 * Hardcode num_queues to 3 until we add proper
+	 * mutli-queue support. This value should be limited
+	 * by number of cores assigned to SPDK
+	 */
+	hw->max_queues = 3;
 
 	ret = virtio_alloc_queues(hw);
 	if (ret < 0)
