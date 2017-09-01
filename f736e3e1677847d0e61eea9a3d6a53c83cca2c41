@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c7df697_f3333a94",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-01T19:10:55Z",
+      "side": 1,
+      "message": "This can be moved to comment above.",
+      "range": {
+        "startLine": 612,
+        "startChar": 39,
+        "endLine": 612,
+        "endChar": 84
+      },
+      "revId": "f736e3e1677847d0e61eea9a3d6a53c83cca2c41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0b7060c_cd0b7e96",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-01T19:10:55Z",
+      "side": 1,
+      "message": "This is very unclear why those callbacks are type of spdk_vhost_event_fn. It takes pointer to void as second argument but should take pointer to sem_t or be brightly documented in struct spdk_vhost_dev_backend.",
+      "range": {
+        "startLine": 88,
+        "startChar": 1,
+        "endLine": 89,
+        "endChar": 36
+      },
+      "revId": "f736e3e1677847d0e61eea9a3d6a53c83cca2c41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3166988_1024f59b",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-01T19:10:55Z",
+      "side": 1,
+      "message": "free_task_pool needed.",
+      "range": {
+        "startLine": 1085,
+        "startChar": 2,
+        "endLine": 1085,
+        "endChar": 12
+      },
+      "revId": "f736e3e1677847d0e61eea9a3d6a53c83cca2c41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
