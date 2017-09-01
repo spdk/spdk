@@ -57,6 +57,21 @@ Configuration file syntax:
 This exports 4 malloc block devices, named Malloc0 through Malloc3.  Each malloc block device will
 be 64MB in size.
 
+## Null {#bdev_config_null}
+
+The SPDK null bdev driver is a dummy block I/O target that discards all writes and returns undefined
+data for reads.  It is useful for benchmarking the rest of the bdev I/O stack with minimal block
+device overhead and for testing configurations that can't easily be created with the Malloc bdev.
+
+Configuration file syntax:
+~~~
+[Null]
+  # Dev <name> <size_in_MiB> <block_size>
+
+  # Create an 8 petabyte null bdev with 4K block size called Null0
+  Dev Null0 8589934592 4096
+ ~~~
+
 ## Linux AIO {#bdev_config_aio}
 
 The SPDK aio bdev driver provides SPDK block layer access to Linux kernel block devices via Linux AIO.
