@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "347cdc15_883ad08d",
+        "filename": "dpdk",
+        "patchSetId": 18
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-01T21:20:02Z",
+      "side": 1,
+      "message": "Accidental revert of the submodule update?",
+      "revId": "58d802dfd165905eff6f65c0e57cb92a8a1b82a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
