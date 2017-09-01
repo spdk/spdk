@@ -83,13 +83,12 @@ struct virtqueue {
 	uint16_t vq_free_cnt;  /**< num of desc available */
 	uint16_t vq_avail_idx; /**< sync until needed */
 
-	void *vq_ring_virt_mem;  /**< linear address of vring*/
+	void *vq_ring_virt_mem;  /**< virtual address of vring */
 	unsigned int vq_ring_size;
 
 	const struct rte_memzone *mz;    /**< mem zone to populate TX ring. */
 
-	phys_addr_t vq_ring_mem; /**< physical address of vring,
-				  * or virtual address for virtio_user. */
+	phys_addr_t vq_ring_mem; /**< physical address of vring */
 
 	/**
 	 * Head of the free chain in the descriptor table. If
