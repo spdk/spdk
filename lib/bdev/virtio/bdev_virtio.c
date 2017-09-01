@@ -74,7 +74,7 @@ struct virtio_scsi_scan_buf {
 };
 
 struct virtio_scsi_scan_base {
-	struct virtio_hw		*hw;
+	struct virtio_dev		*vdev;
 	struct spdk_bdev_poller		*scan_poller;
 	unsigned			refcount;
 	struct virtio_scsi_scan_buf	buf[BDEV_VIRITO_MAX_TARGET];
@@ -82,13 +82,13 @@ struct virtio_scsi_scan_base {
 
 struct virtio_scsi_disk {
 	struct spdk_bdev	bdev;
-	struct virtio_hw	*hw;
+	struct virtio_dev	*vdev;
 	uint64_t		num_blocks;
 	uint32_t		block_size;
 };
 
 struct bdev_virtio_io_channel {
-	struct virtio_hw	*hw;
+	struct virtio_dev	*vdev;
 	struct spdk_bdev_poller	*poller;
 };
 
@@ -143,7 +143,7 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		to_be16(&req->cdb[7], bdev_io->u.write.len / disk->block_size);
 	}
 
-	virtqueue_send_pkt(disk->hw->vqs[2], vreq);
+	virtqueue_send_pkt(disk->vdev->vqs[2], vreq);
 }
 
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -194,7 +194,7 @@ bdev_virtio_get_io_channel(void *ctx)
 {
 	struct virtio_scsi_disk *disk = ctx;
 
-	return spdk_get_io_channel(&disk->hw);
+	return spdk_get_io_channel(&disk->vdev);
 }
 
 static int
@@ -255,7 +255,7 @@ bdev_virtio_poll(void *arg)
 	struct virtio_req *req[32];
 	uint16_t i, cnt;
 
-	cnt = virtqueue_recv_pkts(ch->hw->vqs[2], req, SPDK_COUNTOF(req));
+	cnt = virtqueue_recv_pkts(ch->vdev->vqs[2], req, SPDK_COUNTOF(req));
 	for (i = 0; i < cnt; ++i) {
 		bdev_virtio_io_cpl(req[i]);
 	}
@@ -264,10 +264,10 @@ bdev_virtio_poll(void *arg)
 static int
 bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 {
-	struct virtio_hw **hw = io_device;
+	struct virtio_dev **vdev = io_device;
 	struct bdev_virtio_io_channel *ch = ctx_buf;
 
-	ch->hw = *hw;
+	ch->vdev = *vdev;
 	spdk_bdev_poller_start(&ch->poller, bdev_virtio_poll, ch,
 			       spdk_env_get_current_core(), 0);
 	return 0;
@@ -317,7 +317,7 @@ process_scan_inquiry(struct virtio_scsi_scan_base *base, struct virtio_req *vreq
 	iov[0].iov_len = 32;
 	to_be32(&req->cdb[10], iov[0].iov_len);
 
-	virtqueue_send_pkt(base->hw->vqs[2], vreq);
+	virtqueue_send_pkt(base->vdev->vqs[2], vreq);
 	return 0;
 }
 
@@ -343,7 +343,7 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	disk->num_blocks = from_be64((uint64_t *)(vreq->iov[0].iov_base)) + 1;
 	disk->block_size = from_be32((uint32_t *)(vreq->iov[0].iov_base + 8));
 
-	disk->hw = base->hw;
+	disk->vdev = base->vdev;
 
 	bdev = &disk->bdev;
 	bdev->name = spdk_sprintf_alloc("Virtio0");
@@ -356,7 +356,7 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	bdev->fn_table = &virtio_fn_table;
 	bdev->module = SPDK_GET_BDEV_MODULE(virtio_scsi);
 
-	spdk_io_device_register(&disk->hw, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
+	spdk_io_device_register(&disk->vdev, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
 				sizeof(struct bdev_virtio_io_channel));
 	spdk_bdev_register(bdev);
 
@@ -402,7 +402,7 @@ bdev_scan_poll(void *arg)
 	struct virtio_req *req[32];
 	uint16_t i, cnt;
 
-	cnt = virtqueue_recv_pkts(base->hw->vqs[2], req, SPDK_COUNTOF(req));
+	cnt = virtqueue_recv_pkts(base->vdev->vqs[2], req, SPDK_COUNTOF(req));
 	if (cnt > base->refcount) {
 		SPDK_ERRLOG("Received too many virtio messages. Got %"PRIu16", expected %u",
 			    cnt, base->refcount);
@@ -448,7 +448,7 @@ scan_target(struct virtio_scsi_scan_base *base, uint8_t target)
 	cdb->opcode = SPDK_SPC_INQUIRY;
 	to_be16(&cdb[0], BDEV_VIRTIO_SCAN_PAYLOAD_SIZE);
 
-	virtqueue_send_pkt(base->hw->vqs[2], vreq);
+	virtqueue_send_pkt(base->vdev->vqs[2], vreq);
 }
 
 static int
@@ -456,7 +456,7 @@ bdev_virtio_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Virtio");
 	struct virtio_scsi_scan_base *base;
-	struct virtio_hw *hw = NULL;
+	struct virtio_dev *vdev = NULL;
 	char *type, *path;
 	uint32_t i;
 	int rc = 0;
@@ -477,16 +477,16 @@ bdev_virtio_initialize(void)
 				SPDK_ERRLOG("No path specified for index %d\n", i);
 				continue;
 			}
-			hw = virtio_user_dev_init(path, 1, 512);
+			vdev = virtio_user_dev_init(path, 1, 512);
 		} else if (!strcmp("Pci", type)) {
-			hw = get_pci_virtio_hw();
+			vdev = get_pci_virtio_hw();
 		} else {
 			SPDK_ERRLOG("Invalid type %s specified for index %d\n", type, i);
 			continue;
 		}
 	}
 
-	if (hw == NULL) {
+	if (vdev == NULL) {
 		goto out;
 	}
 
@@ -497,14 +497,14 @@ bdev_virtio_initialize(void)
 		goto out;
 	}
 
-	base->hw = hw;
+	base->vdev = vdev;
 	base->refcount = BDEV_VIRITO_MAX_TARGET;
 	spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,
 			       spdk_env_get_current_core(), 0);
 
 	/* TODO check rc, add virtio_dev_deinit() */
-	virtio_init_device(hw, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
-	virtio_dev_start(hw);
+	virtio_init_device(vdev, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
+	virtio_dev_start(vdev);
 
 	for (i = 0; i < 64; i++) {
 		scan_target(base, i);
