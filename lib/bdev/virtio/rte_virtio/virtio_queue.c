@@ -119,7 +119,7 @@ virtqueue_dequeue_burst_rx(struct virtqueue *vq, struct virtio_req **rx_pkts,
 static inline void
 virtqueue_iov_to_desc(struct virtqueue *vq, uint16_t desc_idx, struct iovec *iov)
 {
-	if (vq->hw->virtio_user_dev) {
+	if (!vq->vdev->is_hw) {
 		vq->vq_ring.desc[desc_idx].addr  = (uintptr_t)iov->iov_base;
 	} else {
 		vq->vq_ring.desc[desc_idx].addr = spdk_vtophys(iov->iov_base);
@@ -184,7 +184,7 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 uint16_t
 virtqueue_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkts)
 {
-	struct virtio_hw *hw = vq->hw;
+	struct virtio_dev *vdev = vq->vdev;
 	struct virtio_req *rxm;
 	uint16_t nb_used, num, nb_rx;
 	uint32_t len[VIRTIO_MBUF_BURST_SZ];
@@ -192,7 +192,7 @@ virtqueue_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_
 	uint32_t i;
 
 	nb_rx = 0;
-	if (unlikely(hw->started == 0))
+	if (unlikely(vdev->started == 0))
 		return nb_rx;
 
 	nb_used = VIRTQUEUE_NUSED(vq);
@@ -223,9 +223,9 @@ virtqueue_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_
 uint16_t
 virtqueue_send_pkt(struct virtqueue *vq, struct virtio_req *req)
 {
-	struct virtio_hw *hw = vq->hw;
+	struct virtio_dev *vdev = vq->vdev;
 
-	if (unlikely(hw->started == 0))
+	if (unlikely(vdev->started == 0))
 		return 0;
 
 	virtio_rmb();
