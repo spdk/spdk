@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7bad974_62a24f51",
+        "filename": "Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-01T22:54:07Z",
+      "side": 1,
+      "message": "Hi Hailiang,\n\nWhy are these @pwd needed?  On lines 58 and 60.\n\n-Jim",
+      "revId": "7834fd27e925f6b6f1420a7d7bd62ec5b6e6aabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f75ce8f_6239c4c7",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-01T22:54:07Z",
+      "side": 1,
+      "message": "Should we add this to pkgdep.sh script too?",
+      "revId": "7834fd27e925f6b6f1420a7d7bd62ec5b6e6aabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
