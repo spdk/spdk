@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b177ce27_9ecd3dae",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-01T05:59:18Z",
+      "side": 1,
+      "message": "I don\u0027t understand the piece of code, does used_event \u003d\u003d avail.idx ? can you explain a little bit more?",
+      "revId": "963913a7c99a4e4b47814cdb93f390c0114ce138",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
