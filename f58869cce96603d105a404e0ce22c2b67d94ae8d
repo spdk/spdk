@@ -70,6 +70,46 @@
     },
     {
       "key": {
+        "uuid": "5285fceb_a37679f7",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-01T22:46:52Z",
+      "side": 1,
+      "message": "I would prefer to call this \"spdk_nvme_connect()\".",
+      "range": {
+        "startLine": 362,
+        "startChar": 4,
+        "endLine": 362,
+        "endChar": 20
+      },
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa635f41_2c0dc6e8",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-01T22:46:52Z",
+      "side": 1,
+      "message": "Rather than a cb_ctx and attach_cb/remove_cb, we should pass a spdk_nvme_ctrlr_opts pointer.  This will mean that we need to expose a way to get the default opts in the public API. spdk_nvme_ctrlr_opts_set_defaults() is already pretty much what we want, but we should rename it to \"get\" for clarity, and then add it to nvme.h.  It is probably also a good idea to add a size parameter - you can copy what spdk_nvme_ctrlr_get_default_io_qpair_opts() does.  That way we can prepare for future extensions without breaking ABI.",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "30875742_e617af81",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 10
