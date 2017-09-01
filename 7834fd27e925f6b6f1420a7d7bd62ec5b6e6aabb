@@ -19,6 +19,46 @@
     },
     {
       "key": {
+        "uuid": "9e1854d8_b91da380",
+        "filename": "README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-01T23:04:48Z",
+      "side": 1,
+      "message": "This won\u0027t work on FreeBSD: GNU make is called \u0027gmake\u0027 there, and it\u0027s not installed by default - the user needs to run pkgdep first to even get gmake.\n\nI would prefer to just tell the user to call scripts/pkgdep.sh directly and drop the Makefile rule.",
+      "range": {
+        "startLine": 51,
+        "startChar": 57,
+        "endLine": 51,
+        "endChar": 70
+      },
+      "revId": "7834fd27e925f6b6f1420a7d7bd62ec5b6e6aabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e96f580e_38396b02",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-01T23:04:48Z",
+      "side": 1,
+      "message": "This should probably return an error code (\u0027exit 1\u0027 after printing the message).\n\nThe message should also be more generic - the system may not be Linux at all.  Something like \"pkgdep: unknown system type\" is probably good enough.\n\n(Also, please trim the extra space between echo and the string)",
+      "revId": "7834fd27e925f6b6f1420a7d7bd62ec5b6e6aabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f75ce8f_6239c4c7",
         "filename": "scripts/vagrant/build.sh",
         "patchSetId": 9
