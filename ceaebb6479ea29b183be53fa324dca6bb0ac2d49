@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b5978653_b79da30b",
+        "filename": "doc/blobfs.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-01T10:54:13Z",
+      "side": 1,
+      "message": "Fixed. Thank you for your detailed instructions.",
+      "parentUuid": "f61d0425_b4b3de38",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a83735bf_4ef0e687",
         "filename": "scripts/autotest_common.sh",
         "patchSetId": 8
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "c164372c_ab4e61dc",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-01T10:54:13Z",
+      "side": 1,
+      "message": "As my previous submission error mentioned in the mail, this change is caused by the version switching. This is not my expected change. I will fix it.",
+      "parentUuid": "a83735bf_4ef0e687",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d529db67_090ab0c9",
         "filename": "scripts/setup.sh",
         "patchSetId": 8
@@ -47,6 +83,24 @@
       "writtenOn": "2017-08-30T15:25:02Z",
       "side": 1,
       "message": "As Pawel suggested in previous review, we should check that HUGEMEM % 2 \u003d\u003d 0 (if using 2MB huge pages) and HUGEMEM % 1024 \u003d\u003d 0 (if using 1GB huge pages).  If this is not true, the script should print an error and exit.",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e895abb_7539b07a",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-01T10:54:13Z",
+      "side": 1,
+      "message": "Fixed. I added the checking.",
+      "parentUuid": "d529db67_090ab0c9",
       "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -88,6 +142,41 @@
     },
     {
       "key": {
+        "uuid": "5ed765e9_29b31061",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-01T10:54:13Z",
+      "side": 1,
+      "message": "Moved to configure_linux().",
+      "parentUuid": "965d210a_46fa3c29",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eacae902_248a83a0",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-01T10:54:13Z",
+      "side": 1,
+      "message": "I tested in Debian, added two kinds of hugepagesz.\nFirst boot system with \"default_hugepagesz\u003d1G hugepagesz\u003d1G hugepages\u003d4 hugepagesz\u003d2M hugepages\u003d2048\"\nThen run new setup.sh:\nHUGEMEM\u003d2048 hugepagesz\u003d2048 scripts/setup.sh or\nHUGEMEM\u003d2048 hugepagesz\u003d1048576 scripts/setup.sh\nI try to dynamically switch hugepasesize through two parameters, but it does not seem to work.\nCould you give advice on setting hugepages?Thanks.\n\nIf only support one hugepages, the previous patch can work well.\n(boot system with \"hugepagesz\u003d1G hugepages\u003d4\" and run HUGEMEM\u003d4096 scripts/setup.sh).",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea1cae60_f2c2fe8c",
         "filename": "scripts/setup.sh",
         "patchSetId": 8
@@ -99,6 +188,24 @@
       "writtenOn": "2017-08-30T17:22:08Z",
       "side": 1,
       "message": "You can simplify this to:\n\n  NRHUGE\u003d$((HUGEMEM / 2))\n\nThe \u0027expr\u0027 isn\u0027t doing anything, since you already calculated HUGEMEM/2 in the $(()), and the $ variable prefix isn\u0027t necessary in $(()).",
+      "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e9a3deb_e0b45085",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-01T10:54:13Z",
+      "side": 1,
+      "message": "Fixed.",
+      "parentUuid": "ea1cae60_f2c2fe8c",
       "revId": "ceaebb6479ea29b183be53fa324dca6bb0ac2d49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
