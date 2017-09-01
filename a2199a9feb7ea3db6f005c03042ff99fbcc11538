@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6b9057c_feb128e5",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-01T19:19:37Z",
+      "side": 1,
+      "message": "This is asserted by spdk_json_decode_object()",
+      "range": {
+        "startLine": 208,
+        "startChar": 0,
+        "endLine": 212,
+        "endChar": 2
+      },
+      "revId": "a2199a9feb7ea3db6f005c03042ff99fbcc11538",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
