@@ -20,7 +20,7 @@ SPDK bdev drivers included with SPDK.
 The SPDK configuration file is typically passed to your SPDK-based application via the command line.
 Refer to the help facility of your application for more details.
 
-## NVMe
+## NVMe {#bdev_config_nvme}
 
 The SPDK nvme bdev driver provides SPDK block layer access to NVMe SSDs via the SPDK userspace
 NVMe driver.  The nvme bdev driver binds only to devices explicitly specified.  These devices
@@ -42,7 +42,7 @@ for namespaces attached to the first controller will be in the format Nvme0nY, w
 the namespace ID.  Most NVMe SSDs have a single namespace with ID=1.  Block devices attached to
 the second controller will be in the format Nvme1nY.
 
-## Malloc
+## Malloc {#bdev_config_malloc}
 
 The SPDK malloc bdev driver allocates a buffer of memory in userspace as the target for block I/O
 operations.  This effectively serves as a userspace ramdisk target.
@@ -57,7 +57,7 @@ Configuration file syntax:
 This exports 4 malloc block devices, named Malloc0 through Malloc3.  Each malloc block device will
 be 64MB in size.
 
-## Linux AIO
+## Linux AIO {#bdev_config_aio}
 
 The SPDK aio bdev driver provides SPDK block layer access to Linux kernel block devices via Linux AIO.
 Note that O_DIRECT is used and thus bypasses the Linux page cache. This mode is probably as close to
@@ -78,7 +78,7 @@ Configuration file syntax:
 
 This exports 2 aio block devices, named AIO0 and AIO1.
 
-## Ceph RBD
+## Ceph RBD {#bdev_config_rbd}
 
 The SPDK rbd bdev driver provides SPDK block layer access to Ceph RADOS block devices (RBD).  Ceph
 RBD devices are accessed via librbd and librados libraries to access the RADOS block device
