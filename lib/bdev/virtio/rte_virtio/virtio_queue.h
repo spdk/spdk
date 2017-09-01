@@ -42,7 +42,7 @@
 #include <rte_memzone.h>
 #include <rte_mempool.h>
 
-#include "virtio_pci.h"
+#include "virtio_dev.h"
 #include "virtio_logs.h"
 
 /*
@@ -72,7 +72,7 @@ struct vq_desc_extra {
 };
 
 struct virtqueue {
-	struct virtio_hw  *hw; /**< virtio_hw structure pointer. */
+	struct virtio_dev *vdev; /**< owner of this virtqueue */
 	struct vring vq_ring;  /**< vring keeping desc, used and avail */
 	/**
 	 * Last consumed descriptor in the used table,
@@ -175,7 +175,7 @@ virtqueue_notify(struct virtqueue *vq)
 	 * For virtio on IA, the notificaiton is through io port operation
 	 * which is a serialization instruction itself.
 	 */
-	VTPCI_OPS(vq->hw)->notify_queue(vq->hw, vq);
+	VTPCI_OPS(vq->vdev)->notify_queue(vq->vdev, vq);
 }
 
 #endif /* _VIRTQUEUE_H_ */

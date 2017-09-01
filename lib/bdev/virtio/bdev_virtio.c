@@ -68,7 +68,7 @@ struct virtio_scsi_io_ctx {
 };
 
 struct virtio_scsi_scan_base {
-	struct virtio_hw		*hw;
+	struct virtio_dev		*vdev;
 	struct spdk_bdev_poller		*scan_poller;
 
 	/* Currently queried target */
@@ -84,14 +84,14 @@ struct virtio_scsi_scan_base {
 
 struct virtio_scsi_disk {
 	struct spdk_bdev	bdev;
-	struct virtio_hw	*hw;
+	struct virtio_dev	*vdev;
 	uint64_t		num_blocks;
 	uint32_t		block_size;
 	TAILQ_ENTRY(virtio_scsi_disk) link;
 };
 
 struct bdev_virtio_io_channel {
-	struct virtio_hw	*hw;
+	struct virtio_dev	*vdev;
 	struct spdk_bdev_poller	*poller;
 };
 
@@ -148,7 +148,7 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		to_be16(&req->cdb[7], bdev_io->u.write.num_blocks);
 	}
 
-	virtio_xmit_pkts(disk->hw->vqs[2], vreq);
+	virtio_xmit_pkts(disk->vdev->vqs[2], vreq);
 }
 
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -199,7 +199,7 @@ bdev_virtio_get_io_channel(void *ctx)
 {
 	struct virtio_scsi_disk *disk = ctx;
 
-	return spdk_get_io_channel(&disk->hw);
+	return spdk_get_io_channel(&disk->vdev);
 }
 
 static int
@@ -260,7 +260,7 @@ bdev_virtio_poll(void *arg)
 	struct virtio_req *req[32];
 	uint16_t i, cnt;
 
-	cnt = virtio_recv_pkts(ch->hw->vqs[2], req, SPDK_COUNTOF(req));
+	cnt = virtio_recv_pkts(ch->vdev->vqs[2], req, SPDK_COUNTOF(req));
 	for (i = 0; i < cnt; ++i) {
 		bdev_virtio_io_cpl(req[i]);
 	}
@@ -269,10 +269,10 @@ bdev_virtio_poll(void *arg)
 static int
 bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 {
-	struct virtio_hw **hw = io_device;
+	struct virtio_dev **vdev = io_device;
 	struct bdev_virtio_io_channel *ch = ctx_buf;
 
-	ch->hw = *hw;
+	ch->vdev = *vdev;
 	spdk_bdev_poller_start(&ch->poller, bdev_virtio_poll, ch,
 			       spdk_env_get_current_core(), 0);
 	return 0;
@@ -301,7 +301,7 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
 		TAILQ_REMOVE(&base->found_disks, disk, link);
-		spdk_io_device_register(&disk->hw, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
+		spdk_io_device_register(&disk->vdev, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
 					sizeof(struct bdev_virtio_io_channel));
 		spdk_bdev_register(&disk->bdev);
 	}
@@ -334,7 +334,7 @@ process_scan_inquiry(struct virtio_scsi_scan_base *base, struct virtio_req *vreq
 	iov[0].iov_len = 32;
 	to_be32(&req->cdb[10], iov[0].iov_len);
 
-	virtio_xmit_pkts(base->hw->vqs[2], vreq);
+	virtio_xmit_pkts(base->vdev->vqs[2], vreq);
 	return 0;
 }
 
@@ -360,7 +360,7 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	disk->num_blocks = from_be64((uint64_t *)(vreq->iov[0].iov_base)) + 1;
 	disk->block_size = from_be32((uint32_t *)(vreq->iov[0].iov_base + 8));
 
-	disk->hw = base->hw;
+	disk->vdev = base->vdev;
 
 	bdev = &disk->bdev;
 	bdev->name = spdk_sprintf_alloc("Virtio0");
@@ -416,7 +416,7 @@ bdev_scan_poll(void *arg)
 	struct virtio_req *req;
 	uint16_t cnt;
 
-	cnt = virtio_recv_pkts(base->hw->vqs[2], &req, 1);
+	cnt = virtio_recv_pkts(base->vdev->vqs[2], &req, 1);
 	if (cnt > 0) {
 		process_scan_resp(base, req);
 	}
@@ -456,7 +456,7 @@ scan_target(struct virtio_scsi_scan_base *base)
 	cdb->opcode = SPDK_SPC_INQUIRY;
 	cdb->alloc_len[1] = 255;
 
-	virtio_xmit_pkts(base->hw->vqs[2], vreq);
+	virtio_xmit_pkts(base->vdev->vqs[2], vreq);
 }
 
 static int
@@ -464,7 +464,7 @@ bdev_virtio_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Virtio");
 	struct virtio_scsi_scan_base *base;
-	struct virtio_hw *hw = NULL;
+	struct virtio_dev *vdev = NULL;
 	char *type, *path;
 	uint32_t i;
 	int rc = 0;
@@ -485,16 +485,16 @@ bdev_virtio_initialize(void)
 				SPDK_ERRLOG("No path specified for index %d\n", i);
 				continue;
 			}
-			hw = virtio_user_dev_init(path, 1, 512);
+			vdev = virtio_user_dev_init(path, 1, 512);
 		} else if (!strcmp("Pci", type)) {
-			hw = get_pci_virtio_hw();
+			vdev = get_pci_virtio_hw();
 		} else {
 			SPDK_ERRLOG("Invalid type %s specified for index %d\n", type, i);
 			continue;
 		}
 	}
 
-	if (hw == NULL) {
+	if (vdev == NULL) {
 		goto out;
 	}
 
@@ -506,10 +506,10 @@ bdev_virtio_initialize(void)
 	}
 
 	/* TODO check rc, add virtio_dev_deinit() */
-	virtio_init_device(hw, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
-	virtio_dev_start(hw);
+	virtio_init_device(vdev, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
+	virtio_dev_start(vdev);
 
-	base->hw = hw;
+	base->vdev = vdev;
 	TAILQ_INIT(&base->found_disks);
 
 	spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,

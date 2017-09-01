@@ -233,18 +233,18 @@ virtio_user_dev_setup(struct virtio_user_dev *dev)
 	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
 	 1ULL << VIRTIO_F_VERSION_1)
 
-struct virtio_hw *
+struct virtio_dev *
 virtio_user_dev_init(char *path, int queues, int queue_size)
 {
-	struct virtio_hw *hw;
+	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
 	uint64_t max_queues;
 
-	hw = calloc(1, sizeof(*hw));
-	dev = calloc(1, sizeof(struct virtio_user_dev));
-	hw->virtio_user_dev = dev;
+	dev = calloc(1, sizeof(*dev));
+	vdev = &dev->vdev;
+	vdev->is_hw = 0;
 
-	virtio_hw_internal[hw->port_id].vtpci_ops = &virtio_user_ops;
+	virtio_hw_internal[0].vtpci_ops = &virtio_user_ops;
 
 	snprintf(dev->path, PATH_MAX, "%s", path);
 	/* Account for control and event queue. */
@@ -279,10 +279,10 @@ virtio_user_dev_init(char *path, int queues, int queue_size)
 
 	dev->device_features &= VIRTIO_USER_SUPPORTED_FEATURES;
 
-	return hw;
+	return vdev;
 
 err:
-	free(hw);
+	free(vdev);
 	free(dev);
 	return NULL;
 }

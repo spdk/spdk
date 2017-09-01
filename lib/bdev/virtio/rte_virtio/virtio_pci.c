@@ -43,7 +43,7 @@
 #include "virtio_logs.h"
 #include "virtio_queue.h"
 
-struct virtio_hw_internal virtio_hw_internal[128];
+struct vtpci_internal virtio_hw_internal[128];
 
 /*
  * Following macros are derived from linux/pci_regs.h, however,
@@ -59,6 +59,9 @@ struct virtio_hw_internal virtio_hw_internal[128];
  * configuration space.
  */
 #define VIRTIO_PCI_CONFIG(hw) (((hw)->use_msix) ? 24 : 20)
+
+#define virtio_dev_get_hw(hw) \
+	((struct virtio_hw *)(hw) - offsetof(struct virtio_hw, vdev))
 
 static inline int
 check_vq_phys_addr_ok(struct virtqueue *vq)
@@ -88,27 +91,28 @@ check_vq_phys_addr_ok(struct virtqueue *vq)
  * enforces this for the virtio-net stuff.
  */
 static void
-legacy_read_dev_config(struct virtio_hw *hw, size_t offset,
+legacy_read_dev_config(struct virtio_dev *dev, size_t offset,
 		       void *dst, int length)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 #ifdef RTE_ARCH_PPC_64
 	int size;
 
 	while (length > 0) {
 		if (length >= 4) {
 			size = 4;
-			rte_pci_ioport_read(VTPCI_IO(hw), dst, size,
-				VIRTIO_PCI_CONFIG(hw) + offset);
+			rte_pci_ioport_read(VTPCI_IO(dev), dst, size,
+				VIRTIO_PCI_CONFIG(dev) + offset);
 			*(uint32_t *)dst = rte_be_to_cpu_32(*(uint32_t *)dst);
 		} else if (length >= 2) {
 			size = 2;
-			rte_pci_ioport_read(VTPCI_IO(hw), dst, size,
-				VIRTIO_PCI_CONFIG(hw) + offset);
+			rte_pci_ioport_read(VTPCI_IO(dev), dst, size,
+				VIRTIO_PCI_CONFIG(dev) + offset);
 			*(uint16_t *)dst = rte_be_to_cpu_16(*(uint16_t *)dst);
 		} else {
 			size = 1;
-			rte_pci_ioport_read(VTPCI_IO(hw), dst, size,
-				VIRTIO_PCI_CONFIG(hw) + offset);
+			rte_pci_ioport_read(VTPCI_IO(dev), dst, size,
+				VIRTIO_PCI_CONFIG(dev) + offset);
 		}
 
 		dst = (char *)dst + size;
@@ -116,15 +120,16 @@ legacy_read_dev_config(struct virtio_hw *hw, size_t offset,
 		length -= size;
 	}
 #else
-	rte_pci_ioport_read(VTPCI_IO(hw), dst, length,
+	rte_pci_ioport_read(VTPCI_IO(dev), dst, length,
 		VIRTIO_PCI_CONFIG(hw) + offset);
 #endif
 }
 
 static void
-legacy_write_dev_config(struct virtio_hw *hw, size_t offset,
+legacy_write_dev_config(struct virtio_dev *dev, size_t offset,
 			const void *src, int length)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 #ifdef RTE_ARCH_PPC_64
 	union {
 		uint32_t u32;
@@ -154,125 +159,125 @@ legacy_write_dev_config(struct virtio_hw *hw, size_t offset,
 		length -= size;
 	}
 #else
-	rte_pci_ioport_write(VTPCI_IO(hw), src, length,
+	rte_pci_ioport_write(VTPCI_IO(dev), src, length,
 		VIRTIO_PCI_CONFIG(hw) + offset);
 #endif
 }
 
 static uint64_t
-legacy_get_features(struct virtio_hw *hw)
+legacy_get_features(struct virtio_dev *dev)
 {
 	uint32_t dst;
 
-	rte_pci_ioport_read(VTPCI_IO(hw), &dst, 4, VIRTIO_PCI_HOST_FEATURES);
+	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 4, VIRTIO_PCI_HOST_FEATURES);
 	return dst;
 }
 
 static void
-legacy_set_features(struct virtio_hw *hw, uint64_t features)
+legacy_set_features(struct virtio_dev *dev, uint64_t features)
 {
 	if ((features >> 32) != 0) {
 		PMD_DRV_LOG(ERR,
 			"only 32 bit features are allowed for legacy virtio!");
 		return;
 	}
-	rte_pci_ioport_write(VTPCI_IO(hw), &features, 4,
+	rte_pci_ioport_write(VTPCI_IO(dev), &features, 4,
 		VIRTIO_PCI_GUEST_FEATURES);
 }
 
 static uint8_t
-legacy_get_status(struct virtio_hw *hw)
+legacy_get_status(struct virtio_dev *dev)
 {
 	uint8_t dst;
 
-	rte_pci_ioport_read(VTPCI_IO(hw), &dst, 1, VIRTIO_PCI_STATUS);
+	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 1, VIRTIO_PCI_STATUS);
 	return dst;
 }
 
 static void
-legacy_set_status(struct virtio_hw *hw, uint8_t status)
+legacy_set_status(struct virtio_dev *dev, uint8_t status)
 {
-	rte_pci_ioport_write(VTPCI_IO(hw), &status, 1, VIRTIO_PCI_STATUS);
+	rte_pci_ioport_write(VTPCI_IO(dev), &status, 1, VIRTIO_PCI_STATUS);
 }
 
 static void
-legacy_reset(struct virtio_hw *hw)
+legacy_reset(struct virtio_dev *dev)
 {
-	legacy_set_status(hw, VIRTIO_CONFIG_STATUS_RESET);
+	legacy_set_status(dev, VIRTIO_CONFIG_STATUS_RESET);
 }
 
 static uint8_t
-legacy_get_isr(struct virtio_hw *hw)
+legacy_get_isr(struct virtio_dev *dev)
 {
 	uint8_t dst;
 
-	rte_pci_ioport_read(VTPCI_IO(hw), &dst, 1, VIRTIO_PCI_ISR);
+	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 1, VIRTIO_PCI_ISR);
 	return dst;
 }
 
 /* Enable one vector (0) for Link State Intrerrupt */
 static uint16_t
-legacy_set_config_irq(struct virtio_hw *hw, uint16_t vec)
+legacy_set_config_irq(struct virtio_dev *dev, uint16_t vec)
 {
 	uint16_t dst;
 
-	rte_pci_ioport_write(VTPCI_IO(hw), &vec, 2, VIRTIO_MSI_CONFIG_VECTOR);
-	rte_pci_ioport_read(VTPCI_IO(hw), &dst, 2, VIRTIO_MSI_CONFIG_VECTOR);
+	rte_pci_ioport_write(VTPCI_IO(dev), &vec, 2, VIRTIO_MSI_CONFIG_VECTOR);
+	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 2, VIRTIO_MSI_CONFIG_VECTOR);
 	return dst;
 }
 
 static uint16_t
-legacy_set_queue_irq(struct virtio_hw *hw, struct virtqueue *vq, uint16_t vec)
+legacy_set_queue_irq(struct virtio_dev *dev, struct virtqueue *vq, uint16_t vec)
 {
 	uint16_t dst;
 
-	rte_pci_ioport_write(VTPCI_IO(hw), &vq->vq_queue_index, 2,
+	rte_pci_ioport_write(VTPCI_IO(dev), &vq->vq_queue_index, 2,
 		VIRTIO_PCI_QUEUE_SEL);
-	rte_pci_ioport_write(VTPCI_IO(hw), &vec, 2, VIRTIO_MSI_QUEUE_VECTOR);
-	rte_pci_ioport_read(VTPCI_IO(hw), &dst, 2, VIRTIO_MSI_QUEUE_VECTOR);
+	rte_pci_ioport_write(VTPCI_IO(dev), &vec, 2, VIRTIO_MSI_QUEUE_VECTOR);
+	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 2, VIRTIO_MSI_QUEUE_VECTOR);
 	return dst;
 }
 
 static uint16_t
-legacy_get_queue_num(struct virtio_hw *hw, uint16_t queue_id)
+legacy_get_queue_num(struct virtio_dev *dev, uint16_t queue_id)
 {
 	uint16_t dst;
 
-	rte_pci_ioport_write(VTPCI_IO(hw), &queue_id, 2, VIRTIO_PCI_QUEUE_SEL);
-	rte_pci_ioport_read(VTPCI_IO(hw), &dst, 2, VIRTIO_PCI_QUEUE_NUM);
+	rte_pci_ioport_write(VTPCI_IO(dev), &queue_id, 2, VIRTIO_PCI_QUEUE_SEL);
+	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 2, VIRTIO_PCI_QUEUE_NUM);
 	return dst;
 }
 
 static int
-legacy_setup_queue(struct virtio_hw *hw, struct virtqueue *vq)
+legacy_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
 	uint32_t src;
 
 	if (!check_vq_phys_addr_ok(vq))
 		return -1;
 
-	rte_pci_ioport_write(VTPCI_IO(hw), &vq->vq_queue_index, 2,
+	rte_pci_ioport_write(VTPCI_IO(dev), &vq->vq_queue_index, 2,
 		VIRTIO_PCI_QUEUE_SEL);
 	src = vq->vq_ring_mem >> VIRTIO_PCI_QUEUE_ADDR_SHIFT;
-	rte_pci_ioport_write(VTPCI_IO(hw), &src, 4, VIRTIO_PCI_QUEUE_PFN);
+	rte_pci_ioport_write(VTPCI_IO(dev), &src, 4, VIRTIO_PCI_QUEUE_PFN);
 
 	return 0;
 }
 
 static void
-legacy_del_queue(struct virtio_hw *hw, struct virtqueue *vq)
+legacy_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
 	uint32_t src = 0;
 
-	rte_pci_ioport_write(VTPCI_IO(hw), &vq->vq_queue_index, 2,
+	rte_pci_ioport_write(VTPCI_IO(dev), &vq->vq_queue_index, 2,
 		VIRTIO_PCI_QUEUE_SEL);
-	rte_pci_ioport_write(VTPCI_IO(hw), &src, 4, VIRTIO_PCI_QUEUE_PFN);
+	rte_pci_ioport_write(VTPCI_IO(dev), &src, 4, VIRTIO_PCI_QUEUE_PFN);
 }
 
 static void
-legacy_notify_queue(struct virtio_hw *hw, struct virtqueue *vq)
+legacy_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
-	rte_pci_ioport_write(VTPCI_IO(hw), &vq->vq_queue_index, 2,
+	rte_pci_ioport_write(VTPCI_IO(dev), &vq->vq_queue_index, 2,
 		VIRTIO_PCI_QUEUE_NOTIFY);
 }
 
@@ -301,9 +306,10 @@ io_write64_twopart(uint64_t val, uint32_t *lo, uint32_t *hi)
 }
 
 static void
-modern_read_dev_config(struct virtio_hw *hw, size_t offset,
+modern_read_dev_config(struct virtio_dev *dev, size_t offset,
 		       void *dst, int length)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 	int i;
 	uint8_t *p;
 	uint8_t old_gen, new_gen;
@@ -320,9 +326,10 @@ modern_read_dev_config(struct virtio_hw *hw, size_t offset,
 }
 
 static void
-modern_write_dev_config(struct virtio_hw *hw, size_t offset,
+modern_write_dev_config(struct virtio_dev *dev, size_t offset,
 			const void *src, int length)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 	int i;
 	const uint8_t *p = src;
 
@@ -331,8 +338,9 @@ modern_write_dev_config(struct virtio_hw *hw, size_t offset,
 }
 
 static uint64_t
-modern_get_features(struct virtio_hw *hw)
+modern_get_features(struct virtio_dev *dev)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 	uint32_t features_lo, features_hi;
 
 	rte_write32(0, &hw->common_cfg->device_feature_select);
@@ -345,8 +353,10 @@ modern_get_features(struct virtio_hw *hw)
 }
 
 static void
-modern_set_features(struct virtio_hw *hw, uint64_t features)
+modern_set_features(struct virtio_dev *dev, uint64_t features)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+
 	rte_write32(0, &hw->common_cfg->guest_feature_select);
 	rte_write32(features & ((1ULL << 32) - 1),
 		    &hw->common_cfg->guest_feature);
@@ -357,55 +367,68 @@ modern_set_features(struct virtio_hw *hw, uint64_t features)
 }
 
 static uint8_t
-modern_get_status(struct virtio_hw *hw)
+modern_get_status(struct virtio_dev *dev)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+
 	return rte_read8(&hw->common_cfg->device_status);
 }
 
 static void
-modern_set_status(struct virtio_hw *hw, uint8_t status)
+modern_set_status(struct virtio_dev *dev, uint8_t status)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+
 	rte_write8(status, &hw->common_cfg->device_status);
 }
 
 static void
-modern_reset(struct virtio_hw *hw)
+modern_reset(struct virtio_dev *dev)
 {
-	modern_set_status(hw, VIRTIO_CONFIG_STATUS_RESET);
-	modern_get_status(hw);
+	modern_set_status(dev, VIRTIO_CONFIG_STATUS_RESET);
+	modern_get_status(dev);
 }
 
 static uint8_t
-modern_get_isr(struct virtio_hw *hw)
+modern_get_isr(struct virtio_dev *dev)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+
 	return rte_read8(hw->isr);
 }
 
 static uint16_t
-modern_set_config_irq(struct virtio_hw *hw, uint16_t vec)
+modern_set_config_irq(struct virtio_dev *dev, uint16_t vec)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+
 	rte_write16(vec, &hw->common_cfg->msix_config);
 	return rte_read16(&hw->common_cfg->msix_config);
 }
 
 static uint16_t
-modern_set_queue_irq(struct virtio_hw *hw, struct virtqueue *vq, uint16_t vec)
+modern_set_queue_irq(struct virtio_dev *dev, struct virtqueue *vq, uint16_t vec)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+
 	rte_write16(vq->vq_queue_index, &hw->common_cfg->queue_select);
 	rte_write16(vec, &hw->common_cfg->queue_msix_vector);
 	return rte_read16(&hw->common_cfg->queue_msix_vector);
 }
 
 static uint16_t
-modern_get_queue_num(struct virtio_hw *hw, uint16_t queue_id)
+modern_get_queue_num(struct virtio_dev *dev, uint16_t queue_id)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+
 	rte_write16(queue_id, &hw->common_cfg->queue_select);
 	return rte_read16(&hw->common_cfg->queue_size);
 }
 
 static int
-modern_setup_queue(struct virtio_hw *hw, struct virtqueue *vq)
+modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 	uint64_t desc_addr, avail_addr, used_addr;
 	uint16_t notify_off;
 
@@ -444,8 +467,10 @@ modern_setup_queue(struct virtio_hw *hw, struct virtqueue *vq)
 }
 
 static void
-modern_del_queue(struct virtio_hw *hw, struct virtqueue *vq)
+modern_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+
 	rte_write16(vq->vq_queue_index, &hw->common_cfg->queue_select);
 
 	io_write64_twopart(0, &hw->common_cfg->queue_desc_lo,
@@ -459,7 +484,7 @@ modern_del_queue(struct virtio_hw *hw, struct virtqueue *vq)
 }
 
 static void
-modern_notify_queue(struct virtio_hw *hw __rte_unused, struct virtqueue *vq)
+modern_notify_queue(struct virtio_dev *dev __rte_unused, struct virtqueue *vq)
 {
 	rte_write16(vq->vq_queue_index, vq->notify_addr);
 }
@@ -483,21 +508,21 @@ const struct virtio_pci_ops modern_ops = {
 
 
 void
-vtpci_read_dev_config(struct virtio_hw *hw, size_t offset,
+vtpci_read_dev_config(struct virtio_dev *dev, size_t offset,
 		      void *dst, int length)
 {
-	VTPCI_OPS(hw)->read_dev_cfg(hw, offset, dst, length);
+	VTPCI_OPS(dev)->read_dev_cfg(dev, offset, dst, length);
 }
 
 void
-vtpci_write_dev_config(struct virtio_hw *hw, size_t offset,
+vtpci_write_dev_config(struct virtio_dev *dev, size_t offset,
 		       const void *src, int length)
 {
-	VTPCI_OPS(hw)->write_dev_cfg(hw, offset, src, length);
+	VTPCI_OPS(dev)->write_dev_cfg(dev, offset, src, length);
 }
 
 uint64_t
-vtpci_negotiate_features(struct virtio_hw *hw, uint64_t host_features)
+vtpci_negotiate_features(struct virtio_dev *dev, uint64_t host_features)
 {
 	uint64_t features;
 
@@ -505,45 +530,45 @@ vtpci_negotiate_features(struct virtio_hw *hw, uint64_t host_features)
 	 * Limit negotiated features to what the driver, virtqueue, and
 	 * host all support.
 	 */
-	features = host_features & hw->guest_features;
-	VTPCI_OPS(hw)->set_features(hw, features);
+	features = host_features & dev->guest_features;
+	VTPCI_OPS(dev)->set_features(dev, features);
 
 	return features;
 }
 
 void
-vtpci_reset(struct virtio_hw *hw)
+vtpci_reset(struct virtio_dev *dev)
 {
-	VTPCI_OPS(hw)->set_status(hw, VIRTIO_CONFIG_STATUS_RESET);
+	VTPCI_OPS(dev)->set_status(dev, VIRTIO_CONFIG_STATUS_RESET);
 	/* flush status write */
-	VTPCI_OPS(hw)->get_status(hw);
+	VTPCI_OPS(dev)->get_status(dev);
 }
 
 void
-vtpci_reinit_complete(struct virtio_hw *hw)
+vtpci_reinit_complete(struct virtio_dev *dev)
 {
-	vtpci_set_status(hw, VIRTIO_CONFIG_STATUS_DRIVER_OK);
+	vtpci_set_status(dev, VIRTIO_CONFIG_STATUS_DRIVER_OK);
 }
 
 void
-vtpci_set_status(struct virtio_hw *hw, uint8_t status)
+vtpci_set_status(struct virtio_dev *dev, uint8_t status)
 {
 	if (status != VIRTIO_CONFIG_STATUS_RESET)
-		status |= VTPCI_OPS(hw)->get_status(hw);
+		status |= VTPCI_OPS(dev)->get_status(dev);
 
-	VTPCI_OPS(hw)->set_status(hw, status);
+	VTPCI_OPS(dev)->set_status(dev, status);
 }
 
 uint8_t
-vtpci_get_status(struct virtio_hw *hw)
+vtpci_get_status(struct virtio_dev *dev)
 {
-	return VTPCI_OPS(hw)->get_status(hw);
+	return VTPCI_OPS(dev)->get_status(dev);
 }
 
 uint8_t
-vtpci_isr(struct virtio_hw *hw)
+vtpci_isr(struct virtio_dev *dev)
 {
-	return VTPCI_OPS(hw)->get_isr(hw);
+	return VTPCI_OPS(dev)->get_isr(dev);
 }
 
 static void *
@@ -668,8 +693,10 @@ next:
  * Return 0 on success.
  */
 int
-vtpci_init(struct rte_pci_device *dev, struct virtio_hw *hw)
+vtpci_init(struct rte_pci_device *dev, struct virtio_dev *vdev)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(vdev);
+
 	/*
 	 * Try if we can succeed reading virtio pci caps, which exists
 	 * only on modern pci device. If failed, we fallback to legacy
@@ -677,8 +704,8 @@ vtpci_init(struct rte_pci_device *dev, struct virtio_hw *hw)
 	 */
 	if (virtio_read_caps(dev, hw) == 0) {
 		PMD_INIT_LOG(INFO, "modern virtio pci detected.");
-		virtio_hw_internal[hw->port_id].vtpci_ops = &modern_ops;
-		hw->modern = 1;
+		virtio_hw_internal[vdev->port_id].vtpci_ops = &modern_ops;
+		vdev->modern = 1;
 		return 0;
 	}
 
@@ -697,8 +724,8 @@ vtpci_init(struct rte_pci_device *dev, struct virtio_hw *hw)
 	}
 #endif
 
-	virtio_hw_internal[hw->port_id].vtpci_ops = &legacy_ops;
-	hw->modern   = 0;
+	virtio_hw_internal[vdev->port_id].vtpci_ops = &legacy_ops;
+	vdev->modern   = 0;
 
 	return 0;
 }
