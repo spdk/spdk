@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b40115e4_37638d03",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-01T17:51:20Z",
+      "side": 1,
+      "message": "Attach the NVMe driver to the device located at the given transport ID.",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9200299f_54a75aca",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-01T17:51:20Z",
+      "side": 1,
+      "message": "This needs to be reworked - it says the trid has to be a discovery service.",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd7550d0_4d50951d",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-01T17:51:20Z",
+      "side": 1,
+      "message": "Somewhere in the documentation, you should mention that using spdk_nvme_probe is much more efficient for attaching to multiple devices because it will perform parallel initialization.",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e1d56cf_fd7ca20e",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-01T17:51:20Z",
+      "side": 1,
+      "message": "This call should be synchronous - i.e. no attach_cb at all. It also shouldn\u0027t have a remove_cb - we aren\u0027t probing a bus we\u0027re just attaching to one device and returning pass or fail.\n\nThis call should also just return a pointer to the NVMe controller.",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30875742_e617af81",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1341,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-01T17:51:20Z",
+      "side": 1,
+      "message": "Is this what happens when the user tries to attach to a device that is already attached? Maybe we should be searching the attached controllers list prior to initializing and returning the existing pointer?",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
