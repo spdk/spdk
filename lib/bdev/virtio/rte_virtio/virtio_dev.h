@@ -37,11 +37,20 @@
 #include <stdint.h>
 #include <sys/uio.h>
 
-#include "virtio_pci.h"
-
 #define VIRTIO_MAX_RX_QUEUES 128U
 #define VIRTIO_MAX_TX_QUEUES 128U
 #define VIRTIO_MIN_RX_BUFSIZE 64
+
+struct virtio_dev {
+	struct virtqueue **vqs;
+	uint16_t	started;
+	uint32_t	max_queues;
+	uint8_t		port_id;
+	uint64_t	req_guest_features;
+	uint64_t	guest_features;
+	int		is_hw;
+	uint8_t		modern;
+};
 
 struct virtio_req {
 	struct iovec	*iov;
@@ -66,9 +75,9 @@ uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 
 uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
 
-int virtio_init_device(struct virtio_hw *hw, uint64_t req_features);
-int virtio_dev_start(struct virtio_hw *hw);
-struct virtio_hw *get_pci_virtio_hw(void);
+int virtio_init_device(struct virtio_dev *hw, uint64_t req_features);
+int virtio_dev_start(struct virtio_dev *hw);
+struct virtio_dev *get_pci_virtio_hw(void);
 
 void virtio_interrupt_handler(void *param);
 

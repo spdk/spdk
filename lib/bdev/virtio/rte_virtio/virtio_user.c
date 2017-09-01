@@ -50,74 +50,74 @@
 #include "virtio_queue.h"
 #include "virtio_user/virtio_user_dev.h"
 
-#define virtio_user_get_dev(hw) \
-	((struct virtio_user_dev *)(hw)->virtio_user_dev)
+#define virtio_dev_get_user_dev(dev) \
+	((struct virtio_user_dev *)((uintptr_t)(dev) - offsetof(struct virtio_user_dev, vdev)))
 
 static void
-virtio_user_read_dev_config(struct virtio_hw *hw, size_t offset,
+virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 		     void *dst, int length)
 {
-	struct virtio_user_dev *dev = virtio_user_get_dev(hw);
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	if (offset == offsetof(struct virtio_scsi_config, num_queues))
 		*(uint16_t *)dst = dev->max_queues;
 }
 
 static void
-virtio_user_write_dev_config(struct virtio_hw *hw, size_t offset,
+virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
 		      const void *src, int length)
 {
 	PMD_DRV_LOG(ERR, "not supported offset=%zu, len=%d", offset, length);
 }
 
 static void
-virtio_user_reset(struct virtio_hw *hw)
+virtio_user_reset(struct virtio_dev *vdev)
 {
-	struct virtio_user_dev *dev = virtio_user_get_dev(hw);
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	if (dev->status & VIRTIO_CONFIG_STATUS_DRIVER_OK)
 		virtio_user_stop_device(dev);
 }
 
 static void
-virtio_user_set_status(struct virtio_hw *hw, uint8_t status)
+virtio_user_set_status(struct virtio_dev *vdev, uint8_t status)
 {
-	struct virtio_user_dev *dev = virtio_user_get_dev(hw);
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	if (status & VIRTIO_CONFIG_STATUS_DRIVER_OK)
 		virtio_user_start_device(dev);
 	else if (status == VIRTIO_CONFIG_STATUS_RESET)
-		virtio_user_reset(hw);
+		virtio_user_reset(vdev);
 	dev->status = status;
 }
 
 static uint8_t
-virtio_user_get_status(struct virtio_hw *hw)
+virtio_user_get_status(struct virtio_dev *vdev)
 {
-	struct virtio_user_dev *dev = virtio_user_get_dev(hw);
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	return dev->status;
 }
 
 static uint64_t
-virtio_user_get_features(struct virtio_hw *hw)
+virtio_user_get_features(struct virtio_dev *vdev)
 {
-	struct virtio_user_dev *dev = virtio_user_get_dev(hw);
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	/* unmask feature bits defined in vhost user protocol */
 	return dev->device_features & VIRTIO_PMD_SUPPORTED_GUEST_FEATURES;
 }
 
 static void
-virtio_user_set_features(struct virtio_hw *hw, uint64_t features)
+virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 {
-	struct virtio_user_dev *dev = virtio_user_get_dev(hw);
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	dev->features = features & dev->device_features;
 }
 
 static uint8_t
-virtio_user_get_isr(struct virtio_hw *hw __rte_unused)
+virtio_user_get_isr(struct virtio_dev *vdev __rte_unused)
 {
 	/* rxq interrupts and config interrupt are separated in virtio-user,
 	 * here we only report config change.
@@ -126,14 +126,14 @@ virtio_user_get_isr(struct virtio_hw *hw __rte_unused)
 }
 
 static uint16_t
-virtio_user_set_config_irq(struct virtio_hw *hw __rte_unused,
+virtio_user_set_config_irq(struct virtio_dev *vdev __rte_unused,
 		    uint16_t vec __rte_unused)
 {
 	return 0;
 }
 
 static uint16_t
-virtio_user_set_queue_irq(struct virtio_hw *hw __rte_unused,
+virtio_user_set_queue_irq(struct virtio_dev *vdev __rte_unused,
 			  struct virtqueue *vq __rte_unused,
 			  uint16_t vec)
 {
@@ -146,18 +146,18 @@ virtio_user_set_queue_irq(struct virtio_hw *hw __rte_unused,
  * max supported queues.
  */
 static uint16_t
-virtio_user_get_queue_num(struct virtio_hw *hw, uint16_t queue_id __rte_unused)
+virtio_user_get_queue_num(struct virtio_dev *vdev, uint16_t queue_id __rte_unused)
 {
-	struct virtio_user_dev *dev = virtio_user_get_dev(hw);
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	/* Currently, each queue has same queue size */
 	return dev->queue_size;
 }
 
 static int
-virtio_user_setup_queue(struct virtio_hw *hw, struct virtqueue *vq)
+virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 {
-	struct virtio_user_dev *dev = virtio_user_get_dev(hw);
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 	uint16_t queue_idx = vq->vq_queue_index;
 	uint64_t desc_addr, avail_addr, used_addr;
 
@@ -176,7 +176,7 @@ virtio_user_setup_queue(struct virtio_hw *hw, struct virtqueue *vq)
 }
 
 static void
-virtio_user_del_queue(struct virtio_hw *hw, struct virtqueue *vq)
+virtio_user_del_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 {
 	/* For legacy devices, write 0 to VIRTIO_PCI_QUEUE_PFN port, QEMU
 	 * correspondingly stops the ioeventfds, and reset the status of
@@ -187,17 +187,17 @@ virtio_user_del_queue(struct virtio_hw *hw, struct virtqueue *vq)
 	 * Here we just care about what information to deliver to vhost-user
 	 * or vhost-kernel. So we just close ioeventfd for now.
 	 */
-	struct virtio_user_dev *dev = virtio_user_get_dev(hw);
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	close(dev->callfds[vq->vq_queue_index]);
 	close(dev->kickfds[vq->vq_queue_index]);
 }
 
 static void
-virtio_user_notify_queue(struct virtio_hw *hw, struct virtqueue *vq)
+virtio_user_notify_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 {
 	uint64_t buf = 1;
-	struct virtio_user_dev *dev = virtio_user_get_dev(hw);
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	if (write(dev->kickfds[vq->vq_queue_index], &buf, sizeof(buf)) < 0)
 		PMD_DRV_LOG(ERR, "failed to kick backend: %s",
