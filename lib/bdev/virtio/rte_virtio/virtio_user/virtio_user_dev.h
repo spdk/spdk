@@ -37,12 +37,15 @@
 #include <linux/virtio_ring.h>
 
 #include <limits.h>
-#include "../virtio_pci.h"
 #include "vhost.h"
+
+#include "../virtio_dev.h"
 
 #define VIRTIO_MAX_VIRTQUEUES 0x100
 
 struct virtio_user_dev {
+	struct virtio_dev vdev;
+
 	/* for vhost_user backend */
 	int		vhostfd;
 
@@ -71,7 +74,7 @@ struct virtio_user_dev {
 int is_vhost_user_by_type(const char *path);
 int virtio_user_start_device(struct virtio_user_dev *dev);
 int virtio_user_stop_device(struct virtio_user_dev *dev);
-struct virtio_hw *virtio_user_dev_init(char *path, int queues, int queue_size);
+struct virtio_dev *virtio_user_dev_init(char *path, int queues, int queue_size);
 void virtio_user_dev_uninit(struct virtio_user_dev *dev);
 void virtio_user_handle_cq(struct virtio_user_dev *dev, uint16_t queue_idx);
 #endif
