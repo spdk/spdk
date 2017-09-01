@@ -33,6 +33,24 @@
       "revId": "9de16dc877ae7ea5f5373f5e25161efaf2c93b9f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f344c640_1550acee",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-01T18:50:07Z",
+      "side": 1,
+      "message": "i\u0027m not sure how. we still call spdk_bdev_module_action_complete on successful bdev subsystem init - line #529",
+      "parentUuid": "47e3bbe0_fd1b41ce",
+      "revId": "9de16dc877ae7ea5f5373f5e25161efaf2c93b9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
