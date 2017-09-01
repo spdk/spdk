@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8564674_622d3841",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-01T16:55:34Z",
+      "side": 1,
+      "message": "overall I think this looks great - can we try to specify which of these are already done and which are still to-do?",
+      "revId": "4cba181d3c0605a9a4bed404bbae38cf3667ea75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a603811f_5fbb5a4f",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-01T16:55:34Z",
+      "side": 1,
+      "message": "maybe add the various I/O tests that we run?",
+      "revId": "4cba181d3c0605a9a4bed404bbae38cf3667ea75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f99d7819_65ffef3b",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-01T16:55:34Z",
+      "side": 1,
+      "message": "you probably don\u0027t need to call out \"virtual mode\" anymore, since that\u0027s the only mode we support now",
+      "revId": "4cba181d3c0605a9a4bed404bbae38cf3667ea75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
