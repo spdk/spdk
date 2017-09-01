@@ -16,6 +16,24 @@
       "revId": "963913a7c99a4e4b47814cdb93f390c0114ce138",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe665650_141a84ad",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-01T20:19:25Z",
+      "side": 1,
+      "message": "The virt_queue-\u003eused_event \u003d\u003d \u0026avail.used_event but only when VIRTIO_F_EVENT_IDX feature is present. See line 658. I can change this to \n\nelse if (spdk_vhost_dev_has_feature(VIRTIO_F_NOTIFY_ON_EMPTY)) {\n...\n}\n\nif you think this will be more clear but since kernel will prefer VIRTIO_F_EVENT_IDX anyway, I thought that this check will be waste of CPU cycles.",
+      "parentUuid": "b177ce27_9ecd3dae",
+      "revId": "963913a7c99a4e4b47814cdb93f390c0114ce138",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
