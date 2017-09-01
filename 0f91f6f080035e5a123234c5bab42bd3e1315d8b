@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebe66a1b_115d1225",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-01T22:39:58Z",
+      "side": 1,
+      "message": "This is a nop.\n\nAt line 137, if sid and tgt-\u003emax_sid are both 16, line 140 will bump tgt-\u003emax_sid to 17, and then this will set sid to (17 - 1).",
+      "revId": "0f91f6f080035e5a123234c5bab42bd3e1315d8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
