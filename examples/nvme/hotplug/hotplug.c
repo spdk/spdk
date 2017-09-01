@@ -33,9 +33,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-
 #include "spdk/nvme.h"
 #include "spdk/queue.h"
 
@@ -60,8 +57,6 @@ struct perf_task {
 	struct dev_ctx		*dev;
 	void			*buf;
 };
-
-static struct rte_mempool *task_pool;
 
 static TAILQ_HEAD(, dev_ctx) g_devs = TAILQ_HEAD_INITIALIZER(g_devs);
 
@@ -144,32 +139,43 @@ unregister_dev(struct dev_ctx *dev)
 	free(dev);
 }
 
-static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
-{
-	struct perf_task *task = __task;
-	task->buf = spdk_dma_zmalloc(g_io_size_bytes, 0x200, NULL);
-	if (task->buf == NULL) {
-		fprintf(stderr, "task->buf rte_malloc failed\n");
-		exit(1);
-	}
-	memset(task->buf, id % 8, g_io_size_bytes);
-}
-
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
 
-static void
-submit_single_io(struct dev_ctx *dev)
+static struct perf_task *
+alloc_task(struct dev_ctx *dev, int fill)
 {
-	struct perf_task	*task = NULL;
-	uint64_t		offset_in_ios;
-	int			rc;
+	struct perf_task *task;
 
-	if (rte_mempool_get(task_pool, (void **)&task) != 0) {
-		fprintf(stderr, "task_pool rte_mempool_get failed\n");
-		exit(1);
+	task = calloc(1, sizeof(*task));
+	if (task == NULL) {
+		return NULL;
 	}
 
+	task->buf = spdk_dma_malloc(g_io_size_bytes, 0x200, NULL);
+	if (task->buf == NULL) {
+		return NULL;
+	}
+
+	memset(task->buf, fill & 0xFF, g_io_size_bytes);
+
 	task->dev = dev;
+
+	return task;
+}
+
+static void
+free_task(struct perf_task *task)
+{
+	spdk_dma_free(task->buf);
+	free(task);
+}
+
+static void
+submit_single_io(struct perf_task *task)
+{
+	struct dev_ctx		*dev = task->dev;
+	uint64_t		offset_in_ios;
+	int			rc;
 
 	offset_in_ios = dev->offset_in_ios++;
 	if (dev->offset_in_ios == dev->size_in_ios) {
@@ -182,7 +188,7 @@ submit_single_io(struct dev_ctx *dev)
 
 	if (rc != 0) {
 		fprintf(stderr, "starting I/O failed\n");
-		rte_mempool_put(task_pool, task);
+		free_task(task);
 	} else {
 		dev->current_queue_depth++;
 	}
@@ -197,8 +203,6 @@ task_complete(struct perf_task *task)
 	dev->current_queue_depth--;
 	dev->io_completed++;
 
-	rte_mempool_put(task_pool, task);
-
 	/*
 	 * is_draining indicates when time has expired for the test run
 	 * and we are just waiting for the previously submitted I/O
@@ -206,7 +210,9 @@ task_complete(struct perf_task *task)
 	 * the one just completed.
 	 */
 	if (!dev->is_draining && !dev->is_removed) {
-		submit_single_io(dev);
+		submit_single_io(task);
+	} else {
+		free_task(task);
 	}
 }
 
@@ -225,8 +231,16 @@ check_io(struct dev_ctx *dev)
 static void
 submit_io(struct dev_ctx *dev, int queue_depth)
 {
+	struct perf_task *task;
+
 	while (queue_depth-- > 0) {
-		submit_single_io(dev);
+		task = alloc_task(dev, queue_depth);
+		if (task == NULL) {
+			fprintf(stderr, "task allocation failed\n");
+			exit(1);
+		}
+
+		submit_single_io(task);
 	}
 }
 
@@ -448,11 +462,6 @@ int main(int argc, char **argv)
 		opts.shm_id = g_shm_id;
 	}
 	spdk_env_init(&opts);
-
-	task_pool = rte_mempool_create("task_pool", 8192,
-				       sizeof(struct perf_task),
-				       64, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
 
 	g_tsc_rate = spdk_get_ticks_hz();
 
