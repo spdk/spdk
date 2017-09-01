@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b8509d8_f08e1fc0",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-01T18:24:23Z",
+      "side": 1,
+      "message": "Trailing backslash is not aligned.  Might as well fix this if you also make the change suggested for bdev.c.",
+      "revId": "9de16dc877ae7ea5f5373f5e25161efaf2c93b9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47e3bbe0_fd1b41ce",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-01T18:24:23Z",
+      "side": 1,
+      "message": "Can this function get merged with spdk_bdev_module_action_complete()?",
+      "revId": "9de16dc877ae7ea5f5373f5e25161efaf2c93b9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
