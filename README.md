@@ -59,7 +59,7 @@ Ubuntu/Debian:
 sudo apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
 	git astyle pep8 lcov clang
 # Additional dependencies for RDMA (NVMe over Fabrics)
-sudo apt-get install -y libibverbs-dev librdmacm
+sudo apt-get install -y libibverbs-dev librdmacm-dev
 # Additional dependencies for building docs
 sudo apt-get install -y doxygen mscgen
 ~~~
