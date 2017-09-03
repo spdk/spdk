@@ -1525,7 +1525,10 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	void *md_payload;
 	void *payload = req->payload.u.contig + req->payload_offset;
 
-	phys_addr = spdk_vtophys(payload);
+if (qpair->id == 0) 
+phys_addr = spdk_vtophys(payload);
+else
+phys_addr = (uint64_t)(payload);
 	if (phys_addr == SPDK_VTOPHYS_ERROR) {
 		nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 		return -1;
@@ -1550,13 +1553,19 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	tr->req->cmd.dptr.prp.prp1 = phys_addr;
 	if (nseg == 2) {
 		seg_addr = payload + PAGE_SIZE - unaligned;
-		tr->req->cmd.dptr.prp.prp2 = spdk_vtophys(seg_addr);
+		if (qpair->id == 0)
+			tr->req->cmd.dptr.prp.prp2 = spdk_vtophys(seg_addr);
+		else
+			tr->req->cmd.dptr.prp.prp2 = (uint64_t) seg_addr;
 	} else if (nseg > 2) {
 		cur_nseg = 1;
 		tr->req->cmd.dptr.prp.prp2 = (uint64_t)tr->prp_sgl_bus_addr;
 		while (cur_nseg < nseg) {
 			seg_addr = payload + cur_nseg * PAGE_SIZE - unaligned;
-			phys_addr = spdk_vtophys(seg_addr);
+			if (qpair->id == 0)
+				phys_addr = spdk_vtophys(seg_addr);
+			else
+				phys_addr = (uint64_t) seg_addr;
 			if (phys_addr == SPDK_VTOPHYS_ERROR) {
 				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 				return -1;
@@ -1590,6 +1599,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	assert(req->payload.type == NVME_PAYLOAD_TYPE_SGL);
 	assert(req->payload.u.sgl.reset_sgl_fn != NULL);
 	assert(req->payload.u.sgl.next_sge_fn != NULL);
+assert(false);
 	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
 
 	sgl = tr->u.sgl;
