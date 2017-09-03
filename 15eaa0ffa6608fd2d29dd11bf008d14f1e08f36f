@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b452bfa_1ddeb22f",
+        "filename": "examples/blob/nvme_blob/blob_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-03T16:29:33Z",
+      "side": 1,
+      "message": "assume you\u0027ll get rid of this soon?",
+      "revId": "15eaa0ffa6608fd2d29dd11bf008d14f1e08f36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aad27824_b047a883",
+        "filename": "examples/blob/nvme_blob/blob_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-03T16:29:33Z",
+      "side": 1,
+      "message": "assume you\u0027ll get rid of this soon?",
+      "revId": "15eaa0ffa6608fd2d29dd11bf008d14f1e08f36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c379d7f6_ed3fb7e9",
+        "filename": "examples/blob/nvme_blob/nvme_blob.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-03T16:29:33Z",
+      "side": 1,
+      "message": "as this is meant to be example/tutorial code, like hello_blob, all structs and functions should be clearly commented to explain what they are and why they\u0027re needed",
+      "revId": "15eaa0ffa6608fd2d29dd11bf008d14f1e08f36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50bf3c03_489dfaec",
+        "filename": "examples/blob/nvme_blob/nvme_blob.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-03T16:29:33Z",
+      "side": 1,
+      "message": "would be helpful to list the threads used in this example and what they are each responsible for",
+      "revId": "15eaa0ffa6608fd2d29dd11bf008d14f1e08f36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4f0fe75_353dfc4b",
+        "filename": "examples/blob/nvme_blob/nvme_blob.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-03T16:29:33Z",
+      "side": 1,
+      "message": "as this is example code you should not assert here but instead have the functional code handle it correctly",
+      "revId": "15eaa0ffa6608fd2d29dd11bf008d14f1e08f36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0b0014c_30e2ff28",
+        "filename": "examples/blob/nvme_blob/nvme_blob.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-03T16:29:33Z",
+      "side": 1,
+      "message": "need to check for NULL here",
+      "revId": "15eaa0ffa6608fd2d29dd11bf008d14f1e08f36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14a13ea1_cf427d44",
+        "filename": "examples/blob/nvme_blob/nvme_blob.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-03T16:29:33Z",
+      "side": 1,
+      "message": "I\u0027m guessing some of this came from the nvme hello example so not trying to be too difficult but comments on these funcs would be great too.  For example, how does this example handle multiple namespaces?",
+      "revId": "15eaa0ffa6608fd2d29dd11bf008d14f1e08f36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ccc07f3c_a2b2ec4b",
+        "filename": "examples/blob/nvme_blob/nvme_blob.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-03T16:29:33Z",
+      "side": 1,
+      "message": "just my pet peace but globals are a bad practice. A lot of our example use them all over the place, ugh, nad for these simple little programs its fine I guess but if you can avoid I think that\u0027d be better",
+      "revId": "15eaa0ffa6608fd2d29dd11bf008d14f1e08f36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ef51566_baa608f8",
+        "filename": "examples/blob/nvme_blob/nvme_blob.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-03T16:29:33Z",
+      "side": 1,
+      "message": "I believe you can get rid of this local * and just pass the global below",
+      "revId": "15eaa0ffa6608fd2d29dd11bf008d14f1e08f36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72eb8586_09ce524b",
+        "filename": "examples/blob/nvme_blob/nvme_blob.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-03T16:29:33Z",
+      "side": 1,
+      "message": "this isn\u0027t a fatal error?",
+      "revId": "15eaa0ffa6608fd2d29dd11bf008d14f1e08f36f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
