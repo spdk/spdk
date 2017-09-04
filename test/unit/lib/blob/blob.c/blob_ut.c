@@ -84,6 +84,15 @@ _bs_flush_scheduler(void)
 		TAILQ_REMOVE(&g_scheduled_ops, ops, ops_queue);
 		free(ops);
 	}
+	/*
+	 * Make second run because first one will create
+	 * new scheduled operation in _spdk_io_device_attempt_free
+	 */
+	TAILQ_FOREACH_SAFE(ops, &g_scheduled_ops, ops_queue, tmp) {
+		ops->fn(ops->ctx);
+		TAILQ_REMOVE(&g_scheduled_ops, ops, ops_queue);
+		free(ops);
+	}
 }
 
 static void
