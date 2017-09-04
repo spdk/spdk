@@ -506,7 +506,7 @@ bdev_virtio_initialize(void)
 	}
 
 	/* TODO check rc, add virtio_dev_deinit() */
-	virtio_init_device(vdev, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
+	virtio_init_device(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
 	virtio_dev_start(vdev);
 
 	base->vdev = vdev;

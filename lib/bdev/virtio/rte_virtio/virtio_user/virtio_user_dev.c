@@ -228,11 +228,6 @@ virtio_user_dev_setup(struct virtio_user_dev *dev)
 	return 0;
 }
 
-/* Use below macro to filter features from vhost backend */
-#define VIRTIO_USER_SUPPORTED_FEATURES			\
-	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
-	 1ULL << VIRTIO_F_VERSION_1)
-
 struct virtio_dev *
 virtio_user_dev_init(char *path, int queues, int queue_size)
 {
@@ -276,8 +271,6 @@ virtio_user_dev_init(char *path, int queues, int queue_size)
 		PMD_INIT_LOG(ERR, "get_features failed: %s", strerror(errno));
 		goto err;
 	}
-
-	dev->device_features &= VIRTIO_USER_SUPPORTED_FEATURES;
 
 	return vdev;
 

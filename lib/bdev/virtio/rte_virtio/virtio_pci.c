@@ -530,7 +530,7 @@ vtpci_negotiate_features(struct virtio_dev *dev, uint64_t host_features)
 	 * Limit negotiated features to what the driver, virtqueue, and
 	 * host all support.
 	 */
-	features = host_features & dev->guest_features;
+	features = host_features & dev->req_guest_features;
 	VTPCI_OPS(dev)->set_features(dev, features);
 
 	return features;
