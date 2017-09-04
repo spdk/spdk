@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "fe4182c6_e9a142e8",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-04T11:25:02Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "f36cfa3b_faa63f93",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 1
+      },
+      "revId": "d4962847b32564ba1fc6d2877fc2b1f777ded748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d50ea9b5_4a92a09b",
         "filename": "scripts/setup.sh",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-01T20:43:39Z",
       "side": 1,
       "message": "hugetlbfs_mount2 is set only when condition in line 115 is true.",
+      "range": {
+        "startLine": 132,
+        "startChar": 23,
+        "endLine": 132,
+        "endChar": 39
+      },
+      "revId": "d4962847b32564ba1fc6d2877fc2b1f777ded748",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81384f7c_bdeee745",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-04T11:25:02Z",
+      "side": 1,
+      "message": "These statements are only temporarily put here. I ran \u0027mount /mnt/huge_2mb\u0027 alone, but the muti-hugepage function did not work.",
+      "parentUuid": "d50ea9b5_4a92a09b",
       "range": {
         "startLine": 132,
         "startChar": 23,
