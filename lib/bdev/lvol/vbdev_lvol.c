@@ -91,7 +91,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev,
 		return -ENOMEM;
 	}
 
-	bs_dev = spdk_bdev_create_bs_dev(base_bdev);
+	bs_dev = spdk_bdev_create_bs_dev(base_bdev, NULL, NULL);
 	if (!bs_dev) {
 		SPDK_ERRLOG("Cannot create blobstore device\n");
 		free(lvs_req);

@@ -246,7 +246,7 @@ construct_targets(void)
 		exit(1);
 	}
 
-	g_bs_dev = spdk_bdev_create_bs_dev(bdev);
+	g_bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
 
 	printf("Mounting BlobFS on bdev %s\n", spdk_bdev_get_name(bdev));
 }

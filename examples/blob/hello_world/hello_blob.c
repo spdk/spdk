@@ -427,7 +427,7 @@ hello_start(void *arg1, void *arg2)
 	 * However blobstore can be more tightly integrated into
 	 * any lower layer, such as NVMe for example.
 	 */
-	bs_dev = spdk_bdev_create_bs_dev(bdev);
+	bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
 	if (bs_dev == NULL) {
 		SPDK_ERRLOG("Could not create blob bdev!!\n");
 		spdk_app_stop(-1);
