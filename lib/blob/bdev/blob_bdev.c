@@ -35,7 +35,6 @@
 
 #include "spdk/blob_bdev.h"
 #include "spdk/blob.h"
-#include "spdk/bdev.h"
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
 #include "spdk/endian.h"
@@ -159,7 +158,7 @@ bdev_blob_destroy(struct spdk_bs_dev *bs_dev)
 }
 
 struct spdk_bs_dev *
-spdk_bdev_create_bs_dev(struct spdk_bdev *bdev)
+spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb, void *remove_ctx)
 {
 	struct blob_bdev *b;
 	struct spdk_bdev_desc *desc;
@@ -172,7 +171,7 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev)
 		return NULL;
 	}
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open(bdev, true, remove_cb, remove_ctx, &desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not open bdev, error=%d\n", rc);
 		free(b);
