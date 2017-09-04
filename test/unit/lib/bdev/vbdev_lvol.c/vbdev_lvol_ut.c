@@ -78,7 +78,7 @@ bdev_blob_destroy(struct spdk_bs_dev *bs_dev)
 }
 
 struct spdk_bs_dev *
-spdk_bdev_create_bs_dev(struct spdk_bdev *bdev)
+spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb, void *remove_ctx)
 {
 	struct spdk_bs_dev *bs_dev;
 
