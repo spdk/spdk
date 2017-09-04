@@ -49,6 +49,8 @@ struct virtio_dev {
 	uint64_t	req_guest_features;
 	uint64_t	guest_features;
 	int		is_hw;
+
+	/** Modern/legacy virtio device flag. */
 	uint8_t		modern;
 };
 
