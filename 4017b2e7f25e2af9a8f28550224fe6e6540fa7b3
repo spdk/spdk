@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9328fa3d_eedebb07",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-04T06:29:25Z",
+      "side": 1,
+      "message": "TAILQ_FOREACH_SAFE instead of TAILQ_FOREACH if you want to remove from the list.",
+      "revId": "4017b2e7f25e2af9a8f28550224fe6e6540fa7b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
