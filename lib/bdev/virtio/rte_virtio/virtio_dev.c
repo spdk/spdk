@@ -261,7 +261,7 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	 * Negotiate features: Subset of device feature bits are written back
 	 * guest feature bits.
 	 */
-	dev->guest_features = req_features;
+	dev->req_guest_features = req_features;
 	dev->guest_features = vtpci_negotiate_features(dev, host_features);
 	PMD_INIT_LOG(DEBUG, "features after negotiate = %" PRIx64,
 		dev->guest_features);
@@ -279,8 +279,6 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 			return -1;
 		}
 	}
-
-	dev->req_guest_features = req_features;
 
 	return 0;
 }
