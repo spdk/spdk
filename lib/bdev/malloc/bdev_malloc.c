@@ -42,7 +42,7 @@
 #include "spdk/copy_engine.h"
 #include "spdk/io_channel.h"
 #include "spdk/string.h"
-
+#include <libpmemblk.h>
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
