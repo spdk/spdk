@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bcfc22b4_bb944257",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-04T09:14:04Z",
+      "side": 1,
+      "message": "yes, I will modify it as \"valid\".",
+      "parentUuid": "9ba64d10_d1dd6c19",
+      "revId": "ce18c53526a21e464c24a26f74255891cc644d9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3adccb4_89316f7f",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 14
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "b4bd17f3_2a70c318",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1385,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-04T09:14:04Z",
+      "side": 1,
+      "message": "sure, I will modify this.",
+      "parentUuid": "a3adccb4_89316f7f",
+      "revId": "ce18c53526a21e464c24a26f74255891cc644d9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d2b698f2_f2f90b5e",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 14
@@ -47,6 +83,24 @@
       "writtenOn": "2017-09-01T18:34:31Z",
       "side": 1,
       "message": "not sure what Ben\u0027s original intention was for this field but I\u0027m guessing to guess this probably isn\u0027t it. Are you trying to use this as a flag that the page is valid? We have an unused crc field that would be a better option I think but should probably be its own patch.  If we were to use a flag like this in functional code (little different for test code) I don\u0027t think I\u0027d go with this value and I\u0027d make it a private #define as well",
+      "revId": "ce18c53526a21e464c24a26f74255891cc644d9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35656b41_3cfa94a6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1537,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-04T09:14:04Z",
+      "side": 1,
+      "message": "yes, I am trying to use the reserved0 as the flag to show if the page is valid, we do have an unused crc field, but I suppose the crc filed is used for crc purpose in the further, no for the flag if the page is valid, so I pick the reserved0 as the flag.",
+      "parentUuid": "d2b698f2_f2f90b5e",
       "revId": "ce18c53526a21e464c24a26f74255891cc644d9a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
