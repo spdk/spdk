@@ -531,6 +531,47 @@ spdk_vhost_allocate_reactor(uint64_t cpumask)
 }
 
 static void
+vhost_timed_event_fn(void *arg1, void *arg2)
+{
+	struct spdk_vhost_timed_event *ctx = arg1;
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(arg2);
+	}
+
+	sem_post(&ctx->sem);
+}
+
+void
+spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cb_fn, void *arg,
+			    unsigned timeout_sec, const char *errmsg)
+{
+	struct spdk_vhost_timed_event ev_ctx = {0};
+	struct spdk_event *ev;
+	struct timespec timeout;
+	int rc;
+
+	if (sem_init(&ev_ctx.sem, 0, 0) < 0)
+		SPDK_ERRLOG("Failed to initialize semaphore for vhost timed event\n");
+
+	ev_ctx.cb_fn = cb_fn;
+	clock_gettime(CLOCK_REALTIME, &timeout);
+	timeout.tv_sec += timeout_sec;
+
+	ev = spdk_event_allocate(lcore, vhost_timed_event_fn, &ev_ctx, arg);
+	assert(ev);
+	spdk_event_call(ev);
+
+	rc = sem_timedwait(&ev_ctx.sem, &timeout);
+	if (rc != 0) {
+		SPDK_ERRLOG("Timout waiting for event: %s.\n", errmsg);
+		abort();
+	}
+
+	sem_destroy(&ev_ctx.sem);
+}
+
+static void
 destroy_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
@@ -701,47 +742,6 @@ spdk_vhost_shutdown_cb(void)
 		abort();
 	}
 	pthread_detach(tid);
-}
-
-static void
-vhost_timed_event_fn(void *arg1, void *arg2)
-{
-	struct spdk_vhost_timed_event *ctx = arg1;
-
-	if (ctx->cb_fn) {
-		ctx->cb_fn(arg2);
-	}
-
-	sem_post(&ctx->sem);
-}
-
-void
-spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cb_fn, void *arg,
-			    unsigned timeout_sec, const char *errmsg)
-{
-	struct spdk_vhost_timed_event ev_ctx = {0};
-	struct spdk_event *ev;
-	struct timespec timeout;
-	int rc;
-
-	if (sem_init(&ev_ctx.sem, 0, 0) < 0)
-		SPDK_ERRLOG("Failed to initialize semaphore for vhost timed event\n");
-
-	ev_ctx.cb_fn = cb_fn;
-	clock_gettime(CLOCK_REALTIME, &timeout);
-	timeout.tv_sec += timeout_sec;
-
-	ev = spdk_event_allocate(lcore, vhost_timed_event_fn, &ev_ctx, arg);
-	assert(ev);
-	spdk_event_call(ev);
-
-	rc = sem_timedwait(&ev_ctx.sem, &timeout);
-	if (rc != 0) {
-		SPDK_ERRLOG("Timout waiting for event: %s.\n", errmsg);
-		abort();
-	}
-
-	sem_destroy(&ev_ctx.sem);
 }
 
 void
