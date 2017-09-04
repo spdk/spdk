@@ -62,13 +62,10 @@ struct virtio_req {
 };
 
 /* Features desired/implemented by this driver. */
-#define VIRTIO_PMD_DEFAULT_GUEST_FEATURES	\
-	(1u << VIRTIO_SCSI_F_INOUT	  |	\
-	 1ULL << VIRTIO_F_VERSION_1       |	\
+#define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
+	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
+	 1ULL << VIRTIO_F_VERSION_1		|	\
 	 1ULL << VIRTIO_F_IOMMU_PLATFORM)
-
-#define VIRTIO_PMD_SUPPORTED_GUEST_FEATURES	\
-	(VIRTIO_PMD_DEFAULT_GUEST_FEATURES)
 
 uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 		uint16_t nb_pkts);
