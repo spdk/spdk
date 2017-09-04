@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccf48231_edd3cd0c",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-04T19:48:34Z",
+      "side": 1,
+      "message": "remove",
+      "revId": "e5949f86f48bf0012d643a7c71f0d8a8822fcc12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
