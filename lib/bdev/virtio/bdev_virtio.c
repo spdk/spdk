@@ -87,6 +87,7 @@ struct virtio_scsi_disk {
 	struct virtio_dev	*vdev;
 	uint64_t		num_blocks;
 	uint32_t		block_size;
+	bool			use_scsi_16;
 	TAILQ_ENTRY(virtio_scsi_disk) link;
 };
 
@@ -310,45 +311,83 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 }
 
-static int
-process_scan_inquiry(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
+static void
+send_read_cap(struct virtio_scsi_scan_base *base, uint8_t target_id, struct virtio_req *vreq,
+	      bool read_16)
 {
 	struct iovec *iov = vreq->iov;
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+
+	memset(req, 0, sizeof(*req));
+	req->lun[0] = 1;
+	req->lun[1] = target_id;
+
+	iov[0].iov_len = 32;
+	if (read_16) {
+		req->cdb[0] = SPDK_SPC_SERVICE_ACTION_IN_16;
+		req->cdb[1] = SPDK_SBC_SAI_READ_CAPACITY_16;
+		to_be32(&req->cdb[10], iov[0].iov_len);
+	} else {
+		req->cdb[0] = SPDK_SBC_READ_CAPACITY_10;
+	}
+
+	virtio_xmit_pkts(base->vdev->vqs[2], vreq);
+}
+
+static int
+process_scan_inquiry(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
+{
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
 	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
-	uint8_t lun_id;
+	uint8_t target_id;
 
 	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
 		return -1;
 	}
 
-	lun_id = req->lun[1];
-	/* reuse vreq for next request */
-	memset(req, 0, sizeof(*req));
-	req->lun[0] = 1;
-	req->lun[1] = lun_id;
-
-	req->cdb[0] = SPDK_SPC_SERVICE_ACTION_IN_16;
-	req->cdb[1] = SPDK_SBC_SAI_READ_CAPACITY_16;
-
-	iov[0].iov_len = 32;
-	to_be32(&req->cdb[10], iov[0].iov_len);
-
-	virtio_xmit_pkts(base->vdev->vqs[2], vreq);
+	target_id = req->lun[1];
+	send_read_cap(base, target_id, vreq, true);
 	return 0;
 }
 
 static int
-process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
+process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq, bool read_16)
 {
 	struct virtio_scsi_disk *disk;
 	struct spdk_bdev *bdev;
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
 	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
+	uint64_t max_block;
+	uint32_t block_size;
+	uint8_t target_id;
+	int sk, asc, ascq;
 
-	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
-		SPDK_ERRLOG("read capacity failed for target %"PRIu8".\n", req->lun[1]);
-		return -1;
+	if (resp->response != VIRTIO_SCSI_S_OK) {
+		goto err;
+	}
+
+	if (resp->response == SPDK_SCSI_STATUS_CHECK_CONDITION) {
+		get_scsi_status(resp, &sk, &asc, &ascq);
+		if (sk == SPDK_SCSI_SENSE_ILLEGAL_REQUEST &&
+		    (asc == SPDK_SCSI_ASC_INVALID_COMMAND_OPERATION_CODE ||
+		     asc == SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB) &&
+		    ascq == SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE) {
+			target_id = req->lun[1];
+			send_read_cap(base, target_id, vreq, false);
+			return 0;
+		}
+	}
+
+	if (resp->status != SPDK_SCSI_STATUS_GOOD) {
+		goto err;
+	}
+
+	if (read_16) {
+		block_size = from_be32((uint8_t *)vreq->iov[0].iov_base + 8);
+		max_block = from_be64(vreq->iov[0].iov_base);
+	} else {
+		block_size = from_be32((uint8_t *)vreq->iov[0].iov_base + 4);
+		max_block = from_be32(vreq->iov[0].iov_base);
 	}
 
 	disk = calloc(1, sizeof(*disk));
@@ -357,8 +396,9 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 		return -1;
 	}
 
-	disk->num_blocks = from_be64((uint64_t *)(vreq->iov[0].iov_base)) + 1;
-	disk->block_size = from_be32((uint32_t *)(vreq->iov[0].iov_base + 8));
+	disk->num_blocks = max_block + 1;
+	disk->block_size = block_size;
+	disk->use_scsi_16 = read_16;
 
 	disk->vdev = base->vdev;
 
@@ -376,6 +416,11 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	TAILQ_INSERT_TAIL(&base->found_disks, disk, link);
 	scan_target_finish(base);
 	return 0;
+
+err:
+	SPDK_ERRLOG("read capacity (%d) failed for target %"PRIu8".\n",
+		    read_16 ? 16 : 10, req->lun[1]);
+	return -1;
 }
 
 static void
@@ -395,8 +440,9 @@ process_scan_resp(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	case SPDK_SPC_INQUIRY:
 		rc = process_scan_inquiry(base, vreq);
 		break;
+	case SPDK_SBC_READ_CAPACITY_10:
 	case SPDK_SPC_SERVICE_ACTION_IN_16:
-		rc = process_read_cap(base, vreq);
+		rc = process_read_cap(base, vreq, req->cdb[0] == SPDK_SPC_SERVICE_ACTION_IN_16);
 		break;
 	default:
 		SPDK_ERRLOG("Received invalid target scan message: cdb[0] = %"PRIu8".\n", req->cdb[0]);
