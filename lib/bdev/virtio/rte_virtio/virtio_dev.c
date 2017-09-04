@@ -243,6 +243,10 @@ virtio_alloc_queues(struct virtio_dev *dev)
 	return 0;
 }
 
+/* Negotiate virtio features. This will also set dev->modern if virtio
+ * device offers VIRTIO_F_VERSION_1 flag. If dev->modern has been set before,
+ * the mentioned flag must be offered. Otherwise an error is returned.
+ */
 static int
 virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 {
@@ -266,18 +270,22 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	PMD_INIT_LOG(DEBUG, "features after negotiate = %" PRIx64,
 		dev->guest_features);
 
-	if (dev->modern) {
-		if (!vtpci_with_feature(dev, VIRTIO_F_VERSION_1)) {
+	if (!vtpci_with_feature(dev, VIRTIO_F_VERSION_1)) {
+		if (dev->modern) {
 			PMD_INIT_LOG(ERR,
-				"VIRTIO_F_VERSION_1 features is not enabled.");
+				     "VIRTIO_F_VERSION_1 features is not enabled.");
 			return -1;
 		}
-		vtpci_set_status(dev, VIRTIO_CONFIG_STATUS_FEATURES_OK);
-		if (!(vtpci_get_status(dev) & VIRTIO_CONFIG_STATUS_FEATURES_OK)) {
-			PMD_INIT_LOG(ERR,
-				"failed to set FEATURES_OK status!");
-			return -1;
-		}
+
+		return 0;
+	}
+
+	dev->modern = 1;
+	vtpci_set_status(dev, VIRTIO_CONFIG_STATUS_FEATURES_OK);
+	if (!(vtpci_get_status(dev) & VIRTIO_CONFIG_STATUS_FEATURES_OK)) {
+		PMD_INIT_LOG(ERR,
+			     "failed to set FEATURES_OK status!");
+		return -1;
 	}
 
 	return 0;
