@@ -81,7 +81,7 @@ spdk_mkfs_run(void *arg1, void *arg2)
 
 	printf("Initializing filesystem on bdev %s...", g_bdev_name);
 	fflush(stdout);
-	g_bs_dev = spdk_bdev_create_bs_dev(bdev);
+	g_bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
 	spdk_fs_init(g_bs_dev, NULL, init_cb, NULL);
 }
 

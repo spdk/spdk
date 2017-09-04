@@ -39,6 +39,7 @@
 #define SPDK_BLOB_BDEV_H
 
 #include "spdk/stdinc.h"
+#include "spdk/bdev.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -47,7 +48,8 @@ extern "C" {
 struct spdk_bs_dev;
 struct spdk_bdev;
 
-struct spdk_bs_dev *spdk_bdev_create_bs_dev(struct spdk_bdev *);
+struct spdk_bs_dev *spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
+		void *remove_ctx);
 
 #ifdef __cplusplus
 }
