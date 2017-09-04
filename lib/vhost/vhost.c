@@ -55,12 +55,6 @@ struct spdk_vhost_timed_event {
 
 	/** Semaphore used to signal that event is done. */
 	sem_t sem;
-
-	/** Timout specified during initialization. */
-	struct timespec timeout;
-
-	/** Event object that can be passed to *spdk_event_call()*. */
-	struct spdk_event *spdk_event;
 };
 
 static int new_connection(int vid);
@@ -712,41 +706,42 @@ spdk_vhost_shutdown_cb(void)
 static void
 vhost_timed_event_fn(void *arg1, void *arg2)
 {
-	struct spdk_vhost_timed_event *ev = arg1;
+	struct spdk_vhost_timed_event *ctx = arg1;
 
-	if (ev->cb_fn) {
-		ev->cb_fn(arg2);
+	if (ctx->cb_fn) {
+		ctx->cb_fn(arg2);
 	}
 
-	sem_post(&ev->sem);
+	sem_post(&ctx->sem);
 }
 
 void
 spdk_vhost_timed_event_send(int32_t lcore, spdk_vhost_timed_event_fn cb_fn, void *arg,
 			    unsigned timeout_sec, const char *errmsg)
 {
-	struct spdk_vhost_timed_event _ev = {0};
-	struct spdk_vhost_timed_event *ev = &_ev;
+	struct spdk_vhost_timed_event ev_ctx = {0};
+	struct spdk_event *ev;
+	struct timespec timeout;
 	int rc;
 
-	if (sem_init(&ev->sem, 0, 0) < 0)
+	if (sem_init(&ev_ctx.sem, 0, 0) < 0)
 		SPDK_ERRLOG("Failed to initialize semaphore for vhost timed event\n");
 
-	ev->cb_fn = cb_fn;
-	clock_gettime(CLOCK_REALTIME, &ev->timeout);
-	ev->timeout.tv_sec += timeout_sec;
-	ev->spdk_event = spdk_event_allocate(lcore, vhost_timed_event_fn, ev, arg);
-	assert(ev->spdk_event);
-	spdk_event_call(ev->spdk_event);
+	ev_ctx.cb_fn = cb_fn;
+	clock_gettime(CLOCK_REALTIME, &timeout);
+	timeout.tv_sec += timeout_sec;
 
-	rc = sem_timedwait(&ev->sem, &ev->timeout);
+	ev = spdk_event_allocate(lcore, vhost_timed_event_fn, &ev_ctx, arg);
+	assert(ev);
+	spdk_event_call(ev);
+
+	rc = sem_timedwait(&ev_ctx.sem, &timeout);
 	if (rc != 0) {
 		SPDK_ERRLOG("Timout waiting for event: %s.\n", errmsg);
 		abort();
 	}
 
-	ev->spdk_event = NULL;
-	sem_destroy(&ev->sem);
+	sem_destroy(&ev_ctx.sem);
 }
 
 void
