@@ -206,6 +206,24 @@
     },
     {
       "key": {
+        "uuid": "692ace09_b25e855d",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-04T14:43:29Z",
+      "side": 1,
+      "message": "Thanks for this comment. Please take a look at this new update and looks like the opts parameter is not required. Please let me know if I miss anything here. Thanks.",
+      "parentUuid": "aa635f41_2c0dc6e8",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "30875742_e617af81",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 10
