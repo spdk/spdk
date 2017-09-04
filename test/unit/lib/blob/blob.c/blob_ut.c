@@ -77,12 +77,13 @@ _bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 static void
 _bs_flush_scheduler(void)
 {
-	struct scheduled_ops *ops, *tmp;
+	struct scheduled_ops *tmp;
 
-	TAILQ_FOREACH_SAFE(ops, &g_scheduled_ops, ops_queue, tmp) {
-		ops->fn(ops->ctx);
-		TAILQ_REMOVE(&g_scheduled_ops, ops, ops_queue);
-		free(ops);
+	while (!TAILQ_EMPTY(&g_scheduled_ops)) {
+		tmp = TAILQ_FIRST(&g_scheduled_ops);
+		tmp->fn(tmp->ctx);
+		TAILQ_REMOVE(&g_scheduled_ops, tmp, ops_queue);
+		free(tmp);
 	}
 }
 
