@@ -109,6 +109,12 @@ for i in "$@"; do
 		--without-dpdk)
 			CONFIG_DPDK_DIR=
 			;;
+		--with-nvml=*)
+			CONFIG_NVML_DIR=$(readlink -f ${i#*=})
+			;;
+		--without-nvml)
+			CONFIG_NVML_DIR=
+			;;
 		--with-fio=*)
 			FIO_SOURCE_DIR="${i#*=}"
 			CONFIG_FIO_PLUGIN=y
@@ -145,6 +151,16 @@ if [ -z "$CONFIG_ENV" ]; then
 			exit 1
 		fi
 		CONFIG_DPDK_DIR="$rootdir"/dpdk/build
+	fi
+	if [ -z "$CONFIG_NVML_DIR" ]; then
+		rootdir=$(readlink -f $(dirname $0))
+		if [ ! -f "$rootdir"/nvml/Makefile ]; then
+			echo "NVML not found; please specify --with-nvml=<path> or run:"
+			echo
+			echo "  git submodule update --init"
+			exit 1
+		fi
+		CONFIG_NVML_DIR="$rootdir"/nvml
 	fi
 fi
 
@@ -205,6 +221,9 @@ if [ -n "$CONFIG_ENV" ]; then
 fi
 if [ -n "$CONFIG_DPDK_DIR" ]; then
 	echo "CONFIG_DPDK_DIR?=$CONFIG_DPDK_DIR" >> CONFIG.local
+fi
+if [ -n "$CONFIG_NVML_DIR" ]; then
+	echo "CONFIG_NVML_DIR?=$CONFIG_NVML_DIR" >> CONFIG.local
 fi
 if [ -n "$CONFIG_FIO_PLUGIN" ]; then
 	echo "CONFIG_FIO_PLUGIN?=$CONFIG_FIO_PLUGIN" >> CONFIG.local
