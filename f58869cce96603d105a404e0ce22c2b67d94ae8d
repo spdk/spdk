@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "489cd2a2_ce813c40",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-04T14:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b40115e4_37638d03",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9200299f_54a75aca",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-01T17:51:20Z",
       "side": 1,
       "message": "This needs to be reworked - it says the trid has to be a discovery service.",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5019954d_5521a893",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-04T14:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9200299f_54a75aca",
       "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "2b28daad_3634bbf7",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-04T14:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bd7550d0_4d50951d",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e1d56cf_fd7ca20e",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 10
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "62540445_34f3be4c",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-04T14:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1e1d56cf_fd7ca20e",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5285fceb_a37679f7",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 10
@@ -81,6 +153,30 @@
       "writtenOn": "2017-09-01T22:46:52Z",
       "side": 1,
       "message": "I would prefer to call this \"spdk_nvme_connect()\".",
+      "range": {
+        "startLine": 362,
+        "startChar": 4,
+        "endLine": 362,
+        "endChar": 20
+      },
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b179ef4_008c1328",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-04T14:41:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5285fceb_a37679f7",
       "range": {
         "startLine": 362,
         "startChar": 4,
@@ -121,6 +217,24 @@
       "writtenOn": "2017-09-01T17:51:20Z",
       "side": 1,
       "message": "Is this what happens when the user tries to attach to a device that is already attached? Maybe we should be searching the attached controllers list prior to initializing and returning the existing pointer?",
+      "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ddfe8923_d59b7c51",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1341,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-04T14:41:32Z",
+      "side": 1,
+      "message": "For the case to attach an already attached ctrlr, does it in the multi_process environment for the secondary process to attach? For the local PCIe ctrlr, it will search on the g_spdk_nvme_driver attached list and for the remote RDMA ctrlr, it will construct the per process ctrlr. The new READY case added here is for the RDMA discovery_ctrlr where its state is set to Ready explicitly in the nvme_rdma_ctrlr_scan() handling.\n\nFor two or more independent SPDK applications, attach to a device which is already attached in another SPDK process may be not allowed (looks like we can not forbid this in our current code by now).",
+      "parentUuid": "30875742_e617af81",
       "revId": "f58869cce96603d105a404e0ce22c2b67d94ae8d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
