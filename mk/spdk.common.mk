@@ -87,6 +87,9 @@ LIBS += -L/usr/local/lib
 COMMON_CFLAGS += -I/usr/local/include
 endif
 
+# Attach only if NVML lib specified with configure
+COMMON_CFLAGS += -I$(SPDK_ROOT_DIR)/nvml/src/include
+
 ifeq ($(CONFIG_DEBUG), y)
 COMMON_CFLAGS += -DDEBUG -O0
 else

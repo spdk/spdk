@@ -34,7 +34,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "bdev_malloc.h"
+#include "bdev_pmem.h"
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
@@ -44,6 +44,7 @@
 #include "spdk/string.h"
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
+#include "libpmemblk.h"
 
 struct malloc_disk {
 	struct spdk_bdev	disk;
@@ -516,4 +517,4 @@ bdev_malloc_get_spdk_running_config(FILE *fp)
 	}
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("bdev_malloc", SPDK_TRACE_BDEV_MALLOC)
+SPDK_LOG_REGISTER_TRACE_FLAG("bdev_pmem", SPDK_TRACE_BDEV_MALLOC)
