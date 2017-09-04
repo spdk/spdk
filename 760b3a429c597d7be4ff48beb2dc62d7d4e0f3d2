@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e5658ea_fc9b9dcd",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-04T05:22:38Z",
+      "side": 1,
+      "message": "i don\u0027t think that\u0027s intentional",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 24
+      },
+      "revId": "760b3a429c597d7be4ff48beb2dc62d7d4e0f3d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
