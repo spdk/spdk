@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5c28f271_f4eefdc5",
+        "filename": "Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-04T10:53:49Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "e7bad974_62a24f51",
+      "revId": "7834fd27e925f6b6f1420a7d7bd62ec5b6e6aabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e1854d8_b91da380",
         "filename": "README.md",
         "patchSetId": 9
@@ -30,6 +48,30 @@
       "writtenOn": "2017-09-01T23:04:48Z",
       "side": 1,
       "message": "This won\u0027t work on FreeBSD: GNU make is called \u0027gmake\u0027 there, and it\u0027s not installed by default - the user needs to run pkgdep first to even get gmake.\n\nI would prefer to just tell the user to call scripts/pkgdep.sh directly and drop the Makefile rule.",
+      "range": {
+        "startLine": 51,
+        "startChar": 57,
+        "endLine": 51,
+        "endChar": 70
+      },
+      "revId": "7834fd27e925f6b6f1420a7d7bd62ec5b6e6aabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa9d9932_c9e1a34b",
+        "filename": "README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-04T10:53:49Z",
+      "side": 1,
+      "message": "Fixed to \u0027scripts/pkgdep.sh\u0027. The way \u0027make pkgdep\u0027 in makefile, just keep it, do you think so?",
+      "parentUuid": "9e1854d8_b91da380",
       "range": {
         "startLine": 51,
         "startChar": 57,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "e0d2e7d9_5e64ea0e",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-04T10:53:49Z",
+      "side": 1,
+      "message": "Fixed.Thank you for your detailed instructions.",
+      "parentUuid": "e96f580e_38396b02",
+      "revId": "7834fd27e925f6b6f1420a7d7bd62ec5b6e6aabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f75ce8f_6239c4c7",
         "filename": "scripts/vagrant/build.sh",
         "patchSetId": 9
@@ -70,6 +130,24 @@
       "writtenOn": "2017-09-01T22:54:07Z",
       "side": 1,
       "message": "Should we add this to pkgdep.sh script too?",
+      "revId": "7834fd27e925f6b6f1420a7d7bd62ec5b6e6aabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bf79320_7d9fec2c",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-04T10:53:49Z",
+      "side": 1,
+      "message": "Added. But I found this applies only to CentOS, so I added a distinguish in \u0027pkgdep.sh\u0027.",
+      "parentUuid": "7f75ce8f_6239c4c7",
       "revId": "7834fd27e925f6b6f1420a7d7bd62ec5b6e6aabb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
