@@ -550,7 +550,7 @@ spdk_rocksdb_run(void *arg1, void *arg2)
 
 	g_lcore = spdk_env_get_first_core();
 
-	g_bs_dev = spdk_bdev_create_bs_dev(bdev);
+	g_bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
 	printf("using bdev %s\n", g_bdev_name.c_str());
 	spdk_fs_load(g_bs_dev, __send_request, fs_load_cb, NULL);
 }
