@@ -16,6 +16,24 @@
       "revId": "8658f83a1c99015ade0a7e9020c2cd5f74604b6d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d58fecf2_b3e67429",
+        "filename": ".gitmodules",
+        "patchSetId": 6
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-05T20:38:27Z",
+      "side": 1,
+      "message": "If we do want to use it as a submodule, it should use the github URL rather than a relative path.",
+      "parentUuid": "f822e360_1488467b",
+      "revId": "8658f83a1c99015ade0a7e9020c2cd5f74604b6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
