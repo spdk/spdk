@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1712dc2f_b7fc0341",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 19
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "they would be, but the hardcoded values now expect NVMe. I was thinking for the next ver to pass an option to specify the name of the back end and then it would jsut be a manual thing to make sure it exists in the .conf file",
+      "parentUuid": "53a4d4af_ee3baa94",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5372996c_d5caf4a4",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 19
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-05T20:04:37Z",
       "side": 1,
       "message": "camel case is definitely not SPDK :)",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8ecee5f_11a23637",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5372996c_d5caf4a4",
       "revId": "243c0795797cd4820a3872f20b932a207e66a951",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "13a87587_d25aa52a",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "I\u0027ll just print both",
+      "parentUuid": "7fc8117b_6f9cc7fa",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91cee94a_131578b2",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 19
@@ -64,6 +118,24 @@
       "writtenOn": "2017-09-05T20:04:37Z",
       "side": 1,
       "message": "iterating",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "034a33b1_5eceb64e",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "91cee94a_131578b2",
       "revId": "243c0795797cd4820a3872f20b932a207e66a951",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "a68b41ea_be8bc886",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b474e655_01a2e378",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3921bbe_8dc4cab7",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 19
@@ -98,6 +188,24 @@
       "writtenOn": "2017-09-05T20:04:37Z",
       "side": 1,
       "message": "Can you just always get the page_size in load_bs()?  Maybe the channel too.  Then you don\u0027t have to do this in several different command functions.",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02693d78_eab03a95",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 833,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "so the issue is that it has to be in the callback (like in this case)  and I have different callbacks for different CLI functions so there\u0027s some duplication here and there where code paths are independent.  But once its set in a cb all downstream functions use it",
+      "parentUuid": "b3921bbe_8dc4cab7",
       "revId": "243c0795797cd4820a3872f20b932a207e66a951",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "ea888ad8_310cb8e4",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4868642c_59793d24",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dbbb2a12_444b0d9a",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 19
@@ -132,6 +258,24 @@
       "writtenOn": "2017-09-05T20:04:37Z",
       "side": 1,
       "message": "This function uses BDEV, bdev and Bdev.  Suggest picking one to use through the entire file (probably bdev).",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e2729da_b17173f3",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 880,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dbbb2a12_444b0d9a",
       "revId": "243c0795797cd4820a3872f20b932a207e66a951",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "0d56a5f8_852117f9",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 885,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65dd46f5_928db1ae",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3eaafe2d_e99ff452",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 19
@@ -166,6 +328,24 @@
       "writtenOn": "2017-09-05T20:04:37Z",
       "side": 1,
       "message": "lin \u003d\u003e line",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3382bfe1_c41c914c",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3eaafe2d_e99ff452",
       "revId": "243c0795797cd4820a3872f20b932a207e66a951",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "3bfb42f5_8468d175",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1032,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "LOL!  OK :)",
+      "parentUuid": "d05dff99_b253b893",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5c45b5bf_596a519a",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 19
@@ -206,6 +404,24 @@
     },
     {
       "key": {
+        "uuid": "e1cfad90_bedea2ef",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1088,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5c45b5bf_596a519a",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b039e8a_b2f0e1ad",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 19
@@ -217,6 +433,24 @@
       "writtenOn": "2017-09-05T20:04:37Z",
       "side": 1,
       "message": "This has slightly different semantics from the rest of the SPDK tools which don\u0027t enforce ordering on the arguments.  If I choose something like -i -c \u003cconf file\u003e this will break after the -i and never pick up the config file name",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a857d2a6_ccba812f",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-05T23:43:51Z",
+      "side": 1,
+      "message": "I\u0027m open to suggestions - never used getopt() before so I was making shit up as I went here...",
+      "parentUuid": "4b039e8a_b2f0e1ad",
       "revId": "243c0795797cd4820a3872f20b932a207e66a951",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
