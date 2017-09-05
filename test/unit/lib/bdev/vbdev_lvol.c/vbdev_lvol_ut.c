@@ -43,6 +43,35 @@ struct spdk_lvol *g_lvol = NULL;
 struct lvol_store_bdev *g_lvs_bdev = NULL;
 struct spdk_bdev *g_base_bdev = NULL;
 
+uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob)
+{
+	return 0;
+}
+
+void spdk_blob_open(struct spdk_blob_store *bs, spdk_blob_id id,
+		    spdk_blob_op_with_handle_complete cb_fn,
+		    void *cb_arg)
+{
+}
+
+spdk_blob_id spdk_blob_get_id(struct spdk_blob *blob)
+{
+	spdk_blob_id id = {0};
+
+	return id;
+}
+
+void
+spdk_blob_iter_next(struct spdk_blob_store *bs, struct spdk_blob **blob,
+		    spdk_blob_op_with_handle_complete cb_fn, struct spdk_lvol_store *lvs)
+{
+}
+
+void
+spdk_blob_iter_first(struct spdk_blob_store *bs, spdk_blob_op_with_handle_complete cb_fn,
+		     struct spdk_lvol_store *lvs)
+{
+}
 int
 spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		void *cb_arg)
