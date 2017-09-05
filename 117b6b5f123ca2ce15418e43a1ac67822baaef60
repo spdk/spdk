@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0cd80026_ad3dc9cf",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-05T18:15:11Z",
+      "side": 1,
+      "message": "This is fixed in the next patch and matches the hard-coded 64 below, so I\u0027m OK with checking it in as-is.",
+      "revId": "117b6b5f123ca2ce15418e43a1ac67822baaef60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
