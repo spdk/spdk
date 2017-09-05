@@ -822,10 +822,17 @@ spdk_vhost_shutdown_cb(void)
 }
 
 void
-spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev,
+			    struct spdk_json_write_ctx *w)
 {
 	assert(vdev->backend->dump_config_json != NULL);
 	vdev->backend->dump_config_json(vdev, w);
+}
+
+int
+spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev)
+{
+	return vdev->backend->vhost_remove_controller(vdev);
 }
 
 static int
