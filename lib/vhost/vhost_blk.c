@@ -597,6 +597,30 @@ spdk_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_wr
 
 	spdk_json_write_object_end(w);
 }
+static int
+spdk_remove_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev)
+{
+//	struct spdk_bdev *bdev = spdk_vhost_blk_get_dev(vdev);
+//	struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+//
+	assert(vdev != NULL);
+//	spdk_json_write_name(w, "block");
+//	spdk_json_write_object_begin(w);
+//
+//	spdk_json_write_name(w, "readonly");
+//	spdk_json_write_bool(w, bvdev->readonly);
+//
+//	spdk_json_write_name(w, "bdev");
+//	if (bdev) {
+//		spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+//	} else {
+//		spdk_json_write_null(w);
+//	}
+//
+//	spdk_json_write_object_end(w);
+
+	return spdk_vhost_blk_destroy(vdev);
+}
 
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.virtio_features = SPDK_VHOST_FEATURES |
@@ -612,6 +636,7 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.new_device =  new_device,
 	.destroy_device = destroy_device,
 	.dump_config_json = spdk_vhost_blk_dump_config_json,
+	.remove_dump_config_json = spdk_remove_vhost_blk_dump_config_json,
 };
 
 int
