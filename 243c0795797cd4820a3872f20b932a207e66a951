@@ -1,0 +1,242 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53a4d4af_ee3baa94",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 19
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "Why does this require an NVMe backend?  Obviously malloc wouldn\u0027t work, but I think other persistent bdevs would work fine.",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5372996c_d5caf4a4",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "camel case is definitely not SPDK :)",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fc8117b_6f9cc7fa",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "This is probably OK but to make it really useful for debugging purposes it should have the ability to print out the hex values.  For example, blobfs stores file lengths as xattrs which won\u0027t print out well as ASCII strings.",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91cee94a_131578b2",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "iterating",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b474e655_01a2e378",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "toa \u003d\u003e to a",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3921bbe_8dc4cab7",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 833,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "Can you just always get the page_size in load_bs()?  Maybe the channel too.  Then you don\u0027t have to do this in several different command functions.",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4868642c_59793d24",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 873,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "ion \u003d\u003e on",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbbb2a12_444b0d9a",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 880,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "This function uses BDEV, bdev and Bdev.  Suggest picking one to use through the entire file (probably bdev).",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65dd46f5_928db1ae",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 885,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "I don\u0027t think this has to be an error and stop with -1.  It\u0027s valid for a config file to not have any bdevs.  It should certainly print a message though explicitly saying that no bdevs were found.",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3eaafe2d_e99ff452",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "lin \u003d\u003e line",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d05dff99_b253b893",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1032,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "We try to keep getopt option strings alphabetized.",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c45b5bf_596a519a",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1088,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "suggest using \"remove\" instead of \"delete\" since the API call is spdk_blob_md_remove_xattr()",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b039e8a_b2f0e1ad",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "This has slightly different semantics from the rest of the SPDK tools which don\u0027t enforce ordering on the arguments.  If I choose something like -i -c \u003cconf file\u003e this will break after the -i and never pick up the config file name",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "464bdc93_f5b1b789",
+        "filename": "examples/blob/cli/blobcli.conf",
+        "patchSetId": 19
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T20:04:37Z",
+      "side": 1,
+      "message": "Not sure we should check this in - the PCI address is highly system dependent.",
+      "revId": "243c0795797cd4820a3872f20b932a207e66a951",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
