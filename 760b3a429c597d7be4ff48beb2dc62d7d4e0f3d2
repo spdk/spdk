@@ -22,6 +22,40 @@
       "revId": "760b3a429c597d7be4ff48beb2dc62d7d4e0f3d2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9d1dd0f_7e17b01b",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T22:26:14Z",
+      "side": 1,
+      "message": "Similar to Darek\u0027s comment - suggest we call this spdk_vhost_virtqueue or spdk_vhost_vq.",
+      "revId": "760b3a429c597d7be4ff48beb2dc62d7d4e0f3d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "739dd3d8_4b62dc3d",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T22:26:14Z",
+      "side": 1,
+      "message": "maybe call this vring instead of vq?  it\u0027s fine as it is but I think calling it vring will make it more clear the differentiation between spdk virtqueue/vq and dpdk vring",
+      "revId": "760b3a429c597d7be4ff48beb2dc62d7d4e0f3d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
