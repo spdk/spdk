@@ -38,6 +38,7 @@
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
 #include "spdk/io_channel.h"
+#include "spdk/likely.h"
 #include "spdk/nvme.h"
 #include "spdk/nvmf_spec.h"
 #include "spdk/trace.h"
@@ -46,15 +47,6 @@
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
-
-/* read command dword 12 */
-struct __attribute__((packed)) nvme_read_cdw12 {
-	uint16_t	nlb;		/* number of logical blocks */
-	uint16_t	rsvd	: 10;
-	uint8_t		prinfo	: 4;	/* protection information field */
-	uint8_t		fua	: 1;	/* force unit access */
-	uint8_t		lr	: 1;	/* limited retry */
-};
 
 bool
 spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
@@ -116,54 +108,105 @@ spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns_dat
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-static int
-nvmf_bdev_ctrlr_rw_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-		       struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+static void
+nvmf_bdev_ctrlr_get_rw_params(const struct spdk_nvme_cmd *cmd, uint64_t *start_lba,
+			      uint64_t *num_blocks)
 {
-	uint64_t lba_address;
-	uint64_t blockcnt;
-	uint64_t io_bytes;
-	uint64_t llen;
+	/* SLBA: CDW10 and CDW11 */
+	*start_lba = from_le64(&cmd->cdw10);
+
+	/* NLB: CDW12 bits 15:00, 0's based */
+	*num_blocks = (from_le32(&cmd->cdw12) & 0xFFFFu) + 1;
+}
+
+static bool
+nvmf_bdev_ctrlr_lba_in_range(uint64_t bdev_num_blocks, uint64_t io_start_lba,
+			     uint64_t io_num_blocks)
+{
+	if (io_start_lba + io_num_blocks > bdev_num_blocks ||
+	    io_start_lba + io_num_blocks < io_start_lba) {
+		return false;
+	}
+
+	return true;
+}
+
+static int
+nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+{
+	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
 	uint32_t block_size = spdk_bdev_get_block_size(bdev);
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
-	struct nvme_read_cdw12 *cdw12 = (struct nvme_read_cdw12 *)&cmd->cdw12;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	uint64_t start_lba;
+	uint64_t num_blocks;
 
-	blockcnt = spdk_bdev_get_num_blocks(bdev);
-	lba_address = cmd->cdw11;
-	lba_address = (lba_address << 32) + cmd->cdw10;
-	llen = cdw12->nlb + 1;
+	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
 
-	if (lba_address >= blockcnt || llen > blockcnt || lba_address > (blockcnt - llen)) {
+	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {
 		SPDK_ERRLOG("end of media\n");
-		response->status.sc = SPDK_NVME_SC_LBA_OUT_OF_RANGE;
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_LBA_OUT_OF_RANGE;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	io_bytes = llen * block_size;
-	if (io_bytes > req->length) {
-		SPDK_ERRLOG("Read/Write NLB > SGL length\n");
-		response->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+	if (spdk_unlikely(num_blocks * block_size > req->length)) {
+		SPDK_ERRLOG("Read NLB %" PRIu64 " * block size %" PRIu32 " > SGL length %" PRIu32 "\n",
+			    num_blocks, block_size, req->length);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	if (cmd->opc == SPDK_NVME_OPC_READ) {
-		spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0, (uint64_t)req, 0);
-		if (spdk_bdev_read_blocks(desc, ch, req->data, lba_address, llen,
-					  nvmf_bdev_ctrlr_complete_cmd, req)) {
-			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-	} else {
-		spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
-		if (spdk_bdev_write_blocks(desc, ch, req->data, lba_address, llen,
-					   nvmf_bdev_ctrlr_complete_cmd, req)) {
-			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
+	spdk_trace_record(TRACE_NVMF_LIB_READ_START, 0, 0, (uint64_t)req, 0);
+	if (spdk_unlikely(spdk_bdev_read_blocks(desc, ch, req->data, start_lba, num_blocks,
+						nvmf_bdev_ctrlr_complete_cmd, req))) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+}
 
+static int
+nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			  struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+{
+	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
+	uint32_t block_size = spdk_bdev_get_block_size(bdev);
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	uint64_t start_lba;
+	uint64_t num_blocks;
+
+	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
+
+	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {
+		SPDK_ERRLOG("end of media\n");
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_LBA_OUT_OF_RANGE;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (spdk_unlikely(num_blocks * block_size > req->length)) {
+		SPDK_ERRLOG("Write NLB %" PRIu64 " * block size %" PRIu32 " > SGL length %" PRIu32 "\n",
+			    num_blocks, block_size, req->length);
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
+	if (spdk_unlikely(spdk_bdev_write_blocks(desc, ch, req->data, start_lba, num_blocks,
+			  nvmf_bdev_ctrlr_complete_cmd, req))) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
 static int
@@ -315,8 +358,9 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	ch = ns->ch;
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
+		return nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_WRITE:
-		return nvmf_bdev_ctrlr_rw_cmd(bdev, desc, ch, req);
+		return nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_FLUSH:
 		return nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:

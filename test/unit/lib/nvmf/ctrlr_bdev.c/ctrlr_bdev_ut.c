@@ -179,8 +179,36 @@ void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, 
 }
 
 static void
-nvmf_test_nvmf_bdev_ctrlr_get_log_page(void)
+test_get_rw_params(void)
 {
+	struct spdk_nvme_cmd cmd = {0};
+	uint64_t lba;
+	uint64_t count;
+
+	lba = 0;
+	count = 0;
+	to_le64(&cmd.cdw10, 0x1234567890ABCDEF);
+	to_le32(&cmd.cdw12, 0x9875 | SPDK_NVME_IO_FLAGS_FORCE_UNIT_ACCESS);
+	nvmf_bdev_ctrlr_get_rw_params(&cmd, &lba, &count);
+	CU_ASSERT(lba == 0x1234567890ABCDEF);
+	CU_ASSERT(count == 0x9876); /* NOTE: this field is 0's based, hence the +1 */
+}
+
+static void
+test_lba_in_range(void)
+{
+	/* Trivial cases (no overflow) */
+	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(1000, 0, 1) == true);
+	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(1000, 0, 1000) == true);
+	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(1000, 0, 1001) == false);
+	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(1000, 1, 999) == true);
+	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(1000, 1, 1000) == false);
+
+	/* Overflow edge cases */
+	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(UINT64_MAX, 0, UINT64_MAX) == true);
+	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(UINT64_MAX, 1, UINT64_MAX) == false)
+	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(UINT64_MAX, UINT64_MAX - 1, 1) == true);
+	CU_ASSERT(nvmf_bdev_ctrlr_lba_in_range(UINT64_MAX, UINT64_MAX, 1) == false);
 }
 
 int main(int argc, char **argv)
@@ -198,8 +226,10 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	if (CU_add_test(suite, "virtual_ctrlr_get_log_page",
-			nvmf_test_nvmf_bdev_ctrlr_get_log_page) == NULL) {
+	if (
+		CU_add_test(suite, "get_rw_params", test_get_rw_params) == NULL ||
+		CU_add_test(suite, "lba_in_range", test_lba_in_range) == NULL
+	) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
