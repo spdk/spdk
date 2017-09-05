@@ -662,6 +662,7 @@ static void *
 session_shutdown(void *arg)
 {
 	struct spdk_vhost_dev *vdev = NULL;
+	char path[PATH_MAX];
 	int i;
 
 	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
@@ -669,7 +670,15 @@ session_shutdown(void *arg)
 		if (vdev == NULL) {
 			continue;
 		}
-		rte_vhost_driver_unregister(vdev->name);
+
+		if (snprintf(path, sizeof(path), "%s%s", dev_dirname, vdev->name) >= (int)sizeof(path)) {
+			SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", vdev->name, dev_dirname,
+				    vdev->name);
+			assert(false);
+			continue;
+		}
+
+		rte_vhost_driver_unregister(path);
 	}
 
 	SPDK_NOTICELOG("Exiting\n");
