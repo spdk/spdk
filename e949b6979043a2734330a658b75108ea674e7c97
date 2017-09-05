@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fcd1275_6576a989",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-05T18:07:15Z",
+      "side": 1,
+      "message": "If we are going to have two hugetlbfs_mount variables like this, they both need to be set above (this branch only handles the case where the hugetlbfs isn\u0027t already mounted).",
+      "revId": "e949b6979043a2734330a658b75108ea674e7c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "786fa60d_96a4a75d",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-05T18:07:15Z",
+      "side": 1,
+      "message": "I don\u0027t understand why this is creating two separate mounts, but the top-level script only has a single hugepagesz - is this intended to support both 2 MB and 1 GB pages at the same time or not?",
+      "revId": "e949b6979043a2734330a658b75108ea674e7c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "007b6ea4_efa73370",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-05T18:07:15Z",
+      "side": 1,
+      "message": "configure_freebsd needs to be updated with the new variable name.",
+      "range": {
+        "startLine": 267,
+        "startChar": 31,
+        "endLine": 267,
+        "endChar": 52
+      },
+      "revId": "e949b6979043a2734330a658b75108ea674e7c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cea2a26_b7fdebbf",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-05T18:07:15Z",
+      "side": 1,
+      "message": "Can we use consistent capitalization for the variables that the user is supposed to set?  Either HUGEMEM -\u003e hugemem or hugepagesz -\u003e HUGEPAGESZ.",
+      "range": {
+        "startLine": 278,
+        "startChar": 4,
+        "endLine": 278,
+        "endChar": 14
+      },
+      "revId": "e949b6979043a2734330a658b75108ea674e7c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
