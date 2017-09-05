@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "073a975f_0f801be3",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1086,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-05T21:48:13Z",
+      "side": 1,
+      "message": "But why do we need to move this here?  This function only gets called when the application exits.  So now if we remove an SSD, the device stays on g_nvme_bdevs and doesn\u0027t get free until the application exits.",
+      "revId": "bdda04443db7562327a62f8e51a0f844082c48f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
