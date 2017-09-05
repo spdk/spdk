@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e669ee4_1addfd57",
+        "filename": "test/unit/lib/vhost/vhost_scsi.c/vhost_scsi_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-05T07:25:31Z",
+      "side": 1,
+      "message": "is this definition required here?",
+      "range": {
+        "startLine": 46,
+        "startChar": 7,
+        "endLine": 46,
+        "endChar": 25
+      },
+      "revId": "c2d1c8f7208984f272e9058661affb1f199b929c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "598ecac1_325bbadd",
+        "filename": "test/unit/lib/vhost/vhost_scsi.c/vhost_scsi_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-05T07:25:31Z",
+      "side": 1,
+      "message": "you might want to include \"lib/test_env.c\" instead\nthere\u0027s no much point in having these in each UT separately",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 23
+      },
+      "revId": "c2d1c8f7208984f272e9058661affb1f199b929c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a40cd343_7e672924",
+        "filename": "test/unit/lib/vhost/vhost_scsi.c/vhost_scsi_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-05T07:25:31Z",
+      "side": 1,
+      "message": "see comment above",
+      "range": {
+        "startLine": 130,
+        "startChar": 0,
+        "endLine": 134,
+        "endChar": 1
+      },
+      "revId": "c2d1c8f7208984f272e9058661affb1f199b929c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06122663_cc67e69b",
+        "filename": "test/unit/lib/vhost/vhost_scsi.c/vhost_scsi_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-05T07:25:31Z",
+      "side": 1,
+      "message": "see comment above",
+      "range": {
+        "startLine": 160,
+        "startChar": 0,
+        "endLine": 175,
+        "endChar": 1
+      },
+      "revId": "c2d1c8f7208984f272e9058661affb1f199b929c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f6e9a8b_71fcbeac",
+        "filename": "test/unit/lib/vhost/vhost_scsi.c/vhost_scsi_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-05T07:25:31Z",
+      "side": 1,
+      "message": "i think this deserves a stub",
+      "range": {
+        "startLine": 177,
+        "startChar": 0,
+        "endLine": 181,
+        "endChar": 1
+      },
+      "revId": "c2d1c8f7208984f272e9058661affb1f199b929c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "838cbf85_dcd4ae48",
+        "filename": "test/unit/lib/vhost/vhost_scsi.c/vhost_scsi_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-05T07:25:31Z",
+      "side": 1,
+      "message": "no need to use strncmp here, strcmp will be just as safe in this case since both strings are null-terminated\nit will compare at most MIN(strlen(key), strlen(\"Name\"))+1",
+      "range": {
+        "startLine": 196,
+        "startChar": 24,
+        "endLine": 196,
+        "endChar": 27
+      },
+      "revId": "c2d1c8f7208984f272e9058661affb1f199b929c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4f996d91_4da0c11d",
+        "filename": "test/unit/lib/vhost/vhost_scsi.c/vhost_scsi_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-05T07:25:31Z",
+      "side": 1,
+      "message": "could you use spdk_dma_zmalloc instead?",
+      "range": {
+        "startLine": 214,
+        "startChar": 0,
+        "endLine": 225,
+        "endChar": 14
+      },
+      "revId": "c2d1c8f7208984f272e9058661affb1f199b929c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
