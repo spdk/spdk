@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "262063fb_1f2b2411",
+        "filename": "test/unit/lib/vhost/vhost_scsi.c/vhost_scsi_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-05T22:29:57Z",
+      "side": 1,
+      "message": "This is the value returned by the spdk_vhost_scsi_dev_remove() stub at the top of this file when spdk_vhost_dev_remove_fail is set to true.  I\u0027m not sure where the previous -EIO value was supposed to come from.",
+      "revId": "035e68c98075186bb01f8d46026b2f6c174211f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
