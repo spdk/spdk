@@ -107,10 +107,7 @@ DEFINE_STUB_P(spdk_conf_section_get_name, const char, (const struct spdk_conf_se
 DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
 DEFINE_STUB_V(spdk_vhost_timed_event_send, (int32_t lcore, spdk_vhost_timed_event_fn cb_fn,
 		void *arg, unsigned timeout_sec, const char *errmsg));
-DEFINE_STUB_V(spdk_vhost_timed_event_init, (struct spdk_vhost_timed_event *ev, int32_t lcore,
-		spdk_vhost_timed_event_fn cb_fn, void *arg, unsigned timeout_sec));
 DEFINE_STUB_V(spdk_poller_unregister, (struct spdk_poller **ppoller, struct spdk_event *complete));
-DEFINE_STUB_V(spdk_vhost_timed_event_wait, (struct spdk_vhost_timed_event *ev, const char *errmsg));
 DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
 DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_uint32, int, (struct spdk_json_write_ctx *w, uint32_t val), 0);
@@ -255,7 +252,7 @@ vhost_scsi_dev_remove_test(void)
 	/* Failed to remove device */
 	MOCK_SET(spdk_vhost_dev_remove_fail, bool, true);
 	rc = spdk_vhost_scsi_dev_remove(&svdev->vdev);
-	CU_ASSERT(rc == -EIO);
+	CU_ASSERT(rc == -1);
 
 	free(svdev);
 }
