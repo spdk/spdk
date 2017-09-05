@@ -133,15 +133,27 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	if (is_read) {
 		vreq->iov = bdev_io->u.read.iovs;
 		vreq->iovcnt = bdev_io->u.read.iovcnt;
-		req->cdb[0] = SPDK_SBC_READ_10;
-		to_be32(&req->cdb[2], bdev_io->u.read.offset / disk->block_size);
-		to_be16(&req->cdb[7], bdev_io->u.read.len / disk->block_size);
+		if (disk->use_scsi_16) {
+			req->cdb[0] = SPDK_SBC_READ_16;
+			to_be64(&req->cdb[2], bdev_io->u.read.offset / disk->block_size);
+			to_be32(&req->cdb[7], bdev_io->u.read.len / disk->block_size);
+		} else {
+			req->cdb[0] = SPDK_SBC_READ_10;
+			to_be32(&req->cdb[2], bdev_io->u.read.offset / disk->block_size);
+			to_be16(&req->cdb[10], bdev_io->u.read.len / disk->block_size);
+		}
 	} else {
 		vreq->iov = bdev_io->u.write.iovs;
 		vreq->iovcnt = bdev_io->u.write.iovcnt;
-		req->cdb[0] = SPDK_SBC_WRITE_10;
-		to_be32(&req->cdb[2], bdev_io->u.write.offset / disk->block_size);
-		to_be16(&req->cdb[7], bdev_io->u.write.len / disk->block_size);
+		if (disk->use_scsi_16) {
+			req->cdb[0] = SPDK_SBC_WRITE_16;
+			to_be64(&req->cdb[2], bdev_io->u.write.offset / disk->block_size);
+			to_be32(&req->cdb[10], bdev_io->u.write.len / disk->block_size);
+		} else {
+			req->cdb[0] = SPDK_SBC_WRITE_10;
+			to_be32(&req->cdb[2], bdev_io->u.write.offset / disk->block_size);
+			to_be16(&req->cdb[7], bdev_io->u.write.len / disk->block_size);
+		}
 	}
 
 	virtqueue_send_pkt(disk->vdev->vqs[2], vreq);
