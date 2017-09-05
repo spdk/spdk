@@ -168,7 +168,7 @@ for vm_conf in ${vms[@]}; do
 					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $disk
 				else
 					echo "INFO: Trying to remove nonexistent controller"
-					if $rpc_py remove_vhost_scsi_controller unk0 > /dev/null; then
+					if $rpc_py remove_vhost_controller unk0 > /dev/null; then
 						echo "ERROR: Removing nonexistent controller succeeded, but it shouldn't"
 						false
 					fi
@@ -354,12 +354,11 @@ if ! $no_shutdown; then
 				for disk in "${disks[@]}"; do
 					disk=${disk%%_*}
 					echo "INFO: Removing all vhost devices from controller naa.$disk.${conf[0]}"
-					if [[ "$test_type" == "spdk_vhost_blk" ]]; then
-						$rpc_py remove_vhost_blk_controller naa.$disk.${conf[0]}
-					else
+					if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 						$rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0
-						$rpc_py remove_vhost_scsi_controller naa.$disk.${conf[0]}
 					fi
+
+					$rpc_py remove_vhost_controller naa.$disk.${conf[0]}
 				done
 			done <<< "${conf[2]}"
 		done

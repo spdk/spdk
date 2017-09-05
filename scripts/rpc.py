@@ -555,14 +555,6 @@ p.add_argument('ctrlr', help='controller name')
 p.add_argument('--cpumask', help='cpu mask for this controller')
 p.set_defaults(func=construct_vhost_scsi_controller)
 
-def remove_vhost_scsi_controller(args):
-    params = {'ctrlr': args.ctrlr}
-    jsonrpc_call('remove_vhost_scsi_controller', params)
-
-p = subparsers.add_parser('remove_vhost_scsi_controller', help='Remove vhost controller')
-p.add_argument('ctrlr', help='controller name')
-p.set_defaults(func=remove_vhost_scsi_controller)
-
 def add_vhost_scsi_lun(args):
     params = {
         'ctrlr': args.ctrlr,
@@ -607,19 +599,19 @@ p.add_argument('--cpumask', help='cpu mask for this controller')
 p.add_argument("-r", "--readonly", action='store_true', help='Set controller as read-only')
 p.set_defaults(func=construct_vhost_blk_controller)
 
-def remove_vhost_blk_controller(args):
-    params = {'ctrlr': args.ctrlr}
-    jsonrpc_call('remove_vhost_blk_controller', params)
-
-p = subparsers.add_parser('remove_vhost_blk_controller', help='Remove a vhost block controller')
-p.add_argument('ctrlr', help='controller name')
-p.set_defaults(func=remove_vhost_blk_controller)
-
 def get_vhost_controllers(args):
     print_dict(jsonrpc_call('get_vhost_controllers'))
 
 p = subparsers.add_parser('get_vhost_controllers', help='List vhost controllers')
 p.set_defaults(func=get_vhost_controllers)
+
+def remove_vhost_controller(args):
+    params = {'ctrlr': args.ctrlr}
+    jsonrpc_call('remove_vhost_controller', params)
+
+p = subparsers.add_parser('remove_vhost_controller', help='Remove a vhost controller')
+p.add_argument('ctrlr', help='controller name')
+p.set_defaults(func=remove_vhost_controller)
 
 def get_rpc_methods(args):
     print_dict(jsonrpc_call('get_rpc_methods'))

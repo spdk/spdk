@@ -99,6 +99,7 @@ struct spdk_vhost_dev_backend {
 	spdk_vhost_event_fn destroy_device;
 
 	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+	int (*vhost_remove_controller)(struct spdk_vhost_dev *vdev);
 };
 
 struct spdk_vhost_dev {
@@ -151,5 +152,6 @@ void spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_w
 void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);
+int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
 
 #endif /* SPDK_VHOST_INTERNAL_H */
