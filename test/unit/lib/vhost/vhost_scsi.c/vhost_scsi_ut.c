@@ -89,7 +89,7 @@ DEFINE_STUB_V(spdk_ring_free, (struct spdk_ring *ring));
 DEFINE_STUB(spdk_vhost_dev_has_feature, bool, (struct spdk_vhost_dev *vdev, unsigned feature_id),
 	    false);
 DEFINE_STUB_P(spdk_scsi_lun_get_dev, const struct spdk_scsi_dev, (const struct spdk_scsi_lun *lun), {0});
-DEFINE_STUB_P(spdk_scsi_dev_get_name, const char , (const struct spdk_scsi_dev *dev), {0});
+DEFINE_STUB_P(spdk_scsi_dev_get_name, const char, (const struct spdk_scsi_dev *dev), {0});
 DEFINE_STUB_V(spdk_vhost_dev_mem_unregister, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB_P(spdk_vhost_dev_find, struct spdk_vhost_dev, (const char *ctrlr_name), {0});
 DEFINE_STUB_P(spdk_scsi_dev_construct, struct spdk_scsi_dev, (const char *name,
