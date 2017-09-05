@@ -112,6 +112,7 @@ struct spdk_vhost_scsi_event {
 static int new_device(struct spdk_vhost_dev *);
 static int destroy_device(struct spdk_vhost_dev *);
 static void spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+static int spdk_vhost_remove_scsi_controller(struct spdk_vhost_dev *vdev);
 
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
@@ -119,6 +120,7 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.new_device =  new_device,
 	.destroy_device = destroy_device,
 	.dump_config_json = spdk_vhost_scsi_config_json,
+	.vhost_remove_controller = spdk_vhost_remove_scsi_controller,
 };
 
 static void
@@ -1230,6 +1232,13 @@ spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_
 	}
 
 	spdk_json_write_object_end(w);
+}
+
+static int
+spdk_vhost_remove_scsi_controller(struct spdk_vhost_dev *vdev)
+{
+	assert(vdev != NULL);
+	return spdk_vhost_scsi_dev_remove(vdev);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_scsi", SPDK_TRACE_VHOST_SCSI)
