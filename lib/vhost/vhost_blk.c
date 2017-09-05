@@ -597,6 +597,12 @@ spdk_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_wr
 
 	spdk_json_write_object_end(w);
 }
+static int
+spdk_remove_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev)
+{
+	assert(vdev != NULL);
+	return spdk_vhost_blk_destroy(vdev);
+}
 
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.virtio_features = SPDK_VHOST_FEATURES |
@@ -611,7 +617,8 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
 	.new_device =  new_device,
 	.destroy_device = destroy_device,
-	.dump_config_json = spdk_vhost_blk_dump_config_json,
+	.vhost_create_dump_config_json = spdk_vhost_blk_dump_config_json,
+	.vhost_remove_dump_config_json = spdk_remove_vhost_blk_dump_config_json,
 };
 
 int
