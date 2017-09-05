@@ -758,10 +758,18 @@ spdk_vhost_timed_event_wait(struct spdk_vhost_timed_event *ev, const char *errms
 }
 
 void
-spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
+spdk_vhost_get_vhost_controllers_dump_config_json(struct spdk_vhost_dev *vdev,
+		struct spdk_json_write_ctx *w)
 {
-	assert(vdev->backend->dump_config_json != NULL);
-	vdev->backend->dump_config_json(vdev, w);
+	assert(vdev->backend->vhost_create_dump_config_json != NULL);
+	vdev->backend->vhost_create_dump_config_json(vdev, w);
+}
+
+int
+spdk_remove_vhost_controller_dump_config_json(struct spdk_vhost_dev *vdev)
+{
+	assert(vdev->backend->vhost_remove_dump_config_json != NULL);
+	return vdev->backend->vhost_remove_dump_config_json(vdev);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
