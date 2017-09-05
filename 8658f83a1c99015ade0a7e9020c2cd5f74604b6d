@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f822e360_1488467b",
+        "filename": ".gitmodules",
+        "patchSetId": 6
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-05T15:58:07Z",
+      "side": 1,
+      "message": "Rather than using a submodule, can we just require the user to install the pmem library dependencies?\n\nThey are packaged on Fedora, at least: libpmem*-devel.",
+      "revId": "8658f83a1c99015ade0a7e9020c2cd5f74604b6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
