@@ -223,13 +223,13 @@ if [[ "$ctrl_type" == "vhost_scsi" ]]; then
             echo -e "\tINFO: Removed device $j"
         done
         echo "Removing vhost SCSI controller naa.0.$i"
-        $rpc_py remove_vhost_scsi_controller naa.0.$i
+        $rpc_py remove_vhost_controller naa.0.$i
     done
 elif [[ "$ctrl_type" == "vhost_blk" ]]; then
     for (( i=0; i<$vm_count; i++)); do
         for (( j=0; j<${#bdevs[@]}; j++)); do
             echo "INFO: Removing vhost BLK controller naa.$j.$i"
-            $rpc_py remove_vhost_blk_controller naa.$j.$i
+            $rpc_py remove_vhost_controller naa.$j.$i
             echo -e "\tINFO: Removed naa.$j.$i"
         done
     done
