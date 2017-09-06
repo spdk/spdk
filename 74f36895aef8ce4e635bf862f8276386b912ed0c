@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b167187_00c3e44a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-06T18:35:05Z",
+      "side": 1,
+      "message": "This doesn\u0027t really say what the patch does.\n\nI would suggest something like \"nvme/perf: claim PCI devices\", and then you can mention that it fixes a crash with multiple processes trying to claim the same device in the next paragraph.\n\nWe also probably need to change all of the NVMe example apps, not just perf.",
+      "revId": "74f36895aef8ce4e635bf862f8276386b912ed0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
