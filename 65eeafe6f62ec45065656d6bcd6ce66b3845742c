@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a7a3749_23922e5f",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T17:50:59Z",
+      "side": 1,
+      "message": "Can you just call spdk_bs_md_delete_blob() after spdk_bs_md_iter_next()?  This was my suggestion in an earlier review.  I do not see why we need to save these in a list and then do them one-by-one later.",
+      "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d69e4507_e4cf10b6",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1203,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T17:50:59Z",
+      "side": 1,
+      "message": "I think this should return 0, not -EBUSY.\n\nWith that change, you can just reuse blob_delete_cb() as the completion callback after the xattr is synced.",
+      "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97dc7542_7949aca9",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1242,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T17:50:59Z",
+      "side": 1,
+      "message": "This comment should be changed.  We allow deleting files with open references, we just mark the file for deletion and defer the deletion until all references are closed.",
+      "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "460f0fcc_8669f15c",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 2389,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T17:50:59Z",
+      "side": 1,
+      "message": "This seems like a race condition.  What if there are two threads that both have the file open after one of the threads deleted it.  They could both get to this point and each call spdk_fs_delete_file().  Trying to grab a lock here to check ref_count will only make it more complicated.\n\nI think the check needs to go in __file_close_async.  Then two threads each calling close will be handled by __file_close_async getting called on the polling thread.  The first one will return immediately since ref_count \u003d\u003d 1, and the second one will delete the file when ref_count \u003d\u003d 0.",
+      "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbc5a4f5_49cc8fc9",
+        "filename": "test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T17:50:59Z",
+      "side": 1,
+      "message": "you should add ref_count and is_deleted checks in these tests",
+      "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bb43031_bb4a4875",
+        "filename": "test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T17:50:59Z",
+      "side": 1,
+      "message": "We should not allow opening a file after it has been deleted.",
+      "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
