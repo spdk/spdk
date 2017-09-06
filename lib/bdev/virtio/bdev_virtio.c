@@ -137,37 +137,44 @@ bdev_virtio_init_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 }
 
 static void
-bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+bdev_virtio_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
 	struct virtio_req *vreq = bdev_virtio_init_vreq(ch, bdev_io);
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
-	bool is_read = (bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
 
-	if (is_read) {
-		vreq->iov = bdev_io->u.read.iovs;
-		vreq->iovcnt = bdev_io->u.read.iovcnt;
-		if (disk->use_scsi_16) {
-			req->cdb[0] = SPDK_SBC_READ_16;
-			to_be64(&req->cdb[2], bdev_io->u.read.offset_blocks);
-			to_be32(&req->cdb[10], bdev_io->u.read.num_blocks);
-		} else {
-			req->cdb[0] = SPDK_SBC_READ_10;
-			to_be32(&req->cdb[2], bdev_io->u.read.offset_blocks);
-			to_be16(&req->cdb[7], bdev_io->u.read.num_blocks);
-		}
+	vreq->iov = bdev_io->u.read.iovs;
+	vreq->iovcnt = bdev_io->u.read.iovcnt;
+	if (disk->use_scsi_16) {
+		req->cdb[0] = SPDK_SBC_READ_16;
+		to_be64(&req->cdb[2], bdev_io->u.read.offset_blocks);
+		to_be32(&req->cdb[10], bdev_io->u.read.num_blocks);
 	} else {
-		vreq->iov = bdev_io->u.write.iovs;
-		vreq->iovcnt = bdev_io->u.write.iovcnt;
-		if (disk->use_scsi_16) {
-			req->cdb[0] = SPDK_SBC_WRITE_16;
-			to_be64(&req->cdb[2], bdev_io->u.write.offset_blocks);
-			to_be32(&req->cdb[10], bdev_io->u.write.num_blocks);
-		} else {
-			req->cdb[0] = SPDK_SBC_WRITE_10;
-			to_be32(&req->cdb[2], bdev_io->u.write.offset_blocks);
-			to_be16(&req->cdb[7], bdev_io->u.write.num_blocks);
-		}
+		req->cdb[0] = SPDK_SBC_READ_10;
+		to_be32(&req->cdb[2], bdev_io->u.read.offset_blocks);
+		to_be16(&req->cdb[7], bdev_io->u.read.num_blocks);
+	}
+
+	virtio_xmit_pkts(disk->vdev->vqs[2], vreq);
+}
+
+static void
+bdev_virtio_write(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
+	struct virtio_req *vreq = bdev_virtio_init_vreq(ch, bdev_io);
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+
+	vreq->iov = bdev_io->u.write.iovs;
+	vreq->iovcnt = bdev_io->u.write.iovcnt;
+	if (disk->use_scsi_16) {
+		req->cdb[0] = SPDK_SBC_WRITE_16;
+		to_be64(&req->cdb[2], bdev_io->u.write.offset_blocks);
+		to_be32(&req->cdb[10], bdev_io->u.write.num_blocks);
+	} else {
+		req->cdb[0] = SPDK_SBC_WRITE_10;
+		to_be32(&req->cdb[2], bdev_io->u.write.offset_blocks);
+		to_be16(&req->cdb[7], bdev_io->u.write.num_blocks);
 	}
 
 	virtio_xmit_pkts(disk->vdev->vqs[2], vreq);
@@ -177,10 +184,10 @@ static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_b
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_rw);
+		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_read);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		bdev_virtio_rw(ch, bdev_io);
+		bdev_virtio_write(ch, bdev_io);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
