@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94456075_0654423e",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1305,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-06T14:24:02Z",
+      "side": 1,
+      "message": "it seems that kernel supports only power-of-2 bs for scsi devices [1].\ncould we introduce the same limitation here and use shifting instead of division?\n\n[1] http://elixir.free-electrons.com/linux/latest/source/drivers/scsi/sd.c#L2508",
+      "revId": "414c722049f28bc49c310276ce2f884cea6407df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
