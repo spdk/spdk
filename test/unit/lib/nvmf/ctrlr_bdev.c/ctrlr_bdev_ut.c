@@ -130,6 +130,14 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch, v
 }
 
 int
+spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			      uint64_t offset_blocks, uint64_t num_blocks,
+			      spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	return 0;
+}
+
+int
 spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc,
 			   struct spdk_io_channel *ch,
 			   const struct spdk_nvme_cmd *cmd,

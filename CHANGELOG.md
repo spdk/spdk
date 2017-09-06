@@ -55,6 +55,8 @@ AllowAnyHost is disabled by default.
 NVMe-oF namespaces may now be assigned arbitrary namespace IDs, and the number
 of namespaces per subsystem is no longer limited.
 
+The NVMe-oF target now supports the Write Zeroes command.
+
 ### Environment Abstraction Layer
 
 A new default value, SPDK_MEMPOOL_DEFAULT_CACHE_SIZE, was added to provide
