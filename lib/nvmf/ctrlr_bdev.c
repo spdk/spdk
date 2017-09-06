@@ -48,10 +48,10 @@
 
 #include "spdk_internal/log.h"
 
-bool
-spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
+static bool
+spdk_nvmf_subsystem_bdev_io_type_supported(struct spdk_nvmf_subsystem *subsystem,
+		enum spdk_bdev_io_type io_type)
 {
-	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvmf_ns *ns;
 
 	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
@@ -60,18 +60,30 @@ spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
 			continue;
 		}
 
-		if (!spdk_bdev_io_type_supported(ns->bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		if (!spdk_bdev_io_type_supported(ns->bdev, io_type)) {
 			SPDK_DEBUGLOG(SPDK_TRACE_NVMF,
-				      "Subsystem %s namespace %u (%s) does not support unmap - not enabling DSM\n",
+				      "Subsystem %s namespace %u (%s) does not support io_type %d\n",
 				      spdk_nvmf_subsystem_get_nqn(subsystem),
-				      ns->id, spdk_bdev_get_name(ns->bdev));
+				      ns->id, spdk_bdev_get_name(ns->bdev), (int)io_type);
 			return false;
 		}
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support unmap - enabling DSM\n",
-		      spdk_nvmf_subsystem_get_nqn(subsystem));
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "All devices in Subsystem %s support io_type %d\n",
+		      spdk_nvmf_subsystem_get_nqn(subsystem), (int)io_type);
 	return true;
+}
+
+bool
+spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return spdk_nvmf_subsystem_bdev_io_type_supported(ctrlr->subsys, SPDK_BDEV_IO_TYPE_UNMAP);
+}
+
+bool
+spdk_nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return spdk_nvmf_subsystem_bdev_io_type_supported(ctrlr->subsys, SPDK_BDEV_IO_TYPE_WRITE_ZEROES);
 }
 
 static void
@@ -200,6 +212,36 @@ nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 
 	spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
 	if (spdk_unlikely(spdk_bdev_write_blocks(desc, ch, req->data, start_lba, num_blocks,
+			  nvmf_bdev_ctrlr_complete_cmd, req))) {
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+}
+
+static int
+nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				 struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+{
+	uint64_t bdev_num_blocks = spdk_bdev_get_num_blocks(bdev);
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	uint64_t start_lba;
+	uint64_t num_blocks;
+
+	nvmf_bdev_ctrlr_get_rw_params(cmd, &start_lba, &num_blocks);
+
+	if (spdk_unlikely(!nvmf_bdev_ctrlr_lba_in_range(bdev_num_blocks, start_lba, num_blocks))) {
+		SPDK_ERRLOG("end of media\n");
+		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+		rsp->status.sc = SPDK_NVME_SC_LBA_OUT_OF_RANGE;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	spdk_trace_record(TRACE_NVMF_LIB_WRITE_START, 0, 0, (uint64_t)req, 0);
+	if (spdk_unlikely(spdk_bdev_write_zeroes_blocks(desc, ch, start_lba, num_blocks,
 			  nvmf_bdev_ctrlr_complete_cmd, req))) {
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
 		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -361,6 +403,8 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_WRITE:
 		return nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_WRITE_ZEROES:
+		return nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_FLUSH:
 		return nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
