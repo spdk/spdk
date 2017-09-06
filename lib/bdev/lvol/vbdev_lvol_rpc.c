@@ -125,22 +125,22 @@ invalid:
 }
 SPDK_RPC_REGISTER("construct_lvol_store", spdk_rpc_construct_lvol_store)
 
-struct rpc_destroy_lvol_store {
+struct rpc_unload_lvol_store {
 	char *lvol_store_uuid;
 };
 
 static void
-free_rpc_destroy_lvol_store(struct rpc_destroy_lvol_store *req)
+free_rpc_unload_lvol_store(struct rpc_unload_lvol_store *req)
 {
 	free(req->lvol_store_uuid);
 }
 
-static const struct spdk_json_object_decoder rpc_destroy_lvol_store_decoders[] = {
-	{"lvol_store_uuid", offsetof(struct rpc_destroy_lvol_store, lvol_store_uuid), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_unload_lvol_store_decoders[] = {
+	{"lvol_store_uuid", offsetof(struct rpc_unload_lvol_store, lvol_store_uuid), spdk_json_decode_string},
 };
 
 static void
-_spdk_rpc_lvol_store_destroy_cb(void *cb_arg, int lvserrno)
+_spdk_rpc_lvol_store_unload_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -164,16 +164,16 @@ invalid:
 }
 
 static void
-spdk_rpc_destroy_lvol_store(struct spdk_jsonrpc_request *request,
+spdk_rpc_unload_lvol_store(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_destroy_lvol_store req = {};
+	struct rpc_unload_lvol_store req = {};
 	struct spdk_lvol_store *lvs;
 	uuid_t lvol_store_uuid;
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_destroy_lvol_store_decoders,
-				    SPDK_COUNTOF(rpc_destroy_lvol_store_decoders),
+	if (spdk_json_decode_object(params, rpc_unload_lvol_store_decoders,
+				    SPDK_COUNTOF(rpc_unload_lvol_store_decoders),
 				    &req)) {
 		SPDK_TRACELOG(SPDK_TRACE_DEBUG, "spdk_json_decode_object failed\n");
 		rc = -EINVAL;
@@ -193,17 +193,17 @@ spdk_rpc_destroy_lvol_store(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	vbdev_lvs_destruct(lvs, _spdk_rpc_lvol_store_destroy_cb, request);
+	vbdev_lvs_unload(lvs, _spdk_rpc_lvol_store_unload_cb, request);
 
-	free_rpc_destroy_lvol_store(&req);
+	free_rpc_unload_lvol_store(&req);
 
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, gai_strerror(-rc));
-	free_rpc_destroy_lvol_store(&req);
+	free_rpc_unload_lvol_store(&req);
 }
-SPDK_RPC_REGISTER("destroy_lvol_store", spdk_rpc_destroy_lvol_store)
+SPDK_RPC_REGISTER("unload_lvol_store", spdk_rpc_unload_lvol_store)
 
 struct rpc_construct_lvol_bdev {
 	char *lvol_store_uuid;
