@@ -53,7 +53,7 @@ vbdev_lvs_hotremove_cb(void *ctx)
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
 		if (lvs_bdev) {
 			if (lvs_bdev->bdev == bdev) {
-				vbdev_lvs_destruct(lvs_bdev->lvs, NULL, NULL);
+				vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
 			}
 		}
 	}
@@ -133,7 +133,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev,
 }
 
 static void
-_vbdev_lvs_destruct_cb(void *cb_arg, int lvserrno)
+_vbdev_lvs_unload_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_lvol_store_req *req = cb_arg;
 
@@ -145,7 +145,7 @@ _vbdev_lvs_destruct_cb(void *cb_arg, int lvserrno)
 }
 
 void
-vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
+vbdev_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		   void *cb_arg)
 {
 
@@ -168,7 +168,7 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	free(lvs_bdev);
 
 	if (TAILQ_EMPTY(&lvs->lvols)) {
-		spdk_lvs_unload(lvs, _vbdev_lvs_destruct_cb, req);
+		spdk_lvs_unload(lvs, _vbdev_lvs_unload_cb, req);
 	} else {
 		lvs->destruct_req = req;
 		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
@@ -226,7 +226,7 @@ vbdev_lvs_fini(void)
 	struct lvol_store_bdev *lvs_bdev, *tmp;
 
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
-		vbdev_lvs_destruct(lvs_bdev->lvs, NULL, NULL);
+		vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
 	}
 }
 
