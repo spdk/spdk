@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "22de1f82_6ed6a584",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-06T10:57:29Z",
+      "side": 1,
+      "message": "Moved out.",
+      "parentUuid": "5fcd1275_6576a989",
+      "revId": "e949b6979043a2734330a658b75108ea674e7c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "786fa60d_96a4a75d",
         "filename": "scripts/setup.sh",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-05T18:07:15Z",
       "side": 1,
       "message": "I don\u0027t understand why this is creating two separate mounts, but the top-level script only has a single hugepagesz - is this intended to support both 2 MB and 1 GB pages at the same time or not?",
+      "revId": "e949b6979043a2734330a658b75108ea674e7c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "973e8db1_68eb5628",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-06T10:57:29Z",
+      "side": 1,
+      "message": "Yes, I want support both 2MB and 1GB pages without having to reboot. \nI ran \u0027mount /mnt/huge_2mb\u0027 alone.\nAnd I tried to write 4096 to nr_hugepages bellow,\n/proc/sys/vm/nr_hugepages(current)\n/sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages\n/sys/devices/system/node/node0/hugepages/hugepages-2048kB/nr_hugepages\n\nSince the \"/proc/meminfo\" only shows the default hugepagesz value, do you know how to see whether 2MB pages are work? (default 1GB)",
+      "parentUuid": "786fa60d_96a4a75d",
       "revId": "e949b6979043a2734330a658b75108ea674e7c97",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -59,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "56c841f0_0b4da318",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-06T10:57:29Z",
+      "side": 1,
+      "message": "Fixed.",
+      "parentUuid": "007b6ea4_efa73370",
+      "range": {
+        "startLine": 267,
+        "startChar": 31,
+        "endLine": 267,
+        "endChar": 52
+      },
+      "revId": "e949b6979043a2734330a658b75108ea674e7c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5cea2a26_b7fdebbf",
         "filename": "scripts/setup.sh",
         "patchSetId": 10
@@ -70,6 +130,30 @@
       "writtenOn": "2017-09-05T18:07:15Z",
       "side": 1,
       "message": "Can we use consistent capitalization for the variables that the user is supposed to set?  Either HUGEMEM -\u003e hugemem or hugepagesz -\u003e HUGEPAGESZ.",
+      "range": {
+        "startLine": 278,
+        "startChar": 4,
+        "endLine": 278,
+        "endChar": 14
+      },
+      "revId": "e949b6979043a2734330a658b75108ea674e7c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e40b18f1_95fd84a0",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-06T10:57:29Z",
+      "side": 1,
+      "message": "OK,I fixed hugepagesz -\u003e HUGEPAGESZ, as same as NRHUGE.",
+      "parentUuid": "5cea2a26_b7fdebbf",
       "range": {
         "startLine": 278,
         "startChar": 4,
