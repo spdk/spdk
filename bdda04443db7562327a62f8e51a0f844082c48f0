@@ -16,6 +16,24 @@
       "revId": "bdda04443db7562327a62f8e51a0f844082c48f0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abf9cd9a_e474eb9f",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1086,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-06T00:02:38Z",
+      "side": 1,
+      "message": "because we also call the bdev_nvme_destruct() when the device is hot removed, and the device already removed in the function remove_cb().",
+      "parentUuid": "073a975f_0f801be3",
+      "revId": "bdda04443db7562327a62f8e51a0f844082c48f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
