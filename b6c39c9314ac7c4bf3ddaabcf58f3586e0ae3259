@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae7487ab_6d40ecc8",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T23:25:33Z",
+      "side": 1,
+      "message": "line up split_type with other members",
+      "revId": "b6c39c9314ac7c4bf3ddaabcf58f3586e0ae3259",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39632250_140602f2",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T23:25:33Z",
+      "side": 1,
+      "message": "not sure why this needed to be moved?  if its for packing reasons that\u0027s fine but the comment on lines 203-208 needs to be reworked if pid moves to here",
+      "revId": "b6c39c9314ac7c4bf3ddaabcf58f3586e0ae3259",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0df8f49e_37b0b4c1",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T23:25:33Z",
+      "side": 1,
+      "message": "We should probably use a #define here instead of just a magic number \"5\".\n\nI\u0027m curious why this is 5 though instead of 4?",
+      "revId": "b6c39c9314ac7c4bf3ddaabcf58f3586e0ae3259",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb0c8c36_aded9fed",
+        "filename": "lib/nvme/nvme_ns_cmd.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T23:25:33Z",
+      "side": 1,
+      "message": "can this get added to nvme_request_add_child?  then we can avoid having to set this to false in several different places (all paths should lead through nvme_request_add_child)",
+      "revId": "b6c39c9314ac7c4bf3ddaabcf58f3586e0ae3259",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
