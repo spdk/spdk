@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ec31c5e_1f2c64cf",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-09-06T07:51:14Z",
+      "side": 1,
+      "message": "What do you think about these names?",
+      "revId": "b103ff2eae688fdca6ffac301b192e18e5906d13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
