@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99a3eaa3_3eddbee0",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-06T23:46:20Z",
+      "side": 1,
+      "message": "Did you intend for this to be stdout instead of stderr?",
+      "range": {
+        "startLine": 403,
+        "startChar": 18,
+        "endLine": 403,
+        "endChar": 24
+      },
+      "revId": "7177f9bd4b6a9bc537e7d817cc07fc62e1e0c8ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
