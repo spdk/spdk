@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b37113f_88452524",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-06T20:01:49Z",
+      "side": 1,
+      "message": "2 -\u003e VIRTIO_SCSI_REQUESTQ",
+      "range": {
+        "startLine": 286,
+        "startChar": 16,
+        "endLine": 286,
+        "endChar": 17
+      },
+      "revId": "e1eba0cce1969444f21cba45b66e0f66330582c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c282bf1_cd2963b7",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-06T20:01:49Z",
+      "side": 1,
+      "message": "It is working but not nice to mix \u0027++\u0027 with other operators.",
+      "range": {
+        "startLine": 286,
+        "startChar": 20,
+        "endLine": 286,
+        "endChar": 47
+      },
+      "revId": "e1eba0cce1969444f21cba45b66e0f66330582c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f1ecdc7_c531c846",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-06T20:01:49Z",
+      "side": 1,
+      "message": "If I read this right this allow to create more channels (bdevs?) than available queues. I think max_queues should be hard limit otherwise some kind of synchronization will be required when used on multiple cores.",
+      "range": {
+        "startLine": 287,
+        "startChar": 1,
+        "endLine": 287,
+        "endChar": 55
+      },
+      "revId": "e1eba0cce1969444f21cba45b66e0f66330582c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa1c7cd1_237d0a37",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-06T20:01:49Z",
+      "side": 1,
+      "message": "2 -\u003e VIRTIO_SCSI_REQUESTQ",
+      "range": {
+        "startLine": 287,
+        "startChar": 53,
+        "endLine": 287,
+        "endChar": 54
+      },
+      "revId": "e1eba0cce1969444f21cba45b66e0f66330582c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d97790b_2e4df43b",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-06T20:01:49Z",
+      "side": 1,
+      "message": "I think all queues must be initialized otherwise vhost poller will not start as DPDK will detect that some queues are not ready.",
+      "range": {
+        "startLine": 240,
+        "startChar": 17,
+        "endLine": 240,
+        "endChar": 18
+      },
+      "revId": "e1eba0cce1969444f21cba45b66e0f66330582c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15ade62f_7752c3d6",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-06T20:01:49Z",
+      "side": 1,
+      "message": "As already mentioned in virtio_bdev.c - this should not wrap but be a hard limit at max_queues",
+      "range": {
+        "startLine": 58,
+        "startChar": 16,
+        "endLine": 58,
+        "endChar": 54
+      },
+      "revId": "e1eba0cce1969444f21cba45b66e0f66330582c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
