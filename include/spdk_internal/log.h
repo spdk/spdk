@@ -85,7 +85,7 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 	do {										\
 		extern struct spdk_trace_flag FLAG;					\
 		if ((FLAG.enabled) && (LEN)) {						\
-			spdk_trace_dump((LABEL), (BUF), (LEN));				\
+			spdk_trace_dump(stderr, (LABEL), (BUF), (LEN));			\
 		}									\
 	} while (0)
 
