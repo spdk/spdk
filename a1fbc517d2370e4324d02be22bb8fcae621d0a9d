@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11e9796f_bac262ec",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T22:43:47Z",
+      "side": 1,
+      "message": "Many of these lines are too long - commit messages should have a limit of no more than 70 or so characters per line.",
+      "revId": "a1fbc517d2370e4324d02be22bb8fcae621d0a9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa97e6a2_bea8c6e9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1331,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T22:43:47Z",
+      "side": 1,
+      "message": "Can we do the deferral in spdk_io_device_unregister instead?  Then it works across all possible future cases.",
+      "revId": "a1fbc517d2370e4324d02be22bb8fcae621d0a9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
