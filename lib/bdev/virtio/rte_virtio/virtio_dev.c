@@ -101,7 +101,7 @@ virtio_init_vring(struct virtqueue *vq)
 	virtqueue_disable_intr(vq);
 }
 
-static int
+int
 virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 {
 	char vq_name[VIRTQUEUE_MAX_NAME_SZ];
@@ -111,6 +111,16 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	int ret;
 
 	PMD_INIT_LOG(DEBUG, "setting up queue: %u", vtpci_queue_idx);
+
+	if (vtpci_queue_idx >= dev->max_queues) {
+		PMD_INIT_LOG(ERR, "queue id %u exceeds max queue count: %u",
+			     vtpci_queue_idx, dev->max_queues);
+		return -1;
+	}
+
+	if (dev->vqs[vtpci_queue_idx]) {
+		return 0;
+	}
 
 	/*
 	 * Read the virtqueue size from the Queue Size field
@@ -232,7 +242,8 @@ virtio_alloc_queues(struct virtio_dev *dev)
 		return -ENOMEM;
 	}
 
-	for (i = 0; i < nr_vq; i++) {
+	/* allocate control, event, and a single requestq */
+	for (i = 0; i < 3; i++) {
 		ret = virtio_init_queue(dev, i);
 		if (ret < 0) {
 			virtio_free_queues(dev);
@@ -310,12 +321,6 @@ virtio_init_device(struct virtio_dev *dev, uint64_t req_features)
 
 	vtpci_read_dev_config(dev, offsetof(struct virtio_scsi_config, num_queues),
 			      &dev->max_queues, sizeof(dev->max_queues));
-	/* FIXME
-	 * Hardcode num_queues to 3 until we add proper
-	 * mutli-queue support. This value should be limited
-	 * by number of cores assigned to SPDK
-	 */
-	dev->max_queues = 3;
 
 	ret = virtio_alloc_queues(dev);
 	if (ret < 0)

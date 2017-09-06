@@ -52,6 +52,12 @@ struct virtio_dev {
 
 	/** Modern/legacy virtio device flag. */
 	uint8_t		modern;
+
+	/**
+	 * Queue index that was assigned to the most recent
+	 * io_channel. Always increments.
+	 */
+	uint32_t		last_used_queue;
 };
 
 struct virtio_req {
@@ -75,6 +81,7 @@ uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
 
 int virtio_init_device(struct virtio_dev *hw, uint64_t req_features);
+int virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx);
 int virtio_dev_start(struct virtio_dev *hw);
 struct virtio_dev *get_pci_virtio_hw(void);
 
