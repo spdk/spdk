@@ -117,6 +117,29 @@
     },
     {
       "key": {
+        "uuid": "d58712cd_566a2120",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "Also - \"the\"",
+      "range": {
+        "startLine": 33,
+        "startChar": 39,
+        "endLine": 33,
+        "endChar": 42
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f0252f7_6c25e82c",
         "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
         "patchSetId": 3
@@ -133,6 +156,190 @@
         "startChar": 31,
         "endLine": 39,
         "endChar": 34
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "714df156_3f3c43b9",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "Again copy pasting comment from previous patch set.\nPlease either reply to comments or apply them.\n\nWhy not just create one base config for vhost with [Split] section \ninstead of copying, calling gen_nvme.sh and adding [Split] in every test?\nAll of test cases in this file use a config file with at least 1 NVMe split, so why not have a common config file for them?",
+      "range": {
+        "startLine": 55,
+        "startChar": 9,
+        "endLine": 55,
+        "endChar": 45
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7b9ab09_b506f103",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "could this be called by RPC, as it is available from common.sh?",
+      "range": {
+        "startLine": 58,
+        "startChar": 4,
+        "endLine": 59,
+        "endChar": 60
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2d59024_9efdbc69",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "Why do we need to wait 5 secs?",
+      "range": {
+        "startLine": 133,
+        "startChar": 4,
+        "endLine": 133,
+        "endChar": 11
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84cdf9f4_e6fddb85",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "What is the reason for disabling trace and error flags? Comment would be nice.\n\nAlso - I don\u0027t see where do you re-enable them.",
+      "range": {
+        "startLine": 150,
+        "startChar": 4,
+        "endLine": 150,
+        "endChar": 11
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e3a254c_b6d0ba52",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "Few lines above you run FIO but you don\u0027t store the PID. You\u0027re possibly using old PID from test case 2.",
+      "range": {
+        "startLine": 174,
+        "startChar": 4,
+        "endLine": 174,
+        "endChar": 23
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4b6ad23_930cf71d",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "Other tests wait for 0.1s. Any reason why we wait 5s here?",
+      "range": {
+        "startLine": 191,
+        "startChar": 4,
+        "endLine": 191,
+        "endChar": 11
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c984c34_ba620f73",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "Pretty sure thats not a correct declaration of an empty array",
+      "range": {
+        "startLine": 216,
+        "startChar": 4,
+        "endLine": 216,
+        "endChar": 14
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "665c9830_85a85a20",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "Didn\u0027t see such syntax before. What does that do?",
+      "range": {
+        "startLine": 232,
+        "startChar": 13,
+        "endLine": 232,
+        "endChar": 32
       },
       "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -180,6 +387,24 @@
     },
     {
       "key": {
+        "uuid": "229311f5_9e2034e4",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "It\u0027s the same common.sh location from here:\nhttps://review.gerrithub.io/#/c/372268/\n\nIn hotfeatures/common.sh Pawel K. would like to group common functions which would be re-usable by hot-plug tests, but shuldn\u0027t be in \"base\" common.sh file.\n\nLukasz did not rebase to Pawel\u0027s patch, so he still uses old version which needs cleanup and fixes",
+      "parentUuid": "04932166_60ab35e1",
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77ea5fa0_1c460431",
         "filename": "test/vhost/hotfeatures/common.sh",
         "patchSetId": 3
@@ -196,6 +421,144 @@
         "startChar": 3,
         "endLine": 185,
         "endChar": 78
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a40633e8_5855676e",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "You have pretty much the same function in blk tests. Move to common?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 24
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a280b08_a25de2b3",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "See comment about this in blk tests.",
+      "range": {
+        "startLine": 54,
+        "startChar": 4,
+        "endLine": 58,
+        "endChar": 60
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7f6264e_21fe3f85",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "why wait that long if VMs are already booted and run fio servers?",
+      "range": {
+        "startLine": 167,
+        "startChar": 4,
+        "endLine": 167,
+        "endChar": 11
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88cf7a6e_ed013764",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "Do we check the result of that FIO anywhere?",
+      "range": {
+        "startLine": 170,
+        "startChar": 4,
+        "endLine": 171,
+        "endChar": 14
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fcb624d_1178b55e",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "This won\u0027t work in my opinion.\nYou start FIO task in the background and immediately move to check it\u0027s results and it\u0027s almost 100 % sure that it didn\u0027t finish yet, so you probably won\u0027t have a valid return code in check_fio_retcode",
+      "range": {
+        "startLine": 188,
+        "startChar": 0,
+        "endLine": 189,
+        "endChar": 83
+      },
+      "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a6ea3ea_9dcdc8c0",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-06T06:40:37Z",
+      "side": 1,
+      "message": "As in BLK - that does not work",
+      "range": {
+        "startLine": 210,
+        "startChar": 0,
+        "endLine": 210,
+        "endChar": 42
       },
       "revId": "e78aee2d31dd2aacb98994bd1ac63ddc0407d76b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
