@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1448d221_5973c544",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 767,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-06T14:47:55Z",
+      "side": 1,
+      "message": "do we need this assert?",
+      "range": {
+        "startLine": 767,
+        "startChar": 0,
+        "endLine": 767,
+        "endChar": 56
+      },
+      "revId": "3167a05a31434c2b970b6ea4bf9fece3f795baf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f82646d6_5db4b80b",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-06T14:47:55Z",
+      "side": 1,
+      "message": "why not spdk_vhost_blk_destroy directly?",
+      "range": {
+        "startLine": 627,
+        "startChar": 28,
+        "endLine": 627,
+        "endChar": 60
+      },
+      "revId": "3167a05a31434c2b970b6ea4bf9fece3f795baf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63fc5b34_8339f1e0",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-06T14:47:55Z",
+      "side": 1,
+      "message": "this should probably be called destroy_device, I\u0027ll rename previous new/destroy_device callbacks to start/stop_device soon. Please await my patch.",
+      "range": {
+        "startLine": 91,
+        "startChar": 7,
+        "endLine": 91,
+        "endChar": 30
+      },
+      "revId": "3167a05a31434c2b970b6ea4bf9fece3f795baf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7369050_d2a3be8c",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-06T14:47:55Z",
+      "side": 1,
+      "message": "i guess it\u0027s more clear to have *remove* function at the very bottom of the file, so that\u0027s fine now,\nbut please keep patches as small as possible in future",
+      "revId": "3167a05a31434c2b970b6ea4bf9fece3f795baf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29e17ade_36f81034",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1242,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-06T14:47:55Z",
+      "side": 1,
+      "message": "is there really a need for such proxy function?\nif it\u0027s here just for the assert, could you move the assert to spdk_remove_vhost_controller?",
+      "range": {
+        "startLine": 1237,
+        "startChar": 0,
+        "endLine": 1242,
+        "endChar": 1
+      },
+      "revId": "3167a05a31434c2b970b6ea4bf9fece3f795baf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "607796cd_1f2e1064",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-06T14:47:55Z",
+      "side": 1,
+      "message": "it seems like you can now move it outside of the if",
+      "range": {
+        "startLine": 361,
+        "startChar": 0,
+        "endLine": 361,
+        "endChar": 58
+      },
+      "revId": "3167a05a31434c2b970b6ea4bf9fece3f795baf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
