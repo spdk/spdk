@@ -67,7 +67,7 @@ log_test(void)
 	SPDK_WARNLOG("log warning unit test\n");
 	SPDK_DEBUGLOG(SPDK_TRACE_LOG, "log trace test\n");
 	SPDK_TRACEDUMP(SPDK_TRACE_LOG, "log trace dump test:", "trace dump", 10);
-	spdk_trace_dump("spdk dump test:", "spdk dump", 9);
+	spdk_trace_dump(stderr, "spdk dump test:", "spdk dump", 9);
 
 	spdk_log_close();
 }

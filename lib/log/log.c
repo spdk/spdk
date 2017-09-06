@@ -166,9 +166,9 @@ fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 }
 
 void
-spdk_trace_dump(const char *label, const uint8_t *buf, size_t len)
+spdk_trace_dump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 {
-	fdump(stderr, label, buf, len);
+	fdump(fp, label, buf, len);
 }
 
 static struct spdk_trace_flag *
