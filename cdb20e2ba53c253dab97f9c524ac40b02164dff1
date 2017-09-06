@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "667d0ae5_e120f03d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 13
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T22:51:38Z",
+      "side": 1,
+      "message": "Thanks Maciek.  The patch looks good - my only comments are on the commit message.\n\nFirst, technically this is adding hotremove callback arguments to the blob_bdev API (not blobstore).\n\nYou also don\u0027t need to add the \"This patch\" part to the beginning of the commit message.  This second line seems to be just repeating what was already in the first line.  You could either remove this second line, or say something like: \"This is in preparation for enabling hot remove of logical volumes when their underlying blobstore device is hot removed\".  Adding more of the reasoning behind the patch can be really helpful to reviewers.",
+      "revId": "cdb20e2ba53c253dab97f9c524ac40b02164dff1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
