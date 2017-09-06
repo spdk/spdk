@@ -93,6 +93,7 @@ struct virtio_scsi_disk {
 
 struct bdev_virtio_io_channel {
 	struct virtio_dev	*vdev;
+	struct virtqueue	*vq;
 	struct spdk_bdev_poller	*poller;
 };
 
@@ -137,6 +138,18 @@ bdev_virtio_init_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 }
 
 static void
+send_pkt(struct spdk_io_channel *ch, struct virtio_req *vreq)
+{
+	struct bdev_virtio_io_channel *vch = spdk_io_channel_get_ctx(ch);
+	struct virtqueue *vq;
+
+	vq = vch->vq;
+	assert(vq != NULL);
+
+	virtio_xmit_pkts(vch->vq, vreq);
+}
+
+static void
 bdev_virtio_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
@@ -155,7 +168,7 @@ bdev_virtio_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		to_be16(&req->cdb[7], bdev_io->u.read.num_blocks);
 	}
 
-	virtio_xmit_pkts(disk->vdev->vqs[2], vreq);
+	send_pkt(ch, vreq);
 }
 
 static void
@@ -177,7 +190,7 @@ bdev_virtio_write(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		to_be16(&req->cdb[7], bdev_io->u.write.num_blocks);
 	}
 
-	virtio_xmit_pkts(disk->vdev->vqs[2], vreq);
+	send_pkt(ch, vreq);
 }
 
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -289,7 +302,7 @@ bdev_virtio_poll(void *arg)
 	struct virtio_req *req[32];
 	uint16_t i, cnt;
 
-	cnt = virtio_recv_pkts(ch->vdev->vqs[2], req, SPDK_COUNTOF(req));
+	cnt = virtio_recv_pkts(ch->vq, req, SPDK_COUNTOF(req));
 	for (i = 0; i < cnt; ++i) {
 		bdev_virtio_io_cpl(req[i]);
 	}
@@ -300,8 +313,22 @@ bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 {
 	struct virtio_dev **vdev = io_device;
 	struct bdev_virtio_io_channel *ch = ctx_buf;
+	uint16_t i;
 
 	ch->vdev = *vdev;
+
+	for (i = 2; i < ch->vdev->max_queues && ch->vdev->vqs[i] == NULL; ++i);
+
+	if (i == ch->vdev->max_queues) {
+		SPDK_ERRLOG("All %"PRIu16" virtqueues are busy.\n", ch->vdev->max_queues);
+		return -1;
+	}
+
+	ch->vq = virtio_dev_init_queue(ch->vdev, i);
+	if (ch->vq == NULL) {
+		return -1;
+	}
+
 	spdk_bdev_poller_start(&ch->poller, bdev_virtio_poll, ch,
 			       spdk_env_get_current_core(), 0);
 	return 0;
@@ -326,6 +353,7 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 		return;
 	}
 
+	virtio_dev_free_queue(base->vdev, 2); /* requestq */
 	spdk_bdev_poller_stop(&base->scan_poller);
 
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
@@ -416,11 +444,10 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq, bo
 		return -1;
 	}
 
+	disk->vdev = base->vdev;
 	disk->num_blocks = max_block + 1;
 	disk->block_size = block_size;
 	disk->use_scsi_16 = read_16;
-
-	disk->vdev = base->vdev;
 
 	bdev = &disk->bdev;
 	bdev->name = spdk_sprintf_alloc("Virtio0");
@@ -571,18 +598,15 @@ bdev_virtio_initialize(void)
 		goto out;
 	}
 
-	rc = virtio_dev_init_queue(vdev, 0); /* controlq */
-	if (rc != 0) {
+	if (virtio_dev_init_queue(vdev, 0) == NULL) { /* controlq */
 		goto out;
 	}
 
-	rc = virtio_dev_init_queue(vdev, 1); /* eventq */
-	if (rc != 0) {
+	if (virtio_dev_init_queue(vdev, 1) == NULL) {  /* eventq */
 		goto out;
 	}
 
-	rc = virtio_dev_init_queue(vdev, 2); /* requestq */
-	if (rc != 0) {
+	if (virtio_dev_init_queue(vdev, 2) == NULL) { /* requestq */
 		goto out;
 	}
 

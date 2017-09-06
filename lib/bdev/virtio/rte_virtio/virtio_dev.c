@@ -96,25 +96,24 @@ virtio_init_vring(struct virtqueue *vq)
 	virtqueue_disable_intr(vq);
 }
 
-int
+struct virtqueue *
 virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 {
 	char vq_name[VIRTQUEUE_MAX_NAME_SZ];
 	const struct rte_memzone *mz = NULL;
 	unsigned int vq_size, size;
 	struct virtqueue *vq;
-	int ret;
 
 	PMD_INIT_LOG(DEBUG, "setting up queue: %u", vtpci_queue_idx);
 
 	if (vtpci_queue_idx >= dev->max_queues) {
 		PMD_INIT_LOG(ERR, "virtuqueue id %u exceeds host virtqueue limit %u",
 				vtpci_queue_idx, dev->max_queues);
-		return -1;
+		return NULL;
 	}
 
 	if (dev->vqs[vtpci_queue_idx]) {
-		return 0;
+		return dev->vqs[vtpci_queue_idx];
 	}
 
 	/*
@@ -125,12 +124,12 @@ virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	PMD_INIT_LOG(DEBUG, "vq_size: %u", vq_size);
 	if (vq_size == 0) {
 		PMD_INIT_LOG(ERR, "virtqueue does not exist");
-		return -EINVAL;
+		return NULL;
 	}
 
 	if (!rte_is_power_of_2(vq_size)) {
 		PMD_INIT_LOG(ERR, "virtqueue size is not powerof 2");
-		return -EINVAL;
+		return NULL;
 	}
 
 	snprintf(vq_name, sizeof(vq_name), "port%d_vq%d",
@@ -144,7 +143,7 @@ virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 				SOCKET_ID_ANY);
 	if (vq == NULL) {
 		PMD_INIT_LOG(ERR, "can not allocate vq");
-		return -ENOMEM;
+		return NULL;
 	}
 	dev->vqs[vtpci_queue_idx] = vq;
 
@@ -167,7 +166,6 @@ virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 		if (rte_errno == EEXIST)
 			mz = rte_memzone_lookup(vq_name);
 		if (mz == NULL) {
-			ret = -ENOMEM;
 			goto fail_q_alloc;
 		}
 	}
@@ -187,16 +185,16 @@ virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	if (VTPCI_OPS(dev)->setup_queue(dev, vq) < 0) {
 		PMD_INIT_LOG(ERR, "setup_queue failed");
-		return -EINVAL;
+		return NULL;
 	}
 
-	return 0;
+	return vq;
 
 fail_q_alloc:
 	rte_memzone_free(mz);
 	rte_free(vq);
 
-	return ret;
+	return NULL;
 }
 
 void
