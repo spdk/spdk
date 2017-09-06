@@ -90,6 +90,7 @@ struct virtio_scsi_disk {
 
 struct bdev_virtio_io_channel {
 	struct virtio_dev	*vdev;
+	uint32_t		queue_id;
 	struct spdk_bdev_poller	*poller;
 };
 
@@ -268,7 +269,8 @@ bdev_virtio_poll(void *arg)
 	struct virtio_req *req[32];
 	uint16_t i, cnt;
 
-	cnt = virtqueue_recv_pkts(ch->vdev->vqs[2], req, SPDK_COUNTOF(req));
+	assert(ch->vdev->vqs[ch->queue_id]);
+	cnt = virtqueue_recv_pkts(ch->vdev->vqs[ch->queue_id], req, SPDK_COUNTOF(req));
 	for (i = 0; i < cnt; ++i) {
 		bdev_virtio_io_cpl(req[i]);
 	}
@@ -281,6 +283,13 @@ bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 	struct bdev_virtio_io_channel *ch = ctx_buf;
 
 	ch->vdev = *vdev;
+	ch->queue_id = 2 + ch->vdev->last_used_queue++;
+	ch->vdev->last_used_queue %= ch->vdev->max_queues - 2;
+
+	if (virtio_init_queue(ch->vdev, ch->queue_id) != 0) {
+		return -1;
+	}
+
 	spdk_bdev_poller_start(&ch->poller, bdev_virtio_poll, ch,
 			       spdk_env_get_current_core(), 0);
 	return 0;
@@ -383,11 +392,10 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq, bo
 		return -1;
 	}
 
+	disk->vdev = base->vdev;
 	disk->num_blocks = max_block + 1;
 	disk->block_size = block_size;
 	disk->use_scsi_16 = read_16;
-
-	disk->vdev = base->vdev;
 
 	bdev = &disk->bdev;
 	bdev->name = spdk_sprintf_alloc("Virtio0");
