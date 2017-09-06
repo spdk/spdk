@@ -280,12 +280,12 @@ p.add_argument('size', help='new size in MiB for this bdev', type=int)
 p.set_defaults(func=resize_lvol_bdev)
 
 
-def destroy_lvol_store(args):
+def unload_lvol_store(args):
     params = {'lvol_store_uuid': args.lvol_store_uuid}
-    jsonrpc_call('destroy_lvol_store', params)
-p = subparsers.add_parser('destroy_lvol_store', help='Destroy an logical volume store')
+    jsonrpc_call('unload_lvol_store', params)
+p = subparsers.add_parser('unload_lvol_store', help='Unload a logical volume store')
 p.add_argument('lvol_store_uuid', help='lvol store UUID')
-p.set_defaults(func=destroy_lvol_store)
+p.set_defaults(func=unload_lvol_store)
 
 
 def get_lvol_stores(args):
