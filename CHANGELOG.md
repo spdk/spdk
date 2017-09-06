@@ -45,6 +45,8 @@ The NVMe-oF target no longer requires any in capsule data buffers to run, and
 the feature is now entirely optional. Previously, at least 4KiB in capsule
 data buffers were required.
 
+The NVMe-oF target now supports the Write Zeroes command.
+
 ### Environment Abstraction Layer
 
 A new default value, SPDK_MEMPOOL_DEFAULT_CACHE_SIZE, was added to provide
