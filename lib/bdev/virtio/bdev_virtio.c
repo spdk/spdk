@@ -109,41 +109,50 @@ SPDK_BDEV_MODULE_REGISTER(virtio_scsi, bdev_virtio_initialize, bdev_virtio_finis
 
 SPDK_BDEV_MODULE_ASYNC_INIT(virtio_scsi)
 
-static void
-bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static struct virtio_req *
+bdev_virtio_init_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct virtio_req *vreq;
 	struct virtio_scsi_cmd_req *req;
 	struct virtio_scsi_cmd_resp *resp;
 	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
 	struct virtio_scsi_io_ctx *io_ctx = (struct virtio_scsi_io_ctx *)bdev_io->driver_ctx;
-	bool is_read = (bdev_io->type == SPDK_BDEV_IO_TYPE_READ);
 
 	vreq = &io_ctx->vreq;
 	req = &io_ctx->req;
 	resp = &io_ctx->resp;
 
-	vreq->iov_req.iov_base = (void *)req;
+	vreq->iov_req.iov_base = req;
 	vreq->iov_req.iov_len = sizeof(*req);
 
-	vreq->iov_resp.iov_base = (void *)resp;
+	vreq->iov_resp.iov_base = resp;
 	vreq->iov_resp.iov_len = sizeof(*resp);
 
-	vreq->is_write = !is_read;
+	vreq->is_write = bdev_io->type != SPDK_BDEV_IO_TYPE_READ;
 
 	memset(req, 0, sizeof(*req));
 	req->lun[0] = 1;
 	req->lun[1] = disk->target;
 
+	return vreq;
+}
+
+static void
+bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
+	struct virtio_req *vreq = bdev_virtio_init_vreq(ch, bdev_io);
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+
 	vreq->iov = bdev_io->u.bdev.iovs;
 	vreq->iovcnt = bdev_io->u.bdev.iovcnt;
 
 	if (disk->num_blocks > (1ULL << 32)) {
-		req->cdb[0] = is_read ? SPDK_SBC_READ_16 : SPDK_SBC_WRITE_16;
+		req->cdb[0] = vreq->is_write ? SPDK_SBC_WRITE_16 : SPDK_SBC_READ_16;
 		to_be64(&req->cdb[2], bdev_io->u.bdev.offset_blocks);
 		to_be32(&req->cdb[10], bdev_io->u.bdev.num_blocks);
 	} else {
-		req->cdb[0] = is_read ? SPDK_SBC_READ_10 : SPDK_SBC_WRITE_10;
+		req->cdb[0] = vreq->is_write ? SPDK_SBC_WRITE_10 : SPDK_SBC_READ_10;
 		to_be32(&req->cdb[2], bdev_io->u.bdev.offset_blocks);
 		to_be16(&req->cdb[7], bdev_io->u.bdev.num_blocks);
 	}
