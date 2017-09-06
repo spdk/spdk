@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "adb02748_80558864",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-06T18:31:26Z",
+      "side": 1,
+      "message": "I\u0027m not sure this is what Jim meant when he said to print it out as hex.  We probably want a hex dump of the full value up to value_len, something like what spdk_trace_dump() does.  We also shouldn\u0027t print out the data as a string directly, since it could contain control characters that will screw up the terminal (or worse) - a column that shows only valid ASCII in the hex dump should be enough, e.g.:\n\n  00000000: 68 69 0A 68 65 6C 6C 6F 0A 77 6F 72 6C 64 0A 62  hi.hello.world.b\n  00000010: 79 65 0A                                         ye.",
+      "revId": "790b7319460bf5d1fb84658cb520a9cda63f71b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
