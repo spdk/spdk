@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9aa051a_4002509e",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-06T20:11:20Z",
+      "side": 1,
+      "message": "I think we need to do something similar on RHEL, but the repository name might be different.  This is probably OK for now so we at least support CentOS.",
+      "revId": "cf03e104b77f8096b6fc9bf70bbd929db5eb1dc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d2cc4f3_7d31e580",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-06T20:11:20Z",
+      "side": 1,
+      "message": "It\u0027s probably good enough to just look for /etc/debian_version and remove the /etc/lsb-release check. (/etc/lsb-release is not Debian-specific.)\n\nFrom a quick check, Ubuntu 16.04 and 17.04 have both files, and Debian just has /etc/debian_version.",
+      "range": {
+        "startLine": 18,
+        "startChar": 10,
+        "endLine": 18,
+        "endChar": 26
+      },
+      "revId": "cf03e104b77f8096b6fc9bf70bbd929db5eb1dc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17823577_358db887",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-06T20:11:20Z",
+      "side": 1,
+      "message": "This should be updated to librdmacm-dev as in https://review.gerrithub.io/#/c/376895/",
+      "range": {
+        "startLine": 23,
+        "startChar": 35,
+        "endLine": 23,
+        "endChar": 44
+      },
+      "revId": "cf03e104b77f8096b6fc9bf70bbd929db5eb1dc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "223a061f_4b11cc41",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-06T20:11:20Z",
+      "side": 1,
+      "message": "This is in pkgdep.sh now, so I don\u0027t think it\u0027s needed here anymore.",
+      "revId": "cf03e104b77f8096b6fc9bf70bbd929db5eb1dc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
