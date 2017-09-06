@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05ea8551_6c473f56",
+        "filename": "dpdk",
+        "patchSetId": 17
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T23:10:48Z",
+      "side": 1,
+      "message": "This should be reverted - it removes your create_shared_memory patch.",
+      "revId": "e0bad5b9edd5681bd7ac30c772ad9852cfb9fe35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c95ad3cf_e5cb61ef",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 992,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T23:10:48Z",
+      "side": 1,
+      "message": "you\u0027re going to want to rebase off of Daniel\u0027s recent changes (including the new spdk_bdev_write_zeroes_blocks())",
+      "revId": "e0bad5b9edd5681bd7ac30c772ad9852cfb9fe35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3deb13d_da0ec186",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1031,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T23:10:48Z",
+      "side": 1,
+      "message": "suggest just doing iovcnt \u003d (int)iovcnt_u64 here and avoiding the division again.",
+      "revId": "e0bad5b9edd5681bd7ac30c772ad9852cfb9fe35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34ab41ed_6ac0934b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1050,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T23:10:48Z",
+      "side": 1,
+      "message": "I think it\u0027s simpler to just do i \u003c iovcnt here, and then after the for loop if (remnant \u003e 0) overwrite the last iov_len",
+      "revId": "e0bad5b9edd5681bd7ac30c772ad9852cfb9fe35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66b37bef_8794e25b",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T23:10:48Z",
+      "side": 1,
+      "message": "this looks like an unrelated change that should probably be its own patch",
+      "revId": "e0bad5b9edd5681bd7ac30c772ad9852cfb9fe35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
