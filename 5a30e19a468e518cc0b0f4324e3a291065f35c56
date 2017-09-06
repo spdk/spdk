@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e60acb09_df1519e4",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-06T23:32:08Z",
+      "side": 1,
+      "message": "I don\u0027t really understand the description in the comment above - what does this accomplish by waiting for 2 unlocks?  Can\u0027t we just sem_post() once when the timed event is finished and sem_timedwait() once for that here?\n\nAlso, even if the two waits are necessary, this first sem_timedwait() call presumably needs to have its return value checked, since it can fail if the timeout expires.",
+      "revId": "5a30e19a468e518cc0b0f4324e3a291065f35c56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
