@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3bf29b4_1405f237",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1604,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T22:30:24Z",
+      "side": 1,
+      "message": "See below comment on _spdk_bs_load_used_pages_cpl which applies here too.",
+      "revId": "dec9ec8880a4e5a2e1638c007b339466a67c7584",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "883ccd3b_1ceb2921",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1655,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-06T22:30:24Z",
+      "side": 1,
+      "message": "I think if recovery is needed, we should skip all of this logic completely.  _spdk_bs_load_used_pages_cpl and _spdk_bs_load_used_clusters_cpl should never get called if we need to do recover - it effectively is reading a bunch of data that we know isn\u0027t valid.",
+      "revId": "dec9ec8880a4e5a2e1638c007b339466a67c7584",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
