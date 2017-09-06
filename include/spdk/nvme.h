@@ -568,6 +568,25 @@ int spdk_nvme_ctrlr_cmd_io_raw(struct spdk_nvme_ctrlr *ctrlr,
 			       spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * \brief Send the given NVM I/O command with metadata to the NVMe controller.
+ *
+ * This is a low level interface for submitting I/O commands directly. Prefer
+ * the spdk_nvme_ns_cmd_* functions instead. The validity of the command will
+ * not be checked!
+ *
+ * When constructing the nvme_command it is not necessary to fill out the PRP
+ * list/SGL or the CID. The driver will handle both of those for you.
+ *
+ * The command is submitted to a qpair allocated by spdk_nvme_ctrlr_alloc_io_qpair().
+ * The user must ensure that only one thread submits I/O on a given qpair at any given time.
+ */
+int spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
+				       struct spdk_nvme_qpair *qpair,
+				       struct spdk_nvme_cmd *cmd,
+				       void *buf, uint32_t len, void *md_buf,
+				       spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
  * \brief Process any outstanding completions for I/O submitted on a queue pair.
  *
  * This call is non-blocking, i.e. it only
