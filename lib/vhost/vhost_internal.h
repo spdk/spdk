@@ -88,11 +88,12 @@ struct spdk_vhost_dev_backend {
 
 	/**
 	 * Callbacks for starting and pausing the device.
-	 * The first param is struct spdk_vhost_dev *,
-	 * The second one is sem_t* passed as a void*.
-	 * The callback must call sem_post with given sem.
-	 * If sem_post won't be called within an arbitrary
-	 * limit of 3 seconds, this will time out.
+	 * The first param is struct spdk_vhost_dev *.
+	 * The second one is event context that has to be
+	 * passed to spdk_vhost_dev_backend_event_done().
+	 * If spdk_vhost_dev_backend_event_done isn't called
+	 * within an arbitrary limit of 3 seconds, these
+	 * callbacks will time out.
 	 */
 	spdk_vhost_event_fn new_device;
 	spdk_vhost_event_fn destroy_device;
@@ -147,5 +148,6 @@ int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
 
 int spdk_vhost_blk_controller_construct(void);
 void spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
 
 #endif /* SPDK_VHOST_INTERNAL_H */
