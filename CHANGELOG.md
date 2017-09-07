@@ -50,6 +50,10 @@ makes it explicit that the default is being used.
 spdk_bs_io_readv_blob() and spdk_bs_io_writev_blob() were added to enable
 scattered payloads.
 
+### Logical Volumes
+
+Logical volumes library was added.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
