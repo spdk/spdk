@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <rte_config.h>
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>

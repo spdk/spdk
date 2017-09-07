@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <rte_config.h>
+
 #include <linux/vhost.h>
 #include <linux/virtio_net.h>
 #include <stddef.h>
