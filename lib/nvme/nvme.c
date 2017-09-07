@@ -393,6 +393,24 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 	return rc;
 }
 
+static int
+spdk_nvme_transport_id_all_pcie(const struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvme_transport_id trid_pcie;
+
+	memset(&trid_pcie, 0, sizeof(trid_pcie));
+
+	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		return -1;
+	}
+
+	if (memcmp(trid->traddr, trid_pcie.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1) == 0) {
+		return 0;
+	}
+
+	return -1;
+}
+
 int
 spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
@@ -401,6 +419,7 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_transport_id trid_pcie;
+	bool all_pcie;
 
 	rc = nvme_driver_init();
 	if (rc != 0) {
@@ -418,6 +437,8 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		return -1;
 	}
 
+	all_pcie = (spdk_nvme_transport_id_all_pcie(trid) == 0);
+
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
 	nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb);
@@ -428,6 +449,11 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 	 */
 	if (!spdk_process_is_primary() && (trid->trtype == SPDK_NVME_TRANSPORT_PCIE)) {
 		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
+			if ((all_pcie == false) &&
+			    (spdk_nvme_transport_id_compare(trid, &ctrlr->trid) != 0)) {
+				continue;
+			}
+
 			nvme_ctrlr_proc_get_ref(ctrlr);
 
 			/*
