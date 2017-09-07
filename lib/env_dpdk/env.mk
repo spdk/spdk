@@ -83,6 +83,10 @@ ENV_DPDK_FILE = $(call spdk_lib_list_to_files,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) -Wl,--start-group -Wl,--whole-archive $(DPDK_LIB) -Wl,--end-group -Wl,--no-whole-archive
 
+ifneq (,$(shell grep "define RTE_LIBRTE_VHOST_NUMA 1" $(DPDK_DIR)/include/rte_config.h))
+ENV_LINKER_ARGS += -lnuma
+endif
+
 ifeq ($(OS),Linux)
 ENV_LINKER_ARGS += -ldl
 endif
