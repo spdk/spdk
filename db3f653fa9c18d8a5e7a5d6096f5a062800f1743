@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6586fcb8_6f284c75",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1088,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-07T23:26:13Z",
+      "side": 1,
+      "message": "I think this will now leak an nvme_bdev when it is hot removed.  remove_cb() will remove the bdev from g_nvme_bdevs() but never frees it.",
+      "revId": "db3f653fa9c18d8a5e7a5d6096f5a062800f1743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
