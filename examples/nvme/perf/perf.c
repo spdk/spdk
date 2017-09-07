@@ -170,6 +170,7 @@ static int g_dpdk_mem;
 static int g_shm_id = -1;
 static uint32_t g_disable_sq_cmb;
 static bool g_no_pci;
+static bool g_attach_all = false;
 
 static const char *g_core_mask;
 
@@ -1096,6 +1097,7 @@ parse_args(int argc, char **argv)
 	if (TAILQ_EMPTY(&g_trid_list)) {
 		/* If no transport IDs specified, default to enumerating all local PCIe devices */
 		add_trid("trtype:PCIe");
+		g_attach_all = true;
 	} else {
 		struct trid_entry *trid_entry, *trid_entry_tmp;
 
@@ -1205,12 +1207,19 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_pci_addr	pci_addr;
 	struct spdk_pci_device	*pci_dev;
 	struct spdk_pci_id	pci_id;
+	struct trid_entry       *entry = cb_ctx;
 
 	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("Attached to NVMe over Fabrics controller at %s:%s: %s\n",
 		       trid->traddr, trid->trsvcid,
 		       trid->subnqn);
 	} else {
+		if (g_attach_all == false) {
+			if (spdk_nvme_transport_id_compare(&entry->trid, trid)) {
+				return;
+			}
+		}
+
 		if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
 			return;
 		}
@@ -1238,7 +1247,7 @@ register_controllers(void)
 	printf("Initializing NVMe Controllers\n");
 
 	TAILQ_FOREACH(trid_entry, &g_trid_list, tailq) {
-		if (spdk_nvme_probe(&trid_entry->trid, NULL, probe_cb, attach_cb, NULL) != 0) {
+		if (spdk_nvme_probe(&trid_entry->trid, trid_entry, probe_cb, attach_cb, NULL) != 0) {
 			fprintf(stderr, "spdk_nvme_probe() failed for transport address '%s'\n",
 				trid_entry->trid.traddr);
 			return -1;
