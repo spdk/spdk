@@ -16,6 +16,24 @@
       "revId": "ba792604305490f2269a6909dfdd38ec0330f4ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cdf6e70_daf199a1",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1218,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-07T23:05:19Z",
+      "side": 1,
+      "message": "There is trtype check first in the above logic and in this code block, it is for the PCIe type.",
+      "parentUuid": "fb5f84e0_fc71d7c3",
+      "revId": "ba792604305490f2269a6909dfdd38ec0330f4ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
