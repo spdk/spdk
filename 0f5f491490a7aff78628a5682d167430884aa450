@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f2813d58_df2ccf60",
+        "filename": "test/vhost/fiotest/lvol_test.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-07T10:37:03Z",
+      "side": 1,
+      "message": "I don\u0027t think this is necessary, as lvols are created below based on number of VMs.",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 4
+      },
+      "revId": "0f5f491490a7aff78628a5682d167430884aa450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eff705ce_4c6a7c00",
+        "filename": "test/vhost/fiotest/lvol_test.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-07T10:37:03Z",
+      "side": 1,
+      "message": "This value can be defined at the beginning of the script.",
+      "range": {
+        "startLine": 133,
+        "startChar": 58,
+        "endLine": 133,
+        "endChar": 63
+      },
+      "revId": "0f5f491490a7aff78628a5682d167430884aa450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bd1eaae_f7c62e60",
+        "filename": "test/vhost/fiotest/lvol_test.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-07T10:37:03Z",
+      "side": 1,
+      "message": "This value should be size of lvol this is based on - divided by the number of VMs.",
+      "range": {
+        "startLine": 141,
+        "startChar": 62,
+        "endLine": 141,
+        "endChar": 66
+      },
+      "revId": "0f5f491490a7aff78628a5682d167430884aa450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9afff2a9_8ea12d18",
+        "filename": "test/vhost/fiotest/lvol_test.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-07T10:37:03Z",
+      "side": 1,
+      "message": "I think this size should be dependent on values defined higher (for nested lvols as well).",
+      "range": {
+        "startLine": 167,
+        "startChar": 23,
+        "endLine": 167,
+        "endChar": 34
+      },
+      "revId": "0f5f491490a7aff78628a5682d167430884aa450",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
