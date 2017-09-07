@@ -31,65 +31,26 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Standard C headers
- *
- * This file is intended to be included first by all other SPDK files.
- */
+#ifndef SPDK_VBDEV_LVOL_H
+#define SPDK_VBDEV_LVOL_H
 
-#ifndef SPDK_STDINC_H
-#define SPDK_STDINC_H
+#include "spdk/lvol.h"
+#include "spdk_internal/bdev.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "spdk_internal/lvolstore.h"
 
-/* Standard C */
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+struct lvol_store_bdev {
+	struct spdk_lvol_store	*lvs;
+	struct spdk_bdev 	*bdev;
 
-/* POSIX */
-#include <arpa/inet.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <poll.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <syslog.h>
-#include <termios.h>
-#include <unistd.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/un.h>
-#include <sys/user.h>
-#include <sys/wait.h>
+	TAILQ_ENTRY(lvol_store_bdev)	lvol_stores;
+};
+int vbdev_lvs_create(struct spdk_bdev *base_bdev, spdk_lvs_op_with_handle_complete cb_fn,
+		     void *cb_arg);
+void vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg);
 
-#include <uuid/uuid.h>
+int vbdev_lvol_create(uuid_t uuid, size_t sz, spdk_lvol_op_with_handle_complete cb_fn,
+		      void *cb_arg);
 
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* SPDK_STDINC_H */
+int vbdev_lvol_resize(char *name, size_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg);
+#endif /* SPDK_VBDEV_LVOL_H */
