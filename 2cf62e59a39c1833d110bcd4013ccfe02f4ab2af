@@ -46,6 +46,30 @@
       "revId": "2cf62e59a39c1833d110bcd4013ccfe02f4ab2af",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ceaf0af0_b11a5858",
+        "filename": "lib/bdev/virtio/rte_virtio/virtqueue.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-07T16:24:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5956d487_23418e1c",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 20
+      },
+      "revId": "2cf62e59a39c1833d110bcd4013ccfe02f4ab2af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
