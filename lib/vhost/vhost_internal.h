@@ -147,5 +147,6 @@ int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
 
 int spdk_vhost_blk_controller_construct(void);
 void spdk_vhost_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
 
 #endif /* SPDK_VHOST_INTERNAL_H */

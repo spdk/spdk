@@ -484,10 +484,9 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
  *
  */
 static int
-new_device(struct spdk_vhost_dev *vdev, void *arg)
+new_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev;
-	sem_t *sem = arg;
 	int rc = -1;
 
 	bvdev = to_blk_dev(vdev);
@@ -519,14 +518,14 @@ new_device(struct spdk_vhost_dev *vdev, void *arg)
 			     bvdev, vdev->lcore, 0);
 	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
 out:
-	sem_post(sem);
+	spdk_vhost_dev_backend_event_done(event_ctx, rc);
 	return 0;
 }
 
 struct spdk_vhost_dev_destroy_ctx {
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_poller *poller;
-	sem_t *sem;
+	void *event_ctx;
 };
 
 static void
@@ -550,11 +549,11 @@ destroy_device_poller_cb(void *arg)
 	spdk_vhost_dev_mem_unregister(&bvdev->vdev);
 
 	spdk_poller_unregister(&ctx->poller, NULL);
-	sem_post(ctx->sem);
+	spdk_vhost_dev_backend_event_done(ctx->event_ctx, 0);
 }
 
 static int
-destroy_device(struct spdk_vhost_dev *vdev, void *arg)
+destroy_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
@@ -562,22 +561,26 @@ destroy_device(struct spdk_vhost_dev *vdev, void *arg)
 	bvdev = to_blk_dev(vdev);
 	if (bvdev == NULL) {
 		SPDK_ERRLOG("Trying to stop non-blk controller as a blk one.\n");
-		return -1;
+		goto err;
 	}
 
 	destroy_ctx = spdk_dma_zmalloc(sizeof(*destroy_ctx), SPDK_CACHE_LINE_SIZE, NULL);
 	if (destroy_ctx == NULL) {
 		SPDK_ERRLOG("Failed to alloc memory for destroying device.\n");
-		return -1;
+		goto err;
 	}
 
 	destroy_ctx->bvdev = bvdev;
-	destroy_ctx->sem = arg;
+	destroy_ctx->event_ctx = event_ctx;
 
 	spdk_poller_unregister(&bvdev->requestq_poller, NULL);
 	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx, vdev->lcore,
 			     1000);
 	return 0;
+
+err:
+	spdk_vhost_dev_backend_event_done(event_ctx, -1);
+	return -1;
 }
 
 static void

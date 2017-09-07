@@ -121,6 +121,7 @@ DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB_P(spdk_bdev_get_io_channel, struct spdk_io_channel, (struct spdk_bdev_desc *desc), {0});
 DEFINE_STUB_V(spdk_vhost_call_external_event, (const char *ctrlr_name, spdk_vhost_event_fn fn,
 		void *arg));
+DEFINE_STUB_V(spdk_vhost_dev_backend_event_done, (void *event_ctx, int response));
 
 /* This sets spdk_vhost_dev_remove to either to fail or success */
 DEFINE_STUB(spdk_vhost_dev_remove_fail, bool, (void), false);
