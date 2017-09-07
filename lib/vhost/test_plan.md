@@ -73,6 +73,56 @@
 - checks that other devices in the same controller are unaffected by hot-attach
     and hot-detach operations
 
+### Vhost initiator test
+Testing vhost initiator with fio sequential read/write and random read/write with verificiation enabled.
+Tests 1-9 should be run on vhost and test 2-3, 5-9 on guest.
+
+#### Test Case 1 - vhost initiator test with malloc
+1. Run vhost with one scsi controller and with one malloc bdev with 512 block size.
+2. Prepare config for bdevio with virtio section.
+3. Run bdevio with config.
+4. Generate the fio config file given the list of all bdevs.
+5. Run fio tests: iodepth=128, block_size=4k, rw, randread, randwrite, read, write, randrw with verification.
+6. Check if fio tests are successful.
+
+#### Test Case 2 - vhost initiator test with nvme
+1. Run vhost with one scsi controller and with one nvme bdev with 512 block size.
+2. Repeat steps 2-6 from test case 1.
+
+#### Test Case 3 - vhost initiator test with lvol
+1. Run vhost with one scsi controller and with one lvol bdev with 512 block size.
+2. Repeat steps 2-6 from test case 1
+
+#### Test Case 4 - vhost initiator test with malloc
+1. Run vhost with one scsi controller and with one malloc bdev with 4096 block size.
+2. Repeat steps 2-6 from test case 1.
+
+#### Test Case 5 - vhost initiator test with lvol
+1. Run vhost with one scsi controller and with one lvol bdev with 4096 block size.
+2. Repeat steps 2-6 from test case 1
+
+#### Test Case 6 - vhost initiator test with nvme disk (size larger than 4G)
+1. Run vhost with one scsi controller and with one nvme bdev with 512 block size and disk size larger than 4G
+   to test if we can read, write to device with fio offset set to 4G.
+2. Repeat steps 4-6 from test case 1.
+
+#### Test Case 7 - vhost initiator test with multiqueue
+1. Run vhost with one scsi controller (one malloc bdev and one nvme bdev).
+2. Generate the fio config file given the list of all bdevs.
+3. Run fio tests: iodepth=128, block_size=4k, rw, randread, randwrite, read, write, randrw with verify
+4. Check if fio tests are successful.
+
+### Test Case 8 - vhost initator test with multiple socket
+1. Run vhost with two scsi controllers, one with nvme bdev and one with malloc bdev.
+2. Generate the fio config file given the list of all bdevs.
+3. Run fio tests: iodepth=128, block_size=4k, write with verification.
+4. Check if fio tests are successful.
+
+### Test Case 9 - vhost initiator test with unmap
+1. Run vhost with one controller and one nvme bdev with 512 block size.
+2. Run fio test with sequential jobs: trim, randtrim, write with verification.
+3. Check if fio test ends with success.
+4. Repeat steps 1-3 on host for malloc with 4096 block size and 512 block size.
 
 ### Performance tests
 Tests verifying the performance and efficiency of the module.
