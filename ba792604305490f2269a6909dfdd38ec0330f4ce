@@ -52,6 +52,24 @@
       "revId": "ba792604305490f2269a6909dfdd38ec0330f4ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f96d64f8_c0941030",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1218,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-07T23:26:01Z",
+      "side": 1,
+      "message": "Actually, looking at this again, we should be checking this condition in probe_cb so we don\u0027t attach to the other controllers at all, rather than attaching and then not using the controller.",
+      "parentUuid": "fb4ac4f8_e5add7e3",
+      "revId": "ba792604305490f2269a6909dfdd38ec0330f4ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
