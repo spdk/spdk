@@ -35,6 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += -I.
+CFLAGS += -include rte_config.h
 CFLAGS += $(ENV_CFLAGS)
 
 # These are the DPDK vhost files copied (for now) into SPDK
