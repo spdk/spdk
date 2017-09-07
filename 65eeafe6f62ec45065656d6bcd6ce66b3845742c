@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3f3a7586_10ca3147",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-07T04:01:20Z",
+      "side": 1,
+      "message": "Hi Jim, I have comments about this before, I suppose the spdk_bs_md_delete_blob() follow the spdk_bs_md_iter_next() will not works. it will go through all the mds in the function spdk_bs_md_iter_next() and call the callback which provide by the upper level app, for example the test case: https://review.gerrithub.io/#/c/376060/, it will stop the app before we have chance to delete the md if we add the spdk_bs_md_delete_blob() after the spdk_bs_md_iter_next().",
+      "parentUuid": "6a7a3749_23922e5f",
+      "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d69e4507_e4cf10b6",
         "filename": "lib/blobfs/blobfs.c",
         "patchSetId": 29
