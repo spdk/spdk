@@ -70,6 +70,24 @@
       "revId": "ba792604305490f2269a6909dfdd38ec0330f4ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e56c4385_e8cb2501",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1218,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-07T23:33:41Z",
+      "side": 1,
+      "message": "When perf started as the Primary or standalone process, it is checked other our current logic can work on the selected ctrlrs. The issue here is that perf started as the Secondary process, and all the attached ctrlrs from the Primary process will call the \"attach_cb\" for the Secondary process. So that the check is added here. The basic limitation so far is that the Secondary process does not probe ctrlrs directly.",
+      "parentUuid": "f96d64f8_c0941030",
+      "revId": "ba792604305490f2269a6909dfdd38ec0330f4ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
