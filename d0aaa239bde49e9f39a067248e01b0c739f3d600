@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc553faf_d69b63de",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-07T19:01:23Z",
+      "side": 1,
+      "message": "Following from earlier comments:\n\nBut there are a bunch of next_func functions that all do things like cli_context-\u003ebs \u003d bs, and set page_size, channel, etc. separately.  All of these next_func functions have to go through load_bs first I think.  So you can just set a bunch of these fields in load_bs and not have to do it separately in several different next_func functions.",
+      "revId": "d0aaa239bde49e9f39a067248e01b0c739f3d600",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "068364d8_f82a2009",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-07T19:01:23Z",
+      "side": 1,
+      "message": "I think something like:\n\nbool command_chosen \u003d false;\n\nif (op !\u003d \u0027c\u0027) {\n  if (command_chosen) {\n   usage(\"you idiot, you tried to pick two commands\\n\");\n   exit(1);\n  } else {\n    command_chosen \u003d true;\n  }\n}\n\nMaybe wordsmith the \"idiot\" part.  :)",
+      "revId": "d0aaa239bde49e9f39a067248e01b0c739f3d600",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
