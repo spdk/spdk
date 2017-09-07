@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb5f84e0_fc71d7c3",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1218,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-07T22:53:22Z",
+      "side": 1,
+      "message": "I think this breaks usage of NVMe-oF discovery services, since the discovery NQN won\u0027t match the NQNs of the discovered controllers.",
+      "revId": "ba792604305490f2269a6909dfdd38ec0330f4ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
