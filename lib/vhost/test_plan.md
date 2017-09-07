@@ -73,6 +73,72 @@
 - checks that other devices in the same controller are unaffected by hot-attach
     and hot-detach operations
 
+### Vhost initiator test
+Testing vhost initiator with fio sequential read/write and random read/write with verificiation enabled.
+Tests 1-8, 11 should be run on vhost and guest.
+
+#### Test Case 1 - vhost initiator test with malloc
+1. Run vhost with one scsi controller and with one malloc bdev with 512 block size.
+2. Prepare config for bdevio with virtio section.
+3. Run bdevio with config.
+4. Generate the fio config file given the list of all bdevs.
+5. Run fio tests: iodepth=128, block_size=4k, rw, randread, randwrite, read, write, randrw with verify
+6. Check if fio tests are successful
+
+#### Test Case 2 - vhost initiator test with nvme
+1. Run vhost with one scsi controller and with one nvme bdev with 512 block size.
+2. Repeat steps 2-6 from test case 1.
+
+#### Test Case 3 - vhost initiator test with lvol
+1. Run vhost with one scsi controller and with one lvol bdev with 512 block size.
+2. Repeat steps 2-6 from test case 1
+
+#### Test Case 4 - vhost initiator test with malloc
+1. Run vhost with one scsi controller and with one malloc bdev with 4096 block size.
+2. Repeat steps 2-6 from test case 1.
+
+#### Test Case 5 - vhost initiator test with nvme
+1. Run vhost with one scsi controller and with one nvme bdev with 4096 block size.
+2. Repeat steps 2-6 from test case 1.
+
+#### Test Case 6 - vhost initiator test with lvol
+1. Run vhost with one scsi controller and with one lvol bdev with 4096 block size.
+2. Repeat steps 2-6 from test case 1
+
+#### Test Case 7 - vhost initiator test with nvme disk (size larger than 4G)
+1. Run vhost with one scsi controller and with one nvme bdev with 512 block size and disk size larger than 4G
+   to test if we can read, write to device with fio offset set to 4G.
+2. Repeat steps 2-6 from test case 1.
+
+#### Test Case 8 - vhost initiator test with nvme disk (size larger than 4G)
+1. Run vhost with one scsi controller and with one nvme bdev with 4096 block size and disk size larger than 4G
+   to test if we can read, write to device with fio offset set to 4G.
+2. Repeat steps 2-6 from test case 1.
+
+#### Test Case 9 - vhost initiator test with multiqueue
+1. Run vhost with one scsi controller and with one malloc bdev.
+2. Run vhost with virtio initiator and pass two cores.
+   Split virtio dev into 2 devices and add each split device to one controller. Use one CPU core for every controller.
+3. Run guest with multiqueue enabled with core numbers equal to 2 and with num_queues equal to 2.
+4. Check if two additional disk showed up in vm.
+5. Run fio test on vm for two disks.
+6. Check if all cores are used by vm.
+
+### Test Case 10 - vhost initator test with multisocket
+1. Run vhost with two scsi controllers, one with nvme bdev and one with malloc bdev
+2. Run vhost with virtio initiator and pass two sockects from first vhost.
+3. Run guest with two devices from second vhost.
+4. Run fio tests on vm using two devices.
+5. Check if fio tests pass.
+
+### Test Case 11 - vhost initiator test withnmap
+1. Run vhost with one controller and one malloc bdev.
+2. Run fio test with sequential jobs: write, read, trim, read.
+3. Check if fio test ends with failure.
+
+#### Annotation
+- More test cases will come after resolving
+  [current vhost initiator limitations](spdk/tree/master/lib/bdev/virtio/README.md#Todo).
 
 ### Performance tests
 Tests verifying the performance and efficiency of the module.
