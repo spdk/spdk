@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "40ab597e_23d9413c",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-07T10:23:50Z",
+      "side": 1,
+      "message": "\"--enablerepo\u003dextras\" only apply to CentOS, I have not yet find the repository for Fedora, \"yum --enablerepo\u003d\"epel\" list available\" printed \"Error: Unknown repo: \u0027epel\u0027\".",
+      "parentUuid": "c9aa051a_4002509e",
+      "revId": "cf03e104b77f8096b6fc9bf70bbd929db5eb1dc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d2cc4f3_7d31e580",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 11
@@ -30,6 +48,30 @@
       "writtenOn": "2017-09-06T20:11:20Z",
       "side": 1,
       "message": "It\u0027s probably good enough to just look for /etc/debian_version and remove the /etc/lsb-release check. (/etc/lsb-release is not Debian-specific.)\n\nFrom a quick check, Ubuntu 16.04 and 17.04 have both files, and Debian just has /etc/debian_version.",
+      "range": {
+        "startLine": 18,
+        "startChar": 10,
+        "endLine": 18,
+        "endChar": 26
+      },
+      "revId": "cf03e104b77f8096b6fc9bf70bbd929db5eb1dc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f3d1308_2e797251",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-07T10:23:50Z",
+      "side": 1,
+      "message": "Fixed and tested in Ubuntu.",
+      "parentUuid": "5d2cc4f3_7d31e580",
       "range": {
         "startLine": 18,
         "startChar": 10,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "0f6bd167_c031bd98",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-07T10:23:50Z",
+      "side": 1,
+      "message": "Fixed.Thanks for your reminder.",
+      "parentUuid": "17823577_358db887",
+      "range": {
+        "startLine": 23,
+        "startChar": 35,
+        "endLine": 23,
+        "endChar": 44
+      },
+      "revId": "cf03e104b77f8096b6fc9bf70bbd929db5eb1dc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "223a061f_4b11cc41",
         "filename": "scripts/vagrant/build.sh",
         "patchSetId": 11
@@ -76,6 +142,24 @@
       "writtenOn": "2017-09-06T20:11:20Z",
       "side": 1,
       "message": "This is in pkgdep.sh now, so I don\u0027t think it\u0027s needed here anymore.",
+      "revId": "cf03e104b77f8096b6fc9bf70bbd929db5eb1dc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d30a483_cdb539a8",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-07T10:23:50Z",
+      "side": 1,
+      "message": "Removed. I thought this script would be used alone.",
+      "parentUuid": "223a061f_4b11cc41",
       "revId": "cf03e104b77f8096b6fc9bf70bbd929db5eb1dc5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
