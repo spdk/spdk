@@ -88,6 +88,24 @@
       "revId": "ba792604305490f2269a6909dfdd38ec0330f4ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec6e5b16_93504643",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1218,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-07T23:36:40Z",
+      "side": 1,
+      "message": "Maybe I can add a \"spdk_process_is_primary()\" check here to be more clear.",
+      "parentUuid": "e56c4385_e8cb2501",
+      "revId": "ba792604305490f2269a6909dfdd38ec0330f4ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
