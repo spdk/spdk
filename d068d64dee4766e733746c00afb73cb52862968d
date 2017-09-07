@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab889a1b_5e891223",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-07T18:33:48Z",
+      "side": 1,
+      "message": "I think you need to set rc \u003d -1 here before goto out.  Otherwise we keep rc \u003d 0 from alloc_task_pool() call earlier.",
+      "revId": "d068d64dee4766e733746c00afb73cb52862968d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07bf5738_0ba1f4ff",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1077,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-07T18:33:48Z",
+      "side": 1,
+      "message": "you need rc \u003d -1 here otherwise we will goto out with rc \u003d\u003d 0 from the alloc_task_pool call at line 1068",
+      "revId": "d068d64dee4766e733746c00afb73cb52862968d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "396ea837_3aaeaf2a",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1095,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-07T18:33:48Z",
+      "side": 1,
+      "message": "I think you should remove this and instead set rc \u003d -1 at line 1078 before goto out.",
+      "revId": "d068d64dee4766e733746c00afb73cb52862968d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
