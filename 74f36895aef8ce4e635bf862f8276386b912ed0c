@@ -16,6 +16,24 @@
       "revId": "74f36895aef8ce4e635bf862f8276386b912ed0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1983abe6_a3536950",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-09-07T03:51:16Z",
+      "side": 1,
+      "message": "Hi Daniel,\n\nThis is just a test not a real fix.",
+      "parentUuid": "0b167187_00c3e44a",
+      "revId": "74f36895aef8ce4e635bf862f8276386b912ed0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
