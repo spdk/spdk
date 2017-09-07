@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c160c683_03c856e7",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1218,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-07T09:28:14Z",
+      "side": 1,
+      "message": "Added the check here as in the multi-process scenario, this secondary perf will only receive the attach_cb(). This check can also work for the standalone case to not register the ctrlr.",
+      "range": {
+        "startLine": 1218,
+        "startChar": 3,
+        "endLine": 1218,
+        "endChar": 58
+      },
+      "revId": "e0e91ba997767a09b22ade7f528f19d9cf545bd4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
