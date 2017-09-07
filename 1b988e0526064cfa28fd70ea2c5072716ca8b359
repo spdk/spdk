@@ -386,6 +386,24 @@
     },
     {
       "key": {
+        "uuid": "063945c3_e0f02e96",
+        "filename": "lib/lvol/Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-07T08:53:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b794902a_7dc5f446",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d293fc9c_070bc44c",
         "filename": "lib/lvol/bdev/lvs_bdev.c",
         "patchSetId": 7
@@ -420,6 +438,24 @@
     },
     {
       "key": {
+        "uuid": "d15fad58_9fd15a60",
+        "filename": "lib/lvol/bdev/lvs_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-07T08:53:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7173edb3_7cc24ae5",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "458f09e0_83a5d4ce",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 7
@@ -431,6 +467,30 @@
       "writtenOn": "2017-08-25T18:20:15Z",
       "side": 1,
       "message": "This size is the number of clusters (I guess - it\u0027s not actually documented anywhere); it should probably be a uint64_t rather than a size_t, since it\u0027s the size of something on disk, not the size of a memory object.  This type change should be propagated back up to all callers as well.",
+      "range": {
+        "startLine": 265,
+        "startChar": 46,
+        "endLine": 265,
+        "endChar": 55
+      },
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0821a70_c3a37880",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-07T08:53:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "458f09e0_83a5d4ce",
       "range": {
         "startLine": 265,
         "startChar": 46,
@@ -488,6 +548,24 @@
       "writtenOn": "2017-08-25T18:20:15Z",
       "side": 1,
       "message": "I don\u0027t think an empty struct is valid C - we should probably put at least a placeholder field in here to avoid problems if a strict compiler rejects this.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "879e3abd_f679ba57",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-07T08:53:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f82143f2_bd84bdb0",
       "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
