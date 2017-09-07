@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "8266512d_1080d44e",
+        "filename": "include/spdk/stdinc.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-07T08:02:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0ec77ffc_4a287489",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "76de69eb_8be5eb88",
         "filename": "include/spdk_internal/bdev.h",
         "patchSetId": 7
@@ -76,6 +94,30 @@
     },
     {
       "key": {
+        "uuid": "68211ac9_7b111127",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-07T08:02:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c596830b_cfc3868e",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 24
+      },
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f923647f_0a7f304d",
         "filename": "include/spdk_internal/lvolstore.h",
         "patchSetId": 7
@@ -87,6 +129,30 @@
       "writtenOn": "2017-08-25T18:20:15Z",
       "side": 1,
       "message": "Mixed spaces and tabs (also elsewhere in this file).",
+      "range": {
+        "startLine": 43,
+        "startChar": 23,
+        "endLine": 43,
+        "endChar": 27
+      },
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2afb5e19_dfdda00b",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-07T08:02:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f923647f_0a7f304d",
       "range": {
         "startLine": 43,
         "startChar": 23,
@@ -122,6 +188,30 @@
     },
     {
       "key": {
+        "uuid": "13c102e9_130023d6",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-07T08:02:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "377d990a_df356c6b",
+      "range": {
+        "startLine": 81,
+        "startChar": 1,
+        "endLine": 81,
+        "endChar": 14
+      },
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "432345f5_b44e2a08",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 7
@@ -139,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "00df99ee_cec6d7d1",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-07T08:02:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "432345f5_b44e2a08",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d1f2bf0_ac8485f3",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 7
@@ -150,6 +258,24 @@
       "writtenOn": "2017-08-25T18:20:15Z",
       "side": 1,
       "message": "num_pages should just be bdev_io-\u003eu.read.len / page_size.",
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5187116e_ed229d34",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-07T08:02:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8d1f2bf0_ac8485f3",
       "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -207,6 +333,30 @@
       "writtenOn": "2017-08-25T18:20:15Z",
       "side": 1,
       "message": "gai_strerror() is for getaddrinfo() errors; please use spdk_strerror_r() instead.",
+      "range": {
+        "startLine": 82,
+        "startChar": 6,
+        "endLine": 82,
+        "endChar": 18
+      },
+      "revId": "1b988e0526064cfa28fd70ea2c5072716ca8b359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e80f68c5_731252de",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-07T08:02:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef02cd77_c69b4a84",
       "range": {
         "startLine": 82,
         "startChar": 6,
