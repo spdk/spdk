@@ -56,6 +56,33 @@
 - checks that other devices in the same controller are unaffected by hot-attach
     and hot-detach operations
 
+### Vhost initiator test
+1. Get latest SPDK.
+2. Run "git submodule update --init" in SPDK directory.
+
+#### Test Case 1
+1. Run vhost with one scsi controller and with one malloc bdev.
+2. Prepare config for bdevio with virtio section.
+3. Run bdevio with config.
+4. Generate the fio config file given the list of all bdevs.
+5. Run fio integrity traffic.
+6. Check if test fails.
+
+#### Test Case 2
+1. Run vhost with one scsi controller and with one nvme bdev.
+2. Prepare config for bdevio with virtio section.
+3. Run bdevio with config.
+4. Generate the fio config file given the list of all bdevs.
+5. Run fio integrity traffic.
+6. Check if test fails.
+
+#### Test Case 3
+1. Run vhost with one scsi controller and with one lvol bdev.
+2. Prepare config for bdevio with virtio section.
+3. Run bdevio with config.
+4. Generate the fio config file given the list of all bdevs.
+5. Run fio integrity traffic.
+6. Check if test fails.
 
 ### Performance tests
 Tests verifying the performance and efficiency of the module.
