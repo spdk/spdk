@@ -89,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "441b3f11_12b485e0",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-07T18:49:45Z",
+      "side": 1,
+      "message": "What if instead you added two fields to spdk_fs_cb_args, in a new fs_load structure in the op union, called:\n\nbool iter_done\nuint32_t deletes_in_progress\n\nif is_deleted exists, do the delete here, and ++deletes_in_progress\n\nWhen a delete finishes, --deletes_in_progress and if it equals 0 and iter_done is true, call the app callback.\n\nWhen you get -ENOENT in the iter callback, iter_done \u003d true and if deletes_in_progress \u003d 0, call the app callback.\n\nI think this will be simpler and avoid the TAILQ plus the spdk_deleted_file structure definition.",
+      "parentUuid": "8d6bee71_1056008e",
+      "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d69e4507_e4cf10b6",
         "filename": "lib/blobfs/blobfs.c",
         "patchSetId": 29
