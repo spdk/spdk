@@ -600,45 +600,20 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 	spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
 }
 
-static void
-__submit_request(struct spdk_bdev *bdev, struct spdk_bdev_io *bdev_io)
+static int
+spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_io_channel *ch;
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_io_channel *ch = bdev_io->ch->channel;
 
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
-
-	ch = bdev_io->ch->channel;
 
 	bdev_io->ch->io_outstanding++;
 	bdev_io->in_submit_request = true;
 	bdev->fn_table->submit_request(ch, bdev_io);
 	bdev_io->in_submit_request = false;
-}
 
-static int
-spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
-{
-	struct spdk_bdev *bdev = bdev_io->bdev;
-
-	__submit_request(bdev, bdev_io);
 	return 0;
-}
-
-void
-spdk_bdev_io_resubmit(struct spdk_bdev_io *bdev_io, struct spdk_bdev_desc *new_bdev_desc)
-{
-	struct spdk_bdev *new_bdev = new_bdev_desc->bdev;
-
-	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
-	bdev_io->bdev = new_bdev;
-
-	/*
-	 * This bdev_io was already submitted so decrement io_outstanding to ensure it
-	 *  does not get double-counted.
-	 */
-	assert(bdev_io->ch->io_outstanding > 0);
-	bdev_io->ch->io_outstanding--;
-	__submit_request(new_bdev, bdev_io);
 }
 
 static void
