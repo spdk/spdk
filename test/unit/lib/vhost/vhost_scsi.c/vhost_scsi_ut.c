@@ -117,6 +117,7 @@ DEFINE_STUB(spdk_json_write_string, int, (struct spdk_json_write_ctx *w, const c
 DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
+DEFINE_STUB_V(spdk_vhost_dev_backend_event_done, (void *event_ctx, int response));
 
 /* This sets spdk_vhost_dev_remove to either to fail or success */
 DEFINE_STUB(spdk_vhost_dev_remove_fail, bool, (void), false);

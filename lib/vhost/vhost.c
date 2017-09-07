@@ -61,6 +61,9 @@ struct spdk_vhost_dev_event_ctx {
 
 	/** Semaphore used to signal that event is done. */
 	sem_t sem;
+
+	/** Response to be written by enqueued event. */
+	int response;
 };
 
 static int new_connection(int vid);
@@ -536,12 +539,21 @@ spdk_vhost_allocate_reactor(uint64_t cpumask)
 	return selected_core;
 }
 
+void
+spdk_vhost_dev_backend_event_done(void *event_ctx, int response)
+{
+	struct spdk_vhost_dev_event_ctx *ctx = event_ctx;
+
+	ctx->response = response;
+	sem_post(&ctx->sem);
+}
+
 static void
 spdk_vhost_event_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_dev_event_ctx *ctx = arg1;
 
-	ctx->cb_fn(ctx->vdev, &ctx->sem);
+	ctx->cb_fn(ctx->vdev, ctx);
 }
 
 static void
@@ -599,7 +611,7 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 	sem_destroy(&ev_ctx.sem);
 	free(ev_ctx.ctrlr_name);
 
-	return rc;
+	return ev_ctx.response;
 }
 
 static int
