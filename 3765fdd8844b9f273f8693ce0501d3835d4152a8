@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6a62505_cf70b8c7",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 35
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-07T13:00:04Z",
+      "side": 1,
+      "message": "RE-ADD NESTED LVOLS ONCE THEYRE FIXED",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 22
+      },
+      "revId": "3765fdd8844b9f273f8693ce0501d3835d4152a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
