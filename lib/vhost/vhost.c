@@ -548,6 +548,26 @@ spdk_vhost_event_cb(void *arg1, void *arg2)
 	sem_post(&ctx->sem);
 }
 
+static void
+spdk_vhost_event_async_fn(void *arg1, void *arg2)
+{
+	struct spdk_vhost_dev_event_ctx *ctx = arg1;
+	struct spdk_vhost_dev *vdev;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_find(ctx->ctrlr_name);
+	if (vdev != ctx->vdev) {
+		/* vdev has been changed after enqueuing this event */
+		vdev = NULL;
+	}
+
+	ctx->cb_fn(vdev, arg2);
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+
+	free(ctx->ctrlr_name);
+	free(ctx);
+}
+
 int
 spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
 		      unsigned timeout_sec, const char *errmsg)
@@ -583,6 +603,29 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, vo
 	free(ev_ctx.ctrlr_name);
 
 	return ev_ctx.response;
+}
+
+static int
+spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg)
+{
+	struct spdk_vhost_dev_event_ctx *ev_ctx;
+	struct spdk_event *ev;
+
+	ev_ctx = calloc(1, sizeof(*ev_ctx));
+	if (ev_ctx == NULL) {
+		SPDK_ERRLOG("Failed to alloc vhost event.\n");
+		return -ENOMEM;
+	}
+
+	ev_ctx->vdev = vdev;
+	ev_ctx->ctrlr_name = strdup(vdev->name);
+	ev_ctx->cb_fn = cb_fn;
+
+	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_async_fn, ev_ctx, arg);
+	assert(ev);
+	spdk_event_call(ev);
+
+	return 0;
 }
 
 static void
@@ -819,6 +862,29 @@ destroy_connection(int vid)
 	}
 
 	vdev->vid = -1;
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+}
+
+void
+spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, void *arg)
+{
+	struct spdk_vhost_dev *vdev;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_find(ctrlr_name);
+
+	if (vdev == NULL) {
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		fn(NULL, arg);
+		return;
+	}
+
+	if (vdev->lcore == -1) {
+		fn(vdev, arg);
+	} else {
+		spdk_vhost_event_async_send(vdev, fn, arg);
+	}
+
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
