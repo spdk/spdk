@@ -221,7 +221,10 @@ process_request(struct spdk_nbd_disk *nbd)
 		return -ENOMEM;
 	}
 
-	assert(from_be32(&io->req.magic) == NBD_REQUEST_MAGIC);
+	if (from_be32(&io->req.magic) != NBD_REQUEST_MAGIC) {
+		SPDK_ERRLOG("invalid request magic\n");
+		return -EINVAL;
+	}
 
 	switch (from_be32(&io->req.type)) {
 	case NBD_CMD_READ:

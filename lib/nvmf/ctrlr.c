@@ -36,6 +36,7 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
+#include "spdk/endian.h"
 #include "spdk/io_channel.h"
 #include "spdk/trace.h"
 #include "spdk/nvme_spec.h"
@@ -831,7 +832,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	spdk_strcpy_pad(cdata->subnqn, subsystem->subnqn, sizeof(cdata->subnqn), '\0');
 
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "ctrlr data: maxcmd 0x%x\n", cdata->maxcmd);
-	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "sgls data: 0x%x\n", *(uint32_t *)&cdata->sgls);
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "sgls data: 0x%x\n", from_le32(&cdata->sgls));
 
 	/*
 	 * NVM subsystem fields (reserved for discovery subsystems)
