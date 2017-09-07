@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a80969a6_10e0a48b",
+        "filename": "test/nvmf/lvol/lvol_integrity.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-07T13:00:38Z",
+      "side": 1,
+      "message": "Currently only run for 3 subsystems, each 10 lvol bdev namespaces.\nTarget value is SUBSYS_NR\u003d10 (that gives 100 nvmf namespaces totally) but currently the test fails in this condition - NVMf target breaks connection. Needs investigating.",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 11
+      },
+      "revId": "a56345c6193865ed6b11468226cf4d4a9a34896a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b07a04a_cf29de76",
+        "filename": "test/nvmf/lvol/lvol_integrity.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-07T13:00:38Z",
+      "side": 1,
+      "message": "uncomment",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 27
+      },
+      "revId": "a56345c6193865ed6b11468226cf4d4a9a34896a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
