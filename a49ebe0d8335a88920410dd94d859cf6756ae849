@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f383995_79ea4541",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-07T21:16:21Z",
+      "side": 1,
+      "message": "The READ (16) parameters should be written with to_be64() and to_be32() similar to the WRITE (16) parameters below (and different offsets).",
+      "revId": "a49ebe0d8335a88920410dd94d859cf6756ae849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
