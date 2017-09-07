@@ -110,7 +110,7 @@
 #define DEFAULT_ADMIN_QUEUE_REQUESTS	(32)
 #define DEFAULT_IO_QUEUE_REQUESTS	(512)
 
-#define DEFAULT_HOSTNQN			"nqn.2016-06.io.spdk:host"
+#define DEFAULT_HOSTNQN			"nqn.2016-06.io.spdk:init"
 
 enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_INVALID = 0,
