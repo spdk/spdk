@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "1e98d8eb_57dc8497",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-07T18:46:33Z",
+      "side": 1,
+      "message": "could we add this to spdk_fs_cb_args instead?  maybe as a new fs_load structure in the op union.  This TAILQ is only needed when doing the load operation - after that it is no longer needed.",
+      "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2a01159_55147625",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-07T18:46:33Z",
+      "side": 1,
+      "message": "529-537 and 502-510 are identical.  Suggest breaking this out into a common function.",
+      "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a7a3749_23922e5f",
         "filename": "lib/blobfs/blobfs.c",
         "patchSetId": 29
@@ -31,6 +65,24 @@
       "side": 1,
       "message": "Hi Jim, I have comments about this before, I suppose the spdk_bs_md_delete_blob() follow the spdk_bs_md_iter_next() will not works. it will go through all the mds in the function spdk_bs_md_iter_next() and call the callback which provide by the upper level app, for example the test case: https://review.gerrithub.io/#/c/376060/, it will stop the app before we have chance to delete the md if we add the spdk_bs_md_delete_blob() after the spdk_bs_md_iter_next().",
       "parentUuid": "6a7a3749_23922e5f",
+      "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d6bee71_1056008e",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-07T18:46:33Z",
+      "side": 1,
+      "message": "OK - I see the problem you are describing.\n\nI was hoping to avoid these extra allocations and TAILQ but this will be OK.  Please let\u0027s add some comments though describing what is happening here and what this \"is_deleted\" xattr means.  Remember that someone might look at this code 6 months from now with no history working with the code and this is a bit complicated.",
+      "parentUuid": "3f3a7586_10ca3147",
       "revId": "65eeafe6f62ec45065656d6bcd6ce66b3845742c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
