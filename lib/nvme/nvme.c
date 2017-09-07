@@ -393,6 +393,24 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 	return rc;
 }
 
+static int
+spdk_nvme_transport_id_all_pcie(const struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvme_transport_id trid_pcie;
+
+	memset(&trid_pcie, 0, sizeof(trid_pcie));
+
+	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		return -1;
+	}
+
+	if (memcmp(trid->traddr, trid_pcie.traddr, SPDK_NVMF_TRADDR_MAX_LEN + 1) == 0) {
+		return 0;
+	}
+
+	return -1;
+}
+
 int
 spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
@@ -435,7 +453,10 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 			 *  that may take the driver lock, like nvme_detach().
 			 */
 			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-			attach_cb(cb_ctx, &ctrlr->trid, ctrlr, &ctrlr->opts);
+			if ((spdk_nvme_transport_id_all_pcie(trid) == 0) ||
+			    (spdk_nvme_transport_id_compare(trid, &ctrlr->trid) == 0)) {
+				attach_cb(cb_ctx, &ctrlr->trid, ctrlr, &ctrlr->opts);
+			}
 			nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 		}
 
