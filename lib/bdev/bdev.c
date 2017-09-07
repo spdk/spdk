@@ -600,7 +600,7 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 	spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
 }
 
-static int
+static void
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
@@ -612,8 +612,6 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	bdev_io->in_submit_request = true;
 	bdev->fn_table->submit_request(ch, bdev_io);
 	bdev_io->in_submit_request = false;
-
-	return 0;
 }
 
 static void
@@ -812,7 +810,6 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
-	int rc;
 
 	if (!spdk_bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
 		return -EINVAL;
@@ -834,12 +831,7 @@ spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.read.offset_blocks = offset_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		return rc;
-	}
-
+	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -866,7 +858,6 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
-	int rc;
 
 	if (!spdk_bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
 		return -EINVAL;
@@ -886,12 +877,7 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	bdev_io->u.read.offset_blocks = offset_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		return rc;
-	}
-
+	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -917,7 +903,6 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
-	int rc;
 
 	if (!desc->write) {
 		return -EBADF;
@@ -943,12 +928,7 @@ spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.write.offset_blocks = offset_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		return rc;
-	}
-
+	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -976,7 +956,6 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
-	int rc;
 
 	if (!desc->write) {
 		return -EBADF;
@@ -1000,12 +979,7 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.write.offset_blocks = offset_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		return rc;
-	}
-
+	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -1028,7 +1002,6 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 			      uint64_t offset_blocks, uint64_t num_blocks,
 			      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
-	int rc;
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
@@ -1050,12 +1023,7 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		return rc;
-	}
-
+	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -1081,7 +1049,6 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
-	int rc;
 
 	if (!desc->write) {
 		return -EBADF;
@@ -1108,12 +1075,7 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.unmap.num_blocks = num_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		return rc;
-	}
-
+	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -1139,7 +1101,6 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
-	int rc;
 
 	if (!desc->write) {
 		return -EBADF;
@@ -1161,12 +1122,7 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.flush.num_blocks = num_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		return rc;
-	}
-
+	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -1174,14 +1130,8 @@ static void
 _spdk_bdev_reset_dev(void *io_device, void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
-	int rc;
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		SPDK_ERRLOG("reset failed\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	}
+	spdk_bdev_io_submit(bdev_io);
 }
 
 static void
@@ -1280,7 +1230,6 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
-	int rc;
 
 	if (!desc->write) {
 		return -EBADF;
@@ -1300,12 +1249,7 @@ spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channe
 
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		return rc;
-	}
-
+	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -1317,7 +1261,6 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
-	int rc;
 
 	if (!desc->write) {
 		/*
@@ -1342,12 +1285,7 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	rc = spdk_bdev_io_submit(bdev_io);
-	if (rc < 0) {
-		spdk_bdev_put_io(bdev_io);
-		return rc;
-	}
-
+	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
 
