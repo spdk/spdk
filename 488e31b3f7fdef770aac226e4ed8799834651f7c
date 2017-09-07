@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9e3105b_c61d79ce",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1331,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-07T16:16:10Z",
+      "side": 1,
+      "message": "Reposting comment from last revision:\n\nI\u0027m not sure I understand.  I was thinking we can:\n1) keep _spdk_bs_free() as-is (no changes)\n2) change lib/util/io_channel.c _spdk_io_device_attempt_free() to not call dev-\u003eunregister_cb directly, instead have it do an spdk_thread_send_msg() with a callback that will call dev-\u003eunregister_cb.  This call can get the thread pointer by calling _get_thread() (local function to io_channel.c).",
+      "revId": "488e31b3f7fdef770aac226e4ed8799834651f7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
