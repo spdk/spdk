@@ -33,6 +33,24 @@
       "revId": "a1fbc517d2370e4324d02be22bb8fcae621d0a9d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc408f2e_316383b2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1331,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-07T13:25:22Z",
+      "side": 1,
+      "message": "The problem is that I\u0027m unable to get correct thread that I should use when channel that references my dev does not exist any more (after calling spdk_bs_unregister_md_thread)",
+      "parentUuid": "fa97e6a2_bea8c6e9",
+      "revId": "a1fbc517d2370e4324d02be22bb8fcae621d0a9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
