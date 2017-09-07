@@ -73,6 +73,41 @@
 - checks that other devices in the same controller are unaffected by hot-attach
     and hot-detach operations
 
+### Vhost initiator test
+Testing vhost initiator with fio sequential read/write and random read/write with verificiation enabled.
+Tests should be run on vhost and guest.
+
+#### Test Case 1
+1. Run vhost with one scsi controller and with one malloc bdev with 512 block size.
+2. Prepare config for bdevio with virtio section.
+3. Run bdevio with config.
+4. Generate the fio config file given the list of all bdevs.
+5. Run fio tests: iodepth=128, block_size=4k, rw, randread, randwrite, read, write, randrw with verify
+6. Check if fio tests are successful
+
+#### Test Case 2
+1. Run vhost with one scsi controller and with one nvme bdev with 512 block size.
+2. Repeat steps 2-6 from test case 1.
+
+#### Test Case 3
+1. Run vhost with one scsi controller and with one lvol bdev with 512 block size.
+2. Repeat steps 2-6 from test case 1
+
+#### Test Case 4
+1. Run vhost with one scsi controller and with one malloc bdev with 4096 block size.
+2. Repeat steps 2-6 from test case 1.
+
+#### Test Case 5
+1. Run vhost with one scsi controller and with one nvme bdev with 4096 block size.
+2. Repeat steps 2-6 from test case 1.
+
+#### Test Case 6
+1. Run vhost with one scsi controller and with one lvol bdev with 4096 block size.
+2. Repeat steps 2-6 from test case 1
+
+#### Annotation
+- More test cases will come after resolving
+  [current vhost initiator limitations](spdk/tree/master/lib/bdev/virtio/README.md#Todo).
 
 ### Performance tests
 Tests verifying the performance and efficiency of the module.
