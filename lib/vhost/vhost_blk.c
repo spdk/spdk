@@ -451,13 +451,7 @@ bdev_remove_cb(void *remove_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev = remove_ctx;
 
-	if (bvdev->vdev.lcore != -1 && (uint32_t)bvdev->vdev.lcore != spdk_env_get_current_core()) {
-		/* Call on proper core. */
-		spdk_vhost_event_send(&bvdev->vdev, _bdev_remove_cb, bvdev, 1, "vhost blk hot remove");
-		return;
-	}
-
-	_bdev_remove_cb(&bvdev->vdev, bvdev);
+	spdk_vhost_call_external_event(bvdev->vdev.name, _bdev_remove_cb, bvdev);
 }
 
 
