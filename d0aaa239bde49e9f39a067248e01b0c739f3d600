@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0211fe9d_51858ca5",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-08T14:46:06Z",
+      "side": 1,
+      "message": "I don\u0027t have any of that information in load_bs(), I don\u0027t get it *until* the callback which is next_func().  Look in this func here that you are commenting on, this is a next_func.  If I had the bs* before here I could do what you suggest but I don\u0027t",
+      "parentUuid": "dc553faf_d69b63de",
+      "revId": "d0aaa239bde49e9f39a067248e01b0c739f3d600",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "068364d8_f82a2009",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 22
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-07T19:01:23Z",
       "side": 1,
       "message": "I think something like:\n\nbool command_chosen \u003d false;\n\nif (op !\u003d \u0027c\u0027) {\n  if (command_chosen) {\n   usage(\"you idiot, you tried to pick two commands\\n\");\n   exit(1);\n  } else {\n    command_chosen \u003d true;\n  }\n}\n\nMaybe wordsmith the \"idiot\" part.  :)",
+      "revId": "d0aaa239bde49e9f39a067248e01b0c739f3d600",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da82afe7_28fe0581",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-08T14:46:06Z",
+      "side": 1,
+      "message": "that works nicely, thanks!",
+      "parentUuid": "068364d8_f82a2009",
       "revId": "d0aaa239bde49e9f39a067248e01b0c739f3d600",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
