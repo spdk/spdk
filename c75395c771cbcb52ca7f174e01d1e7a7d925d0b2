@@ -16,6 +16,24 @@
       "revId": "c75395c771cbcb52ca7f174e01d1e7a7d925d0b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5678c74_bba9fa80",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-08T13:49:43Z",
+      "side": 1,
+      "message": "Nope. This macro want avail-\u003enum but rte_vhost_vring have size field so it is not compatible.",
+      "parentUuid": "0e358b4d_ebad92b3",
+      "revId": "c75395c771cbcb52ca7f174e01d1e7a7d925d0b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
