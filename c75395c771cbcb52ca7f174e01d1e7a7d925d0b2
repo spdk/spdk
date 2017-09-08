@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e358b4d_ebad92b3",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-08T06:50:04Z",
+      "side": 1,
+      "message": "It\u0027s too hard to read here, can you use vring_used_event macro instead?",
+      "revId": "c75395c771cbcb52ca7f174e01d1e7a7d925d0b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
