@@ -22,6 +22,30 @@
       "revId": "ba4dc9e99cbdbffa69f6ac606de89a1cbc0e372e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "747a43c1_fa2fba30",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-08T08:48:03Z",
+      "side": 1,
+      "message": "Daniel may check to merge which one as the major change is similar.",
+      "parentUuid": "19898333_f2d3d157",
+      "range": {
+        "startLine": 432,
+        "startChar": 6,
+        "endLine": 432,
+        "endChar": 32
+      },
+      "revId": "ba4dc9e99cbdbffa69f6ac606de89a1cbc0e372e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
