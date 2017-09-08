@@ -133,6 +133,8 @@ register_bdev(void)
 	g_bdev.bdev.name = "bdev_ut";
 	g_bdev.bdev.fn_table = &fn_table;
 	g_bdev.bdev.module = SPDK_GET_BDEV_MODULE(bdev_ut);
+	g_bdev.bdev.blocklen = 4096;
+	g_bdev.bdev.blockcnt = 1024;
 
 	spdk_io_device_register(&g_bdev.io_target, stub_create_ch, stub_destroy_ch,
 				sizeof(struct ut_bdev_channel));
@@ -289,6 +291,103 @@ aborted_reset(void)
 	teardown_test();
 }
 
+static void
+io_during_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	enum spdk_bdev_io_status *status = cb_arg;
+
+	*status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+io_during_reset(void)
+{
+	struct spdk_io_channel *io_ch[2];
+	struct spdk_bdev_channel *bdev_ch[2];
+	enum spdk_bdev_io_status status0, status1, status_reset;
+	int rc;
+
+	setup_test();
+
+	/*
+	 * First test normal case - submit an I/O on each of two channels (with no resets)
+	 *  and verify they complete successfully.
+	 */
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	CU_ASSERT(bdev_ch[0]->flags == 0);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_done, &status0);
+	CU_ASSERT(rc == 0);
+
+	set_thread(1);
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	CU_ASSERT(bdev_ch[1]->flags == 0);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_done, &status1);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
+
+	set_thread(0);
+	stub_complete_io();
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	set_thread(1);
+	stub_complete_io();
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/*
+	 * Now submit a reset, and leave it pending while we submit I?O on two different
+	 *  channels.  These I/O should be failed by the bdev layer since the reset is in
+	 *  progress.
+	 */
+	set_thread(0);
+	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_reset(g_desc, io_ch[0], io_during_reset_done, &status_reset);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(bdev_ch[0]->flags == 0);
+	CU_ASSERT(bdev_ch[1]->flags == 0);
+	poll_threads();
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_RESET_IN_PROGRESS);
+	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_RESET_IN_PROGRESS);
+
+	set_thread(0);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_done, &status0);
+	CU_ASSERT(rc == 0);
+
+	set_thread(1);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_done, &status1);
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * A reset is in progress so these read I/O should complete with failure.  Note that we
+	 *  need to poll_threads() since I/O completed inline have their completion deferred.
+	 */
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_FAILED);
+
+	set_thread(0);
+	stub_complete_io();
+	spdk_put_io_channel(io_ch[0]);
+	set_thread(1);
+	spdk_put_io_channel(io_ch[1]);
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -308,7 +407,8 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "basic", basic) == NULL ||
 		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL ||
-		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL
+		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL ||
+		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
