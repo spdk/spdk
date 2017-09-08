@@ -78,6 +78,10 @@ which will show up in tools like `gdb`.
 The API spdk_trace_dump() now takes a new parameter to allow the caller to
 specify stdout or stderr for example.
 
+### Logical Volumes
+
+Logical volumes library was added.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
