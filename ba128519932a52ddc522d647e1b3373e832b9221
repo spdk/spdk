@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f46ddd63_93884aa1",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-08T09:56:19Z",
+      "side": 1,
+      "message": "I think this is not needed. Instead we could have some brief description what those tests have in mind.",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 55
+      },
+      "revId": "ba128519932a52ddc522d647e1b3373e832b9221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52282d2a_aeded396",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-08T09:56:19Z",
+      "side": 1,
+      "message": "This is not clear to me what the \"integrity traffic\" is. Some fio job file?",
+      "range": {
+        "startLine": 68,
+        "startChar": 11,
+        "endLine": 68,
+        "endChar": 28
+      },
+      "revId": "ba128519932a52ddc522d647e1b3373e832b9221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5036eb21_40994dba",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-08T09:56:19Z",
+      "side": 1,
+      "message": "maybe \"if fio test not failed\"? Or something similar?",
+      "range": {
+        "startLine": 69,
+        "startChar": 3,
+        "endLine": 69,
+        "endChar": 22
+      },
+      "revId": "ba128519932a52ddc522d647e1b3373e832b9221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
