@@ -44,6 +44,7 @@
 
 #include "config-host.h"
 #include "fio.h"
+#include "file.h"
 #include "optgroup.h"
 
 struct spdk_fio_options {
@@ -376,7 +377,7 @@ spdk_fio_init(struct thread_data *td)
 			return -1;
 		}
 
-		f->engine_data = target;
+		f->engine_data = (uint64_t)(uintptr_t)target;
 
 		TAILQ_INSERT_TAIL(&fio_thread->targets, target, link);
 	}
@@ -481,7 +482,8 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 {
 	int rc = 1;
 	struct spdk_fio_request	*fio_req = io_u->engine_data;
-	struct spdk_fio_target *target = io_u->file->engine_data;
+	struct spdk_fio_target *target = (struct spdk_fio_target *)
+					 (uintptr_t)io_u->file->engine_data;
 
 	assert(fio_req->td == td);
 
