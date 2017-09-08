@@ -1,3 +1,6 @@
 [submodule "dpdk"]
 	path = dpdk
 	url = https://github.com/spdk/dpdk.git
+[submodule "nvml"]
+	path = nvml
+	url = https://github.com/pmem/nvml.git

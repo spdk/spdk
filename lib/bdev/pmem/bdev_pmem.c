@@ -34,7 +34,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "bdev_malloc.h"
+#include "bdev_pmem.h"
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
@@ -42,14 +42,21 @@
 #include "spdk/copy_engine.h"
 #include "spdk/io_channel.h"
 #include "spdk/string.h"
-#include <libpmemblk.h>
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
+#include "libpmemblk.h"
 
 struct malloc_disk {
 	struct spdk_bdev	disk;
 	void 			*malloc_buf;
 	struct malloc_disk	*next;
+};
+
+
+struct pmem_disk {
+	struct spdk_bdev	disk;
+	PMEMblkpool *pool;
+	struct pmem_disk	*next;
 };
 
 struct malloc_task {
@@ -87,21 +94,21 @@ static struct malloc_disk *g_malloc_disk_head = NULL;
 
 int malloc_disk_count = 0;
 
-static int bdev_malloc_initialize(void);
-static void bdev_malloc_finish(void);
-static void bdev_malloc_get_spdk_running_config(FILE *fp);
+static int bdev_pmem_initialize(void);
+static void bdev_pmem_finish(void);
+static void bdev_pmem_get_spdk_running_config(FILE *fp);
 
 static int
-bdev_malloc_get_ctx_size(void)
+bdev_pmem_get_ctx_size(void)
 {
 	return sizeof(struct malloc_task) + spdk_copy_task_size();
 }
 
-SPDK_BDEV_MODULE_REGISTER(malloc, bdev_malloc_initialize, bdev_malloc_finish,
-			  bdev_malloc_get_spdk_running_config, bdev_malloc_get_ctx_size, NULL)
+SPDK_BDEV_MODULE_REGISTER(pmem, bdev_pmem_initialize, bdev_pmem_finish,
+			  bdev_pmem_get_spdk_running_config, bdev_pmem_get_ctx_size, NULL)
 
 static void
-bdev_malloc_delete_from_list(struct malloc_disk *malloc_disk)
+bdev_pmem_delete_from_list(struct malloc_disk *malloc_disk)
 {
 	struct malloc_disk *prev = NULL;
 	struct malloc_disk *node = g_malloc_disk_head;
@@ -136,16 +143,16 @@ malloc_disk_free(struct malloc_disk *malloc_disk)
 }
 
 static int
-bdev_malloc_destruct(void *ctx)
+bdev_pmem_destruct(void *ctx)
 {
 	struct malloc_disk *malloc_disk = ctx;
-	bdev_malloc_delete_from_list(malloc_disk);
+	bdev_pmem_delete_from_list(malloc_disk);
 	malloc_disk_free(malloc_disk);
 	return 0;
 }
 
 static int
-bdev_malloc_check_iov_len(struct iovec *iovs, int iovcnt, size_t nbytes)
+bdev_pmem_check_iov_len(struct iovec *iovs, int iovcnt, size_t nbytes)
 {
 	int i;
 
@@ -160,15 +167,15 @@ bdev_malloc_check_iov_len(struct iovec *iovs, int iovcnt, size_t nbytes)
 }
 
 static void
-bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
-		  struct malloc_task *task,
-		  struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
+bdev_pmem_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
+		struct malloc_task *task,
+		struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
 {
 	int64_t res = 0;
 	void *src = mdisk->malloc_buf + offset;
 	int i;
 
-	if (bdev_malloc_check_iov_len(iov, iovcnt, len)) {
+	if (bdev_pmem_check_iov_len(iov, iovcnt, len)) {
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task),
 				      SPDK_BDEV_IO_STATUS_FAILED);
 		return;
@@ -195,15 +202,15 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 }
 
 static void
-bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
-		   struct malloc_task *task,
-		   struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
+bdev_pmem_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
+		 struct malloc_task *task,
+		 struct iovec *iov, int iovcnt, size_t len, uint64_t offset)
 {
 	int64_t res = 0;
 	void *dst = mdisk->malloc_buf + offset;
 	int i;
 
-	if (bdev_malloc_check_iov_len(iov, iovcnt, len)) {
+	if (bdev_pmem_check_iov_len(iov, iovcnt, len)) {
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task),
 				      SPDK_BDEV_IO_STATUS_FAILED);
 		return;
@@ -230,12 +237,22 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 }
 
 static int
-bdev_malloc_unmap(struct malloc_disk *mdisk,
-		  struct spdk_io_channel *ch,
-		  struct malloc_task *task,
-		  uint64_t offset,
-		  uint64_t byte_count)
+bdev_pmem_unmap(struct malloc_disk *mdisk,
+		struct spdk_io_channel *ch,
+		struct malloc_task *task,
+		uint64_t offset,
+		uint64_t byte_count)
 {
+	uint64_t lba;
+	uint32_t block_count;
+
+	lba = offset / mdisk->disk.blocklen;
+	block_count = byte_count / mdisk->disk.blocklen;
+
+	if (lba >= mdisk->disk.blockcnt || block_count > mdisk->disk.blockcnt - lba) {
+		return -1;
+	}
+
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	task->num_outstanding = 1;
 
@@ -244,8 +261,8 @@ bdev_malloc_unmap(struct malloc_disk *mdisk,
 }
 
 static int64_t
-bdev_malloc_flush(struct malloc_disk *mdisk, struct malloc_task *task,
-		  uint64_t offset, uint64_t nbytes)
+bdev_pmem_flush(struct malloc_disk *mdisk, struct malloc_task *task,
+		uint64_t offset, uint64_t nbytes)
 {
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task), SPDK_BDEV_IO_STATUS_SUCCESS);
 
@@ -253,14 +270,14 @@ bdev_malloc_flush(struct malloc_disk *mdisk, struct malloc_task *task,
 }
 
 static int
-bdev_malloc_reset(struct malloc_disk *mdisk, struct malloc_task *task)
+bdev_pmem_reset(struct malloc_disk *mdisk, struct malloc_task *task)
 {
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(task), SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	return 0;
 }
 
-static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static int _bdev_pmem_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	uint32_t block_size = bdev_io->bdev->blocklen;
 
@@ -277,49 +294,49 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 			return 0;
 		}
 
-		bdev_malloc_readv((struct malloc_disk *)bdev_io->bdev->ctxt,
-				  ch,
-				  (struct malloc_task *)bdev_io->driver_ctx,
-				  bdev_io->u.read.iovs,
-				  bdev_io->u.read.iovcnt,
-				  bdev_io->u.read.num_blocks * block_size,
-				  bdev_io->u.read.offset_blocks * block_size);
+		bdev_pmem_readv((struct malloc_disk *)bdev_io->bdev->ctxt,
+				ch,
+				(struct malloc_task *)bdev_io->driver_ctx,
+				bdev_io->u.read.iovs,
+				bdev_io->u.read.iovcnt,
+				bdev_io->u.read.num_blocks * block_size,
+				bdev_io->u.read.offset_blocks * block_size);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		bdev_malloc_writev((struct malloc_disk *)bdev_io->bdev->ctxt,
-				   ch,
-				   (struct malloc_task *)bdev_io->driver_ctx,
-				   bdev_io->u.write.iovs,
-				   bdev_io->u.write.iovcnt,
-				   bdev_io->u.write.num_blocks * block_size,
-				   bdev_io->u.write.offset_blocks * block_size);
+		bdev_pmem_writev((struct malloc_disk *)bdev_io->bdev->ctxt,
+				 ch,
+				 (struct malloc_task *)bdev_io->driver_ctx,
+				 bdev_io->u.write.iovs,
+				 bdev_io->u.write.iovcnt,
+				 bdev_io->u.write.num_blocks * block_size,
+				 bdev_io->u.write.offset_blocks * block_size);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_RESET:
-		return bdev_malloc_reset((struct malloc_disk *)bdev_io->bdev->ctxt,
-					 (struct malloc_task *)bdev_io->driver_ctx);
+		return bdev_pmem_reset((struct malloc_disk *)bdev_io->bdev->ctxt,
+				       (struct malloc_task *)bdev_io->driver_ctx);
 
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		return bdev_malloc_flush((struct malloc_disk *)bdev_io->bdev->ctxt,
-					 (struct malloc_task *)bdev_io->driver_ctx,
-					 bdev_io->u.flush.offset_blocks * block_size,
-					 bdev_io->u.flush.num_blocks * block_size);
+		return bdev_pmem_flush((struct malloc_disk *)bdev_io->bdev->ctxt,
+				       (struct malloc_task *)bdev_io->driver_ctx,
+				       bdev_io->u.flush.offset_blocks * block_size,
+				       bdev_io->u.flush.num_blocks * block_size);
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		return bdev_malloc_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
-					 ch,
-					 (struct malloc_task *)bdev_io->driver_ctx,
-					 bdev_io->u.unmap.offset_blocks * block_size,
-					 bdev_io->u.unmap.num_blocks * block_size);
+		return bdev_pmem_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
+				       ch,
+				       (struct malloc_task *)bdev_io->driver_ctx,
+				       bdev_io->u.unmap.offset_blocks * block_size,
+				       bdev_io->u.unmap.num_blocks * block_size);
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		/* bdev_malloc_unmap is implemented with a call to mem_cpy_fill which zeroes out all of the requested bytes. */
-		return bdev_malloc_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
-					 ch,
-					 (struct malloc_task *)bdev_io->driver_ctx,
-					 bdev_io->u.write.offset_blocks * block_size,
-					 bdev_io->u.write.num_blocks * block_size);
+		/* bdev_pmem_unmap is implemented with a call to mem_cpy_fill which zeroes out all of the requested bytes. */
+		return bdev_pmem_unmap((struct malloc_disk *)bdev_io->bdev->ctxt,
+				       ch,
+				       (struct malloc_task *)bdev_io->driver_ctx,
+				       bdev_io->u.write.offset_blocks * block_size,
+				       bdev_io->u.write.num_blocks * block_size);
 
 	default:
 		return -1;
@@ -327,15 +344,15 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 	return 0;
 }
 
-static void bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void bdev_pmem_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	if (_bdev_malloc_submit_request(ch, bdev_io) < 0) {
+	if (_bdev_pmem_submit_request(ch, bdev_io) < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
 
 static bool
-bdev_malloc_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
+bdev_pmem_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -352,21 +369,22 @@ bdev_malloc_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 }
 
 static struct spdk_io_channel *
-bdev_malloc_get_io_channel(void *ctx)
+bdev_pmem_get_io_channel(void *ctx)
 {
 	return spdk_copy_engine_get_io_channel();
 }
 
 static const struct spdk_bdev_fn_table malloc_fn_table = {
-	.destruct		= bdev_malloc_destruct,
-	.submit_request		= bdev_malloc_submit_request,
-	.io_type_supported	= bdev_malloc_io_type_supported,
-	.get_io_channel		= bdev_malloc_get_io_channel,
+	.destruct		= bdev_pmem_destruct,
+	.submit_request		= bdev_pmem_submit_request,
+	.io_type_supported	= bdev_pmem_io_type_supported,
+	.get_io_channel		= bdev_pmem_get_io_channel,
 };
 
-struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
+struct spdk_bdev *create_pmem_disk(uint64_t num_blocks, uint32_t block_size)
 {
-	struct malloc_disk	*mdisk;
+	struct pmem_disk *pdisk;
+	const char path[] = "./pmem_pool";
 
 	if (block_size % 512 != 0) {
 		SPDK_ERRLOG("Block size %u is not a multiple of 512.\n", block_size);
@@ -378,47 +396,41 @@ struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 		return NULL;
 	}
 
-	mdisk = spdk_dma_zmalloc(sizeof(*mdisk), 0, NULL);
-	if (!mdisk) {
-		perror("mdisk");
+	pdisk = spdk_dma_zmalloc(sizeof(*pdisk), 0, NULL);
+	if (!pdisk) {
+		perror("pdisk");
 		return NULL;
 	}
 
-	/*
-	 * Allocate the large backend memory buffer from pinned memory.
-	 *
-	 * TODO: need to pass a hint so we know which socket to allocate
-	 *  from on multi-socket systems.
-	 */
-	mdisk->malloc_buf = spdk_dma_zmalloc(num_blocks * block_size, 2 * 1024 * 1024, NULL);
-	if (!mdisk->malloc_buf) {
-		SPDK_ERRLOG("spdk_dma_zmalloc failed\n");
-		malloc_disk_free(mdisk);
+	pdisk->pool = pmemblk_create(path, block_size, num_blocks, 0666);
+	if (!pdisk->pool) {
+		SPDK_ERRLOG("creating pmem pool failed\n");
+//		free(pdisk);
 		return NULL;
 	}
 
-	mdisk->disk.name = spdk_sprintf_alloc("Malloc%d", malloc_disk_count);
-	if (!mdisk->disk.name) {
-		malloc_disk_free(mdisk);
+	pdisk->disk.name = spdk_sprintf_alloc("pmem%d", malloc_disk_count);
+	if (!pdisk->disk.name) {
+//		free(pdisk);
 		return NULL;
 	}
-	mdisk->disk.product_name = "Malloc disk";
-	malloc_disk_count++;
+	pdisk->disk.product_name = "pmem disk";
+//	malloc_disk_count++;
 
-	mdisk->disk.write_cache = 1;
-	mdisk->disk.blocklen = block_size;
-	mdisk->disk.blockcnt = num_blocks;
+	pdisk->disk.write_cache = 1;
+	pdisk->disk.blocklen = block_size;
+	pdisk->disk.blockcnt = num_blocks;
 
-	mdisk->disk.ctxt = mdisk;
-	mdisk->disk.fn_table = &malloc_fn_table;
-	mdisk->disk.module = SPDK_GET_BDEV_MODULE(malloc);
+	pdisk->disk.ctxt = pdisk;
+	pdisk->disk.fn_table = &malloc_fn_table;
+	pdisk->disk.module = SPDK_GET_BDEV_MODULE(pmem);
 
-	spdk_bdev_register(&mdisk->disk);
+	spdk_bdev_register(&pdisk->disk);
 
-	mdisk->next = g_malloc_disk_head;
-	g_malloc_disk_head = mdisk;
-
-	return &mdisk->disk;
+//	pdisk->next = g_malloc_disk_head;
+//	g_malloc_disk_head = pdisk;
+//
+	return &pdisk->disk;
 }
 
 static void free_malloc_disk(struct malloc_disk *mdisk)
@@ -428,7 +440,7 @@ static void free_malloc_disk(struct malloc_disk *mdisk)
 	spdk_dma_free(mdisk);
 }
 
-static int bdev_malloc_initialize(void)
+static int bdev_pmem_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Malloc");
 	int NumberOfLuns, LunSizeInMB, BlockSize, i, rc = 0;
@@ -450,7 +462,7 @@ static int bdev_malloc_initialize(void)
 		}
 		size = (uint64_t)LunSizeInMB * 1024 * 1024;
 		for (i = 0; i < NumberOfLuns; i++) {
-			bdev = create_malloc_disk(size / BlockSize, BlockSize);
+			bdev = create_pmem_disk(size / BlockSize, BlockSize);
 			if (bdev == NULL) {
 				SPDK_ERRLOG("Could not create malloc disk\n");
 				rc = EINVAL;
@@ -463,7 +475,7 @@ end:
 	return rc;
 }
 
-static void bdev_malloc_finish(void)
+static void bdev_pmem_finish(void)
 {
 	struct malloc_disk *mdisk;
 
@@ -475,7 +487,7 @@ static void bdev_malloc_finish(void)
 }
 
 static void
-bdev_malloc_get_spdk_running_config(FILE *fp)
+bdev_pmem_get_spdk_running_config(FILE *fp)
 {
 	int num_malloc_luns = 0;
 	uint64_t malloc_lun_size = 0;
@@ -509,4 +521,4 @@ bdev_malloc_get_spdk_running_config(FILE *fp)
 	}
 }
 
-SPDK_LOG_REGISTER_TRACE_FLAG("bdev_malloc", SPDK_TRACE_BDEV_MALLOC)
+SPDK_LOG_REGISTER_TRACE_FLAG("bdev_pmem", SPDK_TRACE_BDEV_MALLOC)
