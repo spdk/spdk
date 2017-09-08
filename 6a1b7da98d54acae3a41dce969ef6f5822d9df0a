@@ -1,0 +1,303 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ec078cc_201aa085",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "The objective is not clear. Change this to be specific about the feature(s) that your testing.",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 7
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "159ae92f_77348e92",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "Methodology has a larger scope than configuration. This section talks about configuration so you might want to rename it to configuration. It would also be more interesting to show what is static configuration and what is dynamically configured via RPC calls.",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 80
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c87fa81_2e11be0b",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "I don\u0027t see any integrity testing in the test case. Lets make the titles very specific to what the test is doing. I would recommend changing to \"NVMe-oF Namespace on a Logical Volumes (Lvol) device\". Are you planning to have multiple tests in this document? Adding Test # before the test description might help with identifying the different test cases",
+      "range": {
+        "startLine": 14,
+        "startChar": 5,
+        "endLine": 14,
+        "endChar": 19
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c591609_242449fc",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "I would change this part to \"This test configures an SPDK NVMe-oF subsystem backed by logical volume devices and uses FIO to generate I/Os that target those subsystems. The logical volume bdevs are backed by malloc bdev.\"",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 21
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27c8dd48_0b08232f",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "I think we should capitalize the first letter of each step. You might also want to assign step numbers. I would recommend changing this to \"Step 1: Assign IP addresses to RDMA NICs\"",
+      "range": {
+        "startLine": 23,
+        "startChar": 2,
+        "endLine": 23,
+        "endChar": 36
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e2da6f2_5a553337",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "I would recommend changing to \"Step 2: Start the SPDK nvmf_tgt application\"",
+      "range": {
+        "startLine": 24,
+        "startChar": 2,
+        "endLine": 24,
+        "endChar": 19
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "942ee264_3b9eb953",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "I would recommend changing to \"Step 3: Create a malloc bdev\"",
+      "range": {
+        "startLine": 25,
+        "startChar": 2,
+        "endLine": 25,
+        "endChar": 20
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de6b42bb_222bb7f4",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "I would recommend changing to \"Step 4: Create a logical volume store on the malloc bdev\"",
+      "range": {
+        "startLine": 26,
+        "startChar": 2,
+        "endLine": 26,
+        "endChar": 44
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbc7c24e_f94f6f1f",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "I would recommend changing to \"Step 5: Create 10 logical volume bdevs on the logical volume store\"",
+      "range": {
+        "startLine": 27,
+        "startChar": 2,
+        "endLine": 27,
+        "endChar": 56
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6d91e50_e7307108",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "Step 6: Create an NVMe-oF subsystem with logical volume bdevs namespaces",
+      "range": {
+        "startLine": 28,
+        "startChar": 2,
+        "endLine": 28,
+        "endChar": 63
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f28a9b8_f01b1b03",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "How is this step different from the previous steps?",
+      "range": {
+        "startLine": 29,
+        "startChar": 2,
+        "endLine": 29,
+        "endChar": 52
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "238fb425_5e4ee772",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "Step 8: Run FIO with workload parameters blocksize\u003d256K, iodepth\u003d64, workload\u003drandwrite and verify flag enabled so that fio reads and verifies the data written to the logical device. The run time is 10 seconds. \nIs 10 seconds enough time?",
+      "range": {
+        "startLine": 30,
+        "startChar": 2,
+        "endLine": 30,
+        "endChar": 66
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "759d9501_41171c74",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-08T17:00:46Z",
+      "side": 1,
+      "message": "Step 9: Disconnect from NVMe-oF subsystems. Do you want to delete the subsystem(s)? I thin we should always clean up in each test before heading to the next one so that each test start off with a clean slate.",
+      "range": {
+        "startLine": 33,
+        "startChar": 2,
+        "endLine": 33,
+        "endChar": 33
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
