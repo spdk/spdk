@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8ebec2c3_b40b144e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-08T16:55:05Z",
+      "side": 1,
+      "message": "I really don\u0027t want to create another cb_fn typedef just for this purpose.\nplease see patch https://review.gerrithub.io/c/377585/ instead",
+      "parentUuid": "01b9eb9a_8a8b8a79",
+      "range": {
+        "startLine": 544,
+        "startChar": 1,
+        "endLine": 544,
+        "endChar": 34
+      },
+      "revId": "71423a177abf9fa2047891c17e2cfcddb62093df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "79ca7494_485c03f4",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 22
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-08T15:09:32Z",
       "side": 1,
       "message": "If aborting in case of failure why error code? Can we make this function return void and replace abort by sem_wait()?",
+      "range": {
+        "startLine": 593,
+        "startChar": 0,
+        "endLine": 602,
+        "endChar": 11
+      },
+      "revId": "71423a177abf9fa2047891c17e2cfcddb62093df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fec97374_7ac7d943",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-08T16:55:05Z",
+      "side": 1,
+      "message": "It\u0027s temporary. Quoting the commit msg:\n```\nAlso, this patch temporarily gets rid of return codes for\nvhost_scsi/blk dpdk callbacks. -1 will be returned if the\ncall timed out, 0 otherwise. A patch reenabling this\nfunctionality is on the way\n```\nI didn\u0027t want to squeeze all changes into a single patch.\nspdk_vhost_event_send was returning int already, so I\u0027d rather stick with it as is.\nThe error code here *is* required, and the patch for it is published already: https://review.gerrithub.io/c/377585/",
+      "parentUuid": "79ca7494_485c03f4",
       "range": {
         "startLine": 593,
         "startChar": 0,
