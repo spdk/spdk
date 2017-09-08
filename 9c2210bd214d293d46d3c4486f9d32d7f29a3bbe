@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "787daade_6548a57b",
+        "filename": "lib/nvmf/request.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-09-08T07:54:25Z",
+      "side": 1,
+      "message": "If Host is needed in the configuration, the code failed at nvmf_process_connect() and no thread is initialized. The below called asserted where thread is NULL.",
+      "range": {
+        "startLine": 74,
+        "startChar": 5,
+        "endLine": 74,
+        "endChar": 23
+      },
+      "revId": "9c2210bd214d293d46d3c4486f9d32d7f29a3bbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
