@@ -176,6 +176,32 @@ bdev_virtio_write(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	virtqueue_send_pkt(disk->vdev->vqs[2], vreq);
 }
 
+static void
+bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
+	struct virtio_req *vreq = bdev_virtio_init_vreq(ch, bdev_io);
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+
+	vreq->iov = bdev_io->u.direct_io.iovs;
+	vreq->iovcnt = 1;
+
+	req->cdb[0] = SPDK_SBC_UNMAP;
+	req->cdb[8] = 24;
+
+	/* parameter list header */
+	to_be16(&vreq->iov[0], 6 + 16);
+	to_be16(&vreq->iov[2], 16);
+	memset(&vreq->iov[4], 0, 4);
+
+	/* block descriptor */
+	to_be64(&vreq->iov[8], bdev_io->u.direct_io.offset_blocks);
+	to_be32(&vreq->iov[16], bdev_io->u.direct_io.num_blocks);
+	memset(&vreq->iov[20], 0, 4);
+
+	virtqueue_send_pkt(disk->vdev->vqs[2], vreq);
+}
+
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
@@ -188,8 +214,10 @@ static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_b
 	case SPDK_BDEV_IO_TYPE_RESET:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		return 0;
-	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_unmap);
+		return 0;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 	default:
 		return -1;
 	}
