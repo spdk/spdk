@@ -162,8 +162,8 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	}
 }
 
-static struct lvol_store_bdev *
-_vbdev_lvol_store_first(void)
+struct lvol_store_bdev *
+vbdev_lvol_store_first(void)
 {
 	struct lvol_store_bdev *lvs_bdev;
 
@@ -175,8 +175,8 @@ _vbdev_lvol_store_first(void)
 	return lvs_bdev;
 }
 
-static struct lvol_store_bdev *
-_vbdev_lvol_store_next(struct lvol_store_bdev *prev)
+struct lvol_store_bdev *
+vbdev_lvol_store_next(struct lvol_store_bdev *prev)
 {
 	struct lvol_store_bdev *lvs_bdev;
 
@@ -192,14 +192,14 @@ struct spdk_lvol_store *
 vbdev_get_lvol_store_by_uuid(uuid_t uuid)
 {
 	struct spdk_lvol_store *lvs = NULL;
-	struct lvol_store_bdev *lvs_bdev = _vbdev_lvol_store_first();
+	struct lvol_store_bdev *lvs_bdev = vbdev_lvol_store_first();
 
 	while (lvs_bdev != NULL) {
 		lvs = lvs_bdev->lvs;
 		if (uuid_compare(lvs->uuid, uuid) == 0) {
 			return lvs;
 		}
-		lvs_bdev = _vbdev_lvol_store_next(lvs_bdev);
+		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
 	}
 	return NULL;
 }
@@ -208,14 +208,14 @@ struct lvol_store_bdev *
 vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
 {
 	struct spdk_lvol_store *lvs = NULL;
-	struct lvol_store_bdev *lvs_bdev = _vbdev_lvol_store_first();
+	struct lvol_store_bdev *lvs_bdev = vbdev_lvol_store_first();
 
 	while (lvs_bdev != NULL) {
 		lvs = lvs_bdev->lvs;
 		if (lvs == lvs_orig) {
 			return lvs_bdev;
 		}
-		lvs_bdev = _vbdev_lvol_store_next(lvs_bdev);
+		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
 	}
 	return NULL;
 }
