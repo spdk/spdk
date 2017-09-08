@@ -124,6 +124,8 @@ struct spdk_bdev_channel {
 	 */
 	uint64_t		io_outstanding;
 
+	TAILQ_HEAD(, spdk_bdev_io)	queued_resets;
+
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t		start_tsc;
 	uint64_t		interval_tsc;
@@ -653,6 +655,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
+	TAILQ_INIT(&ch->queued_resets);
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -1158,25 +1161,31 @@ _spdk_bdev_start_reset(void *ctx)
 }
 
 static void
-_spdk_bdev_start_next_reset(struct spdk_bdev *bdev)
+_spdk_bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 {
-	struct spdk_bdev_io *bdev_io;
-	struct spdk_thread *thread;
+	struct spdk_bdev *bdev = ch->bdev;
+	struct spdk_bdev_io *reset_io;
+
+	assert(!TAILQ_EMPTY(&ch->queued_resets));
 
 	pthread_mutex_lock(&bdev->mutex);
-
-	if (bdev->reset_in_progress || TAILQ_EMPTY(&bdev->queued_resets)) {
-		pthread_mutex_unlock(&bdev->mutex);
-		return;
-	} else {
-		bdev_io = TAILQ_FIRST(&bdev->queued_resets);
-		TAILQ_REMOVE(&bdev->queued_resets, bdev_io, link);
+	if (!bdev->reset_in_progress) {
 		bdev->reset_in_progress = true;
-		thread = spdk_io_channel_get_thread(bdev_io->ch->channel);
-		spdk_thread_send_msg(thread, _spdk_bdev_start_reset, bdev_io);
+		reset_io = TAILQ_FIRST(&ch->queued_resets);
+		TAILQ_REMOVE(&ch->queued_resets, reset_io, link);
+		_spdk_bdev_start_reset(reset_io);
 	}
-
 	pthread_mutex_unlock(&bdev->mutex);
+}
+
+static void
+_spdk_bdev_complete_reset_channel(void *io_device, struct spdk_io_channel *_ch, void *ctx)
+{
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+
+	if (!TAILQ_EMPTY(&ch->queued_resets)) {
+		_spdk_bdev_channel_start_reset(ch);
+	}
 }
 
 int
@@ -1198,10 +1207,10 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	pthread_mutex_lock(&bdev->mutex);
-	TAILQ_INSERT_TAIL(&bdev->queued_resets, bdev_io, link);
+	TAILQ_INSERT_TAIL(&channel->queued_resets, bdev_io, link);
 	pthread_mutex_unlock(&bdev->mutex);
 
-	_spdk_bdev_start_next_reset(bdev);
+	_spdk_bdev_channel_start_reset(channel);
 
 	return 0;
 }
@@ -1325,8 +1334,10 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	assert(bdev_io->ch->io_outstanding > 0);
 	bdev_io->ch->io_outstanding--;
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
+		pthread_mutex_lock(&bdev_io->bdev->mutex);
 		bdev_io->bdev->reset_in_progress = false;
-		_spdk_bdev_start_next_reset(bdev_io->bdev);
+		pthread_mutex_unlock(&bdev_io->bdev->mutex);
+		spdk_for_each_channel(bdev_io->bdev, _spdk_bdev_complete_reset_channel, NULL, NULL);
 	}
 
 	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
@@ -1475,7 +1486,6 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INIT(&bdev->base_bdevs);
 
 	bdev->reset_in_progress = false;
-	TAILQ_INIT(&bdev->queued_resets);
 
 	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));
