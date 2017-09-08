@@ -1,0 +1,215 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f27471d0_506b102c",
+        "filename": "test/lvol/Commands_Rpc_Lib.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-08T08:09:15Z",
+      "side": 1,
+      "message": "pep8 - E302 expected 2 blank lines, found 1",
+      "revId": "68157d1ca59a8f2798809b75813fad054da7bc24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "521d2ca7_fa463bb9",
+        "filename": "test/lvol/Commands_Rpc_Lib.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-08T08:09:15Z",
+      "side": 1,
+      "message": "pep8 - E302 expected 2 blank lines, found 1",
+      "revId": "68157d1ca59a8f2798809b75813fad054da7bc24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "583f843e_6df7eaca",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-08T08:09:15Z",
+      "side": 1,
+      "message": "Do not run all tests in loop at once.\nIf you want to allow using different \"total_size\" and \"block_size\" for tests then allow passing arguments into the script",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 34
+      },
+      "revId": "68157d1ca59a8f2798809b75813fad054da7bc24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25af93e6_e88ab94f",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-08T08:09:15Z",
+      "side": 1,
+      "message": "remove empty line",
+      "revId": "68157d1ca59a8f2798809b75813fad054da7bc24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4cab161_dae955f0",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-08T08:09:15Z",
+      "side": 1,
+      "message": "remove empty line",
+      "revId": "68157d1ca59a8f2798809b75813fad054da7bc24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aaec424e_897b9a51",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-08T08:09:15Z",
+      "side": 1,
+      "message": "put dependencies from local scripts at the bottom",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 41
+      },
+      "revId": "68157d1ca59a8f2798809b75813fad054da7bc24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7f72184_ef3075cb",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-08T08:09:15Z",
+      "side": 1,
+      "message": "pep8 - E302 expected 2 blank lines, found 1",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 16
+      },
+      "revId": "68157d1ca59a8f2798809b75813fad054da7bc24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "268601c9_388eaffb",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-08T08:09:15Z",
+      "side": 1,
+      "message": "pep8 - E302 expected 2 blank lines, found 0",
+      "revId": "68157d1ca59a8f2798809b75813fad054da7bc24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "011b2252_ddda4ed2",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-08T08:09:15Z",
+      "side": 1,
+      "message": "pep8 - E302 expected 2 blank lines, found 0",
+      "revId": "68157d1ca59a8f2798809b75813fad054da7bc24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9dca1fbf_0b8e0343",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-08T08:09:15Z",
+      "side": 1,
+      "message": "nitpicking - do we even need new variable for just single use?",
+      "range": {
+        "startLine": 274,
+        "startChar": 8,
+        "endLine": 274,
+        "endChar": 30
+      },
+      "revId": "68157d1ca59a8f2798809b75813fad054da7bc24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d570eb0_590e0305",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-08T08:09:15Z",
+      "side": 1,
+      "message": "Why do you delete test plan from previous commit?",
+      "revId": "68157d1ca59a8f2798809b75813fad054da7bc24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
