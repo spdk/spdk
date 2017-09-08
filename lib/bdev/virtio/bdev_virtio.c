@@ -41,6 +41,7 @@
 #include "spdk/endian.h"
 #include "spdk/stdinc.h"
 #include "spdk/util.h"
+#include "spdk/scsi_spec.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -160,6 +161,38 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	virtio_xmit_pkts(disk->vdev->vqs[2], vreq);
 }
 
+static void
+bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
+	struct virtio_req *vreq = bdev_virtio_init_vreq(ch, bdev_io);
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct spdk_scsi_unmap_bdesc *desc;
+	uint8_t *buf;
+	uint16_t cmd_len = 24; /* 8 byte header + 16 byte descriptor */
+
+	vreq->iov = bdev_io->u.bdev.iovs;
+	vreq->iovcnt = bdev_io->u.bdev.iovcnt;
+
+	req->cdb[0] = SPDK_SBC_UNMAP;
+	to_be16(&req->cdb[7], cmd_len);
+
+	buf = vreq->iov->iov_base;
+
+	/* header */
+	to_be16(&buf[0], cmd_len - 2); /* total length (excluding the length field) */
+	to_be16(&buf[2], cmd_len - 8); /* length of block descriptors */
+	memset(&buf[4], 0, 4); /* reserved */
+
+	/* single block descriptor */
+	desc = (struct spdk_scsi_unmap_bdesc *)&buf[8];
+	to_be64(&desc->lba, bdev_io->u.bdev.offset_blocks);
+	to_be32(&desc->block_count, bdev_io->u.bdev.num_blocks);
+	memset(&desc->reserved, 0, sizeof(desc->reserved));
+
+	virtio_xmit_pkts(disk->vdev->vqs[2], vreq);
+}
+
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	switch (bdev_io->type) {
@@ -173,8 +206,18 @@ static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_b
 	case SPDK_BDEV_IO_TYPE_RESET:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		return 0;
-	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+		if (bdev_io->u.bdev.num_blocks > UINT32_MAX) {
+			SPDK_ERRLOG("single UNMAP block count must be no bigger than 2^32 - 1\n");
+			return -1;
+		}
+		/* Since we support only bdev_io->u.bdev.num_blocks <= UINT32_MAX
+		 * allocate just 24 bytes (8 byte header + 16 byte descriptor).
+		 * A single block descriptor can UNMAP at most UINT32_MAX blocks.
+		 */
+		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_unmap, 24);
+		return 0;
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 	default:
 		return -1;
 	}
