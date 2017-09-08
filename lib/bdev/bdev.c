@@ -1020,6 +1020,8 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	}
 
 	bdev_io->ch = channel;
+	bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
+	bdev_io->u.bdev.iovcnt = 1;
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
@@ -1074,6 +1076,8 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
+	bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
+	bdev_io->u.bdev.iovcnt = 1;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
@@ -1121,6 +1125,8 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_FLUSH;
+	bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
+	bdev_io->u.bdev.iovcnt = 1;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
