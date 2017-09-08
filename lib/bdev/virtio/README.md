@@ -38,15 +38,9 @@ the /tmp/vhost.0 domain socket.
   Dev User /tmp/vhost.0
 ~~~
 
-Todo:
+## Todo:
 * Support multiple PCI devices, including specifying the PCI device by PCI
   bus/domain/function.
-* Define SPDK virtio bdev request structure and report it as the context
-  size during module initialization.  This will allow the module to build
-  its request and response in per-bdev_io memory.
-* Asynchronous I/O - currently the driver polls inline for all completions.
-  Asynchronous I/O should be used for both enumeration (INQUIRY, READ CAPACITY,
-  etc.) as well as read/write I/O.
 * Add unmap support.
 * Add I/O channel support.  Includes requesting correct number of queues
   (based on core count).  Fail device initialization if not enough queues 
@@ -56,7 +50,7 @@ Todo:
   linked directly to the bdev module.  This would allow that part of the
   code to potentially get used and tested outside of the SPDK bdev framework.
 * Check for allocation failures in bdev_virtio.c code.
-* Change printfs to SPDK_TRACELOGs (or just remove altogether).
+* Add SPDK_TRACELOGs.
 * Add virtio-blk support.  This will require some rework in the core
   virtio code (in the rte_virtio subdirectory) to allow for multiple
   device types.
@@ -66,8 +60,6 @@ Todo:
 * Add reset support.
 * Finish cleaning up "eth" references.  This includes filenames like
   virtio_ethdev.c and "eth" in various API calls.
-* Improve the virtio_xmit_pkts and virtio_recv_pkts interfaces.  Should not
-  reference the virtio_hw tx_queues directly.  Should have a more opaque API.
 * Understand and handle queue full conditions.
 * Clear interrupt flag for completions - since we are polling, we do not
   need the virtio-scsi backend to signal completion.
