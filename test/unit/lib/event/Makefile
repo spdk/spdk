@@ -33,23 +33,12 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/event
-APP = subsystem_ut
-C_SRCS := subsystem_ut.c
+DIRS-y = subsystem.c
 
-SPDK_LIB_LIST = event trace conf util log
+.PHONY: all clean $(DIRS-y)
 
-LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
+all: $(DIRS-y)
+clean: $(DIRS-y)
 
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
