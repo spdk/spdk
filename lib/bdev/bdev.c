@@ -107,6 +107,8 @@ struct spdk_bdev_desc {
 	TAILQ_ENTRY(spdk_bdev_desc)	link;
 };
 
+#define BDEV_CH_RESET_IN_PROGRESS	(1 << 0)
+
 struct spdk_bdev_channel {
 	struct spdk_bdev	*bdev;
 
@@ -125,6 +127,8 @@ struct spdk_bdev_channel {
 	uint64_t		io_outstanding;
 
 	bdev_io_tailq_t		queued_resets;
+
+	uint32_t		flags;
 
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t		start_tsc;
@@ -613,7 +617,14 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	bdev_ch->io_outstanding++;
 	bdev_io->in_submit_request = true;
-	bdev->fn_table->submit_request(ch, bdev_io);
+	if (spdk_likely(bdev_ch->flags == 0)) {
+		bdev->fn_table->submit_request(ch, bdev_io);
+	} else if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	} else {
+		SPDK_ERRLOG("unknown bdev_ch flag %x found\n", bdev_ch->flags);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
 	bdev_io->in_submit_request = false;
 }
 
@@ -671,6 +682,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
+	ch->flags = 0;
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -1187,6 +1199,8 @@ _spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
 	channel = spdk_io_channel_get_ctx(ch);
 	mgmt_channel = spdk_io_channel_get_ctx(channel->mgmt_channel);
 
+	channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
+
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
 }
@@ -1228,6 +1242,7 @@ _spdk_bdev_complete_reset_channel(void *io_device, struct spdk_io_channel *_ch, 
 {
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
 
+	ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
 	if (!TAILQ_EMPTY(&ch->queued_resets)) {
 		_spdk_bdev_channel_start_reset(ch);
 	}
