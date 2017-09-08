@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed3ba978_dcf0c7fd",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-08T13:10:51Z",
+      "side": 1,
+      "message": "you could write just: \"Repeat steps 2-6 from test case 1\"\nHowever, I do not think these test cases 2\u00263 have any value here.\nVhost-initiator does not differentiate between drive backends on the host. It doesn\u0027t matter if we\u0027re using nvme,malloc,lvol,or another vhost initiator drive. These backends have separate tests and do not have to be tested with initiator. If it happens that only a single case of these vhost initiator tests fail - this will be only the *backend failure*, not related to vhost-initiator whatsoever. Backends have their own tests. If a backend-specific issue is visible in vhost-initiator, it will be visible in these backend tests as well. \nPlease do not hog test pool with such cases. There are much more worthy tests we can run in that time.",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 36
+      },
+      "revId": "44e7c87cafbe2aaec68594fe3dce4b4630af7f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "34dd25b8_0fc18b8f",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-08T13:10:51Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 36
+      },
+      "revId": "44e7c87cafbe2aaec68594fe3dce4b4630af7f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9737effc_167e666a",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-08T13:10:51Z",
+      "side": 1,
+      "message": "Please also add the following:\nMore test cases will come after resolving [current vhost initiator limitations](spdk/tree/master/lib/bdev/virtio/README.md#Todo).",
+      "revId": "44e7c87cafbe2aaec68594fe3dce4b4630af7f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
