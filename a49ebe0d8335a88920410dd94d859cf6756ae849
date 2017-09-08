@@ -16,6 +16,24 @@
       "revId": "a49ebe0d8335a88920410dd94d859cf6756ae849",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5496c95f_a9cc7764",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-08T05:51:36Z",
+      "side": 1,
+      "message": "ofc, it seems i twisted these in a rebase\nthanks",
+      "parentUuid": "8f383995_79ea4541",
+      "revId": "a49ebe0d8335a88920410dd94d859cf6756ae849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
