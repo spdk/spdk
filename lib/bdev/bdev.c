@@ -125,6 +125,13 @@ struct spdk_bdev_channel {
 	uint64_t		io_outstanding;
 
 	bdev_io_tailq_t		queued_resets;
+	bdev_io_tailq_t		queued_ios;
+
+	/*
+	 * Mask of bitflags for different conditions related to queuing rather
+	 *  than submitting IO for this channel.
+	 */
+	uint32_t		queue_flags;
 
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t		start_tsc;
@@ -606,11 +613,31 @@ static void
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
-	struct spdk_io_channel *ch = bdev_io->ch->channel;
+	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
+	struct spdk_io_channel *ch = bdev_ch->channel;
 
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
-	bdev_io->ch->io_outstanding++;
+	if (spdk_unlikely(bdev_ch->queue_flags)) {
+		TAILQ_INSERT_TAIL(&bdev_ch->queued_ios, bdev_io, link);
+		return;
+	}
+
+	bdev_ch->io_outstanding++;
+	bdev_io->in_submit_request = true;
+	bdev->fn_table->submit_request(ch, bdev_io);
+	bdev_io->in_submit_request = false;
+}
+
+static void
+spdk_bdev_reset_submit(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
+	struct spdk_io_channel *ch = bdev_ch->channel;
+
+	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
+
 	bdev_io->in_submit_request = true;
 	bdev->fn_table->submit_request(ch, bdev_io);
 	bdev_io->in_submit_request = false;
@@ -656,6 +683,8 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
+	TAILQ_INIT(&ch->queued_ios);
+	ch->queue_flags = 0;
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -676,13 +705,26 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 }
 
 static void
-_spdk_bdev_abort_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
+_spdk_bdev_abort_buf_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_io *bdev_io, *tmp;
 
 	TAILQ_FOREACH_SAFE(bdev_io, queue, buf_link, tmp) {
 		if (bdev_io->ch == ch) {
 			TAILQ_REMOVE(queue, bdev_io, buf_link);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+}
+
+static void
+_spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
+{
+	struct spdk_bdev_io *bdev_io, *tmp;
+
+	TAILQ_FOREACH_SAFE(bdev_io, queue, link, tmp) {
+		if (bdev_io->ch == ch) {
+			TAILQ_REMOVE(queue, bdev_io, link);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
@@ -696,8 +738,10 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 
 	mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
 
-	_spdk_bdev_abort_io(&mgmt_channel->need_buf_small, ch);
-	_spdk_bdev_abort_io(&mgmt_channel->need_buf_large, ch);
+	_spdk_bdev_abort_queued_io(&ch->queued_resets, ch);
+	_spdk_bdev_abort_queued_io(&ch->queued_ios, ch);
+	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, ch);
+	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
 
 	spdk_put_io_channel(ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
@@ -1134,7 +1178,7 @@ _spdk_bdev_reset_dev(void *io_device, void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
-	spdk_bdev_io_submit(bdev_io);
+	spdk_bdev_reset_submit(bdev_io);
 }
 
 static void
@@ -1147,8 +1191,9 @@ _spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
 	channel = spdk_io_channel_get_ctx(ch);
 	mgmt_channel = spdk_io_channel_get_ctx(channel->mgmt_channel);
 
-	_spdk_bdev_abort_io(&mgmt_channel->need_buf_small, channel);
-	_spdk_bdev_abort_io(&mgmt_channel->need_buf_large, channel);
+	_spdk_bdev_abort_queued_io(&channel->queued_ios, channel);
+	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
+	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
 }
 
 static void
@@ -1331,13 +1376,14 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 {
 	bdev_io->status = status;
 
-	assert(bdev_io->ch->io_outstanding > 0);
-	bdev_io->ch->io_outstanding--;
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
+	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
 		pthread_mutex_lock(&bdev_io->bdev->mutex);
 		bdev_io->bdev->reset_in_progress = false;
 		pthread_mutex_unlock(&bdev_io->bdev->mutex);
 		spdk_for_each_channel(bdev_io->bdev, _spdk_bdev_complete_reset_channel, NULL, NULL);
+	} else {
+		assert(bdev_io->ch->io_outstanding > 0);
+		bdev_io->ch->io_outstanding--;
 	}
 
 	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
