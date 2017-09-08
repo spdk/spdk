@@ -51,7 +51,7 @@ struct bdevperf_task {
 	struct iovec			iov;
 	struct io_target		*target;
 	void				*buf;
-	uint64_t			offset;
+	uint64_t			offset_blocks;
 };
 
 static int g_io_size = 0;
@@ -83,6 +83,7 @@ struct io_target {
 	int			current_queue_depth;
 	uint64_t		size_in_ios;
 	uint64_t		offset_in_ios;
+	uint64_t		io_size_blocks;
 	bool			is_draining;
 	struct spdk_poller	*run_timer;
 	struct spdk_poller	*reset_timer;
@@ -155,8 +156,8 @@ bdevperf_construct_targets(void)
 		target->io_completed = 0;
 		target->current_queue_depth = 0;
 		target->offset_in_ios = 0;
-		target->size_in_ios = (spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev)) /
-				      g_io_size;
+		target->io_size_blocks = g_io_size / spdk_bdev_get_block_size(bdev);
+		target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
 		align = spdk_bdev_get_buf_align(bdev);
 		/*
 		 * TODO: This should actually use the LCM of align and g_min_alignment, but
@@ -217,7 +218,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		assert(iovcnt == 1);
 		assert(iovs != NULL);
 		if (memcmp(task->buf, iovs[0].iov_base, g_io_size) != 0) {
-			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset);
+			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset_blocks);
 			target->is_draining = true;
 			g_run_failed = true;
 		}
@@ -257,8 +258,8 @@ bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	memset(task->buf, 0, g_io_size);
 
 	/* Read the data back in */
-	rc = spdk_bdev_read(target->bdev_desc, target->ch, NULL, task->offset, g_io_size,
-			    bdevperf_complete, task);
+	rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch, NULL, task->offset_blocks,
+				   target->io_size_blocks, bdevperf_complete, task);
 	if (rc) {
 		printf("Failed to submit read: %d\n", rc);
 		target->is_draining = true;
@@ -281,8 +282,8 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 	target = task->target;
 
 	if (g_unmap) {
-		rc = spdk_bdev_unmap(target->bdev_desc, target->ch, task->offset, g_io_size,
-				     bdevperf_unmap_complete, task);
+		rc = spdk_bdev_unmap_blocks(target->bdev_desc, target->ch, task->offset_blocks,
+					    target->io_size_blocks, bdevperf_unmap_complete, task);
 		if (rc) {
 			printf("Failed to submit unmap: %d\n", rc);
 			target->is_draining = true;
@@ -291,10 +292,8 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 		}
 	} else {
 		/* Read the data back in */
-		rc = spdk_bdev_read(target->bdev_desc, target->ch, NULL,
-				    task->offset,
-				    g_io_size,
-				    bdevperf_complete, task);
+		rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch, NULL, task->offset_blocks,
+					   target->io_size_blocks, bdevperf_complete, task);
 		if (rc) {
 			printf("Failed to submit read: %d\n", rc);
 			target->is_draining = true;
@@ -345,13 +344,13 @@ bdevperf_submit_single(struct io_target *target)
 		}
 	}
 
-	task->offset = offset_in_ios * g_io_size;
+	task->offset_blocks = offset_in_ios * target->io_size_blocks;
 	if (g_verify || g_reset || g_unmap) {
 		memset(task->buf, rand_r(&seed) % 256, g_io_size);
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
-		rc = spdk_bdev_writev(desc, ch, &task->iov, 1, task->offset, g_io_size,
-				      bdevperf_verify_write_complete, task);
+		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
+					     target->io_size_blocks, bdevperf_verify_write_complete, task);
 		if (rc) {
 			printf("Failed to submit writev: %d\n", rc);
 			target->is_draining = true;
@@ -361,8 +360,8 @@ bdevperf_submit_single(struct io_target *target)
 	} else if ((g_rw_percentage == 100) ||
 		   (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
 		rbuf = g_zcopy ? NULL : task->buf;
-		rc = spdk_bdev_read(desc, ch, rbuf, task->offset, g_io_size,
-				    bdevperf_complete, task);
+		rc = spdk_bdev_read_blocks(desc, ch, rbuf, task->offset_blocks,
+					   target->io_size_blocks, bdevperf_complete, task);
 		if (rc) {
 			printf("Failed to submit read: %d\n", rc);
 			target->is_draining = true;
@@ -372,8 +371,8 @@ bdevperf_submit_single(struct io_target *target)
 	} else {
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
-		rc = spdk_bdev_writev(desc, ch, &task->iov, 1, task->offset, g_io_size,
-				      bdevperf_complete, task);
+		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
+					     target->io_size_blocks, bdevperf_complete, task);
 		if (rc) {
 			printf("Failed to submit writev: %d\n", rc);
 			target->is_draining = true;
