@@ -45,6 +45,10 @@ DPDKBUILD = dpdkbuild
 DIRS-y += dpdkbuild
 endif
 
+ifeq ($(CURDIR)/nvml,$(CONFIG_NVML_DIR))
+DIRS-y += nvml
+endif
+
 all: $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
