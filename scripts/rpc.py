@@ -288,6 +288,13 @@ p.add_argument('lvol_store_uuid', help='lvol store UUID')
 p.set_defaults(func=destroy_lvol_store)
 
 
+def get_lvol_stores(args):
+    print_dict(jsonrpc_call('get_lvol_stores'))
+
+p = subparsers.add_parser('get_lvol_stores', help='Display current logical volume store list')
+p.set_defaults(func=get_lvol_stores)
+
+
 def set_trace_flag(args):
     params = {'flag': args.flag}
     jsonrpc_call('set_trace_flag', params)
