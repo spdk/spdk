@@ -260,7 +260,18 @@ struct spdk_bdev_io {
 	TAILQ_ENTRY(spdk_bdev_io) buf_link;
 
 	/** Enumerated value representing the I/O type. */
-	enum spdk_bdev_io_type type;
+	int16_t type;
+
+	/** Status for the IO */
+	int16_t status;
+
+	/**
+	 * Set to true while the bdev module submit_request function is in progress.
+	 *
+	 * This is used to decide whether spdk_bdev_io_complete() can complete the I/O directly
+	 * or if completion must be deferred via an event.
+	 */
+	bool in_submit_request;
 
 	union {
 		struct {
@@ -321,9 +332,6 @@ struct spdk_bdev_io {
 		} nvme_passthru;
 	} u;
 
-	/** Status for the IO */
-	enum spdk_bdev_io_status status;
-
 	/** Error information from a device */
 	union {
 		/** Only valid when status is SPDK_BDEV_IO_STATUS_NVME_ERROR */
@@ -351,14 +359,6 @@ struct spdk_bdev_io {
 
 	/** Context that will be passed to the completion callback */
 	void *caller_ctx;
-
-	/**
-	 * Set to true while the bdev module submit_request function is in progress.
-	 *
-	 * This is used to decide whether spdk_bdev_io_complete() can complete the I/O directly
-	 * or if completion must be deferred via an event.
-	 */
-	bool in_submit_request;
 
 	/** Member used for linking child I/Os together. */
 	TAILQ_ENTRY(spdk_bdev_io) link;

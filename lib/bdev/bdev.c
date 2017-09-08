@@ -581,7 +581,7 @@ spdk_bdev_get_io(void)
 		abort();
 	}
 
-	memset(bdev_io, 0, sizeof(*bdev_io));
+	memset(bdev_io, 0, offsetof(struct spdk_bdev_io, u));
 
 	return bdev_io;
 }
