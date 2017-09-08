@@ -122,6 +122,8 @@ DEFINE_STUB_P(spdk_bdev_get_io_channel, struct spdk_io_channel, (struct spdk_bde
 DEFINE_STUB_V(spdk_vhost_call_external_event, (const char *ctrlr_name, spdk_vhost_event_fn fn,
 		void *arg));
 DEFINE_STUB_V(spdk_vhost_dev_backend_event_done, (void *event_ctx, int response));
+DEFINE_STUB_V(spdk_vhost_lock, (void));
+DEFINE_STUB_V(spdk_vhost_unlock, (void));
 
 /* This sets spdk_vhost_dev_remove to either to fail or success */
 DEFINE_STUB(spdk_vhost_dev_remove_fail, bool, (void), false);
