@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1221969b_3c199480",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-08T08:29:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ab889a1b_5e891223",
+      "revId": "d068d64dee4766e733746c00afb73cb52862968d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "07bf5738_0ba1f4ff",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 18
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "f197d2b9_c8f3416d",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1077,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-08T08:29:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "07bf5738_0ba1f4ff",
+      "revId": "d068d64dee4766e733746c00afb73cb52862968d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "396ea837_3aaeaf2a",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 18
@@ -47,6 +83,24 @@
       "writtenOn": "2017-09-07T18:33:48Z",
       "side": 1,
       "message": "I think you should remove this and instead set rc \u003d -1 at line 1078 before goto out.",
+      "revId": "d068d64dee4766e733746c00afb73cb52862968d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d036de51_f48b91ad",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1095,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-08T08:29:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "396ea837_3aaeaf2a",
       "revId": "d068d64dee4766e733746c00afb73cb52862968d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
