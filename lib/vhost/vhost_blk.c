@@ -671,27 +671,31 @@ spdk_vhost_blk_controller_construct(void)
 int
 spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name, bool readonly)
 {
-	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_vhost_blk_dev *bvdev = NULL;
 	struct spdk_bdev *bdev;
-	int ret;
+	int ret = 0;
 
+	spdk_vhost_lock();
 	bdev = spdk_bdev_get_by_name(dev_name);
 	if (bdev == NULL) {
 		SPDK_ERRLOG("Controller %s: bdev '%s' not found\n",
 			    name, dev_name);
-		return -1;
+		ret = -1;
+		goto out;
 	}
 
 	bvdev = spdk_dma_zmalloc(sizeof(*bvdev), SPDK_CACHE_LINE_SIZE, NULL);
 	if (bvdev == NULL) {
-		return -1;
+		ret = -1;
+		goto out;
 	}
 
 	ret = spdk_bdev_open(bdev, true, bdev_remove_cb, bvdev, &bvdev->bdev_desc);
 	if (ret != 0) {
 		SPDK_ERRLOG("Controller %s: could not open bdev '%s', error=%d\n",
 			    name, dev_name, ret);
-		goto err;
+		ret = -1;
+		goto out;
 	}
 
 	bvdev->bdev = bdev;
@@ -700,7 +704,8 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 				       &vhost_blk_device_backend);
 	if (ret != 0) {
 		spdk_bdev_close(bvdev->bdev_desc);
-		goto err;
+		ret = -1;
+		goto out;
 	}
 
 	if (readonly && rte_vhost_driver_enable_features(bvdev->vdev.path, (1ULL << VIRTIO_BLK_F_RO))) {
@@ -711,17 +716,17 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 			SPDK_ERRLOG("Controller %s: failed to remove controller\n", name);
 		}
 
-		goto err;
+		ret = -1;
+		goto out;
 	}
 
-	SPDK_NOTICELOG("Controller %s: using bdev '%s'\n",
-		       name, dev_name);
-
-	return 0;
-
-err:
-	spdk_dma_free(bvdev);
-	return -1;
+	SPDK_NOTICELOG("Controller %s: using bdev '%s'\n", name, dev_name);
+out:
+	if (ret != 0 && bvdev) {
+		spdk_dma_free(bvdev);
+	}
+	spdk_vhost_unlock();
+	return ret;
 }
 
 int
