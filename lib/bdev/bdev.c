@@ -125,6 +125,13 @@ struct spdk_bdev_channel {
 	uint64_t		io_outstanding;
 
 	TAILQ_HEAD(, spdk_bdev_io)	queued_resets;
+	TAILQ_HEAD(, spdk_bdev_io)	queued_ios;
+
+	/*
+	 * Mask of bitflags for different conditions related to queuing rather
+	 *  than submitting IO for this channel.
+	 */
+	uint32_t		queue_flags;
 
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t		start_tsc;
@@ -606,11 +613,17 @@ static void
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
-	struct spdk_io_channel *ch = bdev_io->ch->channel;
+	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
+	struct spdk_io_channel *ch = bdev_ch->channel;
 
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
-	bdev_io->ch->io_outstanding++;
+	if (spdk_unlikely(bdev_ch->queue_flags)) {
+		TAILQ_INSERT_TAIL(&bdev_ch->queued_ios, bdev_io, link);
+		return;
+	}
+
+	bdev_ch->io_outstanding++;
 	bdev_io->in_submit_request = true;
 	bdev->fn_table->submit_request(ch, bdev_io);
 	bdev_io->in_submit_request = false;
@@ -656,6 +669,8 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
+	TAILQ_INIT(&ch->queued_ios);
+	ch->queue_flags = 0;
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
