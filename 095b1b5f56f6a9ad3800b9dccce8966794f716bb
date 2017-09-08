@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0c6db56_8552a5fc",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-08T03:57:28Z",
+      "side": 1,
+      "message": "May need to change to SPDK_ERRLOG for those error cases",
+      "revId": "095b1b5f56f6a9ad3800b9dccce8966794f716bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
