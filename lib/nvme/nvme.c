@@ -428,6 +428,12 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 	 */
 	if (!spdk_process_is_primary() && (trid->trtype == SPDK_NVME_TRANSPORT_PCIE)) {
 		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
+			/* Do not attach other ctrlrs if user specify a valid trid */
+			if ((strlen(trid->traddr) != 0) &&
+			    (spdk_nvme_transport_id_compare(trid, &ctrlr->trid))) {
+				continue;
+			}
+
 			nvme_ctrlr_proc_get_ref(ctrlr);
 
 			/*
