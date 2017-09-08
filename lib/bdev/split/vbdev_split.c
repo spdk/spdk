@@ -96,29 +96,29 @@ vbdev_split_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	/* Modify the I/O to adjust for the offset within the base bdev. */
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		offset_blocks = bdev_io->u.read.offset_blocks + split_disk->offset_blocks;
-		rc = spdk_bdev_readv(base_desc, base_ch, bdev_io->u.read.iovs,
-				     bdev_io->u.read.iovcnt, offset_blocks * block_size,
-				     bdev_io->u.read.num_blocks * block_size, vbdev_split_complete_io,
+		offset_blocks = bdev_io->u.direct_io.offset_blocks + split_disk->offset_blocks;
+		rc = spdk_bdev_readv(base_desc, base_ch, bdev_io->u.direct_io.iovs,
+				     bdev_io->u.direct_io.iovcnt, offset_blocks * block_size,
+				     bdev_io->u.direct_io.num_blocks * block_size, vbdev_split_complete_io,
 				     bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		offset_blocks = bdev_io->u.write.offset_blocks + split_disk->offset_blocks;
-		rc = spdk_bdev_writev(base_desc, base_ch, bdev_io->u.write.iovs,
-				      bdev_io->u.write.iovcnt, offset_blocks * block_size,
-				      bdev_io->u.write.num_blocks * block_size, vbdev_split_complete_io,
+		offset_blocks = bdev_io->u.direct_io.offset_blocks + split_disk->offset_blocks;
+		rc = spdk_bdev_writev(base_desc, base_ch, bdev_io->u.direct_io.iovs,
+				      bdev_io->u.direct_io.iovcnt, offset_blocks * block_size,
+				      bdev_io->u.direct_io.num_blocks * block_size, vbdev_split_complete_io,
 				      bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		offset_blocks = bdev_io->u.unmap.offset_blocks + split_disk->offset_blocks;
+		offset_blocks = bdev_io->u.direct_io.offset_blocks + split_disk->offset_blocks;
 		rc = spdk_bdev_unmap(base_desc, base_ch, offset_blocks * block_size,
-				     bdev_io->u.unmap.num_blocks * block_size,
+				     bdev_io->u.direct_io.num_blocks * block_size,
 				     vbdev_split_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		offset_blocks = bdev_io->u.flush.offset_blocks + split_disk->offset_blocks;
+		offset_blocks = bdev_io->u.direct_io.offset_blocks + split_disk->offset_blocks;
 		rc = spdk_bdev_flush(base_desc, base_ch, offset_blocks * block_size,
-				     bdev_io->u.flush.num_blocks * block_size,
+				     bdev_io->u.direct_io.num_blocks * block_size,
 				     vbdev_split_complete_io, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:

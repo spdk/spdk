@@ -158,25 +158,25 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 static void
 gpt_read(struct gpt_partition_disk *gpt_partition_disk, struct spdk_bdev_io *bdev_io)
 {
-	bdev_io->u.read.offset_blocks += gpt_partition_disk->offset_blocks;
+	bdev_io->u.direct_io.offset_blocks += gpt_partition_disk->offset_blocks;
 }
 
 static void
 gpt_write(struct gpt_partition_disk *gpt_partition_disk, struct spdk_bdev_io *bdev_io)
 {
-	bdev_io->u.write.offset_blocks += gpt_partition_disk->offset_blocks;
+	bdev_io->u.direct_io.offset_blocks += gpt_partition_disk->offset_blocks;
 }
 
 static void
 gpt_unmap(struct gpt_partition_disk *gpt_partition_disk, struct spdk_bdev_io *bdev_io)
 {
-	bdev_io->u.unmap.offset_blocks += gpt_partition_disk->offset_blocks;
+	bdev_io->u.direct_io.offset_blocks += gpt_partition_disk->offset_blocks;
 }
 
 static void
 gpt_flush(struct gpt_partition_disk *gpt_partition_disk, struct spdk_bdev_io *bdev_io)
 {
-	bdev_io->u.flush.offset_blocks += gpt_partition_disk->offset_blocks;
+	bdev_io->u.direct_io.offset_blocks += gpt_partition_disk->offset_blocks;
 }
 
 
