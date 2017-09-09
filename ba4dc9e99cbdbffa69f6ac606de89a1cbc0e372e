@@ -46,6 +46,30 @@
       "revId": "ba4dc9e99cbdbffa69f6ac606de89a1cbc0e372e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13840b18_cbd0e6d4",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-09-09T23:37:53Z",
+      "side": 1,
+      "message": "Yes, you can see if users do not provide trid, the traddr will be empty, so the case will still be processed, the whole local ctrlrs will be attached.",
+      "parentUuid": "19898333_f2d3d157",
+      "range": {
+        "startLine": 432,
+        "startChar": 6,
+        "endLine": 432,
+        "endChar": 32
+      },
+      "revId": "ba4dc9e99cbdbffa69f6ac606de89a1cbc0e372e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
