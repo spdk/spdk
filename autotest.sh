@@ -113,7 +113,8 @@ if [ $SPDK_TEST_ISCSI -eq 1 ]; then
 fi
 
 if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
-	run_test ./test/blobfs/rocksdb/rocksdb.sh
+	# NOTE: disabled on v17.07.x branch due to incompatible RocksDB env changes
+	# run_test ./test/blobfs/rocksdb/rocksdb.sh
 fi
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
