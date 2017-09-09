@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fec52baf_bb70aeaf",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-09T01:41:05Z",
+      "side": 1,
+      "message": "I\u0027m not sure if this part of the change is needed - the new code looks like it should behave identically to the old code (unless I\u0027m missing something).\n\nIf the change is needed, this will at least need to have the whitespace fixed up (add a space after \u0027while\u0027).",
+      "revId": "c50b969f9f56906bc357214c0ff43610b219ee80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
