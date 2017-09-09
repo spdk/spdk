@@ -1,0 +1,141 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6ccbf7b_1f134f27",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 26
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-09T00:24:09Z",
+      "side": 1,
+      "message": "Please make sure your git config user.name is set.",
+      "revId": "d94d092ae997afa1024930e53a97adfa0c9f697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffcd99a4_f821bfaa",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 26
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-09T00:24:09Z",
+      "side": 1,
+      "message": "Please add a blank line before the heading.",
+      "revId": "d94d092ae997afa1024930e53a97adfa0c9f697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a2c3fde_f290640c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 26
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-09T00:24:09Z",
+      "side": 1,
+      "message": "This should probably be expanded - it should explain at least a little bit what this means for the user.\n\nThis should also link to the documentation (the documentation commit should probably be squashed with this one, or if not, we can add the link in that commit).\n\nWe should also mention somewhere in the changelog that libuuid is now required (probably at the top of the 17.10 section).",
+      "revId": "d94d092ae997afa1024930e53a97adfa0c9f697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cb22355_49f4e7ab",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1654,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-09T00:24:09Z",
+      "side": 1,
+      "message": "is_bdev_opened() needs an spdk_ prefix if it\u0027s not static.",
+      "revId": "d94d092ae997afa1024930e53a97adfa0c9f697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0c9a064_1f209325",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-09T00:24:09Z",
+      "side": 1,
+      "message": "This should probably be SPDK_BDEV_IO_STATUS_FAILED.",
+      "range": {
+        "startLine": 378,
+        "startChar": 33,
+        "endLine": 378,
+        "endChar": 60
+      },
+      "revId": "d94d092ae997afa1024930e53a97adfa0c9f697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3bdbdf3_b64aed7b",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-09T00:24:09Z",
+      "side": 1,
+      "message": "gai_strerror() is for getaddrinfo() errors; please use spdk_strerror_r().",
+      "range": {
+        "startLine": 124,
+        "startChar": 78,
+        "endLine": 124,
+        "endChar": 90
+      },
+      "revId": "d94d092ae997afa1024930e53a97adfa0c9f697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "065e9a85_439f1de7",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-09T00:24:09Z",
+      "side": 1,
+      "message": "Please use spdk_strerror_r().",
+      "range": {
+        "startLine": 364,
+        "startChar": 78,
+        "endLine": 364,
+        "endChar": 86
+      },
+      "revId": "d94d092ae997afa1024930e53a97adfa0c9f697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
