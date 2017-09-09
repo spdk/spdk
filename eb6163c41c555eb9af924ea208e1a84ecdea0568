@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ef64f83_de9911a0",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-09T01:18:16Z",
+      "side": 1,
+      "message": "I think it would be simpler if spdk_nvme_transport_id_all_pcie() just returned a bool directly.\n\nOtherwise looks good to me.",
+      "revId": "eb6163c41c555eb9af924ea208e1a84ecdea0568",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
