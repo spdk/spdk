@@ -241,6 +241,7 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
 
+	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 			if (ch->dev == dev) {
@@ -248,10 +249,12 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 				 * device still exists. Defer deletion
 				 * until it is removed.
 				 */
+				pthread_mutex_unlock(&g_devlist_mutex);
 				return;
 			}
 		}
 	}
+	pthread_mutex_unlock(&g_devlist_mutex);
 
 	if (dev->unregister_cb) {
 		dev->unregister_cb(dev->io_device);
@@ -287,9 +290,8 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	dev->unregister_cb = unregister_cb;
 	dev->unregistered = true;
 	TAILQ_REMOVE(&g_io_devices, dev, tailq);
-	_spdk_io_device_attempt_free(dev);
-
 	pthread_mutex_unlock(&g_devlist_mutex);
+	_spdk_io_device_attempt_free(dev);
 }
 
 struct spdk_io_channel *
@@ -377,15 +379,13 @@ _spdk_put_io_channel(void *arg)
 	ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
 
 	pthread_mutex_lock(&g_devlist_mutex);
-
 	TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
+	pthread_mutex_unlock(&g_devlist_mutex);
 
 	if (ch->dev->unregistered) {
 		_spdk_io_device_attempt_free(ch->dev);
 	}
 	free(ch);
-
-	pthread_mutex_unlock(&g_devlist_mutex);
 }
 
 void
