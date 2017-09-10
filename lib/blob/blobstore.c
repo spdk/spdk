@@ -1314,6 +1314,9 @@ _spdk_bs_dev_destroy(void *io_device)
 
 	spdk_bit_array_free(&bs->used_md_pages);
 	spdk_bit_array_free(&bs->used_clusters);
+
+	spdk_bs_sequence_finish((spdk_bs_sequence_t *)bs->dev->unload_seq,
+				bs->dev->unload_err);
 	free(bs);
 }
 
@@ -1782,7 +1785,13 @@ _spdk_bs_unload_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 
 	spdk_dma_free(ctx->super);
 
-	spdk_bs_sequence_finish(seq, bserrno);
+	/*
+	 * We need to defer calling spdk_bs_sequence_finish()
+	 * until after dev destuction, so tuck these away in the
+	 * dev structure for later use.
+	 */
+	ctx->bs->dev->unload_seq = (void *)seq;
+	ctx->bs->dev->unload_err = bserrno;
 
 	_spdk_bs_free(ctx->bs);
 	free(ctx);

@@ -109,6 +109,8 @@ struct spdk_bs_dev {
 	 *  references to it during unload callback context have been completed.
 	 */
 	void (*destroy)(struct spdk_bs_dev *dev);
+	void *unload_seq;
+	int unload_err;
 
 	void (*read)(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payload,
 		     uint64_t lba, uint32_t lba_count,
