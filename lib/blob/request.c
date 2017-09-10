@@ -73,6 +73,9 @@ spdk_bs_call_cpl(struct spdk_bs_cpl *cpl, int bserrno)
 					cpl->u.nested_seq.parent,
 					bserrno);
 		break;
+	case SPDK_BS_CPL_TYPE_NONE:
+		/* this completion's callback is handled elsewhere */
+		break;
 	}
 }
 
@@ -81,9 +84,7 @@ spdk_bs_request_set_complete(struct spdk_bs_request_set *set)
 {
 	struct spdk_bs_cpl cpl = set->cpl;
 	int bserrno = set->bserrno;
-
 	TAILQ_INSERT_TAIL(&set->channel->reqs, set, link);
-
 	spdk_bs_call_cpl(&cpl, bserrno);
 }
 
