@@ -939,12 +939,10 @@ bs_load(void)
 }
 
 /*
- * Create a blobstore and then unload it, while delaying all scheduled operations
- * until after spdk_bs_unload call has finished.  This ensures the memory associated
- * with the internal blobstore channels is not touched after it is freed.
+ * Create a blobstore and then unload it.
  */
 static void
-bs_unload_delayed(void)
+bs_unload(void)
 {
 	struct spdk_bs_dev *dev;
 
@@ -954,17 +952,10 @@ bs_unload_delayed(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
-	g_scheduler_delay = true;
-
 	g_bserrno = -1;
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
-
-	_bs_flush_scheduler();
-	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
-
-	g_scheduler_delay = false;
 }
 
 /*
@@ -1295,7 +1286,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_iter", blob_iter) == NULL ||
 		CU_add_test(suite, "blob_xattr", blob_xattr) == NULL ||
 		CU_add_test(suite, "bs_load", bs_load) == NULL ||
-		CU_add_test(suite, "bs_unload_delayed", bs_unload_delayed) == NULL ||
+		CU_add_test(suite, "bs_unload", bs_unload) == NULL ||
 		CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz) == NULL ||
 		CU_add_test(suite, "bs_resize_md", bs_resize_md) == NULL ||
 		CU_add_test(suite, "blob_serialize", blob_serialize) == NULL ||

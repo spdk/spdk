@@ -45,6 +45,7 @@ void
 spdk_bs_call_cpl(struct spdk_bs_cpl *cpl, int bserrno)
 {
 	switch (cpl->type) {
+	case SPDK_BS_CPL_TYPE_DEFERRED:
 	case SPDK_BS_CPL_TYPE_BS_BASIC:
 		cpl->u.bs_basic.cb_fn(cpl->u.bs_basic.cb_arg,
 				      bserrno);
@@ -81,10 +82,10 @@ spdk_bs_request_set_complete(struct spdk_bs_request_set *set)
 {
 	struct spdk_bs_cpl cpl = set->cpl;
 	int bserrno = set->bserrno;
-
 	TAILQ_INSERT_TAIL(&set->channel->reqs, set, link);
-
-	spdk_bs_call_cpl(&cpl, bserrno);
+	if (cpl.type != SPDK_BS_CPL_TYPE_DEFERRED) {
+		spdk_bs_call_cpl(&cpl, bserrno);
+	}
 }
 
 static void
