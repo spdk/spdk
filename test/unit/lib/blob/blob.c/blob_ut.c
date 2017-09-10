@@ -954,17 +954,17 @@ bs_unload_delayed(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
-	g_scheduler_delay = true;
+	//g_scheduler_delay = true;
 
 	g_bserrno = -1;
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
 
-	_bs_flush_scheduler();
-	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
+	//_bs_flush_scheduler();
+	//CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
 
-	g_scheduler_delay = false;
+	//g_scheduler_delay = false;
 }
 
 /*

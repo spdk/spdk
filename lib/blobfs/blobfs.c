@@ -672,10 +672,6 @@ unload_cb(void *ctx, int bserrno)
 	args->fn.fs_op(args->arg, bserrno);
 	free(req);
 
-	spdk_io_device_unregister(&fs->io_target, NULL);
-	spdk_io_device_unregister(&fs->sync_target, NULL);
-	spdk_io_device_unregister(&fs->md_target, NULL);
-
 	free(fs);
 }
 
@@ -702,6 +698,11 @@ spdk_fs_unload(struct spdk_filesystem *fs, spdk_fs_op_complete cb_fn, void *cb_a
 
 	spdk_fs_free_io_channel(fs->md_target.md_io_channel);
 	spdk_fs_free_io_channel(fs->sync_target.sync_io_channel);
+
+	spdk_io_device_unregister(&fs->io_target, NULL);
+	spdk_io_device_unregister(&fs->sync_target, NULL);
+	spdk_io_device_unregister(&fs->md_target, NULL);
+
 	spdk_bs_unload(fs->bs, unload_cb, req);
 }
 
