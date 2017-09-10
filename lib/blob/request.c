@@ -73,6 +73,9 @@ spdk_bs_call_cpl(struct spdk_bs_cpl *cpl, int bserrno)
 					cpl->u.nested_seq.parent,
 					bserrno);
 		break;
+	case SPDK_BS_CPL_TYPE_NONE:
+		/* this completion's callback is handled elsewhere */
+		break;
 	}
 }
 
