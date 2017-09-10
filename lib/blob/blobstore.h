@@ -39,6 +39,8 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
+#include "request.h"
+
 /* In Memory Data Structures
  *
  * The following data structures exist only in memory.
@@ -155,6 +157,9 @@ struct spdk_blob_store {
 	uint32_t			pages_per_cluster;
 
 	spdk_blob_id			super_blob;
+
+	struct spdk_bs_cpl		unload_cpl;
+	int				unload_err;
 
 	TAILQ_HEAD(, spdk_blob) 	blobs;
 };

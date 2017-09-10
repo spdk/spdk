@@ -279,9 +279,9 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	dev->unregister_cb = unregister_cb;
 	dev->unregistered = true;
 	TAILQ_REMOVE(&g_io_devices, dev, tailq);
-	_spdk_io_device_attempt_free(dev);
-
 	pthread_mutex_unlock(&g_devlist_mutex);
+
+	_spdk_io_device_attempt_free(dev);
 }
 
 struct spdk_io_channel *
