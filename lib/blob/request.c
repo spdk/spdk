@@ -81,10 +81,13 @@ spdk_bs_request_set_complete(struct spdk_bs_request_set *set)
 {
 	struct spdk_bs_cpl cpl = set->cpl;
 	int bserrno = set->bserrno;
+	bool defer_cpl = set->defer_cpl;
 
+	set->defer_cpl = false;
 	TAILQ_INSERT_TAIL(&set->channel->reqs, set, link);
-
-	spdk_bs_call_cpl(&cpl, bserrno);
+	if (defer_cpl == false) {
+		spdk_bs_call_cpl(&cpl, bserrno);
+	}
 }
 
 static void
