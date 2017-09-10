@@ -415,7 +415,9 @@ _call_completion(void *ctx)
 {
 	struct call_channel *ch_ctx = ctx;
 
-	ch_ctx->cpl(ch_ctx->io_device, ch_ctx->ctx);
+	if (ch_ctx->cpl != NULL) {
+		ch_ctx->cpl(ch_ctx->io_device, ch_ctx->ctx);
+	}
 	free(ch_ctx);
 }
 
