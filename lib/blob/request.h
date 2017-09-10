@@ -45,6 +45,7 @@ enum spdk_bs_cpl_type {
 	SPDK_BS_CPL_TYPE_BLOBID,
 	SPDK_BS_CPL_TYPE_BLOB_HANDLE,
 	SPDK_BS_CPL_TYPE_NESTED_SEQUENCE,
+	SPDK_BS_CPL_TYPE_DEFERRED,
 };
 
 struct spdk_bs_request_set;
