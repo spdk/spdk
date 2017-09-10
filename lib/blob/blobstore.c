@@ -44,7 +44,6 @@
 #include "spdk_internal/log.h"
 
 #include "blobstore.h"
-#include "request.h"
 
 #define BLOB_CRC32C_INITIAL    0xffffffffUL
 
@@ -1342,6 +1341,12 @@ _spdk_bs_dev_destroy(void *io_device)
 
 	spdk_bit_array_free(&bs->used_md_pages);
 	spdk_bit_array_free(&bs->used_clusters);
+	/*
+	 * If this function is called for any reason except a successful unload,
+	 * the unload_cpl type will be NONE and this will be a nop.
+	 */
+	spdk_bs_call_cpl(&bs->unload_cpl, bs->unload_err);
+
 	free(bs);
 }
 
@@ -1832,6 +1837,14 @@ _spdk_bs_unload_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 	struct spdk_bs_unload_ctx	*ctx = cb_arg;
 
 	spdk_dma_free(ctx->super);
+
+	/*
+	 * We need to defer calling spdk_bs_call_cpl() until after
+	 * dev destuction, so tuck these away for later use.
+	 */
+	ctx->bs->unload_err = bserrno;
+	memcpy(&ctx->bs->unload_cpl , &seq->cpl, sizeof(struct spdk_bs_cpl));
+	seq->cpl.type = SPDK_BS_CPL_TYPE_NONE;
 
 	spdk_bs_sequence_finish(seq, bserrno);
 

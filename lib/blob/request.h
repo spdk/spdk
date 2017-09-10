@@ -39,6 +39,7 @@
 #include "spdk/blob.h"
 
 enum spdk_bs_cpl_type {
+	SPDK_BS_CPL_TYPE_NONE,
 	SPDK_BS_CPL_TYPE_BS_BASIC,
 	SPDK_BS_CPL_TYPE_BS_HANDLE,
 	SPDK_BS_CPL_TYPE_BLOB_BASIC,
