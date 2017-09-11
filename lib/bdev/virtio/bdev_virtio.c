@@ -78,6 +78,7 @@ struct virtio_scsi_scan_base {
 	struct spdk_bdev_poller		*scan_poller;
 	unsigned			refcount;
 	struct virtio_scsi_scan_buf	buf[BDEV_VIRTIO_MAX_TARGET];
+	char *virtio_name;
 };
 
 struct virtio_scsi_disk {
@@ -346,7 +347,9 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	disk->hw = base->hw;
 
 	bdev = &disk->bdev;
-	bdev->name = spdk_sprintf_alloc("Virtio0");
+	bdev->name = base->virtio_name;
+//	bdev->name = spdk_sprintf_alloc("Virtio%u", req->lun[1]);
+//	bdev->name = spdk_sprintf_alloc("Virtio0");
 	bdev->product_name = "Virtio SCSI Disk";
 	bdev->write_cache = 0;
 	bdev->blocklen = disk->block_size;
@@ -449,6 +452,58 @@ scan_target(struct virtio_scsi_scan_base *base, uint8_t target)
 	cdb->alloc_len[1] = 255;
 
 	virtio_xmit_pkts(base->hw->vqs[2], vreq);
+}
+
+int
+bdev_virtio_construct(const char *name, char *path)
+{
+	struct virtio_scsi_scan_base *base;
+	struct virtio_hw *hw = NULL;
+	int rc = 0;
+	uint32_t i;
+
+	if (name == NULL) {
+		SPDK_ERRLOG("Can't create device with no name\n");
+		goto out;
+	}
+
+	if (path == NULL) {
+		SPDK_ERRLOG("Missing path to the socket\n");
+		goto out;
+	}
+
+	hw = virtio_user_dev_init(path, 1, 512);
+
+	if (hw == NULL) {
+		goto out;
+	}
+
+	base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
+	if (base == NULL) {
+		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
+		rc = -1;
+		goto out;
+	}
+
+	eth_virtio_dev_init(hw);
+	virtio_dev_start(hw);
+
+	base->hw = hw;
+	base->refcount = BDEV_VIRTIO_MAX_TARGET;
+	base->virtio_name = strdup(name);
+
+	spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,
+			       spdk_env_get_current_core(), 0);
+
+	for (i = 0; i < BDEV_VIRTIO_MAX_TARGET; i++) {
+		scan_target(base, i);
+	}
+
+	return 0;
+
+out:
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+	return rc;
 }
 
 static int
