@@ -54,6 +54,7 @@
 #include <virtio_user/virtio_user_dev.h>
 
 #include "spdk/scsi_spec.h"
+#include "bdev_virtio.h"
 
 #define BDEV_VIRTIO_MAX_TARGET 64
 #define BDEV_VIRTIO_SCAN_PAYLOAD_SIZE 256
@@ -78,6 +79,7 @@ struct virtio_scsi_scan_base {
 	struct spdk_bdev_poller		*scan_poller;
 	unsigned			refcount;
 	struct virtio_scsi_scan_buf	buf[BDEV_VIRTIO_MAX_TARGET];
+	char *virtio_name;
 };
 
 struct virtio_scsi_disk {
@@ -346,7 +348,7 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	disk->hw = base->hw;
 
 	bdev = &disk->bdev;
-	bdev->name = spdk_sprintf_alloc("Virtio0");
+	bdev->name = base->virtio_name;
 	bdev->product_name = "Virtio SCSI Disk";
 	bdev->write_cache = 0;
 	bdev->blocklen = disk->block_size;
@@ -521,6 +523,12 @@ out:
 
 static void bdev_virtio_finish(void)
 {
+}
+
+int
+spdk_virtio_user_scsi_connect(const char *path, uint32_t max_queue, uint32_t vq_size)
+{
+	return 0;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio", SPDK_TRACE_VIRTIO)
