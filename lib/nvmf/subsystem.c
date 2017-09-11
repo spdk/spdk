@@ -259,7 +259,14 @@ int
 spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 				 struct spdk_nvme_transport_id *trid)
 {
+	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_listener *listener;
+
+	transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, trid->trtype);
+	if (transport == NULL) {
+		SPDK_ERRLOG("Unknown transport type %d\n", trid->trtype);
+		return -1;
+	}
 
 	listener = calloc(1, sizeof(*listener));
 	if (!listener) {
@@ -267,6 +274,7 @@ spdk_nvmf_subsystem_add_listener(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	listener->trid = *trid;
+	listener->transport = transport;
 
 	TAILQ_INSERT_HEAD(&subsystem->listeners, listener, link);
 
