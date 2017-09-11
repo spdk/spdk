@@ -1184,6 +1184,57 @@ blob_serialize(void)
 	g_bs = NULL;
 }
 
+static void
+blob_crc(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	spdk_blob_id blobid;
+	uint32_t page_num;
+	int index;
+	struct spdk_blob_md_page *page;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_md_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(blob == NULL);
+
+	page_num = _spdk_bs_blobid_to_page(blobid);
+	index = DEV_BUFFER_BLOCKLEN * (bs->md_start + page_num);
+	page = (struct spdk_blob_md_page *)&g_dev_buffer[index];
+	page->crc = 0;
+
+	spdk_bs_md_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(blob == NULL);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1217,7 +1268,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "bs_unload_delayed", bs_unload_delayed) == NULL ||
 		CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz) == NULL ||
 		CU_add_test(suite, "bs_resize_md", bs_resize_md) == NULL ||
-		CU_add_test(suite, "blob_serialize", blob_serialize) == NULL
+		CU_add_test(suite, "blob_serialize", blob_serialize) == NULL ||
+		CU_add_test(suite, "blob_crc", blob_crc) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
