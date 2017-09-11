@@ -330,6 +330,7 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 	rc = spdk_bdev_read(gpt_base->part_base.desc, gpt_base->ch, gpt_base->gpt.buf, 0,
 			    SPDK_GPT_BUFFER_SIZE, spdk_gpt_bdev_complete, gpt_base);
 	if (rc < 0) {
+		spdk_put_io_channel(gpt_base->ch);
 		spdk_gpt_base_free(gpt_base);
 		SPDK_ERRLOG("Failed to send bdev_io command\n");
 		return -1;
