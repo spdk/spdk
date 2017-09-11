@@ -153,43 +153,75 @@ spdk_memzone_free(const char *name)
 	return 0;
 }
 
+struct test_mempool {
+	size_t	count;
+};
+
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
 		    size_t ele_size, size_t cache_size, int socket_id)
 {
-	static int mp = 0;
+	struct test_mempool *mp;
 
-	return (struct spdk_mempool *)&mp;
+	mp = calloc(1, sizeof(*mp));
+	if (mp == NULL) {
+		return NULL;
+	}
+
+	mp->count = count;
+
+	return (struct spdk_mempool *)mp;
 }
 
 void
-spdk_mempool_free(struct spdk_mempool *mp)
+spdk_mempool_free(struct spdk_mempool *_mp)
 {
+	struct test_mempool *mp = (struct test_mempool *)_mp;
 
+	free(mp);
 }
 
 void *
-spdk_mempool_get(struct spdk_mempool *mp)
+spdk_mempool_get(struct spdk_mempool *_mp)
 {
+	struct test_mempool *mp = (struct test_mempool *)_mp;
 	void *buf;
 
-	if (posix_memalign(&buf, 64, 0x1000)) {
-		buf = NULL;
+	if (mp && mp->count == 0) {
+		return NULL;
 	}
 
-	return buf;
+	if (posix_memalign(&buf, 64, 0x1000)) {
+		return NULL;
+	} else {
+		if (mp) {
+			mp->count--;
+		}
+		return buf;
+	}
 }
 
 void
-spdk_mempool_put(struct spdk_mempool *mp, void *ele)
+spdk_mempool_put(struct spdk_mempool *_mp, void *ele)
 {
+	struct test_mempool *mp = (struct test_mempool *)_mp;
+
+	if (mp) {
+		mp->count++;
+	}
 	free(ele);
 }
 
 size_t
-spdk_mempool_count(const struct spdk_mempool *mp)
+spdk_mempool_count(const struct spdk_mempool *_mp)
 {
-	return 1024;
+	struct test_mempool *mp = (struct test_mempool *)_mp;
+
+	if (mp) {
+		return mp->count;
+	} else {
+		return 1024;
+	}
 }
 
 uint64_t ut_tsc = 0;
