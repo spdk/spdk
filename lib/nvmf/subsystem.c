@@ -497,7 +497,7 @@ spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->subtype;
 }
 
-uint16_t
+static uint16_t
 spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_ctrlr *ctrlr;
@@ -538,4 +538,41 @@ spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 	}
 
 	return subsystem->next_cntlid;
+}
+
+int
+spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr)
+{
+	ctrlr->cntlid = spdk_nvmf_subsystem_gen_cntlid(subsystem);
+	if (ctrlr->cntlid == 0xFFFF) {
+		/* Unable to get a cntlid */
+		SPDK_ERRLOG("Reached max simultaneous ctrlrs\n");
+		return -EBUSY;
+	}
+
+	TAILQ_INSERT_TAIL(&subsystem->ctrlrs, ctrlr, link);
+
+	return 0;
+}
+
+void
+spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+				 struct spdk_nvmf_ctrlr *ctrlr)
+{
+	assert(subsystem == ctrlr->subsys);
+	TAILQ_REMOVE(&subsystem->ctrlrs, ctrlr, link);
+}
+
+struct spdk_nvmf_ctrlr *
+spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid)
+{
+	struct spdk_nvmf_ctrlr *ctrlr;
+
+	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+		if (ctrlr->cntlid == cntlid) {
+			return ctrlr;
+		}
+	}
+
+	return NULL;
 }
