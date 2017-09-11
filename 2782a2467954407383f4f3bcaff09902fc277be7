@@ -65,6 +65,29 @@
     },
     {
       "key": {
+        "uuid": "bd8ee1b2_4d64cd3c",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:30Z",
+      "side": 1,
+      "message": "Same line repeated twice.",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 63
+      },
+      "revId": "2782a2467954407383f4f3bcaff09902fc277be7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ecfffaf3_417fa1c2",
         "filename": "test/lvol/testplan.md",
         "patchSetId": 10
@@ -81,6 +104,69 @@
         "startChar": 74,
         "endLine": 89,
         "endChar": 75
+      },
+      "revId": "2782a2467954407383f4f3bcaff09902fc277be7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bad7182_4bdd33c6",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:30Z",
+      "side": 1,
+      "message": "underscore missing",
+      "range": {
+        "startLine": 159,
+        "startChar": 17,
+        "endLine": 159,
+        "endChar": 18
+      },
+      "revId": "2782a2467954407383f4f3bcaff09902fc277be7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5318468f_82acb9bd",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:30Z",
+      "side": 1,
+      "message": "I think that additional lvol should be created on the second lvol store as well.",
+      "revId": "2782a2467954407383f4f3bcaff09902fc277be7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25ffea1f_1a469ff7",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:30Z",
+      "side": 1,
+      "message": "This is duplicate of test case 4. I think it should be removed.",
+      "range": {
+        "startLine": 182,
+        "startChar": 0,
+        "endLine": 183,
+        "endChar": 49
       },
       "revId": "2782a2467954407383f4f3bcaff09902fc277be7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
