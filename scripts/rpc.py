@@ -621,6 +621,20 @@ def get_vhost_controllers(args):
 p = subparsers.add_parser('get_vhost_controllers', help='List vhost controllers')
 p.set_defaults(func=get_vhost_controllers)
 
+def connect_virtio_user_scsi_dev(args):
+    params = {'path': args.path}
+    if args.max_queue:
+        params['max_queue'] = args.max_queue
+    if args.vq_size:
+        params['vq_size'] = args.vq_size
+    jsonrpc_call('connect_virtio_user_scsi_dev', params)
+
+p = subparsers.add_parser('connect_virtio_user_scsi_dev', help='Connect virtio user scsi device')
+p.add_argument('path', help='socket path')
+p.add_argument('--max_queue', help='max_queue', type=int, default=1)
+p.add_argument('--vq_size', help='vq_size', type=int, default=512)
+p.set_defaults(func=connect_virtio_user_scsi_dev)
+
 def get_rpc_methods(args):
     print_dict(jsonrpc_call('get_rpc_methods'))
 
