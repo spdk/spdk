@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a8d0304b_e2abee74",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T08:16:50Z",
+      "side": 1,
+      "message": "Hmmm, this is good question. Now see that this might be wrong. Will fix that.",
+      "parentUuid": "6474d506_d391949a",
+      "revId": "3bba5e5de5d85b9a4e94366e96bb86c7aa3486ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "88ed6cf9_dda42762",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-11T04:18:19Z",
       "side": 1,
       "message": "Okay, Can you put comments here, I just want to let others know why the used event index is located the bottom of avail ring.",
+      "revId": "3bba5e5de5d85b9a4e94366e96bb86c7aa3486ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3372d1f_b9b42f2a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T08:16:50Z",
+      "side": 1,
+      "message": "I like vring_need_event() macro.\nCan we change avail-\u003enum to size in rte_vhost_vring?",
+      "parentUuid": "88ed6cf9_dda42762",
       "revId": "3bba5e5de5d85b9a4e94366e96bb86c7aa3486ea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
