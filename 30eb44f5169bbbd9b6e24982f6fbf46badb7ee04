@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46b1c095_5cb3e16c",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-11T04:38:44Z",
+      "side": 1,
+      "message": "I still has concern about it, because increase the number does not have benefit for the performance, all the requests are queued to the tracker list, but I\u0027m okay if other reviewers don\u0027t have comments.",
+      "revId": "30eb44f5169bbbd9b6e24982f6fbf46badb7ee04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bee0e194_2b30e745",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-11T04:38:44Z",
+      "side": 1,
+      "message": "unused variable desc_table_size?",
+      "revId": "30eb44f5169bbbd9b6e24982f6fbf46badb7ee04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
