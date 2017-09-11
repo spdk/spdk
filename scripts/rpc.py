@@ -592,6 +592,20 @@ p = subparsers.add_parser('kill_instance', help='Send signal to instance')
 p.add_argument('sig_name', help='signal will be sent to server.')
 p.set_defaults(func=kill_instance)
 
+def set_vhost_controller_coalescing(args):
+    params = {
+        'ctrlr': args.ctrlr,
+        'delay_base_us' : args.delay_base_us,
+        'iops_threshold' : args.iops_threshold,
+    }
+    jsonrpc_call('set_vhost_controller_coalescing', params)
+
+p = subparsers.add_parser('set_vhost_controller_coalescing', help='Set vhost controller coalescing')
+p.add_argument('ctrlr', help='controller name')
+p.add_argument('delay_base_us', help='Base delay time', type=int)
+p.add_argument('iops_threshold', help='IOPS threshold when coalescing is enabled', type=int)
+p.set_defaults(func=set_vhost_controller_coalescing)
+
 def construct_vhost_scsi_controller(args):
     params = {'ctrlr': args.ctrlr}
 

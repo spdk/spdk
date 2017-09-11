@@ -107,6 +107,28 @@ const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev);
 uint64_t spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev);
 
 /**
+ * By default, events are generated when asked, but for hight queue depth and
+ * high IOPS this prove to be ineficient both for guest kernel that have to
+ * handle a lot more IO completions and for SPDK vhost that need to make more
+ * syscalls. If enabled, limit amount of events (IRQs) sent to initiator by SPDK
+ * vhost evectively coalescing couple of completions. This ofcource introduce
+ * IO latency penalty proportional to event delay time.
+ *
+ * Actual events delay time when is calculated according to below formula:
+ * if (delay_base == 0 || IOPS < iops_threshold) {
+ *   delay = 0;
+ * } else if (IOPS < iops_threshold) {
+ *   delay = delay_base * pow(2, IOPS / 4);
+ * }
+ *
+ * \param vdev vhost device
+ * \param delay_base_us Base delay time in microseconds. If 0, coalescing is disabled.
+ * \param iops_threshold IOPS threshold when coalescing is activated
+ */
+void spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+			       uint32_t iops_threshold);
+
+/**
  * Construct an empty vhost SCSI device.  This will create a
  * Unix domain socket together with a vhost-user slave server waiting
  * for a connection on this socket. Creating the vdev does not
