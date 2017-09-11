@@ -1,0 +1,279 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae48be08_fb1b5a60",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "This range will require updating each time new test case is added. It would be better to count number of available test.",
+      "range": {
+        "startLine": 21,
+        "startChar": 25,
+        "endLine": 21,
+        "endChar": 37
+      },
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54d7c2c4_6a84423b",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "get_bdevs is used for checking size of the devices as well, so additional argument and logic for that is needed.",
+      "range": {
+        "startLine": 24,
+        "startChar": 8,
+        "endLine": 24,
+        "endChar": 49
+      },
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "589a027d_e4d7d933",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "This checks only last device name. Meanwhile it should go over all bdevs, and verify that there is exactly one of uuid_bdev in that list.",
+      "range": {
+        "startLine": 28,
+        "startChar": 7,
+        "endLine": 28,
+        "endChar": 41
+      },
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1defe812_81204e2c",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "Same as above, it should go over all lvol stores and verify that there is just one of expected base_name and uuid.",
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a1641cf_507467c4",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "Does it check only last uuid ?",
+      "range": {
+        "startLine": 83,
+        "startChar": 33,
+        "endLine": 83,
+        "endChar": 67
+      },
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0907e354_7a1b9ef0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "According to test plan - value here should be 1/4 of total_size. So size of lvol is already smaller than bdev it is based on.",
+      "range": {
+        "startLine": 95,
+        "startChar": 64,
+        "endLine": 95,
+        "endChar": 78
+      },
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed7c2897_21b6980b",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "If above construct_lvol_bdev is changed, this line is no longer needed.",
+      "range": {
+        "startLine": 97,
+        "startChar": 8,
+        "endLine": 97,
+        "endChar": 63
+      },
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc3ccba7_95203b7f",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "After each resize get_bdevs should be called and size checked.",
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ed8df97_e4f99c3d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "This test case reflects the test plan, but I think that new lvol should be created on lvs with uuid_store2. This was noted in review comment in test plan as well.",
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2429cc3_e6c45ad8",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "I think this test case is duplicate of test case 4, this is mentioned in review for test plan.",
+      "range": {
+        "startLine": 162,
+        "startChar": 0,
+        "endLine": 162,
+        "endChar": 25
+      },
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f42fdcb5_5a4fd702",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "\"bad_bdev_name\" would be more fitting as this tests creation of lvol store, which takes bdev as an argument.",
+      "range": {
+        "startLine": 184,
+        "startChar": 8,
+        "endLine": 184,
+        "endChar": 16
+      },
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca12f21d_2f790268",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "To keep test structure the same as above, this could be replaced with \"bad_uuid\" variable.",
+      "range": {
+        "startLine": 246,
+        "startChar": 37,
+        "endLine": 246,
+        "endChar": 41
+      },
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "337c9034_7e5ba738",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T10:57:19Z",
+      "side": 1,
+      "message": "I don\u0027t think this patch should touch the testplan.",
+      "revId": "8e737c24abeca3abd6c40ae7e556123b915fca24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
