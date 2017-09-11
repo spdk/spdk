@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6f7f1770_1d7326c3",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-11T20:48:36Z",
+      "side": 1,
+      "message": "Could you elaborate?\nvdev might be Null, ctx-\u003evdev might be a dangling pointer.\n\nRegarding the entire patch: please note that I\u0027m not trying to develop fancy pancy API here. This logic seemed to me the least complicated that would do it\u0027s job without any corner cases.",
+      "parentUuid": "4853a86b_df9c603e",
+      "range": {
+        "startLine": 595,
+        "startChar": 0,
+        "endLine": 600,
+        "endChar": 77
+      },
+      "revId": "a46b6d6a5548ad798bcb9c25c425ae9993168f34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "14f38f87_b053de5d",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 13
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-11T19:39:53Z",
       "side": 1,
       "message": "ctx \u003d calloc() so free() not spdk_dma_free().",
+      "range": {
+        "startLine": 604,
+        "startChar": 1,
+        "endLine": 604,
+        "endChar": 14
+      },
+      "revId": "a46b6d6a5548ad798bcb9c25c425ae9993168f34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e2d733e_c64d3108",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-11T20:48:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "14f38f87_b053de5d",
       "range": {
         "startLine": 604,
         "startChar": 1,
