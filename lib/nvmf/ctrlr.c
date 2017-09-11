@@ -80,15 +80,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
-	ctrlr->cntlid = spdk_nvmf_subsystem_gen_cntlid(subsystem);
-	if (ctrlr->cntlid == 0xFFFF) {
-		/* Unable to get a cntlid */
-		SPDK_ERRLOG("Reached max simultaneous ctrlrs\n");
-		spdk_nvmf_poll_group_destroy(ctrlr->group);
-		free(ctrlr);
-		return NULL;
-	}
-
 	TAILQ_INIT(&ctrlr->qpairs);
 	ctrlr->kato = connect_cmd->kato;
 	ctrlr->async_event_config.raw = 0;
@@ -130,13 +121,19 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "cc 0x%x\n", ctrlr->vcprop.cc.raw);
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "csts 0x%x\n", ctrlr->vcprop.csts.raw);
 
-	TAILQ_INSERT_TAIL(&subsystem->ctrlrs, ctrlr, link);
+	if (spdk_nvmf_subsystem_add_ctrlr(subsystem, ctrlr)) {
+		SPDK_ERRLOG("Unable to add controller to subsystem\n");
+		spdk_nvmf_poll_group_destroy(ctrlr->group);
+		free(ctrlr);
+		return NULL;
+	}
+
 	return ctrlr;
 }
 
 static void ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
-	TAILQ_REMOVE(&ctrlr->subsys->ctrlrs, ctrlr, link);
+	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
 	spdk_nvmf_poll_group_destroy(ctrlr->group);
 	free(ctrlr);
 }
@@ -226,18 +223,10 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			return;
 		}
 	} else {
-		struct spdk_nvmf_ctrlr *tmp;
-
 		qpair->type = QPAIR_TYPE_IOQ;
 		SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Connect I/O Queue for controller id 0x%x\n", data->cntlid);
 
-		ctrlr = NULL;
-		TAILQ_FOREACH(tmp, &subsystem->ctrlrs, link) {
-			if (tmp->cntlid == data->cntlid) {
-				ctrlr = tmp;
-				break;
-			}
-		}
+		ctrlr = spdk_nvmf_subsystem_get_ctrlr(subsystem, data->cntlid);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Unknown controller ID 0x%x\n", data->cntlid);
 			SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);
