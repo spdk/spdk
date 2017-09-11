@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c2fe32cc_bfaf3d51",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Directory spdk/test/nvmf contains scripts for SPDK NVMe-OF target testing right? So I think the objective is ok.",
+      "parentUuid": "7ec078cc_201aa085",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 5,
+        "endChar": 7
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "159ae92f_77348e92",
         "filename": "test/nvmf/test_plan.md",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-08T17:00:46Z",
       "side": 1,
       "message": "Methodology has a larger scope than configuration. This section talks about configuration so you might want to rename it to configuration. It would also be more interesting to show what is static configuration and what is dynamically configured via RPC calls.",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 80
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51f075e7_4d5020e6",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "159ae92f_77348e92",
       "range": {
         "startLine": 8,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "c9f245ef_d6e13217",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Changed to your version, but after googling the translation I\u0027m pretty sure that originally I meant \"integration\" (as in integration test of nvmf and lvol features), not \"integrity\":P",
+      "parentUuid": "9c87fa81_2e11be0b",
+      "range": {
+        "startLine": 14,
+        "startChar": 5,
+        "endLine": 14,
+        "endChar": 19
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c591609_242449fc",
         "filename": "test/nvmf/test_plan.md",
         "patchSetId": 7
@@ -82,6 +154,30 @@
       "writtenOn": "2017-09-08T17:00:46Z",
       "side": 1,
       "message": "I would change this part to \"This test configures an SPDK NVMe-oF subsystem backed by logical volume devices and uses FIO to generate I/Os that target those subsystems. The logical volume bdevs are backed by malloc bdev.\"",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 21
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38a3a258_6ea53872",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0c591609_242449fc",
       "range": {
         "startLine": 15,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "4fa32ffa_89eb844d",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "27c8dd48_0b08232f",
+      "range": {
+        "startLine": 23,
+        "startChar": 2,
+        "endLine": 23,
+        "endChar": 36
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e2da6f2_5a553337",
         "filename": "test/nvmf/test_plan.md",
         "patchSetId": 7
@@ -128,6 +248,30 @@
       "writtenOn": "2017-09-08T17:00:46Z",
       "side": 1,
       "message": "I would recommend changing to \"Step 2: Start the SPDK nvmf_tgt application\"",
+      "range": {
+        "startLine": 24,
+        "startChar": 2,
+        "endLine": 24,
+        "endChar": 19
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2120d902_2ddf12e3",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5e2da6f2_5a553337",
       "range": {
         "startLine": 24,
         "startChar": 2,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "6bf79bfb_2e825ccd",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "942ee264_3b9eb953",
+      "range": {
+        "startLine": 25,
+        "startChar": 2,
+        "endLine": 25,
+        "endChar": 20
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de6b42bb_222bb7f4",
         "filename": "test/nvmf/test_plan.md",
         "patchSetId": 7
@@ -174,6 +342,30 @@
       "writtenOn": "2017-09-08T17:00:46Z",
       "side": 1,
       "message": "I would recommend changing to \"Step 4: Create a logical volume store on the malloc bdev\"",
+      "range": {
+        "startLine": 26,
+        "startChar": 2,
+        "endLine": 26,
+        "endChar": 44
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a92c65c2_729fefaa",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de6b42bb_222bb7f4",
       "range": {
         "startLine": 26,
         "startChar": 2,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "25ce0a38_c6c34cb7",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dbc7c24e_f94f6f1f",
+      "range": {
+        "startLine": 27,
+        "startChar": 2,
+        "endLine": 27,
+        "endChar": 56
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f6d91e50_e7307108",
         "filename": "test/nvmf/test_plan.md",
         "patchSetId": 7
@@ -220,6 +436,30 @@
       "writtenOn": "2017-09-08T17:00:46Z",
       "side": 1,
       "message": "Step 6: Create an NVMe-oF subsystem with logical volume bdevs namespaces",
+      "range": {
+        "startLine": 28,
+        "startChar": 2,
+        "endLine": 28,
+        "endChar": 63
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75d22d6d_20656bd3",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f6d91e50_e7307108",
       "range": {
         "startLine": 28,
         "startChar": 2,
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "0b5952e1_cbe41f20",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Connecting the initiator to target subsystems, while previous step is creating the subsystems in target app.",
+      "parentUuid": "7f28a9b8_f01b1b03",
+      "range": {
+        "startLine": 29,
+        "startChar": 2,
+        "endLine": 29,
+        "endChar": 52
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "238fb425_5e4ee772",
         "filename": "test/nvmf/test_plan.md",
         "patchSetId": 7
@@ -278,6 +542,30 @@
     },
     {
       "key": {
+        "uuid": "e248218e_9db0dedb",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Done.\nI put 10 seconds because other tests like multiconnection.sh use the same time. Also - it\u0027s for per-commit test so I\u0027m not sure if it\u0027d be ok to run the test longer.",
+      "parentUuid": "238fb425_5e4ee772",
+      "range": {
+        "startLine": 30,
+        "startChar": 2,
+        "endLine": 30,
+        "endChar": 66
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "759d9501_41171c74",
         "filename": "test/nvmf/test_plan.md",
         "patchSetId": 7
@@ -289,6 +577,30 @@
       "writtenOn": "2017-09-08T17:00:46Z",
       "side": 1,
       "message": "Step 9: Disconnect from NVMe-oF subsystems. Do you want to delete the subsystem(s)? I thin we should always clean up in each test before heading to the next one so that each test start off with a clean slate.",
+      "range": {
+        "startLine": 33,
+        "startChar": 2,
+        "endLine": 33,
+        "endChar": 33
+      },
+      "revId": "6a1b7da98d54acae3a41dce969ef6f5822d9df0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d38eab3c_356552b5",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T06:33:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "759d9501_41171c74",
       "range": {
         "startLine": 33,
         "startChar": 2,
