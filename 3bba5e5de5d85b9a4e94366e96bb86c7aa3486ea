@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6474d506_d391949a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-11T04:18:19Z",
+      "side": 1,
+      "message": "Should we hardcoded with the old value to last_used_idx - 1?\nlast_used_idx will always plus one, but not every completion we should call eventfd_write, I think the old value should be the index that\u0027s we call eventfd_write.",
+      "revId": "3bba5e5de5d85b9a4e94366e96bb86c7aa3486ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88ed6cf9_dda42762",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-11T04:18:19Z",
+      "side": 1,
+      "message": "Okay, Can you put comments here, I just want to let others know why the used event index is located the bottom of avail ring.",
+      "revId": "3bba5e5de5d85b9a4e94366e96bb86c7aa3486ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
