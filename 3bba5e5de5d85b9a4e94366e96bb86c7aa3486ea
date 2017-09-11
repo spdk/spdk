@@ -87,6 +87,24 @@
       "revId": "3bba5e5de5d85b9a4e94366e96bb86c7aa3486ea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3b57434_1a8dffda",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-11T08:41:19Z",
+      "side": 1,
+      "message": "Maybe Yes for future, because virtio_scsi initiator library is using struct vring defined in virtio_ring.h header file, for now I think just put one line comment: \"The Guest publishes the used index for which it expects an interrupt at the end of the avail ring.\"",
+      "parentUuid": "319646ae_54c4b46c",
+      "revId": "3bba5e5de5d85b9a4e94366e96bb86c7aa3486ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
