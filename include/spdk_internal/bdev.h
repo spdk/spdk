@@ -470,4 +470,6 @@ spdk_bdev_io_from_ctx(void *ctx)
 #define SPDK_DECLARE_BDEV_MODULE(name)								\
 	static struct spdk_bdev_module_if name ## _if;
 
+int bdev_virtio_construct(const char *name, char *path);
+
 #endif /* SPDK_INTERNAL_BDEV_H */
