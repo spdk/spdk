@@ -69,6 +69,24 @@
       "revId": "3bba5e5de5d85b9a4e94366e96bb86c7aa3486ea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "319646ae_54c4b46c",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T08:23:45Z",
+      "side": 1,
+      "message": "Sorry, I meant vring_used_event() macro and avail-\u003esize to num.",
+      "parentUuid": "d3372d1f_b9b42f2a",
+      "revId": "3bba5e5de5d85b9a4e94366e96bb86c7aa3486ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
