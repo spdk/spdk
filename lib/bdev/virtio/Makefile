@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib/bdev/ -Irte_virtio
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/vhost/linux
 
-C_SRCS = bdev_virtio.c
+C_SRCS = bdev_virtio.c bdev_virtio_rpc.c
 C_SRCS += rte_virtio/virtio_dev.c rte_virtio/virtio_pci.c rte_virtio/virtio_queue.c
 C_SRCS += rte_virtio/virtio_user.c
 C_SRCS += rte_virtio/virtio_user/vhost_user.c rte_virtio/virtio_user/virtio_user_dev.c

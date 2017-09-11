@@ -234,7 +234,7 @@ virtio_user_dev_setup(struct virtio_user_dev *dev)
 	 1ULL << VIRTIO_F_VERSION_1)
 
 struct virtio_dev *
-virtio_user_dev_init(char *path, int queues, int queue_size)
+virtio_user_dev_init(const char *path, int queues, int queue_size)
 {
 	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
