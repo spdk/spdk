@@ -573,6 +573,16 @@ def get_vhost_controllers(args):
 p = subparsers.add_parser('get_vhost_controllers', help='List vhost controllers')
 p.set_defaults(func=get_vhost_controllers)
 
+def construct_virtio_user_bdev(args):
+    params = {'name': args.name,
+              'path': args.path}
+    jsonrpc_call('construct_virtio_user_bdev', params)
+
+p = subparsers.add_parser('construct_virtio_user_bdev', help='Create virtio user device')
+p.add_argument('name', help='device name')
+p.add_argument('path', help='socket path')
+p.set_defaults(func=construct_virtio_user_bdev)
+
 def get_rpc_methods(args):
     print_dict(jsonrpc_call('get_rpc_methods'))
 
