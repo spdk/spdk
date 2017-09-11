@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2818e92_16105d93",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T20:26:40Z",
+      "side": 1,
+      "message": "Don\u0027t like copy-paste. Can you put this in separate function?",
+      "range": {
+        "startLine": 288,
+        "startChar": 0,
+        "endLine": 301,
+        "endChar": 3
+      },
+      "revId": "32ec4f52ac91db896a2c18170209e878c6a4e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9ed447d_7aa75874",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T20:26:40Z",
+      "side": 1,
+      "message": "Can we remove this?",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 85
+      },
+      "revId": "32ec4f52ac91db896a2c18170209e878c6a4e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbfc1efd_e951ed7f",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T20:26:40Z",
+      "side": 1,
+      "message": "Really, pass \u0027$?\u0027 as $3 or you will eventually shoot your foot.",
+      "range": {
+        "startLine": 149,
+        "startChar": 4,
+        "endLine": 149,
+        "endChar": 18
+      },
+      "revId": "32ec4f52ac91db896a2c18170209e878c6a4e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39a97d20_13546921",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T20:26:40Z",
+      "side": 1,
+      "message": "We have bash from 1987. Can we exploit [[ ]] instead of \u0027test\u0027 program?\n\nI think I already wrote this some time ago.",
+      "range": {
+        "startLine": 152,
+        "startChar": 7,
+        "endLine": 152,
+        "endChar": 34
+      },
+      "revId": "32ec4f52ac91db896a2c18170209e878c6a4e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63465dc1_e19524ca",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T20:26:40Z",
+      "side": 1,
+      "message": "Hmmm... Maybe this whole if-else can be just replaced by\n\nif [[ retcode !\u003d expected ]]; the\n     echo \"    Fio test ended with $retcode but expected $expected \"\n            vm_shutdown_all\n            spdk_vhost_kill\n exit 1\nfi\n\nor something similar?",
+      "range": {
+        "startLine": 152,
+        "startChar": 4,
+        "endLine": 170,
+        "endChar": 6
+      },
+      "revId": "32ec4f52ac91db896a2c18170209e878c6a4e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab9d6384_7ab3d6e4",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T20:26:40Z",
+      "side": 1,
+      "message": "Why loop for one disk?",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 112,
+        "endChar": 14
+      },
+      "revId": "32ec4f52ac91db896a2c18170209e878c6a4e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02a74d43_7bc00169",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T20:26:40Z",
+      "side": 1,
+      "message": "Again time travel before bash.",
+      "range": {
+        "startLine": 129,
+        "startChar": 11,
+        "endLine": 129,
+        "endChar": 28
+      },
+      "revId": "32ec4f52ac91db896a2c18170209e878c6a4e25b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
