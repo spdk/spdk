@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a49fa6c_eef4f265",
+        "filename": "scripts/vagrant/build.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-11T17:17:53Z",
+      "side": 1,
+      "message": "Good catch.\n\nTo be clear (since this confused me at first), $SUDOCMD runs commands as vagrant, not as root.",
+      "revId": "a31e2fd3ce2a4dc4597e23dcf4ddc1bab4c50129",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
