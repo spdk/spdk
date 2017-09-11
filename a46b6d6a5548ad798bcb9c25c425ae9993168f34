@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4853a86b_df9c603e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T19:39:53Z",
+      "side": 1,
+      "message": "Why you not iterate here over all controllers? Whole patch is too complicated because of that. If you write here a loop you don\u0027t need most of this patch.",
+      "range": {
+        "startLine": 595,
+        "startChar": 0,
+        "endLine": 600,
+        "endChar": 77
+      },
+      "revId": "a46b6d6a5548ad798bcb9c25c425ae9993168f34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14f38f87_b053de5d",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T19:39:53Z",
+      "side": 1,
+      "message": "ctx \u003d calloc() so free() not spdk_dma_free().",
+      "range": {
+        "startLine": 604,
+        "startChar": 1,
+        "endLine": 604,
+        "endChar": 14
+      },
+      "revId": "a46b6d6a5548ad798bcb9c25c425ae9993168f34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb09abf5_a1d89fcf",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-11T19:39:53Z",
+      "side": 1,
+      "message": "-\u003e calloc()",
+      "range": {
+        "startLine": 599,
+        "startChar": 7,
+        "endLine": 599,
+        "endChar": 23
+      },
+      "revId": "a46b6d6a5548ad798bcb9c25c425ae9993168f34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
