@@ -69,8 +69,8 @@ void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr)
  * Get available requests from avail ring.
  */
 uint16_t
-spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
-			     uint16_t reqs_len)
+spdk_vhost_vq_avail_ring_get(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
+			     uint16_t *reqs, uint16_t reqs_len)
 {
 	struct rte_vhost_vring *vring = &virtqueue->vring;
 	struct vring_avail *avail = vring->avail;
@@ -89,8 +89,8 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *r
 	}
 
 	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
-		      "AVAIL: last_idx=%"PRIu16" avail_idx=%"PRIu16" count=%"PRIu16"\n",
-		      last_idx, avail_idx, count);
+		      "Queue %td - AVAIL RING: last_idx=%"PRIu16" avail_idx=%"PRIu16" count=%"PRIu16"\n",
+		      virtqueue - vdev->virtqueue, last_idx, avail_idx, count);
 
 	return count;
 }
@@ -125,6 +125,24 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue 
 	return 0;
 }
 
+void
+spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue)
+{
+	if (!virtqueue->event_pending) {
+		return;
+	}
+
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
+		      "Queue %td - USED RING: signaling (need=%d, force=%d): last signaled %"PRIu16" last used %"PRIu16"\n",
+		      virtqueue - vdev->virtqueue, need, force, virtqueue->signaled_used_idx,
+		      virtqueue->vring.last_used_idx);
+
+	eventfd_write(virtqueue->vring.callfd, (eventfd_t)1);
+
+	virtqueue->signaled_used_idx = virtqueue->vring.last_used_idx;
+	virtqueue->event_pending = false;
+}
+
 /*
  * Enqueue id and len to used ring.
  */
@@ -133,13 +151,14 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 				uint16_t id,
 				uint32_t len)
 {
-	int need_event = 0;
+	bool need_event, forced_event;
 	struct rte_vhost_vring *vring = &virtqueue->vring;
 	struct vring_used *used = vring->used;
 	uint16_t last_idx = vring->last_used_idx & virtqueue->size_mask;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING, "USED: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
-		      vring->last_used_idx, id, len);
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
+		      "Queue %td - USED RING: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
+		      virtqueue - vdev->virtqueue, vring->last_used_idx, id, len);
 
 	vring->last_used_idx++;
 	used->ring[last_idx].id = id;
@@ -150,20 +169,22 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 
 	if (virtqueue->used_event) {
 		spdk_mb();
-		need_event = vring->last_used_idx == virtqueue->signaled_used_idx;
-		need_event |= vring_need_event(*virtqueue->used_event, vring->last_used_idx,
-					       virtqueue->signaled_used_idx);
+		forced_event = vring->last_used_idx == virtqueue->signaled_used_idx;
+		need_event = !!vring_need_event(*virtqueue->used_event, vring->last_used_idx,
+						virtqueue->signaled_used_idx);
 	} else if (spdk_vhost_dev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
 		   spdk_unlikely(vring->avail->idx == vring->last_avail_idx)) {
-		need_event = 1;
+		forced_event = true;
+		need_event = true;
 	} else {
 		spdk_mb();
+		forced_event = vring->last_used_idx == virtqueue->signaled_used_idx;
 		need_event = !(vring->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
 	}
 
-	if (need_event) {
-		virtqueue->signaled_used_idx = virtqueue->vring.last_used_idx;
-		eventfd_write(virtqueue->vring.callfd, (eventfd_t)1);
+	virtqueue->event_pending |= forced_event | need_event;
+	if (forced_event) {
+		spdk_vhost_vq_used_signal(vdev, virtqueue);
 	}
 }
 
@@ -432,7 +453,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	vdev->cpumask = cpumask;
 	vdev->type = type;
 	vdev->backend = backend;
-
+	vdev->min_event_interval = SPDK_VHOST_USED_RING_IRQ_INTERVAL_US * spdk_get_ticks_hz() / 1000000ULL;
 	g_spdk_vhost_devices[ctrlr_num] = vdev;
 
 	if (rte_vhost_driver_start(path) != 0) {
@@ -560,6 +581,53 @@ spdk_vhost_allocate_reactor(uint64_t cpumask)
 }
 
 static void
+vdev_ring_irq_poller(void *arg)
+{
+	struct spdk_vhost_dev *vdev = arg;
+	uint64_t irq_interval = vdev->min_event_interval;
+	struct spdk_vhost_virtqueue *virtqueue;
+	uint64_t now;
+	uint16_t q_idx;
+
+	if (irq_interval) {
+		now = spdk_get_ticks();
+
+		for (q_idx = 0; q_idx < vdev->num_queues; q_idx++) {
+			virtqueue = &vdev->virtqueue[q_idx];
+
+			if (now < virtqueue->next_event_time) {
+				continue;
+			}
+
+			spdk_vhost_vq_used_signal(vdev, virtqueue);
+
+			now = spdk_get_ticks();
+			virtqueue->next_event_time = now + irq_interval;
+		}
+	} else {
+		for (q_idx = 0; q_idx < vdev->num_queues; q_idx++) {
+			virtqueue = &vdev->virtqueue[q_idx];
+			spdk_vhost_vq_used_signal(vdev, virtqueue);
+		}
+	}
+}
+
+static void
+register_irg_poller(void *arg)
+{
+	struct spdk_vhost_dev *vdev = arg;
+
+	spdk_poller_register(&vdev->used_ring_irq_poller, vdev_ring_irq_poller, vdev, vdev->lcore,
+			     SPDK_VHOST_IRQ_POLLER_PERIOD_US);
+}
+
+static void
+unregister_irg_poller(void *arg)
+{
+	spdk_poller_unregister(&((struct spdk_vhost_dev *)arg)->used_ring_irq_poller, NULL);
+}
+
+static void
 destroy_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
@@ -573,6 +641,9 @@ destroy_device(int vid)
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
+
+	spdk_vhost_timed_event_send(vdev->lcore, unregister_irg_poller, vdev, 1,
+				    "Failed to unregister IRQ poller\n");
 
 	if (vdev->backend->destroy_device(vdev) != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
@@ -687,6 +758,9 @@ new_device(int vid)
 		vdev->lcore = -1;
 		vdev->vid = -1;
 	}
+
+	spdk_vhost_timed_event_send(vdev->lcore, register_irg_poller, vdev, 1,
+				    "Failed to register IRQ poller\n");
 
 out:
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);

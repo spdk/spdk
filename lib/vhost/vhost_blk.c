@@ -307,7 +307,7 @@ process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
 
-	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
+	reqs_cnt = spdk_vhost_vq_avail_ring_get(&bvdev->vdev, vq, reqs, SPDK_COUNTOF(reqs));
 	if (!reqs_cnt) {
 		return;
 	}
@@ -344,7 +344,7 @@ no_bdev_process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue
 	uint32_t length;
 	uint16_t iovcnt, req_idx;
 
-	if (spdk_vhost_vq_avail_ring_get(vq, &req_idx, 1) != 1) {
+	if (spdk_vhost_vq_avail_ring_get(&bvdev->vdev, vq, &req_idx, 1) != 1) {
 		return;
 	}
 

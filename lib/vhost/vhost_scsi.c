@@ -218,7 +218,7 @@ process_event(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_scsi_event *e
 	struct vring_desc *desc_table;
 	uint32_t desc_table_size;
 
-	if (spdk_vhost_vq_avail_ring_get(vq, &req, 1) != 1) {
+	if (spdk_vhost_vq_avail_ring_get(&svdev->vdev, vq, &req, 1) != 1) {
 		SPDK_ERRLOG("%s: no avail virtio eventq ring entries. virtio event won't be sent.\n",
 			    svdev->vdev.name);
 		desc = NULL;
@@ -647,7 +647,7 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
 
-	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
+	reqs_cnt = spdk_vhost_vq_avail_ring_get(&svdev->vdev, vq, reqs, SPDK_COUNTOF(reqs));
 	spdk_vhost_get_tasks(svdev, tasks, reqs_cnt);
 	for (i = 0; i < reqs_cnt; i++) {
 		task = tasks[i];
@@ -669,7 +669,7 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 	uint16_t reqs_cnt, i;
 	int result;
 
-	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
+	reqs_cnt = spdk_vhost_vq_avail_ring_get(&svdev->vdev, vq, reqs, SPDK_COUNTOF(reqs));
 	assert(reqs_cnt <= 32);
 
 	spdk_vhost_get_tasks(svdev, tasks, reqs_cnt);
@@ -707,7 +707,10 @@ vdev_mgmt_worker(void *arg)
 
 	process_removed_devs(svdev);
 	process_eventq(svdev);
+	spdk_vhost_vq_used_signal(&svdev->vdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ]);
+
 	process_controlq(svdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
+	spdk_vhost_vq_used_signal(&svdev->vdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
 }
 
 static void
