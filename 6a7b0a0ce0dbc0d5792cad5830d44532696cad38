@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f0d8e18_52adb91b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1319,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-11T15:16:09Z",
+      "side": 1,
+      "message": "I don\u0027t think this will work - bs-\u003edev is probably freed by this point, as well as the channel that allocate the sequence object.\n\nThere\u0027s more here that we need to think about though (independent of your patch).  I see a bunch of existing places where various memory allocation failures trigger calling _spdk_bs_free() followed by some operation on a sequence object.  _spdk_bs_free() will free the md channel though which the sequence was allocated from.\n\nLet\u0027s talk about this more once you\u0027re back from SDC.",
+      "revId": "6a7b0a0ce0dbc0d5792cad5830d44532696cad38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
