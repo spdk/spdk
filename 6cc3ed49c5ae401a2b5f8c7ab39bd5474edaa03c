@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8029f30b_44129f7d",
+        "filename": "test/lvol/bdev_io.conf.in",
+        "patchSetId": 11
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-11T12:06:09Z",
+      "side": 1,
+      "message": "Remove unnecessary commented lines",
+      "range": {
+        "startLine": 2,
+        "startChar": 2,
+        "endLine": 2,
+        "endChar": 19
+      },
+      "revId": "6cc3ed49c5ae401a2b5f8c7ab39bd5474edaa03c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
