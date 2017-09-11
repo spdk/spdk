@@ -65,6 +65,7 @@ struct spdk_nvmf_host {
 
 struct spdk_nvmf_listener {
 	struct spdk_nvme_transport_id	trid;
+	struct spdk_nvmf_transport	*transport;
 	TAILQ_ENTRY(spdk_nvmf_listener)	link;
 };
 

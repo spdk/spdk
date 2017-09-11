@@ -54,7 +54,6 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_nvmf_listener *listener;
 	struct spdk_nvmf_discovery_log_page_entry *entry;
-	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_discovery_log_page *disc_log;
 	size_t cur_size;
 
@@ -94,10 +93,7 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 			entry->subtype = subsystem->subtype;
 			snprintf(entry->subnqn, sizeof(entry->subnqn), "%s", subsystem->subnqn);
 
-			transport = spdk_nvmf_tgt_get_transport(tgt, listener->trid.trtype);
-			assert(transport != NULL);
-
-			spdk_nvmf_transport_listener_discover(transport, &listener->trid, entry);
+			spdk_nvmf_transport_listener_discover(listener->transport, &listener->trid, entry);
 
 			numrec++;
 		}
