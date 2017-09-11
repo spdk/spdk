@@ -16,6 +16,24 @@
       "revId": "c50b969f9f56906bc357214c0ff43610b219ee80",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6262271_bb331fcd",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-11T07:35:18Z",
+      "side": 1,
+      "message": "Callback in line 84 will add new scheduled operation (change from this patch) and TAILQ_FOREACH_SAFE won\u0027t be aware of this and end w/o freeing newly added operation. TAILQ_EMPTY will guarantee us that it will clean until every newly added elements are removed.",
+      "parentUuid": "fec52baf_bb70aeaf",
+      "revId": "c50b969f9f56906bc357214c0ff43610b219ee80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
