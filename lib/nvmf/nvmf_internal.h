@@ -240,7 +240,12 @@ int spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns
 
 int spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem);
 void spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem);
-uint16_t spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem);
+int spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+				  struct spdk_nvmf_ctrlr *ctrlr);
+void spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+				      struct spdk_nvmf_ctrlr *ctrlr);
+struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+		uint16_t cntlid);
 
 static inline struct spdk_nvmf_ns *
 _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)

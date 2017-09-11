@@ -115,10 +115,22 @@ spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem, struct sp
 	return NULL;
 }
 
-uint16_t
-spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
+int
+spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr)
 {
 	return 0;
+}
+
+void
+spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+				 struct spdk_nvmf_ctrlr *ctrlr)
+{
+}
+
+struct spdk_nvmf_ctrlr *
+spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid)
+{
+	return NULL;
 }
 
 bool

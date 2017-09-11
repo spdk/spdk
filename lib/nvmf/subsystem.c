@@ -497,19 +497,16 @@ spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->subtype;
 }
 
-uint16_t
+static uint16_t
 spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 {
-	struct spdk_nvmf_ctrlr *ctrlr;
-	uint16_t count;
-	bool in_use = true;
+	int count;
 
 	/*
 	 * In the worst case, we might have to try all CNTLID values between 1 and 0xFFF0 - 1
 	 * before we find one that is unused (or find that all values are in use).
 	 */
-	count = 0xFFF0 - 1;
-	do {
+	for (count = 0; count < 0xFFF0 - 1; count++) {
 		subsystem->next_cntlid++;
 		if (subsystem->next_cntlid >= 0xFFF0) {
 			/* The spec reserves cntlid values in the range FFF0h to FFFFh. */
@@ -517,21 +514,49 @@ spdk_nvmf_subsystem_gen_cntlid(struct spdk_nvmf_subsystem *subsystem)
 		}
 
 		/* Check if a controller with this cntlid currently exists. */
-		in_use = false;
-		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-			if (ctrlr->cntlid == subsystem->next_cntlid) {
-				in_use = true;
-				break;
-			}
+		if (spdk_nvmf_subsystem_get_ctrlr(subsystem, subsystem->next_cntlid) == NULL) {
+			/* Found unused cntlid */
+			return subsystem->next_cntlid;
 		}
-
-		count--;
-	} while (in_use && count > 0);
-
-	if (count == 0) {
-		/* All valid cntlid values are in use. */
-		return 0xFFFF;
 	}
 
-	return subsystem->next_cntlid;
+	/* All valid cntlid values are in use. */
+	return 0xFFFF;
+}
+
+int
+spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr)
+{
+	ctrlr->cntlid = spdk_nvmf_subsystem_gen_cntlid(subsystem);
+	if (ctrlr->cntlid == 0xFFFF) {
+		/* Unable to get a cntlid */
+		SPDK_ERRLOG("Reached max simultaneous ctrlrs\n");
+		return -EBUSY;
+	}
+
+	TAILQ_INSERT_TAIL(&subsystem->ctrlrs, ctrlr, link);
+
+	return 0;
+}
+
+void
+spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
+				 struct spdk_nvmf_ctrlr *ctrlr)
+{
+	assert(subsystem == ctrlr->subsys);
+	TAILQ_REMOVE(&subsystem->ctrlrs, ctrlr, link);
+}
+
+struct spdk_nvmf_ctrlr *
+spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid)
+{
+	struct spdk_nvmf_ctrlr *ctrlr;
+
+	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+		if (ctrlr->cntlid == cntlid) {
+			return ctrlr;
+		}
+	}
+
+	return NULL;
 }
