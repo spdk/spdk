@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/blob.h"
+#include "spdk/crc32.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
 #include "spdk/io_channel.h"
@@ -44,6 +45,8 @@
 
 #include "blobstore.h"
 #include "request.h"
+
+#define BLOB_CRC32C_INITIAL    0xffffffffUL
 
 static inline size_t
 divide_round_up(size_t num, size_t divisor)
@@ -518,6 +521,19 @@ struct spdk_blob_load_ctx {
 	void				*cb_arg;
 };
 
+static uint32_t
+_spdk_blob_md_page_calc_crc(struct spdk_blob_md_page *page)
+{
+	uint32_t		crc;
+
+	crc = BLOB_CRC32C_INITIAL;
+	crc = spdk_crc32c_update(page, SPDK_BS_PAGE_SIZE - 4, crc);
+	crc ^= BLOB_CRC32C_INITIAL;
+
+	return crc;
+
+}
+
 static void
 _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
@@ -525,8 +541,18 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_blob 		*blob = ctx->blob;
 	struct spdk_blob_md_page	*page;
 	int				rc;
+	uint32_t			crc;
 
 	page = &ctx->pages[ctx->num_pages - 1];
+	crc = _spdk_blob_md_page_calc_crc(page);
+	if (crc != page->crc) {
+		SPDK_ERRLOG("Metadata page %d crc missmatch\n", ctx->num_pages);
+		_spdk_blob_mark_clean(blob);
+		ctx->cb_fn(seq, ctx->cb_arg, -EINVAL);
+		spdk_dma_free(ctx->pages);
+		free(ctx);
+		return;
+	}
 
 	if (page->next != SPDK_INVALID_MD_PAGE) {
 		uint32_t next_page = page->next;
@@ -1002,10 +1028,11 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 		ctx->pages[i - 1].next = page_num;
 		blob->active.pages[i] = page_num;
 		spdk_bit_array_set(bs->used_md_pages, page_num);
+		ctx->pages[i - 1].crc = _spdk_blob_md_page_calc_crc(&ctx->pages[i - 1]);
 		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Claiming page %u for blob %lu\n", page_num, blob->id);
 		page_num++;
 	}
-
+	ctx->pages[i - 1].crc = _spdk_blob_md_page_calc_crc(&ctx->pages[i - 1]);
 	/* Start writing the metadata from last page to first */
 	ctx->idx = blob->active.num_pages - 1;
 	_spdk_blob_persist_write_page_chain(seq, ctx, 0);
