@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2010-2016 Intel Corporation. All rights reserved.
+ *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -31,51 +31,9 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _VIRTIO_USER_DEV_H
-#define _VIRTIO_USER_DEV_H
+#ifndef SPDK_BDEV_VIRTIO_H
+#define SPDK_BDEV_VIRTIO_H
 
-#include <linux/virtio_ring.h>
+int spdk_virtio_user_scsi_connect(const char *path, uint32_t max_queue, uint32_t vq_size);
 
-#include <limits.h>
-#include "vhost.h"
-
-#include "../virtio_dev.h"
-
-#define VIRTIO_MAX_VIRTQUEUES 0x100
-
-struct virtio_user_dev {
-	struct virtio_dev vdev;
-
-	/* for vhost_user backend */
-	int		vhostfd;
-
-	/* for vhost_kernel backend */
-	char		*ifname;
-	int		*vhostfds;
-	int		*tapfds;
-
-	/* for both vhost_user and vhost_kernel */
-	int		callfds[VIRTIO_MAX_VIRTQUEUES];
-	int		kickfds[VIRTIO_MAX_VIRTQUEUES];
-	uint32_t	max_queues;
-	uint32_t	num_queues;
-	uint32_t	queue_size;
-	uint64_t	features; /* the negotiated features with driver,
-				   * and will be sync with device
-				   */
-	uint64_t	device_features; /* supported features by device */
-	uint8_t		status;
-	uint8_t		port_id;
-	char		path[PATH_MAX];
-	struct vring	vrings[VIRTIO_MAX_VIRTQUEUES];
-	struct virtio_user_backend_ops *ops;
-};
-
-int is_vhost_user_by_type(const char *path);
-int virtio_user_start_device(struct virtio_user_dev *dev);
-int virtio_user_stop_device(struct virtio_user_dev *dev);
-struct virtio_dev *virtio_user_dev_init(const char *path, int queues, int queue_size);
-void virtio_user_dev_uninit(struct virtio_user_dev *dev);
-void virtio_user_handle_cq(struct virtio_user_dev *dev, uint16_t queue_idx);
-
-#endif
+#endif /* SPDK_BDEV_VIRTIO_H */
