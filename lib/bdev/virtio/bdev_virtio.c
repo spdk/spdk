@@ -54,12 +54,14 @@
 #include <virtio_user/virtio_user_dev.h>
 
 #include "spdk/scsi_spec.h"
+#include "bdev_virtio.h"
 
 #define BDEV_VIRTIO_MAX_TARGET 64
 #define BDEV_VIRTIO_SCAN_PAYLOAD_SIZE 256
 
 static int bdev_virtio_initialize(void);
 static void bdev_virtio_finish(void);
+int spdk_virtio_user_scsi_dev_connect(struct virtio_dev *vdev);
 
 struct virtio_scsi_io_ctx {
 	struct virtio_req 		vreq;
@@ -94,6 +96,8 @@ struct bdev_virtio_io_channel {
 	struct virtio_dev	*vdev;
 	struct spdk_bdev_poller	*poller;
 };
+
+int virtio_dev_count = 0;
 
 static void scan_target(struct virtio_scsi_scan_base *base);
 
@@ -363,7 +367,8 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	disk->vdev = base->vdev;
 
 	bdev = &disk->bdev;
-	bdev->name = spdk_sprintf_alloc("Virtio0");
+	bdev->name = spdk_sprintf_alloc("Virtio%d", virtio_dev_count);
+	virtio_dev_count++;
 	bdev->product_name = "Virtio SCSI Disk";
 	bdev->write_cache = 0;
 	bdev->blocklen = disk->block_size;
@@ -459,18 +464,47 @@ scan_target(struct virtio_scsi_scan_base *base)
 	virtio_xmit_pkts(base->vdev->vqs[2], vreq);
 }
 
+int
+spdk_virtio_user_scsi_dev_connect(struct virtio_dev *vdev)
+{
+	struct virtio_scsi_scan_base *base;
+	int rc = 0;
+
+	base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
+	if (base == NULL) {
+		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
+		rc = -ENOMEM;
+		goto invalid;
+	}
+
+	virtio_init_device(vdev, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
+	virtio_dev_start(vdev);
+
+	base->vdev = vdev;
+	TAILQ_INIT(&base->found_disks);
+
+	SPDK_GET_BDEV_MODULE(virtio_scsi)->action_in_progress = 1;
+	spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,
+			       spdk_env_get_current_core(), 0);
+
+	scan_target(base);
+	return 0;
+
+invalid:
+	return rc;
+}
+
 static int
 bdev_virtio_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Virtio");
-	struct virtio_scsi_scan_base *base;
 	struct virtio_dev *vdev = NULL;
 	char *type, *path;
 	uint32_t i;
 	int rc = 0;
 
 	if (sp == NULL) {
-		goto out;
+		goto invalid;
 	}
 
 	for (i = 0; spdk_conf_section_get_nval(sp, "Dev", i) != NULL; i++) {
@@ -493,38 +527,57 @@ bdev_virtio_initialize(void)
 			continue;
 		}
 	}
+	rc = spdk_virtio_user_scsi_dev_connect(vdev);
 
-	if (vdev == NULL) {
-		goto out;
+	if (rc < 0) {
+		goto invalid;
 	}
 
-	base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
-	if (base == NULL) {
-		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
-		rc = -1;
-		goto out;
-	}
-
-	/* TODO check rc, add virtio_dev_deinit() */
-	virtio_init_device(vdev, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
-	virtio_dev_start(vdev);
-
-	base->vdev = vdev;
-	TAILQ_INIT(&base->found_disks);
-
-	spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,
-			       spdk_env_get_current_core(), 0);
-
-	scan_target(base);
 	return 0;
 
-out:
+invalid:
 	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 	return rc;
 }
 
 static void bdev_virtio_finish(void)
 {
+}
+
+int
+spdk_virtio_user_scsi_connect(const char *path, uint32_t max_queue, uint32_t vq_size)
+{
+	struct virtio_dev *vdev = NULL;
+	struct stat file_stat;
+	int rc = 0;
+
+	if (path == NULL) {
+		SPDK_ERRLOG("Missing path to the socket\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (stat(path, &file_stat) != 0) {
+		SPDK_ERRLOG("Invalid socket path\n");
+		rc = -EIO;
+		goto invalid;
+	} else if (!S_ISSOCK(file_stat.st_mode)) {
+		SPDK_ERRLOG("Path %s: not a socket.\n", path);
+		rc = -EIO;
+		goto invalid;
+	}
+
+	vdev = virtio_user_dev_init(path, max_queue, vq_size);
+	rc = spdk_virtio_user_scsi_dev_connect(vdev);
+
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	return 0;
+
+invalid:
+	return rc;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio", SPDK_TRACE_VIRTIO)
