@@ -336,6 +336,8 @@ vdev_worker(void *arg)
 	for (q_idx = 0; q_idx < bvdev->vdev.num_queues; q_idx++) {
 		process_vq(bvdev, &bvdev->vdev.virtqueue[q_idx]);
 	}
+
+	spdk_vhost_dev_used_signal(&bvdev->vdev);
 }
 
 static void
@@ -367,6 +369,8 @@ no_bdev_vdev_worker(void *arg)
 	for (q_idx = 0; q_idx < bvdev->vdev.num_queues; q_idx++) {
 		no_bdev_process_vq(bvdev, &bvdev->vdev.virtqueue[q_idx]);
 	}
+
+	spdk_vhost_dev_used_signal(&bvdev->vdev);
 }
 
 static struct spdk_vhost_blk_dev *
@@ -546,9 +550,15 @@ destroy_device_poller_cb(void *arg)
 {
 	struct spdk_vhost_dev_destroy_ctx *ctx = arg;
 	struct spdk_vhost_blk_dev *bvdev = ctx->bvdev;
+	int i;
 
 	if (bvdev->vdev.task_cnt > 0) {
 		return;
+	}
+
+	for (i = 0; i < bvdev->vdev.num_queues; i++) {
+		bvdev->vdev.virtqueue[i].next_event_time = 0;
+		spdk_vhost_vq_used_signal(&bvdev->vdev, &bvdev->vdev.virtqueue[i]);
 	}
 
 	SPDK_NOTICELOG("Stopping poller for vhost controller %s\n", bvdev->vdev.name);
