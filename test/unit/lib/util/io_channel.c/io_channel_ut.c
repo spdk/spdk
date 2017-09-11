@@ -97,6 +97,79 @@ thread_send_msg(void)
 	free_threads();
 }
 
+static int
+channel_create(void *io_device, void *ctx_buf)
+{
+	return 0;
+}
+
+static void
+channel_destroy(void *io_device, void *ctx_buf)
+{
+}
+
+static void
+channel_msg(void *io_device, struct spdk_io_channel *ch, void *ctx)
+{
+	int *count = spdk_io_channel_get_ctx(ch);
+
+	(*count)++;
+}
+
+static void
+channel_cpl(void *io_device, void *ctx)
+{
+}
+
+static void
+for_each_channel_remove(void)
+{
+	struct spdk_io_channel *ch0, *ch1, *ch2;
+	int io_target;
+	int count = 0;
+
+	allocate_threads(3);
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	set_thread(0);
+	ch0 = spdk_get_io_channel(&io_target);
+	set_thread(1);
+	ch1 = spdk_get_io_channel(&io_target);
+	set_thread(2);
+	ch2 = spdk_get_io_channel(&io_target);
+
+	/*
+	 * Test that io_channel handles the case where we start to iterate through
+	 *  the channels, and during the iteration, one of the channels is deleted.
+	 * This is done in some different and sometimes non-intuitive orders, because
+	 *  some operations are deferred and won't execute until their threads are
+	 *  polled.
+	 *
+	 * Case #1: Put the I/O channel before spdk_for_each_channel.
+	 */
+	set_thread(0);
+	spdk_put_io_channel(ch0);
+	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
+	poll_threads();
+
+	/*
+	 * Case #2: Put the I/O channel after spdk_for_each_channel, but before
+	 *  thread 0 is polled.
+	 */
+	ch0 = spdk_get_io_channel(&io_target);
+	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
+	spdk_put_io_channel(ch0);
+	poll_threads();
+
+	set_thread(1);
+	spdk_put_io_channel(ch1);
+	set_thread(2);
+	spdk_put_io_channel(ch2);
+	spdk_io_device_unregister(&io_target, NULL);
+	poll_threads();
+
+	free_threads();
+}
+
 static void
 thread_name(void)
 {
@@ -244,6 +317,7 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "thread_alloc", thread_alloc) == NULL ||
 		CU_add_test(suite, "thread_send_msg", thread_send_msg) == NULL ||
+		CU_add_test(suite, "for_each_channel_remove", for_each_channel_remove) == NULL ||
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
 		CU_add_test(suite, "channel", channel) == NULL
 	) {
