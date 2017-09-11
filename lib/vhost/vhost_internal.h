@@ -66,6 +66,13 @@
 
 #define SPDK_VHOST_IOVS_MAX 128
 
+/*
+ * Arbitrary chosen minimal time between two IRQ
+ */
+#define SPDK_VHOST_DEFFAULT_IRQ_INTERVAL_US 50
+#define SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS 10
+#define SPDK_VHOST_VQ_COALESCING_THRESHOLD (40000UL * (SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS) / 1000UL)
+
 #define SPDK_VHOST_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
 	(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
 	(1ULL << VIRTIO_F_VERSION_1) | \
@@ -78,12 +85,27 @@
 	(1ULL << VIRTIO_RING_F_INDIRECT_DESC))
 
 enum spdk_vhost_dev_type {
-	SPDK_VHOST_DEV_T_SCSI,
-	SPDK_VHOST_DEV_T_BLK,
+	SPDK_VHOST_DEV_T_SCSI,//!< SPDK_VHOST_DEV_T_SCSI
+	SPDK_VHOST_DEV_T_BLK, //!< SPDK_VHOST_DEV_T_BLK
 };
 
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
+
+	/* Stats - used Number of IO processed on vring. */
+	uint32_t io_cnt;
+	uint32_t irq_cnt;
+	int16_t coalescing_time_factor;
+
+	/* Request enqueued but IRQ not sent yet. */
+	bool used_enqueued;
+
+	/* Is event coalescing used for this queue */
+//	bool coalescing_enabled;
+
+	/* Next time when we need to send event */
+	uint64_t next_event_time;
+
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_dev_backend {
@@ -116,8 +138,23 @@ struct spdk_vhost_dev {
 	enum spdk_vhost_dev_type type;
 	const struct spdk_vhost_dev_backend *backend;
 
+	/* Max coalescing time. */
+	uint64_t event_coalescing_time;
+
+	/* Next time when stats for event coalescing will be checked. */
+	uint64_t next_event_coalescing_check_time;
+
+	/* Interval used for event coalescing stats hathering. */
+	uint64_t check_io_stats_interval;
+
+	/* Treshold when event coalescing for virtqueue will be turned on */
+	uint32_t  coalescing_io_threshold;
+
+	uint16_t last_singaled_vq;
 	uint16_t num_queues;
+
 	uint64_t negotiated_features;
+
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 };
 
@@ -151,6 +188,25 @@ bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct spdk_vhost_
 int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
 			   uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
 			   uint32_t *desc_table_size);
+
+/**
+ * Send IRQ/call client (if pending) for \c vq.
+ * \param vdev vhost device
+ * \param vq virtqueue
+ * \return
+ *   0 - if no interrupt was signalled
+ *   1 - if interrupt was signalled
+ */
+int spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq);
+
+
+/**
+ * Send IRQs for all queues that need to be signaled.
+ * \param vdev vhost device
+ * \param vq virtqueue
+ */
+void spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev);
+
 void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
 				     uint16_t id, uint32_t len);
 
