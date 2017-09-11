@@ -66,6 +66,9 @@ DEFINE_STUB_V(spdk_vhost_vq_used_ring_enqueue, (struct spdk_vhost_dev *vdev,
 DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_virtqueue *vq, uint16_t req_idx, struct vring_desc **desc,
 		struct vring_desc **desc_table, uint32_t *desc_table_size), 0);
+DEFINE_STUB(spdk_vhost_vq_used_signal, int, (struct spdk_vhost_dev *vdev,
+		struct spdk_vhost_virtqueue *virtqueue), 0);
+DEFINE_STUB_V(spdk_vhost_dev_used_signal, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB(spdk_vhost_vring_desc_is_wr, bool, (struct vring_desc *cur_desc), false);
 DEFINE_STUB(spdk_vhost_vring_desc_to_iov, int, (struct spdk_vhost_dev *vdev, struct iovec *iov,
 		uint16_t *iov_index, const struct vring_desc *desc), 0);
