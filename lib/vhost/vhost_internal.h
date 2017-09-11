@@ -66,6 +66,11 @@
 
 #define SPDK_VHOST_IOVS_MAX 128
 
+/*
+ * Arbitrary chosen minimal time betwean two IRQ
+ */
+#define SPDK_VHOST_USED_RING_IRQ_INTERVAL_US 100
+
 #define SPDK_VHOST_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
 	(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
 	(1ULL << VIRTIO_F_VERSION_1) | \
@@ -83,6 +88,9 @@ enum spdk_vhost_dev_type {
 
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
+
+	uint16_t enqueued_reqs;
+	uint64_t next_event_time;
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_dev_backend {
@@ -117,6 +125,9 @@ struct spdk_vhost_dev {
 
 	uint16_t num_queues;
 	uint64_t negotiated_features;
+
+	uint64_t min_event_interval;
+
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 };
 
@@ -150,6 +161,25 @@ bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct spdk_vhost_
 int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
 			   uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
 			   uint32_t *desc_table_size);
+
+/**
+ * Send IRQ/call client (if pending) for \c vq.
+ * \param vdev vhost device
+ * \param vq virtqueue
+ * \return
+ *   0 - if no interrupt was signalled
+ *   1 - if interrupt was signalled
+ */
+int spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq);
+
+
+/**
+ * Send IRQs for all queues that need to be signaled.
+ * \param vdev vhost device
+ * \param vq virtqueue
+ */
+void spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev);
+
 void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
 				     uint16_t id, uint32_t len);
 
@@ -170,6 +200,7 @@ bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
 int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 				 uint16_t *iov_index, const struct vring_desc *desc);
+
 bool spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id);
 
 int spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
