@@ -147,6 +147,98 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue 
 	return 0;
 }
 
+int
+spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue)
+{
+	if (virtqueue->used_req_cnt == false) {
+		return 0;
+	}
+
+	virtqueue->req_cnt += virtqueue->used_req_cnt;
+	virtqueue->used_req_cnt = 0;
+	virtqueue->irq_cnt++;
+
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
+		      "Queue %td - USED RING: sending IRQ: last used %"PRIu16"\n",
+		      virtqueue - vdev->virtqueue, virtqueue->vring.last_used_idx);
+
+	eventfd_write(virtqueue->vring.callfd, (eventfd_t)1);
+	return 1;
+}
+
+
+static void
+check_dev_io_stats(struct spdk_vhost_dev *vdev, uint64_t now)
+{
+	struct spdk_vhost_virtqueue *virtqueue;
+	uint16_t io_treshold = vdev->irq_delay_threshold;
+	uint32_t irq_delay_time;
+	uint16_t q_idx;
+
+	if (vdev->irq_delay_time_base == 0 || now < vdev->next_stats_check_time) {
+		return;
+	}
+
+	vdev->next_stats_check_time = now + vdev->check_stats_interval;
+	for (q_idx = 0; q_idx < vdev->num_queues; q_idx++) {
+		virtqueue = &vdev->virtqueue[q_idx];
+
+		if (virtqueue->req_cnt < io_treshold) {
+			virtqueue->irq_delay_time = 0;
+		} else {
+			irq_delay_time = vdev->irq_delay_time_base;
+			irq_delay_time <<= virtqueue->req_cnt / 4;
+			virtqueue->irq_delay_time = spdk_min((uint32_t)UINT16_MAX, irq_delay_time);
+		}
+
+		virtqueue->req_cnt = 0;
+		virtqueue->irq_cnt = 0;
+		virtqueue->next_event_time = now;
+	}
+}
+
+void
+spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev)
+{
+	struct spdk_vhost_virtqueue *virtqueue;
+	uint64_t now;
+	uint16_t q_idx;
+
+	now = spdk_get_ticks();
+	check_dev_io_stats(vdev, now);
+
+	for (q_idx = vdev->last_singaled_vq; q_idx < vdev->num_queues; q_idx++) {
+		virtqueue = &vdev->virtqueue[q_idx];
+		if (virtqueue->irq_delay_time == 0) {
+			if (!spdk_vhost_vq_used_signal(vdev, virtqueue)) {
+				continue;
+			}
+
+			vdev->last_singaled_vq = q_idx;
+			return;
+
+		}
+
+		/* No need for event right now */
+		if (now < virtqueue->next_event_time ||
+		    (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
+			continue;
+		}
+
+		if (!spdk_vhost_vq_used_signal(vdev, virtqueue)) {
+			continue;
+		}
+
+		/* Syscall is quite long so refresh the time now */
+		now = spdk_get_ticks();
+		virtqueue->next_event_time = now + virtqueue->irq_delay_time;
+		vdev->last_singaled_vq = q_idx;
+		return;
+	}
+
+	vdev->last_singaled_vq = 0;
+}
+
 /*
  * Enqueue id and len to used ring.
  */
@@ -154,13 +246,13 @@ void
 spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
 				uint16_t id, uint32_t len)
 {
-	int need_event = 0;
 	struct rte_vhost_vring *vring = &virtqueue->vring;
 	struct vring_used *used = vring->used;
 	uint16_t last_idx = vring->last_used_idx & (vring->size - 1);
 
-	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING, "USED: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
-		      vring->last_used_idx, id, len);
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_RING,
+		      "Queue %td - USED RING: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
+		      virtqueue - vdev->virtqueue, vring->last_used_idx, id, len);
 
 	vring->last_used_idx++;
 	used->ring[last_idx].id = id;
@@ -169,16 +261,13 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	spdk_wmb();
 	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
 
-	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
-	    spdk_unlikely(vring->avail->idx == vring->last_avail_idx)) {
-		need_event = 1;
-	} else {
-		spdk_mb();
-		need_event = !(vring->avail->flags & VRING_AVAIL_F_NO_INTERRUPT);
-	}
+	virtqueue->used_req_cnt++;
 
-	if (need_event) {
-		eventfd_write(vring->callfd, (eventfd_t)1);
+	/* We need to signal every last_used_idx overflow. */
+	if (vring->last_used_idx == 0 ||
+	    (spdk_vhost_dev_has_feature(vdev, VIRTIO_F_NOTIFY_ON_EMPTY) &&
+	     spdk_unlikely(vring->avail->idx == vring->last_avail_idx))) {
+		spdk_vhost_vq_used_signal(vdev, virtqueue);
 	}
 }
 
@@ -460,6 +549,12 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	vdev->cpumask = cpumask;
 	vdev->type = type;
 	vdev->backend = backend;
+	vdev->irq_delay_time_base = SPDK_VHOST_DEFFAULT_IRQ_INTERVAL_US * spdk_get_ticks_hz() /
+				    1000000ULL;
+	vdev->next_stats_check_time = 0;
+	vdev->check_stats_interval = SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS * spdk_get_ticks_hz() /
+				     1000UL;
+	vdev->irq_delay_threshold = SPDK_VHOST_VQ_COALESCING_THRESHOLD;
 
 	g_spdk_vhost_devices[ctrlr_num] = vdev;
 
