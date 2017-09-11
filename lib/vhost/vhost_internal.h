@@ -66,6 +66,13 @@
 
 #define SPDK_VHOST_IOVS_MAX 128
 
+/*
+ * Arbitrary chosen minimal time betwean two IRQ
+ */
+#define SPDK_VHOST_USED_RING_IRQ_INTERVAL_US 200
+
+#define SPDK_VHOST_IRQ_POLLER_PERIOD_US 50
+
 #define SPDK_VHOST_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
 	(1ULL << VHOST_USER_F_PROTOCOL_FEATURES) | \
 	(1ULL << VIRTIO_F_VERSION_1) | \
@@ -85,6 +92,8 @@ struct spdk_vhost_virtqueue {
 	uint16_t size_mask;
 
 	uint16_t signaled_used_idx;
+	bool event_pending;
+	uint64_t next_event_time;
 	volatile uint16_t *used_event;
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
@@ -111,6 +120,10 @@ struct spdk_vhost_dev {
 
 	uint16_t num_queues;
 	uint64_t negotiated_features;
+
+	uint64_t min_event_interval;
+	struct spdk_poller *used_ring_irq_poller;
+
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 };
 
@@ -126,6 +139,8 @@ bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_v
 int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
 			   uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
 			   uint32_t *desc_table_len);
+
+void spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue);
 
 void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev,
 				     struct spdk_vhost_virtqueue *virtqueue,

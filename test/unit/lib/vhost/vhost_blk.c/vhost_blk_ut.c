@@ -61,8 +61,11 @@ struct spdk_io_channel {
 
 DEFINE_STUB(spdk_ring_enqueue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);
 DEFINE_STUB(spdk_ring_dequeue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);
-DEFINE_STUB_V(spdk_vhost_vq_used_ring_enqueue, (struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue, uint16_t id, uint32_t len));
-DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue, uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table, uint32_t *desc_table_size), -1);
+DEFINE_STUB_V(spdk_vhost_vq_used_ring_enqueue, (struct spdk_vhost_dev *vdev,
+		struct spdk_vhost_virtqueue *virtqueue, uint16_t id, uint32_t len));
+DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct spdk_vhost_dev *vdev,
+		struct spdk_vhost_virtqueue *virtqueue, uint16_t req_idx, struct vring_desc **desc,
+		struct vring_desc **desc_table, uint32_t *desc_table_size), -1);
 DEFINE_STUB(spdk_vhost_vring_desc_is_wr, bool, (struct vring_desc *cur_desc), false);
 DEFINE_STUB(spdk_vhost_vring_desc_to_iov, int, (struct spdk_vhost_dev *vdev, struct iovec *iov,
 		uint16_t *iov_index, const struct vring_desc *desc), 0);
@@ -79,7 +82,8 @@ DEFINE_STUB(spdk_bdev_writev, int, (struct spdk_bdev_desc *desc, struct spdk_io_
 				    uint64_t offset, uint64_t len,
 				    spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
 DEFINE_STUB_P(spdk_bdev_get_product_name, const char, (const struct spdk_bdev *bdev), {0});
-DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs, uint16_t reqs_len), 0);
+DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct spdk_vhost_virtqueue *virtqueue,
+		uint16_t *reqs, uint16_t reqs_len), 0);
 DEFINE_STUB_V(spdk_vhost_dev_mem_register, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB_V(spdk_poller_register, (struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 				     uint32_t lcore, uint64_t period_microseconds));
