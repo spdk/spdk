@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a4e75e6_99a934a2",
+        "filename": "test/unit/lib/blob/bs_dev_common.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-11T22:28:14Z",
+      "side": 1,
+      "message": "keep the memset here",
+      "revId": "f6afc59adaf7088420d9c9dfa6fa52f2363ff053",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
