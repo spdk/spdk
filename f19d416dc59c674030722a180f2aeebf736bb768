@@ -69,6 +69,30 @@
       "revId": "f19d416dc59c674030722a180f2aeebf736bb768",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cea06927_101714d8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1825,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-09-11T15:16:32Z",
+      "side": 1,
+      "message": "From my reservation, it is the variable in the structure, so part does need to be freed",
+      "parentUuid": "62d1bfa4_9fe45f94",
+      "range": {
+        "startLine": 1825,
+        "startChar": 1,
+        "endLine": 1825,
+        "endChar": 2
+      },
+      "revId": "f19d416dc59c674030722a180f2aeebf736bb768",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
