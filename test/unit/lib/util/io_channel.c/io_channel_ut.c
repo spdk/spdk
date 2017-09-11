@@ -36,6 +36,8 @@
 #include "spdk_cunit.h"
 
 #include "util/io_channel.c"
+#include "lib/test_env.c"
+#include "lib/ut_multithread.c"
 
 static void
 _send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
@@ -45,6 +47,58 @@ _send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 
 static void
 thread_alloc(void)
+{
+	CU_ASSERT(TAILQ_EMPTY(&g_threads));
+	allocate_threads(1);
+	CU_ASSERT(!TAILQ_EMPTY(&g_threads));
+	free_threads();
+	CU_ASSERT(TAILQ_EMPTY(&g_threads));
+}
+
+static void
+send_msg_cb(void *ctx)
+{
+	bool *done = ctx;
+
+	*done = true;
+}
+
+static void
+thread_send_msg(void)
+{
+	struct spdk_thread *thread0;
+	bool done = false;
+	
+	allocate_threads(2);
+	set_thread(0);
+	thread0 = spdk_get_thread();
+
+	set_thread(1);
+	/* Simulate thread 1 sending a message to thread 0. */
+	spdk_thread_send_msg(thread0, send_msg_cb, &done);
+
+	/* We have not polled thread 0 yet, so done should be false. */
+	CU_ASSERT(!done);
+
+	/*
+	 * Poll thread 1.  The message was sent to thread 0, so this should be
+	 *  a nop and done should still be false.
+	 */
+	poll_thread(1);
+	CU_ASSERT(!done);
+
+	/*
+	 * Poll thread 0.  This should execute the message and done should then
+	 *  be true.
+	 */
+	poll_thread(0);
+	CU_ASSERT(done);
+
+	free_threads();
+}
+
+static void
+thread_name(void)
 {
 	struct spdk_thread *thread;
 	const char *name;
@@ -189,6 +243,8 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "thread_alloc", thread_alloc) == NULL ||
+		CU_add_test(suite, "thread_send_msg", thread_send_msg) == NULL ||
+		CU_add_test(suite, "thread_name", thread_name) == NULL ||
 		CU_add_test(suite, "channel", channel) == NULL
 	) {
 		CU_cleanup_registry();
