@@ -54,6 +54,7 @@
 #include <virtio_user/virtio_user_dev.h>
 
 #include "spdk/scsi_spec.h"
+#include "bdev_virtio.h"
 
 #define BDEV_VIRTIO_MAX_TARGET 64
 #define BDEV_VIRTIO_SCAN_PAYLOAD_SIZE 256
@@ -521,6 +522,12 @@ out:
 
 static void bdev_virtio_finish(void)
 {
+}
+
+int
+spdk_virtio_user_scsi_connect(const char *path, uint32_t max_queue, uint32_t vq_size)
+{
+	return 0;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio", SPDK_TRACE_VIRTIO)
