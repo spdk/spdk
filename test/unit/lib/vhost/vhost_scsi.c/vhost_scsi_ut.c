@@ -62,6 +62,8 @@ DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct spdk_vhost_virtqueue
 DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_virtqueue *virtqueue, uint16_t req_idx, struct vring_desc **desc,
 		struct vring_desc **desc_table, uint32_t *desc_table_size), -1);
+DEFINE_STUB_V(spdk_vhost_vq_used_signal, (struct spdk_vhost_dev *vdev,
+		struct spdk_vhost_virtqueue *virtqueue));
 DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, uint64_t addr), {0});
 DEFINE_STUB_V(spdk_vhost_vq_used_ring_enqueue, (struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_virtqueue *virtqueue, uint16_t id, uint32_t len));
