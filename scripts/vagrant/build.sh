@@ -33,7 +33,7 @@ echo DISTRIB_CODENAME: $DISTRIB_CODENAME
 echo DISTRIB_DESCRIPTION: $DISTRIB_DESCRIPTION
 
 cd $SPDK_DIR
-$SUDOCMD ./scripts/pkgdep.sh
+./scripts/pkgdep.sh
 $SUDOCMD ./configure --enable-debug
 $SUDOCMD make clean
 $SUDOCMD make -j2
