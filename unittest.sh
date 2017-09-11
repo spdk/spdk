@@ -46,6 +46,8 @@ $valgrind test/unit/lib/bdev/scsi_nvme.c/scsi_nvme_ut
 $valgrind test/unit/lib/bdev/gpt/gpt.c/gpt_ut
 $valgrind test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut
 
+$valgrind test/unit/lib/bdev/mt/bdev.c/bdev_ut
+
 $valgrind test/unit/lib/blob/blob.c/blob_ut
 $valgrind test/unit/lib/blobfs/tree.c/tree_ut
 
