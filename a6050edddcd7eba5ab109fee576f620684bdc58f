@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9783b791_064851e2",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T13:12:33Z",
+      "side": 1,
+      "message": "Same line as above, please remove.",
+      "range": {
+        "startLine": 321,
+        "startChar": 0,
+        "endLine": 321,
+        "endChar": 63
+      },
+      "revId": "a6050edddcd7eba5ab109fee576f620684bdc58f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f408ec66_2e18065e",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T13:12:33Z",
+      "side": 1,
+      "message": "This can be removed, as I don\u0027t think this test case is necessary as presented. Name make it seem like it is test case 10, but test steps make it test case 11. Not sure how \"nesting\" first lvs might change outcome of the test.",
+      "range": {
+        "startLine": 329,
+        "startChar": 0,
+        "endLine": 330,
+        "endChar": 54
+      },
+      "revId": "a6050edddcd7eba5ab109fee576f620684bdc58f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3c97425_4d69325e",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-11T13:12:33Z",
+      "side": 1,
+      "message": "I\u0027m not sure this test requires three lvol stores to test. More readable and adequate test case would be with two lvol stores and deleting the first one. Please revise test steps below.",
+      "revId": "a6050edddcd7eba5ab109fee576f620684bdc58f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
