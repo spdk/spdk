@@ -377,8 +377,8 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       ch,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
-				       bdev_io->u.write.num_blocks,
-				       bdev_io->u.write.offset_blocks);
+				       bdev_io->u.unmap.offset_blocks,
+				       bdev_io->u.unmap.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
