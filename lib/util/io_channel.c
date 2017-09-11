@@ -404,7 +404,6 @@ struct call_channel {
 	void *ctx;
 
 	struct spdk_thread *cur_thread;
-	struct spdk_io_channel *cur_ch;
 
 	struct spdk_thread *orig_thread;
 	spdk_channel_for_each_cpl cpl;
@@ -429,9 +428,22 @@ _call_channel(void *ctx)
 	struct spdk_io_channel *ch;
 
 	thread = ch_ctx->cur_thread;
-	ch = ch_ctx->cur_ch;
+	pthread_mutex_lock(&g_devlist_mutex);
+	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+		if (ch->dev->io_device == ch_ctx->io_device) {
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_devlist_mutex);
 
-	ch_ctx->fn(ch_ctx->io_device, ch, ch_ctx->ctx);
+	/*
+	 * It is possible that the channel was deleted before this
+	 *  message had a chance to execute.  If so, skip calling
+	 *  the fn() on this thread.
+	 */
+	if (ch != NULL) {
+		ch_ctx->fn(ch_ctx->io_device, ch, ch_ctx->ctx);
+	}
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	thread = TAILQ_NEXT(thread, tailq);
@@ -439,7 +451,6 @@ _call_channel(void *ctx)
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 			if (ch->dev->io_device == ch_ctx->io_device) {
 				ch_ctx->cur_thread = thread;
-				ch_ctx->cur_ch = ch;
 				pthread_mutex_unlock(&g_devlist_mutex);
 				spdk_thread_send_msg(thread, _call_channel, ch_ctx);
 				return;
@@ -479,7 +490,6 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 			if (ch->dev->io_device == io_device) {
 				ch_ctx->cur_thread = thread;
-				ch_ctx->cur_ch = ch;
 				pthread_mutex_unlock(&g_devlist_mutex);
 				spdk_thread_send_msg(thread, _call_channel, ch_ctx);
 				return;
