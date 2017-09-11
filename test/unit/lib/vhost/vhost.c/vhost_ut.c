@@ -44,10 +44,15 @@ DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
 	    (uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2), NULL);
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
+DEFINE_STUB(spdk_get_ticks_hz, uint64_t, (void), 0);
+DEFINE_STUB(spdk_get_ticks, uint64_t, (void), 0);
 DEFINE_STUB(spdk_vtophys, uint64_t, (void *vaddr), 1);
 DEFINE_STUB(spdk_app_get_core_mask, uint64_t, (void), 0);
 DEFINE_STUB_V(spdk_app_stop, (int rc));
 DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
+DEFINE_STUB_V(spdk_poller_register, (struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
+				     uint32_t lcore, uint64_t period_microseconds));
+DEFINE_STUB_V(spdk_poller_unregister, (struct spdk_poller **ppoller, struct spdk_event *complete));
 DEFINE_STUB(spdk_iommu_mem_unregister, int, (uint64_t addr, uint64_t len), 0);
 DEFINE_STUB(rte_vhost_get_mem_table, int, (int vid, struct rte_vhost_memory **mem), 0);
 DEFINE_STUB(rte_vhost_get_negotiated_features, int, (int vid, uint64_t *features), 0);
