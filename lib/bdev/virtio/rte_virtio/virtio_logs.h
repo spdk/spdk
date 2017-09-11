@@ -36,6 +36,11 @@
 
 #include <rte_log.h>
 
+/* Make sure DEBUG macro doesn't shadow DEBUG log level */
+#ifdef DEBUG
+#undef DEBUG
+#endif
+
 #ifdef RTE_LIBRTE_VIRTIO_DEBUG_INIT
 #define PMD_INIT_LOG(level, fmt, args...) \
 	RTE_LOG(level, PMD, "%s(): " fmt "\n", __func__, ## args)
