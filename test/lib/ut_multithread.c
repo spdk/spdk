@@ -35,12 +35,12 @@
 #include "spdk/io_channel.h"
 #include "spdk_internal/mock.h"
 
-static int g_ut_num_threads;
+static uint32_t g_ut_num_threads;
 
 int allocate_threads(int num_threads);
 void free_threads(void);
 void poll_threads(void);
-int poll_thread(int thread_id);
+int poll_thread(uintptr_t thread_id);
 
 struct ut_msg {
 	spdk_thread_fn		fn;
@@ -70,26 +70,20 @@ __send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	TAILQ_INSERT_TAIL(&thread->msgs, msg, link);
 }
 
-static pthread_t g_thread_id = MOCK_PASS_THRU;
-
-static int
-get_current_thread_id(void)
-{
-	return g_thread_id == (pthread_t)MOCK_PASS_THRU ? -1 : (int)g_thread_id;
-}
+static uintptr_t g_thread_id = MOCK_PASS_THRU;
 
 static void
-set_thread(pthread_t thread_id)
+set_thread(uintptr_t thread_id)
 {
 	g_thread_id = thread_id;
-	MOCK_SET(pthread_self, pthread_t, thread_id);
+	MOCK_SET(pthread_self, pthread_t, (pthread_t)thread_id);
 }
 
 int
 allocate_threads(int num_threads)
 {
 	struct spdk_thread *thread;
-	int i;
+	uint32_t i;
 
 	g_ut_num_threads = num_threads;
 
@@ -112,7 +106,7 @@ allocate_threads(int num_threads)
 void
 free_threads(void)
 {
-	int i;
+	uint32_t i;
 
 	for (i = 0; i < g_ut_num_threads; i++) {
 		set_thread(i);
@@ -125,17 +119,17 @@ free_threads(void)
 }
 
 int
-poll_thread(int thread_id)
+poll_thread(uintptr_t thread_id)
 {
 	int count = 0;
 	struct ut_thread *thread = &g_ut_threads[thread_id];
 	struct ut_msg *msg;
-	int original_thread_id;
+	uintptr_t original_thread_id;
 
-	CU_ASSERT(thread_id != (int)MOCK_PASS_THRU);
+	CU_ASSERT(thread_id != (uintptr_t)MOCK_PASS_THRU);
 	CU_ASSERT(thread_id < g_ut_num_threads);
 
-	original_thread_id = get_current_thread_id();
+	original_thread_id = g_thread_id;
 	set_thread(thread_id);
 
 	while (!TAILQ_EMPTY(&thread->msgs)) {
@@ -156,7 +150,7 @@ void
 poll_threads(void)
 {
 	bool msg_processed;
-	int i, count;
+	uint32_t i, count;
 
 	while (true) {
 		msg_processed = false;
