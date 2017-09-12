@@ -225,8 +225,9 @@ struct spdk_blob_md_page {
 	uint32_t	reserved0;
 
 	/* Descriptors here */
-	uint8_t		descriptors[4072];
+	uint8_t		descriptors[4068];
 
+	uint32_t	prior;
 	uint32_t	next;
 	uint32_t	crc;
 };

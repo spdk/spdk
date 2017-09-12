@@ -323,6 +323,7 @@ _spdk_blob_serialize_add_page(const struct spdk_blob *blob,
 	page->id = blob->id;
 	page->sequence_num = *page_count - 1;
 	page->next = SPDK_INVALID_MD_PAGE;
+	page->prior = SPDK_INVALID_MD_PAGE;
 	*last_page = page;
 
 	return 0;
@@ -1026,6 +1027,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 		page_num = spdk_bit_array_find_first_clear(bs->used_md_pages, page_num);
 		ctx->pages[i - 1].next = page_num;
 		blob->active.pages[i] = page_num;
+		ctx->pages[i].prior = blob->active.pages[i - 1];
 		spdk_bit_array_set(bs->used_md_pages, page_num);
 		ctx->pages[i - 1].crc = _spdk_blob_md_page_calc_crc(&ctx->pages[i - 1]);
 		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Claiming page %u for blob %lu\n", page_num, blob->id);
