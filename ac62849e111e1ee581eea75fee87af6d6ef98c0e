@@ -16,6 +16,24 @@
       "revId": "ac62849e111e1ee581eea75fee87af6d6ef98c0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "165ad591_7c42da05",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-12T21:58:40Z",
+      "side": 1,
+      "message": "Hmm, you\u0027re right - it shouldn\u0027t cause any problems, just a few extra iteration of the loop, but I\u0027ll update it.",
+      "parentUuid": "3e98314e_a06b3be5",
+      "revId": "ac62849e111e1ee581eea75fee87af6d6ef98c0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
