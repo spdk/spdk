@@ -161,6 +161,12 @@ bdev_blob_destroy(struct spdk_bs_dev *bs_dev)
 struct spdk_bs_dev *
 spdk_bdev_create_bs_dev(struct spdk_bdev *bdev)
 {
+	return spdk_bdev_create_bs_dev_rw(bdev, true);
+}
+
+struct spdk_bs_dev *
+spdk_bdev_create_bs_dev_rw(struct spdk_bdev *bdev, bool write)
+{
 	struct blob_bdev *b;
 	struct spdk_bdev_desc *desc;
 	int rc;
@@ -172,7 +178,7 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev)
 		return NULL;
 	}
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	rc = spdk_bdev_open(bdev, write, NULL, NULL, &desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not open bdev, error=%d\n", rc);
 		free(b);
