@@ -50,9 +50,10 @@ spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
-void
-spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
+int
+spdk_nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
 {
+	return -1;
 }
 
 int
@@ -116,45 +117,9 @@ spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 {
 }
 
-void
-spdk_nvmf_property_get(struct spdk_nvmf_ctrlr *ctrlr,
-		       struct spdk_nvmf_fabric_prop_get_cmd *cmd,
-		       struct spdk_nvmf_fabric_prop_get_rsp *response)
-{
-}
-
-void
-spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
-		       struct spdk_nvmf_fabric_prop_set_cmd *cmd,
-		       struct spdk_nvme_cpl *rsp)
-{
-}
-
-void
-spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
-				 uint64_t offset, uint32_t length)
-{
-}
-
 static void
-test_nvmf_process_fabrics_cmd(void)
+test_placeholder(void)
 {
-	struct	spdk_nvmf_request req = {};
-	int	ret;
-	struct	spdk_nvmf_qpair req_qpair = {};
-	union	nvmf_h2c_msg  req_cmd = {};
-	union	nvmf_c2h_msg   req_rsp = {};
-
-	req.qpair = &req_qpair;
-	req.cmd  = &req_cmd;
-	req.rsp  = &req_rsp;
-	req.qpair->ctrlr = NULL;
-
-	/* No ctrlr and invalid command check */
-	req.cmd->nvmf_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
-	ret = nvmf_process_fabrics_command(&req);
-	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
-	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
 }
 
 int main(int argc, char **argv)
@@ -173,7 +138,7 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "nvmf_process_fabrics_command", test_nvmf_process_fabrics_cmd) == NULL) {
+		CU_add_test(suite, "placeholder", test_placeholder) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
