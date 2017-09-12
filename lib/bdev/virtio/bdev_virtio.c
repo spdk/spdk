@@ -77,6 +77,10 @@ struct virtio_scsi_scan_base {
 	struct virtio_hw		*hw;
 	struct spdk_bdev_poller		*scan_poller;
 	unsigned			refcount;
+
+	/* Disks to be registered after the scan finishes */
+	TAILQ_HEAD(, virtio_scsi_disk) found_disks;
+
 	struct virtio_scsi_scan_buf	buf[BDEV_VIRTIO_MAX_TARGET];
 };
 
@@ -85,6 +89,7 @@ struct virtio_scsi_disk {
 	struct virtio_hw	*hw;
 	uint64_t		num_blocks;
 	uint32_t		block_size;
+	TAILQ_ENTRY(virtio_scsi_disk) link;
 };
 
 struct bdev_virtio_io_channel {
@@ -284,13 +289,25 @@ bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 static void
 scan_target_finish(struct virtio_scsi_scan_base *base)
 {
+	struct virtio_scsi_disk *disk;
+
 	assert(base->refcount > 0);
 	base->refcount--;
-	if (base->refcount == 0) {
-		spdk_bdev_poller_stop(&base->scan_poller);
-		spdk_dma_free(base);
-		spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+	if (base->refcount > 0) {
+		return;
 	}
+
+	spdk_bdev_poller_stop(&base->scan_poller);
+
+	while ((disk = TAILQ_FIRST(&base->found_disks))) {
+		TAILQ_REMOVE(&base->found_disks, disk, link);
+		spdk_io_device_register(&disk->hw, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
+					sizeof(struct bdev_virtio_io_channel));
+		spdk_bdev_register(&disk->bdev);
+	}
+
+	spdk_dma_free(base);
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 }
 
 static int
@@ -356,10 +373,7 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	bdev->fn_table = &virtio_fn_table;
 	bdev->module = SPDK_GET_BDEV_MODULE(virtio_scsi);
 
-	spdk_io_device_register(&disk->hw, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
-				sizeof(struct bdev_virtio_io_channel));
-	spdk_bdev_register(bdev);
-
+	TAILQ_INSERT_TAIL(&base->found_disks, disk, link);
 	scan_target_finish(base);
 	return 0;
 }
@@ -503,6 +517,7 @@ bdev_virtio_initialize(void)
 
 	base->hw = hw;
 	base->refcount = BDEV_VIRTIO_MAX_TARGET;
+	TAILQ_INIT(&base->found_disks);
 
 	spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,
 			       spdk_env_get_current_core(), 0);
