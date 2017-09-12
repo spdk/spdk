@@ -110,66 +110,6 @@ nvmf_process_property_set(struct spdk_nvmf_request *req)
 }
 
 static spdk_nvmf_request_exec_status
-nvmf_process_connect(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_tgt		*tgt;
-	struct spdk_nvmf_subsystem	*subsystem;
-	struct spdk_nvmf_fabric_connect_data *data = (struct spdk_nvmf_fabric_connect_data *)
-			req->data;
-	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
-	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
-	void *end;
-
-	if (cmd->recfmt != 0) {
-		SPDK_ERRLOG("Connect command unsupported RECFMT %u\n", cmd->recfmt);
-		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INCOMPATIBLE_FORMAT;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
-		SPDK_ERRLOG("Connect command data length 0x%x too small\n", req->length);
-		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	/* Ensure that subnqn and hostnqn are null terminated */
-	end = memchr(data->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
-	if (!end) {
-		SPDK_ERRLOG("Connect SUBNQN is not null terminated\n");
-		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	end = memchr(data->hostnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
-	if (!end) {
-		SPDK_ERRLOG("Connect HOSTNQN is not null terminated\n");
-		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, hostnqn);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	tgt = req->qpair->transport->tgt;
-
-	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
-	if (subsystem == NULL) {
-		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
-		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	if (!spdk_nvmf_subsystem_host_allowed(subsystem, data->hostnqn)) {
-		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s'\n", data->subnqn, data->hostnqn);
-		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-
-	spdk_nvmf_ctrlr_connect(req->qpair, cmd, req->data, rsp);
-
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-}
-
-static spdk_nvmf_request_exec_status
 nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_qpair *qpair = req->qpair;
@@ -180,7 +120,8 @@ nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
 	if (qpair->ctrlr == NULL) {
 		/* No ctrlr established yet; the only valid command is Connect */
 		if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
-			return nvmf_process_connect(req);
+			spdk_nvmf_ctrlr_connect(req);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		} else {
 			SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Got fctype 0x%x, expected Connect\n",
 				      cap_hdr->fctype);

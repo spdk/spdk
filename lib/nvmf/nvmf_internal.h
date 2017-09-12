@@ -222,10 +222,7 @@ void spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
 			    struct spdk_nvmf_fabric_prop_set_cmd *cmd,
 			    struct spdk_nvme_cpl *rsp);
 
-void spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
-			     struct spdk_nvmf_fabric_connect_cmd *cmd,
-			     struct spdk_nvmf_fabric_connect_data *data,
-			     struct spdk_nvmf_fabric_connect_rsp *rsp);
+void spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req);
 struct spdk_nvmf_qpair *spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid);
 int spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr);
 void spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
