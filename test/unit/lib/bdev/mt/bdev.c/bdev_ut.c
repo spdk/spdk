@@ -51,12 +51,19 @@ struct ut_bdev {
 	int			io_target;
 };
 
+struct ut_bdev_channel {
+	TAILQ_HEAD(, spdk_bdev_io)	outstanding_io;
+};
+
 struct ut_bdev g_bdev;
 struct spdk_bdev_desc *g_desc;
 
 static int
 stub_create_ch(void *io_device, void *ctx_buf)
 {
+	struct ut_bdev_channel *ch = ctx_buf;
+
+	TAILQ_INIT(&ch->outstanding_io);
 	return 0;
 }
 
@@ -77,9 +84,34 @@ stub_destruct(void *ctx)
 	return 0;
 }
 
+static void
+stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
+{
+	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+
+	TAILQ_INSERT_TAIL(&ch->outstanding_io, bdev_io, module_link);
+}
+
+static void
+stub_complete_io(void)
+{
+	struct spdk_io_channel *_ch = spdk_get_io_channel(&g_bdev.io_target);
+	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev_io *io;
+
+	while (!TAILQ_EMPTY(&ch->outstanding_io)) {
+		io = TAILQ_FIRST(&ch->outstanding_io);
+		TAILQ_REMOVE(&ch->outstanding_io, io, module_link);
+		spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	}
+
+	spdk_put_io_channel(_ch);
+}
+
 static struct spdk_bdev_fn_table fn_table = {
 	.get_io_channel =	stub_get_io_channel,
 	.destruct =		stub_destruct,
+	.submit_request =	stub_submit_request,
 };
 
 static int
@@ -102,7 +134,8 @@ register_bdev(void)
 	g_bdev.bdev.fn_table = &fn_table;
 	g_bdev.bdev.module = SPDK_GET_BDEV_MODULE(bdev_ut);
 
-	spdk_io_device_register(&g_bdev.io_target, stub_create_ch, stub_destroy_ch, 0);
+	spdk_io_device_register(&g_bdev.io_target, stub_create_ch, stub_destroy_ch,
+				sizeof(struct ut_bdev_channel));
 	spdk_bdev_register(&g_bdev.bdev);
 }
 
@@ -145,7 +178,7 @@ teardown_test(void)
 }
 
 static void
-test1(void)
+basic(void)
 {
 	setup_test();
 
@@ -153,6 +186,41 @@ test1(void)
 
 	g_ut_threads[0].ch = spdk_bdev_get_io_channel(g_desc);
 	spdk_put_io_channel(g_ut_threads[0].ch);
+
+	teardown_test();
+}
+
+static void
+reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	bool *done = cb_arg;
+
+	CU_ASSERT(success == true);
+	*done = true;
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+put_channel_during_reset(void)
+{
+	struct spdk_io_channel *io_ch;
+	bool done = false;
+
+	setup_test();
+
+	set_thread(0);
+	io_ch = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(io_ch != NULL);
+
+	/*
+	 * Start a reset, but then put the I/O channel before
+	 *  the deferred messages for the reset get a chance to
+	 *  execute.
+	 */
+	spdk_bdev_reset(g_desc, io_ch, reset_done, &done);
+	spdk_put_io_channel(io_ch);
+	poll_threads();
+	stub_complete_io();
 
 	teardown_test();
 }
@@ -174,7 +242,8 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "test1", test1) == NULL
+		CU_add_test(suite, "basic", basic) == NULL ||
+		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
