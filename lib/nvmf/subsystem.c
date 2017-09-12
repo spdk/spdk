@@ -110,10 +110,6 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 	}
 
 	subsystem->tgt = tgt;
-
-	tgt->current_subsystem_id++;
-
-	subsystem->id = tgt->current_subsystem_id;
 	subsystem->subtype = type;
 	subsystem->max_nsid = num_ns;
 	subsystem->num_allocated_nsid = 0;
