@@ -1,0 +1,13 @@
+[Global]
+
+[Rpc]
+  Enable Yes
+
+[Ioat]
+  Disable Yes
+
+[VhostScsi0]
+  Name vhost.0
+
+[VhostScsi1]
+  Name vhost.1
