@@ -242,6 +242,27 @@ test_get_log_page(void)
 	req.data = data;
 }
 
+static void
+test_process_fabrics_cmd(void)
+{
+	struct	spdk_nvmf_request req = {};
+	int	ret;
+	struct	spdk_nvmf_qpair req_qpair = {};
+	union	nvmf_h2c_msg  req_cmd = {};
+	union	nvmf_c2h_msg   req_rsp = {};
+
+	req.qpair = &req_qpair;
+	req.cmd  = &req_cmd;
+	req.rsp  = &req_rsp;
+	req.qpair->ctrlr = NULL;
+
+	/* No ctrlr and invalid command check */
+	req.cmd->nvmf_cmd.fctype = SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET;
+	ret = spdk_nvmf_ctrlr_process_fabrics_cmd(&req);
+	CU_ASSERT_EQUAL(req.rsp->nvme_cpl.status.sc, SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
+	CU_ASSERT_EQUAL(ret, SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -258,7 +279,9 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "get_log_page", test_get_log_page) == NULL) {
+		CU_add_test(suite, "get_log_page", test_get_log_page) == NULL ||
+		CU_add_test(suite, "process_fabrics_cmd", test_process_fabrics_cmd) == NULL
+	) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
