@@ -220,13 +220,15 @@ struct spdk_blob_md_descriptor {
 
 struct spdk_blob_md_page {
 	spdk_blob_id     id;
-
+	
+	uint32_t	page_num;
 	uint32_t        sequence_num;
 	uint32_t	reserved0;
 
 	/* Descriptors here */
-	uint8_t		descriptors[4072];
+	uint8_t		descriptors[4064];
 
+	uint32_t	prior;	
 	uint32_t	next;
 	uint32_t	crc;
 };
