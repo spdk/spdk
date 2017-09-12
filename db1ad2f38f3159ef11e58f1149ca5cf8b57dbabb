@@ -16,6 +16,24 @@
       "revId": "db1ad2f38f3159ef11e58f1149ca5cf8b57dbabb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3e067f7_3993b972",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-12T20:45:05Z",
+      "side": 1,
+      "message": "You\u0027re right, thanks. cnt should be always equal 1\nThe error message below also needs an update",
+      "parentUuid": "9480a169_671e54a2",
+      "revId": "db1ad2f38f3159ef11e58f1149ca5cf8b57dbabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
