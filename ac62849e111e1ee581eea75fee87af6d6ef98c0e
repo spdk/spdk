@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e98314e_a06b3be5",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-12T21:38:04Z",
+      "side": 1,
+      "message": "This value is a bit off now - I think you can just make it UINT16_MAX with a comment that you may evaluate some cntlid values more than once - otherwise it needs to be something like 0xFFEF.",
+      "revId": "ac62849e111e1ee581eea75fee87af6d6ef98c0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
