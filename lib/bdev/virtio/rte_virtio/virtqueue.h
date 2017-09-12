@@ -97,6 +97,12 @@ struct virtqueue {
 	 * VQ_RING_DESC_CHAIN_END.
 	 */
 	uint16_t  vq_desc_head_idx;
+
+	/**
+	 * Tail of the free chain in desc table. If
+	 * there are no free descriptors, this will be set to
+	 * VQ_RING_DESC_CHAIN_END.
+	 */
 	uint16_t  vq_desc_tail_idx;
 	uint16_t  vq_queue_index;   /**< PCI queue index */
 	uint16_t  *notify_addr;
