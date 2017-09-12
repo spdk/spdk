@@ -167,7 +167,7 @@ spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
 #define SPDK_NVMF_INVALID_CONNECT_DATA(rsp, field)	\
 	spdk_nvmf_invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
 
-void
+static int
 spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_fabric_connect_data *data = req->data;
@@ -183,7 +183,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
 		SPDK_ERRLOG("Connect command data length 0x%x too small\n", req->length);
 		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "recfmt 0x%x qid %u sqsize %u\n",
@@ -204,7 +204,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Connect command unsupported RECFMT %u\n", cmd->recfmt);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INCOMPATIBLE_FORMAT;
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	/* Ensure that subnqn is null terminated */
@@ -212,7 +212,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	if (!end) {
 		SPDK_ERRLOG("Connect SUBNQN is not null terminated\n");
 		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 	subnqn = data->subnqn;
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "  subnqn: \"%s\"\n", subnqn);
@@ -221,7 +221,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", subnqn);
 		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	/* Ensure that hostnqn is null terminated */
@@ -229,7 +229,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	if (!end) {
 		SPDK_ERRLOG("Connect HOSTNQN is not null terminated\n");
 		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, hostnqn);
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 	hostnqn = data->hostnqn;
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "  hostnqn: \"%s\"\n", hostnqn);
@@ -238,7 +238,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s'\n", subnqn, hostnqn);
 		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	/*
@@ -249,7 +249,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Invalid SQSIZE %u (min 1, max %u)\n",
 			    cmd->sqsize, tgt->opts.max_queue_depth - 1);
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, sqsize);
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 	qpair->sq_head_max = cmd->sqsize;
 	qpair->qid = cmd->qid;
@@ -263,7 +263,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 			/* This NVMf target only supports dynamic mode. */
 			SPDK_ERRLOG("The NVMf target only supports dynamic mode (CNTLID = 0x%x).\n", data->cntlid);
 			SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);
-			return;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
 		/* Establish a new ctrlr */
@@ -271,7 +271,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		if (!ctrlr) {
 			SPDK_ERRLOG("spdk_nvmf_ctrlr_create() failed\n");
 			rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-			return;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 	} else {
 		qpair->type = QPAIR_TYPE_IOQ;
@@ -281,33 +281,33 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("Unknown controller ID 0x%x\n", data->cntlid);
 			SPDK_NVMF_INVALID_CONNECT_DATA(rsp, cntlid);
-			return;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
 		if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 			SPDK_ERRLOG("I/O connect not allowed on discovery controller\n");
 			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-			return;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
 		if (!ctrlr->vcprop.cc.bits.en) {
 			SPDK_ERRLOG("Got I/O connect before ctrlr was enabled\n");
 			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-			return;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
 		if (1u << ctrlr->vcprop.cc.bits.iosqes != sizeof(struct spdk_nvme_cmd)) {
 			SPDK_ERRLOG("Got I/O connect with invalid IOSQES %u\n",
 				    ctrlr->vcprop.cc.bits.iosqes);
 			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-			return;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
 		if (1u << ctrlr->vcprop.cc.bits.iocqes != sizeof(struct spdk_nvme_cpl)) {
 			SPDK_ERRLOG("Got I/O connect with invalid IOCQES %u\n",
 				    ctrlr->vcprop.cc.bits.iocqes);
 			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-			return;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
 		/* check if we would exceed ctrlr connection limit */
@@ -315,12 +315,12 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 			SPDK_ERRLOG("qpair limit %d\n", ctrlr->num_qpairs);
 			rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
 			rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
-			return;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
 		if (spdk_nvmf_poll_group_add(ctrlr->group, qpair)) {
 			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-			return;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 	}
 
@@ -335,6 +335,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "connect capsule response: cntlid = 0x%04x\n",
 		      rsp->status_code_specific.success.cntlid);
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 void
@@ -506,11 +507,12 @@ find_prop(uint32_t ofst)
 	return NULL;
 }
 
-void
-spdk_nvmf_property_get(struct spdk_nvmf_ctrlr *ctrlr,
-		       struct spdk_nvmf_fabric_prop_get_cmd *cmd,
-		       struct spdk_nvmf_fabric_prop_get_rsp *response)
+static int
+spdk_nvmf_property_get(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvmf_fabric_prop_get_cmd *cmd = &req->cmd->prop_get_cmd;
+	struct spdk_nvmf_fabric_prop_get_rsp *response = &req->rsp->prop_get_rsp;
 	const struct nvmf_prop *prop;
 
 	response->status.sc = 0;
@@ -523,13 +525,13 @@ spdk_nvmf_property_get(struct spdk_nvmf_ctrlr *ctrlr,
 	    cmd->attrib.size != SPDK_NVMF_PROP_SIZE_8) {
 		SPDK_ERRLOG("Invalid size value %d\n", cmd->attrib.size);
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	prop = find_prop(cmd->ofst);
 	if (prop == NULL || prop->get_cb == NULL) {
 		/* Reserved properties return 0 when read */
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "name: %s\n", prop->name);
@@ -537,18 +539,21 @@ spdk_nvmf_property_get(struct spdk_nvmf_ctrlr *ctrlr,
 		SPDK_ERRLOG("offset 0x%x size mismatch: cmd %u, prop %u\n",
 			    cmd->ofst, cmd->attrib.size, prop->size);
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	response->value.u64 = prop->get_cb(ctrlr);
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "response value: 0x%" PRIx64 "\n", response->value.u64);
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-void
-spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
-		       struct spdk_nvmf_fabric_prop_set_cmd *cmd,
-		       struct spdk_nvme_cpl *response)
+static int
+spdk_nvmf_property_set(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvmf_fabric_prop_set_cmd *cmd = &req->cmd->prop_set_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
 	const struct nvmf_prop *prop;
 	uint64_t value;
 
@@ -559,7 +564,7 @@ spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
 	if (prop == NULL || prop->set_cb == NULL) {
 		SPDK_ERRLOG("Invalid offset 0x%x\n", cmd->ofst);
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "name: %s\n", prop->name);
@@ -567,7 +572,7 @@ spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
 		SPDK_ERRLOG("offset 0x%x size mismatch: cmd %u, prop %u\n",
 			    cmd->ofst, cmd->attrib.size, prop->size);
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
 	value = cmd->value.u64;
@@ -578,8 +583,10 @@ spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
 	if (!prop->set_cb(ctrlr, value)) {
 		SPDK_ERRLOG("prop set_cb failed\n");
 		response->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-		return;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
 int
@@ -1150,4 +1157,50 @@ invalid_opcode:
 	response->status.sct = SPDK_NVME_SCT_GENERIC;
 	response->status.sc = SPDK_NVME_SC_INVALID_OPCODE;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+int
+spdk_nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_capsule_cmd *cap_hdr;
+
+	cap_hdr = &req->cmd->nvmf_cmd;
+
+	if (qpair->ctrlr == NULL) {
+		/* No ctrlr established yet; the only valid command is Connect */
+		if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
+			return spdk_nvmf_ctrlr_connect(req);
+		} else {
+			SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Got fctype 0x%x, expected Connect\n",
+				      cap_hdr->fctype);
+			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+	} else if (qpair->type == QPAIR_TYPE_AQ) {
+		/*
+		 * Controller session is established, and this is an admin queue.
+		 * Disallow Connect and allow other fabrics commands.
+		 */
+		switch (cap_hdr->fctype) {
+		case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET:
+			return spdk_nvmf_property_set(req);
+		case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET:
+			return spdk_nvmf_property_get(req);
+		default:
+			SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "unknown fctype 0x%02x\n",
+				      cap_hdr->fctype);
+			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+	} else {
+		/* Controller session is established, and this is an I/O queue */
+		/* For now, no I/O-specific Fabrics commands are implemented (other than Connect) */
+		SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Unexpected I/O fctype 0x%x\n", cap_hdr->fctype);
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
 }

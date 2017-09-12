@@ -214,18 +214,10 @@ void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt,
 				      void *buffer, uint64_t offset,
 				      uint32_t length);
 
-void spdk_nvmf_property_get(struct spdk_nvmf_ctrlr *ctrlr,
-			    struct spdk_nvmf_fabric_prop_get_cmd *cmd,
-			    struct spdk_nvmf_fabric_prop_get_rsp *response);
-
-void spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
-			    struct spdk_nvmf_fabric_prop_set_cmd *cmd,
-			    struct spdk_nvme_cpl *rsp);
-
-void spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req);
 struct spdk_nvmf_qpair *spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid);
 int spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr);
 void spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
+int spdk_nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req);
 int spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req);
 int spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req);
 bool spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr);

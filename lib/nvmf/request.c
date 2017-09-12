@@ -83,76 +83,6 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
-static spdk_nvmf_request_exec_status
-nvmf_process_property_get(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_fabric_prop_get_rsp *response;
-	struct spdk_nvmf_fabric_prop_get_cmd *cmd;
-
-	cmd = &req->cmd->prop_get_cmd;
-	response = &req->rsp->prop_get_rsp;
-
-	spdk_nvmf_property_get(req->qpair->ctrlr, cmd, response);
-
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-}
-
-static spdk_nvmf_request_exec_status
-nvmf_process_property_set(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_fabric_prop_set_cmd *cmd;
-
-	cmd = &req->cmd->prop_set_cmd;
-
-	spdk_nvmf_property_set(req->qpair->ctrlr, cmd, &req->rsp->nvme_cpl);
-
-	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-}
-
-static spdk_nvmf_request_exec_status
-nvmf_process_fabrics_command(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_capsule_cmd *cap_hdr;
-
-	cap_hdr = &req->cmd->nvmf_cmd;
-
-	if (qpair->ctrlr == NULL) {
-		/* No ctrlr established yet; the only valid command is Connect */
-		if (cap_hdr->fctype == SPDK_NVMF_FABRIC_COMMAND_CONNECT) {
-			spdk_nvmf_ctrlr_connect(req);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		} else {
-			SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Got fctype 0x%x, expected Connect\n",
-				      cap_hdr->fctype);
-			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-	} else if (qpair->type == QPAIR_TYPE_AQ) {
-		/*
-		 * Controller session is established, and this is an admin queue.
-		 * Disallow Connect and allow other fabrics commands.
-		 */
-		switch (cap_hdr->fctype) {
-		case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_SET:
-			return nvmf_process_property_set(req);
-		case SPDK_NVMF_FABRIC_COMMAND_PROPERTY_GET:
-			return nvmf_process_property_get(req);
-		default:
-			SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "recv capsule header type invalid [%x]!\n",
-				      cap_hdr->fctype);
-			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
-	} else {
-		/* Controller session is established, and this is an I/O queue */
-		/* For now, no I/O-specific Fabrics commands are implemented (other than Connect) */
-		SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Unexpected I/O fctype 0x%x\n", cap_hdr->fctype);
-		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_OPCODE;
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	}
-}
-
 static void
 nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum spdk_nvmf_qpair_type qpair_type)
 {
@@ -207,7 +137,7 @@ spdk_nvmf_request_exec_on_master(void *ctx)
 	spdk_nvmf_request_exec_status status;
 
 	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
-		status = nvmf_process_fabrics_command(req);
+		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
 	} else if (ctrlr == NULL || !ctrlr->vcprop.cc.bits.en) {
 		/* Only Fabric commands are allowed when the controller is disabled */
 		SPDK_ERRLOG("Non-Fabric command sent to disabled controller\n");
