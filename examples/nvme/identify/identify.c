@@ -72,6 +72,8 @@ static char g_core_mask[16] = "0x1";
 
 static struct spdk_nvme_transport_id g_trid;
 
+static int g_controllers_found = 0;
+
 static void
 hex_dump(const void *data, size_t size)
 {
@@ -1059,6 +1061,7 @@ static void
 attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
 {
+	g_controllers_found++;
 	print_controller(ctrlr, trid);
 	spdk_nvme_detach(ctrlr);
 }
@@ -1085,11 +1088,15 @@ int main(int argc, char **argv)
 	}
 	spdk_env_init(&opts);
 
-	rc = 0;
 	if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
-		rc = 1;
+		return 1;
 	}
 
-	return rc;
+	if (g_controllers_found == 0) {
+		fprintf(stderr, "No NVMe controllers found.\n");
+		return 1;
+	}
+
+	return 0;
 }
