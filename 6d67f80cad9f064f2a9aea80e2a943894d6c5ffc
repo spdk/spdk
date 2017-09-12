@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4eb3835_293cb837",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1124,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-12T16:55:46Z",
+      "side": 1,
+      "message": "Looking at this again, we might need to rethink our strategy.  If we get a large Write Zeroes request, this could require allocating a huge array of iovec structures.  For example, a 2 TB Write Zeroes with 4 KB zero_buffer_size would require 4 GB for iov.\n\nI think we probably need to add some kind of upper limit with splitting at the bdev layer to avoid having to allocate that much space just for iovecs.",
+      "revId": "6d67f80cad9f064f2a9aea80e2a943894d6c5ffc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
