@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "060c63c0_9b818572",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-12T17:39:52Z",
+      "side": 1,
+      "message": "you might want to define vq \u003d \u0026virtqueue-\u003evring; to reduce the diff",
+      "range": {
+        "startLine": 109,
+        "startChar": 30,
+        "endLine": 109,
+        "endChar": 46
+      },
+      "revId": "0d13144081b0db930b0fe60ee3cf5de098874b8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c12fa12e_5bcaf8fc",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-12T17:39:52Z",
+      "side": 1,
+      "message": "you seem to use *vq* for the variable name in line 75, please be consistent :)\nkeeping it named vq would reduce the diff here.",
+      "range": {
+        "startLine": 137,
+        "startChar": 0,
+        "endLine": 137,
+        "endChar": 51
+      },
+      "revId": "0d13144081b0db930b0fe60ee3cf5de098874b8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
