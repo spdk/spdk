@@ -1,5 +1,9 @@
 # Changelog
 
+## v17.07.1: DPDK 17.08 compatibility
+
+The `env_dpdk` environment layer has been updated to build against DPDK 17.08.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
