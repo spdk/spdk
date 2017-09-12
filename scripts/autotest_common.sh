@@ -378,7 +378,11 @@ function discover_bdevs()
 	done
 
 	# Get all of the bdevs
-	$rootdir/scripts/rpc.py get_bdevs
+	if [ -z "$3" ]; then
+		$rootdir/scripts/rpc.py get_bdevs
+	else
+		$rootdir/scripts/rpc.py -p $3 get_bdevs
+	fi
 
 	# Shut down the bdev service
 	kill $stubpid
