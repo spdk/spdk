@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4790c52a_6178a172",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-12T14:28:20Z",
+      "side": 1,
+      "message": "fixed",
+      "parentUuid": "9783b791_064851e2",
+      "range": {
+        "startLine": 321,
+        "startChar": 0,
+        "endLine": 321,
+        "endChar": 63
+      },
+      "revId": "a6050edddcd7eba5ab109fee576f620684bdc58f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f408ec66_2e18065e",
         "filename": "test/lvol/testplan.md",
         "patchSetId": 12
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "0d7b6069_79b561dc",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-12T14:28:20Z",
+      "side": 1,
+      "message": "change on nested_construct_logical_volumes_on_busy_bdev",
+      "parentUuid": "f408ec66_2e18065e",
+      "range": {
+        "startLine": 329,
+        "startChar": 0,
+        "endLine": 330,
+        "endChar": 54
+      },
+      "revId": "a6050edddcd7eba5ab109fee576f620684bdc58f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e3c97425_4d69325e",
         "filename": "test/lvol/testplan.md",
         "patchSetId": 12
@@ -59,6 +107,24 @@
       "writtenOn": "2017-09-11T13:12:33Z",
       "side": 1,
       "message": "I\u0027m not sure this test requires three lvol stores to test. More readable and adequate test case would be with two lvol stores and deleting the first one. Please revise test steps below.",
+      "revId": "a6050edddcd7eba5ab109fee576f620684bdc58f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "133e1121_e0634688",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-12T14:28:20Z",
+      "side": 1,
+      "message": "I think, this test case can detect more defects, e.g. communication between lvol with second nested lvol after destroy first nested lvol",
+      "parentUuid": "e3c97425_4d69325e",
       "revId": "a6050edddcd7eba5ab109fee576f620684bdc58f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
