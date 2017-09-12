@@ -139,6 +139,12 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 	uint32_t total_iovs = req->iovcnt + 2;
 	struct iovec *iov = req->iov;
 
+	if (total_iovs > vq->vq_free_cnt) {
+		PMD_DRV_LOG(ERR, "not enough free descriptors. requested %"PRIu32", got "%PRIu32"\n",
+			total_iovs, vq->vq_free_cnt);
+		return;
+	}
+
 	head_idx = vq->vq_desc_head_idx;
 	idx = head_idx;
 	dxp = &vq->vq_descx[idx];
@@ -175,8 +181,10 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 	}
 
 	vq->vq_desc_head_idx = idx;
-	if (vq->vq_desc_head_idx == VQ_RING_DESC_CHAIN_END)
-		vq->vq_desc_tail_idx = idx;
+	if (vq->vq_desc_head_idx == VQ_RING_DESC_CHAIN_END) {
+		assert(vq->vq_free_cnt == 0);
+		vq->vq_desc_tail_idx = VQ_RING_DESC_CHAIN_END;
+	}
 	vq->vq_free_cnt = (uint16_t)(vq->vq_free_cnt - total_iovs);
 	vq_update_avail_ring(vq, head_idx);
 }
