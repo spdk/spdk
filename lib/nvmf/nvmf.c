@@ -87,7 +87,6 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	tgt->discovery_genctr = 0;
 	tgt->discovery_log_page = NULL;
 	tgt->discovery_log_page_size = 0;
-	tgt->current_subsystem_id = 0;
 	TAILQ_INIT(&tgt->subsystems);
 	TAILQ_INIT(&tgt->transports);
 
