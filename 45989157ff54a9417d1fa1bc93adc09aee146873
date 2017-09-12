@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70f40f23_3db1299f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-12T00:52:44Z",
+      "side": 1,
+      "message": "Can we wrap this sequence into a helper function?\n\nSomething like:\n\n    crc \u003d spdk_blob_md_page_calc_crc(page);",
+      "revId": "45989157ff54a9417d1fa1bc93adc09aee146873",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3891f56_f25b2f6a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-12T00:52:44Z",
+      "side": 1,
+      "message": "This should probably call ctx-\u003ecb_fn with an error code rather than asserting.",
+      "revId": "45989157ff54a9417d1fa1bc93adc09aee146873",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
