@@ -114,15 +114,20 @@ struct spdk_trace_history {
 
 #define SPDK_TRACE_MAX_LCORE		128
 
-struct spdk_trace_histories {
+struct spdk_trace_flags {
 	uint64_t			tsc_rate;
 	uint64_t			tpoint_mask[SPDK_TRACE_MAX_GROUP_ID];
-	struct spdk_trace_history	per_lcore_history[SPDK_TRACE_MAX_LCORE];
 	struct spdk_trace_owner		owner[UCHAR_MAX + 1];
 	struct spdk_trace_object	object[UCHAR_MAX + 1];
 	struct spdk_trace_tpoint	tpoint[SPDK_TRACE_MAX_TPOINT_ID];
 };
+extern struct spdk_trace_flags *g_trace_flags;
 
+
+struct spdk_trace_histories {
+	struct spdk_trace_flags flags;
+	struct spdk_trace_history	per_lcore_history[SPDK_TRACE_MAX_LCORE];
+};
 
 void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 		       uint64_t object_id, uint64_t arg1);
@@ -144,6 +149,7 @@ void spdk_trace_set_tpoint_group_mask(uint64_t tpoint_group_mask);
 
 void spdk_trace_init(const char *shm_name);
 void spdk_trace_cleanup(void);
+void spdk_trace_flags_init(void);
 
 #define OWNER_NONE 0
 #define OBJECT_NONE 0

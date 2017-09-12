@@ -123,7 +123,7 @@ print_size(uint32_t size)
 static void
 print_object_id(uint8_t type, uint64_t id)
 {
-	printf("id:    %c%-15jd ", g_histories->object[type].id_prefix, id);
+	printf("id:    %c%-15jd ", g_histories->flags.object[type].id_prefix, id);
 }
 
 static void
@@ -152,7 +152,7 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 	struct object_stats		*stats;
 	float				us;
 
-	d = &g_histories->tpoint[e->tpoint_id];
+	d = &g_histories->flags.tpoint[e->tpoint_id];
 	stats = &g_stats[d->object_type];
 
 	if (d->new_object) {
@@ -171,8 +171,8 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 	us = get_us_from_tsc(e->tsc - tsc_offset, tsc_rate);
 
 	printf("%2d: %10.3f (%9ju) ", lcore, us, e->tsc - tsc_offset);
-	if (g_histories->owner[d->owner_type].id_prefix) {
-		printf("%c%02d ", g_histories->owner[d->owner_type].id_prefix, e->poller_id);
+	if (g_histories->flags.owner[d->owner_type].id_prefix) {
+		printf("%c%02d ", g_histories->flags.owner[d->owner_type].id_prefix, e->poller_id);
 	} else {
 		printf("%4s", " ");
 	}
@@ -191,7 +191,7 @@ print_event(struct spdk_trace_entry *e, uint64_t tsc_rate,
 					     tsc_rate);
 			print_object_id(d->object_type, stats->index[e->object_id]);
 			print_float("time:", us);
-			start_description = &g_histories->tpoint[stats->tpoint_id[e->object_id]];
+			start_description = &g_histories->flags.tpoint[stats->tpoint_id[e->object_id]];
 			if (start_description->short_name[0] != 0) {
 				printf(" (%.4s)", start_description->short_name);
 			}
@@ -364,7 +364,7 @@ int main(int argc, char **argv)
 
 	g_histories = (struct spdk_trace_histories *)history_ptr;
 
-	tsc_rate = g_histories->tsc_rate;
+	tsc_rate = g_histories->flags.tsc_rate;
 	if (tsc_rate == 0) {
 		fprintf(stderr, "Invalid tsc_rate %ju\n", tsc_rate);
 		usage();
