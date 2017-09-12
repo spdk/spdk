@@ -1,0 +1,27 @@
+
+[Malloc]
+  NumberOfLuns 3
+  LunSizeInMB 64
+
+[Split]
+  # Split Malloc1 into two auto-sized halves
+  Split Malloc1 2
+
+  # Split Malloc2 into eight 4-megabyte pieces,
+  # leaving the rest of the device inaccessible
+  Split Malloc2 8 4
+
+[AIO]
+  #AIO /dev/ram0 AIO0
+  AIO /tmp/aiofile AIO1 2048
+
+[Virtio]
+  Dev User /tmp/vhost.0
+
+[Rpc]
+  Enable Yes
+  Listen 127.0.0.1:5261
+
+[Ioat]
+  Disable Yes
+
