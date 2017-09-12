@@ -51,10 +51,7 @@ spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req)
 }
 
 void
-spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
-			struct spdk_nvmf_fabric_connect_cmd *cmd,
-			struct spdk_nvmf_fabric_connect_data *data,
-			struct spdk_nvmf_fabric_connect_rsp *rsp)
+spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
 }
 
@@ -138,19 +135,6 @@ spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
 				 uint64_t offset, uint32_t length)
 {
 }
-
-struct spdk_nvmf_subsystem *
-spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
-{
-	return NULL;
-}
-
-bool
-spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
-{
-	return false;
-}
-
 
 static void
 test_nvmf_process_fabrics_cmd(void)
