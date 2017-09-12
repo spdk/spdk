@@ -1216,8 +1216,8 @@ _spdk_bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 	assert(!TAILQ_EMPTY(&ch->queued_resets));
 
 	pthread_mutex_lock(&bdev->mutex);
-	if (!bdev->reset_in_progress) {
-		bdev->reset_in_progress = true;
+	if (bdev->reset_in_progress == NULL) {
+		bdev->reset_in_progress = TAILQ_FIRST(&ch->queued_resets);
 		/*
 		 * Take a channel reference for the target bdev for the life of this
 		 *  reset.  This guards against the channel getting destroyed while
@@ -1225,7 +1225,7 @@ _spdk_bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 		 *  progress.  We will release the reference when this reset is
 		 *  completed.
 		 */
-		TAILQ_FIRST(&ch->queued_resets)->u.reset.ch_ref = spdk_get_io_channel(bdev);
+		bdev->reset_in_progress->u.reset.ch_ref = spdk_get_io_channel(bdev);
 		_spdk_bdev_start_reset(ch);
 	}
 	pthread_mutex_unlock(&bdev->mutex);
@@ -1387,7 +1387,9 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
 		pthread_mutex_lock(&bdev_io->bdev->mutex);
-		bdev_io->bdev->reset_in_progress = false;
+		if (bdev_io == bdev_io->bdev->reset_in_progress) {
+			bdev_io->bdev->reset_in_progress = NULL;
+		}
 		pthread_mutex_unlock(&bdev_io->bdev->mutex);
 		if (bdev_io->u.reset.ch_ref != NULL) {
 			spdk_put_io_channel(bdev_io->u.reset.ch_ref);
@@ -1543,7 +1545,7 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INIT(&bdev->vbdevs);
 	TAILQ_INIT(&bdev->base_bdevs);
 
-	bdev->reset_in_progress = false;
+	bdev->reset_in_progress = NULL;
 
 	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));
