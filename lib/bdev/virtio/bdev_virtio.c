@@ -67,22 +67,19 @@ struct virtio_scsi_io_ctx {
 	struct virtio_scsi_cmd_resp 	resp;
 };
 
-struct virtio_scsi_scan_buf {
-	struct virtio_scsi_io_ctx	io_ctx;
-	struct iovec			iov;
-	uint8_t				payload[BDEV_VIRTIO_SCAN_PAYLOAD_SIZE];
-};
-
 struct virtio_scsi_scan_base {
 	struct virtio_hw		*hw;
 	struct spdk_bdev_poller		*scan_poller;
-	unsigned			refcount;
+
+	/* Currently queried target */
+	unsigned			target;
 
 	/* Disks to be registered after the scan finishes */
 	TAILQ_HEAD(, virtio_scsi_disk) found_disks;
 
-	struct virtio_scsi_scan_buf	buf[BDEV_VIRTIO_MAX_TARGET];
-};
+	struct virtio_scsi_io_ctx	io_ctx;
+	struct iovec			iov;
+	uint8_t				payload[BDEV_VIRTIO_SCAN_PAYLOAD_SIZE];};
 
 struct virtio_scsi_disk {
 	struct spdk_bdev	bdev;
@@ -96,6 +93,8 @@ struct bdev_virtio_io_channel {
 	struct virtio_hw	*hw;
 	struct spdk_bdev_poller	*poller;
 };
+
+static void scan_target(struct virtio_scsi_scan_base *base);
 
 static int
 bdev_virtio_get_ctx_size(void)
@@ -291,9 +290,9 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 {
 	struct virtio_scsi_disk *disk;
 
-	assert(base->refcount > 0);
-	base->refcount--;
-	if (base->refcount > 0) {
+	base->target++;
+	if (base->target < BDEV_VIRTIO_MAX_TARGET) {
+		scan_target(base);
 		return;
 	}
 
@@ -417,9 +416,9 @@ bdev_scan_poll(void *arg)
 	uint16_t i, cnt;
 
 	cnt = virtio_recv_pkts(base->hw->vqs[2], req, SPDK_COUNTOF(req));
-	if (cnt > base->refcount) {
+	if (base->target + cnt > BDEV_VIRTIO_MAX_TARGET) {
 		SPDK_ERRLOG("Received too many virtio messages. Got %"PRIu16", expected %u",
-			    cnt, base->refcount);
+			    cnt, base->target);
 		return;
 	}
 
@@ -429,7 +428,7 @@ bdev_scan_poll(void *arg)
 }
 
 static void
-scan_target(struct virtio_scsi_scan_base *base, uint8_t target)
+scan_target(struct virtio_scsi_scan_base *base)
 {
 	struct iovec *iov;
 	struct virtio_req *vreq;
@@ -437,10 +436,10 @@ scan_target(struct virtio_scsi_scan_base *base, uint8_t target)
 	struct virtio_scsi_cmd_resp *resp;
 	struct spdk_scsi_cdb_inquiry *cdb;
 
-	vreq = &base->buf[target].io_ctx.vreq;
-	req = &base->buf[target].io_ctx.req;
-	resp = &base->buf[target].io_ctx.resp;
-	iov = &base->buf[target].iov;
+	vreq = &base->io_ctx.vreq;
+	req = &base->io_ctx.req;
+	resp = &base->io_ctx.resp;
+	iov = &base->iov;
 
 	vreq->iov = iov;
 	vreq->iovcnt = 1;
@@ -452,11 +451,11 @@ scan_target(struct virtio_scsi_scan_base *base, uint8_t target)
 	vreq->iov_resp.iov_base = (void *)resp;
 	vreq->iov_resp.iov_len = sizeof(*resp);
 
-	iov[0].iov_base = (void *)&base->buf[target].payload;
+	iov[0].iov_base = (void *)&base->payload;
 	iov[0].iov_len = BDEV_VIRTIO_SCAN_PAYLOAD_SIZE;
 
 	req->lun[0] = 1;
-	req->lun[1] = target;
+	req->lun[1] = base->target;
 
 	cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
 	cdb->opcode = SPDK_SPC_INQUIRY;
@@ -516,17 +515,12 @@ bdev_virtio_initialize(void)
 	virtio_dev_start(hw);
 
 	base->hw = hw;
-	base->refcount = BDEV_VIRTIO_MAX_TARGET;
 	TAILQ_INIT(&base->found_disks);
 
 	spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,
 			       spdk_env_get_current_core(), 0);
 
-	for (i = 0; i < BDEV_VIRTIO_MAX_TARGET; i++) {
-		scan_target(base, i);
-	}
-
-
+	scan_target(base);
 	return 0;
 
 out:
