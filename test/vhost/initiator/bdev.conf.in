@@ -1,0 +1,10 @@
+[Virtio]
+  Dev User /tmp/vhost.0
+
+[Rpc]
+  Enable Yes
+  Listen 127.0.0.1:5261
+
+[Ioat]
+  Disable Yes
+
