@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33eaaf40_4e99cde2",
+        "filename": "dpdk",
+        "patchSetId": 11
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-12T17:31:18Z",
+      "side": 1,
+      "message": "unintended change?",
+      "range": {
+        "startLine": 1,
+        "startChar": 18,
+        "endLine": 1,
+        "endChar": 58
+      },
+      "revId": "4e7ceb5d6a6238eab443c013bed29c8009ceaee7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
