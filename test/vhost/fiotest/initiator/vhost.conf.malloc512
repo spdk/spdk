@@ -1,0 +1,20 @@
+[Global]
+
+[Rpc]
+  Enable Yes
+
+[Ioat]
+  Disable Yes
+
+[Malloc]
+  NumberOfLuns 1
+  LunSizeInMB 128
+  BlockSize 512
+
+[VhostScsi0]
+  Name vhost.0
+  Dev 0 Nvme0n1
+
+[VhostScsi1]
+  Name vhost.1
+  Dev 0 Malloc0
