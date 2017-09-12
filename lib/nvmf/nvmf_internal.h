@@ -222,10 +222,7 @@ void spdk_nvmf_property_set(struct spdk_nvmf_ctrlr *ctrlr,
 			    struct spdk_nvmf_fabric_prop_set_cmd *cmd,
 			    struct spdk_nvme_cpl *rsp);
 
-void spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
-			     struct spdk_nvmf_fabric_connect_cmd *cmd,
-			     struct spdk_nvmf_fabric_connect_data *data,
-			     struct spdk_nvmf_fabric_connect_rsp *rsp);
+void spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req);
 struct spdk_nvmf_qpair *spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid);
 int spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr);
 void spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
@@ -261,21 +258,6 @@ _spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid
 
 	return ns;
 }
-
-static inline void
-spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
-				   uint8_t iattr, uint16_t ipo)
-{
-	rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
-	rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_PARAM;
-	rsp->status_code_specific.invalid.iattr = iattr;
-	rsp->status_code_specific.invalid.ipo = ipo;
-}
-
-#define SPDK_NVMF_INVALID_CONNECT_CMD(rsp, field)	\
-	spdk_nvmf_invalid_connect_response(rsp, 0, offsetof(struct spdk_nvmf_fabric_connect_cmd, field))
-#define SPDK_NVMF_INVALID_CONNECT_DATA(rsp, field)	\
-	spdk_nvmf_invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
 
 #define OBJECT_NVMF_IO				0x30
 
