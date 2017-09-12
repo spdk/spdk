@@ -289,6 +289,10 @@ struct spdk_bdev_io {
 			uint64_t offset_blocks;
 		} bdev;
 		struct {
+			/** Channel reference held while messages for this reset are in progress. */
+			struct spdk_io_channel *ch_ref;
+		} reset;
+		struct {
 			/* The NVMe command to execute */
 			struct spdk_nvme_cmd cmd;
 
