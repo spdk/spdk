@@ -50,10 +50,11 @@ export DPDK_ABS_DIR = $(abspath $(DPDK_DIR))
 endif
 
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/include/rte_config.h))
-DPDK_INC = -I$(DPDK_ABS_DIR)/include
+DPDK_INC_DIR := $(DPDK_ABS_DIR)/include
 else
-DPDK_INC = -I$(DPDK_ABS_DIR)/include/dpdk
+DPDK_INC_DIR := $(DPDK_ABS_DIR)/include/dpdk
 endif
+DPDK_INC := -I$(DPDK_INC_DIR)
 
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_eal.a))
 DPDK_LIB_EXT = .a
@@ -83,8 +84,10 @@ ENV_DPDK_FILE = $(call spdk_lib_list_to_files,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) -Wl,--start-group -Wl,--whole-archive $(DPDK_LIB) -Wl,--end-group -Wl,--no-whole-archive
 
-ifneq (,$(shell grep "define RTE_LIBRTE_VHOST_NUMA 1" $(DPDK_DIR)/include/rte_config.h))
+ifneq (,$(wildcard $(DPDK_INC_DIR)/rte_config.h))
+ifneq (,$(shell grep "define RTE_LIBRTE_VHOST_NUMA 1" $(DPDK_INC_DIR)/rte_config.h))
 ENV_LINKER_ARGS += -lnuma
+endif
 endif
 
 ifeq ($(OS),Linux)
