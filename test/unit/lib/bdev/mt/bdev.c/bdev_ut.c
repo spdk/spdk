@@ -225,6 +225,70 @@ put_channel_during_reset(void)
 	teardown_test();
 }
 
+static void
+aborted_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	enum spdk_bdev_io_status *status = cb_arg;
+
+	*status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+aborted_reset(void)
+{
+	struct spdk_io_channel *io_ch[2];
+	enum spdk_bdev_io_status status1, status2;
+
+	setup_test();
+
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(io_ch[0] != NULL);
+	spdk_bdev_reset(g_desc, io_ch[0], aborted_reset_done, &status1);
+	poll_threads();
+	CU_ASSERT(g_bdev.bdev.reset_in_progress != NULL);
+
+	/*
+	 * First reset has been submitted on ch0.  Now submit a second
+	 *  reset on ch1 which will get queued since there is already a
+	 *  reset in progress.
+	 */
+	set_thread(1);
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(io_ch[1] != NULL);
+	spdk_bdev_reset(g_desc, io_ch[1], aborted_reset_done, &status2);
+	poll_threads();
+	CU_ASSERT(g_bdev.bdev.reset_in_progress != NULL);
+
+	/*
+	 * Now destroy ch1.  This will abort the queued reset.  Check that
+	 *  the second reset was completed with failed status.  Also check
+	 *  that bdev->reset_in_progress != NULL, since the original reset
+	 *  has not been completed yet.  This ensures that the bdev code is
+	 *  correctly noticing that the failed reset is *not* the one that
+	 *  had been submitted to the bdev module.
+	 */
+	set_thread(1);
+	spdk_put_io_channel(io_ch[1]);
+	poll_threads();
+	CU_ASSERT(status2 == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(g_bdev.bdev.reset_in_progress != NULL);
+
+	/*
+	 * Now complete the first reset, verify that it completed with SUCCESS
+	 *  status and that bdev->reset_in_progress is also set back to NULL.
+	 */
+	set_thread(0);
+	spdk_put_io_channel(io_ch[0]);
+	stub_complete_io();
+	poll_threads();
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(g_bdev.bdev.reset_in_progress == NULL);
+
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -243,7 +307,8 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "basic", basic) == NULL ||
-		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL
+		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL ||
+		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

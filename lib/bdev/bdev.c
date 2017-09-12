@@ -690,14 +690,35 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	return 0;
 }
 
+/*
+ * Abort I/O that are waiting on a data buffer.  These types of I/O are
+ *  linked using the spdk_bdev_io buf_link TAILQ_ENTRY.
+ */
 static void
-_spdk_bdev_abort_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
+_spdk_bdev_abort_buf_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_io *bdev_io, *tmp;
 
 	TAILQ_FOREACH_SAFE(bdev_io, queue, buf_link, tmp) {
 		if (bdev_io->ch == ch) {
 			TAILQ_REMOVE(queue, bdev_io, buf_link);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+}
+
+/*
+ * Abort I/O that are queued waiting for submission.  These types of I/O are
+ *  linked using the spdk_bdev_io link TAILQ_ENTRY.
+ */
+static void
+_spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
+{
+	struct spdk_bdev_io *bdev_io, *tmp;
+
+	TAILQ_FOREACH_SAFE(bdev_io, queue, link, tmp) {
+		if (bdev_io->ch == ch) {
+			TAILQ_REMOVE(queue, bdev_io, link);
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
@@ -711,8 +732,9 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 
 	mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
 
-	_spdk_bdev_abort_io(&mgmt_channel->need_buf_small, ch);
-	_spdk_bdev_abort_io(&mgmt_channel->need_buf_large, ch);
+	_spdk_bdev_abort_queued_io(&ch->queued_resets, ch);
+	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, ch);
+	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
 
 	spdk_put_io_channel(ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
@@ -1165,8 +1187,8 @@ _spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
 	channel = spdk_io_channel_get_ctx(ch);
 	mgmt_channel = spdk_io_channel_get_ctx(channel->mgmt_channel);
 
-	_spdk_bdev_abort_io(&mgmt_channel->need_buf_small, channel);
-	_spdk_bdev_abort_io(&mgmt_channel->need_buf_large, channel);
+	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
+	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
 }
 
 static void
@@ -1186,8 +1208,8 @@ _spdk_bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 	assert(!TAILQ_EMPTY(&ch->queued_resets));
 
 	pthread_mutex_lock(&bdev->mutex);
-	if (!bdev->reset_in_progress) {
-		bdev->reset_in_progress = true;
+	if (bdev->reset_in_progress == NULL) {
+		bdev->reset_in_progress = TAILQ_FIRST(&ch->queued_resets);
 		/*
 		 * Take a channel reference for the target bdev for the life of this
 		 *  reset.  This guards against the channel getting destroyed while
@@ -1195,7 +1217,7 @@ _spdk_bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 		 *  progress.  We will release the reference when this reset is
 		 *  completed.
 		 */
-		TAILQ_FIRST(&ch->queued_resets)->u.reset.ch_ref = spdk_get_io_channel(bdev);
+		bdev->reset_in_progress->u.reset.ch_ref = spdk_get_io_channel(bdev);
 		_spdk_bdev_start_reset(ch);
 	}
 	pthread_mutex_unlock(&bdev->mutex);
@@ -1357,7 +1379,9 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
 		pthread_mutex_lock(&bdev_io->bdev->mutex);
-		bdev_io->bdev->reset_in_progress = false;
+		if (bdev_io == bdev_io->bdev->reset_in_progress) {
+			bdev_io->bdev->reset_in_progress = NULL;
+		}
 		pthread_mutex_unlock(&bdev_io->bdev->mutex);
 		if (bdev_io->u.reset.ch_ref != NULL) {
 			spdk_put_io_channel(bdev_io->u.reset.ch_ref);
@@ -1513,7 +1537,7 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INIT(&bdev->vbdevs);
 	TAILQ_INIT(&bdev->base_bdevs);
 
-	bdev->reset_in_progress = false;
+	bdev->reset_in_progress = NULL;
 
 	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));

@@ -235,8 +235,8 @@ struct spdk_bdev {
 
 	TAILQ_ENTRY(spdk_bdev) link;
 
-	/** denotes if a reset is currently in progress on this bdev */
-	bool reset_in_progress;
+	/** points to a reset bdev_io if one is in progress. */
+	struct spdk_bdev_io *reset_in_progress;
 };
 
 typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
