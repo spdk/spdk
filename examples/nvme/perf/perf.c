@@ -33,10 +33,7 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-#include <rte_lcore.h>
-
+#include "spdk/env.h"
 #include "spdk/fd.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
@@ -148,8 +145,6 @@ static int g_outstanding_commands;
 
 static bool g_latency_ssd_tracking_enable = false;
 static int g_latency_sw_tracking_level = 0;
-
-static struct rte_mempool *task_pool;
 
 static struct ctrlr_entry *g_controllers = NULL;
 static struct ns_entry *g_namespaces = NULL;
@@ -427,35 +422,17 @@ aio_check_io(struct ns_worker_ctx *ns_ctx)
 }
 #endif /* HAVE_LIBAIO */
 
-static void task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
-{
-	struct perf_task *task = __task;
-	task->buf = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
-	if (task->buf == NULL) {
-		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
-		exit(1);
-	}
-	memset(task->buf, id % 8 + 1, g_io_size_bytes);
-}
-
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
 
 static __thread unsigned int seed = 0;
 
 static void
-submit_single_io(struct ns_worker_ctx *ns_ctx)
+submit_single_io(struct perf_task *task)
 {
-	struct perf_task	*task = NULL;
 	uint64_t		offset_in_ios;
 	int			rc;
+	struct ns_worker_ctx	*ns_ctx = task->ns_ctx;
 	struct ns_entry		*entry = ns_ctx->entry;
-
-	if (rte_mempool_get(task_pool, (void **)&task) != 0) {
-		fprintf(stderr, "task_pool rte_mempool_get failed\n");
-		exit(1);
-	}
-
-	task->ns_ctx = ns_ctx;
 
 	if (g_is_random) {
 		offset_in_ios = rand_r(&seed) % entry->size_in_ios;
@@ -522,7 +499,6 @@ task_complete(struct perf_task *task)
 	if (g_latency_sw_tracking_level > 0) {
 		spdk_histogram_data_tally(&ns_ctx->histogram, tsc_diff);
 	}
-	rte_mempool_put(task_pool, task);
 
 	/*
 	 * is_draining indicates when time has expired for the test run
@@ -530,8 +506,11 @@ task_complete(struct perf_task *task)
 	 * to complete.  In this case, do not submit a new I/O to replace
 	 * the one just completed.
 	 */
-	if (!ns_ctx->is_draining) {
-		submit_single_io(ns_ctx);
+	if (ns_ctx->is_draining) {
+		spdk_dma_free(task->buf);
+		free(task);
+	} else {
+		submit_single_io(task);
 	}
 }
 
@@ -557,8 +536,25 @@ check_io(struct ns_worker_ctx *ns_ctx)
 static void
 submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
 {
+	struct perf_task *task;
+
 	while (queue_depth-- > 0) {
-		submit_single_io(ns_ctx);
+		task = calloc(1, sizeof(*task));
+		if (task == NULL) {
+			fprintf(stderr, "Out of memory allocating tasks\n");
+			exit(1);
+		}
+
+		task->buf = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
+		if (task->buf == NULL) {
+			fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
+			exit(1);
+		}
+		memset(task->buf, queue_depth % 8 + 1, g_io_size_bytes);
+
+		task->ns_ctx = ns_ctx;
+
+		submit_single_io(task);
 	}
 }
 
@@ -1330,8 +1326,6 @@ int main(int argc, char **argv)
 	int rc;
 	struct worker_thread *worker, *master_worker;
 	unsigned master_core;
-	char task_pool_name[30];
-	uint32_t task_count;
 	struct spdk_env_opts opts;
 
 	rc = parse_args(argc, argv);
@@ -1376,35 +1370,15 @@ int main(int argc, char **argv)
 		goto cleanup;
 	}
 
-	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", getpid());
-
-	/*
-	 * The task_count will be dynamically calculated based on the
-	 * number of attached active namespaces(aio files), queue depth
-	 * and number of cores (workers) involved in the IO operations.
-	 */
-	task_count = g_num_namespaces > g_num_workers ? g_num_namespaces : g_num_workers;
-	task_count *= g_queue_depth;
-
-	task_pool = rte_mempool_create(task_pool_name, task_count,
-				       sizeof(struct perf_task),
-				       0, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
-	if (task_pool == NULL) {
-		fprintf(stderr, "could not initialize task pool\n");
-		rc = -1;
-		goto cleanup;
-	}
-
 	printf("Initialization complete. Launching workers.\n");
 
 	/* Launch all of the slave workers */
-	master_core = rte_get_master_lcore();
+	master_core = spdk_env_get_current_core();
 	master_worker = NULL;
 	worker = g_workers;
 	while (worker != NULL) {
 		if (worker->lcore != master_core) {
-			rte_eal_remote_launch(work_fn, worker, worker->lcore);
+			spdk_env_thread_launch_pinned(worker->lcore, work_fn, worker);
 		} else {
 			assert(master_worker == NULL);
 			master_worker = worker;
@@ -1415,7 +1389,7 @@ int main(int argc, char **argv)
 	assert(master_worker != NULL);
 	rc = work_fn(master_worker);
 
-	rte_eal_mp_wait_lcore();
+	spdk_env_thread_wait_all();
 
 	print_stats();
 
