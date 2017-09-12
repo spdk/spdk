@@ -42,6 +42,9 @@
 #include "spdk/log.h"
 #include "spdk/queue.h"
 
+extern enum spdk_log_level g_spdk_log_level;
+extern enum spdk_log_level g_spdk_log_print_level;
+
 struct spdk_trace_flag {
 	TAILQ_ENTRY(spdk_trace_flag) tailq;
 	const char *name;
