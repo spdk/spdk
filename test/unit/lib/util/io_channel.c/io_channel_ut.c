@@ -171,6 +171,94 @@ for_each_channel_remove(void)
 }
 
 static void
+unregister_done(void *io_device)
+{
+	bool *done = io_device;
+
+	*done = true;
+}
+
+static void
+for_each_channel_unregister(void)
+{
+	struct spdk_io_channel *ch0;
+	bool io_target = false;
+	int count = 0;
+
+	allocate_threads(1);
+
+	/* There are three operations that could get called in any order:
+	 *  spdk_put_io_channel() on the last channel for the device
+	 *  spdk_io_device_unregister()
+	 *  spdk_for_each_channel()
+	 *
+	 * Run each combination of the above, which is 6 combinations in total.
+	 */
+	set_thread(0);
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	ch0 = spdk_get_io_channel(&io_target);
+	spdk_put_io_channel(ch0);
+	spdk_io_device_unregister(&io_target, unregister_done);
+	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
+	poll_thread(0);
+	/* Confirm that the io_target was unregistered. */
+	CU_ASSERT(io_target == true);
+	io_target = false;
+
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	ch0 = spdk_get_io_channel(&io_target);
+	spdk_io_device_unregister(&io_target, unregister_done);
+	spdk_put_io_channel(ch0);
+	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
+	poll_thread(0);
+	/* Confirm that the io_target was unregistered. */
+	CU_ASSERT(io_target == true);
+	io_target = false;
+
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	ch0 = spdk_get_io_channel(&io_target);
+	spdk_io_device_unregister(&io_target, unregister_done);
+	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
+	spdk_put_io_channel(ch0);
+	poll_thread(0);
+	/* Confirm that the io_target was unregistered. */
+	CU_ASSERT(io_target == true);
+	io_target = false;
+
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	ch0 = spdk_get_io_channel(&io_target);
+	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
+	spdk_io_device_unregister(&io_target, unregister_done);
+	spdk_put_io_channel(ch0);
+	poll_thread(0);
+	/* Confirm that the io_target was unregistered. */
+	CU_ASSERT(io_target == true);
+	io_target = false;
+
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	ch0 = spdk_get_io_channel(&io_target);
+	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
+	spdk_put_io_channel(ch0);
+	spdk_io_device_unregister(&io_target, unregister_done);
+	poll_thread(0);
+	/* Confirm that the io_target was unregistered. */
+	CU_ASSERT(io_target == true);
+	io_target = false;
+
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	ch0 = spdk_get_io_channel(&io_target);
+	spdk_put_io_channel(ch0);
+	spdk_for_each_channel(&io_target, channel_msg, &count, channel_cpl);
+	spdk_io_device_unregister(&io_target, unregister_done);
+	poll_thread(0);
+	/* Confirm that the io_target was unregistered. */
+	CU_ASSERT(io_target == true);
+	io_target = false;
+
+	free_threads();
+}
+
+static void
 thread_name(void)
 {
 	struct spdk_thread *thread;
@@ -318,6 +406,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "thread_alloc", thread_alloc) == NULL ||
 		CU_add_test(suite, "thread_send_msg", thread_send_msg) == NULL ||
 		CU_add_test(suite, "for_each_channel_remove", for_each_channel_remove) == NULL ||
+		CU_add_test(suite, "for_each_channel_unregister", for_each_channel_unregister) == NULL ||
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
 		CU_add_test(suite, "channel", channel) == NULL
 	) {
