@@ -371,14 +371,18 @@ function discover_bdevs()
 
 	# Start the bdev service to query for the list of available
 	# bdevs.
-	$rootdir/test/app/bdev_svc/bdev_svc -i 0 -c $config_file &>/dev/null &
+	$rootdir/test/app/bdev_svc/bdev_svc -i 0 -s 1024  -c $config_file &>/dev/null &
 	stubpid=$!
 	while ! [ -e /var/run/spdk_bdev0 ]; do
 		sleep 1
 	done
 
 	# Get all of the bdevs
-	$rootdir/scripts/rpc.py get_bdevs
+	if [ -z "$3" ]; then
+		$rootdir/scripts/rpc.py get_bdevs
+	else
+		$rootdir/scripts/rpc.py -p $3 get_bdevs
+	fi
 
 	# Shut down the bdev service
 	kill $stubpid
