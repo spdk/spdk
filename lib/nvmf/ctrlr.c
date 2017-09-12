@@ -153,14 +153,23 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 void
-spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
-			struct spdk_nvmf_fabric_connect_cmd *cmd,
-			struct spdk_nvmf_fabric_connect_data *data,
-			struct spdk_nvmf_fabric_connect_rsp *rsp)
+spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_tgt *tgt;
+	struct spdk_nvmf_fabric_connect_data *data = req->data;
+	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
+	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_tgt *tgt = qpair->transport->tgt;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_subsystem *subsystem;
+	const char *subnqn, *hostnqn;
+	void *end;
+
+	if (req->length < sizeof(struct spdk_nvmf_fabric_connect_data)) {
+		SPDK_ERRLOG("Connect command data length 0x%x too small\n", req->length);
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return;
+	}
 
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "recfmt 0x%x qid %u sqsize %u\n",
 		      cmd->recfmt, cmd->qid, cmd->sqsize);
@@ -175,18 +184,45 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 		      data->hostid[9],
 		      ntohs(*(uint16_t *)&data->hostid[10]),
 		      ntohl(*(uint32_t *)&data->hostid[12]));
-	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "  subnqn: \"%s\"\n", data->subnqn);
-	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "  hostnqn: \"%s\"\n", data->hostnqn);
 
-	assert(qpair->thread == NULL);
-	qpair->thread = spdk_get_thread();
+	if (cmd->recfmt != 0) {
+		SPDK_ERRLOG("Connect command unsupported RECFMT %u\n", cmd->recfmt);
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INCOMPATIBLE_FORMAT;
+		return;
+	}
 
-	tgt = qpair->transport->tgt;
-
-	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, data->subnqn);
-	if (subsystem == NULL) {
-		SPDK_ERRLOG("Could not find subsystem '%s'\n", data->subnqn);
+	/* Ensure that subnqn is null terminated */
+	end = memchr(data->subnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
+	if (!end) {
+		SPDK_ERRLOG("Connect SUBNQN is not null terminated\n");
 		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
+		return;
+	}
+	subnqn = data->subnqn;
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "  subnqn: \"%s\"\n", subnqn);
+
+	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, subnqn);
+	if (subsystem == NULL) {
+		SPDK_ERRLOG("Could not find subsystem '%s'\n", subnqn);
+		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
+		return;
+	}
+
+	/* Ensure that hostnqn is null terminated */
+	end = memchr(data->hostnqn, '\0', SPDK_NVMF_NQN_MAX_LEN + 1);
+	if (!end) {
+		SPDK_ERRLOG("Connect HOSTNQN is not null terminated\n");
+		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, hostnqn);
+		return;
+	}
+	hostnqn = data->hostnqn;
+	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "  hostnqn: \"%s\"\n", hostnqn);
+
+	if (!spdk_nvmf_subsystem_host_allowed(subsystem, hostnqn)) {
+		SPDK_ERRLOG("Subsystem '%s' does not allow host '%s'\n", subnqn, hostnqn);
+		rsp->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+		rsp->status.sc = SPDK_NVMF_FABRIC_SC_INVALID_HOST;
 		return;
 	}
 
@@ -272,6 +308,9 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_qpair *qpair,
 			return;
 		}
 	}
+
+	assert(qpair->thread == NULL);
+	qpair->thread = spdk_get_thread();
 
 	ctrlr->num_qpairs++;
 	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
