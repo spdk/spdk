@@ -136,13 +136,14 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 	struct vring_desc *descs;
 	uint32_t i;
 	uint16_t head_idx, idx;
+	uint32_t total_iovs = req->iovcnt + 2;
 	struct iovec *iov = req->iov;
 
 	head_idx = vq->vq_desc_head_idx;
 	idx = head_idx;
 	dxp = &vq->vq_descx[idx];
 	dxp->cookie = (void *)req;
-	dxp->ndescs = req->iovcnt;
+	dxp->ndescs = total_iovs;
 
 	descs = vq->vq_ring.desc;
 
@@ -176,7 +177,7 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 	vq->vq_desc_head_idx = idx;
 	if (vq->vq_desc_head_idx == VQ_RING_DESC_CHAIN_END)
 		vq->vq_desc_tail_idx = idx;
-	vq->vq_free_cnt = (uint16_t)(vq->vq_free_cnt - req->iovcnt);
+	vq->vq_free_cnt = (uint16_t)(vq->vq_free_cnt - total_iovs);
 	vq_update_avail_ring(vq, head_idx);
 }
 
