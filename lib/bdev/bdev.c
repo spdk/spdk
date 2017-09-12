@@ -58,7 +58,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define BUF_SMALL_POOL_SIZE	8192
 #define BUF_LARGE_POOL_SIZE	1024
 
-typedef TAILQ_HEAD(, spdk_bdev_io) need_buf_tailq_t;
+typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
 
 struct spdk_bdev_mgr {
 	struct spdk_mempool *bdev_io_pool;
@@ -95,8 +95,8 @@ static void			*g_cb_arg = NULL;
 
 
 struct spdk_bdev_mgmt_channel {
-	need_buf_tailq_t need_buf_small;
-	need_buf_tailq_t need_buf_large;
+	bdev_io_tailq_t need_buf_small;
+	bdev_io_tailq_t need_buf_large;
 };
 
 struct spdk_bdev_desc {
@@ -124,7 +124,7 @@ struct spdk_bdev_channel {
 	 */
 	uint64_t		io_outstanding;
 
-	TAILQ_HEAD(, spdk_bdev_io)	queued_resets;
+	bdev_io_tailq_t		queued_resets;
 
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t		start_tsc;
@@ -236,7 +236,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 	struct spdk_mempool *pool;
 	struct spdk_bdev_io *tmp;
 	void *buf;
-	need_buf_tailq_t *tailq;
+	bdev_io_tailq_t *tailq;
 	uint64_t length;
 	struct spdk_bdev_mgmt_channel *ch;
 
@@ -269,7 +269,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb)
 {
 	uint64_t len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 	struct spdk_mempool *pool;
-	need_buf_tailq_t *tailq;
+	bdev_io_tailq_t *tailq;
 	void *buf = NULL;
 	struct spdk_bdev_mgmt_channel *ch;
 
@@ -676,7 +676,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 }
 
 static void
-_spdk_bdev_abort_io(need_buf_tailq_t *queue, struct spdk_bdev_channel *ch)
+_spdk_bdev_abort_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_io *bdev_io, *tmp;
 
