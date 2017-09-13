@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a318af7_19247ea2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-13T05:45:33Z",
+      "side": 1,
+      "message": "Why call eventfd_write twice here ?",
+      "revId": "ae7c472c91ccdae599df26e2b85819fe382d33f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
