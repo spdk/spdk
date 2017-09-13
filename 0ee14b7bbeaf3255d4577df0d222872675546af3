@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c863553_06761ab7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-13T20:09:38Z",
+      "side": 1,
+      "message": "missmatch -\u003e mismatch",
+      "range": {
+        "startLine": 549,
+        "startChar": 36,
+        "endLine": 549,
+        "endChar": 45
+      },
+      "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8022c7a1_31afffb4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-13T20:09:38Z",
+      "side": 1,
+      "message": "Why are we marking the blob clean here? I don\u0027t think we have persisted the metadata in this code path.",
+      "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
