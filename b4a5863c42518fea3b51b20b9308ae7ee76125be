@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "af187a28_02a59b92",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-13T20:09:46Z",
+      "side": 1,
+      "message": "We should add a description of this field to the Media Format section of doc/blob.md.",
+      "revId": "b4a5863c42518fea3b51b20b9308ae7ee76125be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
