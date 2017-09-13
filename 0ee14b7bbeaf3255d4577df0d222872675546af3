@@ -39,6 +39,74 @@
       "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f93dd78a_8d465904",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1031,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:51:50Z",
+      "side": 1,
+      "message": "These should be ctx-\u003epages[i]\n\nThe only reason i - 1 was used was to point the previous page to this one.\n\nThe unit tests didn\u0027t find this problem because it only tests with a single page.",
+      "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3e8c446_d5750413",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1035,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:51:50Z",
+      "side": 1,
+      "message": "ctx-\u003epages[0]",
+      "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8fa732a_a7da7a3a",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1188,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:51:50Z",
+      "side": 1,
+      "message": "This is a great start, but I\u0027d like to see this extended to test blobs with multiple metadata pages in a future patch.  We don\u0027t have unit tests today for multiple metadata pages today so I\u0027d prefer to get basic multi-metadata page tests in first before creating crc tests for multiple md page blobs.\n\n\nThe easiest way to force this case is to create two separate blobs, A and B.  Then do something like:\n\nfor (i \u003d 0; i \u003c some_num; i++) {\n  resize(A, i)\n  resize(B, i)\n}\n\nThis will make sure the clusters are allocated non-contiguously, so that they cannot be coalesced when writing out the extents.\n\nsome_num needs to be big enough to span a page.  513 should be sufficient, since each extent entry takes up 8 bytes.",
+      "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c32a0a60_e5d77693",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1229,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:51:50Z",
+      "side": 1,
+      "message": "This part is invalid.  The open on line 1224 failed, so there is nothing to close.\n\ng_blob should have been set to NULL before line 1224 as well.  The CU_ASSERT on line 1226 is not correct either - g_blob should be NULL since the open failed.",
+      "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
