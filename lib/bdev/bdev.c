@@ -93,9 +93,6 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 static spdk_bdev_init_cb	g_cb_fn = NULL;
 static void			*g_cb_arg = NULL;
 
-static TAILQ_HEAD(bdev_part_tailq, spdk_bdev_part) g_part_disks =
-		TAILQ_HEAD_INITIALIZER(g_part_disks);
-
 struct spdk_bdev_mgmt_channel {
 	need_buf_tailq_t need_buf_small;
 	need_buf_tailq_t need_buf_large;
@@ -538,11 +535,6 @@ int
 spdk_bdev_finish(void)
 {
 	struct spdk_bdev_module_if *bdev_module;
-	struct spdk_bdev_part *part, *tmp;
-
-	TAILQ_FOREACH_SAFE(part, &g_part_disks, tailq, tmp) {
-		spdk_bdev_part_free(part);
-	}
 
 	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
 		if (bdev_module->module_fini) {
@@ -1747,7 +1739,6 @@ spdk_bdev_part_free(struct spdk_bdev_part *part)
 
 	base = part->base;
 	spdk_io_device_unregister(&part->base, NULL);
-	TAILQ_REMOVE(&g_part_disks, part, tailq);
 	free(part->bdev.name);
 
 	if (__sync_sub_and_fetch(&base->ref, 1) == 0) {
@@ -1759,12 +1750,10 @@ static void
 spdk_bdev_part_base_hotremove(void *arg)
 {
 	struct spdk_bdev *base_bdev = arg;
-	struct spdk_bdev_part *part, *tmp;
+	struct spdk_bdev *bdev, *tmp;
 
-	TAILQ_FOREACH_SAFE(part, &g_part_disks, tailq, tmp) {
-		if (part->base->bdev == base_bdev) {
-			spdk_bdev_unregister(&part->bdev);
-		}
+	TAILQ_FOREACH_SAFE(bdev, &base_bdev->vbdevs, vbdev_link, tmp) {
+		spdk_vbdev_unregister(bdev);
 	}
 }
 
@@ -1945,7 +1934,6 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 				spdk_bdev_part_channel_destroy_cb,
 				base->channel_size);
 	spdk_vbdev_register(&part->bdev, &base->bdev, 1);
-	TAILQ_INSERT_TAIL(&g_part_disks, part, tailq);
 
 	return 0;
 }
