@@ -1194,6 +1194,7 @@ blob_crc(void)
 	uint32_t page_num;
 	int index;
 	struct spdk_blob_md_page *page;
+	struct spdk_bs_super_block *super_blob;
 
 	dev = init_dev();
 
@@ -1233,6 +1234,19 @@ blob_crc(void)
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
+
+	super_blob = (struct spdk_bs_super_block *)g_dev_buffer;
+	super_blob->crc = 0;
+	dev = init_dev();
+	g_scheduler_delay = true;
+	/* Load an existing blob store */
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+
+	CU_ASSERT(g_bserrno == -EILSEQ);
+	_bs_flush_scheduler();
+	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
+
+	g_scheduler_delay = false;
 }
 
 int main(int argc, char **argv)
