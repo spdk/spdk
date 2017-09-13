@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d046f5b_c1a62c4b",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:38:30Z",
+      "side": 1,
+      "message": "please add a comment here describing what this xattr means (will make it easier for future readers of the code)",
+      "revId": "7a6ae7456aa8b9f9644082d8d7f55a9a6bfebd87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4f7016f_eb91a369",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 2285,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:38:30Z",
+      "side": 1,
+      "message": "you can just use blob_delete_cb instead of creating this new function",
+      "revId": "7a6ae7456aa8b9f9644082d8d7f55a9a6bfebd87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
