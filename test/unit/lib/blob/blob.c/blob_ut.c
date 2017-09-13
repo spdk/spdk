@@ -1234,6 +1234,39 @@ blob_crc(void)
 	g_bs = NULL;
 }
 
+static void
+super_block_crc(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_super_block *super_blob;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	super_blob = (struct spdk_bs_super_block *)g_dev_buffer;
+	super_blob->crc = 0;
+	dev = init_dev();
+
+	g_scheduler_delay = true;
+	/* Load an existing blob store */
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+
+	CU_ASSERT(g_bserrno == -EILSEQ);
+	_bs_flush_scheduler();
+	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
+
+	g_scheduler_delay = false;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1268,7 +1301,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz) == NULL ||
 		CU_add_test(suite, "bs_resize_md", bs_resize_md) == NULL ||
 		CU_add_test(suite, "blob_serialize", blob_serialize) == NULL ||
-		CU_add_test(suite, "blob_crc", blob_crc) == NULL
+		CU_add_test(suite, "blob_crc", blob_crc) == NULL ||
+		CU_add_test(suite, "super_block_crc", super_block_crc) == NULL	
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
