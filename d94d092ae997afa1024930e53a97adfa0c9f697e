@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "66ea14d4_851db6d2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 1654,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-13T14:13:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4cb22355_49f4e7ab",
+      "revId": "d94d092ae997afa1024930e53a97adfa0c9f697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0c9a064_1f209325",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 26
@@ -81,6 +99,30 @@
       "writtenOn": "2017-09-09T00:24:09Z",
       "side": 1,
       "message": "This should probably be SPDK_BDEV_IO_STATUS_FAILED.",
+      "range": {
+        "startLine": 378,
+        "startChar": 33,
+        "endLine": 378,
+        "endChar": 60
+      },
+      "revId": "d94d092ae997afa1024930e53a97adfa0c9f697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2774d670_50aaccc9",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-13T14:13:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0c9a064_1f209325",
       "range": {
         "startLine": 378,
         "startChar": 33,
@@ -116,6 +158,30 @@
     },
     {
       "key": {
+        "uuid": "01b3db89_acc28351",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-13T14:13:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d3bdbdf3_b64aed7b",
+      "range": {
+        "startLine": 124,
+        "startChar": 78,
+        "endLine": 124,
+        "endChar": 90
+      },
+      "revId": "d94d092ae997afa1024930e53a97adfa0c9f697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "065e9a85_439f1de7",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 26
@@ -127,6 +193,30 @@
       "writtenOn": "2017-09-09T00:24:09Z",
       "side": 1,
       "message": "Please use spdk_strerror_r().",
+      "range": {
+        "startLine": 364,
+        "startChar": 78,
+        "endLine": 364,
+        "endChar": 86
+      },
+      "revId": "d94d092ae997afa1024930e53a97adfa0c9f697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b641e63_7f25158f",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-13T14:13:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "065e9a85_439f1de7",
       "range": {
         "startLine": 364,
         "startChar": 78,
