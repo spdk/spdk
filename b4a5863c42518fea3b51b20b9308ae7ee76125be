@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "c6f78293_68a984ea",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1680,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:57:21Z",
+      "side": 1,
+      "message": "I think it would be more clear to do this in spdk_bs_init(), after ctx-\u003esuper has been filled out.",
+      "revId": "b4a5863c42518fea3b51b20b9308ae7ee76125be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "af187a28_02a59b92",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 8
