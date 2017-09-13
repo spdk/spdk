@@ -45,12 +45,17 @@ DPDKBUILD = dpdkbuild
 DIRS-y += dpdkbuild
 endif
 
+ifeq ($(CURDIR)/nvml,$(CONFIG_NVML_DIR))
+NVMLBUILD = nvml
+DIRS-y += nvml
+endif
+
 all: $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
 	$(Q)rm -f config.h
 
-lib: $(DPDKBUILD)
+lib: $(DPDKBUILD) $(NVMLBUILD)
 app: lib
 test: lib
 examples: lib
