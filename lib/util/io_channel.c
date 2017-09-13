@@ -52,6 +52,7 @@ struct io_device {
 	spdk_io_channel_destroy_cb destroy_cb;
 	spdk_io_device_unregister_cb unregister_cb;
 	uint32_t		ctx_size;
+	uint32_t		for_each_count;
 	TAILQ_ENTRY(io_device)	tailq;
 
 	bool			unregistered;
@@ -218,6 +219,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	dev->destroy_cb = destroy_cb;
 	dev->unregister_cb = NULL;
 	dev->ctx_size = ctx_size;
+	dev->for_each_count = 0;
 	dev->unregistered = false;
 
 	pthread_mutex_lock(&g_devlist_mutex);
@@ -272,6 +274,12 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 
 	if (!dev) {
 		SPDK_ERRLOG("io_device %p not found\n", io_device);
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return;
+	}
+
+	if (dev->for_each_count > 0) {
+		SPDK_ERRLOG("io_device %p has %u for_each calls outstanding\n", io_device, dev->for_each_count);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
@@ -400,6 +408,7 @@ spdk_io_channel_get_thread(struct spdk_io_channel *ch)
 
 struct call_channel {
 	void *io_device;
+	struct io_device *dev;
 	spdk_channel_msg fn;
 	void *ctx;
 
@@ -459,6 +468,7 @@ _call_channel(void *ctx)
 		thread = TAILQ_NEXT(thread, tailq);
 	}
 
+	ch_ctx->dev->for_each_count--;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	spdk_thread_send_msg(ch_ctx->orig_thread, _call_completion, ch_ctx);
@@ -489,6 +499,8 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 			if (ch->dev->io_device == io_device) {
+				ch->dev->for_each_count++;
+				ch_ctx->dev = ch->dev;
 				ch_ctx->cur_thread = thread;
 				pthread_mutex_unlock(&g_devlist_mutex);
 				spdk_thread_send_msg(thread, _call_channel, ch_ctx);
