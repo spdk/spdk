@@ -22,6 +22,30 @@
       "revId": "d733566860deb4db8be04810311b1d593c072c00",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9714114a_134c6de3",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_rxtx.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-13T05:22:40Z",
+      "side": 1,
+      "message": "It compiled just because PMD_DRV_LOG evaluates to nothing by default",
+      "parentUuid": "2def32c1_13a33207",
+      "range": {
+        "startLine": 143,
+        "startChar": 75,
+        "endLine": 143,
+        "endChar": 76
+      },
+      "revId": "d733566860deb4db8be04810311b1d593c072c00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
