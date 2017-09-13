@@ -253,7 +253,8 @@ struct spdk_bs_super_block {
 	uint32_t	md_start; /* Offset from beginning of disk, in pages */
 	uint32_t	md_len; /* Count, in pages */
 
-	uint8_t		reserved[4040];
+	uint8_t		reserved[4036];
+	uint32_t	crc;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super block size");
 

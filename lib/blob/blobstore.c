@@ -1547,6 +1547,7 @@ static void
 _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint32_t	crc;
 
 	if (ctx->super->version != SPDK_BS_VERSION) {
 		spdk_dma_free(ctx->super);
@@ -1564,6 +1565,14 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		spdk_bs_sequence_finish(seq, -EILSEQ);
 		return;
 	}
+	crc = _spdk_blob_md_page_calc_crc(ctx->super);
+	if (crc != ctx->super->crc) {
+		spdk_dma_free(ctx->super);
+		spdk_bs_sequence_finish(seq, -EILSEQ);
+		_spdk_bs_free(ctx->bs);
+		free(ctx);
+		return;
+	}
 
 	if (ctx->super->clean != 1) {
 		/* TODO: ONLY CLEAN SHUTDOWN IS CURRENTLY SUPPORTED.
@@ -1579,7 +1588,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 
 	ctx->super->clean = 0;
-
+	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
 			       _spdk_bs_byte_to_lba(ctx->bs, sizeof(*ctx->super)),
 			       _spdk_bs_load_write_super_cpl, ctx);
@@ -1667,6 +1676,7 @@ _spdk_bs_init_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_init_ctx *ctx = cb_arg;
 
+	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	/* Write super block */
 	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
 			       _spdk_bs_byte_to_lba(ctx->bs, sizeof(*ctx->super)),
@@ -1837,7 +1847,7 @@ _spdk_bs_unload_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, i
 	/* Update the values in the super block */
 	ctx->super->super_blob = ctx->bs->super_blob;
 	ctx->super->clean = 1;
-
+	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
 			       _spdk_bs_byte_to_lba(ctx->bs, sizeof(*ctx->super)),
 			       _spdk_bs_unload_write_super_cpl, ctx);
