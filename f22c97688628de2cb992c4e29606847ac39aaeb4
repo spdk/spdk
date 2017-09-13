@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6ff0bad_1332d800",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 16
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T18:59:00Z",
+      "side": 1,
+      "message": "bd_dev -\u003e bs_dev, aftrer -\u003e after",
+      "revId": "f22c97688628de2cb992c4e29606847ac39aaeb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f663145_0d7878b1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 16
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T18:59:00Z",
+      "side": 1,
+      "message": "postoponed -\u003e postponed",
+      "revId": "f22c97688628de2cb992c4e29606847ac39aaeb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27dd61be_c6e25106",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T18:59:00Z",
+      "side": 1,
+      "message": "What is the use case where _get_thread() would return NULL?  This would not be valid usage.  Maybe this should be an assert() instead?",
+      "revId": "f22c97688628de2cb992c4e29606847ac39aaeb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c9fe25c_cdf32d15",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T18:59:00Z",
+      "side": 1,
+      "message": "Could you change the variable name to \"ops\"?  tmp is usually used when using the _SAFE variation.  That reduces the size of the patch too.",
+      "revId": "f22c97688628de2cb992c4e29606847ac39aaeb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
