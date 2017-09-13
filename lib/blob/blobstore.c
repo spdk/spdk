@@ -1547,6 +1547,7 @@ static void
 _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint32_t	crc;
 
 	if (ctx->super->version != SPDK_BS_VERSION) {
 		spdk_dma_free(ctx->super);
@@ -1558,6 +1559,15 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	if (memcmp(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
 		   sizeof(ctx->super->signature)) != 0) {
+		spdk_dma_free(ctx->super);
+		_spdk_bs_free(ctx->bs);
+		free(ctx);
+		spdk_bs_sequence_finish(seq, -EILSEQ);
+		return;
+	}
+
+	crc = _spdk_blob_md_page_calc_crc(ctx->super);
+	if (crc != ctx->super->crc) {
 		spdk_dma_free(ctx->super);
 		_spdk_bs_free(ctx->bs);
 		free(ctx);
@@ -1579,7 +1589,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 
 	ctx->super->clean = 0;
-
+	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
 			       _spdk_bs_byte_to_lba(ctx->bs, sizeof(*ctx->super)),
 			       _spdk_bs_load_write_super_cpl, ctx);
@@ -1780,6 +1790,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->md_len = bs->md_len;
 	num_md_pages += bs->md_len;
 
+	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	/* Claim all of the clusters used by the metadata */
 	for (i = 0; i < divide_round_up(num_md_pages, bs->pages_per_cluster); i++) {
 		_spdk_bs_claim_cluster(bs, i);
@@ -1837,7 +1848,7 @@ _spdk_bs_unload_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, i
 	/* Update the values in the super block */
 	ctx->super->super_blob = ctx->bs->super_blob;
 	ctx->super->clean = 1;
-
+	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
 			       _spdk_bs_byte_to_lba(ctx->bs, sizeof(*ctx->super)),
 			       _spdk_bs_unload_write_super_cpl, ctx);
