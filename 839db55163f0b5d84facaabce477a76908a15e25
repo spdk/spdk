@@ -16,6 +16,24 @@
       "revId": "839db55163f0b5d84facaabce477a76908a15e25",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20975bcd_639189e1",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T21:06:24Z",
+      "side": 1,
+      "message": "Hi Changpeng - no, this is in regards to how many targets/devices we will try to scan on the virtio-scsi bus.  We will do this scan for every socket file specified in the configuration file.",
+      "parentUuid": "0e940706_dfe4a3ec",
+      "revId": "839db55163f0b5d84facaabce477a76908a15e25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
