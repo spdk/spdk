@@ -440,7 +440,6 @@ struct spdk_bdev_part_base {
 	bool				claimed;
 	struct spdk_bdev_module_if	*module;
 	struct spdk_bdev_fn_table	*fn_table;
-	struct bdev_part_tailq		*tailq;
 	spdk_io_channel_create_cb	ch_create_cb;
 	spdk_io_channel_destroy_cb	ch_destroy_cb;
 };
@@ -457,17 +456,11 @@ struct spdk_bdev_part_channel {
 	struct spdk_io_channel		*base_ch;
 };
 
-typedef TAILQ_HEAD(bdev_part_tailq, spdk_bdev_part)	SPDK_BDEV_PART_TAILQ;
-
 void spdk_bdev_part_base_free(struct spdk_bdev_part_base *base);
 void spdk_bdev_part_free(struct spdk_bdev_part *part);
-void spdk_bdev_part_tailq_fini(struct bdev_part_tailq *tailq);
-void spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tailq *tailq);
 int spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev *bdev,
-				  spdk_bdev_remove_cb_t remove_cb,
 				  struct spdk_bdev_module_if *module,
 				  struct spdk_bdev_fn_table *fn_table,
-				  struct bdev_part_tailq *tailq,
 				  uint32_t channel_size,
 				  spdk_io_channel_create_cb ch_create_cb,
 				  spdk_io_channel_destroy_cb ch_destroy_cb);

@@ -70,8 +70,6 @@ struct gpt_channel {
 	struct spdk_bdev_part_channel	part_ch;
 };
 
-static SPDK_BDEV_PART_TAILQ g_gpt_disks = TAILQ_HEAD_INITIALIZER(g_gpt_disks);
-
 static bool g_gpt_disabled;
 
 static void
@@ -79,12 +77,6 @@ spdk_gpt_base_free(struct gpt_base *gpt_base)
 {
 	spdk_dma_free(gpt_base->gpt.buf);
 	free(gpt_base);
-}
-
-static void
-spdk_gpt_base_bdev_hotremove_cb(void *_base_bdev)
-{
-	spdk_bdev_part_base_hotremove(_base_bdev, &g_gpt_disks);
 }
 
 static int vbdev_gpt_destruct(void *ctx);
@@ -111,9 +103,8 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 	}
 
 	rc = spdk_bdev_part_base_construct(&gpt_base->part_base, bdev,
-					   spdk_gpt_base_bdev_hotremove_cb,
 					   SPDK_GET_BDEV_MODULE(gpt), &vbdev_gpt_fn_table,
-					   &g_gpt_disks, sizeof(struct gpt_channel),
+					   sizeof(struct gpt_channel),
 					   NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("cannot construct gpt_base");
@@ -354,7 +345,6 @@ vbdev_gpt_init(void)
 static void
 vbdev_gpt_fini(void)
 {
-	spdk_bdev_part_tailq_fini(&g_gpt_disks);
 }
 
 static void

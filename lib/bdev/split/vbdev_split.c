@@ -50,8 +50,6 @@
 
 SPDK_DECLARE_BDEV_MODULE(split);
 
-static SPDK_BDEV_PART_TAILQ g_split_disks = TAILQ_HEAD_INITIALIZER(g_split_disks);
-
 struct vbdev_split_channel {
 	struct spdk_bdev_part_channel	part_ch;
 };
@@ -63,12 +61,6 @@ vbdev_split_destruct(void *ctx)
 
 	spdk_bdev_part_free(part);
 	return 0;
-}
-
-static void
-vbdev_split_base_bdev_hotremove_cb(void *_base_bdev)
-{
-	spdk_bdev_part_base_hotremove(_base_bdev, &g_split_disks);
 }
 
 static void
@@ -149,9 +141,8 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	}
 
 	rc = spdk_bdev_part_base_construct(split_base, base_bdev,
-					   vbdev_split_base_bdev_hotremove_cb,
 					   SPDK_GET_BDEV_MODULE(split), &vbdev_split_fn_table,
-					   &g_split_disks, sizeof(struct vbdev_split_channel),
+					   sizeof(struct vbdev_split_channel),
 					   NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("Cannot construct bdev part base\n");
@@ -262,7 +253,6 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 static void
 vbdev_split_fini(void)
 {
-	spdk_bdev_part_tailq_fini(&g_split_disks);
 }
 
 static int

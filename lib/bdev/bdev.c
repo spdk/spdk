@@ -93,6 +93,8 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 static spdk_bdev_init_cb	g_cb_fn = NULL;
 static void			*g_cb_arg = NULL;
 
+static TAILQ_HEAD(bdev_part_tailq, spdk_bdev_part) g_part_disks =
+		TAILQ_HEAD_INITIALIZER(g_part_disks);
 
 struct spdk_bdev_mgmt_channel {
 	need_buf_tailq_t need_buf_small;
@@ -536,6 +538,11 @@ int
 spdk_bdev_finish(void)
 {
 	struct spdk_bdev_module_if *bdev_module;
+	struct spdk_bdev_part *part, *tmp;
+
+	TAILQ_FOREACH_SAFE(part, &g_part_disks, tailq, tmp) {
+		spdk_bdev_part_free(part);
+	}
 
 	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
 		if (bdev_module->module_fini) {
@@ -1740,7 +1747,7 @@ spdk_bdev_part_free(struct spdk_bdev_part *part)
 
 	base = part->base;
 	spdk_io_device_unregister(&part->base, NULL);
-	TAILQ_REMOVE(base->tailq, part, tailq);
+	TAILQ_REMOVE(&g_part_disks, part, tailq);
 	free(part->bdev.name);
 
 	if (__sync_sub_and_fetch(&base->ref, 1) == 0) {
@@ -1748,22 +1755,13 @@ spdk_bdev_part_free(struct spdk_bdev_part *part)
 	}
 }
 
-void
-spdk_bdev_part_tailq_fini(struct bdev_part_tailq *tailq)
+static void
+spdk_bdev_part_base_hotremove(void *arg)
 {
+	struct spdk_bdev *base_bdev = arg;
 	struct spdk_bdev_part *part, *tmp;
 
-	TAILQ_FOREACH_SAFE(part, tailq, tailq, tmp) {
-		spdk_bdev_part_free(part);
-	}
-}
-
-void
-spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tailq *tailq)
-{
-	struct spdk_bdev_part *part, *tmp;
-
-	TAILQ_FOREACH_SAFE(part, tailq, tailq, tmp) {
+	TAILQ_FOREACH_SAFE(part, &g_part_disks, tailq, tmp) {
 		if (part->base->bdev == base_bdev) {
 			spdk_bdev_unregister(&part->bdev);
 		}
@@ -1883,8 +1881,8 @@ spdk_bdev_part_channel_destroy_cb(void *io_device, void *ctx_buf)
 
 int
 spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev *bdev,
-			      spdk_bdev_remove_cb_t remove_cb, struct spdk_bdev_module_if *module,
-			      struct spdk_bdev_fn_table *fn_table, struct bdev_part_tailq *tailq,
+			      struct spdk_bdev_module_if *module,
+			      struct spdk_bdev_fn_table *fn_table,
 			      uint32_t channel_size, spdk_io_channel_create_cb ch_create_cb,
 			      spdk_io_channel_destroy_cb ch_destroy_cb)
 {
@@ -1897,13 +1895,12 @@ spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev
 	base->ref = 0;
 	base->module = module;
 	base->fn_table = fn_table;
-	base->tailq = tailq;
 	base->claimed = false;
 	base->channel_size = channel_size;
 	base->ch_create_cb = ch_create_cb;
 	base->ch_destroy_cb = ch_destroy_cb;
 
-	rc = spdk_bdev_open(bdev, false, remove_cb, bdev, &base->desc);
+	rc = spdk_bdev_open(bdev, false, spdk_bdev_part_base_hotremove, bdev, &base->desc);
 	if (rc) {
 		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
 		return -1;
@@ -1948,7 +1945,7 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 				spdk_bdev_part_channel_destroy_cb,
 				base->channel_size);
 	spdk_vbdev_register(&part->bdev, &base->bdev, 1);
-	TAILQ_INSERT_TAIL(base->tailq, part, tailq);
+	TAILQ_INSERT_TAIL(&g_part_disks, part, tailq);
 
 	return 0;
 }

@@ -68,7 +68,6 @@ struct error_channel {
 };
 
 static pthread_mutex_t g_vbdev_error_mutex = PTHREAD_MUTEX_INITIALIZER;
-static SPDK_BDEV_PART_TAILQ g_error_disks = TAILQ_HEAD_INITIALIZER(g_error_disks);
 
 int
 spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)
@@ -86,12 +85,8 @@ spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint3
 		return -1;
 	}
 
-	TAILQ_FOREACH(part, &g_error_disks, tailq) {
-		if (bdev == &part->bdev) {
-			error_disk = (struct error_disk *)part;
-			break;
-		}
-	}
+	part = SPDK_CONTAINEROF(bdev, struct spdk_bdev_part, bdev);
+	error_disk = SPDK_CONTAINEROF(part, struct error_disk, part);
 
 	if (error_disk == NULL) {
 		SPDK_ERRLOG("Could not find ErrorInjection bdev %s\n", name);
@@ -221,9 +216,9 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 		return -1;
 	}
 
-	rc = spdk_bdev_part_base_construct(base, base_bdev, NULL,
+	rc = spdk_bdev_part_base_construct(base, base_bdev,
 					   SPDK_GET_BDEV_MODULE(error), &vbdev_error_fn_table,
-					   &g_error_disks, sizeof(struct error_channel), NULL, NULL);
+					   sizeof(struct error_channel), NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("could not construct part base for bdev %s\n", spdk_bdev_get_name(base_bdev));
 		free(base);
@@ -306,7 +301,6 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 static void
 vbdev_error_fini(void)
 {
-	spdk_bdev_part_tailq_fini(&g_error_disks);
 }
 
 SPDK_BDEV_MODULE_REGISTER(error, vbdev_error_init, vbdev_error_fini, NULL, NULL,
