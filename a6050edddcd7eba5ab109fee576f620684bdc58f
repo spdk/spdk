@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "b866d0e7_c47ffc4c",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-13T06:45:17Z",
+      "side": 1,
+      "message": "Whitespaces",
+      "range": {
+        "startLine": 89,
+        "startChar": 74,
+        "endLine": 89,
+        "endChar": 75
+      },
+      "revId": "a6050edddcd7eba5ab109fee576f620684bdc58f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9783b791_064851e2",
         "filename": "test/lvol/testplan.md",
         "patchSetId": 12
@@ -37,6 +60,30 @@
       "side": 1,
       "message": "fixed",
       "parentUuid": "9783b791_064851e2",
+      "range": {
+        "startLine": 321,
+        "startChar": 0,
+        "endLine": 321,
+        "endChar": 63
+      },
+      "revId": "a6050edddcd7eba5ab109fee576f620684bdc58f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a0c2790_09669759",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-13T06:45:17Z",
+      "side": 1,
+      "message": "Can\u0027t see it fixed. Did you upload the patch set?",
+      "parentUuid": "4790c52a_6178a172",
       "range": {
         "startLine": 321,
         "startChar": 0,
@@ -125,6 +172,24 @@
       "side": 1,
       "message": "I think, this test case can detect more defects, e.g. communication between lvol with second nested lvol after destroy first nested lvol",
       "parentUuid": "e3c97425_4d69325e",
+      "revId": "a6050edddcd7eba5ab109fee576f620684bdc58f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f2068d1_f76c2cd9",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-13T06:45:17Z",
+      "side": 1,
+      "message": "I agree with Tomasz - I think it doesn\u0027t matter if you test this case with three, four or more levels. Each level will take the same path in code execution, so we only need 2 lvol stores for this test - 1 basic and 1 nested.",
+      "parentUuid": "133e1121_e0634688",
       "revId": "a6050edddcd7eba5ab109fee576f620684bdc58f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
