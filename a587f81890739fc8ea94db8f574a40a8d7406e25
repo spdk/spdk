@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "280d450f_d6d2e11b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 29
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T00:59:44Z",
+      "side": 1,
+      "message": "Daniel\u0027s comments on patch set 26 were not addressed here.",
+      "revId": "a587f81890739fc8ea94db8f574a40a8d7406e25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9580188_e98eb215",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T00:59:44Z",
+      "side": 1,
+      "message": "Daniel\u0027s comments on patch set 26 were not addressed here.",
+      "revId": "a587f81890739fc8ea94db8f574a40a8d7406e25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
