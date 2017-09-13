@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a2294f7_d7af33fe",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-13T08:46:59Z",
+      "side": 1,
+      "message": "\"test\" still used in script code. Change this to use brackets in all possible places.",
+      "range": {
+        "startLine": 150,
+        "startChar": 4,
+        "endLine": 150,
+        "endChar": 40
+      },
+      "revId": "265cac075d662fb5eedecaa000ca8ee55a1650fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
