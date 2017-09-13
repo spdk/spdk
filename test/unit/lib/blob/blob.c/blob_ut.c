@@ -155,6 +155,8 @@ blob_super(void)
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
 	spdk_blob_id blobid;
+	uint32_t crc;
+	struct spdk_bs_super_block *super_blob;
 
 	dev = init_dev();
 
@@ -162,6 +164,34 @@ blob_super(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
+
+	/*Start the crc test */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	super_blob = (struct spdk_bs_super_block *)g_dev_buffer;
+	crc = super_blob->crc;
+	super_blob->crc = 0;
+
+	dev = init_dev();
+
+	g_scheduler_delay = true;
+	/* Load an existing blob store */
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+
+	CU_ASSERT(g_bserrno == -EILSEQ);
+	_bs_flush_scheduler();
+	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
+
+	g_scheduler_delay = false;
+	super_blob = (struct spdk_bs_super_block *)g_dev_buffer;
+	super_blob->crc = crc;
+
+	dev = init_dev();
+	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
 	/* Get the super blob without having set one */
 	spdk_bs_get_super(bs, blob_op_with_id_complete, NULL);
