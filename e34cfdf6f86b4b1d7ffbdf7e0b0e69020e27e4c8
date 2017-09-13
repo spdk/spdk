@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db2d06ad_2e3c22b3",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:38:30Z",
+      "side": 1,
+      "message": "Please add a comment here explaining why we are checking this is_deleted xattr - it will make it easier for future readers to understand.",
+      "revId": "e34cfdf6f86b4b1d7ffbdf7e0b0e69020e27e4c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31cf3e69_a575e94d",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 2285,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:38:30Z",
+      "side": 1,
+      "message": "Can you reuse blob_delete_cb instead of adding this new function?",
+      "revId": "e34cfdf6f86b4b1d7ffbdf7e0b0e69020e27e4c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44df22a8_e9314b7d",
+        "filename": "test/lib/blobfs/blobfs_async_ut/blobfs_async_ut.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:38:30Z",
+      "side": 1,
+      "message": "comment needs to be fixed",
+      "revId": "e34cfdf6f86b4b1d7ffbdf7e0b0e69020e27e4c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "919efc2f_79a263f4",
+        "filename": "test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:38:30Z",
+      "side": 1,
+      "message": "Why do we not expect this to return 0?\n\nIt seems this patch passed the test pool, but I don\u0027t understand why.  You have clearly modified the delete path to not return -EBUSY anymore if the ref count \u003e 0.",
+      "revId": "e34cfdf6f86b4b1d7ffbdf7e0b0e69020e27e4c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
