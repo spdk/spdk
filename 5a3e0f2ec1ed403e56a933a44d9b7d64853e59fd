@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e09f67b_180a488a",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-13T07:05:29Z",
+      "side": 1,
+      "message": "In one of the previous patch sets I changed this to bdev/nbd application. Why did you change it again back to bdev_io?",
+      "range": {
+        "startLine": 76,
+        "startChar": 4,
+        "endLine": 76,
+        "endChar": 69
+      },
+      "revId": "5a3e0f2ec1ed403e56a933a44d9b7d64853e59fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e2a1d29_4ddd16b4",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-13T07:05:29Z",
+      "side": 1,
+      "message": "cases",
+      "range": {
+        "startLine": 31,
+        "startChar": 36,
+        "endLine": 31,
+        "endChar": 40
+      },
+      "revId": "5a3e0f2ec1ed403e56a933a44d9b7d64853e59fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7feb8609_303f0581",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-13T07:05:29Z",
+      "side": 1,
+      "message": "You use nbd.pid while in lvol.sh you save pid to bdev_io.pid",
+      "range": {
+        "startLine": 395,
+        "startChar": 8,
+        "endLine": 395,
+        "endChar": 42
+      },
+      "revId": "5a3e0f2ec1ed403e56a933a44d9b7d64853e59fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d540487_2103e162",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-13T07:05:29Z",
+      "side": 1,
+      "message": "These changes (including file rename to \"test_plan\") are not in the scope of this commit.\nPlease apply these changes in previous commit which contains test plan itself.",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 42
+      },
+      "revId": "5a3e0f2ec1ed403e56a933a44d9b7d64853e59fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
