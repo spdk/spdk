@@ -38,6 +38,6 @@
 
 #include "spdk/bdev.h"
 
-struct spdk_bdev *create_pmem_disk(uint64_t num_blocks, uint32_t block_size);
+struct spdk_bdev *create_pmem_disk(const char *filename , uint64_t num_blocks, uint32_t block_size);
 
 #endif /* SPDK_BDEV_MALLOC_H */

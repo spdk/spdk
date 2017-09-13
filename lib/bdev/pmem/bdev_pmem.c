@@ -42,7 +42,6 @@
 #include "spdk/copy_engine.h"
 #include "spdk/io_channel.h"
 #include "spdk/string.h"
-
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 #include "libpmemblk.h"
@@ -382,10 +381,9 @@ static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.get_io_channel		= bdev_pmem_get_io_channel,
 };
 
-struct spdk_bdev *create_pmem_disk(uint64_t num_blocks, uint32_t block_size)
+struct spdk_bdev *create_pmem_disk(const char *filename , uint64_t num_blocks, uint32_t block_size)
 {
 	struct pmem_disk *pdisk;
-	const char path[] = "./pmem_pool";
 
 	if (block_size % 512 != 0) {
 		SPDK_ERRLOG("Block size %u is not a multiple of 512.\n", block_size);
@@ -403,7 +401,7 @@ struct spdk_bdev *create_pmem_disk(uint64_t num_blocks, uint32_t block_size)
 		return NULL;
 	}
 
-	pdisk->pool = pmemblk_create(path, block_size, num_blocks, 0666);
+	pdisk->pool = pmemblk_create(filename , block_size, num_blocks, 0666);
 	if (!pdisk->pool) {
 		SPDK_ERRLOG("creating pmem pool failed\n");
 //		free(pdisk);

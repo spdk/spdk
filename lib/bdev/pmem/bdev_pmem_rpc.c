@@ -38,32 +38,40 @@
 
 #include "spdk_internal/log.h"
 
-struct rpc_construct_malloc {
+struct rpc_construct_pmem_bdev {
+	char *pmem_file;
 	uint32_t num_blocks;
 	uint32_t block_size;
 };
 
-static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
-	{"num_blocks", offsetof(struct rpc_construct_malloc, num_blocks), spdk_json_decode_uint32},
-	{"block_size", offsetof(struct rpc_construct_malloc, block_size), spdk_json_decode_uint32},
+static const struct spdk_json_object_decoder rpc_construct_pmem_bdev_decoders[] = {
+	{"pmem_file",  offsetof(struct rpc_construct_pmem_bdev, pmem_file), spdk_json_decode_string},
+	{"num_blocks", offsetof(struct rpc_construct_pmem_bdev, num_blocks), spdk_json_decode_uint32},
+	{"block_size", offsetof(struct rpc_construct_pmem_bdev, block_size), spdk_json_decode_uint32},
 };
 
 static void
-spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
+free_rpc_construct_pmem_bdev(struct rpc_construct_pmem_bdev *req)
+{
+	free(req->pmem_file);
+}
+
+static void
+spdk_rpc_construct_pmem_bdev(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
-	struct rpc_construct_malloc req = {};
+	struct rpc_construct_pmem_bdev req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
 
-	if (spdk_json_decode_object(params, rpc_construct_malloc_decoders,
-				    SPDK_COUNTOF(rpc_construct_malloc_decoders),
+	if (spdk_json_decode_object(params, rpc_construct_pmem_bdev_decoders,
+				    SPDK_COUNTOF(rpc_construct_pmem_bdev_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_TRACE_BDEV_MALLOC, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
-	bdev = create_malloc_disk(req.num_blocks, req.block_size);
+	bdev = create_pmem_disk(req.pmem_file, req.num_blocks, req.block_size);
 	if (bdev == NULL) {
 		goto invalid;
 	}
@@ -81,5 +89,6 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_construct_pmem_bdev(&req);
 }
-SPDK_RPC_REGISTER("construct_malloc_bdev", spdk_rpc_construct_malloc_bdev)
+SPDK_RPC_REGISTER("construct_pmem_bdev", spdk_rpc_construct_pmem_bdev)

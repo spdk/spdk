@@ -240,6 +240,23 @@ p.add_argument('rbd_name', help='rbd image name')
 p.add_argument('block_size', help='rbd block size', type=int)
 p.set_defaults(func=construct_rbd_bdev)
 
+def construct_pmem_bdev(args):
+	num_blocks = (args.total_size * 1024 * 1024) / args.block_size
+	params = {
+        'pmem_file': args.pool_name,
+        'num_blocks': num_blocks,
+        'block_size': args.block_size,
+    }
+    print_array(jsonrpc_call('construct_pmem_bdev', params))
+
+p = subparsers.add_parser('construct_pmem_bdev', help='Add a bdev with pmem backend')
+p.add_argument('pmem_file', help='pmem file name')
+p.add_argument('total_size', help='Size of this bdev in MB (int > 0)', type=int)
+p.add_argument('block_size', help='Block size for this bdev', type=int)
+p.set_defaults(func=construct_rbd_bdev)
+
+
+
 def construct_error_bdev(args):
     params = {'base_name': args.base_name}
     jsonrpc_call('construct_error_bdev', params)
