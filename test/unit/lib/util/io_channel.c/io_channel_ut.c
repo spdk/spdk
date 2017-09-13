@@ -170,6 +170,77 @@ for_each_channel_remove(void)
 	free_threads();
 }
 
+struct unreg_ctx {
+	bool	ch_done;
+	bool	foreach_done;
+};
+
+static void
+unreg_ch_done(void *io_device, struct spdk_io_channel *_ch, void *_ctx)
+{
+	struct unreg_ctx *ctx = _ctx;
+
+	ctx->ch_done = true;
+}
+
+static void
+unreg_foreach_done(void *io_device, void *_ctx)
+{
+	struct unreg_ctx *ctx = _ctx;
+
+	ctx->foreach_done = true;
+}
+
+static void
+for_each_channel_unreg(void)
+{
+	struct spdk_io_channel *ch0;
+	struct io_device *dev;
+	struct unreg_ctx ctx = {};
+	int io_target;
+
+	allocate_threads(1);
+	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	CU_ASSERT(!TAILQ_EMPTY(&g_io_devices));
+	dev = TAILQ_FIRST(&g_io_devices);
+	CU_ASSERT(TAILQ_NEXT(dev, tailq) == NULL);
+	set_thread(0);
+	ch0 = spdk_get_io_channel(&io_target);
+	spdk_for_each_channel(&io_target, unreg_ch_done, &ctx, unreg_foreach_done);
+
+	spdk_io_device_unregister(&io_target, NULL);
+	/*
+	 * There is an outstanding foreach call on the io_device, so the unregister should not
+	 *  have removed the device.
+	 */
+	CU_ASSERT(dev == TAILQ_FIRST(&g_io_devices));
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	/*
+	 * There is already a device registered at &io_target, so a new io_device should not
+	 *  have been added to g_io_devices.
+	 */
+	CU_ASSERT(dev == TAILQ_FIRST(&g_io_devices));
+	CU_ASSERT(TAILQ_NEXT(dev, tailq) == NULL);
+
+	poll_thread(0);
+	CU_ASSERT(ctx.ch_done == true);
+	CU_ASSERT(ctx.foreach_done == true);
+	/*
+	 * There are no more foreach operations outstanding, so we can unregister the device,
+	 *  even though a channel still exists for the device.
+	 */
+	spdk_io_device_unregister(&io_target, NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+
+	set_thread(0);
+	spdk_put_io_channel(ch0);
+
+	poll_threads();
+
+	free_threads();
+}
+
 static void
 thread_name(void)
 {
@@ -318,6 +389,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "thread_alloc", thread_alloc) == NULL ||
 		CU_add_test(suite, "thread_send_msg", thread_send_msg) == NULL ||
 		CU_add_test(suite, "for_each_channel_remove", for_each_channel_remove) == NULL ||
+		CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg) == NULL ||
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
 		CU_add_test(suite, "channel", channel) == NULL
 	) {
