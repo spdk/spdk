@@ -416,7 +416,7 @@ blockdev_write_read_512Bytes(void)
 	/* Data size = 512 */
 	data_length = 512;
 	CU_ASSERT_TRUE(data_length < BUFFER_SIZE);
-	offset = 2048;
+	offset = 8192;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
 	 * of write and read for all blockdevs is 0. */
@@ -437,7 +437,7 @@ blockdev_writev_readv_512Bytes(void)
 	data_length = 512;
 	iov_len = 512;
 	CU_ASSERT_TRUE(data_length < BUFFER_SIZE);
-	offset = 2048;
+	offset = 8192;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
 	 * of write and read for all blockdevs is 0. */
@@ -457,7 +457,7 @@ blockdev_write_read_size_gt_128k(void)
 	/* Data size = 132K */
 	data_length = 135168;
 	CU_ASSERT_TRUE(data_length < BUFFER_SIZE);
-	offset = 2048;
+	offset = 8192;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
 	 * of write and read for all blockdevs is 0. */
@@ -478,7 +478,7 @@ blockdev_writev_readv_size_gt_128k(void)
 	data_length = 135168;
 	iov_len = 135168;
 	CU_ASSERT_TRUE(data_length < BUFFER_SIZE);
-	offset = 2048;
+	offset = 8192;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
 	 * of write and read for all blockdevs is 0. */
@@ -499,7 +499,7 @@ blockdev_writev_readv_size_gt_128k_two_iov(void)
 	data_length = 135168;
 	iov_len = 128 * 1024;
 	CU_ASSERT_TRUE(data_length < BUFFER_SIZE);
-	offset = 2048;
+	offset = 8192;
 	pattern = 0xA3;
 	/* Params are valid, hence the expected return value
 	 * of write and read for all blockdevs is 0. */
@@ -519,7 +519,7 @@ blockdev_write_read_invalid_size(void)
 	/* Data size is not a multiple of the block size */
 	data_length = 0x1015;
 	CU_ASSERT_TRUE(data_length < BUFFER_SIZE);
-	offset = 2048;
+	offset = 8192;
 	pattern = 0xA3;
 	/* Params are invalid, hence the expected return value
 	 * of write and read for all blockdevs is < 0 */
