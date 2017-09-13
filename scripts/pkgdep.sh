@@ -10,7 +10,7 @@ if [ -s /etc/redhat-release ]; then
 		yum --enablerepo=extras install -y epel-release
 	fi
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-		git astyle-devel python-pep8 lcov python clang-analyzer
+		git astyle-devel python-pep8 lcov python clang-analyzer libuuid-devel 
 	# Additional dependencies for NVMe over Fabrics
 	yum install -y libibverbs-devel librdmacm-devel
 	# Additional dependencies for building docs
@@ -18,14 +18,14 @@ if [ -s /etc/redhat-release ]; then
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
-		git astyle pep8 lcov clang
+		git astyle pep8 lcov clang uuid-dev
 	# Additional dependencies for NVMe over Fabrics
 	apt-get install -y libibverbs-dev librdmacm-dev
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen
 elif [ $SYSTEM = "FreeBSD" ] ; then
 	pkg install gmake cunit openssl git devel/astyle bash devel/pep8 \
-		python
+		python misc/e2fsprogs-libuuid
 	# Additional dependencies for building docs
 	pkg install doxygen mscgen
 else
