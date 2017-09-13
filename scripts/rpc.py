@@ -174,6 +174,14 @@ p.add_argument('block_size', help='Block size for this bdev', type=int)
 p.set_defaults(func=construct_malloc_bdev)
 
 
+def construct_pmem_bdev(args):
+    params = {'pmem_file': args.pmem_file}
+    print_array(jsonrpc_call('construct_pmem_bdev', params))
+
+p = subparsers.add_parser('construct_pmem_bdev', help='Add a bdev with pmem backend')
+p.add_argument('pmem_file', help='Path to pmemblk pool file')
+p.set_defaults(func=construct_pmem_bdev)
+
 def construct_null_bdev(args):
     num_blocks = (args.total_size * 1024 * 1024) / args.block_size
     params = {'name': args.name, 'num_blocks': num_blocks, 'block_size': args.block_size}
