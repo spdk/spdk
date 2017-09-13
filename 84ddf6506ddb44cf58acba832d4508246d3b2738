@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53cd1da6_615991f8",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-13T20:15:01Z",
+      "side": 0,
+      "message": "unrelated whitespace change",
+      "revId": "84ddf6506ddb44cf58acba832d4508246d3b2738",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
