@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0150b4d_c42c8214",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-14T16:11:16Z",
+      "side": 1,
+      "message": "This could use some LIST API.",
+      "range": {
+        "startLine": 52,
+        "startChar": 1,
+        "endLine": 52,
+        "endChar": 24
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b20968ac_2fcdbfcc",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-14T16:11:16Z",
+      "side": 1,
+      "message": "Check error code.",
+      "range": {
+        "startLine": 197,
+        "startChar": 3,
+        "endLine": 197,
+        "endChar": 62
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "301dd6e6_75981931",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-14T16:11:16Z",
+      "side": 1,
+      "message": "Check error code.",
+      "range": {
+        "startLine": 215,
+        "startChar": 0,
+        "endLine": 215,
+        "endChar": 47
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bdbc8e0_fc44ebaf",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-14T16:11:16Z",
+      "side": 1,
+      "message": "Is this true if executed from other core?",
+      "range": {
+        "startLine": 226,
+        "startChar": 1,
+        "endLine": 226,
+        "endChar": 81
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f84d5b0d_391145fe",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-14T16:11:16Z",
+      "side": 1,
+      "message": "spdk_dma_zmalloc -\u003e calloc",
+      "range": {
+        "startLine": 328,
+        "startChar": 9,
+        "endLine": 328,
+        "endChar": 25
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9be48fd8_584cbd4b",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-14T16:11:16Z",
+      "side": 1,
+      "message": "This need to undo the pmemblk_open(). And free pdisk etc.",
+      "range": {
+        "startLine": 355,
+        "startChar": 1,
+        "endLine": 358,
+        "endChar": 2
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d16e6a1c_42c00317",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-14T16:11:16Z",
+      "side": 1,
+      "message": "This need some mutex.",
+      "range": {
+        "startLine": 360,
+        "startChar": 49,
+        "endLine": 360,
+        "endChar": 64
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "785a4ff1_ea00947d",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-14T16:11:16Z",
+      "side": 1,
+      "message": "This need some mutex.",
+      "range": {
+        "startLine": 381,
+        "startChar": 1,
+        "endLine": 382,
+        "endChar": 26
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
