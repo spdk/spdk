@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab1d6503_f0eb7360",
+        "filename": "test/nvmf/discovery/discovery.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-14T16:52:36Z",
+      "side": 1,
+      "message": "Mismatched whitespace.",
+      "revId": "cc6ae4fd06dcbd695d8e2d2067777388eec8768c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
