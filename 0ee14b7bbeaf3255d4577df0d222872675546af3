@@ -143,6 +143,24 @@
       "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84c66030_933a20d6",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1229,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-14T03:11:12Z",
+      "side": 1,
+      "message": "actually, the logic now still return the blob even if the crc is not correct, just with a return errno other than 0, so do you mean we should return NULL if the blob crc is not correct? but that means we have no chance to delete the blob?",
+      "parentUuid": "c32a0a60_e5d77693",
+      "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
