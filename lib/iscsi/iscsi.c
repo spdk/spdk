@@ -2439,15 +2439,9 @@ spdk_iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	struct iscsi_bhs_logout_req *reqh;
 	struct iscsi_bhs_logout_resp *rsph;
 	uint16_t cid;
-#ifdef DEBUG
-	int reason;
-#endif
 
 	reqh = (struct iscsi_bhs_logout_req *)&pdu->bhs;
 
-#ifdef DEBUG
-	reason = reqh->reason & ISCSI_LOGOUT_REASON_MASK;
-#endif
 	cid = from_be16(&reqh->cid);
 	task_tag = from_be32(&reqh->itt);
 	CmdSN = from_be32(&reqh->cmd_sn);
@@ -2455,7 +2449,7 @@ spdk_iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	ExpStatSN = from_be32(&reqh->exp_stat_sn);
 
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "reason=%d, ITT=%x, cid=%d\n",
-		      reason, task_tag, cid);
+		      reqh->reason, task_tag, cid);
 
 	if (reqh->reason != 0 && conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
 		SPDK_ERRLOG("only logout with close the session reason can be in discovery session");
