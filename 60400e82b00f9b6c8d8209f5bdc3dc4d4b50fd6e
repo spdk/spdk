@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "992c62d3_a480bf0b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-14T21:48:55Z",
+      "side": 1,
+      "message": "This link has an extra opening parenthesis.",
+      "range": {
+        "startLine": 92,
+        "startChar": 21,
+        "endLine": 92,
+        "endChar": 23
+      },
+      "revId": "60400e82b00f9b6c8d8209f5bdc3dc4d4b50fd6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
