@@ -136,6 +136,7 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *c
 {
 	bdev_blob_destroy(lvs->bs_dev);
 	free(lvs);
+	g_lvol_store = NULL;
 	cb_fn(cb_arg, 0);
 	return 0;
 }
@@ -161,6 +162,31 @@ lvol_store_op_complete(void *cb_arg, int lvserrno)
 	return;
 }
 
+static void
+lvol_hotremove(void)
+{
+	int rc = 0;
+
+	lvol_store_initialize_fail = false;
+	lvol_store_initialize_cb_fail = false;
+
+	/* Lvol store is succesfully created */
+	rc = vbdev_lvs_create(&g_bdev, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store != NULL);
+	CU_ASSERT(g_bs_dev != NULL);
+
+	/* Hot remove callback with NULL - stability check */
+	vbdev_lvs_hotremove_cb(NULL);
+
+	/* Hot remove lvs on bdev removal */
+	vbdev_lvs_hotremove_cb(&g_bdev);
+
+	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_lvol_pairs));
+
+}
 
 static void
 lvol_init(void)
@@ -235,7 +261,8 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "lvol_init", lvol_init) == NULL
+		CU_add_test(suite, "lvol_init", lvol_init) == NULL ||
+		CU_add_test(suite, "lvol_hotremove", lvol_hotremove) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
