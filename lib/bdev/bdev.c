@@ -606,11 +606,26 @@ static void
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
-	struct spdk_io_channel *ch = bdev_io->ch->channel;
+	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
+	struct spdk_io_channel *ch = bdev_ch->channel;
 
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
-	bdev_io->ch->io_outstanding++;
+	bdev_ch->io_outstanding++;
+	bdev_io->in_submit_request = true;
+	bdev->fn_table->submit_request(ch, bdev_io);
+	bdev_io->in_submit_request = false;
+}
+
+static void
+spdk_bdev_io_submit_reset(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
+	struct spdk_io_channel *ch = bdev_ch->channel;
+
+	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
+
 	bdev_io->in_submit_request = true;
 	bdev->fn_table->submit_request(ch, bdev_io);
 	bdev_io->in_submit_request = false;
@@ -1134,7 +1149,7 @@ _spdk_bdev_reset_dev(void *io_device, void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
-	spdk_bdev_io_submit(bdev_io);
+	spdk_bdev_io_submit_reset(bdev_io);
 }
 
 static void
@@ -1331,13 +1346,14 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 {
 	bdev_io->status = status;
 
-	assert(bdev_io->ch->io_outstanding > 0);
-	bdev_io->ch->io_outstanding--;
-	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
+	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
 		pthread_mutex_lock(&bdev_io->bdev->mutex);
 		bdev_io->bdev->reset_in_progress = false;
 		pthread_mutex_unlock(&bdev_io->bdev->mutex);
 		spdk_for_each_channel(bdev_io->bdev, _spdk_bdev_complete_reset_channel, NULL, NULL);
+	} else {
+		assert(bdev_io->ch->io_outstanding > 0);
+		bdev_io->ch->io_outstanding--;
 	}
 
 	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
