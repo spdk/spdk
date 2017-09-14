@@ -415,11 +415,16 @@ spdk_bdev_io_from_ctx(void *ctx)
 	       ((uintptr_t)ctx - offsetof(struct spdk_bdev_io, driver_ctx));
 }
 
+struct spdk_bdev_part_base;
+
+typedef void (*spdk_bdev_part_base_free_fn)(struct spdk_bdev_part_base *base);
+
 struct spdk_bdev_part_base {
 	struct spdk_bdev		*bdev;
 	struct spdk_bdev_desc		*desc;
 	uint32_t			ref;
 	uint32_t			channel_size;
+	spdk_bdev_part_base_free_fn	base_free_fn;
 	bool				claimed;
 	struct spdk_bdev_module_if	*module;
 	struct spdk_bdev_fn_table	*fn_table;
@@ -451,6 +456,7 @@ int spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_
 				  struct spdk_bdev_module_if *module,
 				  struct spdk_bdev_fn_table *fn_table,
 				  struct bdev_part_tailq *tailq,
+				  spdk_bdev_part_base_free_fn free_fn,
 				  uint32_t channel_size,
 				  spdk_io_channel_create_cb ch_create_cb,
 				  spdk_io_channel_destroy_cb ch_destroy_cb);
