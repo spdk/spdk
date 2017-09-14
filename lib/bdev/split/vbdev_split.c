@@ -56,6 +56,12 @@ struct vbdev_split_channel {
 	struct spdk_bdev_part_channel	part_ch;
 };
 
+static void
+vbdev_split_base_free(struct spdk_bdev_part_base *base)
+{
+	free(base);
+}
+
 static int
 vbdev_split_destruct(void *ctx)
 {
@@ -151,11 +157,10 @@ vbdev_split_create(struct spdk_bdev *base_bdev, uint64_t split_count, uint64_t s
 	rc = spdk_bdev_part_base_construct(split_base, base_bdev,
 					   vbdev_split_base_bdev_hotremove_cb,
 					   SPDK_GET_BDEV_MODULE(split), &vbdev_split_fn_table,
-					   &g_split_disks, sizeof(struct vbdev_split_channel),
-					   NULL, NULL);
+					   &g_split_disks, vbdev_split_base_free,
+					   sizeof(struct vbdev_split_channel), NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("Cannot construct bdev part base\n");
-		free(split_base);
 		return -1;
 	}
 

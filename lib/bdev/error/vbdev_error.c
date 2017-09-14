@@ -70,6 +70,12 @@ struct error_channel {
 static pthread_mutex_t g_vbdev_error_mutex = PTHREAD_MUTEX_INITIALIZER;
 static SPDK_BDEV_PART_TAILQ g_error_disks = TAILQ_HEAD_INITIALIZER(g_error_disks);
 
+static void
+spdk_error_free_base(struct spdk_bdev_part_base *base)
+{
+	free(base);
+}
+
 int
 spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)
 {
@@ -223,25 +229,25 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 
 	rc = spdk_bdev_part_base_construct(base, base_bdev, NULL,
 					   SPDK_GET_BDEV_MODULE(error), &vbdev_error_fn_table,
-					   &g_error_disks, sizeof(struct error_channel), NULL, NULL);
+					   &g_error_disks, spdk_error_free_base,
+					   sizeof(struct error_channel), NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("could not construct part base for bdev %s\n", spdk_bdev_get_name(base_bdev));
-		free(base);
 		return -1;
 	}
 
 	disk = calloc(1, sizeof(*disk));
 	if (!disk) {
 		SPDK_ERRLOG("Memory allocation failure\n");
-		free(base);
+		spdk_error_free_base(base);
 		return -1;
 	}
 
 	name = spdk_sprintf_alloc("EE_%s", spdk_bdev_get_name(base_bdev));
 	if (!name) {
 		SPDK_ERRLOG("name allocation failure\n");
+		spdk_error_free_base(base);
 		free(disk);
-		free(base);
 		return -1;
 	}
 
@@ -250,8 +256,8 @@ spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 	if (rc) {
 		SPDK_ERRLOG("could not construct part for bdev %s\n", spdk_bdev_get_name(base_bdev));
 		/* spdk_bdev_part_construct will free name on failure */
+		spdk_error_free_base(base);
 		free(disk);
-		free(base);
 		return -1;
 	}
 
