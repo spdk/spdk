@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "1eb18105_45afa3da",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-14T03:06:13Z",
+      "side": 1,
+      "message": "I think we do not want the blob keep in SPDK_BLOB_STATE_LOADING state, then we can have chance to close it or delete it later, so it should be clean or dirty? there are nothing modified in the blob, so I suppose we should mark it as clean even the crc is not correct.",
+      "parentUuid": "8022c7a1_31afffb4",
+      "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f93dd78a_8d465904",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 10
@@ -53,6 +71,24 @@
       "writtenOn": "2017-09-13T20:51:50Z",
       "side": 1,
       "message": "These should be ctx-\u003epages[i]\n\nThe only reason i - 1 was used was to point the previous page to this one.\n\nThe unit tests didn\u0027t find this problem because it only tests with a single page.",
+      "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ee58881_423287e8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1031,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-14T03:06:13Z",
+      "side": 1,
+      "message": "we modify the pages[i - 1].next here, so I suppose the crc should be calculated accordingly? two examples: 1 we have only 1 page, then we will not come into this block, the following ctx-\u003epages[i - 1].crc \u003d _spdk_blob_md_page_calc_crc(\u0026ctx-\u003epages[i - 1]); will handle the only page. 2 we have N pages, we will handle 0 - N-2 pages in the block, add handle the last page in the following ctx-\u003epages[i - 1].crc \u003d _spdk_blob_md_page_calc_crc(\u0026ctx-\u003epages[i - 1]).",
+      "parentUuid": "f93dd78a_8d465904",
       "revId": "0ee14b7bbeaf3255d4577df0d222872675546af3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
