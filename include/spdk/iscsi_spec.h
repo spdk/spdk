@@ -203,7 +203,8 @@ struct iscsi_bhs_logout_req {
 	uint8_t opcode		: 6;	/* opcode = 0x06 */
 	uint8_t immediate	: 1;
 	uint8_t reserved	: 1;
-	uint8_t reason;
+	uint8_t reason		: 7;
+	uint8_t reason_1	: 1;
 	uint8_t res[2];
 	uint8_t total_ahs_len;
 	uint8_t data_segment_len[3];
@@ -481,9 +482,6 @@ struct iscsi_bhs_text_resp {
 
 /* text flags */
 #define ISCSI_TEXT_CONTINUE			0x40
-
-/* logout flags */
-#define ISCSI_LOGOUT_REASON_MASK		0x7f
 
 /* datain flags */
 #define ISCSI_DATAIN_ACKNOLWEDGE		0x40
