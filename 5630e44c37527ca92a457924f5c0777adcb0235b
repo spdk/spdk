@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f663d4c5_25fccafd",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1031,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-14T17:35:30Z",
+      "side": 1,
+      "message": "Oh!  Yes, now I understand.\n\nCould you move this to just after line 1028?  So then it sets next and crc together.  You can also add a comment saying something like:\n\n/* Now that previous metadata page is complete, calculate the crc for it. */",
+      "revId": "5630e44c37527ca92a457924f5c0777adcb0235b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95849dd6_c84d64a1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 2141,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-14T17:35:30Z",
+      "side": 1,
+      "message": "please add comment here describing why blob could be NULL",
+      "revId": "5630e44c37527ca92a457924f5c0777adcb0235b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3a5976a_ea9661c5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 2198,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-14T17:35:30Z",
+      "side": 1,
+      "message": "please add comment here describing why blob could be NULL",
+      "revId": "5630e44c37527ca92a457924f5c0777adcb0235b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "404e79ed_2dbba79c",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1227,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-14T17:35:30Z",
+      "side": 1,
+      "message": "You need to set g_bserrno \u003d 0 here.  Otherwise when you check g_bserrno on line 1229, you do not know if it is just leftover value from the previously spdk_bs_md_open_blob() call.",
+      "revId": "5630e44c37527ca92a457924f5c0777adcb0235b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ba7d943_f03980c3",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1229,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-14T17:35:30Z",
+      "side": 1,
+      "message": "Yes - this should still check that g_blob \u003d\u003d NULL.  If crc is not correct the blob will need to be deleted as part of a separate recovery tool/API.\n\nIf the crc is invalid, we cannot delete the blob like normal, because the metadata has been corrupted so we do not know which clusters to free.",
+      "revId": "5630e44c37527ca92a457924f5c0777adcb0235b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
