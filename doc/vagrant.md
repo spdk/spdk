@@ -13,7 +13,13 @@ The VM builds SPDK and DPDK from source which are located at `/spdk`.
 
 Note: If you are behind a corporate firewall, set `http_proxy` and `https_proxy` in
 your environment before trying to start up the VM.  Also make sure that you
-have installed the optional vagrant module 'vagrant-proxyconf'.
+have installed the optional vagrant module `vagrant-proxyconf`:
+
+~~~{.sh}
+export http_proxy=...
+export https_proxy=...
+vagrant plugin install vagrant-proxyconf
+~~~
 
 # VM Configuration {#vagrant_config}
 
