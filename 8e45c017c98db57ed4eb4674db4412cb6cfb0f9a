@@ -16,6 +16,24 @@
       "revId": "8e45c017c98db57ed4eb4674db4412cb6cfb0f9a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ac6e516_0240b97f",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-14T12:18:38Z",
+      "side": 1,
+      "message": "I reverted back to previous versions",
+      "parentUuid": "e1c3c3e3_58152266",
+      "revId": "8e45c017c98db57ed4eb4674db4412cb6cfb0f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
