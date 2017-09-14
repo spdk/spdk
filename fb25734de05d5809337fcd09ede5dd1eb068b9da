@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42782094_e6cbace1",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 23
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T15:15:30Z",
+      "side": 1,
+      "message": "I still see changes - deleting white spaces.\nIt\u0027s not really a significant change, but still - we\u0027re still before merging, so I\u0027d prefer that this commit had 0 changes to test plan which belongs to other commit.\nNit picking here, but please remove these white spaces in test plan commit.",
+      "range": {
+        "startLine": 89,
+        "startChar": 2,
+        "endLine": 89,
+        "endChar": 74
+      },
+      "revId": "fb25734de05d5809337fcd09ede5dd1eb068b9da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
