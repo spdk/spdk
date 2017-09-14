@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1c3c3e3_58152266",
+        "filename": "test/lvol/testplan.md",
+        "patchSetId": 22
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T10:55:30Z",
+      "side": 1,
+      "message": "Changes to test plan are not part of the scope of this commit.\nPretty sure I mentioned that in comment from previous patch set",
+      "revId": "8e45c017c98db57ed4eb4674db4412cb6cfb0f9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
