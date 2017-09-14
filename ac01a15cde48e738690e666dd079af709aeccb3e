@@ -1,0 +1,343 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b80afa8_3e308791",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "I know why you do it, but are you sure it does not break any other stuff that relies on this function?",
+      "range": {
+        "startLine": 376,
+        "startChar": 1,
+        "endLine": 376,
+        "endChar": 40
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f7bb483_c2aa78a9",
+        "filename": "test/vhost/fiotest/bdev.conf.in",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "remove commented lines",
+      "range": {
+        "startLine": 7,
+        "startChar": 1,
+        "endLine": 7,
+        "endChar": 44
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1790143c_64da0f1a",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "For the whole file - decide if you use spaces or tabs",
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17f6cfb6_51f54811",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "Remove duplicate line",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 34
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f97729b1_7e131059",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "duplicate, you do it in line 28",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 41
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6937e84_bc2cca5b",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "Could it be just\nsed -i \"s|/tmp|$root_dir/../vhost|g\" $testdir/bdev.conf\ninstead of using $path and additional sed?\n\nbest would be to just use -S option for vhost which allows you to specify where vhost should put the socket files (unfortunately we\u0027d need to modify spdk_vhost_run function too)",
+      "range": {
+        "startLine": 34,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 51
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4af39a46_ed706e1a",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "Remove if not needed",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 51
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42a1cdb3_fca69c01",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "Not familiar with this function, but it looks like it runs additional nbd app which takes bdev and attaches it via nbd to kernel and performs filesystem operations on it - not part of our test plan.\n\nDarek please advise if we want that in test.",
+      "range": {
+        "startLine": 43,
+        "startChar": 1,
+        "endLine": 43,
+        "endChar": 52
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "389c8899_90362245",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "Commented - remove",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 57
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7b2e3cf_dc943a6d",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "Why not put all of these modes already in the fio job file, instead of dynamically creating it every time?",
+      "range": {
+        "startLine": 54,
+        "startChar": 18,
+        "endLine": 54,
+        "endChar": 70
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "edb057e0_e9f46f8b",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "I think that this should be the only operation done dynamically on fio job file - finding and replacing filename parameter. Other things can be put into fio job file as static configuration",
+      "range": {
+        "startLine": 66,
+        "startChar": 23,
+        "endLine": 69,
+        "endChar": 28
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "295d6c8e_b2654d3d",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "remove if not needed",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 22
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97340e2e_71e2b099",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "This does nothing, and we haven\u0027t disscussed any needs for separate nightly conditions.",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 2
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bb5a005_d5e214a2",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "remove if not needed",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 113,
+        "endChar": 3
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba8efee2_40358a63",
+        "filename": "test/vhost/fiotest/initiator/vhost.conf.in",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:46:11Z",
+      "side": 1,
+      "message": "remove if not needed",
+      "range": {
+        "startLine": 16,
+        "startChar": 2,
+        "endLine": 16,
+        "endChar": 16
+      },
+      "revId": "ac01a15cde48e738690e666dd079af709aeccb3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
