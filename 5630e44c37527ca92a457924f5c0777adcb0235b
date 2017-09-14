@@ -102,6 +102,24 @@
       "revId": "5630e44c37527ca92a457924f5c0777adcb0235b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a2f3c18_0cf9547d",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1229,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-14T23:49:00Z",
+      "side": 1,
+      "message": "We want to make sure that blobstore passes NULL to blob_op_complete, not a pointer to a blob object that points to corrupted metadata.",
+      "parentUuid": "c29164a8_f0110533",
+      "revId": "5630e44c37527ca92a457924f5c0777adcb0235b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
