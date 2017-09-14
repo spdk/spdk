@@ -252,7 +252,9 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 	}
 
 	if (dev->unregister_cb) {
-		dev->unregister_cb(dev->io_device);
+		thread = _get_thread();
+		assert(thread != NULL);
+		spdk_thread_send_msg(_get_thread(), dev->unregister_cb, dev->io_device);
 	}
 
 	free(dev);
