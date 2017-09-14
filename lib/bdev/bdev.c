@@ -1880,10 +1880,11 @@ spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 void
 spdk_bdev_part_base_free(struct spdk_bdev_part_base *base)
 {
-	assert(base->bdev);
-	assert(base->desc);
-	spdk_bdev_close(base->desc);
-	free(base);
+	if (base->desc) {
+		spdk_bdev_close(base->desc);
+		base->desc = NULL;
+	}
+	base->base_free_fn(base);
 }
 
 void
@@ -2043,6 +2044,7 @@ int
 spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev *bdev,
 			      spdk_bdev_remove_cb_t remove_cb, struct spdk_bdev_module_if *module,
 			      struct spdk_bdev_fn_table *fn_table, struct bdev_part_tailq *tailq,
+			      spdk_bdev_part_base_free_fn free_fn,
 			      uint32_t channel_size, spdk_io_channel_create_cb ch_create_cb,
 			      spdk_io_channel_destroy_cb ch_destroy_cb)
 {
@@ -2052,6 +2054,7 @@ spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev
 	fn_table->io_type_supported = spdk_bdev_part_io_type_supported;
 
 	base->bdev = bdev;
+	base->desc = NULL;
 	base->ref = 0;
 	base->module = module;
 	base->fn_table = fn_table;
@@ -2060,9 +2063,11 @@ spdk_bdev_part_base_construct(struct spdk_bdev_part_base *base, struct spdk_bdev
 	base->channel_size = channel_size;
 	base->ch_create_cb = ch_create_cb;
 	base->ch_destroy_cb = ch_destroy_cb;
+	base->base_free_fn = free_fn;
 
 	rc = spdk_bdev_open(bdev, false, remove_cb, bdev, &base->desc);
 	if (rc) {
+		spdk_bdev_part_base_free(base);
 		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
 		return -1;
 	}
