@@ -1726,7 +1726,6 @@ spdk_bdev_part_base_free(struct spdk_bdev_part_base *base)
 {
 	assert(base->bdev);
 	assert(base->desc);
-	spdk_bdev_module_release_bdev(base->bdev);
 	spdk_bdev_close(base->desc);
 }
 
@@ -1744,6 +1743,7 @@ spdk_bdev_part_free(struct spdk_bdev_part *part)
 	free(part->bdev.name);
 
 	if (__sync_sub_and_fetch(&base->ref, 1) == 0) {
+		spdk_bdev_module_release_bdev(base->bdev);
 		spdk_bdev_part_base_free(base);
 	}
 }
