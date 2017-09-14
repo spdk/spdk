@@ -67,6 +67,24 @@
       "revId": "e34cfdf6f86b4b1d7ffbdf7e0b0e69020e27e4c8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88e56661_ed0cac7e",
+        "filename": "test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-14T00:48:04Z",
+      "side": 1,
+      "message": "It seems the blobfs_sync_ut never get run, the test pool skip this test case.",
+      "parentUuid": "919efc2f_79a263f4",
+      "revId": "e34cfdf6f86b4b1d7ffbdf7e0b0e69020e27e4c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
