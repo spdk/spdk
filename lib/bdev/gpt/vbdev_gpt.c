@@ -77,6 +77,7 @@ static bool g_gpt_disabled;
 static void
 spdk_gpt_base_free(struct gpt_base *gpt_base)
 {
+	spdk_bdev_part_base_free(&gpt_base->part_base);
 	spdk_dma_free(gpt_base->gpt.buf);
 	free(gpt_base);
 }
