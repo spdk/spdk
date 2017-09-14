@@ -1,15 +1,15 @@
 # SPDK virtio bdev module
 
 This directory contains an experimental SPDK virtio bdev module.
-It currently supports very basic enumeration capabilities for
-virtio-scsi devices as well as read/write operations to any
-SCSI LUNs discovered during enumeration.
+It currently supports very basic read/write operations for
+virtio-scsi drive. Currently it will only work with a single
+target with a single LUN.
 
 It supports two different usage models:
 * PCI - This is the standard mode of operation when used in a guest virtual
 machine, where QEMU has presented the virtio-scsi controller as a virtual
 PCI device.  The virtio-scsi controller might be implemented in the host OS
-by SPDK vhost-scsi, kernel vhost-scsi, or a QEMU virtio-scsi backend.
+by SPDK vhost-scsi. Kernel/QEMU vhost-scsi are not supported yet.
 * User vhost - Can be used to connect to an SPDK vhost-scsi target running on
 the same host.
 
@@ -20,8 +20,7 @@ every huge page explicitly, it is fairly limited on how many file descriptors
 it can pass due to the VHOST_MEMORY_MAX_NREGIONS limit of 8.
 
 Use the following configuration file snippet to enumerate a virtio-scsi PCI
-device and present its LUNs as bdevs.  Currently it will only work with
-a single PCI device.
+device and present its LUNs as bdevs.
 
 ~~~{.sh}
 [Virtio]
