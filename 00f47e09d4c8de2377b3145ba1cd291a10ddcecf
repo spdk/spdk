@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83edc6ee_4b24c191",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-14T12:18:16Z",
+      "side": 1,
+      "message": "could you create bdev_virtio.h file for this declaration?",
+      "range": {
+        "startLine": 473,
+        "startChar": 0,
+        "endLine": 473,
+        "endChar": 56
+      },
+      "revId": "00f47e09d4c8de2377b3145ba1cd291a10ddcecf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64c717e5_2fd50620",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-14T12:18:16Z",
+      "side": 1,
+      "message": "i think this deserves a separate patch",
+      "range": {
+        "startLine": 396,
+        "startChar": 0,
+        "endLine": 411,
+        "endChar": 1
+      },
+      "revId": "00f47e09d4c8de2377b3145ba1cd291a10ddcecf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23c4538d_83b87a2c",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-14T12:18:16Z",
+      "side": 1,
+      "message": "what if it creates more than 1 target?\nbdev-\u003ename has to be unique\n\nproper multi-target support should be added in a separate patch, it\u0027s on my TODO list",
+      "range": {
+        "startLine": 350,
+        "startChar": 14,
+        "endLine": 350,
+        "endChar": 31
+      },
+      "revId": "00f47e09d4c8de2377b3145ba1cd291a10ddcecf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdac8426_57b6a190",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-14T12:18:16Z",
+      "side": 1,
+      "message": "i\u0027m not sure if it\u0027s required here.\nRPC spdk_json_decode_object won\u0027t return any NULLs\ni guess such error checks should be done by the caller",
+      "range": {
+        "startLine": 463,
+        "startChar": 1,
+        "endLine": 471,
+        "endChar": 2
+      },
+      "revId": "00f47e09d4c8de2377b3145ba1cd291a10ddcecf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0c071f3_995aca21",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-14T12:18:16Z",
+      "side": 1,
+      "message": "This is *required* only on bdev_virtio initialization. You can safely remove it from here.",
+      "range": {
+        "startLine": 503,
+        "startChar": 0,
+        "endLine": 503,
+        "endChar": 63
+      },
+      "revId": "00f47e09d4c8de2377b3145ba1cd291a10ddcecf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c185d310_d2d123af",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-14T12:18:16Z",
+      "side": 1,
+      "message": "could you use bdev_virtio_construct() here?",
+      "range": {
+        "startLine": 546,
+        "startChar": 0,
+        "endLine": 566,
+        "endChar": 0
+      },
+      "revId": "00f47e09d4c8de2377b3145ba1cd291a10ddcecf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5dfb7c7e_6932225c",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-14T12:18:16Z",
+      "side": 1,
+      "message": "We can\u0027t really provide name for the bdev. A single socket might create multiple bdevs and each has to have unique name.\nOther bdev modules also use hardcoded names with unique number at the end, so we can probably do the same.",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 80
+      },
+      "revId": "00f47e09d4c8de2377b3145ba1cd291a10ddcecf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1259b385_06fd56a2",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-14T12:18:16Z",
+      "side": 1,
+      "message": "this should probably wait with sending the response until after all targets on the socket has been fully scanned.\nhowever, i guess that can be done in a separate patch. so that\u0027s okay for now.",
+      "range": {
+        "startLine": 85,
+        "startChar": 1,
+        "endLine": 85,
+        "endChar": 21
+      },
+      "revId": "00f47e09d4c8de2377b3145ba1cd291a10ddcecf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67c913d7_682d8749",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-14T12:18:16Z",
+      "side": 1,
+      "message": "uninitialized",
+      "range": {
+        "startLine": 91,
+        "startChar": 78,
+        "endLine": 91,
+        "endChar": 81
+      },
+      "revId": "00f47e09d4c8de2377b3145ba1cd291a10ddcecf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
