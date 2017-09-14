@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bfc96e0_5f28a430",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-14T19:42:24Z",
+      "side": 1,
+      "message": "Maybe free_fn -\u003e base_free_fn to avoid confusion in case we add another free function for spdk_bdev_part?",
+      "range": {
+        "startLine": 444,
+        "startChar": 29,
+        "endLine": 444,
+        "endChar": 36
+      },
+      "revId": "53df3ee1416099d207cfa2a9f1da406c5b4b7955",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "167dffa9_229548b8",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-14T19:42:24Z",
+      "side": 1,
+      "message": "This should probably use SPDK_CONTAINEROF - no need to assume  part_base is the first field in gpt_base.",
+      "revId": "53df3ee1416099d207cfa2a9f1da406c5b4b7955",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
