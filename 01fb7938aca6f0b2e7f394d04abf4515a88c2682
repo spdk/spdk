@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4465ccf7_cdf9a575",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 27
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T08:13:47Z",
+      "side": 1,
+      "message": "0x6 mask is cores 1-2 (0110) and 0xC mask is cores 2-3 (1100) so CPU cores for VMs 1 and 2 will overlap. Need to adjust other VM cpu masks to what is used in VM0.\n\ne.g.\nVM0\u003d0x6 (0110)\nVM1\u003d0x18 (1 1000)\nVM2\u003d0x60 (110 0000)\nVM3\u003d0x180 (1 1000 0000)\nand so on (keep in mind that in one place you have to change to NUMA node 1)\n\nIt does not matter that much for non-performance tests, but let\u0027s look out for that",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 21
+      },
+      "revId": "01fb7938aca6f0b2e7f394d04abf4515a88c2682",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
