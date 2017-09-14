@@ -84,6 +84,24 @@
       "revId": "5630e44c37527ca92a457924f5c0777adcb0235b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c29164a8_f0110533",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1229,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-14T22:59:31Z",
+      "side": 1,
+      "message": "the g_blob already \u003d\u003d NULL in line 1226, we do not touch g_blob anymore, so why we need check it here?",
+      "parentUuid": "8ba7d943_f03980c3",
+      "revId": "5630e44c37527ca92a457924f5c0777adcb0235b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
