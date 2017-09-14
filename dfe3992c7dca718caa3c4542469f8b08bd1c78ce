@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2488255f_11631729",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 29
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-14T15:28:26Z",
+      "side": 1,
+      "message": "Word of comment why we do that:\none of our platform has 0-17 and 18-35 cpus on numa nodes.\nThe other one has 0-21 and 22-43.\nWe want VMs to be evenly distributed on both nodes if we need to run all 12 VMs.",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 21
+      },
+      "revId": "dfe3992c7dca718caa3c4542469f8b08bd1c78ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
