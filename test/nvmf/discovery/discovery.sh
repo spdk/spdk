@@ -49,15 +49,6 @@ $rpc_py get_nvmf_subsystems
 
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
-$rpc_py delete_bdev Null1
-$rpc_py delete_bdev Null0
-
-check_bdevs=$($rpc_py get_bdevs | jq -r '.[].name')
-if [ -n "$check_bdevs" ]; then
-	echo $check_bdevs
-	exit 1
-fi
-
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
