@@ -55,6 +55,8 @@
 
 #include "spdk/scsi_spec.h"
 
+#include "bdev_virtio.h"
+
 #define BDEV_VIRTIO_MAX_TARGET 64
 #define BDEV_VIRTIO_SCAN_PAYLOAD_SIZE 256
 
@@ -91,6 +93,8 @@ struct bdev_virtio_io_channel {
 	struct virtio_hw	*hw;
 	struct spdk_bdev_poller	*poller;
 };
+
+int virtio_dev_count = 0;
 
 static int
 bdev_virtio_get_ctx_size(void)
@@ -346,8 +350,9 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	disk->hw = base->hw;
 
 	bdev = &disk->bdev;
-	bdev->name = spdk_sprintf_alloc("Virtio0");
 	bdev->product_name = "Virtio SCSI Disk";
+	bdev->name = spdk_sprintf_alloc("Virtio%d", virtio_dev_count);
+	virtio_dev_count++;
 	bdev->write_cache = 0;
 	bdev->blocklen = disk->block_size;
 	bdev->blockcnt = disk->num_blocks;
@@ -451,53 +456,45 @@ scan_target(struct virtio_scsi_scan_base *base, uint8_t target)
 	virtio_xmit_pkts(base->hw->vqs[2], vreq);
 }
 
-static int
-bdev_virtio_initialize(void)
+int
+bdev_virtio_construct(char *path)
 {
-	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Virtio");
 	struct virtio_scsi_scan_base *base;
 	struct virtio_hw *hw = NULL;
-	char *type, *path;
-	uint32_t i;
+	struct stat file_stat;
 	int rc = 0;
+	uint32_t i;
 
-	if (sp == NULL) {
+	if (path == NULL) {
+		SPDK_ERRLOG("Missing path to the socket\n");
+		return -EINVAL;
 		goto out;
 	}
 
-	for (i = 0; spdk_conf_section_get_nval(sp, "Dev", i) != NULL; i++) {
-		type = spdk_conf_section_get_nmval(sp, "Dev", i, 0);
-		if (type == NULL) {
-			SPDK_ERRLOG("No type specified for index %d\n", i);
-			continue;
-		}
-		if (!strcmp("User", type)) {
-			path = spdk_conf_section_get_nmval(sp, "Dev", i, 1);
-			if (path == NULL) {
-				SPDK_ERRLOG("No path specified for index %d\n", i);
-				continue;
-			}
-			hw = virtio_user_dev_init(path, 1, 512);
-		} else if (!strcmp("Pci", type)) {
-			hw = get_pci_virtio_hw();
-		} else {
-			SPDK_ERRLOG("Invalid type %s specified for index %d\n", type, i);
-			continue;
-		}
+	if (stat(path, &file_stat) != 0) {
+		SPDK_ERRLOG("Invalid socket path\n");
+		rc = -EIO;
+		goto out;
+	} else if (!S_ISSOCK(file_stat.st_mode)) {
+		SPDK_ERRLOG("Path %s: not a socket.\n", path);
+		rc = -EIO;
+		goto out;
 	}
 
+	hw = virtio_user_dev_init(path, 1, 512);
+
 	if (hw == NULL) {
+		rc = -EIO;
 		goto out;
 	}
 
 	base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
 	if (base == NULL) {
 		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
-		rc = -1;
+		rc = -ENOMEM;
 		goto out;
 	}
 
-	/* TODO check rc, add virtio_dev_deinit() */
 	eth_virtio_dev_init(hw);
 	virtio_dev_start(hw);
 
@@ -511,6 +508,107 @@ bdev_virtio_initialize(void)
 		scan_target(base, i);
 	}
 
+	return 0;
+
+out:
+	return rc;
+}
+
+static int
+bdev_virtio_initialize(void)
+{
+	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Virtio");
+//	struct virtio_scsi_scan_base *base;
+	struct virtio_hw *hw = NULL;
+	char *type, *path;
+	uint32_t i;
+	int rc = 0;
+
+//	for(sp = spdk_conf_first_section(NULL); sp != NULL; sp = spdk_conf_next_section(sp)) {
+//		if (!spdk_conf_section_match_prefix(sp, "Virtio")){
+//			continue;
+//		}
+		if (sp == NULL) {
+			goto out;
+		}
+
+		for (i = 0; spdk_conf_section_get_nval(sp, "Dev", i) != NULL; i++) {
+			type = spdk_conf_section_get_nmval(sp, "Dev", i, 0);
+			if (type == NULL) {
+				SPDK_ERRLOG("No type specified for index %d\n", i);
+				continue;
+			}
+			if (!strcmp("User", type)) {
+				path = spdk_conf_section_get_nmval(sp, "Dev", i, 1);
+				if (path == NULL) {
+					SPDK_ERRLOG("No path specified for index %d\n", i);
+					continue;
+				}
+
+				rc = bdev_virtio_construct(path);
+				if(rc != 0){
+					goto out;
+				}
+			} else if (!strcmp("Pci", type)) {
+				hw = get_pci_virtio_hw();
+			} else {
+				SPDK_ERRLOG("Invalid type %s specified for index %d\n", type, i);
+				continue;
+			}
+//
+		}
+//	}
+
+//	if (sp == NULL) {
+//		goto out;
+//	}
+//
+//	for (i = 0; spdk_conf_section_get_nval(sp, "Dev", i) != NULL; i++) {
+//		type = spdk_conf_section_get_nmval(sp, "Dev", i, 0);
+//		if (type == NULL) {
+//			SPDK_ERRLOG("No type specified for index %d\n", i);
+//			continue;
+//		}
+//		if (!strcmp("User", type)) {
+//			path = spdk_conf_section_get_nmval(sp, "Dev", i, 1);
+//			if (path == NULL) {
+//				SPDK_ERRLOG("No path specified for index %d\n", i);
+//				continue;
+//			}
+//			hw = virtio_user_dev_init(path, 1, 512);
+//		} else if (!strcmp("Pci", type)) {
+//			hw = get_pci_virtio_hw();
+//		} else {
+//			SPDK_ERRLOG("Invalid type %s specified for index %d\n", type, i);
+//			continue;
+//		}
+//	}
+//
+//	if (hw == NULL) {
+//		goto out;
+//	}
+//
+//	base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
+//	if (base == NULL) {
+//		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
+//		rc = -1;
+//		goto out;
+//	}
+//
+//	/* TODO check rc, add virtio_dev_deinit() */
+//	eth_virtio_dev_init(hw);
+//	virtio_dev_start(hw);
+//
+//	base->hw = hw;
+//	base->refcount = BDEV_VIRTIO_MAX_TARGET;
+//
+//	spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,
+//			       spdk_env_get_current_core(), 0);
+//
+//	for (i = 0; i < BDEV_VIRTIO_MAX_TARGET; i++) {
+//		scan_target(base, i);
+//	}
+
 
 	return 0;
 
@@ -518,6 +616,74 @@ out:
 	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 	return rc;
 }
+
+//static int
+//bdev_virtio_initialize(void)
+//{
+//	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Virtio");
+//	struct virtio_scsi_scan_base *base;
+//	struct virtio_hw *hw = NULL;
+//	char *type, *path;
+//	uint32_t i;
+//	int rc = 0;
+//
+//	if (sp == NULL) {
+//		goto out;
+//	}
+//
+//	for (i = 0; spdk_conf_section_get_nval(sp, "Dev", i) != NULL; i++) {
+//		type = spdk_conf_section_get_nmval(sp, "Dev", i, 0);
+//		if (type == NULL) {
+//			SPDK_ERRLOG("No type specified for index %d\n", i);
+//			continue;
+//		}
+//		if (!strcmp("User", type)) {
+//			path = spdk_conf_section_get_nmval(sp, "Dev", i, 1);
+//			if (path == NULL) {
+//				SPDK_ERRLOG("No path specified for index %d\n", i);
+//				continue;
+//			}
+//			hw = virtio_user_dev_init(path, 1, 512);
+//		} else if (!strcmp("Pci", type)) {
+//			hw = get_pci_virtio_hw();
+//		} else {
+//			SPDK_ERRLOG("Invalid type %s specified for index %d\n", type, i);
+//			continue;
+//		}
+//	}
+//
+//	if (hw == NULL) {
+//		goto out;
+//	}
+//
+//	base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
+//	if (base == NULL) {
+//		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
+//		rc = -1;
+//		goto out;
+//	}
+//
+//	/* TODO check rc, add virtio_dev_deinit() */
+//	eth_virtio_dev_init(hw);
+//	virtio_dev_start(hw);
+//
+//	base->hw = hw;
+//	base->refcount = BDEV_VIRTIO_MAX_TARGET;
+//
+//	spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,
+//			       spdk_env_get_current_core(), 0);
+//
+//	for (i = 0; i < BDEV_VIRTIO_MAX_TARGET; i++) {
+//		scan_target(base, i);
+//	}
+//
+//
+//	return 0;
+//
+//out:
+//	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+//	return rc;
+//}
 
 static void bdev_virtio_finish(void)
 {
