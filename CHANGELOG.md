@@ -2,6 +2,10 @@
 
 ## v17.10: (Upcoming Release)
 
+### New dependency
+
+libuuid added as new depenency for logical volumes.
+
 ### Block Device Abstraction Layer (bdev)
 
 An [fio](http://github.com/axboe/fio) plugin was added that can route
@@ -79,6 +83,13 @@ which will show up in tools like `gdb`.
 
 The API spdk_trace_dump() now takes a new parameter to allow the caller to
 specify stdout or stderr for example.
+
+### Logical Volumes
+
+Logical volumes library built on top of SPDK blobstore has been added.
+It is possible create logical volumes on top of other devices using RPC.
+
+See [logical volumes]((http://www.spdk.io/doc/lvol.md) documentation for more information.
 
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
