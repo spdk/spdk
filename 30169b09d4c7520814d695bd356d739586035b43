@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f4ebf50_19e36052",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1236,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-14T20:31:51Z",
+      "side": 1,
+      "message": "This is the super block - super blob is a different thing.",
+      "revId": "30169b09d4c7520814d695bd356d739586035b43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
