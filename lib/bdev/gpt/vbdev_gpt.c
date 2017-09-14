@@ -75,10 +75,12 @@ static SPDK_BDEV_PART_TAILQ g_gpt_disks = TAILQ_HEAD_INITIALIZER(g_gpt_disks);
 static bool g_gpt_disabled;
 
 static void
-spdk_gpt_base_free(struct gpt_base *gpt_base)
+spdk_gpt_base_free(struct spdk_bdev_part_base *base)
 {
+	struct gpt_base *gpt_base = SPDK_CONTAINEROF(base, struct gpt_base, part_base);
+
 	spdk_dma_free(gpt_base->gpt.buf);
-	spdk_bdev_part_base_free(&gpt_base->part_base);
+	free(gpt_base);
 }
 
 static void
@@ -113,11 +115,10 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 	rc = spdk_bdev_part_base_construct(&gpt_base->part_base, bdev,
 					   spdk_gpt_base_bdev_hotremove_cb,
 					   SPDK_GET_BDEV_MODULE(gpt), &vbdev_gpt_fn_table,
-					   &g_gpt_disks, sizeof(struct gpt_channel),
-					   NULL, NULL);
+					   &g_gpt_disks, spdk_gpt_base_free,
+					   sizeof(struct gpt_channel), NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("cannot construct gpt_base");
-		free(gpt_base);
 		return NULL;
 	}
 
@@ -125,7 +126,7 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 	gpt->buf = spdk_dma_zmalloc(SPDK_GPT_BUFFER_SIZE, 0x1000, NULL);
 	if (!gpt->buf) {
 		SPDK_ERRLOG("Cannot alloc buf\n");
-		free(gpt_base);
+		spdk_bdev_part_base_free(&gpt_base->part_base);
 		return NULL;
 	}
 
@@ -309,7 +310,7 @@ end:
 
 	if (gpt_base->part_base.ref == 0) {
 		/* If no gpt_disk instances were created, free the base context */
-		spdk_gpt_base_free(gpt_base);
+		spdk_bdev_part_base_free(&gpt_base->part_base);
 	}
 }
 
@@ -331,7 +332,7 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 			    SPDK_GPT_BUFFER_SIZE, spdk_gpt_bdev_complete, gpt_base);
 	if (rc < 0) {
 		spdk_put_io_channel(gpt_base->ch);
-		spdk_gpt_base_free(gpt_base);
+		spdk_bdev_part_base_free(&gpt_base->part_base);
 		SPDK_ERRLOG("Failed to send bdev_io command\n");
 		return -1;
 	}
