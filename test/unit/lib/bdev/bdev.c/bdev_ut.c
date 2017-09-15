@@ -187,7 +187,7 @@ static void
 open_write_test(void)
 {
 	struct spdk_bdev *bdev[8];
-	struct spdk_bdev_desc *desc[8];
+	struct spdk_bdev_desc *desc[8] = {};
 	int rc;
 
 	/*
