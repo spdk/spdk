@@ -43,6 +43,7 @@
 #include "spdk/nvme.h"
 #include "spdk/io_channel.h"
 #include "spdk/string.h"
+#include "spdk/likely.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -345,7 +346,9 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 			      bdev_io->u.read.num_blocks,
 			      bdev_io->u.read.offset_blocks);
 
-	if (ret < 0) {
+	if (ret == -ENOMEM) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+	} else if (ret < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
@@ -422,8 +425,14 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 static void
 bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	if (_bdev_nvme_submit_request(ch, bdev_io) < 0) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	int rc = _bdev_nvme_submit_request(ch, bdev_io);
+
+	if (spdk_unlikely(rc < 0)) {
+		if (rc == -ENOMEM) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
 	}
 }
 
@@ -1240,7 +1249,7 @@ bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
 					     bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge);
 	}
 
-	if (rc != 0) {
+	if (rc != 0 && rc != -ENOMEM) {
 		SPDK_ERRLOG("%s failed: rc = %d\n", direction == BDEV_DISK_READ ? "readv" : "writev", rc);
 	}
 	return rc;
