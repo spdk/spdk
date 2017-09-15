@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b828a844_d0bbf4e8",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1641,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-15T20:00:49Z",
+      "side": 1,
+      "message": "I think we should just always set this to MPTR_CONTIG.  We currently don\u0027t actually support filling out MPTR with an SGL descriptor.\n\nIt also looks like we don\u0027t ever set mptr anywhere - does separate (non-extended-LBA) metadata actually work right now?",
+      "revId": "8ab607dbd3098a15578ea6928d16c80172fbf134",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
