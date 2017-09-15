@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d85003e_39f5c824",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-15T07:53:22Z",
+      "side": 1,
+      "message": "construct_pmem_bdev",
+      "range": {
+        "startLine": 110,
+        "startChar": 4,
+        "endLine": 110,
+        "endChar": 20
+      },
+      "revId": "8f1fb2d18b664c293c1ee6a51d7257af8939dc83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b6999a7_f28a282c",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-15T07:53:22Z",
+      "side": 1,
+      "message": "Does this test assumes correct mempool file exists?",
+      "range": {
+        "startLine": 120,
+        "startChar": 5,
+        "endLine": 120,
+        "endChar": 25
+      },
+      "revId": "8f1fb2d18b664c293c1ee6a51d7257af8939dc83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "467011ad_92c4ba28",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-15T07:53:22Z",
+      "side": 1,
+      "message": "construct_pmem_bdev",
+      "range": {
+        "startLine": 124,
+        "startChar": 7,
+        "endLine": 124,
+        "endChar": 23
+      },
+      "revId": "8f1fb2d18b664c293c1ee6a51d7257af8939dc83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73c64df4_22b7e051",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-15T07:53:22Z",
+      "side": 1,
+      "message": "pmem_exists",
+      "range": {
+        "startLine": 147,
+        "startChar": 7,
+        "endLine": 147,
+        "endChar": 17
+      },
+      "revId": "8f1fb2d18b664c293c1ee6a51d7257af8939dc83",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
