@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "507d64af_e50e18ff",
+        "filename": "test/blobfs/rocksdb/rocksdb.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-15T18:13:24Z",
+      "side": 1,
+      "message": "I think we can remove the NO_SPDK checks from this script.",
+      "revId": "460ec9af39168da9e91f88ef645d965ea02adfe5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f4901ac_e25c1670",
+        "filename": "test/blobfs/rocksdb/rocksdb.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-15T18:13:24Z",
+      "side": 1,
+      "message": "\u0027sudo\u0027 isn\u0027t necessary here - the autotest scripts are already running as root.",
+      "range": {
+        "startLine": 18,
+        "startChar": 1,
+        "endLine": 18,
+        "endChar": 5
+      },
+      "revId": "460ec9af39168da9e91f88ef645d965ea02adfe5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e23c121_5045d6b1",
+        "filename": "test/blobfs/rocksdb/rocksdb.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-15T18:13:24Z",
+      "side": 1,
+      "message": "We probably also don\u0027t need these SKIP_* checks - just run all of the steps unconditionally in this script.",
+      "revId": "460ec9af39168da9e91f88ef645d965ea02adfe5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
