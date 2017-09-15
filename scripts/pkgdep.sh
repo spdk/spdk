@@ -13,6 +13,8 @@ if [ -s /etc/redhat-release ]; then
 		git astyle-devel python-pep8 lcov python clang-analyzer libuuid-devel
 	# Additional dependencies for NVMe over Fabrics
 	yum install -y libibverbs-devel librdmacm-devel
+	# Additional dependencies for DPDK
+	yum install -y numactl-devel
 	# Additional dependencies for building docs
 	yum install -y doxygen mscgen
 elif [ -f /etc/debian_version ]; then
@@ -21,6 +23,8 @@ elif [ -f /etc/debian_version ]; then
 		git astyle pep8 lcov clang uuid-dev
 	# Additional dependencies for NVMe over Fabrics
 	apt-get install -y libibverbs-dev librdmacm-dev
+	# Additional dependencies for DPDK
+	apt-get install -y libnuma-dev
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen
 elif [ $SYSTEM = "FreeBSD" ] ; then
