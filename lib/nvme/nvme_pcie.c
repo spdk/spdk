@@ -1624,6 +1624,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	void *virt_addr;
 	uint64_t phys_addr;
 	uint32_t remaining_transfer_len, length;
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvme_sgl_descriptor *sgl;
 	uint32_t nseg = 0;
 
@@ -1637,7 +1638,10 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 	req->payload.u.sgl.reset_sgl_fn(req->payload.u.sgl.cb_arg, req->payload_offset);
 
 	sgl = tr->u.sgl;
-	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
+	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
+	if (ctrlr->cdata.sgls.metadata_address) {
+		req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_SGL;
+	}
 	req->cmd.dptr.sgl1.unkeyed.subtype = 0;
 
 	remaining_transfer_len = req->payload_size;
