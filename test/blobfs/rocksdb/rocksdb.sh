@@ -116,23 +116,33 @@ echo "--num=$NUM_KEYS" >> writesync_flags.txt
 
 if [ -z "$SKIP_INSERT" ]
 then
+	timing_enter rocksdb-insert
 	run_step insert
+	timing_exit rocksdb-insert
 fi
 if [ -z "$SKIP_OVERWRITE" ]
 then
+	timing_enter rocksdb-overwrite
 	run_step overwrite
+	timing_exit rocksdb-overwrite
 fi
 if [ -z "$SKIP_READWRITE" ]
 then
+	timing_enter rocksdb-readwrite
 	run_step readwrite
+	timing_exit rocksdb-readwrite
 fi
 if [ -z "$SKIP_WRITESYNC" ]
 then
+	timing_enter rocksdb-writesync
 	run_step writesync
+	timing_exit rocksdb-writesync
 fi
 if [ -z "$SKIP_RANDREAD" ]
 then
+	timing_enter rocksdb-randread
 	run_step randread
+	timing_exit rocksdb-randread
 fi
 
 
