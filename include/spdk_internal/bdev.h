@@ -161,6 +161,13 @@ struct spdk_bdev_fn_table {
 
 /** bdev I/O completion status */
 enum spdk_bdev_io_status {
+	/*
+	 * NOMEM should be returned when a bdev module cannot start an I/O because of
+	 *  some lack of resources.  It may not be returned for RESET I/O.  I/O completed
+	 *  with NOMEM status will be retried after some I/O from the same channel have
+	 *  completed.
+	 */
+	SPDK_BDEV_IO_STATUS_NOMEM = -4,
 	SPDK_BDEV_IO_STATUS_SCSI_ERROR = -3,
 	SPDK_BDEV_IO_STATUS_NVME_ERROR = -2,
 	SPDK_BDEV_IO_STATUS_FAILED = -1,
