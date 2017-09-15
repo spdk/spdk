@@ -54,9 +54,6 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_name(w, "num_blocks");
 	spdk_json_write_uint64(w, spdk_bdev_get_num_blocks(bdev));
 
-	spdk_json_write_name(w, "bdev_opened_for_write");
-	spdk_json_write_bool(w, bdev->bdev_opened_for_write);
-
 	spdk_json_write_name(w, "supported_io_types");
 	spdk_json_write_object_begin(w);
 	spdk_json_write_name(w, "read");
