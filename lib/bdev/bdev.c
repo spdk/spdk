@@ -57,6 +57,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_IO_POOL_SIZE	(64 * 1024)
 #define BUF_SMALL_POOL_SIZE	8192
 #define BUF_LARGE_POOL_SIZE	1024
+#define NOMEM_THRESHOLD_COUNT	8
 
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
 
@@ -127,6 +128,17 @@ struct spdk_bdev_channel {
 	uint64_t		io_outstanding;
 
 	bdev_io_tailq_t		queued_resets;
+
+	/*
+	 * Queue of IO awaiting retry because of a previous NOMEM status returned
+	 *  on this channel.
+	 */
+	bdev_io_tailq_t		nomem_io;
+
+	/*
+	 * Threshold which io_outstanding must drop to before retrying nomem_io.
+	 */
+	uint64_t		nomem_threshold;
 
 	uint32_t		flags;
 
@@ -621,6 +633,9 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 		bdev->fn_table->submit_request(ch, bdev_io);
 	} else if (bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	} else if (!TAILQ_EMPTY(&bdev_ch->nomem_io)) {
+		bdev_ch->io_outstanding--;
+		TAILQ_INSERT_TAIL(&bdev_ch->nomem_io, bdev_io, link);
 	} else {
 		SPDK_ERRLOG("unknown bdev_ch flag %x found\n", bdev_ch->flags);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -682,6 +697,8 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
+	TAILQ_INIT(&ch->nomem_io);
+	ch->nomem_threshold = 0;
 	ch->flags = 0;
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -731,6 +748,15 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 	TAILQ_FOREACH_SAFE(bdev_io, queue, link, tmp) {
 		if (bdev_io->ch == ch) {
 			TAILQ_REMOVE(queue, bdev_io, link);
+			/*
+			 * spdk_bdev_io_complete() assumes that the completed I/O had
+			 *  been submitted to the bdev module.  Since in this case it
+			 *  hadn't, bump io_outstanding to account for the decrement
+			 *  that spdk_bdev_io_complete() will do.
+			 */
+			if (bdev_io->type != SPDK_BDEV_IO_TYPE_RESET) {
+				ch->io_outstanding++;
+			}
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
@@ -745,6 +771,7 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
 
 	_spdk_bdev_abort_queued_io(&ch->queued_resets, ch);
+	_spdk_bdev_abort_queued_io(&ch->nomem_io, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
 
@@ -1201,6 +1228,7 @@ _spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
 
 	channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
 
+	_spdk_bdev_abort_queued_io(&channel->nomem_io, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
 }
@@ -1379,6 +1407,36 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 }
 
 static void
+_spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
+{
+	struct spdk_bdev *bdev = bdev_ch->bdev;
+	struct spdk_bdev_io *bdev_io;
+
+	if (bdev_ch->io_outstanding > bdev_ch->nomem_threshold) {
+		/*
+		 * Allow some more I/O to complete before retrying the nomem_io queue.
+		 *  Some drivers (such as nvme) cannot immediately take a new I/O in
+		 *  the context of a completion, because the resources for the I/O are
+		 *  not released until control returns to the bdev poller.  Also, we
+		 *  may require several small I/O to complete before a larger I/O
+		 *  (that requires splitting) can be submitted.
+		 */
+		return;
+	}
+
+	while (!TAILQ_EMPTY(&bdev_ch->nomem_io)) {
+		bdev_io = TAILQ_FIRST(&bdev_ch->nomem_io);
+		TAILQ_REMOVE(&bdev_ch->nomem_io, bdev_io, link);
+		bdev_ch->io_outstanding++;
+		bdev_io->status = SPDK_BDEV_IO_STATUS_PENDING;
+		bdev->fn_table->submit_request(bdev_ch->channel, bdev_io);
+		if (bdev_io->status == SPDK_BDEV_IO_STATUS_NOMEM) {
+			break;
+		}
+	}
+}
+
+static void
 _spdk_bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
@@ -1396,6 +1454,9 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	bdev_io->status = status;
 
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
+		if (status == SPDK_BDEV_IO_STATUS_NOMEM) {
+			SPDK_ERRLOG("NOMEM returned for reset\n");
+		}
 		pthread_mutex_lock(&bdev->mutex);
 		if (bdev_io == bdev->reset_in_progress) {
 			bdev->reset_in_progress = NULL;
@@ -1408,6 +1469,22 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	} else {
 		assert(bdev_ch->io_outstanding > 0);
 		bdev_ch->io_outstanding--;
+		if (spdk_likely(status != SPDK_BDEV_IO_STATUS_NOMEM)) {
+			if (spdk_unlikely(!TAILQ_EMPTY(&bdev_ch->nomem_io))) {
+				_spdk_bdev_ch_retry_io(bdev_ch);
+			}
+		} else {
+			TAILQ_INSERT_HEAD(&bdev_ch->nomem_io, bdev_io, link);
+			/*
+			 * Wait for some of the outstanding I/O to complete before we
+			 *  retry any of the nomem_io.  Normally we will wait for
+			 *  NOMEM_THRESHOLD_COUNT I/O to complete but for low queue
+			 *  depth channels we will instead wait for half to complete.
+			 */
+			bdev_ch->nomem_threshold = spdk_max(bdev_ch->io_outstanding / 2,
+							    bdev_ch->io_outstanding - NOMEM_THRESHOLD_COUNT);
+			return;
+		}
 	}
 
 	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {

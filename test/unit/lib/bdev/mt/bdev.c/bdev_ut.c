@@ -99,12 +99,24 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
 
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
+		struct spdk_bdev_io *io;
+
+		while (!TAILQ_EMPTY(&ch->outstanding_io)) {
+			io = TAILQ_FIRST(&ch->outstanding_io);
+			TAILQ_REMOVE(&ch->outstanding_io, io, module_link);
+			ch->outstanding_cnt--;
+			spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_FAILED);
+			ch->avail_cnt++;
+		}
+	}
+
 	if (ch->avail_cnt > 0) {
 		TAILQ_INSERT_TAIL(&ch->outstanding_io, bdev_io, module_link);
 		ch->outstanding_cnt++;
 		ch->avail_cnt--;
 	} else {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 	}
 }
 
@@ -413,6 +425,95 @@ io_during_reset(void)
 	teardown_test();
 }
 
+static void
+enomem_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	enum spdk_bdev_io_status *status = cb_arg;
+
+	*status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
+	spdk_bdev_free_io(bdev_io);
+}
+
+static uint32_t
+bdev_io_tailq_cnt(bdev_io_tailq_t *tailq)
+{
+	struct spdk_bdev_io *io;
+	uint32_t cnt = 0;
+
+	TAILQ_FOREACH(io, tailq, link) {
+		cnt++;
+	}
+
+	return cnt;
+}
+
+static void
+enomem(void)
+{
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_channel *bdev_ch;
+	struct ut_bdev_channel *ut_ch;
+	const uint32_t IO_ARRAY_SIZE = 64;
+	const uint32_t AVAIL = 20;
+	enum spdk_bdev_io_status status[IO_ARRAY_SIZE], status_reset;
+	uint32_t nomem_cnt, i;
+	int rc;
+
+	setup_test();
+
+	set_thread(0);
+	io_ch = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch = spdk_io_channel_get_ctx(io_ch);
+	ut_ch = spdk_io_channel_get_ctx(bdev_ch->channel);
+	ut_ch->avail_cnt = AVAIL;
+
+	for (i = 0; i < IO_ARRAY_SIZE; i++) {
+		status[i] = SPDK_BDEV_IO_STATUS_PENDING;
+		rc = spdk_bdev_read_blocks(g_desc, io_ch, NULL, 0, 1, enomem_done, &status[i]);
+		CU_ASSERT(rc == 0);
+	}
+
+	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == (IO_ARRAY_SIZE - AVAIL));
+	nomem_cnt = bdev_io_tailq_cnt(&bdev_ch->nomem_io);
+	CU_ASSERT(bdev_ch->nomem_threshold == (AVAIL - NOMEM_THRESHOLD_COUNT));
+
+	/*
+	 * Complete 1 I/O only.  The key check here is bdev_io_tailq_cnt - this should not have
+	 *  changed since completing just 1 I/O should not trigger retrying the queued nomem_io
+	 *  list.
+	 */
+	stub_complete_io(1);
+	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == nomem_cnt);
+
+	/*
+	 * Complete enough I/O to hit the nomem_theshold.  This should trigger retrying nomem_io,
+	 *  and we should see I/O get resubmitted to the test bdev module.
+	 */
+	stub_complete_io(NOMEM_THRESHOLD_COUNT - 1);
+	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) < nomem_cnt);
+	nomem_cnt = bdev_io_tailq_cnt(&bdev_ch->nomem_io);
+
+	/* Complete 1 I/O only.  This should not trigger retrying the queued nomem_io. */
+	stub_complete_io(1);
+	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == nomem_cnt);
+
+	/*
+	 * Send a reset and confirm that all I/O are completed, including the ones that
+	 *  were queued on the nomem_io list.
+	 */
+	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_reset(g_desc, io_ch, enomem_done, &status_reset);
+	poll_threads();
+	CU_ASSERT(rc == 0);
+	/* This will complete the reset. */
+	stub_complete_io(0);
+
+	CU_ASSERT(bdev_io_tailq_cnt(&bdev_ch->nomem_io) == 0);
+	CU_ASSERT(bdev_ch->io_outstanding == 0);
+
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -433,7 +534,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "basic", basic) == NULL ||
 		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL ||
 		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL ||
-		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL
+		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL ||
+		CU_add_test(suite, "enomem", enomem) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
