@@ -13,6 +13,7 @@ addons:
       - libcunit1-dev
       - libaio-dev
       - libssl-dev
+      - uuid-dev
 
 before_script:
   - export MAKEFLAGS="-j$(nproc)"
