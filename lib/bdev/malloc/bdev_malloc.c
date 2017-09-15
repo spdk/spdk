@@ -75,7 +75,11 @@ malloc_done(void *ref, int status)
 	struct malloc_task *task = __malloc_task_from_copy_task(ref);
 
 	if (status != 0) {
-		task->status = SPDK_BDEV_IO_STATUS_FAILED;
+		if (status == -ENOMEM) {
+			task->status = SPDK_BDEV_IO_STATUS_NOMEM;
+		} else {
+			task->status = SPDK_BDEV_IO_STATUS_FAILED;
+		}
 	}
 
 	if (--task->num_outstanding == 0) {

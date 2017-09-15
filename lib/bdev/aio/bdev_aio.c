@@ -120,7 +120,11 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 
 	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
 	if (rc < 0) {
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+		if (rc == EAGAIN) {
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+		}
 		SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		return -1;
 	}
@@ -146,7 +150,11 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 
 	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
 	if (rc < 0) {
-		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+		if (rc == EAGAIN) {
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
+		} else {
+			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_FAILED);
+		}
 		SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		return -1;
 	}

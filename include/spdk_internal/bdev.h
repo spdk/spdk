@@ -161,6 +161,7 @@ struct spdk_bdev_fn_table {
 
 /** bdev I/O completion status */
 enum spdk_bdev_io_status {
+	SPDK_BDEV_IO_STATUS_NOMEM = -4,
 	SPDK_BDEV_IO_STATUS_SCSI_ERROR = -3,
 	SPDK_BDEV_IO_STATUS_NVME_ERROR = -2,
 	SPDK_BDEV_IO_STATUS_FAILED = -1,
