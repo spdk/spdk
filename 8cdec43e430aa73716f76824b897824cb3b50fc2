@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cee90c8_70ccd64f",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-15T13:22:57Z",
+      "side": 1,
+      "message": "Do we need mutex here?",
+      "range": {
+        "startLine": 379,
+        "startChar": 0,
+        "endLine": 379,
+        "endChar": 48
+      },
+      "revId": "8cdec43e430aa73716f76824b897824cb3b50fc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
