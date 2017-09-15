@@ -33,6 +33,9 @@
  */
 
 #include "spdk/conf.h"
+#include "spdk/endian.h"
+#include "spdk/env.h"
+#include "spdk/io_channel.h"
 #include "spdk/string.h"
 #include "spdk/likely.h"
 #include "spdk/util.h"
@@ -49,6 +52,22 @@ struct pmem_disk {
 };
 
 TAILQ_HEAD(, pmem_disk) g_pmem_disks = TAILQ_HEAD_INITIALIZER(g_pmem_disks);
+struct pmem_task {
+	int				num_outstanding;
+	enum spdk_bdev_io_status	status;
+};
+
+TAILQ_HEAD(, pmem_disk) g_pmem_disks =
+	TAILQ_HEAD_INITIALIZER(g_pmem_disks);
+
+TAILQ_HEAD(, spdk_pmem_io_device) spdk_pmem_device_list =
+	TAILQ_HEAD_INITIALIZER(spdk_pmem_device_list);
+
+struct pmem_io_channel {
+	struct spdk_io_channel	*ch;
+};
+
+static struct pmem_io_channel pmem_engine;
 
 static int pmem_disk_count = 0;
 
@@ -281,7 +300,7 @@ bdev_pmem_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 static struct spdk_io_channel *
 bdev_pmem_get_io_channel(void *ctx)
 {
-	return spdk_get_io_channel(&g_pmem_disks);
+	return spdk_get_io_channel(&pmem_engine);
 }
 
 static const struct spdk_bdev_fn_table pmem_fn_table = {
@@ -353,7 +372,17 @@ struct spdk_bdev *create_pmem_disk(char *pmem_file)
 
 	return &pdisk->disk;
 }
+static int
+pmem_create_cb(void *io_device, void *ctx_buf)
+{
+	return 0;
+}
+static void
+pmem_destroy_cb(void *io_device, void *ctx_buf)
+{
 
+
+}
 static int bdev_pmem_initialize(void)
 {
 	const char *err = pmemblk_check_version(PMEMBLK_MAJOR_VERSION, PMEMBLK_MINOR_VERSION);
@@ -364,6 +393,8 @@ static int bdev_pmem_initialize(void)
 		return -1;
 	}
 
+	spdk_io_device_register(&spdk_pmem_device_list, pmem_create_cb, pmem_destroy_cb,
+				sizeof(struct pmem_io_channel));
 	return 0;
 
 }
@@ -375,6 +406,7 @@ static void bdev_pmem_finish(void)
 	TAILQ_FOREACH_SAFE(pdisk, &g_pmem_disks, tailq, tmp) {
 		bdev_pmem_destruct(pdisk);
 	}
+	//spdk_io_device_unregister(&spdk_pmem_device_list, pmem_unregister_cb);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_pmem", SPDK_TRACE_BDEV_PMEM)
