@@ -16,6 +16,24 @@
       "revId": "8ab607dbd3098a15578ea6928d16c80172fbf134",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3606a16b_b89a9178",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1641,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-15T23:15:44Z",
+      "side": 1,
+      "message": "Yes, Currently Intel SSDs can not support metadata as SGL. Even for separate contiguous physical buffer metadata is not work now, there have a experimental version firmware can support it, but I cannot upgrade my D3600 to the release.",
+      "parentUuid": "b828a844_d0bbf4e8",
+      "revId": "8ab607dbd3098a15578ea6928d16c80172fbf134",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
