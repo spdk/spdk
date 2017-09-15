@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "2041972d_033f916f",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-15T07:42:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b20968ac_2fcdbfcc",
+      "range": {
+        "startLine": 197,
+        "startChar": 3,
+        "endLine": 197,
+        "endChar": 62
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "301dd6e6_75981931",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 15
@@ -59,6 +83,30 @@
       "writtenOn": "2017-09-14T16:11:16Z",
       "side": 1,
       "message": "Check error code.",
+      "range": {
+        "startLine": 215,
+        "startChar": 0,
+        "endLine": 215,
+        "endChar": 47
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a2cf70f_e73a0b23",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-15T07:42:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "301dd6e6_75981931",
       "range": {
         "startLine": 215,
         "startChar": 0,
@@ -117,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "da696375_6604a673",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-15T07:42:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f84d5b0d_391145fe",
+      "range": {
+        "startLine": 328,
+        "startChar": 9,
+        "endLine": 328,
+        "endChar": 25
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9be48fd8_584cbd4b",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 15
@@ -128,6 +200,30 @@
       "writtenOn": "2017-09-14T16:11:16Z",
       "side": 1,
       "message": "This need to undo the pmemblk_open(). And free pdisk etc.",
+      "range": {
+        "startLine": 355,
+        "startChar": 1,
+        "endLine": 358,
+        "endChar": 2
+      },
+      "revId": "d1982d3c57cf5425d3101fe989ade73a08e62e43",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86eaba01_89f3c885",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-15T07:42:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9be48fd8_584cbd4b",
       "range": {
         "startLine": 355,
         "startChar": 1,
