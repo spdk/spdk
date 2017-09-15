@@ -46,6 +46,10 @@ LIBNAME = bdev
 
 DIRS-y += error gpt lvol malloc null nvme rpc split
 
+ifeq ($(CONFIG_NVML),y)
+DIRS-y += pmem
+endif
+
 ifeq ($(OS),Linux)
 DIRS-y += aio virtio
 endif
