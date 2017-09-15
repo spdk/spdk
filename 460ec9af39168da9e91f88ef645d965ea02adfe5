@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "3bc333b1_95f8482a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-15T18:37:33Z",
+      "side": 1,
+      "message": "I would reword this - you really are not simplifying this script at all - you are making it bigger and more complicated.  :)  but for good reasons of course.",
+      "revId": "460ec9af39168da9e91f88ef645d965ea02adfe5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "507d64af_e50e18ff",
         "filename": "test/blobfs/rocksdb/rocksdb.sh",
         "patchSetId": 4
@@ -36,6 +53,40 @@
         "endLine": 18,
         "endChar": 5
       },
+      "revId": "460ec9af39168da9e91f88ef645d965ea02adfe5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c979a8f_f1c3cb16",
+        "filename": "test/blobfs/rocksdb/rocksdb.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-15T18:37:33Z",
+      "side": 1,
+      "message": "You can remove USE_PERF",
+      "revId": "460ec9af39168da9e91f88ef645d965ea02adfe5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6223081_59ed5a48",
+        "filename": "test/blobfs/rocksdb/rocksdb.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-15T18:37:33Z",
+      "side": 1,
+      "message": "You can remove lines 61-75.",
       "revId": "460ec9af39168da9e91f88ef645d965ea02adfe5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
