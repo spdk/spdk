@@ -95,11 +95,25 @@ echo "--use_existing_db=1" >> writesync_flags.txt
 echo "--sync=1" >> writesync_flags.txt
 echo "--num=$NUM_KEYS" >> writesync_flags.txt
 
+timing_enter rocksdb-insert
 run_step insert
+timing_exit rocksdb-insert
+
+timing_enter rocksdb-overwrite
 run_step overwrite
+timing_exit rocksdb-overwrite
+
+timing_enter rocksdb-readwrite
 run_step readwrite
+timing_exit rocksdb-readwrite
+
+timing_enter rocksdb-writesync
 run_step writesync
+timing_exit rocksdb-writesync
+
+timing_enter rocksdb-randread
 run_step randread
+timing_exit rocksdb-randread
 
 trap - SIGINT SIGTERM EXIT
 
