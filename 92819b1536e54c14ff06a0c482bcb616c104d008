@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "012346d6_b93985ec",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1241,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-15T21:13:04Z",
+      "side": 1,
+      "message": "variable name should be super_block",
+      "revId": "92819b1536e54c14ff06a0c482bcb616c104d008",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
