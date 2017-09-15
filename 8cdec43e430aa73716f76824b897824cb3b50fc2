@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "15c22f9b_d561f58f",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-15T14:01:03Z",
+      "side": 1,
+      "message": "Where this variable is accesed?",
+      "range": {
+        "startLine": 56,
+        "startChar": 1,
+        "endLine": 56,
+        "endChar": 24
+      },
+      "revId": "8cdec43e430aa73716f76824b897824cb3b50fc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a956911f_3b09495f",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-15T14:01:03Z",
+      "side": 1,
+      "message": "I think some kind of mutex is needed here. Other bdev modules don\u0027t use mutex while accessing own lists but we could. Maybe Daniel or Jim could give more info here.",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 76
+      },
+      "revId": "8cdec43e430aa73716f76824b897824cb3b50fc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16407e77_db2202a5",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-15T14:01:03Z",
+      "side": 1,
+      "message": "And this should be some atomic type or accessed under lock.",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 23
+      },
+      "revId": "8cdec43e430aa73716f76824b897824cb3b50fc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7cee90c8_70ccd64f",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 22
@@ -18,6 +87,29 @@
         "startChar": 0,
         "endLine": 379,
         "endChar": 48
+      },
+      "revId": "8cdec43e430aa73716f76824b897824cb3b50fc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6b3c1ff_d6a5956d",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-15T14:01:03Z",
+      "side": 1,
+      "message": "Hmmm.... This might not free all devices.\n\nwhile (! TAILQ_HEAD(g_pmem_disks) ) {\n    bdev_pmem_destruct(TAILQ_HEAD(g_pmem_disks);\n}",
+      "range": {
+        "startLine": 393,
+        "startChar": 1,
+        "endLine": 393,
+        "endChar": 45
       },
       "revId": "8cdec43e430aa73716f76824b897824cb3b50fc2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
