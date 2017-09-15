@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dae3bf3d_67d8aa2c",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-15T13:30:07Z",
+      "side": 1,
+      "message": "I think it would be better to either:\n- use system provided library\n- let user specify directory to use",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 16
+      },
+      "revId": "f483d8fd5ee45dd61de9e9f8caf243ce848c8c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4eb7fd62_012b1043",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-15T13:30:07Z",
+      "side": 1,
+      "message": "Dependencies for debian/freebsd are required as well.",
+      "revId": "f483d8fd5ee45dd61de9e9f8caf243ce848c8c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
