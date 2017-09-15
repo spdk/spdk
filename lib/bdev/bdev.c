@@ -1391,32 +1391,35 @@ _spdk_bdev_io_complete(void *ctx)
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
+
 	bdev_io->status = status;
 
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
-		pthread_mutex_lock(&bdev_io->bdev->mutex);
-		if (bdev_io == bdev_io->bdev->reset_in_progress) {
-			bdev_io->bdev->reset_in_progress = NULL;
+		pthread_mutex_lock(&bdev->mutex);
+		if (bdev_io == bdev->reset_in_progress) {
+			bdev->reset_in_progress = NULL;
 		}
-		pthread_mutex_unlock(&bdev_io->bdev->mutex);
+		pthread_mutex_unlock(&bdev->mutex);
 		if (bdev_io->u.reset.ch_ref != NULL) {
 			spdk_put_io_channel(bdev_io->u.reset.ch_ref);
 		}
-		spdk_for_each_channel(bdev_io->bdev, _spdk_bdev_complete_reset_channel, NULL, NULL);
+		spdk_for_each_channel(bdev, _spdk_bdev_complete_reset_channel, NULL, NULL);
 	} else {
-		assert(bdev_io->ch->io_outstanding > 0);
-		bdev_io->ch->io_outstanding--;
+		assert(bdev_ch->io_outstanding > 0);
+		bdev_ch->io_outstanding--;
 	}
 
 	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
-			bdev_io->ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-			bdev_io->ch->stat.num_read_ops++;
+			bdev_ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev->blocklen;
+			bdev_ch->stat.num_read_ops++;
 			break;
 		case SPDK_BDEV_IO_TYPE_WRITE:
-			bdev_io->ch->stat.bytes_written += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
-			bdev_io->ch->stat.num_write_ops++;
+			bdev_ch->stat.bytes_written += bdev_io->u.bdev.num_blocks * bdev->blocklen;
+			bdev_ch->stat.num_write_ops++;
 			break;
 		default:
 			break;
@@ -1425,21 +1428,21 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t now_tsc = spdk_get_ticks();
-	if (now_tsc > (bdev_io->ch->start_tsc + bdev_io->ch->interval_tsc)) {
+	if (now_tsc > (bdev_ch->start_tsc + bdev_ch->interval_tsc)) {
 		uint64_t data[5];
 
-		data[0] = bdev_io->ch->stat.num_read_ops;
-		data[1] = bdev_io->ch->stat.bytes_read;
-		data[2] = bdev_io->ch->stat.num_write_ops;
-		data[3] = bdev_io->ch->stat.bytes_written;
-		data[4] = bdev_io->bdev->fn_table->get_spin_time ?
-			  bdev_io->bdev->fn_table->get_spin_time(bdev_io->ch->channel) : 0;
+		data[0] = bdev_ch->stat.num_read_ops;
+		data[1] = bdev_ch->stat.bytes_read;
+		data[2] = bdev_ch->stat.num_write_ops;
+		data[3] = bdev_ch->stat.bytes_written;
+		data[4] = bdev->fn_table->get_spin_time ?
+			  bdev->fn_table->get_spin_time(bdev_ch->channel) : 0;
 
-		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->ch->handle,
+		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_ch->handle,
 				   __itt_metadata_u64, 5, data);
 
-		memset(&bdev_io->ch->stat, 0, sizeof(bdev_io->ch->stat));
-		bdev_io->ch->start_tsc = now_tsc;
+		memset(&bdev_ch->stat, 0, sizeof(bdev_ch->stat));
+		bdev_ch->start_tsc = now_tsc;
 	}
 #endif
 
@@ -1448,7 +1451,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		 * Defer completion to avoid potential infinite recursion if the
 		 * user's completion callback issues a new I/O.
 		 */
-		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_io->ch->channel),
+		spdk_thread_send_msg(spdk_io_channel_get_thread(bdev_ch->channel),
 				     _spdk_bdev_io_complete, bdev_io);
 	} else {
 		_spdk_bdev_io_complete(bdev_io);
