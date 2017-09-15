@@ -328,6 +328,11 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	uint32_t i;
 	int rc;
 
+	if (nsid == SPDK_NVME_GLOBAL_NS_TAG) {
+		SPDK_ERRLOG("Invalid NSID %" PRIu32 "\n", nsid);
+		return 0;
+	}
+
 	if (nsid > subsystem->max_nsid ||
 	    (nsid == 0 && subsystem->num_allocated_nsid == subsystem->max_nsid)) {
 		struct spdk_nvmf_ns *new_ns_array;
