@@ -189,6 +189,11 @@ test_spdk_nvmf_subsystem_add_ns(void)
 	CU_ASSERT(nsid == 0);
 	CU_ASSERT(subsystem.max_nsid == 5);
 
+	/* Request 0xFFFFFFFF (invalid NSID, reserved for broadcast) */
+	nsid = spdk_nvmf_subsystem_add_ns(&subsystem, &bdev2, 0xFFFFFFFF);
+	CU_ASSERT(nsid == 0);
+	CU_ASSERT(subsystem.max_nsid == 5);
+
 	free(subsystem.ns);
 }
 
