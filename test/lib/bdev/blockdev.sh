@@ -38,7 +38,7 @@ fi
 timing_exit nbd
 
 timing_enter bdev_svc
-bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.bdev_opened_for_write == false)')
+bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.claim_module == null)')
 timing_exit bdev_svc
 
 if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
