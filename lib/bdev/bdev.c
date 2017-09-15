@@ -128,6 +128,9 @@ struct spdk_bdev_channel {
 
 	bdev_io_tailq_t		queued_resets;
 
+	bdev_io_tailq_t		nomem_io;
+	uint64_t		nomem_threshold;
+
 	uint32_t		flags;
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -621,6 +624,9 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 		bdev->fn_table->submit_request(ch, bdev_io);
 	} else if ((bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS) == BDEV_CH_RESET_IN_PROGRESS) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	} else if (!TAILQ_EMPTY(&bdev_ch->nomem_io)) {
+		bdev_ch->io_outstanding--;
+		TAILQ_INSERT_TAIL(&bdev_ch->nomem_io, bdev_io, link);
 	} else {
 		SPDK_ERRLOG("unknown bdev_ch flag %x found\n", bdev_ch->flags);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -682,6 +688,8 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
+	TAILQ_INIT(&ch->nomem_io);
+	ch->nomem_threshold = 0;
 	ch->flags = 0;
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -745,6 +753,7 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
 
 	_spdk_bdev_abort_queued_io(&ch->queued_resets, ch);
+	_spdk_bdev_abort_queued_io(&ch->nomem_io, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
 
@@ -1201,6 +1210,7 @@ _spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
 
 	channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
 
+	_spdk_bdev_abort_queued_io(&channel->nomem_io, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
 }
@@ -1380,6 +1390,27 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 }
 
 static void
+_spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
+{
+	struct spdk_bdev *bdev = bdev_ch->bdev;
+	struct spdk_bdev_io *bdev_io;
+
+	if (bdev_ch->io_outstanding > bdev_ch->nomem_threshold) {
+		return;
+	}
+
+	while (!TAILQ_EMPTY(&bdev_ch->nomem_io)) {
+		bdev_io = TAILQ_FIRST(&bdev_ch->nomem_io);
+		TAILQ_REMOVE(&bdev_ch->nomem_io, bdev_io, link);
+		bdev_ch->io_outstanding++;
+		bdev->fn_table->submit_request(bdev_ch->channel, bdev_io);
+		if (bdev_io->status == SPDK_BDEV_IO_STATUS_NOMEM) {
+			break;
+		}
+	}
+}
+
+static void
 _spdk_bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
@@ -1397,6 +1428,9 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	bdev_io->status = status;
 
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
+		if (status == SPDK_BDEV_IO_STATUS_NOMEM) {
+			SPDK_ERRLOG("NOMEM returned for reset\n");
+		}
 		pthread_mutex_lock(&bdev->mutex);
 		if (bdev_io == bdev->reset_in_progress) {
 			bdev->reset_in_progress = NULL;
@@ -1409,6 +1443,15 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	} else {
 		assert(bdev_ch->io_outstanding > 0);
 		bdev_ch->io_outstanding--;
+		if (spdk_likely(status != SPDK_BDEV_IO_STATUS_NOMEM)) {
+			if (spdk_unlikely(!TAILQ_EMPTY(&bdev_ch->nomem_io))) {
+				_spdk_bdev_ch_retry_io(bdev_ch);
+			}
+		} else {
+			TAILQ_INSERT_HEAD(&bdev_ch->nomem_io, bdev_io, link);
+			bdev_ch->nomem_threshold = bdev_ch->io_outstanding / 2;
+			return;
+		}
 	}
 
 	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
