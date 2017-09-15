@@ -46,7 +46,10 @@ $rootdir/scripts/gen_nvme.sh >> $ROCKSDB_CONF
 
 trap 'rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
+timing_enter mkfs
 $rootdir/test/lib/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
+timing_exit mkfs
+
 mkdir $output_dir/rocksdb
 RESULTS_DIR=$output_dir/rocksdb
 DURATION=30
@@ -95,11 +98,25 @@ echo "--use_existing_db=1" >> writesync_flags.txt
 echo "--sync=1" >> writesync_flags.txt
 echo "--num=$NUM_KEYS" >> writesync_flags.txt
 
+timing_enter rocksdb_insert
 run_step insert
+timing_exit rocksdb_insert
+
+timing_enter rocksdb_overwrite
 run_step overwrite
+timing_exit rocksdb_overwrite
+
+timing_enter rocksdb_readwrite
 run_step readwrite
+timing_exit rocksdb_readwrite
+
+timing_enter rocksdb_writesync
 run_step writesync
+timing_exit rocksdb_writesync
+
+timing_enter rocksdb_randread
 run_step randread
+timing_exit rocksdb_randread
 
 trap - SIGINT SIGTERM EXIT
 
