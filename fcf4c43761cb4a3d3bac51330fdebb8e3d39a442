@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba412a08_b368cf3f",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-16T08:01:03Z",
+      "side": 1,
+      "message": "It does not seem to be valid markdown link.\n[current vhost initiator limitations](spdk/tree/master/lib/bdev/virtio/README.md#Todo)",
+      "range": {
+        "startLine": 92,
+        "startChar": 2,
+        "endLine": 92,
+        "endChar": 52
+      },
+      "revId": "fcf4c43761cb4a3d3bac51330fdebb8e3d39a442",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
