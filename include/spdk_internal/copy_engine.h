@@ -45,9 +45,9 @@ struct spdk_copy_task {
 };
 
 struct spdk_copy_engine {
-	int64_t	(*copy)(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
+	int	(*copy)(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
 			uint64_t nbytes, spdk_copy_completion_cb cb);
-	int64_t	(*fill)(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
+	int	(*fill)(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
 			uint64_t nbytes, spdk_copy_completion_cb cb);
 	struct spdk_io_channel *(*get_io_channel)(void);
 };
