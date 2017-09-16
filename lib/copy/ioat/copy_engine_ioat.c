@@ -145,7 +145,7 @@ ioat_done(void *cb_arg)
 	ioat_task->cb(copy_req, 0);
 }
 
-static int64_t
+static int
 ioat_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
 		 spdk_copy_completion_cb cb)
 {
@@ -159,7 +159,7 @@ ioat_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src,
 	return spdk_ioat_submit_copy(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, src, nbytes);
 }
 
-static int64_t
+static int
 ioat_copy_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
 		      uint64_t nbytes, spdk_copy_completion_cb cb)
 {

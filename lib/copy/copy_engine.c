@@ -75,7 +75,7 @@ copy_engine_done(void *ref, int status)
 	req->cb(req, status);
 }
 
-int64_t
+int
 spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
 		 void *dst, void *src, uint64_t nbytes, spdk_copy_completion_cb cb)
 {
@@ -87,7 +87,7 @@ spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
 				     copy_engine_done);
 }
 
-int64_t
+int
 spdk_copy_submit_fill(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
 		      void *dst, uint8_t fill, uint64_t nbytes, spdk_copy_completion_cb cb)
 {
@@ -100,7 +100,7 @@ spdk_copy_submit_fill(struct spdk_copy_task *copy_req, struct spdk_io_channel *c
 }
 
 /* memcpy default copy engine */
-static int64_t
+static int
 mem_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, uint64_t nbytes,
 		spdk_copy_completion_cb cb)
 {
@@ -111,10 +111,10 @@ mem_copy_submit(void *cb_arg, struct spdk_io_channel *ch, void *dst, void *src, 
 	copy_req = (struct spdk_copy_task *)((uintptr_t)cb_arg -
 					     offsetof(struct spdk_copy_task, offload_ctx));
 	cb(copy_req, 0);
-	return nbytes;
+	return 0;
 }
 
-static int64_t
+static int
 mem_copy_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill, uint64_t nbytes,
 	      spdk_copy_completion_cb cb)
 {
@@ -125,7 +125,7 @@ mem_copy_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8_t fill,
 					     offsetof(struct spdk_copy_task, offload_ctx));
 	cb(copy_req, 0);
 
-	return nbytes;
+	return 0;
 }
 
 static struct spdk_io_channel *mem_get_io_channel(void);
