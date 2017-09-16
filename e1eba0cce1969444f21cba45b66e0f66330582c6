@@ -94,6 +94,54 @@
     },
     {
       "key": {
+        "uuid": "258377a9_60093a94",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-16T08:27:56Z",
+      "side": 1,
+      "message": "You\u0027re right. Done.",
+      "parentUuid": "7f1ecdc7_c531c846",
+      "range": {
+        "startLine": 287,
+        "startChar": 1,
+        "endLine": 287,
+        "endChar": 55
+      },
+      "revId": "e1eba0cce1969444f21cba45b66e0f66330582c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42ff0902_886178df",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-16T08:27:56Z",
+      "side": 1,
+      "message": "i\u0027ll change those later, not a priority right now.",
+      "parentUuid": "fa1c7cd1_237d0a37",
+      "range": {
+        "startLine": 287,
+        "startChar": 53,
+        "endLine": 287,
+        "endChar": 54
+      },
+      "revId": "e1eba0cce1969444f21cba45b66e0f66330582c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4d97790b_2e4df43b",
         "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.c",
         "patchSetId": 1
@@ -117,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "2c7619ed_f8ec7157",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-16T08:27:56Z",
+      "side": 1,
+      "message": "DPDK dynamically increases it\u0027s queue count basing on vhost-user messages it receives.\nIt should work, but ofc - requires testing.",
+      "parentUuid": "4d97790b_2e4df43b",
+      "range": {
+        "startLine": 240,
+        "startChar": 17,
+        "endLine": 240,
+        "endChar": 18
+      },
+      "revId": "e1eba0cce1969444f21cba45b66e0f66330582c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15ade62f_7752c3d6",
         "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
         "patchSetId": 1
@@ -128,6 +200,30 @@
       "writtenOn": "2017-09-06T20:01:49Z",
       "side": 1,
       "message": "As already mentioned in virtio_bdev.c - this should not wrap but be a hard limit at max_queues",
+      "range": {
+        "startLine": 58,
+        "startChar": 16,
+        "endLine": 58,
+        "endChar": 54
+      },
+      "revId": "e1eba0cce1969444f21cba45b66e0f66330582c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b0f3d97_36296481",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-16T08:27:56Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "15ade62f_7752c3d6",
       "range": {
         "startLine": 58,
         "startChar": 16,
