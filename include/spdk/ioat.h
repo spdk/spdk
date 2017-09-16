@@ -112,9 +112,9 @@ int spdk_ioat_detach(struct spdk_ioat_chan *ioat);
  * \param src Source virtual address.
  * \param nbytes Number of bytes to copy.
  */
-int64_t spdk_ioat_submit_copy(struct spdk_ioat_chan *chan,
-			      void *cb_arg, spdk_ioat_req_cb cb_fn,
-			      void *dst, const void *src, uint64_t nbytes);
+int spdk_ioat_submit_copy(struct spdk_ioat_chan *chan,
+			  void *cb_arg, spdk_ioat_req_cb cb_fn,
+			  void *dst, const void *src, uint64_t nbytes);
 
 /**
  * Submit a DMA engine memory fill request.
@@ -126,9 +126,9 @@ int64_t spdk_ioat_submit_copy(struct spdk_ioat_chan *chan,
  * \param fill_pattern Repeating eight-byte pattern to use for memory fill.
  * \param nbytes Number of bytes to fill.
  */
-int64_t spdk_ioat_submit_fill(struct spdk_ioat_chan *chan,
-			      void *cb_arg, spdk_ioat_req_cb cb_fn,
-			      void *dst, uint64_t fill_pattern, uint64_t nbytes);
+int spdk_ioat_submit_fill(struct spdk_ioat_chan *chan,
+			  void *cb_arg, spdk_ioat_req_cb cb_fn,
+			  void *dst, uint64_t fill_pattern, uint64_t nbytes);
 
 /**
  * Check for completed requests on an I/OAT channel.
