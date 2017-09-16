@@ -573,7 +573,7 @@ spdk_ioat_detach(struct spdk_ioat_chan *ioat)
 #define _2MB_PAGE(ptr)		((ptr) & ~(0x200000 - 1))
 #define _2MB_OFFSET(ptr)	((ptr) &  (0x200000 - 1))
 
-int64_t
+int
 spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb cb_fn,
 		      void *dst, const void *src, uint64_t nbytes)
 {
@@ -585,7 +585,7 @@ spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 	uint32_t	orig_head;
 
 	if (!ioat) {
-		return -1;
+		return -EINVAL;
 	}
 
 	orig_head = ioat->head;
@@ -639,14 +639,14 @@ spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 		 * in case we managed to fill out any descriptors.
 		 */
 		ioat->head = orig_head;
-		return -1;
+		return -ENOMEM;
 	}
 
 	ioat_flush(ioat);
-	return nbytes;
+	return 0;
 }
 
-int64_t
+int
 spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb cb_fn,
 		      void *dst, uint64_t fill_pattern, uint64_t nbytes)
 {
@@ -656,7 +656,7 @@ spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 	uint32_t	orig_head;
 
 	if (!ioat) {
-		return -1;
+		return -EINVAL;
 	}
 
 	if (!(ioat->dma_capabilities & SPDK_IOAT_ENGINE_FILL_SUPPORTED)) {
@@ -695,11 +695,11 @@ spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 		 * in case we managed to fill out any descriptors.
 		 */
 		ioat->head = orig_head;
-		return -1;
+		return -ENOMEM;
 	}
 
 	ioat_flush(ioat);
-	return nbytes;
+	return 0;
 }
 
 uint32_t

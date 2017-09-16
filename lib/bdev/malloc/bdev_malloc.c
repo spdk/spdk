@@ -185,8 +185,8 @@ bdev_malloc_readv(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 				       ch, iov[i].iov_base,
 				       src, iov[i].iov_len, malloc_done);
 
-		if (res != (int64_t)iov[i].iov_len) {
-			malloc_done(__copy_task_from_malloc_task(task), -1);
+		if (res != 0) {
+			malloc_done(__copy_task_from_malloc_task(task), res);
 		}
 
 		src += iov[i].iov_len;
@@ -220,8 +220,8 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 				       ch, dst, iov[i].iov_base,
 				       iov[i].iov_len, malloc_done);
 
-		if (res != (int64_t)iov[i].iov_len) {
-			malloc_done(__copy_task_from_malloc_task(task), -1);
+		if (res != 0) {
+			malloc_done(__copy_task_from_malloc_task(task), res);
 		}
 
 		dst += iov[i].iov_len;
@@ -328,7 +328,7 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 
 static void bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	if (_bdev_malloc_submit_request(ch, bdev_io) < 0) {
+	if (_bdev_malloc_submit_request(ch, bdev_io) != 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
