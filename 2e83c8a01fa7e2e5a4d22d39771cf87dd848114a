@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c637e520_25bdf0f8",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-17T22:16:18Z",
+      "side": 1,
+      "message": "you can pass the parms below in as NULL and remove these 2 funcs",
+      "revId": "2e83c8a01fa7e2e5a4d22d39771cf87dd848114a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b47d738_a7d6fa5d",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-17T22:16:18Z",
+      "side": 1,
+      "message": "why aren\u0027t you using the mock macros for these?",
+      "revId": "2e83c8a01fa7e2e5a4d22d39771cf87dd848114a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
