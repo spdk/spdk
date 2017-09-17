@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "410c3910_6f311844",
+        "filename": "lib/ut_mock/mock.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-17T22:10:29Z",
+      "side": 1,
+      "message": "love it, alphabetized?  :)",
+      "revId": "21a47f61fe6dc3b5e9aef79b05f412f575a50990",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
