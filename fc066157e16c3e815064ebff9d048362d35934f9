@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f86943f4_6396da71",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 38
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-17T23:13:51Z",
+      "side": 1,
+      "message": "Actually what was meant in the previous comments was to leave the reserved field the way it was and instead add logic to actually use the existing crc field that is in this struct below.  So you\u0027ll need to make sure it\u0027s calculated and written every time a page is changed and instead of using what you are calling the \u0027valid\u0027 field, you read hte md page, calculate the crc and compare it against what was stored in the page. If it matches then its valid, if not then the page page was only partially written previously and its therefore invalid.",
+      "revId": "fc066157e16c3e815064ebff9d048362d35934f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
