@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a162774_02ae20af",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-09-18T17:54:49Z",
+      "side": 1,
+      "message": "comments before this.",
+      "range": {
+        "startLine": 499,
+        "startChar": 9,
+        "endLine": 499,
+        "endChar": 15
+      },
+      "revId": "cb90d2ec25cfd11d31fedda515e5322975e64ecc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
