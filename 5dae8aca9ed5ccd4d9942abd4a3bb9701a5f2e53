@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f800c4ec_3f50d2cf",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1507,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-18T17:11:24Z",
+      "side": 1,
+      "message": "I think this should probably be \u003e\u003d rather than \u003e; the existing _spdk_bs_unload_read_super_cpl() has the same bug.\n\nAlso, since we are writing this same loop a few times now, it might be a good idea to make this a common function (with the bit array as a parameter).",
+      "revId": "5dae8aca9ed5ccd4d9942abd4a3bb9701a5f2e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "062b0779_fd01a73e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1544,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-18T17:11:24Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "5dae8aca9ed5ccd4d9942abd4a3bb9701a5f2e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2ba9cd6_67b4e53e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1634,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-18T17:11:24Z",
+      "side": 1,
+      "message": "This needs a check for allocation failure.",
+      "revId": "5dae8aca9ed5ccd4d9942abd4a3bb9701a5f2e53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
