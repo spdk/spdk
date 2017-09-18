@@ -224,8 +224,6 @@ struct spdk_bdev {
 
 	bool bdev_opened;
 
-	bool bdev_opened_for_write;
-
 	/**
 	 * Pointer to the module that has claimed this bdev for purposes of creating virtual
 	 *  bdevs on top of it.  Set to NULL if the bdev has not been claimed.
