@@ -58,7 +58,7 @@ static void
 _spdk_rpc_lvol_store_construct_cb(void *cb_arg, struct spdk_lvol_store *lvol_store, int lvserrno)
 {
 	struct spdk_json_write_ctx *w;
-	char lvol_store_uuid[37];
+	char lvol_store_uuid[UUID_STRING_LEN];
 	struct spdk_jsonrpc_request *request = cb_arg;
 	char buf[64];
 
@@ -378,3 +378,44 @@ invalid:
 }
 
 SPDK_RPC_REGISTER("resize_lvol_bdev", spdk_rpc_resize_lvol_bdev)
+
+static void
+spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	struct lvol_store_bdev *lvs_bdev;
+	char uuid[UUID_STRING_LEN];
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_lvol_stores requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	for (lvs_bdev = vbdev_lvol_store_first(); lvs_bdev != NULL;
+	     lvs_bdev = vbdev_lvol_store_next(lvs_bdev)) {
+		spdk_json_write_object_begin(w);
+
+		uuid_unparse(lvs_bdev->lvs->uuid, uuid);
+		spdk_json_write_name(w, "uuid");
+		spdk_json_write_string(w, uuid);
+
+		spdk_json_write_name(w, "base_bdev");
+		spdk_json_write_string(w, spdk_bdev_get_name(lvs_bdev->bdev));
+
+		spdk_json_write_object_end(w);
+	}
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+}
+
+SPDK_RPC_REGISTER("get_lvol_stores", spdk_rpc_get_lvol_stores)
