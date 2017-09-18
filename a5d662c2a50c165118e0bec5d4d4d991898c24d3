@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "15d1b00c_13016a8b",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-18T17:01:37Z",
+      "side": 1,
+      "message": "It would be useful if this could return the list of created bdev names, similar to the NVMe bdev.",
+      "revId": "a5d662c2a50c165118e0bec5d4d4d991898c24d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d2f713b_8028f550",
         "filename": "scripts/rpc.py",
         "patchSetId": 11
