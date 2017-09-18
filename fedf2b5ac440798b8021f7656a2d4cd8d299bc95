@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0c7cd14_de341202",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-18T08:20:49Z",
+      "side": 1,
+      "message": "ch-\u003equeue_id",
+      "range": {
+        "startLine": 321,
+        "startChar": 8,
+        "endLine": 321,
+        "endChar": 33
+      },
+      "revId": "fedf2b5ac440798b8021f7656a2d4cd8d299bc95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
