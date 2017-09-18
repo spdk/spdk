@@ -22,6 +22,75 @@
       "revId": "fedf2b5ac440798b8021f7656a2d4cd8d299bc95",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "545c0939_2c72180c",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-18T15:54:04Z",
+      "side": 1,
+      "message": "All queue should be ready after connect phase. He we should only assign a queue id to IO channel.",
+      "range": {
+        "startLine": 323,
+        "startChar": 1,
+        "endLine": 325,
+        "endChar": 2
+      },
+      "revId": "fedf2b5ac440798b8021f7656a2d4cd8d299bc95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d30808f3_4a15d1ae",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-18T15:54:04Z",
+      "side": 1,
+      "message": "This is still only one queue.\nMaybe Change syntax of config file to\nDev PATH [VQ_NUM [VQ_DEPTH]]",
+      "range": {
+        "startLine": 570,
+        "startChar": 10,
+        "endLine": 570,
+        "endChar": 45
+      },
+      "revId": "fedf2b5ac440798b8021f7656a2d4cd8d299bc95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33bd46aa_c789cda2",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-18T15:54:04Z",
+      "side": 1,
+      "message": "Why only 3?",
+      "range": {
+        "startLine": 246,
+        "startChar": 17,
+        "endLine": 246,
+        "endChar": 18
+      },
+      "revId": "fedf2b5ac440798b8021f7656a2d4cd8d299bc95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
