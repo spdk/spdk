@@ -11,6 +11,7 @@ run_step() {
 	echo "--spdk=$ROCKSDB_CONF" >> "$1"_flags.txt
 	echo "--spdk_bdev=Nvme0n1" >> "$1"_flags.txt
 	echo "--spdk_cache_size=$CACHE_SIZE" >> "$1"_flags.txt
+	echo "--spdk_shared_mem=0" >> "$1"_flags.txt
 
 	echo -n Start $1 test phase...
 	/usr/bin/time taskset 0xFFF $DB_BENCH --flagfile="$1"_flags.txt &> "$1"_db_bench.txt
@@ -20,6 +21,14 @@ run_step() {
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
+
+if [ `uname` = Linux ]; then
+	echo starting stub
+	start_stub "-s 4096 -i 0 -m 0xF"
+	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
+fi
+
+sleep 5
 
 DB_BENCH_DIR=/usr/src/rocksdb
 DB_BENCH=$DB_BENCH_DIR/db_bench
@@ -47,14 +56,14 @@ $rootdir/scripts/gen_nvme.sh >> $ROCKSDB_CONF
 trap 'rm -f $ROCKSDB_CONF; exit 1' SIGINT SIGTERM EXIT
 
 timing_enter mkfs
-$rootdir/test/lib/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1
+$rootdir/test/lib/blobfs/mkfs/mkfs $ROCKSDB_CONF Nvme0n1 0
 timing_exit mkfs
 
 mkdir $output_dir/rocksdb
 RESULTS_DIR=$output_dir/rocksdb
 DURATION=30
 NUM_KEYS=50000000
-CACHE_SIZE=4096
+CACHE_SIZE=3072
 
 cd $RESULTS_DIR
 
@@ -121,5 +130,10 @@ timing_exit rocksdb_randread
 trap - SIGINT SIGTERM EXIT
 
 rm -f $ROCKSDB_CONF
+
+if [ `uname` = Linux ]; then
+	trap - SIGINT SIGTERM EXIT
+	kill_stub
+fi
 
 timing_exit rocksdb
