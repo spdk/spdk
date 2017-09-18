@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 	struct spdk_app_opts opts = {};
 
 	if (argc < 3) {
-		SPDK_ERRLOG("usage: %s <conffile> <bdevname>\n", argv[0]);
+		SPDK_ERRLOG("usage: %s <conffile> <bdevname> <shm_id>\n", argv[0]);
 		exit(1);
 	}
 
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 	opts.name = "spdk_mkfs";
 	opts.config_file = argv[1];
 	opts.reactor_mask = "0x3";
-	opts.mem_size = 1024;
+	opts.shm_id = atoi(argv[3]);
 	opts.shutdown_cb = NULL;
 
 	spdk_fs_set_cache_size(512);

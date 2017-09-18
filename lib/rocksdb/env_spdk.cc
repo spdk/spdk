@@ -303,7 +303,7 @@ private:
 
 public:
 	SpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
-		const std::string &bdev, uint64_t cache_size_in_mb);
+		const std::string &bdev, uint64_t cache_size_in_mb, int shm_id);
 
 	virtual ~SpdkEnv();
 
@@ -586,7 +586,7 @@ initialize_spdk(void *arg)
 }
 
 SpdkEnv::SpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
-		 const std::string &bdev, uint64_t cache_size_in_mb)
+		 const std::string &bdev, uint64_t cache_size_in_mb, int shm_id)
 	: EnvWrapper(base_env), mDirectory(dir), mConfig(conf), mBdev(bdev)
 {
 	struct spdk_app_opts *opts = new struct spdk_app_opts;
@@ -594,8 +594,8 @@ SpdkEnv::SpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
 	spdk_app_opts_init(opts);
 	opts->name = "rocksdb";
 	opts->config_file = mConfig.c_str();
-	opts->mem_size = 1024 + cache_size_in_mb;
 	opts->shutdown_cb = spdk_rocksdb_shutdown;
+	opts->shm_id = shm_id;
 
 	spdk_fs_set_cache_size(cache_size_in_mb);
 	g_bdev_name = mBdev;
@@ -631,9 +631,9 @@ SpdkEnv::~SpdkEnv()
 }
 
 Env *NewSpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
-		const std::string &bdev, uint64_t cache_size_in_mb)
+		const std::string &bdev, uint64_t cache_size_in_mb, int shm_id)
 {
-	SpdkEnv *spdk_env = new SpdkEnv(base_env, dir, conf, bdev, cache_size_in_mb);
+	SpdkEnv *spdk_env = new SpdkEnv(base_env, dir, conf, bdev, cache_size_in_mb, shm_id);
 
 	if (g_fs != NULL) {
 		return spdk_env;
