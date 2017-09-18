@@ -1481,7 +1481,6 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	TAILQ_INIT(&bdev->open_descs);
 	bdev->bdev_opened = false;
-	bdev->bdev_opened_for_write = false;
 
 	TAILQ_INIT(&bdev->vbdevs);
 	TAILQ_INIT(&bdev->base_bdevs);
@@ -1605,18 +1604,14 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 
 	pthread_mutex_lock(&bdev->mutex);
 
-	if (write && (bdev->bdev_opened_for_write || bdev->claim_module)) {
-		SPDK_ERRLOG("failed, %s already opened for write or claimed\n", bdev->name);
+	if (write && bdev->claim_module) {
+		SPDK_ERRLOG("failed, %s already claimed\n", bdev->name);
 		free(desc);
 		pthread_mutex_unlock(&bdev->mutex);
 		return -EPERM;
 	}
 
 	TAILQ_INSERT_TAIL(&bdev->open_descs, desc, link);
-
-	if (write) {
-		bdev->bdev_opened_for_write = true;
-	}
 
 	bdev->bdev_opened = true;
 
@@ -1638,11 +1633,6 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	bool do_unregister = false;
 
 	pthread_mutex_lock(&bdev->mutex);
-
-	if (desc->write) {
-		assert(bdev->bdev_opened_for_write);
-		bdev->bdev_opened_for_write = false;
-	}
 
 	bdev->bdev_opened = false;
 
@@ -1669,13 +1659,7 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		return -EPERM;
 	}
 
-	if ((!desc || !desc->write) && bdev->bdev_opened_for_write) {
-		SPDK_ERRLOG("bdev %s already opened with write access\n", bdev->name);
-		return -EPERM;
-	}
-
 	if (desc && !desc->write) {
-		bdev->bdev_opened_for_write = true;
 		desc->write = true;
 	}
 
