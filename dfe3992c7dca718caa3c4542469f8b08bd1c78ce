@@ -22,6 +22,121 @@
       "revId": "dfe3992c7dca718caa3c4542469f8b08bd1c78ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae5763ab_abecffc6",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-18T09:11:23Z",
+      "side": 1,
+      "message": "Once?",
+      "range": {
+        "startLine": 103,
+        "startChar": 57,
+        "endLine": 103,
+        "endChar": 62
+      },
+      "revId": "dfe3992c7dca718caa3c4542469f8b08bd1c78ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af726746_282e7674",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-18T09:11:23Z",
+      "side": 1,
+      "message": "10m for boot is quite long time. Can we have some shorter timeout?",
+      "range": {
+        "startLine": 121,
+        "startChar": 21,
+        "endLine": 121,
+        "endChar": 24
+      },
+      "revId": "dfe3992c7dca718caa3c4542469f8b08bd1c78ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be2bfc99_dbdd38c8",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-18T09:11:23Z",
+      "side": 1,
+      "message": "Why echo?",
+      "range": {
+        "startLine": 148,
+        "startChar": 4,
+        "endLine": 148,
+        "endChar": 11
+      },
+      "revId": "dfe3992c7dca718caa3c4542469f8b08bd1c78ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4bf625a_94c7f331",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-18T09:11:23Z",
+      "side": 1,
+      "message": "It would be really good do simplify this big if condition.",
+      "range": {
+        "startLine": 150,
+        "startChar": 0,
+        "endLine": 168,
+        "endChar": 6
+      },
+      "revId": "dfe3992c7dca718caa3c4542469f8b08bd1c78ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b339958_57c78259",
+        "filename": "test/vhost/hotfeatures/scsi_hotattach.sh",
+        "patchSetId": 29
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-18T09:11:23Z",
+      "side": 1,
+      "message": "Why prepare already prepared VMs?\nThe same comment for all other places.",
+      "range": {
+        "startLine": 83,
+        "startChar": 3,
+        "endLine": 83,
+        "endChar": 26
+      },
+      "revId": "dfe3992c7dca718caa3c4542469f8b08bd1c78ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
