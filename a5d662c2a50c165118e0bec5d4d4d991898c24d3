@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d2f713b_8028f550",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 586,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-18T17:00:20Z",
+      "side": 1,
+      "message": "max_queue and vq_size should probably have type\u003dint.",
+      "revId": "a5d662c2a50c165118e0bec5d4d4d991898c24d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
