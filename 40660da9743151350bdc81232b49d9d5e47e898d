@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18ebd8a1_01a65094",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-09-18T17:47:52Z",
+      "side": 1,
+      "message": "should we define a macro and explain this to make it more clear",
+      "range": {
+        "startLine": 174,
+        "startChar": 9,
+        "endLine": 174,
+        "endChar": 15
+      },
+      "revId": "40660da9743151350bdc81232b49d9d5e47e898d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
