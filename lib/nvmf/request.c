@@ -147,59 +147,41 @@ spdk_nvmf_request_exec_on_master(void *ctx)
 		status = spdk_nvmf_ctrlr_process_admin_cmd(req);
 	}
 
-	switch (status) {
-	case SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE:
+	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
 		spdk_nvmf_request_complete(req);
-		break;
-	case SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS:
-		break;
-	default:
-		SPDK_UNREACHABLE();
 	}
 }
 
-int
+void
 spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
 	spdk_nvmf_request_exec_status status;
 
-	nvmf_trace_command(req->cmd, req->qpair->type);
+	nvmf_trace_command(req->cmd, qpair->type);
 
-	if (cmd->opc == SPDK_NVME_OPC_FABRIC ||
-	    req->qpair->type == QPAIR_TYPE_AQ) {
-		/* Fabric and admin commands are sent
-		 * to the master core for synchronization
-		 * reasons.
-		 */
-		spdk_thread_send_msg(req->qpair->transport->tgt->master_thread,
+	if (spdk_unlikely(cmd->opc == SPDK_NVME_OPC_FABRIC || qpair->type == QPAIR_TYPE_AQ)) {
+		/* Fabric and admin commands are sent to the master core for synchronization. */
+		spdk_thread_send_msg(qpair->transport->tgt->master_thread,
 				     spdk_nvmf_request_exec_on_master,
 				     req);
-		status = SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
-	} else if (ctrlr == NULL ||
-		   !ctrlr->vcprop.cc.bits.en) {
-		/* TODO: The EN bit is modified by the master thread. This needs
-		 * stronger synchronization.
-		 */
-		SPDK_ERRLOG("Non-Fabric command sent to disabled controller\n");
+		return;
+	}
+
+	if (spdk_unlikely(ctrlr == NULL)) {
+		SPDK_ERRLOG("I/O command sent before connect\n");
 		rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
-		status = SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-	} else {
-		status = spdk_nvmf_ctrlr_process_io_cmd(req);
+		spdk_nvmf_request_complete_on_qpair(req);
+		return;
 	}
 
-	switch (status) {
-	case SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE:
-		return spdk_nvmf_request_complete(req);
-	case SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS:
-		return 0;
-	default:
-		SPDK_UNREACHABLE();
+	status = spdk_nvmf_ctrlr_process_io_cmd(req);
+	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		spdk_nvmf_request_complete_on_qpair(req);
 	}
-
-	return 0;
 }
 
 int
