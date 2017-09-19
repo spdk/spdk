@@ -57,8 +57,6 @@ struct virtio_user_dev {
 	/* for both vhost_user and vhost_kernel */
 	int		callfds[VIRTIO_MAX_VIRTQUEUES];
 	int		kickfds[VIRTIO_MAX_VIRTQUEUES];
-	uint32_t	max_queues;
-	uint32_t	num_queues;
 	uint32_t	queue_size;
 	uint64_t	features; /* the negotiated features with driver,
 				   * and will be sync with device
@@ -74,7 +72,7 @@ struct virtio_user_dev {
 int is_vhost_user_by_type(const char *path);
 int virtio_user_start_device(struct virtio_user_dev *dev);
 int virtio_user_stop_device(struct virtio_user_dev *dev);
-struct virtio_dev *virtio_user_dev_init(char *path, int queues, int queue_size);
+struct virtio_dev *virtio_user_dev_init(char *path, int queue_size);
 void virtio_user_dev_uninit(struct virtio_user_dev *dev);
 void virtio_user_handle_cq(struct virtio_user_dev *dev, uint16_t queue_idx);
 #endif

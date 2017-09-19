@@ -308,8 +308,6 @@ virtio_init_device(struct virtio_dev *dev, uint64_t req_features)
 	if (virtio_negotiate_features(dev, req_features) < 0)
 		return -1;
 
-	vtpci_read_dev_config(dev, offsetof(struct virtio_scsi_config, num_queues),
-			      &dev->max_queues, sizeof(dev->max_queues));
 	/* FIXME
 	 * Hardcode num_queues to 3 until we add proper
 	 * mutli-queue support. This value should be limited
@@ -360,6 +358,7 @@ struct virtio_dev *
 get_pci_virtio_hw(void)
 {
 	int ret;
+	struct virtio_dev *vdev = &g_pci_hw->vdev;
 
 	printf("%s[%d] %p\n", __func__, __LINE__, g_pci_hw);
 	if (rte_eal_process_type() == RTE_PROC_SECONDARY) {
@@ -367,11 +366,14 @@ get_pci_virtio_hw(void)
 		return NULL;
 	}
 
-	ret = vtpci_init(g_pci_hw->pci_dev, &g_pci_hw->vdev);
+	ret = vtpci_init(g_pci_hw->pci_dev, vdev);
 	if (ret)
 		return NULL;
 
-	return &g_pci_hw->vdev;
+	vtpci_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
+			      &vdev->max_queues, sizeof(vdev->max_queues));
+
+	return vdev;
 }
 
 static int virtio_pci_probe(struct rte_pci_driver *pci_drv __rte_unused,
