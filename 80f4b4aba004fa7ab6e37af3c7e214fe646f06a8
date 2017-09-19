@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01c1cf19_a45ca64c",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-19T12:54:12Z",
+      "side": 1,
+      "message": "From the code logic, you may change dev-\u003emodern from 0 to 1, while dev-\u003emodern \u003d\u003d 0, the vtpci_ops has been set to legacy_ops; seems that the original logic is right, what\u0027s the issue you met?",
+      "revId": "80f4b4aba004fa7ab6e37af3c7e214fe646f06a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
