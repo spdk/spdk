@@ -67,6 +67,11 @@ extern "C" {
  */
 #define SPDK_NVME_DATASET_MANAGEMENT_MAX_RANGES	256
 
+/**
+ * Maximum number of blocks that may be specified in a single dataset management range.
+ */
+#define SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS	0xFFFFFFFFu
+
 union spdk_nvme_cap_register {
 	uint64_t	raw;
 	struct {
