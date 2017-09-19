@@ -45,14 +45,6 @@
 #define NVME_ADMIN_TRACKERS	(64)
 
 /*
- * NVME_IO_ENTRIES defines the size of an I/O qpair's submission and completion
- *  queues, this value will be used to negotiate with user specified size and
- *  hardware allowed size to determine the maximum number of outstanding IOs on
- *  an I/O qpair at any time.
- */
-#define NVME_IO_ENTRIES		(512)
-
-/*
  * NVME_MAX_SGL_DESCRIPTORS defines the maximum number of descriptors in one SGL
  *  segment.
  */
@@ -396,12 +388,6 @@ nvme_pcie_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 	 *  results in a max xfer size of 506*ctrlr->page_size.
 	 */
 	return NVME_MAX_PRP_LIST_ENTRIES * ctrlr->page_size;
-}
-
-uint32_t
-nvme_pcie_ctrlr_get_max_io_queue_size(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return NVME_IO_ENTRIES;
 }
 
 uint16_t
