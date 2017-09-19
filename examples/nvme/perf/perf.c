@@ -1190,6 +1190,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	opts->io_queue_size = g_queue_depth + 1;
+	opts->io_queue_requests = opts->io_queue_size;
 
 	return true;
 }
