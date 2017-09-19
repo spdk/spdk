@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69347373_8440c4d8",
+        "filename": "autotest.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-19T10:22:00Z",
+      "side": 1,
+      "message": "I think more cases can be enabled, keeping in mind current known outstanding issues (see trello logical volumes board).\nI would propose to enable cases 1-7,9-17.",
+      "range": {
+        "startLine": 127,
+        "startChar": 43,
+        "endLine": 127,
+        "endChar": 56
+      },
+      "revId": "7fa1c14cbec91a281eff9ee58a7b0f4171c726ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0f230d9_69c399d1",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-19T10:22:00Z",
+      "side": 1,
+      "message": "Typo, \"Command\"",
+      "range": {
+        "startLine": 59,
+        "startChar": 27,
+        "endLine": 59,
+        "endChar": 34
+      },
+      "revId": "7fa1c14cbec91a281eff9ee58a7b0f4171c726ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32358cfd_e53c4771",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-19T10:22:00Z",
+      "side": 1,
+      "message": "one quarter",
+      "range": {
+        "startLine": 103,
+        "startChar": 24,
+        "endLine": 103,
+        "endChar": 28
+      },
+      "revId": "7fa1c14cbec91a281eff9ee58a7b0f4171c726ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5afc356_d8c96335",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-19T10:22:00Z",
+      "side": 1,
+      "message": "half",
+      "range": {
+        "startLine": 107,
+        "startChar": 24,
+        "endLine": 107,
+        "endChar": 35
+      },
+      "revId": "7fa1c14cbec91a281eff9ee58a7b0f4171c726ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5da553ac_0111dc80",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-19T10:22:00Z",
+      "side": 1,
+      "message": "Even though when executing this test manually (issuing rpc commands directly, not via this script) this functionality works. I was not able to pass this test case when using this script.\nI think it might be related to setting trap on nbd app, so when kill is issued it takes over.",
+      "range": {
+        "startLine": 387,
+        "startChar": 8,
+        "endLine": 387,
+        "endChar": 19
+      },
+      "revId": "7fa1c14cbec91a281eff9ee58a7b0f4171c726ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09e8484d_9abaefd6",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-19T10:22:00Z",
+      "side": 1,
+      "message": "Unless I\u0027m missing something, this part will pass always whenever kill command succeeds. I think the return from nbd should be checked - if it crashed, or if ASAN found a leak.",
+      "range": {
+        "startLine": 399,
+        "startChar": 16,
+        "endLine": 403,
+        "endChar": 28
+      },
+      "revId": "7fa1c14cbec91a281eff9ee58a7b0f4171c726ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
