@@ -55,7 +55,6 @@ _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	} else {
 		assert(bs != NULL);
 		lvs->blobstore = bs;
-		lvs->page_size = spdk_bs_get_page_size(bs);
 		TAILQ_INIT(&lvs->lvols);
 
 		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store initialized\n");

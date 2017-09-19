@@ -36,6 +36,8 @@
 
 #include "vbdev_lvol.c"
 
+#define SPDK_BS_PAGE_SIZE 0x1000
+
 int g_lvolerrno;
 int g_lvserrno;
 int g_cluster_size;
@@ -56,6 +58,12 @@ void
 spdk_bdev_unregister(struct spdk_bdev *bdev)
 {
 	return;
+}
+
+uint64_t
+spdk_bs_get_page_size(struct spdk_blob_store *bs)
+{
+	return SPDK_BS_PAGE_SIZE;
 }
 
 static void
@@ -326,7 +334,6 @@ ut_lvol_init(void)
 
 	uuid_generate_time(g_lvs->uuid);
 	uuid_generate_time(wrong_uuid);
-	g_lvs->page_size = 4096;
 
 	/* Incorrect uuid set */
 	g_lvolerrno = 0;
@@ -368,7 +375,6 @@ ut_lvol_resize(void)
 
 
 	uuid_generate_time(g_lvs->uuid);
-	g_lvs->page_size = 4096;
 	g_base_bdev->blocklen = 4096;
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
 
