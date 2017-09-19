@@ -46,10 +46,10 @@ static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 static void
 _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 {
-	struct spdk_lvol_store_req *req = cb_arg;
-	struct spdk_bs_dev *bs_dev = req->u.lvs_handle.bs_dev;
+	struct spdk_lvs_with_handle_req *req = cb_arg;
+	struct spdk_bs_dev *bs_dev = req->bs_dev;
 	struct lvol_store_bdev *lvs_bdev;
-	struct spdk_bdev *bdev = req->u.lvs_handle.base_bdev;
+	struct spdk_bdev *bdev = req->base_bdev;
 
 	if (lvserrno != 0) {
 		assert(lvs == NULL);
@@ -73,7 +73,7 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev inserted\n");
 
 end:
-	req->u.lvs_handle.cb_fn(req->u.lvs_handle.cb_arg, lvs, lvserrno);
+	req->cb_fn(req->cb_arg, lvs, lvserrno);
 	free(req);
 
 	return;
@@ -85,7 +85,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev,
 		 void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
-	struct spdk_lvol_store_req *lvs_req;
+	struct spdk_lvs_with_handle_req *lvs_req;
 	int rc;
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
@@ -101,10 +101,10 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev,
 		return -ENODEV;
 	}
 
-	lvs_req->u.lvs_handle.bs_dev = bs_dev;
-	lvs_req->u.lvs_handle.base_bdev = base_bdev;
-	lvs_req->u.lvs_handle.cb_fn = cb_fn;
-	lvs_req->u.lvs_handle.cb_arg = cb_arg;
+	lvs_req->bs_dev = bs_dev;
+	lvs_req->base_bdev = base_bdev;
+	lvs_req->cb_fn = cb_fn;
+	lvs_req->cb_arg = cb_arg;
 
 	rc = spdk_lvs_init(bs_dev, _vbdev_lvs_create_cb, lvs_req);
 	if (rc < 0) {
@@ -119,12 +119,12 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev,
 static void
 _vbdev_lvs_destruct_cb(void *cb_arg, int lvserrno)
 {
-	struct spdk_lvol_store_req *req = cb_arg;
+	struct spdk_lvs_req *req = cb_arg;
 
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev deleted\n");
 
-	if (req->u.lvs_basic.cb_fn != NULL)
-		req->u.lvs_basic.cb_fn(req->u.lvs_basic.cb_arg, lvserrno);
+	if (req->cb_fn != NULL)
+		req->cb_fn(req->cb_arg, lvserrno);
 	free(req);
 }
 
@@ -133,7 +133,7 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		   void *cb_arg)
 {
 
-	struct spdk_lvol_store_req *req;
+	struct spdk_lvs_req *req;
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_lvol *lvol, *tmp;
 
@@ -142,11 +142,10 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
 		return;
 	}
-	req->u.lvs_basic.cb_fn = cb_fn;
-	req->u.lvs_basic.cb_arg = cb_arg;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
-	req->u.lvs_basic.base_bdev = lvs_bdev->bdev;
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
 
 	free(lvs_bdev);
@@ -445,7 +444,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 static void
 _vbdev_lvol_create_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
-	struct spdk_lvol_store_req *req = cb_arg;
+	struct spdk_lvol_with_handle_req *req = cb_arg;
 	struct spdk_bdev *bdev = NULL;
 
 	if (lvolerrno < 0) {
@@ -460,7 +459,7 @@ _vbdev_lvol_create_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 	lvol->bdev = bdev;
 
 end:
-	req->u.lvol_handle.cb_fn(req->u.lvol_handle.cb_arg, lvol, lvolerrno);
+	req->cb_fn(req->cb_arg, lvol, lvolerrno);
 	free(req);
 }
 
@@ -468,7 +467,7 @@ int
 vbdev_lvol_create(uuid_t uuid, size_t sz,
 		  spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
-	struct spdk_lvol_store_req *req;
+	struct spdk_lvol_with_handle_req *req;
 	struct spdk_lvol_store *lvs;
 	int rc;
 
@@ -481,8 +480,8 @@ vbdev_lvol_create(uuid_t uuid, size_t sz,
 	if (req == NULL) {
 		return -ENOMEM;
 	}
-	req->u.lvol_handle.cb_fn = cb_fn;
-	req->u.lvol_handle.cb_arg = cb_arg;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
 
 	rc = spdk_lvol_create(lvs, sz, _vbdev_lvol_create_cb, req);
 	if (rc != 0) {
@@ -495,9 +494,9 @@ vbdev_lvol_create(uuid_t uuid, size_t sz,
 static void
 _vbdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
-	struct spdk_lvol_store_req *req = cb_arg;
+	struct spdk_lvol_req *req = cb_arg;
 
-	req->u.lvol_basic.cb_fn(req->u.lvol_basic.cb_arg,  lvolerrno);
+	req->cb_fn(req->cb_arg,  lvolerrno);
 	free(req);
 }
 
@@ -505,7 +504,7 @@ int
 vbdev_lvol_resize(char *name, size_t sz,
 		  spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
-	struct spdk_lvol_store_req *req;
+	struct spdk_lvol_req *req;
 	struct spdk_bdev *bdev;
 	struct spdk_lvol *lvol;
 	struct spdk_lvol_store *lvs;
@@ -537,8 +536,8 @@ vbdev_lvol_resize(char *name, size_t sz,
 		cb_fn(cb_arg, -1);
 		return -ENOMEM;
 	}
-	req->u.lvol_basic.cb_fn = cb_fn;
-	req->u.lvol_basic.cb_arg = cb_arg;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
 
 	rc = spdk_lvol_resize(lvol, sz, _vbdev_lvol_resize_cb, req);
 

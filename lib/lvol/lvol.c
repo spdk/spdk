@@ -44,8 +44,8 @@ SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)
 static void
 _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 {
-	struct spdk_lvol_store_req *lvs_req = cb_arg;
-	struct spdk_lvol_store *lvs = lvs_req->u.lvs_handle.lvol_store;
+	struct spdk_lvs_with_handle_req *lvs_req = cb_arg;
+	struct spdk_lvol_store *lvs = lvs_req->lvol_store;
 
 	if (lvserrno != 0) {
 		assert(bs == NULL);
@@ -60,8 +60,8 @@ _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 
 		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store initialized\n");
 	}
-	assert(lvs_req->u.lvs_handle.cb_fn != NULL);
-	lvs_req->u.lvs_handle.cb_fn(lvs_req->u.lvs_handle.cb_arg, lvs, lvserrno);
+	assert(lvs_req->cb_fn != NULL);
+	lvs_req->cb_fn(lvs_req->cb_arg, lvs, lvserrno);
 	free(lvs_req);
 }
 
@@ -70,7 +70,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 	      void *cb_arg)
 {
 	struct spdk_lvol_store *lvs;
-	struct spdk_lvol_store_req *lvs_req;
+	struct spdk_lvs_with_handle_req *lvs_req;
 
 	if (bs_dev == NULL) {
 		SPDK_ERRLOG("Blobstore device does not exist\n");
@@ -92,9 +92,9 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 		return -ENOMEM;
 	}
 
-	lvs_req->u.lvs_handle.cb_fn = cb_fn;
-	lvs_req->u.lvs_handle.cb_arg = cb_arg;
-	lvs_req->u.lvs_handle.lvol_store = lvs;
+	lvs_req->cb_fn = cb_fn;
+	lvs_req->cb_arg = cb_arg;
+	lvs_req->lvol_store = lvs;
 	lvs->bs_dev = bs_dev;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Initializing lvol store\n");
@@ -106,11 +106,11 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 static void
 _lvs_unload_cb(void *cb_arg, int lvserrno)
 {
-	struct spdk_lvol_store_req *lvs_req = cb_arg;
+	struct spdk_lvs_req *lvs_req = cb_arg;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store unloaded\n");
-	assert(lvs_req->u.lvs_basic.cb_fn != NULL);
-	lvs_req->u.lvs_basic.cb_fn(lvs_req->u.lvs_basic.cb_arg, lvserrno);
+	assert(lvs_req->cb_fn != NULL);
+	lvs_req->cb_fn(lvs_req->cb_arg, lvserrno);
 	free(lvs_req);
 }
 
@@ -118,7 +118,7 @@ int
 spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		void *cb_arg)
 {
-	struct spdk_lvol_store_req *lvs_req;
+	struct spdk_lvs_req *lvs_req;
 
 	if (lvs == NULL) {
 		SPDK_ERRLOG("Lvol store is NULL\n");
@@ -131,8 +131,8 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		return -ENOMEM;
 	}
 
-	lvs_req->u.lvs_basic.cb_fn = cb_fn;
-	lvs_req->u.lvs_basic.cb_arg = cb_arg;
+	lvs_req->cb_fn = cb_fn;
+	lvs_req->cb_arg = cb_arg;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Unloading lvol store\n");
 	spdk_bs_unload(lvs->blobstore, _lvs_unload_cb, lvs_req);
@@ -144,22 +144,22 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 static void
 _spdk_lvol_return_to_caller(void *cb_arg, int lvolerrno)
 {
-	struct spdk_lvol_store_req *req = cb_arg;
+	struct spdk_lvol_with_handle_req *req = cb_arg;
 
-	assert(req->u.lvol_handle.cb_fn != NULL);
-	req->u.lvol_handle.cb_fn(req->u.lvol_handle.cb_arg, req->u.lvol_handle.lvol, lvolerrno);
+	assert(req->cb_fn != NULL);
+	req->cb_fn(req->cb_arg, req->lvol, lvolerrno);
 	free(req);
 }
 
 static void
 _spdk_lvs_destruct_cb(void *cb_arg, int lvserrno)
 {
-	struct spdk_lvol_store_req *req = cb_arg;
+	struct spdk_lvs_req *req = cb_arg;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store bdev deleted\n");
 
-	if (req->u.lvs_basic.cb_fn != NULL)
-		req->u.lvs_basic.cb_fn(req->u.lvs_basic.cb_arg, lvserrno);
+	if (req->cb_fn != NULL)
+		req->cb_fn(req->cb_arg, lvserrno);
 	free(req);
 }
 
@@ -206,9 +206,9 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 static void
 _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 {
-	struct spdk_lvol_store_req *req = cb_arg;
+	struct spdk_lvol_with_handle_req *req = cb_arg;
 	spdk_blob_id blob_id = spdk_blob_get_id(blob);
-	struct spdk_lvol *lvol = req->u.lvol_handle.lvol;
+	struct spdk_lvol *lvol = req->lvol;
 	uint64_t cluster_size = spdk_bs_get_cluster_size(lvol->lvol_store->blobstore);
 	uint64_t number_of_clusters = lvol->sz / cluster_size;
 	char uuid[UUID_STRING_LEN];
@@ -241,8 +241,8 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	return;
 
 invalid:
-	assert(req->u.lvol_handle.cb_fn != NULL);
-	req->u.lvol_handle.cb_fn(req->u.lvol_handle.cb_arg, NULL, lvolerrno);
+	assert(req->cb_fn != NULL);
+	req->cb_fn(req->cb_arg, NULL, lvolerrno);
 	free(req);
 	return;
 
@@ -251,18 +251,18 @@ invalid:
 static void
 _spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 {
-	struct spdk_lvol_store_req *req = cb_arg;
+	struct spdk_lvol_with_handle_req *req = cb_arg;
 	struct spdk_blob_store *bs;
 
 	if (lvolerrno < 0) {
-		free(req->u.lvol_handle.lvol);
-		assert(req->u.lvol_handle.cb_fn != NULL);
-		req->u.lvol_handle.cb_fn(req->u.lvol_handle.cb_arg, NULL, lvolerrno);
+		free(req->lvol);
+		assert(req->cb_fn != NULL);
+		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		free(req);
 		return;
 	}
 
-	bs = req->u.lvol_handle.lvol->lvol_store->blobstore;
+	bs = req->lvol->lvol_store->blobstore;
 
 	spdk_bs_md_open_blob(bs, blobid, _spdk_lvol_create_open_cb, req);
 }
@@ -271,7 +271,7 @@ int
 spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
 		 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
-	struct spdk_lvol_store_req *req;
+	struct spdk_lvol_with_handle_req *req;
 	struct spdk_lvol *lvol;
 	uint64_t free_clusters;
 
@@ -291,8 +291,8 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
 		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
 		return -ENOMEM;
 	}
-	req->u.lvol_handle.cb_fn = cb_fn;
-	req->u.lvol_handle.cb_arg = cb_arg;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
 
 	lvol = calloc(1, sizeof(*lvol));
 	if (!lvol) {
@@ -304,7 +304,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
 	lvol->lvol_store = lvs;
 	lvol->sz = sz * spdk_bs_get_cluster_size(lvs->blobstore);
 	lvol->close_only = false;
-	req->u.lvol_handle.lvol = lvol;
+	req->lvol = lvol;
 
 	spdk_bs_md_create_blob(lvs->blobstore, _spdk_lvol_create_cb, req);
 
@@ -314,9 +314,9 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
 static void
 _spdk_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
-	struct spdk_lvol_store_req *req = cb_arg;
+	struct spdk_lvol_req *req = cb_arg;
 
-	req->u.lvol_basic.cb_fn(req->u.lvol_basic.cb_arg,  lvolerrno);
+	req->cb_fn(req->cb_arg,  lvolerrno);
 	free(req);
 }
 
@@ -327,7 +327,7 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	int rc;
 	struct spdk_blob *blob = lvol->blob;
 	struct spdk_lvol_store *lvs = lvol->lvol_store;
-	struct spdk_lvol_store_req *req;
+	struct spdk_lvol_req *req;
 	uint64_t cluster_size = spdk_bs_get_cluster_size(lvs->blobstore);
 	uint64_t free_clusters = spdk_bs_free_cluster_count(lvs->blobstore);
 	uint64_t used_clusters = lvol->sz / cluster_size;
@@ -346,8 +346,8 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
 		return -ENOMEM;
 	}
-	req->u.lvol_basic.cb_fn = cb_fn;
-	req->u.lvol_basic.cb_arg = cb_arg;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
 
 	rc = spdk_bs_md_resize_blob(blob, sz);
 	if (rc < 0) {
@@ -363,7 +363,7 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	return rc;
 
 invalid:
-	req->u.lvol_basic.cb_fn(req->u.lvol_basic.cb_arg, rc);
+	req->cb_fn(req->cb_arg, rc);
 	free(req);
 	return rc;
 }

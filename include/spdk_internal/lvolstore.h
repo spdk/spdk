@@ -40,33 +40,28 @@
 /* Length of string returned from uuid_unparse() */
 #define UUID_STRING_LEN 37
 
-struct spdk_lvol_store_req {
-	union {
-		struct {
-			spdk_lvs_op_complete	cb_fn;
-			void			*cb_arg;
-			struct spdk_bdev	*base_bdev;
-		} lvs_basic;
+struct spdk_lvs_req {
+	spdk_lvs_op_complete    cb_fn;
+	void                    *cb_arg;
+};
 
-		struct {
-			spdk_lvs_op_with_handle_complete cb_fn;
-			void				*cb_arg;
-			struct spdk_lvol_store		*lvol_store;
-			struct spdk_bs_dev		*bs_dev;
-			struct spdk_bdev		*base_bdev;
-		} lvs_handle;
+struct spdk_lvol_req {
+	spdk_lvol_op_complete    cb_fn;
+	void                    *cb_arg;
+};
 
-		struct {
-			spdk_lvol_op_complete    cb_fn;
-			void                    *cb_arg;
-		} lvol_basic;
+struct spdk_lvs_with_handle_req {
+	spdk_lvs_op_with_handle_complete cb_fn;
+	void				*cb_arg;
+	struct spdk_lvol_store		*lvol_store;
+	struct spdk_bs_dev		*bs_dev;
+	struct spdk_bdev		*base_bdev;
+};
 
-		struct {
-			spdk_lvol_op_with_handle_complete cb_fn;
-			void				*cb_arg;
-			struct spdk_lvol		*lvol;
-		} lvol_handle;
-	} u;
+struct spdk_lvol_with_handle_req {
+	spdk_lvol_op_with_handle_complete cb_fn;
+	void				*cb_arg;
+	struct spdk_lvol		*lvol;
 };
 
 struct spdk_lvol_store {
@@ -74,7 +69,7 @@ struct spdk_lvol_store {
 	struct spdk_blob_store		*blobstore;
 	uuid_t				uuid;
 	uint64_t			page_size;
-	struct spdk_lvol_store_req *destruct_req;
+	struct spdk_lvs_req		*destruct_req;
 	TAILQ_HEAD(, spdk_lvol)		lvols;
 };
 
