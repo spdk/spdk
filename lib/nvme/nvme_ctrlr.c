@@ -1450,8 +1450,6 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 void
 nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap)
 {
-	uint32_t max_io_queue_size = nvme_transport_ctrlr_get_max_io_queue_size(ctrlr);
-
 	ctrlr->cap = *cap;
 
 	ctrlr->min_page_size = 1u << (12 + ctrlr->cap.bits.mpsmin);
@@ -1461,7 +1459,6 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_reg
 
 	ctrlr->opts.io_queue_size = spdk_max(ctrlr->opts.io_queue_size, SPDK_NVME_IO_QUEUE_MIN_ENTRIES);
 	ctrlr->opts.io_queue_size = spdk_min(ctrlr->opts.io_queue_size, ctrlr->cap.bits.mqes + 1u);
-	ctrlr->opts.io_queue_size = spdk_min(ctrlr->opts.io_queue_size, max_io_queue_size);
 
 	ctrlr->opts.io_queue_requests = spdk_max(ctrlr->opts.io_queue_requests, ctrlr->opts.io_queue_size);
 }
