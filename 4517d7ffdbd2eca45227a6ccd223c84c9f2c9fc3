@@ -16,6 +16,24 @@
       "revId": "4517d7ffdbd2eca45227a6ccd223c84c9f2c9fc3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "151d608a_f79b5734",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-19T15:36:28Z",
+      "side": 1,
+      "message": "I guess you\u0027re right. Done.",
+      "parentUuid": "a8644ab5_964651d7",
+      "revId": "4517d7ffdbd2eca45227a6ccd223c84c9f2c9fc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
