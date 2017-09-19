@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "938bb5d0_b75f87a1",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-19T10:04:33Z",
+      "side": 1,
+      "message": "Negative part of test does not fail due to bdev being \"busy\". But due to first construct_lvol_bdev taking up all space in lvol store, so second construct_lvol_bdev fails as there is not enough space for it.\n\nI think name and description should be updated to reflect that.",
+      "range": {
+        "startLine": 256,
+        "startChar": 0,
+        "endLine": 258,
+        "endChar": 47
+      },
+      "revId": "b0f85f2b0f56d12b5ff88a2d0aeb609b90f65a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61e65d6d_2b889f48",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-19T10:04:33Z",
+      "side": 1,
+      "message": "Name and description does not follow what is tested here. This case is same as 13, but for nested lvols.",
+      "range": {
+        "startLine": 335,
+        "startChar": 0,
+        "endLine": 338,
+        "endChar": 23
+      },
+      "revId": "b0f85f2b0f56d12b5ff88a2d0aeb609b90f65a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60f36658_c1d0cf91",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-19T10:04:33Z",
+      "side": 1,
+      "message": "with same",
+      "range": {
+        "startLine": 351,
+        "startChar": 35,
+        "endLine": 351,
+        "endChar": 37
+      },
+      "revId": "b0f85f2b0f56d12b5ff88a2d0aeb609b90f65a0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
