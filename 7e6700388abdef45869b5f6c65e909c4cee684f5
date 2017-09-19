@@ -1,0 +1,383 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b308439f_e22d272c",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "Maybe use config from TC4 as common config? It\u0027s suitable for other test cases as well",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 28
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cbc2221_daa6a034",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "see comments about flags in other file",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 1
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36d3ffce_321ddc75",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "tab -\u003e space",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 5
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9903c97_4dcb8557",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "Some leftover? Doesn\u0027t this crash as you don\u0027t provide any argument?",
+      "range": {
+        "startLine": 166,
+        "startChar": 8,
+        "endLine": 166,
+        "endChar": 13
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7459adc2_99939db9",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "Why do you disable \u0027xe\u0027 flags here? Where are they re-enabled?",
+      "range": {
+        "startLine": 192,
+        "startChar": 4,
+        "endLine": 192,
+        "endChar": 10
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca8c1831_1528808a",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "Why?",
+      "range": {
+        "startLine": 196,
+        "startChar": 4,
+        "endLine": 196,
+        "endChar": 11
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00e3c401_64497023",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "Why do you disable \u0027xe\u0027 flags here? Where are they re-enabled?",
+      "range": {
+        "startLine": 199,
+        "startChar": 4,
+        "endLine": 199,
+        "endChar": 11
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25211faf_973d82c5",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "Why do you re-enable flags at the end of the function?",
+      "range": {
+        "startLine": 211,
+        "startChar": 4,
+        "endLine": 211,
+        "endChar": 11
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20a45924_7187e04a",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "separate blank line between functions for readability",
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd4994cc_673178e3",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "There are 2 prepare fio functions in scripts. Could they be unified to 1?",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 1
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea93f269_f08fff84",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "separate blank line between functions for readability",
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f8e6988_280634ca",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "Why not have a single config file with\n[Split]\n    Split Nvme0n1 2\n    Split Nvme1n1 2\n?\n\nThat should cover all the cases which need split.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 1
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36598241_8901ed9a",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "You unbind the device before running FIO. If I remember - this was the other way around, you\u0027re supposed to unbind it while FIO is running.",
+      "range": {
+        "startLine": 96,
+        "startChar": 4,
+        "endLine": 97,
+        "endChar": 12
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b912eb16_2fd9b575",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "Why wait here?",
+      "range": {
+        "startLine": 102,
+        "startChar": 4,
+        "endLine": 102,
+        "endChar": 11
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd7ed38c_e1e55c63",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "why wait that long?",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 11
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a46f7e6e_ba079883",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "Could some of that be put in a function maybe? You disable/enable flags in every test case.",
+      "range": {
+        "startLine": 126,
+        "startChar": 4,
+        "endLine": 131,
+        "endChar": 11
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d08dcbe_ed25494a",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-19T08:48:06Z",
+      "side": 1,
+      "message": "why wait that long?",
+      "range": {
+        "startLine": 154,
+        "startChar": 4,
+        "endLine": 154,
+        "endChar": 11
+      },
+      "revId": "7e6700388abdef45869b5f6c65e909c4cee684f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
