@@ -225,7 +225,6 @@ bdev_malloc_writev(struct malloc_disk *mdisk, struct spdk_io_channel *ch,
 		}
 
 		dst += iov[i].iov_len;
-		len -= iov[i].iov_len;
 	}
 }
 
