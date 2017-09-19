@@ -118,6 +118,10 @@ virtio_user_queue_setup(struct virtio_user_dev *dev,
 	uint32_t i;
 
 	for (i = 0; i < dev->vdev.max_queues; ++i) {
+		if (dev->vdev.vqs[i] == NULL) {
+			continue;
+		}
+
 		if (fn(dev, i) < 0) {
 			PMD_DRV_LOG(INFO, "setup tx vq fails: %u", i);
 			return -1;

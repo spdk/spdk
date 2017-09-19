@@ -571,6 +571,21 @@ bdev_virtio_initialize(void)
 		goto out;
 	}
 
+	rc = virtio_dev_init_queue(vdev, 0); /* controlq */
+	if (rc != 0) {
+		goto out;
+	}
+
+	rc = virtio_dev_init_queue(vdev, 1); /* eventq */
+	if (rc != 0) {
+		goto out;
+	}
+
+	rc = virtio_dev_init_queue(vdev, 2); /* requestq */
+	if (rc != 0) {
+		goto out;
+	}
+
 	rc = virtio_dev_start(vdev);
 	if (rc != 0) {
 		goto out;

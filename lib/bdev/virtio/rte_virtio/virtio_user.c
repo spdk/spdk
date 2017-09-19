@@ -82,9 +82,7 @@ virtio_user_set_status(struct virtio_dev *vdev, uint8_t status)
 {
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
-	if (status & VIRTIO_CONFIG_STATUS_DRIVER_OK)
-		virtio_user_start_device(dev);
-	else if (status == VIRTIO_CONFIG_STATUS_RESET)
+	if (status == VIRTIO_CONFIG_STATUS_RESET)
 		virtio_user_reset(vdev);
 	dev->status = status;
 }
