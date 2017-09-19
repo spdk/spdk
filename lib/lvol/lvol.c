@@ -65,16 +65,40 @@ _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	free(lvs_req);
 }
 
+static void
+spdk_setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o)
+{
+	if (o) {
+		bs_opts->cluster_sz = o->cluster_sz;
+	} else {
+		bs_opts->cluster_sz = SPDK_LVS_OPTS_CLUSTER_SZ;
+	}
+
+	bs_opts->num_md_pages = SPDK_LVS_OPTS_NUM_MD_PAGES;
+	bs_opts->max_md_ops = SPDK_LVS_OPTS_MAX_MD_OPS;
+	bs_opts->max_channel_ops = SPDK_LVS_OPTS_MAX_CHANNEL_OPS;
+}
+
 int
-spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn,
-	      void *cb_arg)
+spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
+	      spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvol_store_req *lvs_req;
+	struct spdk_bs_opts opts;
+	uint64_t bs_dev_sz;
 
 	if (bs_dev == NULL) {
 		SPDK_ERRLOG("Blobstore device does not exist\n");
 		return -ENODEV;
+	}
+
+	spdk_setup_lvs_opts(&opts, o);
+
+	bs_dev_sz = bs_dev->blockcnt * bs_dev->blocklen;
+	if (bs_dev_sz < opts.cluster_sz || bs_dev->blocklen > opts.cluster_sz) {
+		SPDK_ERRLOG("Not enough space on bs_bdev to fit at least one cluster\n");
+		return -ENOMEM;
 	}
 
 	lvs = calloc(1, sizeof(*lvs));
@@ -98,7 +122,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 	lvs->bs_dev = bs_dev;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Initializing lvol store\n");
-	spdk_bs_init(bs_dev, NULL, _lvs_init_cb, lvs_req);
+	spdk_bs_init(bs_dev, &opts, _lvs_init_cb, lvs_req);
 
 	return 0;
 }

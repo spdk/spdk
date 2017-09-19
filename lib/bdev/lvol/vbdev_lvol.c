@@ -80,13 +80,33 @@ end:
 }
 
 int
-vbdev_lvs_create(struct spdk_bdev *base_bdev,
-		 spdk_lvs_op_with_handle_complete cb_fn,
-		 void *cb_arg)
+vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
+		 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvol_store_req *lvs_req;
+	struct spdk_lvs_opts *opts = NULL;
+	struct spdk_lvs_opts temp;
+	uint64_t bdev_sz;
 	int rc;
+
+	if (base_bdev == NULL) {
+		SPDK_ERRLOG("Bdev does not exist\n");
+		return -ENODEV;
+	}
+
+	bdev_sz = base_bdev->blocklen * base_bdev->blockcnt;
+	if (cluster_sz != 0) {
+		if (bdev_sz < cluster_sz || base_bdev->blocklen > cluster_sz) {
+			SPDK_ERRLOG("Not enough space on bdev to fit at least one cluster\n");
+			return -ENOMEM;
+		}
+		temp.cluster_sz = cluster_sz;
+		opts = &temp;
+	} else if (bdev_sz < SPDK_LVS_OPTS_CLUSTER_SZ || base_bdev->blocklen < cluster_sz) {
+		SPDK_ERRLOG("Not enough space on bdev to fit at least one cluster\n");
+		return -ENOMEM;
+	}
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
 	if (!lvs_req) {
@@ -106,7 +126,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev,
 	lvs_req->u.lvs_handle.cb_fn = cb_fn;
 	lvs_req->u.lvs_handle.cb_arg = cb_arg;
 
-	rc = spdk_lvs_init(bs_dev, _vbdev_lvs_create_cb, lvs_req);
+	rc = spdk_lvs_init(bs_dev, opts, _vbdev_lvs_create_cb, lvs_req);
 	if (rc < 0) {
 		free(lvs_req);
 		bs_dev->destroy(bs_dev);
