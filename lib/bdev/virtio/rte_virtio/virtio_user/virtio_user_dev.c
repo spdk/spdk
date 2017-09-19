@@ -100,6 +100,18 @@ virtio_user_kick_queue(struct virtio_user_dev *dev, uint32_t queue_sel)
 }
 
 static int
+virtio_user_stop_queue(struct virtio_user_dev *dev, uint32_t queue_sel)
+{
+	struct vhost_vring_state state;
+
+	state.index = queue_sel;
+	state.num = 0;
+	dev->ops->send_request(dev, VHOST_USER_GET_VRING_BASE, &state);
+
+	return 0;
+}
+
+static int
 virtio_user_queue_setup(struct virtio_user_dev *dev,
 			int (*fn)(struct virtio_user_dev *, uint32_t))
 {
@@ -138,7 +150,7 @@ virtio_user_start_device(struct virtio_user_dev *dev)
 
 int virtio_user_stop_device(struct virtio_user_dev *dev)
 {
-	return 0;
+	return virtio_user_queue_setup(dev, virtio_user_stop_queue);
 }
 
 int
@@ -227,8 +239,6 @@ void
 virtio_user_dev_uninit(struct virtio_user_dev *dev)
 {
 	uint32_t i;
-
-	virtio_user_stop_device(dev);
 
 	close(dev->vhostfd);
 
