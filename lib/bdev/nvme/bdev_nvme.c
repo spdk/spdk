@@ -44,6 +44,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/string.h"
 #include "spdk/likely.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -1267,15 +1268,44 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		uint64_t num_blocks)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
-	int rc = 0;
-	struct spdk_nvme_dsm_range dsm_range = {};
+	struct spdk_nvme_dsm_range dsm_ranges[SPDK_NVME_DATASET_MANAGEMENT_MAX_RANGES];
+	struct spdk_nvme_dsm_range *range;
+	uint64_t offset, remaining;
+	uint64_t num_ranges_u64;
+	uint16_t num_ranges;
+	int rc;
 
-	dsm_range.starting_lba = offset_blocks;
-	dsm_range.length = num_blocks;
+	num_ranges_u64 = (num_blocks + SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS - 1) /
+			 SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS;
+	if (num_ranges_u64 > SPDK_COUNTOF(dsm_ranges)) {
+		SPDK_ERRLOG("Unmap request for %" PRIu64 " blocks is too large\n", num_blocks);
+		return -EINVAL;
+	}
+	num_ranges = (uint16_t)num_ranges_u64;
+
+	offset = offset_blocks;
+	remaining = num_blocks;
+	range = &dsm_ranges[0];
+
+	/* Fill max-size ranges until the remaining blocks fit into one range */
+	while (remaining > SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS) {
+		range->attributes.raw = 0;
+		range->length = SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS;
+		range->starting_lba = offset;
+
+		offset += SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS;
+		remaining -= SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS;
+		range++;
+	}
+
+	/* Final range describes the remaining blocks */
+	range->attributes.raw = 0;
+	range->length = remaining;
+	range->starting_lba = offset;
 
 	rc = spdk_nvme_ns_cmd_dataset_management(nbdev->ns, nvme_ch->qpair,
 			SPDK_NVME_DSM_ATTR_DEALLOCATE,
-			&dsm_range, 1,
+			dsm_ranges, num_ranges,
 			bdev_nvme_queued_done, bio);
 
 	return rc;
