@@ -78,8 +78,11 @@ uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
 
 int virtio_init_device(struct virtio_dev *hw, uint64_t req_features);
+void virtio_dev_deinit(struct virtio_dev *dev);
 int virtio_dev_start(struct virtio_dev *hw);
 struct virtio_dev *get_pci_virtio_hw(void);
+int virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx);
+void virtio_dev_free_queue(struct virtio_dev *dev, uint16_t queue_idx);
 
 void virtio_interrupt_handler(void *param);
 

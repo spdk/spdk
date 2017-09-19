@@ -57,6 +57,7 @@
 #include "virtio_pci.h"
 #include "virtio_logs.h"
 #include "virtio_queue.h"
+#include "virtio_user/virtio_user_dev.h"
 
 /*
  * The set of PCI devices this driver supports
@@ -65,12 +66,6 @@ static const struct rte_pci_id pci_id_virtio_map[] = {
 	{ RTE_PCI_DEVICE(VIRTIO_PCI_VENDORID, VIRTIO_PCI_DEVICEID_SCSI_MODERN) },
 	{ .vendor_id = 0, /* sentinel */ },
 };
-
-static uint16_t
-virtio_get_nr_vq(struct virtio_dev *dev)
-{
-	return dev->max_queues;
-}
 
 static void
 virtio_init_vring(struct virtqueue *vq)
@@ -101,8 +96,8 @@ virtio_init_vring(struct virtqueue *vq)
 	virtqueue_disable_intr(vq);
 }
 
-static int
-virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
+int
+virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 {
 	char vq_name[VIRTQUEUE_MAX_NAME_SZ];
 	const struct rte_memzone *mz = NULL;
@@ -111,6 +106,16 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	int ret;
 
 	PMD_INIT_LOG(DEBUG, "setting up queue: %u", vtpci_queue_idx);
+
+	if (vtpci_queue_idx >= dev->max_queues) {
+		PMD_INIT_LOG(ERR, "virtuqueue id %u exceeds host virtqueue limit %u",
+				vtpci_queue_idx, dev->max_queues);
+		return -1;
+	}
+
+	if (dev->vqs[vtpci_queue_idx]) {
+		return 0;
+	}
 
 	/*
 	 * Read the virtqueue size from the Queue Size field
@@ -194,50 +199,28 @@ fail_q_alloc:
 	return ret;
 }
 
-static void
-virtio_free_queues(struct virtio_dev *dev)
+void
+virtio_dev_free_queue(struct virtio_dev *dev, uint16_t queue_idx)
 {
-	uint16_t nr_vq = virtio_get_nr_vq(dev);
-	struct virtqueue *vq;
-	uint16_t i;
+	struct virtqueue *vq = dev->vqs[queue_idx];
 
-	if (dev->vqs == NULL)
+	if (!vq)
 		return;
 
-	for (i = 0; i < nr_vq; i++) {
-		vq = dev->vqs[i];
-		if (!vq)
-			continue;
+	VTPCI_OPS(dev)->del_queue(dev, vq);
 
-		rte_memzone_free(vq->mz);
-
-		rte_free(vq);
-		dev->vqs[i] = NULL;
-	}
-
-	rte_free(dev->vqs);
-	dev->vqs = NULL;
+	rte_memzone_free(vq->mz);
+	rte_free(vq);
+	dev->vqs[queue_idx] = NULL;
 }
 
 static int
 virtio_alloc_queues(struct virtio_dev *dev)
 {
-	uint16_t nr_vq = virtio_get_nr_vq(dev);
-	uint16_t i;
-	int ret;
-
-	dev->vqs = rte_zmalloc(NULL, sizeof(struct virtqueue *) * nr_vq, 0);
+	dev->vqs = rte_zmalloc(NULL, sizeof(struct virtqueue *) * dev->max_queues, 0);
 	if (!dev->vqs) {
 		PMD_INIT_LOG(ERR, "failed to allocate vqs");
 		return -ENOMEM;
-	}
-
-	for (i = 0; i < nr_vq; i++) {
-		ret = virtio_init_queue(dev, i);
-		if (ret < 0) {
-			virtio_free_queues(dev);
-			return ret;
-		}
 	}
 
 	return 0;
@@ -308,19 +291,25 @@ virtio_init_device(struct virtio_dev *dev, uint64_t req_features)
 	if (virtio_negotiate_features(dev, req_features) < 0)
 		return -1;
 
-	/* FIXME
-	 * Hardcode num_queues to 3 until we add proper
-	 * mutli-queue support. This value should be limited
-	 * by number of cores assigned to SPDK
-	 */
-	dev->max_queues = 3;
-
 	ret = virtio_alloc_queues(dev);
 	if (ret < 0)
 		return ret;
 
 	vtpci_reinit_complete(dev);
 	return 0;
+}
+
+void
+virtio_dev_deinit(struct virtio_dev *dev)
+{
+	uint16_t i;
+
+	for (i = 0; i < dev->max_queues; ++i) {
+		virtio_dev_free_queue(dev, i);
+	}
+
+	virtio_hw_internal[dev->port_id].vtpci_ops = NULL;
+	free(dev);
 }
 
 int
@@ -344,6 +333,11 @@ virtio_dev_start(struct virtio_dev *vdev)
 		}
 	}
 #endif
+
+	if (!vdev->is_hw) {
+		/* FIXME temporary */
+		virtio_user_start_device((struct virtio_user_dev *) vdev);
+	}
 
 	PMD_INIT_LOG(DEBUG, "Notified backend at initialization");
 

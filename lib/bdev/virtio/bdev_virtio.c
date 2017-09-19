@@ -566,9 +566,30 @@ bdev_virtio_initialize(void)
 		goto out;
 	}
 
-	/* TODO check rc, add virtio_dev_deinit() */
-	virtio_init_device(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
-	virtio_dev_start(vdev);
+	rc = virtio_init_device(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
+	if (rc != 0) {
+		goto out;
+	}
+
+	rc = virtio_dev_init_queue(vdev, 0); /* controlq */
+	if (rc != 0) {
+		goto out;
+	}
+
+	rc = virtio_dev_init_queue(vdev, 1); /* eventq */
+	if (rc != 0) {
+		goto out;
+	}
+
+	rc = virtio_dev_init_queue(vdev, 2); /* requestq */
+	if (rc != 0) {
+		goto out;
+	}
+
+	rc = virtio_dev_start(vdev);
+	if (rc != 0) {
+		goto out;
+	}
 
 	base->vdev = vdev;
 	TAILQ_INIT(&base->found_disks);
@@ -580,6 +601,9 @@ bdev_virtio_initialize(void)
 	return 0;
 
 out:
+	if (vdev) {
+		virtio_dev_deinit(vdev);
+	}
 	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 	return rc;
 }
