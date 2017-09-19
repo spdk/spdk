@@ -115,12 +115,6 @@ nvme_transport_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 	return UINT32_MAX;
 }
 
-uint32_t
-nvme_transport_ctrlr_get_max_io_queue_size(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return SPDK_NVME_IO_QUEUE_MAX_ENTRIES;
-}
-
 uint16_t
 nvme_transport_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 {

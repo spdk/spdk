@@ -57,8 +57,6 @@
 #define NVME_RDMA_RW_BUFFER_SIZE 131072
 #define NVME_HOST_ID_DEFAULT "12345679890"
 
-#define NVME_HOST_MAX_ENTRIES_PER_QUEUE (128)
-
 /*
 NVME RDMA qpair Resouce Defaults
  */
@@ -1523,12 +1521,6 @@ nvme_rdma_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 {
 	/* Todo, which should get from the NVMF target */
 	return NVME_RDMA_RW_BUFFER_SIZE;
-}
-
-uint32_t
-nvme_rdma_ctrlr_get_max_io_queue_size(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return NVME_HOST_MAX_ENTRIES_PER_QUEUE;
 }
 
 uint16_t
