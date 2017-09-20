@@ -31,6 +31,10 @@ run_test ./test/iscsi_tgt/filesystem/filesystem.sh
 run_test ./test/iscsi_tgt/reset/reset.sh
 run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
 run_test ./test/iscsi_tgt/idle_migration/idle_migration.sh
+
+if [ $SPDK_TEST_NVML -eq 1 ]; then
+	run_test ./test/iscsi_tgt/pmem/iscsi_pmem.sh
+fi
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test ./test/iscsi_tgt/ip_migration/ip_migration.sh
 fi
