@@ -44,6 +44,21 @@ static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 			g_spdk_lvol_pairs);
 
 static void
+vbdev_lvs_hotremove_cb(void *ctx)
+{
+	struct spdk_bdev *bdev = ctx;
+	struct lvol_store_bdev *lvs_bdev, *tmp;
+
+	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
+		if (lvs_bdev) {
+			if (lvs_bdev->bdev == bdev) {
+				vbdev_lvs_destruct(lvs_bdev->lvs, NULL, NULL);
+			}
+		}
+	}
+}
+
+static void
 _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 {
 	struct spdk_lvs_with_handle_req *req = cb_arg;
@@ -91,7 +106,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev,
 		return -ENOMEM;
 	}
 
-	bs_dev = spdk_bdev_create_bs_dev(base_bdev, NULL, NULL);
+	bs_dev = spdk_bdev_create_bs_dev(base_bdev, vbdev_lvs_hotremove_cb, base_bdev);
 	if (!bs_dev) {
 		SPDK_ERRLOG("Cannot create blobstore device\n");
 		free(lvs_req);
