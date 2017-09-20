@@ -16,6 +16,24 @@
       "revId": "d7183236edf05341050a4644d5d8b764fac67c94",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec158c7a_6fe4a6ed",
+        "filename": "test/lib/test_env.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T23:26:31Z",
+      "side": 1,
+      "message": "This whole file is used as a \"dummy\" env implementation for unit tests instead of using DPDK.  It\u0027s possible we could remove this 1024 here since bdev.c is the only file that calls spdk_mempool_count() and all of the unit tests covering those should be passing valid mempool pointers.  But I\u0027d rather do that as a separate commit.\n\nThe original idea was to return 1024 here instead of 0 because the normal case is that there are \u003e 0 buffers available in the mempool.",
+      "parentUuid": "dc79854a_460e2907",
+      "revId": "d7183236edf05341050a4644d5d8b764fac67c94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
