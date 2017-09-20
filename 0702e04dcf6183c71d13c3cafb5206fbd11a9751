@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85868b97_11cd1dff",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-20T09:24:44Z",
+      "side": 1,
+      "message": "Change to configuration",
+      "range": {
+        "startLine": 7,
+        "startChar": 3,
+        "endLine": 7,
+        "endChar": 14
+      },
+      "revId": "0702e04dcf6183c71d13c3cafb5206fbd11a9751",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a1a06ef_84555433",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-20T09:24:44Z",
+      "side": 1,
+      "message": "change to pmem_pool_info\n\n- add test with OBJ pool instead of BLK pool",
+      "range": {
+        "startLine": 26,
+        "startChar": 4,
+        "endLine": 26,
+        "endChar": 15
+      },
+      "revId": "0702e04dcf6183c71d13c3cafb5206fbd11a9751",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "958b9114_ed0f8cbb",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-20T09:24:44Z",
+      "side": 1,
+      "message": "Change to create_pmem_pool",
+      "range": {
+        "startLine": 49,
+        "startChar": 4,
+        "endLine": 49,
+        "endChar": 15
+      },
+      "revId": "0702e04dcf6183c71d13c3cafb5206fbd11a9751",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d636bed_cd525927",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-20T09:24:44Z",
+      "side": 1,
+      "message": "Add case:\n- test creating on disk space (/tmp)\n- test creating in RAM\n- test various sizes (bigger/smaller/equal)\n- test various block sizes ( \u003c512, 512, \u003e512)\n- test minimum number of blocks - 256 (in case of big BS and small total size)\n- test minimum total size of file (\u003c16MB)",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 20
+      },
+      "revId": "0702e04dcf6183c71d13c3cafb5206fbd11a9751",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d882bd7_5484cb59",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-20T09:24:44Z",
+      "side": 1,
+      "message": "change to delete_pmem_pool\n\n- add test with some file that is not a pool file; or with an OBJ pool\n- add double delete test",
+      "range": {
+        "startLine": 94,
+        "startChar": 4,
+        "endLine": 94,
+        "endChar": 15
+      },
+      "revId": "0702e04dcf6183c71d13c3cafb5206fbd11a9751",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c22510e_9c2c55e0",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-20T09:24:44Z",
+      "side": 1,
+      "message": "block size, total size, etc tests moved to create_pmem_pool\n\n- add test for creating on OBJ pool\n- add test for creating on random file\n- test for non-existing path\n- double create test",
+      "range": {
+        "startLine": 116,
+        "startChar": 4,
+        "endLine": 116,
+        "endChar": 23
+      },
+      "revId": "0702e04dcf6183c71d13c3cafb5206fbd11a9751",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
