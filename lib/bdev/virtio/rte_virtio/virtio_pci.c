@@ -221,12 +221,6 @@ legacy_set_status(struct virtio_dev *dev, uint8_t status)
 	rte_pci_ioport_write(VTPCI_IO(dev), &status, 1, VIRTIO_PCI_STATUS);
 }
 
-static void
-legacy_reset(struct virtio_dev *dev)
-{
-	legacy_set_status(dev, VIRTIO_CONFIG_STATUS_RESET);
-}
-
 static uint8_t
 legacy_get_isr(struct virtio_dev *dev)
 {
@@ -305,7 +299,6 @@ legacy_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
 const struct virtio_pci_ops legacy_ops = {
 	.read_dev_cfg	= legacy_read_dev_config,
 	.write_dev_cfg	= legacy_write_dev_config,
-	.reset		= legacy_reset,
 	.get_status	= legacy_get_status,
 	.set_status	= legacy_set_status,
 	.get_features	= legacy_get_features,
@@ -402,13 +395,6 @@ modern_set_status(struct virtio_dev *dev, uint8_t status)
 	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 
 	rte_write8(status, &hw->common_cfg->device_status);
-}
-
-static void
-modern_reset(struct virtio_dev *dev)
-{
-	modern_set_status(dev, VIRTIO_CONFIG_STATUS_RESET);
-	modern_get_status(dev);
 }
 
 static uint8_t
@@ -514,7 +500,6 @@ modern_notify_queue(struct virtio_dev *dev __rte_unused, struct virtqueue *vq)
 const struct virtio_pci_ops modern_ops = {
 	.read_dev_cfg	= modern_read_dev_config,
 	.write_dev_cfg	= modern_write_dev_config,
-	.reset		= modern_reset,
 	.get_status	= modern_get_status,
 	.set_status	= modern_set_status,
 	.get_features	= modern_get_features,
