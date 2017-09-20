@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f63f6e93_df020493",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T23:53:22Z",
+      "side": 1,
+      "message": "can we have separate read_cap_10 and read_cap_16 functions and avoid the parameter differentiating between the two?  i guess in my mind that seems clearer\n\nthe parameter name read_16 should really be read_cap_16 anyways (to differentiate from READ(16))",
+      "revId": "5af7aff0ccff10e381a0315525e2a35c55981bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b74457c_8872cb71",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T23:53:22Z",
+      "side": 1,
+      "message": "Instead of the extra use_scsi_16 member, can we just check bdev-\u003eblockcnt when we need to send reads/writes?  i.e. if blockcnt \u003e (1ULL \u003c\u003c 32).  Just an idea...",
+      "revId": "5af7aff0ccff10e381a0315525e2a35c55981bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21a1022c_9415b9c7",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T23:53:22Z",
+      "side": 1,
+      "message": "Maybe break this into two separate functions - read_cap_10 and read_cap_16?  Then we don\u0027t need this \"read_16\" parameter.\n\nProbably a prep patch is needed first which moves the \u0027finishing\u0027 code (lines 391-409) to a separate function.",
+      "revId": "5af7aff0ccff10e381a0315525e2a35c55981bb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
