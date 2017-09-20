@@ -36,6 +36,23 @@ quick test an 10 minutes for longer nightly test.
 - Step 9: Disconnect kernel initiator from NVMe-oF subsystems.
 - Step 10: Delete NVMe-oF subsystems from configuration.
 
+#### Test 2: NVMe-OF namespace on a Pmem device
+This test configures a SPDK NVMe-OF subsystem backed by pmem
+devices and uses FIO to generate I/Os that target those subsystems.
+Test steps:
+- Step 1: Assign IP addresses to RDMA NICs.
+- Step 2: Start SPDK nvmf_tgt application.
+- Step 3: Create NVMe-OF subsystem with 10 pmem bdevs namespaces
+- Step 4: Repeat step 3 nine more times to get a total of 10 NVMeOF subsystems,
+each with 10 pmem bdev namespaces.
+- Step 5: Connect to NVMe-OF susbsystems with kernel initiator.
+- Step 6: Run FIO with workload parameters: blocksize=128kB, iodepth=16,
+    workload=randwrite; varify flag is enabled so that FIO reads and verifies
+    the data written to the pmem device. The run time is 10 seconds for a
+    quick test an 10 minutes for longer nightly test.
+- Step 7: Disconnect kernel initiator from NVMe-OF subsystems.
+- Step 8: Delete NVMe-OF subsystems from configuration.
+
 ### Compatibility testing
 
 - Verify functionality of SPDK `nvmf_tgt` with Linux kernel NVMe-oF host
