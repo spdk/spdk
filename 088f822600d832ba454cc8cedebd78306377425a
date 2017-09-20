@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "eae88748_d633d312",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 30
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-20T08:34:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1fd1daaa_bd4d512b",
+      "range": {
+        "startLine": 9,
+        "startChar": 24,
+        "endLine": 9,
+        "endChar": 36
+      },
+      "revId": "088f822600d832ba454cc8cedebd78306377425a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c5d1e28_db6f6e13",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 30
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "9da3ecb8_66cbebc3",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-20T08:34:25Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0c5d1e28_db6f6e13",
+      "range": {
+        "startLine": 728,
+        "startChar": 0,
+        "endLine": 729,
+        "endChar": 33
+      },
+      "revId": "088f822600d832ba454cc8cedebd78306377425a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "50467a37_b6c7a2c8",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 30
@@ -59,6 +107,30 @@
       "writtenOn": "2017-09-20T08:01:56Z",
       "side": 1,
       "message": "It would be good to check error code here (also in new_device)",
+      "range": {
+        "startLine": 757,
+        "startChar": 2,
+        "endLine": 757,
+        "endChar": 36
+      },
+      "revId": "088f822600d832ba454cc8cedebd78306377425a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8af70921_f2417f71",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 757,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-20T08:34:25Z",
+      "side": 1,
+      "message": "let\u0027s do that in a separate patch",
+      "parentUuid": "50467a37_b6c7a2c8",
       "range": {
         "startLine": 757,
         "startChar": 2,
