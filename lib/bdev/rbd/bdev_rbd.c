@@ -258,10 +258,10 @@ static void bdev_rbd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io 
 	ret = bdev_rbd_readv(bdev_io->bdev->ctxt,
 			     ch,
 			     bdev_io,
-			     bdev_io->u.read.iovs,
-			     bdev_io->u.read.iovcnt,
-			     bdev_io->u.read.num_blocks * bdev_io->bdev->blocklen,
-			     bdev_io->u.read.offset_blocks * bdev_io->bdev->blocklen);
+			     bdev_io->u.bdev.iovs,
+			     bdev_io->u.bdev.iovcnt,
+			     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+			     bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
 
 	if (ret != 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -279,16 +279,16 @@ static int _bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 		return bdev_rbd_writev((struct bdev_rbd *)bdev_io->bdev->ctxt,
 				       ch,
 				       bdev_io,
-				       bdev_io->u.write.iovs,
-				       bdev_io->u.write.iovcnt,
-				       bdev_io->u.write.num_blocks * bdev_io->bdev->blocklen,
-				       bdev_io->u.write.offset_blocks * bdev_io->bdev->blocklen);
+				       bdev_io->u.bdev.iovs,
+				       bdev_io->u.bdev.iovcnt,
+				       bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+				       bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return bdev_rbd_flush((struct bdev_rbd *)bdev_io->bdev->ctxt,
 				      ch,
 				      bdev_io,
-				      bdev_io->u.flush.offset_blocks * bdev_io->bdev->blocklen,
-				      bdev_io->u.flush.num_blocks * bdev_io->bdev->blocklen);
+				      bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen,
+				      bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 	default:
 		return -1;
 	}
@@ -337,7 +337,7 @@ bdev_rbd_io_poll(void *arg)
 		bdev_io = rbd_aio_get_arg(comps[i]);
 		io_status = rbd_aio_get_return_value(comps[i]);
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			if ((int)(bdev_io->u.read.num_blocks * bdev_io->bdev->blocklen) == io_status) {
+			if ((int)(bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen) == io_status) {
 				status = SPDK_BDEV_IO_STATUS_SUCCESS;
 			} else {
 				status = SPDK_BDEV_IO_STATUS_FAILED;

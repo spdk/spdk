@@ -273,7 +273,7 @@ struct spdk_bdev_io {
 
 	union {
 		struct {
-			/** For basic read case, use our own iovec element. */
+			/** For basic IO case, use our own iovec element. */
 			struct iovec iov;
 
 			/** For SG buffer cases, array of iovecs to transfer. */
@@ -287,55 +287,7 @@ struct spdk_bdev_io {
 
 			/** Starting offset (in blocks) of the bdev for this I/O. */
 			uint64_t offset_blocks;
-		} read;
-		struct {
-			/** For basic write case, use our own iovec element */
-			struct iovec iov;
-
-			/** For SG buffer cases, array of iovecs to transfer. */
-			struct iovec *iovs;
-
-			/** For SG buffer cases, number of iovecs in iovec array. */
-			int iovcnt;
-
-			/** Total size of data to be transferred. */
-			uint64_t num_blocks;
-
-			/** Starting offset (in blocks) of the bdev for this I/O. */
-			uint64_t offset_blocks;
-		} write;
-		struct {
-			/** For basic write case, use our own iovec element */
-			struct iovec iov;
-
-			/** For SG buffer cases, array of iovecs to transfer. */
-			struct iovec *iovs;
-
-			/** For SG buffer cases, number of iovecs in iovec array. */
-			int iovcnt;
-
-			/** Total size of region to be unmapped. */
-			uint64_t num_blocks;
-
-			/** Starting offset (in blocks) of the bdev for this I/O. */
-			uint64_t offset_blocks;
-		} unmap;
-		struct {
-			/** For basic write case, use our own iovec element */
-			struct iovec iov;
-
-			/** For SG buffer cases, array of iovecs to transfer. */
-			struct iovec *iovs;
-
-			/** For SG buffer cases, number of iovecs in iovec array. */
-			int iovcnt;
-
-			/** Represents the number of blocks to be flushed, starting at offset_blocks. */
-			uint64_t num_blocks;
-
-			/** Represents starting offset in blocks of the range to be flushed. */
-			uint64_t offset_blocks;
-		} flush;
+		} bdev;
 		struct {
 			/* The NVMe command to execute */
 			struct spdk_nvme_cmd cmd;

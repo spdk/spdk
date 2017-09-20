@@ -135,28 +135,28 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	req->lun[1] = 0;
 
 	if (is_read) {
-		vreq->iov = bdev_io->u.read.iovs;
-		vreq->iovcnt = bdev_io->u.read.iovcnt;
+		vreq->iov = bdev_io->u.bdev.iovs;
+		vreq->iovcnt = bdev_io->u.bdev.iovcnt;
 		if (disk->num_blocks > (1ULL << 32)) {
 			req->cdb[0] = SPDK_SBC_READ_16;
-			to_be64(&req->cdb[2], bdev_io->u.read.offset_blocks);
-			to_be32(&req->cdb[10], bdev_io->u.read.num_blocks);
+			to_be64(&req->cdb[2], bdev_io->u.bdev.offset_blocks);
+			to_be32(&req->cdb[10], bdev_io->u.bdev.num_blocks);
 		} else {
 			req->cdb[0] = SPDK_SBC_READ_10;
-			to_be32(&req->cdb[2], bdev_io->u.read.offset_blocks);
-			to_be16(&req->cdb[7], bdev_io->u.read.num_blocks);
+			to_be32(&req->cdb[2], bdev_io->u.bdev.offset_blocks);
+			to_be16(&req->cdb[7], bdev_io->u.bdev.num_blocks);
 		}
 	} else {
-		vreq->iov = bdev_io->u.write.iovs;
-		vreq->iovcnt = bdev_io->u.write.iovcnt;
+		vreq->iov = bdev_io->u.bdev.iovs;
+		vreq->iovcnt = bdev_io->u.bdev.iovcnt;
 		if (disk->num_blocks > (1ULL << 32)) {
 			req->cdb[0] = SPDK_SBC_WRITE_16;
-			to_be64(&req->cdb[2], bdev_io->u.write.offset_blocks);
-			to_be32(&req->cdb[10], bdev_io->u.write.num_blocks);
+			to_be64(&req->cdb[2], bdev_io->u.bdev.offset_blocks);
+			to_be32(&req->cdb[10], bdev_io->u.bdev.num_blocks);
 		} else {
 			req->cdb[0] = SPDK_SBC_WRITE_10;
-			to_be32(&req->cdb[2], bdev_io->u.write.offset_blocks);
-			to_be16(&req->cdb[7], bdev_io->u.write.num_blocks);
+			to_be32(&req->cdb[2], bdev_io->u.bdev.offset_blocks);
+			to_be16(&req->cdb[7], bdev_io->u.bdev.num_blocks);
 		}
 	}
 
