@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b987be8_d1e49960",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T18:52:36Z",
+      "side": 1,
+      "message": "does this need to be exposed in the public API?",
+      "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d1515eb_90fb1e4b",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T18:52:36Z",
+      "side": 1,
+      "message": "Can we use the spdk_bs_md_iter functions instead?  I think this will be confusing, to have spdk_blob functions defined in lvol code - it also seems to just be a passthrough so I\u0027m not sure what value these functions are adding.",
+      "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37c0f714_3749820a",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T18:52:36Z",
+      "side": 1,
+      "message": "indentation is off",
+      "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "885ea487_cdd78997",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T18:52:36Z",
+      "side": 1,
+      "message": "why change this to success?",
+      "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af4efbc7_539af689",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T18:52:36Z",
+      "side": 1,
+      "message": "this could be done in a separate patch",
+      "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6aaf15ae_644a0804",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T18:52:36Z",
+      "side": 1,
+      "message": "/* */ commenting style",
+      "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95a8fcd1_5f04d2b9",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T18:52:36Z",
+      "side": 1,
+      "message": "should this be part of a separate patch?",
+      "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b89065d2_0bbf6f1a",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T18:52:36Z",
+      "side": 1,
+      "message": "this too",
+      "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
