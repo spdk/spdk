@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "8e7abfa5_c7dfda9e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1578,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-20T01:51:08Z",
+      "side": 1,
+      "message": "So if you\u0027re still reading these Ben I\u0027m curious about these additional checks. How could they *not* match other than a page being incomplete (torn)? SW bug? Then asserts would be more appropriate. Or, is there another way something could get messed up? We could cross check al sorts of things all over the place but that doesn\u0027t seem like it\u0027d make any sense for \u0027production\u0027 code.",
+      "parentUuid": "95993438_df867f7a",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "044c20c4_8f792762",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 41
