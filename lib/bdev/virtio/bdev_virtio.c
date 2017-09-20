@@ -41,6 +41,7 @@
 #include "spdk/endian.h"
 #include "spdk/stdinc.h"
 #include "spdk/util.h"
+#include "spdk/json.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -208,11 +209,59 @@ bdev_virtio_destruct(void *ctx)
 	return 0;
 }
 
+static int
+bdev_virtio_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct virtio_scsi_disk *virtio_bdev = ctx;
+	struct virtio_dev *vdev =  virtio_bdev->vdev;
+
+	spdk_json_write_name(w, "virtio");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "type");
+	if (virtio_bdev->vdev->is_hw == true) {
+		struct virtio_hw *hw = SPDK_CONTAINEROF(vdev, struct virtio_hw, vdev);
+
+		spdk_json_write_string(w, "pci");
+		spdk_json_write_name(w, "queue_size");
+		spdk_json_write_uint32(w, hw->common_cfg->queue_size);
+	} else {
+		struct virtio_user_dev *dev = SPDK_CONTAINEROF(vdev, struct virtio_user_dev, vdev);
+
+		spdk_json_write_string(w, "user");
+		spdk_json_write_name(w, "queue_size");
+		spdk_json_write_uint32(w, dev->queue_size);
+	}
+
+	spdk_json_write_name(w, "max_queue");
+	spdk_json_write_uint32(w, vdev->max_queues);
+
+	spdk_json_write_object_end(w);
+
+	if (virtio_bdev->vdev->is_hw == true) {
+		char buf[32];
+		struct virtio_hw *hw = SPDK_CONTAINEROF(vdev, struct virtio_hw, vdev);
+
+		snprintf(buf, sizeof(buf), "%04u:%02u:%02u:%u", hw->pci_dev->addr.domain, hw->pci_dev->addr.bus,
+			 hw->pci_dev->addr.devid, hw->pci_dev->addr.function);
+		spdk_json_write_name(w, "pci_address");
+		spdk_json_write_string(w, buf);
+	} else {
+		struct virtio_user_dev *dev = SPDK_CONTAINEROF(vdev, struct virtio_user_dev, vdev);
+
+		spdk_json_write_name(w, "path");
+		spdk_json_write_string(w, dev->path);
+	}
+
+	return 0;
+}
+
 static const struct spdk_bdev_fn_table virtio_fn_table = {
 	.destruct		= bdev_virtio_destruct,
 	.submit_request		= bdev_virtio_submit_request,
 	.io_type_supported	= bdev_virtio_io_type_supported,
 	.get_io_channel		= bdev_virtio_get_io_channel,
+	.dump_config_json	= bdev_virtio_dump_config_json,
 };
 
 static void
