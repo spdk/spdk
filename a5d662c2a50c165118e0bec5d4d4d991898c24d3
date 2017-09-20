@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1b32462c_a092dbc9",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-20T09:34:22Z",
+      "side": 1,
+      "message": "I would like not to do that now because until SCSI scan is complete we don\u0027t have those devices yet. If we need created devices the RPC response will have to be blocked or deferred using some kind of callback and there is no such mechanisms yet available in virtio initiator.\n\nIf this is must have can this be done later?",
+      "parentUuid": "15d1b00c_13016a8b",
+      "revId": "a5d662c2a50c165118e0bec5d4d4d991898c24d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d2f713b_8028f550",
         "filename": "scripts/rpc.py",
         "patchSetId": 11
