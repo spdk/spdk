@@ -1348,9 +1348,16 @@ _spdk_bs_dev_destroy(void *io_device)
 static void
 _spdk_bs_free(struct spdk_blob_store *bs)
 {
+	struct spdk_thread *thread = spdk_io_channel_get_thread(bs->md_target.md_channel);
+
 	spdk_bs_unregister_md_thread(bs);
+	/*
+	 * Defer completion to avoid using freed bdev by deffered io channel release
+	 * from spdk_bs_unregister_md_thread call
+	 */
+	spdk_thread_send_msg(thread, _spdk_bs_dev_destroy, &bs->md_target);
 	spdk_io_device_unregister(&bs->io_target, NULL);
-	spdk_io_device_unregister(&bs->md_target, _spdk_bs_dev_destroy);
+	spdk_io_device_unregister(&bs->md_target, NULL);
 }
 
 void
