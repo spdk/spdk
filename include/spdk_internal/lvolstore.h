@@ -37,6 +37,8 @@
 #include "spdk/lvol.h"
 #include "spdk_internal/bdev.h"
 
+#define UUID_STRING_LEN 37
+
 struct spdk_lvol_store_req {
 	union {
 		struct {
@@ -67,8 +69,10 @@ struct spdk_lvol_store_req {
 };
 
 struct spdk_lvol_store {
-	struct spdk_bs_dev		*bs_dev;
-	struct spdk_blob_store		*blobstore;
+	struct spdk_bs_dev              *bs_dev;
+	struct spdk_blob_store          *blobstore;
+	struct spdk_blob				*super_blob;
+	spdk_blob_id					super_blob_id;
 	uuid_t				uuid;
 	uint64_t			page_size;
 	struct spdk_lvol_store_req *destruct_req;
