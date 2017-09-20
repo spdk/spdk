@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94b0ed0c_207ed478",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1495,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-20T00:34:51Z",
+      "side": 1,
+      "message": "You can skip this step - the masks will get flushed out when the user does the next clean shutdown.",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16ed47c9_7654e090",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1524,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-20T00:34:51Z",
+      "side": 1,
+      "message": "You don\u0027t need to do this step here. This will get written out when the user does the next clean shutdown anyway.",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "707c7a8d_ffd86fd8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1555,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-20T00:34:51Z",
+      "side": 1,
+      "message": "I don\u0027t think you need the \u0027page\u0027 argument here. It\u0027s ctx-\u003ecur_page.",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95993438_df867f7a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1578,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-20T00:34:51Z",
+      "side": 1,
+      "message": "The CRC matching doesn\u0027t necessarily mean the page is valid. The CRC not matching means the data corrupted, but we could get fluke CRC matches on invalid pages. Basically, the CRC detects bit rot, but not validity.\n\nThere are two parts to checking if a page is valid. First, you have to verify that the blobid in the page is the expected value. The blobid is calculated with this formula:\n\nid \u003d (1ULL \u003c\u003c 32) | page_idx;\n\nYou know the page index (page_num in your code), so verify that it is correct. Second, one of two conditions must also be true:\n\n1) sequence_num is 0 (indicating this page is the start of a metadata page chain)\n2) sequence_num is non-zero and a known valid page\u0027s next pointer is pointing at it.\n\nIt\u0027s easy to verify #1, but hard to work out case #2. Your code below is mostly doing the right thing though - when you hit condition #1, chase the chain until it ends, then go back to reading the pages in order.",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "044c20c4_8f792762",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1580,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-20T00:34:51Z",
+      "side": 1,
+      "message": "Can you use the regular page parsing function here?",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5596327_e07a3e19",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1581,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-20T00:34:51Z",
+      "side": 1,
+      "message": "Maybe name \"md_page_valid\" \"in_page_chain\"",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04d208cc_73b8a87b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1760,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-20T00:34:51Z",
+      "side": 1,
+      "message": "To make it clear that the logic is forking here, I would put the code from lines 1787 to 1801 in an \u0027else\u0027 clause with this if statement.",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6014d34_48351532",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1836,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-09-20T00:34:51Z",
+      "side": 1,
+      "message": "If clean is 0 here, you don\u0027t need to write it to 0 on line 1840. Just skip that step.",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
