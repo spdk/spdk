@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7a7cb1c_97a43311",
+        "filename": "test/nvmf/pmem/nvmf_pmem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-20T06:56:46Z",
+      "side": 1,
+      "message": "fix white spaces",
+      "range": {
+        "startLine": 20,
+        "startChar": 1,
+        "endLine": 20,
+        "endChar": 2
+      },
+      "revId": "d30de969144162959804e38d41c831a22f0cdceb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4785d3a_ba75d629",
+        "filename": "test/nvmf/pmem/nvmf_pmem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-20T06:56:46Z",
+      "side": 1,
+      "message": "increase to 128k bs and 16qd",
+      "range": {
+        "startLine": 69,
+        "startChar": 29,
+        "endLine": 69,
+        "endChar": 35
+      },
+      "revId": "d30de969144162959804e38d41c831a22f0cdceb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90a7fc26_af46b3f5",
+        "filename": "test/nvmf/pmem/nvmf_pmem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-20T06:56:46Z",
+      "side": 1,
+      "message": "this is not a lvol_integrity test",
+      "range": {
+        "startLine": 85,
+        "startChar": 12,
+        "endLine": 85,
+        "endChar": 26
+      },
+      "revId": "d30de969144162959804e38d41c831a22f0cdceb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
