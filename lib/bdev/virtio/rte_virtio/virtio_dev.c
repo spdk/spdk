@@ -97,7 +97,7 @@ virtio_init_vring(struct virtqueue *vq)
 }
 
 int
-virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
+virtio_dev_init_queue(struct virtio_dev *vdev, uint16_t vtpci_queue_idx)
 {
 	char vq_name[VIRTQUEUE_MAX_NAME_SZ];
 	const struct rte_memzone *mz = NULL;
@@ -107,13 +107,13 @@ virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	PMD_INIT_LOG(DEBUG, "setting up queue: %u", vtpci_queue_idx);
 
-	if (vtpci_queue_idx >= dev->max_queues) {
+	if (vtpci_queue_idx >= vdev->max_queues) {
 		PMD_INIT_LOG(ERR, "virtuqueue id %u exceeds host virtqueue limit %u",
 				vtpci_queue_idx, dev->max_queues);
 		return -1;
 	}
 
-	if (dev->vqs[vtpci_queue_idx]) {
+	if (vdev->vqs[vtpci_queue_idx]) {
 		return 0;
 	}
 
@@ -121,7 +121,7 @@ virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	 * Read the virtqueue size from the Queue Size field
 	 * Always power of 2 and if 0 virtqueue does not exist
 	 */
-	vq_size = VTPCI_OPS(dev)->get_queue_num(dev, vtpci_queue_idx);
+	vq_size = VTPCI_OPS(vdev)->get_queue_num(vdev, vtpci_queue_idx);
 	PMD_INIT_LOG(DEBUG, "vq_size: %u", vq_size);
 	if (vq_size == 0) {
 		PMD_INIT_LOG(ERR, "virtqueue does not exist");
@@ -134,7 +134,7 @@ virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	}
 
 	snprintf(vq_name, sizeof(vq_name), "port%d_vq%d",
-		 dev->port_id, vtpci_queue_idx);
+		 vdev->port_id, vtpci_queue_idx);
 
 	size = RTE_ALIGN_CEIL(sizeof(*vq) +
 				vq_size * sizeof(struct vq_desc_extra),
@@ -146,9 +146,9 @@ virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 		PMD_INIT_LOG(ERR, "can not allocate vq");
 		return -ENOMEM;
 	}
-	dev->vqs[vtpci_queue_idx] = vq;
+	vdev->vqs[vtpci_queue_idx] = vq;
 
-	vq->vdev = dev;
+	vq->vdev = vdev;
 	vq->vq_queue_index = vtpci_queue_idx;
 	vq->vq_nentries = vq_size;
 
@@ -185,7 +185,7 @@ virtio_dev_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	vq->mz = mz;
 
-	if (VTPCI_OPS(dev)->setup_queue(dev, vq) < 0) {
+	if (VTPCI_OPS(vdev)->setup_queue(vdev, vq) < 0) {
 		PMD_INIT_LOG(ERR, "setup_queue failed");
 		return -EINVAL;
 	}
@@ -200,25 +200,25 @@ fail_q_alloc:
 }
 
 void
-virtio_dev_free_queue(struct virtio_dev *dev, uint16_t queue_idx)
+virtio_dev_free_queue(struct virtio_dev *vdev, uint16_t queue_idx)
 {
-	struct virtqueue *vq = dev->vqs[queue_idx];
+	struct virtqueue *vq = vdev->vqs[queue_idx];
 
 	if (!vq)
 		return;
 
-	VTPCI_OPS(dev)->del_queue(dev, vq);
+	VTPCI_OPS(vdev)->del_queue(vdev, vq);
 
 	rte_memzone_free(vq->mz);
 	rte_free(vq);
-	dev->vqs[queue_idx] = NULL;
+	vdev->vqs[queue_idx] = NULL;
 }
 
 static int
-virtio_alloc_queues(struct virtio_dev *dev)
+virtio_alloc_queues(struct virtio_dev *vdev)
 {
-	dev->vqs = rte_zmalloc(NULL, sizeof(struct virtqueue *) * dev->max_queues, 0);
-	if (!dev->vqs) {
+	vdev->vqs = rte_zmalloc(NULL, sizeof(struct virtqueue *) * vdev->max_queues, 0);
+	if (!vdev->vqs) {
 		PMD_INIT_LOG(ERR, "failed to allocate vqs");
 		return -ENOMEM;
 	}
@@ -231,7 +231,7 @@ virtio_alloc_queues(struct virtio_dev *dev)
  * the mentioned flag must be offered. Otherwise an error is returned.
  */
 static int
-virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
+virtio_negotiate_features(struct virtio_dev *vdev, uint64_t req_features)
 {
 	uint64_t host_features;
 
@@ -240,7 +240,7 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 		req_features);
 
 	/* Read device(host) feature bits */
-	host_features = VTPCI_OPS(dev)->get_features(dev);
+	host_features = VTPCI_OPS(vdev)->get_features(vdev);
 	PMD_INIT_LOG(DEBUG, "host_features before negotiate = %" PRIx64,
 		host_features);
 
@@ -248,13 +248,13 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	 * Negotiate features: Subset of device feature bits are written back
 	 * guest feature bits.
 	 */
-	dev->req_guest_features = req_features;
-	dev->guest_features = vtpci_negotiate_features(dev, host_features);
+	vdev->req_guest_features = req_features;
+	vdev->guest_features = vtpci_negotiate_features(vdev, host_features);
 	PMD_INIT_LOG(DEBUG, "features after negotiate = %" PRIx64,
 		dev->guest_features);
 
-	if (!vtpci_with_feature(dev, VIRTIO_F_VERSION_1)) {
-		if (dev->modern) {
+	if (!vtpci_with_feature(vdev, VIRTIO_F_VERSION_1)) {
+		if (vdev->modern) {
 			PMD_INIT_LOG(ERR,
 				     "VIRTIO_F_VERSION_1 features is not enabled.");
 			return -1;
@@ -263,9 +263,9 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 		return 0;
 	}
 
-	dev->modern = 1;
-	vtpci_set_status(dev, VIRTIO_CONFIG_STATUS_FEATURES_OK);
-	if (!(vtpci_get_status(dev) & VIRTIO_CONFIG_STATUS_FEATURES_OK)) {
+	vdev->modern = 1;
+	vtpci_set_status(vdev, VIRTIO_CONFIG_STATUS_FEATURES_OK);
+	if (!(vtpci_get_status(vdev) & VIRTIO_CONFIG_STATUS_FEATURES_OK)) {
 		PMD_INIT_LOG(ERR,
 			     "failed to set FEATURES_OK status!");
 		return -1;
@@ -276,40 +276,40 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 
 /* reset device and renegotiate features if needed */
 int
-virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
+virtio_dev_init(struct virtio_dev *vdev, uint64_t req_features)
 {
 	int ret;
 
 	/* Reset the device although not necessary at startup */
-	vtpci_reset(dev);
+	vtpci_reset(vdev);
 
 	/* Tell the host we've noticed this device. */
-	vtpci_set_status(dev, VIRTIO_CONFIG_STATUS_ACK);
+	vtpci_set_status(vdev, VIRTIO_CONFIG_STATUS_ACK);
 
 	/* Tell the host we've known how to drive the device. */
-	vtpci_set_status(dev, VIRTIO_CONFIG_STATUS_DRIVER);
-	if (virtio_negotiate_features(dev, req_features) < 0)
+	vtpci_set_status(vdev, VIRTIO_CONFIG_STATUS_DRIVER);
+	if (virtio_negotiate_features(vdev, req_features) < 0)
 		return -1;
 
-	ret = virtio_alloc_queues(dev);
+	ret = virtio_alloc_queues(vdev);
 	if (ret < 0)
 		return ret;
 
-	vtpci_reinit_complete(dev);
+	vtpci_reinit_complete(vdev);
 	return 0;
 }
 
 void
-virtio_dev_deinit(struct virtio_dev *dev)
+virtio_dev_deinit(struct virtio_dev *vdev)
 {
 	uint16_t i;
 
-	for (i = 0; i < dev->max_queues; ++i) {
-		virtio_dev_free_queue(dev, i);
+	for (i = 0; i < vdev->max_queues; ++i) {
+		virtio_dev_free_queue(vdev, i);
 	}
 
-	virtio_hw_internal[dev->port_id].vtpci_ops = NULL;
-	free(dev);
+	virtio_hw_internal[vdev->port_id].vtpci_ops = NULL;
+	free(vdev);
 }
 
 int

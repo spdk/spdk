@@ -186,27 +186,27 @@ struct virtio_pci_common_cfg {
 };
 
 struct virtio_pci_ops {
-	void (*read_dev_cfg)(struct virtio_dev *hw, size_t offset,
+	void (*read_dev_cfg)(struct virtio_dev *vdev, size_t offset,
 			     void *dst, int len);
-	void (*write_dev_cfg)(struct virtio_dev *hw, size_t offset,
+	void (*write_dev_cfg)(struct virtio_dev *vdev, size_t offset,
 			      const void *src, int len);
-	uint8_t (*get_status)(struct virtio_dev *hw);
-	void    (*set_status)(struct virtio_dev *hw, uint8_t status);
+	uint8_t (*get_status)(struct virtio_dev *vdev);
+	void    (*set_status)(struct virtio_dev *vdev, uint8_t status);
 
-	uint64_t (*get_features)(struct virtio_dev *hw);
-	void     (*set_features)(struct virtio_dev *hw, uint64_t features);
+	uint64_t (*get_features)(struct virtio_dev *vdev);
+	void     (*set_features)(struct virtio_dev *vdev, uint64_t features);
 
-	uint8_t (*get_isr)(struct virtio_dev *hw);
+	uint8_t (*get_isr)(struct virtio_dev *vdev);
 
-	uint16_t (*set_config_irq)(struct virtio_dev *hw, uint16_t vec);
+	uint16_t (*set_config_irq)(struct virtio_dev *vdev, uint16_t vec);
 
-	uint16_t (*set_queue_irq)(struct virtio_dev *hw, struct virtqueue *vq,
+	uint16_t (*set_queue_irq)(struct virtio_dev *vdev, struct virtqueue *vq,
 			uint16_t vec);
 
-	uint16_t (*get_queue_num)(struct virtio_dev *hw, uint16_t queue_id);
-	int (*setup_queue)(struct virtio_dev *hw, struct virtqueue *vq);
-	void (*del_queue)(struct virtio_dev *hw, struct virtqueue *vq);
-	void (*notify_queue)(struct virtio_dev *hw, struct virtqueue *vq);
+	uint16_t (*get_queue_num)(struct virtio_dev *vdev, uint16_t queue_id);
+	int (*setup_queue)(struct virtio_dev *vdev, struct virtqueue *vq);
+	void (*del_queue)(struct virtio_dev *vdev, struct virtqueue *vq);
+	void (*notify_queue)(struct virtio_dev *vdev, struct virtqueue *vq);
 };
 
 struct virtio_hw {
@@ -245,9 +245,9 @@ extern struct vtpci_internal virtio_hw_internal[128];
 #define VIRTIO_PCI_VRING_ALIGN 4096
 
 static inline int
-vtpci_with_feature(struct virtio_dev *dev, uint64_t bit)
+vtpci_with_feature(struct virtio_dev *vdev, uint64_t bit)
 {
-	return (dev->guest_features & (1ULL << bit)) != 0;
+	return (vdev->guest_features & (1ULL << bit)) != 0;
 }
 
 /*
