@@ -27,10 +27,14 @@ run_test test/nvmf/fio/fio.sh
 run_test test/nvmf/filesystem/filesystem.sh
 run_test test/nvmf/discovery/discovery.sh
 run_test test/nvmf/nvme_cli/nvme_cli.sh
-run_test test/nvmf/lvol/nvmf_lvol.sh
+if [ $SPDK_TEST_NVML -eq 1 ]; then
+	run_test test/nvmf/lvol/nvmf_lvol.sh
+	run_test test/nvmf/pmem/nvmf_pmem.sh 10
+fi
 run_test test/nvmf/shutdown/shutdown.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
+	run_test test/nvmf/pmem/nvmf_pmem.sh 600
 	run_test test/nvmf/multiconnection/multiconnection.sh
 fi
 
