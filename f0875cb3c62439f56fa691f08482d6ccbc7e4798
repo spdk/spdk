@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "946a4d21_adaf87d9",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 10
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T23:54:57Z",
+      "side": 1,
+      "message": "READ/WRITE 16 support\n\n(I was going to let this slide but since I had comments on earlier patches in this series you might as well fix this since you\u0027ll have to rebase anyways.)",
+      "revId": "f0875cb3c62439f56fa691f08482d6ccbc7e4798",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
