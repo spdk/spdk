@@ -46,6 +46,10 @@ timing_enter hello_world
 $rootdir/examples/nvme/hello_world/hello_world
 timing_exit
 
+timing_enter unmap
+$testdir/unmap/unmap
+timing_exit unmap
+
 timing_enter sgl
 $testdir/sgl/sgl
 timing_exit sgl
