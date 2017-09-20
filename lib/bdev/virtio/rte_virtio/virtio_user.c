@@ -69,23 +69,16 @@ virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
 }
 
 static void
-virtio_user_reset(struct virtio_dev *vdev)
-{
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
-
-	if (dev->status & VIRTIO_CONFIG_STATUS_DRIVER_OK)
-		virtio_user_stop_device(dev);
-}
-
-static void
 virtio_user_set_status(struct virtio_dev *vdev, uint8_t status)
 {
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
-	if (status & VIRTIO_CONFIG_STATUS_DRIVER_OK)
+	if (status & VIRTIO_CONFIG_STATUS_DRIVER_OK) {
 		virtio_user_start_device(dev);
-	else if (status == VIRTIO_CONFIG_STATUS_RESET)
-		virtio_user_reset(vdev);
+	} else if (status == VIRTIO_CONFIG_STATUS_RESET &&
+			(dev->status & VIRTIO_CONFIG_STATUS_DRIVER_OK)) {
+		virtio_user_stop_device(dev);
+	}
 	dev->status = status;
 }
 
@@ -242,7 +235,6 @@ virtio_user_free(struct virtio_dev *vdev)
 const struct virtio_pci_ops virtio_user_ops = {
 	.read_dev_cfg	= virtio_user_read_dev_config,
 	.write_dev_cfg	= virtio_user_write_dev_config,
-	.reset		= virtio_user_reset,
 	.get_status	= virtio_user_get_status,
 	.set_status	= virtio_user_set_status,
 	.get_features	= virtio_user_get_features,
