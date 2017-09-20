@@ -530,4 +530,10 @@ spdk_virtio_user_scsi_connect(const char *path, uint32_t max_queue, uint32_t vq_
 	return 0;
 }
 
+int
+spdk_virtio_user_disconnect(const char *path)
+{
+	return 0;
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio", SPDK_TRACE_VIRTIO)
