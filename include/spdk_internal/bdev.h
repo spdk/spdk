@@ -307,6 +307,15 @@ struct spdk_bdev_io {
 			uint64_t offset_blocks;
 		} write;
 		struct {
+			/** For basic write case, use our own iovec element */
+			struct iovec iov;
+
+			/** For SG buffer cases, array of iovecs to transfer. */
+			struct iovec *iovs;
+
+			/** For SG buffer cases, number of iovecs in iovec array. */
+			int iovcnt;
+
 			/** Total size of region to be unmapped. */
 			uint64_t num_blocks;
 
@@ -314,6 +323,15 @@ struct spdk_bdev_io {
 			uint64_t offset_blocks;
 		} unmap;
 		struct {
+			/** For basic write case, use our own iovec element */
+			struct iovec iov;
+
+			/** For SG buffer cases, array of iovecs to transfer. */
+			struct iovec *iovs;
+
+			/** For SG buffer cases, number of iovecs in iovec array. */
+			int iovcnt;
+
 			/** Represents the number of blocks to be flushed, starting at offset_blocks. */
 			uint64_t num_blocks;
 
