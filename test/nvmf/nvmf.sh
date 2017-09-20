@@ -28,6 +28,7 @@ run_test test/nvmf/filesystem/filesystem.sh
 run_test test/nvmf/discovery/discovery.sh
 run_test test/nvmf/nvme_cli/nvme_cli.sh
 run_test test/nvmf/lvol/nvmf_lvol.sh
+run_test test/nvmf/pmem/nvmf_pmem.sh
 run_test test/nvmf/shutdown/shutdown.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
