@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "668b6ab0_0fd403ca",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1293,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-20T07:46:26Z",
+      "side": 1,
+      "message": "The number of ranges should be a \"1\" based value for the API, num_ranges is 0 if num_blocks less than SPDK_NVME_DATASET_MANAGEMENT_RANGE_MAX_BLOCKS.",
+      "revId": "c5e3af5da35de95ed50e074a34e34527189c8424",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
