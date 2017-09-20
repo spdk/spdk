@@ -76,10 +76,10 @@ bdev_null_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		if (bdev_io->u.read.iovs[0].iov_base == NULL) {
-			assert(bdev_io->u.read.iovcnt == 1);
-			bdev_io->u.read.iovs[0].iov_base = g_null_read_buf;
-			bdev_io->u.read.iovs[0].iov_len = bdev_io->u.read.num_blocks * bdev_io->bdev->blocklen;
+		if (bdev_io->u.bdev.iovs[0].iov_base == NULL) {
+			assert(bdev_io->u.bdev.iovcnt == 1);
+			bdev_io->u.bdev.iovs[0].iov_base = g_null_read_buf;
+			bdev_io->u.bdev.iovs[0].iov_len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 		}
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		break;

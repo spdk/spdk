@@ -340,10 +340,10 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	ret = bdev_nvme_readv((struct nvme_bdev *)bdev_io->bdev->ctxt,
 			      ch,
 			      (struct nvme_bdev_io *)bdev_io->driver_ctx,
-			      bdev_io->u.read.iovs,
-			      bdev_io->u.read.iovcnt,
-			      bdev_io->u.read.num_blocks,
-			      bdev_io->u.read.offset_blocks);
+			      bdev_io->u.bdev.iovs,
+			      bdev_io->u.bdev.iovcnt,
+			      bdev_io->u.bdev.num_blocks,
+			      bdev_io->u.bdev.offset_blocks);
 
 	if (ret < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -368,24 +368,24 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		return bdev_nvme_writev((struct nvme_bdev *)bdev_io->bdev->ctxt,
 					ch,
 					(struct nvme_bdev_io *)bdev_io->driver_ctx,
-					bdev_io->u.write.iovs,
-					bdev_io->u.write.iovcnt,
-					bdev_io->u.write.num_blocks,
-					bdev_io->u.write.offset_blocks);
+					bdev_io->u.bdev.iovs,
+					bdev_io->u.bdev.iovcnt,
+					bdev_io->u.bdev.num_blocks,
+					bdev_io->u.bdev.offset_blocks);
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       ch,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
-				       bdev_io->u.unmap.offset_blocks,
-				       bdev_io->u.unmap.num_blocks);
+				       bdev_io->u.bdev.offset_blocks,
+				       bdev_io->u.bdev.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return bdev_nvme_unmap((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       ch,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
-				       bdev_io->u.unmap.offset_blocks,
-				       bdev_io->u.unmap.num_blocks);
+				       bdev_io->u.bdev.offset_blocks,
+				       bdev_io->u.bdev.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_RESET:
 		return bdev_nvme_reset((struct nvme_bdev *)bdev_io->bdev->ctxt,
@@ -394,8 +394,8 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return bdev_nvme_flush((struct nvme_bdev *)bdev_io->bdev->ctxt,
 				       (struct nvme_bdev_io *)bdev_io->driver_ctx,
-				       bdev_io->u.flush.offset_blocks,
-				       bdev_io->u.flush.num_blocks);
+				       bdev_io->u.bdev.offset_blocks,
+				       bdev_io->u.bdev.num_blocks);
 
 	case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
 		return bdev_nvme_admin_passthru((struct nvme_bdev *)bdev_io->bdev->ctxt,

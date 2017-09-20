@@ -316,15 +316,16 @@ lvol_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	struct spdk_blob *blob = lvol->blob;
 	struct lvol_task *task = (struct lvol_task *)bdev_io->driver_ctx;
 
-	start_page = bdev_io->u.read.offset_blocks;
-	num_pages = bdev_io->u.read.num_blocks;
+	start_page = bdev_io->u.bdev.offset_blocks;
+	num_pages = bdev_io->u.bdev.num_blocks;
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL,
 		     "Vbdev doing read at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
-	spdk_bs_io_readv_blob(blob, ch, bdev_io->u.read.iovs, bdev_io->u.read.iovcnt, start_page, num_pages,
+	spdk_bs_io_readv_blob(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
+			      num_pages,
 			      lvol_op_comp, task);
 }
 
@@ -335,15 +336,15 @@ lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 	struct spdk_blob *blob = lvol->blob;
 	struct lvol_task *task = (struct lvol_task *)bdev_io->driver_ctx;
 
-	start_page = bdev_io->u.write.offset_blocks;
-	num_pages = bdev_io->u.write.num_blocks;
+	start_page = bdev_io->u.bdev.offset_blocks;
+	num_pages = bdev_io->u.bdev.num_blocks;
 
 	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL,
 		     "Vbdev doing write at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
 		     num_pages, bdev_io->bdev->name);
-	spdk_bs_io_writev_blob(blob, ch, bdev_io->u.write.iovs, bdev_io->u.write.iovcnt, start_page,
+	spdk_bs_io_writev_blob(blob, ch, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, start_page,
 			       num_pages, lvol_op_comp, task);
 }
 
