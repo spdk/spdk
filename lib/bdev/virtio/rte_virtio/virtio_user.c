@@ -37,6 +37,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/eventfd.h>
 
 #include <linux/virtio_scsi.h>
 
@@ -157,6 +158,32 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 	uint16_t queue_idx = vq->vq_queue_index;
 	uint64_t desc_addr, avail_addr, used_addr;
+	int callfd;
+	int kickfd;
+
+	if (dev->callfds[queue_idx] != -1 || dev->kickfds[queue_idx] != -1) {
+		PMD_DRV_LOG(ERR, "queue %u already exists", queue_sel);
+		return -1;
+	}
+
+	/* May use invalid flag, but some backend uses kickfd and
+	 * callfd as criteria to judge if dev is alive. so finally we
+	 * use real event_fd.
+	 */
+	callfd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
+	if (callfd < 0) {
+		PMD_DRV_LOG(ERR, "callfd error, %s", strerror(errno));
+		return -1;
+	}
+
+	kickfd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
+	if (kickfd < 0) {
+		PMD_DRV_LOG(ERR, "kickfd error, %s", strerror(errno));
+		return -1;
+	}
+
+	dev->callfds[queue_idx] = callfd;
+	dev->kickfds[queue_idx] = kickfd;
 
 	desc_addr = (uintptr_t)vq->vq_ring_virt_mem;
 	avail_addr = desc_addr + vq->vq_nentries * sizeof(struct vring_desc);
@@ -188,6 +215,8 @@ virtio_user_del_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 
 	close(dev->callfds[vq->vq_queue_index]);
 	close(dev->kickfds[vq->vq_queue_index]);
+	dev->callfds[vq->vq_queue_index] = -1;
+	dev->kickfds[vq->vq_queue_index] = -1;
 }
 
 static void
