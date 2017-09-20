@@ -587,6 +587,14 @@ p.add_argument('--max_queue', help='max_queue')
 p.add_argument('--vq_size', help='vq_size')
 p.set_defaults(func=connect_virtio_user_scsi_dev)
 
+def disconnect_virtio_user_dev(args):
+    params = {'path': args.path}
+    jsonrpc_call('connect_virtio_user_scsi_dev', params)
+
+p = subparsers.add_parser('disconnect_virtio_user_dev', help='Disconnect virtio user device')
+p.add_argument('path', help='socket path')
+p.set_defaults(func=disconnect_virtio_user_dev)
+
 def get_rpc_methods(args):
     print_dict(jsonrpc_call('get_rpc_methods'))
 
