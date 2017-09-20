@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b0d357b_dac25e16",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-20T11:58:38Z",
+      "side": 1,
+      "message": "If num_blocks is verified to be non-zero, shouldn\u0027t block_size be as well ?",
+      "range": {
+        "startLine": 321,
+        "startChar": 1,
+        "endLine": 321,
+        "endChar": 11
+      },
+      "revId": "bafa263b5fa3a811090934432cf2d7ba598752e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
