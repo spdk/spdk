@@ -21,6 +21,24 @@
 - runs on Fedora 25 and Ubuntu 16.04 guest systems
 - runs against vhost scsi and vhost blk
 
+#### NVMe-OF namespace on a Pmem device
+This test configures a SPDK NVMe-OF subsystem backed by pmem
+devices and uses FIO to generate I/Os that target those subsystems.
+The logical volume bdevs are backed by malloc bdevs.
+Test steps:
+- assign IP addresses to RDMA NICs.
+- start SPDK nvmf_tgt application.
+- create 10 pmem pools.
+- create pmem bdevs on pmem pools.
+- create NVMe-OF subsystems with 10 pmem bdevs namespaces.
+- connect to NVMe-OF susbsystems with kernel initiator.
+- run FIO with workload parameters: blocksize=128MB, iodepth=64,
+    workload=randwrite; varify flag is enabled so that FIO reads and verifies
+    the data written to the pmem device. The run time is 10 seconds for a
+    quick test an 10 minutes for longer nightly test.
+- disconnect kernel initiator from NVMe-OF subsystems.
+- delete NVMe-OF subsystems from configuration.
+
 #### Filesystem integrity
 - runs SPDK with 1 VM with 1 NVMe device attached.
 - creates a partition table and filesystem on passed device, and mounts it
