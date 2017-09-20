@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "792d7ca3_f2977113",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T18:26:40Z",
+      "side": 1,
+      "message": "good call",
+      "parentUuid": "c637e520_25bdf0f8",
+      "revId": "2e83c8a01fa7e2e5a4d22d39771cf87dd848114a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b47d738_a7d6fa5d",
         "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
         "patchSetId": 14
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-17T22:16:18Z",
       "side": 1,
       "message": "why aren\u0027t you using the mock macros for these?",
+      "revId": "2e83c8a01fa7e2e5a4d22d39771cf87dd848114a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c4bc968_b580d2ee",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-20T18:26:40Z",
+      "side": 1,
+      "message": "I wasn\u0027t planning to mock any return values for these functions - these unit tests aren\u0027t focused on testing channel creation/deletion callback functions.",
+      "parentUuid": "0b47d738_a7d6fa5d",
       "revId": "2e83c8a01fa7e2e5a4d22d39771cf87dd848114a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
