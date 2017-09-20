@@ -46,6 +46,10 @@ timing_enter hello_world
 $rootdir/examples/nvme/hello_world/hello_world
 timing_exit
 
+timing_enter deallocated_value
+$testdir/deallocated_value/deallocated_value
+timing_exit deallocated_value
+
 timing_enter sgl
 $testdir/sgl/sgl
 timing_exit sgl
