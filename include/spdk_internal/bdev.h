@@ -314,11 +314,11 @@ struct spdk_bdev_io {
 			uint64_t offset_blocks;
 		} unmap;
 		struct {
-			/** Represents starting offset in blocks of the range to be flushed. */
-			uint64_t offset_blocks;
-
 			/** Represents the number of blocks to be flushed, starting at offset_blocks. */
 			uint64_t num_blocks;
+
+			/** Represents starting offset in blocks of the range to be flushed. */
+			uint64_t offset_blocks;
 		} flush;
 		struct {
 			/* The NVMe command to execute */
