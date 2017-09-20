@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a73ee426_60c947dc",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1031,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-09-20T03:57:23Z",
+      "side": 1,
+      "message": "i:l?\n\nBecause I found printing of \" -i\" is different from \"-l\" \"-n\" \"-x\"...\n(while \" -i Nvme0n1\" is OK）. \n#./blobcli -i\nStarting DPDK 17.05.0 initialization...\n...\nBlobstore using bdev Product Name: NVMe disk\nblobstore init\u0027d: (0x7fc2ff276e60)\n\nIn addition, Do other illegal parameters need to be taken into consideration? Thanks.\n#./blobcli - or ./blobcli -- or ./blobcli c \nStarting DPDK 17.05.0 initialization...\n...\nError in blob open callback (err -2)\nERROR!",
+      "range": {
+        "startLine": 1031,
+        "startChar": 34,
+        "endLine": 1031,
+        "endChar": 55
+      },
+      "revId": "01d90168aa944b6541372b5893157a88ee303b06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
