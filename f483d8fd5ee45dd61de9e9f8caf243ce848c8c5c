@@ -39,6 +39,24 @@
       "revId": "f483d8fd5ee45dd61de9e9f8caf243ce848c8c5c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e5e721f_13a00ee6",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-20T08:11:18Z",
+      "side": 1,
+      "message": "I think no such package exists for debian and freebsd",
+      "parentUuid": "4eb7fd62_012b1043",
+      "revId": "f483d8fd5ee45dd61de9e9f8caf243ce848c8c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
