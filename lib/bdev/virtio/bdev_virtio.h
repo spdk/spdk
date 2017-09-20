@@ -35,5 +35,6 @@
 #define SPDK_BDEV_VIRTIO_H
 
 int spdk_virtio_user_scsi_connect(const char *path, uint32_t max_queue, uint32_t vq_size);
+int spdk_virtio_user_disconnect(const char *path);
 
 #endif /* SPDK_BDEV_VIRTIO_H */

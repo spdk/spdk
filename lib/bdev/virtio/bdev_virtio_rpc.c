@@ -97,3 +97,54 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
 }
 SPDK_RPC_REGISTER("connect_virtio_user_scsi_dev", spdk_rpc_connect_virtio_user_scsi_dev);
+
+struct rpc_disconnect_virtio_user_dev {
+	char *path;
+};
+
+static const struct spdk_json_object_decoder rpc_disconnect_virtio_user[] = {
+	{"path", offsetof(struct rpc_disconnect_virtio_user_dev, path), spdk_json_decode_string },
+};
+
+static void
+free_rpc_disconnect_virtio_user_dev(struct rpc_disconnect_virtio_user_dev *req)
+{
+	free(req->path);
+}
+
+static void
+spdk_rpc_disconnect_virtio_user_dev(struct spdk_jsonrpc_request *request,
+				      const struct spdk_json_val *params){
+
+	struct spdk_json_write_ctx *w;
+	struct rpc_disconnect_virtio_user_dev req = {0};
+	char buf[64];
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_disconnect_virtio_user,
+				    SPDK_COUNTOF(rpc_disconnect_virtio_user),
+				    &req)) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = spdk_virtio_user_disconnect(req.path);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_disconnect_virtio_user_dev(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+invalid:
+	spdk_strerror_r(-rc, buf, sizeof(buf));
+	free_rpc_disconnect_virtio_user_dev(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+}
+SPDK_RPC_REGISTER("disconnect_virtio_user_dev", spdk_rpc_disconnect_virtio_user_dev);
