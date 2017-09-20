@@ -293,7 +293,7 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 
 /* reset device and renegotiate features if needed */
 int
-virtio_init_device(struct virtio_dev *dev, uint64_t req_features)
+virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 {
 	int ret;
 
@@ -321,6 +321,14 @@ virtio_init_device(struct virtio_dev *dev, uint64_t req_features)
 
 	vtpci_reinit_complete(dev);
 	return 0;
+}
+
+void
+virtio_dev_deinit(struct virtio_dev *dev)
+{
+	virtio_free_queues(dev);
+	virtio_hw_internal[dev->port_id].vtpci_ops = NULL;
+	free(dev);
 }
 
 int
