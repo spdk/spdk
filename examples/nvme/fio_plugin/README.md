@@ -70,3 +70,10 @@ engine's full path via the ioengine parameter - LD_PRELOAD is recommended to avo
 When testing random workloads, it is recommended to set norandommap=1.  fio's random map
 processing consumes extra CPU cycles which will degrade performance over time with
 the fio_plugin since all I/O are submitted and completed on a single CPU core.
+
+We also do some performance comparion between fio + spdk plugin with spdk perf(examples/nvme/perf/perf) on
+NVMe SSDs. If you use one job for fio test (which means using one CPU core), the performance will be worse
+than spdk perf (also using one cpu core) against many NVMe SSDs. But if you use multiple jobs for fio test,
+the performance of fio will be similiar with spdk perf. We analyze this phenomenon, it is caused by the
+architecture of fio. Mainly is can scale with multiple threads (i.e., cpu cores), but it is not good to
+use one thread against many I/O devices.
