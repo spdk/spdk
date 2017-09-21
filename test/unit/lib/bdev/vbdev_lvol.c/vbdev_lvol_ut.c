@@ -124,6 +124,7 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	struct spdk_lvol_store_req *req = cb_arg;
 	free(req);
 	free(lvs);
+	g_lvol_store = NULL;
 
 	return 0;
 }
@@ -361,6 +362,35 @@ ut_lvol_init(void)
 
 
 }
+
+static void
+ut_lvol_hotremove(void)
+{
+	int rc = 0;
+
+	lvol_store_initialize_fail = false;
+	lvol_store_initialize_cb_fail = false;
+	lvol_already_opened = false;
+	g_bs_dev = NULL;
+
+	/* Lvol store is succesfully created */
+	rc = vbdev_lvs_create(&g_bdev, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store != NULL);
+	CU_ASSERT(g_bs_dev != NULL);
+
+	/* Hot remove callback with NULL - stability check */
+	vbdev_lvs_hotremove_cb(NULL);
+
+	/* Hot remove lvs on bdev removal */
+	vbdev_lvs_hotremove_cb(&g_bdev);
+
+	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_lvol_pairs));
+
+}
+
 static void
 ut_lvol_resize(void)
 {
@@ -497,7 +527,8 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "ut_lvs_init", ut_lvs_init) == NULL ||
 		CU_add_test(suite, "ut_lvol_init", ut_lvol_init) == NULL ||
-		CU_add_test(suite, "ut_lvol_resize", ut_lvol_resize) == NULL
+		CU_add_test(suite, "ut_lvol_resize", ut_lvol_resize) == NULL ||
+		CU_add_test(suite, "lvol_hotremove", ut_lvol_hotremove) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
