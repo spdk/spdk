@@ -272,6 +272,7 @@ virtio_user_dev_init(char *path, int queues, int queue_size)
 		goto err;
 	}
 
+	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
 	return vdev;
 
 err:
