@@ -1,0 +1,176 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc535918_45bbd8d8",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:03:17Z",
+      "side": 1,
+      "message": "num_blocks should probably be uint64_t to allow larger sizes.",
+      "range": {
+        "startLine": 96,
+        "startChar": 1,
+        "endLine": 96,
+        "endChar": 21
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4aac6781_d6abf261",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:03:17Z",
+      "side": 1,
+      "message": "SPDK_TRACE_BDEV_MALLOC -\u003e SPDK_TRACE_BDEV_PMEM",
+      "range": {
+        "startLine": 124,
+        "startChar": 16,
+        "endLine": 124,
+        "endChar": 38
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e352d545_b9c35ae7",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:03:17Z",
+      "side": 1,
+      "message": "This path has a memleak - we should probably call free_rpc_create_pmem_pool() before this (or call it in this path as well as below).",
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5082748_57edf0b5",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:03:17Z",
+      "side": 1,
+      "message": "SPDK_TRACE_BDEV_PMEM",
+      "range": {
+        "startLine": 189,
+        "startChar": 16,
+        "endLine": 189,
+        "endChar": 38
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56d58df1_8370253f",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:03:17Z",
+      "side": 1,
+      "message": "We don\u0027t currently have a JSON function to write a size_t currently, but spdk_json_write_uint64() would be a closer fit.",
+      "range": {
+        "startLine": 223,
+        "startChar": 1,
+        "endLine": 223,
+        "endChar": 22
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1736b36_e678d1c6",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:03:17Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 225,
+        "startChar": 1,
+        "endLine": 225,
+        "endChar": 22
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06980b7e_7a56db92",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:03:17Z",
+      "side": 1,
+      "message": "SPDK_TRACE_BDEV_PMEM",
+      "range": {
+        "startLine": 267,
+        "startChar": 16,
+        "endLine": 267,
+        "endChar": 38
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00197212_75aa9830",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:03:17Z",
+      "side": 1,
+      "message": "I think this path leaks req.pmem_file.",
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
