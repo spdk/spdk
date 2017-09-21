@@ -49,6 +49,7 @@
 #define SPDK_BLOB_OPTS_NUM_MD_PAGES UINT32_MAX
 #define SPDK_BLOB_OPTS_MAX_MD_OPS 32
 #define SPDK_BLOB_OPTS_MAX_CHANNEL_OPS 512
+#define SPDK_BLOB_OPTS_UNKNOWN_BSTYPE "UNKNOWN"
 
 int g_lvserrno;
 int g_resize_rc;
@@ -58,10 +59,24 @@ struct spdk_bs_opts g_bs_opts;
 struct spdk_blob_store {};
 
 void
+spdk_bs_get_super(struct spdk_blob_store *bs,
+		  spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	return;
+}
+
+void
 spdk_bs_set_super(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		  spdk_bs_op_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, 0);
+}
+
+void
+spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
+	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	return;
 }
 
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
@@ -72,6 +87,13 @@ struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 int
 spdk_blob_md_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 		       uint16_t value_len)
+{
+	return 0;
+}
+
+int
+spdk_bs_md_get_xattr_value(struct spdk_blob *blob, const char *name,
+			   const void **value, size_t *value_len)
 {
 	return 0;
 }
@@ -132,6 +154,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
+	sprintf(opts->bstype, "%s", SPDK_BLOB_OPTS_UNKNOWN_BSTYPE);
 }
 
 uint64_t
