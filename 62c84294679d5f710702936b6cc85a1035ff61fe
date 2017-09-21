@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "beb43b30_f926336e",
+        "filename": "test/iscsi_tgt/pmem/iscsi_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T10:22:15Z",
+      "side": 1,
+      "message": "So we create ... 0 iSCSI targets? This variable and it\u0027s value may be confusing.\nYou should either change the loop ranges or change to loop type (from seq `` to for(i\u003d...))",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 11
+      },
+      "revId": "62c84294679d5f710702936b6cc85a1035ff61fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d8d19e8_4d666048",
+        "filename": "test/iscsi_tgt/pmem/iscsi_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T10:22:15Z",
+      "side": 1,
+      "message": "start_iscsi_tgt\nwe don\u0027t measure anything related to pmem here, just time of starting the app itself",
+      "range": {
+        "startLine": 39,
+        "startChar": 13,
+        "endLine": 39,
+        "endChar": 29
+      },
+      "revId": "62c84294679d5f710702936b6cc85a1035ff61fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a37d45a_be08228c",
+        "filename": "test/iscsi_tgt/pmem/iscsi_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T10:22:15Z",
+      "side": 1,
+      "message": "Maybe add separate variable for that, as here you don\u0027t create iSCSI targets but PMEM devs",
+      "range": {
+        "startLine": 58,
+        "startChar": 11,
+        "endLine": 58,
+        "endChar": 27
+      },
+      "revId": "62c84294679d5f710702936b6cc85a1035ff61fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0ac6bdf_2bd01b71",
+        "filename": "test/iscsi_tgt/pmem/iscsi_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T10:22:15Z",
+      "side": 1,
+      "message": "remove",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 7
+      },
+      "revId": "62c84294679d5f710702936b6cc85a1035ff61fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5bb51b8_57403aa8",
+        "filename": "test/iscsi_tgt/pmem/iscsi_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T10:22:15Z",
+      "side": 1,
+      "message": "Double rm. Remove first one.",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 18
+      },
+      "revId": "62c84294679d5f710702936b6cc85a1035ff61fe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
