@@ -31,6 +31,7 @@ function usage()
 	echo "                           example: /usr/share/dpdk/x86_64-default-linuxapp-gcc"
 	echo " fio                       Required to build fio_plugin."
 	echo "                           example: /usr/src/fio"
+	echo " nvml                      Required to build bdev_pmem backend."
 	echo " rbd                       [disabled]"
 	echo "                           No path required."
 	echo " rdma                      [disabled]"
@@ -108,6 +109,16 @@ for i in "$@"; do
 			;;
 		--without-dpdk)
 			CONFIG_DPDK_DIR=
+			;;
+		--with-nvml)
+			CONFIG_NVML=y
+			;;
+		--with-nvml=*)
+			CONFIG_NVML=y
+			CONFIG_NVML_DIR=$(readlink -f ${i#*=})
+			;;
+		--without-nvml)
+			CONFIG_NVML=n
 			;;
 		--with-fio=*)
 			FIO_SOURCE_DIR="${i#*=}"
@@ -205,6 +216,12 @@ if [ -n "$CONFIG_ENV" ]; then
 fi
 if [ -n "$CONFIG_DPDK_DIR" ]; then
 	echo "CONFIG_DPDK_DIR?=$CONFIG_DPDK_DIR" >> CONFIG.local
+fi
+if [ -n "$CONFIG_NVML" ]; then
+	echo "CONFIG_NVML?=$CONFIG_NVML" >> CONFIG.local
+fi
+if [ -n "$CONFIG_NVML_DIR" ]; then
+	echo "CONFIG_NVML_DIR?=$CONFIG_NVML_DIR" >> CONFIG.local
 fi
 if [ -n "$CONFIG_FIO_PLUGIN" ]; then
 	echo "CONFIG_FIO_PLUGIN?=$CONFIG_FIO_PLUGIN" >> CONFIG.local

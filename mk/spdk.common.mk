@@ -87,6 +87,12 @@ LIBS += -L/usr/local/lib
 COMMON_CFLAGS += -I/usr/local/include
 endif
 
+# Attach only if NVML lib specified with configure
+ifneq ($(CONFIG_NVML_DIR),)
+LIBS += -L$(CONFIG_NVML_DIR)/src/nondebug
+COMMON_CFLAGS += -I$(CONFIG_NVML_DIR)/src/include
+endif
+
 ifeq ($(CONFIG_DEBUG), y)
 COMMON_CFLAGS += -DDEBUG -O0
 else
