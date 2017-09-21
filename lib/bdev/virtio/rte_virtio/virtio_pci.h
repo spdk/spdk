@@ -38,6 +38,7 @@
 
 #include <rte_pci.h>
 
+#include "spdk/env.h"
 #include "virtio_dev.h"
 
 struct virtqueue;
@@ -218,7 +219,7 @@ struct virtio_hw {
 	uint8_t     *isr;
 	uint16_t    *notify_base;
 	struct virtio_pci_common_cfg *common_cfg;
-	struct rte_pci_device *pci_dev;
+	struct spdk_pci_device *pci_dev;
 	struct virtio_scsi_config *dev_cfg;
 };
 
@@ -255,7 +256,7 @@ vtpci_with_feature(struct virtio_dev *dev, uint64_t bit)
 /*
  * Function declaration from virtio_pci.c
  */
-int vtpci_init(struct rte_pci_device *dev, struct virtio_dev *vdev);
+int vtpci_init(struct spdk_pci_device *dev, struct virtio_dev *vdev);
 void vtpci_reset(struct virtio_dev *);
 
 void vtpci_reinit_complete(struct virtio_dev *);
