@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "780bd0c9_f69df61a",
+        "filename": "lib/bdev/Makefile",
+        "patchSetId": 5
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T16:41:06Z",
+      "side": 1,
+      "message": "It looks like this directory doesn\u0027t actually exist yet, so the addition of this line should be deferred until the patch that actually introduces files here.",
+      "revId": "87e9bed343fc714d457a8a3cd9b95483541ddd9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8455fb8a_bb3cdcbc",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 5
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T16:41:06Z",
+      "side": 1,
+      "message": "Same here - this module doesn\u0027t exist yet, so we can\u0027t add it to the build.\n\nIf possible, it would be good to squash this patch into the implementation patch so we can test if it builds.",
+      "revId": "87e9bed343fc714d457a8a3cd9b95483541ddd9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
