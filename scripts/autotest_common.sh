@@ -26,6 +26,7 @@ fi
 : ${SPDK_TEST_IOAT=1}; export SPDK_TEST_IOAT
 : ${SPDK_TEST_EVENT=1}; export SPDK_TEST_EVENT
 : ${SPDK_TEST_BLOBFS=1}; export SPDK_TEST_BLOBFS
+: ${SPDK_TEST_NVML=1}; export SPDK_TEST_NVML
 : ${SPDK_RUN_ASAN=1}; export SPDK_RUN_ASAN
 : ${SPDK_RUN_UBSAN=1}; export SPDK_RUN_UBSAN
 
@@ -88,6 +89,10 @@ fi
 
 if [ -f /usr/include/infiniband/verbs.h ]; then
 	config_params+=' --with-rdma'
+fi
+
+if [ -f /usr/include/libpmemblk.h ]; then
+    config_params+=' --with-nvml'
 fi
 
 if [ -d /usr/src/fio ]; then
