@@ -22,6 +22,30 @@
       "revId": "9ce19599346078eb251f13a3a5f197a880b36cbe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73f5191c_0f09f435",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-21T18:04:17Z",
+      "side": 1,
+      "message": "How about just naming it \"bdev\"?  Then it differentiates from the nvme part of the union.\n\nSo basically this union defines how the IO is defined - bdev parameters, nvme parameters, or some other future set of parameters (scsi?).\n\nI also think \"bdev\" will make it not as alarming (i.e. this is the normal case).  I think with direct, there might be more confusion on what this actually means.",
+      "parentUuid": "e25d9bb0_f314266f",
+      "range": {
+        "startLine": 292,
+        "startChar": 4,
+        "endLine": 292,
+        "endChar": 10
+      },
+      "revId": "9ce19599346078eb251f13a3a5f197a880b36cbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
