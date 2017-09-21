@@ -485,6 +485,9 @@ vbdev_lvol_create(uuid_t uuid, size_t sz,
 	req->u.lvol_handle.cb_arg = cb_arg;
 
 	rc = spdk_lvol_create(lvs, sz, _vbdev_lvol_create_cb, req);
+	if (rc != 0) {
+		free(req);
+	}
 
 	return rc;
 }
