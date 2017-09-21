@@ -339,17 +339,10 @@ process_scan_inquiry(struct virtio_scsi_scan_base *base, struct virtio_req *vreq
 }
 
 static int
-process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
+alloc_virtio_disk(struct virtio_scsi_scan_base *base, uint64_t num_blocks, uint32_t block_size)
 {
 	struct virtio_scsi_disk *disk;
 	struct spdk_bdev *bdev;
-	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
-	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
-
-	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
-		SPDK_ERRLOG("read capacity failed for target %"PRIu8".\n", req->lun[1]);
-		return -1;
-	}
 
 	disk = calloc(1, sizeof(*disk));
 	if (disk == NULL) {
@@ -357,10 +350,9 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 		return -1;
 	}
 
-	disk->num_blocks = from_be64((uint64_t *)(vreq->iov[0].iov_base)) + 1;
-	disk->block_size = from_be32((uint32_t *)(vreq->iov[0].iov_base + 8));
-
 	disk->vdev = base->vdev;
+	disk->num_blocks = num_blocks;
+	disk->block_size = block_size;
 
 	bdev = &disk->bdev;
 	bdev->name = spdk_sprintf_alloc("Virtio0");
@@ -376,6 +368,24 @@ process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	TAILQ_INSERT_TAIL(&base->found_disks, disk, link);
 	scan_target_finish(base);
 	return 0;
+}
+
+static int
+process_read_cap(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
+{
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
+	uint64_t num_blocks;
+	uint32_t block_size;
+
+	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
+		SPDK_ERRLOG("read capacity failed for target %"PRIu8".\n", req->lun[1]);
+		return -1;
+	}
+
+	num_blocks = from_be64((uint64_t *)(vreq->iov[0].iov_base)) + 1;
+	block_size = from_be32((uint32_t *)(vreq->iov[0].iov_base + 8));
+	return alloc_virtio_disk(base, num_blocks, block_size);
 }
 
 static void
