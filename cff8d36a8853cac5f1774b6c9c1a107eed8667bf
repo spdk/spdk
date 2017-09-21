@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f9f18d2e_d1e885ee",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-21T18:07:16Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "17d17590_c895c365",
+      "revId": "cff8d36a8853cac5f1774b6c9c1a107eed8667bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "369a579a_29a06de4",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "515eb549_644d8bf4",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-21T18:07:16Z",
+      "side": 1,
+      "message": "you\u0027re right, thanks!",
+      "parentUuid": "369a579a_29a06de4",
+      "revId": "cff8d36a8853cac5f1774b6c9c1a107eed8667bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b6c9b5a_667743ac",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2017-09-21T17:29:55Z",
       "side": 1,
       "message": "I think this will get a buffer big enough for the size of the blocks we are unmapping, which I don\u0027t think is quite right - do we need to override the size here to calculate how big the unmap descriptors + header will be?",
+      "revId": "cff8d36a8853cac5f1774b6c9c1a107eed8667bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7b60ba7_05b7104e",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-21T18:07:16Z",
+      "side": 1,
+      "message": "This is not quite right, but unmap isn\u0027t a frequent request so I thought this was just fine.\n\nSince you\u0027ve pointed it out - I\u0027ll try adding another version of spdk_bdev_io_get_buf().",
+      "parentUuid": "7b6c9b5a_667743ac",
       "revId": "cff8d36a8853cac5f1774b6c9c1a107eed8667bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
