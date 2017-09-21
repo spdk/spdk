@@ -302,6 +302,7 @@ typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev)
 
 int spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 int spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
+int spdk_pci_virtio_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 struct spdk_pci_device *spdk_pci_get_device(struct spdk_pci_addr *pci_addr);
 
@@ -340,6 +341,8 @@ int spdk_pci_nvme_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
 				struct spdk_pci_addr *pci_address);
 int spdk_pci_ioat_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
 				struct spdk_pci_addr *pci_address);
+int spdk_pci_virtio_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
+				  struct spdk_pci_addr *pci_address);
 
 int spdk_pci_device_cfg_read(struct spdk_pci_device *dev, void *value, uint32_t len,
 			     uint32_t offset);
