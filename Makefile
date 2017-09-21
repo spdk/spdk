@@ -40,7 +40,7 @@ DIRS-y += lib test examples app
 
 .PHONY: all clean $(DIRS-y) config.h CONFIG.local mk/cc.mk
 
-ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
+ifeq (dpdk/build,$(CONFIG_DPDK_DIR))
 DPDKBUILD = dpdkbuild
 DIRS-y += dpdkbuild
 endif
