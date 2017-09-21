@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51c37980_3a864867",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-21T15:39:13Z",
+      "side": 1,
+      "message": "this whitespace change should be removed",
+      "revId": "f9830f1e930e456c0504f03c1345cbd895db9a2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ed93c08_540589f0",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-21T15:39:13Z",
+      "side": 1,
+      "message": "i saw the explanation for this - that makes sense, but needs to be in a separate patch explaining it (probably with a TODO or something explaining what needs to be changed back later)\n\nThis should also *only* apply to UNMAP and WRITE_ZEROES probably with a specific error message - otherwise this will return success if someone passes a completely garbage IO_TYPE.",
+      "revId": "f9830f1e930e456c0504f03c1345cbd895db9a2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0eab3ba8_30d2c717",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-21T15:39:13Z",
+      "side": 1,
+      "message": "Hi Maciek,\n\nAll of this code for creating the super blob - this should be moved into a separate patch.  This is not specific to lvolstore tasting, and should be done when initializing a new lvolstore (which the current code already does).\n\nThen this patch can just focus on the tasting part.\n\nThanks,\n\n-Jim",
+      "revId": "f9830f1e930e456c0504f03c1345cbd895db9a2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "007e1316_ee5f1af9",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-21T15:39:13Z",
+      "side": 1,
+      "message": "not necessary to set lvs to NULL here",
+      "revId": "f9830f1e930e456c0504f03c1345cbd895db9a2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "944e325f_2082121a",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-21T15:39:13Z",
+      "side": 1,
+      "message": "return not needed at end of void function (should also remove the extra newline)",
+      "revId": "f9830f1e930e456c0504f03c1345cbd895db9a2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
