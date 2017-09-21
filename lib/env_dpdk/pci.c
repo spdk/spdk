@@ -307,63 +307,65 @@ spdk_pci_device_get_socket_id(struct spdk_pci_device *pci_dev)
 }
 
 int
+spdk_pci_device_cfg_read(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+{
+	int rc;
+
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	rc = rte_pci_read_config(dev, value, len, offset);
+#else
+	rc = rte_eal_pci_read_config(dev, value, len, offset);
+#endif
+	return (rc > 0 && (uint32_t) rc == len) ? 0 : -1;
+}
+
+int
+spdk_pci_device_cfg_write(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+{
+	int rc;
+
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	rc = rte_pci_write_config(dev, value, len, offset);
+#else
+	rc = rte_eal_pci_write_config(dev, value, len, offset);
+#endif
+	return (rc > 0 && (uint32_t) rc == len) ? 0 : -1;
+}
+
+int
 spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-	return rte_pci_read_config(dev, value, 1, offset) == 1 ? 0 : -1;
-#else
-	return rte_eal_pci_read_config(dev, value, 1, offset) == 1 ? 0 : -1;
-#endif
+	return spdk_pci_device_cfg_read(dev, value, 1, offset);
 }
 
 int
 spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-	return rte_pci_write_config(dev, &value, 1, offset) == 1 ? 0 : -1;
-#else
-	return rte_eal_pci_write_config(dev, &value, 1, offset) == 1 ? 0 : -1;
-#endif
+	return spdk_pci_device_cfg_write(dev, &value, 1, offset);
 }
 
 int
 spdk_pci_device_cfg_read16(struct spdk_pci_device *dev, uint16_t *value, uint32_t offset)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-	return rte_pci_read_config(dev, value, 2, offset) == 2 ? 0 : -1;
-#else
-	return rte_eal_pci_read_config(dev, value, 2, offset) == 2 ? 0 : -1;
-#endif
+	return spdk_pci_device_cfg_read(dev, value, 2, offset);
 }
 
 int
 spdk_pci_device_cfg_write16(struct spdk_pci_device *dev, uint16_t value, uint32_t offset)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-	return rte_pci_write_config(dev, &value, 2, offset) == 2 ? 0 : -1;
-#else
-	return rte_eal_pci_write_config(dev, &value, 2, offset) == 2 ? 0 : -1;
-#endif
+	return spdk_pci_device_cfg_write(dev, &value, 2, offset);
 }
 
 int
 spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-	return rte_pci_read_config(dev, value, 4, offset) == 4 ? 0 : -1;
-#else
-	return rte_eal_pci_read_config(dev, value, 4, offset) == 4 ? 0 : -1;
-#endif
+	return spdk_pci_device_cfg_read(dev, value, 4, offset);
 }
 
 int
 spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_t offset)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-	return rte_pci_write_config(dev, &value, 4, offset) == 4 ? 0 : -1;
-#else
-	return rte_eal_pci_write_config(dev, &value, 4, offset) == 4 ? 0 : -1;
-#endif
+	return spdk_pci_device_cfg_write(dev, &value, 4, offset);
 }
 
 int
