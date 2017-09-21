@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b6a2f9f_dcb4df11",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1213,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-21T18:05:42Z",
+      "side": 1,
+      "message": "I\u0027d leave this out for resets - there\u0027s no payload associated with them.",
+      "revId": "849716d185350046aa637caede00dc6466e64c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
