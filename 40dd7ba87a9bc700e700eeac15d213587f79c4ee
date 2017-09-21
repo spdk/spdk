@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e539d08f_d21a8fe0",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-21T10:11:24Z",
+      "side": 1,
+      "message": "no",
+      "parentUuid": "2b987be8_d1e49960",
+      "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d1515eb_90fb1e4b",
         "filename": "include/spdk/lvol.h",
         "patchSetId": 28
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-20T18:52:36Z",
       "side": 1,
       "message": "Can we use the spdk_bs_md_iter functions instead?  I think this will be confusing, to have spdk_blob functions defined in lvol code - it also seems to just be a passthrough so I\u0027m not sure what value these functions are adding.",
+      "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3382028_02667d2f",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-21T10:11:24Z",
+      "side": 1,
+      "message": "it was due to some old assumptions but it\u0027s not current and we can change this",
+      "parentUuid": "8d1515eb_90fb1e4b",
       "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -64,6 +100,24 @@
       "writtenOn": "2017-09-20T18:52:36Z",
       "side": 1,
       "message": "why change this to success?",
+      "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "996bb41e_dcea95f4",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-21T10:11:24Z",
+      "side": 1,
+      "message": "This is temporary change until the \u0027write zeros\u0027 functionality for unmap is implemented - this suppress errors on unmap of nasted lvols.",
+      "parentUuid": "885ea487_cdd78997",
       "revId": "40dd7ba87a9bc700e700eeac15d213587f79c4ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
