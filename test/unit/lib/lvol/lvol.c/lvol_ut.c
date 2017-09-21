@@ -50,6 +50,25 @@ struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
 struct spdk_blob_store {};
 
+const char *
+spdk_bs_get_type(struct spdk_blob_store *bs)
+{
+	return NULL;
+}
+
+void
+spdk_bs_opts_init(struct spdk_bs_opts *opts)
+{
+	return;
+}
+
+void
+spdk_bs_load(struct spdk_bs_dev *dev,
+	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	return;
+}
+
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
 	return NULL;
