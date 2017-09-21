@@ -97,5 +97,6 @@ struct lvol_task {
 
 struct lvol_store_bdev *vbdev_lvol_store_first(void);
 struct lvol_store_bdev *vbdev_lvol_store_next(struct lvol_store_bdev *prev);
+void spdk_lvs_examine_cb(void *cb_arg, struct spdk_blob_store *bs, int bserrno);
 
 #endif /* SPDK_INTERNAL_LVOLSTORE_H */
