@@ -96,6 +96,23 @@
       "revId": "b7fffb035834663165848f3d775caf5ad108694a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cff6aa83_f10c615d",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:04:04Z",
+      "side": 1,
+      "message": "This path leaks req.pmem_file - we need to call free_rpc_construct_pmem_bdev() here or move the call up before this.",
+      "revId": "b7fffb035834663165848f3d775caf5ad108694a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
