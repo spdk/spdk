@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "62c151f0_6facbd0d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1495,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-21T00:00:34Z",
+      "side": 1,
+      "message": "but the mask will be modified in the running time, so I suppose we still need set the mask correctly.",
+      "parentUuid": "94b0ed0c_207ed478",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "16ed47c9_7654e090",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 41
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-20T00:34:51Z",
       "side": 1,
       "message": "You don\u0027t need to do this step here. This will get written out when the user does the next clean shutdown anyway.",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af0a995d_076b630c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1524,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-21T00:00:34Z",
+      "side": 1,
+      "message": "but the mask will be modified in the following running time, so I suppose we still need set the mask correctly.",
+      "parentUuid": "16ed47c9_7654e090",
       "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
