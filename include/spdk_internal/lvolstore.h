@@ -72,6 +72,8 @@ struct spdk_lvol_store_req {
 struct spdk_lvol_store {
 	struct spdk_bs_dev		*bs_dev;
 	struct spdk_blob_store		*blobstore;
+	struct spdk_blob		*super_blob;
+	spdk_blob_id			super_blob_id;
 	uuid_t				uuid;
 	uint64_t			page_size;
 	struct spdk_lvol_store_req *destruct_req;
@@ -95,5 +97,6 @@ struct lvol_task {
 
 struct lvol_store_bdev *vbdev_lvol_store_first(void);
 struct lvol_store_bdev *vbdev_lvol_store_next(struct lvol_store_bdev *prev);
+void spdk_lvs_examine_cb(void *cb_arg, struct spdk_blob_store *bs, int bserrno);
 
 #endif /* SPDK_INTERNAL_LVOLSTORE_H */
