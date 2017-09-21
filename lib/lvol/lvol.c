@@ -170,6 +170,8 @@ _spdk_lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not close blob on lvol\n");
+		free(lvol->name);
+		free(lvol);
 		return;
 	}
 
@@ -193,6 +195,8 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not delete blob on lvol\n");
+		free(lvol->name);
+		free(lvol);
 		return;
 	}
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Blob closed on lvol\n");
