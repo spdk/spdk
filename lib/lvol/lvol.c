@@ -35,6 +35,7 @@
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
 #include "spdk/io_channel.h"
+#include "spdk/blob_bdev.h"
 
 /* Length of string returned from uuid_unparse() */
 #define UUID_STRING_LEN 37
@@ -42,25 +43,89 @@
 SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)
 
 static void
-_lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
+_spdk_bs_unload_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_store_req *req = (struct spdk_lvol_store_req *)cb_arg;
+
+	req->u.lvs_handle.cb_fn(req, NULL, -1);
+}
+
+static void
+spdk_lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
+{
+	struct spdk_lvol_store_req *req = (struct spdk_lvol_store_req *)cb_arg;
+	struct spdk_lvol_store *lvs;
+	const char *bstype_uuid;
+
+	if (lvolerrno != 0) {
+		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Blob store not found on %s\n", req->u.lvs_handle.base_bdev->name);
+		req->u.lvs_handle.cb_fn(req, NULL, lvolerrno);
+		return;
+	}
+
+	bstype_uuid = spdk_bs_get_type(bs);
+	if (strncmp(bstype_uuid, "lvolstore", 9)) {
+		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store not found on %s\n", req->u.lvs_handle.base_bdev->name);
+		spdk_bs_unload(bs, _spdk_bs_unload_cb, req);
+		return;
+	}
+
+	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store found on %s - begin parsing\n",
+		     req->u.lvs_handle.base_bdev->name);
+
+	lvs = calloc(1, sizeof(*lvs));
+	if (lvs == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol store\n");
+		req->u.lvs_handle.cb_fn(req, NULL, -1);
+		return;
+	}
+
+	uuid_parse(&bstype_uuid[10], lvs->uuid);
+	lvs->blobstore = bs;
+	lvs->bs_dev = req->u.lvs_handle.bs_dev;
+	lvs->page_size = spdk_bs_get_page_size(bs);
+	TAILQ_INIT(&lvs->lvols);
+
+	req->u.lvs_handle.lvol_store = lvs;
+
+	assert(req->u.lvs_handle.cb_fn != NULL);
+	req->u.lvs_handle.cb_fn(req, lvs, lvolerrno);
+}
+
+void
+spdk_lvs_load(struct spdk_bs_dev *bs_dev,    spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol_store_req *req = cb_arg;
+
+	assert(cb_fn != NULL);
+	req->u.lvs_handle.cb_fn = cb_fn;
+	req->u.lvs_handle.bs_dev = bs_dev;
+
+	spdk_bs_load(bs_dev, spdk_lvs_load_cb, cb_arg);
+}
+
+static void
+_spdk_lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 {
 	struct spdk_lvol_store_req *lvs_req = cb_arg;
 	struct spdk_lvol_store *lvs = lvs_req->u.lvs_handle.lvol_store;
 
 	if (lvserrno != 0) {
 		assert(bs == NULL);
+		lvs_req->u.lvs_handle.cb_fn(lvs_req->u.lvs_handle.cb_arg, NULL, lvserrno);
 		SPDK_ERRLOG("Lvol store init failed: could not initialize blobstore\n");
 		free(lvs);
-		lvs = NULL;
-	} else {
-		assert(bs != NULL);
-		lvs->blobstore = bs;
-		lvs->page_size = spdk_bs_get_page_size(bs);
-		TAILQ_INIT(&lvs->lvols);
-
-		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store initialized\n");
+		free(lvs_req);
+		return;
 	}
-	assert(lvs_req->u.lvs_handle.cb_fn != NULL);
+
+	assert(bs != NULL);
+	lvs->blobstore = bs;
+	lvs->page_size = spdk_bs_get_page_size(bs);
+	TAILQ_INIT(&lvs->lvols);
+
+	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store initialized\n");
+
 	lvs_req->u.lvs_handle.cb_fn(lvs_req->u.lvs_handle.cb_arg, lvs, lvserrno);
 	free(lvs_req);
 }
@@ -71,6 +136,8 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 {
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvol_store_req *lvs_req;
+	struct spdk_bs_opts opts = {};
+	char uuid[UUID_STRING_LEN];
 
 	if (bs_dev == NULL) {
 		SPDK_ERRLOG("Blobstore device does not exist\n");
@@ -84,6 +151,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 	}
 
 	uuid_generate_time(lvs->uuid);
+	uuid_unparse(lvs->uuid, uuid);
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
 	if (!lvs_req) {
@@ -92,13 +160,18 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 		return -ENOMEM;
 	}
 
+	assert(cb_fn != NULL);
+
 	lvs_req->u.lvs_handle.cb_fn = cb_fn;
 	lvs_req->u.lvs_handle.cb_arg = cb_arg;
 	lvs_req->u.lvs_handle.lvol_store = lvs;
 	lvs->bs_dev = bs_dev;
 
+	spdk_bs_opts_init(&opts);
+	sprintf(opts.bstype_uuid ,"lvolstore_%s", uuid);
+
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Initializing lvol store\n");
-	spdk_bs_init(bs_dev, NULL, _lvs_init_cb, lvs_req);
+	spdk_bs_init(bs_dev, &opts, _spdk_lvs_init_cb, lvs_req);
 
 	return 0;
 }
