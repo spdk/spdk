@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e25d9bb0_f314266f",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:25:13Z",
+      "side": 1,
+      "message": "I don\u0027t know if \"direct\" is the best name for this, but I don\u0027t have a better suggestion...",
+      "range": {
+        "startLine": 292,
+        "startChar": 4,
+        "endLine": 292,
+        "endChar": 10
+      },
+      "revId": "9ce19599346078eb251f13a3a5f197a880b36cbe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
