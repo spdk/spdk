@@ -46,13 +46,24 @@ struct spdk_lvol *g_lvol = NULL;
 struct lvol_store_bdev *g_lvs_bdev = NULL;
 struct spdk_bdev *g_base_bdev = NULL;
 
-
 static struct spdk_bdev g_bdev = {};
 static struct spdk_bs_dev *g_bs_dev = NULL;
 static struct spdk_lvol_store *g_lvol_store = NULL;
 bool lvol_store_initialize_fail = false;
 bool lvol_store_initialize_cb_fail = false;
 bool lvol_already_opened = false;
+
+void
+spdk_lvs_load(struct spdk_bs_dev *dev,
+	      spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+}
+
+void
+spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
+	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+}
 
 void
 spdk_bdev_unregister(struct spdk_bdev *bdev)
@@ -117,6 +128,35 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	cb_fn(cb_arg, lvs, error);
 
 	return 0;
+}
+
+uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob)
+{
+	return 0;
+}
+
+void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+{
+}
+
+spdk_blob_id spdk_blob_get_id(struct spdk_blob *blob)
+{
+	spdk_blob_id id = {0};
+
+	return id;
+}
+
+void
+spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
+		     spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+{
+}
+
+void
+spdk_bs_md_iter_first(struct spdk_blob_store *bs,
+		      spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+{
 }
 
 int
