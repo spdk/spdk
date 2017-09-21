@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "595d2928_08c782fc",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T09:45:35Z",
+      "side": 1,
+      "message": "Negative part of test does not fail due to bdev being \"busy\". But due to first construct_lvol_bdev taking up all space in lvol store, so second construct_lvol_bdev fails as there is not enough space for it.\nI think name and description should be updated to reflect that.\n\nI think correct name would be: construct_lvol_bdev_on_full_lvol_store or similar. lvol store is not \u0027busy\u0027",
+      "range": {
+        "startLine": 256,
+        "startChar": 1,
+        "endLine": 258,
+        "endChar": 46
+      },
+      "revId": "dc071d4e6e605420a8bbc54f0fd1e032d1c584e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f5d2222_1ea2356a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T09:45:35Z",
+      "side": 1,
+      "message": "It is supposed to be the same test as 13 right? if so, then again then name should hint that we are trying to create a bdev on full lvol store",
+      "range": {
+        "startLine": 335,
+        "startChar": 20,
+        "endLine": 335,
+        "endChar": 71
+      },
+      "revId": "dc071d4e6e605420a8bbc54f0fd1e032d1c584e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffa2ecae_0b0049d7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T09:45:35Z",
+      "side": 1,
+      "message": "I dont get it. We dont have \"nested_construct_lvol_bdev\" in RPC calls.",
+      "range": {
+        "startLine": 337,
+        "startChar": 0,
+        "endLine": 337,
+        "endChar": 53
+      },
+      "revId": "dc071d4e6e605420a8bbc54f0fd1e032d1c584e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "708bc60d_72051c37",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T09:45:35Z",
+      "side": 1,
+      "message": "What is the size of the bdev besides of being correct? does it take up whole lvol store or just part of it?",
+      "range": {
+        "startLine": 346,
+        "startChar": 59,
+        "endLine": 346,
+        "endChar": 63
+      },
+      "revId": "dc071d4e6e605420a8bbc54f0fd1e032d1c584e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02c3f99d_a6a8f6c9",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T09:45:35Z",
+      "side": 1,
+      "message": "Why do we need another level of nesting? I think it\u0027s not needed",
+      "range": {
+        "startLine": 347,
+        "startChar": 0,
+        "endLine": 347,
+        "endChar": 70
+      },
+      "revId": "dc071d4e6e605420a8bbc54f0fd1e032d1c584e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "396a8e0e_e60a0cf9",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T09:45:35Z",
+      "side": 1,
+      "message": "What is the size besides of being correct? Depending of size of second_nested_lvol_bdev and first_nested_lvol_bdev this case could also be positive",
+      "range": {
+        "startLine": 349,
+        "startChar": 73,
+        "endLine": 349,
+        "endChar": 77
+      },
+      "revId": "dc071d4e6e605420a8bbc54f0fd1e032d1c584e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a7fc325_aaea26d8",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T09:45:35Z",
+      "side": 1,
+      "message": "Isn\u0027t that the same step \u0026 result as step above? I don\u0027t think its necessary",
+      "range": {
+        "startLine": 350,
+        "startChar": 1,
+        "endLine": 350,
+        "endChar": 71
+      },
+      "revId": "dc071d4e6e605420a8bbc54f0fd1e032d1c584e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
