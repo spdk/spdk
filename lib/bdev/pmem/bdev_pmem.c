@@ -36,6 +36,7 @@
 #include "spdk/string.h"
 #include "spdk/likely.h"
 #include "spdk/util.h"
+#include "spdk/rpc.h"
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
@@ -45,6 +46,7 @@
 struct pmem_disk {
 	struct spdk_bdev	disk;
 	PMEMblkpool *pool;
+	char pmem_file[NAME_MAX];
 	TAILQ_ENTRY(pmem_disk) tailq;
 };
 
@@ -74,6 +76,17 @@ bdev_pmem_destruct(void *ctx)
 	free(pdisk->disk.name);
 	pmemblk_close(pdisk->pool);
 	free(pdisk);
+
+	return 0;
+}
+
+static int
+bdev_pmem_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct pmem_disk *pdisk = ctx;
+
+	spdk_json_write_name(w, "pmem_file");
+	spdk_json_write_string(w, pdisk->pmem_file);
 
 	return 0;
 }
@@ -299,6 +312,7 @@ static const struct spdk_bdev_fn_table pmem_fn_table = {
 	.submit_request		= bdev_pmem_submit_request,
 	.io_type_supported	= bdev_pmem_io_type_supported,
 	.get_io_channel		= bdev_pmem_get_io_channel,
+	.dump_config_json	= bdev_pmem_dump_config_json,
 };
 
 struct spdk_bdev *create_pmem_disk(char *pmem_file)
@@ -315,6 +329,7 @@ struct spdk_bdev *create_pmem_disk(char *pmem_file)
 		return NULL;
 	}
 
+	strncpy(pdisk->pmem_file, pmem_file, NAME_MAX);
 	pdisk->pool = pmemblk_open(pmem_file, 0);
 
 	if (!pdisk->pool) {
@@ -396,3 +411,4 @@ static void bdev_pmem_finish(void)
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_pmem", SPDK_TRACE_BDEV_PMEM)
+
