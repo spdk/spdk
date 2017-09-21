@@ -35,6 +35,7 @@
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
 #include "spdk/io_channel.h"
+#include "spdk/blob_bdev.h"
 
 /* Length of string returned from uuid_unparse() */
 #define UUID_STRING_LEN 37
@@ -45,6 +46,126 @@ static inline size_t
 divide_round_up(size_t num, size_t divisor)
 {
 	return (num + divisor - 1) / divisor;
+}
+
+static void
+_spdk_bs_unload_with_error_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)cb_arg;
+
+	req->cb_fn(req, NULL, -ENODEV);
+}
+
+static void
+_spdk_close_super_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+	struct spdk_blob_store *bs = lvs->blobstore;
+
+	if (lvolerrno != 0) {
+		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Could not close super blob\n");
+		free(lvs);
+		spdk_bs_unload(bs, _spdk_bs_unload_with_error_cb, req);
+		return;
+	}
+
+	assert(req->cb_fn != NULL);
+	req->cb_fn(req, lvs, lvolerrno);
+}
+
+static void
+_spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+	struct spdk_blob_store *bs = lvs->blobstore;
+	const char *attr;
+	size_t value_len;
+
+	if (lvolerrno != 0) {
+		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Could not open super blob\n");
+		free(lvs);
+		spdk_bs_unload(bs, _spdk_bs_unload_with_error_cb, req);
+		return;
+	}
+
+	spdk_bs_md_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
+
+	if (uuid_parse(attr, lvs->uuid)) {
+		SPDK_INFOLOG(SPDK_TRACE_LVOL, "incorrect UUID '%s'\n", attr);
+		free(lvs);
+		spdk_bs_unload(bs, _spdk_bs_unload_with_error_cb, req);
+		return;
+	}
+
+	lvs->super_blob_id = spdk_blob_get_id(blob);
+
+	spdk_bs_md_close_blob(&blob, _spdk_close_super_cb, req);
+}
+
+static void
+_spdk_lvs_open_super(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+	struct spdk_blob_store *bs = lvs->blobstore;
+
+	if (lvolerrno != 0) {
+		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Super blob not found\n");
+		free(lvs);
+		spdk_bs_unload(bs, _spdk_bs_unload_with_error_cb, req);
+		return;
+	}
+
+	spdk_bs_md_open_blob(bs, blobid, _spdk_lvs_read_uuid, req);
+}
+
+static void
+spdk_lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)cb_arg;
+	struct spdk_lvol_store *lvs;
+
+	if (lvolerrno != 0) {
+		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store not found on %s\n", req->base_bdev->name);
+		req->cb_fn(req, NULL, lvolerrno);
+		return;
+	}
+
+	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store found on %s - begin parsing\n",
+		     req->base_bdev->name);
+
+	lvs = calloc(1, sizeof(*lvs));
+	if (lvs == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol store\n");
+		spdk_bs_unload(bs, _spdk_bs_unload_with_error_cb, req);
+		return;
+	}
+
+	lvs->blobstore = bs;
+	lvs->bs_dev = req->bs_dev;
+	TAILQ_INIT(&lvs->lvols);
+
+	req->lvol_store = lvs;
+
+	spdk_bs_get_super(bs, _spdk_lvs_open_super, req);
+}
+
+void
+spdk_lvs_load(struct spdk_bs_dev *bs_dev,    spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvs_with_handle_req *req = cb_arg;
+	struct spdk_bs_opts opts = {};
+
+	assert(cb_fn != NULL);
+	req->cb_fn = cb_fn;
+	req->bs_dev = bs_dev;
+
+	spdk_bs_opts_init(&opts);
+	strncpy(opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
+
+	spdk_bs_load(bs_dev, &opts, spdk_lvs_load_cb, cb_arg);
 }
 
 static void
@@ -184,7 +305,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 {
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvs_with_handle_req *lvs_req;
-	struct spdk_bs_opts opts;
+	struct spdk_bs_opts opts = {};
 
 	if (bs_dev == NULL) {
 		SPDK_ERRLOG("Blobstore device does not exist\n");
@@ -213,6 +334,8 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	lvs_req->cb_arg = cb_arg;
 	lvs_req->lvol_store = lvs;
 	lvs->bs_dev = bs_dev;
+
+	strncpy(opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Initializing lvol store\n");
 	spdk_bs_init(bs_dev, &opts, _spdk_lvs_init_cb, lvs_req);
