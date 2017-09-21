@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3d03273_e33297c6",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-21T13:30:01Z",
+      "side": 1,
+      "message": "There is information about tasting test case, but I don\u0027t see such test case below",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 41
+      },
+      "revId": "e6fb735021125a49d823ed1417e8d606fccc3596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "816d0c58_176e8820",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-21T13:30:01Z",
+      "side": 1,
+      "message": "This operation should actually success because this how hot remove works",
+      "range": {
+        "startLine": 375,
+        "startChar": 0,
+        "endLine": 375,
+        "endChar": 70
+      },
+      "revId": "e6fb735021125a49d823ed1417e8d606fccc3596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a6a02c1_fe8ce994",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-21T13:30:01Z",
+      "side": 1,
+      "message": "it would be good to test this case with nested lvols",
+      "range": {
+        "startLine": 397,
+        "startChar": 0,
+        "endLine": 397,
+        "endChar": 54
+      },
+      "revId": "e6fb735021125a49d823ed1417e8d606fccc3596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8fada342_a597fed5",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-21T13:30:01Z",
+      "side": 1,
+      "message": "to is no way to send get_bdevs after sigterm",
+      "range": {
+        "startLine": 406,
+        "startChar": 2,
+        "endLine": 406,
+        "endChar": 22
+      },
+      "revId": "e6fb735021125a49d823ed1417e8d606fccc3596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
