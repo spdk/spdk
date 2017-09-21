@@ -244,7 +244,7 @@ vtpci_with_feature(struct virtio_dev *dev, uint64_t bit)
 /*
  * Function declaration from virtio_pci.c
  */
-int vtpci_init(struct rte_pci_device *dev, struct virtio_dev *vdev);
+int vtpci_init(struct spdk_pci_device *dev, struct virtio_dev *vdev);
 void vtpci_reset(struct virtio_dev *);
 
 void vtpci_reinit_complete(struct virtio_dev *);

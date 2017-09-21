@@ -375,7 +375,7 @@ static int virtio_pci_probe(struct rte_pci_driver *pci_drv __rte_unused,
 
 	hw = calloc(1, sizeof(*hw));
 	hw->vdev.is_hw = 1;
-	hw->pci_dev = pci_dev;
+	hw->pci_dev = (struct spdk_pci_device *) pci_dev;
 
 	g_pci_hw = hw;
 
@@ -394,7 +394,7 @@ static struct rte_pci_driver rte_virtio_pmd = {
 		.name = "net_virtio",
 	},
 	.id_table = pci_id_virtio_map,
-	.drv_flags = 0,
+	.drv_flags = RTE_PCI_DRV_NEED_MAPPING,
 	.probe = virtio_pci_probe,
 	.remove = virtio_pci_remove,
 };

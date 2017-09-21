@@ -36,6 +36,10 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/env.h"
+
+#include <sys/queue.h>
+
 struct virtio_dev {
 	struct virtqueue		**vqs;
 	uint16_t			started;
@@ -54,8 +58,10 @@ struct virtio_hw {
 	uint8_t				*isr;
 	uint16_t			*notify_base;
 	struct virtio_pci_common_cfg	*common_cfg;
-	struct rte_pci_device		*pci_dev;
+	struct spdk_pci_device		*pci_dev;
 	struct virtio_scsi_config	*dev_cfg;
+
+	TAILQ_ENTRY(virtio_hw)		tailq;
 };
 
 #endif /* SPDK_BDEV_VIRTIO_INTERNAL_H */

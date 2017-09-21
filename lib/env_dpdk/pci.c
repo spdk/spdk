@@ -307,7 +307,7 @@ spdk_pci_device_get_socket_id(struct spdk_pci_device *pci_dev)
 }
 
 int
-spdk_pci_device_cfg_read(struct spdk_pci_device *dev, uint8_t *value, uint32_t len, uint32_t offset)
+spdk_pci_device_cfg_read(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
 {
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
 	return rte_pci_read_config(dev, value, 1, offset) == 1 ? 0 : -1;
@@ -317,7 +317,7 @@ spdk_pci_device_cfg_read(struct spdk_pci_device *dev, uint8_t *value, uint32_t l
 }
 
 int
-spdk_pci_device_cfg_write(struct spdk_pci_device *dev, uint8_t value, uint32_t len, uint32_t offset)
+spdk_pci_device_cfg_write(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
 {
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
 	return rte_pci_write_config(dev, &value, 1, offset) == 1 ? 0 : -1;
