@@ -279,6 +279,7 @@ virtio_user_dev_init(char *path, int queues, int queue_size)
 
 	dev->device_features &= VIRTIO_USER_SUPPORTED_FEATURES;
 
+	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
 	return vdev;
 
 err:

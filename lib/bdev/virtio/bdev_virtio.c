@@ -474,6 +474,7 @@ bdev_virtio_initialize(void)
 	char *type, *path;
 	uint32_t i;
 	int rc = 0;
+	bool scan_pci = false;
 
 	if (sp == NULL) {
 		goto out;
@@ -492,38 +493,42 @@ bdev_virtio_initialize(void)
 				continue;
 			}
 			vdev = virtio_user_dev_init(path, 1, 512);
+			if (vdev == NULL) {
+				goto out;
+			}
 		} else if (!strcmp("Pci", type)) {
-			vdev = get_pci_virtio_hw();
+			scan_pci = true;
 		} else {
 			SPDK_ERRLOG("Invalid type %s specified for index %d\n", type, i);
 			continue;
 		}
 	}
 
-	if (vdev == NULL) {
-		goto out;
+	if (scan_pci) {
+		vtpci_init();
 	}
 
-	base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
-	if (base == NULL) {
-		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
-		rc = -1;
-		goto out;
+	TAILQ_FOREACH(vdev, &g_virtio_driver.init_ctrlrs, tailq) {
+		base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
+		if (base == NULL) {
+			SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
+			rc = -1;
+			goto out;
+		}
+
+		/* TODO check rc, add virtio_dev_deinit() */
+		virtio_init_device(vdev, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
+		virtio_dev_start(vdev);
+
+		base->vdev = vdev;
+		TAILQ_INIT(&base->found_disks);
+
+		spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,
+				       spdk_env_get_current_core(), 0);
+
+		scan_target(base);
 	}
 
-	/* TODO check rc, add virtio_dev_deinit() */
-	virtio_init_device(vdev, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
-	virtio_dev_start(vdev);
-
-	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
-
-	base->vdev = vdev;
-	TAILQ_INIT(&base->found_disks);
-
-	spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,
-			       spdk_env_get_current_core(), 0);
-
-	scan_target(base);
 	return 0;
 
 out:
