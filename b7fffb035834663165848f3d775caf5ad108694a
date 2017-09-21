@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d164e403_0a4a5a11",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T16:54:25Z",
+      "side": 1,
+      "message": "This should probably be #include \u003clibpmemblk.h\u003e since this is expected to be a system header, not part of SPDK.",
+      "revId": "b7fffb035834663165848f3d775caf5ad108694a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f4044d4_33ad166c",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T16:54:25Z",
+      "side": 1,
+      "message": "This should use spdk_bdev_io_get_buf() in order to support callers that want the bdev layer to allocate the buffer.",
+      "revId": "b7fffb035834663165848f3d775caf5ad108694a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c48d80bb_4c39f574",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T16:54:25Z",
+      "side": 1,
+      "message": "It looks like the current flush implementation doesn\u0027t do anything - if we don\u0027t need to have a flush, we can just turn write_cache off and remove the flush function.",
+      "revId": "b7fffb035834663165848f3d775caf5ad108694a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9c2ce10_a1e42fa3",
+        "filename": "lib/bdev/pmem/bdev_pmem.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T16:54:25Z",
+      "side": 1,
+      "message": "All non-static names need an spdk_ prefix to avoid polluting the global namespace when we are statically linking.",
+      "range": {
+        "startLine": 41,
+        "startChar": 18,
+        "endLine": 41,
+        "endChar": 34
+      },
+      "revId": "b7fffb035834663165848f3d775caf5ad108694a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "689add96_67cf3074",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T16:54:25Z",
+      "side": 1,
+      "message": "This should probably be SPDK_TRACE_BDEV_PMEM.",
+      "range": {
+        "startLine": 66,
+        "startChar": 16,
+        "endLine": 66,
+        "endChar": 38
+      },
+      "revId": "b7fffb035834663165848f3d775caf5ad108694a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
