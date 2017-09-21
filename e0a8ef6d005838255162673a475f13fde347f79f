@@ -124,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "3d252f0a_50fdf32b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 1578,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-09-21T01:25:32Z",
+      "side": 1,
+      "message": "Hi Ben, yes, previously I also tried the method you mentioned about 2), make the md pages chain as double linked and go through all md pages in order, and if the md is not 0, try to find all the upstream md pages until the first md page(sequence num is 0), but it seems make the logic too complex, the logic now is much more simple and also do the same work. for the md page valid check, I use the reserved field before, Paul\u0027s comments is the crc is make more sense, I am OK with your propose to use the page id. So I will leave both CRC check and page id check in the code, you can discuss about this little more.",
+      "parentUuid": "95993438_df867f7a",
+      "revId": "e0a8ef6d005838255162673a475f13fde347f79f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "044c20c4_8f792762",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 41
