@@ -318,6 +318,12 @@ virtio_dev_start(struct virtio_dev *vdev)
 	return VTPCI_OPS(vdev)->set_enabled(vdev, 1);
 }
 
+void
+virtio_dev_stop(struct virtio_dev *vdev)
+{
+	VTPCI_OPS(vdev)->set_enabled(vdev, 0);
+}
+
 static struct virtio_hw *g_pci_hw = NULL;
 
 struct virtio_dev *

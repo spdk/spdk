@@ -80,6 +80,7 @@ uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
 int virtio_dev_init(struct virtio_dev *vdev, uint64_t req_features);
 void virtio_dev_deinit(struct virtio_dev *vdev);
 int virtio_dev_start(struct virtio_dev *vdev);
+void virtio_dev_stop(struct virtio_dev *vdev);
 struct virtio_dev *get_pci_virtio_hw(void);
 int virtio_dev_init_queue(struct virtio_dev *vdev, uint16_t vtpci_queue_idx);
 void virtio_dev_free_queue(struct virtio_dev *vdev, uint16_t queue_idx);
