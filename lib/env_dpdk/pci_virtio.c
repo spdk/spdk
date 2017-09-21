@@ -63,7 +63,7 @@ static struct spdk_pci_enum_ctx g_virtio_pci_drv = {
 
 int
 spdk_pci_virtio_device_attach(spdk_pci_enum_cb enum_cb,
-			    void *enum_ctx, struct spdk_pci_addr *pci_address)
+			      void *enum_ctx, struct spdk_pci_addr *pci_address)
 {
 	return spdk_pci_device_attach(&g_virtio_pci_drv, enum_cb, enum_ctx, pci_address);
 }

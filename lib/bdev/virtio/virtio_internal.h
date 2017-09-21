@@ -64,4 +64,10 @@ struct virtio_hw {
 	TAILQ_ENTRY(virtio_hw)		tailq;
 };
 
+struct virtio_driver {
+	TAILQ_HEAD(, virtio_hw)		vdevs;
+};
+
+extern struct virtio_driver g_spdk_virtio_driver;
+
 #endif /* SPDK_BDEV_VIRTIO_INTERNAL_H */

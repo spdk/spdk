@@ -469,6 +469,9 @@ bdev_virtio_initialize(void)
 	uint32_t i;
 	int rc = 0;
 
+	/* TODO Add "Enable Yes" entry */
+	vtpci_init();
+
 	if (sp == NULL) {
 		goto out;
 	}
@@ -486,8 +489,6 @@ bdev_virtio_initialize(void)
 				continue;
 			}
 			vdev = virtio_user_dev_init(path, 1, 512);
-		} else if (!strcmp("Pci", type)) {
-			vdev = get_pci_virtio_hw();
 		} else {
 			SPDK_ERRLOG("Invalid type %s specified for index %d\n", type, i);
 			continue;
@@ -495,7 +496,11 @@ bdev_virtio_initialize(void)
 	}
 
 	if (vdev == NULL) {
-		goto out;
+		if (TAILQ_EMPTY(&g_spdk_virtio_driver.vdevs)) {
+			goto out;
+		}
+
+		vdev = &TAILQ_FIRST(&g_spdk_virtio_driver.vdevs)->vdev;
 	}
 
 	base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);

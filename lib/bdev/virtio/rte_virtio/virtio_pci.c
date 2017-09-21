@@ -43,6 +43,7 @@
 #include "virtio_logs.h"
 #include "virtio_queue.h"
 
+struct virtio_driver g_spdk_virtio_driver;
 struct vtpci_internal virtio_hw_internal[128];
 
 /*
@@ -686,28 +687,27 @@ next:
 	return 0;
 }
 
-/*
- * Return -1:
- *   if there is error mapping with VFIO/UIO.
- *   if port map error when driver type is KDRV_NONE.
- *   if whitelisted but driver type is KDRV_UNKNOWN.
- * Return 1 if kernel driver is managing the device.
- * Return 0 on success.
- */
-int
-vtpci_init(struct spdk_pci_device *dev, struct virtio_dev *vdev)
+static int
+pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(vdev);
+	struct virtio_hw *hw;
+	struct virtio_dev *vdev;
+
+	hw = calloc(1, sizeof(*hw));
+	vdev = &hw->vdev;
+	vdev->is_hw = 1;
+	hw->pci_dev = pci_dev;
 
 	/*
 	 * Try if we can succeed reading virtio pci caps, which exists
 	 * only on modern pci device. If failed, we fallback to legacy
 	 * virtio handling.
 	 */
-	if (virtio_read_caps(dev, hw) == 0) {
+	if (virtio_read_caps(pci_dev, hw) == 0) {
 		PMD_INIT_LOG(INFO, "modern virtio pci detected.");
 		virtio_hw_internal[vdev->port_id].vtpci_ops = &modern_ops;
 		vdev->modern = 1;
+		TAILQ_INSERT_TAIL(&g_spdk_virtio_driver.vdevs, hw, tailq);
 		return 0;
 	}
 
@@ -729,5 +729,18 @@ vtpci_init(struct spdk_pci_device *dev, struct virtio_dev *vdev)
 	virtio_hw_internal[vdev->port_id].vtpci_ops = &legacy_ops;
 	vdev->modern   = 0;
 
+	TAILQ_INSERT_TAIL(&g_spdk_virtio_driver.vdevs, hw, tailq);
 	return 0;
+}
+
+int
+vtpci_init(void)
+{
+	if (!spdk_process_is_primary()) {
+		PMD_INIT_LOG(INFO, "virtio_pci secondary process support is not implemented yet.");
+		return 0;
+	}
+
+	TAILQ_INIT(&g_spdk_virtio_driver.vdevs);
+	return spdk_pci_virtio_enumerate(pci_enum_virtio_probe_cb, NULL);
 }
