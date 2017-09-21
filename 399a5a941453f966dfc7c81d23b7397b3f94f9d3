@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80df36bc_810371b3",
+        "filename": "test/nvmf/pmem/nvmf_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T10:43:41Z",
+      "side": 1,
+      "message": "That\u0027s not 128k. 1024 * 128 \u003d ...?",
+      "range": {
+        "startLine": 69,
+        "startChar": 28,
+        "endLine": 69,
+        "endChar": 31
+      },
+      "revId": "399a5a941453f966dfc7c81d23b7397b3f94f9d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1770dcb6_9826f916",
+        "filename": "test/nvmf/pmem/nvmf_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-21T10:43:41Z",
+      "side": 1,
+      "message": "should be tab",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 4
+      },
+      "revId": "399a5a941453f966dfc7c81d23b7397b3f94f9d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
