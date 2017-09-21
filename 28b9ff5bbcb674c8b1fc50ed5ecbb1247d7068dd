@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d81668cf_34f99368",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:07:54Z",
+      "side": 1,
+      "message": "This should wrap everything in a top-level object named \"pmem\" (which will end up inside \"driver_specific\") so that the user can tell what type of bdev module the information is for.",
+      "revId": "28b9ff5bbcb674c8b1fc50ed5ecbb1247d7068dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41a34385_d7782fb6",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:07:54Z",
+      "side": 1,
+      "message": "strncpy() can leave the destination unterminated; this should probably be:\n\n  snprintf(pdisk-\u003epmem_file, sizeof(pdisk-\u003epmem_file), \"%s\", pmem_file);\n\nAlternatively, we can change pdisk-\u003epmem_file to a char * and use strdup() to remove the size limitation.",
+      "revId": "28b9ff5bbcb674c8b1fc50ed5ecbb1247d7068dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8db1c8e0_30203e9a",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-21T17:07:54Z",
+      "side": 1,
+      "message": "Unrelated whitespace change.",
+      "revId": "28b9ff5bbcb674c8b1fc50ed5ecbb1247d7068dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
