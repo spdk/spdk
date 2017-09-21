@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5ebc7f1_34c31332",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-21T12:38:35Z",
+      "side": 1,
+      "message": "This test is working but need some cleanup.",
+      "range": {
+        "startLine": 396,
+        "startChar": 0,
+        "endLine": 396,
+        "endChar": 24
+      },
+      "revId": "e2dce026d9b6405620f3befa1be5e96a8d4eb052",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
