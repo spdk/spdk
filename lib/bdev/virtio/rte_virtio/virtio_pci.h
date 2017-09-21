@@ -211,17 +211,6 @@ struct virtio_pci_ops {
 	void (*notify_queue)(struct virtio_dev *hw, struct virtqueue *vq);
 };
 
-struct virtio_hw {
-	struct virtio_dev vdev;
-	uint8_t	    use_msix;
-	uint32_t    notify_off_multiplier;
-	uint8_t     *isr;
-	uint16_t    *notify_base;
-	struct virtio_pci_common_cfg *common_cfg;
-	struct rte_pci_device *pci_dev;
-	struct virtio_scsi_config *dev_cfg;
-};
-
 /*
  * While virtio_hw is stored in shared memory, this structure stores
  * some infos that may vary in the multiple process model locally.

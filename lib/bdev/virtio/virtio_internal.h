@@ -36,4 +36,26 @@
 
 #include "spdk/stdinc.h"
 
+struct virtio_dev {
+	struct virtqueue		**vqs;
+	uint16_t			started;
+	uint32_t			max_queues;
+	uint8_t				port_id;
+	uint64_t			req_guest_features;
+	uint64_t			guest_features;
+	int				is_hw;
+	uint8_t				modern;
+};
+
+struct virtio_hw {
+	struct virtio_dev		vdev;
+	uint8_t				use_msix;
+	uint32_t			notify_off_multiplier;
+	uint8_t				*isr;
+	uint16_t			*notify_base;
+	struct virtio_pci_common_cfg	*common_cfg;
+	struct rte_pci_device		*pci_dev;
+	struct virtio_scsi_config	*dev_cfg;
+};
+
 #endif /* SPDK_BDEV_VIRTIO_INTERNAL_H */

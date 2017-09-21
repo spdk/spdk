@@ -37,20 +37,7 @@
 #include <stdint.h>
 #include <sys/uio.h>
 
-#define VIRTIO_MAX_RX_QUEUES 128U
-#define VIRTIO_MAX_TX_QUEUES 128U
-#define VIRTIO_MIN_RX_BUFSIZE 64
-
-struct virtio_dev {
-	struct virtqueue **vqs;
-	uint16_t	started;
-	uint32_t	max_queues;
-	uint8_t		port_id;
-	uint64_t	req_guest_features;
-	uint64_t	guest_features;
-	int		is_hw;
-	uint8_t		modern;
-};
+#include "../virtio_internal.h"
 
 struct virtio_req {
 	struct iovec	*iov;
