@@ -572,12 +572,13 @@ vtpci_isr(struct virtio_dev *dev)
 }
 
 static void *
-get_cfg_addr(struct rte_pci_device *dev, struct virtio_pci_cap *cap)
+get_cfg_addr(struct spdk_pci_device *dev, struct virtio_pci_cap *cap)
 {
 	uint8_t  bar    = cap->bar;
 	uint32_t length = cap->length;
 	uint32_t offset = cap->offset;
-	uint8_t *base;
+	uint8_t *bar_vaddr;
+	uint64_t bar_paddr, bar_len;
 
 	if (bar > 5) {
 		PMD_INIT_LOG(ERR, "invalid bar: %u", bar);
@@ -590,37 +591,43 @@ get_cfg_addr(struct rte_pci_device *dev, struct virtio_pci_cap *cap)
 		return NULL;
 	}
 
-	if (offset + length > dev->mem_resource[bar].len) {
+	spdk_pci_device_map_bar(dev, bar, (void *) &bar_vaddr, &bar_paddr, &bar_len);
+	/* FIXME the bar should be also unmapped.
+	 * However, current spdk_pci_device_map_bar
+	 * implementation doesn't alloc anything,
+	 * so there's no leak whatsoever.
+	 */
+
+	if (offset + length > bar_len) {
 		PMD_INIT_LOG(ERR,
 			"invalid cap: overflows bar space: %u > %" PRIu64,
 			offset + length, dev->mem_resource[bar].len);
 		return NULL;
 	}
 
-	base = dev->mem_resource[bar].addr;
-	if (base == NULL) {
+	if (bar_vaddr == NULL) {
 		PMD_INIT_LOG(ERR, "bar %u base addr is NULL", bar);
 		return NULL;
 	}
 
-	return base + offset;
+	return bar_vaddr + offset;
 }
 
 static int
-virtio_read_caps(struct rte_pci_device *dev, struct virtio_hw *hw)
+virtio_read_caps(struct spdk_pci_device *dev, struct virtio_hw *hw)
 {
 	uint8_t pos;
 	struct virtio_pci_cap cap;
 	int ret;
 
-	ret = rte_pci_read_config(dev, &pos, 1, PCI_CAPABILITY_LIST);
+	ret = spdk_pci_device_cfg_read(dev, &pos, 1, PCI_CAPABILITY_LIST);
 	if (ret < 0) {
 		PMD_INIT_LOG(DEBUG, "failed to read pci capability list");
 		return -1;
 	}
 
 	while (pos) {
-		ret = rte_pci_read_config(dev, &cap, sizeof(cap), pos);
+		ret = spdk_pci_device_cfg_read(dev, &cap, sizeof(cap), pos);
 		if (ret < 0) {
 			PMD_INIT_LOG(ERR,
 				"failed to read pci cap at pos: %x", pos);
@@ -646,7 +653,7 @@ virtio_read_caps(struct rte_pci_device *dev, struct virtio_hw *hw)
 			hw->common_cfg = get_cfg_addr(dev, &cap);
 			break;
 		case VIRTIO_PCI_CAP_NOTIFY_CFG:
-			rte_pci_read_config(dev, &hw->notify_off_multiplier,
+			spdk_pci_device_cfg_read(dev, &hw->notify_off_multiplier,
 					4, pos + sizeof(cap));
 			hw->notify_base = get_cfg_addr(dev, &cap);
 			break;
@@ -688,7 +695,7 @@ next:
  * Return 0 on success.
  */
 int
-vtpci_init(struct rte_pci_device *dev, struct virtio_dev *vdev)
+vtpci_init(struct spdk_pci_device *dev, struct virtio_dev *vdev)
 {
 	struct virtio_hw *hw = virtio_dev_get_hw(vdev);
 

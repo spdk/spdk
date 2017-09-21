@@ -381,7 +381,7 @@ static int virtio_pci_probe(struct rte_pci_driver *pci_drv __rte_unused,
 
 	hw = calloc(1, sizeof(*hw));
 	hw->vdev.is_hw = 1;
-	hw->pci_dev = pci_dev;
+	hw->pci_dev = (struct spdk_pci_device *) pci_dev;
 
 	g_pci_hw = hw;
 
