@@ -315,35 +315,7 @@ virtio_dev_deinit(struct virtio_dev *vdev)
 int
 virtio_dev_start(struct virtio_dev *vdev)
 {
-	struct virtnet_tx *txvq __rte_unused;
-
-	/* Enable uio/vfio intr/eventfd mapping: althrough we already did that
-	 * in device configure, but it could be unmapped  when device is
-	 * stopped.
-	 */
-	/** TODO: interrupt handling for virtio_scsi */
-#if 0
-	if (dev->data->dev_conf.intr_conf.lsc ||
-	    dev->data->dev_conf.intr_conf.rxq) {
-		rte_intr_disable(dev->intr_handle);
-
-		if (rte_intr_enable(dev->intr_handle) < 0) {
-			PMD_DRV_LOG(ERR, "interrupt enable failed");
-			return -EIO;
-		}
-	}
-#endif
-
-	if (!vdev->is_hw) {
-		/* FIXME temporary */
-		virtio_user_start_device((struct virtio_user_dev *) vdev);
-	}
-
-	PMD_INIT_LOG(DEBUG, "Notified backend at initialization");
-
-	vdev->started = 1;
-
-	return 0;
+	return VTPCI_OPS(vdev)->set_enabled(vdev, 1);
 }
 
 static struct virtio_hw *g_pci_hw = NULL;

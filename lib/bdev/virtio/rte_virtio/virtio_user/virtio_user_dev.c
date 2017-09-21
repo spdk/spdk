@@ -42,6 +42,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include "vhost.h"
 #include "virtio_user_dev.h"
@@ -160,6 +161,7 @@ virtio_user_start_device(struct virtio_user_dev *dev)
 	if (virtio_user_queue_setup(dev, virtio_user_kick_queue) < 0)
 		goto error;
 
+	dev->vdev.started = 1;
 	return 0;
 error:
 	/* TODO: free resource here or caller to check */
@@ -168,7 +170,13 @@ error:
 
 int virtio_user_stop_device(struct virtio_user_dev *dev)
 {
-	return virtio_user_queue_setup(dev, virtio_user_stop_queue);
+	int rc;
+
+	rc = virtio_user_queue_setup(dev, virtio_user_stop_queue);
+	assert(rc == 0);
+	dev->vdev.started = 0;
+
+	return rc;
 }
 
 int

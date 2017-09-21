@@ -197,9 +197,8 @@ struct virtio_pci_ops {
 	void     (*set_features)(struct virtio_dev *vdev, uint64_t features);
 
 	uint8_t (*get_isr)(struct virtio_dev *vdev);
-
+	int (*set_enabled)(struct virtio_dev *vdev, int enabled);
 	uint16_t (*set_config_irq)(struct virtio_dev *vdev, uint16_t vec);
-
 	uint16_t (*set_queue_irq)(struct virtio_dev *vdev, struct virtqueue *vq,
 			uint16_t vec);
 

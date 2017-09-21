@@ -113,6 +113,26 @@ virtio_user_get_isr(struct virtio_dev *vdev __rte_unused)
 	return VIRTIO_PCI_ISR_CONFIG;
 }
 
+static int
+virtio_user_set_enabled(struct virtio_dev *vdev, int enabled)
+{
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	int rc;
+
+	if (enabled == vdev->started) {
+		PMD_DRV_LOG(DEBUG, "vdev %u is already in state %d", vdev->port_id, enabled);
+		return 0;
+	}
+
+	if (enabled) {
+		rc = virtio_user_start_device(dev);
+	} else {
+		rc = virtio_user_stop_device(dev);
+	}
+
+	return -rc;
+}
+
 static uint16_t
 virtio_user_set_config_irq(struct virtio_dev *vdev __rte_unused,
 		    uint16_t vec __rte_unused)
@@ -228,6 +248,7 @@ const struct virtio_pci_ops virtio_user_ops = {
 	.get_features	= virtio_user_get_features,
 	.set_features	= virtio_user_set_features,
 	.get_isr	= virtio_user_get_isr,
+	.set_enabled	= virtio_user_set_enabled,
 	.set_config_irq	= virtio_user_set_config_irq,
 	.set_queue_irq	= virtio_user_set_queue_irq,
 	.get_queue_num	= virtio_user_get_queue_num,

@@ -79,6 +79,13 @@ check_vq_phys_addr_ok(struct virtqueue *vq)
 	return 1;
 }
 
+static int
+virtio_pci_set_enabled(struct virtio_dev *vdev, int enabled)
+{
+	/** TODO: interrupt handling for virtio_scsi */
+	return 0;
+}
+
 /*
  * Since we are in legacy mode:
  * http://ozlabs.org/~rusty/virtio-spec/virtio-0.9.5.pdf
@@ -282,6 +289,7 @@ const struct virtio_pci_ops legacy_ops = {
 	.set_status	= legacy_set_status,
 	.get_features	= legacy_get_features,
 	.set_features	= legacy_set_features,
+	.set_enabled	= virtio_pci_set_enabled,
 	.get_isr	= legacy_get_isr,
 	.set_config_irq	= legacy_set_config_irq,
 	.set_queue_irq  = legacy_set_queue_irq,
@@ -483,6 +491,7 @@ const struct virtio_pci_ops modern_ops = {
 	.get_features	= modern_get_features,
 	.set_features	= modern_set_features,
 	.get_isr	= modern_get_isr,
+	.set_enabled	= virtio_pci_set_enabled,
 	.set_config_irq	= modern_set_config_irq,
 	.set_queue_irq  = modern_set_queue_irq,
 	.get_queue_num	= modern_get_queue_num,
