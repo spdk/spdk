@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ea842ea8_92120a31",
+        "filename": ".travis.yml",
+        "patchSetId": 4
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-21T12:01:35Z",
+      "side": 1,
+      "message": "I\u0027ve removed this dependency as it is not available as Ubuntu package.",
+      "parentUuid": "9911b914_0e2c78f7",
+      "revId": "fe748a90aa1ebd6de44d930f3795499f6138ac60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "21a9c139_5ba2ccd2",
         "filename": "configure",
         "patchSetId": 4
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "69db4abf_49df9930",
+        "filename": "configure",
+        "patchSetId": 4
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-21T12:01:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "21a9c139_5ba2ccd2",
+      "revId": "fe748a90aa1ebd6de44d930f3795499f6138ac60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb03389f_e288526a",
         "filename": "lib/bdev/Makefile",
         "patchSetId": 4
@@ -47,6 +83,24 @@
       "writtenOn": "2017-09-20T17:36:03Z",
       "side": 1,
       "message": "This can be simplified to:\n\n  DIRS-$(CONFIG_NVML) +\u003d pmem",
+      "revId": "fe748a90aa1ebd6de44d930f3795499f6138ac60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "943dfcb2_b59c57ba",
+        "filename": "lib/bdev/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-21T12:01:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bb03389f_e288526a",
       "revId": "fe748a90aa1ebd6de44d930f3795499f6138ac60",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
