@@ -1,0 +1,169 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "583b605c_cbf83ed9",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T20:03:35Z",
+      "side": 1,
+      "message": "This copyright line can probably be dropped, assuming you didn\u0027t use something from iscsi_tgt here.",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe033a68_5c726ce5",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T20:03:35Z",
+      "side": 1,
+      "message": "I think this should be static.",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "684b4278_2f15374b",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T20:03:35Z",
+      "side": 1,
+      "message": "Read still needs spdk_bdev_io_get_buf() support.",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f2b6cea_8c15919d",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T20:03:35Z",
+      "side": 1,
+      "message": "It would be better if the user could specify the bdev name here - just like NVMe, AIO, etc. bdevs.",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8262d13f_2aec3ba7",
+        "filename": "lib/bdev/pmem/bdev_pmem.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T20:03:35Z",
+      "side": 1,
+      "message": "Fix copy-paste error (SPDK_BDEV_MALLOC_H -\u003e SPDK_BDEV_PMEM_H)",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 26
+      },
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1799d6c4_261abcf0",
+        "filename": "lib/bdev/pmem/bdev_pmem.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T20:03:35Z",
+      "side": 1,
+      "message": "Add spdk_ prefix. (For extra clarity, this should probably be spdk_bdev_pmem_create() or something similar.)",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "deb64a86_cdaeadab",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T20:03:35Z",
+      "side": 1,
+      "message": "We should also allow the user to specify the bdev name in the RPC (see construct_aio_bdev, for example).",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2e28c13_766eb453",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T20:03:35Z",
+      "side": 1,
+      "message": "SPDK_TRACE_BDEV_MALLOC -\u003e SPDK_TRACE_BDEV_PMEM",
+      "range": {
+        "startLine": 66,
+        "startChar": 16,
+        "endLine": 66,
+        "endChar": 38
+      },
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5ef05d0_d6305737",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T20:03:35Z",
+      "side": 1,
+      "message": "This path still has a memleak - need to call free_rpc_construct_pmem_bdev() before returning.",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
