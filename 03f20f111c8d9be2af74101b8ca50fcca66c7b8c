@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0746217f_01401d0c",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-22T12:14:36Z",
+      "side": 1,
+      "message": "overall this is correct, but why do we need io module for that?\nIsn\u0027t just open() sufficient?",
+      "range": {
+        "startLine": 334,
+        "startChar": 13,
+        "endLine": 334,
+        "endChar": 20
+      },
+      "revId": "03f20f111c8d9be2af74101b8ca50fcca66c7b8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98978c74_c67ebee6",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-22T12:14:36Z",
+      "side": 1,
+      "message": "nbd.pid contains only a single line with pid number; pretty sure we don\u0027t need split here",
+      "range": {
+        "startLine": 335,
+        "startChar": 38,
+        "endLine": 335,
+        "endChar": 46
+      },
+      "revId": "03f20f111c8d9be2af74101b8ca50fcca66c7b8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bc0955f_a966183c",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-22T12:14:36Z",
+      "side": 1,
+      "message": "You are checking if you\u0027ve read some value from nbd.pid instead of checking if process is still alive. That\u0027s not what we want.",
+      "range": {
+        "startLine": 336,
+        "startChar": 12,
+        "endLine": 338,
+        "endChar": 24
+      },
+      "revId": "03f20f111c8d9be2af74101b8ca50fcca66c7b8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
