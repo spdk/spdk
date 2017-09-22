@@ -147,6 +147,7 @@ static bool g_latency_ssd_tracking_enable = false;
 static int g_latency_sw_tracking_level = 0;
 
 static struct ctrlr_entry *g_controllers = NULL;
+static int g_controllers_found = 0;
 static struct ns_entry *g_namespaces = NULL;
 static int g_num_namespaces = 0;
 static struct worker_thread *g_workers = NULL;
@@ -1202,6 +1203,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct spdk_pci_device	*pci_dev;
 	struct spdk_pci_id	pci_id;
 
+	g_controllers_found++;
 	if (trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		printf("Attached to NVMe over Fabrics controller at %s:%s: %s\n",
 		       trid->traddr, trid->trsvcid,
@@ -1363,6 +1365,11 @@ int main(int argc, char **argv)
 	if (register_controllers() != 0) {
 		rc = -1;
 		goto cleanup;
+	}
+
+	if (g_controllers_found == 0) {
+		fprintf(stderr, "No NVMe controllers found.\n");
+		return 0;
 	}
 
 	if (associate_workers_with_ns() != 0) {
