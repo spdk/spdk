@@ -1385,7 +1385,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	bs->num_free_clusters = bs->total_clusters;
 	bs->used_clusters = spdk_bit_array_create(bs->total_clusters);
 	if (bs->used_clusters == NULL) {
-		_spdk_bs_free(bs);
+		free(bs);
 		return NULL;
 	}
 
