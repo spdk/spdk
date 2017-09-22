@@ -1362,10 +1362,23 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
 }
 
+static int
+_spdk_bs_opts_verify(struct spdk_bs_opts *opts)
+{
+	if (opts->cluster_sz == 0 || opts->num_md_pages == 0 || opts->max_md_ops == 0 ||
+	    opts->max_channel_ops == 0) {
+		SPDK_ERRLOG("Blobstore options cannot be set to 0\n");
+		return -1;
+	}
+
+	return 0;
+}
+
 static struct spdk_blob_store *
 _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 {
 	struct spdk_blob_store	*bs;
+	uint64_t dev_size;
 
 	bs = calloc(1, sizeof(struct spdk_blob_store));
 	if (!bs) {
@@ -1380,13 +1393,27 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	 *  even multiple of the cluster size.
 	 */
 	bs->cluster_sz = opts->cluster_sz;
+	dev_size = dev->blocklen * dev->blockcnt;
+	if (dev_size < bs->cluster_sz) {
+		/* Device size cannot be smaller than cluster size of blobstore */
+		SPDK_ERRLOG("Device size %" PRIu64 " is smaller than cluster size %d\n", dev_size,
+			    opts->cluster_sz);
+		goto failure;
+	}
+
 	bs->total_clusters = dev->blockcnt / (bs->cluster_sz / dev->blocklen);
 	bs->pages_per_cluster = bs->cluster_sz / SPDK_BS_PAGE_SIZE;
+	if (bs->pages_per_cluster < 2) {
+		/* Minimum of two pages per cluster have to be used, atleast one  */
+		SPDK_ERRLOG("Minimum cluster size can be %d, but %d was set\n", SPDK_BS_PAGE_SIZE * 2,
+			    opts->cluster_sz);
+		goto failure;
+	}
+
 	bs->num_free_clusters = bs->total_clusters;
 	bs->used_clusters = spdk_bit_array_create(bs->total_clusters);
 	if (bs->used_clusters == NULL) {
-		free(bs);
-		return NULL;
+		goto failure;
 	}
 
 	bs->md_target.max_md_ops = opts->max_md_ops;
@@ -1404,6 +1431,10 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 				sizeof(struct spdk_bs_channel));
 
 	return bs;
+
+failure:
+	free(bs);
+	return NULL;
 }
 
 /* START spdk_bs_load */
@@ -1710,6 +1741,11 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		opts = *o;
 	} else {
 		spdk_bs_opts_init(&opts);
+	}
+
+	if (_spdk_bs_opts_verify(&opts) != 0) {
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
 	}
 
 	bs = _spdk_bs_alloc(dev, &opts);
