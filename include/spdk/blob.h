@@ -173,7 +173,7 @@ void spdk_bs_get_super(struct spdk_blob_store *bs,
 		       spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
 /* Get the blobstore type and uuid. */
-const char * spdk_bs_get_type(struct spdk_blob_store *bs);
+const char *spdk_bs_get_type(struct spdk_blob_store *bs);
 
 /* Get the cluster size in bytes. Used in the extend operation. */
 uint64_t spdk_bs_get_cluster_size(struct spdk_blob_store *bs);
