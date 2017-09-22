@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07d274a6_12e084d7",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T17:04:58Z",
+      "side": 1,
+      "message": "Maybe \"max_queues\" to match the variable name?",
+      "range": {
+        "startLine": 236,
+        "startChar": 26,
+        "endLine": 236,
+        "endChar": 35
+      },
+      "revId": "aa11a3a1fbd829a15e45fc60663cf8be72f8e1d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "502f3d8e_3d42481f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T17:04:58Z",
+      "side": 1,
+      "message": "This should be moved down to the end of the function so all of the fields are within the virtio object.",
+      "range": {
+        "startLine": 239,
+        "startChar": 1,
+        "endLine": 239,
+        "endChar": 27
+      },
+      "revId": "aa11a3a1fbd829a15e45fc60663cf8be72f8e1d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9882748c_414bf071",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T17:04:58Z",
+      "side": 1,
+      "message": "These should all be in hex (%x rather than %u).",
+      "range": {
+        "startLine": 245,
+        "startChar": 31,
+        "endLine": 245,
+        "endChar": 34
+      },
+      "revId": "aa11a3a1fbd829a15e45fc60663cf8be72f8e1d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42e5fac5_4d3f2f65",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T17:04:58Z",
+      "side": 1,
+      "message": "You can simplify this with spdk_json_write_string_fmt(), which takes a printf-style format string.",
+      "range": {
+        "startLine": 248,
+        "startChar": 2,
+        "endLine": 248,
+        "endChar": 24
+      },
+      "revId": "aa11a3a1fbd829a15e45fc60663cf8be72f8e1d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
