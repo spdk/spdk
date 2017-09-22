@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09426bdb_a274fda3",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-22T23:16:42Z",
+      "side": 1,
+      "message": "Could you change it to be more descriptive?  For example \"UNMAP/WRITE_ZEROES not supported yet, but returning success\".  As it is now, it is basically identical to the message on line 394.\n\nThen when someone sees this message, it will be more clear what the \u0027problem\u0027 is.",
+      "revId": "1a9f98f75382e2e05efd0182604d28b5a2eeef58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
