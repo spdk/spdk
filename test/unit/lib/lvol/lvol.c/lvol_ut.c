@@ -57,6 +57,13 @@ struct spdk_lvol *g_lvol;
 struct spdk_bs_opts g_bs_opts;
 struct spdk_blob_store {};
 
+void
+spdk_bs_set_super(struct spdk_blob_store *bs, spdk_blob_id blobid,
+		  spdk_bs_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, 0);
+}
+
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
 	return NULL;
