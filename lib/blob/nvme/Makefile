@@ -31,13 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS)
-C_SRCS = blobstore.c request.c
-LIBNAME = blob
-
-DIRS-y += bdev nvme
+C_SRCS = blob_nvme.c
+LIBNAME = blob_nvme
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
