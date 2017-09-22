@@ -48,28 +48,125 @@ divide_round_up(size_t num, size_t divisor)
 }
 
 static void
-_lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
+_spdk_super_create_close_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+
+	if (lvolerrno < 0) {
+		SPDK_ERRLOG("Lvol store init failed: could not close super blob\n");
+		free(lvs);
+	}
+
+	req->cb_fn(req->cb_arg, lvs, lvolerrno);
+	free(req);
+}
+
+static void
+_spdk_super_blob_set_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+	struct spdk_blob *blob = lvs->super_blob;
+
+	if (lvolerrno < 0) {
+		req->cb_fn(req->cb_arg, NULL, lvolerrno);
+		SPDK_ERRLOG("Lvol store init failed: could not set uuid for super blob\n");
+		free(lvs);
+		free(req);
+		return;
+	}
+
+	spdk_bs_md_close_blob(&blob, _spdk_super_create_close_cb, req);
+}
+
+static void
+_spdk_super_blob_init_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+	struct spdk_blob *blob = lvs->super_blob;
+	char uuid[UUID_STRING_LEN];
+
+	if (lvolerrno < 0) {
+		req->cb_fn(req->cb_arg, NULL, lvolerrno);
+		SPDK_ERRLOG("Lvol store init failed: could not set super blob\n");
+		free(lvs);
+		free(req);
+		return;
+	}
+
+	uuid_unparse(lvs->uuid, uuid);
+
+	spdk_blob_md_set_xattr(blob, "uuid", uuid, UUID_STRING_LEN);
+	spdk_bs_md_sync_blob(blob, _spdk_super_blob_set_cb, req);
+}
+
+static void
+_spdk_super_blob_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+
+	if (lvolerrno < 0) {
+		req->cb_fn(req->cb_arg, NULL, lvolerrno);
+		SPDK_ERRLOG("Lvol store init failed: could not open super blob\n");
+		free(lvs);
+		free(req);
+		return;
+	}
+
+	lvs->super_blob = blob;
+	lvs->super_blob_id = spdk_blob_get_id(blob);
+
+	spdk_bs_set_super(lvs->blobstore, lvs->super_blob_id, _spdk_super_blob_init_cb, req);
+}
+
+static void
+_spdk_super_blob_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = cb_arg;
+	struct spdk_lvol_store *lvs = req->lvol_store;
+	struct spdk_blob_store *bs;
+
+	if (lvolerrno < 0) {
+		req->cb_fn(req->cb_arg, NULL, lvolerrno);
+		SPDK_ERRLOG("Lvol store init failed: could not create super blob\n");
+		free(lvs);
+		free(req);
+		return;
+	}
+
+	bs = req->lvol_store->blobstore;
+
+	spdk_bs_md_open_blob(bs, blobid, _spdk_super_blob_create_open_cb, req);
+}
+
+static void
+_spdk_lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 {
 	struct spdk_lvs_with_handle_req *lvs_req = cb_arg;
 	struct spdk_lvol_store *lvs = lvs_req->lvol_store;
 
 	if (lvserrno != 0) {
 		assert(bs == NULL);
+		lvs_req->cb_fn(lvs_req->cb_arg, NULL, lvserrno);
 		SPDK_ERRLOG("Lvol store init failed: could not initialize blobstore\n");
 		free(lvs);
-		lvs = NULL;
-	} else {
-		assert(bs != NULL);
-		lvs->blobstore = bs;
-		TAILQ_INIT(&lvs->lvols);
-		lvs->total_blocks = (spdk_bs_get_cluster_size(bs) * spdk_bs_free_cluster_count(
-					     bs)) / spdk_bs_get_page_size(bs);
-
-		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store initialized\n");
+		free(lvs_req);
+		return;
 	}
-	assert(lvs_req->cb_fn != NULL);
-	lvs_req->cb_fn(lvs_req->cb_arg, lvs, lvserrno);
-	free(lvs_req);
+
+	assert(bs != NULL);
+	lvs->blobstore = bs;
+	TAILQ_INIT(&lvs->lvols);
+	lvs->total_blocks = (spdk_bs_get_cluster_size(bs) * spdk_bs_free_cluster_count(
+				     bs)) / spdk_bs_get_page_size(bs);
+
+	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store initialized\n");
+
+	/* create super blob */
+	spdk_bs_md_create_blob(lvs->blobstore, _spdk_super_blob_create_cb, lvs_req);
 }
 
 static void
@@ -113,13 +210,14 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		return -ENOMEM;
 	}
 
+	assert(cb_fn != NULL);
 	lvs_req->cb_fn = cb_fn;
 	lvs_req->cb_arg = cb_arg;
 	lvs_req->lvol_store = lvs;
 	lvs->bs_dev = bs_dev;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Initializing lvol store\n");
-	spdk_bs_init(bs_dev, &opts, _lvs_init_cb, lvs_req);
+	spdk_bs_init(bs_dev, &opts, _spdk_lvs_init_cb, lvs_req);
 
 	return 0;
 }
@@ -263,8 +361,6 @@ invalid:
 	assert(req->cb_fn != NULL);
 	req->cb_fn(req->cb_arg, NULL, lvolerrno);
 	free(req);
-	return;
-
 }
 
 static void
