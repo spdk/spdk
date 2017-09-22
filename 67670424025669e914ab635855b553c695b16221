@@ -22,6 +22,30 @@
       "revId": "67670424025669e914ab635855b553c695b16221",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "703f2abd_d64bed51",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1249,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-22T21:42:00Z",
+      "side": 1,
+      "message": "Good catch.",
+      "parentUuid": "4da32911_5d498c68",
+      "range": {
+        "startLine": 1249,
+        "startChar": 0,
+        "endLine": 1249,
+        "endChar": 41
+      },
+      "revId": "67670424025669e914ab635855b553c695b16221",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
