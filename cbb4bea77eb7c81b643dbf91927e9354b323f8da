@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7e1a0a8_c2ada40e",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-22T07:35:22Z",
+      "side": 1,
+      "message": "Why did you remove xe flags?",
+      "revId": "cbb4bea77eb7c81b643dbf91927e9354b323f8da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "390ed593_985ea120",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-22T07:35:22Z",
+      "side": 1,
+      "message": "whitespaces",
+      "range": {
+        "startLine": 99,
+        "startChar": 4,
+        "endLine": 99,
+        "endChar": 5
+      },
+      "revId": "cbb4bea77eb7c81b643dbf91927e9354b323f8da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba08883b_d5a3a65a",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-22T07:35:22Z",
+      "side": 1,
+      "message": "use tabs or spaces in whole file for consistency (up to you which you decide)",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 1
+      },
+      "revId": "cbb4bea77eb7c81b643dbf91927e9354b323f8da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac833e0f_f56b4980",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-22T07:35:22Z",
+      "side": 1,
+      "message": "please remove that conditional; if it\u0027s because nbd_kill will likely fail after we SIGTERM the app in the tests, then please rather remove x flag for kill operation",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 107,
+        "endChar": 70
+      },
+      "revId": "cbb4bea77eb7c81b643dbf91927e9354b323f8da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8405c6b7_5476d02f",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 26
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-22T07:35:22Z",
+      "side": 1,
+      "message": "Either remove whole function or just leave:\ndef test():\npass",
+      "range": {
+        "startLine": 166,
+        "startChar": 0,
+        "endLine": 171,
+        "endChar": 16
+      },
+      "revId": "cbb4bea77eb7c81b643dbf91927e9354b323f8da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1b6e2bd_88ea4935",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 26
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-22T07:35:22Z",
+      "side": 1,
+      "message": "You still do not check whether app was actually shut down or not. You should also check the return code after it\u0027s shutdown - in case of SIGTERM (Ctrl-C) the return code should be 0.",
+      "range": {
+        "startLine": 349,
+        "startChar": 16,
+        "endLine": 353,
+        "endChar": 28
+      },
+      "revId": "cbb4bea77eb7c81b643dbf91927e9354b323f8da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
