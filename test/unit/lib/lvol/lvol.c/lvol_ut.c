@@ -61,6 +61,13 @@ struct spdk_blob_store {
 	int stub;
 };
 
+void
+spdk_bs_set_super(struct spdk_blob_store *bs, spdk_blob_id blobid,
+		  spdk_bs_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, 0);
+}
+
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
 	return NULL;
