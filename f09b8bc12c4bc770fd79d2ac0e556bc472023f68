@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c8a6ac1_02b06562",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1407,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-22T18:00:45Z",
+      "side": 1,
+      "message": "Could you elaborate a little bit on why clusters need to be big enough to fit two pages?  It seems like page_size \u003d\u003d cluster_sz should be OK, but maybe I\u0027m missing some details.",
+      "revId": "f09b8bc12c4bc770fd79d2ac0e556bc472023f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
