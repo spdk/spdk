@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cef095a4_9cf330b1",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-22T23:32:46Z",
+      "side": 1,
+      "message": "Maybe we can skip this resize?  We had talked about having something associated with the super blob that would mark it as a lvolstore (rather than a blobfs or some other future blobstore use case).  You\u0027ve already added an xattr for the uuid - maybe we also add an xattr named \"bstype\" and set it to \"lvolstore\"?\n\nFYI - xattr information is stored in the metadata page, so you could do all of this without allocating a cluster for data.",
+      "revId": "fba4efd24f718b668a40670ca03f9604e3eef8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be0e9177_f3d73a4c",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-22T23:32:46Z",
+      "side": 1,
+      "message": "This assert() is ok, but in general it\u0027s not necessary to add these asserts everywhere before a function pointer is called.\n\nCalling a NULL function pointer will immediately cause a useful stack trace, so it should be enough to just assert(cb_fn !\u003d NULL) during spdk_lvs_init() and not add separate ones for each function in the init chain.",
+      "revId": "fba4efd24f718b668a40670ca03f9604e3eef8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9f08c97_37da23dd",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-22T23:32:46Z",
+      "side": 1,
+      "message": "This error message is invalid if you get here from a failed resize.",
+      "revId": "fba4efd24f718b668a40670ca03f9604e3eef8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55c6dc41_fd7dffee",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-22T23:32:46Z",
+      "side": 1,
+      "message": "extra return and newline not needed",
+      "revId": "fba4efd24f718b668a40670ca03f9604e3eef8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
