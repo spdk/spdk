@@ -197,7 +197,7 @@ struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol)
 }
 
 void
-spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb)
+spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
 {
 }
 
