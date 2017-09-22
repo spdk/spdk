@@ -34,6 +34,7 @@
 #include "bdev_pmem.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
+#include "spdk/string.h"
 #include "libpmemblk.h"
 
 #include "spdk_internal/log.h"
@@ -59,11 +60,13 @@ spdk_rpc_construct_pmem_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_pmem req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
+	char buf[64];
 
 	if (spdk_json_decode_object(params, rpc_construct_pmem_decoders,
 				    SPDK_COUNTOF(rpc_construct_pmem_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_TRACE_BDEV_MALLOC, "spdk_json_decode_object failed\n");
+		errno = EINVAL;
 		goto invalid;
 	}
 	bdev = create_pmem_disk(req.pmem_file);
@@ -86,7 +89,8 @@ spdk_rpc_construct_pmem_bdev(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_strerror_r(errno, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
 	free_rpc_construct_pmem_bdev(&req);
 }
 SPDK_RPC_REGISTER("construct_pmem_bdev", spdk_rpc_construct_pmem_bdev)
@@ -117,21 +121,25 @@ spdk_rpc_create_pmem_pool(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	uint64_t pool_size;
 	PMEMblkpool *pbp;
+	char buf[64];
 
 	if (spdk_json_decode_object(params, rpc_create_pmem_pool_decoders,
 				    SPDK_COUNTOF(rpc_create_pmem_pool_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_TRACE_BDEV_MALLOC, "spdk_json_decode_object failed\n");
+		errno = EINVAL;
 		goto invalid;
 	}
 
 	/* libpmemblk pool has to be contain at least 256 blocks */
 	if (req.num_blocks < 256) {
+		errno = EINVAL;
 		goto invalid;
 	}
 
 	pool_size = req.num_blocks * req.block_size;
 	if (pool_size < PMEMBLK_MIN_POOL) {
+		errno = EINVAL;
 		goto invalid;
 	}
 
@@ -155,7 +163,8 @@ spdk_rpc_create_pmem_pool(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_strerror_r(errno, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
 	free_rpc_create_pmem_pool(&req);
 }
 SPDK_RPC_REGISTER("create_pmem_pool", spdk_rpc_create_pmem_pool)
@@ -182,11 +191,13 @@ spdk_rpc_pmem_pool_info(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	size_t num_blocks, block_size;
 	PMEMblkpool *pbp;
+	char buf[64];
 
 	if (spdk_json_decode_object(params, rpc_pmem_pool_info_decoders,
 				    SPDK_COUNTOF(rpc_pmem_pool_info_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_TRACE_BDEV_MALLOC, "spdk_json_decode_object failed\n");
+		errno = EINVAL;
 		goto invalid;
 	}
 
@@ -197,11 +208,13 @@ spdk_rpc_pmem_pool_info(struct spdk_jsonrpc_request *request,
 
 	block_size = pmemblk_bsize(pbp);
 	if (block_size <= 0) {
+		errno = EINVAL;
 		goto close;
 	}
 
 	num_blocks = pmemblk_nblock(pbp);
 	if (num_blocks <= 0) {
+		errno = EINVAL;
 		goto close;
 	}
 
@@ -235,7 +248,8 @@ close:
 	pmemblk_close(pbp);
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_strerror_r(errno, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
 	free_rpc_pmem_pool_info(&req);
 }
 SPDK_RPC_REGISTER("pmem_pool_info", spdk_rpc_pmem_pool_info)
@@ -260,11 +274,13 @@ spdk_rpc_delete_pmem_pool(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_delete_pmem_pool req = {};
 	struct spdk_json_write_ctx *w;
+	char buf[64];
 
 	if (spdk_json_decode_object(params, rpc_delete_pmem_pool_decoders,
 				    SPDK_COUNTOF(rpc_delete_pmem_pool_decoders),
 				    &req)) {
 		SPDK_DEBUGLOG(SPDK_TRACE_BDEV_MALLOC, "spdk_json_decode_object failed\n");
+		errno = EINVAL;
 		goto invalid;
 	}
 
@@ -288,7 +304,8 @@ spdk_rpc_delete_pmem_pool(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	spdk_strerror_r(errno, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
 	free_rpc_delete_pmem_pool(&req);
 }
 SPDK_RPC_REGISTER("delete_pmem_pool", spdk_rpc_delete_pmem_pool)
