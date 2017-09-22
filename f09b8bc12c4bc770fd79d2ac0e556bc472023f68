@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "8a0cc156_1a1068e7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-22T19:35:23Z",
+      "side": 1,
+      "message": "Some of these lines are too long for a commit message.  git recommends \u003c\u003d 70 and gerrit itself won\u0027t show the whole line (without scrolling) by default.",
+      "revId": "f09b8bc12c4bc770fd79d2ac0e556bc472023f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9804249d_bcaa9315",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1404,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-22T19:35:23Z",
+      "side": 1,
+      "message": "Can you keep these assignment together - cluster_sz, total_clusters, pages_per_cluster?  I think that is easier to read than breaking those up to add this somewhat unrelated check.\n\nIn fact, we should just do this check at the beginning of the function, even before the calloc().  We have all of the information we need there.  Then you can just return NULL and avoid having to add the goto + label.",
+      "revId": "f09b8bc12c4bc770fd79d2ac0e556bc472023f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1c8a6ac1_02b06562",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 1
@@ -13,6 +47,24 @@
       "writtenOn": "2017-09-22T18:00:45Z",
       "side": 1,
       "message": "Could you elaborate a little bit on why clusters need to be big enough to fit two pages?  It seems like page_size \u003d\u003d cluster_sz should be OK, but maybe I\u0027m missing some details.",
+      "revId": "f09b8bc12c4bc770fd79d2ac0e556bc472023f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "188ef015_821b7cca",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1407,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-22T19:35:23Z",
+      "side": 1,
+      "message": "atleast \u003d\u003e at least\n\nAgree with Daniel - I\u0027m not sure why a cluster has to be at least two pages.",
+      "parentUuid": "1c8a6ac1_02b06562",
       "revId": "f09b8bc12c4bc770fd79d2ac0e556bc472023f68",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
