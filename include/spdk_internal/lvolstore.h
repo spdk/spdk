@@ -70,6 +70,8 @@ struct spdk_lvol_with_handle_req {
 struct spdk_lvol_store {
 	struct spdk_bs_dev		*bs_dev;
 	struct spdk_blob_store		*blobstore;
+	struct spdk_blob		*super_blob;
+	spdk_blob_id			super_blob_id;
 	uuid_t				uuid;
 	struct spdk_lvs_req		*destruct_req;
 	uint64_t			total_blocks;
