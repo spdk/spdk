@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "72fbff77_d3471d84",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T21:51:34Z",
+      "side": 1,
+      "message": "it won\u0027t work this way. this is a pci register\nyet, it\u0027s available only on modern pci devices\nplease use VTPCI_OPS(vdev)-\u003eget_queue_num(vdev, 2) instead\n(2 stands for virtqueue #2, which is the first requestq)",
+      "range": {
+        "startLine": 227,
+        "startChar": 28,
+        "endLine": 227,
+        "endChar": 54
+      },
+      "revId": "aa11a3a1fbd829a15e45fc60663cf8be72f8e1d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dbdbab41_303ec798",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T21:51:34Z",
+      "side": 1,
+      "message": "the get_queue_num callback from comment above should be fine for both virtio_pci and virtio_user",
+      "range": {
+        "startLine": 229,
+        "startChar": 0,
+        "endLine": 233,
+        "endChar": 45
+      },
+      "revId": "aa11a3a1fbd829a15e45fc60663cf8be72f8e1d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07d274a6_12e084d7",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 3
@@ -91,6 +137,29 @@
       "revId": "aa11a3a1fbd829a15e45fc60663cf8be72f8e1d0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d4c68d7_9bcd1b3f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T21:51:34Z",
+      "side": 1,
+      "message": "this patch should be rebased on https://review.gerrithub.io/c/379489/ ((DRAFT) rte_virtio: convert to spdk pci_virtio layer)\nand should use spdk_pci_device_get_addr/spdk_pci_addr_fmt instead",
+      "range": {
+        "startLine": 244,
+        "startChar": 0,
+        "endLine": 248,
+        "endChar": 33
+      },
+      "revId": "aa11a3a1fbd829a15e45fc60663cf8be72f8e1d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
