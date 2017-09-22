@@ -229,7 +229,7 @@ spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf)
 	bdev_io->buf = buf;
 	bdev_io->u.bdev.iovs[0].iov_base = (void *)((unsigned long)((char *)buf + BUF_CACHE_LINE_SIZE)
 					   & ~((unsigned long)BUF_CACHE_LINE_SIZE - 1));
-	bdev_io->u.bdev.iovs[0].iov_len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+	bdev_io->u.bdev.iovs[0].iov_len = bdev_io->buf_len;
 	bdev_io->get_buf_cb(bdev_io->ch->channel, bdev_io);
 }
 
@@ -278,6 +278,13 @@ void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb)
 {
 	uint64_t len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+
+	spdk_bdev_io_get_sized_buf(bdev_io, cb, len);
+}
+
+void
+spdk_bdev_io_get_sized_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
+{
 	bdev_io_tailq_t *tailq;
 	void *buf = NULL;
 	struct spdk_bdev_mgmt_channel *ch;
@@ -293,6 +300,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb)
 
 	ch = spdk_io_channel_get_ctx(bdev_io->ch->mgmt_channel);
 
+	bdev_io->buf_len = len;
 	bdev_io->get_buf_cb = cb;
 	if (len <= SPDK_BDEV_SMALL_BUF_MAX_SIZE) {
 		tailq = &ch->need_buf_small;

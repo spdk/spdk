@@ -251,6 +251,9 @@ struct spdk_bdev_io {
 	/** bdev allocated memory associated with this request */
 	void *buf;
 
+	/** requested size of the buffer associated with this I/O */
+	uint64_t buf_len;
+
 	/** Callback for when buf is allocated */
 	spdk_bdev_io_get_buf_cb get_buf_cb;
 
@@ -367,7 +370,29 @@ void spdk_bdev_poller_start(struct spdk_bdev_poller **ppoller,
 
 void spdk_bdev_poller_stop(struct spdk_bdev_poller **ppoller);
 
+/**
+ * Allocate a buffer for given bdev_io.  The size of the buffer
+ * is determined basing on I/O size.  The buffer will be freed
+ * automatically on \c spdk_bdev_free_io() call. The allocation
+ * will never fail - in case of lack of memory it will be deferred
+ * until enough memory is freed.
+ *
+ * \param bdev_io I/O to allocate buffer for.
+ * \param cb callback to be called when the buffer is actually allocated.
+ */
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb);
+
+/**
+ * Allocate a buffer of custom size for given bdev_io.
+ *
+ * \sa spdk_bdev_io_get_buf()
+ * \param bdev_io I/O to allocate buffer for.
+ * \param cb callback to be called when the buffer is actually allocated.
+ * \param len size of the buffer to allocate. Must be no bigger than
+ * \c SPDK_BDEV_LARGE_BUF_MAX_SIZE
+ */
+void spdk_bdev_io_get_sized_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb,
+				uint64_t len);
 struct spdk_bdev_io *spdk_bdev_get_io(void);
 void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
 			   enum spdk_bdev_io_status status);
