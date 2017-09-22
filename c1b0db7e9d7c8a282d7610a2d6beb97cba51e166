@@ -1,0 +1,199 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75afc641_14fb5e1d",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T18:30:44Z",
+      "side": 1,
+      "message": "is this declaration required?",
+      "revId": "c1b0db7e9d7c8a282d7610a2d6beb97cba51e166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "038d2ec0_c2c46034",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T18:30:44Z",
+      "side": 1,
+      "message": "why not static?",
+      "range": {
+        "startLine": 467,
+        "startChar": 0,
+        "endLine": 467,
+        "endChar": 3
+      },
+      "revId": "c1b0db7e9d7c8a282d7610a2d6beb97cba51e166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0381cc5_8ea6dc5f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T18:30:44Z",
+      "side": 1,
+      "message": "this doesn\u0027t really connect to anything,\nit\u0027s also usable for both virtio_user and virtio_pci.\nthe function should be reworded to e.g. init_virtio_scsi_ctrlr",
+      "range": {
+        "startLine": 468,
+        "startChar": 0,
+        "endLine": 468,
+        "endChar": 33
+      },
+      "revId": "c1b0db7e9d7c8a282d7610a2d6beb97cba51e166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "02f12a42_01155c9a",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T18:30:44Z",
+      "side": 1,
+      "message": "you might want to return -ENOMEM directly; without an additional goto.",
+      "range": {
+        "startLine": 476,
+        "startChar": 2,
+        "endLine": 477,
+        "endChar": 15
+      },
+      "revId": "c1b0db7e9d7c8a282d7610a2d6beb97cba51e166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55ef1951_8cf78cde",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T18:30:44Z",
+      "side": 1,
+      "message": "you probably shouldn\u0027t dereference this struct,\nhmm, let me think of something else",
+      "range": {
+        "startLine": 486,
+        "startChar": 1,
+        "endLine": 486,
+        "endChar": 59
+      },
+      "revId": "c1b0db7e9d7c8a282d7610a2d6beb97cba51e166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6a3c60e3_a5b18c6a",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T18:30:44Z",
+      "side": 1,
+      "message": "this is valid behavior. no config section - finish bdev_virtio initialization.\nThe \"out\" label was just fine.",
+      "range": {
+        "startLine": 507,
+        "startChar": 7,
+        "endLine": 507,
+        "endChar": 14
+      },
+      "revId": "c1b0db7e9d7c8a282d7610a2d6beb97cba51e166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20ec2f24_41ad0d5a",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T18:30:44Z",
+      "side": 1,
+      "message": "you removed the vdev \u003d\u003d NULL check, the code will probably segfault on initialization failure",
+      "revId": "c1b0db7e9d7c8a282d7610a2d6beb97cba51e166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1749666_88e417d9",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T18:30:44Z",
+      "side": 1,
+      "message": "is this required?\nvhost_user_setup will fail the connection to invalid socket with \"connect error \u003cerrno\u003e\" error message.",
+      "range": {
+        "startLine": 560,
+        "startChar": 1,
+        "endLine": 568,
+        "endChar": 2
+      },
+      "revId": "c1b0db7e9d7c8a282d7610a2d6beb97cba51e166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efbc42fa_81b10dfb",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-22T18:30:44Z",
+      "side": 1,
+      "message": "please remove those parameters for now, only path param should be provided",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 97
+      },
+      "revId": "c1b0db7e9d7c8a282d7610a2d6beb97cba51e166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
