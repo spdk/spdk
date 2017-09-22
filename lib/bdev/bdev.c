@@ -593,10 +593,6 @@ spdk_bdev_get_io(void)
 static void
 spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 {
-	if (!bdev_io) {
-		return;
-	}
-
 	if (bdev_io->buf != NULL) {
 		spdk_bdev_io_put_buf(bdev_io);
 	}
