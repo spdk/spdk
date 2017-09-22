@@ -155,7 +155,8 @@ static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_b
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_rw);
+		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_rw,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		bdev_virtio_rw(ch, bdev_io);

@@ -244,7 +244,8 @@ static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 {
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, bdev_aio_get_buf_cb);
+		spdk_bdev_io_get_buf(bdev_io, bdev_aio_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
