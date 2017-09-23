@@ -1,0 +1,106 @@
+syntax = "proto3";
+
+package proto;
+
+message ErrorResponse {
+	string message = 1;
+	int32 code = 2;
+}
+
+message RpcMethods{
+        repeated string name = 1;
+}
+
+message ScsiDevices{
+	repeated ScsiDevice scsiDevice = 1;
+}
+
+message ScsiDevice{
+	int32 id = 1;
+	string name = 2;
+}
+
+message Luns{
+	repeated Lun lun = 1;
+}
+
+message Lun{
+	bool claimed = 1;
+	string name = 2;
+}
+
+message Interfaces{
+	repeated Interface interface = 1;
+}
+
+message Interface{
+	message InterfaceInfo{
+		repeated string ip_addr = 1;
+		int32 ifc_index = 2;
+		string name = 3;
+	}
+	repeated InterfaceInfo info = 1;
+}
+
+message BlockDevices{
+        repeated BlockDevice blockDevice = 1;
+}
+
+message BlockDevice{
+	int32 num_blocks = 1;
+	message SupportedIOTypes{
+            bool nvme_admin = 1;
+            bool reset = 2;
+            bool unmap = 3;
+            bool read = 4;
+            bool nvme_io = 5;
+	        bool write = 6;
+	        bool flush = 7;
+	}
+    SupportedIOTypes supported_io_types = 2;
+	bool bdev_opened_for_write = 3;
+	message DriverSpecific{
+	}
+	DriverSpecific driver_specific = 4;
+	int32 block_size = 5;
+	string product_name = 6;
+	string name = 7;
+}
+
+message ConstructAIObdevRequest {
+	string name = 1;
+	string filename = 2;
+	int32 block_size = 3;
+}
+
+message ConstructNVMeBdevRequest {
+	string name = 1;
+	string trtype = 2;
+	string traddr = 3;
+	string adrfam = 4;
+	string trsvcid = 5;
+	string subnqn = 6;
+}
+
+message NVMFSubsystems{
+        repeated NVMFSubsystem subsystem = 1;
+}
+
+message NVMFSubsystem {
+	repeated string listen_addresses = 1;
+	int32 core = 2;
+	string nqn = 3;
+	repeated string hosts = 4;
+	string subtype = 5;
+}
+
+message ConstructNVMFSubsystemRequest {
+	int32 core = 1;
+	string nqn = 2;
+	string listen = 3;
+	string hosts = 4;
+	string serial_number = 5;
+	string namespaces = 6;
+}
+
+
