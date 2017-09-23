@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "36aacc2e_11c84f0c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-23T00:02:58Z",
+      "side": 1,
+      "message": "looks like there are a few error cases which don\u0027t call spdk_bdev_module_examine_done()",
+      "revId": "2403162a9c27b2a4bfbae88869c1bd160287c928",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e6f480b_d3cdd291",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-23T00:02:58Z",
+      "side": 1,
+      "message": "I think we should call spdk_bdev_module_examine_done() after all of the blobs have been opened and bdevs created.  Otherwise there is a delay between telling the bdev layer that we are done examining, and when the lvol bdevs are actually registered.",
+      "revId": "2403162a9c27b2a4bfbae88869c1bd160287c928",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c50bc53_c043f9e1",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-23T00:02:58Z",
+      "side": 1,
+      "message": "just call spdk_bs_md_iter_first inline here",
+      "revId": "2403162a9c27b2a4bfbae88869c1bd160287c928",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "868658ec_a8e4dbda",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 698,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-23T00:02:58Z",
+      "side": 1,
+      "message": "extra newline and return not needed",
+      "revId": "2403162a9c27b2a4bfbae88869c1bd160287c928",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dce3608_100a1888",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 727,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-23T00:02:58Z",
+      "side": 1,
+      "message": "I think I\u0027d rather see an spdk_lvs_load which can be implemented in lvol.c.  Then we have matching spdk_lvs_init/load like we do for spdk_bs_init/load and spdk_fs_init/load.",
+      "revId": "2403162a9c27b2a4bfbae88869c1bd160287c928",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06a96b9b_e1a51396",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-23T00:02:58Z",
+      "side": 1,
+      "message": "This is where we should read the bstype xattr (see comments on previous patch), and if it is not \"lvolstore\" we should fail the load process.",
+      "revId": "2403162a9c27b2a4bfbae88869c1bd160287c928",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
