@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "9b2aa8ec_f97cd6c0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1335,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-24T22:24:39Z",
+      "side": 1,
+      "message": "After looking at this more, what does this buy us over what I\u0027ve done here?  There\u0027 already a spdk_bs_dev struct in the bs so whether I store the cpl info there or in bs what\u0027s the difference?\n\nAlso, what I am doing in this patch is also adding the defer flag so that when spdk_bs_request_set_complete() is called we know whether to call spdk_bs_call_cpl() or not.  Are you sugesting keeping those but jsut moving where the cpl and error number are stored?",
+      "parentUuid": "54753976_68baeb93",
+      "revId": "f24cf6abd5f4172d6ee55c3fe3ad93c9aad14015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4a195a1_eeafa8df",
         "filename": "lib/util/io_channel.c",
         "patchSetId": 4
