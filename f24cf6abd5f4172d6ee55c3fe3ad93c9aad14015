@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "54753976_68baeb93",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1335,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-24T21:26:31Z",
+      "side": 1,
+      "message": "OK cool, will try that",
+      "parentUuid": "bd9c3b92_8a3ba73a",
+      "revId": "f24cf6abd5f4172d6ee55c3fe3ad93c9aad14015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4a195a1_eeafa8df",
         "filename": "lib/util/io_channel.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-21T17:24:04Z",
       "side": 1,
       "message": "We can\u0027t move this outside of the lock.  _spdk_io_device_attempt_free() walks the device list so has to hold the lock.\n\nWe can put a lock/unlock pair in _spdk_io_device_attempt_free(), but can you first explain the problem that precipitated moving this?",
+      "revId": "f24cf6abd5f4172d6ee55c3fe3ad93c9aad14015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "719685aa_a816bbb5",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-24T21:26:31Z",
+      "side": 1,
+      "message": "how the heck did I not see that? I moved it to avoid having to make a change in blobfs, you\u0027ll see it after I move it back. Not a huge change",
+      "parentUuid": "a4a195a1_eeafa8df",
       "revId": "f24cf6abd5f4172d6ee55c3fe3ad93c9aad14015",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
