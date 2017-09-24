@@ -340,7 +340,7 @@ typedef void (*spdk_nvme_remove_cb)(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
  * will be reported.
  *
  * To stop using the the controller and release its associated resources,
- * call \ref spdk_nvme_detach with the spdk_nvme_ctrlr instance returned by this function.
+ * call \ref spdk_nvme_detach with the spdk_nvme_ctrlr instance from the valid attach_cb() function.
  */
 int spdk_nvme_probe(const struct spdk_nvme_transport_id *trid,
 		    void *cb_ctx,
