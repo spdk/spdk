@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1bd81501_a6b2468d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1824,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-25T17:56:02Z",
+      "side": 1,
+      "message": "Since we are using this calculation below as well, it might be clearer to put this value into a variable with a more descriptive name (num_md_clusters?)",
+      "revId": "85dd25c873f469f77be6805c8af4e97012da053e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ce1b4a1_1390c4bd",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1825,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-25T17:56:02Z",
+      "side": 1,
+      "message": "Please use regular string concatenation rather than \\ if you want to wrap the string across multiple lines:\n\n    SPDK_ERRLOG(\"Blobstore metadata cannot use more clusters than is available, \"\n                \"please decrease number of pages reserved for metadata \"\n                \"or increase cluster size.\\n\");",
+      "range": {
+        "startLine": 1825,
+        "startChar": 77,
+        "endLine": 1825,
+        "endChar": 79
+      },
+      "revId": "85dd25c873f469f77be6805c8af4e97012da053e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
