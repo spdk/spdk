@@ -99,6 +99,22 @@ struct spdk_bdev;
 struct spdk_nvmf_request;
 struct spdk_nvmf_host;
 struct spdk_nvmf_listener;
+struct spdk_nvmf_poll_group;
+
+/**
+ * Create a poll group.
+ */
+struct spdk_nvmf_poll_group *spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt);
+
+/**
+ * Destroy a poll group.
+ */
+void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group);
+
+/**
+ * Check a poll group for work completions.
+ */
+int spdk_nvmf_poll_group_poll(struct spdk_nvmf_poll_group *group);
 
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection

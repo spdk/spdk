@@ -39,8 +39,18 @@
 #include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
+#include "spdk/util.h"
+
+struct nvmf_tgt_poll_group {
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_poller *poller;
+};
 
 struct spdk_nvmf_tgt *g_tgt = NULL;
+
+static struct nvmf_tgt_poll_group *g_poll_groups = NULL;
+static size_t g_num_poll_groups = 0;
+static size_t g_active_poll_groups = 0;
 
 static struct spdk_poller *g_acceptor_poller = NULL;
 
@@ -97,9 +107,40 @@ shutdown_subsystems(void)
 }
 
 static void
+nvmf_tgt_poll_group_stopped_event(void *arg1, void *arg2)
+{
+	uint32_t core;
+
+	g_active_poll_groups--;
+
+	if (g_active_poll_groups == 0) {
+		/* All of the poll group pollers are stopped, so we can now delete the poll groups safely. */
+		SPDK_ENV_FOREACH_CORE(core) {
+			struct nvmf_tgt_poll_group *app_poll_group = &g_poll_groups[core];
+
+			spdk_nvmf_poll_group_destroy(app_poll_group->group);
+		}
+
+		shutdown_subsystems();
+	}
+}
+
+static void
 acceptor_poller_unregistered_event(void *arg1, void *arg2)
 {
-	shutdown_subsystems();
+	struct nvmf_tgt_poll_group *app_poll_group;
+	struct spdk_event *event;
+	uint32_t core;
+
+	/* Stop poll group pollers on all cores */
+	SPDK_ENV_FOREACH_CORE(core) {
+		app_poll_group = &g_poll_groups[core];
+		event = spdk_event_allocate(spdk_env_get_current_core(),
+					    nvmf_tgt_poll_group_stopped_event,
+					    NULL, NULL);
+
+		spdk_poller_unregister(&app_poll_group->poller, event);
+	}
 }
 
 static void
@@ -232,8 +273,17 @@ acceptor_poll(void *arg)
 }
 
 static void
+nvmf_tgt_poll_group_poll(void *arg)
+{
+	struct nvmf_tgt_poll_group *app_poll_group = arg;
+
+	spdk_nvmf_poll_group_poll(app_poll_group->group);
+}
+
+static void
 spdk_nvmf_startup(void *arg1, void *arg2)
 {
+	uint32_t core;
 	int rc;
 
 	rc = spdk_nvmf_parse_conf();
@@ -245,6 +295,35 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 	if (((1ULL << g_spdk_nvmf_tgt_conf.acceptor_lcore) & spdk_app_get_core_mask()) == 0) {
 		SPDK_ERRLOG("Invalid AcceptorCore setting\n");
 		goto initialize_error;
+	}
+
+	/* Find the maximum core number */
+	SPDK_ENV_FOREACH_CORE(core) {
+		g_num_poll_groups = spdk_max(g_num_poll_groups, core + 1);
+	}
+
+	assert(g_num_poll_groups > 0);
+
+	g_poll_groups = calloc(g_num_poll_groups, sizeof(*g_poll_groups));
+	if (g_poll_groups == NULL) {
+		goto initialize_error;
+	}
+
+	/* Create a poll group on each core in the app core mask. */
+	g_active_poll_groups = 0;
+	SPDK_ENV_FOREACH_CORE(core) {
+		struct nvmf_tgt_poll_group *app_poll_group = &g_poll_groups[core];
+
+		app_poll_group->group = spdk_nvmf_poll_group_create(g_tgt);
+		if (app_poll_group->group == NULL) {
+			SPDK_ERRLOG("Failed to create poll group for core %u\n", core);
+			goto initialize_error;
+		}
+
+		spdk_poller_register(&app_poll_group->poller,
+				     nvmf_tgt_poll_group_poll, app_poll_group,
+				     core, 0);
+		g_active_poll_groups++;
 	}
 
 	spdk_poller_register(&g_acceptor_poller, acceptor_poll, g_tgt,
