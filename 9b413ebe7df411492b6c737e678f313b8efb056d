@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fe7b84d8_991bc7e1",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-25T13:38:26Z",
+      "side": 1,
+      "message": "Definitely, thanks. Changed cluster sizes in blobstore related structs as well.",
+      "parentUuid": "0adcd697_3114cfbf",
+      "revId": "9b413ebe7df411492b6c737e678f313b8efb056d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97bb3a3e_df27768a",
         "filename": "scripts/rpc.py",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-22T18:07:14Z",
       "side": 1,
       "message": "Short argument names (single -) are typically only one character; can we make this -c instead?\n\nAlso, --cluster-sz would be more consistent (dash rather than underscore) - I believe argparse will automatically convert the dash to underscore and set args.cluster_sz.",
+      "revId": "9b413ebe7df411492b6c737e678f313b8efb056d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba4fc7fa_b7666a24",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-25T13:38:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "97bb3a3e_df27768a",
       "revId": "9b413ebe7df411492b6c737e678f313b8efb056d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
