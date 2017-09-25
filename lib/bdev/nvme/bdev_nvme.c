@@ -135,7 +135,7 @@ static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
 static TAILQ_HEAD(, nvme_bdev) g_nvme_bdevs = TAILQ_HEAD_INITIALIZER(g_nvme_bdevs);
 
-static void nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
+static bool nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
 static int bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
@@ -830,7 +830,11 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel));
-	nvme_ctrlr_create_bdevs(nvme_ctrlr);
+
+	if (nvme_ctrlr_create_bdevs(nvme_ctrlr) == false) {
+		spdk_io_device_unregister(ctrlr, NULL);
+		return;
+	}
 
 	spdk_bdev_poller_start(&nvme_ctrlr->adminq_timer_poller, bdev_nvme_poll_adminq, ctrlr,
 			       spdk_env_get_current_core(), g_nvme_adminq_poll_timeout_us);
@@ -1092,7 +1096,7 @@ bdev_nvme_library_fini(void)
 	}
 }
 
-static void
+static bool
 nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 {
 	struct nvme_bdev	*bdev;
@@ -1100,6 +1104,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 	struct spdk_nvme_ns	*ns;
 	const struct spdk_nvme_ctrlr_data *cdata;
 	int			ns_id, num_ns;
+	bool			bdev_created = false;
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -1118,7 +1123,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 
 		bdev = calloc(1, sizeof(*bdev));
 		if (!bdev) {
-			return;
+			break;
 		}
 
 		bdev->nvme_ctrlr = nvme_ctrlr;
@@ -1128,7 +1133,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
 		if (!bdev->disk.name) {
 			free(bdev);
-			return;
+			break;
 		}
 		bdev->disk.product_name = "NVMe disk";
 
@@ -1146,7 +1151,11 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		spdk_bdev_register(&bdev->disk);
 
 		TAILQ_INSERT_TAIL(&g_nvme_bdevs, bdev, link);
+
+		bdev_created = true;
 	}
+
+	return bdev_created;
 }
 
 static void
