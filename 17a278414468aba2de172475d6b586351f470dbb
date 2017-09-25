@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "af098cc1_d1ed5b66",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-25T14:48:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "583b605c_cbf83ed9",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fe033a68_5c726ce5",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 31
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-22T20:03:35Z",
       "side": 1,
       "message": "I think this should be static.",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a917bda_169c45f5",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-25T14:48:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fe033a68_5c726ce5",
       "revId": "17a278414468aba2de172475d6b586351f470dbb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "08282b42_298c44e1",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-25T14:48:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "684b4278_2f15374b",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f2b6cea_8c15919d",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 31
@@ -64,6 +118,24 @@
       "writtenOn": "2017-09-22T20:03:35Z",
       "side": 1,
       "message": "It would be better if the user could specify the bdev name here - just like NVMe, AIO, etc. bdevs.",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd50f9b9_2ee8b58d",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-25T14:48:56Z",
+      "side": 1,
+      "message": "I think we can add this in separate patch. More info at trello task: https://trello.com/c/4eBeQCWi/6-rpc-add-friendly-names-to-pmem-bdevs",
+      "parentUuid": "7f2b6cea_8c15919d",
       "revId": "17a278414468aba2de172475d6b586351f470dbb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -93,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "63fe06b2_f7b2cdd6",
+        "filename": "lib/bdev/pmem/bdev_pmem.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-25T14:48:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8262d13f_2aec3ba7",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 26
+      },
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1799d6c4_261abcf0",
         "filename": "lib/bdev/pmem/bdev_pmem.h",
         "patchSetId": 31
@@ -104,6 +200,24 @@
       "writtenOn": "2017-09-22T20:03:35Z",
       "side": 1,
       "message": "Add spdk_ prefix. (For extra clarity, this should probably be spdk_bdev_pmem_create() or something similar.)",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "236d403d_3817e8a9",
+        "filename": "lib/bdev/pmem/bdev_pmem.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-25T14:48:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1799d6c4_261abcf0",
       "revId": "17a278414468aba2de172475d6b586351f470dbb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -150,6 +264,30 @@
     },
     {
       "key": {
+        "uuid": "3fc99742_1a21d523",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-25T14:48:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b2e28c13_766eb453",
+      "range": {
+        "startLine": 66,
+        "startChar": 16,
+        "endLine": 66,
+        "endChar": 38
+      },
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b5ef05d0_d6305737",
         "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
         "patchSetId": 31
@@ -167,6 +305,24 @@
     },
     {
       "key": {
+        "uuid": "c243657e_066f796e",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-25T14:48:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b5ef05d0_d6305737",
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73a8a5d9_d4992aee",
         "filename": "scripts/autotest_common.sh",
         "patchSetId": 31
@@ -178,6 +334,30 @@
       "writtenOn": "2017-09-25T07:08:47Z",
       "side": 1,
       "message": "tab :P",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 95,
+        "endChar": 4
+      },
+      "revId": "17a278414468aba2de172475d6b586351f470dbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6518a992_4a60e48f",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 31
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-25T14:48:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "73a8a5d9_d4992aee",
       "range": {
         "startLine": 95,
         "startChar": 0,
