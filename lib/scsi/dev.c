@@ -34,7 +34,7 @@
 
 #include "scsi_internal.h"
 
-static struct spdk_scsi_dev g_devs[SPDK_SCSI_MAX_DEVS];
+static struct spdk_scsi_dev g_devs[SPDK_SCSI_MAX_DEVS] = {{0}};
 
 struct spdk_scsi_dev *
 spdk_scsi_dev_get_list(void)
@@ -215,6 +215,7 @@ int
 spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 {
 	struct spdk_scsi_port *port;
+	int i, index = -1;
 	int rc;
 
 	if (dev->num_ports == SPDK_SCSI_DEV_MAX_PORTS) {
@@ -222,7 +223,21 @@ spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 		return -1;
 	}
 
-	port = &dev->port[dev->num_ports];
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_PORTS; i++) {
+		if (!dev->port[i].is_valid) {
+			if (index < 0) {
+				index = i;
+			}
+		}
+		if (dev->port[i].id == id) {
+			SPDK_ERRLOG("device already has port(%" PRIu64 ")\n", id);
+			return -1;
+		}
+	}
+
+	assert(index >= 0);
+
+	port = &dev->port[index];
 
 	rc = spdk_scsi_port_construct(port, id, dev->num_ports, name);
 	if (rc != 0) {
@@ -233,12 +248,33 @@ spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 	return 0;
 }
 
+int
+spdk_scsi_dev_delete_port(struct spdk_scsi_dev *dev, uint64_t id)
+{
+	struct spdk_scsi_port *port;
+
+	port = spdk_scsi_dev_find_port_by_id(dev, id);
+	if (port == NULL) {
+		SPDK_ERRLOG("device does not have specified port(%" PRIu64 ")\n", id);
+		return -1;
+	}
+
+	spdk_scsi_port_destruct(port);
+
+	dev->num_ports--;
+
+	return 0;
+}
+
 struct spdk_scsi_port *
 spdk_scsi_dev_find_port_by_id(struct spdk_scsi_dev *dev, uint64_t id)
 {
 	int i;
 
-	for (i = 0; i < dev->num_ports; i++) {
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_PORTS; i++) {
+		if (!dev->port[i].is_valid) {
+			continue;
+		}
 		if (dev->port[i].id == id) {
 			return &dev->port[i];
 		}
