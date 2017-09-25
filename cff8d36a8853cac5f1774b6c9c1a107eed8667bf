@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f598be7d_adda7573",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-25T10:41:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f9f18d2e_d1e885ee",
+      "revId": "cff8d36a8853cac5f1774b6c9c1a107eed8667bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "369a579a_29a06de4",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 1
@@ -72,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "fc0f971b_dde65644",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-25T10:41:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "515eb549_644d8bf4",
+      "revId": "cff8d36a8853cac5f1774b6c9c1a107eed8667bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b6c9b5a_667743ac",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 1
@@ -101,6 +137,24 @@
       "side": 1,
       "message": "This is not quite right, but unmap isn\u0027t a frequent request so I thought this was just fine.\n\nSince you\u0027ve pointed it out - I\u0027ll try adding another version of spdk_bdev_io_get_buf().",
       "parentUuid": "7b6c9b5a_667743ac",
+      "revId": "cff8d36a8853cac5f1774b6c9c1a107eed8667bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9df10f0_b1b6f51f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-25T10:41:51Z",
+      "side": 1,
+      "message": "Done: https://review.gerrithub.io/c/379721/",
+      "parentUuid": "e7b60ba7_05b7104e",
       "revId": "cff8d36a8853cac5f1774b6c9c1a107eed8667bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
