@@ -47,14 +47,12 @@ static void
 _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 {
 	struct spdk_lvs_with_handle_req *req = cb_arg;
-	struct spdk_bs_dev *bs_dev = req->bs_dev;
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_bdev *bdev = req->base_bdev;
 
 	if (lvserrno != 0) {
 		assert(lvs == NULL);
 		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Cannot create lvol store bdev\n");
-		bs_dev->destroy(bs_dev);
 		goto end;
 	}
 
@@ -62,7 +60,6 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 
 	lvs_bdev = calloc(1, sizeof(*lvs_bdev));
 	if (!lvs_bdev) {
-		bs_dev->destroy(bs_dev);
 		lvserrno = -ENOMEM;
 		goto end;
 	}
