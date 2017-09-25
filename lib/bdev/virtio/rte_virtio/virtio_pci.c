@@ -43,7 +43,7 @@
 #include "virtio_logs.h"
 #include "virtio_queue.h"
 
-struct vtpci_internal virtio_hw_internal[128];
+struct virtio_driver g_virtio_driver;
 
 /*
  * Following macros are derived from linux/pci_regs.h, however,
@@ -704,7 +704,7 @@ vtpci_init(struct rte_pci_device *dev, struct virtio_dev *vdev)
 	 */
 	if (virtio_read_caps(dev, hw) == 0) {
 		PMD_INIT_LOG(INFO, "modern virtio pci detected.");
-		virtio_hw_internal[vdev->port_id].vtpci_ops = &modern_ops;
+		VTPCI_OPS(vdev) = &modern_ops;
 		vdev->modern = 1;
 		return 0;
 	}
@@ -724,7 +724,7 @@ vtpci_init(struct rte_pci_device *dev, struct virtio_dev *vdev)
 	}
 #endif
 
-	virtio_hw_internal[vdev->port_id].vtpci_ops = &legacy_ops;
+	VTPCI_OPS(vdev) = &legacy_ops;
 	vdev->modern   = 0;
 
 	return 0;
