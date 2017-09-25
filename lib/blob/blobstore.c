@@ -1707,6 +1707,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	if ((SPDK_BS_PAGE_SIZE % dev->blocklen) != 0) {
 		SPDK_ERRLOG("unsupported dev block length of %d\n",
 			    dev->blocklen);
+		dev->destroy(dev);
 		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
 	}
@@ -1719,6 +1720,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 	bs = _spdk_bs_alloc(dev, &opts);
 	if (!bs) {
+		dev->destroy(dev);
 		cb_fn(cb_arg, NULL, -ENOMEM);
 		return;
 	}
