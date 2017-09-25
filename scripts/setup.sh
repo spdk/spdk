@@ -168,6 +168,7 @@ function reset_linux {
 
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
 	rm -f "$hugetlbfs_mount"/spdk*map_*
+	rm -f /run/.spdk*
 }
 
 function status_linux {
