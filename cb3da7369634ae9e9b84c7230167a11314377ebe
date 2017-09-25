@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99f5e01b_864268fc",
+        "filename": "lib/rocksdb/env_spdk.cc",
+        "patchSetId": 2
+      },
+      "lineNbr": 597,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-25T18:16:28Z",
+      "side": 0,
+      "message": "Is this removal intentional?",
+      "revId": "cb3da7369634ae9e9b84c7230167a11314377ebe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
