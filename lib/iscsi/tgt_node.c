@@ -181,7 +181,9 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 	struct spdk_iscsi_portal_grp *pg;
 	struct spdk_iscsi_init_grp *igp;
 	int rc;
-	int i, j, k;
+	int i;
+	struct spdk_iscsi_initiator_name *iname;
+	struct spdk_iscsi_initiator_netmask *imask;
 
 	if (conn == NULL || target == NULL || iqn == NULL || addr == NULL)
 		return 0;
@@ -195,11 +197,11 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 			continue;
 		/* iqn is initiator group? */
 		igp = target->map[i].ig;
-		for (j = 0; j < igp->ninitiators; j++) {
+		SLIST_FOREACH(iname, &igp->initiator_head, slist) {
 			/* deny initiators */
-			if (igp->initiators[j][0] == '!'
-			    && (strcasecmp(&igp->initiators[j][1], "ALL") == 0
-				|| strcasecmp(&igp->initiators[j][1], iqn) == 0)) {
+			if (iname->name[0] == '!'
+			    && (strcasecmp(&iname->name[1], "ALL") == 0
+				|| strcasecmp(&iname->name[1], iqn) == 0)) {
 				/* NG */
 				SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
 					      "access denied from %s (%s) to %s (%s:%s,%d)\n",
@@ -208,18 +210,18 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 				return 0;
 			}
 			/* allow initiators */
-			if (strcasecmp(igp->initiators[j], "ALL") == 0
-			    || strcasecmp(igp->initiators[j], iqn) == 0) {
+			if (strcasecmp(iname->name, "ALL") == 0
+			    || strcasecmp(iname->name, iqn) == 0) {
 				/* OK iqn, check netmask */
 				if (igp->nnetmasks == 0) {
 					/* OK, empty netmask as ALL */
 					return 1;
 				}
-				for (k = 0; k < igp->nnetmasks; k++) {
+				SLIST_FOREACH(imask, &igp->netmask_head, slist) {
 					SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
 						      "netmask=%s, addr=%s\n",
-						      igp->netmasks[k], addr);
-					rc = spdk_iscsi_tgt_node_allow_netmask(igp->netmasks[k], addr);
+						      imask->mask, addr);
+					rc = spdk_iscsi_tgt_node_allow_netmask(imask->mask, addr);
 					if (rc > 0) {
 						/* OK netmask */
 						return 1;
@@ -242,7 +244,8 @@ spdk_iscsi_tgt_node_visible(struct spdk_iscsi_tgt_node *target, const char *iqn,
 {
 	struct spdk_iscsi_init_grp *igp;
 	int match_pg_tag;
-	int i, j;
+	int i;
+	struct spdk_iscsi_initiator_name *iname;
 
 	if (target == NULL || iqn == NULL)
 		return 0;
@@ -261,15 +264,15 @@ spdk_iscsi_tgt_node_visible(struct spdk_iscsi_tgt_node *target, const char *iqn,
 	for (i = 0; i < target->maxmap; i++) {
 		/* iqn is initiator group? */
 		igp = target->map[i].ig;
-		for (j = 0; j < igp->ninitiators; j++) {
-			if (igp->initiators[j][0] == '!'
-			    && (strcasecmp(&igp->initiators[j][1], "ALL") == 0
-				|| strcasecmp(&igp->initiators[j][1], iqn) == 0)) {
+		SLIST_FOREACH(iname, &igp->initiator_head, slist) {
+			if (iname->name[0] == '!'
+			    && (strcasecmp(&iname->name[1], "ALL") == 0
+				|| strcasecmp(&iname->name[1], iqn) == 0)) {
 				/* NG */
 				return 0;
 			}
-			if (strcasecmp(igp->initiators[j], "ALL") == 0
-			    || strcasecmp(igp->initiators[j], iqn) == 0) {
+			if (strcasecmp(iname->name, "ALL") == 0
+			    || strcasecmp(iname->name, iqn) == 0) {
 				/* OK iqn, no check addr */
 				return 1;
 			}
@@ -286,7 +289,8 @@ spdk_iscsi_portal_grp_is_visible(struct spdk_iscsi_tgt_node *target,
 {
 	struct spdk_iscsi_init_grp *igp;
 	int match_idx;
-	int i, j;
+	int i;
+	struct spdk_iscsi_initiator_name *iname;
 
 	if (target == NULL || iqn == NULL)
 		return 0;
@@ -306,15 +310,15 @@ spdk_iscsi_portal_grp_is_visible(struct spdk_iscsi_tgt_node *target,
 	igp = target->map[match_idx].ig;
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "iqn=%s, pg=%d, ig=%d\n", iqn, pg_tag, igp->tag);
 
-	for (j = 0; j < igp->ninitiators; j++) {
-		if (igp->initiators[j][0] == '!'
-		    && (strcasecmp(&igp->initiators[j][1], "ALL") == 0
-			|| strcasecmp(&igp->initiators[j][1], iqn) == 0)) {
+	SLIST_FOREACH(iname, &igp->initiator_head, slist) {
+		if (iname->name[0] == '!'
+		    && (strcasecmp(&iname->name[1], "ALL") == 0
+			|| strcasecmp(&iname->name[1], iqn) == 0)) {
 			/* NG */
 			return 0;
 		}
-		if (strcasecmp(igp->initiators[j], "ALL") == 0
-		    || strcasecmp(igp->initiators[j], iqn) == 0) {
+		if (strcasecmp(iname->name, "ALL") == 0
+		    || strcasecmp(iname->name, iqn) == 0) {
 			/* OK iqn, no check addr */
 			return 1;
 		}
@@ -466,19 +470,6 @@ spdk_iscsi_find_tgt_node(const char *target_name)
 	return NULL;
 }
 
-struct spdk_iscsi_init_grp *
-spdk_iscsi_find_init_grp(int tag)
-{
-	struct spdk_iscsi_init_grp *ig;
-
-	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
-		if (ig->tag == tag) {
-			return ig;
-		}
-	}
-	return NULL;
-}
-
 static int
 spdk_check_iscsi_name(const char *name)
 {
@@ -578,7 +569,7 @@ spdk_iscsi_tgt_node_add_map(struct spdk_iscsi_tgt_node *target,
 		SPDK_ERRLOG("%s: PortalGroup%d not active\n", target->name, pg_tag);
 		return NULL;
 	}
-	ig = spdk_iscsi_find_init_grp(ig_tag);
+	ig = spdk_iscsi_init_grp_find_by_tag(ig_tag);
 	if (ig == NULL) {
 		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 		SPDK_ERRLOG("%s: InitiatorGroup%d not found\n", target->name, ig_tag);

@@ -43,11 +43,21 @@ enum group_state {
 	GROUP_DESTROY = 0x2,
 };
 
+struct spdk_iscsi_initiator_name {
+	char *name;
+	SLIST_ENTRY(spdk_iscsi_initiator_name) slist;
+};
+
+struct spdk_iscsi_initiator_netmask {
+	char *mask;
+	SLIST_ENTRY(spdk_iscsi_initiator_netmask) slist;
+};
+
 struct spdk_iscsi_init_grp {
 	int ninitiators;
-	char **initiators;
+	SLIST_HEAD(, spdk_iscsi_initiator_name) initiator_head;
 	int nnetmasks;
-	char **netmasks;
+	SLIST_HEAD(, spdk_iscsi_initiator_netmask) netmask_head;
 	int ref;
 	int tag;
 	enum group_state state;
@@ -62,7 +72,6 @@ int spdk_iscsi_init_grp_create_from_initiator_list(int tag,
 		int num_initiator_masks, char **initiator_masks);
 
 void spdk_iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig);
-void spdk_iscsi_init_grp_destroy_by_tag(int tag);
 void spdk_iscsi_init_grp_release(struct spdk_iscsi_init_grp *ig);
 
 struct spdk_iscsi_init_grp *spdk_iscsi_init_grp_find_by_tag(int tag);
@@ -71,6 +80,5 @@ void spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig);
 
 int spdk_iscsi_init_grp_array_create(void);
 void spdk_iscsi_init_grp_array_destroy(void);
-int spdk_iscsi_init_grp_deletable(int tag);
 
 #endif // SPDK_INIT_GRP_H
