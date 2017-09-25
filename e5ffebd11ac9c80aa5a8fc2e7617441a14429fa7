@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bec06872_fc8394e3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-25T23:56:48Z",
+      "side": 1,
+      "message": "Stray colon in the subject line (also an extra space in between \"unmapped\" and \"blocks\").",
+      "range": {
+        "startLine": 7,
+        "startChar": 53,
+        "endLine": 7,
+        "endChar": 54
+      },
+      "revId": "e5ffebd11ac9c80aa5a8fc2e7617441a14429fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a70d8e0_442f36fa",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-25T23:56:48Z",
+      "side": 1,
+      "message": "You can also just call time(NULL), since you\u0027re not using the time after this call - see `man 2 time`.",
+      "revId": "e5ffebd11ac9c80aa5a8fc2e7617441a14429fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fcd6417_b4d24155",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-25T23:56:48Z",
+      "side": 1,
+      "message": "It might be simpler to use calloc():\n\n    context.write_buf \u003d calloc(NUM_BLOCKS, sizeof(char *));\n\nThis will also ensure the write_buf array is all zeroes, so if we go into the cleanup() path on the next allocation, we won\u0027t try to free random pointers.",
+      "revId": "e5ffebd11ac9c80aa5a8fc2e7617441a14429fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98b7fe4c_b5f957c4",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-25T23:56:48Z",
+      "side": 1,
+      "message": "We should use the maximum block size of all of the namespaces under test in place of all the hard-coded 0x1000 above.",
+      "revId": "e5ffebd11ac9c80aa5a8fc2e7617441a14429fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc7da05e_9b551860",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-25T23:56:48Z",
+      "side": 1,
+      "message": "This comment looks like it should go with the while loop below.  Please also use /* */ C-style comments.",
+      "revId": "e5ffebd11ac9c80aa5a8fc2e7617441a14429fa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
