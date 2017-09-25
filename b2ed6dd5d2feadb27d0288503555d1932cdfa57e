@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3fbfa8a_78ebe01e",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-25T22:47:27Z",
+      "side": 1,
+      "message": "the word \"valid\" here seems a little odd.  I think \"from the attach_cb() function\" is sufficient",
+      "revId": "b2ed6dd5d2feadb27d0288503555d1932cdfa57e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
