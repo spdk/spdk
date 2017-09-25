@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d13ad2de_50041c8a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1060,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-25T17:47:05Z",
+      "side": 1,
+      "message": "I\u0027m not clear on why write_zeroes and flush should have iovs set - these commands don\u0027t have associated data buffers, so bdev_io-\u003eu.bdev.iov will be uninitialized.",
+      "revId": "84dc553e37784d0828b30377b5a180415edb0b92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
