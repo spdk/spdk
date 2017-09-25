@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "76e879be_7eeff4de",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 29
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-25T11:57:18Z",
+      "side": 1,
+      "message": "Why do we need that?\nIf there actually is a newline sign - why not do \"echo -n\" when saving PID to file?",
+      "range": {
+        "startLine": 335,
+        "startChar": 43,
+        "endLine": 335,
+        "endChar": 59
+      },
+      "revId": "2c5460b427b7a0013ef3f0e4c7d8950c06266093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42684418_dfea5aba",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 29
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-25T11:57:18Z",
+      "side": 1,
+      "message": "And what if it takes 6 seconds, but application closes gracefully after that? Then you have a false fail.\n\nAfter sending SIGTERM to app you shoud wait in loop with a timeout and check that app finishes working before timeout runs out. If it does not - then you can fail the test",
+      "range": {
+        "startLine": 338,
+        "startChar": 0,
+        "endLine": 343,
+        "endChar": 20
+      },
+      "revId": "2c5460b427b7a0013ef3f0e4c7d8950c06266093",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
