@@ -45,11 +45,10 @@
 
 #define ACCEPT_TIMEOUT_US 1000 /* 1ms */
 
-static struct spdk_poller *g_acceptor_poller;
-
 static void
-spdk_iscsi_portal_accept(struct spdk_iscsi_portal *portal)
+spdk_iscsi_portal_accept(void *arg)
 {
+	struct spdk_iscsi_portal	*portal = arg;
 	int				rc, sock;
 	char buf[64];
 
@@ -77,29 +76,16 @@ spdk_iscsi_portal_accept(struct spdk_iscsi_portal *portal)
 	}
 }
 
-static void
-spdk_acceptor(void *arg)
-{
-	struct spdk_iscsi_globals		*iscsi = arg;
-	struct spdk_iscsi_portal_grp	*portal_group;
-	struct spdk_iscsi_portal	*portal;
-
-	TAILQ_FOREACH(portal_group, &iscsi->pg_head, tailq) {
-		TAILQ_FOREACH(portal, &portal_group->head, tailq) {
-			spdk_iscsi_portal_accept(portal);
-		}
-	}
-}
-
 void
-spdk_iscsi_acceptor_start(void)
+spdk_iscsi_acceptor_start(struct spdk_iscsi_portal *p)
 {
-	spdk_poller_register(&g_acceptor_poller, spdk_acceptor, &g_spdk_iscsi, spdk_env_get_current_core(),
+	spdk_poller_register(&p->acceptor_poller, spdk_iscsi_portal_accept,
+			     p, spdk_env_get_current_core(),
 			     ACCEPT_TIMEOUT_US);
 }
 
 void
-spdk_iscsi_acceptor_stop(void)
+spdk_iscsi_acceptor_stop(struct spdk_iscsi_portal *p)
 {
-	spdk_poller_unregister(&g_acceptor_poller, NULL);
+	spdk_poller_unregister(&p->acceptor_poller, NULL);
 }

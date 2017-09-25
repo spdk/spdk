@@ -77,6 +77,10 @@ struct spdk_iscsi_conn {
 	 *  are initialized when allocated.
 	 */
 	struct spdk_iscsi_portal		*portal;
+	int				pg_tag;
+	char				*portal_host;
+	char				*portal_port;
+	uint64_t			portal_cpumask;
 	uint32_t			lcore;
 	int				sock;
 	struct spdk_iscsi_sess	*sess;
