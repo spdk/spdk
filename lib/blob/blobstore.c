@@ -1362,11 +1362,31 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
 }
 
+static int
+_spdk_bs_opts_verify(struct spdk_bs_opts *opts)
+{
+	if (opts->cluster_sz == 0 || opts->num_md_pages == 0 || opts->max_md_ops == 0 ||
+	    opts->max_channel_ops == 0) {
+		SPDK_ERRLOG("Blobstore options cannot be set to 0\n");
+		return -1;
+	}
+
+	return 0;
+}
+
 static struct spdk_blob_store *
 _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 {
 	struct spdk_blob_store	*bs;
+	uint64_t dev_size;
 
+	dev_size = dev->blocklen * dev->blockcnt;
+	if (dev_size < opts->cluster_sz) {
+		/* Device size cannot be smaller than cluster size of blobstore */
+		SPDK_ERRLOG("Device size %" PRIu64 " is smaller than cluster size %d\n", dev_size,
+			    opts->cluster_sz);
+		return NULL;
+	}
 	bs = calloc(1, sizeof(struct spdk_blob_store));
 	if (!bs) {
 		return NULL;
@@ -1713,6 +1733,12 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		spdk_bs_opts_init(&opts);
 	}
 
+	if (_spdk_bs_opts_verify(&opts) != 0) {
+		dev->destroy(dev);
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
+
 	bs = _spdk_bs_alloc(dev, &opts);
 	if (!bs) {
 		dev->destroy(dev);
@@ -1794,6 +1820,17 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	num_md_pages += bs->md_len;
 
 	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
+
+	if (divide_round_up(num_md_pages, bs->pages_per_cluster) > bs->total_clusters) {
+		SPDK_ERRLOG("Blobstore metadata cannot use more clusters than is available, \
+			     please decrease number of pages reserved for metadata \
+			     or increase cluster size.\n");
+		spdk_dma_free(ctx->super);
+		free(ctx);
+		_spdk_bs_free(bs);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
 	/* Claim all of the clusters used by the metadata */
 	for (i = 0; i < divide_round_up(num_md_pages, bs->pages_per_cluster); i++) {
 		_spdk_bs_claim_cluster(bs, i);
