@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3467652_bcc534ee",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-25T22:55:35Z",
+      "side": 1,
+      "message": "I\u0027m not really sure what you are trying to say here. Are you saying that independent of whether one uses fio with or without SPDK that multiple threads should be used?\n\nI would try to rewrite this with as few words as possible and start with something like \"Note: It has been observed that...\" and just state what you\u0027re trying to communicate without a bunch of details.",
+      "revId": "3e7e62b709b147909ac0ce22be33efd5503b03ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
