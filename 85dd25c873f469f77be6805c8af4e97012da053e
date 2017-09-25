@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "b61d3add_98ae7748",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1749,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-25T22:17:41Z",
+      "side": 1,
+      "message": "I know you didn\u0027t touch this code but while you\u0027re in here, it might be nice to replace the UINT32_MAX with SPDK_BLOB_OPTS_NUM_MD_PAGES",
+      "revId": "85dd25c873f469f77be6805c8af4e97012da053e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1bd81501_a6b2468d",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 2
