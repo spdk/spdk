@@ -16,6 +16,24 @@
       "revId": "84dc553e37784d0828b30377b5a180415edb0b92",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebd3d578_b1b81eb3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1060,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-25T18:39:40Z",
+      "side": 1,
+      "message": "it\u0027s mostly to overwrite values from previous bdev_ios.\nshould i change them to NULL?",
+      "parentUuid": "d13ad2de_50041c8a",
+      "revId": "84dc553e37784d0828b30377b5a180415edb0b92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
