@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18382692_c5a5d891",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-25T20:03:16Z",
+      "side": 1,
+      "message": "Could we instead just add this extra 40 bytes to virtio_scsi_io_ctx?  I know that means for the vast majority of cases we\u0027re wasting 40 bytes that never get used, but it would eliminate the need for this whole patch set.  bdev_virtio does have the biggest IO context size currently so the 40 bytes will be an incremental add.\n\nWe currently allocate 64K IO buffers, so this would add 2.56MB of extra memory consumption.  I\u0027m OK with that but curious what others think.",
+      "revId": "86d60c44e1f57784a5e2d4224d657313ee21fd27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
