@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c3a52c54_371b890b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-25T13:38:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8a0cc156_1a1068e7",
+      "revId": "f09b8bc12c4bc770fd79d2ac0e556bc472023f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9804249d_bcaa9315",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-22T19:35:23Z",
       "side": 1,
       "message": "Can you keep these assignment together - cluster_sz, total_clusters, pages_per_cluster?  I think that is easier to read than breaking those up to add this somewhat unrelated check.\n\nIn fact, we should just do this check at the beginning of the function, even before the calloc().  We have all of the information we need there.  Then you can just return NULL and avoid having to add the goto + label.",
+      "revId": "f09b8bc12c4bc770fd79d2ac0e556bc472023f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91d70fd6_a59d9c05",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1404,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-25T13:38:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9804249d_bcaa9315",
       "revId": "f09b8bc12c4bc770fd79d2ac0e556bc472023f68",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -65,6 +101,24 @@
       "side": 1,
       "message": "atleast \u003d\u003e at least\n\nAgree with Daniel - I\u0027m not sure why a cluster has to be at least two pages.",
       "parentUuid": "1c8a6ac1_02b06562",
+      "revId": "f09b8bc12c4bc770fd79d2ac0e556bc472023f68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0c4c978_1047a5bb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1407,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-25T13:38:58Z",
+      "side": 1,
+      "message": "After more though it might have been not the right place to fix that. I\u0027ve encountered issue in spdk_bs_init() during _spdk_bs_claim_cluster() (blobstore.c:1830 in this patch) due to cluster_num exceeding total_clusters.\n\nPlease consider following scenario:\n- device has blkcnt of 256, blocklen of 4096\n- requested cluster size is 4096 and SPDK_BS_PAGE_SIZE defaults to 4096\n\nThis results in:\n- blobstore.c:1403 bs-\u003etotal_clusters \u003d 256/(4096/4096) \u003d 256\n- blobstore.c:1404 bs-\u003epages_per_cluster \u003d 4096/4096 \u003d 1\n- blobstore.c:1414 bs-\u003eused_clusters, array is created with 256 elements\n- blobstore.c:1829 num_md_pages/bs-\u003epages_per_cluster \u003d (256 + 3 for md)/1 This will try to claim 259 clusters, exceeding total_clusters of 256.\n\nEven if it did not exceed total_clusters, does having less than 1:1 ratio of metadata to data make sense ?\nI did not take into account the opts.num_md_pages other than default here as well.\n\n\nNext patch set will change fail spdk_bs_init(), if divide_round_up(num_md_pages, bs-\u003epages_per_cluster) exceeds total_clusters.\nPlease let me know if I missed something in that scenario.",
+      "parentUuid": "188ef015_821b7cca",
       "revId": "f09b8bc12c4bc770fd79d2ac0e556bc472023f68",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
