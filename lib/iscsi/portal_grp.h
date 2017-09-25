@@ -43,6 +43,7 @@ struct spdk_iscsi_portal {
 	char				*port;
 	int				sock;
 	uint64_t			cpumask;
+	TAILQ_ENTRY(spdk_iscsi_portal)	per_pg_tailq;
 	TAILQ_ENTRY(spdk_iscsi_portal)	tailq;
 };
 
@@ -81,7 +82,7 @@ void spdk_iscsi_portal_grp_array_destroy(void);
 struct spdk_iscsi_portal_grp *spdk_iscsi_portal_grp_find_by_tag(int tag);
 
 int spdk_iscsi_portal_grp_open_all(void);
-int spdk_iscsi_portal_grp_close_all(void);
+void spdk_iscsi_portal_grp_close_all(void);
 
 int spdk_iscsi_portal_grp_deletable(int tag);
 #endif // SPDK_PORTAL_GRP_H
