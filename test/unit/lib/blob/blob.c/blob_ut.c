@@ -962,6 +962,30 @@ bs_cluster_sz(void)
 	struct spdk_bs_opts opts;
 	uint32_t cluster_sz;
 
+	/* Set cluster size to zero */
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	opts.cluster_sz = 0;
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
+	SPDK_CU_ASSERT_FATAL(g_bs == NULL);
+
+	/*
+	 * Set cluster size to blobstore page size,
+	 * to work it is required to be at least twice the blobstore page size.
+	 */
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	opts.cluster_sz = SPDK_BS_PAGE_SIZE;
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -ENOMEM);
+	SPDK_CU_ASSERT_FATAL(g_bs == NULL);
+
+	/* Set cluster size to twice the default */
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
 	opts.cluster_sz *= 2;
