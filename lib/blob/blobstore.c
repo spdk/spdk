@@ -1383,7 +1383,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	dev_size = dev->blocklen * dev->blockcnt;
 	if (dev_size < opts->cluster_sz) {
 		/* Device size cannot be smaller than cluster size of blobstore */
-		SPDK_ERRLOG("Device size %" PRIu64 " is smaller than cluster size %d\n", dev_size,
+		SPDK_ERRLOG("Device size %" PRIu64 " is smaller than cluster size %" PRIu64 "\n", dev_size,
 			    opts->cluster_sz);
 		return NULL;
 	}

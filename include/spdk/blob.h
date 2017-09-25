@@ -140,7 +140,7 @@ struct spdk_bs_dev {
 };
 
 struct spdk_bs_opts {
-	uint32_t cluster_sz; /* In bytes. Must be multiple of page size. */
+	uint64_t cluster_sz; /* In bytes. Must be multiple of page size. */
 	uint32_t num_md_pages; /* Count of the number of pages reserved for metadata */
 	uint32_t max_md_ops; /* Maximum simultaneous metadata operations */
 	uint32_t max_channel_ops; /* Maximum simultaneous operations per channel */
