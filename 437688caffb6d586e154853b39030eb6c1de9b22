@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4bc297c_f328a5b2",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-25T17:42:44Z",
+      "side": 1,
+      "message": "offset_len sounds confusing to me - should this be named offset_blocks?",
+      "range": {
+        "startLine": 113,
+        "startChar": 12,
+        "endLine": 113,
+        "endChar": 22
+      },
+      "revId": "437688caffb6d586e154853b39030eb6c1de9b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95b16272_62a53deb",
+        "filename": "lib/bdev/pmem/bdev_pmem.h",
+        "patchSetId": 32
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-25T17:42:44Z",
+      "side": 1,
+      "message": "SPDK_BDEV_MALLOC_H -\u003e SPDK_BDEV_PMEM_H (or just remove the comment)",
+      "range": {
+        "startLine": 43,
+        "startChar": 10,
+        "endLine": 43,
+        "endChar": 28
+      },
+      "revId": "437688caffb6d586e154853b39030eb6c1de9b22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
