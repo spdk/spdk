@@ -3,7 +3,7 @@
 @sa @ref nvme_fabrics_host
 
 
-# Getting Started Guide {#nvmf_getting_started}
+# NVMe-oF Target Getting Started Guide {#nvmf_getting_started}
 
 The NVMe over Fabrics target is a user space application that presents block devices over the
 network using RDMA. It requires an RDMA-capable NIC with its corresponding OFED software package
