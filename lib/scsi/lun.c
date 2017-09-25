@@ -373,8 +373,12 @@ spdk_scsi_lun_delete(const char *lun_name)
 int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 {
 	if (lun->io_channel != NULL) {
-		assert(spdk_io_channel_get_thread(lun->io_channel) == spdk_get_thread());
-		return 0;
+		if (pthread_self() == lun->thread_id) {
+			lun->ref++;
+			return 0;
+		}
+		SPDK_ERRLOG("io_channel already allocated for lun %s\n", lun->name);
+		return -1;
 	}
 
 	lun->lcore = spdk_env_get_current_core();
@@ -383,14 +387,19 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 	if (lun->io_channel == NULL) {
 		return -1;
 	}
+	lun->thread_id = pthread_self();
+	lun->ref = 1;
 	return 0;
 }
 
 void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
 {
 	if (lun->io_channel != NULL) {
-		spdk_put_io_channel(lun->io_channel);
-		lun->io_channel = NULL;
+		lun->ref--;
+		if (lun->ref == 0) {
+			spdk_put_io_channel(lun->io_channel);
+			lun->io_channel = NULL;
+		}
 	}
 }
 
