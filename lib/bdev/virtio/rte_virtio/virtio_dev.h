@@ -36,6 +36,7 @@
 
 #include <stdint.h>
 #include <sys/uio.h>
+#include <sys/queue.h>
 
 #define VIRTIO_MAX_RX_QUEUES 128U
 #define VIRTIO_MAX_TX_QUEUES 128U
@@ -50,6 +51,8 @@ struct virtio_dev {
 	uint64_t	guest_features;
 	int		is_hw;
 	uint8_t		modern;
+
+	TAILQ_ENTRY(virtio_dev) tailq;
 };
 
 struct virtio_req {

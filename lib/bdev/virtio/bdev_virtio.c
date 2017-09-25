@@ -306,8 +306,14 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 		spdk_bdev_register(&disk->bdev);
 	}
 
+	TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, base->vdev, tailq);
+	TAILQ_INSERT_TAIL(&g_virtio_driver.attached_ctrlrs, base->vdev, tailq);
+
 	spdk_dma_free(base);
-	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+
+	if (TAILQ_EMPTY(&g_virtio_driver.init_ctrlrs)) {
+		spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+	}
 }
 
 static int
@@ -508,6 +514,8 @@ bdev_virtio_initialize(void)
 	/* TODO check rc, add virtio_dev_deinit() */
 	virtio_init_device(vdev, VIRTIO_PMD_DEFAULT_GUEST_FEATURES);
 	virtio_dev_start(vdev);
+
+	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
 
 	base->vdev = vdev;
 	TAILQ_INIT(&base->found_disks);
