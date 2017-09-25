@@ -109,6 +109,29 @@ sanitize_path(const std::string &input, const std::string &mount_directory)
 	return name;
 }
 
+struct spdk_opts {
+	uint64_t cache_size;
+	int32_t shm_id;
+};
+
+static void spdk_get_default_opts(struct spdk_opts *opts)
+{
+	opts->cache_size = 4096;
+	opts->shm_id = -1;
+}
+
+static void spdk_initialize_user_opts(struct spdk_opts *local_opts, struct spdk_opts *user_opts,
+				      size_t user_opts_size)
+{
+	size_t local_opts_size;
+	size_t copy_size;
+
+	local_opts_size = sizeof(struct spdk_opts);
+	spdk_get_default_opts(local_opts);
+	copy_size = user_opts_size > local_opts_size ? local_opts_size : user_opts_size;
+	memcpy(local_opts, user_opts, copy_size);
+}
+
 class SpdkSequentialFile : public SequentialFile
 {
 	struct spdk_file *mFile;
@@ -631,9 +654,11 @@ SpdkEnv::~SpdkEnv()
 }
 
 Env *NewSpdkEnv(Env *base_env, const std::string &dir, const std::string &conf,
-		const std::string &bdev, uint64_t cache_size_in_mb, int shm_id)
+		const std::string &bdev, struct spdk_opts *user_opts, size_t size)
 {
-	SpdkEnv *spdk_env = new SpdkEnv(base_env, dir, conf, bdev, cache_size_in_mb, shm_id);
+	struct spdk_opts options;
+	spdk_initialize_user_opts(&options, user_opts, size);
+	SpdkEnv *spdk_env = new SpdkEnv(base_env, dir, conf, bdev, options.cache_size, options.shm_id);
 
 	if (g_fs != NULL) {
 		return spdk_env;
