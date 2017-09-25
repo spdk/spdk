@@ -244,7 +244,7 @@ virtio_user_dev_init(char *path, int queues, int queue_size)
 	vdev = &dev->vdev;
 	vdev->is_hw = 0;
 
-	virtio_hw_internal[0].vtpci_ops = &virtio_user_ops;
+	VTPCI_OPS(vdev) = &virtio_user_ops;
 
 	snprintf(dev->path, PATH_MAX, "%s", path);
 	/* Account for control and event queue. */
