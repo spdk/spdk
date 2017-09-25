@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53d93234_7cc28428",
+        "filename": "test/unit/lib/bdev/pmem/Makefile",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-25T12:32:12Z",
+      "side": 1,
+      "message": "This should also be changed :D",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 59
+      },
+      "revId": "9fcb5f6e1928fca0c92e1110cc20633becce1c5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
