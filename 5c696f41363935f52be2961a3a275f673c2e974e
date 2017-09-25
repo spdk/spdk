@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfe1cab5_40431399",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-25T16:52:18Z",
+      "side": 1,
+      "message": "This will have the same problem.  Assume we have one I/O that\u0027s 128KB where we can allocate the buffer and then one that\u0027s 256KB and we cannot allocate the buffer.  The 256KB one will go on the tailq.  When the 128KB I/O completes, we will reuse that buffer for the 256KB I/O.",
+      "revId": "5c696f41363935f52be2961a3a275f673c2e974e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
