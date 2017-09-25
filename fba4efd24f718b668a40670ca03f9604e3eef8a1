@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6d68941c_b5ee5eae",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-25T11:00:27Z",
+      "side": 1,
+      "message": "Good idea. I\u0027ll remove resizing.\nI\u0027ll also add new attribute.",
+      "parentUuid": "cef095a4_9cf330b1",
+      "revId": "fba4efd24f718b668a40670ca03f9604e3eef8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be0e9177_f3d73a4c",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-22T23:32:46Z",
       "side": 1,
       "message": "This assert() is ok, but in general it\u0027s not necessary to add these asserts everywhere before a function pointer is called.\n\nCalling a NULL function pointer will immediately cause a useful stack trace, so it should be enough to just assert(cb_fn !\u003d NULL) during spdk_lvs_init() and not add separate ones for each function in the init chain.",
+      "revId": "fba4efd24f718b668a40670ca03f9604e3eef8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d0c79f1_3c980942",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-25T11:00:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be0e9177_f3d73a4c",
       "revId": "fba4efd24f718b668a40670ca03f9604e3eef8a1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "61469c3f_f8c953ed",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-25T11:00:27Z",
+      "side": 1,
+      "message": "This won\u0027t be an issue when resize is removed",
+      "parentUuid": "b9f08c97_37da23dd",
+      "revId": "fba4efd24f718b668a40670ca03f9604e3eef8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55c6dc41_fd7dffee",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2017-09-22T23:32:46Z",
       "side": 1,
       "message": "extra return and newline not needed",
+      "revId": "fba4efd24f718b668a40670ca03f9604e3eef8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4978c83d_3777c0d1",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-25T11:00:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55c6dc41_fd7dffee",
       "revId": "fba4efd24f718b668a40670ca03f9604e3eef8a1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
