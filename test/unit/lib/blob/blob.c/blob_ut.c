@@ -131,13 +131,6 @@ blob_init(void)
 	dev->blocklen = 500;
 	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == -EINVAL);
-	/*
-	 * Normally dev gets deleted as part of the dev->destroy callback.  But
-	 *  that doesn't get invoked when init() fails.  So manually free it here
-	 *  instead.  Probably blobstore should still destroy the dev when init
-	 *  fails, but we'll do that in a separate patch.
-	 */
-	free(dev);
 
 	dev = init_dev();
 	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
