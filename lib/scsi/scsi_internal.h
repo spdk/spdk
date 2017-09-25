@@ -87,6 +87,14 @@ struct spdk_scsi_lun {
 	/** I/O channel for the bdev associated with this LUN. */
 	struct spdk_io_channel *io_channel;
 
+	/** Thread ID for the thread that allocated the I/O channel for this
+	 *   LUN.  All I/O to this LUN must be performed from this thread.
+	 */
+	pthread_t thread_id;
+
+	/**  The reference number for this LUN, thus we can correctly free the io_channel */
+	uint32_t ref;
+
 	/** Name for this LUN. */
 	char name[SPDK_SCSI_LUN_MAX_NAME_LENGTH];
 
