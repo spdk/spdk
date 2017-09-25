@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "000e4207_0c9cfbf0",
+        "filename": "lib/blobkv/blobkv.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-09-25T06:38:02Z",
+      "side": 1,
+      "message": "you can use scripts/check_format.sh to make your format align with spdk\u0027s coding style",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 4
+      },
+      "revId": "73e029588d613bbcf4bb1230f673707454ecb5c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
