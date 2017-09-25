@@ -237,6 +237,8 @@ struct vtpci_internal {
 
 struct virtio_driver {
 	struct vtpci_internal internal[128];
+	TAILQ_HEAD(, virtio_dev) init_ctrlrs;
+	TAILQ_HEAD(, virtio_dev) attached_ctrlrs;
 };
 
 extern struct virtio_driver g_virtio_driver;

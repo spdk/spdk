@@ -43,7 +43,10 @@
 #include "virtio_logs.h"
 #include "virtio_queue.h"
 
-struct virtio_driver g_virtio_driver;
+struct virtio_driver g_virtio_driver = {
+	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.init_ctrlrs),
+	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.attached_ctrlrs),
+};
 
 /*
  * Following macros are derived from linux/pci_regs.h, however,
