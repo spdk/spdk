@@ -363,6 +363,12 @@ spdk_bdev_init_complete(int rc)
 	cb_fn(cb_arg, rc);
 }
 
+void
+spdk_bdev_module_init_defer(struct spdk_bdev_module_if *module)
+{
+	module->action_in_progress++;
+}
+
 static void
 spdk_bdev_module_action_complete(void)
 {

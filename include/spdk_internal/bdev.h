@@ -354,6 +354,14 @@ void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 void spdk_vbdev_unregister(struct spdk_bdev *vbdev);
 
 void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module);
+
+/**
+ * Defer module initialization until spdk_bdev_module_init_done()
+ * is explicitly called. If this function is called multiple times
+ * for the same module the spdk_bdev_module_init_done() function
+ * has to be called the same amount of times as well.
+ */
+void spdk_bdev_module_init_defer(struct spdk_bdev_module_if *module);
 void spdk_bdev_module_init_done(struct spdk_bdev_module_if *module);
 int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				struct spdk_bdev_module_if *module);
@@ -467,16 +475,6 @@ void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spd
 	}
 
 #define SPDK_GET_BDEV_MODULE(name) (&name ## _if)
-
-/*
- * Set module initialization to be asynchronous. After using this macro, the module
- * initialization has to be explicitly finished by calling spdk_bdev_module_init_done().
- */
-#define SPDK_BDEV_MODULE_ASYNC_INIT(name)							\
-	__attribute__((constructor)) static void name ## _async_init(void)			\
-	{											\
-		SPDK_GET_BDEV_MODULE(name)->action_in_progress = 1;				\
-	}
 
 /*
  * Modules are not required to use this macro.  It allows modules to reference the module with

@@ -106,8 +106,6 @@ bdev_virtio_get_ctx_size(void)
 SPDK_BDEV_MODULE_REGISTER(virtio_scsi, bdev_virtio_initialize, bdev_virtio_finish,
 			  NULL, bdev_virtio_get_ctx_size, NULL)
 
-SPDK_BDEV_MODULE_ASYNC_INIT(virtio_scsi)
-
 static void
 bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
@@ -528,10 +526,9 @@ bdev_virtio_initialize(void)
 	struct virtio_dev *vdev = NULL;
 	char *type, *path;
 	uint32_t i;
-	int rc = 0;
 
 	if (sp == NULL) {
-		goto out;
+		return 0;
 	}
 
 	for (i = 0; spdk_conf_section_get_nval(sp, "Dev", i) != NULL; i++) {
@@ -556,14 +553,13 @@ bdev_virtio_initialize(void)
 	}
 
 	if (vdev == NULL) {
-		goto out;
+		return -1;
 	}
 
 	base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
 	if (base == NULL) {
 		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
-		rc = -1;
-		goto out;
+		return -1;
 	}
 
 	/* TODO check rc, add virtio_dev_deinit() */
@@ -577,11 +573,8 @@ bdev_virtio_initialize(void)
 			       spdk_env_get_current_core(), 0);
 
 	scan_target(base);
+	spdk_bdev_module_init_defer(SPDK_GET_BDEV_MODULE(virtio_scsi));
 	return 0;
-
-out:
-	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
-	return rc;
 }
 
 static void bdev_virtio_finish(void)
