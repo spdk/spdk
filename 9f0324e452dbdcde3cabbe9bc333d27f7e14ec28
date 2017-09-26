@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b73fefc2_c6121675",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 41
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-26T14:18:11Z",
+      "side": 1,
+      "message": "should be 4 more spaces here",
+      "range": {
+        "startLine": 355,
+        "startChar": 1,
+        "endLine": 355,
+        "endChar": 21
+      },
+      "revId": "9f0324e452dbdcde3cabbe9bc333d27f7e14ec28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
