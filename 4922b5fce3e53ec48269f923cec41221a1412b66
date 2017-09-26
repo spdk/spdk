@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aef0c42_213e7954",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 31
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T07:25:05Z",
+      "side": 1,
+      "message": "still needs fixing",
+      "range": {
+        "startLine": 333,
+        "startChar": 7,
+        "endLine": 333,
+        "endChar": 42
+      },
+      "revId": "4922b5fce3e53ec48269f923cec41221a1412b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f87addc0_0d0bc8be",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 31
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T07:25:05Z",
+      "side": 1,
+      "message": "what about timeout? If SIGTERM does not work, aren\u0027t we stuck in loop?",
+      "range": {
+        "startLine": 337,
+        "startChar": 15,
+        "endLine": 337,
+        "endChar": 39
+      },
+      "revId": "4922b5fce3e53ec48269f923cec41221a1412b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50d82df0_65626bfc",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 31
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T07:25:05Z",
+      "side": 1,
+      "message": "Add sleep(1) after that, otherwise we get spammed with lots of output.",
+      "range": {
+        "startLine": 339,
+        "startChar": 20,
+        "endLine": 339,
+        "endChar": 79
+      },
+      "revId": "4922b5fce3e53ec48269f923cec41221a1412b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99177c51_0e0a2dfb",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 31
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T07:25:05Z",
+      "side": 1,
+      "message": "have doubts about that",
+      "range": {
+        "startLine": 341,
+        "startChar": 16,
+        "endLine": 341,
+        "endChar": 24
+      },
+      "revId": "4922b5fce3e53ec48269f923cec41221a1412b66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
