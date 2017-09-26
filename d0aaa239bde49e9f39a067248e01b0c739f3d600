@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "ad33af92_25dfc00f",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T22:51:33Z",
+      "side": 1,
+      "message": "Uh, yeah - what you said.  I still think this could be made generic by having a generic callback function that gets passed spdk_bs_load() which sets -\u003ebs, -\u003epage_size, -\u003echannel, etc. and then calls -\u003enext_func() directly.  But I\u0027m OK with it as is.",
+      "parentUuid": "0211fe9d_51858ca5",
+      "revId": "d0aaa239bde49e9f39a067248e01b0c739f3d600",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "068364d8_f82a2009",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 22
