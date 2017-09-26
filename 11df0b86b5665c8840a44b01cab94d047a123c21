@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de47137c_c92e8182",
+        "filename": "test/unit/lib/bdev/pmem/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-26T15:34:39Z",
+      "side": 1,
+      "message": "This was already corrected by Karol Latecki. Why reintroduced?",
+      "range": {
+        "startLine": 4,
+        "startChar": 17,
+        "endLine": 4,
+        "endChar": 37
+      },
+      "revId": "11df0b86b5665c8840a44b01cab94d047a123c21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
