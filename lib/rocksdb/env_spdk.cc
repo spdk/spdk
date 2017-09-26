@@ -386,20 +386,20 @@ public:
 		}
 		return EnvWrapper::FileExists(fname);
 	}
-	virtual Status RenameFile(const std::string &src, const std::string &target) override
+	virtual Status RenameFile(const std::string &src, const std::string &t) override
 	{
 		int rc;
 		std::string src_name = sanitize_path(src, mDirectory);
-		std::string target_name = sanitize_path(target, mDirectory);
+		std::string target_name = sanitize_path(t, mDirectory);
 
 		rc = spdk_fs_rename_file(g_fs, g_sync_args.channel,
 					 src_name.c_str(), target_name.c_str());
 		if (rc == -ENOENT) {
-			return EnvWrapper::RenameFile(src, target);
+			return EnvWrapper::RenameFile(src, t);
 		}
 		return Status::OK();
 	}
-	virtual Status LinkFile(const std::string &src, const std::string &target) override
+	virtual Status LinkFile(const std::string &src, const std::string &t) override
 	{
 		return Status::NotSupported("SpdkEnv does not support LinkFile");
 	}
