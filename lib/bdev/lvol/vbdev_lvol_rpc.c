@@ -42,7 +42,7 @@ SPDK_LOG_REGISTER_TRACE_FLAG("lvolrpc", SPDK_TRACE_LVOL_RPC)
 
 struct rpc_construct_lvol_store {
 	char *base_name;
-	uint32_t cluster_sz;
+	uint64_t cluster_sz;
 };
 
 static void
@@ -53,7 +53,7 @@ free_rpc_construct_lvol_store(struct rpc_construct_lvol_store *req)
 
 static const struct spdk_json_object_decoder rpc_construct_lvol_store_decoders[] = {
 	{"base_name", offsetof(struct rpc_construct_lvol_store, base_name), spdk_json_decode_string},
-	{"cluster_sz", offsetof(struct rpc_construct_lvol_store, cluster_sz), spdk_json_decode_uint32, true},
+	{"cluster_sz", offsetof(struct rpc_construct_lvol_store, cluster_sz), spdk_json_decode_uint64, true},
 };
 
 static void

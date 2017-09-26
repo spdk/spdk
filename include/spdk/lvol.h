@@ -46,7 +46,7 @@ struct spdk_lvol_store;
 struct spdk_lvol;
 
 struct spdk_lvs_opts {
-	uint32_t cluster_sz;
+	uint64_t cluster_sz;
 };
 
 typedef void (*spdk_lvs_op_with_handle_complete)(void *cb_arg, struct spdk_lvol_store *lvol_store,
