@@ -394,7 +394,7 @@ static struct rte_pci_driver rte_virtio_pmd = {
 		.name = "net_virtio",
 	},
 	.id_table = pci_id_virtio_map,
-	.drv_flags = 0,
+	.drv_flags = RTE_PCI_DRV_NEED_MAPPING,
 	.probe = virtio_pci_probe,
 	.remove = virtio_pci_remove,
 };
