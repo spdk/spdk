@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7b9a03c_da9ccdb6",
+        "filename": "lib/blob/request.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-26T22:48:34Z",
+      "side": 0,
+      "message": "These whitespace changes look unrelated.",
+      "revId": "14f7a8eec66d6ec1745eace0f448bc95e5ca8b04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

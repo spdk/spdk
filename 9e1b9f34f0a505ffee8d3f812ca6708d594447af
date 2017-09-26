@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2d7c25f_0e5d7774",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1846,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-26T22:48:34Z",
+      "side": 1,
+      "message": "Remove extra space before the comma.",
+      "range": {
+        "startLine": 1846,
+        "startChar": 28,
+        "endLine": 1846,
+        "endChar": 29
+      },
+      "revId": "9e1b9f34f0a505ffee8d3f812ca6708d594447af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
