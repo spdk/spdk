@@ -1259,7 +1259,7 @@ spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io = spdk_bdev_get_io();
 	if (!bdev_io) {
 		SPDK_ERRLOG("bdev_io memory allocation failed duing reset\n");
-		return -ENOMEM;;
+		return -ENOMEM;
 	}
 
 	bdev_io->ch = channel;
