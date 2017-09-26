@@ -385,45 +385,45 @@ ut_pmem_open_close(void)
 	pools_cnt = g_opened_pools;
 
 	/* Try opening with NULL name */
-	rc = spdk_create_pmem_disk(NULL, &bdev);
+	rc = spdk_create_pmem_disk(NULL, NULL, &bdev);
 	CU_ASSERT_PTR_NULL(bdev);
 	CU_ASSERT_EQUAL(pools_cnt, g_opened_pools);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* Open non-existent pool */
-	rc = spdk_create_pmem_disk("non existent pool", &bdev);
+	rc = spdk_create_pmem_disk("non existent pool", NULL, &bdev);
 	CU_ASSERT_PTR_NULL(bdev);
 	CU_ASSERT_EQUAL(pools_cnt, g_opened_pools);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* Open inconsistent pool */
-	rc = spdk_create_pmem_disk(g_pool_inconsistent.name, &bdev);
+	rc = spdk_create_pmem_disk(g_pool_inconsistent.name, NULL, &bdev);
 	CU_ASSERT_PTR_NULL(bdev);
 	CU_ASSERT_EQUAL(pools_cnt, g_opened_pools);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* Open consistent pool fail the open from unknown reason. */
 	g_pmemblk_open_allow_open = false;
-	rc = spdk_create_pmem_disk(g_pool_inconsistent.name, &bdev);
+	rc = spdk_create_pmem_disk(g_pool_inconsistent.name, NULL, &bdev);
 	g_pmemblk_open_allow_open = true;
 	CU_ASSERT_PTR_NULL(bdev);
 	CU_ASSERT_EQUAL(pools_cnt, g_opened_pools);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* Open pool with nblocks = 0 */
-	rc = spdk_create_pmem_disk(g_pool_nblock_0.name, &bdev);
+	rc = spdk_create_pmem_disk(g_pool_nblock_0.name, NULL, &bdev);
 	CU_ASSERT_PTR_NULL(bdev);
 	CU_ASSERT_EQUAL(pools_cnt, g_opened_pools);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* Open pool with bsize = 0 */
-	rc = spdk_create_pmem_disk(g_pool_bsize_0.name, &bdev);
+	rc = spdk_create_pmem_disk(g_pool_bsize_0.name, NULL, &bdev);
 	CU_ASSERT_PTR_NULL(bdev);
 	CU_ASSERT_EQUAL(pools_cnt, g_opened_pools);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
 	/* Open good  pool */
-	rc = spdk_create_pmem_disk(g_pool_ok.name, &bdev);
+	rc = spdk_create_pmem_disk(g_pool_ok.name, NULL, &bdev);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 	CU_ASSERT_TRUE(g_pool_ok.is_open);
 	CU_ASSERT_EQUAL(pools_cnt + 1, g_opened_pools);
@@ -454,7 +454,7 @@ ut_pmem_write_read(void)
 		{ 0, 4 * g_pool_ok.bsize },
 	};
 
-	rc = spdk_create_pmem_disk(g_pool_ok.name, &bdev);
+	rc = spdk_create_pmem_disk(g_pool_ok.name, NULL, &bdev);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	SPDK_CU_ASSERT_FATAL(g_pool_ok.nblock > 40);
@@ -628,7 +628,7 @@ ut_pmem_reset(void)
 	struct spdk_bdev *bdev;
 	int rc;
 
-	rc = spdk_create_pmem_disk(g_pool_ok.name, &bdev);
+	rc = spdk_create_pmem_disk(g_pool_ok.name, NULL, &bdev);
 	CU_ASSERT_EQUAL(rc, 0);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
@@ -648,7 +648,7 @@ ut_pmem_unmap_write_zero(int16_t io_type)
 	int rc;
 
 	CU_ASSERT(io_type == SPDK_BDEV_IO_TYPE_UNMAP || io_type == SPDK_BDEV_IO_TYPE_WRITE_ZEROES);
-	rc = spdk_create_pmem_disk(g_pool_ok.name, &bdev);
+	rc = spdk_create_pmem_disk(g_pool_ok.name, NULL, &bdev);
 	CU_ASSERT_EQUAL(rc, 0);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 	SPDK_CU_ASSERT_FATAL(g_pool_ok.nblock > 40);

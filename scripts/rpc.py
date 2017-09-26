@@ -211,10 +211,13 @@ p.set_defaults(func=delete_pmem_pool)
 
 def construct_pmem_bdev(args):
     params = {'pmem_file': args.pmem_file}
+    if args.name:
+        params['name'] = args.name
     print_array(jsonrpc_call('construct_pmem_bdev', params))
 
 p = subparsers.add_parser('construct_pmem_bdev', help='Add a bdev with pmem backend')
 p.add_argument('pmem_file', help='Path to pmemblk pool file')
+p.add_argument('-n', '--name', help='Block device name', required=False)
 p.set_defaults(func=construct_pmem_bdev)
 
 def construct_null_bdev(args):
