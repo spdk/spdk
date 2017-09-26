@@ -300,6 +300,22 @@ function vm_scp()
 	$scp_cmd "$@"
 }
 
+# Execute scp command on given VM
+# param $1 virtual machine number
+#
+function vm_scp()
+{
+	vm_num_is_valid $1 || return 1
+	vm_create_ssh_config
+	local ssh_config="$VM_BASE_DIR/ssh_config"
+
+	local scp_cmd="scp -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
+		-P $(vm_ssh_socket $1) "
+
+	shift
+	$scp_cmd "$@"
+}
+
 
 # check if specified VM is running
 # param $1 VM num
@@ -454,6 +470,7 @@ function vm_setup()
 	local disks=""
 	local raw_cache=""
 	local force_vm=""
+	local guest_memory=1024
 	while getopts ':-:' optchar; do
 		case "$optchar" in
 			-)
@@ -465,6 +482,7 @@ function vm_setup()
 				disks=*) local disks="${OPTARG#*=}" ;;
 				raw-cache=*) local raw_cache=",cache${OPTARG#*=}" ;;
 				force=*) local force_vm=${OPTARG#*=} ;;
+				memory=*) local guest_memory=${OPTARG#*=} ;;
 				*)
 					error "unknown argument $OPTARG"
 					return 1
@@ -476,6 +494,7 @@ function vm_setup()
 			;;
 		esac
 	done
+	hp=$(echo $(($guest_memory/1024)) )
 
 	# Find next directory we can use
 	if [[ ! -z $force_vm ]]; then
@@ -542,8 +561,8 @@ function vm_setup()
 	#-cpu host
 	local node_num=${!qemu_numa_node_param}
 	echo "INFO: NUMA NODE: $node_num"
-	cmd+="-m 1024 --enable-kvm -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize -snapshot ${eol}"
-	cmd+="-object memory-backend-file,id=mem,size=1G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
+	cmd+="-m $guest_memory --enable-kvm -cpu host -smp $cpu_num -vga std -vnc :$vnc_socket -snapshot -daemonize ${eol}"
+	cmd+="-object memory-backend-file,id=mem,size=${hp}G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
 	cmd+="-numa node,memdev=mem ${eol}"
 	cmd+="-pidfile $qemu_pid_file ${eol}"
 	cmd+="-serial file:$vm_dir/serial.log ${eol}"
