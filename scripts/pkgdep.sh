@@ -17,6 +17,8 @@ if [ -s /etc/redhat-release ]; then
 	yum install -y numactl-devel
 	# Additional dependencies for building docs
 	yum install -y doxygen mscgen
+	# Additional dependencies for building nvml based backends
+	yum install -y libpmemblk-devel
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
