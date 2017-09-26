@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a28d216_d1275e2e",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-26T20:06:51Z",
+      "side": 1,
+      "message": "Rather than storing this as a special xattr that all blob store users will have to use by convention, I think it might be a good idea to put a bstype field into struct spdk_bs_super_block (maybe use a UUID), and add a required parameter to spdk_bs_init() to provide the bstype.  Then we can have an accessor function, something like spdk_bs_get_type(), to return the bs type as soon as the open completes.\n\nThis should all probably be a separate patch to introduce the bstype in the generic blobstore layer (and updating blobfs and lvol to pass the new type parameter), then this patch can use the new get_type function to actually check the type during load.  We might also want to add a special case for existing blobfs blob stores, which won\u0027t have the new type - we could potentially assign blobfs a special all-zeroes UUID to keep compatibility with existing blobfs stores. (Or, probably better, we could allow reading in old blobfs with all-zeroes UUID, but always write the newly defined UUID.)",
+      "revId": "57489b8e933371d16a2daeb8370aad1cbb49da6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
