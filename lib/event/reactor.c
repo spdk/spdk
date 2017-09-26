@@ -150,6 +150,23 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
 	event->fn = fn;
 	event->arg1 = arg1;
 	event->arg2 = arg2;
+	event->sync_call = false;
+
+	return event;
+}
+
+static struct spdk_event *
+sync_spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1,
+			 void *arg2)
+{
+	struct spdk_event *event;
+
+	event = spdk_event_allocate(lcore, fn, arg1, arg2);
+	if (event == NULL) {
+		return NULL;
+	}
+
+	event->sync_call = true;
 
 	return event;
 }
@@ -160,6 +177,12 @@ spdk_event_call(struct spdk_event *event)
 	int rc;
 	struct spdk_reactor *reactor;
 
+	if (event->sync_call &&
+	    event->lcore == spdk_env_get_current_core()) {
+		event->fn(event->arg1, event->arg2);
+		return;
+	}
+	    
 	reactor = spdk_reactor_get(event->lcore);
 
 	assert(reactor->events != NULL);
@@ -818,6 +841,47 @@ spdk_poller_unregister(struct spdk_poller **ppoller,
 		 */
 		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_remove_poller, poller, complete));
 	}
+}
+
+static void
+_spdk_sem_post(void *arg1, void *arg2)
+{
+	sem_t *psem = arg1;
+
+	sem_post(psem);
+}
+
+void
+spdk_poller_unregister_sync(struct spdk_poller *poller, unsigned timeout_sec)
+{
+	sem_t sem;
+	struct spdk_event *event;
+	struct timespec timeout;
+	int rc;
+
+	assert(poller != NULL);
+
+	rc = sem_init(&sem, 0, 0);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed sem_init() for poller stop event\n");
+		abort();
+	}
+
+	event = sync_spdk_event_allocate(poller->lcore, _spdk_sem_post,
+					 &sem, NULL);
+	assert(event);
+	spdk_poller_unregister(&poller, event);
+
+	clock_gettime(CLOCK_REALTIME, &timeout);
+	timeout.tv_sec += timeout_sec;
+
+	rc = sem_timedwait(&sem, &timeout);
+	if (rc != 0) {
+		SPDK_ERRLOG("Timeout waiting for poller stop event\n");
+		abort();
+	}
+
+	sem_destroy(&sem);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("reactor", SPDK_TRACE_REACTOR)

@@ -43,6 +43,7 @@ struct spdk_event {
 	spdk_event_fn		fn;
 	void			*arg1;
 	void			*arg2;
+	bool			sync_call;
 };
 
 int spdk_reactors_init(unsigned int max_delay_us);

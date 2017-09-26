@@ -177,6 +177,12 @@ void spdk_poller_unregister(struct spdk_poller **ppoller,
 			    struct spdk_event *complete);
 
 /**
+ * \brief Unregister a poller synchronously on the given lcore.
+ */
+void spdk_poller_unregister_sync(struct spdk_poller *poller,
+				 unsigned timeout_sec);
+
+/**
  * \brief Enable or disable monitoring of context switches.
  */
 void spdk_reactor_enable_context_switch_monitor(bool enabled);
