@@ -135,7 +135,7 @@ bdev_pmem_submit_io(struct spdk_bdev_io *bdev_io, struct pmem_disk *pdisk,
 		goto end;
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BDEV_PMEM, "read %lu bytes from offset %#lx\n",
+	SPDK_DEBUGLOG(SPDK_TRACE_BDEV_PMEM, "io %lu bytes from offset %#lx\n",
 		      num_blocks, offset_blocks);
 
 	for (nbytes = num_blocks * block_size; nbytes > 0; iov++) {
@@ -146,7 +146,7 @@ bdev_pmem_submit_io(struct spdk_bdev_io *bdev_io, struct pmem_disk *pdisk,
 		while (offset != len) {
 			rc = fn(pdisk->pool, iov->iov_base + offset, offset_blocks);
 			if (rc != 0) {
-				SPDK_ERRLOG("pmemblk read failed: %d (%s)\n", errno, pmemblk_errormsg());
+				SPDK_ERRLOG("pmemblk io failed: %d (%s)\n", errno, pmemblk_errormsg());
 				status = SPDK_BDEV_IO_STATUS_FAILED;
 				goto end;
 			}
