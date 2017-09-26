@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45639b40_9eea15a6",
+        "filename": "autotest.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T07:05:33Z",
+      "side": 1,
+      "message": "More test cases can be enabled. Identify which are failing and add more",
+      "range": {
+        "startLine": 127,
+        "startChar": 30,
+        "endLine": 127,
+        "endChar": 56
+      },
+      "revId": "dbe4341466fda12c99214eab648fc410c32cea35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4baeb0d0_e21c16d2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 30
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T07:05:33Z",
+      "side": 1,
+      "message": "Fails here for me.\nnbd.pid is saved in spdk/test/lvol/nbd.pid while the pid_path path in my case is spdk/nbd.pid, just because I run the script from different directory. Fix paths",
+      "range": {
+        "startLine": 334,
+        "startChar": 8,
+        "endLine": 334,
+        "endChar": 47
+      },
+      "revId": "dbe4341466fda12c99214eab648fc410c32cea35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ee4be42_868f7354",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 30
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T07:05:33Z",
+      "side": 1,
+      "message": "This is still wrong.\n- you send signal 0 to process while it\u0027s still running (you didn\u0027t send any killing signal before, what are you trying to check?)\n- because process is still alive, kill(pid, 0) returns None, so the \"while\" loop is not executed and you don\u0027t even send the SIGTERM signal\n- except should catch the correct exception type and possibly check errno (OSError with ESRCH errno if I see correctly)\n- as commented before - kill(pid, 0) should be run  in loop with a timeout after sending SIGTERM\n- this \"return 0\" at the end - shouldnt we return fail_count instead? by return 0 you mask any fails in fail_count counter",
+      "range": {
+        "startLine": 336,
+        "startChar": 11,
+        "endLine": 341,
+        "endChar": 24
+      },
+      "revId": "dbe4341466fda12c99214eab648fc410c32cea35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
