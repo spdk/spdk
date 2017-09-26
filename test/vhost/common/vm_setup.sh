@@ -26,6 +26,7 @@ function usage()
 	echo "                          kernel_vhost - the WWN number to be used"
 	echo "                          spdk_vhost - the socket path. Default is WORK_DIR/vhost/usvhost"
 	echo "    --os=OS_QCOW2         Custom OS qcow2 image file"
+	echo "    --memory              How much memory should guest use"
 	echo "    --os-mode=MODE        MODE how to use provided image: default: backing"
 	echo "                          backing - create new image but use provided backing file"
 	echo "                          copy - copy provided image and use a copy"
@@ -37,6 +38,7 @@ disk=""
 raw_cache=""
 img_mode=""
 os=""
+memory="1024"
 while getopts 'xf:h-:' optchar; do
 	case "$optchar" in
 		-)
@@ -54,6 +56,7 @@ while getopts 'xf:h-:' optchar; do
 				fi
 				os="$(readlink -f $os)"
 				;;
+			memory=*) memory="${OPTARG#*=}" ;;
 			os-mode=*) os_mode="--os-mode=${OPTARG#*=}" ;;
 			*) usage $0 "Invalid argument '$OPTARG'" ;;
 		esac
@@ -78,4 +81,5 @@ vm_setup \
 	--os=$os \
 	--disk-type=$test_type \
 	--disks=$disk \
+	--memory=$memory \
 	$wwn $raw_cache $force_vm_num $os_mode
