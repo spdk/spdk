@@ -45,6 +45,10 @@
 struct spdk_lvol_store;
 struct spdk_lvol;
 
+struct spdk_lvs_opts {
+	uint32_t cluster_sz;
+};
+
 typedef void (*spdk_lvs_op_with_handle_complete)(void *cb_arg, struct spdk_lvol_store *lvol_store,
 		int lvserrno);
 typedef void (*spdk_lvs_op_complete)(void *cb_arg, int lvserrno);
@@ -52,7 +56,8 @@ typedef void (*spdk_lvol_op_complete)(void *cb_arg, int lvolerrno);
 typedef void (*spdk_lvol_op_with_handle_complete)(void *cb_arg, struct spdk_lvol *lvol,
 		int lvolerrno);
 
-int spdk_lvs_init(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
+int spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
+		  spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
 int spdk_lvs_unload(struct spdk_lvol_store *lvol_store, spdk_lvs_op_complete cb_fn, void *cb_arg);
 int spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
 		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
