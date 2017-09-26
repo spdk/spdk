@@ -69,7 +69,9 @@ trap "iscsicleanup; killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT 
 sleep 1
 
 echo "Running FIO"
-$fio_py 4096 1 randrw 1 verify
+
+$testdir/fio_run.sh &
+$testdir/fio_run.sh &
 
 rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
