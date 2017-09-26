@@ -31,27 +31,11 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS) -I.
-ifeq ($(CONFIG_VTUNE),y)
-CFLAGS += -I$(VTUNE_SOURCE_DIR)/include -I$(VTUNE_SOURCE_DIR)/sdk/src/ittnotify
-endif
-
-C_SRCS = bdev.c scsi_nvme.c
-C_SRCS-$(CONFIG_VTUNE) += vtune.c
-
-LIBNAME = bdev
-
-DIRS-y += error gpt lvol malloc null nvme rpc split
-
-DIRS-$(CONFIG_NVML) += pmem
-
-ifeq ($(OS),Linux)
-DIRS-y += aio virtio
-endif
-
-DIRS-$(CONFIG_RBD) += rbd
+CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib/bdev/
+C_SRCS = bdev_pmem.c bdev_pmem_rpc.c
+LIBNAME = bdev_pmem
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
