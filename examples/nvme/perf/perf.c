@@ -186,6 +186,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
 	const struct spdk_nvme_ctrlr_data *cdata;
+	uint32_t max_xfer_size, entries;
+	struct spdk_nvme_io_qpair_opts opts;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
@@ -202,6 +204,20 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
 		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
+		return;
+	}
+
+	max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	/* NVMe driver may add addtional entries based on
+	 * stripe size and maximum transfer size, we assume
+	 * 1 more entry be used for stripe.
+	 */
+	entries = (g_io_size_bytes - 1) / max_xfer_size + 2;
+	if ((g_queue_depth * entries) > opts.io_queue_size) {
+		printf("WARNING: controller IO queue size %u may less than required\n",
+		       opts.io_queue_size);
+		printf("You can try with smaller IO size or queue depth\n");
 		return;
 	}
 
@@ -1190,7 +1206,8 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		       pci_id.vendor_id, pci_id.device_id);
 	}
 
-	opts->io_queue_size = g_queue_depth + 1;
+	/* Maximum Queue Entries Supported */
+	opts->io_queue_size = UINT16_MAX;
 
 	return true;
 }
