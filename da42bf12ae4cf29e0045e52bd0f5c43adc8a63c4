@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0fbc5ba1_268c7499",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-26T17:58:23Z",
+      "side": 1,
+      "message": "This is calling the connect method, which seems wrong.",
+      "range": {
+        "startLine": 592,
+        "startChar": 18,
+        "endLine": 592,
+        "endChar": 46
+      },
+      "revId": "da42bf12ae4cf29e0045e52bd0f5c43adc8a63c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
