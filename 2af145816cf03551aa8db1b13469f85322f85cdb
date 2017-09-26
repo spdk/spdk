@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac0cd8a2_2532a4ca",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T09:37:47Z",
+      "side": 1,
+      "message": "SDPK_TEST_LVOL; already here: https://review.gerrithub.io/#/c/376973/31",
+      "range": {
+        "startLine": 132,
+        "startChar": 5,
+        "endLine": 132,
+        "endChar": 19
+      },
+      "revId": "2af145816cf03551aa8db1b13469f85322f85cdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4eec77f2_c69b9d34",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T09:37:47Z",
+      "side": 1,
+      "message": "SDPK_TEST_LVOL; already here: https://review.gerrithub.io/#/c/376973/31",
+      "range": {
+        "startLine": 29,
+        "startChar": 4,
+        "endLine": 29,
+        "endChar": 18
+      },
+      "revId": "2af145816cf03551aa8db1b13469f85322f85cdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "301f26e6_18178dc4",
+        "filename": "test/pmem/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T09:37:47Z",
+      "side": 1,
+      "message": "you can delete Malloc0 after that, so it does not come in the way of other tests",
+      "revId": "2af145816cf03551aa8db1b13469f85322f85cdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75709a39_dd3f0f76",
+        "filename": "test/pmem/nbd.conf.in",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T09:37:47Z",
+      "side": 1,
+      "message": "Not needed IMO",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 38
+      },
+      "revId": "2af145816cf03551aa8db1b13469f85322f85cdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c82c474_d3dda9b0",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T09:37:47Z",
+      "side": 1,
+      "message": "double slash",
+      "range": {
+        "startLine": 8,
+        "startChar": 16,
+        "endLine": 8,
+        "endChar": 18
+      },
+      "revId": "2af145816cf03551aa8db1b13469f85322f85cdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "423e77d2_b442edd8",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T09:37:47Z",
+      "side": 1,
+      "message": "use RPC calls - create_pmem_pool",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 73
+      },
+      "revId": "2af145816cf03551aa8db1b13469f85322f85cdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7703a56e_ad185a3c",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T09:37:47Z",
+      "side": 1,
+      "message": "I suppose this is the first test - could we have each test case as separate function, so that they could be called separately instead of executing tests from top to bottom?",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 2
+      },
+      "revId": "2af145816cf03551aa8db1b13469f85322f85cdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
