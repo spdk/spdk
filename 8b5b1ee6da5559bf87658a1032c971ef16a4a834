@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc957b41_1d943b60",
+        "filename": "dpdk",
+        "patchSetId": 26
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-26T17:05:10Z",
+      "side": 1,
+      "message": "Unrelated submodule change",
+      "revId": "8b5b1ee6da5559bf87658a1032c971ef16a4a834",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
