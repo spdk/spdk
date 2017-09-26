@@ -249,6 +249,25 @@ function vm_fio_socket()
 	cat $vm_dir/fio_socket
 }
 
+function vm_create_ssh_config()
+{
+	local ssh_config="$VM_BASE_DIR/ssh_config"
+	if [[ ! -f $ssh_config ]]; then
+		(
+		echo "Host *"
+		echo "  ControlPersist=10m"
+		echo "  ConnectTimeout=2"
+		echo "  Compression=no"
+		echo "  ControlMaster=auto"
+		echo "  UserKnownHostsFile=/dev/null"
+		echo "  StrictHostKeyChecking=no"
+		echo "  User root"
+		echo "  ControlPath=$VM_BASE_DIR/%r@%h:%p.ssh"
+		echo ""
+		) > $ssh_config
+	fi
+}
+
 # Execute ssh command on given VM
 # param $1 virtual machine number
 #
@@ -276,6 +295,22 @@ function vm_ssh()
 
 	shift
 	$ssh_cmd "$@"
+}
+
+# Execute scp command on given VM
+# param $1 virtual machine number
+#
+function vm_scp()
+{
+	vm_num_is_valid $1 || return 1
+	vm_create_ssh_config
+	local ssh_config="$VM_BASE_DIR/ssh_config"
+
+	local scp_cmd="scp -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
+		-P $(vm_ssh_socket $1) "
+
+	shift
+	$scp_cmd "$@"
 }
 
 # check if specified VM is running
@@ -519,8 +554,8 @@ function vm_setup()
 	#-cpu host
 	local node_num=${!qemu_numa_node_param}
 	echo "INFO: NUMA NODE: $node_num"
-	cmd+="-m 1024 --enable-kvm -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize -snapshot ${eol}"
-	cmd+="-object memory-backend-file,id=mem,size=1G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
+	cmd+="-m 6144 --enable-kvm -cpu host -smp $cpu_num -vga std -vnc :$vnc_socket -snapshot -daemonize ${eol}"
+	cmd+="-object memory-backend-file,id=mem,size=6G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
 	cmd+="-numa node,memdev=mem ${eol}"
 	cmd+="-pidfile $qemu_pid_file ${eol}"
 	cmd+="-serial file:$vm_dir/serial.log ${eol}"
