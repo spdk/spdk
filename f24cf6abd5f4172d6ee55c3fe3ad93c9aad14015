@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "b05556bb_2d236af3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1335,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T01:53:08Z",
+      "side": 1,
+      "message": "Yeah - storing them in the spdk_blob_store instead would be better - then its not part of the public spdk_bs_dev API.\n\nI\u0027m just trying to avoid the defer flag.  I\u0027m pretty confident we can do all of this without needing it.  Should be able to just set the spdk_bs_request cb_fn/cb_arg to some dummy empty callback and then call the unload cb_fn/cb_arg from spdk_bs_free if they are set.",
+      "parentUuid": "9b2aa8ec_f97cd6c0",
+      "revId": "f24cf6abd5f4172d6ee55c3fe3ad93c9aad14015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4a195a1_eeafa8df",
         "filename": "lib/util/io_channel.c",
         "patchSetId": 4
