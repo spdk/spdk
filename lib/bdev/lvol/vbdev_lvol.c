@@ -77,7 +77,7 @@ end:
 }
 
 int
-vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
+vbdev_lvs_create(struct spdk_bdev *base_bdev, uint64_t cluster_sz,
 		 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
