@@ -1,6 +1,14 @@
 [VirtioUser0]
   Path /tmp/vhost.0
-  Queues 16
+  Queues 4
+
+[VirtioUser1]
+  Path /tmp/vhost.1
+  Queues 4
+
+[VirtioUser2]
+  Path /tmp/vhost.2
+  Queues 4
 
 [Rpc]
   Enable Yes
