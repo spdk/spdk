@@ -129,6 +129,10 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_exit vhost
 fi
 
+if [ $SPDK_TEST_NVML -eq 1 ]; then
+	run_test ./test/pmem/pmem.sh
+fi
+
 timing_enter cleanup
 rbd_cleanup
 ./scripts/setup.sh reset
