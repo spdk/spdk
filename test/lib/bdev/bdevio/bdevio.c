@@ -788,6 +788,7 @@ main(int argc, char **argv)
 	}
 	bdevtest_init(config_file, "0x3", &opts);
 
+	opts.no_pci = true;
 	num_failures = spdk_app_start(&opts, start_timer, NULL, NULL);
 	spdk_app_fini();
 

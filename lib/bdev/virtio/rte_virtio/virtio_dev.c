@@ -310,12 +310,6 @@ virtio_init_device(struct virtio_dev *dev, uint64_t req_features)
 
 	vtpci_read_dev_config(dev, offsetof(struct virtio_scsi_config, num_queues),
 			      &dev->max_queues, sizeof(dev->max_queues));
-	/* FIXME
-	 * Hardcode num_queues to 3 until we add proper
-	 * mutli-queue support. This value should be limited
-	 * by number of cores assigned to SPDK
-	 */
-	dev->max_queues = 3;
 
 	ret = virtio_alloc_queues(dev);
 	if (ret < 0)

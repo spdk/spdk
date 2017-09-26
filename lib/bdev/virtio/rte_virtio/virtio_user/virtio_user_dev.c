@@ -229,7 +229,7 @@ virtio_user_dev_setup(struct virtio_user_dev *dev)
 }
 
 struct virtio_dev *
-virtio_user_dev_init(char *path, int queues, int queue_size)
+virtio_user_dev_init(const char *path, int queues, int queue_size)
 {
 	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
@@ -280,8 +280,9 @@ err:
 }
 
 void
-virtio_user_dev_uninit(struct virtio_user_dev *dev)
+virtio_user_dev_uninit(struct virtio_dev *vdev)
 {
+	struct virtio_user_dev *dev = container_of(vdev, struct virtio_user_dev, vdev);
 	uint32_t i;
 
 	virtio_user_stop_device(dev);
@@ -299,4 +300,6 @@ virtio_user_dev_uninit(struct virtio_user_dev *dev)
 		free(dev->vhostfds);
 		free(dev->tapfds);
 	}
+
+	free(dev);
 }

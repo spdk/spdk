@@ -1,7 +1,7 @@
-/*-
+	/*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2010-2015 Intel Corporation. All rights reserved.
+ *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -31,61 +31,35 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _VIRTIO_DEV_H_
-#define _VIRTIO_DEV_H_
+#ifndef SPDK_BDEV_VIRTIO_H
+#define SPDK_BDEV_VIRTIO_H
 
-#include <stdint.h>
-#include <sys/uio.h>
-#include <sys/queue.h>
+#include <spdk/event.h>
+#include <spdk/bdev.h>
 
-#define VIRTIO_MAX_RX_QUEUES 128U
-#define VIRTIO_MAX_TX_QUEUES 128U
-#define VIRTIO_MIN_RX_BUFSIZE 64
-
-struct virtio_dev {
-	struct virtqueue **vqs;
-	uint16_t	started;
-	uint32_t	max_queues;
-	uint8_t		port_id;
-	uint64_t	req_guest_features;
-	uint64_t	guest_features;
-	int		is_hw;
-
-	/** Modern/legacy virtio device flag. */
-	uint8_t		modern;
-
-	TAILQ_ENTRY(virtio_dev) tailq;
+enum virtio_scsi_io_type
+{
+	VIRTIO_SCSI_IO_TYPE_INQUIRY = SPDK_BDEV_IO_TYPE_USER,
+	VIRTIO_SCSI_IO_TYPE_READ_CAP_10,
+	VIRTIO_SCSI_IO_TYPE_READ_CAP_16,
 };
 
-struct virtio_req {
-	struct iovec	*iov;
-	struct iovec	iov_req;
-	struct iovec	iov_resp;
-	uint32_t	iovcnt;
-	int		is_write;
-	uint32_t	data_transferred;
-};
-
-/* Features desired/implemented by this driver. */
-#define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
-	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
-	 1ULL << VIRTIO_F_VERSION_1		|	\
-	 1ULL << VIRTIO_F_IOMMU_PLATFORM)
-
-uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
-		uint16_t nb_pkts);
-
-/*
- * Return 1 if req sent or negative error code.
- * -ENOTCONN - queue not started
- * -EAGAIN - queue full. Try again later.
+/**
+ *
+ * \param path
+ *   Path to socket.
+ * \param max_queue
+ *   Max number of queues
+ * \param vq_size
+ *   Max queue size.
+ * \param done_cb
+ *   Callback called just after adding new bdev from controller.
+ *   First parameter is cb_ctx, second is new bdev.
+ *   Last call will have second parameter set to NULL to marking that process is complete.
+ * \return
+ *   Zero or negative error code on error.
+ *   In case of error before establishing valid connection \c done_cb is not called.
  */
-int virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
+int spdk_virtio_user_scsi_connect(const char *path, uint32_t max_queue, uint32_t vq_size, spdk_event_fn done_cb, void *cb_ctx);
 
-int virtio_init_device(struct virtio_dev *hw, uint64_t req_features);
-int virtio_dev_start(struct virtio_dev *hw);
-struct virtio_dev *get_pci_virtio_hw(void);
-
-void virtio_interrupt_handler(void *param);
-
-#endif /* _VIRTIO_DEV_H_ */
+#endif /* SPDK_BDEV_VIRTIO_H */
