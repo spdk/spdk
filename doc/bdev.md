@@ -57,6 +57,26 @@ Configuration file syntax:
 This exports 4 malloc block devices, named Malloc0 through Malloc3.  Each malloc block device will
 be 64MB in size.
 
+## Pmem {#bdev_config_pmem}
+
+The SPDK pmem bdev driver uses pmemblk pool as the the target for block I/O operations.
+
+First, you need to compile SPDK with NVML:
+
+./configure --with-nvml
+
+To create pmemblk pool for use with SPDK use pmempool tool included with NVML:
+Usage: pmempool create [<args>] <blk|log|obj> [<bsize>] <file>
+
+Example:
+
+./nvml/src/tools/pmempool/pmempool create -s 32000000 blk 512 pool_file
+
+Then, it is possible to use SPDK RPC:
+
+./scripts/rpc.py construct_pmem_bdev pool_file
+
+
 ## Null {#bdev_config_null}
 
 The SPDK null bdev driver is a dummy block I/O target that discards all writes and returns undefined
