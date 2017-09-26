@@ -2,6 +2,14 @@
   Path /tmp/vhost.0
   Queues 16
 
+[VirtioUser1]
+  Path /tmp/vhost.1
+  Queues 16
+
+[VirtioUser2]
+  Path /tmp/vhost.2
+  Queues 16
+
 [Rpc]
   Enable Yes
   Listen /var/tmp/spdk2.sock
