@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d3fb808_2ed508c1",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T07:33:42Z",
+      "side": 1,
+      "message": "These are WiP.\niSCSI is already present for review: https://review.gerrithub.io/#/c/379349/",
+      "range": {
+        "startLine": 308,
+        "startChar": 0,
+        "endLine": 310,
+        "endChar": 21
+      },
+      "revId": "078651b61a367e667f8a8c29efae666f6abe5f69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
