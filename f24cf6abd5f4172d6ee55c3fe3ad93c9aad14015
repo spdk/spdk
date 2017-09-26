@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "72fb93e3_369fe8d9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1335,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-09-26T15:27:37Z",
+      "side": 1,
+      "message": "OK, will address that - I wasn\u0027t real fond of the flag either",
+      "parentUuid": "b05556bb_2d236af3",
+      "revId": "f24cf6abd5f4172d6ee55c3fe3ad93c9aad14015",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4a195a1_eeafa8df",
         "filename": "lib/util/io_channel.c",
         "patchSetId": 4
