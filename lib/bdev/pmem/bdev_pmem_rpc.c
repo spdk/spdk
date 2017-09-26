@@ -41,6 +41,7 @@
 
 struct rpc_construct_pmem {
 	char *pmem_file;
+	char *name;
 };
 
 static void
@@ -51,6 +52,7 @@ free_rpc_construct_pmem_bdev(struct rpc_construct_pmem *req)
 
 static const struct spdk_json_object_decoder rpc_construct_pmem_decoders[] = {
 	{"pmem_file", offsetof(struct rpc_construct_pmem, pmem_file), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_construct_pmem, name), spdk_json_decode_string, true},
 };
 
 static void
@@ -70,7 +72,7 @@ spdk_rpc_construct_pmem_bdev(struct spdk_jsonrpc_request *request,
 		rc = EINVAL;
 		goto invalid;
 	}
-	rc = spdk_create_pmem_disk(req.pmem_file, &bdev);
+	rc = spdk_create_pmem_disk(req.pmem_file, req.name, &bdev);
 	if (rc != 0) {
 		goto invalid;
 	}

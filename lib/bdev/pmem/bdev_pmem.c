@@ -289,7 +289,7 @@ static const struct spdk_bdev_fn_table pmem_fn_table = {
 };
 
 int
-spdk_create_pmem_disk(const char *pmem_file, struct spdk_bdev **bdev)
+spdk_create_pmem_disk(const char *pmem_file, char *name, struct spdk_bdev **bdev)
 {
 	uint64_t num_blocks;
 	uint32_t block_size;
@@ -329,9 +329,11 @@ spdk_create_pmem_disk(const char *pmem_file, struct spdk_bdev **bdev)
 		free(pdisk);
 		return EINVAL;
 	}
-
-
-	pdisk->disk.name = spdk_sprintf_alloc("pmem%d", pmem_disk_count);
+	if (name) {
+		pdisk->disk.name = spdk_sprintf_alloc("%s", name);
+	} else {
+		pdisk->disk.name = spdk_sprintf_alloc("pmem%d", pmem_disk_count);
+	}
 
 	if (!pdisk->disk.name) {
 		pmemblk_close(pdisk->pool);
