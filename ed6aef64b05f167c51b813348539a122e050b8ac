@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5ad780e_a6a36ba2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T16:21:15Z",
+      "side": 1,
+      "message": "complehensible \u003d\u003e comprehensible (or complete?)",
+      "revId": "ed6aef64b05f167c51b813348539a122e050b8ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29fa4faa_bf3551b3",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T16:21:15Z",
+      "side": 1,
+      "message": "this does not need to be split across two lines",
+      "revId": "ed6aef64b05f167c51b813348539a122e050b8ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "969f2012_917f70fc",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T16:21:15Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "ed6aef64b05f167c51b813348539a122e050b8ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b8dd1d2_623d4f07",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1383,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T16:21:15Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "ed6aef64b05f167c51b813348539a122e050b8ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d11d4fe0_27b3e73a",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1388,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T16:21:15Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "ed6aef64b05f167c51b813348539a122e050b8ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
