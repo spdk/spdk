@@ -233,7 +233,7 @@ spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_request *request,
 	if (!ig) {
 		goto invalid;
 	}
-	spdk_iscsi_tgt_node_delete_map(NULL, ig);
+	spdk_iscsi_tgt_nodes_delete_ig_map(ig);
 	spdk_iscsi_init_grp_release(ig);
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -274,6 +274,8 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 
 	for (tgt_idx = 0 ; tgt_idx < MAX_ISCSI_TARGET_NODE; tgt_idx++) {
 		struct spdk_iscsi_tgt_node *tgtnode = iscsi->target[tgt_idx];
+		struct spdk_iscsi_pg_map *pg_map;
+		struct spdk_iscsi_ig_map *ig_map;
 
 		if (tgtnode == NULL) {
 			continue;
@@ -291,13 +293,15 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 
 		spdk_json_write_name(w, "pg_ig_maps");
 		spdk_json_write_array_begin(w);
-		for (i = 0; i < tgtnode->maxmap; i++) {
-			spdk_json_write_object_begin(w);
-			spdk_json_write_name(w, "pg_tag");
-			spdk_json_write_int32(w, tgtnode->map[i].pg->tag);
-			spdk_json_write_name(w, "ig_tag");
-			spdk_json_write_int32(w, tgtnode->map[i].ig->tag);
-			spdk_json_write_object_end(w);
+		SLIST_FOREACH(pg_map, &tgtnode->pg_head, slist) {
+			SLIST_FOREACH(ig_map, &pg_map->ig_head, slist) {
+				spdk_json_write_object_begin(w);
+				spdk_json_write_name(w, "pg_tag");
+				spdk_json_write_int32(w, pg_map->pg->tag);
+				spdk_json_write_name(w, "ig_tag");
+				spdk_json_write_int32(w, ig_map->ig->tag);
+				spdk_json_write_object_end(w);
+			}
 		}
 		spdk_json_write_array_end(w);
 
@@ -771,7 +775,7 @@ spdk_rpc_delete_portal_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_iscsi_tgt_node_delete_map(pg, NULL);
+	spdk_iscsi_tgt_nodes_delete_pg_map(pg);
 	spdk_iscsi_portal_grp_release(pg);
 
 	w = spdk_jsonrpc_begin_result(request);
