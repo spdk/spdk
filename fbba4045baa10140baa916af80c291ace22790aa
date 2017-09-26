@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bb8692b_908f92c7",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 524,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-26T21:28:31Z",
+      "side": 1,
+      "message": "The connect function should also take the size of opts as a parameter, like spdk_nvme_ctrlr_alloc_io_qpair() - this is so that we can avoid reading past the end of the user\u0027s structure if they were compiled against an older version of the headers. (This won\u0027t be a problem in practice today, since there\u0027s only one version of the structure, and SPDK only supports static linking, but this prepares us for ABI compatibility in the future when we start to support shared libraries.)",
+      "revId": "fbba4045baa10140baa916af80c291ace22790aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6d19a5b_a6fbce56",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-26T21:28:31Z",
+      "side": 1,
+      "message": "connet -\u003e connect",
+      "range": {
+        "startLine": 614,
+        "startChar": 12,
+        "endLine": 614,
+        "endChar": 25
+      },
+      "revId": "fbba4045baa10140baa916af80c291ace22790aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
