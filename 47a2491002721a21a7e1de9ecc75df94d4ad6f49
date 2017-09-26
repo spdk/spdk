@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "de24410d_2a70a7d2",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T22:36:56Z",
+      "side": 1,
+      "message": "\"splits\" is not completely accurate.  For example, for a 4KB I/O, splits \u003d\u003d 1 even though this I/O will not be split at all.  Maybe \"queue_entries\" or just \"entries\" is a better name?",
+      "revId": "47a2491002721a21a7e1de9ecc75df94d4ad6f49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "465b40e9_3d4c9fe0",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 3
@@ -30,6 +47,23 @@
       "writtenOn": "2017-09-26T22:34:17Z",
       "side": 1,
       "message": "caculation \u003d\u003e calculation\nreminder \u003d\u003e remind",
+      "revId": "47a2491002721a21a7e1de9ecc75df94d4ad6f49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4efe4c2_67232b34",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T22:36:56Z",
+      "side": 1,
+      "message": "I\u0027m also not sure the math works out for devices that do striping like Intel SSDs.  For example, a 120KB I/O could get split zero or one times (usually one) depending on where the I/O starts.  I know this is not normal case but maybe to be safe add one more to \"splits\" (with a comment explaining why).",
       "revId": "47a2491002721a21a7e1de9ecc75df94d4ad6f49",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
