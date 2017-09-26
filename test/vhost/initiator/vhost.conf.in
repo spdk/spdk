@@ -5,10 +5,10 @@
   Disable Yes
 
 [VhostScsi0]
-  Name vhost.0
+  Name naa.Nvme0n1.0
 
 [VhostScsi1]
-  Name vhost.1
+  Name naa.1
 
 [VhostScsi2]
-  Name vhost.2
+  Name naa.2
