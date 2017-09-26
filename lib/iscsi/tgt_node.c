@@ -686,7 +686,7 @@ spdk_iscsi_tgt_node_delete_pg_map(struct spdk_iscsi_tgt_node *target,
 	return 0;
 }
 
-static void
+void
 spdk_iscsi_tgt_node_delete_all_pg_maps(struct spdk_iscsi_tgt_node *target)
 {
 	struct spdk_iscsi_pg_map *pg_map;
@@ -864,7 +864,7 @@ spdk_iscsi_tgt_node_add_map(struct spdk_iscsi_tgt_node *target,
 	return -1;
 }
 
-static int
+int
 spdk_iscsi_tgt_node_add_maps(struct spdk_iscsi_tgt_node *target,
 			     int *pg_tags, int *ig_tags, uint16_t num_maps)
 {
@@ -889,7 +889,7 @@ invalid:
 	return -1;
 }
 
-static int
+int
 spdk_iscsi_tgt_node_delete_maps(struct spdk_iscsi_tgt_node *target,
 				int *pg_tags, int *ig_tags, uint16_t num_maps)
 {
