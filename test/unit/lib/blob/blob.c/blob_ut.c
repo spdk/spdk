@@ -960,7 +960,7 @@ bs_cluster_sz(void)
 {
 	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts opts;
-	uint32_t cluster_sz;
+	uint64_t cluster_sz;
 
 	/* Set cluster size to zero */
 	dev = init_dev();
@@ -1031,7 +1031,7 @@ bs_resize_md(void)
 	const int NUM_BLOBS = CLUSTER_PAGE_COUNT * 4;
 	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts opts;
-	uint32_t cluster_sz;
+	uint64_t cluster_sz;
 	spdk_blob_id blobids[NUM_BLOBS];
 	int i;
 

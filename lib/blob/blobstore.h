@@ -151,7 +151,7 @@ struct spdk_blob_store {
 	struct spdk_bit_array		*used_md_pages;
 	struct spdk_bit_array		*used_clusters;
 
-	uint32_t			cluster_sz;
+	uint64_t			cluster_sz;
 	uint64_t			total_clusters;
 	uint64_t			num_free_clusters;
 	uint32_t			pages_per_cluster;
@@ -258,7 +258,9 @@ struct spdk_bs_super_block {
 	uint32_t	md_start; /* Offset from beginning of disk, in pages */
 	uint32_t	md_len; /* Count, in pages */
 
-	uint8_t		reserved[4036];
+	uint64_t	cluster_size_u64; /* In bytes */
+
+	uint8_t		reserved[4028];
 	uint32_t	crc;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super block size");
