@@ -40,7 +40,7 @@ for i in `seq 0 9`; do
     INITIATOR_TAG=$((i+2))
     $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
     bdev=$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
-    ls_guid=$($rpc_py construct_lvol_store $bdev)
+    ls_guid=$($rpc_py construct_lvol_store $bdev -c 8192)
     LUNs=""
     for j in `seq 0 0`; do
         lb_guid=$($rpc_py construct_lvol_bdev $ls_guid 10)
