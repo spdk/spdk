@@ -109,6 +109,7 @@ _lvs_unload_cb(void *cb_arg, int lvserrno)
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store unloaded\n");
 	assert(lvs_req->cb_fn != NULL);
+	spdk_bdev_module_release_bdev(lvs_req->base_bdev);
 	lvs_req->cb_fn(lvs_req->cb_arg, lvserrno);
 	free(lvs_req);
 }
@@ -117,6 +118,7 @@ int
 spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		void *cb_arg)
 {
+	struct spdk_lvs_req *req = cb_arg;
 	struct spdk_lvs_req *lvs_req;
 
 	if (lvs == NULL) {
@@ -132,6 +134,7 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 
 	lvs_req->cb_fn = cb_fn;
 	lvs_req->cb_arg = cb_arg;
+	lvs_req->base_bdev = req->base_bdev;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Unloading lvol store\n");
 	spdk_bs_unload(lvs->blobstore, _lvs_unload_cb, lvs_req);

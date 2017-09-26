@@ -50,6 +50,11 @@ struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
 struct spdk_blob_store {};
 
+void
+spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
+{
+}
+
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
 	return NULL;
