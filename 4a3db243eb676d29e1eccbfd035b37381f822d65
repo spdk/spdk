@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71507876_2b850dc8",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T22:23:58Z",
+      "side": 1,
+      "message": "you could get rid of this variable and just use vreq-\u003eis_write instead (switching the READ/WRITE values of course down below)",
+      "revId": "4a3db243eb676d29e1eccbfd035b37381f822d65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
