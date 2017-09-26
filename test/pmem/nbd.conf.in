@@ -1,0 +1,17 @@
+# SPDK vhost configuration file
+#
+# Please write all parameters using ASCII.
+# The parameter must be quoted if it includes whitespace.
+
+# Configuration syntax:
+# Leading whitespace is ignored.
+# Lines starting with '#' are comments.
+# Lines ending with '\' are concatenated with the next line.
+# Bracketed ([]) names define sections
+
+[Rpc]
+  Enable Yes
+  Listen 127.0.0.1
+[Malloc]
+  NumberOfLuns 1
+  LunSizeInMB 64
