@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51bb789a_3b21e26c",
+        "filename": "examples/blob/cli/blobcli.conf",
+        "patchSetId": 28
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T22:51:33Z",
+      "side": 1,
+      "message": "I\u0027d prefer not checking this in since it points to a hardcoded 06:00.0 device.\n\nMaybe in the help/usage, if user doesn\u0027t specify a config file, you just tell them to run \"scripts/gen_nvme.sh \u003e blobcli.conf\" to create one?",
+      "revId": "3881b62773fd5997957c4957b1a54801afcf8d14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
