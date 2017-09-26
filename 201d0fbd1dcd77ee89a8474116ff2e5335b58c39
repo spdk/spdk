@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5212af3_ef7ffd6c",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-26T03:15:28Z",
+      "side": 1,
+      "message": "Good catch, maybe you can count the valid namespaces with this controller for the return value?",
+      "revId": "201d0fbd1dcd77ee89a8474116ff2e5335b58c39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
