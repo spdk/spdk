@@ -22,6 +22,23 @@
       "revId": "d04561cd4b12fae1cde44bfb25cfbf5c5b9f0148",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6b5679c_0ca60fe9",
+        "filename": "scripts/perf/nvme/run_fio_test.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-26T22:55:00Z",
+      "side": 1,
+      "message": "We should be able to make the script detect which version of the output it is seeing - something like:\n\n    if \u0027lat_ns\u0027 in data[\u0027jobs\u0027][job_pos][\u0027read\u0027]:\n        read_avg_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027read\u0027][\u0027lat_ns\u0027][\u0027mean\u0027])\n        read_min_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027read\u0027][\u0027lat_ns\u0027][\u0027min\u0027])\n        read_max_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027read\u0027][\u0027lat_ns\u0027][\u0027max\u0027])\n    else\n        read_avg_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027read\u0027][\u0027lat\u0027][\u0027mean\u0027])\n        read_min_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027read\u0027][\u0027lat\u0027][\u0027min\u0027])\n        read_max_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027read\u0027][\u0027lat\u0027][\u0027max\u0027])\n\n(And the same thing for \u0027write\u0027)",
+      "revId": "d04561cd4b12fae1cde44bfb25cfbf5c5b9f0148",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
