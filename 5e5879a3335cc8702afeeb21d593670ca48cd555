@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fad36bf_73c1b9e7",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:36:10Z",
+      "side": 1,
+      "message": "Pretty sure I mentioned that - could we find a \"common ground\" for all test cases and use only 1 config?",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 1
+      },
+      "revId": "5e5879a3335cc8702afeeb21d593670ca48cd555",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3d8f841_b347b6fe",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:36:10Z",
+      "side": 1,
+      "message": "is that supposed to be an array definition? why the parentheses?",
+      "range": {
+        "startLine": 79,
+        "startChar": 4,
+        "endLine": 79,
+        "endChar": 64
+      },
+      "revId": "5e5879a3335cc8702afeeb21d593670ca48cd555",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71c30d2c_1d5de628",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:36:10Z",
+      "side": 1,
+      "message": "whitespaces",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 4
+      },
+      "revId": "5e5879a3335cc8702afeeb21d593670ca48cd555",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3c060e9_8cd5b1ad",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:36:10Z",
+      "side": 1,
+      "message": "Where are these flags re-enabled?",
+      "range": {
+        "startLine": 152,
+        "startChar": 4,
+        "endLine": 152,
+        "endChar": 11
+      },
+      "revId": "5e5879a3335cc8702afeeb21d593670ca48cd555",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42a0681a_5d3d144d",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:36:10Z",
+      "side": 1,
+      "message": "way too long sleep if we want these tests to be run on test pool",
+      "range": {
+        "startLine": 201,
+        "startChar": 4,
+        "endLine": 201,
+        "endChar": 12
+      },
+      "revId": "5e5879a3335cc8702afeeb21d593670ca48cd555",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b72bb7e3_e5ab9d37",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:36:10Z",
+      "side": 1,
+      "message": "tabs or spaces. I already mentioned that before.",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 5
+      },
+      "revId": "5e5879a3335cc8702afeeb21d593670ca48cd555",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa2358e0_94a746ba",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:36:10Z",
+      "side": 1,
+      "message": "print what? I already mentioned it before.",
+      "range": {
+        "startLine": 166,
+        "startChar": 8,
+        "endLine": 166,
+        "endChar": 13
+      },
+      "revId": "5e5879a3335cc8702afeeb21d593670ca48cd555",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "319cc70f_c22c2929",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:36:10Z",
+      "side": 1,
+      "message": "And where are these re-enabled?",
+      "range": {
+        "startLine": 192,
+        "startChar": 4,
+        "endLine": 192,
+        "endChar": 11
+      },
+      "revId": "5e5879a3335cc8702afeeb21d593670ca48cd555",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "505b3452_c569b13b",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:36:10Z",
+      "side": 1,
+      "message": "IMO - time for fio job could be in the fio config file, no need to generate it via script every time",
+      "range": {
+        "startLine": 37,
+        "startChar": 12,
+        "endLine": 37,
+        "endChar": 32
+      },
+      "revId": "5e5879a3335cc8702afeeb21d593670ca48cd555",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c4f05b2_8a7df9c1",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:36:10Z",
+      "side": 1,
+      "message": "Why are these called BLK when we are in the file for SCSI tests? BTW, they look pretty similar to blk_config functions - maybe it\u0027d be possible to make them common somehow?",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 1
+      },
+      "revId": "5e5879a3335cc8702afeeb21d593670ca48cd555",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
