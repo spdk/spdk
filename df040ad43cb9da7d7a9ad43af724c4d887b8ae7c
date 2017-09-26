@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2913ecd8_6e54197c",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T08:24:59Z",
+      "side": 1,
+      "message": "not sure if that\u0027s a good idea - do other tests depend on that? You sure it doesn\u0027t break anything?",
+      "range": {
+        "startLine": 376,
+        "startChar": 25,
+        "endLine": 376,
+        "endChar": 31
+      },
+      "revId": "df040ad43cb9da7d7a9ad43af724c4d887b8ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be898eed_a7c25b9b",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T08:24:59Z",
+      "side": 1,
+      "message": "tabs / spaces consistency in all files",
+      "revId": "df040ad43cb9da7d7a9ad43af724c4d887b8ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82100470_75f1d42e",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T08:24:59Z",
+      "side": 1,
+      "message": "why not enable -e flag? we need it to make sure all operations pass correctly",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 6
+      },
+      "revId": "df040ad43cb9da7d7a9ad43af724c4d887b8ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed24a3df_6e02640c",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T08:24:59Z",
+      "side": 1,
+      "message": "1 second should be sufficient",
+      "range": {
+        "startLine": 11,
+        "startChar": 8,
+        "endLine": 11,
+        "endChar": 15
+      },
+      "revId": "df040ad43cb9da7d7a9ad43af724c4d887b8ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0eb37ac_3a4fb852",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T08:24:59Z",
+      "side": 1,
+      "message": "why disable this flag?",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 6
+      },
+      "revId": "df040ad43cb9da7d7a9ad43af724c4d887b8ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ebb5026_8027428d",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T08:24:59Z",
+      "side": 1,
+      "message": "is 10MB enough for a test? maybe use just size\u003d1G or something like that",
+      "range": {
+        "startLine": 76,
+        "startChar": 41,
+        "endLine": 77,
+        "endChar": 80
+      },
+      "revId": "df040ad43cb9da7d7a9ad43af724c4d887b8ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd6e1598_f8031abb",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T08:24:59Z",
+      "side": 1,
+      "message": "in that case you disable verification and it does not match test plan description.\nTwo choices here:\n- either skip testing randread and read and we assume the\u0027re tested as part of write/randwrite tests with verify (we have to read in order to verify written data)\n- or: before reading you have to add additional write job (without verify) and make read / verify after that.\n\nSolution 1 seems simple and correct for us",
+      "range": {
+        "startLine": 83,
+        "startChar": 40,
+        "endLine": 83,
+        "endChar": 79
+      },
+      "revId": "df040ad43cb9da7d7a9ad43af724c4d887b8ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ec92da2_ed47b86f",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T08:24:59Z",
+      "side": 1,
+      "message": "it\u0027s commented - so is it needed here? if not, remove",
+      "range": {
+        "startLine": 105,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 38
+      },
+      "revId": "df040ad43cb9da7d7a9ad43af724c4d887b8ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a68532ba_60b24d0d",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T08:24:59Z",
+      "side": 1,
+      "message": "We don\u0027t have anything like this described in test plan steps, so why have it here?\nEither consult and add this to test plan, or remove this step.",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 26
+      },
+      "revId": "df040ad43cb9da7d7a9ad43af724c4d887b8ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "036ee5d8_573493e1",
+        "filename": "test/vhost/fiotest/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T08:24:59Z",
+      "side": 1,
+      "message": "Do we need to kill every time?",
+      "range": {
+        "startLine": 128,
+        "startChar": 8,
+        "endLine": 128,
+        "endChar": 23
+      },
+      "revId": "df040ad43cb9da7d7a9ad43af724c4d887b8ae7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
