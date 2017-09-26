@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a045c36_8f829195",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T18:46:30Z",
+      "side": 1,
+      "message": "Can this just be an spdk_bs_op_complete (i.e. just the function pointer), and then check if it\u0027s NULL to determine if it should be called or not?  Then don\u0027t call spdk_bs_call_cpl() but instead just call bs-\u003eunload_cpl directly.\n\nI\u0027m just thinking using spdk_bs_cpl here is extra complexity that\u0027s not really needed.  It also eliminates the need for the new DEFERRED request type which doesn\u0027t really fit with the rest of the enum.  DEFERRED is really a modifier on an existing request type (in this case, BS_BASIC), not a new request type.",
+      "revId": "00f05ceb63199d1d36bb71fb4142b7e04c7f1c74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
