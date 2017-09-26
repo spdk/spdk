@@ -12,7 +12,7 @@
   BlockSize 4096
 
 [VhostScsi0]
-  Name vhost.0
+  Name naa.Nvme0n1.0
   Dev 0 Nvme0n1
 
 [VhostScsi1]
