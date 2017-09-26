@@ -160,6 +160,7 @@ static uint32_t g_io_size_bytes;
 static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
+static int g_cap_mqes;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
@@ -186,6 +187,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
 	const struct spdk_nvme_ctrlr_data *cdata;
+	uint32_t max_xfer_size, splits;
+	struct spdk_nvme_io_qpair_opts opts;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
 
@@ -202,6 +205,20 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
 		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
+		return;
+	}
+
+	/* stripe and maximum transfer size of controller may
+	 * add additional queue than uses's input queue depth,
+	 * here we make a simple caculation to reminder users
+	 */
+	max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	splits = (g_io_size_bytes - 1) / max_xfer_size + 1;
+	if ((g_queue_depth * splits) > opts.io_queue_size) {
+		printf("WARNING: controller IO queue size %u is smaller than required\n",
+		       opts.io_queue_size);
+		printf("Try to use '-Q' parameter to increase the default queue size\n");
 		return;
 	}
 
@@ -675,6 +692,7 @@ static void usage(char *program_name)
 #endif
 	printf("\n");
 	printf("\t[-q io depth]\n");
+	printf("\t[-Q Maximum Queue Entries Supported]\n");
 	printf("\t[-s io size in bytes]\n");
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
@@ -972,7 +990,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:DLM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:i:lm:q:r:s:t:w:DLMQ:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
@@ -1007,6 +1025,9 @@ parse_args(int argc, char **argv)
 		case 'w':
 			workload_type = optarg;
 			break;
+		case 'D':
+			g_disable_sq_cmb = 1;
+			break;
 		case 'L':
 			g_latency_sw_tracking_level++;
 			break;
@@ -1014,8 +1035,8 @@ parse_args(int argc, char **argv)
 			g_rw_percentage = atoi(optarg);
 			mix_specified = true;
 			break;
-		case 'D':
-			g_disable_sq_cmb = 1;
+		case 'Q':
+			g_cap_mqes = atoi(optarg);
 			break;
 		default:
 			usage(argv[0]);
@@ -1190,7 +1211,11 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		       pci_id.vendor_id, pci_id.device_id);
 	}
 
-	opts->io_queue_size = g_queue_depth + 1;
+	if (g_cap_mqes > 0) {
+		opts->io_queue_size = g_cap_mqes + 1;
+	} else {
+		opts->io_queue_size = g_queue_depth + 1;
+	}
 
 	return true;
 }
