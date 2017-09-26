@@ -97,6 +97,13 @@ It is possible create logical volumes on top of other devices using RPC.
 
 See [logical volumes](http://www.spdk.io/doc/lvol.html) documentation for more information.
 
+### Persistent Memory
+
+New bdev type has been added. Persistent memory block device is built on top of libpmemblk.
+It is possible create pmem devices on top of pmem pool files using RPC.
+
+See [Block Device](http://www.spdk.io/doc/bdev.html) documentation for more information.
+
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
 ### Build System
