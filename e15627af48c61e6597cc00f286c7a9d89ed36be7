@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6fcdb730_fc39d8aa",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-26T06:55:51Z",
+      "side": 1,
+      "message": "vbdev_lvs_create() sets clusters size to appropriate number when the argument is non 0. When set to 0, then default of SPDK_LVS_OPTS_CLUSTER_SZ is used (added in this patch, 1GiB).\n\nIdea was to control default cluster size using lvol lib rather than via rpc call.",
+      "parentUuid": "95d5c719_012ba5ba",
+      "revId": "e15627af48c61e6597cc00f286c7a9d89ed36be7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56bba6f5_ae44547e",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-25T18:09:42Z",
       "side": 1,
       "message": "I didn\u0027t realize cluster_size was stored as uint32_t on disk - we should probably do this change as a separate patch, since it\u0027s changing the on-disk format and will break compatibility with any existing blobstores. \n\nTo avoid breaking compatibility, it might be better to add a new uint64_t field, cluster_size_u64, later in the struct and set the 32-bit cluster_size to a special value (UINT32_MAX?) to indicate that the value is too large to be stored in the existing cluster_size field, and therefore the uint64_t version should be used.\n\nOtherwise, we\u0027d need to bump the version to indicate an incompatible format change.\n\nThis also needs an update to doc/blob.md to describe the change to the on-disk format.",
+      "revId": "e15627af48c61e6597cc00f286c7a9d89ed36be7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc97e5da_3056b689",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-26T06:55:51Z",
+      "side": 1,
+      "message": "For this patch I will use uint32_t for all cluster_size related changes and new patch with changes you have suggested will be added to series after this one.\n\nThanks for looking out for those details !",
+      "parentUuid": "56bba6f5_ae44547e",
       "revId": "e15627af48c61e6597cc00f286c7a9d89ed36be7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
