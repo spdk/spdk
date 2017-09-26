@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ecac1736_f7d884ec",
+        "filename": "test/iscsi_tgt/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:23:12Z",
+      "side": 1,
+      "message": "NVMe-OF?",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 29
+      },
+      "revId": "712355c779b2c68b7434ad1372e422e824f4d404",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b7a2609_3c674ae0",
+        "filename": "test/iscsi_tgt/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:23:12Z",
+      "side": 1,
+      "message": "We don\u0027t need RDMA NICs for iSCSI test.",
+      "range": {
+        "startLine": 25,
+        "startChar": 33,
+        "endLine": 25,
+        "endChar": 42
+      },
+      "revId": "712355c779b2c68b7434ad1372e422e824f4d404",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a9f4c05_25f96e4f",
+        "filename": "test/iscsi_tgt/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:23:12Z",
+      "side": 1,
+      "message": "NVMe-OF in iSCSI test?",
+      "range": {
+        "startLine": 29,
+        "startChar": 17,
+        "endLine": 29,
+        "endChar": 35
+      },
+      "revId": "712355c779b2c68b7434ad1372e422e824f4d404",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6ecd9d1_034e6d01",
+        "filename": "test/iscsi_tgt/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-26T06:23:12Z",
+      "side": 1,
+      "message": "Did you actually check the script to see what workload is used?",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 49
+      },
+      "revId": "712355c779b2c68b7434ad1372e422e824f4d404",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
