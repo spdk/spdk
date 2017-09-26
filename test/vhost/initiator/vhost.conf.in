@@ -1,11 +1,21 @@
 [Ioat]
   Disable Yes
 
+[Split]
+  Split Nvme0n1 5
+
 [VhostScsi0]
-  Name vhost.0
+  Name naa.Nvme0n1.0
 
 [VhostScsi1]
-  Name vhost.1
+  Name naa.Nvme0n1.1
 
 [VhostScsi2]
-  Name vhost.2
+  Name naa.Malloc0.2
+
+[VhostScsi3]
+  Name naa.Malloc1.3
+
+[Rpc]
+  Enable Yes
+  Listen /var/tmp/spdk.sock
