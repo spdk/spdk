@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5864c3b0_3f4cc11d",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T15:36:27Z",
+      "side": 1,
+      "message": "do you think this should be an error case instead? for example:\n\nif (index \u003d\u003d -1) {\n  assert(false);\n  return -EINVAL; /* or maybe there is a better errno to return */\n}",
+      "revId": "cb4b3caa8bf094d0b387313e48fceb8e3f053635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4166ea7e_5fed28eb",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T15:36:27Z",
+      "side": 1,
+      "message": "There\u0027s some trailing whitespace here.\n\nFYI - we have a nice script at scripts/check_format.sh that you can run which will catch a lot of these things and fix them for you.",
+      "revId": "cb4b3caa8bf094d0b387313e48fceb8e3f053635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "560e08c4_c475cfe1",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T15:36:27Z",
+      "side": 1,
+      "message": "is it still useful for spdk_scsi_port to point to its spdk_scsi_dev?",
+      "revId": "cb4b3caa8bf094d0b387313e48fceb8e3f053635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
