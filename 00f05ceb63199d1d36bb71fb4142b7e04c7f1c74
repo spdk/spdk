@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "deebe736_19edd78b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1840,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-26T22:02:35Z",
+      "side": 1,
+      "message": "destruction",
+      "revId": "00f05ceb63199d1d36bb71fb4142b7e04c7f1c74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a045c36_8f829195",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 6
