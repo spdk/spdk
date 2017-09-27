@@ -145,6 +145,30 @@
       "revId": "a589f825c8139ea87142e8dec33ab604f972b7d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad3dab5f_31a72e99",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T19:51:10Z",
+      "side": 1,
+      "message": "I\u0027d still like to understand why we can\u0027t just put 24 bytes of space in the virtio_req for this.  See comment on previous review.  That seems a lot simpler (and is even less of a memory drain than the previous revision)",
+      "parentUuid": "45dd8b00_9a07220f",
+      "range": {
+        "startLine": 212,
+        "startChar": 57,
+        "endLine": 212,
+        "endChar": 59
+      },
+      "revId": "a589f825c8139ea87142e8dec33ab604f972b7d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
