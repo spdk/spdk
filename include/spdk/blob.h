@@ -70,6 +70,7 @@
 
 typedef uint64_t spdk_blob_id;
 #define SPDK_BLOBID_INVALID	(uint64_t)-1
+#define SPDK_BLOBSTORE_TYPE_LENGTH 16
 
 struct spdk_blob_store;
 struct spdk_io_channel;
@@ -139,18 +140,23 @@ struct spdk_bs_dev {
 	uint32_t	blocklen; /* In bytes */
 };
 
+struct spdk_bs_type {
+	char bstype[SPDK_BLOBSTORE_TYPE_LENGTH];
+};
+
 struct spdk_bs_opts {
 	uint32_t cluster_sz; /* In bytes. Must be multiple of page size. */
 	uint32_t num_md_pages; /* Count of the number of pages reserved for metadata */
 	uint32_t max_md_ops; /* Maximum simultaneous metadata operations */
 	uint32_t max_channel_ops; /* Maximum simultaneous operations per channel */
+	struct spdk_bs_type bstype; /* Blobstore type */
 };
 
 /* Initialize an spdk_bs_opts structure to the default blobstore option values. */
 void spdk_bs_opts_init(struct spdk_bs_opts *opts);
 
 /* Load a blob store from the given device. This will fail (return NULL) if no blob store is present. */
-void spdk_bs_load(struct spdk_bs_dev *dev,
+void spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 		  spdk_bs_op_with_handle_complete cb_fn, void *cb_arg);
 
 /* Initialize a blob store on the given disk. Destroys all data present on the device. */
@@ -275,5 +281,8 @@ int spdk_bs_md_get_xattr_names(struct spdk_blob *blob,
 uint32_t spdk_xattr_names_get_count(struct spdk_xattr_names *names);
 const char *spdk_xattr_names_get_name(struct spdk_xattr_names *names, uint32_t index);
 void spdk_xattr_names_free(struct spdk_xattr_names *names);
+
+struct spdk_bs_type spdk_bs_get_bstype(struct spdk_blob_store *bs);
+void spdk_bs_set_bstype(struct spdk_blob_store *bs, struct spdk_bs_type bstype);
 
 #endif /* SPDK_BLOB_H_ */
