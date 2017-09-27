@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "16778fe6_e8bfb600",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-27T07:52:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "173f3ce5_0fc2ab0d",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 1
+      },
+      "revId": "24666b41dfe6f255f2b3a965e5728761a3822bcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b377bf9_0c08744f",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 35
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-26T15:37:55Z",
       "side": 1,
       "message": "Make a proxy instead changing everything.",
+      "range": {
+        "startLine": 255,
+        "startChar": 2,
+        "endLine": 255,
+        "endChar": 52
+      },
+      "revId": "24666b41dfe6f255f2b3a965e5728761a3822bcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "266cc7fe_726e1af9",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-27T07:52:09Z",
+      "side": 1,
+      "message": "This is initial patch, why not be consistent in all functions?",
+      "parentUuid": "3b377bf9_0c08744f",
       "range": {
         "startLine": 255,
         "startChar": 2,
