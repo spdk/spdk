@@ -1365,6 +1365,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
+	snprintf(opts->bstype, sizeof(opts->bstype), "%s", SPDK_BLOB_OPTS_UNKNOWN_BSTYPE);
 }
 
 static int
@@ -1417,6 +1418,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	bs->md_target.max_md_ops = opts->max_md_ops;
 	bs->io_target.max_channel_ops = opts->max_channel_ops;
 	bs->super_blob = SPDK_BLOBID_INVALID;
+	snprintf(bs->bstype, sizeof(bs->bstype), "%s", opts->bstype);
 
 	/* The metadata is assumed to be at least 1 page */
 	bs->used_md_pages = spdk_bit_array_create(1);
@@ -1551,6 +1553,7 @@ _spdk_bs_load_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	ctx->bs->md_start = ctx->super->md_start;
 	ctx->bs->md_len = ctx->super->md_len;
 	ctx->bs->super_blob = ctx->super->super_blob;
+	snprintf(ctx->bs->bstype, sizeof(ctx->bs->bstype), "%s", ctx->super->bstype);
 
 	/* Read the used pages mask */
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
@@ -1575,7 +1578,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint32_t	crc;
 
-	if (ctx->super->version != SPDK_BS_VERSION) {
+	if (ctx->super->version > SPDK_BS_VERSION || ctx->super->version == 0) {
 		spdk_dma_free(ctx->super);
 		_spdk_bs_free(ctx->bs);
 		free(ctx);
@@ -1601,6 +1604,27 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
+	/* First blobstore version didn't support bstype. Update it now
+	 * with the only supported type in first version - blob fs */
+	if (!strcmp(ctx->super->bstype, "") && ctx->super->version == 1) {
+		SPDK_ERRLOG("Empty bstype found in super block - updating bstype to BLOBFS\n");
+		sprintf(ctx->super->bstype, "BLOBFS");
+	}
+
+	if (strcmp(ctx->bs->bstype, SPDK_BLOB_OPTS_UNKNOWN_BSTYPE) &&
+	    strcmp(ctx->bs->bstype, ctx->super->bstype)) {
+		SPDK_ERRLOG("Wrong bstype: expected: %s; found: %s\n", ctx->bs->bstype, ctx->super->bstype);
+		spdk_dma_free(ctx->super);
+		_spdk_bs_free(ctx->bs);
+		free(ctx);
+		spdk_bs_sequence_finish(seq, -ENXIO);
+		return;
+	}
+
+	if (!strcmp(ctx->bs->bstype, SPDK_BLOB_OPTS_UNKNOWN_BSTYPE)) {
+		SPDK_ERRLOG("Bstype wildcard found - loading blobstore regardless bstype\n");
+	}
+
 	if (ctx->super->clean != 1) {
 		/* TODO: ONLY CLEAN SHUTDOWN IS CURRENTLY SUPPORTED.
 		 * All of the necessary data to recover is available
@@ -1622,7 +1646,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 void
-spdk_bs_load(struct spdk_bs_dev *dev,
+spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_store	*bs;
@@ -1633,7 +1657,16 @@ spdk_bs_load(struct spdk_bs_dev *dev,
 
 	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Loading blobstore from dev %p\n", dev);
 
-	spdk_bs_opts_init(&opts);
+	if (o) {
+		opts = *o;
+	} else {
+		spdk_bs_opts_init(&opts);
+	}
+
+	if (_spdk_bs_opts_verify(&opts) != 0) {
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
 
 	bs = _spdk_bs_alloc(dev, &opts);
 	if (!bs) {
@@ -1794,6 +1827,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->super_blob = bs->super_blob;
 	ctx->super->clean = 0;
 	ctx->super->cluster_size = bs->cluster_sz;
+	snprintf(ctx->super->bstype, sizeof(ctx->super->bstype), "%s", bs->bstype);
 
 	/* Calculate how many pages the metadata consumes at the front
 	 * of the disk.
@@ -1902,6 +1936,7 @@ _spdk_bs_unload_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, i
 
 	/* Update the values in the super block */
 	ctx->super->super_blob = ctx->bs->super_blob;
+	snprintf(ctx->super->bstype, sizeof(ctx->super->bstype), "%s", ctx->bs->bstype);
 	ctx->super->clean = 1;
 	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
