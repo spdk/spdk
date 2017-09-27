@@ -21,7 +21,7 @@ fi
 timing_enter identify
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -c $testdir/../nvmf.conf &
+$NVMF_APP -c $testdir/../nvmf.conf -t all &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
