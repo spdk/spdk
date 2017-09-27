@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1ed29b1_85d84dcc",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:16:54Z",
+      "side": 1,
+      "message": "I don\u0027t think you need another switch statement.\n\nstatic void\nload_bs_cb(void *arg1, struct spdk_blob_store *bs, int bserrno)\n{\n  struct cli_context_t *context \u003d arg1;\n  /* initialize a bunch of values */\n\n  context-\u003enext_func(arg1, bs, bserrno);\n}\n\nThen pass load_bs_cb as the second param here instead of cli_context-\u003enext_func.",
+      "revId": "5d9d633c9c8215a7407b86d0ee3779d948bb16c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
