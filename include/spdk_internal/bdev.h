@@ -388,7 +388,8 @@ void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb 
  * \sa spdk_bdev_io_get_buf()
  * \param bdev_io I/O to allocate buffer for.
  * \param cb callback to be called when the buffer is actually allocated.
- * \param len size of the buffer to allocate.
+ * \param len size of the buffer to allocate. Must be no bigger than
+ * \c SPDK_BDEV_LARGE_BUF_MAX_SIZE
  */
 void spdk_bdev_io_get_sized_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb,
 				uint64_t len);
