@@ -70,6 +70,7 @@
 
 typedef uint64_t spdk_blob_id;
 #define SPDK_BLOBID_INVALID	(uint64_t)-1
+#define SPDK_BLOBSTORE_TYPE_LENGTH 50
 
 struct spdk_blob_store;
 struct spdk_io_channel;
@@ -144,6 +145,7 @@ struct spdk_bs_opts {
 	uint32_t num_md_pages; /* Count of the number of pages reserved for metadata */
 	uint32_t max_md_ops; /* Maximum simultaneous metadata operations */
 	uint32_t max_channel_ops; /* Maximum simultaneous operations per channel */
+	char     bstype_uuid[SPDK_BLOBSTORE_TYPE_LENGTH]; /* Blobstore type and uuid */
 };
 
 /* Initialize an spdk_bs_opts structure to the default blobstore option values. */
@@ -169,6 +171,9 @@ void spdk_bs_set_super(struct spdk_blob_store *bs, spdk_blob_id blobid,
 /* Open the super blob. */
 void spdk_bs_get_super(struct spdk_blob_store *bs,
 		       spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+
+/* Get the blobstore type and uuid. */
+const char * spdk_bs_get_type(struct spdk_blob_store *bs);
 
 /* Get the cluster size in bytes. Used in the extend operation. */
 uint64_t spdk_bs_get_cluster_size(struct spdk_blob_store *bs);

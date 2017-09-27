@@ -1360,6 +1360,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
+	snprintf(opts->bstype_uuid, sizeof(opts->bstype_uuid), "%s", SPDK_BLOB_OPTS_UNKNOWN_BSTYPE_UUID);
 }
 
 static struct spdk_blob_store *
@@ -1526,6 +1527,7 @@ _spdk_bs_load_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	ctx->bs->md_start = ctx->super->md_start;
 	ctx->bs->md_len = ctx->super->md_len;
 	ctx->bs->super_blob = ctx->super->super_blob;
+	snprintf(ctx->bs->bstype_uuid, sizeof(ctx->bs->bstype_uuid), "%s", ctx->super->bstype_uuid);
 
 	/* Read the used pages mask */
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
@@ -1737,6 +1739,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
+	snprintf(bs->bstype_uuid, sizeof(bs->bstype_uuid), "%s", opts.bstype_uuid);
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		_spdk_bs_free(bs);
@@ -1760,6 +1764,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->super_blob = bs->super_blob;
 	ctx->super->clean = 0;
 	ctx->super->cluster_size = bs->cluster_sz;
+	snprintf(ctx->super->bstype_uuid, sizeof(ctx->super->bstype_uuid), "%s", bs->bstype_uuid);
 
 	/* Calculate how many pages the metadata consumes at the front
 	 * of the disk.
@@ -1848,6 +1853,7 @@ _spdk_bs_unload_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, i
 
 	/* Update the values in the super block */
 	ctx->super->super_blob = ctx->bs->super_blob;
+	snprintf(ctx->super->bstype_uuid, sizeof(ctx->super->bstype_uuid), "%s", ctx->bs->bstype_uuid);
 	ctx->super->clean = 1;
 	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
@@ -1994,6 +2000,12 @@ spdk_bs_get_super(struct spdk_blob_store *bs,
 	} else {
 		cb_fn(cb_arg, bs->super_blob, 0);
 	}
+}
+
+const char *
+spdk_bs_get_type(struct spdk_blob_store *bs)
+{
+	return bs->bstype_uuid;
 }
 
 uint64_t

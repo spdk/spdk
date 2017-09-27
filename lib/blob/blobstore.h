@@ -48,6 +48,7 @@
 #define SPDK_BLOB_OPTS_NUM_MD_PAGES UINT32_MAX
 #define SPDK_BLOB_OPTS_MAX_MD_OPS 32
 #define SPDK_BLOB_OPTS_MAX_CHANNEL_OPS 512
+#define SPDK_BLOB_OPTS_UNKNOWN_BSTYPE_UUID "unknown_00000000-0000-0000-0000-000000000000"
 
 struct spdk_xattr {
 	/* TODO: reorder for best packing */
@@ -155,6 +156,7 @@ struct spdk_blob_store {
 	uint32_t			pages_per_cluster;
 
 	spdk_blob_id			super_blob;
+	char				bstype_uuid[SPDK_BLOBSTORE_TYPE_LENGTH];
 
 	TAILQ_HEAD(, spdk_blob) 	blobs;
 };
@@ -253,7 +255,9 @@ struct spdk_bs_super_block {
 	uint32_t	md_start; /* Offset from beginning of disk, in pages */
 	uint32_t	md_len; /* Count, in pages */
 
-	uint8_t		reserved[4036];
+	char		bstype_uuid[SPDK_BLOBSTORE_TYPE_LENGTH]; /* blobstore type and uuid */
+
+	uint8_t		reserved[3986];
 	uint32_t	crc;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super block size");
