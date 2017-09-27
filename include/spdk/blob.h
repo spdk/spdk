@@ -70,6 +70,7 @@
 
 typedef uint64_t spdk_blob_id;
 #define SPDK_BLOBID_INVALID	(uint64_t)-1
+#define SPDK_BLOBSTORE_TYPE_LENGTH 16
 
 struct spdk_blob_store;
 struct spdk_io_channel;
@@ -144,6 +145,7 @@ struct spdk_bs_opts {
 	uint32_t num_md_pages; /* Count of the number of pages reserved for metadata */
 	uint32_t max_md_ops; /* Maximum simultaneous metadata operations */
 	uint32_t max_channel_ops; /* Maximum simultaneous operations per channel */
+	char     bstype[SPDK_BLOBSTORE_TYPE_LENGTH]; /* Blobstore type and uuid */
 };
 
 /* Initialize an spdk_bs_opts structure to the default blobstore option values. */
