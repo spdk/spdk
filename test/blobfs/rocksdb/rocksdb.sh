@@ -13,6 +13,13 @@ run_step() {
 	echo "--spdk_cache_size=$CACHE_SIZE" >> "$1"_flags.txt
 
 	echo -n Start $1 test phase...
+	echo files:
+	echo 1: "$1"_flags.txt
+	echo 2: "$1"_db_bench.txt
+	echo pwd:
+	echo "$(pwd)"
+	echo ls:
+	echo "$(ls -al)"
 	/usr/bin/time taskset 0xFFF $DB_BENCH --flagfile="$1"_flags.txt &> "$1"_db_bench.txt
 	echo done.
 }
