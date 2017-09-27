@@ -405,6 +405,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 {
 	struct spdk_bdev *bdev;
 	struct lvol_store_bdev *lvs_bdev;
+	uint64_t total_size;
 
 	if (!lvol->name) {
 		return NULL;
@@ -426,8 +427,9 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	bdev->product_name = "Logical Volume";
 	bdev->write_cache = 1;
 	bdev->blocklen = spdk_bs_get_page_size(lvol->lvol_store->blobstore);
-	assert((lvol->sz % bdev->blocklen) == 0);
-	bdev->blockcnt = lvol->sz / bdev->blocklen;
+	total_size = lvol->cluster_num * spdk_bs_get_cluster_size(lvol->lvol_store->blobstore);
+	assert((total_size % bdev->blocklen) == 0);
+	bdev->blockcnt = total_size / bdev->blocklen;
 
 	bdev->ctxt = lvol;
 	bdev->fn_table = &vbdev_lvol_fn_table;

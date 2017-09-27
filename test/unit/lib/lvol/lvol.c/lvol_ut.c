@@ -42,7 +42,8 @@
 #define DEV_BUFFER_SIZE (64 * 1024 * 1024)
 #define DEV_BUFFER_BLOCKLEN (4096)
 #define DEV_BUFFER_BLOCKCNT (DEV_BUFFER_SIZE / DEV_BUFFER_BLOCKLEN)
-#define DEV_FREE_CLUSTERS 0xFFFF
+#define BS_CLUSTER_SIZE (1024 * 1024)
+#define BS_FREE_CLUSTERS (DEV_BUFFER_SIZE / BS_CLUSTER_SIZE)
 
 int g_lvserrno;
 int g_resize_rc;
@@ -112,7 +113,7 @@ spdk_blob_get_id(struct spdk_blob *blob)
 uint64_t
 spdk_bs_get_cluster_size(struct spdk_blob_store *bs)
 {
-	return DEV_BUFFER_BLOCKLEN;
+	return BS_CLUSTER_SIZE;
 }
 
 void spdk_bs_md_close_blob(struct spdk_blob **b,
@@ -144,7 +145,7 @@ spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 uint64_t
 spdk_bs_free_cluster_count(struct spdk_blob_store *bs)
 {
-	return DEV_FREE_CLUSTERS;
+	return BS_FREE_CLUSTERS;
 }
 
 void
@@ -275,7 +276,7 @@ lvol_create_fail(void)
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvol == NULL);
 
-	rc = spdk_lvol_create(g_lvol_store, DEV_FREE_CLUSTERS + 1, lvol_op_with_handle_complete, NULL);
+	rc = spdk_lvol_create(g_lvol_store, DEV_BUFFER_SIZE + 1, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvol == NULL);
 

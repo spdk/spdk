@@ -275,9 +275,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz, spdk_lvol_op_with_handl
 
 	SPDK_CU_ASSERT_FATAL(lvol != NULL);
 
-
 	lvol->lvol_store = lvs;
-	lvol->sz = sz * 1024 * 1024;
 	lvol->name = spdk_sprintf_alloc("%s", "UNIT_TEST_UUID");
 	SPDK_CU_ASSERT_FATAL(lvol->name != NULL);
 

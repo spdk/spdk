@@ -41,6 +41,12 @@
 
 SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)
 
+static inline size_t
+divide_round_up(size_t num, size_t divisor)
+{
+	return (num + divisor - 1) / divisor;
+}
+
 static void
 _lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 {
@@ -208,8 +214,6 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_lvol_with_handle_req *req = cb_arg;
 	spdk_blob_id blob_id = spdk_blob_get_id(blob);
 	struct spdk_lvol *lvol = req->lvol;
-	uint64_t cluster_size = spdk_bs_get_cluster_size(lvol->lvol_store->blobstore);
-	uint64_t number_of_clusters = lvol->sz / cluster_size;
 	char uuid[UUID_STRING_LEN];
 
 	if (lvolerrno < 0) {
@@ -227,7 +231,7 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		goto invalid;
 	}
 
-	lvolerrno = spdk_bs_md_resize_blob(blob, number_of_clusters);
+	lvolerrno = spdk_bs_md_resize_blob(blob, lvol->cluster_num);
 	if (lvolerrno < 0) {
 		spdk_bs_md_close_blob(&blob, _spdk_lvol_delete_blob_cb, lvol);
 		goto invalid;
@@ -271,17 +275,21 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
 		 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
+	struct spdk_blob_store *bs;
 	struct spdk_lvol *lvol;
-	uint64_t free_clusters;
+	uint64_t cluster_number, free_clusters;
 
 	if (lvs == NULL) {
 		SPDK_ERRLOG("lvol store does not exist\n");
 		return -ENODEV;
 	}
+	bs = lvs->blobstore;
 
-	free_clusters = spdk_bs_free_cluster_count(lvs->blobstore);
-	if (sz > free_clusters) {
-		SPDK_ERRLOG("Not enough free clusters left on lvol store to add lvol with %zu clusters\n", sz);
+	cluster_number = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
+	free_clusters = spdk_bs_free_cluster_count(bs);
+	if (cluster_number > free_clusters) {
+		SPDK_ERRLOG("Not enough free clusters left (%zu) on lvol store to add lvol %zu clusters\n",
+			    free_clusters, cluster_number);
 		return -ENOMEM;
 	}
 
@@ -301,7 +309,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
 	}
 
 	lvol->lvol_store = lvs;
-	lvol->sz = sz * spdk_bs_get_cluster_size(lvs->blobstore);
+	lvol->cluster_num = cluster_number;
 	lvol->close_only = false;
 	req->lvol = lvol;
 
@@ -327,14 +335,14 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	struct spdk_blob *blob = lvol->blob;
 	struct spdk_lvol_store *lvs = lvol->lvol_store;
 	struct spdk_lvol_req *req;
-	uint64_t cluster_size = spdk_bs_get_cluster_size(lvs->blobstore);
 	uint64_t free_clusters = spdk_bs_free_cluster_count(lvs->blobstore);
-	uint64_t used_clusters = lvol->sz / cluster_size;
+	uint64_t used_clusters = lvol->cluster_num;
+	uint64_t new_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(lvs->blobstore));
 
 	/* Check if size of lvol increasing */
-	if (sz > used_clusters) {
+	if (new_clusters > used_clusters) {
 		/* Check if there is enough clusters left to resize */
-		if (sz - used_clusters > free_clusters) {
+		if (new_clusters - used_clusters > free_clusters) {
 			SPDK_ERRLOG("Not enough free clusters left on lvol store to resize lvol to %zu clusters\n", sz);
 			return -ENOMEM;
 		}
@@ -353,7 +361,7 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 		goto invalid;
 	}
 
-	lvol->sz = sz * cluster_size;
+	lvol->cluster_num = new_clusters;
 
 	spdk_blob_md_set_xattr(blob, "length", &sz, sizeof(sz));
 
