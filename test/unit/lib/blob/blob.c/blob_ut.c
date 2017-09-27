@@ -847,8 +847,10 @@ bs_load(void)
 	int rc;
 	const void *value;
 	size_t value_len;
+	struct spdk_bs_opts opts;
 
 	dev = init_dev();
+	spdk_bs_opts_init(&opts);
 
 	/* Initialize a new blob store */
 	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
@@ -895,7 +897,7 @@ bs_load(void)
 	CU_ASSERT(super_blob->clean == 1);
 	dev = init_dev();
 	/* Load an existing blob store */
-	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -1007,7 +1009,7 @@ bs_cluster_sz(void)
 
 	dev = init_dev();
 	/* Load an existing blob store */
-	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -1067,7 +1069,7 @@ bs_resize_md(void)
 	g_bserrno = -1;
 	g_bs = NULL;
 	dev = init_dev();
-	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -1168,7 +1170,7 @@ blob_serialize(void)
 
 	dev = init_dev();
 	/* Load an existing blob store */
-	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -1247,8 +1249,10 @@ super_block_crc(void)
 {
 	struct spdk_bs_dev *dev;
 	struct spdk_bs_super_block *super_block;
+	struct spdk_bs_opts opts;
 
 	dev = init_dev();
+	spdk_bs_opts_init(&opts);
 
 	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -1264,7 +1268,7 @@ super_block_crc(void)
 
 	g_scheduler_delay = true;
 	/* Load an existing blob store */
-	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 
 	CU_ASSERT(g_bserrno == -EILSEQ);
 	_bs_flush_scheduler();
