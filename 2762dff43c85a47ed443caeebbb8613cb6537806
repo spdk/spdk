@@ -1,0 +1,251 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82ea446a_71f9a2bb",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:14:56Z",
+      "side": 1,
+      "message": "what is the point of putting a single call into a function?\nif you\u0027d like to shorten the length of the line then perhaps using $rpc_py from common file would be better, as most of all other scripts do?",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 1
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77ca99e1_d829f871",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:14:56Z",
+      "side": 1,
+      "message": "I don;t get it... you print it to screen?",
+      "range": {
+        "startLine": 18,
+        "startChar": 3,
+        "endLine": 19,
+        "endChar": 28
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cdfc035_3cd912e0",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:14:56Z",
+      "side": 1,
+      "message": "Any comment on this \"common ground\" for config file I mentioned in previous patch set?",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 1
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ce492e1_dec534a5",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:14:56Z",
+      "side": 1,
+      "message": "is this needed?",
+      "range": {
+        "startLine": 51,
+        "startChar": 4,
+        "endLine": 51,
+        "endChar": 12
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b4c95d7_5dd0ad8a",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:14:56Z",
+      "side": 1,
+      "message": "pretty sure I asked this before - but why do you unbind BEFORE running FIO traffic? original test plan mentioned doing it DURING I/O traffic",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 12
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "528bba85_cf92606d",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:14:56Z",
+      "side": 1,
+      "message": "mentioned that before",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 5
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32a0cee2_06f5461f",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:14:56Z",
+      "side": 1,
+      "message": "Why do you just print stuff?",
+      "range": {
+        "startLine": 81,
+        "startChar": 4,
+        "endLine": 83,
+        "endChar": 28
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5d34053_c89c5d7f",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:14:56Z",
+      "side": 1,
+      "message": "Why did you cut this function from the bottom of the file and pasted it here? Is there any reason? If not, then this is unnecessary change",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 1
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b297f781_4f8634c8",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:14:56Z",
+      "side": 1,
+      "message": "is that needed?",
+      "range": {
+        "startLine": 194,
+        "startChar": 4,
+        "endLine": 194,
+        "endChar": 11
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "171fd47e_fe3a6763",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:14:56Z",
+      "side": 1,
+      "message": "Again - did you cut it from the top and pasted at the bottom? Don\u0027t think it\u0027s necessary",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 228,
+        "endChar": 1
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fb9ab72_c94f01db",
+        "filename": "test/vhost/hotfeatures/scsi_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:14:56Z",
+      "side": 1,
+      "message": "You didn\u0027t apply or reply to any of comments here",
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
