@@ -1365,6 +1365,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
+	snprintf(opts->bstype, sizeof(opts->bstype), "%s", SPDK_BLOB_OPTS_UNKNOWN_BSTYPE);
 }
 
 static int
@@ -1551,6 +1552,7 @@ _spdk_bs_load_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	ctx->bs->md_start = ctx->super->md_start;
 	ctx->bs->md_len = ctx->super->md_len;
 	ctx->bs->super_blob = ctx->super->super_blob;
+	snprintf(ctx->bs->bstype, sizeof(ctx->bs->bstype), "%s", ctx->super->bstype);
 
 	/* Read the used pages mask */
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
@@ -1771,6 +1773,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
+	snprintf(bs->bstype, sizeof(bs->bstype), "%s", opts.bstype);
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		_spdk_bs_free(bs);
@@ -1794,6 +1798,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->super_blob = bs->super_blob;
 	ctx->super->clean = 0;
 	ctx->super->cluster_size = bs->cluster_sz;
+	snprintf(ctx->super->bstype, sizeof(ctx->super->bstype), "%s", bs->bstype);
 
 	/* Calculate how many pages the metadata consumes at the front
 	 * of the disk.
@@ -1902,6 +1907,7 @@ _spdk_bs_unload_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, i
 
 	/* Update the values in the super block */
 	ctx->super->super_blob = ctx->bs->super_blob;
+	snprintf(ctx->super->bstype, sizeof(ctx->super->bstype), "%s", ctx->bs->bstype);
 	ctx->super->clean = 1;
 	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
