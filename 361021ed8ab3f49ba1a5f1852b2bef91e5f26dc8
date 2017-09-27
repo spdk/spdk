@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2d808e4_0f736c6d",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:09:50Z",
+      "side": 1,
+      "message": "tabs are off",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e62cbdd_e3541416",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:09:50Z",
+      "side": 1,
+      "message": "would be easier to read by separating out the next sentence to its own printf - or at least use something like:\n\nprintf(\"Writing blocks 0 to %d blah blah\\n\"\n         \"On next read, read blah blah\\n\");",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f13cb08_ad91d89a",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:09:50Z",
+      "side": 1,
+      "message": "quicker to just memset the whole context structure at the beginning - then you don\u0027t have to explicitly set these to 0",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "748f7c40_ff820386",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:09:50Z",
+      "side": 1,
+      "message": "why the flush?",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe1a0ecb_d43f70bf",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:09:50Z",
+      "side": 1,
+      "message": "you don\u0027t need these ifs - free(NULL) is safe and just does nothing",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f66e3b3_da339c9f",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:09:50Z",
+      "side": 1,
+      "message": "you can remove some of these comments which were really suited for the hello_world app",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
