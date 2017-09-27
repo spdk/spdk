@@ -43,6 +43,12 @@ The HotplugEnable option in `[Nvme]` sections of the configuration file is now
 The NVMe library now includes a function spdk_nvme_ns_get_ctrlr which returns the
 NVMe Controller associated with a given namespace.
 
+The NVMe library now allows the user to specify a host identifier when attaching
+to a controller.  The host identifier is used as part of the Reservations feature,
+as well as in the NVMe-oF Connect command.  The default host ID is also now a
+randomly-generated UUID, and the default host NQN uses the host ID to generate
+a UUID-based NQN.
+
 ### NVMe-oF Target (nvmf_tgt)
 
 The NVMe-oF target no longer requires any in capsule data buffers to run, and
