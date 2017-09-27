@@ -1,0 +1,251 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f076c13d_d48d3c0c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:37:38Z",
+      "side": 1,
+      "message": "Rebase on top of:\nhttps://review.gerrithub.io/#/c/372268/\n\nSo that test plan points are added into test plan rather than creating new file",
+      "range": {
+        "startLine": 1,
+        "startChar": 12,
+        "endLine": 1,
+        "endChar": 21
+      },
+      "revId": "1f5b17d58231801d26dc80031bed0b47535d6499",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08aaec99_4974cf59",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:37:38Z",
+      "side": 1,
+      "message": "test/vhost",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 17
+      },
+      "revId": "1f5b17d58231801d26dc80031bed0b47535d6499",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "423ab058_37817f46",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:37:38Z",
+      "side": 1,
+      "message": "mention hot-remove here",
+      "range": {
+        "startLine": 7,
+        "startChar": 20,
+        "endLine": 7,
+        "endChar": 57
+      },
+      "revId": "1f5b17d58231801d26dc80031bed0b47535d6499",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b94bf2d3_6f244d42",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:37:38Z",
+      "side": 1,
+      "message": "method?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 6
+      },
+      "revId": "1f5b17d58231801d26dc80031bed0b47535d6499",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f4fea04_51f22b0e",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:37:38Z",
+      "side": 1,
+      "message": "Comment for whole plan - what about mentioning that hot-remove only works on uio_pci_generic",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 44
+      },
+      "revId": "1f5b17d58231801d26dc80031bed0b47535d6499",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d15d1b73_6ef94d90",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:37:38Z",
+      "side": 1,
+      "message": "Some overall description is missing - any words on how we configure the vhost? do we use RPC? what driver? how many disks are required for tests ?etc.",
+      "revId": "1f5b17d58231801d26dc80031bed0b47535d6499",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d033bef2_7973e1d1",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:37:38Z",
+      "side": 1,
+      "message": "space between \"case\" and number",
+      "range": {
+        "startLine": 5,
+        "startChar": 9,
+        "endLine": 5,
+        "endChar": 17
+      },
+      "revId": "1f5b17d58231801d26dc80031bed0b47535d6499",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6bc6da6_467eb936",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:37:38Z",
+      "side": 1,
+      "message": "Pawels test plan from here https://review.gerrithub.io/#/c/372268/31/test/vhost/hotfeatures/test_plan.md just use numbers.\nSentence is not needed.",
+      "range": {
+        "startLine": 5,
+        "startChar": 18,
+        "endLine": 5,
+        "endChar": 47
+      },
+      "revId": "1f5b17d58231801d26dc80031bed0b47535d6499",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8e8f5d1_c857359e",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:37:38Z",
+      "side": 1,
+      "message": "Describe how you specifically remove it from configuration. \"run the command\" is too ambiguous",
+      "range": {
+        "startLine": 11,
+        "startChar": 2,
+        "endLine": 11,
+        "endChar": 42
+      },
+      "revId": "1f5b17d58231801d26dc80031bed0b47535d6499",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b40a9411_7e75d2e9",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:37:38Z",
+      "side": 1,
+      "message": "FIO integrity was a short term for \"FIO Integrity\" test job. Correct phrase would be \"FIO I/O traffic with verification enabled\"",
+      "range": {
+        "startLine": 22,
+        "startChar": 6,
+        "endLine": 22,
+        "endChar": 19
+      },
+      "revId": "1f5b17d58231801d26dc80031bed0b47535d6499",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dba336c2_cf154ece",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-27T21:37:38Z",
+      "side": 1,
+      "message": "I dont think this step is necessary to be here - in order to remove the device you need to know its address anyways. It\u0027s just not relevant",
+      "range": {
+        "startLine": 23,
+        "startChar": 1,
+        "endLine": 23,
+        "endChar": 40
+      },
+      "revId": "1f5b17d58231801d26dc80031bed0b47535d6499",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
