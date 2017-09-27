@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "886d05fd_c443c851",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-27T17:39:33Z",
+      "side": 1,
+      "message": "true",
+      "parentUuid": "642406c3_4e60c3a8",
+      "revId": "a589f825c8139ea87142e8dec33ab604f972b7d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "75d7bf28_995805e7",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 5
@@ -59,6 +77,30 @@
     },
     {
       "key": {
+        "uuid": "aa197f4d_748a6f45",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-27T17:39:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "75d7bf28_995805e7",
+      "range": {
+        "startLine": 209,
+        "startChar": 64,
+        "endLine": 209,
+        "endChar": 68
+      },
+      "revId": "a589f825c8139ea87142e8dec33ab604f972b7d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "23b4f9b9_1e774afd",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 5
@@ -70,6 +112,30 @@
       "writtenOn": "2017-09-27T16:35:25Z",
       "side": 1,
       "message": "It would be good to calculate this 24 from struct sizes or at least add a comment like the one above where 24 is used.",
+      "range": {
+        "startLine": 212,
+        "startChar": 57,
+        "endLine": 212,
+        "endChar": 59
+      },
+      "revId": "a589f825c8139ea87142e8dec33ab604f972b7d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45dd8b00_9a07220f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-27T17:39:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "23b4f9b9_1e774afd",
       "range": {
         "startLine": 212,
         "startChar": 57,
