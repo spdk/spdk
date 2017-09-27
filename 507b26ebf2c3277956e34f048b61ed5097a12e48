@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "484be9b5_99f174c5",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-27T17:17:48Z",
+      "side": 1,
+      "message": "Small nitpick: I think \"num_clusters\" or \"cluster_count\" would be clearer - \"cluster_num\" sounds like it would be the offset of a single cluster.",
+      "revId": "507b26ebf2c3277956e34f048b61ed5097a12e48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
