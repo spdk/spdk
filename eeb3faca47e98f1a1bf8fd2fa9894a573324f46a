@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97465b45_9f1e1f21",
+        "filename": "configure",
+        "patchSetId": 36
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:46:56Z",
+      "side": 1,
+      "message": "should show example directory (maybe where user would typically find nvml if installed from packages?) - similar to dpdk, fio and vtune options",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fe3d62c_c559c728",
+        "filename": "lib/bdev/Makefile",
+        "patchSetId": 36
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:46:56Z",
+      "side": 1,
+      "message": "this probably belongs in the ifeq(Linux) below - I think nvml is only supported on Linux (not FreeBSD)",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec5c29c8_7b40afe0",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:46:56Z",
+      "side": 1,
+      "message": "can we combine the readv and writev functions?  mostly duplicated code there",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce333f80_dd80dc7a",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:46:56Z",
+      "side": 1,
+      "message": "just initialize status to SUCCESS, then you can avoid the goto",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13a787ad_758a3f57",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:46:56Z",
+      "side": 1,
+      "message": "no newline needed before this line; but I think you can make this simpler anyways:\n\nuint64_t offset \u003d bdev_io-\u003eu.bdev.offset_blocks;\nsize_t count_remaining \u003d bdev_io-\u003eu.bdev.num_blocks;\n\nwhile (count_remaining \u003e 0) {\n  /* do stuff */\n  offset++;\n  count_remaining--;\n}",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad2bc420_b226b5e7",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:46:56Z",
+      "side": 1,
+      "message": "for these simple ones like FLUSH and RESET, you can just call spdk_bdev_io_complete() directly here rather than creating the separate function.  less code :)",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24b0d49a_abc8c786",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:46:56Z",
+      "side": 1,
+      "message": "I don\u0027t really like using errno in this way.  I would rather have this function return int, and have a struct spdk_bdev ** parameter that gets set if we can create the pmem disk.",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65c77711_c1652a16",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:46:56Z",
+      "side": 1,
+      "message": "set this to 0 - there\u0027s no cache here (all writes are persistent - no need to flush)",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a89c9fa2_16262407",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T22:46:56Z",
+      "side": 1,
+      "message": "I\u0027m not sure about this change.  I\u0027m sure there are some earlier RedHat/CentOS versions that don\u0027t have libpmemblk yet?  We also don\u0027t enable this by default (yet) so I\u0027m not sure we should install the package for it by default.\n\nCould we instead check if this package exists and then install it?  Just to avoid unnecessary error messages.",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
