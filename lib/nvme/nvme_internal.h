@@ -110,8 +110,6 @@
 #define DEFAULT_ADMIN_QUEUE_REQUESTS	(32)
 #define DEFAULT_IO_QUEUE_REQUESTS	(512)
 
-#define DEFAULT_HOSTNQN			"nqn.2016-06.io.spdk:init"
-
 enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_INVALID = 0,
 
@@ -470,6 +468,7 @@ struct nvme_driver {
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	init_ctrlrs;
 	TAILQ_HEAD(, spdk_nvme_ctrlr)	attached_ctrlrs;
 	bool				initialized;
+	uint8_t				default_extended_host_id[16];
 };
 
 extern struct nvme_driver *g_spdk_nvme_driver;
@@ -523,6 +522,8 @@ int	nvme_ctrlr_cmd_get_num_queues(struct spdk_nvme_ctrlr *ctrlr,
 int	nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 		union spdk_nvme_critical_warning_state state,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int	nvme_ctrlr_cmd_set_host_id(struct spdk_nvme_ctrlr *ctrlr, void *host_id, uint32_t host_id_size,
+				   spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 				 struct spdk_nvme_ctrlr_list *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,

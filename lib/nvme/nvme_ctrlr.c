@@ -37,6 +37,8 @@
 
 #include "spdk/env.h"
 
+#include <uuid/uuid.h>
+
 static int nvme_ctrlr_construct_and_submit_aer(struct spdk_nvme_ctrlr *ctrlr,
 		struct nvme_async_event_request *aer);
 
@@ -78,15 +80,21 @@ nvme_ctrlr_set_cc(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cc_regist
 void
 spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
 {
+	char host_id_str[37];
+
 	opts->num_io_queues = DEFAULT_MAX_IO_QUEUES;
 	opts->use_cmb_sqs = true;
 	opts->arb_mechanism = SPDK_NVME_CC_AMS_RR;
 	opts->keep_alive_timeout_ms = 10 * 1000;
 	opts->io_queue_size = DEFAULT_IO_QUEUE_SIZE;
-	strncpy(opts->hostnqn, DEFAULT_HOSTNQN, sizeof(opts->hostnqn));
 	opts->io_queue_requests = DEFAULT_IO_QUEUE_REQUESTS;
 	memset(opts->src_addr, 0, sizeof(opts->src_addr));
 	memset(opts->src_svcid, 0, sizeof(opts->src_svcid));
+	memset(opts->host_id, 0, sizeof(opts->host_id));
+	memcpy(opts->extended_host_id, g_spdk_nvme_driver->default_extended_host_id,
+	       sizeof(opts->extended_host_id));
+	uuid_unparse(opts->extended_host_id, host_id_str);
+	snprintf(opts->hostnqn, sizeof(opts->hostnqn), "2014-08.org.nvmexpress:uuid:%s", host_id_str);
 }
 
 /**
@@ -808,6 +816,76 @@ nvme_ctrlr_set_keep_alive_timeout(struct spdk_nvme_ctrlr *ctrlr)
 	return 0;
 }
 
+static int
+nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_completion_poll_status status;
+	bool all_zeroes;
+	uint8_t *host_id;
+	uint32_t host_id_size;
+	uint32_t i;
+	int rc;
+
+	if (ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		/*
+		 * NVMe-oF sends the host ID during Connect and doesn't allow
+		 * Set Features - Host Identifier after Connect, so we don't need to do anything here.
+		 */
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "NVMe-oF transport - not sending Set Features - Host ID\n");
+		return 0;
+	}
+
+	if (ctrlr->cdata.ctratt.host_id_exhid_supported) {
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Using 128-bit extended host identifier\n");
+		host_id = ctrlr->opts.extended_host_id;
+		host_id_size = sizeof(ctrlr->opts.extended_host_id);
+	} else {
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Using 64-bit host identifier\n");
+		host_id = ctrlr->opts.host_id;
+		host_id_size = sizeof(ctrlr->opts.host_id);
+	}
+
+	/* If the user specified an all-zeroes host identifier, don't send the command. */
+	all_zeroes = true;
+	for (i = 0; i < host_id_size; i++) {
+		if (host_id[i] != 0) {
+			all_zeroes = false;
+			break;
+		}
+	}
+
+	if (all_zeroes) {
+		SPDK_DEBUGLOG(SPDK_TRACE_NVME,
+			      "User did not specify host ID - not sending Set Features - Host ID\n");
+		return 0;
+	}
+
+	SPDK_TRACEDUMP(SPDK_TRACE_NVME, "host_id", host_id, host_id_size);
+
+	status.done = false;
+	rc = nvme_ctrlr_cmd_set_host_id(ctrlr, host_id, host_id_size, nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		SPDK_ERRLOG("Set Features - Host ID failed: %d\n", rc);
+		return rc;
+	}
+
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		SPDK_WARNLOG("Set Features - Host ID failed: SC 0x%x SCT 0x%x\n",
+			     status.cpl.status.sc, status.cpl.status.sct);
+		/*
+		 * Treat Set Features - Host ID failure as non-fatal, since the Host ID feature
+		 * is optional.
+		 */
+		return 0;
+	}
+
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "Set Features - Host ID was successful\n");
+	return 0;
+}
+
 static void
 nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1391,6 +1469,10 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 
 	if (nvme_ctrlr_set_keep_alive_timeout(ctrlr) != 0) {
 		SPDK_ERRLOG("Setting keep alive timeout failed\n");
+		return -1;
+	}
+
+	if (nvme_ctrlr_set_host_id(ctrlr) != 0) {
 		return -1;
 	}
 
