@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f255dc51_284222d2",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-27T16:35:25Z",
+      "side": 1,
+      "message": "Parameter List Length field is actually two bytes (7-8), so it might be best to write this as:\n\n    to_be16(\u0026req-\u003ecdb[7], 24);\n\nThis also affects the uses of cdb[8] below - it might be clearer to put the size into a variable in native endianness to avoid having to convert back and forth.\n\nWe could also add a struct for the unmap parameter list so that these could have names rather than just magic numbers.",
+      "revId": "a589f825c8139ea87142e8dec33ab604f972b7d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "642406c3_4e60c3a8",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-27T16:35:25Z",
+      "side": 1,
+      "message": "We also need to clamp this to MAXIMUM UNMAP LBA COUNT from the Block Limits VPD page.\n\nThat can be a separate patch, though, since we don\u0027t currently retrieve the Block Limits page, and it has limits that need to be applied to other commands as well.",
+      "revId": "a589f825c8139ea87142e8dec33ab604f972b7d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75d7bf28_995805e7",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-27T16:35:25Z",
+      "side": 1,
+      "message": "Nitpick: 2^32 - 1 is the maximum allowed value.",
+      "range": {
+        "startLine": 209,
+        "startChar": 64,
+        "endLine": 209,
+        "endChar": 68
+      },
+      "revId": "a589f825c8139ea87142e8dec33ab604f972b7d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23b4f9b9_1e774afd",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-27T16:35:25Z",
+      "side": 1,
+      "message": "It would be good to calculate this 24 from struct sizes or at least add a comment like the one above where 24 is used.",
+      "range": {
+        "startLine": 212,
+        "startChar": 57,
+        "endLine": 212,
+        "endChar": 59
+      },
+      "revId": "a589f825c8139ea87142e8dec33ab604f972b7d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
