@@ -53,6 +53,8 @@ struct ut_bdev {
 
 struct ut_bdev_channel {
 	TAILQ_HEAD(, spdk_bdev_io)	outstanding_io;
+	uint32_t			outstanding_cnt;
+	uint32_t			avail_cnt;
 };
 
 struct ut_bdev g_bdev;
@@ -64,6 +66,14 @@ stub_create_ch(void *io_device, void *ctx_buf)
 	struct ut_bdev_channel *ch = ctx_buf;
 
 	TAILQ_INIT(&ch->outstanding_io);
+	ch->outstanding_cnt = 0;
+	/*
+	 * When avail gets to 0, the submit_request function will return ENOMEM.
+	 *  Most tests to not want ENOMEM to occur, so by default set this to a
+	 *  big value that won't get hit.  The ENOMEM tests can then override this
+	 *  value to something much smaller to induce ENOMEM conditions.
+	 */
+	ch->avail_cnt = 2048;
 	return 0;
 }
 
@@ -89,23 +99,38 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
 	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
 
-	TAILQ_INSERT_TAIL(&ch->outstanding_io, bdev_io, module_link);
+	if (ch->avail_cnt > 0) {
+		TAILQ_INSERT_TAIL(&ch->outstanding_io, bdev_io, module_link);
+		ch->outstanding_cnt++;
+		ch->avail_cnt--;
+	} else {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
 }
 
-static void
-stub_complete_io(void)
+static uint32_t
+stub_complete_io(uint32_t num_to_complete)
 {
 	struct spdk_io_channel *_ch = spdk_get_io_channel(&g_bdev.io_target);
 	struct ut_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct spdk_bdev_io *io;
+	bool complete_all = (num_to_complete == 0);
+	uint32_t num_completed = 0;
 
-	while (!TAILQ_EMPTY(&ch->outstanding_io)) {
+	while (complete_all || num_completed < num_to_complete) {
+		if (TAILQ_EMPTY(&ch->outstanding_io)) {
+			break;
+		}
 		io = TAILQ_FIRST(&ch->outstanding_io);
 		TAILQ_REMOVE(&ch->outstanding_io, io, module_link);
+		ch->outstanding_cnt--;
 		spdk_bdev_io_complete(io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		ch->avail_cnt++;
+		num_completed++;
 	}
 
 	spdk_put_io_channel(_ch);
+	return num_completed;
 }
 
 static struct spdk_bdev_fn_table fn_table = {
@@ -222,7 +247,7 @@ put_channel_during_reset(void)
 	spdk_bdev_reset(g_desc, io_ch, reset_done, &done);
 	spdk_put_io_channel(io_ch);
 	poll_threads();
-	stub_complete_io();
+	stub_complete_io(0);
 
 	teardown_test();
 }
@@ -283,7 +308,7 @@ aborted_reset(void)
 	 */
 	set_thread(0);
 	spdk_put_io_channel(io_ch[0]);
-	stub_complete_io();
+	stub_complete_io(0);
 	poll_threads();
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_bdev.bdev.reset_in_progress == NULL);
@@ -335,11 +360,11 @@ io_during_reset(void)
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
 
 	set_thread(0);
-	stub_complete_io();
+	stub_complete_io(0);
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	set_thread(1);
-	stub_complete_io();
+	stub_complete_io(0);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	/*
@@ -378,7 +403,7 @@ io_during_reset(void)
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_FAILED);
 
 	set_thread(0);
-	stub_complete_io();
+	stub_complete_io(0);
 	spdk_put_io_channel(io_ch[0]);
 	set_thread(1);
 	spdk_put_io_channel(io_ch[1]);
