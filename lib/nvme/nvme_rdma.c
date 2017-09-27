@@ -55,7 +55,6 @@
 
 #define NVME_RDMA_TIME_OUT_IN_MS 2000
 #define NVME_RDMA_RW_BUFFER_SIZE 131072
-#define NVME_HOST_ID_DEFAULT "12345679890"
 
 /*
 NVME RDMA qpair Resouce Defaults
@@ -600,8 +599,9 @@ nvme_rdma_qpair_fabric_connect(struct nvme_rdma_qpair *rqpair)
 		nvmf_data->cntlid = rctrlr->cntlid;
 	}
 
-	strncpy((char *)&nvmf_data->hostid, (char *)NVME_HOST_ID_DEFAULT,
-		strlen((char *)NVME_HOST_ID_DEFAULT));
+	SPDK_STATIC_ASSERT(sizeof(nvmf_data->hostid) == sizeof(ctrlr->opts.extended_host_id),
+			   "host ID size mismatch");
+	memcpy(nvmf_data->hostid, ctrlr->opts.extended_host_id, sizeof(nvmf_data->hostid));
 	strncpy((char *)nvmf_data->hostnqn, ctrlr->opts.hostnqn, sizeof(nvmf_data->hostnqn));
 	strncpy((char *)nvmf_data->subnqn, ctrlr->trid.subnqn, sizeof(nvmf_data->subnqn));
 
