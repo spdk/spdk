@@ -17,6 +17,7 @@ addons:
       - libnuma-dev
 
 before_script:
+  - git submodule update --init
   - export MAKEFLAGS="-j$(nproc)"
   - if [ "$CC" = gcc ]; then
       wget https://downloads.sourceforge.net/project/astyle/astyle/astyle%203.0/astyle_3.0_linux.tar.gz;
@@ -26,7 +27,6 @@ before_script:
       export PATH=$PWD/bin:$PATH;
       popd;
     fi
-  - git submodule update --init
 
 script:
   - ./scripts/check_format.sh
