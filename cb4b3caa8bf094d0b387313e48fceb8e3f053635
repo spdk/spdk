@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3bb0f3c1_7e374b48",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-09-27T06:17:56Z",
+      "side": 1,
+      "message": "Thank you for your suggestion. I have learned the usage of assert(false) and error return from other code such as blobfs and vhost. I\u0027m adopting this one.",
+      "parentUuid": "5864c3b0_3f4cc11d",
+      "revId": "cb4b3caa8bf094d0b387313e48fceb8e3f053635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4166ea7e_5fed28eb",
         "filename": "lib/scsi/dev.c",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "e0fc11ec_7b54fc44",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-09-27T06:17:56Z",
+      "side": 1,
+      "message": "As I said, the script check_format.sh is very nice, thank you.",
+      "parentUuid": "4166ea7e_5fed28eb",
+      "revId": "cb4b3caa8bf094d0b387313e48fceb8e3f053635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "560e08c4_c475cfe1",
         "filename": "lib/scsi/scsi_internal.h",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2017-09-26T15:36:27Z",
       "side": 1,
       "message": "is it still useful for spdk_scsi_port to point to its spdk_scsi_dev?",
+      "revId": "cb4b3caa8bf094d0b387313e48fceb8e3f053635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be9a06a7_c6117e56",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-09-27T06:17:56Z",
+      "side": 1,
+      "message": "Thank you this feedback is important. I\u0027m considering/investigating your feedback. If this complete, I will submit patch again together with my opinion.",
+      "parentUuid": "560e08c4_c475cfe1",
       "revId": "cb4b3caa8bf094d0b387313e48fceb8e3f053635",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
