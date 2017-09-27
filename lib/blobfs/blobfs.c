@@ -441,6 +441,7 @@ spdk_fs_init(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	struct spdk_filesystem *fs;
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
+	struct spdk_bs_opts opts = {};
 
 	fs = fs_alloc(dev, send_request_fn);
 	if (fs == NULL) {
@@ -465,7 +466,10 @@ spdk_fs_init(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	args->arg = cb_arg;
 	args->fs = fs;
 
-	spdk_bs_init(dev, NULL, init_cb, req);
+	spdk_bs_opts_init(&opts);
+	strncpy(opts.bstype.bstype, "BLOBFS", SPDK_BLOBSTORE_TYPE_LENGTH);
+
+	spdk_bs_init(dev, &opts, init_cb, req);
 }
 
 static struct spdk_file *
@@ -609,8 +613,25 @@ load_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_filesystem *fs = args->fs;
+	struct spdk_bs_type bstype;
+	static const char blobfs_type[SPDK_BLOBSTORE_TYPE_LENGTH] = {"BLOBFS"};
+	static const char zeros[SPDK_BLOBSTORE_TYPE_LENGTH];
 
 	if (bserrno != 0) {
+		args->fn.fs_op_with_handle(args->arg, NULL, bserrno);
+		free_fs_request(req);
+		free(fs);
+		return;
+	}
+
+	bstype = spdk_bs_get_bstype(bs);
+
+	if (!memcmp(&bstype, zeros, SPDK_BLOBSTORE_TYPE_LENGTH)) {
+		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "assigning bstype");
+		snprintf(bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH, blobfs_type);
+		spdk_bs_set_bstype(bs, bstype);
+	} else if (strncmp(bstype.bstype, blobfs_type, SPDK_BLOBSTORE_TYPE_LENGTH)) {
+		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "not blobfs: %s", bstype.bstype);
 		args->fn.fs_op_with_handle(args->arg, NULL, bserrno);
 		free_fs_request(req);
 		free(fs);
@@ -628,6 +649,7 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	struct spdk_filesystem *fs;
 	struct spdk_fs_cb_args *args;
 	struct spdk_fs_request *req;
+	struct spdk_bs_opts opts = {};
 
 	fs = fs_alloc(dev, send_request_fn);
 	if (fs == NULL) {
@@ -652,7 +674,10 @@ spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 	args->arg = cb_arg;
 	args->fs = fs;
 	TAILQ_INIT(&args->op.fs_load.deleted_files);
-	spdk_bs_load(dev, load_cb, req);
+
+	spdk_bs_opts_init(&opts);
+
+	spdk_bs_load(dev, &opts, load_cb, req);
 }
 
 static void
