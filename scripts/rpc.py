@@ -257,9 +257,10 @@ p.set_defaults(func=construct_lvol_store)
 
 
 def construct_lvol_bdev(args):
+    num_bytes = (args.size * 1024 * 1024)
     params = {
         'lvol_store_uuid': args.lvol_store_uuid,
-        'size': args.size,
+        'size': num_bytes,
     }
     print_array(jsonrpc_call('construct_lvol_bdev', params))
 p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
