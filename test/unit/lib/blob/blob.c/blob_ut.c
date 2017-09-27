@@ -59,6 +59,29 @@ struct scheduled_ops {
 
 static TAILQ_HEAD(, scheduled_ops) g_scheduled_ops = TAILQ_HEAD_INITIALIZER(g_scheduled_ops);
 
+struct spdk_bs_super_block_ver1 {
+	uint8_t		signature[8];
+	uint32_t        version;
+	uint32_t        length;
+	uint32_t	clean; /* If there was a clean shutdown, this is 1. */
+	spdk_blob_id	super_blob;
+
+	uint32_t	cluster_size; /* In bytes */
+
+	uint32_t	used_page_mask_start; /* Offset from beginning of disk, in pages */
+	uint32_t	used_page_mask_len; /* Count, in pages */
+
+	uint32_t	used_cluster_mask_start; /* Offset from beginning of disk, in pages */
+	uint32_t	used_cluster_mask_len; /* Count, in pages */
+
+	uint32_t	md_start; /* Offset from beginning of disk, in pages */
+	uint32_t	md_len; /* Count, in pages */
+
+	uint8_t		reserved[4036];
+	uint32_t	crc;
+} __attribute__((packed));
+SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block_ver1) == 0x1000, "Invalid super block size");
+
 static void
 _bs_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
@@ -842,16 +865,21 @@ bs_load(void)
 	struct spdk_bs_dev *dev;
 	spdk_blob_id blobid;
 	struct spdk_blob *blob;
-	struct spdk_bs_super_block *super_blob;
+	struct spdk_bs_super_block *super_block;
 	uint64_t length;
 	int rc;
 	const void *value;
 	size_t value_len;
+	struct spdk_bs_opts opts;
+
+	g_scheduler_delay = true;
 
 	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
 
 	/* Initialize a new blob store */
-	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -901,16 +929,19 @@ bs_load(void)
 	g_blob = NULL;
 	g_blobid = 0;
 
-	super_blob = (struct spdk_bs_super_block *)g_dev_buffer;
-	CU_ASSERT(super_blob->clean == 1);
-	dev = init_dev();
+	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
+	CU_ASSERT(super_block->clean == 1);
+
+
 	/* Load an existing blob store */
-	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	dev = init_dev();
+	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
-	super_blob = (struct spdk_bs_super_block *)g_dev_buffer;
-	CU_ASSERT(super_blob->clean == 0);
+	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
+	CU_ASSERT(super_block->clean == 0);
 
 	spdk_bs_md_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -939,6 +970,139 @@ bs_load(void)
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
+	g_scheduler_delay = false;
+}
+
+static void
+bs_type(void)
+{
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_opts opts;
+
+	g_scheduler_delay = true;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+
+	/* Load non existing blobstore type */
+	dev = init_dev();
+	strncpy(opts.bstype.bstype, "NONEXISTING", SPDK_BLOBSTORE_TYPE_LENGTH);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+
+	/* Load with empty blobstore type */
+	dev = init_dev();
+	strncpy(opts.bstype.bstype, "", SPDK_BLOBSTORE_TYPE_LENGTH);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	/* Initialize a new blob store with empty bstype */
+	dev = init_dev();
+	strncpy(opts.bstype.bstype, "", SPDK_BLOBSTORE_TYPE_LENGTH);
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	/* Load non existing blobstore type */
+	dev = init_dev();
+	strncpy(opts.bstype.bstype, "NONEXISTING", SPDK_BLOBSTORE_TYPE_LENGTH);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+
+	/* Load with empty blobstore type */
+	dev = init_dev();
+	strncpy(opts.bstype.bstype, "", SPDK_BLOBSTORE_TYPE_LENGTH);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_scheduler_delay = false;
+}
+
+static void
+bs_super_block(void)
+{
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_super_block *super_block;
+	struct spdk_bs_opts opts;
+	struct spdk_bs_super_block_ver1 super_block_v1;
+
+	g_scheduler_delay = true;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_blob = NULL;
+	g_blobid = 0;
+
+	/* Load an existing blob store with version newer than supported */
+	super_block = (struct spdk_bs_super_block *)g_dev_buffer;
+	super_block->version++;
+
+	dev = init_dev();
+	strncpy(opts.bstype.bstype, "", SPDK_BLOBSTORE_TYPE_LENGTH);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+
+	/* Create a new blob store with super block version 1 */
+	dev = init_dev();
+	super_block_v1.version = 1;
+	strncpy(super_block_v1.signature, "SPDKBLOB", sizeof(super_block_v1.signature));
+	super_block_v1.length = 0x1000;
+	super_block_v1.clean = 1;
+	super_block_v1.super_blob = 0xFFFFFFFFFFFFFFFF;
+	super_block_v1.cluster_size = 0x100000;
+	super_block_v1.used_page_mask_start = 0x01;
+	super_block_v1.used_page_mask_len = 0x01;
+	super_block_v1.used_cluster_mask_start = 0x02;
+	super_block_v1.used_cluster_mask_len = 0x01;
+	super_block_v1.md_start = 0x03;
+	super_block_v1.md_len = 0x40;
+	memset(super_block_v1.reserved, 0, 4036);
+	super_block_v1.crc = _spdk_blob_md_page_calc_crc(&super_block_v1);
+	memcpy(g_dev_buffer, &super_block_v1, sizeof(struct spdk_bs_super_block_ver1));
+
+	strncpy(opts.bstype.bstype, "", SPDK_BLOBSTORE_TYPE_LENGTH);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	g_scheduler_delay = false;
 }
 
 /*
@@ -1017,7 +1181,7 @@ bs_cluster_sz(void)
 
 	dev = init_dev();
 	/* Load an existing blob store */
-	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -1077,7 +1241,7 @@ bs_resize_md(void)
 	g_bserrno = -1;
 	g_bs = NULL;
 	dev = init_dev();
-	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
@@ -1178,7 +1342,7 @@ blob_serialize(void)
 
 	dev = init_dev();
 	/* Load an existing blob store */
-	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
@@ -1257,8 +1421,10 @@ super_block_crc(void)
 {
 	struct spdk_bs_dev *dev;
 	struct spdk_bs_super_block *super_block;
+	struct spdk_bs_opts opts;
 
 	dev = init_dev();
+	spdk_bs_opts_init(&opts);
 
 	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -1274,7 +1440,7 @@ super_block_crc(void)
 
 	g_scheduler_delay = true;
 	/* Load an existing blob store */
-	spdk_bs_load(dev, bs_op_with_handle_complete, NULL);
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 
 	CU_ASSERT(g_bserrno == -EILSEQ);
 	_bs_flush_scheduler();
@@ -1316,6 +1482,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "bs_unload", bs_unload) == NULL ||
 		CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz) == NULL ||
 		CU_add_test(suite, "bs_resize_md", bs_resize_md) == NULL ||
+		CU_add_test(suite, "bs_type", bs_type) == NULL ||
+		CU_add_test(suite, "bs_super_block", bs_super_block) == NULL ||
 		CU_add_test(suite, "blob_serialize", blob_serialize) == NULL ||
 		CU_add_test(suite, "blob_crc", blob_crc) == NULL ||
 		CU_add_test(suite, "super_block_crc", super_block_crc) == NULL
