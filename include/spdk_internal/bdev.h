@@ -380,7 +380,9 @@ void spdk_bdev_poller_stop(struct spdk_bdev_poller **ppoller);
  * \param bdev_io I/O to allocate buffer for.
  * \param cb callback to be called when the buffer is allocated
  * or the bdev_io has an SGL assigned already.
- * \param len size of the buffer to allocate.
+ * \param len size of the buffer to allocate. In case the bdev_io
+ * doesn't have an SGL assigned this field must be no bigger than
+ * \c SPDK_BDEV_LARGE_BUF_MAX_SIZE.
  */
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len);
 
