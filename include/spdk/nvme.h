@@ -130,6 +130,20 @@ struct spdk_nvme_ctrlr_opts {
 	 * specified.
 	 */
 	char src_svcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
+
+	/**
+	 * The host identifier to use when connecting to controllers with 64-bit host ID support.
+	 *
+	 * Set to all zeroes to specify that no host ID should be provided to the controller.
+	 */
+	uint8_t host_id[8];
+
+	/**
+	 * The host identifier to use when connecting to controllers with extended (128-bit) host ID support.
+	 *
+	 * Set to all zeroes to specify that no host ID should be provided to the controller.
+	 */
+	uint8_t extended_host_id[16];
 };
 
 /**

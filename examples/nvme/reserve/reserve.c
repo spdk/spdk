@@ -33,8 +33,10 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/endian.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
+#include "spdk/log.h"
 
 #define MAX_DEVS 64
 
@@ -52,44 +54,22 @@ static int num_devs = 0;
 
 static int outstanding_commands;
 static int reserve_command_result;
-static int set_feature_result;
-
-struct feature {
-	uint32_t result;
-	bool valid;
-};
-
-static struct feature features[256];
+static bool get_host_id_successful;
 
 #define HOST_ID		0xABABABABCDCDCDCD
+#define EXT_HOST_ID	((uint8_t[]){0x0f, 0x97, 0xcd, 0x74, 0x8c, 0x80, 0x41, 0x42, \
+				     0x99, 0x0f, 0x65, 0xc4, 0xf0, 0x39, 0x24, 0x20})
+
 #define CR_KEY		0xDEADBEAF5A5A5A5B
 
 static void
 get_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
 {
-	struct feature *feature = cb_arg;
-	int fid = feature - features;
-
 	if (spdk_nvme_cpl_is_error(cpl)) {
-		fprintf(stdout, "get_feature(0x%02X) failed\n", fid);
+		fprintf(stdout, "Get Features - Host Identifier failed\n");
+		get_host_id_successful = false;
 	} else {
-		feature->result = cpl->cdw0;
-		feature->valid = true;
-	}
-	outstanding_commands--;
-}
-
-static void
-set_feature_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
-{
-	struct feature *feature = cb_arg;
-	int fid = feature - features;
-
-	if (spdk_nvme_cpl_is_error(cpl)) {
-		fprintf(stdout, "set_feature(0x%02X) failed\n", fid);
-		set_feature_result = -1;
-	} else {
-		set_feature_result = 0;
+		get_host_id_successful = true;
 	}
 	outstanding_commands--;
 }
@@ -98,81 +78,40 @@ static int
 get_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int ret;
-	uint64_t *host_id;
-	struct spdk_nvme_cmd cmd = {};
+	uint8_t host_id[16];
+	uint32_t host_id_size;
+	uint32_t cdw11;
 
-	cmd.opc = SPDK_NVME_OPC_GET_FEATURES;
-	cmd.cdw10 = SPDK_NVME_FEAT_HOST_IDENTIFIER;
-
-	host_id = spdk_dma_zmalloc(sizeof(*host_id), 0x1000, NULL);
-	if (!host_id) {
-		fprintf(stderr, "Host_ID DMA Buffer Allocation Failed\n");
-		return -1;
+	if (spdk_nvme_ctrlr_get_data(ctrlr)->ctratt.host_id_exhid_supported) {
+		host_id_size = 16;
+		cdw11 = 1;
+		printf("Using 128-bit extended host identifier\n");
+	} else {
+		host_id_size = 8;
+		cdw11 = 0;
+		printf("Using 64-bit host identifier\n");
 	}
 
 	outstanding_commands = 0;
-	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, host_id, sizeof(*host_id),
-					    get_feature_completion, &features[SPDK_NVME_FEAT_HOST_IDENTIFIER]);
+	ret = spdk_nvme_ctrlr_cmd_get_feature(ctrlr, SPDK_NVME_FEAT_HOST_IDENTIFIER, cdw11, host_id,
+					      host_id_size,
+					      get_feature_completion, NULL);
 	if (ret) {
 		fprintf(stdout, "Get Feature: Failed\n");
-		spdk_dma_free(host_id);
 		return -1;
 	}
 
 	outstanding_commands++;
+	get_host_id_successful = false;
 
 	while (outstanding_commands) {
 		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 	}
 
-	if (features[SPDK_NVME_FEAT_HOST_IDENTIFIER].valid) {
-		fprintf(stdout, "Get Feature: Host Identifier 0x%" PRIx64 "\n", *host_id);
+	if (get_host_id_successful) {
+		spdk_trace_dump(stdout, "Get Feature: Host Identifier:", host_id, host_id_size);
 	}
 
-	spdk_dma_free(host_id);
-	return 0;
-}
-
-static int
-set_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
-{
-	int ret;
-	uint64_t *host_id;
-	struct spdk_nvme_cmd cmd = {};
-
-	cmd.opc = SPDK_NVME_OPC_SET_FEATURES;
-	cmd.cdw10 = SPDK_NVME_FEAT_HOST_IDENTIFIER;
-
-	host_id = spdk_dma_zmalloc(sizeof(*host_id), 0x1000, NULL);
-	if (!host_id) {
-		fprintf(stderr, "Host_ID DMA Buffer Allocation Failed\n");
-		return -1;
-	}
-
-	*host_id = HOST_ID;
-
-	outstanding_commands = 0;
-	set_feature_result = -1;
-
-	fprintf(stdout, "Set Feature: Host Identifier 0x%" PRIx64 "\n", *host_id);
-	ret = spdk_nvme_ctrlr_cmd_admin_raw(ctrlr, &cmd, host_id, sizeof(*host_id),
-					    set_feature_completion, &features[SPDK_NVME_FEAT_HOST_IDENTIFIER]);
-	if (ret) {
-		fprintf(stdout, "Set Feature: Failed\n");
-		spdk_dma_free(host_id);
-		return -1;
-	}
-
-	outstanding_commands++;
-
-	while (outstanding_commands) {
-		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
-	}
-
-	if (set_feature_result)
-		fprintf(stdout, "Set Feature: Host Identifier Failed\n");
-
-	spdk_dma_free(host_id);
 	return 0;
 }
 
@@ -369,7 +308,6 @@ reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
 	if (!cdata->oncs.reservations)
 		return;
 
-	set_host_identifier(ctrlr);
 	get_host_identifier(ctrlr);
 
 	/* tested 1 namespace */
@@ -383,6 +321,15 @@ static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
 {
+	/*
+	 * Provide both 64-bit and 128-bit host identifiers.
+	 *
+	 * The NVMe library will choose which one to use based on whether the controller
+	 * supports extended host identifiers.
+	 */
+	to_le64(opts->host_id, HOST_ID);
+	memcpy(opts->extended_host_id, EXT_HOST_ID, sizeof(opts->extended_host_id));
+
 	return true;
 }
 

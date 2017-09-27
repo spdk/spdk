@@ -297,7 +297,8 @@ spdk_nvme_ctrlr_cmd_set_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	int rc;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request_null(ctrlr->adminq, cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(ctrlr->adminq, payload, payload_size, cb_fn, cb_arg,
+					      true);
 	if (req == NULL) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
@@ -325,7 +326,8 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 	int rc;
 
 	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
-	req = nvme_allocate_request_null(ctrlr->adminq, cb_fn, cb_arg);
+	req = nvme_allocate_request_user_copy(ctrlr->adminq, payload, payload_size, cb_fn, cb_arg,
+					      false);
 	if (req == NULL) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
@@ -372,6 +374,27 @@ nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
 	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_ASYNC_EVENT_CONFIGURATION, cdw11, 0,
 					       NULL, 0,
 					       cb_fn, cb_arg);
+}
+
+int
+nvme_ctrlr_cmd_set_host_id(struct spdk_nvme_ctrlr *ctrlr, void *host_id, uint32_t host_id_size,
+			   spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	uint32_t cdw11;
+
+	if (host_id_size == 16) {
+		/* 128-bit extended host identifier */
+		cdw11 = 1;
+	} else if (host_id_size == 8) {
+		/* 64-bit host identifier */
+		cdw11 = 0;
+	} else {
+		SPDK_ERRLOG("Invalid host ID size %u\n", host_id_size);
+		return -EINVAL;
+	}
+
+	return spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_FEAT_HOST_IDENTIFIER, cdw11, 0,
+					       host_id, host_id_size, cb_fn, cb_arg);
 }
 
 int
