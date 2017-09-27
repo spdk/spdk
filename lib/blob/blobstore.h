@@ -158,6 +158,7 @@ struct spdk_blob_store {
 	uint32_t			pages_per_cluster;
 
 	spdk_blob_id			super_blob;
+	struct spdk_bs_type 		bstype;
 
 	struct spdk_bs_cpl		unload_cpl;
 	int				unload_err;
@@ -179,7 +180,7 @@ struct spdk_bs_channel {
  *
  * The following data structures exist on disk.
  */
-#define SPDK_BS_VERSION 1
+#define SPDK_BS_VERSION 2
 
 #pragma pack(push, 1)
 
@@ -259,7 +260,9 @@ struct spdk_bs_super_block {
 	uint32_t	md_start; /* Offset from beginning of disk, in pages */
 	uint32_t	md_len; /* Count, in pages */
 
-	uint8_t		reserved[4036];
+	struct spdk_bs_type 	bstype; /* blobstore type */
+
+	uint8_t		reserved[4020];
 	uint32_t	crc;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super block size");

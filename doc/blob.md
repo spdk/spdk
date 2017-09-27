@@ -190,12 +190,13 @@ is the remainder of cluster 0 and may extend to additional clusters.
 The `<sb-params>` data contains parameters specified by the user when the blob
 store was initially formatted.
 
-    <sb-params> ::= <sb-page-size> <sb-cluster-size>
+    <sb-params> ::= <sb-page-size> <sb-cluster-size> <sb-bs-type>
     <sb-page-size> ::= u32 # page size, in bytes.
                            # Must be a multiple of the logical block size.
                            # The implementation today requires this to be 4KiB.
     <sb-cluster-size> ::= u32 # Cluster size, in bytes.
                               # Must be a multiple of the page size.
+    <sb-bs-type> ::= char[16] # Blobstore type
 
 Each blob is allocated a non-contiguous set of pages inside the metadata region
 for its metadata. These pages form a linked list. The first page in the list
