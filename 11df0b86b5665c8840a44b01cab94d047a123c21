@@ -22,6 +22,30 @@
       "revId": "11df0b86b5665c8840a44b01cab94d047a123c21",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46472ec5_9ae86a5f",
+        "filename": "test/unit/lib/bdev/pmem/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-27T07:54:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de47137c_c92e8182",
+      "range": {
+        "startLine": 4,
+        "startChar": 17,
+        "endLine": 4,
+        "endChar": 37
+      },
+      "revId": "11df0b86b5665c8840a44b01cab94d047a123c21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
