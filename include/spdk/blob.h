@@ -70,6 +70,7 @@
 
 typedef uint64_t spdk_blob_id;
 #define SPDK_BLOBID_INVALID	(uint64_t)-1
+#define SPDK_BLOBSTORE_TYPE_LENGTH 16
 
 struct spdk_blob_store;
 struct spdk_io_channel;
@@ -144,13 +145,14 @@ struct spdk_bs_opts {
 	uint32_t num_md_pages; /* Count of the number of pages reserved for metadata */
 	uint32_t max_md_ops; /* Maximum simultaneous metadata operations */
 	uint32_t max_channel_ops; /* Maximum simultaneous operations per channel */
+	char     bstype[SPDK_BLOBSTORE_TYPE_LENGTH]; /* Blobstore type */
 };
 
 /* Initialize an spdk_bs_opts structure to the default blobstore option values. */
 void spdk_bs_opts_init(struct spdk_bs_opts *opts);
 
 /* Load a blob store from the given device. This will fail (return NULL) if no blob store is present. */
-void spdk_bs_load(struct spdk_bs_dev *dev,
+void spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 		  spdk_bs_op_with_handle_complete cb_fn, void *cb_arg);
 
 /* Initialize a blob store on the given disk. Destroys all data present on the device. */

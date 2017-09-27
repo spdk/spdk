@@ -93,7 +93,8 @@ int main(int argc, char **argv)
 		SPDK_ERRLOG("usage: %s <conffile> <bdevname>\n", argv[0]);
 		exit(1);
 	}
-
+	spdk_log_set_trace_flag("all");
+	spdk_log_set_print_level(SPDK_LOG_DEBUG);
 	spdk_app_opts_init(&opts);
 	opts.name = "spdk_mkfs";
 	opts.config_file = argv[1];
