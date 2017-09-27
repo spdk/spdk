@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b77338c_16e6ee50",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-27T17:14:22Z",
+      "side": 1,
+      "message": "This line has a formatting error (see scripts/check_format.sh output).",
+      "revId": "0ac05d2967cb652d333f7887b9e344d5355470a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69d45dfe_456cb1ba",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-27T17:14:22Z",
+      "side": 1,
+      "message": "I would prefer to just store a UUID in binary format (16 bytes), but I could probably be convinced otherwise with a good argument. :)",
+      "revId": "0ac05d2967cb652d333f7887b9e344d5355470a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
