@@ -1380,6 +1380,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
+	memset(&opts->bstype, 0, sizeof(opts->bstype));
 }
 
 static int
@@ -1432,6 +1433,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	bs->md_target.max_md_ops = opts->max_md_ops;
 	bs->io_target.max_channel_ops = opts->max_channel_ops;
 	bs->super_blob = SPDK_BLOBID_INVALID;
+	memcpy(&bs->bstype, &opts->bstype, sizeof(opts->bstype));
 
 	/* The metadata is assumed to be at least 1 page */
 	bs->used_md_pages = spdk_bit_array_create(1);
@@ -1581,6 +1583,7 @@ _spdk_bs_load_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	ctx->bs->md_start = ctx->super->md_start;
 	ctx->bs->md_len = ctx->super->md_len;
 	ctx->bs->super_blob = ctx->super->super_blob;
+	memcpy(&ctx->bs->bstype, &ctx->super->bstype, sizeof(ctx->super->bstype));
 
 	/* Read the used pages mask */
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
@@ -1604,6 +1607,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	uint32_t	crc;
+	static const char zeros[SPDK_BLOBSTORE_TYPE_LENGTH];
 
 	if (ctx->super->version != SPDK_BS_VERSION) {
 		spdk_dma_free(ctx->super);
@@ -1631,6 +1635,22 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
+	if (memcmp(&ctx->bs->bstype, zeros, SPDK_BLOBSTORE_TYPE_LENGTH) &&
+	    memcmp(&ctx->bs->bstype, &ctx->super->bstype, SPDK_BLOBSTORE_TYPE_LENGTH)) {
+		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Unexpected bstype\n");
+		SPDK_TRACEDUMP(SPDK_TRACE_BLOB, "Expected:", ctx->bs->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
+		SPDK_TRACEDUMP(SPDK_TRACE_BLOB, "Found:", ctx->super->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
+		spdk_dma_free(ctx->super);
+		_spdk_bs_free(ctx->bs);
+		free(ctx);
+		spdk_bs_sequence_finish(seq, -ENXIO);
+		return;
+	}
+
+	if (!memcmp(&ctx->bs->bstype, zeros, SPDK_BLOBSTORE_TYPE_LENGTH)) {
+		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Bstype wildcard used - loading blobstore regardless bstype\n");
+	}
+
 	if (ctx->super->clean != 1) {
 		/* TODO: ONLY CLEAN SHUTDOWN IS CURRENTLY SUPPORTED.
 		 * All of the necessary data to recover is available
@@ -1652,7 +1672,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 void
-spdk_bs_load(struct spdk_bs_dev *dev,
+spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_store	*bs;
@@ -1663,7 +1683,16 @@ spdk_bs_load(struct spdk_bs_dev *dev,
 
 	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Loading blobstore from dev %p\n", dev);
 
-	spdk_bs_opts_init(&opts);
+	if (o) {
+		opts = *o;
+	} else {
+		spdk_bs_opts_init(&opts);
+	}
+
+	if (opts.max_md_ops == 0 || opts.max_channel_ops == 0) {
+		cb_fn(cb_arg, NULL, -EINVAL);
+		return;
+	}
 
 	bs = _spdk_bs_alloc(dev, &opts);
 	if (!bs) {
@@ -1824,6 +1853,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->super_blob = bs->super_blob;
 	ctx->super->clean = 0;
 	ctx->super->cluster_size = bs->cluster_sz;
+	memcpy(&ctx->super->bstype, &bs->bstype, sizeof(bs->bstype));
 
 	/* Calculate how many pages the metadata consumes at the front
 	 * of the disk.
@@ -1932,6 +1962,7 @@ _spdk_bs_unload_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, i
 
 	/* Update the values in the super block */
 	ctx->super->super_blob = ctx->bs->super_blob;
+	memcpy(&ctx->super->bstype, &ctx->bs->bstype, sizeof(ctx->bs->bstype));
 	ctx->super->clean = 1;
 	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
@@ -2701,6 +2732,18 @@ void
 spdk_xattr_names_free(struct spdk_xattr_names *names)
 {
 	free(names);
+}
+
+struct spdk_bs_type
+spdk_bs_get_bstype(struct spdk_blob_store *bs)
+{
+	return bs->bstype;
+}
+
+void
+spdk_bs_set_bstype(struct spdk_blob_store *bs, struct spdk_bs_type bstype)
+{
+	memcpy(&bs->bstype, &bstype, sizeof(bstype));
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("blob", SPDK_TRACE_BLOB);
