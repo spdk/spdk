@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67217bb8_ddb88cc3",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-27T14:48:00Z",
+      "side": 1,
+      "message": "I don\u0027t think \"unpacking\" the base_bdev from request in previous function is the way to go. If it was required, then it would be better to put it as a parameter in spdk_lvs_unload().\nTo keep separation of lib/lvol from any spdk_bdev interaction, spdk_bdev_module_release_bdev() might be better suited in vbdev_lvol.c.",
+      "range": {
+        "startLine": 121,
+        "startChar": 1,
+        "endLine": 121,
+        "endChar": 35
+      },
+      "revId": "ebfae0dcfbc2206fb08cacab1eee69d5170c16e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
