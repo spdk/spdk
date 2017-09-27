@@ -72,6 +72,8 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev inserted\n");
 
+	spdk_bdev_module_claim_bdev(bdev, NULL, SPDK_GET_BDEV_MODULE(lvol));
+
 end:
 	req->cb_fn(req->cb_arg, lvs, lvserrno);
 	free(req);
@@ -147,6 +149,8 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+
+	req->base_bdev = lvs_bdev->bdev;
 
 	free(lvs_bdev);
 

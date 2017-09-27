@@ -50,6 +50,11 @@ struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
 struct spdk_blob_store {};
 
+void
+spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
+{
+}
+
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
 	return NULL;
@@ -184,6 +189,7 @@ lvs_init_unload_success(void)
 {
 	struct spdk_bs_dev bs_dev;
 	int rc = 0;
+	struct spdk_lvs_req req;
 
 	init_dev(&bs_dev);
 
@@ -196,7 +202,7 @@ lvs_init_unload_success(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, &req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
@@ -208,11 +214,12 @@ static void
 lvs_unload_lvs_is_null_fail(void)
 {
 	int rc = 0;
+	struct spdk_lvs_req req;
 
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_unload(NULL, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_unload(NULL, lvol_store_op_complete, &req);
 	CU_ASSERT(rc == -ENODEV);
 	CU_ASSERT(g_lvserrno == -1);
 
@@ -224,6 +231,7 @@ lvol_create_destroy_success(void)
 {
 	struct spdk_bs_dev bs_dev;
 	int rc = 0;
+	struct spdk_lvs_req req;
 
 	init_dev(&bs_dev);
 
@@ -242,7 +250,7 @@ lvol_create_destroy_success(void)
 	spdk_lvol_destroy(g_lvol);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, &req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
@@ -255,6 +263,7 @@ lvol_create_fail(void)
 {
 	struct spdk_bs_dev bs_dev;
 	int rc = 0;
+	struct spdk_lvs_req req;
 
 	init_dev(&bs_dev);
 
@@ -280,7 +289,7 @@ lvol_create_fail(void)
 	CU_ASSERT(g_lvol == NULL);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, &req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
@@ -293,6 +302,7 @@ lvol_destroy_fail(void)
 {
 	struct spdk_bs_dev bs_dev;
 	int rc = 0;
+	struct spdk_lvs_req req;
 
 	init_dev(&bs_dev);
 
@@ -311,7 +321,7 @@ lvol_destroy_fail(void)
 	// nothing to check here... it should just still work
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, &req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
@@ -324,6 +334,7 @@ lvol_close_fail(void)
 {
 	struct spdk_bs_dev bs_dev;
 	int rc = 0;
+	struct spdk_lvs_req req;
 
 	init_dev(&bs_dev);
 
@@ -342,7 +353,7 @@ lvol_close_fail(void)
 	// nothing to check here... it should just still work
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, &req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
@@ -355,6 +366,7 @@ lvol_close_success(void)
 {
 	struct spdk_bs_dev bs_dev;
 	int rc = 0;
+	struct spdk_lvs_req req;
 
 	init_dev(&bs_dev);
 
@@ -373,7 +385,7 @@ lvol_close_success(void)
 	spdk_lvol_close(g_lvol);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, &req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
@@ -386,6 +398,7 @@ lvol_resize(void)
 {
 	struct spdk_bs_dev bs_dev;
 	int rc = 0;
+	struct spdk_lvs_req req;
 
 	init_dev(&bs_dev);
 
@@ -436,7 +449,7 @@ lvol_resize(void)
 	spdk_lvol_destroy(g_lvol);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, &req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
