@@ -14,6 +14,7 @@ max_disks=""
 ctrl_type="vhost_scsi"
 use_fs=false
 nested_lvol=false
+distribute_cores=false
 base_bdev_size=10000
 nest_bdev_size=""
 
@@ -39,6 +40,9 @@ function usage()
     echo "                          (NVMe->lvol_store->lvol_bdev->lvol_store->lvol_bdev)"
     echo "                          Default: False"
     echo "-x                        set -x for script debug"
+    echo "    --distribute-cores    Use custom config file and run vhost controllers"
+    echo "                          on different CPU cores instead of single core."
+    echo "                          Default: False"
     exit 0
 }
 
@@ -52,6 +56,7 @@ while getopts 'xh-:' optchar; do
             max-disks=*) max_disks="${OPTARG#*=}" ;;
             ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
             nested-lvol) nested_lvol=true ;;
+            distribute-cores) distribute_cores=true ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -75,7 +80,20 @@ is lower than number of requested disks for test ($max_disks)"
     exit 1
 fi
 
-trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
+if $distribute_cores; then
+    cp $COMMON_DIR/autotest.config $COMMON_DIR/autotest.config.bak
+    cp $BASE_DIR/autotest.config $COMMON_DIR/autotest.config
+    . $COMMON_DIR/common.sh
+fi
+
+function restore_acfg()
+{
+    if $distribute_cores; then
+        mv $COMMON_DIR/autotest.config.bak $COMMON_DIR/autotest.config
+    fi
+}
+
+trap 'restore_acfg; error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
 vm_kill_all
 
@@ -123,7 +141,7 @@ fi
 # For each VM create one lvol bdev on each 'normal' and nested lvol store
 for (( i=0; i<$vm_count; i++)); do
     bdevs=()
-    echo "INFO: Creating lvol bdevs for VM $j"
+    echo "INFO: Creating lvol bdevs for VM $i"
     for lvol_store in "${lvol_stores[@]}"; do
         lb_guid=$($rpc_py construct_lvol_bdev $lvol_store 10000)
         lvol_bdevs+=("$lb_guid")
@@ -149,8 +167,13 @@ for (( i=0; i<$vm_count; i++)); do
     setup_cmd+=" --os=/home/sys_sgsw/vhost_vm_image.qcow2"
 
     # Create single SCSI controller or multiple BLK controllers for this VM
+    if $distribute_cores; then
+        mask="VM_${i}_qemu_mask"
+        mask_arg="--cpumask ${!mask}"
+    fi
+
     if [[ "$ctrl_type" == "vhost_scsi" ]]; then
-        $rpc_py construct_vhost_scsi_controller naa.0.$i
+        $rpc_py construct_vhost_scsi_controller naa.0.$i $mask_arg
         for (( j=0; j<${#bdevs[@]}; j++)); do
             $rpc_py add_vhost_scsi_lun naa.0.$i $j ${bdevs[$j]}
         done
@@ -158,7 +181,7 @@ for (( i=0; i<$vm_count; i++)); do
     elif [[ "$ctrl_type" == "vhost_blk" ]]; then
         disk=""
         for (( j=0; j<${#bdevs[@]}; j++)); do
-            $rpc_py construct_vhost_blk_controller naa.$j.$i ${bdevs[$j]}
+        $rpc_py construct_vhost_blk_controller naa.$j.$i ${bdevs[$j]} $mask_arg
             disk+="${j}_size_1500M:"
         done
         disk="${disk::-1}"
@@ -266,3 +289,4 @@ $rpc_py get_luns
 
 echo "INFO: Shutting down SPDK vhost app..."
 spdk_vhost_kill
+restore_acfg
