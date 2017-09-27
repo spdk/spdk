@@ -8,7 +8,7 @@ source $rootdir/test/nvmf/common.sh
 MALLOC_BDEV_SIZE=128
 MALLOC_BLOCK_SIZE=512
 LVOL_BDEV_SIZE=10
-SUBSYS_NR=1
+SUBSYS_NR=10
 
 rpc_py="python $rootdir/scripts/rpc.py"
 
