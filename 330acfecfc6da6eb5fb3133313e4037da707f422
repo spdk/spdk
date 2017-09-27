@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e527202_fec91862",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T20:02:01Z",
+      "side": 1,
+      "message": "What if we just change spdk_bdev_io_get_buf() to take a length parameter?  There are only 5 places where it is called currently.  I think that will keep the API a lot more simple and not have to think too much about the difference between \"io_get_buf\" and \"io_get_sized_buf\".\n\nBut I\u0027d still like to think about avoiding this altogether by putting the virtio unmap bytes in the virtio_req which is allocated out of the bdev_io memory.",
+      "revId": "330acfecfc6da6eb5fb3133313e4037da707f422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
