@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74cd957c_46a1306a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T21:44:27Z",
+      "side": 1,
+      "message": "successful (only one L) - I know, English has really dumb spelling many times\n\nit\u0027s in here a bunch of times but just commented on this one",
+      "revId": "aa4893f85227f4b9267fe838f87fc5813510c6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92c53672_70d24415",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T21:44:27Z",
+      "side": 1,
+      "message": "also destruct the lvol bdev before deleting the malloc bdev?  or maybe this is testing the hotplug condition?  (might be good to test both)",
+      "revId": "aa4893f85227f4b9267fe838f87fc5813510c6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "608772e5_6e850949",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T21:44:27Z",
+      "side": 1,
+      "message": "a little less than 1 quarter?  a little bit of the base bdev is used for metadata",
+      "revId": "aa4893f85227f4b9267fe838f87fc5813510c6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ad9ac92_9eaf4878",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T21:44:27Z",
+      "side": 1,
+      "message": "maybe say \"repeat the previous step three more times\" - otherwise someone could read this as you repeat it another four times",
+      "revId": "aa4893f85227f4b9267fe838f87fc5813510c6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3ec0588_2997a44e",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T21:44:27Z",
+      "side": 1,
+      "message": "this doesn\u0027t seem right - what happens to the lvol bdev after we destroy the underlying lvol store?  should we disallow destroying an lvol store if there are exiting bdev lvols in it?",
+      "revId": "aa4893f85227f4b9267fe838f87fc5813510c6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaa20b5a_fe83e342",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T21:44:27Z",
+      "side": 1,
+      "message": "i think overall these negative tests look good, but it\u0027s not immediately clear which step should result in the expected error result",
+      "revId": "aa4893f85227f4b9267fe838f87fc5813510c6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f019d82_f962d833",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T21:44:27Z",
+      "side": 1,
+      "message": "fourth call?",
+      "revId": "aa4893f85227f4b9267fe838f87fc5813510c6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
