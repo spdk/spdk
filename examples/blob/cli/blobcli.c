@@ -867,7 +867,7 @@ load_bs(struct cli_context_t *cli_context)
 		return;
 	}
 
-	spdk_bs_load(bs_dev, cli_context->next_func, cli_context);
+	spdk_bs_load(bs_dev, NULL, cli_context->next_func, cli_context);
 }
 
 /*
