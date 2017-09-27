@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "0305c7e2_3f5746c0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1742,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T18:18:52Z",
+      "side": 1,
+      "message": "You should do this in _spdk_bs_alloc().  I know that this opts value is only really valid for init(), but we already set cluster_sz (which is persistent) in _spdk_bs_alloc().\n\nThen during load, we could even fail the load operation if the opts uuid !\u003d 0, and it does not match the uuid found in the superblock, you could fail the load.  This would allow blobstore to do this bstype checking instead of doing it separately in lvolstore, blobfs, etc.",
+      "revId": "0ac05d2967cb652d333f7887b9e344d5355470a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "69d45dfe_456cb1ba",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 1
@@ -30,6 +47,24 @@
       "writtenOn": "2017-09-27T17:14:22Z",
       "side": 1,
       "message": "I would prefer to just store a UUID in binary format (16 bytes), but I could probably be convinced otherwise with a good argument. :)",
+      "revId": "0ac05d2967cb652d333f7887b9e344d5355470a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b781eebb_ca81d9bc",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-27T18:18:52Z",
+      "side": 1,
+      "message": "I agree - we should save it to disk in binary format.",
+      "parentUuid": "69d45dfe_456cb1ba",
       "revId": "0ac05d2967cb652d333f7887b9e344d5355470a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
