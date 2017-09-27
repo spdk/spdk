@@ -282,6 +282,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 		return;
 	}
 
+	assert(len <= SPDK_BDEV_LARGE_BUF_MAX_SIZE);
 	ch = spdk_io_channel_get_ctx(bdev_io->ch->mgmt_channel);
 
 	bdev_io->buf_len = len;
