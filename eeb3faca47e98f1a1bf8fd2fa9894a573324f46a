@@ -241,6 +241,24 @@
       "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2a57eb8_fdb3fc48",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T17:29:24Z",
+      "side": 1,
+      "message": "I\u0027m fine with Daniel\u0027s suggestion.",
+      "parentUuid": "9a6f6e22_0c6edb49",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
