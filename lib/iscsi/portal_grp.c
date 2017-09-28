@@ -592,36 +592,6 @@ spdk_iscsi_portal_grp_unregister(struct spdk_iscsi_portal_grp *pg)
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
 
-int
-spdk_iscsi_portal_grp_deletable(int tag)
-{
-	int ret = 0;
-	struct spdk_iscsi_portal_grp *pg;
-
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	pg = spdk_iscsi_portal_grp_find_by_tag(tag);
-	if (pg == NULL) {
-		ret = -1;
-		goto out;
-	}
-
-	if (pg->state != GROUP_READY) {
-		ret = -1;
-		goto out;
-	}
-
-	if (pg->ref == 0) {
-		ret = 0;
-		goto out;
-	}
-
-out:
-	if (ret == 0)
-		pg->state = GROUP_DESTROY;
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-	return ret;
-}
-
 void
 spdk_iscsi_portal_grp_release(struct spdk_iscsi_portal_grp *pg)
 {
