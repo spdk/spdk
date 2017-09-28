@@ -561,8 +561,14 @@ spdk_vhost_event_async_fn(void *arg1, void *arg2)
 {
 	struct spdk_vhost_dev_event_ctx *ctx = arg1;
 	struct spdk_vhost_dev *vdev;
+	struct spdk_event *ev;
 
-	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
+		ev = spdk_event_allocate(spdk_env_get_current_core(), spdk_vhost_event_async_fn, arg1, arg2);
+		spdk_event_call(ev);
+		return;
+	}
+
 	vdev = spdk_vhost_dev_find(ctx->ctrlr_name);
 	if (vdev != ctx->vdev) {
 		/* vdev has been changed after enqueuing this event */

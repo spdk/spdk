@@ -67,6 +67,7 @@ DEFINE_STUB(spdk_vhost_scsi_controller_construct, int, (void), 0);
 DEFINE_STUB(spdk_vhost_blk_controller_construct, int, (void), 0);
 DEFINE_STUB(rte_vhost_set_vhost_vring_last_idx, int,
 	    (int vid, uint16_t vring_idx, uint16_t last_avail_idx, uint16_t last_used_idx), 0);
+DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 
 static int
 test_setup(void)
