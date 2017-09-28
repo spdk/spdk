@@ -860,7 +860,7 @@ load_bs(struct cli_context_t *cli_context)
 		return;
 	}
 
-	bs_dev = spdk_bdev_create_bs_dev(bdev);
+	bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
 	if (bs_dev == NULL) {
 		printf("Could not create blob bdev!!\n");
 		spdk_app_stop(-1);
@@ -933,7 +933,7 @@ init_bs(struct cli_context_t *cli_context)
 	printf("Blobstore using bdev Product Name: %s\n",
 	       spdk_bdev_get_product_name(bdev));
 
-	bs_dev = spdk_bdev_create_bs_dev(bdev);
+	bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
 	if (bs_dev == NULL) {
 		printf("Could not create blob bdev!!\n");
 		spdk_app_stop(-1);
