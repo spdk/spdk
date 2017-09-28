@@ -49,6 +49,7 @@ int g_lvserrno;
 int g_resize_rc;
 struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
+struct spdk_bs_opts g_bs_opts;
 struct spdk_blob_store {};
 
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
@@ -84,6 +85,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	struct spdk_blob_store *bs;
 
 	bs = calloc(1, sizeof(*bs));
+
+	memcpy(&g_bs_opts, o, sizeof(struct spdk_bs_opts));
 
 	cb_fn(cb_arg, bs, 0);
 }
@@ -191,9 +194,39 @@ lvs_init_unload_success(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_init(&bs_dev, lvol_store_op_with_handle_complete, NULL);
+
+	rc = spdk_lvs_init(&bs_dev, NULL, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	spdk_free_thread();
+}
+
+static void
+lvs_init_opts_success(void)
+{
+	struct spdk_bs_dev bs_dev;
+	struct spdk_lvs_opts opts;
+	int rc = 0;
+
+	init_dev(&bs_dev);
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
+
+	g_lvserrno = -1;
+
+	opts.cluster_sz = 8192;
+	rc = spdk_lvs_init(&bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_bs_opts.cluster_sz == opts.cluster_sz);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
 	g_lvserrno = -1;
@@ -231,7 +264,7 @@ lvol_create_destroy_success(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_init(&bs_dev, lvol_store_op_with_handle_complete, NULL);
+	rc = spdk_lvs_init(&bs_dev, NULL, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
@@ -263,11 +296,11 @@ lvol_create_fail(void)
 
 	g_lvol_store = NULL;
 	g_lvserrno = 0;
-	rc = spdk_lvs_init(NULL, lvol_store_op_with_handle_complete, NULL);
+	rc = spdk_lvs_init(NULL, NULL, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvol_store == NULL);
 
-	rc = spdk_lvs_init(&bs_dev, lvol_store_op_with_handle_complete, NULL);
+	rc = spdk_lvs_init(&bs_dev, NULL, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
@@ -299,7 +332,7 @@ lvol_destroy_fail(void)
 
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
-	rc = spdk_lvs_init(&bs_dev, lvol_store_op_with_handle_complete, NULL);
+	rc = spdk_lvs_init(&bs_dev, NULL, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
@@ -330,7 +363,7 @@ lvol_close_fail(void)
 
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
-	rc = spdk_lvs_init(&bs_dev, lvol_store_op_with_handle_complete, NULL);
+	rc = spdk_lvs_init(&bs_dev, NULL, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
@@ -362,7 +395,7 @@ lvol_close_success(void)
 	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_init(&bs_dev, lvol_store_op_with_handle_complete, NULL);
+	rc = spdk_lvs_init(&bs_dev, NULL, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
@@ -394,7 +427,7 @@ lvol_resize(void)
 
 	g_resize_rc = 0;
 	g_lvserrno = -1;
-	rc = spdk_lvs_init(&bs_dev, lvol_store_op_with_handle_complete, NULL);
+	rc = spdk_lvs_init(&bs_dev, NULL, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
@@ -462,6 +495,7 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "lvs_init_unload_success", lvs_init_unload_success) == NULL ||
+		CU_add_test(suite, "lvs_init_opts_success", lvs_init_opts_success) == NULL ||
 		CU_add_test(suite, "lvs_unload_lvs_is_null_fail", lvs_unload_lvs_is_null_fail) == NULL ||
 		CU_add_test(suite, "lvol_create_destroy_success", lvol_create_destroy_success) == NULL ||
 		CU_add_test(suite, "lvol_create_fail", lvol_create_fail) == NULL ||
