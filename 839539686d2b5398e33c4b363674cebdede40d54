@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "569d6c46_b7c30f85",
+        "filename": "lib/iscsi/conn.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-09-28T23:18:38Z",
+      "side": 1,
+      "message": "May also make the alignment same with the following ones.",
+      "revId": "839539686d2b5398e33c4b363674cebdede40d54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
