@@ -1,0 +1,303 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95a23820_28cd4903",
+        "filename": "test/vhost/hotfeatures/fio_jobs/default_integrity.job",
+        "patchSetId": 32
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "can you use bsrange\u003d4k-512k?",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 12
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41ea26a4_9f71af6f",
+        "filename": "test/vhost/hotfeatures/fio_jobs/default_integrity.job",
+        "patchSetId": 32
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "not needed if runtime if specified",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 10
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f95ef2c_d1b76ddc",
+        "filename": "test/vhost/hotfeatures/fio_jobs/default_integrity.job",
+        "patchSetId": 32
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "make it 10",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 9
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28fe51ae_804ce356",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "Can you do it without using eval?",
+      "range": {
+        "startLine": 12,
+        "startChar": 4,
+        "endLine": 12,
+        "endChar": 30
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0233b023_c173801f",
+        "filename": "test/vhost/hotfeatures/scsi_hotdetach.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "no need to disable \u0027x\u0027 flag, it\u0027s ok to have it enabled all the time.",
+      "range": {
+        "startLine": 146,
+        "startChar": 4,
+        "endLine": 146,
+        "endChar": 11
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1feabe6c_b3255c1f",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 32
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "What about ./configure and make?;) I think these steps can be removed, it\u0027s pretty obvious you won\u0027t be able to run these tests without SPDK compiled",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 55
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "934b8ad1_caca85c2",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 32
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "Be more specific what kind of FIO test is performed and what are the expected results:\ne.g.:\n- fio randwrites with verification enabled\n- expecting fio will not fail on disks during hotattach of other disks,\netc.",
+      "range": {
+        "startLine": 12,
+        "startChar": 1,
+        "endLine": 12,
+        "endChar": 79
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b597d2f_f8e22bbb",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 32
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "Like in previous commend - Be more specific what kind of FIO test is performed and what are the expected results:\ne.g.:\n- fio randwrites with verification enabled\n- expecting fio will fail on detached disks but will not affect others,\netc.",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 78
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12548f85_b31c19ef",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 32
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "detached",
+      "range": {
+        "startLine": 57,
+        "startChar": 14,
+        "endLine": 57,
+        "endChar": 23
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1313a80_7db4b0ba",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 32
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "remaining",
+      "range": {
+        "startLine": 92,
+        "startChar": 29,
+        "endLine": 92,
+        "endChar": 38
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aff241e4_c8e44660",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "unnecessary change",
+      "range": {
+        "startLine": 60,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 10
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f8818ed_cfc37ad3",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "unnecessary change",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 7
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae4fddd3_9c6590c6",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T10:21:12Z",
+      "side": 1,
+      "message": "unnecessary change",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 8
+      },
+      "revId": "a06f1910ff8ee9521ff23a1807c51130bc8ccf16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
