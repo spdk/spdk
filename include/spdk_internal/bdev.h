@@ -394,6 +394,9 @@ void spdk_bdev_poller_stop(struct spdk_bdev_poller **ppoller);
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len);
 
 struct spdk_bdev_io *spdk_bdev_get_io(void);
+void spdk_bdev_io_init(struct spdk_bdev_io *bdev_io, struct spdk_bdev *bdev, void *cb_arg,
+		       spdk_bdev_io_completion_cb cb);
+void spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io);
 void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io,
 			   enum spdk_bdev_io_status status);
 
