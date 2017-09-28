@@ -71,6 +71,5 @@ void spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig);
 
 int spdk_iscsi_init_grp_array_create(void);
 void spdk_iscsi_init_grp_array_destroy(void);
-int spdk_iscsi_init_grp_deletable(int tag);
 
 #endif // SPDK_INIT_GRP_H
