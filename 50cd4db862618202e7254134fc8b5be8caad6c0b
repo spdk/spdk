@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6a7b0d8_3477d065",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1487,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T21:42:13Z",
+      "side": 1,
+      "message": "breaking _spdk_bs_set_mask is a nice cleanup - but it should be done in a separate patch - this patch is already very large",
+      "revId": "50cd4db862618202e7254134fc8b5be8caad6c0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e172da4e_654bbcc7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1857,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T21:42:13Z",
+      "side": 1,
+      "message": "if clean \u003d\u003d 0 and we get to this point, can we skip rewriting the superblock?  we would just be writing the same block back to disk with nothing changed\n\nthen you would not need to modify _spdk_bs_load_write_super_cpl and could have a separate recovery function that you call directly (probably don\u0027t even need the \"recovery_needed\" flag then either)",
+      "revId": "50cd4db862618202e7254134fc8b5be8caad6c0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85614c23_3f54bfdb",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T21:42:13Z",
+      "side": 1,
+      "message": "We\u0027re really going to need a lot more unit tests for this code - there are a lot of complicated corner cases with md page chains, etc. that we have code for but no tests.\n\nI would really suggest breaking out the dirty shutdown and mask recovery into separate unit tests, instead of appending them to this bs_load unit test.\n\nThese tests need to do things like figure out where the bit masks are in memory, and zero them out completely.  Then you know for sure that blobstore built the masks again and that it did it correctly.\n\nWe also need page chain tests.  These will be harder.  You will need to create a condition where there is a valid metadata page but is not part of any chain.",
+      "revId": "50cd4db862618202e7254134fc8b5be8caad6c0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
