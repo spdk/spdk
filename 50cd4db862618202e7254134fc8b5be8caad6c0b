@@ -50,6 +50,24 @@
       "revId": "50cd4db862618202e7254134fc8b5be8caad6c0b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e8eecc2_f270ce0b",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T21:49:40Z",
+      "side": 1,
+      "message": "For example, the test here only opens an existing blob - it does not allocate new md pages nor resize a blob.  So the bit masks will not change.  We need the tests to either allocate or delete blobs as well as resize an existing blob and then simulate the power failure.  Then when reloading, we should make sure that the state is as expected from before the power failure.",
+      "parentUuid": "85614c23_3f54bfdb",
+      "revId": "50cd4db862618202e7254134fc8b5be8caad6c0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
