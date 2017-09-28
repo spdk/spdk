@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c9d21ed7_5e6fdcb9",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-28T06:52:04Z",
+      "side": 1,
+      "message": "change in next patch set",
+      "parentUuid": "82ea446a_71f9a2bb",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 1
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77ca99e1_d829f871",
         "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-27T21:14:56Z",
       "side": 1,
       "message": "I don;t get it... you print it to screen?",
+      "range": {
+        "startLine": 18,
+        "startChar": 3,
+        "endLine": 19,
+        "endChar": 28
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8051ba5a_1f92b244",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-28T06:52:04Z",
+      "side": 1,
+      "message": "gen_tc_3_blk_config \u003e $BASE_DIR/vhost.conf.in\nconsulted with Paweł W",
+      "parentUuid": "77ca99e1_d829f871",
       "range": {
         "startLine": 18,
         "startChar": 3,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "06512323_3a69252d",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-28T06:52:04Z",
+      "side": 1,
+      "message": "This division is assigned to test cases, we can stats 1,3,5 test in platform with single disk. yes i can pull out [split] to config base, but this is better readable",
+      "parentUuid": "6cdfc035_3cd912e0",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 1
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ce492e1_dec534a5",
         "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
         "patchSetId": 8
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "d1ec751d_b9e068fe",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-28T06:52:04Z",
+      "side": 1,
+      "message": "I think yes, wait 10 s with running vhost and unbind disk, sleep causes greater the chances of a crash vhost etc",
+      "parentUuid": "3ce492e1_dec534a5",
+      "range": {
+        "startLine": 51,
+        "startChar": 4,
+        "endLine": 51,
+        "endChar": 12
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8b4c95d7_5dd0ad8a",
         "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
         "patchSetId": 8
@@ -105,6 +201,30 @@
       "writtenOn": "2017-09-27T21:14:56Z",
       "side": 1,
       "message": "pretty sure I asked this before - but why do you unbind BEFORE running FIO traffic? original test plan mentioned doing it DURING I/O traffic",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 12
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2c1dbe7_52190551",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-28T06:52:04Z",
+      "side": 1,
+      "message": "traffic is running, \n(sleep 5; echo $bdf\u003e/sys/bus/pci/devices/$bdf/driver/unbind) \u0026\nwait 5s with unbind disk, check common.sh",
+      "parentUuid": "8b4c95d7_5dd0ad8a",
       "range": {
         "startLine": 71,
         "startChar": 0,
@@ -163,6 +283,30 @@
     },
     {
       "key": {
+        "uuid": "23a1a26c_444ce223",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-28T06:52:04Z",
+      "side": 1,
+      "message": "config_base \u003e $BASE_DIR/vhost.conf.in",
+      "parentUuid": "32a0cee2_06f5461f",
+      "range": {
+        "startLine": 81,
+        "startChar": 4,
+        "endLine": 83,
+        "endChar": 28
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d5d34053_c89c5d7f",
         "filename": "test/vhost/hotfeatures/common.sh",
         "patchSetId": 8
@@ -174,6 +318,30 @@
       "writtenOn": "2017-09-27T21:14:56Z",
       "side": 1,
       "message": "Why did you cut this function from the bottom of the file and pasted it here? Is there any reason? If not, then this is unnecessary change",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 1
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8507577d_58ec4fd5",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-28T06:52:04Z",
+      "side": 1,
+      "message": "Alphabetical organization \"library\" or common parts",
+      "parentUuid": "d5d34053_c89c5d7f",
       "range": {
         "startLine": 86,
         "startChar": 0,
@@ -209,6 +377,30 @@
     },
     {
       "key": {
+        "uuid": "d76e9a95_ed720eec",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-28T06:52:04Z",
+      "side": 1,
+      "message": "yes, vms_prepare startuje fio server and this wait for it",
+      "parentUuid": "b297f781_4f8634c8",
+      "range": {
+        "startLine": 194,
+        "startChar": 4,
+        "endLine": 194,
+        "endChar": 11
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "171fd47e_fe3a6763",
         "filename": "test/vhost/hotfeatures/common.sh",
         "patchSetId": 8
@@ -220,6 +412,30 @@
       "writtenOn": "2017-09-27T21:14:56Z",
       "side": 1,
       "message": "Again - did you cut it from the top and pasted at the bottom? Don\u0027t think it\u0027s necessary",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 228,
+        "endChar": 1
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57157546_5a5248e3",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-09-28T06:52:04Z",
+      "side": 1,
+      "message": "Alphabetical organization \"library\" or common parts",
+      "parentUuid": "171fd47e_fe3a6763",
       "range": {
         "startLine": 219,
         "startChar": 0,
