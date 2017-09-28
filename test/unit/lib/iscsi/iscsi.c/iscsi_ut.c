@@ -72,10 +72,9 @@ spdk_iscsi_acceptor_stop(void)
 {
 }
 
-int
+void
 spdk_iscsi_portal_grp_close_all(void)
 {
-	return 0;
 }
 
 void
