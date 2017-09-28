@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "d79d22f5_25b44f79",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T09:22:55Z",
+      "side": 1,
+      "message": "If I remember correctly, then original test plan only assumes using Split configuration for TC5. I\u0027m ok with leaving it that way, but you have to reflect that in test plan.",
+      "parentUuid": "06512323_3a69252d",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 1
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ce492e1_dec534a5",
         "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
         "patchSetId": 8
@@ -178,6 +202,30 @@
       "side": 1,
       "message": "I think yes, wait 10 s with running vhost and unbind disk, sleep causes greater the chances of a crash vhost etc",
       "parentUuid": "3ce492e1_dec534a5",
+      "range": {
+        "startLine": 51,
+        "startChar": 4,
+        "endLine": 51,
+        "endChar": 12
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d91a2168_e3503120",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T09:22:55Z",
+      "side": 1,
+      "message": "it\u0027s too much. sleep 1 would be enough",
+      "parentUuid": "d1ec751d_b9e068fe",
       "range": {
         "startLine": 51,
         "startChar": 4,
@@ -228,6 +276,29 @@
       "range": {
         "startLine": 71,
         "startChar": 0,
+        "endLine": 73,
+        "endChar": 12
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bd1e92d_d848a88c",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T09:22:55Z",
+      "side": 1,
+      "message": "I don\u0027t like it.\nIt\u0027s very unreadable and suggests you unbind first.\nI\u0027d rearrange it in something like this:\n- prepare_fio\n- $run_fio \u0026 (run this one in background instead of unbind)\n- sleep 5 (it\u0027s kind of a lucky shot as in your function as well, but let\u0027s  stick with that; sleep value also depends on how long the traffic runs)\n- unbind dev\n- wait for run_fio to exit, check return codes, etc",
+      "range": {
+        "startLine": 71,
+        "startChar": 1,
         "endLine": 73,
         "endChar": 12
       },
@@ -354,6 +425,30 @@
     },
     {
       "key": {
+        "uuid": "7b8b1912_67823002",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T09:22:55Z",
+      "side": 1,
+      "message": "Dind\u0027t know we even had this approach. Problem is that by reorganizing the functions you introduce more and more changes to original file which makes it harder to read/review.",
+      "parentUuid": "8507577d_58ec4fd5",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 1
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b297f781_4f8634c8",
         "filename": "test/vhost/hotfeatures/common.sh",
         "patchSetId": 8
@@ -389,6 +484,30 @@
       "side": 1,
       "message": "yes, vms_prepare startuje fio server and this wait for it",
       "parentUuid": "b297f781_4f8634c8",
+      "range": {
+        "startLine": 194,
+        "startChar": 4,
+        "endLine": 194,
+        "endChar": 11
+      },
+      "revId": "2762dff43c85a47ed443caeebbb8613cb6537806",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2bef8b5a_da055086",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T09:22:55Z",
+      "side": 1,
+      "message": "There\u0027s no need for sleep, because FIO servers are already started once \"vms_prepare\" function finishes.",
+      "parentUuid": "d76e9a95_ed720eec",
       "range": {
         "startLine": 194,
         "startChar": 4,
