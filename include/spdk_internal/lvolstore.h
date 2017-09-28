@@ -46,6 +46,7 @@
 struct spdk_lvs_req {
 	spdk_lvs_op_complete    cb_fn;
 	void                    *cb_arg;
+	struct spdk_bdev        *base_bdev;
 };
 
 struct spdk_lvol_req {
