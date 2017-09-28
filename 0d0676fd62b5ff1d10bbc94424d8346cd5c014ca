@@ -1,0 +1,222 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "914ade35_b5bb9e60",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-28T09:15:16Z",
+      "side": 1,
+      "message": "you create a single split on the entire device, is this intended?",
+      "range": {
+        "startLine": 15,
+        "startChar": 9,
+        "endLine": 15,
+        "endChar": 19
+      },
+      "revId": "0d0676fd62b5ff1d10bbc94424d8346cd5c014ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a0b3911_761f6a7d",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-28T09:15:16Z",
+      "side": 1,
+      "message": "this could use some generic function,\neg.\nnum_disks\u003d$1\nnum_splits\u003d$2\n\nthen, if num_splits\u003d\u003d 0, don\u0027t create the split",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 1
+      },
+      "revId": "0d0676fd62b5ff1d10bbc94424d8346cd5c014ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab54732d_361a365b",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-28T09:15:16Z",
+      "side": 1,
+      "message": "could you add 1 line description of what each of these test cases do?",
+      "revId": "0d0676fd62b5ff1d10bbc94424d8346cd5c014ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ff48fac_f2e2c789",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-28T09:15:16Z",
+      "side": 1,
+      "message": "isn\u0027t 1 second enough here?",
+      "range": {
+        "startLine": 47,
+        "startChar": 4,
+        "endLine": 47,
+        "endChar": 12
+      },
+      "revId": "0d0676fd62b5ff1d10bbc94424d8346cd5c014ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a368580_18566bf8",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-28T09:15:16Z",
+      "side": 1,
+      "message": "this could use some wrapper in common.sh",
+      "range": {
+        "startLine": 50,
+        "startChar": 4,
+        "endLine": 52,
+        "endChar": 57
+      },
+      "revId": "0d0676fd62b5ff1d10bbc94424d8346cd5c014ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59de3106_98ddc3b4",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-28T09:15:16Z",
+      "side": 1,
+      "message": "why +x? this disables trace output in logs, we probably don\u0027t want that",
+      "range": {
+        "startLine": 66,
+        "startChar": 9,
+        "endLine": 66,
+        "endChar": 10
+      },
+      "revId": "0d0676fd62b5ff1d10bbc94424d8346cd5c014ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61d7f409_701542bf",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-28T09:15:16Z",
+      "side": 1,
+      "message": "this looks like copy-paste from tc2",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 75
+      },
+      "revId": "0d0676fd62b5ff1d10bbc94424d8346cd5c014ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87e1b263_54008fb9",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-28T09:15:16Z",
+      "side": 1,
+      "message": "^",
+      "revId": "0d0676fd62b5ff1d10bbc94424d8346cd5c014ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad543d8c_5fe408b8",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-28T09:15:16Z",
+      "side": 1,
+      "message": "what\u0027s the purpose of this? why not VM_NUM\u003d${used_vms[$1]}",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 27
+      },
+      "revId": "0d0676fd62b5ff1d10bbc94424d8346cd5c014ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5457651a_75100093",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-09-28T09:15:16Z",
+      "side": 1,
+      "message": "}",
+      "range": {
+        "startLine": 126,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 1
+      },
+      "revId": "0d0676fd62b5ff1d10bbc94424d8346cd5c014ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
