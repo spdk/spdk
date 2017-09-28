@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ddb8086_7f135bd4",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T21:57:20Z",
+      "side": 1,
+      "message": "additional",
+      "revId": "56554f99a90fc16b921cca04fe797a4d6e0ace2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5eccfd73_b38977b1",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T21:57:20Z",
+      "side": 1,
+      "message": "should this be:\n\nWARNING: controller IO queue size %u is less than required\n\nThe word \"may\" here seems confusing.",
+      "revId": "56554f99a90fc16b921cca04fe797a4d6e0ace2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1bab4c7_2d7d6cdc",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1209,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T21:57:20Z",
+      "side": 1,
+      "message": "I think this comment should explain this a bit more.  Something like: \"Set io_queue_size to UINT16_MAX, NVMe driver will then reduce this to MQES to maximize the io_queue_size as much as possible.\"",
+      "revId": "56554f99a90fc16b921cca04fe797a4d6e0ace2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
