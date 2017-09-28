@@ -55,6 +55,18 @@ bool lvol_store_initialize_cb_fail = false;
 bool lvol_already_opened = false;
 
 void
+spdk_bdev_module_release_bdev(struct spdk_bdev *bdev)
+{
+}
+
+int
+spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			    struct spdk_bdev_module_if *module)
+{
+	return 0;
+}
+
+void
 spdk_bdev_unregister(struct spdk_bdev *bdev)
 {
 	return;
