@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91599d72_870f6dcc",
+        "filename": "autotest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T07:28:19Z",
+      "side": 1,
+      "message": "tabs to be consistent with rest of file",
+      "range": {
+        "startLine": 129,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 8
+      },
+      "revId": "a9168502013cf81e77d8d0da903e0e3677c03aa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1ce4e57_c3ca4378",
+        "filename": "test/vhost/common/fio_jobs/default_initiator.job",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T07:28:19Z",
+      "side": 1,
+      "message": "We don\u0027t use ramp time in this test so remove it",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 11
+      },
+      "revId": "a9168502013cf81e77d8d0da903e0e3677c03aa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "741ca99a_27bb9e75",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T07:28:19Z",
+      "side": 1,
+      "message": "make it at least 10 for per-patch run. if nightly - can make it bigger, but that\u0027s not a necessity",
+      "range": {
+        "startLine": 31,
+        "startChar": 101,
+        "endLine": 31,
+        "endChar": 112
+      },
+      "revId": "a9168502013cf81e77d8d0da903e0e3677c03aa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eccf7028_5ccd129e",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T07:28:19Z",
+      "side": 1,
+      "message": "why do you disable exit flag and/or where do you re-enable it?",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 6
+      },
+      "revId": "a9168502013cf81e77d8d0da903e0e3677c03aa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5e6e4bc_42440871",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T07:28:19Z",
+      "side": 1,
+      "message": "You could get rid of the first \u0027if\u0027 block. Do not check block size in if, but instead use variable block_size to substitute in command whre needed, for example:\ncp $testdir/vhost.conf.malloc${block_size} $testdir/vhost.conf.in",
+      "range": {
+        "startLine": 43,
+        "startChar": 8,
+        "endLine": 53,
+        "endChar": 10
+      },
+      "revId": "a9168502013cf81e77d8d0da903e0e3677c03aa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "924be20c_9c5ef045",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T07:28:19Z",
+      "side": 1,
+      "message": "This seems a little low... can we up it a bit?\nMaybe get rid of \"io_size\" and just use size\u003d1G? Also - this part of config does not have to be generated on every run, you can keep these arguments in fio config file",
+      "range": {
+        "startLine": 84,
+        "startChar": 40,
+        "endLine": 85,
+        "endChar": 80
+      },
+      "revId": "a9168502013cf81e77d8d0da903e0e3677c03aa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "276503b7_8b875aa4",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-09-28T07:28:19Z",
+      "side": 1,
+      "message": "tabs / spaces consistency",
+      "range": {
+        "startLine": 112,
+        "startChar": 0,
+        "endLine": 112,
+        "endChar": 17
+      },
+      "revId": "a9168502013cf81e77d8d0da903e0e3677c03aa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
