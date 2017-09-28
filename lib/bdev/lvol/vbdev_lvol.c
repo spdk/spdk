@@ -72,6 +72,8 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev inserted\n");
 
+	spdk_bdev_module_claim_bdev(bdev, NULL, SPDK_GET_BDEV_MODULE(lvol));
+
 end:
 	req->cb_fn(req->cb_arg, lvs, lvserrno);
 	free(req);
@@ -123,6 +125,8 @@ _vbdev_lvs_destruct_cb(void *cb_arg, int lvserrno)
 
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev deleted\n");
 
+	spdk_bdev_module_release_bdev(req->base_bdev);
+
 	if (req->cb_fn != NULL)
 		req->cb_fn(req->cb_arg, lvserrno);
 	free(req);
@@ -137,28 +141,40 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_lvol *lvol, *tmp;
 
-	req = calloc(1, sizeof(*req));
-	if (!req) {
-		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
-		return;
-	}
-	req->cb_fn = cb_fn;
-	req->cb_arg = cb_arg;
-
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
 
-	free(lvs_bdev);
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+		spdk_bdev_module_release_bdev(lvs_bdev->bdev);
+		if (cb_fn != NULL)
+			cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	req->base_bdev = lvs_bdev->bdev;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
 
 	if (TAILQ_EMPTY(&lvs->lvols)) {
 		spdk_lvs_unload(lvs, _vbdev_lvs_destruct_cb, req);
 	} else {
-		lvs->destruct_req = req;
+		lvs->destruct_req = calloc(1, sizeof(*lvs->destruct_req));
+		if (!lvs->destruct_req) {
+			SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+			_vbdev_lvs_destruct_cb(req, -ENOMEM);
+			return;
+		}
+		lvs->destruct_req->cb_fn = _vbdev_lvs_destruct_cb;
+		lvs->destruct_req->cb_arg = req;
 		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
 			lvol->close_only = true;
-			spdk_bdev_unregister(lvol->bdev);
+			spdk_vbdev_unregister(lvol->bdev);
 		}
 	}
+
+	free(lvs_bdev);
 }
 
 struct lvol_store_bdev *
@@ -436,7 +452,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	bdev->fn_table = &vbdev_lvol_fn_table;
 	bdev->module = SPDK_GET_BDEV_MODULE(lvol);
 
-	spdk_bdev_register(bdev);
+	spdk_vbdev_register(bdev, &lvs_bdev->bdev, 1);
 
 	return bdev;
 }
