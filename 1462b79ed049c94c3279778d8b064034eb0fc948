@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e4c9bc3_9679ce0c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T17:47:01Z",
+      "side": 1,
+      "message": "this should actually be spdk_vbdev_unregister (to match the spdk_vbdev_register I mention below)",
+      "revId": "1462b79ed049c94c3279778d8b064034eb0fc948",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2021579_cbe6304b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T17:47:01Z",
+      "side": 1,
+      "message": "This should also be changed to use spdk_vbdev_register().  Then the bdev layer will know the dependencies between the lvol bdevs and the base bdev.",
+      "revId": "1462b79ed049c94c3279778d8b064034eb0fc948",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
