@@ -706,14 +706,14 @@ dmpimp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	cli_context->blob_pages = spdk_blob_get_num_pages(cli_context->blob);
 	cli_context->page_count = 0;
 	if (cli_context->action == CLI_DUMP) {
-		cli_context->fp = fopen(cli_context->file , "w");
+		cli_context->fp = fopen(cli_context->file, "w");
 
 		/* read a page of data from the blob */
 		spdk_bs_io_read_blob(cli_context->blob, cli_context->channel,
 				     cli_context->buff, cli_context->page_count,
 				     1, read_dump_complete, cli_context);
 	} else {
-		cli_context->fp = fopen(cli_context->file , "r");
+		cli_context->fp = fopen(cli_context->file, "r");
 
 		/* get the filesize then rewind read a page of data from file */
 		fseek(cli_context->fp, 0L, SEEK_END);
