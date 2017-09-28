@@ -352,6 +352,59 @@ io_valid_test(void)
 	CU_ASSERT(spdk_bdev_io_valid_blocks(&bdev, 18446744073709551615ULL, 1) == false);
 }
 
+static int
+__destruct(void *ctx)
+{
+	return 0;
+}
+
+static struct spdk_bdev_fn_table base_fn_table = {
+	.destruct		= __destruct,
+};
+static struct spdk_bdev_fn_table part_fn_table = {
+	.destruct		= __destruct,
+};
+
+static void
+__base_free(struct spdk_bdev_part_base *base)
+{
+	free(base);
+}
+
+SPDK_BDEV_MODULE_REGISTER(ut, NULL, NULL, NULL, NULL, NULL);
+
+static void
+part_test(void)
+{
+	struct spdk_bdev_part_base	*base;
+	struct spdk_bdev_part		part1, part2;
+	struct spdk_bdev		bdev_base = {};
+	SPDK_BDEV_PART_TAILQ		tailq = TAILQ_HEAD_INITIALIZER(tailq);
+
+	base = calloc(1, sizeof(*base));
+	SPDK_CU_ASSERT_FATAL(base != NULL);
+
+	bdev_base.fn_table = &base_fn_table;
+	bdev_base.module = SPDK_GET_BDEV_MODULE(ut);
+	spdk_bdev_register(&bdev_base);
+	spdk_bdev_part_base_construct(base, &bdev_base, NULL, NULL, &part_fn_table,
+				      &tailq, __base_free, 0, NULL, NULL);
+
+	spdk_bdev_part_construct(&part1, base, "test1", 0, 100, "test");
+	spdk_bdev_part_construct(&part2, base, "test2", 100, 100, "test");
+
+	spdk_bdev_part_base_hotremove(&bdev_base, &tailq);
+
+	/*
+	 * The base device was removed - ensure that the partition vbdevs were
+	 *  removed from the base's vbdev list.
+	 */
+	CU_ASSERT(TAILQ_EMPTY(&bdev_base.vbdevs));
+
+	spdk_bdev_part_base_free(base);
+	spdk_bdev_unregister(&bdev_base);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -371,7 +424,8 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "bytes_to_blocks_test", bytes_to_blocks_test) == NULL ||
 		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
-		CU_add_test(suite, "open_write", open_write_test) == NULL
+		CU_add_test(suite, "open_write", open_write_test) == NULL ||
+		CU_add_test(suite, "part", part_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
