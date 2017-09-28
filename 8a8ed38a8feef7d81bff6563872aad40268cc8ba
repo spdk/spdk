@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d15976f_bc0e91e3",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T21:23:06Z",
+      "side": 1,
+      "message": "Maybe call spdk_bs_opts_init(bs_opts) instead?  Then you do not need to worry about setting num_md_pages, max_md_ops and max_channel_ops.  You could also remove the #defines.\n\nWe could always override these later if needed, but if we don\u0027t need them now I\u0027d say just remove them.",
+      "revId": "8a8ed38a8feef7d81bff6563872aad40268cc8ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3731ac88_54a8a13c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-28T21:23:06Z",
+      "side": 1,
+      "message": "I think this is in bytes?  maybe the help should say \"size of cluster (in bytes)\" to make it clear",
+      "revId": "8a8ed38a8feef7d81bff6563872aad40268cc8ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
