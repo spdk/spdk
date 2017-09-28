@@ -1924,7 +1924,7 @@ spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tail
 
 	TAILQ_FOREACH_SAFE(part, tailq, tailq, tmp) {
 		if (part->base->bdev == base_bdev) {
-			spdk_bdev_unregister(&part->bdev);
+			spdk_vbdev_unregister(&part->bdev);
 		}
 	}
 }
