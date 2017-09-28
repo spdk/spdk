@@ -612,7 +612,7 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 	spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
 }
 
-static void
+void
 spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
@@ -653,7 +653,7 @@ spdk_bdev_io_submit_reset(struct spdk_bdev_io *bdev_io)
 	bdev_io->in_submit_request = false;
 }
 
-static void
+void
 spdk_bdev_io_init(struct spdk_bdev_io *bdev_io,
 		  struct spdk_bdev *bdev, void *cb_arg,
 		  spdk_bdev_io_completion_cb cb)
