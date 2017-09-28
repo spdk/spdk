@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f4415cb_291500f0",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-09-28T23:35:19Z",
+      "side": 1,
+      "message": "naming refactor can be the separate patch.",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 159,
+        "endChar": 37
+      },
+      "revId": "de7282e2dbe6297718ebe4b2f844ee2113893c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98d447cb_412457b4",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-09-28T23:35:19Z",
+      "side": 1,
+      "message": "May change the return type of this function as bool? Or return 0 as allowed, but -1 as not.",
+      "range": {
+        "startLine": 186,
+        "startChar": 2,
+        "endLine": 186,
+        "endChar": 11
+      },
+      "revId": "de7282e2dbe6297718ebe4b2f844ee2113893c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "676fb2c5_27e0ddd9",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-09-28T23:35:19Z",
+      "side": 1,
+      "message": "add ()",
+      "range": {
+        "startLine": 206,
+        "startChar": 5,
+        "endLine": 206,
+        "endChar": 19
+      },
+      "revId": "de7282e2dbe6297718ebe4b2f844ee2113893c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
