@@ -90,6 +90,12 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_NVME_ADMIN,
 	SPDK_BDEV_IO_TYPE_NVME_IO,
 	SPDK_BDEV_IO_TYPE_WRITE_ZEROES,
+
+	/**
+	 * First user/driver specific command. All values >= SPDK_BDEV_IO_TYPE_USER
+	 * can be used by user code.
+	 */
+	SPDK_BDEV_IO_TYPE_USER = 1024,
 };
 
 /**
