@@ -84,6 +84,40 @@ spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 }
 
 static int
+spdk_iscsi_portal_open(struct spdk_iscsi_portal *p)
+{
+	int port, sock;
+
+	if (p->sock >= 0) {
+		SPDK_ERRLOG("portal (%s, %s) is already opened\n",
+			    p->host, p->port);
+		return -1;
+	}
+
+	port = (int)strtol(p->port, NULL, 0);
+	sock = spdk_sock_listen(p->host, port);
+	if (sock < 0) {
+		SPDK_ERRLOG("listen error %.64s.%d\n", p->host, port);
+		return -1;
+	}
+
+	p->sock = sock;
+
+	return 0;
+}
+
+static void
+spdk_iscsi_portal_close(struct spdk_iscsi_portal *p)
+{
+	if (p->sock >= 0) {
+		SPDK_DEBUGLOG(SPDK_TRACE_NET, "close portal (%s, %s)\n",
+			      p->host, p->port);
+		close(p->sock);
+		p->sock = -1;
+	}
+}
+
+static int
 spdk_iscsi_portal_create_from_configline(const char *portalstring,
 		struct spdk_iscsi_portal **ip,
 		int dry_run)
@@ -296,7 +330,7 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 		struct spdk_iscsi_portal **portal_list,
 		int num_portals)
 {
-	int i = 0, rc = 0, port;
+	int i = 0, rc = 0;
 	struct spdk_iscsi_portal_grp *pg;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "add portal group (from portal list) %d\n", tag);
@@ -318,19 +352,12 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
 			      "RIndex=%d, Host=%s, Port=%s, Tag=%d\n",
 			      i, p->host, p->port, tag);
-
-		port = (int)strtol(p->port, NULL, 0);
-		p->sock = spdk_sock_listen(p->host, port);
-
-		if (p->sock < 0) {
+		rc = spdk_iscsi_portal_open(p);
+		if (rc < 0) {
 			/* if listening failed on any port, do not register the portal group
 			 * and close any previously opened. */
-			SPDK_ERRLOG("listen error %.64s:%d\n", p->host, port);
-			rc = -1;
-
 			for (--i; i >= 0; --i) {
-				spdk_sock_close(portal_list[i]->sock);
-				portal_list[i]->sock = -1;
+				spdk_iscsi_portal_close(portal_list[i]);
 			}
 
 			break;
@@ -502,20 +529,12 @@ static int
 spdk_iscsi_portal_grp_open(struct spdk_iscsi_portal_grp *pg)
 {
 	struct spdk_iscsi_portal *p;
-	int port;
-	int sock;
+	int rc;
 
 	TAILQ_FOREACH(p, &pg->head, tailq) {
-		if (p->sock < 0) {
-			SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "open host %s, port %s, tag %d\n",
-				      p->host, p->port, pg->tag);
-			port = (int)strtol(p->port, NULL, 0);
-			sock = spdk_sock_listen(p->host, port);
-			if (sock < 0) {
-				SPDK_ERRLOG("listen error %.64s:%d\n", p->host, port);
-				return -1;
-			}
-			p->sock = sock;
+		rc = spdk_iscsi_portal_open(p);
+		if (rc < 0) {
+			return rc;
 		}
 	}
 	return 0;
@@ -540,39 +559,27 @@ spdk_iscsi_portal_grp_open_all(void)
 	return 0;
 }
 
-static int
+static void
 spdk_iscsi_portal_grp_close(struct spdk_iscsi_portal_grp *pg)
 {
 	struct spdk_iscsi_portal *p;
 
 	TAILQ_FOREACH(p, &pg->head, tailq) {
-		if (p->sock >= 0) {
-			SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "close host %s, port %s, tag %d\n",
-				      p->host, p->port, pg->tag);
-			close(p->sock);
-			p->sock = -1;
-		}
+		spdk_iscsi_portal_close(p);
 	}
-	return 0;
 }
 
-int
+void
 spdk_iscsi_portal_grp_close_all(void)
 {
 	struct spdk_iscsi_portal_grp *pg;
-	int rc;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_portal_grp_close_all\n");
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
-		rc = spdk_iscsi_portal_grp_close(pg);
-		if (rc < 0) {
-			pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-			return -1;
-		}
+		spdk_iscsi_portal_grp_close(pg);
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-	return 0;
 }
 
 static inline void
