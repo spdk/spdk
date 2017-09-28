@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "4457290f_a51f8576",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 44
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-28T10:22:16Z",
+      "side": 1,
+      "message": "I think by default pkill calls SIGTERM, not SIGKILL.",
+      "range": {
+        "startLine": 90,
+        "startChar": 18,
+        "endLine": 90,
+        "endChar": 25
+      },
+      "revId": "08b5f6de5d59d6291fa131df3b197aec42f2c01d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03d8670d_942dd9ed",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 44
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-28T10:22:16Z",
+      "side": 1,
+      "message": "It is possible that SIGTERM never finishes, if something went wrong when handling the signal. Adding SIGKILL after a set time can ensure that process is killed at the end of tests anyway.",
+      "revId": "08b5f6de5d59d6291fa131df3b197aec42f2c01d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6f1f3d8_6a796530",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 44
