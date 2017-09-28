@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a24bfbcb_6ba9aaf5",
+        "filename": "configure",
+        "patchSetId": 36
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-28T16:52:24Z",
+      "side": 1,
+      "message": "I think the idea is that --with-pmem (no path) should just link against libraries installed system-wide, and --with-nvml\u003d/path is only needed to build against a custom local version.\n\nWe might want to rethink how these options are listed (instead of listing e.g. dpdk, fio, nvml, etc., we should just put the full option, --with-dpdk\u003d/path, --with-nvml[\u003d/path], etc.) to make it clear which ones have optional parameters, but that should be a separate patch.",
+      "parentUuid": "97465b45_9f1e1f21",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fe3d62c_c559c728",
         "filename": "lib/bdev/Makefile",
         "patchSetId": 36
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-27T22:46:56Z",
       "side": 1,
       "message": "this probably belongs in the ifeq(Linux) below - I think nvml is only supported on Linux (not FreeBSD)",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3b9bca9_81ac39e4",
+        "filename": "lib/bdev/Makefile",
+        "patchSetId": 36
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-28T16:52:24Z",
+      "side": 1,
+      "message": "I\u0027m OK either way here - since we have a config option for it, we won\u0027t have it turned on for FreeBSD anyway.",
+      "parentUuid": "7fe3d62c_c559c728",
       "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -104,6 +140,41 @@
     },
     {
       "key": {
+        "uuid": "20021bed_26c34b94",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-28T16:52:24Z",
+      "side": 1,
+      "message": "I think we should just remove support for flush if it doesn\u0027t do anything - is this required for some reason? Do we have future plans to add flush support for pmem?",
+      "parentUuid": "ad2bc420_b226b5e7",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc2d6bf4_569f058d",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-28T16:52:24Z",
+      "side": 1,
+      "message": "Make sure to remove flush from this list if we remove flush support (as noted above) and set write_cache \u003d 0.",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24b0d49a_abc8c786",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 36
@@ -149,6 +220,24 @@
       "writtenOn": "2017-09-27T22:46:56Z",
       "side": 1,
       "message": "I\u0027m not sure about this change.  I\u0027m sure there are some earlier RedHat/CentOS versions that don\u0027t have libpmemblk yet?  We also don\u0027t enable this by default (yet) so I\u0027m not sure we should install the package for it by default.\n\nCould we instead check if this package exists and then install it?  Just to avoid unnecessary error messages.",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a6f6e22_0c6edb49",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-28T16:52:24Z",
+      "side": 1,
+      "message": "Good point - CentOS 7 has libpmemblk-devel, but CentOS 6 does not (and I assume the same applies to the corresponding RHEL versions).  We could just add || true (and maybe redirect stderr to /dev/null if the error messages are too annoying) rather than trying to detect it, though.",
+      "parentUuid": "a89c9fa2_16262407",
       "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
