@@ -17,14 +17,14 @@ if [ $(uname -s) = Linux ]; then
 echo Running SPDK vhost fio autotest...
 
 case $param in
-    -p|--performance)
+	-p|--performance)
 	echo Running performance suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0 \
 	--test-type=spdk_vhost_scsi \
 	--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu
-    ;;
+	;;
 	-pb|--performance-blk)
 	echo Running blk performance suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
@@ -32,23 +32,23 @@ case $param in
 	--test-type=spdk_vhost_blk \
 	--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu
-    ;;
-    -i|--integrity)
+	;;
+	-i|--integrity)
 	echo Running integrity suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_scsi \
 	--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu -x
-    ;;
-    -ib|--integrity-blk)
+	;;
+	-ib|--integrity-blk)
 	echo Running blk integrity suite...
 	./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 	--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 	--test-type=spdk_vhost_blk \
 	--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
 	--qemu-src=/home/sys_sgsw/vhost/qemu -x
-    ;;
+	;;
 	-fs|--fs-integrity-scsi)
 	echo Running filesystem integrity suite...
 	./integrity/integrity_start.sh -i /home/sys_sgsw/vhost_vm_image.qcow2 -m scsi -f ntfs
@@ -76,8 +76,18 @@ case $param in
 	--vm=3,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p6:Nvme0n1p7 \
 	--test-type=spdk_vhost_scsi \
 	--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
-    ;;
-    -h|--help)
+	;;
+	-ips|--integrity-pmem-scsi)
+	echo Running pmem integrity suite...
+	./pmem/vhost_pmem.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	--ctrl-type=spdk_vhost_scsi --os=/home/sys_sgsw/vhost_vm_image.qcow2
+	;;
+	-ipb|--integrity-pmem-blk)
+	echo Running pmem integrity suite...
+	./pmem/vhost_pmem.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+	--ctrl-type=spdk_vhost_blk --os=/home/sys_sgsw/vhost_vm_image.qcow2
+	;;
+	-h|--help)
 	echo "-i |--integrity             for running an integrity test with vhost scsi"
 	echo "-fs|--fs-integrity-scsi     for running an integrity test with filesystem"
 	echo "-fb|--fs-integrity-blk      for running an integrity test with filesystem"
@@ -88,10 +98,10 @@ case $param in
 	echo "-ilb|--integrity-lvol-blk   for running an integrity test with vhost blk and lvol backends"
 	echo "-hp|--hotplug               for running hotplug tests"
 	echo "-h |--help                  prints this message"
-    ;;
-    *)
+	;;
+	*)
 	echo "unknown test type"
-    ;;
+	;;
 esac
 
 fi

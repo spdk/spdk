@@ -1,0 +1,16 @@
+[global]
+blocksize=4k
+iodepth=128
+ioengine=libaio
+runtime=10
+filename=
+group_reporting
+thread
+numjobs=1
+direct=1
+rw=randwrite
+do_verify=1
+verify=md5
+verify_backlog=1024
+
+[pmem-verify]
