@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "15f80d37_437d7f64",
+        "filename": "configure",
+        "patchSetId": 36
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "97465b45_9f1e1f21",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fe3d62c_c559c728",
         "filename": "lib/bdev/Makefile",
         "patchSetId": 36
@@ -72,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "51d3ef2b_9d43ea4a",
+        "filename": "lib/bdev/Makefile",
+        "patchSetId": 36
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7fe3d62c_c559c728",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec5c29c8_7b40afe0",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 36
@@ -83,6 +119,24 @@
       "writtenOn": "2017-09-27T22:46:56Z",
       "side": 1,
       "message": "can we combine the readv and writev functions?  mostly duplicated code there",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd6913c8_6311c0d5",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ec5c29c8_7b40afe0",
       "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -106,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "0ec77005_c51b05fb",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ce333f80_dd80dc7a",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13a787ad_758a3f57",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 36
@@ -117,6 +189,24 @@
       "writtenOn": "2017-09-27T22:46:56Z",
       "side": 1,
       "message": "no newline needed before this line; but I think you can make this simpler anyways:\n\nuint64_t offset \u003d bdev_io-\u003eu.bdev.offset_blocks;\nsize_t count_remaining \u003d bdev_io-\u003eu.bdev.num_blocks;\n\nwhile (count_remaining \u003e 0) {\n  /* do stuff */\n  offset++;\n  count_remaining--;\n}",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66bd6963_b00b0f20",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "13a787ad_758a3f57",
       "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -158,6 +248,42 @@
     },
     {
       "key": {
+        "uuid": "faedadcb_0765a52c",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "20021bed_26c34b94",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24a829f5_1cbddb31",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ad2bc420_b226b5e7",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc2d6bf4_569f058d",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 36
@@ -169,6 +295,24 @@
       "writtenOn": "2017-09-28T16:52:24Z",
       "side": 1,
       "message": "Make sure to remove flush from this list if we remove flush support (as noted above) and set write_cache \u003d 0.",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "988bbce4_76c1c84c",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc2d6bf4_569f058d",
       "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -192,6 +336,24 @@
     },
     {
       "key": {
+        "uuid": "0fe46a64_ad1bd3a6",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "24b0d49a_abc8c786",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65c77711_c1652a16",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 36
@@ -203,6 +365,24 @@
       "writtenOn": "2017-09-27T22:46:56Z",
       "side": 1,
       "message": "set this to 0 - there\u0027s no cache here (all writes are persistent - no need to flush)",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed3f4b77_ee9dcfa9",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65c77711_c1652a16",
       "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -255,6 +435,42 @@
       "writtenOn": "2017-09-28T17:29:24Z",
       "side": 1,
       "message": "I\u0027m fine with Daniel\u0027s suggestion.",
+      "parentUuid": "9a6f6e22_0c6edb49",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0dbd2e0_0a47c7f2",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a89c9fa2_16262407",
+      "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8fb4e47_d37729d7",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-09-29T07:45:07Z",
+      "side": 1,
+      "message": "Redirecting stderr to /dev/null doesn\u0027t display information if package is already installed, so i\u0027ll leave just || true.",
       "parentUuid": "9a6f6e22_0c6edb49",
       "revId": "eeb3faca47e98f1a1bf8fd2fa9894a573324f46a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
