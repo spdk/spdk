@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6fe073e_ef4b3fe1",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T22:33:54Z",
+      "side": 1,
+      "message": "you can use the lvs variable as the second argument",
+      "revId": "f22edfa1a0bea1a9f82c9bab56898a7ed55bab0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e936eb40_fef20401",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T22:33:54Z",
+      "side": 1,
+      "message": "lvs-\u003esuper_blob",
+      "revId": "f22edfa1a0bea1a9f82c9bab56898a7ed55bab0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b81cfe1f_c49496bc",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T22:33:54Z",
+      "side": 1,
+      "message": "you can make this lvs-\u003esuper_blob",
+      "revId": "f22edfa1a0bea1a9f82c9bab56898a7ed55bab0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1c3be33_3bed2483",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T22:33:54Z",
+      "side": 1,
+      "message": "lvs-\u003esuper_blob",
+      "revId": "f22edfa1a0bea1a9f82c9bab56898a7ed55bab0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "275f28cd_3c3c4599",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T22:33:54Z",
+      "side": 1,
+      "message": "lvs-\u003eblobstore",
+      "revId": "f22edfa1a0bea1a9f82c9bab56898a7ed55bab0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
