@@ -79,6 +79,9 @@ makes it explicit that the default is being used.
 spdk_bs_io_readv_blob() and spdk_bs_io_writev_blob() were added to enable
 scattered payloads.
 
+Add a CLI tool for blobstore allowing basic operations through either command
+line or shell interface.
+
 ### Event Framework
 
 The ability to set a thread name, previously only used by the reactor code, is
