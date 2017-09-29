@@ -69,9 +69,9 @@ function qemu_build_and_install()
 {
 	mkdir -p $QEMU_BUILD_DIR
 
-        cd $QEMU_SRC_DIR
-        make clean
-        cd $QEMU_BUILD_DIR
+	cd $QEMU_SRC_DIR
+	make clean
+	cd $QEMU_BUILD_DIR
 
 	echo "INFO: Configuring QEMU from source in $QEMU_SRC_DIR"
 	if type ccache > /dev/null 2>&1; then
