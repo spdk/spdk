@@ -55,7 +55,10 @@ int g_resize_rc;
 struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
 struct spdk_bs_opts g_bs_opts;
-struct spdk_blob_store {};
+
+struct spdk_blob_store {
+	int stub;
+};
 
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
