@@ -101,7 +101,7 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 void
-spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts)
+spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
 	memset(opts, 0, sizeof(*opts));
 }
