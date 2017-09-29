@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29e9e4f4_50619d0b",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 699,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-29T16:49:53Z",
+      "side": 1,
+      "message": "6 could be SPDK_COUNTOF(hw-\u003epci_bar) for clarity.",
+      "range": {
+        "startLine": 699,
+        "startChar": 17,
+        "endLine": 699,
+        "endChar": 18
+      },
+      "revId": "4e703d5de454325b6be0ab9e5133483b587478f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02d81109_20e49de8",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 700,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-29T16:49:53Z",
+      "side": 1,
+      "message": "Minor nitpick: we could change the type of bar_vaddr to void * instead of adding the cast.",
+      "range": {
+        "startLine": 700,
+        "startChar": 43,
+        "endLine": 700,
+        "endChar": 62
+      },
+      "revId": "4e703d5de454325b6be0ab9e5133483b587478f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
