@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "76821a7e_52986546",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T17:00:12Z",
+      "side": 1,
+      "message": "could most of the changes related to this function be part of a separate patch?",
+      "revId": "c1608d4a60c0f554ae24172e1b95e1260fd28675",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90d235f2_b3b6bb00",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T17:00:12Z",
+      "side": 1,
+      "message": "Suggest removing this line and replacing with:\n\nIf connecting to multiple controllers, it is suggested to use spdk_nvme_probe() and filter the requested controllers with the probe callback.  For PCIe controllers, spdk_nvme_probe() will be more efficient since the controller resets will happen in parallel.",
+      "revId": "c1608d4a60c0f554ae24172e1b95e1260fd28675",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
