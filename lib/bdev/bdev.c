@@ -1725,16 +1725,8 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 bool
 spdk_is_bdev_opened(struct spdk_bdev *bdev)
 {
-	struct spdk_bdev *base;
-
 	if (bdev->bdev_opened) {
 		return true;
-	}
-
-	TAILQ_FOREACH(base, &bdev->base_bdevs, base_bdev_link) {
-		if (spdk_is_bdev_opened(base)) {
-			return true;
-		}
 	}
 
 	return false;
