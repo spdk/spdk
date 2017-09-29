@@ -47,12 +47,25 @@
  * include it here.
  */
 #include "../lib/blob/blobstore.h"
+static void cli_start(void *arg1, void *arg2);
+static bool cli_shell(void *arg1, void *arg2);
 
 static const char *program_name = "blobcli";
 static const char *program_conf = "blobcli.conf";
 static const char *bdev_name = "Nvme0n1";
 
+/*
+ * CMD mode runs one command at a time which can be annoying as the init takes
+ * a few seconds, so the shell mode, invoked with -S, does the init once and gives
+ * the user an interactive shell instead.
+ */
+enum cli_mode_type {
+	CLI_MODE_CMD,
+	CLI_MODE_SHELL
+};
+
 enum cli_action_type {
+	CLI_NONE,
 	CLI_IMPORT,
 	CLI_DUMP,
 	CLI_FILL,
@@ -64,14 +77,22 @@ enum cli_action_type {
 	CLI_CREATE_BLOB,
 	CLI_LIST_BDEVS,
 	CLI_LIST_BLOBS,
-	CLI_INIT_BS
+	CLI_INIT_BS,
+	CLI_SHELL_EXIT,
+	CLI_HELP
 };
 #define BUFSIZE 255
 
-/* todo, scrub this as there may be some extra junk in here picked up along the way... */
+#define MAX_ARGS 6
+/*
+ * The CLI uses the SPDK app framework so is async and callback driven. A
+ * pointer to this structure is passed to SPDK calls and returned in the
+ * callbacks for easy access to all the info we may need.
+ */
 struct cli_context_t {
 	struct spdk_blob_store *bs;
 	struct spdk_blob *blob;
+	struct spdk_bs_dev *bs_dev;
 	spdk_blob_id blobid;
 	spdk_blob_id superid;
 	struct spdk_io_channel *channel;
@@ -91,7 +112,38 @@ struct cli_context_t {
 	int rc;
 	int num_clusters;
 	void (*next_func)(void *arg1, struct spdk_blob_store *bs, int bserrno);
+	enum cli_mode_type cli_mode;
+	const char *config_file;
+	int argc;
+	char *argv[MAX_ARGS];
+	bool app_started;
 };
+
+/*
+ * Common printing of commands for CLI and shell modes.
+ */
+static void
+print_cmds(char *msg)
+{
+	if (msg) {
+		printf("%s", msg);
+	}
+	printf("\nCommands include:\n");
+	printf("\t-d <blobid> filename - dump contents of a blob to a file\n");
+	printf("\t-f <blobid> value - fill a blob with a decimal value\n");
+	printf("\t-h - this help screen\n");
+	printf("\t-i - initialize a blobstore\n");
+	printf("\t-l bdevs | blobs - list either available bdevs or existing blobs\n");
+	printf("\t-m <blobid> filename - import contents of a file to a blob\n");
+	printf("\t-n <# clusters> - create new blob\n");
+	printf("\t-p <blobid> - set the superblob to the ID provided\n");
+	printf("\t-r <blobid> name - remove xattr name/value pair\n");
+	printf("\t-s <blobid> | bs - show blob info or blobstore info\n");
+	printf("\t-x <blobid> name value - set xattr name/value pair\n");
+	printf("\t-X - exit when in interactive shell mode\n");
+	printf("\t-S - enter interactive shell mode\n");
+	printf("\n");
+}
 
 /*
  * Prints usage and relevant error message.
@@ -108,18 +160,7 @@ usage(char *msg)
 	       program_name);
 	printf("on the underlying device specified in the conf file passed\n");
 	printf("in as a command line option.\n");
-	printf("\nCommands include:\n");
-	printf("\t-i - initialize a blobstore\n");
-	printf("\t-l bdevs | blobs - list either available bdevs or existing blobs\n");
-	printf("\t-n <# clusters> - create new blob\n");
-	printf("\t-p <blobid> - set the superblob to the ID provided\n");
-	printf("\t-s <blobid> | bs - show blob info or blobstore info\n");
-	printf("\t-x <blobid> name value - set xattr name/value pair\n");
-	printf("\t-r <blobid> name - remove xattr name/value pair\n");
-	printf("\t-f <blobid> value - fill a blob with a decimal value\n");
-	printf("\t-d <blobid> filename - dump contents of a blob to a file\n");
-	printf("\t-m <blobid> filename - import contents of a file to a blob\n");
-	printf("\n");
+	print_cmds("");
 }
 
 /*
@@ -128,11 +169,16 @@ usage(char *msg)
 static void
 cli_cleanup(struct cli_context_t *cli_context)
 {
+	int i;
+
 	if (cli_context->buff) {
 		spdk_dma_free(cli_context->buff);
 	}
 	if (cli_context->channel) {
 		spdk_bs_free_io_channel(cli_context->channel);
+	}
+	for (i = 0; i < MAX_ARGS; i++) {
+		free(cli_context->argv[i]);
 	}
 	free(cli_context);
 }
@@ -150,7 +196,18 @@ unload_complete(void *cb_arg, int bserrno)
 		cli_context->rc = bserrno;
 	}
 
-	spdk_app_stop(cli_context->rc);
+	/*
+	 * Quit if we're in cmd mode or exiting shell mode, otherwise
+	 * clear the action field and start the main function again.
+	 */
+	if (cli_context->cli_mode == CLI_MODE_CMD ||
+	    cli_context->action == CLI_SHELL_EXIT) {
+		spdk_app_stop(cli_context->rc);
+	} else {
+		/* when action is NONE, we know we need to remain in the shell */
+		cli_context->action = CLI_NONE;
+		cli_start(cli_context, NULL);
+	}
 }
 
 /*
@@ -163,6 +220,7 @@ unload_bs(struct cli_context_t *cli_context, char *msg, int bserrno)
 		printf("%s (err %d)\n", msg, bserrno);
 		cli_context->rc = bserrno;
 	}
+
 	if (cli_context->bs) {
 		spdk_bs_unload(cli_context->bs, unload_complete, cli_context);
 	} else {
@@ -874,7 +932,7 @@ load_bs(struct cli_context_t *cli_context)
  * Lists all the blobs on this blobstore.
  */
 static void
-list_bdevs(void)
+list_bdevs(struct cli_context_t *cli_context)
 {
 	struct spdk_bdev *bdev = NULL;
 
@@ -892,7 +950,12 @@ list_bdevs(void)
 	}
 
 	printf("\n");
-	spdk_app_stop(0);
+	if (cli_context->cli_mode == CLI_MODE_CMD) {
+		spdk_app_stop(0);
+	} else {
+		cli_context->action = CLI_NONE;
+		cli_start(cli_context, NULL);
+	}
 }
 
 /*
@@ -922,7 +985,6 @@ static void
 init_bs(struct cli_context_t *cli_context)
 {
 	struct spdk_bdev *bdev = NULL;
-	struct spdk_bs_dev *bs_dev = NULL;
 
 	bdev = spdk_bdev_get_by_name(cli_context->bdev_name);
 	if (bdev == NULL) {
@@ -933,14 +995,14 @@ init_bs(struct cli_context_t *cli_context)
 	printf("Blobstore using bdev Product Name: %s\n",
 	       spdk_bdev_get_product_name(bdev));
 
-	bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
-	if (bs_dev == NULL) {
+	cli_context->bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
+	if (cli_context->bs_dev == NULL) {
 		printf("Could not create blob bdev!!\n");
 		spdk_app_stop(-1);
 		return;
 	}
 
-	spdk_bs_init(bs_dev, NULL, bs_init_complete,
+	spdk_bs_init(cli_context->bs_dev, NULL, bs_init_complete,
 		     cli_context);
 }
 
@@ -953,7 +1015,14 @@ cli_start(void *arg1, void *arg2)
 {
 	struct cli_context_t *cli_context = arg1;
 
-	printf("\n");
+	/*
+	 * The initial cmd line options are parsed once before this function is
+	 * called so if there is no action, we're in shell mode and will loop
+	 * here until a a valid option is parsed and returned.
+	 */
+	if (cli_context->action == CLI_NONE) {
+		while (cli_shell(cli_context, NULL) == false);
+	}
 
 	/*
 	 * Decide what to do next based on cmd line parsing that
@@ -997,7 +1066,20 @@ cli_start(void *arg1, void *arg2)
 		init_bs(cli_context);
 		break;
 	case CLI_LIST_BDEVS:
-		list_bdevs();
+		list_bdevs(cli_context);
+		break;
+	case CLI_SHELL_EXIT:
+		/*
+		 * Because shell mode reuses cmd mode functions, the blobstore
+		 * is loaded/unloaded with every action so we just need to
+		 * stop the framework. For this app there's no need to optimize
+		 * and keep the blobstore open while the app is in shell mode.
+		 */
+		spdk_app_stop(0);
+		break;
+	case CLI_HELP:
+		print_cmds("");
+		unload_complete(cli_context, 0);
 		break;
 	default:
 		/* should never get here */
@@ -1006,78 +1088,107 @@ cli_start(void *arg1, void *arg2)
 	}
 }
 
-int
-main(int argc, char **argv)
+/*
+ * Common cmd/option parser for command and shell modes.
+ */
+static bool
+cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 {
-	struct spdk_app_opts opts = {};
-	struct cli_context_t *cli_context = NULL;
-	const char *config_file = NULL;
-	int rc = 0;
 	int op;
-	bool cmd_chosen = false;
+	int cmd_chosen = 0;
+	char resp;
 
-	if (argc < 2) {
-		usage("ERROR: Invalid option\n");
-		exit(1);
-	}
-
-	cli_context = calloc(1, sizeof(struct cli_context_t));
-	if (cli_context == NULL) {
-		printf("ERROR: could not allocate context structure\n");
-		exit(-1);
-	}
-	cli_context->bdev_name = bdev_name;
-
-	while ((op = getopt(argc, argv, "c:d:f:il:m:n:p:r:s:x:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:f:hil:m:n:p:r:s:SXx:")) != -1) {
 		switch (op) {
 		case 'c':
-			config_file = optarg;
+			if (cli_context->app_started == false) {
+				cmd_chosen++;
+				cli_context->config_file = optarg;
+			} else {
+				print_cmds("ERROR: -c option not valid during shell mode.\n");
+			}
 			break;
 		case 'd':
+			cmd_chosen++;
 			cli_context->action = CLI_DUMP;
 			cli_context->blobid = atoll(optarg);
 			break;
 		case 'f':
+			cmd_chosen++;
 			cli_context->action = CLI_FILL;
 			cli_context->blobid = atoll(optarg);
 			break;
+		case 'h':
+			cmd_chosen++;
+			cli_context->action = CLI_HELP;
+			break;
 		case 'i':
-			cli_context->action = CLI_INIT_BS;
+			printf("You entire blobstore will be destroyed. Are you sure? (y/n) ");
+			if (scanf("%c%*c", &resp)) {
+				if (resp == 'y' || resp == 'Y') {
+					cmd_chosen++;
+					cli_context->action = CLI_INIT_BS;
+				} else {
+					if (cli_context->cli_mode == CLI_MODE_CMD) {
+						exit(0);
+					}
+				}
+			}
 			break;
 		case 'r':
+			cmd_chosen++;
 			cli_context->action = CLI_REM_XATTR;
 			cli_context->blobid = atoll(optarg);
 			break;
 		case 'l':
 			if (strcmp("bdevs", optarg) == 0) {
+				cmd_chosen++;
 				cli_context->action = CLI_LIST_BDEVS;
 			} else if (strcmp("blobs", optarg) == 0) {
+				cmd_chosen++;
 				cli_context->action = CLI_LIST_BLOBS;
 			} else {
-				usage("ERROR: invalid option for list\n");
-				cli_cleanup(cli_context);
-				exit(-1);
+				if (cli_context->cli_mode == CLI_MODE_CMD) {
+					usage("ERROR: invalid option for list\n");
+					exit(-1);
+				} else {
+					print_cmds("ERROR: invalid option for list\n");
+				}
 			}
 			break;
 		case 'm':
+			cmd_chosen++;
 			cli_context->action = CLI_IMPORT;
 			cli_context->blobid = atoll(optarg);
 			break;
 		case 'n':
+			cmd_chosen++;
 			cli_context->num_clusters = atoi(optarg);
 			if (cli_context->num_clusters > 0) {
 				cli_context->action = CLI_CREATE_BLOB;
 			} else {
-				usage("ERROR: invalid option for new\n");
-				cli_cleanup(cli_context);
-				exit(-1);
+				if (cli_context->cli_mode == CLI_MODE_CMD) {
+					usage("ERROR: invalid option for new\n");
+					exit(-1);
+				} else {
+					print_cmds("ERROR: invalid option for new\n");
+				}
 			}
 			break;
 		case 'p':
+			cmd_chosen++;
 			cli_context->action = CLI_SET_SUPER;
 			cli_context->superid = atoll(optarg);
 			break;
+		case 'S':
+			if (cli_context->cli_mode == CLI_MODE_CMD) {
+				cli_context->action = CLI_NONE;
+				cli_context->cli_mode = CLI_MODE_SHELL;
+			}
+			cli_context->action = CLI_NONE;
+			break;
 		case 's':
+			cmd_chosen++;
 			if (strcmp("bs", optarg) == 0) {
 				cli_context->action = CLI_SHOW_BS;
 			} else {
@@ -1085,43 +1196,39 @@ main(int argc, char **argv)
 				cli_context->blobid = atoll(optarg);
 			}
 			break;
+		case 'X':
+			cmd_chosen++;
+			cli_context->action = CLI_SHELL_EXIT;
+			break;
 		case 'x':
+			cmd_chosen++;
 			cli_context->action = CLI_SET_XATTR;
 			cli_context->blobid = atoll(optarg);
 			break;
 		default:
-			usage("ERROR: Invalid option\n");
-			cli_cleanup(cli_context);
-			exit(1);
+			if (cli_context->cli_mode == CLI_MODE_CMD) {
+				usage("ERROR: invalid option\n");
+				exit(-1);
+			} else {
+				print_cmds("ERROR: invalid option\n");
+			}
 		}
 		/* config file is the only option that can be combined */
 		if (op != 'c') {
-			if (cmd_chosen) {
-				usage("Error: Please choose only one command\n");
-				cli_cleanup(cli_context);
-				exit(1);
-			} else {
-				cmd_chosen = true;
+			if (cmd_chosen > 1) {
+				if (cli_context->cli_mode == CLI_MODE_CMD) {
+					usage("Error: Please choose only one command\n");
+					cli_cleanup(cli_context);
+					exit(1);
+				} else {
+					print_cmds("Error: Please choose only one command\n");
+				}
 			}
 		}
 	}
 
-	if (cmd_chosen == false) {
+	if (cli_context->cli_mode == CLI_MODE_CMD && cmd_chosen == 0) {
 		usage("Error: Please choose a command.\n");
-		exit(1);
-	}
-
-	/* if they don't supply a conf name, use the default */
-	if (!config_file) {
-		config_file = program_conf;
-	}
-
-	/* if the config file doesn't exist, tell them how to make one */
-	if (access(config_file, F_OK) == -1) {
-		printf("Error: No config file found.\n");
-		printf("To create a config file named 'blobcli.conf' for your NVMe device:\n");
-		printf("   <path to spdk>/scripts/gen_nvme.sh > blobcli.conf\n");
-		printf("and then re-run the cli tool.\n");
 		exit(1);
 	}
 
@@ -1141,16 +1248,117 @@ main(int argc, char **argv)
 		cli_context->fill_value = atoi(argv[3]);
 	}
 
+	/* in shell mode we'll call getopt multiple times so need to reset its index */
+	optind = 0;
+	return (cmd_chosen > 0);
+}
+
+/*
+ * Provides for a shell interface as opposed to one shot command line.
+ */
+static bool
+cli_shell(void *arg1, void *arg2)
+{
+	struct cli_context_t *cli_context = arg1;
+	char *line = NULL;
+	ssize_t buf_size = 0;
+	ssize_t bytes_in = 0;
+	ssize_t tok_len = 0;
+	char *tok = NULL;
+	bool cmd_chosen = false;
+
+	printf("blob> ");
+	bytes_in = getline(&line, &buf_size, stdin);
+
+	/* parse input and update cli_context so we can use common option parser */
+	if (bytes_in > 0) {
+		tok = strtok(line, " ");
+	}
+	while (tok != NULL) {
+		strcpy(cli_context->argv[cli_context->argc], tok);
+		tok_len = strlen(tok);
+		cli_context->argc++;
+		tok = strtok(NULL, " ,.-");
+	}
+
+	/* replace newline on last arg with null */
+	if (tok_len > 0) {
+		cli_context->argv[cli_context->argc - 1][tok_len - 1] = '\0';
+	}
+
+	/* call parse cmd line with user input as args */
+	cmd_chosen = cmd_parser(cli_context->argc, &cli_context->argv[0], cli_context);
+
+	/* reset arg count for next shell interaction */
+	cli_context->argc = 1;
+
+	return cmd_chosen;
+}
+
+
+int
+main(int argc, char **argv)
+{
+	struct spdk_app_opts opts = {};
+	struct cli_context_t *cli_context = NULL;
+	int rc = 0;
+	int i;
+
+	if (argc < 2) {
+		usage("ERROR: Invalid option\n");
+		exit(1);
+	}
+
+	cli_context = calloc(1, sizeof(struct cli_context_t));
+	if (cli_context == NULL) {
+		printf("ERROR: could not allocate context structure\n");
+		exit(-1);
+	}
+	cli_context->bdev_name = bdev_name;
+	/* default to CMD mode until we've parsed the first parms */
+	cli_context->cli_mode = CLI_MODE_CMD;
+
+	/* for shell mode we keep our own set of argvs for cgetopt */
+	for (i = 0; i < MAX_ARGS; i++) {
+		cli_context->argv[i] = calloc(1, BUFSIZE);
+		if (cli_context->argv[i] == NULL) {
+			cli_cleanup(cli_context);
+			exit(-1);
+		}
+	}
+	strcpy(cli_context->argv[0], argv[0]);
+	cli_context->argc = 1;
+
+	/* parse command line */
+	cmd_parser(argc, argv, cli_context);
+
+	/* after displaying help, just exit */
+	if (cli_context->action == CLI_HELP) {
+		usage("");
+		cli_cleanup(cli_context);
+		exit(-1);
+	}
+
+	/* if they don't supply a conf name, use the default */
+	if (!cli_context->config_file) {
+		cli_context->config_file = program_conf;
+	}
+
+	/* if the config file doesn't exist, tell them how to make one */
+	if (access(cli_context->config_file, F_OK) == -1) {
+		printf("Error: No config file found.\n");
+		printf("To create a config file named 'blobcli.conf' for your NVMe device:\n");
+		printf("   <path to spdk>/scripts/gen_nvme.sh > blobcli.conf\n");
+		printf("and then re-run the cli tool.\n");
+		exit(1);
+	}
+
 	/* Set default values in opts struct along with name and conf file. */
 	spdk_app_opts_init(&opts);
 	opts.name = "blobcli";
-	opts.config_file = config_file;
+	opts.config_file = cli_context->config_file;
 
-	/*
-	 * spdk_app_start() will block running cli_start() until
-	 * spdk_app_stop() is called by someone (not simply when
-	 * cli_start() returns)
-	 */
+	cli_context->app_started = true;
 	rc = spdk_app_start(&opts, cli_start, cli_context, NULL);
 	if (rc) {
 		printf("ERROR!\n");
