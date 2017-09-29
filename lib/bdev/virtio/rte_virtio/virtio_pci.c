@@ -83,6 +83,23 @@ check_vq_phys_addr_ok(struct virtqueue *vq)
 	return 1;
 }
 
+static void
+free_virtio_hw(struct virtio_dev *dev)
+{
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	unsigned i;
+
+	for (i = 0; i < 6; ++i) {
+		if (hw->pci_bar[i].vaddr == NULL) {
+			continue;
+		}
+
+		spdk_pci_device_unmap_bar(hw->pci_dev, i, hw->pci_bar[i].vaddr);
+	}
+
+	free(hw);
+}
+
 /*
  * Since we are in legacy mode:
  * http://ozlabs.org/~rusty/virtio-spec/virtio-0.9.5.pdf
@@ -295,6 +312,7 @@ const struct virtio_pci_ops legacy_ops = {
 	.set_features	= legacy_set_features,
 	.get_isr	= legacy_get_isr,
 	.set_config_irq	= legacy_set_config_irq,
+	.free_vdev	= free_virtio_hw,
 	.set_queue_irq  = legacy_set_queue_irq,
 	.get_queue_num	= legacy_get_queue_num,
 	.setup_queue	= legacy_setup_queue,
@@ -503,6 +521,7 @@ const struct virtio_pci_ops modern_ops = {
 	.set_features	= modern_set_features,
 	.get_isr	= modern_get_isr,
 	.set_config_irq	= modern_set_config_irq,
+	.free_vdev	= free_virtio_hw,
 	.set_queue_irq  = modern_set_queue_irq,
 	.get_queue_num	= modern_get_queue_num,
 	.setup_queue	= modern_setup_queue,
@@ -692,6 +711,11 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	unsigned i;
 
 	hw = calloc(1, sizeof(*hw));
+	if (hw == NULL) {
+		PMD_DRV_LOG(ERR, "calloc failed");
+		return -1;
+	}
+
 	vdev = &hw->vdev;
 	vdev->is_hw = 1;
 	hw->pci_dev = pci_dev;
@@ -701,8 +725,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 					     &bar_len);
 		if (rc != 0) {
 			PMD_DRV_LOG(ERR, "failed to memmap PCI BAR %d", i);
-			free(hw);
-			return -1;
+			goto err;
 		}
 
 		hw->pci_bar[i].vaddr = bar_vaddr;
@@ -745,6 +768,10 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
 	return 0;
+
+err:
+	free_virtio_hw(vdev);
+	return -1;
 }
 
 int

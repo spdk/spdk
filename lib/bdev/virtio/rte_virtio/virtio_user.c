@@ -201,6 +201,14 @@ virtio_user_notify_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 			    strerror(errno));
 }
 
+static void
+virtio_user_free(struct virtio_dev *vdev)
+{
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+
+	virtio_user_dev_uninit(dev);
+}
+
 const struct virtio_pci_ops virtio_user_ops = {
 	.read_dev_cfg	= virtio_user_read_dev_config,
 	.write_dev_cfg	= virtio_user_write_dev_config,
@@ -211,6 +219,7 @@ const struct virtio_pci_ops virtio_user_ops = {
 	.set_features	= virtio_user_set_features,
 	.get_isr	= virtio_user_get_isr,
 	.set_config_irq	= virtio_user_set_config_irq,
+	.free_vdev	= virtio_user_free,
 	.set_queue_irq	= virtio_user_set_queue_irq,
 	.get_queue_num	= virtio_user_get_queue_num,
 	.setup_queue	= virtio_user_setup_queue,
