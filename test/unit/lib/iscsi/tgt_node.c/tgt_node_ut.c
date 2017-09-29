@@ -63,6 +63,12 @@ spdk_iscsi_portal_grp_find_by_tag(int tag)
 	return NULL;
 }
 
+struct spdk_iscsi_init_grp *
+spdk_iscsi_init_grp_find_by_tag(int tag)
+{
+	return NULL;
+}
+
 struct spdk_scsi_lun *
 spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 {
