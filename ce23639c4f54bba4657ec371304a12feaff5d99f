@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "620c7388_170855ec",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T17:22:53Z",
+      "side": 1,
+      "message": "oh - this is a good catch - originally I had an ENOMEM flag instead of just checking the nomem_io list but I took it out which broke this - thanks!!!",
+      "parentUuid": "b52ba98a_d27bae2e",
+      "revId": "ce23639c4f54bba4657ec371304a12feaff5d99f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a0d2e3b6_6cba2d2a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 11
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-29T06:52:17Z",
       "side": 1,
       "message": "For submission routine, you used TAILQ_INSERT_TAIL, and for the completion routine, here is TAILQ_INSERT_HEAD, do you mean 2 different Policy?",
+      "revId": "ce23639c4f54bba4657ec371304a12feaff5d99f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de9e505e_d35e2c74",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1483,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T17:22:53Z",
+      "side": 1,
+      "message": "yes - the idea here is that if there are some I/O on the nomem list already, new I/O go to the end of the list;  but when one of these I/O is retried and it fails again, we want it to go back to the front of the list, not the end, to keep order",
+      "parentUuid": "a0d2e3b6_6cba2d2a",
       "revId": "ce23639c4f54bba4657ec371304a12feaff5d99f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
