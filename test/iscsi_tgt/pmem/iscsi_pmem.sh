@@ -8,6 +8,8 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
+timing_enter iscsi_pmem
+
 # iSCSI target configuration
 PMEM_BDEVS=""
 PORT=3260
@@ -22,7 +24,7 @@ PMEM_PER_TGT=1
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
-timing_enter start_iscsi_tmt
+timing_enter start_iscsi_tgt
 
 $ISCSI_APP -c $testdir/iscsi.conf -m $ISCSI_TEST_CORE_MASK &
 pid=$!
@@ -33,7 +35,7 @@ trap "iscsicleanup; killprocess $pid; rm -f /tmp/pool_file*; exit 1" SIGINT SIGT
 waitforlisten $pid ${RPC_PORT}
 echo "iscsi_tgt is listening. Running tests..."
 
-timing_exit start_iscsi_pmem
+timing_exit start_iscsi_tgt
 
 $rpc_py add_portal_group 1 $TARGET_IP:$PORT
 for i in `seq 1 $TGT_NR`; do
