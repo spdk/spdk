@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbbb4021_897d222e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T00:08:02Z",
+      "side": 1,
+      "message": "would \"force_signal\" be a better name?",
+      "revId": "7587f620d5456d2bca029a088815b4a425e5da9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18c48883_d351c4ca",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T00:08:02Z",
+      "side": 1,
+      "message": "Would it be possible to run this logic in the context of the existing per-dev poller?\n\nFor example, vdev_worker just calls this function after it processes the vqs.  Should work for both scsi and blk.",
+      "revId": "7587f620d5456d2bca029a088815b4a425e5da9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cb86257_f4aa2d13",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T00:08:02Z",
+      "side": 1,
+      "message": "register_irg_poller \u003d\u003e register_irq_poller",
+      "revId": "7587f620d5456d2bca029a088815b4a425e5da9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c5c0771_0cc123cb",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T00:08:02Z",
+      "side": 1,
+      "message": "irg_poller \u003d\u003e irq_poller",
+      "revId": "7587f620d5456d2bca029a088815b4a425e5da9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
