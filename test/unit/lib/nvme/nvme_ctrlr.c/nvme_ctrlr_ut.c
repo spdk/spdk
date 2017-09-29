@@ -1411,16 +1411,45 @@ test_ctrlr_opts_set_defaults(void)
 	SPDK_CU_ASSERT_FATAL(sizeof(uuid) == sizeof(g_spdk_nvme_driver->default_extended_host_id));
 	memcpy(g_spdk_nvme_driver->default_extended_host_id, uuid, sizeof(uuid));
 
-	spdk_nvme_ctrlr_opts_set_defaults(&opts);
+	memset(&opts, 0, sizeof(opts));
+
+	/* set a smaller opts_size */
+	CU_ASSERT(sizeof(opts) > 8);
+	spdk_nvme_ctrlr_opts_set_defaults(&opts, 8);
+	CU_ASSERT_EQUAL(opts.num_io_queues, DEFAULT_MAX_IO_QUEUES);
+	CU_ASSERT_TRUE(opts.use_cmb_sqs);
+	/* check below fields are not initialized by default value */
+	CU_ASSERT_EQUAL(opts.arb_mechanism, 0);
+	CU_ASSERT_EQUAL(opts.keep_alive_timeout_ms, 0);
+	CU_ASSERT_EQUAL(opts.io_queue_size, 0);
+	CU_ASSERT_EQUAL(opts.io_queue_requests, 0);
+	for (int i = 0; i < 8; i++) {
+		CU_ASSERT(opts.host_id[i] == 0);
+	}
+	for (int i = 0; i < 16; i++) {
+		CU_ASSERT(opts.extended_host_id[i] == 0);
+	}
+	CU_ASSERT(strlen(opts.hostnqn) == 0);
+	CU_ASSERT(strlen(opts.src_addr) == 0);
+	CU_ASSERT(strlen(opts.src_svcid) == 0);
+
+	/* set a consistent opts_size */
+	spdk_nvme_ctrlr_opts_set_defaults(&opts, sizeof(opts));
 	CU_ASSERT_EQUAL(opts.num_io_queues, DEFAULT_MAX_IO_QUEUES);
 	CU_ASSERT_TRUE(opts.use_cmb_sqs);
 	CU_ASSERT_EQUAL(opts.arb_mechanism, SPDK_NVME_CC_AMS_RR);
 	CU_ASSERT_EQUAL(opts.keep_alive_timeout_ms, 10 * 1000);
 	CU_ASSERT_EQUAL(opts.io_queue_size, DEFAULT_IO_QUEUE_SIZE);
+	CU_ASSERT_EQUAL(opts.io_queue_requests, DEFAULT_IO_QUEUE_REQUESTS);
+	for (int i = 0; i < 8; i++) {
+		CU_ASSERT(opts.host_id[i] == 0);
+	}
 	CU_ASSERT_STRING_EQUAL(opts.hostnqn,
 			       "2014-08.org.nvmexpress:uuid:e53e9258-c93b-48b5-be1a-f025af6d232a");
 	CU_ASSERT(memcmp(opts.extended_host_id, g_spdk_nvme_driver->default_extended_host_id,
 			 sizeof(opts.extended_host_id)) == 0);
+	CU_ASSERT(strlen(opts.src_addr) == 0);
+	CU_ASSERT(strlen(opts.src_svcid) == 0);
 }
 
 #if 0 /* TODO: move to PCIe-specific unit test */
