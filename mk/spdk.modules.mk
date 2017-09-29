@@ -50,6 +50,11 @@ BLOCKDEV_MODULES_LIST += bdev_rbd
 BLOCKDEV_MODULES_DEPS += -lrados -lrbd
 endif
 
+ifeq ($(CONFIG_NVML),y)
+BLOCKDEV_MODULES_LIST += bdev_pmem
+BLOCKDEV_MODULES_DEPS += -lpmemblk
+endif
+
 COPY_MODULES_LIST = copy_ioat ioat
 
 BLOCKDEV_MODULES_LINKER_ARGS = -Wl,--whole-archive \
