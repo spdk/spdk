@@ -135,7 +135,7 @@ spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr
 }
 
 void
-spdk_nvme_ctrlr_opts_set_defaults(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
+spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
 	memset(opts, 0, sizeof(*opts));
 }

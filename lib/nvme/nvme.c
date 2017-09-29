@@ -320,7 +320,7 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
 	struct spdk_nvme_ctrlr *ctrlr;
 	struct spdk_nvme_ctrlr_opts opts;
 
-	spdk_nvme_ctrlr_opts_set_defaults(&opts, sizeof(opts));
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
 
 	if (probe_cb(cb_ctx, trid, &opts)) {
 		ctrlr = nvme_transport_ctrlr_construct(trid, &opts, devhandle);
