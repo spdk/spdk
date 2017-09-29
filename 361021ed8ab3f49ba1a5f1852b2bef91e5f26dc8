@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "70644c8e_d51274f6",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-09-29T19:36:51Z",
+      "side": 1,
+      "message": "Thanks, I realized I wasn\u0027t very consistent throughout this file so I changed all the declarations in the file to use tabs. I\u0027m not sure if that\u0027s the right way either though. Let me know if it still looks off.",
+      "parentUuid": "d2d808e4_0f736c6d",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e62cbdd_e3541416",
         "filename": "test/lib/nvme/unmap/unmap.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2017-09-27T22:09:50Z",
       "side": 1,
       "message": "would be easier to read by separating out the next sentence to its own printf - or at least use something like:\n\nprintf(\"Writing blocks 0 to %d blah blah\\n\"\n         \"On next read, read blah blah\\n\");",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "195f2eb8_5e633a7c",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-09-29T19:36:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2e62cbdd_e3541416",
       "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "f378bfc9_aafcd066",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-09-29T19:36:51Z",
+      "side": 1,
+      "message": "Thanks! I added it above. I still have to manually set these in between each namespace, so I moved this block to the end of the while loop to prevent from incrementing the counters over the number of blocks.",
+      "parentUuid": "7f13cb08_ad91d89a",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "748f7c40_ff820386",
         "filename": "test/lib/nvme/unmap/unmap.c",
         "patchSetId": 4
@@ -64,6 +118,24 @@
       "writtenOn": "2017-09-27T22:09:50Z",
       "side": 1,
       "message": "why the flush?",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a31664af_8874bb80",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-09-29T19:36:51Z",
+      "side": 1,
+      "message": "I had a misconception about what a flush would actually do. Your comment made me look closer at the spec, and I see now that Flush really only applies to write commands when volatile write cache is enabled.\n\nThanks!",
+      "parentUuid": "748f7c40_ff820386",
       "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "1c85d37b_e2fd4c62",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-09-29T19:36:51Z",
+      "side": 1,
+      "message": "Thanks! I\u0027ll remember that.",
+      "parentUuid": "fe1a0ecb_d43f70bf",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f66e3b3_da339c9f",
         "filename": "test/lib/nvme/unmap/unmap.c",
         "patchSetId": 4
@@ -98,6 +188,24 @@
       "writtenOn": "2017-09-27T22:09:50Z",
       "side": 1,
       "message": "you can remove some of these comments which were really suited for the hello_world app",
+      "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1207d4c4_df301869",
+        "filename": "test/lib/nvme/unmap/unmap.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-09-29T19:36:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1f66e3b3_da339c9f",
       "revId": "361021ed8ab3f49ba1a5f1852b2bef91e5f26dc8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
