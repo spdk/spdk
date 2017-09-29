@@ -1402,7 +1402,7 @@ test_nvme_ctrlr_set_supported_features(void)
 }
 
 static void
-test_ctrlr_opts_set_defaults(void)
+test_ctrlr_get_default_ctrlr_opts(void)
 {
 	struct spdk_nvme_ctrlr_opts opts = {};
 	uuid_t uuid;
@@ -1414,15 +1414,15 @@ test_ctrlr_opts_set_defaults(void)
 	memset(&opts, 0, sizeof(opts));
 
 	/* set a NULL opts pointer */
-	spdk_nvme_ctrlr_opts_set_defaults(NULL, 0);
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(NULL, 0);
 	CU_ASSERT_EQUAL(opts.num_io_queues, 0);
 
 	/* set an inconsistent opts_size */
-	spdk_nvme_ctrlr_opts_set_defaults(&opts, 0);
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, 0);
 	CU_ASSERT_EQUAL(opts.num_io_queues, 0);
 
 	/* set a valid opts pointer and consistent opts_size */
-	spdk_nvme_ctrlr_opts_set_defaults(&opts, sizeof(opts));
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
 	CU_ASSERT_EQUAL(opts.num_io_queues, DEFAULT_MAX_IO_QUEUES);
 	CU_ASSERT_TRUE(opts.use_cmb_sqs);
 	CU_ASSERT_EQUAL(opts.arb_mechanism, SPDK_NVME_CC_AMS_RR);
@@ -1567,7 +1567,7 @@ int main(int argc, char **argv)
 		|| CU_add_test(suite, "test nvme_ctrlr init CC.EN = 0 CSTS.RDY = 0 AMS = VS",
 			       test_nvme_ctrlr_init_en_0_rdy_0_ams_vs) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair_rr 1", test_alloc_io_qpair_rr_1) == NULL
-		|| CU_add_test(suite, "set_defaults", test_ctrlr_opts_set_defaults) == NULL
+		|| CU_add_test(suite, "get_default_ctrlr_opts", test_ctrlr_get_default_ctrlr_opts) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair_wrr 1", test_alloc_io_qpair_wrr_1) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair_wrr 2", test_alloc_io_qpair_wrr_2) == NULL
 		|| CU_add_test(suite, "test nvme ctrlr function update_firmware",
