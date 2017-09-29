@@ -57,10 +57,7 @@ static void
 virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 		     void *dst, int length)
 {
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
-
-	if (offset == offsetof(struct virtio_scsi_config, num_queues))
-		*(uint16_t *)dst = dev->max_queues;
+	PMD_DRV_LOG(ERR, "not supported offset=%zu, len=%d", offset, length);
 }
 
 static void

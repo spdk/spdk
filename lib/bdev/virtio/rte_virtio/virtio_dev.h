@@ -45,7 +45,10 @@
 struct virtio_dev {
 	struct virtqueue **vqs;
 	uint16_t	started;
-	uint32_t	max_queues;
+
+	/** Max number of queues the host supports. */
+	uint16_t	max_queues;
+
 	uint8_t		port_id;
 	uint64_t	req_guest_features;
 	uint64_t	guest_features;

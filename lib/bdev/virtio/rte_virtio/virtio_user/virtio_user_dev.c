@@ -105,7 +105,7 @@ virtio_user_queue_setup(struct virtio_user_dev *dev,
 {
 	uint32_t i;
 
-	for (i = 0; i < dev->max_queues; ++i) {
+	for (i = 0; i < dev->vdev.max_queues; ++i) {
 		if (fn(dev, i) < 0) {
 			PMD_DRV_LOG(INFO, "setup tx vq fails: %u", i);
 			return -1;
@@ -174,7 +174,7 @@ virtio_user_dev_init_notify(struct virtio_user_dev *dev)
 	int kickfd;
 
 	for (i = 0; i < VIRTIO_MAX_VIRTQUEUES; ++i) {
-		if (i >= dev->max_queues) {
+		if (i >= dev->vdev.max_queues) {
 			dev->kickfds[i] = -1;
 			dev->callfds[i] = -1;
 			continue;
@@ -229,7 +229,7 @@ virtio_user_dev_setup(struct virtio_user_dev *dev)
 }
 
 struct virtio_dev *
-virtio_user_dev_init(char *path, int queues, int queue_size)
+virtio_user_dev_init(char *path, int queue_size)
 {
 	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
@@ -242,8 +242,6 @@ virtio_user_dev_init(char *path, int queues, int queue_size)
 	VTPCI_OPS(vdev) = &virtio_user_ops;
 
 	snprintf(dev->path, PATH_MAX, "%s", path);
-	/* Account for control and event queue. */
-	dev->max_queues = queues + 2;
 	dev->queue_size = queue_size;
 
 	if (virtio_user_dev_setup(dev) < 0) {
@@ -256,10 +254,12 @@ virtio_user_dev_init(char *path, int queues, int queue_size)
 		goto err;
 	}
 
-	if (dev->max_queues > max_queues) {
-		PMD_INIT_LOG(ERR, "%d queues requested but only %lu supported", dev->max_queues, max_queues);
+	if (max_queues >= VIRTIO_MAX_VIRTQUEUES) {
+		PMD_INIT_LOG(ERR, "invalid get_queue_num value: %lu", max_queues);
 		goto err;
 	}
+
+	vdev->max_queues = max_queues;
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
 		PMD_INIT_LOG(ERR, "set_owner fails: %s", strerror(errno));
@@ -287,7 +287,7 @@ virtio_user_dev_uninit(struct virtio_user_dev *dev)
 
 	virtio_user_stop_device(dev);
 
-	for (i = 0; i < dev->max_queues; ++i) {
+	for (i = 0; i < dev->vdev.max_queues; ++i) {
 		close(dev->callfds[i]);
 		close(dev->kickfds[i]);
 	}
@@ -295,7 +295,7 @@ virtio_user_dev_uninit(struct virtio_user_dev *dev)
 	close(dev->vhostfd);
 
 	if (dev->vhostfds) {
-		for (i = 0; i < dev->max_queues; ++i)
+		for (i = 0; i < dev->vdev.max_queues; ++i)
 			close(dev->vhostfds[i]);
 		free(dev->vhostfds);
 		free(dev->tapfds);
