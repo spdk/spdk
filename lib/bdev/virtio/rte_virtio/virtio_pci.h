@@ -203,6 +203,8 @@ struct virtio_pci_ops {
 
 	uint16_t (*set_config_irq)(struct virtio_dev *hw, uint16_t vec);
 
+	/** Deinit and free virtio device */
+	void (*free_vdev)(struct virtio_dev *vdev);
 	uint16_t (*set_queue_irq)(struct virtio_dev *hw, struct virtqueue *vq,
 			uint16_t vec);
 
