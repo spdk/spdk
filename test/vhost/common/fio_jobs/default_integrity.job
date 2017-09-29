@@ -1,8 +1,8 @@
 [global]
 blocksize_range=4k-512k
-iodepth=128
-iodepth_batch=32
-iodepth_low=64
+iodepth=512
+iodepth_batch=128
+iodepth_low=256
 ioengine=libaio
 size=1G
 io_size=4G
