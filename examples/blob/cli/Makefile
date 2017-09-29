@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 APP = blobcli
 
 C_SRCS := blobcli.c
-
+CFLAGS += -O0
 SPDK_LIB_LIST = event_bdev event_copy
 SPDK_LIB_LIST += blobfs blob bdev blob_bdev copy event util conf trace \
 		log jsonrpc json rpc
