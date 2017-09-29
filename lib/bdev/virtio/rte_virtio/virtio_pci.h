@@ -218,6 +218,15 @@ struct virtio_hw {
 	uint32_t    notify_off_multiplier;
 	uint8_t     *isr;
 	uint16_t    *notify_base;
+
+	struct {
+		/** Mem-mapped resources from given PCI BAR */
+		void        *vaddr;
+
+		/** Length of the address space */
+		uint32_t    len;
+	} pci_bar[6];
+
 	struct virtio_pci_common_cfg *common_cfg;
 	struct spdk_pci_device *pci_dev;
 	struct virtio_scsi_config *dev_cfg;
