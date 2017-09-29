@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "594db5d3_0b48e5aa",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-09-29T01:14:52Z",
+      "side": 1,
+      "message": "Thank you. Make sense and I will do.",
+      "parentUuid": "9f4415cb_291500f0",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 159,
+        "endChar": 37
+      },
+      "revId": "de7282e2dbe6297718ebe4b2f844ee2113893c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98d447cb_412457b4",
         "filename": "lib/iscsi/tgt_node.c",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "5bdea449_a1d58fae",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-09-29T01:14:52Z",
+      "side": 1,
+      "message": "I kept the current implementation. I think bool is better. I will pull your feedback. Thank you.",
+      "parentUuid": "98d447cb_412457b4",
+      "range": {
+        "startLine": 186,
+        "startChar": 2,
+        "endLine": 186,
+        "endChar": 11
+      },
+      "revId": "de7282e2dbe6297718ebe4b2f844ee2113893c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "676fb2c5_27e0ddd9",
         "filename": "lib/iscsi/tgt_node.c",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2017-09-28T23:35:19Z",
       "side": 1,
       "message": "add ()",
+      "range": {
+        "startLine": 206,
+        "startChar": 5,
+        "endLine": 206,
+        "endChar": 19
+      },
+      "revId": "de7282e2dbe6297718ebe4b2f844ee2113893c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc8e90bd_e2be6cff",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-09-29T01:14:52Z",
+      "side": 1,
+      "message": "Please explain add() a little in detail, thank you.",
+      "parentUuid": "676fb2c5_27e0ddd9",
       "range": {
         "startLine": 206,
         "startChar": 5,
