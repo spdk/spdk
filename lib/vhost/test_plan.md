@@ -38,23 +38,20 @@
   data integrity check.
 - runs against vhost scsi and vhost blk
 
-#### NVMe-OF namespace on a Pmem device
-This test configures a SPDK NVMe-OF subsystem backed by pmem
+#### Vhost with NVML backends
+This test configures a SPDK vhost backed by pmem
 devices and uses FIO to generate I/Os that target those subsystems.
-The logical volume bdevs are backed by malloc bdevs.
 Test steps:
-- assign IP addresses to RDMA NICs.
-- start SPDK nvmf_tgt application.
+- start SPDK vhost application.
 - create 10 pmem pools.
 - create pmem bdevs on pmem pools.
-- create NVMe-OF subsystems with 10 pmem bdevs namespaces.
-- connect to NVMe-OF susbsystems with kernel initiator.
-- run FIO with workload parameters: blocksize=128MB, iodepth=64,
+- create controller with pmem bdev.
+- run FIO with workload parameters: blocksize=4k, iodepth=128,
     workload=randwrite; varify flag is enabled so that FIO reads and verifies
     the data written to the pmem device. The run time is 10 seconds for a
     quick test an 10 minutes for longer nightly test.
-- disconnect kernel initiator from NVMe-OF subsystems.
-- delete NVMe-OF subsystems from configuration.
+- disconnect qemu guests connecting to vhost controllers.
+- shutdown SPDK vhost application..
 
 #### Filesystem integrity
 - runs SPDK with 1 VM with 1 NVMe device attached.

@@ -1,0 +1,8 @@
+[global]
+  LogFacility "local7"
+
+[Rpc]
+  Enable Yes
+
+[Ioat]
+  Disable Yes
