@@ -608,7 +608,7 @@ bdev_virtio_initialize(void)
 				SPDK_ERRLOG("No path specified for index %d\n", i);
 				continue;
 			}
-			vdev = virtio_user_dev_init(path, 1, 512);
+			vdev = virtio_user_dev_init(path, 512);
 			if (vdev == NULL) {
 				goto out;
 			}

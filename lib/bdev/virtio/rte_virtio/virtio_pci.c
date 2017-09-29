@@ -37,6 +37,7 @@
  #include <fcntl.h>
 #endif
 
+#include <linux/virtio_scsi.h>
 #include <rte_io.h>
 
 #include "virtio_pci.h"
@@ -730,6 +731,9 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 	VTPCI_OPS(vdev) = &legacy_ops;
 	vdev->modern   = 0;
+
+	vtpci_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
+			      &vdev->max_queues, sizeof(vdev->max_queues));
 
 	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
 	return 0;
