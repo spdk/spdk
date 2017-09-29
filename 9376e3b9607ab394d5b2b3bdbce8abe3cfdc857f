@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "415000ca_f045216f",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-29T08:22:51Z",
+      "side": 1,
+      "message": "Can we have if() here? bdev_io-\u003etype is already checked so no need to have deffault case here.\n\nAlso rewriting this loops from\nfor () {\n   while() {\n      if (bdev_io-\u003etype \u003d\u003d READ) {\n           read()\n      } else {\n           write()\n      }\n   }\n}\n\nto\n\nif (bdev_io-\u003etype \u003d\u003d READ) {\n   for () {\n     while() {\n       read()\n     }\n   }\n} else {\n   for () {\n     while() {\n       write()\n     }\n   }\n}\n\nwould be much better to to avoid n * if()",
+      "range": {
+        "startLine": 132,
+        "startChar": 3,
+        "endLine": 132,
+        "endChar": 27
+      },
+      "revId": "9376e3b9607ab394d5b2b3bdbce8abe3cfdc857f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9caa28b_327623de",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-29T08:22:51Z",
+      "side": 1,
+      "message": "How about write?",
+      "range": {
+        "startLine": 144,
+        "startChar": 25,
+        "endLine": 144,
+        "endChar": 29
+      },
+      "revId": "9376e3b9607ab394d5b2b3bdbce8abe3cfdc857f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "487ab11b_36f29861",
+        "filename": "lib/bdev/pmem/bdev_pmem.h",
+        "patchSetId": 38
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-29T08:22:51Z",
+      "side": 1,
+      "message": "No need to have this include any more.",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 24
+      },
+      "revId": "9376e3b9607ab394d5b2b3bdbce8abe3cfdc857f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed2722c4_3a23c2aa",
+        "filename": "lib/bdev/pmem/bdev_pmem.h",
+        "patchSetId": 38
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-09-29T08:22:51Z",
+      "side": 1,
+      "message": "Artifact",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 20
+      },
+      "revId": "9376e3b9607ab394d5b2b3bdbce8abe3cfdc857f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
