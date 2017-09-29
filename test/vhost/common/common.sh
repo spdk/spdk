@@ -825,6 +825,52 @@ function vm_check_blk_location()
 	fi
 }
 
+function vm_create_ssh_config()
+{
+    local ssh_config="$VM_BASE_DIR/ssh_config"
+    if [[ ! -f $ssh_config ]]; then
+        (
+        echo "Host *"
+        echo "  ControlPersist=10m"
+        echo "  ConnectTimeout=2"
+        echo "  Compression=no"
+        echo "  ControlMaster=auto"
+        echo "  UserKnownHostsFile=/dev/null"
+        echo "  StrictHostKeyChecking=no"
+        echo "  User root"
+        echo "  ControlPath=$VM_BASE_DIR/%r@%h:%p.ssh"
+        echo ""
+        ) > $ssh_config
+    fi
+}
+
+function vms_prepare()
+{
+    for vm_num in `seq 0 $LOOP_RANGE`; do
+        vm_dir=$VM_BASE_DIR/$vm_num
+
+        qemu_mask_param="VM_${vm_num}_qemu_mask"
+
+        host_name="VM-${vm_num}-${!qemu_mask_param}"
+        echo "INFO: Setting up hostname: $host_name"
+        vm_ssh $vm_num "hostname $host_name"
+        vm_start_fio_server --fio-bin=$fio_bin $ls $vm_num
+    done
+}
+
+function vm_scp()
+{
+    vm_num_is_valid $1 || return 1
+    vm_create_ssh_config
+    local ssh_config="$VM_BASE_DIR/ssh_config"
+
+    local scp_cmd="scp -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
+        -P $(vm_ssh_socket $1) "
+
+    shift
+    $scp_cmd "$@"
+}
+
 # Shutdown or kill any running VM and SPDK APP.
 #
 function at_app_exit()
