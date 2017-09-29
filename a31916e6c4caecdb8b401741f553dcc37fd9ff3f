@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52bbe941_b7a2957d",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_user.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-09-29T16:53:37Z",
+      "side": 1,
+      "message": "Do we need to close(callfd) here, since it doesn\u0027t get inserted into dev-\u003ecallfds[] on this path?\n\n(I realize that this is just moving code around, but it would be good to fix it while we\u0027re here.)",
+      "revId": "a31916e6c4caecdb8b401741f553dcc37fd9ff3f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
