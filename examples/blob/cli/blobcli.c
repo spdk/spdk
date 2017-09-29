@@ -59,11 +59,13 @@ static const char *bdev_name = "Nvme0n1";
 /*
  * CMD mode runs one command at a time which can be annoying as the init takes
  * a few seconds, so the shell mode, invoked with -S, does the init once and gives
- * the user an interactive shell instead.
+ * the user an interactive shell instead. With script mode init is also done just
+ * once.
  */
 enum cli_mode_type {
 	CLI_MODE_CMD,
-	CLI_MODE_SHELL
+	CLI_MODE_SHELL,
+	CLI_MODE_SCRIPT
 };
 
 enum cli_action_type {
@@ -81,14 +83,15 @@ enum cli_action_type {
 	CLI_LIST_BLOBS,
 	CLI_INIT_BS,
 	CLI_SHELL_EXIT,
-	CLI_HELP
+	CLI_HELP,
 };
 
 #define BUFSIZE 255
-#define MAX_ARGS 6
+#define MAX_ARGS 16
 #define ALIGN_4K 4096
 #define STARTING_PAGE 0
 #define NUM_PAGES 1
+
 /*
  * The CLI uses the SPDK app framework so is async and callback driven. A
  * pointer to this structure is passed to SPDK calls and returned in the
@@ -121,7 +124,20 @@ struct cli_context_t {
 	int argc;
 	char *argv[MAX_ARGS];
 	bool app_started;
+	char script_file[BUFSIZE + 1];
 };
+
+/* we store a bunch of stuff in a global struct for use by scripting mode */
+#define MAX_SCRIPT_LINES 64
+#define MAX_SCRIPT_BLOBS 16
+struct cli_script_t {
+	spdk_blob_id blobid[MAX_SCRIPT_BLOBS];
+	int blobid_idx;
+	int max_index;
+	int cmdline_idx;
+	char *cmdline[MAX_SCRIPT_LINES];
+};
+struct cli_script_t g_script;
 
 /*
  * Common printing of commands for CLI and shell modes.
@@ -146,6 +162,7 @@ print_cmds(char *msg)
 	printf("\t-x <blobid> name value - set xattr name/value pair\n");
 	printf("\t-X - exit when in interactive shell mode\n");
 	printf("\t-S - enter interactive shell mode\n");
+	printf("\t-T <filename> - enter automated script mode\n");
 	printf("\n");
 }
 
@@ -176,6 +193,13 @@ cli_cleanup(struct cli_context_t *cli_context)
 	if (cli_context->buff) {
 		spdk_dma_free(cli_context->buff);
 	}
+	if (cli_context->cli_mode == CLI_MODE_SCRIPT) {
+		int i;
+
+		for (i = 0; i <= g_script.max_index; i++) {
+			free(g_script.cmdline[i]);
+		}
+	}
 	free(cli_context);
 }
 
@@ -200,7 +224,7 @@ unload_complete(void *cb_arg, int bserrno)
 	    cli_context->action == CLI_SHELL_EXIT) {
 		spdk_app_stop(cli_context->rc);
 	} else {
-		/* when action is NONE, we know we need to remain in the shell */
+		/* when action is CLI_NONE, we know we need to remain in the shell */
 		cli_context->action = CLI_NONE;
 		cli_start(cli_context, NULL);
 	}
@@ -314,6 +338,11 @@ blob_create_cb(void *arg1, spdk_blob_id blobid, int bserrno)
 
 	cli_context->blobid = blobid;
 	printf("New blob id %" PRIu64 "\n", cli_context->blobid);
+
+	/* if we're in script mode, we need info on all blobids for later */
+	if (cli_context->cli_mode == CLI_MODE_SCRIPT) {
+		g_script.blobid[g_script.blobid_idx++] = blobid;
+	}
 
 	/* We have to open the blob before we can do things like resize. */
 	spdk_bs_md_open_blob(cli_context->bs, cli_context->blobid,
@@ -569,7 +598,7 @@ read_dump_cb(void *arg1, int bserrno)
 				     NUM_PAGES, read_dump_cb, cli_context);
 	} else {
 		/* done reading */
-		printf("\nFile write complete.\n");
+		printf("\nFile write complete (to %s).\n", cli_context->file);
 		fclose(cli_context->fp);
 		spdk_bs_md_close_blob(&cli_context->blob, close_cb,
 				      cli_context);
@@ -618,7 +647,7 @@ write_imp_cb(void *arg1, int bserrno)
 				      NUM_PAGES, write_imp_cb, cli_context);
 	} else {
 		/* done writing */
-		printf("\nBlob import complete.\n");
+		printf("\nBlob import complete (from %s).\n", cli_context->file);
 		fclose(cli_context->fp);
 		spdk_bs_md_close_blob(&cli_context->blob, close_cb, cli_context);
 	}
@@ -709,11 +738,10 @@ write_cb(void *arg1, int bserrno)
 				      NUM_PAGES, write_cb, cli_context);
 	} else {
 		/* done writing */
-		printf("\nBlob fill complete.\n");
+		printf("\nBlob fill complete (with 0x%x).\n", cli_context->fill_value);
 		spdk_bs_md_close_blob(&cli_context->blob, close_cb,
 				      cli_context);
 	}
-
 }
 
 /*
@@ -743,7 +771,7 @@ fill_blob_cb(void *arg1, struct spdk_blob *blob, int bserrno)
 
 	memset(cli_context->buff, cli_context->fill_value,
 	       cli_context->page_size);
-	printf("\n");
+	printf("Working");
 	spdk_bs_io_write_blob(cli_context->blob, cli_context->channel,
 			      cli_context->buff,
 			      STARTING_PAGE, NUM_PAGES, write_cb, cli_context);
@@ -927,7 +955,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 	int cmd_chosen = 0;
 	char resp;
 
-	while ((op = getopt(argc, argv, "c:d:f:hil:m:n:p:r:s:SXx:")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:f:hil:m:n:p:r:s:ST:Xx:")) != -1) {
 		switch (op) {
 		case 'c':
 			if (cli_context->app_started == false) {
@@ -952,16 +980,21 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			cli_context->action = CLI_HELP;
 			break;
 		case 'i':
-			printf("You entire blobstore will be destroyed. Are you sure? (y/n) ");
-			if (scanf("%c%*c", &resp)) {
-				if (resp == 'y' || resp == 'Y') {
-					cmd_chosen++;
-					cli_context->action = CLI_INIT_BS;
-				} else {
-					if (cli_context->cli_mode == CLI_MODE_CMD) {
-						exit(0);
+			if (cli_context->cli_mode != CLI_MODE_SCRIPT) {
+				printf("You entire blobstore will be destroyed. Are you sure? (y/n) ");
+				if (scanf("%c%*c", &resp)) {
+					if (resp == 'y' || resp == 'Y') {
+						cmd_chosen++;
+						cli_context->action = CLI_INIT_BS;
+					} else {
+						if (cli_context->cli_mode == CLI_MODE_CMD) {
+							exit(0);
+						}
 					}
 				}
+			} else {
+				cmd_chosen++;
+				cli_context->action = CLI_INIT_BS;
 			}
 			break;
 		case 'r':
@@ -1011,7 +1044,6 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			break;
 		case 'S':
 			if (cli_context->cli_mode == CLI_MODE_CMD) {
-				cli_context->action = CLI_NONE;
 				cli_context->cli_mode = CLI_MODE_SHELL;
 			}
 			cli_context->action = CLI_NONE;
@@ -1023,6 +1055,14 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			} else {
 				cli_context->action = CLI_SHOW_BLOB;
 				cli_context->blobid = atoll(optarg);
+			}
+			break;
+		case 'T':
+			if (cli_context->cli_mode == CLI_MODE_CMD) {
+				cli_context->cli_mode = CLI_MODE_SCRIPT;
+				snprintf(cli_context->script_file, BUFSIZE, "%s", optarg);
+			} else {
+				cli_context->action = CLI_NONE;
 			}
 			break;
 		case 'X':
@@ -1085,6 +1125,123 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 }
 
 /*
+ * In script mode, we parsed a script file at startup and saved off a bunch of cmd
+ * lines that we now parse with each run of cli_start so we us the same cmd parser
+ * as cmd and shell modes.
+ */
+static bool
+line_parser(struct cli_context_t *cli_context)
+{
+	bool cmd_chosen;
+	char *tok = NULL;
+	int blob_num = 0;
+	int start_idx = cli_context->argc;
+	int i;
+
+	tok = strtok(g_script.cmdline[g_script.cmdline_idx], " ");
+	while (tok != NULL) {
+		/*
+		 * We support one replaceable token right now, a $Bn
+		 * represents the blobid that was created in position n
+		 * so fish this out now and use it here.
+		 */
+		cli_context->argv[cli_context->argc] = strdup(tok);
+		if (tok[0] == '$' && tok[1] == 'B') {
+			tok += 2;
+			blob_num = atoi(tok);
+			cli_context->argv[cli_context->argc] =
+				realloc(cli_context->argv[cli_context->argc], BUFSIZE);
+			if (cli_context->argv[cli_context->argc] == NULL) {
+				printf("ERROR: unable to realloc memory\n");
+				for (i = start_idx; i < cli_context->argc; i++) {
+					free(cli_context->argv[i]);
+				}
+				cli_cleanup(cli_context);
+				exit(-1);
+			}
+			snprintf(cli_context->argv[cli_context->argc], BUFSIZE,
+				 "%" PRIu64, g_script.blobid[blob_num]);
+		}
+		cli_context->argc++;
+		tok = strtok(NULL, " ");
+	}
+
+	/* call parse cmd line with user input as args */
+	cmd_chosen = cmd_parser(cli_context->argc, &cli_context->argv[0], cli_context);
+
+	/* free strdup memory and reset arg count for next shell interaction */
+	for (i = start_idx; i < cli_context->argc; i++) {
+		free(cli_context->argv[i]);
+	}
+	cli_context->argc = 1;
+
+	g_script.cmdline_idx++;
+	assert(g_script.cmdline_idx < MAX_SCRIPT_LINES);
+
+	return cmd_chosen;
+}
+
+/*
+ * For script mode, we read a series of commands from a text file and store them
+ * in a global struct. That, along with the cli_mode that tells us we're in
+ * script mode is what feeds the rest of the app in the same way as is it were
+ * getting commands from shell mode.
+ */
+static void
+parse_script(struct cli_context_t *cli_context)
+{
+	FILE *fp = NULL;
+	size_t bufsize = BUFSIZE;
+	int64_t bytes_in = 0;
+	int i = 0;
+
+	/* initialize global script values */
+	for (i = 0; i < MAX_SCRIPT_BLOBS; i++) {
+		g_script.blobid[i] = 0;
+	}
+	g_script.blobid_idx = 0;
+	g_script.cmdline_idx = 0;
+	i = 0;
+
+	fp = fopen(cli_context->script_file, "r");
+	if (fp == NULL) {
+		printf("ERROR: unable to open script: %s\n",
+		       cli_context->script_file);
+		cli_cleanup(cli_context);
+		exit(-1);
+	}
+
+	do {
+		bytes_in = getline(&g_script.cmdline[i], &bufsize, fp);
+		if (bytes_in > 0) {
+			/* replace newline with null */
+			spdk_str_chomp(g_script.cmdline[i]);
+
+			/* ignore comments */
+			if (g_script.cmdline[i][0] != '#') {
+				i++;
+			}
+		}
+	} while (bytes_in != -1 && i < MAX_SCRIPT_LINES);
+	fclose(fp);
+
+	/* add an exit cmd in case they didn't */
+	g_script.cmdline[i] = realloc(g_script.cmdline[i], BUFSIZE);
+	if (g_script.cmdline[i] == NULL)  {
+		int j;
+
+		printf("ERROR: unable to alloc memory.\n");
+		for (j = 0; j < i; j++) {
+			free(g_script.cmdline[j]);
+		}
+		cli_cleanup(cli_context);
+		exit(-1);
+	}
+	snprintf(g_script.cmdline[i], BUFSIZE, "%s", "-X");
+	g_script.max_index = i;
+}
+
+/*
  * Provides for a shell interface as opposed to one shot command line.
  */
 static bool
@@ -1141,6 +1298,18 @@ static void
 cli_start(void *arg1, void *arg2)
 {
 	struct cli_context_t *cli_context = arg1;
+
+	/*
+	 * If we're in script mode, we already have a list of commands so
+	 * just need to pull them out one at a time and process them.
+	 */
+	if (cli_context->cli_mode == CLI_MODE_SCRIPT) {
+		if (line_parser(cli_context) == false) {
+			/* error on processing a line from the script */
+			cli_cleanup(cli_context);
+			exit(1);
+		}
+	}
 
 	/*
 	 * The initial cmd line options are parsed once before this function is
@@ -1238,6 +1407,19 @@ main(int argc, char **argv)
 		printf("   <path to spdk>/scripts/gen_nvme.sh > blobcli.conf\n");
 		printf("and then re-run the cli tool.\n");
 		exit(1);
+	}
+
+	/*
+	 * For script mode we keep a bunch of stuff in a gobal since
+	 * none if it is passed back and forth to SPDK.
+	 */
+	if (cli_context->cli_mode == CLI_MODE_SCRIPT) {
+		/*
+		 * Now we'll build up the global which will direct this run of the app
+		 * as it will have a list (g_script) of all of the commands line by
+		 * line as if they were typed in on the shell at cmd line.
+		 */
+		parse_script(cli_context);
 	}
 
 	/* Set default values in opts struct along with name and conf file. */
