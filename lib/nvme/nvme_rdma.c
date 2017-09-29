@@ -1192,7 +1192,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 		return rc;
 	}
 
-	spdk_nvme_ctrlr_opts_set_defaults(&discovery_opts, sizeof(discovery_opts));
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&discovery_opts, sizeof(discovery_opts));
 	/* For discovery_ctrlr set the timeout to 0 */
 	discovery_opts.keep_alive_timeout_ms = 0;
 
