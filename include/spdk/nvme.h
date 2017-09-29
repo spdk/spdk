@@ -147,6 +147,15 @@ struct spdk_nvme_ctrlr_opts {
 };
 
 /**
+ * \brief Get the default options for the creation of a specific NVMe controller.
+ *
+ * \param[out] opts Will be filled with the default option.
+ * \param opts_size Must be set to sizeof(struct spdk_nvme_ctrlr_opts).
+ */
+void spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts,
+		size_t opts_size);
+
+/**
  * NVMe library transports
  *
  * NOTE: These are mapped directly to the NVMe over Fabrics TRTYPE values, except for PCIe,
