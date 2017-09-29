@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b95bc9cd_b98430e5",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-29T09:24:00Z",
+      "side": 1,
+      "message": "Please see comment below.\nI think this logic for already claimed bdev should be moved to spdk_bdev_module_release_bdev() and spdk_bdev_module_claim_bdev().",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 28
+      },
+      "revId": "908a235b5b82b2290369ad4fa4393b1cda145e05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18e40f87_f5151024",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-09-29T09:24:00Z",
+      "side": 1,
+      "message": "This unit test should have detected lack of \"claim\" before this patch. Unfortunately logic for exclusive open of bdev was removed so spdk_bdev_create_bs_dev() stub here does not reflect how it works now.",
+      "range": {
+        "startLine": 477,
+        "startChar": 0,
+        "endLine": 482,
+        "endChar": 29
+      },
+      "revId": "908a235b5b82b2290369ad4fa4393b1cda145e05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
