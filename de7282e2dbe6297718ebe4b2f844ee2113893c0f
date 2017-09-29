@@ -140,6 +140,30 @@
       "revId": "de7282e2dbe6297718ebe4b2f844ee2113893c0f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41c58624_8ef7c9aa",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-09-29T18:09:25Z",
+      "side": 1,
+      "message": "I think Ziye was suggesting to add parentheses and change this line to:\n\nif ((name[0] \u003d\u003d \u0027!\u0027)\n\nthen it makes it clear that this clause ends here and does not continue to the next line",
+      "parentUuid": "bc8e90bd_e2be6cff",
+      "range": {
+        "startLine": 206,
+        "startChar": 5,
+        "endLine": 206,
+        "endChar": 19
+      },
+      "revId": "de7282e2dbe6297718ebe4b2f844ee2113893c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
