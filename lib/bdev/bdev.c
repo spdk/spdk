@@ -1652,12 +1652,6 @@ spdk_is_bdev_opened(struct spdk_bdev *bdev)
 		return true;
 	}
 
-	TAILQ_FOREACH(base, &bdev->base_bdevs, base_bdev_link) {
-		if (spdk_is_bdev_opened(base)) {
-			return true;
-		}
-	}
-
 	return false;
 }
 
