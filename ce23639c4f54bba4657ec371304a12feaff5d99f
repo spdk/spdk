@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b52ba98a_d27bae2e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-29T06:52:17Z",
+      "side": 1,
+      "message": "I think currently the block channel is 0 or BDEV_CH_RESET_IN_PROGRESS, so it cannot hit the condition.",
+      "revId": "ce23639c4f54bba4657ec371304a12feaff5d99f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0d2e3b6_6cba2d2a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1483,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-29T06:52:17Z",
+      "side": 1,
+      "message": "For submission routine, you used TAILQ_INSERT_TAIL, and for the completion routine, here is TAILQ_INSERT_HEAD, do you mean 2 different Policy?",
+      "revId": "ce23639c4f54bba4657ec371304a12feaff5d99f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
