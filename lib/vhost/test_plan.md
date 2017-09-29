@@ -38,6 +38,21 @@
   data integrity check.
 - runs against vhost scsi and vhost blk
 
+#### Vhost with NVML backends
+This test configures a SPDK vhost backed by pmem
+devices and uses FIO to generate I/Os that target those subsystems.
+Test steps:
+- start SPDK vhost application.
+- create 10 pmem pools.
+- create pmem bdevs on pmem pools.
+- create controller with pmem bdev.
+- run FIO with workload parameters: blocksize=4k, iodepth=128,
+    workload=randwrite; varify flag is enabled so that FIO reads and verifies
+    the data written to the pmem device. The run time is 10 seconds for a
+    quick test an 10 minutes for longer nightly test.
+- disconnect qemu guests connecting to vhost controllers.
+- shutdown SPDK vhost application..
+
 #### Filesystem integrity
 - runs SPDK with 1 VM with 1 NVMe device attached.
 - creates a partition table and filesystem on passed device, and mounts it
