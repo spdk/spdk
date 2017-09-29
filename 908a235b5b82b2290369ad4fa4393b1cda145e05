@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "527ebeec_7f65e00c",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-29T10:08:34Z",
+      "side": 1,
+      "message": "Actually create bs dev calls open_bdev which also checks if bsev is claimed, so check stays here, but lvol_already_opened \u003d true has been moved to claim function.",
+      "parentUuid": "b95bc9cd_b98430e5",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 28
+      },
+      "revId": "908a235b5b82b2290369ad4fa4393b1cda145e05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18e40f87_f5151024",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 10
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-29T09:24:00Z",
       "side": 1,
       "message": "This unit test should have detected lack of \"claim\" before this patch. Unfortunately logic for exclusive open of bdev was removed so spdk_bdev_create_bs_dev() stub here does not reflect how it works now.",
+      "range": {
+        "startLine": 477,
+        "startChar": 0,
+        "endLine": 482,
+        "endChar": 29
+      },
+      "revId": "908a235b5b82b2290369ad4fa4393b1cda145e05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68b8b3f6_44e39a7f",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-09-29T10:08:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "18e40f87_f5151024",
       "range": {
         "startLine": 477,
         "startChar": 0,
