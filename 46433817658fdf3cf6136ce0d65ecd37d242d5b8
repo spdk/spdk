@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7031ddfe_7d50c547",
+        "filename": "scripts/perf/nvme/run_fio_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-30T13:19:11Z",
+      "side": 1,
+      "message": "I think we should do the check once and setting a lat and lat_unit variable. \nLike this:\n if \u0027lat_ns\u0027 in data[\u0027jobs\u0027][job_pos][\u0027read\u0027]:\n            lat\u003d\u0027lat_ns\u0027\n            lat_units\u003d\u0027ns\u0027\n        else:\n            lat\u003d\u0027lat\u0027\n            lat_units\u003d\u0027usec\u0027",
+      "range": {
+        "startLine": 72,
+        "startChar": 8,
+        "endLine": 72,
+        "endChar": 53
+      },
+      "revId": "46433817658fdf3cf6136ce0d65ecd37d242d5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ec29ada_25f614cd",
+        "filename": "scripts/perf/nvme/run_fio_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-30T13:19:11Z",
+      "side": 1,
+      "message": "Then change this to use lat instead of \u0027lat\u0027 or \u0027lat_ns\u0027\nLike this:\nread_avg_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027read\u0027][lat][\u0027mean\u0027])\n        read_min_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027read\u0027][lat][\u0027min\u0027])\n        read_max_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027read\u0027][lat][\u0027max\u0027])\n        write_iops \u003d float(data[\u0027jobs\u0027][job_pos][\u0027write\u0027][\u0027iops\u0027])\n        write_bw \u003d float(data[\u0027jobs\u0027][job_pos][\u0027write\u0027][\u0027bw\u0027])\n        write_avg_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027write\u0027][lat][\u0027mean\u0027])\n        write_min_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027write\u0027][lat][\u0027min\u0027])\n        write_max_lat \u003d float(data[\u0027jobs\u0027][job_pos][\u0027write\u0027][lat][\u0027max\u0027])",
+      "range": {
+        "startLine": 73,
+        "startChar": 12,
+        "endLine": 79,
+        "endChar": 77
+      },
+      "revId": "46433817658fdf3cf6136ce0d65ecd37d242d5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "678a9acb_9258d2d9",
+        "filename": "scripts/perf/nvme/run_fio_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-30T13:19:11Z",
+      "side": 1,
+      "message": "Needs to change to account for different units usec or ns.\n\"Read Avg. Lat(\"+lat_units+\")\"",
+      "range": {
+        "startLine": 93,
+        "startChar": 46,
+        "endLine": 93,
+        "endChar": 63
+      },
+      "revId": "46433817658fdf3cf6136ce0d65ecd37d242d5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c2154be_9003eb0c",
+        "filename": "scripts/perf/nvme/run_fio_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-30T13:19:11Z",
+      "side": 1,
+      "message": "Change to \"Read Min. Lat(\"+lat_units+\")\"",
+      "range": {
+        "startLine": 94,
+        "startChar": 23,
+        "endLine": 94,
+        "endChar": 40
+      },
+      "revId": "46433817658fdf3cf6136ce0d65ecd37d242d5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce020168_fdd2ed5a",
+        "filename": "scripts/perf/nvme/run_fio_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-30T13:19:11Z",
+      "side": 1,
+      "message": "Change to \"Read Max. Lat(\"+lat_units+\")\"",
+      "range": {
+        "startLine": 94,
+        "startChar": 54,
+        "endLine": 94,
+        "endChar": 71
+      },
+      "revId": "46433817658fdf3cf6136ce0d65ecd37d242d5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af232663_235e3276",
+        "filename": "scripts/perf/nvme/run_fio_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-30T13:19:11Z",
+      "side": 1,
+      "message": "Change to \"Write Avg. Lat(\"+lat_units+\")\"",
+      "range": {
+        "startLine": 95,
+        "startChar": 46,
+        "endLine": 95,
+        "endChar": 66
+      },
+      "revId": "46433817658fdf3cf6136ce0d65ecd37d242d5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e58161a2_f6d3c9d0",
+        "filename": "scripts/perf/nvme/run_fio_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-30T13:19:11Z",
+      "side": 1,
+      "message": "Change to \"Write Max. Lat(\"+lat_units+\")\"",
+      "range": {
+        "startLine": 96,
+        "startChar": 54,
+        "endLine": 96,
+        "endChar": 74
+      },
+      "revId": "46433817658fdf3cf6136ce0d65ecd37d242d5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3031e3a_35054a1f",
+        "filename": "scripts/perf/nvme/run_fio_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-09-30T13:19:11Z",
+      "side": 1,
+      "message": "Change to \"Write Min. Lat(\"+lat_units+\")\"",
+      "range": {
+        "startLine": 96,
+        "startChar": 22,
+        "endLine": 96,
+        "endChar": 42
+      },
+      "revId": "46433817658fdf3cf6136ce0d65ecd37d242d5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
