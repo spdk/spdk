@@ -398,7 +398,7 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 			TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
 				if (pg->tag != pg_tag)
 					continue;
-				TAILQ_FOREACH(p, &pg->head, tailq) {
+				TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
 					if (alloc_len - total < 1) {
 						pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 						SPDK_ERRLOG("data space small %d\n", alloc_len);

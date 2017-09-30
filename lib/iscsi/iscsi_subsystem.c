@@ -147,7 +147,7 @@ spdk_iscsi_config_dump_portal_groups(FILE *fp)
 		if (NULL == pg) continue;
 		fprintf(fp, PORTAL_GROUP_TMPL, pg->tag, pg->tag);
 		/* Dump portals */
-		TAILQ_FOREACH(p, &pg->head, tailq) {
+		TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
 			if (NULL == p) continue;
 			fprintf(fp, PORTAL_TMPL, p->host, p->port);
 		}

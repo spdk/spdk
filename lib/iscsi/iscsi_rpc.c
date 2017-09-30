@@ -638,7 +638,7 @@ spdk_rpc_get_portal_groups(struct spdk_jsonrpc_request *request,
 
 		spdk_json_write_name(w, "portals");
 		spdk_json_write_array_begin(w);
-		TAILQ_FOREACH(portal, &pg->head, tailq) {
+		TAILQ_FOREACH(portal, &pg->head, per_pg_tailq) {
 			spdk_json_write_object_begin(w);
 			spdk_json_write_name(w, "host");
 			spdk_json_write_string(w, portal->host);
@@ -737,7 +737,7 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 	struct rpc_portal_group req = {};
 	struct spdk_iscsi_portal *portal_list[MAX_PORTAL] = {};
 	struct spdk_json_write_ctx *w;
-	size_t i;
+	size_t i = 0;
 	int rc = -1;
 
 	if (spdk_json_decode_object(params, rpc_portal_group_decoders,
@@ -773,8 +773,8 @@ out:
 	} else {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 
-		for (i = 0; i < req.portal_list.num_portals; i++) {
-			spdk_iscsi_portal_destroy(portal_list[i]);
+		for (; i > 0; --i) {
+			spdk_iscsi_portal_destroy(portal_list[i - 1]);
 		}
 	}
 	free_rpc_portal_group(&req);
