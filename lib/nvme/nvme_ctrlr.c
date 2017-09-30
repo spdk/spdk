@@ -619,6 +619,61 @@ nvme_ctrlr_set_state(struct spdk_nvme_ctrlr *ctrlr, enum nvme_ctrlr_state state,
 	}
 }
 
+static void
+nvme_ctrlr_free_doorbell_buffer(struct spdk_nvme_ctrlr *ctrlr)
+{
+	if (ctrlr->shadow_doorbell) {
+		spdk_dma_free(ctrlr->shadow_doorbell);
+		ctrlr->shadow_doorbell = NULL;
+	}
+
+	if (ctrlr->eventidx) {
+		spdk_dma_free(ctrlr->eventidx);
+		ctrlr->eventidx = NULL;
+	}
+}
+
+static int
+nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
+{
+	int rc;
+	struct nvme_completion_poll_status status;
+	uint64_t prp1, prp2;
+
+	if (ctrlr->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		return 0;
+	}
+
+	/* 1 CC.MPS is supported */
+	ctrlr->shadow_doorbell = spdk_dma_zmalloc(ctrlr->page_size, 0x1000, &prp1);
+	if (ctrlr->shadow_doorbell == NULL) {
+		return -1;
+	}
+
+	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, 0x1000, &prp2);
+	if (ctrlr->eventidx == NULL) {
+		spdk_dma_free(ctrlr->shadow_doorbell);
+		ctrlr->shadow_doorbell = NULL;
+		return -1;
+	}
+
+	status.done = false;
+	rc = nvme_ctrlr_cmd_doorbell_buffer_config(ctrlr, prp1, prp2,
+			nvme_completion_poll_cb, &status);
+	if (rc != 0) {
+		return -1;
+	}
+
+	while (status.done == false) {
+		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
+	}
+	if (spdk_nvme_cpl_is_error(&status.cpl)) {
+		return -1;
+	}
+
+	return 0;
+}
+
 int
 spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -654,6 +709,9 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	TAILQ_FOREACH(qpair, &ctrlr->active_io_qpairs, tailq) {
 		nvme_qpair_disable(qpair);
 	}
+
+	/* Doorbell buffer config is invalid via reset */
+	nvme_ctrlr_free_doorbell_buffer(ctrlr);
 
 	/* Set the state back to INIT to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
@@ -1511,6 +1569,16 @@ nvme_ctrlr_start(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
 	}
 
+	if (ctrlr->cdata.oacs.doorbell_buffer_config) {
+		ctrlr->flags |= SPDK_NVME_CTRLR_DB_BUF_CFG_SUPPORTED;
+
+		if (nvme_ctrlr_set_doorbell_buffer_config(ctrlr)) {
+			SPDK_WARNLOG("Doorbell buffer config failed\n");
+			nvme_ctrlr_free_doorbell_buffer(ctrlr);
+		}
+	}
+
+
 	if (nvme_ctrlr_set_keep_alive_timeout(ctrlr) != 0) {
 		SPDK_ERRLOG("Setting keep alive timeout failed\n");
 		return -1;
@@ -1597,6 +1665,8 @@ nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 	TAILQ_FOREACH_SAFE(qpair, &ctrlr->active_io_qpairs, tailq, tmp) {
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
+
+	nvme_ctrlr_free_doorbell_buffer(ctrlr);
 
 	nvme_ctrlr_shutdown(ctrlr);
 

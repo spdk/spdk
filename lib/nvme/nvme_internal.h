@@ -125,6 +125,7 @@ enum nvme_payload_type {
  */
 enum spdk_nvme_ctrlr_flags {
 	SPDK_NVME_CTRLR_SGL_SUPPORTED		= 0x1, /**< The SGL is supported */
+	SPDK_NVME_CTRLR_DB_BUF_CFG_SUPPORTED	= 0x2, /**< The Doorbell Buffer Config is supported */
 };
 
 /**
@@ -282,6 +283,7 @@ struct spdk_nvme_qpair {
 	TAILQ_ENTRY(spdk_nvme_qpair)	per_process_tailq;
 
 	void				*req_buf;
+
 };
 
 struct spdk_nvme_ns {
@@ -427,6 +429,11 @@ struct spdk_nvme_ctrlr {
 
 	struct spdk_nvme_qpair		*adminq;
 
+	/** shadow doorbell buffer */
+	uint32_t			*shadow_doorbell;
+	/** eventidx buffer */
+	uint32_t			*eventidx;
+
 	/**
 	 * Identify Controller data.
 	 */
@@ -538,6 +545,9 @@ int	nvme_ctrlr_cmd_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 				 struct spdk_nvme_ctrlr_list *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data *payload,
 				 spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int	nvme_ctrlr_cmd_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr, uint64_t prp1,
+		uint64_t prp2,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme_cmd_cb cb_fn,
 				 void *cb_arg);
 int	nvme_ctrlr_cmd_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
