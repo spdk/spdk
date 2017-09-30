@@ -121,6 +121,16 @@ nvme_transport_ctrlr_get_max_xfer_size(struct spdk_nvme_ctrlr *ctrlr)
 	return UINT32_MAX;
 }
 
+int
+nvme_ctrlr_cmd_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr, uint64_t prp1, uint64_t prp2,
+				      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_completion_poll_status *status = (struct nvme_completion_poll_status *)cb_arg;
+
+	status->done = true;
+	return 0;
+}
+
 uint16_t
 nvme_transport_ctrlr_get_max_sges(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -1574,6 +1584,19 @@ test_spdk_nvme_ctrlr_update_firmware(void)
 	CU_ASSERT(ret == 0);
 }
 
+static void
+test_spdk_nvme_ctrlr_doorbell_buffer_config(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	int ret = -1;
+
+	ctrlr.cdata.oacs.doorbell_buffer_config = 1;
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	ret = nvme_ctrlr_set_doorbell_buffer_config(&ctrlr);
+	CU_ASSERT(ret == 0);
+	nvme_ctrlr_free_doorbell_buffer(&ctrlr);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1616,6 +1639,8 @@ int main(int argc, char **argv)
 			       test_nvme_ctrlr_construct_intel_support_log_page_list) == NULL
 		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_set_supported_features",
 			       test_nvme_ctrlr_set_supported_features) == NULL
+		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_set_doorbell_buffer_config",
+			       test_spdk_nvme_ctrlr_doorbell_buffer_config) == NULL
 #if 0 /* TODO: move to PCIe-specific unit test */
 		|| CU_add_test(suite, "test nvme ctrlr function nvme_ctrlr_alloc_cmb",
 			       test_nvme_ctrlr_alloc_cmb) == NULL
