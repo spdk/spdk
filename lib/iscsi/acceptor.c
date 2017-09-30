@@ -85,7 +85,7 @@ spdk_acceptor(void *arg)
 	struct spdk_iscsi_portal	*portal;
 
 	TAILQ_FOREACH(portal_group, &iscsi->pg_head, tailq) {
-		TAILQ_FOREACH(portal, &portal_group->head, tailq) {
+		TAILQ_FOREACH(portal, &portal_group->head, per_pg_tailq) {
 			spdk_iscsi_portal_accept(portal);
 		}
 	}
