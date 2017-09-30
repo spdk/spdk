@@ -43,6 +43,7 @@ struct spdk_iscsi_portal {
 	char				*port;
 	int				sock;
 	uint64_t			cpumask;
+	struct spdk_poller		*acceptor_poller;
 	TAILQ_ENTRY(spdk_iscsi_portal)	per_pg_tailq;
 	TAILQ_ENTRY(spdk_iscsi_portal)	g_tailq;
 };

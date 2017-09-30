@@ -43,6 +43,7 @@
 #include "iscsi/tgt_node.h"
 #include "iscsi/conn.h"
 #include "iscsi/portal_grp.h"
+#include "iscsi/acceptor.h"
 
 #define PORTNUMSTRLEN 32
 
@@ -88,6 +89,7 @@ spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 	p->cpumask = cpumask;
 	p->sock = -1;
 	p->group = NULL; /* set at a later time by caller */
+	p->acceptor_poller = NULL;
 
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.portal_head, p, g_tailq);
 
@@ -126,6 +128,8 @@ spdk_iscsi_portal_open(struct spdk_iscsi_portal *p)
 
 	p->sock = sock;
 
+	spdk_iscsi_acceptor_start(p);
+
 	return 0;
 }
 
@@ -135,6 +139,7 @@ spdk_iscsi_portal_close(struct spdk_iscsi_portal *p)
 	if (p->sock >= 0) {
 		SPDK_DEBUGLOG(SPDK_TRACE_NET, "close portal (%s, %s)\n",
 			      p->host, p->port);
+		spdk_iscsi_acceptor_stop(p);
 		close(p->sock);
 		p->sock = -1;
 	}

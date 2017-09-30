@@ -368,7 +368,7 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 			continue;
 		}
 		rc = spdk_iscsi_tgt_node_visible(target, iiqn,
-						 conn->portal->group->tag);
+						 conn->pg_tag);
 		if (rc == 0) {
 			continue;
 		}

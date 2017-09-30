@@ -76,10 +76,14 @@ struct spdk_iscsi_conn {
 	 *  SPDK_ISCSI_CONNECTION_MEMSET() macro if changing which fields
 	 *  are initialized when allocated.
 	 */
-	struct spdk_iscsi_portal		*portal;
+	struct spdk_iscsi_portal	*portal;
+	int				pg_tag;
+	char				*portal_host;
+	char				*portal_port;
+	uint64_t			portal_cpumask;
 	uint32_t			lcore;
 	int				sock;
-	struct spdk_iscsi_sess	*sess;
+	struct spdk_iscsi_sess		*sess;
 
 	enum iscsi_connection_state	state;
 	int				login_phase;

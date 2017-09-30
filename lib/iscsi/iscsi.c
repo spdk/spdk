@@ -2527,14 +2527,14 @@ spdk_iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		snprintf(buf, sizeof buf, "Logout(login failed) from %s (%s) on"
 			 " (%s:%s,%d)\n",
 			 conn->initiator_name, conn->initiator_addr,
-			 conn->portal->host, conn->portal->port, conn->portal->group->tag);
+			 conn->portal_host, conn->portal_port, conn->pg_tag);
 	} else if (spdk_iscsi_param_eq_val(conn->sess->params, "SessionType", "Normal")) {
 		snprintf(buf, sizeof buf, "Logout from %s (%s) on %s tgt_node%d"
 			 " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
 			 " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
 			 conn->initiator_name, conn->initiator_addr,
 			 conn->target->name, conn->target->num,
-			 conn->portal->host, conn->portal->port, conn->portal->group->tag,
+			 conn->portal_host, conn->portal_port, conn->pg_tag,
 			 conn->sess->isid, conn->sess->tsih, conn->cid,
 			 (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
 			  ? "on" : "off"),
@@ -2546,7 +2546,7 @@ spdk_iscsi_op_logout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			 " (%s:%s,%d), ISID=%"PRIx64", TSIH=%u,"
 			 " CID=%u, HeaderDigest=%s, DataDigest=%s\n",
 			 conn->initiator_name, conn->initiator_addr,
-			 conn->portal->host, conn->portal->port, conn->portal->group->tag,
+			 conn->portal_host, conn->portal_port, conn->pg_tag,
 			 conn->sess->isid, conn->sess->tsih, conn->cid,
 			 (spdk_iscsi_param_eq_val(conn->params, "HeaderDigest", "CRC32C")
 			  ? "on" : "off"),
@@ -4688,7 +4688,6 @@ spdk_append_iscsi_sess(struct spdk_iscsi_conn *conn,
 void
 spdk_iscsi_shutdown(void)
 {
-	spdk_iscsi_acceptor_stop();
 	spdk_iscsi_portal_grp_close_all();
 	spdk_shutdown_iscsi_conns();
 }
