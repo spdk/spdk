@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9fb97c9_fdef932a",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_user.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-09-30T02:32:14Z",
+      "side": 1,
+      "message": "When I submitted the vhost user block patch to Qemu community, the maintainer suggest to add new vhost-user messages to get/set virtio pci configuration space for vhost-user, maybe this will be ready in future as well.",
+      "revId": "b9ebf948ba5948d6c28879a8e62cd7c2bfa1b893",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
