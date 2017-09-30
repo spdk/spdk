@@ -427,6 +427,11 @@ struct spdk_nvme_ctrlr {
 
 	struct spdk_nvme_qpair		*adminq;
 
+	/** shadow doorbell buffer */
+	uint32_t			*shadow_doorbell;
+	/** eventidx buffer */
+	uint32_t			*eventidx;
+
 	/**
 	 * Identify Controller data.
 	 */
@@ -540,6 +545,9 @@ int	nvme_ctrlr_cmd_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 				 struct spdk_nvme_ctrlr_list *payload, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_data *payload,
 				 spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int	nvme_ctrlr_cmd_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr,
+		uint64_t prp1, uint64_t prp2,
+		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 int	nvme_ctrlr_cmd_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme_cmd_cb cb_fn,
 				 void *cb_arg);
 int	nvme_ctrlr_cmd_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
