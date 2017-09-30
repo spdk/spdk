@@ -41,7 +41,6 @@
 #include "iscsi/iscsi.h"
 #include "iscsi/init_grp.h"
 #include "iscsi/portal_grp.h"
-#include "iscsi/acceptor.h"
 #include "iscsi/conn.h"
 #include "iscsi/task.h"
 
@@ -956,8 +955,6 @@ spdk_iscsi_setup(void *arg1, void *arg2)
 		SPDK_ERRLOG("spdk_iscsi_portal_grp_open_all() failed\n");
 		return;
 	}
-
-	spdk_iscsi_acceptor_start();
 }
 
 int

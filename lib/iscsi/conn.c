@@ -125,6 +125,8 @@ allocate_conn(void)
 static void
 free_conn(struct spdk_iscsi_conn *conn)
 {
+	free(conn->portal_host);
+	free(conn->portal_port);
 	conn->is_valid = 0;
 }
 
@@ -433,6 +435,10 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->MaxRecvDataSegmentLength = 8192; // RFC3720(12.12)
 
 	conn->portal = portal;
+	conn->pg_tag = portal->group->tag;
+	conn->portal_host = strdup(portal->host);
+	conn->portal_port = strdup(portal->port);
+	conn->portal_cpumask = portal->cpumask;
 	conn->sock = sock;
 
 	conn->state = ISCSI_CONN_STATE_INVALID;

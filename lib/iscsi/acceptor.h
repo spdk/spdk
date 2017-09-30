@@ -35,7 +35,9 @@
 #ifndef SPDK_ACCEPTOR_H_
 #define SPDK_ACCEPTOR_H_
 
-void spdk_iscsi_acceptor_start(void);
-void spdk_iscsi_acceptor_stop(void);
+struct spdk_iscsi_portal;
+
+void spdk_iscsi_acceptor_start(struct spdk_iscsi_portal *p);
+void spdk_iscsi_acceptor_stop(struct spdk_iscsi_portal *p);
 
 #endif /* SPDK_ACCEPTOR_H_ */
