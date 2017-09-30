@@ -855,6 +855,11 @@ bs_load(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
+	/* Try to open bogus blobid as the first blob */
+	spdk_bs_md_open_blob(g_bs, 0, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -ENOENT);
+	CU_ASSERT(g_blob == NULL);
+
 	/* Create a blob */
 	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -865,6 +870,12 @@ bs_load(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
+
+	/* Try again to open bogus blobid this time with an existing one */
+	spdk_bs_md_open_blob(g_bs, 0, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -ENOENT);
+	CU_ASSERT(g_blob == NULL);
+
 
 	/* Set some xattrs */
 	rc = spdk_blob_md_set_xattr(blob, "name", "log.txt", strlen("log.txt") + 1);

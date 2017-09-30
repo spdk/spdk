@@ -2131,11 +2131,7 @@ void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
 	}
 	spdk_bit_array_set(bs->used_md_pages, page_idx);
 
-	/* The blob id is a 64 bit number. The lower 32 bits are the page_idx. The upper
-	 * 32 bits are not currently used. Stick a 1 there just to catch bugs where the
-	 * code assumes blob id == page_idx.
-	 */
-	id = (1ULL << 32) | page_idx;
+	id = _spdk_bs_page_to_blobid(page_idx);
 
 	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Creating blob with id %lu at page %u\n", id, page_idx);
 
@@ -2285,6 +2281,11 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	uint32_t			page_num;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Opening blob %lu\n", blobid);
+
+	if (_spdk_bs_blobid_is_valid(blobid) == false) {
+		cb_fn(cb_arg, NULL, -ENOENT);
+		return;
+	}
 
 	blob = _spdk_blob_lookup(bs, blobid);
 	if (blob) {
@@ -2496,7 +2497,7 @@ _spdk_bs_iter_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		return;
 	}
 
-	id = (1ULL << 32) | ctx->page_num;
+	id = _spdk_bs_page_to_blobid(ctx->page_num);
 
 	blob = _spdk_blob_lookup(bs, id);
 	if (blob) {
