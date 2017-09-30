@@ -50,6 +50,7 @@
 #define SPDK_BLOB_OPTS_NUM_MD_PAGES UINT32_MAX
 #define SPDK_BLOB_OPTS_MAX_MD_OPS 32
 #define SPDK_BLOB_OPTS_MAX_CHANNEL_OPS 512
+#define SPDK_BLOB_BLOBID_HIGH_BIT (1ULL << 32)
 
 struct spdk_xattr {
 	/* TODO: reorder for best packing */
@@ -348,6 +349,16 @@ static inline uint32_t
 _spdk_bs_blobid_to_page(spdk_blob_id id)
 {
 	return id & 0xFFFFFFFF;
+}
+
+/* The blob id is a 64 bit number. The lower 32 bits are the page_idx. The upper
+ * 32 bits are not currently used. Stick a 1 there just to catch bugs where the
+ * code assumes blob id == page_idx.
+ */
+static inline spdk_blob_id
+_spdk_bs_page_to_blobid(uint32_t page_idx)
+{
+	return SPDK_BLOB_BLOBID_HIGH_BIT | page_idx;
 }
 
 /* Given a page offset into a blob, look up the LBA for the

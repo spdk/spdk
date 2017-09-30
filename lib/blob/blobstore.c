@@ -270,8 +270,16 @@ _spdk_blob_parse(const struct spdk_blob_md_page *pages, uint32_t page_count,
 	assert(blob != NULL);
 	assert(blob->state == SPDK_BLOB_STATE_LOADING);
 	assert(blob->active.clusters == NULL);
-	assert(blob->id == pages[0].id);
 	assert(blob->state == SPDK_BLOB_STATE_LOADING);
+
+	/* The blobid provided doesn't match what's in the MD, this can
+	 * happen for example if a bogus blobid is passed in through open.
+	 */
+	if (blob->id != pages[0].id) {
+		SPDK_ERRLOG("Blobid (%lu) doesn't match what's in metadata (%lu)\n",
+			    blob->id, pages[0].id);
+		return -ENOENT;
+	}
 
 	for (i = 0; i < page_count; i++) {
 		page = &pages[i];
@@ -579,6 +587,13 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	/* Parse the pages */
 	rc = _spdk_blob_parse(ctx->pages, ctx->num_pages, blob);
+	if (rc) {
+		_spdk_blob_free(blob);
+		ctx->cb_fn(seq, NULL, rc);
+		spdk_dma_free(ctx->pages);
+		free(ctx);
+		return;
+	}
 
 	_spdk_blob_mark_clean(blob);
 
@@ -2131,11 +2146,7 @@ void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
 	}
 	spdk_bit_array_set(bs->used_md_pages, page_idx);
 
-	/* The blob id is a 64 bit number. The lower 32 bits are the page_idx. The upper
-	 * 32 bits are not currently used. Stick a 1 there just to catch bugs where the
-	 * code assumes blob id == page_idx.
-	 */
-	id = (1ULL << 32) | page_idx;
+	id = _spdk_bs_page_to_blobid(page_idx);
 
 	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Creating blob with id %lu at page %u\n", id, page_idx);
 
@@ -2496,7 +2507,7 @@ _spdk_bs_iter_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		return;
 	}
 
-	id = (1ULL << 32) | ctx->page_num;
+	id = _spdk_bs_page_to_blobid(ctx->page_num);
 
 	blob = _spdk_blob_lookup(bs, id);
 	if (blob) {
