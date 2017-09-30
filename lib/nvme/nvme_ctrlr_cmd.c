@@ -262,6 +262,32 @@ nvme_ctrlr_cmd_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, spdk_nvme
 }
 
 int
+nvme_ctrlr_cmd_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr, uint64_t prp1, uint64_t prp2,
+				      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request			*req;
+	struct spdk_nvme_cmd			*cmd;
+	int					rc;
+
+	nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
+	req = nvme_allocate_request_null(ctrlr->adminq, cb_fn, cb_arg);
+	if (req == NULL) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_DOORBELL_BUFFER_CONFIG;
+	cmd->dptr.prp.prp1 = prp1;
+	cmd->dptr.prp.prp2 = prp2;
+
+	rc = nvme_ctrlr_submit_admin_request(ctrlr, req);
+
+	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
+	return rc;
+}
+
+int
 nvme_ctrlr_cmd_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid, struct spdk_nvme_format *format,
 		      spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {

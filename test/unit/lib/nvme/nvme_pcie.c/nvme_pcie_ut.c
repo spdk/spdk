@@ -785,6 +785,18 @@ test_prp_list_append(void)
 					    (NVME_MAX_PRP_LIST_ENTRIES + 1) * 0x1000, 0x1000) == -EINVAL);
 }
 
+static void test_shadow_doorbell_update(void)
+{
+	bool ret;
+
+	/* nvme_pcie_qpair_need_event(uint16_t event_idx, uint16_t new_idx, uint16_t old) */
+	ret = nvme_pcie_qpair_need_event(10, 15, 14);
+	CU_ASSERT(ret == false);
+
+	ret = nvme_pcie_qpair_need_event(14, 15, 14);
+	CU_ASSERT(ret == true);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -801,7 +813,8 @@ int main(int argc, char **argv)
 	}
 
 	if (CU_add_test(suite, "prp_list_append", test_prp_list_append) == NULL
-	   ) {
+	    || CU_add_test(suite, "shadow_doorbell_update",
+			   test_shadow_doorbell_update) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
