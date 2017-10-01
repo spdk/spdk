@@ -1423,6 +1423,35 @@ test_ctrlr_opts_set_defaults(void)
 			 sizeof(opts.extended_host_id)) == 0);
 }
 
+static void
+test_ctrlr_get_default_io_qpair_opts(void)
+{
+	struct spdk_nvme_ctrlr ctrlr = {};
+	struct spdk_nvme_io_qpair_opts opts = {};
+
+	memset(&opts, 0, sizeof(opts));
+
+	/* set a NULL ctrlr pointer */
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(NULL, NULL, 0);
+	CU_ASSERT_EQUAL(opts.io_queue_size, 0);
+
+	/* set a valid ctrlr pointer and NULL opts pointer */
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(&ctrlr, NULL, 0);
+	CU_ASSERT_EQUAL(opts.io_queue_size, 0);
+
+	/* set a valid ctrlr pointer and opts pointer and inconsistent opts_size */
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(&ctrlr, &opts, 0);
+	CU_ASSERT_EQUAL(opts.io_queue_size, 0);
+
+	/* set a valid ctrlr pointer and opts pointer and consistent opts_size */
+	ctrlr.opts.io_queue_size = DEFAULT_IO_QUEUE_SIZE;
+	ctrlr.opts.io_queue_requests = DEFAULT_IO_QUEUE_REQUESTS;
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(&ctrlr, &opts, sizeof(opts));
+	CU_ASSERT_EQUAL(opts.qprio, SPDK_NVME_QPRIO_URGENT);
+	CU_ASSERT_EQUAL(opts.io_queue_size, DEFAULT_IO_QUEUE_SIZE);
+	CU_ASSERT_EQUAL(opts.io_queue_requests, DEFAULT_IO_QUEUE_REQUESTS);
+}
+
 #if 0 /* TODO: move to PCIe-specific unit test */
 static void
 test_nvme_ctrlr_alloc_cmb(void)
@@ -1551,6 +1580,7 @@ int main(int argc, char **argv)
 			       test_nvme_ctrlr_init_en_0_rdy_0_ams_vs) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair_rr 1", test_alloc_io_qpair_rr_1) == NULL
 		|| CU_add_test(suite, "set_defaults", test_ctrlr_opts_set_defaults) == NULL
+		|| CU_add_test(suite, "get_default_io_qpair_opts", test_ctrlr_get_default_io_qpair_opts) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair_wrr 1", test_alloc_io_qpair_wrr_1) == NULL
 		|| CU_add_test(suite, "alloc_io_qpair_wrr 2", test_alloc_io_qpair_wrr_2) == NULL
 		|| CU_add_test(suite, "test nvme ctrlr function update_firmware",

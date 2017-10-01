@@ -161,6 +161,10 @@ spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
 		return;
 	}
 
+	if (opts_size != sizeof(*opts)) {
+		return;
+	}
+
 	memset(opts, 0, opts_size);
 
 #define FIELD_OK(field) \
