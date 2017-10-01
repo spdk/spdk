@@ -197,9 +197,9 @@ spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_io_qpair_opts *opts,
 		size_t opts_size)
 {
-	if (!ctrlr || !opts) {
-		return;
-	}
+	assert(ctrlr);
+
+	assert(opts);
 
 	memset(opts, 0, opts_size);
 
