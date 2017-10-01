@@ -175,8 +175,9 @@ static const char *initiator_group_section = \
 static void
 spdk_iscsi_config_dump_initiator_groups(FILE *fp)
 {
-	int i;
 	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_initiator_name *iname;
+	struct spdk_iscsi_initiator_netmask *imask;
 
 	/* Create initiator group section */
 	fprintf(fp, "%s", initiator_group_section);
@@ -188,14 +189,16 @@ spdk_iscsi_config_dump_initiator_groups(FILE *fp)
 
 		/* Dump initiators */
 		fprintf(fp, INITIATOR_TMPL);
-		for (i = 0; i < ig->ninitiators; i++)
-			fprintf(fp, "%s ", ig->initiators[i]);
+		TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
+			fprintf(fp, "%s ", iname->name);
+		}
 		fprintf(fp, "\n");
 
 		/* Dump netmasks */
 		fprintf(fp, NETMASK_TMPL);
-		for (i = 0; i < ig->nnetmasks; i++)
-			fprintf(fp, "%s ", ig->netmasks[i]);
+		TAILQ_FOREACH(imask, &ig->netmask_head, tailq) {
+			fprintf(fp, "%s ", imask->mask);
+		}
 		fprintf(fp, "\n");
 	}
 }

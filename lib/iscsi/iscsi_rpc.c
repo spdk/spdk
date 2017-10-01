@@ -49,7 +49,8 @@ spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_init_grp *ig;
-	int i;
+	struct spdk_iscsi_initiator_name *iname;
+	struct spdk_iscsi_initiator_netmask *imask;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -69,8 +70,8 @@ spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
 
 		spdk_json_write_name(w, "initiators");
 		spdk_json_write_array_begin(w);
-		for (i = 0; i < ig->ninitiators; i++) {
-			spdk_json_write_string(w, ig->initiators[i]);
+		TAILQ_FOREACH(iname, &ig->initiator_head, tailq) {
+			spdk_json_write_string(w, iname->name);
 		}
 		spdk_json_write_array_end(w);
 
@@ -79,8 +80,8 @@ spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
 
 		spdk_json_write_name(w, "netmasks");
 		spdk_json_write_array_begin(w);
-		for (i = 0; i < ig->nnetmasks; i++) {
-			spdk_json_write_string(w, ig->netmasks[i]);
+		TAILQ_FOREACH(imask, &ig->netmask_head, tailq) {
+			spdk_json_write_string(w, imask->mask);
 		}
 		spdk_json_write_array_end(w);
 
