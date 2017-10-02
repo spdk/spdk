@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbccf02b_15f3c1db",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 28
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:42:35Z",
+      "side": 1,
+      "message": "Such test is not here currently, so I don\u0027t think this note is necessary here.",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 41
+      },
+      "revId": "97c1ef1266f8bc0f020b7bd299355724ad0c82d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a55e7f0_76ec891a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 28
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:42:35Z",
+      "side": 1,
+      "message": "Comment by Maciej:\n\"This operation should actually success because this how hot remove works\"",
+      "range": {
+        "startLine": 375,
+        "startChar": 0,
+        "endLine": 375,
+        "endChar": 70
+      },
+      "revId": "97c1ef1266f8bc0f020b7bd299355724ad0c82d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94e32eee_f3fb5000",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 28
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:42:35Z",
+      "side": 1,
+      "message": "Not possible to call get_bdevs as application was shutdown as part of the test.",
+      "range": {
+        "startLine": 406,
+        "startChar": 0,
+        "endLine": 406,
+        "endChar": 22
+      },
+      "revId": "97c1ef1266f8bc0f020b7bd299355724ad0c82d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
