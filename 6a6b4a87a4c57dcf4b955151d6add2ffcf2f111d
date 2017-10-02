@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "6d75f6bf_0764217e",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-10-02T18:59:20Z",
+      "side": 1,
+      "message": "Yes. It shall be a valid opts here. Will add an assert() here. Same change for the default_io_qpair_opts()",
+      "parentUuid": "e018a5dd_d26b60cf",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9306993e_7fa5ac64",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 2
