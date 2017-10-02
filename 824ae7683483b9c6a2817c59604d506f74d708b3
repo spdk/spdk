@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38dc20a3_b564ed2e",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-02T14:04:56Z",
+      "side": 1,
+      "message": "moving this outside variables declaration would make this more readable",
+      "range": {
+        "startLine": 459,
+        "startChar": 10,
+        "endLine": 460,
+        "endChar": 24
+      },
+      "revId": "824ae7683483b9c6a2817c59604d506f74d708b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e4b7532_7f147f2e",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-02T14:04:56Z",
+      "side": 1,
+      "message": "double ;",
+      "range": {
+        "startLine": 642,
+        "startChar": 23,
+        "endLine": 642,
+        "endChar": 25
+      },
+      "revId": "824ae7683483b9c6a2817c59604d506f74d708b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5db8058_d93fa8bf",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-02T14:04:56Z",
+      "side": 1,
+      "message": "do we need to create variable for this? can we just call function with define in arguments",
+      "range": {
+        "startLine": 644,
+        "startChar": 1,
+        "endLine": 644,
+        "endChar": 43
+      },
+      "revId": "824ae7683483b9c6a2817c59604d506f74d708b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0e4409c_ff7803cb",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-02T14:04:56Z",
+      "side": 1,
+      "message": "can we just put 30?",
+      "range": {
+        "startLine": 674,
+        "startChar": 36,
+        "endLine": 674,
+        "endChar": 45
+      },
+      "revId": "824ae7683483b9c6a2817c59604d506f74d708b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33a09abf_4d6d0ed3",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-02T14:04:56Z",
+      "side": 1,
+      "message": "wrong name",
+      "range": {
+        "startLine": 748,
+        "startChar": 22,
+        "endLine": 748,
+        "endChar": 35
+      },
+      "revId": "824ae7683483b9c6a2817c59604d506f74d708b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
