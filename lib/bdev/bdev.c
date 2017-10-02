@@ -689,6 +689,10 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 
 	ch->bdev = io_device;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
+	if (!ch->channel) {
+		return -1;
+	}
+
 	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
