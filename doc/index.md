@@ -31,6 +31,7 @@
 - @ref blob
 - @ref blobfs
 - @ref vhost
+- @ref virtio
 
 # Tools {#tools}
 
