@@ -689,7 +689,16 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 
 	ch->bdev = io_device;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
+	if (!ch->channel) {
+		return -1;
+	}
+
 	ch->mgmt_channel = spdk_get_io_channel(&g_bdev_mgr);
+	if (!ch->mgmt_channel) {
+		spdk_put_io_channel(ch->channel);
+		return -1;
+	}
+
 	memset(&ch->stat, 0, sizeof(ch->stat));
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
@@ -703,6 +712,8 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 		__itt_init_ittlib(NULL, 0);
 		name = spdk_sprintf_alloc("spdk_bdev_%s_%p", ch->bdev->name, ch);
 		if (!name) {
+			spdk_put_io_channel(ch->channel);
+			spdk_put_io_channel(ch->mgmt_channel);
 			return -1;
 		}
 		ch->handle = __itt_string_handle_create(name);
