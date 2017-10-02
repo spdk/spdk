@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc99b13a_5b06cd69",
+        "filename": "autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T07:44:21Z",
+      "side": 1,
+      "message": "we don\u0027t have 1G HP machine on TP yet, remove running this script and run only on Jenkins",
+      "range": {
+        "startLine": 129,
+        "startChar": 1,
+        "endLine": 129,
+        "endChar": 44
+      },
+      "revId": "10b6a27bde584f747c120c4704297700249532c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c19eb91d_d3fc474a",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T07:44:21Z",
+      "side": 1,
+      "message": "if the difference is only about malloc block size, then theres no need to use different cfg file - you might as well use RPC",
+      "range": {
+        "startLine": 42,
+        "startChar": 8,
+        "endLine": 42,
+        "endChar": 73
+      },
+      "revId": "10b6a27bde584f747c120c4704297700249532c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "456cccc8_b4bf9b8c",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T07:44:21Z",
+      "side": 1,
+      "message": "tabs /spaces consistency. Please check all your files",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 25
+      },
+      "revId": "10b6a27bde584f747c120c4704297700249532c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4de25203_e0cb96ab",
+        "filename": "test/vhost/initiator/vhost.conf.malloc512",
+        "patchSetId": 10
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T07:44:21Z",
+      "side": 1,
+      "message": "why keep 2 config files for that when we can use RPC to create a malloc device with desired block size?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 15
+      },
+      "revId": "10b6a27bde584f747c120c4704297700249532c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
