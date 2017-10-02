@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc2198fd_fed0d856",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T02:30:01Z",
+      "side": 1,
+      "message": "We usually put the GitHub issue reference in the body - not the initial line.  Not a big deal but if you\u0027re fixing the commit message based on the below you can update this too.",
+      "revId": "7984abc03c86179bd10184e7d02ac23bd43d7125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a00094f2_868c0ead",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T02:30:01Z",
+      "side": 1,
+      "message": "This isn\u0027t just ID 0.  The problem really is that we were not validating the upper 32 bits of the blobid.  So it could happen with any blobid.\n\nIt\u0027s not super clear to me what is meant by \"create a 2nd blob with an ID of 0\" - callers cannot specify the blobid, blobstore creates it and returns it.  I was thinking that the problem was that a blob gets created by blobstore with blobid\u003d0x1.0000.0000, then user tries to open blobid\u003d0x0.0000.0000 and blobstore returns the original blob instead of ENOENT.",
+      "revId": "7984abc03c86179bd10184e7d02ac23bd43d7125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92b675e2_cf3b649c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2285,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T02:30:01Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we also check the blobid in the metadata after its loaded?\n\nThe reason I ask is because we used to put an incrementing count in the upper 32 bits (blobstore-wide) so that we could detect cases where metadata page number was used for a blob once, deleted, then that metadata page number was used for a different blob - we could then more easily detect if someone used a stale blobid.  I\u0027m not sure when that changed, but I\u0027m guessing Ben took that out at some point.\n\nI\u0027d like to add that functionality back at some point, and if we do, then we cannot only do this check here, we\u0027ll also need to validate the blobid stored in the metadata.  If we do add that functionality, this check here would need to be removed completely.",
+      "revId": "7984abc03c86179bd10184e7d02ac23bd43d7125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac501274_4bf9bdc9",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T02:30:01Z",
+      "side": 1,
+      "message": "this needs to check all 32 upper bits, not just bit 32\n\notherwise I could pass 0x3.0000.0000 and this function would return true because bit 32 is set\n\nare you concerned that \"is_valid\" is descriptive enough?  i could see this being misconstrued (without context) that is_valid means \"it exists\"",
+      "revId": "7984abc03c86179bd10184e7d02ac23bd43d7125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
