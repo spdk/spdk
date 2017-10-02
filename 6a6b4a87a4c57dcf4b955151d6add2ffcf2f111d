@@ -126,6 +126,24 @@
     },
     {
       "key": {
+        "uuid": "16f215d0_d3e26efa",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-10-02T20:25:33Z",
+      "side": 1,
+      "message": "Thanks for making this clear.",
+      "parentUuid": "f561abb5_c4c8e26e",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b0a6050_60656719",
         "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
         "patchSetId": 2
@@ -190,6 +208,24 @@
       "writtenOn": "2017-10-02T02:07:53Z",
       "side": 1,
       "message": "we should handle inconsistent opts sizes - at least where user passes in opts size smaller than expected",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ea57369_c5e5cb5a",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1422,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-10-02T20:25:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "db396c6c_92c3d977",
       "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
