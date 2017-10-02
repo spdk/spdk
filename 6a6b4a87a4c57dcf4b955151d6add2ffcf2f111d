@@ -89,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "77e6c5ac_5f2882e9",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1418,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-10-02T02:55:56Z",
+      "side": 1,
+      "message": "If no user specified ctrlr opts here (i.e., NULL), the ctrlr will be initialized with default setting. This is to check this case.",
+      "parentUuid": "3b0a6050_60656719",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db396c6c_92c3d977",
         "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
         "patchSetId": 2
