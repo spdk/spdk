@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "245c1dfa_bb9b35c8",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T02:07:53Z",
+      "side": 1,
+      "message": "this can be an assert() - it is not legal to pass NULL to this function - if someone does, we should let it crash instead of just returning silently",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9306993e_7fa5ac64",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T02:07:53Z",
+      "side": 1,
+      "message": "I don\u0027t understand this check.  If opts_size \u003d\u003d sizeof(*opts) then we do not need any of the FIELD_OK checks below.  Shouldn\u0027t this check be removed?",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b0a6050_60656719",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1418,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T02:07:53Z",
+      "side": 1,
+      "message": "we should not test passing a NULL opts pointer\n\nthink of it this way - we have many many functions which take pointers - we do not check all of them to see if any of the parameters are NULL - the expectation is that they are *not* NULL, unless there is some specific case where a NULL value would be useful\n\nin this case, that is not useful - just do not call this function if you do not have a pointer to an opts structure",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db396c6c_92c3d977",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1422,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T02:07:53Z",
+      "side": 1,
+      "message": "we should handle inconsistent opts sizes - at least where user passes in opts size smaller than expected",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
