@@ -49,6 +49,7 @@
 struct spdk_fio_options {
 	void *pad;
 	char *conf;
+	unsigned mem_mb;
 };
 
 /* Used to pass messages between fio threads */
@@ -256,8 +257,12 @@ spdk_fio_init_env(struct thread_data *td)
 	/* Initialize the environment library */
 	spdk_env_opts_init(&opts);
 	opts.name = "fio";
-	spdk_env_init(&opts);
 
+	if (eo->mem_mb) {
+		opts.mem_size = eo->mem_mb;
+	}
+
+	spdk_env_init(&opts);
 	spdk_unaffinitize_thread();
 
 	/* Create an SPDK thread temporarily */
@@ -594,6 +599,15 @@ static struct fio_option options[] = {
 		.type		= FIO_OPT_STR_STORE,
 		.off1		= offsetof(struct spdk_fio_options, conf),
 		.help 		= "An SPDK configuration file",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "spdk_mem",
+		.lname		= "SPDK memory in MB",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, mem_mb),
+		.help 		= "Amount of memory in MB to allocate for SPDK",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
