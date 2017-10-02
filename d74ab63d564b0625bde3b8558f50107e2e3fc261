@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffa474ae_d722d8ee",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-02T05:14:48Z",
+      "side": 1,
+      "message": "now i see that it suffers from the possible deadlock issue: https://review.gerrithub.io/c/380634/",
+      "range": {
+        "startLine": 594,
+        "startChar": 1,
+        "endLine": 594,
+        "endChar": 41
+      },
+      "revId": "d74ab63d564b0625bde3b8558f50107e2e3fc261",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
