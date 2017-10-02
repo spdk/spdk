@@ -276,6 +276,13 @@ struct spdk_bdev_io {
 	/** Status for the IO */
 	int16_t status;
 
+	/** split request info */
+	uint64_t unsplit_num_blocks;
+
+	uint64_t offset_blocks;
+
+	uint64_t next_starting_block;
+
 	/**
 	 * Set to true while the bdev module submit_request function is in progress.
 	 *
