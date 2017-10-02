@@ -1,0 +1,297 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07af57c0_4c1e4e15",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "vhost has no subsystems",
+      "range": {
+        "startLine": 42,
+        "startChar": 34,
+        "endLine": 42,
+        "endChar": 43
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1251be43_f58df8d0",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "there are not subsystems or namespaces in vhost configuration",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 56
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a38475b7_a4ec5fb4",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "There is no kernel initiator connecting to vhost \"subsystems\", only qemu guests connecting to vhost controllers",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 52
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4c74100_2b4e97e0",
+        "filename": "test/vhost/pmem/fio.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "I don\u0027t see this file used anywhere.\nI see that you try to use run_fio.py from test/vhost/common but fio.py - I don\u0027t see it.",
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "506382d1_636547c1",
+        "filename": "test/vhost/pmem/fio.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "Where would this be run? on host or on guest machine? This is EXTREMELY risky, as this could break your system.\nFor example my dev machine local disk is /dev/sda and it happens to be an Intel SSD, so in /sys/block you can see:\nklateck@GrizzlyPass7:~/work/spdk$ cat /sys/block/sda/device/model\nINTEL SSDSC2BB12\nSo it\u0027s highly possible that I\u0027d break my system.\n\nAlso - I\u0027m not sure if PMEM bdevs will show up as \"Intel\" - did you check that?",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 47
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33e2cd03_6ea9ff6a",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "i\u0027d say it\u0027s not necessary, remove",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 2
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47264768_9f921e83",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "No such file in that path.",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 47
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0de7735a_c5f3327e",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "I get \"No such file or directory\" error. Path is wrong, run_vhost.sh is in common dir.",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 33
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "976269a4_99976167",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "as the argument name suggests - it\u0027s a path to DIR, not path to the file itself. \nAlso - run_vhost.sh creates a file \"vhost.conf\" using \"vhost.conf.in\". You already add \"vhost.conf\" in commit which will probably cause \"File exists\" error.",
+      "range": {
+        "startLine": 35,
+        "startChar": 37,
+        "endLine": 35,
+        "endChar": 68
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25268491_0370ce54",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "That is not necessary. Use \"waitforlisten\" from autotest_common.sh (also I think it\u0027s already used in vhost/common functions)",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 8
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fe54a4b_416d09d3",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "You only create pmem pool files, where are vhost controllers and VMs for test?",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 65
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5e1ea82_94c50245",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "why do we use 1024k blocksize?",
+      "range": {
+        "startLine": 60,
+        "startChar": 8,
+        "endLine": 60,
+        "endChar": 15
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b678d1f_9074a760",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T09:26:53Z",
+      "side": 1,
+      "message": "remove, 2 lines below you remove with a wildcard",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 33
+      },
+      "revId": "c65ad3e986b2a2d846d8d3de12956180e844b6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
