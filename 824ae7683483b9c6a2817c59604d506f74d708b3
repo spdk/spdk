@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "31466831_b153dab8",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:34:28Z",
+      "side": 1,
+      "message": "Those are RPC related functions, are those stubs necessary here ?",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 93
+      },
+      "revId": "824ae7683483b9c6a2817c59604d506f74d708b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "38dc20a3_b564ed2e",
         "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
         "patchSetId": 20
@@ -13,6 +36,29 @@
       "writtenOn": "2017-10-02T14:04:56Z",
       "side": 1,
       "message": "moving this outside variables declaration would make this more readable",
+      "range": {
+        "startLine": 459,
+        "startChar": 10,
+        "endLine": 460,
+        "endChar": 24
+      },
+      "revId": "824ae7683483b9c6a2817c59604d506f74d708b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68b7c89c_809a774c",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:34:28Z",
+      "side": 1,
+      "message": "I think this should be below declarations.",
       "range": {
         "startLine": 459,
         "startChar": 10,
