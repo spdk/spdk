@@ -31,3 +31,4 @@
 - @ref blobfs
 - @ref vhost
 - @ref nvme-cli
+- @ref vhost
