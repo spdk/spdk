@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "e018a5dd_d26b60cf",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T18:15:36Z",
+      "side": 1,
+      "message": "Right - it\u0027s OK to pass NULL to a future spdk_nvme_connect() function to request default settings.  But there is no reason to call this function with a NULL opts pointer.",
+      "parentUuid": "89a50d5d_51924e06",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9306993e_7fa5ac64",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 2
@@ -72,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "f561abb5_c4c8e26e",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T18:15:36Z",
+      "side": 1,
+      "message": "If user\u0027s binary was compiled with sizeof(opts) \u003d\u003d 20, but current sizeof(opts) \u003d\u003d 32, then we should still allow user to pass 20 for sizeof(opts).  Your FIELD_OK checks below make sure that we only fill in up to 20 bytes of data.",
+      "parentUuid": "523eb0b3_8864876d",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b0a6050_60656719",
         "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
         "patchSetId": 2
@@ -101,6 +137,24 @@
       "side": 1,
       "message": "If no user specified ctrlr opts here (i.e., NULL), the ctrlr will be initialized with default setting. This is to check this case.",
       "parentUuid": "3b0a6050_60656719",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52b4d122_c1fe9471",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1418,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T18:15:36Z",
+      "side": 1,
+      "message": "but no controllers are initialized here - this function is only initializing the opts structure",
+      "parentUuid": "77e6c5ac_5f2882e9",
       "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
