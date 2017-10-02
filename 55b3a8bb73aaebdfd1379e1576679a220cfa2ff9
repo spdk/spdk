@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50590d96_f856c043",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T18:06:56Z",
+      "side": 1,
+      "message": "A lot of places are using controller instead of device.  Maybe a short explanation of what a \"vhost device\" is?",
+      "revId": "55b3a8bb73aaebdfd1379e1576679a220cfa2ff9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2c43d0a_6ea0697b",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T18:06:56Z",
+      "side": 1,
+      "message": "controller -\u003e device",
+      "revId": "55b3a8bb73aaebdfd1379e1576679a220cfa2ff9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d607bb9_81eab025",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T18:06:56Z",
+      "side": 1,
+      "message": "acquired",
+      "revId": "55b3a8bb73aaebdfd1379e1576679a220cfa2ff9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fc5fdc0_04fde76d",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T18:06:56Z",
+      "side": 1,
+      "message": "controller -\u003e device",
+      "revId": "55b3a8bb73aaebdfd1379e1576679a220cfa2ff9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8019c485_4f3101d6",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T18:06:56Z",
+      "side": 1,
+      "message": "ctrlr -\u003e vdev",
+      "revId": "55b3a8bb73aaebdfd1379e1576679a220cfa2ff9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
