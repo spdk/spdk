@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f98cd95e_c725cd05",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T07:31:16Z",
+      "side": 1,
+      "message": "Unnecessary indentation change",
+      "range": {
+        "startLine": 184,
+        "startChar": 8,
+        "endLine": 184,
+        "endChar": 12
+      },
+      "revId": "9efa485c5211689fc1dc16c6ba858e4435642bff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
