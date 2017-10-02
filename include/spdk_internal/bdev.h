@@ -274,6 +274,13 @@ struct spdk_bdev_io {
 	/** Status for the IO */
 	int16_t status;
 
+	/** split request info */
+	uint64_t unsplit_num_blocks;
+
+	uint64_t offset_blocks;
+
+	uint64_t next_starting_block;
+
 	/**
 	 * Set to true while the bdev module submit_request function is in progress.
 	 *
@@ -339,6 +346,9 @@ struct spdk_bdev_io {
 
 	/** User function that will be called when this completes */
 	spdk_bdev_io_completion_cb cb;
+
+	/** stored user callback in the event of a completion callback */
+	spdk_bdev_io_completion_cb stored_cb;
 
 	/** Context that will be passed to the completion callback */
 	void *caller_ctx;
