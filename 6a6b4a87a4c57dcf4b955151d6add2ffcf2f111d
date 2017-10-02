@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "89a50d5d_51924e06",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-10-02T02:45:21Z",
+      "side": 1,
+      "message": "This is optional to the caller. If not specified, then use the default ctrlr opts configuration. In this case, it\u0027s OK to be NULL.",
+      "parentUuid": "245c1dfa_bb9b35c8",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9306993e_7fa5ac64",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2017-10-02T02:07:53Z",
       "side": 1,
       "message": "I don\u0027t understand this check.  If opts_size \u003d\u003d sizeof(*opts) then we do not need any of the FIELD_OK checks below.  Shouldn\u0027t this check be removed?",
+      "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "523eb0b3_8864876d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-10-02T02:45:21Z",
+      "side": 1,
+      "message": "In Daniel\u0027s comment at https://review.gerrithub.io/#/c/370634/17/lib/nvme/nvme.c@524\n\nThis is to be compatible with future shared libary. Also there is a note in the comments of this API, the opts_size shall be sizeof(spdk_nvme_ctrlr_opts). Add a check here to have the default value if the size check is not equal here. Just to be robust.\n\nMaybe my understanding is wrong and Daniel can comment on this. Also for the get_default_io_qpair_opts() handling.",
+      "parentUuid": "9306993e_7fa5ac64",
       "revId": "6a6b4a87a4c57dcf4b955151d6add2ffcf2f111d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
