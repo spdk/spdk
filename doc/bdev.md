@@ -142,6 +142,38 @@ Configuration file syntax:
 
 This exports 1 rbd block device, named Ceph0.
 
+## Virtio SCSI {#bdev_config_virtio_scsi}
+
+The SPDK Virtio SCSI driver allows creating SPDK block devices from Virtio SCSI LUNs.
+
+Use the following configuration file snippet to bind all available Virtio-SCSI PCI
+devices on a virtual machine. The driver will perform a target scan on each device
+and automatically create block device for each LUN.
+
+~~~
+[VirtioPci]
+  # If enabled, the driver will automatically use all available Virtio-SCSI PCI
+  # devices. Disabled by default.
+  Enable Yes
+~~~
+
+The driver also supports connecting to vhost-user devices exposed on the same host.
+In the following case, the host app has created a vhost-scsi controller which is
+accessible through the /tmp/vhost.0 domain socket.
+
+~~~
+[VirtioUser0]
+  # Path to the Unix domain socket using vhost-user protocol.
+  Path /tmp/vhost.0
+  # Maximum number of request queues to use. Default value is 1.
+  Queues 1
+
+#[VirtioUser1]
+  #Path /tmp/vhost.1
+~~~
+
+Each Virtio-SCSI device may export up to 64 block devices named VirtioScsi0t0 ~ VirtioScsi0t63.
+
 ## GPT (GUID Partition Table) {#bdev_config_gpt}
 
 The GPT virtual bdev driver examines all bdevs as they are added and exposes partitions
