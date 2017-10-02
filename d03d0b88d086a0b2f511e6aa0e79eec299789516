@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dafa16a7_e20dae45",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T11:44:00Z",
+      "side": 1,
+      "message": "use tabs before echo for consistency with rest of file",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 4
+      },
+      "revId": "d03d0b88d086a0b2f511e6aa0e79eec299789516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f68d113_1334a0ac",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T11:44:00Z",
+      "side": 1,
+      "message": "use tabs for consistenty with rest of file",
+      "revId": "d03d0b88d086a0b2f511e6aa0e79eec299789516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d838f91_a2391e4b",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T11:44:00Z",
+      "side": 1,
+      "message": "actually this may be pretty pointless to do, since we do not know where the file be located if create_pmem_pool does create the pool file. ...oh well, let\u0027s stick with that anyways.",
+      "range": {
+        "startLine": 123,
+        "startChar": 1,
+        "endLine": 123,
+        "endChar": 51
+      },
+      "revId": "d03d0b88d086a0b2f511e6aa0e79eec299789516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb37fd98_89bd6acf",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T11:44:00Z",
+      "side": 1,
+      "message": "change error message :P",
+      "range": {
+        "startLine": 124,
+        "startChar": 8,
+        "endLine": 124,
+        "endChar": 45
+      },
+      "revId": "d03d0b88d086a0b2f511e6aa0e79eec299789516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04af8594_2ecae180",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T11:44:00Z",
+      "side": 1,
+      "message": "That way you call pmem_pool_info 3 times producing way more output in logs. Try shortening that later (after all other tests are in place, not really a major issue)",
+      "range": {
+        "startLine": 207,
+        "startChar": 0,
+        "endLine": 209,
+        "endChar": 87
+      },
+      "revId": "d03d0b88d086a0b2f511e6aa0e79eec299789516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5002ad1b_afe870a4",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T11:44:00Z",
+      "side": 1,
+      "message": "Test plan is a little mistaken here. Actually I think it should not be possible to create a pool file with block size \u003d -1, so there is no rounding up of block size. You can create a separate negative test case for negative values of block_size and total_size arguments.",
+      "range": {
+        "startLine": 250,
+        "startChar": 0,
+        "endLine": 258,
+        "endChar": 3
+      },
+      "revId": "d03d0b88d086a0b2f511e6aa0e79eec299789516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1effed65_b68c140d",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T11:44:00Z",
+      "side": 1,
+      "message": "use pmem_min_block_size",
+      "range": {
+        "startLine": 290,
+        "startChar": 7,
+        "endLine": 290,
+        "endChar": 10
+      },
+      "revId": "d03d0b88d086a0b2f511e6aa0e79eec299789516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0e7954f_c0a0cf09",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T11:44:00Z",
+      "side": 1,
+      "message": "128k bs \u003d 131072",
+      "range": {
+        "startLine": 406,
+        "startChar": 51,
+        "endLine": 406,
+        "endChar": 54
+      },
+      "revId": "d03d0b88d086a0b2f511e6aa0e79eec299789516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3debb643_4ae9b7ab",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T11:44:00Z",
+      "side": 1,
+      "message": "I\u0027d rather put that inside function for test case 4",
+      "range": {
+        "startLine": 692,
+        "startChar": 1,
+        "endLine": 692,
+        "endChar": 22
+      },
+      "revId": "d03d0b88d086a0b2f511e6aa0e79eec299789516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba4ba068_57052488",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 697,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-02T11:44:00Z",
+      "side": 1,
+      "message": "this as well",
+      "range": {
+        "startLine": 697,
+        "startChar": 1,
+        "endLine": 697,
+        "endChar": 21
+      },
+      "revId": "d03d0b88d086a0b2f511e6aa0e79eec299789516",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
