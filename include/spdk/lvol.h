@@ -61,8 +61,6 @@ int spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 int spdk_lvs_unload(struct spdk_lvol_store *lvol_store, spdk_lvs_op_complete cb_fn, void *cb_arg);
 int spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
 		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
-int spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
-		     spdk_lvol_op_complete cb_fn, void *cb_arg);
 void spdk_lvol_destroy(struct spdk_lvol *lvol);
 void spdk_lvol_close(struct spdk_lvol *lvol);
 struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol);
