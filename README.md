@@ -15,6 +15,7 @@ The development kit currently includes:
 * [NVMe over Fabrics target](http://www.spdk.io/doc/nvmf.html)
 * [iSCSI target](http://www.spdk.io/doc/iscsi.html)
 * [vhost target](http://www.spdk.io/doc/vhost.html)
+* [Virtio-SCSI driver](http://www.spdk.io/doc/virtio.html)
 
 # In this readme:
 
