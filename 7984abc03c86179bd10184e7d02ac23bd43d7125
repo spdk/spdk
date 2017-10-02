@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "7ce8cef6_0c5125a4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-02T14:23:22Z",
+      "side": 1,
+      "message": "OK",
+      "parentUuid": "bc2198fd_fed0d856",
+      "revId": "7984abc03c86179bd10184e7d02ac23bd43d7125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a00094f2_868c0ead",
         "filename": "/COMMIT_MSG",
         "patchSetId": 1
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "129abd65_4a910f9c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-02T14:23:22Z",
+      "side": 1,
+      "message": "Yeah, that makes little sense :) I\u0027ll rewrite it.  The problem was that if a blob exists and you create then try to OPEN one with an ID of 0 that it w/o this change it will open the first blob that was created because of the missing upper bit in which case you hit the assert when it sees that the blobid in the blob struct doesn\u0027t match what\u0027s in the metadata because it read the wrong blob MD",
+      "parentUuid": "a00094f2_868c0ead",
+      "revId": "7984abc03c86179bd10184e7d02ac23bd43d7125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92b675e2_cf3b649c",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 1
@@ -47,6 +83,24 @@
       "writtenOn": "2017-10-02T02:30:01Z",
       "side": 1,
       "message": "Shouldn\u0027t we also check the blobid in the metadata after its loaded?\n\nThe reason I ask is because we used to put an incrementing count in the upper 32 bits (blobstore-wide) so that we could detect cases where metadata page number was used for a blob once, deleted, then that metadata page number was used for a different blob - we could then more easily detect if someone used a stale blobid.  I\u0027m not sure when that changed, but I\u0027m guessing Ben took that out at some point.\n\nI\u0027d like to add that functionality back at some point, and if we do, then we cannot only do this check here, we\u0027ll also need to validate the blobid stored in the metadata.  If we do add that functionality, this check here would need to be removed completely.",
+      "revId": "7984abc03c86179bd10184e7d02ac23bd43d7125",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d27d7965_66f8a5d7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2285,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-02T14:23:22Z",
+      "side": 1,
+      "message": "Maybe when you add that back it makes sense but right now I don\u0027t think so, this is the only user input for a blobid right?  Also there is an assert in the MD load which for now at least seems right to me. If it\u0027s wrong there for any other reason we should track down that bug and fix it.  I could be missing something of course...",
+      "parentUuid": "92b675e2_cf3b649c",
       "revId": "7984abc03c86179bd10184e7d02ac23bd43d7125",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
