@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a9919e9_060598cc",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-02T23:51:27Z",
+      "side": 1,
+      "message": "would it be better to take blobid from line 869 and mask off the upper 32 bits?  my only concern here is that it assumes the first blob created will have a blobid with lower bits all zero\n\nthe key part of the unit test is that its specifically trying to ensure that if you pass a blobid where the lower 32 bits match an existing blobid, but the upper 32 bits do not, that we will catch that failure - the comment doesn\u0027t really call that out",
+      "revId": "246b2400538669871fcb760219c66d35bbe7f47f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
