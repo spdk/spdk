@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4f109d3_404510ae",
+        "filename": "doc/bdev.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:30:48Z",
+      "side": 1,
+      "message": "Please add code block for this command.",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 23
+      },
+      "revId": "eb8de3def7409b95ef470cf00caff8a3a580fd13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75793b70_718fc92f",
+        "filename": "doc/bdev.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:30:48Z",
+      "side": 1,
+      "message": "code block",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 80
+      },
+      "revId": "eb8de3def7409b95ef470cf00caff8a3a580fd13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dafa122a_e7db68c9",
+        "filename": "doc/bdev.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:30:48Z",
+      "side": 1,
+      "message": "management",
+      "range": {
+        "startLine": 78,
+        "startChar": 19,
+        "endLine": 78,
+        "endChar": 30
+      },
+      "revId": "eb8de3def7409b95ef470cf00caff8a3a580fd13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70f2e454_a9e62583",
+        "filename": "doc/bdev.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:30:48Z",
+      "side": 1,
+      "message": "code block",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 52
+      },
+      "revId": "eb8de3def7409b95ef470cf00caff8a3a580fd13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18ac4054_b69bc56d",
+        "filename": "doc/bdev.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:30:48Z",
+      "side": 1,
+      "message": "code block",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 55
+      },
+      "revId": "eb8de3def7409b95ef470cf00caff8a3a580fd13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d61772b_f00fa24a",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:30:48Z",
+      "side": 1,
+      "message": "verifying",
+      "range": {
+        "startLine": 18,
+        "startChar": 16,
+        "endLine": 18,
+        "endChar": 24
+      },
+      "revId": "eb8de3def7409b95ef470cf00caff8a3a580fd13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc587299_96f40263",
+        "filename": "test/pmem/test_plan.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-02T16:30:48Z",
+      "side": 1,
+      "message": "non-existent",
+      "range": {
+        "startLine": 39,
+        "startChar": 10,
+        "endLine": 39,
+        "endChar": 22
+      },
+      "revId": "eb8de3def7409b95ef470cf00caff8a3a580fd13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
