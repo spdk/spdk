@@ -19,6 +19,11 @@
   #  on core 0.
   #ReactorMask 0xFFFF
 
+  # Disable PCI access. PCI is enabled by default. Setting this
+  # option will hide any PCI device from all SPDK modules, making
+  # SPDK act as if they don't exist.
+  #NoPci Yes
+
   # Tracepoint group mask for spdk trace buffers
   # Default: 0x0 (all tracepoint groups disabled)
   # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.

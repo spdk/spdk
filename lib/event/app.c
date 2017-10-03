@@ -302,17 +302,17 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	spdk_log_set_level(SPDK_APP_DEFAULT_LOG_PRIORITY);
 	spdk_log_open();
 
+	sp = spdk_conf_find_section(g_spdk_app.config, "Global");
 	if (opts->reactor_mask == NULL) {
-		sp = spdk_conf_find_section(g_spdk_app.config, "Global");
-		if (sp != NULL) {
-			if (spdk_conf_section_get_val(sp, "ReactorMask")) {
-				opts->reactor_mask = spdk_conf_section_get_val(sp, "ReactorMask");
-			} else {
-				opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
-			}
+		if (sp && spdk_conf_section_get_val(sp, "ReactorMask")) {
+			opts->reactor_mask = spdk_conf_section_get_val(sp, "ReactorMask");
 		} else {
 			opts->reactor_mask = SPDK_APP_DPDK_DEFAULT_CORE_MASK;
 		}
+	}
+
+	if (!opts->no_pci && sp) {
+		opts->no_pci = spdk_conf_section_get_boolval(sp, "NoPci", false);
 	}
 
 	spdk_env_opts_init(&env_opts);
