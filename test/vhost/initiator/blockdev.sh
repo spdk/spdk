@@ -8,8 +8,7 @@ plugindir=$rootdir/examples/bdev/fio_plugin
 rpc_py="$rootdir/scripts/rpc.py"
 
 
-function run_fio()
-{
+function run_fio() {
         LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=4k --runtime=10 $testdir/bdev.fio "$@" --spdk_mem=1024
         fio_status=$?
         if [ $fio_status != 0 ]; then
@@ -18,9 +17,36 @@ function run_fio()
         fi
 }
 
-function prepare_fio_job_for_unmap() {
+function prepare_fio_job_4G() {
+        rw="$1"
+        fio_bdevs="$2"
+        echo "size=1G" >> $testdir/bdev.fio
+        echo "io_size=4G" >> $testdir/bdev.fio
+        echo "offset=4G" >> $testdir/bdev.fio
+        if [ $rw == "read" ] || [ $rw == "randread" ]; then
+                echo "[job_write]" >> $testdir/bdev.fio
+                echo "stonewall" >> $testdir/bdev.fio
+                echo "rw=write" >> $testdir/bdev.fio
+                echo "do_verify=0" >> $testdir/bdev.fio
+                echo -n "filename=" >> $testdir/bdev.fio
+                for b in $(echo $fio_bdevs | jq -r '.name'); do
+                    echo -n "$b:" >> $testdir/bdev.fio
+                done
+                echo "" >> $testdir/bdev.fio
+        fi
+        echo "[job_$rw]" >> $testdir/bdev.fio
+        echo "stonewall" >> $testdir/bdev.fio
+        echo "rw=$rw" >> $testdir/bdev.fio
         echo -n "filename=" >> $testdir/bdev.fio
-        for b in $(echo $bdevs | jq -r '.name'); do
+        for b in $(echo $fio_bdevs | jq -r '.name'); do
+                echo -n "$b:" >> $testdir/bdev.fio
+        done
+}
+
+function prepare_fio_job_for_unmap() {
+        fio_bdevs="$1"
+        echo -n "filename=" >> $testdir/bdev.fio
+        for b in $(echo $fio_bdevs | jq -r '.name'); do
                 echo -n "$b:" >> $testdir/bdev.fio
         done
         echo "" >> $testdir/bdev.fio
@@ -45,7 +71,6 @@ function prepare_fio_job_for_unmap() {
         echo "stonewall" >> $testdir/bdev.fio
         echo "rw=trimwrite" >> $testdir/bdev.fio
         echo "trim_verify_zero=1" >> $testdir/bdev.fio
-
 }
 
 source $rootdir/test/vhost/common/common.sh
@@ -76,16 +101,17 @@ for bdev in $bdevs; do
         timing_exit bounds
 
         timing_enter bdev_svc
-        bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf 5261 | jq -r '.[] | select(.claimed == false)')
+        vbdevs=$(discover_bdevs $rootdir $testdir/bdev.conf 5261 | jq -r '.[] | select(.claimed == false)')
         timing_exit bdev_svc
 
         if [ -d /usr/src/fio ]; then
                 timing_enter fio
                 if [ $RUN_NIGHTLY -eq 1 ]; then
-                        fio_rw=("write" "read" "randwrite" "randread" "rw" "randrw")
+                        fio_rw=("read" "randwrite" "randread" "rw" "randrw")
                 else
-                        fio_rw=("write" "read")
+                        fio_rw=("read")
                 fi
+
                 for rw in "${fio_rw[@]}"; do
                         timing_enter fio_rw_verify
                         cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
@@ -97,7 +123,7 @@ for bdev in $bdevs; do
                                 echo "rw=write" >> $testdir/bdev.fio
                                 echo "do_verify=0" >> $testdir/bdev.fio
                                 echo -n "filename=" >> $testdir/bdev.fio
-                                for b in $(echo $bdevs | jq -r '.name'); do
+                                for b in $(echo $vbdevs | jq -r '.name'); do
                                         echo -n "$b:" >> $testdir/bdev.fio
                                 done
                                 echo "" >> $testdir/bdev.fio
@@ -106,7 +132,7 @@ for bdev in $bdevs; do
                         echo "stonewall" >> $testdir/bdev.fio
                         echo "rw=$rw" >> $testdir/bdev.fio
                         echo -n "filename=" >> $testdir/bdev.fio
-                        for b in $(echo $bdevs | jq -r '.name'); do
+                        for b in $(echo $vbdevs | jq -r '.name'); do
                                 echo -n "$b:" >> $testdir/bdev.fio
                         done
 
@@ -119,11 +145,25 @@ for bdev in $bdevs; do
 
                 #Host test for unmap
                 cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
-                prepare_fio_job_for_unmap
+                prepare_fio_job_for_unmap "$vbdevs"
                 run_fio --spdk_conf=$testdir/bdev.conf
                 rm -f *.state
                 rm -f $testdir/bdev.fio
 
+                #Host test for +4G
+                if [ $bdev == "Nvme0n1" ]; then
+                    for rw in "${fio_rw[@]}"; do
+                        timing_enter fio_4G_rw_verify
+                        echo "RUNNING 4G FOR $rw"
+                        cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                        prepare_fio_job_4G "$rw" "$vbdevs"
+                        run_fio --spdk_conf=$testdir/bdev.conf
+
+                        rm -f *.state
+                        rm -f $testdir/bdev.fio
+                        timing_exit fio_4G_rw_verify
+                    done
+                fi
                 timing_exit fio
         fi
 
