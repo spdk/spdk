@@ -628,6 +628,23 @@ p = subparsers.add_parser('remove_vhost_controller', help='Remove a vhost contro
 p.add_argument('ctrlr', help='controller name')
 p.set_defaults(func=remove_vhost_controller)
 
+def construct_virtio_user_scsi_bdev(args):
+    params = {'path': args.path}
+    if args.prefix:
+        params['prefix'] = args.prefix
+    if args.vq_size:
+        params['vq_size'] = args.vq_size
+    print_dict(jsonrpc_call('construct_virtio_user_scsi_bdev', params))
+
+p = subparsers.add_parser('construct_virtio_user_scsi_bdev', help="""Connect to virtio user scsi device.
+This imply scan and add bdevs offered by remote side.
+Result is array of added bdevs.""")
+p.add_argument('path', help='Path to Virtio SCSI socket')
+p.add_argument('--prefix', help="""Use this prefix as base instead of 'VirtioScsiN'
+Base will be used to construct new bdev's found on target by adding 't<TARGET_ID>' sufix.""", type=int)
+p.add_argument('--vq-size', help='vq_size', type=int)
+p.set_defaults(func=construct_virtio_user_scsi_bdev)
+
 def get_rpc_methods(args):
     print_dict(jsonrpc_call('get_rpc_methods'))
 
