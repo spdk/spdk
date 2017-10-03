@@ -165,24 +165,39 @@ spdk_subsystem_init(void *arg1, void *arg2)
 	spdk_subsystem_init_next(0);
 }
 
+void
+spdk_subsystem_fini_next(int rc)
+{
+	if (rc) {
+		assert(g_next_subsystem != NULL);
+		SPDK_ERRLOG("Init subsystem %s failed\n", g_next_subsystem->name);
+		return;
+	}
+
+	if (!g_next_subsystem) {
+		g_next_subsystem = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
+	} else {
+		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
+	}
+
+	if (!g_next_subsystem) {
+		return;
+	}
+
+	if (g_next_subsystem->fini) {
+		g_next_subsystem->fini();
+	} else {
+		spdk_subsystem_fini_next(0);
+	}
+}
+
 int
 spdk_subsystem_fini(void)
 {
-	int rc = 0;
-	struct spdk_subsystem *cur;
+	g_next_subsystem = NULL;
 
-	cur = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
-
-	while (cur) {
-		if (cur->fini) {
-			rc = cur->fini();
-			if (rc)
-				return rc;
-		}
-		cur = TAILQ_PREV(cur, spdk_subsystem_list, tailq);
-	}
-
-	return rc;
+	spdk_subsystem_fini_next(0);
+	return 0;
 }
 
 void

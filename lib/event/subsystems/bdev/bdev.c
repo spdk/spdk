@@ -74,7 +74,12 @@ spdk_bdev_subsystem_initialize(void)
 static int
 spdk_bdev_subsystem_finish(void)
 {
-	return spdk_bdev_finish();
+	int rc;
+
+	rc = spdk_bdev_finish();
+	spdk_subsystem_fini_next(rc);
+
+	return rc;
 }
 
 SPDK_SUBSYSTEM_REGISTER(bdev, spdk_bdev_subsystem_initialize,
