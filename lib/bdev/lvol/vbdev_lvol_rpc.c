@@ -387,6 +387,8 @@ spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_json_write_ctx *w;
 	struct lvol_store_bdev *lvs_bdev;
+	struct spdk_blob_store *bs;
+	uint64_t free_blocks, cluster_size, block_size;
 	char uuid[UUID_STRING_LEN];
 
 	if (params != NULL) {
@@ -404,6 +406,13 @@ spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
 
 	for (lvs_bdev = vbdev_lvol_store_first(); lvs_bdev != NULL;
 	     lvs_bdev = vbdev_lvol_store_next(lvs_bdev)) {
+
+		bs = lvs_bdev->lvs->blobstore;
+		cluster_size = spdk_bs_get_cluster_size(bs);
+		/* Block size of lvols is always size of blob store page */
+		block_size = spdk_bs_get_page_size(bs);
+		free_blocks = (cluster_size * spdk_bs_free_cluster_count(bs)) / block_size;
+
 		spdk_json_write_object_begin(w);
 
 		uuid_unparse(lvs_bdev->lvs->uuid, uuid);
@@ -412,6 +421,18 @@ spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
 
 		spdk_json_write_name(w, "base_bdev");
 		spdk_json_write_string(w, spdk_bdev_get_name(lvs_bdev->bdev));
+
+		spdk_json_write_name(w, "total_num_blocks");
+		spdk_json_write_uint64(w, lvs_bdev->lvs->total_blocks);
+
+		spdk_json_write_name(w, "free_num_blocks");
+		spdk_json_write_uint64(w, free_blocks);
+
+		spdk_json_write_name(w, "block_size");
+		spdk_json_write_uint64(w, block_size);
+
+		spdk_json_write_name(w, "cluster_size");
+		spdk_json_write_uint64(w, cluster_size);
 
 		spdk_json_write_object_end(w);
 	}
