@@ -6,26 +6,6 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
 
-function format_disk_512() {
-        $rootdir/scripts/setup.sh reset
-        sleep 2
-        last_nvme_disk=$( sudo nvme list | tail -n 1 )
-        last_nvme_disk="$( cut -d ' ' -f 1 <<< "$last_nvme_disk" )"
-        nvme format -l 0 $last_nvme_disk
-        NRHUGE=8 $rootdir/scripts/setup.sh
-        sleep 2
-}
-
-function format_disk_4096() {
-        $rootdir/scripts/setup.sh reset
-        sleep 2
-        last_nvme_disk=$( sudo nvme list | tail -n 1 )
-        last_nvme_disk="$( cut -d ' ' -f 1 <<< "$last_nvme_disk" )"
-        nvme format -l 3 $last_nvme_disk
-        NRHUGE=8 $rootdir/scripts/setup.sh
-        sleep 2
-}
-
 function run_fio()
 {
         LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=4k --runtime=10 $testdir/bdev.fio "$@"
@@ -43,9 +23,6 @@ sleep 4
 spdk_vhost_run $testdir
 
 for block_size in 512 4096; do
-        if [ $RUN_NIGHTLY -eq 1 ]; then
-                format_disk_${block_size}
-        fi
         $rootdir/scripts/rpc.py construct_malloc_bdev 128 ${block_size}
         $rootdir/scripts/rpc.py get_bdevs
         if [ $block_size == 512 ]; then
@@ -81,10 +58,39 @@ for block_size in 512 4096; do
                         fi
                         for rw in $fio_rw; do
 	                        timing_enter fio_rw_verify
-                                cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                                if [ $bdev_type == "nvme" ]; then
+					cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+					echo "size=1G" >> $testdir/bdev.fio
+					echo "io_size=4G" >> $testdir/bdev.fio
+	                                echo "offset=4G" >> $testdir/bdev.fio
+	                                if [ $rw == "read" ] || [ $rw == "randread" ]; then
+	                                        echo "[job_write]" >> $testdir/bdev.fio
+                	                        echo "stonewall" >> $testdir/bdev.fio
+                               		        echo "rw=write" >> $testdir/bdev.fio
+		                                echo "do_verify=0" >> $testdir/bdev.fio
+                		                echo -n "filename=" >> $testdir/bdev.fio
+                                		for b in $(echo $bdevs | jq -r '.name'); do
+                                                	echo -n "$b:" >> $testdir/bdev.fio
+		                                done
+                		        	echo "" >> $testdir/bdev.fio
+                                	fi
+	                                echo "[job_$rw]" >> $testdir/bdev.fio
+        	                        echo "stonewall" >> $testdir/bdev.fio
+                	                echo "rw=$rw" >> $testdir/bdev.fio
+                        	        echo -n "filename=" >> $testdir/bdev.fio
+                                	for b in $(echo $bdevs | jq -r '.name'); do
+                                	        echo -n "$b:" >> $testdir/bdev.fio
+					done
+					cat $testdir/bdev.fio
+	                                run_fio --spdk_conf=$testdir/bdev.conf
+
+        	                        rm -f *.state
+                	                rm -f $testdir/bdev.fio
+				fi
+				cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+				echo "size=100m" >> $testdir/bdev.fio
+                                echo "io_size=400m" >> $testdir/bdev.fio
                                 if [ $rw == "read" ] || [ $rw == "randread" ]; then
-                                        echo "size=100m" >> $testdir/bdev.fio
-                                        echo "io_size=400m" >> $testdir/bdev.fio
                                         echo "[job_write]" >> $testdir/bdev.fio
                                         echo "stonewall" >> $testdir/bdev.fio
                                         echo "rw=write" >> $testdir/bdev.fio
@@ -100,14 +106,13 @@ for block_size in 512 4096; do
                                 echo "rw=$rw" >> $testdir/bdev.fio
                                 echo -n "filename=" >> $testdir/bdev.fio
 	                        for b in $(echo $bdevs | jq -r '.name'); do
-	                        	echo -n "$b:" >> $testdir/bdev.fio
-                                done
+	                        	cat $testdir/bdev.fio
+				done
 
-                                cat $testdir/bdev.fio
-	                        run_fio --spdk_conf=$testdir/bdev.conf
+                                run_fio --spdk_conf=$testdir/bdev.conf
 
-	                        rm -f *.state
-	                        rm -f $testdir/bdev.fio
+                                rm -f *.state
+                                rm -f $testdir/bdev.fioecho -n "$b:" >> $testdir/bdev.fio
 	                        timing_exit fio_rw_verify
                         done
 
