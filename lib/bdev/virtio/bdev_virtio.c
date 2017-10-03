@@ -51,6 +51,8 @@
 #include <virtio_dev.h>
 #include <virtio_user/virtio_user_dev.h>
 
+#include "bdev_virtio.h"
+
 #define BDEV_VIRTIO_MAX_TARGET 64
 #define BDEV_VIRTIO_SCAN_PAYLOAD_SIZE 256
 #define CTRLQ_POLL_PERIOD_US (1000 * 5)
@@ -80,6 +82,9 @@ struct virtio_scsi_scan_base {
 
 	/** Virtqueue used for the scan I/O. */
 	struct virtqueue		*vq;
+
+	virtio_create_device_cb		cb_fn;
+	void				*cb_arg;
 
 	/* Currently queried target */
 	unsigned			target;
@@ -539,7 +544,7 @@ bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 static void
-scan_target_abort(struct virtio_scsi_scan_base *base)
+scan_target_abort(struct virtio_scsi_scan_base *base, int error)
 {
 	struct virtio_scsi_disk *disk;
 
@@ -550,16 +555,20 @@ scan_target_abort(struct virtio_scsi_scan_base *base)
 
 	TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, base->vdev, tailq);
 	virtio_dev_free(base->vdev);
-	spdk_dma_free(base);
 
-	if (TAILQ_EMPTY(&g_virtio_driver.init_ctrlrs)) {
-		spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+
+	if (base->cb_fn) {
+		base->cb_fn(base->cb_arg, error, NULL, 0);
 	}
+
+	spdk_dma_free(base);
 }
 
 static void
 scan_target_finish(struct virtio_scsi_scan_base *base)
 {
+	size_t bdevs_cnt = 0;
+	struct spdk_bdev *bdevs[BDEV_VIRTIO_MAX_TARGET];
 	struct virtio_scsi_disk *disk;
 	struct virtqueue *ctrlq;
 	struct spdk_ring *ctrlq_ring;
@@ -582,7 +591,7 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 				      SPDK_ENV_SOCKET_ID_ANY);
 	if (ctrlq_ring == NULL) {
 		SPDK_ERRLOG("Failed to allocate send ring for the controlq.\n");
-		scan_target_abort(base);
+		scan_target_abort(base, -ENOMEM);
 		return;
 	}
 
@@ -591,7 +600,7 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 		SPDK_ERRLOG("Failed to acquire the controlq.\n");
 		assert(false);
 		spdk_ring_free(ctrlq_ring);
-		scan_target_abort(base);
+		scan_target_abort(base, rc);
 		return;
 	}
 
@@ -604,16 +613,18 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 		spdk_io_device_register(&disk->vdev, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
 					sizeof(struct bdev_virtio_io_channel));
 		spdk_bdev_register(&disk->bdev);
+		bdevs[bdevs_cnt] = &disk->bdev;
+		bdevs_cnt++;
 	}
 
 	TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, base->vdev, tailq);
 	TAILQ_INSERT_TAIL(&g_virtio_driver.attached_ctrlrs, base->vdev, tailq);
 
-	spdk_dma_free(base);
-
-	if (TAILQ_EMPTY(&g_virtio_driver.init_ctrlrs)) {
-		spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+	if (base->cb_fn) {
+		base->cb_fn(base->cb_arg, 0, bdevs, bdevs_cnt);
 	}
+
+	spdk_dma_free(base);
 }
 
 static void
@@ -702,7 +713,7 @@ alloc_virtio_disk(struct virtio_scsi_scan_base *base, uint8_t target_id, uint64_
 	disk->target = target_id;
 
 	bdev = &disk->bdev;
-	bdev->name = spdk_sprintf_alloc("VirtioScsi%"PRIu32"t%"PRIu8, disk->vdev->id, target_id);
+	bdev->name = spdk_sprintf_alloc("%st%"PRIu8, base->vdev->name, target_id);
 	if (bdev->name == NULL) {
 		SPDK_ERRLOG("Couldn't alloc memory for the bdev name.\n");
 		free(disk);
@@ -856,7 +867,8 @@ bdev_virtio_process_config(void)
 {
 	struct spdk_conf_section *sp;
 	struct virtio_dev *vdev = NULL;
-	char *path;
+	char *default_name = NULL;
+	char *path, *name;
 	unsigned vdev_num;
 	int num_queues;
 	bool enable_pci;
@@ -886,8 +898,17 @@ bdev_virtio_process_config(void)
 			num_queues = 1;
 		}
 
-		vdev = virtio_user_dev_init(path, num_queues, 512,
-					    SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
+		name = spdk_conf_section_get_val(sp, "Name");
+		if (name == NULL) {
+			default_name = spdk_sprintf_alloc("VirtioScsi%u", vdev_num);
+			name = default_name;
+		}
+
+		vdev = virtio_user_dev_init(name, path, num_queues, 512, SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
+
+		free(default_name);
+		default_name = NULL;
+
 		if (vdev == NULL) {
 			rc = -1;
 			goto out;
@@ -908,14 +929,87 @@ out:
 	return rc;
 }
 
+static void
+bdev_virtio_scsi_free(struct virtio_dev *vdev)
+{
+	struct virtqueue *vq;
+
+	if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_REQUESTQ)) {
+		vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
+		spdk_bdev_poller_stop(&vq->poller);
+		spdk_dma_free(vq->poller_ctx);
+		vq->poller_ctx = NULL;
+		virtio_dev_release_queue(vdev, VIRTIO_SCSI_REQUESTQ);
+	}
+
+	virtio_dev_free(vdev);
+}
+
+static int
+bdev_virtio_scsi_scan(struct virtio_dev *vdev, virtio_create_device_cb cb_fn, void *cb_arg)
+{
+	struct virtio_scsi_scan_base *base = spdk_dma_zmalloc(sizeof(struct virtio_scsi_scan_base), 64,
+					     NULL);
+	struct virtqueue *vq;
+	int rc;
+
+	if (base == NULL) {
+		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
+		return -ENOMEM;
+	}
+
+	base->cb_fn = cb_fn;
+	base->cb_arg = cb_arg;
+
+	rc = virtio_dev_init(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
+	if (rc != 0) {
+		spdk_dma_free(base);
+		return rc;
+	}
+
+	rc = virtio_dev_start(vdev);
+	if (rc != 0) {
+		spdk_dma_free(base);
+		return rc;
+	}
+
+	base->vdev = vdev;
+	TAILQ_INIT(&base->found_disks);
+
+	rc = virtio_dev_acquire_queue(vdev, VIRTIO_SCSI_REQUESTQ);
+	if (rc != 0) {
+		SPDK_ERRLOG("Couldn't acquire requestq for the target scan.\n");
+		spdk_dma_free(base);
+		return rc;
+	}
+
+	vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
+	base->vq = vq;
+	vq->poller_ctx = base;
+	spdk_bdev_poller_start(&vq->poller, bdev_scan_poll, base, 0);
+	rc = scan_target(base);
+	if (rc) {
+		SPDK_ERRLOG("Failed to start target scan.\n");
+	}
+
+	return rc;
+}
+
+static void
+bdev_virtio_initial_scan_complete(void *ctx __attribute__((unused)),
+				  int result  __attribute__((unused)),
+				  struct spdk_bdev **bdevs __attribute__((unused)), size_t bdevs_cnt __attribute__((unused)))
+{
+	if (TAILQ_EMPTY(&g_virtio_driver.init_ctrlrs)) {
+		spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+	}
+}
 
 static int
 bdev_virtio_initialize(void)
 {
-	struct virtio_scsi_scan_base *base;
 	struct virtio_dev *vdev, *next_vdev;
-	struct virtqueue *vq;
-	int rc = 0;
+	int rc;
 
 	rc = bdev_virtio_process_config();
 	if (rc != 0) {
@@ -929,43 +1023,8 @@ bdev_virtio_initialize(void)
 
 	/* Initialize all created devices and scan available targets */
 	TAILQ_FOREACH(vdev, &g_virtio_driver.init_ctrlrs, tailq) {
-		base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
-		if (base == NULL) {
-			SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
-			rc = -1;
-			goto out;
-		}
-
-		rc = virtio_dev_init(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
+		rc = bdev_virtio_scsi_scan(vdev, bdev_virtio_initial_scan_complete, NULL);
 		if (rc != 0) {
-			spdk_dma_free(base);
-			goto out;
-		}
-
-		rc = virtio_dev_start(vdev);
-		if (rc != 0) {
-			spdk_dma_free(base);
-			goto out;
-		}
-
-		base->vdev = vdev;
-		TAILQ_INIT(&base->found_disks);
-
-		rc = virtio_dev_acquire_queue(vdev, VIRTIO_SCSI_REQUESTQ);
-		if (rc != 0) {
-			SPDK_ERRLOG("Couldn't acquire requestq for the target scan.\n");
-			spdk_dma_free(base);
-			goto out;
-		}
-
-		vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
-		base->vq = vq;
-		vq->poller_ctx = base;
-		spdk_bdev_poller_start(&vq->poller, bdev_scan_poll, base, 0);
-
-		rc = scan_target(base);
-		if (rc != 0) {
-			SPDK_ERRLOG("Failed to start target scan.\n");
 			goto out;
 		}
 	}
@@ -976,24 +1035,15 @@ out:
 	/* Remove any created devices */
 	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.init_ctrlrs, tailq, next_vdev) {
 		TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, vdev, tailq);
-		if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_REQUESTQ)) {
-			vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
-			spdk_bdev_poller_stop(&vq->poller);
-			spdk_dma_free(vq->poller_ctx);
-			vq->poller_ctx = NULL;
-			virtio_dev_release_queue(vdev, VIRTIO_SCSI_REQUESTQ);
-		}
-		/* since scan pollers couldn't do a single tick yet.
-		 * it's safe just to free the vdev now.
-		 */
-		virtio_dev_free(vdev);
+		bdev_virtio_scsi_free(vdev);
 	}
 
 	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 	return rc;
 }
 
-static void bdev_virtio_finish(void)
+static void
+bdev_virtio_finish(void)
 {
 	struct virtio_dev *vdev, *next;
 	struct virtqueue *vq;
@@ -1014,5 +1064,29 @@ static void bdev_virtio_finish(void)
 		virtio_dev_free(vdev);
 	}
 }
+
+int
+create_virtio_user_scsi_device(const char *base_name, const char *path, unsigned num_queues,
+			       unsigned queue_size, virtio_create_device_cb cb_fn, void *cb_arg)
+{
+	struct virtio_dev *vdev;
+	int rc;
+
+	vdev = virtio_user_dev_init(base_name, path, num_queues, queue_size,
+				    SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
+	if (!vdev) {
+		SPDK_ERRLOG("Failed to create virito device %s: %s\n", base_name, path);
+		return -EINVAL;
+	}
+
+	rc = bdev_virtio_scsi_scan(vdev, cb_fn, cb_arg);
+	if (rc) {
+		TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+		bdev_virtio_scsi_free(vdev);
+	}
+
+	return rc;
+}
+
 
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio", SPDK_TRACE_VIRTIO)
