@@ -132,6 +132,8 @@ spdk_rpc_subsystem_finish(void)
 {
 	spdk_rpc_close();
 
+	spdk_subsystem_fini_next(0);
+
 	return 0;
 }
 

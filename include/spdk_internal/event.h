@@ -73,6 +73,7 @@ void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
 void spdk_subsystem_init(void *arg1, void *arg2);
 int spdk_subsystem_fini(void);
 void spdk_subsystem_init_next(int rc);
+void spdk_subsystem_fini_next(int rc);
 void spdk_subsystem_config(FILE *fp);
 
 /**

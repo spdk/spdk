@@ -391,20 +391,18 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 int
 spdk_app_fini(void)
 {
-	int rc;
-
-	rc = spdk_subsystem_fini();
 	spdk_trace_cleanup();
 	spdk_reactors_fini();
 	spdk_conf_free(g_spdk_app.config);
 	spdk_log_close();
 
-	return rc;
+	return 0;
 }
 
 void
 spdk_app_stop(int rc)
 {
+	spdk_subsystem_fini();
 	spdk_reactors_stop();
 	g_spdk_app.rc = rc;
 }
