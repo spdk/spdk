@@ -74,6 +74,9 @@
 
 struct virtio_dev {
 	struct virtqueue **vqs;
+
+	/** Name of this virtio dev set by backend */
+	char		*name;
 	uint16_t	started;
 
 	/** Max number of queues the host supports. */
