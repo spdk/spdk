@@ -91,6 +91,7 @@ free_virtio_hw(struct virtio_dev *dev)
 		spdk_pci_device_unmap_bar(hw->pci_dev, i, hw->pci_bar[i].vaddr);
 	}
 
+	free(dev->name);
 	free(hw);
 }
 
@@ -714,6 +715,12 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	if (rc != 0) {
 		goto err;
 	}
+
+	vdev->name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, vdev->id);
+	if (!vdev->name) {
+		goto err;
+	}
+
 	vdev->modern = 0;
 	virtio_dev_pci_init(vdev);
 	return 0;
