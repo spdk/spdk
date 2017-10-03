@@ -664,6 +664,11 @@ out:
 
 static void bdev_virtio_finish(void)
 {
+	struct virtio_dev *vdev, *next;
+
+	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.attached_ctrlrs, tailq, next) {
+		virtio_dev_free(vdev);
+	}
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio", SPDK_TRACE_VIRTIO)

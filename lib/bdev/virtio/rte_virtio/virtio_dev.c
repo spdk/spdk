@@ -304,6 +304,7 @@ virtio_dev_free(struct virtio_dev *dev)
 {
 	uint32_t vdev_id = dev->id;
 
+	vtpci_reset(dev);
 	virtio_free_queues(dev);
 	vtpci_ops(dev)->free_vdev(dev);
 	vtpci_deinit(vdev_id);
