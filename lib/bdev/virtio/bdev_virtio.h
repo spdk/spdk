@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2010-2016 Intel Corporation. All rights reserved.
+ *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -31,55 +31,36 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _VIRTIO_USER_DEV_H
-#define _VIRTIO_USER_DEV_H
+#ifndef SPDK_BDEV_VIRTIO_H
+#define SPDK_BDEV_VIRTIO_H
 
-#include "spdk/stdinc.h"
+#include "spdk/bdev.h"
 
-#include <linux/virtio_ring.h>
-
-#include "vhost.h"
-
-#include "../virtio_dev.h"
-
-#define VIRTIO_MAX_VIRTQUEUES 0x100
-
-struct virtio_user_dev {
-	struct virtio_dev vdev;
-
-	/* for vhost_user backend */
-	int		vhostfd;
-
-	/* for both vhost_user and vhost_kernel */
-	int		callfds[VIRTIO_MAX_VIRTQUEUES];
-	int		kickfds[VIRTIO_MAX_VIRTQUEUES];
-	uint32_t	queue_size;
-
-	uint8_t		status;
-	char		path[PATH_MAX];
-	struct vring	vrings[VIRTIO_MAX_VIRTQUEUES];
-	struct virtio_user_backend_ops *ops;
-};
-
-int virtio_user_start_device(struct virtio_user_dev *dev);
-int virtio_user_stop_device(struct virtio_user_dev *dev);
+typedef void (*virtio_create_device_cb)(void *, int, struct spdk_bdev **, size_t size);
 
 /**
- * Connect to a vhost-user device and create corresponding virtio_dev.
+ * Add new Virtio SCSI device and scan it. When LUN is found bdev is automaticly
+ * added to point this LUN.
  *
- * \param name name of this virtio device
- * \param path path to the Unix domain socket of the vhost-user device
- * \param requested_queues maximum number of request queues that this
- * device will support
- * \param queue_size size of each of the queues
- * \param fixed_queue_num number of queues preceeding the first
- * request queue. For Virtio-SCSI this is equal to 2, as there are
- * additional event and control queues.
- * \return virtio device
+ * \param path
+ *   Path to socket.
+ * \param base_name
+ *   Name to used for all bdevs created from this device.
+ * \param vq_size
+ *   Max queue size.
+ * \param cb_fn
+ *   An optional callback to be called after scanning all targets on the controller.
+ *   First parameter is \c cb_arg
+ *   Second parameter is error code. Zero on succes or negative error code.
+ *   Third parameter is bdevs array found on created device. NULL in case of error.
+ *   Fourth is number of bdevs in array. Zero in case of error.
+ * \param cb_arg1
+ *   First argument of \c cb_fn
+ * \return
+ *   Zero on success (device scan is started) or negative error code.
+ *   In case of error \c done_cb is not called.
  */
-struct virtio_dev *virtio_user_dev_init(const char *name, const char *path,
-					uint16_t requested_queues,
-					uint32_t queue_size, uint16_t fixed_queue_num);
-void virtio_user_dev_uninit(struct virtio_user_dev *dev);
+int create_virtio_user_scsi_device(const char *base_name, const char *path, unsigned num_queues,
+				   unsigned queue_size, virtio_create_device_cb cb_fn, void *cb_arg);
 
-#endif
+#endif /* SPDK_BDEV_VIRTIO_H */
