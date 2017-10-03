@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43ce0c0b_564c062a",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-03T18:36:49Z",
+      "side": 1,
+      "message": "why isn\u0027t this global?\nhowever, it should probably be possible to call spdk_bdev_module_init_done after the init, then it just won\u0027t do anything\nbdev examine_done() already works this way.",
+      "range": {
+        "startLine": 76,
+        "startChar": 0,
+        "endLine": 76,
+        "endChar": 21
+      },
+      "revId": "92b27438fbc60099fbd9ab97f8c04018ce1d249b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa1536fc_4fcfaa7b",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-03T18:36:49Z",
+      "side": 1,
+      "message": "this should probably go to g_virtio_driver",
+      "range": {
+        "startLine": 106,
+        "startChar": 0,
+        "endLine": 106,
+        "endChar": 34
+      },
+      "revId": "92b27438fbc60099fbd9ab97f8c04018ce1d249b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f1c89b8_5887f9f5",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-03T18:36:49Z",
+      "side": 1,
+      "message": "what\u0027s that for? seems unnecessary to me.\ncurrently we dont iterate through attached_ctrlrs in any way so the code probably works...",
+      "range": {
+        "startLine": 651,
+        "startChar": 2,
+        "endLine": 651,
+        "endChar": 67
+      },
+      "revId": "92b27438fbc60099fbd9ab97f8c04018ce1d249b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "54089266_526021da",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-03T18:36:49Z",
+      "side": 1,
+      "message": "you can call these directly from spdk_rpc_create_virtio_user_scsi_device",
+      "range": {
+        "startLine": 73,
+        "startChar": 2,
+        "endLine": 76,
+        "endChar": 3
+      },
+      "revId": "92b27438fbc60099fbd9ab97f8c04018ce1d249b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "953d13d4_03a53e03",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-03T18:36:49Z",
+      "side": 1,
+      "message": "if you move the code above (the ones from my previous comment) to the spdk_rpc_create_virtio_user_scsi_device this check won\u0027t be necessary here",
+      "range": {
+        "startLine": 79,
+        "startChar": 1,
+        "endLine": 79,
+        "endChar": 14
+      },
+      "revId": "92b27438fbc60099fbd9ab97f8c04018ce1d249b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
