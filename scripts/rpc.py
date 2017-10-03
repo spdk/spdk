@@ -627,6 +627,17 @@ p = subparsers.add_parser('remove_vhost_controller', help='Remove a vhost contro
 p.add_argument('ctrlr', help='controller name')
 p.set_defaults(func=remove_vhost_controller)
 
+def connect_virtio_user_scsi_dev(args):
+    params = {'path': args.path}
+    if args.vq_size:
+        params['vq_size'] = args.vq_size
+    print_dict(jsonrpc_call('create_virtio_user_scsi_device', params))
+
+p = subparsers.add_parser('create_virtio_user_scsi_device', help='Connect virtio user scsi device')
+p.add_argument('path', help='Path to Virtio SCSI socket')
+p.add_argument('--vq_size', help='vq_size', type=int, default=512)
+p.set_defaults(func=connect_virtio_user_scsi_dev)
+
 def get_rpc_methods(args):
     print_dict(jsonrpc_call('get_rpc_methods'))
 
