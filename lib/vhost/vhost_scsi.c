@@ -99,15 +99,15 @@ struct spdk_vhost_scsi_task {
 	struct rte_vhost_vring *vq;
 };
 
-static int new_device(struct spdk_vhost_dev *, void *);
-static int destroy_device(struct spdk_vhost_dev *, void *);
+static int spdk_vhost_scsi_start(struct spdk_vhost_dev *, void *);
+static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *, void *);
 static void spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
 	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
-	.new_device =  new_device,
-	.destroy_device = destroy_device,
+	.start_device =  spdk_vhost_scsi_start,
+	.stop_device = spdk_vhost_scsi_stop,
 	.dump_config_json = spdk_vhost_scsi_config_json,
 	.vhost_remove_controller = spdk_vhost_scsi_dev_remove,
 };
@@ -967,7 +967,7 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
  * and then allocated to a specific data core.
  */
 static int
-new_device(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	uint32_t i;
@@ -1038,7 +1038,7 @@ destroy_device_poller_cb(void *arg)
 }
 
 static int
-destroy_device(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;

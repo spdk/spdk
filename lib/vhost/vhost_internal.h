@@ -95,8 +95,8 @@ struct spdk_vhost_dev_backend {
 	 * within an arbitrary limit of 3 seconds, these
 	 * callbacks will time out.
 	 */
-	spdk_vhost_event_fn new_device;
-	spdk_vhost_event_fn destroy_device;
+	spdk_vhost_event_fn start_device;
+	spdk_vhost_event_fn stop_device;
 
 	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 	int (*vhost_remove_controller)(struct spdk_vhost_dev *vdev);

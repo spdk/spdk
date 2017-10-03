@@ -484,7 +484,7 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
  *
  */
 static int
-new_device(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev;
 	int rc = 0;
@@ -556,7 +556,7 @@ destroy_device_poller_cb(void *arg)
 }
 
 static int
-destroy_device(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
@@ -620,8 +620,8 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.disabled_features = SPDK_VHOST_DISABLED_FEATURES | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
 	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
-	.new_device =  new_device,
-	.destroy_device = destroy_device,
+	.start_device =  spdk_vhost_blk_start,
+	.stop_device = spdk_vhost_blk_stop,
 	.dump_config_json = spdk_vhost_blk_dump_config_json,
 	.vhost_remove_controller = spdk_vhost_blk_destroy,
 };

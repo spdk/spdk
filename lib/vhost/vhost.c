@@ -67,13 +67,13 @@ struct spdk_vhost_dev_event_ctx {
 };
 
 static int new_connection(int vid);
-static int new_device(int vid);
-static void destroy_device(int vid);
+static int start_device(int vid);
+static void stop_device(int vid);
 static void destroy_connection(int vid);
 
 const struct vhost_device_ops g_spdk_vhost_ops = {
-	.new_device =  new_device,
-	.destroy_device = destroy_device,
+	.new_device =  start_device,
+	.destroy_device = stop_device,
 	.new_connection = new_connection,
 	.destroy_connection = destroy_connection,
 };
@@ -672,7 +672,7 @@ spdk_vhost_event_async_send(unsigned vdev_id, spdk_vhost_event_fn cb_fn, void *a
 }
 
 static void
-destroy_device(int vid)
+stop_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	struct rte_vhost_vring *q;
@@ -693,7 +693,7 @@ destroy_device(int vid)
 		return;
 	}
 
-	rc = spdk_vhost_event_send(vdev, vdev->backend->destroy_device, 3, "destroy device");
+	rc = spdk_vhost_event_send(vdev, vdev->backend->stop_device, 3, "stop device");
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -712,7 +712,7 @@ destroy_device(int vid)
 }
 
 static int
-new_device(int vid)
+start_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	int rc = -1;
@@ -766,7 +766,7 @@ new_device(int vid)
 	}
 
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
-	rc = spdk_vhost_event_send(vdev, vdev->backend->new_device, 3, "new device");
+	rc = spdk_vhost_event_send(vdev, vdev->backend->start_device, 3, "start device");
 	if (rc != 0) {
 		free(vdev->mem);
 		spdk_vhost_free_reactor(vdev->lcore);
