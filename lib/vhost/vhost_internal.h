@@ -91,9 +91,6 @@ struct spdk_vhost_dev_backend {
 	 * The first param is struct spdk_vhost_dev *.
 	 * The second one is event context that has to be
 	 * passed to spdk_vhost_dev_backend_event_done().
-	 * If spdk_vhost_dev_backend_event_done isn't called
-	 * within an arbitrary limit of 3 seconds, these
-	 * callbacks will time out.
 	 */
 	spdk_vhost_event_fn start_device;
 	spdk_vhost_event_fn stop_device;
