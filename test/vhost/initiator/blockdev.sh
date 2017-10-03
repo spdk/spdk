@@ -81,10 +81,39 @@ for block_size in 512 4096; do
                         fi
                         for rw in $fio_rw; do
 	                        timing_enter fio_rw_verify
-                                cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                                if [ $bdev_type == "nvme" ]; then
+					cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+					echo "size=1G" >> $testdir/bdev.fio
+					echo "io_size=4G" >> $testdir/bdev.fio
+	                                echo "offset=4G" >> $testdir/bdev.fio
+	                                if [ $rw == "read" ] || [ $rw == "randread" ]; then
+	                                        echo "[job_write]" >> $testdir/bdev.fio
+                	                        echo "stonewall" >> $testdir/bdev.fio
+                               		        echo "rw=write" >> $testdir/bdev.fio
+		                                echo "do_verify=0" >> $testdir/bdev.fio
+                		                echo -n "filename=" >> $testdir/bdev.fio
+                                		for b in $(echo $bdevs | jq -r '.name'); do
+                                                	echo -n "$b:" >> $testdir/bdev.fio
+		                                done
+                		        	echo "" >> $testdir/bdev.fio
+                                	fi
+	                                echo "[job_$rw]" >> $testdir/bdev.fio
+        	                        echo "stonewall" >> $testdir/bdev.fio
+                	                echo "rw=$rw" >> $testdir/bdev.fio
+                        	        echo -n "filename=" >> $testdir/bdev.fio
+                                	for b in $(echo $bdevs | jq -r '.name'); do
+                                	        echo -n "$b:" >> $testdir/bdev.fio
+					done
+					cat $testdir/bdev.fio
+	                                run_fio --spdk_conf=$testdir/bdev.conf
+
+        	                        rm -f *.state
+                	                rm -f $testdir/bdev.fio
+				fi
+				cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+				echo "size=100m" >> $testdir/bdev.fio
+                                echo "io_size=400m" >> $testdir/bdev.fio
                                 if [ $rw == "read" ] || [ $rw == "randread" ]; then
-                                        echo "size=100m" >> $testdir/bdev.fio
-                                        echo "io_size=400m" >> $testdir/bdev.fio
                                         echo "[job_write]" >> $testdir/bdev.fio
                                         echo "stonewall" >> $testdir/bdev.fio
                                         echo "rw=write" >> $testdir/bdev.fio
@@ -100,14 +129,13 @@ for block_size in 512 4096; do
                                 echo "rw=$rw" >> $testdir/bdev.fio
                                 echo -n "filename=" >> $testdir/bdev.fio
 	                        for b in $(echo $bdevs | jq -r '.name'); do
-	                        	echo -n "$b:" >> $testdir/bdev.fio
-                                done
+	                        	cat $testdir/bdev.fio
+				done
 
-                                cat $testdir/bdev.fio
-	                        run_fio --spdk_conf=$testdir/bdev.conf
+                                run_fio --spdk_conf=$testdir/bdev.conf
 
-	                        rm -f *.state
-	                        rm -f $testdir/bdev.fio
+                                rm -f *.state
+                                rm -f $testdir/bdev.fioecho -n "$b:" >> $testdir/bdev.fio
 	                        timing_exit fio_rw_verify
                         done
 
