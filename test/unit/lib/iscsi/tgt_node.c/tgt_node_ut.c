@@ -79,6 +79,12 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 	return dev->lun[lun_id];
 }
 
+int
+spdk_scsi_dev_delete_port(struct spdk_scsi_dev *dev, uint64_t id)
+{
+	return 0;
+}
+
 static void
 config_file_fail_cases(void)
 {
