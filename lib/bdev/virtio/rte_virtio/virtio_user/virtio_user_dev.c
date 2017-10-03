@@ -38,6 +38,7 @@
 #include "../virtio_dev.h"
 
 #include "spdk/string.h"
+#include "spdk/util.h"
 
 static int
 virtio_user_create_queue(struct virtio_user_dev *dev, uint32_t queue_sel)
@@ -166,13 +167,22 @@ virtio_user_dev_setup(struct virtio_user_dev *dev)
 }
 
 struct virtio_dev *
-virtio_user_dev_init(char *path, uint16_t requested_queues,
-		     uint32_t queue_size, uint16_t fixed_queue_num)
+virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queues,
+		     uint32_t queue_size,
+		     uint16_t fixed_queue_num)
 {
 	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
 	uint64_t max_queues;
 	char err_str[64];
+
+	if (name == NULL) {
+		SPDK_ERRLOG("No name gived for controller: %s\n", path);
+		return NULL;
+	} else if (requested_queues == 0) {
+		SPDK_ERRLOG("Can't create controller with no queues: %s\n", path);
+		return NULL;
+	}
 
 	dev = calloc(1, sizeof(*dev));
 	if (dev == NULL) {
@@ -181,6 +191,11 @@ virtio_user_dev_init(char *path, uint16_t requested_queues,
 
 	vdev = &dev->vdev;
 	vdev->is_hw = 0;
+	vdev->name = strdup(name);
+	if (!vdev->name) {
+		SPDK_ERRLOG("Failed to reserve memory for controller name: %s\n", path);
+		goto err;
+	}
 
 	if (vtpci_init(vdev, &virtio_user_ops) != 0) {
 		SPDK_ERRLOG("Failed to init device: %s\n", path);
@@ -219,6 +234,7 @@ virtio_user_dev_init(char *path, uint16_t requested_queues,
 	return vdev;
 
 err:
+	free(vdev->name);
 	free(dev);
 	return NULL;
 }
@@ -227,4 +243,6 @@ void
 virtio_user_dev_uninit(struct virtio_user_dev *dev)
 {
 	close(dev->vhostfd);
+	free(dev->vdev.name);
+	free(dev);
 }
