@@ -66,7 +66,7 @@ usage(char *executable_name)
 	printf(" -e mask    tracepoint group mask for spdk trace buffers (default: 0x0)\n");
 	printf(" -f pidfile save pid to file under given path\n");
 	printf(" -m mask    reactor core mask (default: 0x1)\n");
-	printf(" -n channel number of memory channels used for DPDK\n");
+	printf(" -N         pass --no-pci to DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -s size    memory size in MB for DPDK (default: %dMB)\n", defaults.mem_size);
 	printf(" -S dir     directory where to create vhost sockets (default: pwd)\n");
@@ -103,7 +103,7 @@ main(int argc, char *argv[])
 
 	vhost_app_opts_init(&opts);
 
-	while ((ch = getopt(argc, argv, "c:de:f:m:p:qs:S:t:h")) != -1) {
+	while ((ch = getopt(argc, argv, "c:de:f:m:Np:qs:S:t:h")) != -1) {
 		switch (ch) {
 		case 'c':
 			opts.config_file = optarg;
@@ -122,6 +122,9 @@ main(int argc, char *argv[])
 			exit(EXIT_SUCCESS);
 		case 'm':
 			opts.reactor_mask = optarg;
+			break;
+		case 'N':
+			opts.no_pci = true;
 			break;
 		case 'p':
 			opts.master_core = strtoul(optarg, NULL, 10);
