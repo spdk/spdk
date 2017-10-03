@@ -24,9 +24,25 @@ function run_fio() {
         rm -f $testdir/bdev.fio
 }
 
-function prepare_fio_job_for_unmap() {
+function prepare_fio_job_4G() {
+        rw="$1"
+        fio_bdevs="$2"
+        echo "size=1G" >> $testdir/bdev.fio
+        echo "io_size=4G" >> $testdir/bdev.fio
+        echo "offset=4G" >> $testdir/bdev.fio
+        echo "[job_$rw]" >> $testdir/bdev.fio
+        echo "stonewall" >> $testdir/bdev.fio
+        echo "rw=$rw" >> $testdir/bdev.fio
         echo -n "filename=" >> $testdir/bdev.fio
-        for b in $(echo $bdevs | jq -r '.name'); do
+        for b in $(echo $fio_bdevs | jq -r '.name'); do
+                echo -n "$b:" >> $testdir/bdev.fio
+        done
+}
+
+function prepare_fio_job_for_unmap() {
+        fio_bdevs="$1"
+        echo -n "filename=" >> $testdir/bdev.fio
+        for b in $(echo $fio_bdevs | jq -r '.name'); do
                 echo -n "$b:" >> $testdir/bdev.fio
         done
         echo "" >> $testdir/bdev.fio
@@ -51,7 +67,6 @@ function prepare_fio_job_for_unmap() {
         echo "stonewall" >> $testdir/bdev.fio
         echo "rw=trimwrite" >> $testdir/bdev.fio
         echo "trim_verify_zero=1" >> $testdir/bdev.fio
-
 }
 
 source $rootdir/test/vhost/common/common.sh
@@ -105,8 +120,20 @@ for bdev in $bdevs; do
 
                 #Host test for unmap
                 cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
-                prepare_fio_job_for_unmap
+                prepare_fio_job_for_unmap "$bdevs"
                 run_fio --spdk_conf=$testdir/bdev.conf
+
+                #Host test for +4G
+                if [ $bdev == "Nvme0n1" ]; then
+                    for rw in "${fio_rw[@]}"; do
+                        timing_enter fio_4G_rw_verify
+                        echo "INFO: Running 4G test $rw for disk $bdev"
+                        cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                        prepare_fio_job_4G "$rw" "$bdevs"
+                        run_fio --spdk_conf=$testdir/bdev.conf
+                        timing_exit fio_4G_rw_verify
+                    done
+                fi
                 timing_exit fio
         fi
 
