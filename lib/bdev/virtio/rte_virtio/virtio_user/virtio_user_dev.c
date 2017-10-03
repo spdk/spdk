@@ -187,7 +187,7 @@ virtio_user_dev_setup(struct virtio_user_dev *dev)
 }
 
 struct virtio_dev *
-virtio_user_dev_init(char *path, int queue_size)
+virtio_user_dev_init(const char *path, int queue_size)
 {
 	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
@@ -248,4 +248,6 @@ virtio_user_dev_uninit(struct virtio_user_dev *dev)
 		free(dev->vhostfds);
 		free(dev->tapfds);
 	}
+
+	free(dev);
 }
