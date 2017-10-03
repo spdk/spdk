@@ -23,6 +23,32 @@ function run_host_fio() {
         fi
 }
 
+function prepare_fio_job_4G() {
+        rw="$1"
+        fio_bdevs="$2"
+        echo "size=1G" >> $testdir/bdev.fio
+        echo "io_size=4G" >> $testdir/bdev.fio
+        echo "offset=4G" >> $testdir/bdev.fio
+        if [ $rw == "read" ] || [ $rw == "randread" ]; then
+                echo "[job_write]" >> $testdir/bdev.fio
+                echo "stonewall" >> $testdir/bdev.fio
+                echo "rw=write" >> $testdir/bdev.fio
+                echo "do_verify=0" >> $testdir/bdev.fio
+                echo -n "filename=" >> $testdir/bdev.fio
+                for b in $(echo $fio_bdevs | jq -r '.name'); do
+                        echo -n "$b:" >> $testdir/bdev.fio
+                done
+                echo "" >> $testdir/bdev.fio
+        fi
+        echo "[job_$rw]" >> $testdir/bdev.fio
+        echo "stonewall" >> $testdir/bdev.fio
+        echo "rw=$rw" >> $testdir/bdev.fio
+        echo -n "filename=" >> $testdir/bdev.fio
+        for b in $(echo $fio_bdevs | jq -r '.name'); do
+            echo -n "$b:" >> $testdir/bdev.fio
+        done
+}
+
 function prepare_fio_job() {
         rw="$1"
         fio_bdevs="$2"
@@ -158,6 +184,10 @@ for bdev in $bdevs; do
                                 rm -f *.state
                                 rm -f $testdir/bdev.fio
                         done
+                        prepare_fio_job_4G "$rw" ""
+                        run_guest_fio "Guest +4G test" --spdk_conf=/root/bdev.conf
+                        rm -f *.state
+                        rm -f $testdir/bdev.fio
                         vm_shutdown_all
                 fi
                 for rw in "${fio_rw[@]}"; do
@@ -170,7 +200,10 @@ for bdev in $bdevs; do
                         rm -f $testdir/bdev.fio
                         timing_exit fio_rw_verify
                 done
-
+                if [ $bdev == "Nvme0n1" ]; then
+                        prepare_fio_job_4G "$rw" "$vbdevs"
+                        run_host_fio "Host +4G test" --spdk_conf=$testdir/bdev.conf
+                fi
                 timing_exit fio
         fi
 
