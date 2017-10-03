@@ -318,6 +318,7 @@ virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 void
 virtio_dev_free(struct virtio_dev *dev)
 {
+	vtpci_reset(dev);
 	virtio_free_queues(dev);
 	VTPCI_OPS(dev)->free_vdev(dev);
 	/* FIXME clear VTPCI_OPS(dev) */
