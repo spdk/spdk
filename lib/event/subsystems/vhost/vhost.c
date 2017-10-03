@@ -50,7 +50,12 @@ spdk_vhost_subsystem_init(void)
 static int
 spdk_vhost_subsystem_fini(void)
 {
-	return spdk_vhost_fini();
+	int rc = 0;
+
+	rc = spdk_vhost_fini();
+	spdk_subsystem_fini_next(rc);
+
+	return rc;
 }
 
 SPDK_SUBSYSTEM_REGISTER(vhost, spdk_vhost_subsystem_init, spdk_vhost_subsystem_fini, NULL)

@@ -167,27 +167,40 @@ spdk_subsystem_init(void *arg1, void *arg2)
 }
 
 void
-spdk_subsystem_fini(void *arg1, void *arg2)
+spdk_subsystem_fini_next(int rc)
 {
-	int rc = 0;
-	struct spdk_subsystem *cur;
-	g_app_finish_event = (struct spdk_event *)arg1;
-
-	cur = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
-
-	while (cur) {
-		if (cur->fini) {
-			rc = cur->fini();
-			if (rc) {
-				spdk_event_call(g_app_finish_event);
-				return;
-			}
-		}
-		cur = TAILQ_PREV(cur, spdk_subsystem_list, tailq);
+	if (rc) {
+		assert(g_next_subsystem != NULL);
+		SPDK_ERRLOG("Init subsystem %s failed\n", g_next_subsystem->name);
+		spdk_event_call(g_app_finish_event);
+		return;
 	}
 
-	spdk_event_call(g_app_finish_event);
-	return;
+	if (!g_next_subsystem) {
+		g_next_subsystem = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
+	} else {
+		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
+	}
+
+	if (!g_next_subsystem) {
+		spdk_event_call(g_app_finish_event);
+		return;
+	}
+
+	if (g_next_subsystem->fini) {
+		g_next_subsystem->fini();
+	} else {
+		spdk_subsystem_fini_next(0);
+	}
+}
+
+void
+spdk_subsystem_fini(void *arg1, void *arg2)
+{
+	g_app_finish_event = (struct spdk_event *)arg1;
+	g_next_subsystem = NULL;
+
+	spdk_subsystem_fini_next(0);
 }
 
 void
