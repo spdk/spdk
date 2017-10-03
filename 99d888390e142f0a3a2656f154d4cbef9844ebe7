@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "30c74a51_a56a0844",
+        "filename": "test/pmem/common/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-03T07:30:14Z",
+      "side": 1,
+      "message": "oh no",
+      "parentUuid": "27a116c6_bff5366d",
+      "range": {
+        "startLine": 91,
+        "startChar": 4,
+        "endLine": 92,
+        "endChar": 29
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "69e11f1f_fa9f1bc0",
         "filename": "test/pmem/common/common.sh",
         "patchSetId": 15
@@ -140,6 +164,30 @@
     },
     {
       "key": {
+        "uuid": "a54ca620_03e46471",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-03T07:30:14Z",
+      "side": 1,
+      "message": "I will revert it to \"error\" but for now this test fails as create_pmem_pool doesn\u0027t round up block size to 512 and stops the tests",
+      "parentUuid": "a5d189c2_04c7724b",
+      "range": {
+        "startLine": 254,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 14
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b7a9d7c_2c031fd6",
         "filename": "test/pmem/pmem.sh",
         "patchSetId": 15
@@ -186,6 +234,30 @@
     },
     {
       "key": {
+        "uuid": "3958ce5c_e36d26ee",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-03T07:30:14Z",
+      "side": 1,
+      "message": "Yes, this looks awful, but it\u0027s still a draft ;) ;)",
+      "parentUuid": "2c233dd7_e7539574",
+      "range": {
+        "startLine": 267,
+        "startChar": 0,
+        "endLine": 358,
+        "endChar": 3
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ffa2fac9_a7a88290",
         "filename": "test/pmem/pmem.sh",
         "patchSetId": 15
@@ -197,6 +269,30 @@
       "writtenOn": "2017-10-03T07:03:50Z",
       "side": 1,
       "message": "Can you confirm that? Works on my end.",
+      "range": {
+        "startLine": 384,
+        "startChar": 0,
+        "endLine": 384,
+        "endChar": 16
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4c734d8_d060b71b",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-03T07:30:14Z",
+      "side": 1,
+      "message": "It should work, this artifact is a leftover before I refined this test. I will delete this",
+      "parentUuid": "ffa2fac9_a7a88290",
       "range": {
         "startLine": 384,
         "startChar": 0,
@@ -243,6 +339,30 @@
       "writtenOn": "2017-10-03T07:03:50Z",
       "side": 1,
       "message": "Meaningful error messages; but this test is still TBD, so I get it;)",
+      "range": {
+        "startLine": 654,
+        "startChar": 2,
+        "endLine": 654,
+        "endChar": 44
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34d5ed39_d44b967b",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-03T07:30:14Z",
+      "side": 1,
+      "message": "I must have been tired at this point ;)",
+      "parentUuid": "790cb9ac_5037327b",
       "range": {
         "startLine": 654,
         "startChar": 2,
