@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a3f2d82_a1195e8b",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-03T11:08:02Z",
+      "side": 1,
+      "message": "Not true.",
+      "range": {
+        "startLine": 66,
+        "startChar": 60,
+        "endLine": 67,
+        "endChar": 55
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0b8dc94_30397d1b",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-03T11:08:02Z",
+      "side": 1,
+      "message": "It is not clear what \u0027vdev\u0027 is. I would add in line 63:\n\"SPDK vhost device - called vdev.\"",
+      "range": {
+        "startLine": 69,
+        "startChar": 7,
+        "endLine": 69,
+        "endChar": 11
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7de58bd4_58c86387",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-03T11:08:02Z",
+      "side": 1,
+      "message": "-\u003e is",
+      "range": {
+        "startLine": 99,
+        "startChar": 41,
+        "endLine": 99,
+        "endChar": 45
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f86c240_23bec533",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-03T11:08:02Z",
+      "side": 1,
+      "message": "\"SPDK application CPU mask\" or \"CPU mask used to start SPDK application\"",
+      "range": {
+        "startLine": 100,
+        "startChar": 6,
+        "endLine": 100,
+        "endChar": 24
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dabf55e_3617019f",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-03T11:08:02Z",
+      "side": 1,
+      "message": "Are you sure this sentence is about CPU mask?",
+      "range": {
+        "startLine": 103,
+        "startChar": 32,
+        "endLine": 104,
+        "endChar": 60
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0834f9dc_11b65277",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-03T11:08:02Z",
+      "side": 1,
+      "message": "This create many questions when? how? doc?\nMaybe something like this?\n\n\"... after proper initialization. See QEMU doc/spec/vhost_user.txt for more details.\"",
+      "range": {
+        "startLine": 112,
+        "startChar": 51,
+        "endLine": 113,
+        "endChar": 63
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30de5d03_76a332df",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-03T11:08:02Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 195,
+        "startChar": 45,
+        "endLine": 196,
+        "endChar": 56
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1d1ee31_2bcd227b",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-03T11:08:02Z",
+      "side": 1,
+      "message": "hmmm... so haw the function detect cpumask base?",
+      "range": {
+        "startLine": 208,
+        "startChar": 38,
+        "endLine": 208,
+        "endChar": 54
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9dc52a1_c6649bf5",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-03T11:08:02Z",
+      "side": 1,
+      "message": "Whitespace",
+      "range": {
+        "startLine": 254,
+        "startChar": 17,
+        "endLine": 254,
+        "endChar": 18
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
