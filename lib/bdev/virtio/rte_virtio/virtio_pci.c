@@ -35,6 +35,7 @@
 #include <linux/virtio_scsi.h>
 
 #include "spdk/mmio.h"
+#include "spdk/string.h"
 
 #include "virtio_pci.h"
 
@@ -91,6 +92,7 @@ free_virtio_hw(struct virtio_dev *dev)
 		spdk_pci_device_unmap_bar(hw->pci_dev, i, hw->pci_bar[i].vaddr);
 	}
 
+	free(dev->name);
 	free(hw);
 }
 
@@ -710,10 +712,16 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	}
 #endif
 
+	vdev->name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, vdev->id);
+	if (!vdev->name) {
+		goto err;
+	}
+
 	rc = vtpci_init(vdev, &legacy_ops);
 	if (rc != 0) {
 		goto err;
 	}
+
 	vdev->modern = 0;
 	virtio_dev_pci_init(vdev);
 	return 0;
