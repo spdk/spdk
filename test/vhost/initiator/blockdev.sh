@@ -17,6 +17,31 @@ function run_fio()
         fi
 }
 
+function prepare_fio_job_4G() {
+        rw="$1"
+        echo "size=1G" >> $testdir/bdev.fio
+        echo "io_size=4G" >> $testdir/bdev.fio
+        echo "offset=4G" >> $testdir/bdev.fio
+        if [ $rw == "read" ] || [ $rw == "randread" ]; then
+                echo "[job_write]" >> $testdir/bdev.fio
+                echo "stonewall" >> $testdir/bdev.fio
+                echo "rw=write" >> $testdir/bdev.fio
+                echo "do_verify=0" >> $testdir/bdev.fio
+                echo -n "filename=" >> $testdir/bdev.fio
+                for b in $(echo $bdevs | jq -r '.name'); do
+                    echo -n "$b:" >> $testdir/bdev.fio
+                done
+                echo "" >> $testdir/bdev.fio
+        fi
+        echo "[job_$rw]" >> $testdir/bdev.fio
+        echo "stonewall" >> $testdir/bdev.fio
+        echo "rw=$rw" >> $testdir/bdev.fio
+        echo -n "filename=" >> $testdir/bdev.fio
+        for b in $(echo $bdevs | jq -r '.name'); do
+                echo -n "$b:" >> $testdir/bdev.fio
+        done
+}
+
 source $rootdir/test/vhost/common/common.sh
 $rootdir/scripts/gen_nvme.sh
 spdk_vhost_run $testdir
@@ -55,6 +80,7 @@ for bdev in $bdevs; do
                 else
                         fio_rw=("write" "read")
                 fi
+
                 for rw in "${fio_rw[@]}"; do
                         timing_enter fio_rw_verify
                         cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
@@ -79,13 +105,21 @@ for bdev in $bdevs; do
                                 echo -n "$b:" >> $testdir/bdev.fio
                         done
 
-                        run_fio --spdk_conf=$testdir/bdev.conf
+                        #run_fio --spdk_conf=$testdir/bdev.conf
 
                         rm -f *.state
                         rm -f $testdir/bdev.fio
                         timing_exit fio_rw_verify
                 done
 
+                if [ $bdev == "Nvme0n1" ]; then
+                    for rw in "${fio_rw[@]}"; do
+                        echo "RUNNING 4G FOR $rw"
+                        cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                        prepare_fio_job_4G "$rw"
+                        run_fio --spdk_conf=$testdir/bdev.conf
+                    done
+                fi
                 timing_exit fio
         fi
 
