@@ -44,6 +44,7 @@
 #define DEV_BUFFER_BLOCKCNT (DEV_BUFFER_SIZE / DEV_BUFFER_BLOCKLEN)
 #define BS_CLUSTER_SIZE (1024 * 1024)
 #define BS_FREE_CLUSTERS (DEV_BUFFER_SIZE / BS_CLUSTER_SIZE)
+#define BS_PAGE_SIZE (4096)
 
 #define SPDK_BLOB_OPTS_CLUSTER_SZ (1024 * 1024)
 #define SPDK_BLOB_OPTS_NUM_MD_PAGES UINT32_MAX
@@ -72,7 +73,7 @@ spdk_blob_md_set_xattr(struct spdk_blob *blob, const char *name, const void *val
 uint64_t
 spdk_bs_get_page_size(struct spdk_blob_store *bs)
 {
-	return 0;
+	return BS_PAGE_SIZE;
 }
 
 static void
