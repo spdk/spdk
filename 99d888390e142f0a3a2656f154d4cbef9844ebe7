@@ -1,0 +1,297 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fa661eb_3e0244ce",
+        "filename": "autotest.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "spaces after [ and before ]",
+      "range": {
+        "startLine": 132,
+        "startChar": 3,
+        "endLine": 132,
+        "endChar": 26
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "313e430c_15a67311",
+        "filename": "test/pmem/common/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "tabs/spaces consistency",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 4
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27a116c6_bff5366d",
+        "filename": "test/pmem/common/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "Bad news here: please change to vhost. Tomek discovered that nbd testing app has memory leaks and test will fail if you use ASAN. Check it up yourself if you\u0027d like.\nWe\u0027ll possibly have to go back to nbd anyways once mem leaks are fixed.",
+      "range": {
+        "startLine": 91,
+        "startChar": 4,
+        "endLine": 92,
+        "endChar": 29
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69e11f1f_fa9f1bc0",
+        "filename": "test/pmem/common/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "tabs / spaces",
+      "range": {
+        "startLine": 110,
+        "startChar": 1,
+        "endLine": 113,
+        "endChar": 4
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed14d26a_75e410d4",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "Note on all functions:\ncan you print some kind of header for each function / test?\ne.g. : \u003d\u003d\u003d\u003d\u003d TEST: pmem_pool_info_tc1 \u003d\u003d\u003d\u003d\u003d\nCurrently it\u0027s hard to read through a wall of output if you\u0027re looking for something",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 1
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5d189c2_04c7724b",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "I think you\u0027d like to revert back to using \"error\"",
+      "range": {
+        "startLine": 254,
+        "startChar": 0,
+        "endLine": 255,
+        "endChar": 14
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b7a9d7c_2c031fd6",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "This one fails. Maybe I have a wrong understanding of documentation, but have to double check",
+      "range": {
+        "startLine": 252,
+        "startChar": 0,
+        "endLine": 257,
+        "endChar": 5
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c233dd7_e7539574",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "How about putting this in a loop?",
+      "range": {
+        "startLine": 267,
+        "startChar": 0,
+        "endLine": 358,
+        "endChar": 3
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffa2fac9_a7a88290",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "Can you confirm that? Works on my end.",
+      "range": {
+        "startLine": 384,
+        "startChar": 0,
+        "endLine": 384,
+        "endChar": 16
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19995772_e52f16f4",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "I think we can change the values.\nDocumentation says \"the number of available blocks for the user cannot be less than 256. This translates to at least 512 internal blocks\" and here we try to test against 256 blocks while we should against 512.\n\nChange it to create 32 65536 - that\u0027s exactly 512 blocks, but it will still fail due to pmem pool overhead.\n33 65536 correctly creates pmem pool as 33M/65536 \u003e 512\n\nI will update the test plan accordingly",
+      "range": {
+        "startLine": 389,
+        "startChar": 48,
+        "endLine": 389,
+        "endChar": 57
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "790cb9ac_5037327b",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 654,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "Meaningful error messages; but this test is still TBD, so I get it;)",
+      "range": {
+        "startLine": 654,
+        "startChar": 2,
+        "endLine": 654,
+        "endChar": 44
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1048f53_adf3240d",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 656,
+        "startChar": 0,
+        "endLine": 656,
+        "endChar": 1
+      },
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d93b5100_2c9ae708",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 736,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-03T07:03:50Z",
+      "side": 1,
+      "message": "Didn\u0027t know where to put this, so maybe here.\nIf something fails and we get just RC\u003d1 at the end of the script we would have to analyze the whole output and search for failed tests manually.\n\nI see two options here:\n1. Maybe try to print a list of failed test cases as a summary?\n2. Or - stop script execution after first failure; no need to search for fail then as it will be at the bottom of output.\n\nI opt for solution 1, but it\u0027s your call.",
+      "revId": "99d888390e142f0a3a2656f154d4cbef9844ebe7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
