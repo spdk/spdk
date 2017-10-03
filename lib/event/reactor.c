@@ -357,7 +357,9 @@ _spdk_reactor_run(void *arg)
 	char			thread_name[32];
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
-	spdk_allocate_thread(_spdk_reactor_send_msg, &reactor->lcore, thread_name);
+	if (spdk_allocate_thread(_spdk_reactor_send_msg, &reactor->lcore, thread_name) == NULL) {
+		return -1;
+	}
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
 		       reactor->socket_id);
 
