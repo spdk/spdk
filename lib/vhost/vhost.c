@@ -637,8 +637,8 @@ spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 
 	rc = sem_timedwait(&ev_ctx.sem, &timeout);
 	if (rc != 0) {
-		SPDK_ERRLOG("Timout waiting for event: %s.\n", errmsg);
-		abort();
+		SPDK_ERRLOG("Timeout waiting for event: %s.\n", errmsg);
+		sem_wait(&ev_ctx.sem);
 	}
 
 	sem_destroy(&ev_ctx.sem);
