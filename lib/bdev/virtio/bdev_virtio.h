@@ -1,7 +1,7 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright(c) 2010-2016 Intel Corporation. All rights reserved.
+ *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -31,45 +31,32 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _VIRTIO_USER_DEV_H
-#define _VIRTIO_USER_DEV_H
+#ifndef SPDK_BDEV_VIRTIO_H
+#define SPDK_BDEV_VIRTIO_H
+#include "spdk/bdev.h"
 
-#include <linux/virtio_ring.h>
+typedef void (*virtio_scsi_add_bdev_cb)(void *, struct spdk_bdev **, size_t);
 
-#include <limits.h>
-#include "vhost.h"
+/**
+ *
+ * \param path
+ *   Path to socket.
+ * \param prefix
+ *   Prefix to used instead of default 'VirtioScsiN'
+ * \param vq_size
+ *   Max queue size.
+ * \param cb_fn
+ *   Callback called just after adding new bdev from controller.
+ *   First parameter is \c cb_arg
+ *   Second parameter is bdevs array found on created device.
+ *   Third is number of bdevs in array.
+ * \param cb_arg1
+ *   First argument of \c cb_fn
+ * \return
+ *   Zero or negative error code on error.
+ *   In case of error \c done_cb is not called.
+ */
+int create_virtio_user_scsi_device(const char *path, const char *prefix, int queue_size,
+				   virtio_scsi_add_bdev_cb cb_fn, void *cb_arg);
 
-#include "../virtio_dev.h"
-
-#define VIRTIO_MAX_VIRTQUEUES 0x100
-
-struct virtio_user_dev {
-	struct virtio_dev vdev;
-
-	/* for vhost_user backend */
-	int		vhostfd;
-
-	/* for vhost_kernel backend */
-	char		*ifname;
-	int		*vhostfds;
-	int		*tapfds;
-
-	/* for both vhost_user and vhost_kernel */
-	int		callfds[VIRTIO_MAX_VIRTQUEUES];
-	int		kickfds[VIRTIO_MAX_VIRTQUEUES];
-	uint32_t	queue_size;
-
-	uint8_t		status;
-	uint8_t		port_id;
-	char		path[PATH_MAX];
-	struct vring	vrings[VIRTIO_MAX_VIRTQUEUES];
-	struct virtio_user_backend_ops *ops;
-};
-
-int is_vhost_user_by_type(const char *path);
-int virtio_user_start_device(struct virtio_user_dev *dev);
-int virtio_user_stop_device(struct virtio_user_dev *dev);
-struct virtio_dev *virtio_user_dev_init(const char *path, int queue_size);
-void virtio_user_dev_uninit(struct virtio_user_dev *dev);
-void virtio_user_handle_cq(struct virtio_user_dev *dev, uint16_t queue_idx);
-#endif
+#endif /* SPDK_BDEV_VIRTIO_H */
