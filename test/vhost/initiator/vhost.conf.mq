@@ -1,0 +1,21 @@
+[Global]
+
+[Rpc]
+  Enable Yes
+  Listen 127.0.0.1:5261
+
+[Ioat]
+  Disable Yes
+
+[Virtio]
+  Dev User /tmp/vhost.0
+#  Dev User /tmp/vhost.1
+
+[Split]
+  Split Virtio0 2
+
+[VhostScsi0]
+  Name naa.Virtio0p0.0
+
+[VhostScsi1]
+  Name naa.Virtio0p1.0
