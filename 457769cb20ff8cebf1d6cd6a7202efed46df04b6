@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "773b1633_19fb287f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-04T09:11:54Z",
+      "side": 1,
+      "message": "I don\u0027t feel this is a strong need for good designed modules but it doesn\u0027t bother me either. Only suggestion is to document when use this function.",
+      "range": {
+        "startLine": 414,
+        "startChar": 0,
+        "endLine": 414,
+        "endChar": 62
+      },
+      "revId": "457769cb20ff8cebf1d6cd6a7202efed46df04b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
