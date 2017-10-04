@@ -567,11 +567,6 @@ vbdev_lvol_resize(char *name, size_t sz,
 		return -1;
 	}
 
-	if (spdk_is_bdev_opened(bdev)) {
-		SPDK_ERRLOG("bdev '%s' cannot be resized because it is currently opened\n", name);
-		return -1;
-	}
-
 	lvs = lvol->lvol_store;
 	cluster_size = spdk_bs_get_cluster_size(lvs->blobstore);
 

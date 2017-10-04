@@ -229,8 +229,6 @@ struct spdk_bdev {
 
 	TAILQ_ENTRY(spdk_bdev) vbdev_link;
 
-	bool bdev_opened;
-
 	/**
 	 * Pointer to the module that has claimed this bdev for purposes of creating virtual
 	 *  bdevs on top of it.  Set to NULL if the bdev has not been claimed.
@@ -423,8 +421,6 @@ void spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			      int *sc, int *sk, int *asc, int *ascq);
 
 void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module);
-
-bool spdk_is_bdev_opened(struct spdk_bdev *bdev);
 
 static inline struct spdk_bdev_io *
 spdk_bdev_io_from_ctx(void *ctx)
