@@ -22,6 +22,30 @@
       "revId": "38cc52212603f6bb8a03e59519d7663f3c23eb7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9894d86e_c5f9a804",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-04T14:17:20Z",
+      "side": 1,
+      "message": "I don\u0027t think this break any architecture here.\n\nIf we don\u0027t have a way to issue some bdev-specific commands using existing IO channel facility there will be a need of modifying bdev.c every time new bdev type is added that require some out-of-band IO be passed. VirtioSCSI is the first example here. Changing geometry or hot-plug/hot-remove will require issuing custom commands and this will require concurrent access to VQ. If we can\u0027t allocate/share IO channel one VQ will have to allocated only for that purpose.\n\nOnly one change here is to preserve some numbers for later bdev.c use.",
+      "parentUuid": "a6c48c7b_6a4da88a",
+      "range": {
+        "startLine": 95,
+        "startChar": 1,
+        "endLine": 95,
+        "endChar": 24
+      },
+      "revId": "38cc52212603f6bb8a03e59519d7663f3c23eb7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
