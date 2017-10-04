@@ -66,6 +66,7 @@ struct spdk_io_channel {
 	uint32_t			ref;
 	TAILQ_ENTRY(spdk_io_channel)	tailq;
 	spdk_io_channel_destroy_cb	destroy_cb;
+	bool				is_master;
 
 	/*
 	 * Modules will allocate extra memory off the end of this structure
@@ -345,6 +346,7 @@ spdk_get_io_channel(void *io_device)
 	ch->thread = thread;
 	ch->ref = 1;
 	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
+	ch->is_master = false;
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 
@@ -514,4 +516,16 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	cpl(io_device, ctx);
+}
+
+void
+spdk_io_channel_set_master(struct spdk_io_channel *ch)
+{
+	ch->is_master = true;
+}
+
+bool
+spdk_io_channel_is_master(struct spdk_io_channel *ch)
+{
+	return ch->is_master;
 }

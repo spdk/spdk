@@ -666,4 +666,14 @@ void spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
  */
 void spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp);
 
+/**
+ * Set the master channel for the required bdev. This will be called once the I/O channel
+ * is retrieved and the master channel has not been set on this bdev or the previous master
+ * channel has been destroyed.
+ *
+ * \param bdev Block device.
+ * \param ch I/O channel.
+ */
+void spdk_bdev_set_master_channel(struct spdk_bdev *bdev, struct spdk_io_channel *ch);
+
 #endif /* SPDK_BDEV_H_ */

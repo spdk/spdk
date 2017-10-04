@@ -172,4 +172,14 @@ struct spdk_thread *spdk_io_channel_get_thread(struct spdk_io_channel *ch);
 void spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 			   spdk_channel_for_each_cpl cpl);
 
+/**
+ * \brief Set the current I/O channel as the master channel.
+ */
+void spdk_io_channel_set_master(struct spdk_io_channel *ch);
+
+/**
+ * \brief Returns the is_master flag associated with an I/O channel.
+ */
+bool spdk_io_channel_is_master(struct spdk_io_channel *ch);
+
 #endif /* SPDK_IO_CHANNEL_H_ */
