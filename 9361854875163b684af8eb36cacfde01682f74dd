@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0be0a7c_81a20fc2",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-04T13:52:40Z",
+      "side": 1,
+      "message": "Shouldn\u0027t channel be returned here instead of NULL, later to be compared with g_ch ?",
+      "range": {
+        "startLine": 202,
+        "startChar": 8,
+        "endLine": 202,
+        "endChar": 12
+      },
+      "revId": "9361854875163b684af8eb36cacfde01682f74dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25ee92c6_280b76f6",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-04T13:52:40Z",
+      "side": 1,
+      "message": "Should calling lvol_op_comp be assesed here ?",
+      "revId": "9361854875163b684af8eb36cacfde01682f74dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3123ad9c_f286503f",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-04T13:52:40Z",
+      "side": 1,
+      "message": "I think it should be local spdk_lvol, otherwise it depends  on previous tests.",
+      "range": {
+        "startLine": 607,
+        "startChar": 31,
+        "endLine": 607,
+        "endChar": 40
+      },
+      "revId": "9361854875163b684af8eb36cacfde01682f74dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "709d58e5_e9baa82d",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 608,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-04T13:52:40Z",
+      "side": 1,
+      "message": "Doesn\u0027t it pass here due to g_ch never being assigned anything other than NULL and ch being NULL from spdk_lvol_get_io_channel stub ?",
+      "range": {
+        "startLine": 608,
+        "startChar": 1,
+        "endLine": 608,
+        "endChar": 23
+      },
+      "revId": "9361854875163b684af8eb36cacfde01682f74dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
