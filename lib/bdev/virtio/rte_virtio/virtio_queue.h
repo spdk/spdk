@@ -175,7 +175,7 @@ virtqueue_notify(struct virtqueue *vq)
 	 * For virtio on IA, the notificaiton is through io port operation
 	 * which is a serialization instruction itself.
 	 */
-	VTPCI_OPS(vq->vdev)->notify_queue(vq->vdev, vq);
+	vtpci_ops(vq->vdev)->notify_queue(vq->vdev, vq);
 }
 
 #endif /* _VIRTQUEUE_H_ */
