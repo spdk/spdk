@@ -58,12 +58,6 @@ struct virtio_driver g_virtio_driver = {
 #define PCI_CAP_ID_VNDR		0x09
 #define PCI_CAP_ID_MSIX		0x11
 
-/*
- * The remaining space is defined by each driver as the per-driver
- * configuration space.
- */
-#define VIRTIO_PCI_CONFIG(hw) (((hw)->use_msix) ? 24 : 20)
-
 #define virtio_dev_get_hw(hw) \
 	((struct virtio_hw *)((uintptr_t)(hw) - offsetof(struct virtio_hw, vdev)))
 
@@ -124,7 +118,7 @@ legacy_read_dev_config(struct virtio_dev *dev, size_t offset,
 	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 
 	rte_pci_ioport_read(vtpci_io(dev), dst, length,
-		VIRTIO_PCI_CONFIG(hw) + offset);
+		VIRTIO_PCI_CONFIG_OFF(hw->use_msix) + offset);
 }
 
 static void
@@ -134,7 +128,7 @@ legacy_write_dev_config(struct virtio_dev *dev, size_t offset,
 	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 
 	rte_pci_ioport_write(vtpci_io(dev), src, length,
-		VIRTIO_PCI_CONFIG(hw) + offset);
+		VIRTIO_PCI_CONFIG_OFF(hw->use_msix) + offset);
 }
 
 static uint64_t
@@ -497,7 +491,7 @@ vtpci_write_dev_config(struct virtio_dev *dev, size_t offset,
 void
 vtpci_reset(struct virtio_dev *dev)
 {
-	vtpci_ops(dev)->set_status(dev, VIRTIO_CONFIG_STATUS_RESET);
+	vtpci_ops(dev)->set_status(dev, VIRTIO_CONFIG_S_RESET);
 	/* flush status write */
 	vtpci_ops(dev)->get_status(dev);
 }
@@ -505,13 +499,13 @@ vtpci_reset(struct virtio_dev *dev)
 void
 vtpci_reinit_complete(struct virtio_dev *dev)
 {
-	vtpci_set_status(dev, VIRTIO_CONFIG_STATUS_DRIVER_OK);
+	vtpci_set_status(dev, VIRTIO_CONFIG_S_DRIVER_OK);
 }
 
 void
 vtpci_set_status(struct virtio_dev *dev, uint8_t status)
 {
-	if (status != VIRTIO_CONFIG_STATUS_RESET)
+	if (status != VIRTIO_CONFIG_S_RESET)
 		status |= vtpci_ops(dev)->get_status(dev);
 
 	vtpci_ops(dev)->set_status(dev, status);
