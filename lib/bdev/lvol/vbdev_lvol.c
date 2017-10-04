@@ -52,7 +52,7 @@ vbdev_lvs_hotremove_cb(void *ctx)
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
 		if (lvs_bdev) {
 			if (lvs_bdev->bdev == bdev) {
-				vbdev_lvs_destruct(lvs_bdev->lvs, NULL, NULL);
+				vbdev_lvs_destruct_hr(lvs_bdev->lvs);
 			}
 		}
 	}
@@ -68,6 +68,13 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 	if (lvserrno != 0) {
 		assert(lvs == NULL);
 		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Cannot create lvol store bdev\n");
+		goto end;
+	}
+
+	lvserrno = spdk_bdev_module_claim_bdev(bdev, NULL, SPDK_GET_BDEV_MODULE(lvol));
+	if (lvserrno != 0) {
+		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store base bdev already claimed by another bdev\n");
+		req->bs_dev->destroy(req->bs_dev);
 		goto end;
 	}
 
@@ -146,13 +153,26 @@ _vbdev_lvs_destruct_cb(void *cb_arg, int lvserrno)
 
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev deleted\n");
 
+	if (lvserrno == 0) {
+		spdk_bdev_module_release_bdev(req->base_bdev);
+	}
+
 	if (req->cb_fn != NULL)
 		req->cb_fn(req->cb_arg, lvserrno);
 	free(req);
 }
 
-void
-vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
+static void
+_vbdev_lvs_destruct_hr_cb(void *cb_arg, int lvserrno)
+{
+	struct spdk_lvs_req *req = cb_arg;
+
+	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev deleted\n");
+	free(req);
+}
+
+static void
+_vbdev_lvs_destruct_generic(struct spdk_lvol_store *lvs, spdk_lvs_op_complete destruct_cb_fn, spdk_lvs_op_complete cb_fn,
 		   void *cb_arg)
 {
 
@@ -160,28 +180,61 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_lvol *lvol, *tmp;
 
-	req = calloc(1, sizeof(*req));
-	if (!req) {
-		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
-		return;
-	}
-	req->cb_fn = cb_fn;
-	req->cb_arg = cb_arg;
-
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
 
-	free(lvs_bdev);
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+		spdk_bdev_module_release_bdev(lvs_bdev->bdev);
+		if (cb_fn != NULL)
+			cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	req->base_bdev = lvs_bdev->bdev;
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
 
 	if (TAILQ_EMPTY(&lvs->lvols)) {
-		spdk_lvs_unload(lvs, _vbdev_lvs_destruct_cb, req);
+		spdk_lvs_unload(lvs, destruct_cb_fn, req);
 	} else {
-		lvs->destruct_req = req;
+		lvs->destruct_req = calloc(1, sizeof(*lvs->destruct_req));
+		if (!lvs->destruct_req) {
+			SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+			destruct_cb_fn(req, -ENOMEM);
+			return;
+		}
+		lvs->destruct_req->cb_fn = destruct_cb_fn;
+		lvs->destruct_req->cb_arg = req;
 		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
 			lvol->close_only = true;
-			spdk_bdev_unregister(lvol->bdev);
+			spdk_vbdev_unregister(lvol->bdev);
 		}
 	}
+
+	free(lvs_bdev);
+}
+
+void
+vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
+		   void *cb_arg)
+{
+	_vbdev_lvs_destruct_generic(lvs, _vbdev_lvs_destruct_cb, cb_fn, cb_arg);
+}
+
+void
+vbdev_lvs_destruct_hr(struct spdk_lvol_store *lvs)
+{
+	struct lvol_store_bdev *lvs_bdev;
+	struct spdk_bdev *bdev;
+
+	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
+	bdev = lvs_bdev->bdev;
+
+	_vbdev_lvs_destruct_generic(lvs, _vbdev_lvs_destruct_hr_cb, NULL, NULL);
+
+	spdk_bdev_module_release_bdev(bdev);
 }
 
 struct lvol_store_bdev *
@@ -462,7 +515,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	bdev->fn_table = &vbdev_lvol_fn_table;
 	bdev->module = SPDK_GET_BDEV_MODULE(lvol);
 
-	spdk_bdev_register(bdev);
+	spdk_vbdev_register(bdev, &lvs_bdev->bdev, 1);
 
 	return bdev;
 }
