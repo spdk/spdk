@@ -1,0 +1,192 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27a62096_bc9ceaca",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T10:00:32Z",
+      "side": 1,
+      "message": "add destroy_lvol_store",
+      "revId": "d491ea2617799505bb20ca00f1e7b4086fbed984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad1dc696_dda3c5fa",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T10:00:32Z",
+      "side": 1,
+      "message": "delete lvol bdev, delete lvol store",
+      "revId": "d491ea2617799505bb20ca00f1e7b4086fbed984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbe8c275_5d20ba67",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T10:00:32Z",
+      "side": 1,
+      "message": "delete lvol bdev, delete lvol store",
+      "revId": "d491ea2617799505bb20ca00f1e7b4086fbed984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39627781_07f3e586",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T10:00:32Z",
+      "side": 1,
+      "message": "delete lvol bdev, delete lvol store",
+      "range": {
+        "startLine": 95,
+        "startChar": 11,
+        "endLine": 95,
+        "endChar": 12
+      },
+      "revId": "d491ea2617799505bb20ca00f1e7b4086fbed984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e8056cf_fa3dd26b",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T10:00:32Z",
+      "side": 1,
+      "message": "with lvol bdev",
+      "revId": "d491ea2617799505bb20ca00f1e7b4086fbed984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6649a8ed_8f3a70b8",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T10:00:32Z",
+      "side": 1,
+      "message": "destroying   bdevs",
+      "range": {
+        "startLine": 138,
+        "startChar": 18,
+        "endLine": 138,
+        "endChar": 30
+      },
+      "revId": "d491ea2617799505bb20ca00f1e7b4086fbed984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a4fbe56_ae03fe9c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T10:00:32Z",
+      "side": 1,
+      "message": "delete lvol bdevs, delete lvol stores",
+      "revId": "d491ea2617799505bb20ca00f1e7b4086fbed984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd6b6073_2a959383",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T10:00:32Z",
+      "side": 1,
+      "message": "delete malloc bdevs",
+      "revId": "d491ea2617799505bb20ca00f1e7b4086fbed984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da425173_fdb252af",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T10:00:32Z",
+      "side": 1,
+      "message": "delete bdev",
+      "revId": "d491ea2617799505bb20ca00f1e7b4086fbed984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e4b43fb_78ef3043",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 30
+      },
+      "lineNbr": 327,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T10:00:32Z",
+      "side": 1,
+      "message": "destroying malloc first, then trying to destroy lvs; rephrase",
+      "range": {
+        "startLine": 320,
+        "startChar": 0,
+        "endLine": 327,
+        "endChar": 20
+      },
+      "revId": "d491ea2617799505bb20ca00f1e7b4086fbed984",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
