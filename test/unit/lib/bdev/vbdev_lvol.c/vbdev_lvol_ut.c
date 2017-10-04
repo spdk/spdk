@@ -54,8 +54,19 @@ bool lvol_store_initialize_fail = false;
 bool lvol_store_initialize_cb_fail = false;
 bool lvol_already_opened = false;
 
+int
+spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *module)
+{
+	if (lvol_already_opened == true)
+		return -1;
+
+	lvol_already_opened = true;
+
+	return 0;
+}
+
 void
-spdk_bdev_unregister(struct spdk_bdev *bdev)
+spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 {
 	return;
 }
@@ -84,8 +95,6 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 
 	if (lvol_already_opened == true)
 		return NULL;
-
-	lvol_already_opened = true;
 
 	bs_dev = calloc(1, sizeof(*bs_dev));
 	bs_dev->destroy = bdev_blob_destroy;
@@ -260,7 +269,7 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 }
 
 void
-spdk_bdev_register(struct spdk_bdev *bdev)
+spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int base_bdev_count)
 {
 }
 
