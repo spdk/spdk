@@ -5,6 +5,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 
 total_size=64
 block_size=512
+cluster_sz=1048576 #1MiB
 test_cases=all
 x=""
 
@@ -19,6 +20,7 @@ function usage() {
     echo "-h, --help                print help and exit"
     echo "    --total-size          Size of malloc bdev in MB (int > 0)"
     echo "    --block-size          Block size for this bdev"
+	echo "    --cluster-sz          size of cluster (in bytes)"
     echo "-x                        set -x for script debug"
     echo "    --test-cases=         List test cases which will be run:
                                     1: 'construct_lvs_positive',
@@ -31,18 +33,17 @@ function usage() {
                                     8: 'nested construct_logical_volume_positive',
                                     9: 'destroy_after_resize_lvol_bdev_positive',
                                     10: 'construct_lvs_nonexistent_bdev',
-                                    11: 'construct_lvs_on_bdev_twic_negative',
+                                    11: 'construct_lvs_on_bdev_twice_negative',
                                     12: 'construct_logical_volume_nonexistent_lvs_uuid',
                                     13: 'construct_logical_volumes_on_busy_bdev',
                                     14: 'resize_logical_volume_nonexistent_logical_volume',
                                     15: 'resize_logical_volume_with_size_out_of_range',
                                     16: 'destroy_lvol_store_nonexistent_lvs_uuid',
                                     17: 'destroy_lvol_store_nonexistent_bdev',
-                                    18: 'nested construct_logical_volume__on_busy_bdev',
+                                    18: 'nested construct_logical_volume_on_busy_bdev',
                                     19: 'nested destroy_logical_volume_positive',
                                     20: 'delete_bdev_positive',
-                                    21: 'SIGTERM',
-                                    22: 'SIGTERM_nested_lvol'
+                                    21: 'SIGTERM_on_lvol_store',
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"
@@ -58,6 +59,7 @@ while getopts 'xh-:' optchar; do
             help) usage $0 ;;
             total-size=*) total_size="${OPTARG#*=}" ;;
             block-size=*) block_size="${OPTARG#*=}" ;;
+            cluster-sz=*) cluster_sz="${OPTARG#*=}" ;;
             test-cases=*) test_cases="${OPTARG#*=}" ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
@@ -72,44 +74,30 @@ shift $(( OPTIND - 1 ))
 
 source $TEST_DIR/scripts/autotest_common.sh
 
-###  Function starts nbd app
-function nbd_start()
+###  Function starts vhost app
+function vhost_start()
 {
-    modprobe nbd
-    $TEST_DIR/test/lib/bdev/nbd/nbd -c $BASE_DIR/nbd.conf.in \
-    -b Malloc0 -n /dev/nbd0 &
-    nbd_pid=$!
-    echo $nbd_pid > $BASE_DIR/nbd.pid
-    waitforlisten $nbd_pid $RPC_PORT
-    # Malloc0 used for nbd is not needed in our test, remove it
-    $rpc_py delete_bdev Malloc0
+    $TEST_DIR/app/vhost/vhost -c $BASE_DIR/vhost.conf.in &
+    vhost_pid=$!
+    echo $vhost_pid > $BASE_DIR/vhost.pid
+    waitforlisten $vhost_pid $RPC_PORT
 }
 
-###  Function stops vhost nbd app
-function nbd_sigterm()
-{
-    ### Kill with SIGTERM param
-    if pkill -F $BASE_DIR/nbd.pid; then
-        wait `cat $BASE_DIR/nbd.pid`
-        rm $BASE_DIR/nbd.pid
-    fi
-    rmmod nbd
-}
-
-function nbd_kill()
+###  Function stops vhost app
+function vhost_kill()
 {
     ### Kill with SIGKILL param
-    pkill -KILL $BASE_DIR/nbd.pid
-    wait `cat $BASE_DIR/nbd.pid`
-    rm $BASE_DIR/nbd.pid
-    rmmod nbd
+    if pkill -F $BASE_DIR/vhost.pid; then
+        sleep 1
+    fi
+    rm $BASE_DIR/vhost.pid || true
 }
 
-trap "nbd_kill; exit 1" SIGINT SIGTERM EXIT
+trap "vhost_kill; exit 1" SIGINT SIGTERM EXIT
 
-nbd_start
+vhost_start
 
-$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $BASE_DIR "${test_cases[@]}"
+$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $cluster_sz $BASE_DIR "${test_cases[@]}"
 
 trap - SIGINT SIGTERM EXIT
-nbd_sigterm
+vhost_kill
