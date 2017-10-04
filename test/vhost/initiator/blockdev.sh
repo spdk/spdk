@@ -54,7 +54,7 @@ function prepare_fio_job() {
 function start_and_prepare_vm() {
         os="/home/sys_sgsw/vhost_vm_image.qcow2"
         test_type="spdk_vhost_scsi"
-        disk="Nvme0n1"
+        disk="$1"
         force_vm_num="0"
         vm_num="0"
         os_mode="original"
@@ -116,22 +116,29 @@ $rootdir/scripts/gen_nvme.sh
 spdk_vhost_run $testdir
 $rpc_py construct_malloc_bdev 128 512
 $rpc_py construct_malloc_bdev 128 4096
-$rpc_py add_vhost_scsi_lun naa.Nvme0n1.0 0 Nvme0n1
-$rpc_py add_vhost_scsi_lun naa.1 0 Malloc0
-$rpc_py add_vhost_scsi_lun naa.2 0 Malloc1
+$rpc_py get_bdevs
+$rpc_py add_vhost_scsi_lun naa.Nvme0n1.0 0 Nvme0n1p0
+$rpc_py add_vhost_scsi_lun naa.Nvme0n1m.0 0 Nvme0n1p1
+$rpc_py add_vhost_scsi_lun naa.Nvme0n1m.0 1 Nvme0n1p2
+$rpc_py add_vhost_scsi_lun naa.2 0 Malloc0
+$rpc_py add_vhost_scsi_lun naa.3 0 Malloc1
 $rpc_py get_bdevs
 bdevs=$($rpc_py get_bdevs | jq -r '.[] | .name')
+bdevs=( "${bdevs[@]/Nvme0n1p1}" )
+bdevs=( "${bdevs[@]/Nvme0n1p2}" )
+bdevs=( "${bdevs[@]/Nvme0n1}" )
+echo $bdevs
 
 for bdev in $bdevs; do
         timing_enter bdev
 
         cp $testdir/bdev.conf.in $testdir/bdev.conf
-        if [ $bdev == "Nvme0n1" ]; then
+        if [ $bdev == "Nvme0n1p0" ]; then
                 sed -i "s|/tmp/vhost.0|$rootdir/../vhost/naa.Nvme0n1.0|g" $testdir/bdev.conf
         elif [ $bdev == "Malloc0" ]; then
-                sed -i "s|/tmp/vhost.0|$rootdir/../vhost/naa.1|g" $testdir/bdev.conf
-        else
                 sed -i "s|/tmp/vhost.0|$rootdir/../vhost/naa.2|g" $testdir/bdev.conf
+        else
+                sed -i "s|/tmp/vhost.0|$rootdir/../vhost/naa.3|g" $testdir/bdev.conf
         fi
 
         timing_enter bounds
@@ -148,28 +155,34 @@ for bdev in $bdevs; do
                 else
                         fio_rw=("write" "read")
                 fi
-                if [ $bdev == "Nvme0n1" ]; then
-                        start_and_prepare_vm
-                        run_guest_bdevio
-                        for rw in "${fio_rw[@]}"; do
-                                cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
-                                prepare_fio_job "$rw" ""
-                                run_guest_fio "Guest $bdev" --spdk_conf=/root/bdev.conf 0
-                                rm -f *.state
-                                rm -f $testdir/bdev.fio
-                        done
-                        vm_shutdown_all
-                fi
-                for rw in "${fio_rw[@]}"; do
-                        timing_enter fio_rw_verify
+                if [ $bdev == "Nvme0n1p0" ]; then
+                        #start_and_prepare_vm "Nvme0n1"
+                        #run_guest_bdevio
+                        #for rw in "${fio_rw[@]}"; do
+                        #        cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                        #        prepare_fio_job "$rw" ""
+                        #        run_guest_fio "Guest $bdev" --spdk_conf=/root/bdev.conf 0
+                        #        rm -f *.state
+                        #        rm -f $testdir/bdev.fio
+                        #done
+                        #vm_shutdown_all
+                        start_and_prepare_vm "Nvme0n1m"
                         cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
-                        prepare_fio_job "$rw" "$vbdevs"
-                        run_host_fio "Host $bdev" --spdk_conf=$testdir/bdev.conf
-
+                        prepare_fio_job "write" ""
+                        run_guest_fio "Guest multiqueue $bdev" --spdk_conf=/root/bdev.conf 0
                         rm -f *.state
                         rm -f $testdir/bdev.fio
-                        timing_exit fio_rw_verify
-                done
+                fi
+                #for rw in "${fio_rw[@]}"; do
+                #        timing_enter fio_rw_verify
+                #        cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                #        prepare_fio_job "$rw" "$vbdevs"
+                #        run_host_fio "Host $bdev" --spdk_conf=$testdir/bdev.conf
+
+                #        rm -f *.state
+                #        rm -f $testdir/bdev.fio
+                #        timing_exit fio_rw_verify
+                #done
 
                 timing_exit fio
         fi
@@ -177,5 +190,4 @@ for bdev in $bdevs; do
         rm -f $testdir/bdev.conf
         timing_exit bdev
 done
-vm_shutdown_all
 spdk_vhost_kill
