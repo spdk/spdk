@@ -101,6 +101,7 @@ function nbd_kill()
     ### Kill with SIGKILL param
     pkill -KILL $BASE_DIR/nbd.pid
     wait `cat $BASE_DIR/nbd.pid`
+    
     rm $BASE_DIR/nbd.pid
     rmmod nbd
 }

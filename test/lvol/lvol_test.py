@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+
 from test_cases import *
 
 def check_fail_count(fail_count, num_test):
