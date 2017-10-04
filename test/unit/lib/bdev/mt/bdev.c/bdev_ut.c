@@ -541,6 +541,29 @@ enomem(void)
 	teardown_test();
 }
 
+static void
+master_channel(void)
+{
+	struct spdk_io_channel *io_ch0, *io_ch1;
+
+	setup_test();
+	CU_ASSERT(g_desc->bdev->master_channel_set == false);
+
+	set_thread(0);
+	io_ch0 = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(g_desc->bdev->master_channel_set == true);
+	CU_ASSERT(spdk_io_channel_is_master(io_ch0) == true);
+
+	set_thread(1);
+	io_ch1 = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(g_desc->bdev->master_channel_set == true);
+	CU_ASSERT(spdk_io_channel_is_master(io_ch1) == false);
+
+	spdk_put_io_channel(io_ch0);
+	spdk_put_io_channel(io_ch1);
+	teardown_test();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -562,7 +585,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL ||
 		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL ||
 		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL ||
-		CU_add_test(suite, "enomem", enomem) == NULL
+		CU_add_test(suite, "enomem", enomem) == NULL ||
+		CU_add_test(suite, "master_channel", master_channel) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
