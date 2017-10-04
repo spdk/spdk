@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1f7f1e5_164ca6b5",
+        "filename": "test/pmem/common/common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T07:39:39Z",
+      "side": 1,
+      "message": "copy/paste from vhost/common/common.sh\n\nI\u0027m ok with that, but you should then remove some unnecessary stuff from this function like:\n- reactor mask\n- master core\n\nFor this test we\u0027re ok with using just the defaults with no arguments specified.",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 22
+      },
+      "revId": "54545cb62ff110032a5e74631682bf4ac2b46f75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf8e60af_78008eb3",
+        "filename": "test/pmem/common/common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T07:39:39Z",
+      "side": 1,
+      "message": "not",
+      "range": {
+        "startLine": 153,
+        "startChar": 24,
+        "endLine": 153,
+        "endChar": 26
+      },
+      "revId": "54545cb62ff110032a5e74631682bf4ac2b46f75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c1eb877_0f9a5f51",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T07:39:39Z",
+      "side": 1,
+      "message": "this doesn\u0027t crash but use different quote signs or escape characters",
+      "range": {
+        "startLine": 28,
+        "startChar": 65,
+        "endLine": 28,
+        "endChar": 70
+      },
+      "revId": "54545cb62ff110032a5e74631682bf4ac2b46f75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77bde6c8_30d5785c",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T07:39:39Z",
+      "side": 1,
+      "message": "I found this ${FUNCNAME[0]} to print current function name. Use it if you like to. Or don\u0027t. Up to you.",
+      "range": {
+        "startLine": 77,
+        "startChar": 20,
+        "endLine": 77,
+        "endChar": 40
+      },
+      "revId": "54545cb62ff110032a5e74631682bf4ac2b46f75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ddd76508_c5351ca0",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T07:39:39Z",
+      "side": 1,
+      "message": "instead of piping to grep you can use jq select:\njq -r \u0027.[] | select(.name\u003d\u003d\"Nvme0n1\")\u0027",
+      "range": {
+        "startLine": 590,
+        "startChar": 24,
+        "endLine": 590,
+        "endChar": 57
+      },
+      "revId": "54545cb62ff110032a5e74631682bf4ac2b46f75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
