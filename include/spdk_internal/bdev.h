@@ -363,7 +363,24 @@ void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 			 int base_bdev_count);
 void spdk_vbdev_unregister(struct spdk_bdev *vbdev);
 
+/**
+ * Complete pending module examine.  This will check for any other
+ * pending bdev actions and might finish bdev subsystem initialization.
+ * The function can be safely called after the bdev subsystem has
+ * been initialized - in this case no action will be taken.
+ *
+ * \param module bdev module.
+ */
 void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module);
+
+/**
+ * Complete asynchronous module init.  This will check for any other
+ * pending bdev actions and might finish bdev subsystem initialization.
+ * The function can be safely called after the bdev subsystem has been
+ * initialized - in this case no action will be taken.
+ *
+ * \param module bdev module.
+ */
 void spdk_bdev_module_init_done(struct spdk_bdev_module_if *module);
 int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				struct spdk_bdev_module_if *module);
