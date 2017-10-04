@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abf6ecf2_623b0d87",
+        "filename": "test/vhost/hotfeatures/test_plan.md",
+        "patchSetId": 36
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T11:52:48Z",
+      "side": 1,
+      "message": "whitespace:P",
+      "revId": "37f54f7eae0fe3241df81959f34163223f37bea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4485c9a1_0ed8e779",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T11:52:48Z",
+      "side": 1,
+      "message": "add spaces here for better text alignment",
+      "range": {
+        "startLine": 81,
+        "startChar": 31,
+        "endLine": 86,
+        "endChar": 33
+      },
+      "revId": "37f54f7eae0fe3241df81959f34163223f37bea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb77a6c9_e4991e4c",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T11:52:48Z",
+      "side": 1,
+      "message": "here too",
+      "range": {
+        "startLine": 89,
+        "startChar": 20,
+        "endLine": 90,
+        "endChar": 35
+      },
+      "revId": "37f54f7eae0fe3241df81959f34163223f37bea5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
