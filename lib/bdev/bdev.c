@@ -1629,7 +1629,6 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	bdev->status = SPDK_BDEV_STATUS_READY;
 
 	TAILQ_INIT(&bdev->open_descs);
-	bdev->bdev_opened = false;
 
 	TAILQ_INIT(&bdev->vbdevs);
 	TAILQ_INIT(&bdev->base_bdevs);
@@ -1722,24 +1721,6 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 	spdk_bdev_unregister(vbdev);
 }
 
-bool
-spdk_is_bdev_opened(struct spdk_bdev *bdev)
-{
-	struct spdk_bdev *base;
-
-	if (bdev->bdev_opened) {
-		return true;
-	}
-
-	TAILQ_FOREACH(base, &bdev->base_bdevs, base_bdev_link) {
-		if (spdk_is_bdev_opened(base)) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
 int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 	       void *remove_ctx, struct spdk_bdev_desc **_desc)
@@ -1762,8 +1743,6 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 
 	TAILQ_INSERT_TAIL(&bdev->open_descs, desc, link);
 
-	bdev->bdev_opened = true;
-
 	desc->bdev = bdev;
 	desc->remove_cb = remove_cb;
 	desc->remove_ctx = remove_ctx;
@@ -1782,8 +1761,6 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	bool do_unregister = false;
 
 	pthread_mutex_lock(&bdev->mutex);
-
-	bdev->bdev_opened = false;
 
 	TAILQ_REMOVE(&bdev->open_descs, desc, link);
 	free(desc);
