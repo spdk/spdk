@@ -199,7 +199,10 @@ virtio_user_dev_init(char *path, int queue_size)
 	vdev = &dev->vdev;
 	vdev->is_hw = 0;
 
-	vtpci_ops(vdev) = &virtio_user_ops;
+	if (vtpci_init(vdev, &virtio_user_ops) != 0) {
+		PMD_INIT_LOG(ERR, "Failed to init device: %s", path);
+		goto err;
+	}
 
 	snprintf(dev->path, PATH_MAX, "%s", path);
 	dev->queue_size = queue_size;

@@ -83,6 +83,12 @@ check_vq_phys_addr_ok(struct virtqueue *vq)
 	return 1;
 }
 
+static struct rte_pci_ioport *
+vtpci_io(struct virtio_dev *vdev)
+{
+	return &g_virtio_driver.internal[vdev->id].io;
+}
+
 static void
 free_virtio_hw(struct virtio_dev *dev)
 {
@@ -724,7 +730,10 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	 */
 	if (virtio_read_caps(hw) == 0) {
 		PMD_INIT_LOG(INFO, "modern virtio pci detected.");
-		vtpci_ops(vdev) = &modern_ops;
+		rc = vtpci_init(vdev, &modern_ops);
+		if (rc != 0) {
+			goto err;
+		}
 		vdev->modern = 1;
 		TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
 		return 0;
@@ -745,8 +754,11 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	}
 #endif
 
-	vtpci_ops(vdev) = &legacy_ops;
-	vdev->modern   = 0;
+	rc = vtpci_init(vdev, &legacy_ops);
+	if (rc != 0) {
+		goto err;
+	}
+	vdev->modern = 0;
 
 	vtpci_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
 			      &vdev->max_queues, sizeof(vdev->max_queues));
@@ -760,7 +772,29 @@ err:
 }
 
 int
-vtpci_init(void)
+vtpci_init(struct virtio_dev *vdev, const struct virtio_pci_ops *ops)
+{
+	unsigned vdev_num;
+
+	for (vdev_num = 0; vdev_num < VIRTIO_MAX_DEVICES; vdev_num++) {
+		if (g_virtio_driver.internal[vdev_num].vtpci_ops == NULL) {
+			break;
+		}
+	}
+
+	if (vdev_num == VIRTIO_MAX_DEVICES) {
+		PMD_INIT_LOG(ERR, "Max vhost device limit reached (%d).", VIRTIO_MAX_DEVICES);
+		return -ENOSPC;
+	}
+
+	vdev->id = vdev_num;
+	g_virtio_driver.internal[vdev_num].vtpci_ops = ops;
+
+	return 0;
+}
+
+int
+vtpci_enumerate_pci(void)
 {
 	if (!spdk_process_is_primary()) {
 		PMD_INIT_LOG(INFO, "virtio_pci secondary process support is not implemented yet.");
@@ -768,4 +802,16 @@ vtpci_init(void)
 	}
 
 	return spdk_pci_virtio_enumerate(pci_enum_virtio_probe_cb, NULL);
+}
+
+const struct virtio_pci_ops *
+vtpci_ops(struct virtio_dev *dev)
+{
+	return g_virtio_driver.internal[dev->id].vtpci_ops;
+}
+
+void
+vtpci_deinit(uint32_t id)
+{
+	g_virtio_driver.internal[id].vtpci_ops = NULL;
 }

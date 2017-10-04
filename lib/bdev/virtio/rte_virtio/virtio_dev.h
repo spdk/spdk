@@ -38,6 +38,8 @@
 #include <sys/uio.h>
 #include <sys/queue.h>
 
+#define VIRTIO_MAX_DEVICES 128
+
 struct virtio_dev {
 	struct virtqueue **vqs;
 	uint16_t	started;
@@ -45,7 +47,8 @@ struct virtio_dev {
 	/** Max number of queues the host supports. */
 	uint16_t	max_queues;
 
-	uint8_t		port_id;
+	/* Unique device id. */
+	uint32_t	id;
 	uint64_t	req_guest_features;
 	uint64_t	guest_features;
 	int		is_hw;
