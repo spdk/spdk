@@ -185,24 +185,6 @@ spdk_lvol_destroy(struct spdk_lvol *lvol)
 	g_lvol = NULL;
 }
 
-bool
-spdk_is_bdev_opened(struct spdk_bdev *bdev)
-{
-	struct spdk_bdev *base;
-
-	if (bdev->bdev_opened) {
-		return true;
-	}
-
-	TAILQ_FOREACH(base, &bdev->base_bdevs, base_bdev_link) {
-		if (spdk_is_bdev_opened(base)) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
@@ -430,7 +412,6 @@ ut_lvol_resize(void)
 	CU_ASSERT(g_lvolerrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
-	g_base_bdev->bdev_opened = false;
 	g_base_bdev->ctxt = g_lvol;
 
 	g_base_bdev->name = spdk_sprintf_alloc("%s", g_lvol->name);
@@ -440,13 +421,7 @@ ut_lvol_resize(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_base_bdev->blockcnt == 20 * g_cluster_size / g_base_bdev->blocklen);
 
-	/* Resize while bdev is open */
-	g_base_bdev->bdev_opened = true;
-	rc = vbdev_lvol_resize(g_lvol->name, 20, vbdev_lvol_resize_complete, NULL);
-	CU_ASSERT(rc != 0);
-
 	/* Resize with wrong bdev name */
-	g_base_bdev->bdev_opened = false;
 	rc = vbdev_lvol_resize("wrong name", 20, vbdev_lvol_resize_complete, NULL);
 	CU_ASSERT(rc != 0);
 
