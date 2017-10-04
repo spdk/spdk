@@ -4,11 +4,17 @@
 [Ioat]
   Disable Yes
 
+[Split]
+  Split Nvme0n1 3
+
 [VhostScsi0]
   Name naa.Nvme0n1.0
 
 [VhostScsi1]
-  Name naa.1
+  Name naa.Nvme0n1m.0
 
 [VhostScsi2]
   Name naa.2
+
+[VhostScsi3]
+  Name naa.3
