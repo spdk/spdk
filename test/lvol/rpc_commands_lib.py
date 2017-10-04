@@ -49,21 +49,26 @@ class Commands_Rpc(object):
                                     json_value=json_value))
         return 1
 
-    def check_get_lvol_stores(self, base_name, uuid):
+    def check_get_lvol_stores(self, base_name, uuid, cluster_size):
         print("INFO: RPC COMMAND get_lvol_stores")
         output = self.rpc.get_lvol_stores()[0]
         json_value = json.loads(output)
         if json_value:
             for i in range(len(json_value)):
                 uuid_json_response = json_value[i]['uuid']
+                cluster_size_response = json_value[i]['cluster_size']
                 base_bdev_json_reponse = json_value[i]['base_bdev']
                 if base_name in [base_bdev_json_reponse] \
-                        and uuid in [uuid_json_response]:
+                        and uuid in [uuid_json_response] and cluster_size ==\
+                        [cluster_size_response]:
                     print("INFO: base_name:{base_name} is found in RPC "
                           "Command: get_lvol_stores "
                           "response".format(base_name=base_name))
                     print("INFO: UUID:{uuid} is found in RPC Commnad: "
                           "get_lvol_stores response".format(uuid=uuid))
+                    print("INFO: Cluster size :{cluster_size} is found in RPC "
+                          "Commnad: get_lvol_stores "
+                          "response".format(cluster_size=cluster_size))
                     return 0
             print("FAILED: UUID: {uuid} or base_name: {base_name} not found "
                   "in RPC COMMAND get_bdevs:"
@@ -81,7 +86,8 @@ class Commands_Rpc(object):
 
     def construct_lvol_store(self, base_name, cluster_size):
         print("INFO: RPC COMMAND construct_lvol_store")
-        output = self.rpc.construct_lvol_store(base_name, cluster_size)[0]
+        output = self.rpc.construct_lvol_store(
+            base_name, "-c {cluster_sz}".format(cluster_sz=cluster_size))[0]
         return output.rstrip('\n')
 
     def construct_lvol_bdev(self, uuid, size):
