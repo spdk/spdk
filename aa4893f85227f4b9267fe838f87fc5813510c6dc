@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "ba0e19ab_16cc0fae",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-04T08:26:09Z",
+      "side": 1,
+      "message": "I agree, aprox 1/4 should be fine for this test. In separate patch this test could be changed to exact value using new info from get_lvol_stores in patch https://review.gerrithub.io/#/c/381131/",
+      "parentUuid": "608772e5_6e850949",
+      "revId": "aa4893f85227f4b9267fe838f87fc5813510c6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6ad9ac92_9eaf4878",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 2
@@ -81,6 +99,24 @@
       "writtenOn": "2017-09-27T21:44:27Z",
       "side": 1,
       "message": "this doesn\u0027t seem right - what happens to the lvol bdev after we destroy the underlying lvol store?  should we disallow destroying an lvol store if there are exiting bdev lvols in it?",
+      "revId": "aa4893f85227f4b9267fe838f87fc5813510c6dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8487798b_d15db9da",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-04T08:26:09Z",
+      "side": 1,
+      "message": "When lvol store is destroyed, all lvol bdevs built on top of it are destroyed as well.\nI think disallowing destroying lvol store until there are no lvol bdevs on it, does not stop this behavior from happening. Another call that does similar thing is delete_bdev.\n\nDisallowing destroy_lvol_store would require user to delete each of lvol bdevs explicitly. Should this change be made, keeping in mind delete_bdev does similar thing as destroy_lvol_store?",
+      "parentUuid": "f3ec0588_2997a44e",
       "revId": "aa4893f85227f4b9267fe838f87fc5813510c6dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
