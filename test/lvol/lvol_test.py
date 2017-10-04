@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import sys
+
 from test_cases import *
 
 def check_fail_count(fail_count, num_test):
@@ -22,8 +23,9 @@ if __name__ == "__main__":
         rpc_py = sys.argv[1]
         total_size = int(sys.argv[2])
         block_size = int(sys.argv[3])
-        base_dir_path = sys.argv[4]
-        tc_list = sys.argv[5].split(',')
+        cluster_size = int(sys.argv[4])
+        base_dir_path = sys.argv[5]
+        tc_list = sys.argv[6].split(',')
     else:
         print("Invalid argument")
     try:
