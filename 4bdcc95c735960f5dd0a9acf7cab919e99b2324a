@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a2e0de8e_26c38e70",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-04T08:22:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cc535918_45bbd8d8",
+      "range": {
+        "startLine": 96,
+        "startChar": 1,
+        "endLine": 96,
+        "endChar": 21
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4aac6781_d6abf261",
         "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2017-09-21T17:03:17Z",
       "side": 1,
       "message": "SPDK_TRACE_BDEV_MALLOC -\u003e SPDK_TRACE_BDEV_PMEM",
+      "range": {
+        "startLine": 124,
+        "startChar": 16,
+        "endLine": 124,
+        "endChar": 38
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f6a432c_5db4e49d",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-04T08:22:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4aac6781_d6abf261",
       "range": {
         "startLine": 124,
         "startChar": 16,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "ed7cf0c3_c2d3c311",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-04T08:22:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e352d545_b9c35ae7",
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5082748_57edf0b5",
         "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
         "patchSetId": 5
@@ -76,6 +142,30 @@
       "writtenOn": "2017-09-21T17:03:17Z",
       "side": 1,
       "message": "SPDK_TRACE_BDEV_PMEM",
+      "range": {
+        "startLine": 189,
+        "startChar": 16,
+        "endLine": 189,
+        "endChar": 38
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cf49ecf_7b16dd09",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-04T08:22:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c5082748_57edf0b5",
       "range": {
         "startLine": 189,
         "startChar": 16,
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "e57d98d3_d04a9883",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-04T08:22:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "56d58df1_8370253f",
+      "range": {
+        "startLine": 223,
+        "startChar": 1,
+        "endLine": 223,
+        "endChar": 22
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d1736b36_e678d1c6",
         "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
         "patchSetId": 5
@@ -122,6 +236,30 @@
       "writtenOn": "2017-09-21T17:03:17Z",
       "side": 1,
       "message": "Same here.",
+      "range": {
+        "startLine": 225,
+        "startChar": 1,
+        "endLine": 225,
+        "endChar": 22
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2af022a4_9c434854",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-04T08:22:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d1736b36_e678d1c6",
       "range": {
         "startLine": 225,
         "startChar": 1,
@@ -157,6 +295,30 @@
     },
     {
       "key": {
+        "uuid": "c0658f6e_3b3a502f",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-04T08:22:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "06980b7e_7a56db92",
+      "range": {
+        "startLine": 267,
+        "startChar": 16,
+        "endLine": 267,
+        "endChar": 38
+      },
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "00197212_75aa9830",
         "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
         "patchSetId": 5
@@ -168,6 +330,24 @@
       "writtenOn": "2017-09-21T17:03:17Z",
       "side": 1,
       "message": "I think this path leaks req.pmem_file.",
+      "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "defad4f2_6d7a1d32",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-04T08:22:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "00197212_75aa9830",
       "revId": "4bdcc95c735960f5dd0a9acf7cab919e99b2324a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
