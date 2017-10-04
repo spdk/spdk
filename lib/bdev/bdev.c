@@ -1636,6 +1636,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	bdev->reset_in_progress = NULL;
 
+	bdev->master_channel_set = false;
+
 	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));
 
@@ -2114,6 +2116,27 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 	TAILQ_INSERT_TAIL(base->tailq, part, tailq);
 
 	return 0;
+}
+
+static void
+_spdk_bdev_io_channel_set_master(void *io_device, struct spdk_io_channel *ch, void *ctx)
+{
+	struct spdk_bdev *bdev = io_device;
+
+	if (bdev->master_channel_set == false) {
+		/* Always set the first channel as the master channel */
+		spdk_io_channel_set_master(ch);
+
+		bdev->master_channel_set = true;
+	}
+}
+
+void
+spdk_bdev_set_master_channel(struct spdk_bdev *bdev)
+{
+	bdev->master_channel_set = false;
+
+	spdk_for_each_channel(bdev, _spdk_bdev_io_channel_set_master, NULL, NULL);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev", SPDK_TRACE_BDEV)

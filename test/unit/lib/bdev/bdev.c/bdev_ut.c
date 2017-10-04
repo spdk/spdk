@@ -42,51 +42,6 @@
 
 SPDK_DECLARE_BDEV_MODULE(vbdev_ut);
 
-void *
-spdk_io_channel_get_ctx(struct spdk_io_channel *ch)
-{
-	return NULL;
-}
-
-void
-spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
-			spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size)
-{
-}
-
-void
-spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregister_cb)
-{
-}
-
-void
-spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
-{
-}
-
-struct spdk_io_channel *
-spdk_get_io_channel(void *io_device)
-{
-	return NULL;
-}
-
-void
-spdk_put_io_channel(struct spdk_io_channel *ch)
-{
-}
-
-void
-spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
-		      spdk_channel_for_each_cpl cpl)
-{
-}
-
-struct spdk_thread *
-spdk_io_channel_get_thread(struct spdk_io_channel *ch)
-{
-	return NULL;
-}
-
 void
 spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			 int *sc, int *sk, int *asc, int *ascq)
