@@ -38,10 +38,6 @@
 #include <sys/uio.h>
 #include <sys/queue.h>
 
-#define VIRTIO_MAX_RX_QUEUES 128U
-#define VIRTIO_MAX_TX_QUEUES 128U
-#define VIRTIO_MIN_RX_BUFSIZE 64
-
 struct virtio_dev {
 	struct virtqueue **vqs;
 	uint16_t	started;
@@ -72,8 +68,7 @@ struct virtio_req {
 /* Features desired/implemented by this driver. */
 #define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
 	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
-	 1ULL << VIRTIO_F_VERSION_1		|	\
-	 1ULL << VIRTIO_F_IOMMU_PLATFORM)
+	 1ULL << VIRTIO_F_VERSION_1)
 
 uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 		uint16_t nb_pkts);
