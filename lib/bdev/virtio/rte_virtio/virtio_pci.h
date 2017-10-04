@@ -242,8 +242,8 @@ struct vtpci_internal {
 	struct rte_pci_ioport io;
 };
 
-#define VTPCI_OPS(dev)	(g_virtio_driver.internal[(dev)->port_id].vtpci_ops)
-#define VTPCI_IO(dev)	(&g_virtio_driver.internal[(dev)->port_id].io)
+#define vtpci_ops(dev)	(g_virtio_driver.internal[(dev)->port_id].vtpci_ops)
+#define vtpci_io(dev)	(&g_virtio_driver.internal[(dev)->port_id].io)
 
 struct virtio_driver {
 	struct vtpci_internal internal[128];

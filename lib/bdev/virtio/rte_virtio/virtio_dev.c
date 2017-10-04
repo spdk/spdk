@@ -108,7 +108,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	 * Read the virtqueue size from the Queue Size field
 	 * Always power of 2 and if 0 virtqueue does not exist
 	 */
-	vq_size = VTPCI_OPS(dev)->get_queue_num(dev, vtpci_queue_idx);
+	vq_size = vtpci_ops(dev)->get_queue_num(dev, vtpci_queue_idx);
 	PMD_INIT_LOG(DEBUG, "vq_size: %u", vq_size);
 	if (vq_size == 0) {
 		PMD_INIT_LOG(ERR, "virtqueue does not exist");
@@ -172,7 +172,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	vq->mz = mz;
 
-	if (VTPCI_OPS(dev)->setup_queue(dev, vq) < 0) {
+	if (vtpci_ops(dev)->setup_queue(dev, vq) < 0) {
 		PMD_INIT_LOG(ERR, "setup_queue failed");
 		return -EINVAL;
 	}
@@ -249,7 +249,7 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 		req_features);
 
 	/* Read device(host) feature bits */
-	host_features = VTPCI_OPS(dev)->get_features(dev);
+	host_features = vtpci_ops(dev)->get_features(dev);
 	PMD_INIT_LOG(DEBUG, "host_features before negotiate = %" PRIx64,
 		host_features);
 
@@ -319,7 +319,7 @@ void
 virtio_dev_free(struct virtio_dev *dev)
 {
 	virtio_free_queues(dev);
-	VTPCI_OPS(dev)->free_vdev(dev);
+	vtpci_ops(dev)->free_vdev(dev);
 	/* FIXME clear VTPCI_OPS(dev) */
 }
 

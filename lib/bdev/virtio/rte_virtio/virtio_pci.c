@@ -122,17 +122,17 @@ legacy_read_dev_config(struct virtio_dev *dev, size_t offset,
 	while (length > 0) {
 		if (length >= 4) {
 			size = 4;
-			rte_pci_ioport_read(VTPCI_IO(dev), dst, size,
+			rte_pci_ioport_read(vtpci_io(dev), dst, size,
 				VIRTIO_PCI_CONFIG(dev) + offset);
 			*(uint32_t *)dst = rte_be_to_cpu_32(*(uint32_t *)dst);
 		} else if (length >= 2) {
 			size = 2;
-			rte_pci_ioport_read(VTPCI_IO(dev), dst, size,
+			rte_pci_ioport_read(vtpci_io(dev), dst, size,
 				VIRTIO_PCI_CONFIG(dev) + offset);
 			*(uint16_t *)dst = rte_be_to_cpu_16(*(uint16_t *)dst);
 		} else {
 			size = 1;
-			rte_pci_ioport_read(VTPCI_IO(dev), dst, size,
+			rte_pci_ioport_read(vtpci_io(dev), dst, size,
 				VIRTIO_PCI_CONFIG(dev) + offset);
 		}
 
@@ -141,7 +141,7 @@ legacy_read_dev_config(struct virtio_dev *dev, size_t offset,
 		length -= size;
 	}
 #else
-	rte_pci_ioport_read(VTPCI_IO(dev), dst, length,
+	rte_pci_ioport_read(vtpci_io(dev), dst, length,
 		VIRTIO_PCI_CONFIG(hw) + offset);
 #endif
 }
@@ -162,16 +162,16 @@ legacy_write_dev_config(struct virtio_dev *dev, size_t offset,
 		if (length >= 4) {
 			size = 4;
 			tmp.u32 = rte_cpu_to_be_32(*(const uint32_t *)src);
-			rte_pci_ioport_write(VTPCI_IO(hw), &tmp.u32, size,
+			rte_pci_ioport_write(vtpci_io(hw), &tmp.u32, size,
 				VIRTIO_PCI_CONFIG(hw) + offset);
 		} else if (length >= 2) {
 			size = 2;
 			tmp.u16 = rte_cpu_to_be_16(*(const uint16_t *)src);
-			rte_pci_ioport_write(VTPCI_IO(hw), &tmp.u16, size,
+			rte_pci_ioport_write(vtpci_io(hw), &tmp.u16, size,
 				VIRTIO_PCI_CONFIG(hw) + offset);
 		} else {
 			size = 1;
-			rte_pci_ioport_write(VTPCI_IO(hw), src, size,
+			rte_pci_ioport_write(vtpci_io(hw), src, size,
 				VIRTIO_PCI_CONFIG(hw) + offset);
 		}
 
@@ -180,7 +180,7 @@ legacy_write_dev_config(struct virtio_dev *dev, size_t offset,
 		length -= size;
 	}
 #else
-	rte_pci_ioport_write(VTPCI_IO(dev), src, length,
+	rte_pci_ioport_write(vtpci_io(dev), src, length,
 		VIRTIO_PCI_CONFIG(hw) + offset);
 #endif
 }
@@ -190,7 +190,7 @@ legacy_get_features(struct virtio_dev *dev)
 {
 	uint32_t dst;
 
-	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 4, VIRTIO_PCI_HOST_FEATURES);
+	rte_pci_ioport_read(vtpci_io(dev), &dst, 4, VIRTIO_PCI_HOST_FEATURES);
 	return dst;
 }
 
@@ -202,7 +202,7 @@ legacy_set_features(struct virtio_dev *dev, uint64_t features)
 			"only 32 bit features are allowed for legacy virtio!");
 		return;
 	}
-	rte_pci_ioport_write(VTPCI_IO(dev), &features, 4,
+	rte_pci_ioport_write(vtpci_io(dev), &features, 4,
 		VIRTIO_PCI_GUEST_FEATURES);
 }
 
@@ -211,14 +211,14 @@ legacy_get_status(struct virtio_dev *dev)
 {
 	uint8_t dst;
 
-	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 1, VIRTIO_PCI_STATUS);
+	rte_pci_ioport_read(vtpci_io(dev), &dst, 1, VIRTIO_PCI_STATUS);
 	return dst;
 }
 
 static void
 legacy_set_status(struct virtio_dev *dev, uint8_t status)
 {
-	rte_pci_ioport_write(VTPCI_IO(dev), &status, 1, VIRTIO_PCI_STATUS);
+	rte_pci_ioport_write(vtpci_io(dev), &status, 1, VIRTIO_PCI_STATUS);
 }
 
 static uint8_t
@@ -226,7 +226,7 @@ legacy_get_isr(struct virtio_dev *dev)
 {
 	uint8_t dst;
 
-	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 1, VIRTIO_PCI_ISR);
+	rte_pci_ioport_read(vtpci_io(dev), &dst, 1, VIRTIO_PCI_ISR);
 	return dst;
 }
 
@@ -236,8 +236,8 @@ legacy_set_config_irq(struct virtio_dev *dev, uint16_t vec)
 {
 	uint16_t dst;
 
-	rte_pci_ioport_write(VTPCI_IO(dev), &vec, 2, VIRTIO_MSI_CONFIG_VECTOR);
-	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 2, VIRTIO_MSI_CONFIG_VECTOR);
+	rte_pci_ioport_write(vtpci_io(dev), &vec, 2, VIRTIO_MSI_CONFIG_VECTOR);
+	rte_pci_ioport_read(vtpci_io(dev), &dst, 2, VIRTIO_MSI_CONFIG_VECTOR);
 	return dst;
 }
 
@@ -246,10 +246,10 @@ legacy_set_queue_irq(struct virtio_dev *dev, struct virtqueue *vq, uint16_t vec)
 {
 	uint16_t dst;
 
-	rte_pci_ioport_write(VTPCI_IO(dev), &vq->vq_queue_index, 2,
+	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
 		VIRTIO_PCI_QUEUE_SEL);
-	rte_pci_ioport_write(VTPCI_IO(dev), &vec, 2, VIRTIO_MSI_QUEUE_VECTOR);
-	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 2, VIRTIO_MSI_QUEUE_VECTOR);
+	rte_pci_ioport_write(vtpci_io(dev), &vec, 2, VIRTIO_MSI_QUEUE_VECTOR);
+	rte_pci_ioport_read(vtpci_io(dev), &dst, 2, VIRTIO_MSI_QUEUE_VECTOR);
 	return dst;
 }
 
@@ -258,8 +258,8 @@ legacy_get_queue_num(struct virtio_dev *dev, uint16_t queue_id)
 {
 	uint16_t dst;
 
-	rte_pci_ioport_write(VTPCI_IO(dev), &queue_id, 2, VIRTIO_PCI_QUEUE_SEL);
-	rte_pci_ioport_read(VTPCI_IO(dev), &dst, 2, VIRTIO_PCI_QUEUE_NUM);
+	rte_pci_ioport_write(vtpci_io(dev), &queue_id, 2, VIRTIO_PCI_QUEUE_SEL);
+	rte_pci_ioport_read(vtpci_io(dev), &dst, 2, VIRTIO_PCI_QUEUE_NUM);
 	return dst;
 }
 
@@ -271,10 +271,10 @@ legacy_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	if (!check_vq_phys_addr_ok(vq))
 		return -1;
 
-	rte_pci_ioport_write(VTPCI_IO(dev), &vq->vq_queue_index, 2,
+	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
 		VIRTIO_PCI_QUEUE_SEL);
 	src = vq->vq_ring_mem >> VIRTIO_PCI_QUEUE_ADDR_SHIFT;
-	rte_pci_ioport_write(VTPCI_IO(dev), &src, 4, VIRTIO_PCI_QUEUE_PFN);
+	rte_pci_ioport_write(vtpci_io(dev), &src, 4, VIRTIO_PCI_QUEUE_PFN);
 
 	return 0;
 }
@@ -284,15 +284,15 @@ legacy_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
 	uint32_t src = 0;
 
-	rte_pci_ioport_write(VTPCI_IO(dev), &vq->vq_queue_index, 2,
+	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
 		VIRTIO_PCI_QUEUE_SEL);
-	rte_pci_ioport_write(VTPCI_IO(dev), &src, 4, VIRTIO_PCI_QUEUE_PFN);
+	rte_pci_ioport_write(vtpci_io(dev), &src, 4, VIRTIO_PCI_QUEUE_PFN);
 }
 
 static void
 legacy_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
-	rte_pci_ioport_write(VTPCI_IO(dev), &vq->vq_queue_index, 2,
+	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
 		VIRTIO_PCI_QUEUE_NOTIFY);
 }
 
@@ -519,14 +519,14 @@ void
 vtpci_read_dev_config(struct virtio_dev *dev, size_t offset,
 		      void *dst, int length)
 {
-	VTPCI_OPS(dev)->read_dev_cfg(dev, offset, dst, length);
+	vtpci_ops(dev)->read_dev_cfg(dev, offset, dst, length);
 }
 
 void
 vtpci_write_dev_config(struct virtio_dev *dev, size_t offset,
 		       const void *src, int length)
 {
-	VTPCI_OPS(dev)->write_dev_cfg(dev, offset, src, length);
+	vtpci_ops(dev)->write_dev_cfg(dev, offset, src, length);
 }
 
 uint64_t
@@ -539,7 +539,7 @@ vtpci_negotiate_features(struct virtio_dev *dev, uint64_t host_features)
 	 * host all support.
 	 */
 	features = host_features & dev->req_guest_features;
-	VTPCI_OPS(dev)->set_features(dev, features);
+	vtpci_ops(dev)->set_features(dev, features);
 
 	return features;
 }
@@ -547,9 +547,9 @@ vtpci_negotiate_features(struct virtio_dev *dev, uint64_t host_features)
 void
 vtpci_reset(struct virtio_dev *dev)
 {
-	VTPCI_OPS(dev)->set_status(dev, VIRTIO_CONFIG_STATUS_RESET);
+	vtpci_ops(dev)->set_status(dev, VIRTIO_CONFIG_STATUS_RESET);
 	/* flush status write */
-	VTPCI_OPS(dev)->get_status(dev);
+	vtpci_ops(dev)->get_status(dev);
 }
 
 void
@@ -562,21 +562,21 @@ void
 vtpci_set_status(struct virtio_dev *dev, uint8_t status)
 {
 	if (status != VIRTIO_CONFIG_STATUS_RESET)
-		status |= VTPCI_OPS(dev)->get_status(dev);
+		status |= vtpci_ops(dev)->get_status(dev);
 
-	VTPCI_OPS(dev)->set_status(dev, status);
+	vtpci_ops(dev)->set_status(dev, status);
 }
 
 uint8_t
 vtpci_get_status(struct virtio_dev *dev)
 {
-	return VTPCI_OPS(dev)->get_status(dev);
+	return vtpci_ops(dev)->get_status(dev);
 }
 
 uint8_t
 vtpci_isr(struct virtio_dev *dev)
 {
-	return VTPCI_OPS(dev)->get_isr(dev);
+	return vtpci_ops(dev)->get_isr(dev);
 }
 
 static void *
@@ -724,7 +724,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	 */
 	if (virtio_read_caps(hw) == 0) {
 		PMD_INIT_LOG(INFO, "modern virtio pci detected.");
-		VTPCI_OPS(vdev) = &modern_ops;
+		vtpci_ops(vdev) = &modern_ops;
 		vdev->modern = 1;
 		TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
 		return 0;
@@ -732,7 +732,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 #if 0
 	PMD_INIT_LOG(INFO, "trying with legacy virtio pci.");
-	if (rte_pci_ioport_map(dev, 0, VTPCI_IO(hw)) < 0) {
+	if (rte_pci_ioport_map(dev, 0, vtpci_io(hw)) < 0) {
 		if (dev->kdrv == RTE_KDRV_UNKNOWN &&
 		    (!dev->device.devargs ||
 		     dev->device.devargs->type !=
@@ -745,7 +745,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	}
 #endif
 
-	VTPCI_OPS(vdev) = &legacy_ops;
+	vtpci_ops(vdev) = &legacy_ops;
 	vdev->modern   = 0;
 
 	vtpci_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),

@@ -199,7 +199,7 @@ virtio_user_dev_init(char *path, int queue_size)
 	vdev = &dev->vdev;
 	vdev->is_hw = 0;
 
-	VTPCI_OPS(vdev) = &virtio_user_ops;
+	vtpci_ops(vdev) = &virtio_user_ops;
 
 	snprintf(dev->path, PATH_MAX, "%s", path);
 	dev->queue_size = queue_size;
