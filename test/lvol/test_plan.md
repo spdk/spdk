@@ -415,9 +415,34 @@ Expected result:
 - get_lvol_stores: response should be of no value after destroyed lvol store
 - no other operation fails
 
+### construct_lvol_store_with_cluster_size  - negative tests
+
+#### TEST CASE 21 - Name: construct_lvol_store_with_cluster_size_max
+Negative test for constructing a new lvol store.
+Call construct_lvol_store with cluster size is equal malloc bdev size + 1B.
+Steps:
+- create a malloc bdev
+- construct_lvol_store on correct, exisitng malloc bdev and cluster size equal
+  malloc bdev size in bytes + 1B
+
+Expected result:
+- return code != 0
+- Error code response printed to stdout
+
+#### TEST CASE 22 - Name: construct_lvol_store_with_cluster_size_min
+Negative test for constructing a new lvol store.
+Call construct_lvol_store with cluster size = 0.
+Steps:
+- create a malloc bdev
+- construct_lvol_store on correct, exisitng malloc bdev and cluster size 0
+
+Expected result:
+- return code != 0
+- Error code response printed to stdout
+
 ### SIGTERM
 
-#### TEST CASE 21 - Name: SIGTERM
+#### TEST CASE 23 - Name: SIGTERM
 Call CTRL+C (SIGTERM) occurs after creating lvol store
 Steps:
 - create a malloc bdev
