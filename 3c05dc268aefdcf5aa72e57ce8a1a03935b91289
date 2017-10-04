@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "7bb0e96c_ab6803d3",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-04T13:27:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b0b8dc94_30397d1b",
+      "range": {
+        "startLine": 69,
+        "startChar": 7,
+        "endLine": 69,
+        "endChar": 11
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7de58bd4_58c86387",
         "filename": "include/spdk/vhost.h",
         "patchSetId": 16
@@ -59,6 +83,30 @@
       "writtenOn": "2017-10-03T11:08:02Z",
       "side": 1,
       "message": "-\u003e is",
+      "range": {
+        "startLine": 99,
+        "startChar": 41,
+        "endLine": 99,
+        "endChar": 45
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b30a0553_9abb8844",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-04T13:27:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7de58bd4_58c86387",
       "range": {
         "startLine": 99,
         "startChar": 41,
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "0bba39a6_d9394df5",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-04T13:27:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1f86c240_23bec533",
+      "range": {
+        "startLine": 100,
+        "startChar": 6,
+        "endLine": 100,
+        "endChar": 24
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5dabf55e_3617019f",
         "filename": "include/spdk/vhost.h",
         "patchSetId": 16
@@ -105,6 +177,30 @@
       "writtenOn": "2017-10-03T11:08:02Z",
       "side": 1,
       "message": "Are you sure this sentence is about CPU mask?",
+      "range": {
+        "startLine": 103,
+        "startChar": 32,
+        "endLine": 104,
+        "endChar": 60
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a9afd10_d1763026",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-04T13:27:55Z",
+      "side": 1,
+      "message": "good call",
+      "parentUuid": "5dabf55e_3617019f",
       "range": {
         "startLine": 103,
         "startChar": 32,
@@ -140,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "1845cec4_a9729e6d",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-04T13:27:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0834f9dc_11b65277",
+      "range": {
+        "startLine": 112,
+        "startChar": 51,
+        "endLine": 113,
+        "endChar": 63
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "30de5d03_76a332df",
         "filename": "include/spdk/vhost.h",
         "patchSetId": 16
@@ -163,6 +283,30 @@
     },
     {
       "key": {
+        "uuid": "8bb95f2e_66df6923",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-04T13:27:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "30de5d03_76a332df",
+      "range": {
+        "startLine": 195,
+        "startChar": 45,
+        "endLine": 196,
+        "endChar": 56
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e1d1ee31_2bcd227b",
         "filename": "include/spdk/vhost.h",
         "patchSetId": 16
@@ -174,6 +318,30 @@
       "writtenOn": "2017-10-03T11:08:02Z",
       "side": 1,
       "message": "hmmm... so haw the function detect cpumask base?",
+      "range": {
+        "startLine": 208,
+        "startChar": 38,
+        "endLine": 208,
+        "endChar": 54
+      },
+      "revId": "3c05dc268aefdcf5aa72e57ce8a1a03935b91289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e15df28f_f1f2fe1e",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-04T13:27:55Z",
+      "side": 1,
+      "message": "my bad",
+      "parentUuid": "e1d1ee31_2bcd227b",
       "range": {
         "startLine": 208,
         "startChar": 38,
