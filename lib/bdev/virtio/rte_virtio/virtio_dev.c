@@ -120,8 +120,8 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 		return -EINVAL;
 	}
 
-	snprintf(vq_name, sizeof(vq_name), "port%d_vq%d",
-		 dev->port_id, vtpci_queue_idx);
+	snprintf(vq_name, sizeof(vq_name), "dev%d_vq%d",
+		 dev->id, vtpci_queue_idx);
 
 	size = RTE_ALIGN_CEIL(sizeof(*vq) +
 				vq_size * sizeof(struct vq_desc_extra),
@@ -318,9 +318,11 @@ virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 void
 virtio_dev_free(struct virtio_dev *dev)
 {
+	uint32_t vdev_id = dev->id;
+
 	virtio_free_queues(dev);
 	vtpci_ops(dev)->free_vdev(dev);
-	/* FIXME clear VTPCI_OPS(dev) */
+	vtpci_deinit(vdev_id);
 }
 
 int
