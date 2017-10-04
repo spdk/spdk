@@ -5,6 +5,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 
 total_size=64
 block_size=512
+cluster_sz=1048576 #1MiB
 test_cases=all
 x=""
 
@@ -19,6 +20,7 @@ function usage() {
     echo "-h, --help                print help and exit"
     echo "    --total-size          Size of malloc bdev in MB (int > 0)"
     echo "    --block-size          Block size for this bdev"
+    echo "    --cluster-sz          size of cluster (in bytes)"
     echo "-x                        set -x for script debug"
     echo "    --test-cases=         List test cases which will be run:
                                     1: 'construct_lvs_positive',
@@ -41,7 +43,10 @@ function usage() {
                                     18: 'nested construct_logical_volume_on_busy_bdev',
                                     19: 'nested destroy_logical_volume_positive',
                                     20: 'delete_bdev_positive',
-                                    21: 'SIGTERM_on_lvol_store',
+                                    21: 'construct_lvs_with_cluster_sz_out_of_range_max',
+                                    22: 'construct_lvs_with_cluster_sz_out_of_range_min',
+                                    23: 'SIGTERM',
+                                    24: 'SIGTERM_nested_lvol'
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"
@@ -57,6 +62,7 @@ while getopts 'xh-:' optchar; do
             help) usage $0 ;;
             total-size=*) total_size="${OPTARG#*=}" ;;
             block-size=*) block_size="${OPTARG#*=}" ;;
+            cluster-sz=*) cluster_sz="${OPTARG#*=}" ;;
             test-cases=*) test_cases="${OPTARG#*=}" ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
@@ -94,7 +100,7 @@ trap "vhost_kill; exit 1" SIGINT SIGTERM EXIT
 
 vhost_start
 
-$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $BASE_DIR "${test_cases[@]}"
+$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $cluster_sz $BASE_DIR "${test_cases[@]}"
 
 trap - SIGINT SIGTERM EXIT
 vhost_kill

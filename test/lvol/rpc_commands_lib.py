@@ -1,4 +1,5 @@
 import json
+
 from subprocess import check_output, CalledProcessError
 
 class Spdk_Rpc(object):
@@ -38,8 +39,8 @@ class Commands_Rpc(object):
                 num_blocks = json_value[i]['num_blocks']
                 block_size = json_value[i]['block_size']
                 if num_blocks * block_size == bdev_size_mb * 1024 * 1024:
-                    print("Info: Response get_bdevs command is "
-                          "correct. Params: uuid_bdevs: {uuid}, bdev_size "
+                    print("Info: Response get_bdevs command  is "
+                          "correctly. Params: uuid_bdevs: {uuid}, bdev_size "
                           "{size}".format(uuid=uuid_bdev,
                                           size=bdev_size_mb))
                     return 0
@@ -49,21 +50,26 @@ class Commands_Rpc(object):
                                     json_value=json_value))
         return 1
 
-    def check_get_lvol_stores(self, base_name, uuid):
+    def check_get_lvol_stores(self, base_name, uuid, cluster_size):
         print("INFO: RPC COMMAND get_lvol_stores")
         output = self.rpc.get_lvol_stores()[0]
         json_value = json.loads(output)
         if json_value:
             for i in range(len(json_value)):
                 uuid_json_response = json_value[i]['uuid']
+                cluster_size_response = json_value[i]['cluster_size']
                 base_bdev_json_reponse = json_value[i]['base_bdev']
                 if base_name in [base_bdev_json_reponse] \
-                        and uuid in [uuid_json_response]:
+                        and uuid in [uuid_json_response] and cluster_size ==\
+                        [cluster_size_response]:
                     print("INFO: base_name:{base_name} is found in RPC "
                           "Command: get_lvol_stores "
                           "response".format(base_name=base_name))
                     print("INFO: UUID:{uuid} is found in RPC Commnad: "
                           "get_lvol_stores response".format(uuid=uuid))
+                    print("INFO: Cluster size :{cluster_size} is found in RPC "
+                          "Commnad: get_lvol_stores "
+                          "response".format(cluster_size=cluster_size))
                     return 0
             print("FAILED: UUID: {uuid} or base_name: {base_name} not found "
                   "in RPC COMMAND get_bdevs:"
@@ -79,9 +85,10 @@ class Commands_Rpc(object):
         output = self.rpc.construct_malloc_bdev(total_size, block_size)[0]
         return output.rstrip('\n')
 
-    def construct_lvol_store(self, base_name, cluster_size):
+    def construct_lvol_store(self, base_name, size):
         print("INFO: RPC COMMAND construct_lvol_store")
-        output = self.rpc.construct_lvol_store(base_name, cluster_size)[0]
+        output = self.rpc.construct_lvol_store(base_name, "-c "
+                                               "{size}".format(size=size))[0]
         return output.rstrip('\n')
 
     def construct_lvol_bdev(self, uuid, size):
