@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6190608d_6078f767",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T11:49:05Z",
+      "side": 1,
+      "message": "sleep 1 is enough",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 7
+      },
+      "revId": "8b94b766dcfbdc654bb208a802249512b7663d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff2f3b41_2a52489f",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T11:49:05Z",
+      "side": 1,
+      "message": "You can skip \"if\" conditional few lines below by saving the name of created malloc bdev:\nmalloc_bdev\u003d$($rpc_py construct_malloc_bdev 128 ${block_size})\n\nand then instead of conditional:\n$rootdir/scripts/rpc.py add_vhost_scsi_lun vhost.1 0 $malloc_bdev",
+      "range": {
+        "startLine": 49,
+        "startChar": 7,
+        "endLine": 49,
+        "endChar": 71
+      },
+      "revId": "8b94b766dcfbdc654bb208a802249512b7663d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d691b0dc_2d5b69cb",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T11:49:05Z",
+      "side": 1,
+      "message": "for rpc calls you can shorten these lines by:\nrpc_py\u003d$rootdir/scripts/rpc.py\n\nand then:\n$rpc_py get_bdevs",
+      "range": {
+        "startLine": 50,
+        "startChar": 7,
+        "endLine": 50,
+        "endChar": 31
+      },
+      "revId": "8b94b766dcfbdc654bb208a802249512b7663d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00b37d93_0f18231a",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T11:49:05Z",
+      "side": 1,
+      "message": "tabs/spaces consistency",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 9
+      },
+      "revId": "8b94b766dcfbdc654bb208a802249512b7663d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee322da3_590cc55f",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T11:49:05Z",
+      "side": 1,
+      "message": "You can also delete malloc bdevs here after removing them from constrollers",
+      "range": {
+        "startLine": 120,
+        "startChar": 8,
+        "endLine": 121,
+        "endChar": 63
+      },
+      "revId": "8b94b766dcfbdc654bb208a802249512b7663d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99766072_c45ffa8e",
+        "filename": "test/vhost/initiator/vhost.conf.in",
+        "patchSetId": 16
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-04T11:49:05Z",
+      "side": 1,
+      "message": "Any chance to move it to RPC commands instead of hard coding it into config file?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 14
+      },
+      "revId": "8b94b766dcfbdc654bb208a802249512b7663d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
