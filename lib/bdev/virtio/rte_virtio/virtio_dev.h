@@ -45,7 +45,8 @@ struct virtio_dev {
 	/** Max number of queues the host supports. */
 	uint16_t	max_queues;
 
-	uint8_t		port_id;
+	/* Device index. */
+	uint32_t	id;
 	uint64_t	req_guest_features;
 	uint64_t	guest_features;
 	int		is_hw;

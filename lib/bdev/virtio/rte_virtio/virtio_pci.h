@@ -43,6 +43,8 @@
 
 struct virtqueue;
 
+#define VIRTIO_MAX_DEVICES 128
+
 /* VirtIO PCI vendor/device ID. */
 #define VIRTIO_PCI_VENDORID     0x1AF4
 #define VIRTIO_PCI_DEVICEID_SCSI_MODERN 0x1004
@@ -242,11 +244,8 @@ struct vtpci_internal {
 	struct rte_pci_ioport io;
 };
 
-#define vtpci_ops(dev)	(g_virtio_driver.internal[(dev)->port_id].vtpci_ops)
-#define vtpci_io(dev)	(&g_virtio_driver.internal[(dev)->port_id].io)
-
 struct virtio_driver {
-	struct vtpci_internal internal[128];
+	struct vtpci_internal internal[VIRTIO_MAX_DEVICES];
 	TAILQ_HEAD(, virtio_dev) init_ctrlrs;
 	TAILQ_HEAD(, virtio_dev) attached_ctrlrs;
 };
@@ -268,7 +267,17 @@ vtpci_with_feature(struct virtio_dev *dev, uint64_t bit)
 	return (dev->guest_features & (1ULL << bit)) != 0;
 }
 
-int vtpci_init(void);
+/**
+ * Init all compatible Virtio PCI devices.
+ */
+int vtpci_enumerate_pci(void);
+
+/**
+ * Init virtual PCI layer for given device.  This
+ * will set vdev->id field.
+ */
+int vtpci_init(struct virtio_dev *vdev, const struct virtio_pci_ops *ops);
+
 void vtpci_reset(struct virtio_dev *);
 
 void vtpci_reinit_complete(struct virtio_dev *);
@@ -283,6 +292,10 @@ void vtpci_write_dev_config(struct virtio_dev *, size_t, const void *, int);
 void vtpci_read_dev_config(struct virtio_dev *, size_t, void *, int);
 
 uint8_t vtpci_isr(struct virtio_dev *);
+
+const struct virtio_pci_ops *vtpci_ops(struct virtio_dev *dev);
+
+void vtpci_deinit(uint32_t id);
 
 extern const struct virtio_pci_ops virtio_user_ops;
 

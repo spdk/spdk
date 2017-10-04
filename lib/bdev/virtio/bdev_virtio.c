@@ -621,7 +621,7 @@ bdev_virtio_initialize(void)
 	}
 
 	if (scan_pci) {
-		vtpci_init();
+		vtpci_enumerate_pci();
 	}
 
 	TAILQ_FOREACH(vdev, &g_virtio_driver.init_ctrlrs, tailq) {
