@@ -410,24 +410,23 @@ spdk_bdev_module_action_complete(void)
 	spdk_bdev_init_complete(0);
 }
 
-static void
-spdk_bdev_module_action_done(struct spdk_bdev_module_if *module)
+void
+spdk_bdev_module_init_done(struct spdk_bdev_module_if *module)
 {
-	assert(module->action_in_progress > 0);
+	if (module->action_in_progress == 0) {
+		/* The module has been already initialized */
+		return;
+	}
 	module->action_in_progress--;
 	spdk_bdev_module_action_complete();
 }
 
 void
-spdk_bdev_module_init_done(struct spdk_bdev_module_if *module)
-{
-	spdk_bdev_module_action_done(module);
-}
-
-void
 spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
 {
-	spdk_bdev_module_action_done(module);
+	assert(module->action_in_progress > 0);
+	module->action_in_progress--;
+	spdk_bdev_module_action_complete();
 }
 
 static int
