@@ -1,4 +1,5 @@
 import json
+
 from subprocess import check_output, CalledProcessError
 
 class Spdk_Rpc(object):

@@ -56,7 +56,6 @@ class TestCases(object):
         self.block_size = block_size
         self.path = base_dir_path
 
-    # positive tests
     def test_case1(self):
         header(1)
         base_name = self.c.construct_malloc_bdev(self.total_size,
@@ -207,7 +206,6 @@ class TestCases(object):
         footer(9)
         return fail_count
 
-    # negative tests
     def test_case10(self):
         bad_bdev_uuid = random.randrange(999999999)
         fail_count = 0
