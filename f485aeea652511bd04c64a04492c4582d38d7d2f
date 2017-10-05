@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c67e6f80_0481400e",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:16:48Z",
+      "side": 1,
+      "message": "Please add blank lines between the end of the variable initializer and this function.",
+      "revId": "f485aeea652511bd04c64a04492c4582d38d7d2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "086b33ea_da809402",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:16:48Z",
+      "side": 1,
+      "message": "Add a blank line before this function as well.",
+      "revId": "f485aeea652511bd04c64a04492c4582d38d7d2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b939050_1e1dc87f",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:16:48Z",
+      "side": 1,
+      "message": "Add blank line before this.",
+      "revId": "f485aeea652511bd04c64a04492c4582d38d7d2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6fdddbe_653c1a7d",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:16:48Z",
+      "side": 1,
+      "message": "Add blank line here.",
+      "revId": "f485aeea652511bd04c64a04492c4582d38d7d2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e90acb1_63b8e414",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:16:48Z",
+      "side": 1,
+      "message": "block_size is a size_t, which is undefined, so it can\u0027t be \u003c 0.  I don\u0027t think we need to error check these values anyway - if we have a valid PMEMblkpool, the library should give us valid block size and num blocks.",
+      "revId": "f485aeea652511bd04c64a04492c4582d38d7d2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e15661d_0de78067",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:16:48Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "f485aeea652511bd04c64a04492c4582d38d7d2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
