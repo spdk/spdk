@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a000c92_dec096a7",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:17:55Z",
+      "side": 1,
+      "message": "Leave a blank line between sections.\n\nAlso, I don\u0027t think the link is pointing to the right place -this should point to the bdev pmem docs.",
+      "revId": "d74132a8199d27821c1db0f9b14795f882bc3b8f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
