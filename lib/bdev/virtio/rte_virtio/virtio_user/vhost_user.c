@@ -236,7 +236,7 @@ prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 {
 	int i, num;
 	struct hugepage_file_info huges[VHOST_MEMORY_MAX_NREGIONS];
-	struct vhost_memory_region *mr;
+	struct vhost_memory_region *mr __attribute__((aligned(1)));
 
 	num = get_hugepage_file_info(huges, VHOST_MEMORY_MAX_NREGIONS);
 	if (num < 0) {
