@@ -88,6 +88,57 @@
     },
     {
       "key": {
+        "uuid": "93fffef6_425a8030",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:08:27Z",
+      "side": 1,
+      "message": "If this is going to return early, it would be clearer to make the block below into its own \u0027if\u0027 statement rather than \u0027else if\u0027.",
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a53e15e7_c744bdff",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:08:27Z",
+      "side": 1,
+      "message": "This get_scsi_status modification seems unrelated to multi-queue enabling?",
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d029737_daeaeddf",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:08:27Z",
+      "side": 1,
+      "message": "Should this return a failure code?",
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6fd45ba4_d5f3dd4e",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 2
@@ -108,6 +159,46 @@
       "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29573a4a_6013c773",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:08:27Z",
+      "side": 1,
+      "message": "If this is a number of virt queues, it would be clearer to call it something like \"num_vq\" or \"vq_count\".",
+      "range": {
+        "startLine": 55,
+        "startChar": 3,
+        "endLine": 55,
+        "endChar": 9
+      },
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63584d05_e73230fd",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 634,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:08:27Z",
+      "side": 1,
+      "message": "Duplicate of the vq_size block above?",
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
