@@ -191,6 +191,30 @@
     },
     {
       "key": {
+        "uuid": "b0d5a11b_311d4327",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-05T10:19:49Z",
+      "side": 1,
+      "message": "Line @377 removes an entry frm g_virtio_driver.init_ctrlrs\nvirtio_user_dev_init() already inserts to this list.\nYou\u0027re appending vdev to attached_ctrlrs list. After successful scan_target_finish, you will have two identical\nentries in the list, which will break it...\nPlease remove this line.",
+      "parentUuid": "75d4593d_d5f780b0",
+      "range": {
+        "startLine": 651,
+        "startChar": 2,
+        "endLine": 651,
+        "endChar": 67
+      },
+      "revId": "92b27438fbc60099fbd9ab97f8c04018ce1d249b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54089266_526021da",
         "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
         "patchSetId": 1
