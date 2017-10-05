@@ -123,9 +123,9 @@ main(int argc, char **argv)
 	opts.shutdown_cb = bdev_svc_shutdown;
 	opts.max_delay_us = 1000 * 1000;
 
-	spdk_app_start(&opts, bdev_svc_start, (void *)(intptr_t)opts.shm_id, NULL);
+	rc = spdk_app_start(&opts, bdev_svc_start, (void *)(intptr_t)opts.shm_id, NULL);
 
-	rc = spdk_app_fini();
+	spdk_app_fini();
 
 	return rc;
 }

@@ -387,15 +387,13 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	return g_spdk_app.rc;
 }
 
-int
+void
 spdk_app_fini(void)
 {
 	spdk_trace_cleanup();
 	spdk_reactors_fini();
 	spdk_conf_free(g_spdk_app.config);
 	spdk_log_close();
-
-	return 0;
 }
 
 void
