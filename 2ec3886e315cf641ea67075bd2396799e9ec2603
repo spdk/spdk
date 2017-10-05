@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3802b9d2_452d22d4",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T18:07:49Z",
+      "side": 1,
+      "message": "also thinking that we should have something like:\n\nstruct spdk_bs_type {\n  char bstype[SPDK_BLOBSTORE_TYPE_LENGTH];\n};\n\nThis could be used in spdk_bs_opts, spdk_blob_store and spdk_super_blob.  It also gives us a convenient structure to pass as a parameter (instead of char *) for the spdk_bs_get/set_bstype functions I recommend later in this review.",
+      "parentUuid": "265d6321_8faea183",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a322e655_f132532c",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 15
@@ -87,6 +105,24 @@
     },
     {
       "key": {
+        "uuid": "c5d2a304_181d66be",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1611,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T18:07:49Z",
+      "side": 1,
+      "message": "I don\u0027t think we should put this BLOBFS here in the blobstore code.\n\nHow about instead we add spdk_bs_get/set_bstype functions.  blobfs can then load with a NULL bstype.  If after bs load, bstype is empty (it finds this by calling spdk_bs_get_bstype), it can call spdk_bs_set_bstype.  If its already BLOBFS, do nothing.  Otherwise fail the spdk_fs_load operation.",
+      "parentUuid": "05f1c463_e7416ea7",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "53263ea2_9ba79206",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 15
@@ -115,6 +151,23 @@
       "writtenOn": "2017-10-05T17:49:08Z",
       "side": 1,
       "message": "I\u0027m thinking we don\u0027t have an UNKNOWN string - we just have all zeroes be the definition of unknown bstype (then this is a bit more backward compatible too with version 1)",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a04fa608_5e698e5f",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T18:07:49Z",
+      "side": 1,
+      "message": "Daniel and I are thinking now that we may not need this version bump.  If we treat \"undefined\" bstype as all zeroes, then this matches the current format (since all reserved bits are already set to 0)",
       "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
