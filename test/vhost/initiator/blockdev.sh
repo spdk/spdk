@@ -42,7 +42,7 @@ sudo NRHUGE=8 $rootdir/scripts/setup.sh
 sleep 4
 spdk_vhost_run $testdir
 
-for block_size in 512 4096; do
+for block_size in ; do #512 4096; do
         if [ $RUN_NIGHTLY -eq 1 ]; then
                 format_disk_${block_size}
         fi
@@ -120,4 +120,32 @@ for block_size in 512 4096; do
         $rootdir/scripts/rpc.py remove_vhost_scsi_dev vhost.1 0
         $rootdir/scripts/rpc.py remove_vhost_scsi_dev vhost.0 0
 done
+$rootdir/scripts/rpc.py construct_malloc_bdev 128 512
+$rootdir/scripts/rpc.py add_vhost_scsi_lun vhost.0 0 Nvme0n1
+$rootdir/scripts/rpc.py add_vhost_scsi_lun vhost.1 0 Malloc0
+cp $testdir/vhost.conf.multisocket $testdir/vhost.conf
+sed -i "s|/tmp/vhost.0|$rootdir/../vhost/vhost.0|g" $testdir/vhost.conf
+sed -i "s|/tmp/vhost.1|$rootdir/../vhost/vhost.1|g" $testdir/vhost.conf
+$rootdir/app/vhost/vhost -m 0x18 -p 0 -N -S $rootdir/../vhost -c $testdir/vhost.conf &
+vhost_pid=$!
+waitforlisten "$vhost_pid" 5261
+$rootdir/scripts/rpc.py -p 5261 get_bdevs
+$rootdir/scripts/rpc.py -p 5261 add_vhost_scsi_lun naa.Virtio0.0 0 Virtio0
+$rootdir/scripts/rpc.py -p 5261 add_vhost_scsi_lun naa.Virtio1.0 0 Virtio1
+
+setup_cmd="$testdir/../common/vm_setup.sh $x --work-dir=$rootdir/../ --test-type=spdk_vhost_scsi "
+setup_cmd+="-f 0 --os=/home/sys_sgsw/vhost_vm_image.qcow2 --disk=Virtio0p0:Virtio0p1"
+$setup_cmd
+$testdir/../common/vm_run.sh --work-dir=$rootdir/../ "0"
+vm_wait_for_boot 600 "0"
+vm_dir=$BASEDIR/$vm_num
+
+qemu_mask_param="VM_0_qemu_mask"
+host_name="VM-0-${!qemu_mask_param}"
+echo "INFO: Setting up hostname: $host_name"
+vm_ssh "0" "hostname $host_name"
+vm_start_fio_server --fio-bin=/home/sys_sgsw/fio_ubuntu "0"
+rm $testdir/vhost.conf
+vm_kill_all
+/bin/kill -KILL $vhost_pid
 spdk_vhost_kill
