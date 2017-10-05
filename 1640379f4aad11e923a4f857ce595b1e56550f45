@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa8ef111_227549e7",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T08:41:29Z",
+      "side": 1,
+      "message": "vhost has no subsystems, it has controllers",
+      "range": {
+        "startLine": 60,
+        "startChar": 34,
+        "endLine": 60,
+        "endChar": 43
+      },
+      "revId": "1640379f4aad11e923a4f857ce595b1e56550f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aacb97a6_b8c9252b",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T08:41:29Z",
+      "side": 1,
+      "message": "did you read my previous comments?",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 44
+      },
+      "revId": "1640379f4aad11e923a4f857ce595b1e56550f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fe50c50_63bdc2f2",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T08:41:29Z",
+      "side": 1,
+      "message": "change name",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 9
+      },
+      "revId": "1640379f4aad11e923a4f857ce595b1e56550f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0b85b66_79858d3a",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T08:41:29Z",
+      "side": 1,
+      "message": "pretty sure I saw these functions in some other commits, do we need them added once more?\n\nThese look as they could be put into common",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 24
+      },
+      "revId": "1640379f4aad11e923a4f857ce595b1e56550f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "654a4f1e_04d256b2",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T08:41:29Z",
+      "side": 1,
+      "message": "tabs/spaces consistency (applies to all lines / files in this commit)",
+      "range": {
+        "startLine": 64,
+        "startChar": 1,
+        "endLine": 67,
+        "endChar": 6
+      },
+      "revId": "1640379f4aad11e923a4f857ce595b1e56550f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90e7fe87_134081d6",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T08:41:29Z",
+      "side": 1,
+      "message": "maybe put this at the top of the file for better readability",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 31
+      },
+      "revId": "1640379f4aad11e923a4f857ce595b1e56550f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cacf35f1_c5716d3f",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T08:41:29Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 112,
+        "startChar": 69,
+        "endLine": 112,
+        "endChar": 70
+      },
+      "revId": "1640379f4aad11e923a4f857ce595b1e56550f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ddc6638_e9487fa1",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T08:41:29Z",
+      "side": 1,
+      "message": "Any reason why only blk?",
+      "range": {
+        "startLine": 114,
+        "startChar": 70,
+        "endLine": 114,
+        "endChar": 84
+      },
+      "revId": "1640379f4aad11e923a4f857ce595b1e56550f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d43f4179_bb7eca52",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T08:41:29Z",
+      "side": 1,
+      "message": "It\u0027d be better to start all VMs outside of loop and then wait for all of them to boot.\nThat way you call \"vm_wait_for_boot\" only once instead of doing it in loop.",
+      "range": {
+        "startLine": 115,
+        "startChar": 2,
+        "endLine": 116,
+        "endChar": 25
+      },
+      "revId": "1640379f4aad11e923a4f857ce595b1e56550f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
