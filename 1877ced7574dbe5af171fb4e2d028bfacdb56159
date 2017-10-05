@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30a3c4fc_9419ed9e",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 830,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T11:09:21Z",
+      "side": 1,
+      "message": "again - tab / spaces consistency in file",
+      "range": {
+        "startLine": 830,
+        "startChar": 0,
+        "endLine": 830,
+        "endChar": 4
+      },
+      "revId": "1877ced7574dbe5af171fb4e2d028bfacdb56159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d2934d0_1d4c43c2",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 872,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T11:09:21Z",
+      "side": 1,
+      "message": "It can stay here for now until commit for hot-* is merged, will need rebasing after that.",
+      "range": {
+        "startLine": 828,
+        "startChar": 0,
+        "endLine": 872,
+        "endChar": 1
+      },
+      "revId": "1877ced7574dbe5af171fb4e2d028bfacdb56159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afd70706_86160920",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T11:09:21Z",
+      "side": 1,
+      "message": "default for test pool is /home/sys_sgsw/fio_ubuntu\nYou can look up the default in test/vhost/spdk_vhost.sh.\n\nI\u0027d prefer removing this default from here",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 31
+      },
+      "revId": "1877ced7574dbe5af171fb4e2d028bfacdb56159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65462d52_d0a63fd9",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T11:09:21Z",
+      "side": 1,
+      "message": "That\u0027s nitpicking here, but since you\u0027re gracefully removing all configuration then you\u0027d possibly also want to remove vhost controller devices too.\nYou don\u0027t have to though.",
+      "range": {
+        "startLine": 24,
+        "startChar": 4,
+        "endLine": 24,
+        "endChar": 47
+      },
+      "revId": "1877ced7574dbe5af171fb4e2d028bfacdb56159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bed0e442_ed40b04a",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T11:09:21Z",
+      "side": 1,
+      "message": "This loop will produce [global] section multiple times if there is more than 1 disk per VM, which is excessive.\nMost of [global] can be put info a file or generated only once.",
+      "range": {
+        "startLine": 40,
+        "startChar": 7,
+        "endLine": 54,
+        "endChar": 24
+      },
+      "revId": "1877ced7574dbe5af171fb4e2d028bfacdb56159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a392936_575c8915",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T11:09:21Z",
+      "side": 1,
+      "message": "Could we please have a COMMON_DIR variable instead of typing relative path every time we need something from common?",
+      "range": {
+        "startLine": 97,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 32
+      },
+      "revId": "1877ced7574dbe5af171fb4e2d028bfacdb56159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24bc69fa_5e371375",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T11:09:21Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 8
+      },
+      "revId": "1877ced7574dbe5af171fb4e2d028bfacdb56159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b15700a1_2eddc10c",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T11:09:21Z",
+      "side": 1,
+      "message": "does this work? $PMEM_BDEVS is not assigned anywhere, I just see $PMEM_BDEV. Typo?",
+      "range": {
+        "startLine": 110,
+        "startChar": 56,
+        "endLine": 110,
+        "endChar": 66
+      },
+      "revId": "1877ced7574dbe5af171fb4e2d028bfacdb56159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed5475c6_c4410749",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T11:09:21Z",
+      "side": 1,
+      "message": "You\u0027re not adding any device to the controller, so there\u0027s no point of running the test for SCSI",
+      "range": {
+        "startLine": 112,
+        "startChar": 12,
+        "endLine": 112,
+        "endChar": 69
+      },
+      "revId": "1877ced7574dbe5af171fb4e2d028bfacdb56159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88e2c8d6_be47d1a7",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T11:09:21Z",
+      "side": 1,
+      "message": "Not needed IMO",
+      "range": {
+        "startLine": 114,
+        "startChar": 8,
+        "endLine": 114,
+        "endChar": 15
+      },
+      "revId": "1877ced7574dbe5af171fb4e2d028bfacdb56159",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
