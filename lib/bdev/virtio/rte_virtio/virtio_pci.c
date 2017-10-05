@@ -200,16 +200,19 @@ legacy_get_features(struct virtio_dev *dev)
 	return dst;
 }
 
-static void
+static int
 legacy_set_features(struct virtio_dev *dev, uint64_t features)
 {
 	if ((features >> 32) != 0) {
 		PMD_DRV_LOG(ERR,
 			"only 32 bit features are allowed for legacy virtio!");
-		return;
+		return -1;
 	}
 	rte_pci_ioport_write(vtpci_io(dev), &features, 4,
 		VIRTIO_PCI_GUEST_FEATURES);
+	dev->negotiated_features = features;
+
+	return 0;
 }
 
 static uint8_t
@@ -373,10 +376,16 @@ modern_get_features(struct virtio_dev *dev)
 	return ((uint64_t)features_hi << 32) | features_lo;
 }
 
-static void
+static int
 modern_set_features(struct virtio_dev *dev, uint64_t features)
 {
 	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+
+	if ((features & (1ULL << VIRTIO_F_VERSION_1)) == 0) {
+		PMD_INIT_LOG(ERR,
+			     "VIRTIO_F_VERSION_1 feature is not enabled.");
+		return -1;
+	}
 
 	rte_write32(0, &hw->common_cfg->guest_feature_select);
 	rte_write32(features & ((1ULL << 32) - 1),
@@ -385,6 +394,10 @@ modern_set_features(struct virtio_dev *dev, uint64_t features)
 	rte_write32(1, &hw->common_cfg->guest_feature_select);
 	rte_write32(features >> 32,
 		    &hw->common_cfg->guest_feature);
+
+	dev->negotiated_features = features;
+
+	return 0;
 }
 
 static uint8_t
@@ -533,21 +546,6 @@ vtpci_write_dev_config(struct virtio_dev *dev, size_t offset,
 		       const void *src, int length)
 {
 	vtpci_ops(dev)->write_dev_cfg(dev, offset, src, length);
-}
-
-uint64_t
-vtpci_negotiate_features(struct virtio_dev *dev, uint64_t host_features)
-{
-	uint64_t features;
-
-	/*
-	 * Limit negotiated features to what the driver, virtqueue, and
-	 * host all support.
-	 */
-	features = host_features & dev->req_guest_features;
-	vtpci_ops(dev)->set_features(dev, features);
-
-	return features;
 }
 
 void

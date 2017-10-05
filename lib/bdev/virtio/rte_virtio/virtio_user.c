@@ -94,17 +94,31 @@ static uint64_t
 virtio_user_get_features(struct virtio_dev *vdev)
 {
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	uint64_t features;
 
-	/* unmask feature bits defined in vhost user protocol */
-	return dev->device_features;
+	if (dev->ops->send_request(dev, VHOST_USER_GET_FEATURES, &features) < 0) {
+		PMD_INIT_LOG(ERR, "get_features failed: %s", strerror(errno));
+		return 0;
+	}
+
+	return features;
 }
 
-static void
+static int
 virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 {
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	int ret;
 
-	dev->features = features & dev->device_features;
+	ret = dev->ops->send_request(dev, VHOST_USER_SET_FEATURES, &features);
+	if (ret < 0) {
+		return -1;
+	}
+
+	vdev->negotiated_features = features;
+	vdev->modern = vtpci_with_feature(vdev, VIRTIO_F_VERSION_1);
+
+	return 0;
 }
 
 static uint8_t

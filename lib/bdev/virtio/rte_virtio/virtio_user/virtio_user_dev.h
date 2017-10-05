@@ -58,10 +58,7 @@ struct virtio_user_dev {
 	int		callfds[VIRTIO_MAX_VIRTQUEUES];
 	int		kickfds[VIRTIO_MAX_VIRTQUEUES];
 	uint32_t	queue_size;
-	uint64_t	features; /* the negotiated features with driver,
-				   * and will be sync with device
-				   */
-	uint64_t	device_features; /* supported features by device */
+
 	uint8_t		status;
 	uint8_t		port_id;
 	char		path[PATH_MAX];

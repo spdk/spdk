@@ -47,8 +47,10 @@ struct virtio_dev {
 
 	/* Device index. */
 	uint32_t	id;
-	uint64_t	req_guest_features;
-	uint64_t	guest_features;
+
+	/* Common device & guest features. */
+	uint64_t	negotiated_features;
+
 	int		is_hw;
 
 	/** Modern/legacy virtio device flag. */
