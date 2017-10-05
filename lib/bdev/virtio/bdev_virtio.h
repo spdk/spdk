@@ -33,7 +33,8 @@
 
 #ifndef SPDK_BDEV_VIRTIO_H
 #define SPDK_BDEV_VIRTIO_H
-#include "spdk/bdev.h"
+
+#include "spdk/stdinc.h"
 
 typedef void (*virtio_scsi_add_bdev_cb)(void *, struct spdk_bdev **, size_t);
 
@@ -56,7 +57,8 @@ typedef void (*virtio_scsi_add_bdev_cb)(void *, struct spdk_bdev **, size_t);
  *   Zero or negative error code on error.
  *   In case of error \c done_cb is not called.
  */
-int create_virtio_user_scsi_device(const char *path, const char *prefix, int queue_size,
-				   virtio_scsi_add_bdev_cb cb_fn, void *cb_arg);
+int create_virtio_user_scsi_device(const char *path, const char *prefix, uint16_t queue_num,
+				   uint32_t queue_size, virtio_scsi_add_bdev_cb cb_fn, void *cb_arg);
+
 
 #endif /* SPDK_BDEV_VIRTIO_H */
