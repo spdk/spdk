@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a29bcd71_0fbf3484",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T12:27:27Z",
+      "side": 1,
+      "message": "sleep 1 is enough",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 7
+      },
+      "revId": "8f67c1777a1a0cb1365d8e569c78826a9f07ddbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff22068a_821440a9",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T12:27:27Z",
+      "side": 1,
+      "message": "shorten it more by:\nrpc_py\u003d\"$rootdir/scripts/rpc.py\"\n\nand then just call $rpc_py",
+      "range": {
+        "startLine": 49,
+        "startChar": 7,
+        "endLine": 49,
+        "endChar": 31
+      },
+      "revId": "8f67c1777a1a0cb1365d8e569c78826a9f07ddbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f00ba83_254004fa",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T12:27:27Z",
+      "side": 1,
+      "message": "tabs / spaces consistency!",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 9
+      },
+      "revId": "8f67c1777a1a0cb1365d8e569c78826a9f07ddbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b54cb07c_21cedc22",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T12:27:27Z",
+      "side": 1,
+      "message": "why do we need that if?\nmaybe use bdev name returned from construct_malloc_bdev instead of hardcoding Malloc0 and Malloc1?",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 10
+      },
+      "revId": "8f67c1777a1a0cb1365d8e569c78826a9f07ddbd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
