@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "265d6321_8faea183",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T17:49:08Z",
+      "side": 1,
+      "message": "we should clarify more how this is to be specified:\n\nfor example:\nbstype set to all zeroes is a special value meaning no bstype defined\nduring init, bstype is set to a string denoting the type of blobstore (BLOBFS, LVOLSTORE)\nduring load, bstype may be set to:\n1) a string to compare with the bstype on disk, if they do not match, or the on disk bstype is all zeroes, the load operation will fail with -E_SOME_ERRNO\n2) all zeroes, in which case the load operation will not depend at all on bstype stored on disk\n\nnow that we are allowing options to be passed during the load, we also need to specify that cluster_sz and num_md_pages only apply during init() and are ignored during load()",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a322e655_f132532c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1368,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T17:49:08Z",
+      "side": 1,
+      "message": "lets just make this all zeroes",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed7b103f_2c2e1ad7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1421,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T17:49:08Z",
+      "side": 1,
+      "message": "should we just use memcpy here instead of snprintf?  or if we are going to use snprintf, then we should clearly clarify in the header file documentation that bstype is a NUL-terminated ASCII string (i.e. anything after the \\0 is ignored and not compared)",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b4fee1e_c13c0af9",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 15
@@ -36,6 +87,40 @@
     },
     {
       "key": {
+        "uuid": "53263ea2_9ba79206",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1667,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T17:49:08Z",
+      "side": 1,
+      "message": "I\u0027m not sure about using this here.  For example, cluster_sz and num_md_pages are ignored during load since they are on-disk fields that can\u0027t be changed.  I think we need to specify that in the documentation.  And if we do, then we really cannot fail the load operation if they pass cluster_sz or num_md_pages \u003d\u003d 0.",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88f65190_39f5fab9",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T17:49:08Z",
+      "side": 1,
+      "message": "I\u0027m thinking we don\u0027t have an UNKNOWN string - we just have all zeroes be the definition of unknown bstype (then this is a bit more backward compatible too with version 1)",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d1dfce0d_38c32fec",
         "filename": "lib/blobfs/blobfs.c",
         "patchSetId": 15
@@ -64,6 +149,23 @@
       "writtenOn": "2017-10-05T17:30:15Z",
       "side": 1,
       "message": "Here as well.",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c54c60e3_a2387315",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T17:49:08Z",
+      "side": 1,
+      "message": "I need to think about this some more.  This will actually break v1 blobfs blobstores.",
       "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
