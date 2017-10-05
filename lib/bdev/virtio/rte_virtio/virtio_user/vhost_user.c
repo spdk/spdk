@@ -236,7 +236,6 @@ prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 {
 	int i, num;
 	struct hugepage_file_info huges[VHOST_MEMORY_MAX_NREGIONS];
-	struct vhost_memory_region *mr;
 
 	num = get_hugepage_file_info(huges, VHOST_MEMORY_MAX_NREGIONS);
 	if (num < 0) {
@@ -245,11 +244,11 @@ prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 	}
 
 	for (i = 0; i < num; ++i) {
-		mr = &msg->payload.memory.regions[i];
-		mr->guest_phys_addr = huges[i].addr; /* use vaddr! */
-		mr->userspace_addr = huges[i].addr;
-		mr->memory_size = huges[i].size;
-		mr->mmap_offset = 0;
+		/* the memory regions are unaligned */
+		msg->payload.memory.regions[i].guest_phys_addr = huges[i].addr; /* use vaddr! */
+		msg->payload.memory.regions[i].userspace_addr = huges[i].addr;
+		msg->payload.memory.regions[i].memory_size = huges[i].size;
+		msg->payload.memory.regions[i].mmap_offset = 0;
 		fds[i] = open(huges[i].path, O_RDWR);
 	}
 
