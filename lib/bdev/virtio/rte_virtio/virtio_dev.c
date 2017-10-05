@@ -53,6 +53,7 @@
 #include <rte_eal.h>
 #include <rte_dev.h>
 
+#include "virtio_user/vhost.h"
 #include "virtio_dev.h"
 #include "virtio_pci.h"
 #include "virtio_logs.h"
@@ -242,37 +243,20 @@ virtio_alloc_queues(struct virtio_dev *dev)
 static int
 virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 {
-	uint64_t host_features;
+	uint64_t host_features = vtpci_ops(dev)->get_features(dev);
+	int rc;
 
-	/* Prepare guest_features: feature that driver wants to support */
-	PMD_INIT_LOG(DEBUG, "guest_features before negotiate = %" PRIx64,
-		req_features);
+	PMD_INIT_LOG(DEBUG, "guest features = %" PRIx64, req_features);
+	PMD_INIT_LOG(DEBUG, "device features = %" PRIx64, host_features);
 
-	/* Read device(host) feature bits */
-	host_features = vtpci_ops(dev)->get_features(dev);
-	PMD_INIT_LOG(DEBUG, "host_features before negotiate = %" PRIx64,
-		host_features);
-
-	/*
-	 * Negotiate features: Subset of device feature bits are written back
-	 * guest feature bits.
-	 */
-	dev->req_guest_features = req_features;
-	dev->guest_features = vtpci_negotiate_features(dev, host_features);
-	PMD_INIT_LOG(DEBUG, "features after negotiate = %" PRIx64,
-		dev->guest_features);
-
-	if (!vtpci_with_feature(dev, VIRTIO_F_VERSION_1)) {
-		if (dev->modern) {
-			PMD_INIT_LOG(ERR,
-				     "VIRTIO_F_VERSION_1 features is not enabled.");
-			return -1;
-		}
-
-		return 0;
+	rc = vtpci_ops(dev)->set_features(dev, req_features & host_features);
+	if (rc != 0) {
+		PMD_INIT_LOG(ERR, "failed to negotiate device features.");
+		return -1;
 	}
 
-	dev->modern = 1;
+	PMD_INIT_LOG(DEBUG, "negotiated features = %" PRIx64, dev->negotiated_features);
+
 	vtpci_set_status(dev, VIRTIO_CONFIG_STATUS_FEATURES_OK);
 	if (!(vtpci_get_status(dev) & VIRTIO_CONFIG_STATUS_FEATURES_OK)) {
 		PMD_INIT_LOG(ERR,
