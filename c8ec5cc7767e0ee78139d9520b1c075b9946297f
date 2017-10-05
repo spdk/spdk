@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f6e0b79_3d284ec4",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T23:27:14Z",
+      "side": 1,
+      "message": "notiated \u003d\u003e negotiated",
+      "revId": "c8ec5cc7767e0ee78139d9520b1c075b9946297f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
