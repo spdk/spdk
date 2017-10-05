@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57139f32_446d8c49",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 715,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:03:17Z",
+      "side": 1,
+      "message": "Does this path also need to put the channels?",
+      "revId": "50570854cd3b20ecfbe4248102e5eb146290cf96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
