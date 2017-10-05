@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3f46fc5_f3254c40",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T09:05:45Z",
+      "side": 1,
+      "message": "Once again - please read my previous comments and make this change in appropriate file.\nIn this commit you want to update NVMF test plan.",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 15
+      },
+      "revId": "b4ec4edcb220b7fb804715a2655a70c8c36f9275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df5b220e_fcfec6f9",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T09:05:45Z",
+      "side": 1,
+      "message": "Why do you describe vhost/lvol test in nvmf/lvol commit?\nWhat is going on here?",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 39
+      },
+      "revId": "b4ec4edcb220b7fb804715a2655a70c8c36f9275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b23ca7c_d10e48bf",
+        "filename": "test/nvmf/pmem/nvmf_pmem.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-05T09:05:45Z",
+      "side": 1,
+      "message": "please read previous comment",
+      "range": {
+        "startLine": 57,
+        "startChar": 16,
+        "endLine": 57,
+        "endChar": 27
+      },
+      "revId": "b4ec4edcb220b7fb804715a2655a70c8c36f9275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
