@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50241652_6da65117",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T18:14:21Z",
+      "side": 1,
+      "message": "Thanks for adding a changelog entry - we should be more diligent about this in general.\n\nI think we could reword this to be more consistent with the voice of the rest of the file, though.  Maybe something like: \"A CLI tool for blobstore has been added...\", and it would be good to mention the path to the tool as well (or a link to a readme/docs/whatever).",
+      "revId": "1c27ecadcb539d9a6724a7ee535de62e5d981d72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
