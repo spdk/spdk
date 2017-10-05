@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b4fee1e_c13c0af9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1609,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:30:15Z",
+      "side": 1,
+      "message": "ctx-\u003esuper has been read from disk (untrusted data), so we shouldn\u0027t assume that bstype is null terminated - strcmp() may run off the end of the buffer if malicious/buggy software writes a bogus superblock.",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05f1c463_e7416ea7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1611,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:30:15Z",
+      "side": 1,
+      "message": "Please use snprintf() here even though we know the string will always fit in this case - sprintf() is on the banned functions list of the security part of our release checklist.",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1dfce0d_38c32fec",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:30:15Z",
+      "side": 1,
+      "message": "Please use snprintf() rather than sprintf().",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f1c94d4_d2112dea",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:30:15Z",
+      "side": 1,
+      "message": "Here as well.",
+      "revId": "2ec3886e315cf641ea67075bd2396799e9ec2603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
