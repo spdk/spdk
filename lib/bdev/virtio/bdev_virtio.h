@@ -53,7 +53,7 @@
  *   In case of error \c done_cb is not called.
  */
 int
-create_virtio_user_scsi_device(const char *path, int queue_size, spdk_event_fn cb_fn,
-			       void *cb_arg1);
+create_virtio_user_scsi_device(const char *path, uint16_t queue_num, uint32_t queue_size,
+			       spdk_event_fn done_cb, void *cb_ctx);
 
 #endif /* SPDK_BDEV_VIRTIO_H */
