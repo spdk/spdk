@@ -90,7 +90,7 @@ int
 main(int argc, char **argv)
 {
 	int ch;
-	int rc, app_rc;
+	int rc;
 	int daemon_mode = 0;
 	struct spdk_app_opts opts = {};
 	enum spdk_log_level print_level = SPDK_LOG_NOTICE;
@@ -179,9 +179,9 @@ main(int argc, char **argv)
 
 	printf("Using net framework %s\n", spdk_net_framework_get_name());
 	/* Blocks until the application is exiting */
-	app_rc = spdk_app_start(&opts, spdk_startup, NULL, NULL);
+	rc = spdk_app_start(&opts, spdk_startup, NULL, NULL);
 
-	rc = spdk_app_fini();
+	spdk_app_fini();
 
-	return app_rc ? app_rc : rc;
+	return rc;
 }

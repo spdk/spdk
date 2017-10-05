@@ -46,7 +46,7 @@ struct spdk_event {
 };
 
 int spdk_reactors_init(unsigned int max_delay_us);
-int spdk_reactors_fini(void);
+void spdk_reactors_fini(void);
 
 void spdk_reactors_start(void);
 void spdk_reactors_stop(void);
