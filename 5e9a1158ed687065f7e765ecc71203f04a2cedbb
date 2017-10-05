@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e32c9480_9987dc4c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-05T16:46:51Z",
+      "side": 1,
+      "message": "should this be 4 hashes instead of 3 ?",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 3
+      },
+      "revId": "5e9a1158ed687065f7e765ecc71203f04a2cedbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0dbfae97_16e65eb2",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-05T16:46:51Z",
+      "side": 1,
+      "message": "you seem to use additional \"Example\" and \"Parameters\" sections in previous commands",
+      "revId": "5e9a1158ed687065f7e765ecc71203f04a2cedbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
