@@ -1,0 +1,208 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed7fd54b_fb224d8d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1521,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "this is almost exact duplicate of _spdk_bs_unload_write_used_pages_cpl() - could we create a new function, something like _spdk_bs_write_used_clusters() that could be used for both cases?\n\nlet\u0027s break that out into a separate function in a different patch - that patch can break out both this one and the one I mention below",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8a57187_fb968fb8",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1550,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "this is almost exact duplicate of _spdk_bs_unload_read_super_cpl() - could we create a new function, something like _spdk_bs_write_used_md() that could be used for both cases?",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae74990b_cb7a9fd1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1580,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "i think we need a check in this function to make sure ctx-\u003esuper-\u003emd_start + ctx-\u003ecur_page is not past the end of the metadata",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdbac563_5e408b7f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1585,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "is this memset needed?  see below - the memset is done twice but I don\u0027t think its needed at all",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0928fd8_5779c61a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1590,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "return not needed at end of void function",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "342cce40_65fdfc49",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1634,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "in_page_chain is already true here",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1f35ead_7afd6854",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1638,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "do we need an else clause here to set in_page_chain \u003d false?\n\nor maybe at line 1645, just before incrementing page_index, you just set in_page_chain to false, then you can avoid adding one here and can remove the ones online 1627 and 1640",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffd1d073_c65af3f2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1651,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "is this necessary if device will just be overwriting it?  if you check bserrno, at the beginning of this function you shouldn\u0027t need to memset here",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c54becd_ca411c10",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1679,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "can you just call _spdk_bs_load_replay_cur_md_page() here and avoid a bit of code duplication?",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c0f4e14_39c3a9c1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1834,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "return not needed at end of void function",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41290dcf_e3fc39c2",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1458,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "Create third blob?",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d70b7c5a_971dc347",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1502,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T22:00:54Z",
+      "side": 1,
+      "message": "should we have some operations where we delete blobs too and confirm they are still deleted after recovery?",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
