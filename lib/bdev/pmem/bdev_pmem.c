@@ -386,6 +386,7 @@ bdev_pmem_finish(void)
 	}
 
 	spdk_io_device_unregister(&g_pmem_disks, NULL);
+	spdk_bdev_finish_next(0);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_pmem", SPDK_TRACE_BDEV_PMEM)

@@ -71,13 +71,18 @@ spdk_bdev_subsystem_initialize(void)
 			     spdk_bdev_subsystem_stop_poller);
 }
 
+static void
+spdk_bdev_finish_complete(void *cb_arg, int rc)
+{
+	spdk_subsystem_fini_next(rc);
+}
+
 static int
 spdk_bdev_subsystem_finish(void)
 {
 	int rc;
 
-	rc = spdk_bdev_finish();
-	spdk_subsystem_fini_next(rc);
+	rc = spdk_bdev_finish(spdk_bdev_finish_complete, NULL);
 
 	return rc;
 }

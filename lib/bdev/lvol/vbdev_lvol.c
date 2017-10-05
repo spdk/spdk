@@ -581,12 +581,20 @@ vbdev_lvs_init(void)
 }
 
 static void
+vbdev_lvs_fini_cb(void *cb_arg, int lvserrno)
+{
+	if (TAILQ_EMPTY(&g_spdk_lvol_pairs)) {
+		spdk_bdev_finish_next(0);
+	}
+}
+
+static void
 vbdev_lvs_fini(void)
 {
 	struct lvol_store_bdev *lvs_bdev, *tmp;
 
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
-		vbdev_lvs_destruct(lvs_bdev->lvs, NULL, NULL);
+		vbdev_lvs_destruct(lvs_bdev->lvs, vbdev_lvs_fini_cb, NULL);
 	}
 }
 

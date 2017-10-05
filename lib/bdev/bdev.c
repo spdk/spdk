@@ -94,6 +94,9 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 static spdk_bdev_init_cb	g_cb_fn = NULL;
 static void			*g_cb_arg = NULL;
 
+static spdk_bdev_fini_cb	g_fini_cb_fn = NULL;
+static void			*g_fini_cb_arg = NULL;
+
 
 struct spdk_bdev_mgmt_channel {
 	bdev_io_tailq_t need_buf_small;
@@ -546,15 +549,26 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 	spdk_bdev_module_action_complete();
 }
 
-int
-spdk_bdev_finish(void)
-{
-	struct spdk_bdev_module_if *bdev_module;
+struct spdk_bdev_module_if *g_bdev_module;
 
-	TAILQ_FOREACH(bdev_module, &g_bdev_mgr.bdev_modules, tailq) {
-		if (bdev_module->module_fini) {
-			bdev_module->module_fini();
-		}
+static void
+spdk_bdev_finish_cb(void *io_device)
+{
+	spdk_bdev_fini_cb cb_fn = g_fini_cb_fn;
+	void *cb_arg = g_fini_cb_arg;
+
+	g_fini_cb_fn = NULL;
+	g_fini_cb_arg = NULL;
+
+	cb_fn(cb_arg, 0);
+}
+
+static void
+spdk_bdev_finish_end(int rc)
+{
+	if (rc) {
+		spdk_bdev_finish_cb(NULL);
+		assert(false);
 	}
 
 	if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != SPDK_BDEV_IO_POOL_SIZE) {
@@ -581,7 +595,42 @@ spdk_bdev_finish(void)
 	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
 
-	spdk_io_device_unregister(&g_bdev_mgr, NULL);
+	spdk_io_device_unregister(&g_bdev_mgr, spdk_bdev_finish_cb);
+}
+
+void
+spdk_bdev_finish_next(int rc)
+{
+	if (rc) {
+		spdk_bdev_finish_end(rc);
+		return;
+	}
+
+	if (!g_bdev_module) {
+		g_bdev_module = TAILQ_FIRST(&g_bdev_mgr.bdev_modules);
+	} else {
+		g_bdev_module = TAILQ_NEXT(g_bdev_module, tailq);
+	}
+
+	if (!g_bdev_module) {
+		spdk_bdev_finish_end(rc);
+		return;
+	}
+
+	if (g_bdev_module->module_fini) {
+		g_bdev_module->module_fini();
+	} else {
+		spdk_bdev_finish_next(0);
+	}
+}
+
+int
+spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
+{
+	g_fini_cb_fn = cb_fn;
+	g_fini_cb_arg = cb_arg;
+
+	spdk_bdev_finish_next(0);
 
 	return 0;
 }
