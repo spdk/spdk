@@ -47,9 +47,12 @@ extern "C" {
 
 struct spdk_bs_dev;
 struct spdk_bdev;
+struct spdk_bdev_module_if;
 
 struct spdk_bs_dev *spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 		void *remove_ctx);
+
+int spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *module);
 
 #ifdef __cplusplus
 }

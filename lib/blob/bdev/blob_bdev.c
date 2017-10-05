@@ -38,11 +38,13 @@
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
 #include "spdk/endian.h"
+#include "spdk_internal/bdev.h"
 
 struct blob_bdev {
 	struct spdk_bs_dev	bs_dev;
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*desc;
+	bool			claimed;
 };
 
 static inline struct spdk_bdev_desc *
@@ -134,6 +136,23 @@ bdev_blob_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64
 	}
 }
 
+int
+spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *module)
+{
+	struct blob_bdev *blob_bdev = (struct blob_bdev *)bs_dev;
+	int rc;
+
+	rc = spdk_bdev_module_claim_bdev(blob_bdev->bdev, NULL, module);
+	if (rc != 0) {
+		SPDK_ERRLOG("could not claim bs dev\n");
+		return rc;
+	}
+
+	blob_bdev->claimed = true;
+
+	return rc;
+}
+
 static struct spdk_io_channel *
 bdev_blob_create_channel(struct spdk_bs_dev *dev)
 {
@@ -152,6 +171,11 @@ static void
 bdev_blob_destroy(struct spdk_bs_dev *bs_dev)
 {
 	struct spdk_bdev_desc *desc = __get_desc(bs_dev);
+	struct blob_bdev *blob_bdev = (struct blob_bdev *)bs_dev;
+
+	if (blob_bdev->claimed) {
+		spdk_bdev_module_release_bdev(blob_bdev->bdev);
+	}
 
 	spdk_bdev_close(desc);
 	free(bs_dev);
