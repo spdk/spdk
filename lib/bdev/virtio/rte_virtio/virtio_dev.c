@@ -283,6 +283,33 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	return 0;
 }
 
+int
+virtio_dev_register(struct virtio_dev *dev, const struct virtio_pci_ops *virtio_user_ops)
+{
+	size_t i;
+
+	for (i = 0; i < RTE_DIM(g_virtio_driver.internal); i++) {
+		if (g_virtio_driver.internal[i].vtpci_ops != NULL) {
+			continue;
+		}
+
+		dev->port_id = i;
+		VTPCI_OPS(dev) = virtio_user_ops;
+		return 0;
+	}
+
+	return -ENOMEM;
+}
+
+void
+virtio_dev_unregister(struct virtio_dev *dev)
+{
+	assert(VTPCI_OPS(dev) != NULL);
+
+	VTPCI_OPS(dev) = NULL;
+	dev->port_id = -1;
+}
+
 /* reset device and renegotiate features if needed */
 int
 virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
@@ -300,13 +327,6 @@ virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 	if (virtio_negotiate_features(dev, req_features) < 0)
 		return -1;
 
-	/* FIXME
-	 * Hardcode num_queues to 3 until we add proper
-	 * mutli-queue support. This value should be limited
-	 * by number of cores assigned to SPDK
-	 */
-	dev->max_queues = 3;
-
 	ret = virtio_alloc_queues(dev);
 	if (ret < 0)
 		return ret;
@@ -320,8 +340,8 @@ virtio_dev_free(struct virtio_dev *dev)
 {
 	virtio_free_queues(dev);
 	VTPCI_OPS(dev)->free_vdev(dev);
-	/* FIXME clear VTPCI_OPS(dev) */
 }
+
 
 int
 virtio_dev_start(struct virtio_dev *vdev)

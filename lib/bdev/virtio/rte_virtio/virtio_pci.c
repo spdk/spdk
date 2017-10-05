@@ -97,6 +97,7 @@ free_virtio_hw(struct virtio_dev *dev)
 		spdk_pci_device_unmap_bar(hw->pci_dev, i, hw->pci_bar[i].vaddr);
 	}
 
+	virtio_dev_unregister(dev);
 	free(hw);
 }
 

@@ -245,6 +245,7 @@ struct vtpci_internal {
 #define VTPCI_OPS(dev)	(g_virtio_driver.internal[(dev)->port_id].vtpci_ops)
 #define VTPCI_IO(dev)	(&g_virtio_driver.internal[(dev)->port_id].io)
 
+/* FIXME: This doesn't belong here. Move this to virtio_dev.c */
 struct virtio_driver {
 	struct vtpci_internal internal[128];
 	TAILQ_HEAD(, virtio_dev) init_ctrlrs;
