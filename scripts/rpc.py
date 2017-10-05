@@ -632,6 +632,8 @@ def construct_virtio_user_scsi_bdev(args):
     params = {'path': args.path}
     if args.prefix:
         params['prefix'] = args.prefix
+    if args.vq_count:
+        params['vq_count'] = args.vq_count
     if args.vq_size:
         params['vq_size'] = args.vq_size
     print_dict(jsonrpc_call('construct_virtio_user_scsi_bdev', params))
@@ -642,7 +644,8 @@ Result is array of added bdevs.""")
 p.add_argument('path', help='Path to Virtio SCSI socket')
 p.add_argument('--prefix', help="""Use this prefix as base instead of 'VirtioScsiN'
 Base will be used to construct new bdev's found on target by adding 't<TARGET_ID>' sufix.""", type=int)
-p.add_argument('--vq-size', help='vq_size', type=int)
+p.add_argument('--vq-count', help='Number of virtual queues. Deffault is number of logical cores used by application.', type=int)
+p.add_argument('--vq-size', help='Depth of each queue', type=int)
 p.set_defaults(func=construct_virtio_user_scsi_bdev)
 
 def get_rpc_methods(args):
