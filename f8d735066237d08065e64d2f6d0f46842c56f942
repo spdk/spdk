@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5206def5_d6b29a48",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-05T23:23:49Z",
+      "side": 1,
+      "message": "should change \"port\" to \"dev\" in the string",
+      "revId": "f8d735066237d08065e64d2f6d0f46842c56f942",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
