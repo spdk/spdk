@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "302f555a_d4a31c0f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-05T16:33:57Z",
+      "side": 1,
+      "message": "this is not scsi specific -\u003e either refactor/remove it or place it in virtio_dev/virtqueue",
+      "range": {
+        "startLine": 79,
+        "startChar": 1,
+        "endLine": 80,
+        "endChar": 0
+      },
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b7732d2_be5909f9",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-05T16:33:57Z",
+      "side": 1,
+      "message": "unused, can you remove it?",
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55e23a44_c83b9037",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-05T16:33:57Z",
+      "side": 1,
+      "message": "reword or remove",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 118,
+        "endChar": 91
+      },
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "027218c5_d80844e9",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-05T16:33:57Z",
+      "side": 1,
+      "message": "this seems to be only used in line #691, could we remove this queue\nand use g_virtio_drivers.attached_ctrlrs instead?",
+      "range": {
+        "startLine": 130,
+        "startChar": 32,
+        "endLine": 130,
+        "endChar": 52
+      },
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fd45ba4_d5f3dd4e",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-05T16:33:57Z",
+      "side": 1,
+      "message": "could you just hard-code max queue count to some bigger number for now, e.g. 16?",
+      "range": {
+        "startLine": 791,
+        "startChar": 3,
+        "endLine": 828,
+        "endChar": 4
+      },
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
