@@ -43,6 +43,7 @@
 
 struct rpc_virtio_user_scsi_dev {
 	char *path;
+	uint32_t vq_num;
 	uint32_t vq_size;
 	struct spdk_jsonrpc_request *request;
 	struct spdk_json_write_ctx *w;
@@ -51,6 +52,7 @@ struct rpc_virtio_user_scsi_dev {
 
 static const struct spdk_json_object_decoder rpc_construct_virtio_user_scsi_dev[] = {
 	{"path", offsetof(struct rpc_virtio_user_scsi_dev, path), spdk_json_decode_string },
+	{"vq_num", offsetof(struct rpc_virtio_user_scsi_dev, vq_num), spdk_json_decode_uint32, true },
 	{"vq_size", offsetof(struct rpc_virtio_user_scsi_dev, vq_size), spdk_json_decode_uint32, true },
 };
 
@@ -100,6 +102,7 @@ spdk_rpc_create_virtio_user_scsi_device(struct spdk_jsonrpc_request *request,
 	int rc;
 
 	req = calloc(1, sizeof(*req));
+	req->vq_num = spdk_env_get_core_count();
 	req->vq_size = 128;
 
 	if (spdk_json_decode_object(params, rpc_construct_virtio_user_scsi_dev,
@@ -110,7 +113,8 @@ spdk_rpc_create_virtio_user_scsi_device(struct spdk_jsonrpc_request *request,
 	}
 
 	req->request = request;
-	rc = create_virtio_user_scsi_device(req->path, req->vq_size, rpc_create_virtio_user_scsi_device_cb,
+	rc = create_virtio_user_scsi_device(req->path, req->vq_num, req->vq_size,
+					    rpc_create_virtio_user_scsi_device_cb,
 					    req);
 	if (rc < 0) {
 		goto invalid;
