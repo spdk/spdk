@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29912f11_729327e8",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:38:29Z",
+      "side": 1,
+      "message": "Do we really need to reformat a physical NVMe device for this test? If we want to test out varying block sizes, it would be better to just use a Malloc bdev.",
+      "revId": "a905ef7b3d12180cf4fdd41cc7987d30f1f2fdc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25c75dc1_62bd2ae3",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:38:29Z",
+      "side": 1,
+      "message": "Mixed tabs/spaces in this file - we should use tabs everywhere for consistency.",
+      "revId": "a905ef7b3d12180cf4fdd41cc7987d30f1f2fdc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
