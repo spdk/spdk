@@ -376,8 +376,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 
 	g_spdk_app.rc = 0;
-	app_start_event = spdk_event_allocate(spdk_env_get_current_core(), start_fn,
-					      arg1, arg2);
+	app_start_event = spdk_event_allocate(spdk_env_get_current_core(), start_fn, arg1, arg2);
 
 	spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_init,
 					    app_start_event, NULL));
@@ -391,20 +390,22 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 int
 spdk_app_fini(void)
 {
-	int rc;
-
-	rc = spdk_subsystem_fini();
 	spdk_trace_cleanup();
 	spdk_reactors_fini();
 	spdk_conf_free(g_spdk_app.config);
 	spdk_log_close();
 
-	return rc;
+	return 0;
 }
 
 void
 spdk_app_stop(int rc)
 {
-	spdk_reactors_stop();
+	struct spdk_event *app_finish_event;
+
+	app_finish_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_reactors_stop, NULL, NULL);
+
+	spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_fini,
+					    app_finish_event, NULL));
 	g_spdk_app.rc = rc;
 }
