@@ -196,8 +196,18 @@ struct virtio_pci_ops {
 	uint8_t (*get_status)(struct virtio_dev *hw);
 	void    (*set_status)(struct virtio_dev *hw, uint8_t status);
 
-	uint64_t (*get_features)(struct virtio_dev *hw);
-	void     (*set_features)(struct virtio_dev *hw, uint64_t features);
+	/**
+	 * Get device features. The features might be already
+	 * negotiated with driver (guest) features.
+	 */
+	uint64_t (*get_features)(struct virtio_dev *vdev);
+
+	/**
+	 * Negotiate and set device features.
+	 * The negotiation can fail with return code -1.
+	 * This function should also set vdev->notiated_features field.
+	 */
+	int     (*set_features)(struct virtio_dev *vdev, uint64_t features);
 
 	uint8_t (*get_isr)(struct virtio_dev *hw);
 
@@ -264,7 +274,7 @@ extern struct virtio_driver g_virtio_driver;
 static inline int
 vtpci_with_feature(struct virtio_dev *dev, uint64_t bit)
 {
-	return (dev->guest_features & (1ULL << bit)) != 0;
+	return (dev->negotiated_features & (1ULL << bit)) != 0;
 }
 
 /**

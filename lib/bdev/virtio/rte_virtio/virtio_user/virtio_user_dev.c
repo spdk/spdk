@@ -118,36 +118,22 @@ virtio_user_queue_setup(struct virtio_user_dev *dev,
 int
 virtio_user_start_device(struct virtio_user_dev *dev)
 {
-	uint64_t features;
 	int ret;
 
-	/* Step 0: tell vhost to create queues */
+	/* tell vhost to create queues */
 	if (virtio_user_queue_setup(dev, virtio_user_create_queue) < 0)
-		goto error;
+		return -1;
 
-	/* Step 1: set features */
-	features = dev->features;
-
-	printf("features = %jx\n", features);
-
-	ret = dev->ops->send_request(dev, VHOST_USER_SET_FEATURES, &features);
-	if (ret < 0)
-		goto error;
-	PMD_DRV_LOG(INFO, "set features: %" PRIx64, features);
-
-	/* Step 2: share memory regions */
+	/* share memory regions */
 	ret = dev->ops->send_request(dev, VHOST_USER_SET_MEM_TABLE, NULL);
 	if (ret < 0)
-		goto error;
+		return -1;
 
-	/* Step 3: kick queues */
+	/* kick queues */
 	if (virtio_user_queue_setup(dev, virtio_user_kick_queue) < 0)
-		goto error;
+		return -1;
 
 	return 0;
-error:
-	/* TODO: free resource here or caller to check */
-	return -1;
 }
 
 int virtio_user_stop_device(struct virtio_user_dev *dev)
@@ -226,12 +212,6 @@ virtio_user_dev_init(char *path, int queue_size)
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
 		PMD_INIT_LOG(ERR, "set_owner fails: %s", strerror(errno));
-		goto err;
-	}
-
-	if (dev->ops->send_request(dev, VHOST_USER_GET_FEATURES,
-			    &dev->device_features) < 0) {
-		PMD_INIT_LOG(ERR, "get_features failed: %s", strerror(errno));
 		goto err;
 	}
 
