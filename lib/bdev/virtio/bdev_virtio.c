@@ -167,28 +167,44 @@ bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
 	struct virtio_req *vreq = bdev_virtio_init_vreq(ch, bdev_io);
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
-	struct spdk_scsi_unmap_bdesc *desc;
+	struct spdk_scsi_unmap_bdesc *desc, *first_desc;
 	uint8_t *buf;
-	uint16_t cmd_len = 24; /* 8 byte header + 16 byte descriptor */
+	uint64_t offset_blocks, num_blocks;
+	uint16_t cmd_len;
 
 	vreq->iov = bdev_io->u.bdev.iovs;
 	vreq->iovcnt = bdev_io->u.bdev.iovcnt;
+	buf = vreq->iov->iov_base;
+
+	offset_blocks = bdev_io->u.bdev.offset_blocks;
+	num_blocks = bdev_io->u.bdev.num_blocks;
+
+	/* (n-1) * 16-byte descriptors */
+	first_desc = desc = (struct spdk_scsi_unmap_bdesc *)&buf[8];
+	while (num_blocks > UINT32_MAX) {
+		to_be64(&desc->lba, offset_blocks);
+		to_be32(&desc->block_count, UINT32_MAX);
+		memset(&desc->reserved, 0, sizeof(desc->reserved));
+		offset_blocks += UINT32_MAX;
+		num_blocks -= UINT32_MAX;
+		desc++;
+	}
+
+	/* The last descriptor with block_count <= UINT32_MAX */
+	to_be64(&desc->lba, offset_blocks);
+	to_be32(&desc->block_count, num_blocks);
+	memset(&desc->reserved, 0, sizeof(desc->reserved));
+
+	/* 8-byte header + n * 16-byte block descriptor */
+	cmd_len = 8 + (desc - first_desc + 1) *  sizeof(struct spdk_scsi_unmap_bdesc);
 
 	req->cdb[0] = SPDK_SBC_UNMAP;
 	to_be16(&req->cdb[7], cmd_len);
 
-	buf = vreq->iov->iov_base;
-
-	/* header */
+	/* 8-byte header */
 	to_be16(&buf[0], cmd_len - 2); /* total length (excluding the length field) */
 	to_be16(&buf[2], cmd_len - 8); /* length of block descriptors */
 	memset(&buf[4], 0, 4); /* reserved */
-
-	/* single block descriptor */
-	desc = (struct spdk_scsi_unmap_bdesc *)&buf[8];
-	to_be64(&desc->lba, bdev_io->u.bdev.offset_blocks);
-	to_be32(&desc->block_count, bdev_io->u.bdev.num_blocks);
-	memset(&desc->reserved, 0, sizeof(desc->reserved));
 
 	virtio_xmit_pkts(disk->vdev->vqs[2], vreq);
 }
@@ -206,17 +222,19 @@ static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_b
 	case SPDK_BDEV_IO_TYPE_RESET:
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 		return 0;
-	case SPDK_BDEV_IO_TYPE_UNMAP:
-		if (bdev_io->u.bdev.num_blocks > UINT32_MAX) {
-			SPDK_ERRLOG("single UNMAP block count must be no bigger than 2^32 - 1\n");
+	case SPDK_BDEV_IO_TYPE_UNMAP: {
+		uint64_t buf_len = 8 /* header size */ +
+				   (bdev_io->u.bdev.num_blocks + UINT32_MAX - 1) /
+				   UINT32_MAX * sizeof(struct spdk_scsi_unmap_bdesc);
+
+		if (buf_len > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
+			SPDK_ERRLOG("Trying to UNMAP too many blocks: %"PRIu64"\n",
+				    bdev_io->u.bdev.num_blocks);
 			return -1;
 		}
-		/* Since we support only bdev_io->u.bdev.num_blocks <= UINT32_MAX
-		 * allocate just 24 bytes (8 byte header + 16 byte descriptor).
-		 * A single block descriptor can UNMAP at most UINT32_MAX blocks.
-		 */
-		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_unmap, 24);
+		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_unmap, buf_len);
 		return 0;
+	}
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	default:
 		return -1;
