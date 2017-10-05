@@ -117,8 +117,8 @@ spdk_vhost_run $testdir
 $rpc_py construct_malloc_bdev 128 512
 $rpc_py construct_malloc_bdev 128 4096
 $rpc_py add_vhost_scsi_lun naa.Nvme0n1.0 0 Nvme0n1
-$rpc_py add_vhost_scsi_lun naa.1 0 Malloc0
-$rpc_py add_vhost_scsi_lun naa.2 0 Malloc1
+$rpc_py add_vhost_scsi_lun naa.Malloc0.1 0 Malloc0
+$rpc_py add_vhost_scsi_lun naa.Malloc1.2 0 Malloc1
 $rpc_py get_bdevs
 bdevs=$($rpc_py get_bdevs | jq -r '.[] | .name')
 
@@ -129,9 +129,9 @@ for bdev in $bdevs; do
         if [ $bdev == "Nvme0n1" ]; then
                 sed -i "s|/tmp/vhost.0|$rootdir/../vhost/naa.Nvme0n1.0|g" $testdir/bdev.conf
         elif [ $bdev == "Malloc0" ]; then
-                sed -i "s|/tmp/vhost.0|$rootdir/../vhost/naa.1|g" $testdir/bdev.conf
+                sed -i "s|/tmp/vhost.0|$rootdir/../vhost/naa.Malloc0.1|g" $testdir/bdev.conf
         else
-                sed -i "s|/tmp/vhost.0|$rootdir/../vhost/naa.2|g" $testdir/bdev.conf
+                sed -i "s|/tmp/vhost.0|$rootdir/../vhost/naa.Malloc1.2|g" $testdir/bdev.conf
         fi
 
         timing_enter bounds
@@ -149,27 +149,35 @@ for bdev in $bdevs; do
                         fio_rw=("write" "read")
                 fi
                 if [ $bdev == "Nvme0n1" ]; then
-                        start_and_prepare_vm
+                        #start_and_prepare_vm
+                        #run_guest_bdevio
+                        #for rw in "${fio_rw[@]}"; do
+                        #        cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                        #        prepare_fio_job "$rw" ""
+                        #        run_guest_fio "Guest $bdev" --spdk_conf=/root/bdev.conf 0
+                        #        rm -f *.state
+                        #        rm -f $testdir/bdev.fio
+                        #done
+                        #vm_shutdown_all
+                        start_and_prepare_vm "Nvme0n1:Malloc0"
                         run_guest_bdevio
-                        for rw in "${fio_rw[@]}"; do
-                                cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
-                                prepare_fio_job "$rw" ""
-                                run_guest_fio "Guest $bdev" --spdk_conf=/root/bdev.conf 0
-                                rm -f *.state
-                                rm -f $testdir/bdev.fio
-                        done
-                        vm_shutdown_all
-                fi
-                for rw in "${fio_rw[@]}"; do
-                        timing_enter fio_rw_verify
                         cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
-                        prepare_fio_job "$rw" "$vbdevs"
-                        run_host_fio "Host $bdev" --spdk_conf=$testdir/bdev.conf
-
+                        prepare_fio_job "write" ""
+                        run_guest_fio "Guest multiqueue $bdev" --spdk_conf=/root/bdev.conf 0
                         rm -f *.state
                         rm -f $testdir/bdev.fio
-                        timing_exit fio_rw_verify
-                done
+                        vm_shutdown_all
+                fi
+                #for rw in "${fio_rw[@]}"; do
+                #        timing_enter fio_rw_verify
+                #        cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                #        prepare_fio_job "$rw" "$vbdevs"
+                #        run_host_fio "Host $bdev" --spdk_conf=$testdir/bdev.conf
+
+                #        rm -f *.state
+                #        rm -f $testdir/bdev.fio
+                #        timing_exit fio_rw_verify
+                #done
 
                 timing_exit fio
         fi
@@ -177,5 +185,15 @@ for bdev in $bdevs; do
         rm -f $testdir/bdev.conf
         timing_exit bdev
 done
-vm_shutdown_all
+# Host test for many sockets
+cp $testdir/bdev.conf.multisocket $testdir/bdevms.conf
+sed -i "s|/tmp/vhost.0|$rootdir/../vhost/naa.Nvme0n1.0|g" $testdir/bdevms.conf
+sed -i "s|/tmp/vhost.1|$rootdir/../vhost/naa.Malloc0.1|g" $testdir/bdevms.conf
+msbdevs=$(discover_bdevs $rootdir $testdir/bdevms.conf 5261 | jq -r '.[] | select(.claimed == false)')
+cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+prepare_fio_job "read" "$msbdevs"
+run_host_fio "Host multisocket" --spdk_conf=$testdir/bdevms.conf
+rm -f *.state
+rm -f $testdir/bdev.fio
+rm -f $testdir/bdevms.conf
 spdk_vhost_kill

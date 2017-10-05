@@ -1,0 +1,24 @@
+[Global]
+
+[Rpc]
+  Enable Yes
+  Listen 127.0.0.1:5261
+
+[Ioat]
+  Disable Yes
+
+[VirtioUser0]
+  Path /tmp/vhost.0
+  Queues 4
+
+[VirtioUser1]
+  Path /tmp/vhost.1
+  Queues 4
+
+#[VhostScsi0]
+#  Name naa.Virtio0.0
+#  Dev 0 VirtioScsi0t0
+
+#[VhostScsi1]
+#  Name naa.Virtio1.0
+#  Dev 0 VirtioScsi1t0
