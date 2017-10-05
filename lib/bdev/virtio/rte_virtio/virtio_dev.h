@@ -76,7 +76,16 @@ struct virtio_req {
 uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 		uint16_t nb_pkts);
 
-uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
+/**
+ *
+ * \param vq
+ * \param req
+ * \return
+ * 0 on succes or negative error code.
+ * -EAGAIN - no room in queue.
+ * -EIO - given VQ is not started.
+ */
+int virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
 
 int virtio_dev_init(struct virtio_dev *hw, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);

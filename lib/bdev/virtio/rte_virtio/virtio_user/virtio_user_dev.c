@@ -187,15 +187,26 @@ virtio_user_dev_setup(struct virtio_user_dev *dev)
 }
 
 struct virtio_dev *
-virtio_user_dev_init(const char *path, int queue_size)
+virtio_user_dev_init(const char *path, uint16_t queue_num, uint32_t queue_size)
 {
 	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
 	uint64_t max_queues;
 
 	dev = calloc(1, sizeof(*dev));
+	if (dev == NULL) {
+		PMD_INIT_LOG(ERR, "No memory to init device '%s'", path);
+		goto err;
+	}
+
 	vdev = &dev->vdev;
 	vdev->is_hw = 0;
+
+	if (queue_num >= VIRTIO_MAX_VIRTQUEUES) {
+		PMD_INIT_LOG(ERR, "Requested too many queues (%d, mas is %d) in device '%s'", queue_num,
+			     VIRTIO_MAX_VIRTQUEUES, path);
+		goto err;
+	}
 
 	if (vtpci_init(vdev, &virtio_user_ops) != 0) {
 		PMD_INIT_LOG(ERR, "Failed to init device: %s", path);
@@ -203,6 +214,7 @@ virtio_user_dev_init(const char *path, int queue_size)
 	}
 
 	snprintf(dev->path, PATH_MAX, "%s", path);
+	/* Account for control and event queue. */
 	dev->queue_size = queue_size;
 
 	if (virtio_user_dev_setup(dev) < 0) {
@@ -215,12 +227,11 @@ virtio_user_dev_init(const char *path, int queue_size)
 		goto err;
 	}
 
-	if (max_queues >= VIRTIO_MAX_VIRTQUEUES) {
-		PMD_INIT_LOG(ERR, "invalid get_queue_num value: %lu", max_queues);
+	if (queue_size > max_queues) {
+		PMD_INIT_LOG(ERR, "%"PRIu16" queues requested but only %"PRIu16" supported", queues, vdev->max_queues);
 		goto err;
 	}
-
-	vdev->max_queues = max_queues;
+	vdev->max_queues = queue_num;
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
 		PMD_INIT_LOG(ERR, "set_owner fails: %s", strerror(errno));

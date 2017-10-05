@@ -128,7 +128,7 @@ virtqueue_iov_to_desc(struct virtqueue *vq, uint16_t desc_idx, struct iovec *iov
 	vq->vq_ring.desc[desc_idx].len = iov->iov_len;
 }
 
-static inline void
+static inline int
 virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 {
 	struct vq_desc_extra *dxp;
@@ -141,7 +141,7 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 	if (total_iovs > vq->vq_free_cnt) {
 		PMD_DRV_LOG(ERR, "not enough free descriptors. requested %"PRIu32", got %"PRIu32"\n",
 			total_iovs, vq->vq_free_cnt);
-		return;
+		return -EAGAIN;
 	}
 
 	head_idx = vq->vq_desc_head_idx;
@@ -186,6 +186,7 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 	}
 	vq->vq_free_cnt = (uint16_t)(vq->vq_free_cnt - total_iovs);
 	vq_update_avail_ring(vq, head_idx);
+	return 0;
 }
 
 #define VIRTIO_MBUF_BURST_SZ 64
@@ -229,17 +230,21 @@ virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkt
 	return nb_rx;
 }
 
-uint16_t
+int
 virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req)
 {
 	struct virtio_dev *vdev = vq->vdev;
+	int rc;
 
 	if (unlikely(vdev->started == 0))
-		return 0;
+		return -EIO;
 
 	virtio_rmb();
 
-	virtqueue_enqueue_xmit(vq, req);
+	rc = virtqueue_enqueue_xmit(vq, req);
+	if (unlikely(rc)) {
+		return rc;
+	}
 
 	vq_update_avail_idx(vq);
 
@@ -248,5 +253,5 @@ virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req)
 		PMD_TX_LOG(DEBUG, "Notified backend after xmit");
 	}
 
-	return 1;
+	return 0;
 }

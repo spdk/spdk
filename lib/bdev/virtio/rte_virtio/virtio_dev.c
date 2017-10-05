@@ -284,13 +284,6 @@ virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 	if (virtio_negotiate_features(dev, req_features) < 0)
 		return -1;
 
-	/* FIXME
-	 * Hardcode num_queues to 3 until we add proper
-	 * mutli-queue support. This value should be limited
-	 * by number of cores assigned to SPDK
-	 */
-	dev->max_queues = 3;
-
 	ret = virtio_alloc_queues(dev);
 	if (ret < 0)
 		return ret;
