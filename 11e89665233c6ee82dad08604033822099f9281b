@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a1daf66_8ac629ff",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:43:08Z",
+      "side": 1,
+      "message": "spdk_blob_id is a uint64_t, so the printf specifiers should use PRIu64.  For example, on 32-bit x86, %lu (unsigned long) is only 32 bits.\n\nIt looks like we make this same mistake throughout this file, though, so we can check this in as-is and do another patch to fix the format strings.",
+      "revId": "11e89665233c6ee82dad08604033822099f9281b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
