@@ -503,6 +503,7 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_get_vhost_ctrlrs *ctx;
 	struct spdk_json_write_ctx *w;
+	char buf[64];
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -519,7 +520,8 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, strerror(-ENOMEM));
+		spdk_strerror_r(-ENOMEM, buf, sizeof(buf));
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, buf);
 		return;
 	}
 
