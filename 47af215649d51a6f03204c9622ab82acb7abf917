@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a0d319d_24e791ac",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-05T15:32:50Z",
+      "side": 1,
+      "message": "do we need return code here?\nit\u0027s a shutdown. if one module fails to shutdown you could just print an error and move on, right?",
+      "range": {
+        "startLine": 602,
+        "startChar": 22,
+        "endLine": 602,
+        "endChar": 28
+      },
+      "revId": "47af215649d51a6f03204c9622ab82acb7abf917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ce41c1a_b7a19290",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 610,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-05T15:32:50Z",
+      "side": 1,
+      "message": "could you move this logic to spdk_bdev_finish so it\u0027s done unconditionally?",
+      "range": {
+        "startLine": 610,
+        "startChar": 0,
+        "endLine": 610,
+        "endChar": 56
+      },
+      "revId": "47af215649d51a6f03204c9622ab82acb7abf917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
