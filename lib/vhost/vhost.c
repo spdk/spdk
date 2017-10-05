@@ -810,6 +810,12 @@ spdk_vhost_startup(void *arg1, void *arg2)
 	}
 }
 
+static void
+session_app_stop(void *arg1, void *arg2)
+{
+	spdk_app_stop(0);
+}
+
 static void *
 session_shutdown(void *arg)
 {
@@ -834,7 +840,7 @@ session_shutdown(void *arg)
 	}
 
 	SPDK_NOTICELOG("Exiting\n");
-	spdk_app_stop(0);
+	spdk_event_call((struct spdk_event *)arg);
 	return NULL;
 }
 
@@ -846,8 +852,11 @@ spdk_vhost_shutdown_cb(void)
 {
 	pthread_t tid;
 	char buf[64];
+	struct spdk_event *vhost_app_stop;
 
-	if (pthread_create(&tid, NULL, &session_shutdown, NULL) < 0) {
+	vhost_app_stop = spdk_event_allocate(spdk_env_get_current_core(), session_app_stop, NULL, NULL);
+
+	if (pthread_create(&tid, NULL, &session_shutdown, vhost_app_stop) < 0) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s\n", errno, buf);
 		abort();
