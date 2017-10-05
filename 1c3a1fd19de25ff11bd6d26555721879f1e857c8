@@ -1,0 +1,118 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca0a6f7d_9d954150",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:01:11Z",
+      "side": 1,
+      "message": "The bdev code shouldn\u0027t use the event framework directly - we should try to use the bdev wrappers like spdk_bdev_poller_start().  If we need some new wrappers, we can probably add them.\n\nThe goal is to keep the bdev library usable without our event framework (so the user can plug in their own threading/message passing framework).",
+      "revId": "1c3a1fd19de25ff11bd6d26555721879f1e857c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08b75402_91b93461",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:01:11Z",
+      "side": 1,
+      "message": "Function declarations should not be split at the return type, only function definitions.",
+      "revId": "1c3a1fd19de25ff11bd6d26555721879f1e857c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58f8d969_b8b14953",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:01:11Z",
+      "side": 1,
+      "message": "This function has some pretty confusing flow control (at least for my feeble brain) - is there any way this can be flattened/simplified? (Or at least add some comments describing why all of these paths need to exist.)",
+      "revId": "1c3a1fd19de25ff11bd6d26555721879f1e857c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3c2b770_fc0d5e6a",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:01:11Z",
+      "side": 1,
+      "message": "Allocation needs a NULL check.",
+      "revId": "1c3a1fd19de25ff11bd6d26555721879f1e857c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c619e0b0_70f54fc2",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:01:11Z",
+      "side": 1,
+      "message": "Can we name this to be consistent with the other bdev RPCs?\n\nMaybe \"construct_virtio_user_scsi_bdev\"?",
+      "range": {
+        "startLine": 126,
+        "startChar": 19,
+        "endLine": 126,
+        "endChar": 49
+      },
+      "revId": "1c3a1fd19de25ff11bd6d26555721879f1e857c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3d10249_44dae662",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-05T17:01:11Z",
+      "side": 1,
+      "message": "\u0027--vq-size\u0027 would be more consistent with typical long argument style.  argparse will convert this to \u0027vq_size\u0027 in the args dict, so the rest of the code can stay the same.\n\nThe help string could probably also be expanded to explain what the argument actually does.",
+      "range": {
+        "startLine": 638,
+        "startChar": 16,
+        "endLine": 638,
+        "endChar": 25
+      },
+      "revId": "1c3a1fd19de25ff11bd6d26555721879f1e857c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
