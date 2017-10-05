@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
@@ -43,6 +44,7 @@
 
 struct rpc_virtio_user_scsi_dev {
 	char *path;
+	uint32_t vq_count;
 	uint32_t vq_size;
 	struct spdk_jsonrpc_request *request;
 
@@ -50,6 +52,7 @@ struct rpc_virtio_user_scsi_dev {
 
 static const struct spdk_json_object_decoder rpc_construct_virtio_user_scsi_dev[] = {
 	{"path", offsetof(struct rpc_virtio_user_scsi_dev, path), spdk_json_decode_string },
+	{"vq_count", offsetof(struct rpc_virtio_user_scsi_dev, vq_count), spdk_json_decode_uint32, true },
 	{"vq_size", offsetof(struct rpc_virtio_user_scsi_dev, vq_size), spdk_json_decode_uint32, true },
 };
 
@@ -99,6 +102,7 @@ spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	req->vq_count = spdk_env_get_core_count();
 	req->vq_size = 128;
 
 	if (spdk_json_decode_object(params, rpc_construct_virtio_user_scsi_dev,
@@ -109,7 +113,8 @@ spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	req->request = request;
-	rc = create_virtio_user_scsi_device(req->path, req->vq_size, rpc_create_virtio_user_scsi_bdev_cb,
+	rc = create_virtio_user_scsi_device(req->path, req->vq_count, req->vq_size,
+					    rpc_create_virtio_user_scsi_bdev_cb,
 					    req);
 	if (rc < 0) {
 		goto invalid;
