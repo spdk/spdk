@@ -62,6 +62,10 @@
 #define VIRTIO_SCSI_EVENTQ   1
 #define VIRTIO_SCSI_REQUESTQ   2
 
+#define VIRTIO_SCSI_CTRL_MAGIC          0xfeed0001
+#define VIRTIO_SCSI_DEV_MAGIC           0xfeed0002
+#define VIRTIO_SCSI_IO_CHANNEL_MAGIC    0xfeed0003
+
 #define BDEV_VIRTIO_MAX_TARGET 64
 #define BDEV_VIRTIO_SCAN_PAYLOAD_SIZE 256
 
@@ -80,6 +84,9 @@ struct virtio_scsi_ctrlr {
 
 	TAILQ_ENTRY(virtio_scsi_ctrlr) ctrlr_link;
 	char *prefix;
+
+	/* DEBUG: bagic used to check if this is valid object */
+	uint32_t magic;
 };
 
 struct virtio_scsi_io_ctx {
@@ -111,6 +118,9 @@ struct virtio_scsi_disk {
 	uint64_t		num_blocks;
 	uint32_t		block_size;
 	uint8_t			target;
+
+	/* used to check if this is valid object */
+	uint32_t magic;
 };
 
 struct bdev_virtio_io_channel {
@@ -122,6 +132,9 @@ struct bdev_virtio_io_channel {
 
 	/* VQ Poller */
 	struct spdk_bdev_poller	*poller;
+
+	/* DEBUG: bagic used to check if this is valid object */
+	uint32_t magic;
 };
 
 TAILQ_HEAD(, virtio_scsi_ctrlr) g_virtio_scsi_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_scsi_ctrlrs);
@@ -200,6 +213,8 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	struct virtio_req *vreq = bdev_virtio_init_vreq(bdev_io);
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
 
+	assert(disk->magic == VIRTIO_SCSI_DEV_MAGIC);
+
 	vreq->iov = bdev_io->u.bdev.iovs;
 	vreq->iovcnt = bdev_io->u.bdev.iovcnt;
 
@@ -249,6 +264,11 @@ bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	assert(((struct virtio_scsi_disk *)bdev_io->bdev->ctxt)->magic == VIRTIO_SCSI_DEV_MAGIC);
+	assert(((struct virtio_scsi_disk *)bdev_io->bdev->ctxt)->ctrlr->magic == VIRTIO_SCSI_CTRL_MAGIC);
+	assert(((struct bdev_virtio_io_channel *)spdk_io_channel_get_ctx(ch))->magic ==
+	       VIRTIO_SCSI_IO_CHANNEL_MAGIC);
+
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_rw,
@@ -347,6 +367,9 @@ bdev_virtio_io_cpl(struct virtio_req *req)
 	enum spdk_scsi_status sc;
 	int sk = 0, asc = 0, ascq = 0;
 
+	assert(((struct virtio_scsi_disk *)bdev_io->bdev->ctxt)->magic == VIRTIO_SCSI_DEV_MAGIC);
+	assert(((struct virtio_scsi_disk *)bdev_io->bdev->ctxt)->ctrlr->magic == VIRTIO_SCSI_CTRL_MAGIC);
+
 	switch (io_ctx->resp.response) {
 	case VIRTIO_SCSI_S_OK:
 		sc = io_ctx->resp.status;
@@ -367,6 +390,8 @@ bdev_virtio_poll(void *arg)
 	struct virtio_req *req[32];
 	uint16_t i, cnt;
 
+	assert(ch->magic == VIRTIO_SCSI_IO_CHANNEL_MAGIC);
+
 	cnt = virtio_recv_pkts(ch->vq, req, SPDK_COUNTOF(req));
 	for (i = 0; i < cnt; ++i) {
 		bdev_virtio_io_cpl(req[i]);
@@ -380,14 +405,19 @@ bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 	struct bdev_virtio_io_channel *ch = ctx_buf;
 	uint32_t i;
 
+	assert(ctrlr->magic == VIRTIO_SCSI_CTRL_MAGIC);
+
 	for (i = VIRTIO_SCSI_REQUESTQ; i < ctrlr->vdev->max_queues; i++) {
 		if (ctrlr->is_vq_used[i]) {
 			continue;
 		}
 
 		ctrlr->is_vq_used[i] = 1;
+
 		ch->vq = ctrlr->vdev->vqs[i];
+		ch->magic = VIRTIO_SCSI_IO_CHANNEL_MAGIC;
 		spdk_bdev_poller_start(&ch->poller, bdev_virtio_poll, ch, spdk_env_get_current_core(), 0);
+
 		return 0;
 	}
 
@@ -410,6 +440,7 @@ bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 
 		assert(ctrlr->is_vq_used[i] == 1);
 		ctrlr->is_vq_used[i] = 0;
+		ch->magic = 0;
 		ch->ctrlr = ctrlr;
 		spdk_bdev_poller_stop(&ch->poller);
 		return ;
@@ -527,6 +558,7 @@ alloc_virtio_disk(struct virtio_scsi_scan_base *base, uint8_t target_id, uint64_
 		return -1;
 	}
 
+	disk->magic = VIRTIO_SCSI_DEV_MAGIC;
 	disk->ctrlr = base->ctrlr;
 	disk->num_blocks = num_blocks;
 	disk->block_size = block_size;
@@ -740,6 +772,8 @@ _create_virtio_user_scsi_device(const char *path, const char *prefix, uint16_t q
 	if (!ctrlr) {
 		return -ENOMEM;
 	}
+
+	ctrlr->magic = VIRTIO_SCSI_CTRL_MAGIC;
 
 	ctrlr->vdev = virtio_user_dev_init(path, queue_num + 2, queue_size);
 	if (ctrlr->vdev == NULL) {
