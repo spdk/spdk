@@ -132,6 +132,7 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 	struct spdk_scsi_dev *dev;
 	struct spdk_bdev *bdev;
 	struct spdk_scsi_lun *lun = NULL;
+	bool found_lun_0;
 	int i, rc;
 
 	if (num_luns == 0) {
@@ -139,7 +140,15 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 		return NULL;
 	}
 
-	if (lun_id_list[0] != 0) {
+	found_lun_0 = false;
+	for (i = 0; i < num_luns; i++) {
+		if (lun_id_list[i] == 0) {
+			found_lun_0 = true;
+			break;
+		}
+	}
+
+	if (!found_lun_0) {
 		SPDK_ERRLOG("device %s: no LUN 0 specified\n", name);
 		return NULL;
 	}

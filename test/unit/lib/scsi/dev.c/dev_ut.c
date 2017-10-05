@@ -36,6 +36,8 @@
 #include "CUnit/Basic.h"
 #include "spdk_cunit.h"
 
+#include "spdk/util.h"
+
 #include "dev.c"
 #include "port.c"
 
@@ -44,7 +46,10 @@ struct spdk_bdev {
 	char name[100];
 };
 
-static struct spdk_bdev g_bdev = {};
+static struct spdk_bdev g_bdevs[] = {
+	{"malloc0"},
+	{"malloc1"},
+};
 
 struct lun_entry {
 	TAILQ_ENTRY(lun_entry) lun_entries;
@@ -62,7 +67,7 @@ test_setup(void)
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
-	return "test";
+	return bdev->name;
 }
 
 static struct spdk_scsi_task *
@@ -109,8 +114,15 @@ spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 struct spdk_bdev *
 spdk_bdev_get_by_name(const char *bdev_name)
 {
-	snprintf(g_bdev.name, sizeof(g_bdev.name), "%s", bdev_name);
-	return &g_bdev;
+	size_t i;
+
+	for (i = 0; i < SPDK_COUNTOF(g_bdevs); i++) {
+		if (strcmp(bdev_name, g_bdevs[i].name) == 0) {
+			return &g_bdevs[i];
+		}
+	}
+
+	return NULL;
 }
 
 int
@@ -281,6 +293,25 @@ dev_construct_success(void)
 	int lun_id_list[1] = { 0 };
 
 	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 1,
+				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+
+	/* Successfully constructs and returns a dev */
+	CU_ASSERT_TRUE(dev != NULL);
+
+	/* free the dev */
+	spdk_scsi_dev_destruct(dev);
+
+	CU_ASSERT(TAILQ_EMPTY(&g_lun_head));
+}
+
+static void
+dev_construct_success_lun_zero_not_first(void)
+{
+	struct spdk_scsi_dev *dev;
+	char *lun_name_list[2] = {"malloc1", "malloc0"};
+	int lun_id_list[2] = { 1, 0 };
+
+	dev = spdk_scsi_dev_construct("Name", lun_name_list, lun_id_list, 2,
 				      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
 
 	/* Successfully constructs and returns a dev */
@@ -574,6 +605,8 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "construct  - null lun",
 			       dev_construct_null_lun) == NULL
 		|| CU_add_test(suite, "construct  - success", dev_construct_success) == NULL
+		|| CU_add_test(suite, "construct - success - LUN zero not first",
+			       dev_construct_success_lun_zero_not_first) == NULL
 		|| CU_add_test(suite, "construct  - same lun on two devices",
 			       dev_construct_same_lun_two_devices) == NULL
 		|| CU_add_test(suite, "construct  - same lun on once device",
