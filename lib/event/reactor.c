@@ -656,7 +656,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 	return 0;
 }
 
-int
+void
 spdk_reactors_fini(void)
 {
 	uint32_t i;
@@ -674,8 +674,6 @@ spdk_reactors_fini(void)
 			spdk_mempool_free(g_spdk_event_mempool[i]);
 		}
 	}
-
-	return 0;
 }
 
 static void

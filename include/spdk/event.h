@@ -105,7 +105,7 @@ int spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 /**
  * \brief Perform final shutdown operations on an application using the event framework.
  */
-int spdk_app_fini(void);
+void spdk_app_fini(void);
 
 /**
  * \brief Start shutting down the framework.  Typically this function is not called directly, and
