@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "75d4593d_d5f780b0",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 651,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-05T07:38:30Z",
+      "side": 1,
+      "message": "https://review.gerrithub.io/#/c/381186/1/lib/bdev/virtio/bdev_virtio.c@377",
+      "parentUuid": "d1720f04_bd03489e",
+      "range": {
+        "startLine": 651,
+        "startChar": 2,
+        "endLine": 651,
+        "endChar": 67
+      },
+      "revId": "92b27438fbc60099fbd9ab97f8c04018ce1d249b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54089266_526021da",
         "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
         "patchSetId": 1
