@@ -71,10 +71,10 @@ spdk_bdev_subsystem_initialize(void)
 			     spdk_bdev_subsystem_stop_poller);
 }
 
-static int
+static void
 spdk_bdev_subsystem_finish(void)
 {
-	return spdk_bdev_finish();
+	spdk_bdev_finish();
 }
 
 SPDK_SUBSYSTEM_REGISTER(bdev, spdk_bdev_subsystem_initialize,

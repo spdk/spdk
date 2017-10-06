@@ -127,13 +127,11 @@ spdk_rpc_subsystem_initialize(void)
 	spdk_subsystem_init_next(0);
 }
 
-static int
+static void
 spdk_rpc_subsystem_finish(void)
 {
 	spdk_rpc_close();
 	spdk_poller_unregister(&g_rpc_poller, NULL);
-
-	return 0;
 }
 
 static void

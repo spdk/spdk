@@ -249,11 +249,10 @@ spdk_copy_engine_initialize(void)
 	return 0;
 }
 
-int
+void
 spdk_copy_engine_finish(void)
 {
 	spdk_copy_engine_module_finish();
-	return 0;
 }
 
 SPDK_COPY_MODULE_REGISTER(copy_engine_mem_init, NULL, NULL, copy_engine_mem_get_ctx_size)

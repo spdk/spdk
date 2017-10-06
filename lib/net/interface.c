@@ -426,7 +426,7 @@ spdk_interface_init(void)
 	return 0;
 }
 
-int
+void
 spdk_interface_destroy(void)
 {
 	struct spdk_interface *ifc_entry;
@@ -436,7 +436,6 @@ spdk_interface_destroy(void)
 		TAILQ_REMOVE(&g_interface_head, ifc_entry, tailq);
 		free(ifc_entry);
 	}
-	return 0;
 }
 
 int
@@ -471,10 +470,9 @@ spdk_interface_init(void)
 	return 0;
 }
 
-int
+void
 spdk_interface_destroy(void)
 {
-	return 0;
 }
 
 int

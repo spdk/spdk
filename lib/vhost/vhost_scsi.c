@@ -1076,10 +1076,9 @@ spdk_vhost_init(void)
 	return 0;
 }
 
-int
+void
 spdk_vhost_fini(void)
 {
-	return 0;
 }
 
 static void

@@ -452,35 +452,25 @@ static unsigned rte_mempool_avail_count(const struct rte_mempool *pool)
 }
 #endif
 
-static int
+static void
 spdk_iscsi_check_pool(struct rte_mempool *pool, uint32_t count)
 {
 	if (rte_mempool_avail_count(pool) != count) {
 		SPDK_ERRLOG("rte_mempool_avail_count(%s) == %d, should be %d\n",
 			    pool->name, rte_mempool_avail_count(pool), count);
-		return -1;
-	} else {
-		return 0;
 	}
 }
 
-static int
+static void
 spdk_iscsi_check_pools(void)
 {
-	int rc = 0;
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 
-	rc += spdk_iscsi_check_pool(iscsi->pdu_pool, PDU_POOL_SIZE(iscsi));
-	rc += spdk_iscsi_check_pool(iscsi->session_pool, SESSION_POOL_SIZE(iscsi));
-	rc += spdk_iscsi_check_pool(iscsi->pdu_immediate_data_pool, IMMEDIATE_DATA_POOL_SIZE(iscsi));
-	rc += spdk_iscsi_check_pool(iscsi->pdu_data_out_pool, DATA_OUT_POOL_SIZE(iscsi));
+	spdk_iscsi_check_pool(iscsi->pdu_pool, PDU_POOL_SIZE(iscsi));
+	spdk_iscsi_check_pool(iscsi->session_pool, SESSION_POOL_SIZE(iscsi));
+	spdk_iscsi_check_pool(iscsi->pdu_immediate_data_pool, IMMEDIATE_DATA_POOL_SIZE(iscsi));
+	spdk_iscsi_check_pool(iscsi->pdu_data_out_pool, DATA_OUT_POOL_SIZE(iscsi));
 	/* TODO: check the task_pool on exit */
-
-	if (rc == 0) {
-		return 0;
-	} else {
-		return -1;
-	}
 }
 
 static void
@@ -994,12 +984,10 @@ spdk_iscsi_init(void)
 	return 0;
 }
 
-int
+void
 spdk_iscsi_fini(void)
 {
-	int rc;
-
-	rc = spdk_iscsi_check_pools();
+	spdk_iscsi_check_pools();
 	spdk_iscsi_free_pools();
 
 	spdk_iscsi_shutdown_tgt_nodes();
@@ -1009,8 +997,6 @@ spdk_iscsi_fini(void)
 	free(g_spdk_iscsi.nodebase);
 
 	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
-
-	return rc;
 }
 
 void
