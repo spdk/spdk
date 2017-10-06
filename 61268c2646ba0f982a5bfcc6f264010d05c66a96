@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6ae2f36_8cae6ec9",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-06T10:11:11Z",
+      "side": 1,
+      "message": "This will never be reached, please remove.",
+      "range": {
+        "startLine": 235,
+        "startChar": 0,
+        "endLine": 235,
+        "endChar": 20
+      },
+      "revId": "61268c2646ba0f982a5bfcc6f264010d05c66a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
