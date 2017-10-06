@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8743209_4fae3651",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-06T10:03:37Z",
+      "side": 1,
+      "message": "Instead of claiming bs_bdev as separate call, can\u0027t it be done within spdk_bdev_create_bs_dev() ?\nIs there a case we would like to have an unclaimed bs_dev ?\nIt would pair create/detroy with claim/unclaim.",
+      "range": {
+        "startLine": 147,
+        "startChar": 6,
+        "endLine": 147,
+        "endChar": 33
+      },
+      "revId": "53ee93ac5198c850460b90b9b1c221b776145069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79177a3e_a28fc890",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-06T10:03:37Z",
+      "side": 1,
+      "message": "If above change is made, this field would not be necessary.",
+      "range": {
+        "startLine": 153,
+        "startChar": 1,
+        "endLine": 153,
+        "endChar": 27
+      },
+      "revId": "53ee93ac5198c850460b90b9b1c221b776145069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
