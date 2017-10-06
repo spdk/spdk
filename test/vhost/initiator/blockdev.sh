@@ -49,6 +49,31 @@ function prepare_fio_job() {
         done
 }
 
+function prepare_fio_job_for_unmap() {
+	fio_bdevs="$1"
+        echo -n "filename=" >> $testdir/bdev.fio
+        for b in $(echo $fio_bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
+                echo -n "$b:" >> $testdir/bdev.fio
+        done
+        echo "" >> $testdir/bdev.fio
+        echo "size=100m" >> $testdir/bdev.fio
+        echo "io_size=400m" >> $testdir/bdev.fio
+        echo "offset=8G" >> $testdir/bdev.fio
+        echo "[job_wr1]" >> $testdir/bdev.fio
+        echo "stonewall" >> $testdir/bdev.fio
+        echo "rw=write" >> $testdir/bdev.fio
+        echo "[job_rd1]" >> $testdir/bdev.fio
+        echo "stonewall" >> $testdir/bdev.fio
+        echo "rw=read" >> $testdir/bdev.fio
+        echo "[job_tr1]" >> $testdir/bdev.fio
+        echo "stonewall" >> $testdir/bdev.fio
+        echo "rw=trim" >> $testdir/bdev.fio
+        echo "[job_rd2]" >> $testdir/bdev.fio
+        echo "stonewall" >> $testdir/bdev.fio
+        echo "rw=read" >> $testdir/bdev.fio
+        echo "verify_pattern=0x0000" >> $testdir/bdev.fio
+        echo "do_verify=1" >> $testdir/bdev.fio
+}
 
 function start_and_prepare_vm() {
         os="/home/sys_sgsw/vhost_vm_image.qcow2"
@@ -158,18 +183,30 @@ for bdev in $bdevs; do
                                 rm -f *.state
                                 rm -f $testdir/bdev.fio
                         done
+                        # Guest test for unmap 
+                        cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                        prepare_fio_job_for_unmap ""
+                        run_guest_fio "Guest $bdev" --spdk_conf=/root/bdev.conf 0
+                        rm -f *.state
+                        rm -f $testdir/bdev.fio
                         vm_shutdown_all
                 fi
                 for rw in "${fio_rw[@]}"; do
                         timing_enter fio_rw_verify
                         cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
                         prepare_fio_job "$rw" "$vbdevs"
-                        run_host_fio "Host $bdev" --spdk_conf=$testdir/bdev.conf
+                        run_host_fio "Host unamp $bdev" --spdk_conf=$testdir/bdev.conf
 
                         rm -f *.state
                         rm -f $testdir/bdev.fio
                         timing_exit fio_rw_verify
                 done
+                #Host test for unmap
+                cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                prepare_fio_job_for_unmap "$vbdevs"
+                run_host_fio "Host unmap $bdev" --spdk_conf=$testdir/bdev.conf 0
+                rm -f *.state
+                rm -f $testdir/bdev.fio
 
                 timing_exit fio
         fi
