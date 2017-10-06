@@ -55,14 +55,19 @@ typedef void (*spdk_lvs_op_complete)(void *cb_arg, int lvserrno);
 typedef void (*spdk_lvol_op_complete)(void *cb_arg, int lvolerrno);
 typedef void (*spdk_lvol_op_with_handle_complete)(void *cb_arg, struct spdk_lvol *lvol,
 		int lvolerrno);
-
+/* Initialize logical volumes store (lvs) on base block device (bs_dev) */
 int spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		  spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
+/* Unloads lvs and all bdevs and lvols, which are located in that lvs */
 int spdk_lvs_unload(struct spdk_lvol_store *lvol_store, spdk_lvs_op_complete cb_fn, void *cb_arg);
+/* Create logical volume */
 int spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
 		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+/* Destroy logical volume */
 void spdk_lvol_destroy(struct spdk_lvol *lvol);
+/* Close  logical volume */
 void spdk_lvol_close(struct spdk_lvol *lvol);
+
 struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol);
 struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig);
 struct spdk_lvol *vbdev_get_lvol_by_name(const char *name);
