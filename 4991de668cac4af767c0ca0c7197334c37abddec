@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04e96ff0_6a970d0e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T03:51:17Z",
+      "side": 1,
+      "message": "should be scsi: instead of iscsi: (since this only touches scsi directory)",
+      "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39c50fe7_dd78a3b1",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T03:51:17Z",
+      "side": 1,
+      "message": "this check needs to add \"\u0026\u0026 dev-\u003eport[i].is_valid\"\n\ncould you also add a unit test to catch this bug?\n\nthanks,\n\nJim",
+      "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
