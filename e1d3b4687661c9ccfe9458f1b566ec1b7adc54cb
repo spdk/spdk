@@ -34,6 +34,24 @@
       "revId": "e1d3b4687661c9ccfe9458f1b566ec1b7adc54cb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "359335ab_9ede6ae7",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T20:30:22Z",
+      "side": 1,
+      "message": "The SPDK_SCSI_DEV_MAX_LUN doesn\u0027t do anything here.  So you have to still pass a separate parameter telling spdk_scsi_dev_construct the size of the const char pointer array.  You could change the comments to say that the char pointer array must be of size SPDK_SCSI_DEV_MAX_LUN, but that\u0027s very non-standard in my opinion.",
+      "parentUuid": "702cd5f0_f27a317c",
+      "revId": "e1d3b4687661c9ccfe9458f1b566ec1b7adc54cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
