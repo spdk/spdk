@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "56b2378b_ef5ecf26",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T20:50:32Z",
+      "side": 1,
+      "message": "spdk_bdev_io_get_buf() will always attach a buffer at least as large as what was requested.",
+      "parentUuid": "3d1d507e_81c11297",
+      "range": {
+        "startLine": 183,
+        "startChar": 1,
+        "endLine": 183,
+        "endChar": 61
+      },
+      "revId": "4a515ff570a9a38e2f91bfb2d8c549188dbe0afa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db89826b_56fd85ab",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 1
