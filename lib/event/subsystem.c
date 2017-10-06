@@ -165,24 +165,19 @@ spdk_subsystem_init(void *arg1, void *arg2)
 	spdk_subsystem_init_next(0);
 }
 
-int
+void
 spdk_subsystem_fini(void)
 {
-	int rc = 0;
 	struct spdk_subsystem *cur;
 
 	cur = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
 
 	while (cur) {
 		if (cur->fini) {
-			rc = cur->fini();
-			if (rc)
-				return rc;
+			cur->fini();
 		}
 		cur = TAILQ_PREV(cur, spdk_subsystem_list, tailq);
 	}
-
-	return rc;
 }
 
 void

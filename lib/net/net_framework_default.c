@@ -46,9 +46,9 @@ int spdk_net_framework_start(void)
 }
 
 __attribute__((weak))
-int spdk_net_framework_fini(void)
+void spdk_net_framework_fini(void)
 {
-	return 0;
+	return;
 }
 
 __attribute__((weak))

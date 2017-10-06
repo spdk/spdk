@@ -127,7 +127,7 @@ typedef void (*spdk_bdev_poller_stop_cb)(struct spdk_bdev_poller **ppoller);
 void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 			  spdk_bdev_poller_start_cb start_poller_fn,
 			  spdk_bdev_poller_stop_cb stop_poller_fn);
-int spdk_bdev_finish(void);
+void spdk_bdev_finish(void);
 void spdk_bdev_config_text(FILE *fp);
 
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);

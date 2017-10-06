@@ -164,7 +164,7 @@ struct spdk_scsi_lun;
 
 int spdk_scsi_init(void);
 
-int spdk_scsi_fini(void);
+void spdk_scsi_fini(void);
 
 int spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun);
 const char *spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun);
