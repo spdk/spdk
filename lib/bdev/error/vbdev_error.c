@@ -313,6 +313,7 @@ static void
 vbdev_error_fini(void)
 {
 	spdk_bdev_part_tailq_fini(&g_error_disks);
+	spdk_bdev_finish_next();
 }
 
 SPDK_BDEV_MODULE_REGISTER(error, vbdev_error_init, vbdev_error_fini, NULL, NULL,

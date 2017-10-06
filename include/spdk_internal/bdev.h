@@ -483,6 +483,8 @@ int spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_
 			     char *product_name);
 void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bdev_io *bdev_io);
 
+void spdk_bdev_finish_next(void);
+
 #define SPDK_BDEV_MODULE_REGISTER(_name, init_fn, fini_fn, config_fn, ctx_size_fn, examine_fn)	\
 	static struct spdk_bdev_module_if _name ## _if = {					\
 	.name		= #_name,								\
