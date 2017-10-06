@@ -2,6 +2,7 @@ set -xe
 PS4=' \t	\$ '
 ulimit -c unlimited
 
+# initial commit for nightly build
 export RUN_NIGHTLY=0
 
 if [[ ! -z $1 ]]; then
