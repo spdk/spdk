@@ -43,12 +43,12 @@ timing_exit start_iscsi_tgt
 
 $rpc_py add_portal_group 1 $TARGET_IP:$PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
-$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
-# "Malloc0:0" ==> use Malloc0 blockdev for LUN0
+$rpc_py construct_malloc_bdev -b MyBdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
+# "MyBdev:0" ==> use MyBdev blockdev for LUN0
 # "1:2" ==> map PortalGroup1 to InitiatorGroup2
 # "64" ==> iSCSI queue depth 64
 # "0 0 0 1" ==> enable CHAP authentication using auth group 1
-$rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' '1:2' 64 0 0 0 1
+$rpc_py construct_target_node Target3 Target3_alias 'MyBdev:0' '1:2' 64 0 0 0 1
 sleep 1
 
 if [ "$1" ]; then
