@@ -1,17 +1,46 @@
-# Logical volume store {#lvolstore}
+Terminology and naming
+==================
 
-A logical volume store is an SPDK blobstore with a special super blob denoting the blobstore.
-This super blob is to different from SPDK blobstores used for BlobFS.
+Logical volume store
+------------------------
 
-# Logical volume {#lvol}
+A logical volume store will be implemented as an SPDK blobstore with a super blob denoting
+the blobstore (to differentiate from SPDK blobstores used for BlobFS).
 
-A logical volume is an SPDK blob created from an lvolstore.
+Shorthand:  lvolstore
+Type name:  struct spdk_lvol_store
 
-An lvol is uniquely identified by its blob ID and the UUID of the lvolstore from which it was created.
+An lvolstore will generate a GUID on creation, so that it can be uniquely identified from
+other lvolstores.
 
-# Logical volume block device {#vdev_lvol}
+lvolstore should be implemented without dependencies on the SPDK app and event framework.
+This will allow it to be unit tested in isolation.
 
-Representation of an SPDK block device (spdk_bdev) with an lvol implementation. A logical volume block device translates generic SPDK block device I/O (spdk_bdev_io) operations into the equivalent SPDK blob operations.
+Logical volume
+-----------------
+
+A logical volume will be implemented as an SPDK blob created from an lvolstore.
+
+Shorthand: lvol
+Type name: struct spdk_lvol
+
+An lvol will be uniquely identified by its blob ID and the GUID of the lvolstore from
+which it was created.
+
+lvol should be implemented without dependencies on the SPDK app and event framework.
+This will allow it to be unit tested in isolation.
+
+Logical volume block device
+---------------------------------
+
+Representation of an SPDK block device (spdk_bdev) with an lvol implementation.
+A logical volume block device translates generic SPDK block device I/O (spdk_bdev_io)
+operations into the equivalent SPDK blob operations.
+
+Shorthand: lvol_bdev
+Type name: struct spdk_lvol_bdev
+
+lvol_bdev will be dependent on the SPDK bdev framework.
 
 # RPC overview
 There are few logical volumes specific calls.
@@ -20,9 +49,10 @@ There are few logical volumes specific calls.
 	Constructs lvolstore on specified bdev
 - destroy_lvol_store bdev_name
 	Destroy lvolstore on specified bdev
+- get_lvol_stores
+	Display current logical volume store list
 - construct_lvol_bdev uuid size
 	Constructs lvol bdev on lvolstore specified by uuid with specified size
-- resize_lvol_bdev bdev_name size
-	Resizes specified lvol bdev
 
-Note that destroying lvol store requires using call destroy_lvol_store, while deleting single lvol requires using delete_bdev rpc call.
+Note that destroying lvol store requires using call destroy_lvol_store,
+while deleting single lvol requires using delete_bdev rpc call.
