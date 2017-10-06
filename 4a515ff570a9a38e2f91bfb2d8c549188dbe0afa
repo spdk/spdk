@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d1d507e_81c11297",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-06T14:22:34Z",
+      "side": 1,
+      "message": "It is unclear why you don\u0027t check iov-\u003eiov_len to have enought size. Can you put some comment here + assert()?",
+      "range": {
+        "startLine": 183,
+        "startChar": 1,
+        "endLine": 183,
+        "endChar": 61
+      },
+      "revId": "4a515ff570a9a38e2f91bfb2d8c549188dbe0afa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db89826b_56fd85ab",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-06T14:22:34Z",
+      "side": 1,
+      "message": "Empty line needed here?",
+      "range": {
+        "startLine": 228,
+        "startChar": 57,
+        "endLine": 229,
+        "endChar": 2
+      },
+      "revId": "4a515ff570a9a38e2f91bfb2d8c549188dbe0afa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
