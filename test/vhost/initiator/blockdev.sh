@@ -7,6 +7,7 @@ rootdir=$(readlink -f $testdir/../../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
 rpc_py="$rootdir/scripts/rpc.py"
 
+
 function run_fio()
 {
         LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=4k --runtime=10 $testdir/bdev.fio "$@" --spdk_mem=1024
@@ -15,6 +16,37 @@ function run_fio()
                 spdk_vhost_kill
                 exit 1
         fi
+}
+
+function prepare_fio_job_for_unmap() {
+        fio_bdevs="$1"
+        echo -n "filename=" >> $testdir/bdev.fio
+        for b in $(echo $bdevs | jq -r '.name'); do
+                echo -n "$b:" >> $testdir/bdev.fio
+        done
+        echo "" >> $testdir/bdev.fio
+        echo "size=100m" >> $testdir/bdev.fio
+        echo "io_size=400m" >> $testdir/bdev.fio
+
+        # Check that sequential TRIM/UNMAP operations 'zeroes' disk space
+        echo "[trim_sequential]" >> $testdir/bdev.fio
+        echo "stonewall" >> $testdir/bdev.fio
+        echo "rw=trim" >> $testdir/bdev.fio
+        echo "trim_verify_zero=1" >> $testdir/bdev.fio
+
+        # Check that random TRIM/UNMAP operations 'zeroes' disk space
+        echo "[trim_random]" >> $testdir/bdev.fio
+        echo "stonewall" >> $testdir/bdev.fio
+        echo "rw=randtrim" >> $testdir/bdev.fio
+        echo "trim_verify_zero=1" >> $testdir/bdev.fio
+
+        # Check that after TRIM/UNMAP operation disk space can be used for read
+        # by using write with verify (which implies reads)
+        #echo "[trim_write_read]" >> $testdir/bdev.fio
+        #echo "stonewall" >> $testdir/bdev.fio
+        #echo "rw=trimwrite" >> $testdir/bdev.fio
+        #echo "trim_verify_zero=1" >> $testdir/bdev.fio
+
 }
 
 source $rootdir/test/vhost/common/common.sh
@@ -85,6 +117,13 @@ for bdev in $bdevs; do
                         rm -f $testdir/bdev.fio
                         timing_exit fio_rw_verify
                 done
+
+                #Host test for unmap
+                cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                prepare_fio_job_for_unmap "$vbdevs"
+                run_fio --spdk_conf=$testdir/bdev.conf
+                rm -f *.state
+                rm -f $testdir/bdev.fio
 
                 timing_exit fio
         fi
