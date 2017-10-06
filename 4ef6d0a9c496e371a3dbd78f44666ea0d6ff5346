@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c93c98e_32f579bc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 795,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T20:11:46Z",
+      "side": 1,
+      "message": "can this logic just go directly in spdk_bdev_channel_destroy()?  i don\u0027t understand why this needs to be a separate function that is then exposed in the public API\n\nwhy do we want to expose this function in the public API?",
+      "revId": "4ef6d0a9c496e371a3dbd78f44666ea0d6ff5346",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
