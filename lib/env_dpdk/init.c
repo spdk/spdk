@@ -95,6 +95,22 @@ _sprintf_alloc(const char *format, ...)
 	return NULL;
 }
 
+static void
+spdk_env_delete_shared_files(void)
+{
+	char buffer[PATH_MAX];
+
+	sprintf(buffer, "/var/run/.spdk_pid%d_config", getpid());
+	if (remove(buffer)) {
+		fprintf(stderr, "Unable to remove shared memory file: %s. Error code: %d\n", buffer, errno);
+	}
+
+	sprintf(buffer, "/var/run/.spdk_pid%d_hugepage_info", getpid());
+	if (remove(buffer)) {
+		fprintf(stderr, "Unable to remove shared memory file: %s. Error code: %d\n", buffer, errno);
+	}
+}
+
 void
 spdk_env_opts_init(struct spdk_env_opts *opts)
 {
@@ -282,6 +298,10 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 	if (rc < 0) {
 		fprintf(stderr, "Failed to initialize DPDK\n");
 		exit(-1);
+	}
+
+	if (opts->shm_id < 0) {
+		atexit(spdk_env_delete_shared_files);
 	}
 
 	spdk_mem_map_init();
