@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb3fbeca_0170efa7",
+        "filename": "test/nvmf/nvmf.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T22:42:39Z",
+      "side": 1,
+      "message": "does this need an NVML guard like in the iSCSI patch?",
+      "revId": "94b9c07ab132b5f614ddf1c9f99bb5d51ed3b2e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "833eac17_f0f13ae5",
+        "filename": "test/nvmf/pmem/nvmf_pmem.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T22:42:39Z",
+      "side": 1,
+      "message": "malloc \u003d\u003e pmem, remove lvol reference",
+      "revId": "94b9c07ab132b5f614ddf1c9f99bb5d51ed3b2e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f95661a7_55a7d2d8",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T22:42:39Z",
+      "side": 1,
+      "message": "looks like test script only sets up 1 pmem pool (unless I\u0027m reading it wrong)",
+      "revId": "94b9c07ab132b5f614ddf1c9f99bb5d51ed3b2e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58e1103f_2518070e",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T22:42:39Z",
+      "side": 1,
+      "message": "this always runs for 10 seconds - there\u0027s no check for nightly test to run 10 minutes",
+      "revId": "94b9c07ab132b5f614ddf1c9f99bb5d51ed3b2e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
