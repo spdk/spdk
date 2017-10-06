@@ -122,34 +122,9 @@ legacy_read_dev_config(struct virtio_dev *dev, size_t offset,
 		       void *dst, int length)
 {
 	struct virtio_hw *hw = virtio_dev_get_hw(dev);
-#ifdef RTE_ARCH_PPC_64
-	int size;
 
-	while (length > 0) {
-		if (length >= 4) {
-			size = 4;
-			rte_pci_ioport_read(vtpci_io(dev), dst, size,
-				VIRTIO_PCI_CONFIG(dev) + offset);
-			*(uint32_t *)dst = rte_be_to_cpu_32(*(uint32_t *)dst);
-		} else if (length >= 2) {
-			size = 2;
-			rte_pci_ioport_read(vtpci_io(dev), dst, size,
-				VIRTIO_PCI_CONFIG(dev) + offset);
-			*(uint16_t *)dst = rte_be_to_cpu_16(*(uint16_t *)dst);
-		} else {
-			size = 1;
-			rte_pci_ioport_read(vtpci_io(dev), dst, size,
-				VIRTIO_PCI_CONFIG(dev) + offset);
-		}
-
-		dst = (char *)dst + size;
-		offset += size;
-		length -= size;
-	}
-#else
 	rte_pci_ioport_read(vtpci_io(dev), dst, length,
 		VIRTIO_PCI_CONFIG(hw) + offset);
-#endif
 }
 
 static void
@@ -157,38 +132,9 @@ legacy_write_dev_config(struct virtio_dev *dev, size_t offset,
 			const void *src, int length)
 {
 	struct virtio_hw *hw = virtio_dev_get_hw(dev);
-#ifdef RTE_ARCH_PPC_64
-	union {
-		uint32_t u32;
-		uint16_t u16;
-	} tmp;
-	int size;
 
-	while (length > 0) {
-		if (length >= 4) {
-			size = 4;
-			tmp.u32 = rte_cpu_to_be_32(*(const uint32_t *)src);
-			rte_pci_ioport_write(vtpci_io(hw), &tmp.u32, size,
-				VIRTIO_PCI_CONFIG(hw) + offset);
-		} else if (length >= 2) {
-			size = 2;
-			tmp.u16 = rte_cpu_to_be_16(*(const uint16_t *)src);
-			rte_pci_ioport_write(vtpci_io(hw), &tmp.u16, size,
-				VIRTIO_PCI_CONFIG(hw) + offset);
-		} else {
-			size = 1;
-			rte_pci_ioport_write(vtpci_io(hw), src, size,
-				VIRTIO_PCI_CONFIG(hw) + offset);
-		}
-
-		src = (const char *)src + size;
-		offset += size;
-		length -= size;
-	}
-#else
 	rte_pci_ioport_write(vtpci_io(dev), src, length,
 		VIRTIO_PCI_CONFIG(hw) + offset);
-#endif
 }
 
 static uint64_t
