@@ -51,6 +51,24 @@
       "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7767d18_2ba7e0c0",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-06T20:59:33Z",
+      "side": 1,
+      "message": "Since you are editing this patch anyway, I think it would be good to clarify this part a little bit.\n\nI believe this loop is trying to do two things:\n1. Check for duplicate port ID values\n2. Find an empty slot to put the new port into\n\nI think it would be clearer to split these up into two separate loops (even if it\u0027s slightly less efficient, this shouldn\u0027t matter much with the small array sizes we are dealing with here).  At least, the two checks should have some comments describing what they are doing.\n\nOther than that, and Jim\u0027s comment about is_valid above, looks good to me.",
+      "parentUuid": "23a40b06_2e62e916",
+      "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
