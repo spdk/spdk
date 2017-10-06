@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f6b14583_47eb05b4",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-06T14:33:11Z",
+      "side": 1,
+      "message": "When you merge this patch https://review.gerrithub.io/#/c/379157/ I won\u0027t neet this so then can rebase and remove. Meanwhile keep it here so less conflicts is made.",
+      "parentUuid": "302f555a_d4a31c0f",
+      "range": {
+        "startLine": 79,
+        "startChar": 1,
+        "endLine": 80,
+        "endChar": 0
+      },
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b7732d2_be5909f9",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 2
@@ -88,6 +112,30 @@
     },
     {
       "key": {
+        "uuid": "9c4507e2_9e417032",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-06T14:33:11Z",
+      "side": 1,
+      "message": "Used also in bdev_virtio_init_dev(). I can\u0027t use  any of g_virtio_drivers.*_ctrlr because virtio_user_dev_init() doesn\u0027t return valid pointer for upcasting. This one of many things to be fexed ASAP.",
+      "parentUuid": "027218c5_d80844e9",
+      "range": {
+        "startLine": 130,
+        "startChar": 32,
+        "endLine": 130,
+        "endChar": 52
+      },
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "93fffef6_425a8030",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 2
@@ -122,6 +170,24 @@
     },
     {
       "key": {
+        "uuid": "5a1a22ec_ce604804",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-06T14:33:11Z",
+      "side": 1,
+      "message": "See changes in bdev_virtio_io_cpl() and\nhttps://review.gerrithub.io/#/c/381553/2/lib/bdev/virtio/bdev_virtio.c@353\n\nThe case here is that there is no valid data to pass to get_scsi_status() in case io_ctx-\u003eresp.response !\u003d VIRTIO_SCSI_S_OK. So is sk, asc, ascq are preset to 0 no need to have it set again here.",
+      "parentUuid": "a53e15e7_c744bdff",
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d029737_daeaeddf",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 2
@@ -139,6 +205,24 @@
     },
     {
       "key": {
+        "uuid": "23ef4dc6_1262a41f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-06T14:33:11Z",
+      "side": 1,
+      "message": "True",
+      "parentUuid": "2d029737_daeaeddf",
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6fd45ba4_d5f3dd4e",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 2
@@ -150,6 +234,30 @@
       "writtenOn": "2017-10-05T16:33:57Z",
       "side": 1,
       "message": "could you just hard-code max queue count to some bigger number for now, e.g. 16?",
+      "range": {
+        "startLine": 791,
+        "startChar": 3,
+        "endLine": 828,
+        "endChar": 4
+      },
+      "revId": "f63e3bfcf6ff39acbc69a9087ed940c9fa4c8e2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8588cb09_387f5c4e",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-06T14:33:11Z",
+      "side": 1,
+      "message": "Why 16? What is wrong with this part?",
+      "parentUuid": "6fd45ba4_d5f3dd4e",
       "range": {
         "startLine": 791,
         "startChar": 3,
