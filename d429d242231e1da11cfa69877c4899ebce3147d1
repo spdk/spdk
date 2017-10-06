@@ -39,6 +39,24 @@
       "revId": "d429d242231e1da11cfa69877c4899ebce3147d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7304f1e1_2dc74b88",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T18:15:18Z",
+      "side": 1,
+      "message": "If user specifies BLOBFS and super block has zeroes, spdk_bs_load should fail.  Otherwise if you pass in LVOLSTORE and its an \"old\" blobfs disk without the BLOBFS type, it will return success which you definitely don\u0027t want to handle.\n\nI think this all looks correct.",
+      "parentUuid": "ac82ec66_a5478f2b",
+      "revId": "d429d242231e1da11cfa69877c4899ebce3147d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
