@@ -42,7 +42,7 @@ for i in `seq 0 9`; do
     bdev=$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
     ls_guid=$($rpc_py construct_lvol_store $bdev -c 1048576)
     LUNs=""
-    for j in `seq 0 0`; do
+    for j in `seq 0 9`; do
         lb_guid=$($rpc_py construct_lvol_bdev $ls_guid 10)
         LUNs+="$lb_guid:$j "
     done
@@ -54,7 +54,7 @@ sleep 1
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
 iscsiadm -m node --login -p $TARGET_IP:$PORT
 
-$fio_py 1048576 64 randwrite 10 verify
+$fio_py 131072 8 randwrite 10 verify
 
 rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
