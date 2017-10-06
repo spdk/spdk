@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83c2d3b5_d23c1d9e",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T19:13:08Z",
+      "side": 1,
+      "message": "should be added near similar init function - name should be more consistent too",
+      "revId": "f0cf8d11cef11b39fadc35cdf6d0068df2f02c77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "674067d3_6abf5994",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T19:13:08Z",
+      "side": 1,
+      "message": "let\u0027s rename these to g_init_cb_fn/arg now that we have g_fini_cb_fn",
+      "revId": "f0cf8d11cef11b39fadc35cdf6d0068df2f02c77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d13a782f_45fb23e6",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T19:13:08Z",
+      "side": 1,
+      "message": "I think we should hide some of these details in the subsystem code.  For example, pass it the app_finish_event and let it allocate and call this event and then execute the event parameter after subsystem fini is complete",
+      "revId": "f0cf8d11cef11b39fadc35cdf6d0068df2f02c77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
