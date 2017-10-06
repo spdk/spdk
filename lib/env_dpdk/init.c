@@ -95,6 +95,22 @@ _sprintf_alloc(const char *format, ...)
 	return NULL;
 }
 
+static void
+spdk_env_delete_shared_files(void)
+{
+	char buffer[PATH_MAX];
+
+	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_config", getpid());
+	if (remove(buffer)) {
+		fprintf(stderr, "Unable to remove shared memory file: %s. Error code: %d\n", buffer, errno);
+	}
+
+	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_hugepage_info", getpid());
+	if (remove(buffer)) {
+		fprintf(stderr, "Unable to remove shared memory file: %s. Error code: %d\n", buffer, errno);
+	}
+}
+
 void
 spdk_env_opts_init(struct spdk_env_opts *opts)
 {
@@ -282,6 +298,18 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 	if (rc < 0) {
 		fprintf(stderr, "Failed to initialize DPDK\n");
 		exit(-1);
+	}
+
+	/* If the shared memory id is less than 0, that means that we are
+	 * starting a single process application. There will be no other
+	 * processes relying on the shared configuration files created by
+	 * dpdk for this process, and they can be deleted upon exit.
+	 * Specifying a shared memory id >= 0 implies that there will be multiple
+	 * processes relying on those configuration files, and we cannot delete
+	 * them when this process exits.
+	 */
+	if (opts->shm_id < 0) {
+		atexit(spdk_env_delete_shared_files);
 	}
 
 	spdk_mem_map_init();
