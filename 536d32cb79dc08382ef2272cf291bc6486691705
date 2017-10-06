@@ -33,6 +33,24 @@
       "revId": "536d32cb79dc08382ef2272cf291bc6486691705",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "644b39e4_7abc7495",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 784,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-10-06T21:17:12Z",
+      "side": 1,
+      "message": "Within the spdk_bdev_set_master_channel(), the mutex of the bdev is always acquired to serialize the concurrent callings of get_io_channel.",
+      "parentUuid": "3325cad0_ed1caf7d",
+      "revId": "536d32cb79dc08382ef2272cf291bc6486691705",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
