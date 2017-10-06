@@ -544,7 +544,7 @@ enomem(void)
 static void
 master_channel(void)
 {
-	struct spdk_io_channel *io_ch0, *io_ch1;
+	struct spdk_io_channel *io_ch0, *io_ch1, *io_ch2;
 
 	setup_test();
 	CU_ASSERT(g_desc->bdev->master_channel_set == false);
@@ -559,8 +559,30 @@ master_channel(void)
 	CU_ASSERT(g_desc->bdev->master_channel_set == true);
 	CU_ASSERT(spdk_io_channel_is_master(io_ch1) == false);
 
-	spdk_put_io_channel(io_ch0);
-	spdk_put_io_channel(io_ch1);
+	CU_ASSERT(spdk_bdev_get_master_channel(g_desc->bdev) == io_ch0);
+
+	spdk_bdev_put_io_channel(g_desc->bdev, io_ch0);
+	CU_ASSERT(g_desc->bdev->master_channel_set == false);
+	spdk_bdev_put_io_channel(g_desc->bdev, io_ch1);
+	CU_ASSERT(g_desc->bdev->master_channel_set == false);
+
+	set_thread(2);
+	io_ch2 = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(g_desc->bdev->master_channel_set == true);
+	CU_ASSERT(spdk_io_channel_is_master(io_ch2) == true);
+
+	set_thread(1);
+	io_ch1 = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(g_desc->bdev->master_channel_set == true);
+	CU_ASSERT(spdk_io_channel_is_master(io_ch1) == false);
+
+	CU_ASSERT(spdk_bdev_get_master_channel(g_desc->bdev) == io_ch2);
+
+	spdk_bdev_put_io_channel(g_desc->bdev, io_ch2);
+	CU_ASSERT(g_desc->bdev->master_channel_set == false);
+	spdk_bdev_put_io_channel(g_desc->bdev, io_ch1);
+	CU_ASSERT(g_desc->bdev->master_channel_set == false);
+
 	teardown_test();
 }
 

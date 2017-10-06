@@ -763,6 +763,7 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_channel	*ch = ctx_buf;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
+	struct spdk_bdev		*bdev = io_device;
 
 	mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
 
@@ -771,7 +772,7 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
 
-	spdk_put_io_channel(ch->channel);
+	spdk_bdev_put_io_channel(bdev, ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
 	assert(ch->io_outstanding == 0);
 }
@@ -786,6 +787,18 @@ spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 	}
 
 	return channel;
+}
+
+void spdk_bdev_put_io_channel(struct spdk_bdev *bdev, struct spdk_io_channel *ch)
+{
+	/* Always reset the master channel when current channel is master */
+	if (spdk_io_channel_is_master(ch) == true) {
+		bdev->master_channel_set = false;
+
+		bdev->master_channel = NULL;
+	}
+
+	spdk_put_io_channel(ch);
 }
 
 const char *
@@ -1643,6 +1656,7 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	bdev->reset_in_progress = NULL;
 
 	bdev->master_channel_set = false;
+	bdev->master_channel = NULL;
 
 	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));
@@ -2134,9 +2148,17 @@ spdk_bdev_set_master_channel(struct spdk_bdev *bdev, struct spdk_io_channel *cha
 		spdk_io_channel_set_master(channel);
 
 		bdev->master_channel_set = true;
+
+		bdev->master_channel = channel;
 	}
 
 	pthread_mutex_unlock(&bdev->mutex);
+}
+
+struct spdk_io_channel *
+spdk_bdev_get_master_channel(struct spdk_bdev *bdev)
+{
+	return bdev->master_channel;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev", SPDK_TRACE_BDEV)
