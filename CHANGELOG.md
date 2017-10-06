@@ -113,7 +113,7 @@ specify an output file handle (stdout or stderr, for example).
 Logical volumes library built on top of SPDK blobstore has been added.
 It is possible to create logical volumes on top of other devices using RPC.
 
-See the [logical volumes](http://www.spdk.io/doc/lvolstore.html) documentation for more information.
+See the [logical volumes](http://www.spdk.io/doc/logical_volumes.html) documentation for more information.
 
 ### Persistent Memory
 
