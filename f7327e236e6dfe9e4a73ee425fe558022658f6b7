@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4792b228_3cdad37b",
+        "filename": "test/pmem/common.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T22:23:46Z",
+      "side": 1,
+      "message": "This is an almost exact copy of spdk_vhost_kill in test/vhost/common/common.sh\n\nCan we use that instead?  Or make a prep patch that modifies it so it can be reused?\n\nPlease let\u0027s treat scripts the same as C code and avoid unnecessary duplication.\n\nThanks,\n\n-Jim",
+      "revId": "f7327e236e6dfe9e4a73ee425fe558022658f6b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f94346c6_e56cdb86",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T22:23:46Z",
+      "side": 1,
+      "message": "why do we need to create malloc, aio and nvme bdevs here, and test that they can be deleted?  I don\u0027t see how that is related to pmem",
+      "revId": "f7327e236e6dfe9e4a73ee425fe558022658f6b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
