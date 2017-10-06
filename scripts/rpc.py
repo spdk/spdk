@@ -166,9 +166,12 @@ p.set_defaults(func=construct_target_node)
 def construct_malloc_bdev(args):
     num_blocks = (args.total_size * 1024 * 1024) / args.block_size
     params = {'num_blocks': num_blocks, 'block_size': args.block_size}
+    if args.name:
+        params['name'] = args.name
     print_array(jsonrpc_call('construct_malloc_bdev', params))
 
 p = subparsers.add_parser('construct_malloc_bdev', help='Add a bdev with malloc backend')
+p.add_argument('-b', '--name', help="Name of the bdev")
 p.add_argument('total_size', help='Size of malloc bdev in MB (int > 0)', type=int)
 p.add_argument('block_size', help='Block size for this bdev', type=int)
 p.set_defaults(func=construct_malloc_bdev)

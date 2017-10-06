@@ -38,11 +38,19 @@
 #include "spdk_internal/log.h"
 
 struct rpc_construct_malloc {
+	char *name;
 	uint32_t num_blocks;
 	uint32_t block_size;
 };
 
+static void
+free_rpc_construct_malloc(struct rpc_construct_malloc *r)
+{
+	free(r->name);
+}
+
 static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
+	{"name", offsetof(struct rpc_construct_malloc, name), spdk_json_decode_string, true},
 	{"num_blocks", offsetof(struct rpc_construct_malloc, num_blocks), spdk_json_decode_uint32},
 	{"block_size", offsetof(struct rpc_construct_malloc, block_size), spdk_json_decode_uint32},
 };
@@ -51,7 +59,7 @@ static void
 spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
-	struct rpc_construct_malloc req = {};
+	struct rpc_construct_malloc req = {NULL};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
 
@@ -62,10 +70,12 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev = create_malloc_disk(req.num_blocks, req.block_size);
+	bdev = create_malloc_disk(req.name, req.num_blocks, req.block_size);
 	if (bdev == NULL) {
 		goto invalid;
 	}
+
+	free_rpc_construct_malloc(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
@@ -79,6 +89,7 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
+	free_rpc_construct_malloc(&req);
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
 SPDK_RPC_REGISTER("construct_malloc_bdev", spdk_rpc_construct_malloc_bdev)

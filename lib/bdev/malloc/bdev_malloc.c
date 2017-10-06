@@ -367,7 +367,7 @@ static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.get_io_channel		= bdev_malloc_get_io_channel,
 };
 
-struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
+struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint32_t block_size)
 {
 	struct malloc_disk	*mdisk;
 
@@ -400,13 +400,18 @@ struct spdk_bdev *create_malloc_disk(uint64_t num_blocks, uint32_t block_size)
 		return NULL;
 	}
 
-	mdisk->disk.name = spdk_sprintf_alloc("Malloc%d", malloc_disk_count);
+	if (name) {
+		mdisk->disk.name = strdup(name);
+	} else {
+		/* Auto-generate a name */
+		mdisk->disk.name = spdk_sprintf_alloc("Malloc%d", malloc_disk_count);
+		malloc_disk_count++;
+	}
 	if (!mdisk->disk.name) {
 		malloc_disk_free(mdisk);
 		return NULL;
 	}
 	mdisk->disk.product_name = "Malloc disk";
-	malloc_disk_count++;
 
 	mdisk->disk.write_cache = 1;
 	mdisk->disk.blocklen = block_size;
@@ -453,7 +458,7 @@ static int bdev_malloc_initialize(void)
 		}
 		size = (uint64_t)LunSizeInMB * 1024 * 1024;
 		for (i = 0; i < NumberOfLuns; i++) {
-			bdev = create_malloc_disk(size / BlockSize, BlockSize);
+			bdev = create_malloc_disk(NULL, size / BlockSize, BlockSize);
 			if (bdev == NULL) {
 				SPDK_ERRLOG("Could not create malloc disk\n");
 				rc = EINVAL;
