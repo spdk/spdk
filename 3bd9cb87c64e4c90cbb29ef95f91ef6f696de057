@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff49849b_1cce2478",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-06T21:49:22Z",
+      "side": 1,
+      "message": "Commit message needs to be updated to match the new name (construct_virtio_user_scsi_bdev)",
+      "range": {
+        "startLine": 7,
+        "startChar": 17,
+        "endLine": 7,
+        "endChar": 47
+      },
+      "revId": "3bd9cb87c64e4c90cbb29ef95f91ef6f696de057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c9191e9_756233ac",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-06T21:49:22Z",
+      "side": 1,
+      "message": "Is port_id guaranteed to be unique? (e.g. what happens if we have bdevs from two different vhost instances at once - can they have the same port_id?)\n\nIt would be nice if the user could specify the base name of the bdevs via an RPC parameter, instead of having an auto-generated name, similar to NVMe and AIO construct_*_bdev RPC calls.",
+      "revId": "3bd9cb87c64e4c90cbb29ef95f91ef6f696de057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5cae982_2a8dd3ff",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-06T21:49:22Z",
+      "side": 1,
+      "message": "--vq_size -\u003e --vq-size (unless there\u0027s a good reason to use the underscore?)",
+      "range": {
+        "startLine": 640,
+        "startChar": 16,
+        "endLine": 640,
+        "endChar": 25
+      },
+      "revId": "3bd9cb87c64e4c90cbb29ef95f91ef6f696de057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
