@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dae0116a_76b7f56f",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-06T23:00:50Z",
+      "side": 1,
+      "message": "This still seems to be assuming a single global hugepage size; I think it would be best to support 1 GB and 2 MB hugepages at the same time, and I think the rest of your changes are trying to support that (if I understand it correctly).\n\nThis is how I think it should work:\n- User specifies the total desired size of hugepage memory in $HUGEMEM.\n- Check the number of hugepages currently available for each size (1 GB, 2 MB) and count up to $HUGEMEM.\n- If needed, configure nr_hugepages for each available size (1 GB, 2 MB) until the user\u0027s $HUGEMEM value is satisfied.  This may require some special cases, since 2 MB hugepages can be allocated dynamically but as far as I know, 1 GB hugepages can\u0027t (they must be reserved at boot time).\n- Mount a hugetlbfs for each hugepage size we have allocated above.\n\nThese steps should use /sys/kernel/mm/hugepages/hugepages-* - there will be one directory for each supported hugepage size: hugepages-1048576kB and hugepages-2048kB.  Each of those directories contains a nr_hugepages file that indicates how much space is allocated.\n\nThis will mean that some of the existing code will need to change - we can\u0027t assume that there is just one hugetlbfs mount point, like we are currently doing in linux_hugetlbfs_mount, since there will be one hugetlbfs per page size.  Also, there won\u0027t be a $HUGEPAGESZ variable, since there will be potentially more than one size of hugepage at once.",
+      "revId": "62394dd5c782e9f4911df7d0335bcdaf8ceb5d1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
