@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0af20288_859b13e1",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T23:14:52Z",
+      "side": 1,
+      "message": "NVMe-oF",
+      "revId": "45f8f8f9ad4634102228cc68b0aa974b43b70a9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3e4352c_6c3ec018",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T23:14:52Z",
+      "side": 1,
+      "message": "OF \u003d\u003e oF",
+      "revId": "45f8f8f9ad4634102228cc68b0aa974b43b70a9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d9877ac_46946656",
+        "filename": "test/nvmf/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T23:14:52Z",
+      "side": 1,
+      "message": "OF \u003d\u003e oF\n\nalso logival \u003d\u003e logical",
+      "revId": "45f8f8f9ad4634102228cc68b0aa974b43b70a9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
