@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a65b9963_aee00a98",
+        "filename": "lib/net/interface.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T17:03:50Z",
+      "side": 1,
+      "message": "just remove the return",
+      "revId": "bab23a3525475554236e7944c10abd2ff1f64477",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7121db63_d0f4a6a1",
+        "filename": "lib/net/net_framework_default.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T17:03:50Z",
+      "side": 1,
+      "message": "remove the return",
+      "revId": "bab23a3525475554236e7944c10abd2ff1f64477",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec447977_82fb45e7",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1082,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T17:03:50Z",
+      "side": 1,
+      "message": "remove the return",
+      "revId": "bab23a3525475554236e7944c10abd2ff1f64477",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
