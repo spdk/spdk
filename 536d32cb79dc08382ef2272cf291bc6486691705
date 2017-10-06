@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d9b36b1_3358e5f5",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T20:11:58Z",
+      "side": 1,
+      "message": "I think this should all be done internally to bdev, and not in the public API.  Why do upper layers (iSCSI/vhost/NVMe-oF/BlobFS) need to see this function?  We definitely do not want them trying to call this function?",
+      "revId": "536d32cb79dc08382ef2272cf291bc6486691705",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3325cad0_ed1caf7d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 784,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T20:11:58Z",
+      "side": 1,
+      "message": "how do you guard against races between multiple threads calling bdev_get_io_channel?",
+      "revId": "536d32cb79dc08382ef2272cf291bc6486691705",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
