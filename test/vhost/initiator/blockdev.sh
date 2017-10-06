@@ -26,8 +26,7 @@ function format_disk_4096() {
         sleep 2
 }
 
-function run_fio()
-{
+function run_fio() {
         LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=4k --runtime=10 $testdir/bdev.fio "$@"
         fio_status=$?
         if [ $fio_status != 0 ]; then
@@ -79,7 +78,8 @@ for block_size in 512 4096; do
                         else
                                 fio_rw=("write" "read")
                         fi
-                        for rw in $fio_rw; do
+                        #for rw in $fio_rw; do
+                        for rw in ;do
 	                        timing_enter fio_rw_verify
                                 cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
                                 if [ $rw == "read" ] || [ $rw == "randread" ]; then
@@ -110,6 +110,30 @@ for block_size in 512 4096; do
 	                        rm -f $testdir/bdev.fio
 	                        timing_exit fio_rw_verify
                         done
+			#Unmap tests
+                        timing_enter unmap_test
+                        cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
+                        echo -n "filename=" >> $testdir/bdev.fio
+                        for b in $(echo $bdevs | jq -r 'select(.supported_io_types.unmap == true) | .name'); do
+                                echo -n "$b:" >> $testdir/bdev.fio
+                        done
+                        echo "" >> $testdir/bdev.fio
+                        echo "[job_wr1]" >> $testdir/bdev.fio
+			echo "stonewall" >> $testdir/bdev.fio
+			echo "rw=write" >> $testdir/bdev.fio
+			echo "[job_rd1]" >> $testdir/bdev.fio
+			echo "stonewall" >> $testdir/bdev.fio
+			echo "rw=read" >> $testdir/bdev.fio
+			echo "[job_tr1]" >> $testdir/bdev.fio
+			echo "stonewall" >> $testdir/bdev.fio
+			echo "rw=trim" >> $testdir/bdev.fio
+                        cat $testdir/bdev.fio
+
+                        run_fio --spdk_conf=$testdir/bdev.conf
+
+                        rm -f *.state
+                        rm -f $testdir/bdev.fio
+			timing_exit unmap_test
 
                         timing_exit fio
                 fi
