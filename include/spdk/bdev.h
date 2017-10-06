@@ -253,6 +253,15 @@ bool spdk_bdev_has_write_cache(const struct spdk_bdev *bdev);
 struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc);
 
 /**
+ * Release an I/O channel for the block device.
+ *
+ * \param bdev Block device.
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ *
+ */
+void spdk_bdev_put_io_channel(struct spdk_bdev *bdev, struct spdk_io_channel *ch);
+
+/**
  * Submit a read request to the bdev on the given channel.
  *
  * \param bdev Block device
@@ -675,5 +684,14 @@ void spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, i
  * \param ch I/O channel.
  */
 void spdk_bdev_set_master_channel(struct spdk_bdev *bdev, struct spdk_io_channel *ch);
+
+/**
+ * Get the master channel for the required bdev.
+ *
+ * \param bdev Block device.
+ *
+ * \return master I/O channel if already set, otherwise the current I/O channel.
+ */
+struct spdk_io_channel *spdk_bdev_get_master_channel(struct spdk_bdev *bdev);
 
 #endif /* SPDK_BDEV_H_ */
