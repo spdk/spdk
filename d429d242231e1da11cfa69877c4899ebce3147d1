@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "9515c918_fe8217d7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1610,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-06T22:43:52Z",
+      "side": 1,
+      "message": "We shouldn\u0027t print the bstype as a %s string directly - it could be unterminated or contain ANSI escape sequences, etc.  It would be safer to dump it as hex with SPDK_TRACEDUMP().",
+      "revId": "d429d242231e1da11cfa69877c4899ebce3147d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a482886_0162a706",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-06T22:43:52Z",
+      "side": 1,
+      "message": "This changes the on-disk structure, so doc/blob.md needs to be updated.",
+      "revId": "d429d242231e1da11cfa69877c4899ebce3147d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4d38c05_e98ab0d0",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-06T22:43:52Z",
+      "side": 1,
+      "message": "This should probably use strncpy() just to be sure the rest of the bstype gets filled with \\0.  spdk_bs_opts_init() will zero it out already, but it\u0027s nice to be explicit here - plus, we should be able to use the full 16 characters (with no null terminator) if we want to.",
+      "revId": "d429d242231e1da11cfa69877c4899ebce3147d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e18dadcb_0eb0a161",
         "filename": "lib/blobfs/blobfs.c",
         "patchSetId": 21
