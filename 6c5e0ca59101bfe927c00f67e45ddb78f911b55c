@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e43d09bb_17bdc0d4",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-06T08:50:06Z",
+      "side": 1,
+      "message": "You don\u0027t need this variable. Pass arg directly to like: spdk_event_call(arg)",
+      "range": {
+        "startLine": 825,
+        "startChar": 1,
+        "endLine": 825,
+        "endChar": 62
+      },
+      "revId": "6c5e0ca59101bfe927c00f67e45ddb78f911b55c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
