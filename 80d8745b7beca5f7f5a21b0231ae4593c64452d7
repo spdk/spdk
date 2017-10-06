@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "39b23396_f7e91da7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T21:17:49Z",
+      "side": 1,
+      "message": "shered \u003d\u003e shared",
+      "revId": "80d8745b7beca5f7f5a21b0231ae4593c64452d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d7a3a5c_a27d47d3",
         "filename": "lib/env_dpdk/init.c",
         "patchSetId": 1
