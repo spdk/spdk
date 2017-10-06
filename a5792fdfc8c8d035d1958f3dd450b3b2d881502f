@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4bab062_fd1eb675",
+        "filename": "unittest.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T22:30:55Z",
+      "side": 1,
+      "message": "remove this echo\n\nalso indent these two lines like we do for other if statements in bash scripts",
+      "revId": "a5792fdfc8c8d035d1958f3dd450b3b2d881502f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
