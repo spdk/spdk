@@ -33,6 +33,24 @@
       "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23a40b06_2e62e916",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-10-06T09:51:35Z",
+      "side": 1,
+      "message": "Thank you, I\u0027m getting used to this activity a little by little. I will  add CUnit based UTs to the test director and confirm the fix by using these.",
+      "parentUuid": "39c50fe7_dd78a3b1",
+      "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
