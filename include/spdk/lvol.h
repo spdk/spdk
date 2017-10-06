@@ -49,33 +49,147 @@ struct spdk_lvol;
 #define SPDK_LVS_NAME_MAX	64
 #define SPDK_LVOL_NAME_MAX	64
 
+/**
+ * Parameters for lvolstore initialization.
+ */
 struct spdk_lvs_opts {
 	uint32_t	cluster_sz;
 	char		name[SPDK_LVS_NAME_MAX];
 };
 
-/* Initialize an spdk_lvs_opts structure to the default logical volume store option values. */
+/**
+ * \brief Initialize an spdk_lvs_opts structure to the defaults.
+ * \param opts
+ */
 void spdk_lvs_opts_init(struct spdk_lvs_opts *opts);
 
+/**
+ * \brief Callback definition for lvolstore operations, including handle to lvs
+ * \param cb_arg Custom arguments
+ * \param lvol_store Handle to lvol_store or NULL when lvserrno is set
+ * \param lvserrno Error
+ */
 typedef void (*spdk_lvs_op_with_handle_complete)(void *cb_arg, struct spdk_lvol_store *lvol_store,
 		int lvserrno);
+
+/**
+ * \brief Callback definition for lvolstore operations without handle
+ * \param cb_arg Custom arguments
+ * \param lvserrno Error
+ */
 typedef void (*spdk_lvs_op_complete)(void *cb_arg, int lvserrno);
-typedef void (*spdk_lvol_op_complete)(void *cb_arg, int lvolerrno);
+
+
+/**
+ * \brief Callback definition for lvol operations with handle to lvol
+ * \param cb_arg Custom arguments
+ * \param lvol Handle to lvol or NULL when lvserrno is set
+ * \param lvolerrno Error
+ */
 typedef void (*spdk_lvol_op_with_handle_complete)(void *cb_arg, struct spdk_lvol *lvol,
 		int lvolerrno);
 
+/**
+ * \brief Callback definition for lvol operations without handle to lvol
+ * \param cb_arg Custom arguments
+ * \param lvolerrno Error
+ */
+typedef void (*spdk_lvol_op_complete)(void *cb_arg, int lvolerrno);
+
+/**
+ * \brief Initialize lvolstore on given bs_bdev.
+ *
+ * bs_dev can be created on bdev by using spdk_bdev_create_bs_dev()
+ * Refer to blobstore documention for more details.
+ *
+ * \param o Options for lvolstore
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ * \return error
+ */
 int spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		  spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
-int spdk_lvs_unload(struct spdk_lvol_store *lvol_store, spdk_lvs_op_complete cb_fn, void *cb_arg);
+
+/**
+ * \brief Unloads lvolstore
+ *
+ * All lvols have to be closed beforehand, when doing unload.
+ *
+ * \param lvol_store Handle to lvolstore
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ * \return error
+ */
+int spdk_lvs_unload(struct spdk_lvol_store *lvol_store,
+		    spdk_lvs_op_complete cb_fn, void *cb_arg);
+/**
+ * \brief Destroy lvolstore
+ *
+ * All lvols have to be closed beforehand, when doing destroy.
+ *
+ * \param lvol_store Handle to lvolstore
+ * \param umap_device When set to true, unmaps whole lvolstore, otherwise writes zeros in first block
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ * \return error
+ */
 int spdk_lvs_destroy(struct spdk_lvol_store *lvol_store, bool unmap_device,
 		     spdk_lvs_op_complete cb_fn, void *cb_arg);
+
+/**
+ * \brief Create lvol on given lvolstore with specified size
+ * \param lvs Handle to lvolstore
+ * \param sz size of lvol in bytes
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ * \return error
+ */
 int spdk_lvol_create(struct spdk_lvol_store *lvs, char *name, uint64_t sz,
 		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+
+/**
+ * \brief Closes lvol and removes information about lvol from its lvolstore.
+ * \param lvol Handle to lvol
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
 void spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
+
+/**
+ * \brief Closes lvol, but information is kept on lvolstore.
+ * \param lvol Handle to lvol
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
 void spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
+
+/**
+ * \brief Return IO channel of bdev associated with specified lvol.
+ * \param lvol Handle to lvol
+ * \return IO channel
+ */
+
 struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol);
+
+/**
+ * \brief Search for handle to lvolstore bdev
+ * \param lvs_orig Handle to spdk_lvol_store
+ * \return Handle to lvol_store_bdev or NULL if not found.
+ */
 struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig);
+
+/**
+ * \brief Search for handle to lvol
+ * \param name Name of bdev
+ * \return Handle to spdk_lvol or NULL if not found.
+ */
 struct spdk_lvol *vbdev_get_lvol_by_name(const char *name);
+
+/**
+ * \brief Search for handle lvolstore
+ * \param uuid UUID of lvolstore
+ * \return Handle to spdk_lvol_store or NULL if not found.
+ */
 struct spdk_lvol_store *vbdev_get_lvol_store_by_uuid(uuid_t uuid);
 void spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn,
 		   void *cb_arg);
