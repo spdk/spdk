@@ -45,12 +45,12 @@
 #define IDLE_INTERVAL_TIME_IN_US 5000
 
 int spdk_interface_init(void);
-int spdk_interface_destroy(void);
+void spdk_interface_destroy(void);
 
 const char *spdk_net_framework_get_name(void);
 int spdk_net_framework_start(void);
 void spdk_net_framework_clear_socket_association(int sock);
-int spdk_net_framework_fini(void);
+void spdk_net_framework_fini(void);
 int spdk_net_framework_idle_time(void);
 
 #define SPDK_IFNAMSIZE		32

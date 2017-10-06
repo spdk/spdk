@@ -44,7 +44,7 @@
 #include "spdk/event.h"
 
 int spdk_vhost_init(void);
-int spdk_vhost_fini(void);
+void spdk_vhost_fini(void);
 
 /**
  * Init vhost application.  This is called once by SPDK app layer.

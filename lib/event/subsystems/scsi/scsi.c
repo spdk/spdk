@@ -47,10 +47,10 @@ spdk_scsi_subsystem_init(void)
 	spdk_subsystem_init_next(rc);
 }
 
-static int
+static void
 spdk_scsi_subsystem_fini(void)
 {
-	return spdk_scsi_fini();
+	spdk_scsi_fini();
 }
 
 SPDK_SUBSYSTEM_REGISTER(scsi, spdk_scsi_subsystem_init, spdk_scsi_subsystem_fini, NULL)

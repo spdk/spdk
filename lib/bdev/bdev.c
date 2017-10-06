@@ -546,7 +546,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 	spdk_bdev_module_action_complete();
 }
 
-int
+void
 spdk_bdev_finish(void)
 {
 	struct spdk_bdev_module_if *bdev_module;
@@ -582,8 +582,6 @@ spdk_bdev_finish(void)
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
 
 	spdk_io_device_unregister(&g_bdev_mgr, NULL);
-
-	return 0;
 }
 
 struct spdk_bdev_io *

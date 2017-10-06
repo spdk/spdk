@@ -50,11 +50,10 @@ spdk_scsi_init(void)
 	return 0;
 }
 
-int
+void
 spdk_scsi_fini(void)
 {
 	pthread_mutex_destroy(&g_spdk_scsi.mutex);
-	return 0;
 }
 
 SPDK_TRACE_REGISTER_FN(scsi_trace)
