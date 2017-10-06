@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "09806e5e_9a6d0d4c",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-06T21:19:22Z",
+      "side": 1,
+      "message": "opts should be able to be const as well.",
+      "revId": "09b26c3284f9e14562f688b00a5429e0ee8f8945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "85ac378c_c452546e",
         "filename": "lib/nvme/nvme.c",
         "patchSetId": 26
