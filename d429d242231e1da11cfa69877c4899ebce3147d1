@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e18dadcb_0eb0a161",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-06T14:36:26Z",
+      "side": 1,
+      "message": "I don\u0027t think this case would occur. Because if bs_type on disc does not equal BLOBFS or 0 then bs_load should fail with bs\u003dNULL and bserrno set.",
+      "range": {
+        "startLine": 633,
+        "startChar": 12,
+        "endLine": 633,
+        "endChar": 74
+      },
+      "revId": "d429d242231e1da11cfa69877c4899ebce3147d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac82ec66_a5478f2b",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-06T14:36:26Z",
+      "side": 1,
+      "message": "I think opts bs_type should be set to BLOBFS during load. Then blobstore would load it in just two cases bs_type on disc is 0 or BLOBFS.",
+      "revId": "d429d242231e1da11cfa69877c4899ebce3147d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
