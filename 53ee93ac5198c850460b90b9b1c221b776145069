@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "d14ad551_7b5298c1",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-06T16:11:56Z",
+      "side": 1,
+      "message": "We need to add a struct spdk_bdev_module_if pointer parameter, and use that pointer instead of creating our own BDEV_MODULE in this file.",
+      "revId": "53ee93ac5198c850460b90b9b1c221b776145069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d8743209_4fae3651",
         "filename": "lib/blob/bdev/blob_bdev.c",
         "patchSetId": 1
