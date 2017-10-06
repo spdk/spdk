@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5a8729d_b6736a28",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-06T21:32:06Z",
+      "side": 1,
+      "message": "Rather than reformatting the physical NVMe device for every test (which will take a long time and potentially put extra wear on the NAND), I think we should be able to get the same coverage of different block sizes using Malloc bdevs.",
+      "revId": "ec64199d8d91a21dd122822e39f67e993dca25c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "099ec53c_31fedf1b",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-06T21:32:06Z",
+      "side": 1,
+      "message": "Rather than adding a whole new test that calls bdevio, can we extend test/lib/bdev/blockdev.sh so that it can set up a vhost target and initiator bdevs?  This will help to avoid duplicating test code when we already have common test infrastructure for bdev modules.\n\nWe should also be able to just add multiple malloc bdevs with different block sizes at the same time and run the tests just once, rather than running all tests multiple times for each block size.",
+      "revId": "ec64199d8d91a21dd122822e39f67e993dca25c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
