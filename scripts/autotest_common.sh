@@ -2,7 +2,7 @@ set -xe
 PS4=' \t	\$ '
 ulimit -c unlimited
 
-export RUN_NIGHTLY=0
+export RUN_NIGHTLY=1
 
 if [[ ! -z $1 ]]; then
 	if [ -f $1 ]; then
@@ -444,3 +444,4 @@ function fio_config_add_job()
 
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
+DATE='Sat Oct  7 05:00:06 MST 2017'
