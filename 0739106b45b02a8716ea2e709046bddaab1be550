@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfd632dc_147bafa7",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-07T00:09:38Z",
+      "side": 1,
+      "message": "why do we not abort these tasks in all of the error cases in this function now?  that seems unrelated to the indirect descriptors\n\nit looks like this will return -1 to process_request which in turn returns it to process_requestq and then calls invalid_request() on it - but I don\u0027t see where we set a response for the task before doing so\n\nregardless, seems this part of the change should be moved out to a separate patch\n\nupdate: ok now i see that before it always set task-\u003eresp \u003d NULL so wouldn\u0027t actually set ABORTED response so this is effectively the same functionality but simpler; but still would rather see this done in a prep patch before this one",
+      "revId": "0739106b45b02a8716ea2e709046bddaab1be550",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
