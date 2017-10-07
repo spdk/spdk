@@ -69,6 +69,24 @@
       "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6ccdf34_e32cc96f",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-10-07T00:19:36Z",
+      "side": 1,
+      "message": "Thank you Dan, Jim,\n\nwhat I did internally was the following.\nHowever, I did a bad optimization as you mentioned.\n\nI confirmed the following code worked correctly, but I have not succeeded to create UT code for it. Hence I have not proposed it yet.  \n\nIf the following satisfies your expectation, I will submit it together with UT code after completing validation of CUnit based UT code.\n\nThank you,\nShuhei    \n\nstatic struct spdk_scsi_port *\nspdk_scsi_dev_find_free_port(struct spdk_scsi_dev *dev)\n{\n    for (i \u003d 0; i \u003c MAX_PORTS; i++) { \n        if (dev-\u003eport[i].is_valid)\n            return \u0026dev-\u003eport[i];\n        return NULL;\n}\n\nint\nscsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)\n{\n    struct spdk_scsi_port *port;\n    int rc;\n\n    if (dev-\u003enum_ports \u003d\u003d SPDK_SCSI_DEV_MAX_PORTS)\n        return -1;\n\n    port \u003d spdk_scsi_dev_find_port_by_id(dev, id);\n    if (port !\u003d NULL)\n        return -1;\n\n    port \u003d spdk_scsi_dev_find_free_port(dev);\n    if (port \u003d\u003d NULL)\n        return -1;\n\n    rc \u003d spdk_scsi_port_construct(port, id, dev-\u003enum_ports, name);\n    if (rc !\u003d 0)\n        return rc;\n\n    dev-\u003enum_ports++;\n    return 0;\n}",
+      "parentUuid": "f7767d18_2ba7e0c0",
+      "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
