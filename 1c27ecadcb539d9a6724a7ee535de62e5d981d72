@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "c2d6f740_7fd57833",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-08T23:47:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0190ec0d_3ccd5c29",
+      "revId": "1c27ecadcb539d9a6724a7ee535de62e5d981d72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2deba364_6cee272f",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 1
@@ -47,6 +65,24 @@
       "writtenOn": "2017-10-07T00:26:30Z",
       "side": 1,
       "message": "Can you name these CLI_MODE_CMD and CLI_MODE_SHELL?  then they will be more clearly differentiated from the CLI_* action types below.",
+      "revId": "1c27ecadcb539d9a6724a7ee535de62e5d981d72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75be7552_9ffc948a",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-08T23:47:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2deba364_6cee272f",
       "revId": "1c27ecadcb539d9a6724a7ee535de62e5d981d72",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "3bcb781e_7d354179",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1126,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-08T23:47:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "57f966e5_2c61c962",
+      "revId": "1c27ecadcb539d9a6724a7ee535de62e5d981d72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46372c62_46066da6",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 1
@@ -81,6 +135,24 @@
       "writtenOn": "2017-10-07T00:26:30Z",
       "side": 1,
       "message": "this comment doesn\u0027t read right",
+      "revId": "1c27ecadcb539d9a6724a7ee535de62e5d981d72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "263bf42b_8fe32e2f",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1335,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-08T23:47:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46372c62_46066da6",
       "revId": "1c27ecadcb539d9a6724a7ee535de62e5d981d72",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
