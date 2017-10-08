@@ -33,6 +33,24 @@
       "revId": "09b26c3284f9e14562f688b00a5429e0ee8f8945",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b45d0b0_9587269b",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-10-08T00:52:10Z",
+      "side": 1,
+      "message": "This is to avoid the improper calling of this function and just have a default value on the ctrlr_opts. The other way is jut to assert it for the improper calling. I will change it to assert.",
+      "parentUuid": "85ac378c_c452546e",
+      "revId": "09b26c3284f9e14562f688b00a5429e0ee8f8945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
