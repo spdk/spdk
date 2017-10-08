@@ -1,11 +1,5 @@
 # Storage Performance Development Kit {#index}
 
-# Introduction {#intro}
-- @ref getting_started
-- @ref vagrant
-- @ref changelog
-- [Source Code (GitHub)](https://github.com/spdk/spdk/)
-
 # User Guides {#user_guides}
 
 - @ref iscsi_getting_started
