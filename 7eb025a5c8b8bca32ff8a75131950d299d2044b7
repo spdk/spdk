@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "235476dc_b1a1d747",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 1521,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-10-08T12:05:24Z",
+      "side": 1,
+      "message": "sure, I will make them as separated functions in the following patch.",
+      "parentUuid": "ed7fd54b_fb224d8d",
+      "revId": "7eb025a5c8b8bca32ff8a75131950d299d2044b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e8a57187_fb968fb8",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 47
