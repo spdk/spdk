@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "957c9194_690f11b6",
+        "filename": "doc/blob.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T15:50:04Z",
+      "side": 1,
+      "message": "should use spaces instead of tab for indent (matching other lines)\n\ninstead of \"struct spdk_bs_type\" here, let\u0027s say:\n\n\u003csb-bs-type\u003e ::\u003d char[16] # Blobstore type\n\nthen users can understand the real layout on disk from this document without needing to reference the header file to see what struct spdk_bs_type is",
+      "revId": "f1f7f07a54f573478f49dcc0c070560a913a4976",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9344a6a1_80ba3e68",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T15:50:04Z",
+      "side": 1,
+      "message": "I would suggest choosing a different name here.  Normally this will be BLOBFS or LVOLSTORE - \"BLOBSTORE\" would never be used as a blobstore type and might confuse readers as to what this type would be used for in a real application.",
+      "revId": "f1f7f07a54f573478f49dcc0c070560a913a4976",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
