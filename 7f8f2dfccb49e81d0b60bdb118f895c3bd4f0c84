@@ -16,6 +16,24 @@
       "revId": "7f8f2dfccb49e81d0b60bdb118f895c3bd4f0c84",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efd99819_ddd37712",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-09T19:12:48Z",
+      "side": 1,
+      "message": "after setting default_hugepagesz in kernel params it\u0027s 1GB",
+      "parentUuid": "01a77a23_b6b8b486",
+      "revId": "7f8f2dfccb49e81d0b60bdb118f895c3bd4f0c84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
