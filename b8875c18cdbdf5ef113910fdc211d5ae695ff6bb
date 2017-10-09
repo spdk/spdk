@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93fd25e4_6983c993",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 61
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T16:01:01Z",
+      "side": 1,
+      "message": "I think this depends that when blobs A, B and C are all opened in parallel, that the completion callbacks will also be called in A, B and C order.  But that is not a guarantee by the API (even though it probably always happens like that now).  For example, opening those 3 blobs will result in 3 reads to disk and those reads may complete out of order.\n\nI think you need to keep a count instead.",
+      "revId": "b8875c18cdbdf5ef113910fdc211d5ae695ff6bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d32a3c6_7077ac73",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 61
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T16:01:01Z",
+      "side": 1,
+      "message": "could you add something to the function name just to indicate that it always returns failure",
+      "revId": "b8875c18cdbdf5ef113910fdc211d5ae695ff6bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aed20d72_3e6293b7",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 61
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T16:01:01Z",
+      "side": 1,
+      "message": "-1 \u003d\u003d -EPERM - is that the best errno to return here?",
+      "revId": "b8875c18cdbdf5ef113910fdc211d5ae695ff6bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
