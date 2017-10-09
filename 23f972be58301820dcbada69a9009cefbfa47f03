@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b942ca08_935dc6e2",
+        "filename": "doc/getting_started.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-09T16:02:11Z",
+      "side": 1,
+      "message": "If you\u0027re deleting this file, you must also remove it from doc/Doxyfile.",
+      "revId": "23f972be58301820dcbada69a9009cefbfa47f03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c89e525_4934c212",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-09T16:02:11Z",
+      "side": 1,
+      "message": "If you\u0027re going to rename this, you also need to update the link in the top-level README.md that points to http://spdk.io/doc/vagrant.html and remove it from doc/Doxyfile.",
+      "revId": "23f972be58301820dcbada69a9009cefbfa47f03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

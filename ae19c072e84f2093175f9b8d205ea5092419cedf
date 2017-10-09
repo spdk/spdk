@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c4c90a8_0a20c71d",
+        "filename": "doc/index.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-09T16:02:11Z",
+      "side": 0,
+      "message": "If you\u0027re going to remove the changelog link from here, you should also revert commit 0269601f77a2ccadf8601b76b87de8da9235afca - but I\u0027d prefer to keep it linked from the documentation (along with these other docs).\n\nWhy do we need to remove the link to e.g. Vagrant startup instructions from the documentation?",
+      "revId": "ae19c072e84f2093175f9b8d205ea5092419cedf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
