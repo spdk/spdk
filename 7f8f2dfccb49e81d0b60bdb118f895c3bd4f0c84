@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01a77a23_b6b8b486",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-09T18:13:02Z",
+      "side": 1,
+      "message": "I think this is always 2 MB on x86-64, even on systems that have 1 GB pages configured.",
+      "revId": "7f8f2dfccb49e81d0b60bdb118f895c3bd4f0c84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
