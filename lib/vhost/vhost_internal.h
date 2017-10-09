@@ -74,8 +74,7 @@
 	(1ULL << VIRTIO_RING_F_INDIRECT_DESC))
 
 #define SPDK_VHOST_DISABLED_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
-	(1ULL << VIRTIO_RING_F_EVENT_IDX) | \
-	(1ULL << VIRTIO_RING_F_INDIRECT_DESC))
+	(1ULL << VIRTIO_RING_F_EVENT_IDX))
 
 enum spdk_vhost_dev_type {
 	SPDK_VHOST_DEV_T_SCSI,
@@ -133,6 +132,7 @@ bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_v
  * The descriptor will provide access to the entire descriptor
  * chain. The subsequent descriptors are accesible via
  * \c spdk_vhost_vring_desc_get_next.
+ * \param vdev vhost device
  * \param vq virtqueue
  * \param req_idx descriptor index
  * \param desc pointer to be set to the descriptor
@@ -144,8 +144,9 @@ bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_v
  * \return 0 on success, -1 if given index is invalid.
  * If -1 is returned, the params won't be changed.
  */
-int spdk_vhost_vq_get_desc(struct rte_vhost_vring *vq, uint16_t req_idx, struct vring_desc **desc,
-			   struct vring_desc **desc_table, uint32_t *desc_table_size);
+int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
+			   uint16_t req_idx,
+			   struct vring_desc **desc, struct vring_desc **desc_table, uint32_t *desc_table_size);
 void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
 				     uint16_t id, uint32_t len);
 
