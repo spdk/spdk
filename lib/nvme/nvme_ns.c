@@ -156,6 +156,12 @@ spdk_nvme_ns_get_max_io_xfer_size(struct spdk_nvme_ns *ns)
 }
 
 uint32_t
+spdk_nvme_ns_get_max_sectors_per_io(struct spdk_nvme_ns *ns)
+{
+	return ns->sectors_per_max_io;
+}
+
+uint32_t
 spdk_nvme_ns_get_sector_size(struct spdk_nvme_ns *ns)
 {
 	return ns->sector_size;
