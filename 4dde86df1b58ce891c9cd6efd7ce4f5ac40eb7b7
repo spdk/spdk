@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "963ebfd2_9d2a7d1d",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T22:30:42Z",
+      "side": 1,
+      "message": "member name alignment (extra tab before ns and next)",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b375aa10_79a60e58",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T22:30:42Z",
+      "side": 1,
+      "message": "same here - these member names should all be aligned",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16c752dd_8c7b1765",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T22:30:42Z",
+      "side": 1,
+      "message": "same here\n\nthere are a bunch more below - please take a look at those as well",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d88e0e15_0b27232b",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T22:30:42Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b31e57b_1b8c9b08",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T22:30:42Z",
+      "side": 1,
+      "message": "need newline after last variable declaration",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39d28ab2_e964aa34",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T22:30:42Z",
+      "side": 1,
+      "message": "technically this is writing blocks 0 to NUM_BLOCKS-1",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65f8d6ee_4b655ca8",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T22:30:42Z",
+      "side": 1,
+      "message": "should just be a space between \"struct\" and \"spdk_nvme_ns\" - not a tab",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c83bfb37_eb93173c",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T22:30:42Z",
+      "side": 1,
+      "message": "same here - also use space between struct and spdk_env_opts",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
