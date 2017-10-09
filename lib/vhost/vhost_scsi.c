@@ -406,6 +406,8 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 	uint32_t desc_table_len, len = 0;
 	int rc;
 
+	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_cpl, spdk_vhost_scsi_task_free_cb, NULL);
+
 	rc = spdk_vhost_vq_get_desc(vdev, task->vq, task->req_idx, &desc, &desc_table, &desc_table_len);
 	/* First descriptor must be readable */
 	if (rc != 0 || spdk_unlikely(spdk_vhost_vring_desc_is_wr(desc))) {
@@ -414,7 +416,6 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		goto abort_task;
 	}
 
-	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_cpl, spdk_vhost_scsi_task_free_cb, NULL);
 	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 
 	/* Each request must have at least 2 descriptors (e.g. request and response) */
