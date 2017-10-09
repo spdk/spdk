@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "515ff010_55fc71ff",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T16:46:49Z",
+      "side": 1,
+      "message": "What if the module has already been initialized, then a module_examine operation starts, and bdev module calls spdk_bdev_module_init_done before spdk_bdev_module_examine_done?",
+      "revId": "cc809929c51c571db2f5c1780ae4e326436d318f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
