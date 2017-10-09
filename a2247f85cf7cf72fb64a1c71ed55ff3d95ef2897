@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8a36e75_d3651122",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1024,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-09T16:52:31Z",
+      "side": 1,
+      "message": "It might be good to print out the help if the user specifies an unrecognized command.",
+      "revId": "a2247f85cf7cf72fb64a1c71ed55ff3d95ef2897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82769a9d_624dd86b",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1278,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-09T16:52:31Z",
+      "side": 1,
+      "message": "Please use something with a length check rather than strcpy() - strcpy() doesn\u0027t have a size argument and can overflow the buffer.\n\nBetter yet, you could just strdup() to avoid the arbitrary size limit since this is a CLI app where we aren\u0027t too worried about runtime allocations.",
+      "revId": "a2247f85cf7cf72fb64a1c71ed55ff3d95ef2897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "379f2e78_e2e8b75c",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1286,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-09T16:52:31Z",
+      "side": 1,
+      "message": "This could use spdk_str_chomp()",
+      "revId": "a2247f85cf7cf72fb64a1c71ed55ff3d95ef2897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f40cde11_d0786079",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1329,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-09T16:52:31Z",
+      "side": 1,
+      "message": "We shouldn\u0027t use strcpy() - this could overrun the buffer.\n\nIt would be simpler to just use strdup() since you\u0027re doing an allocation already.",
+      "revId": "a2247f85cf7cf72fb64a1c71ed55ff3d95ef2897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
