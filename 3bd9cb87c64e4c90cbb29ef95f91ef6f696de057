@@ -60,6 +60,24 @@
     },
     {
       "key": {
+        "uuid": "371d2b5d_975b8fe8",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-09T15:06:35Z",
+      "side": 1,
+      "message": "port_id is a leftover from virtio-net,\nI\u0027ve added unique vdev-\u003eid field in patch https://review.gerrithub.io/c/381311/\nLets add user-provided bdev names in a separate patch.",
+      "parentUuid": "37f22e38_cd0d32e5",
+      "revId": "3bd9cb87c64e4c90cbb29ef95f91ef6f696de057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5cae982_2a8dd3ff",
         "filename": "scripts/rpc.py",
         "patchSetId": 4
