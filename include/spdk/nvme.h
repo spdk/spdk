@@ -955,6 +955,14 @@ bool spdk_nvme_ns_is_active(struct spdk_nvme_ns *ns);
  */
 uint32_t spdk_nvme_ns_get_max_io_xfer_size(struct spdk_nvme_ns *ns);
 
+
+/**
+ * \brief Get the maximum number of sectors per i/o.
+ *
+ *
+ */
+uint32_t spdk_nvme_ns_get_max_sectors_per_io(struct spdk_nvme_ns *ns);
+
 /**
  * \brief Get the sector size, in bytes, of the given namespace.
  *
