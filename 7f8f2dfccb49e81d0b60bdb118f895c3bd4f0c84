@@ -34,6 +34,23 @@
       "revId": "7f8f2dfccb49e81d0b60bdb118f895c3bd4f0c84",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72af4d74_c61d5efd",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T19:47:57Z",
+      "side": 1,
+      "message": "I don\u0027t think NRHUGE is needed anymore for FreeBSD.  So you should be able to just do this before the if statement (same for Linux and FreeBSD):\n\n: ${HUGEMEM:\u003d2048}",
+      "revId": "7f8f2dfccb49e81d0b60bdb118f895c3bd4f0c84",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
