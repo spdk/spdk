@@ -177,6 +177,38 @@ p.add_argument('block_size', help='Block size for this bdev', type=int)
 p.set_defaults(func=construct_malloc_bdev)
 
 
+def create_pmem_pool(args):
+    num_blocks = (args.total_size * 1024 * 1024) / args.block_size
+    params = {'pmem_file': args.pmem_file,
+              'num_blocks': num_blocks,
+              'block_size': args.block_size}
+    jsonrpc_call('create_pmem_pool', params)
+
+p = subparsers.add_parser('create_pmem_pool', help='Create pmem pool')
+p.add_argument('pmem_file', help='Path to pmemblk pool file')
+p.add_argument('total_size', help='Size of malloc bdev in MB (int > 0)', type=int)
+p.add_argument('block_size', help='Block size for this pmem pool', type=int)
+p.set_defaults(func=create_pmem_pool)
+
+
+def pmem_pool_info(args):
+    params = {'pmem_file': args.pmem_file}
+    print_dict(jsonrpc_call('pmem_pool_info', params))
+
+p = subparsers.add_parser('pmem_pool_info', help='Display pmem pool info and check consistency')
+p.add_argument('pmem_file', help='Path to pmemblk pool file')
+p.set_defaults(func=pmem_pool_info)
+
+
+def delete_pmem_pool(args):
+    params = {'pmem_file': args.pmem_file}
+    jsonrpc_call('delete_pmem_pool', params)
+
+p = subparsers.add_parser('delete_pmem_pool', help='Delete pmem pool')
+p.add_argument('pmem_file', help='Path to pmemblk pool file')
+p.set_defaults(func=delete_pmem_pool)
+
+
 def construct_pmem_bdev(args):
     params = {'pmem_file': args.pmem_file}
     print_array(jsonrpc_call('construct_pmem_bdev', params))
