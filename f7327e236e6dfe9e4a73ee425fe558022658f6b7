@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "66fd6230_e57380d3",
+        "filename": "test/pmem/common.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-09T13:35:12Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "4792b228_3cdad37b",
+      "revId": "f7327e236e6dfe9e4a73ee425fe558022658f6b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f94346c6_e56cdb86",
         "filename": "test/pmem/pmem.sh",
         "patchSetId": 27
@@ -30,6 +48,24 @@
       "writtenOn": "2017-10-06T22:23:46Z",
       "side": 1,
       "message": "why do we need to create malloc, aio and nvme bdevs here, and test that they can be deleted?  I don\u0027t see how that is related to pmem",
+      "revId": "f7327e236e6dfe9e4a73ee425fe558022658f6b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33b3c59a_2727076c",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-09T13:35:12Z",
+      "side": 1,
+      "message": "This test was to check if delete_bdev would delete other bdevs, but ok",
+      "parentUuid": "f94346c6_e56cdb86",
       "revId": "f7327e236e6dfe9e4a73ee425fe558022658f6b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
