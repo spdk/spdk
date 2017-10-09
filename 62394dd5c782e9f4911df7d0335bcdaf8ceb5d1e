@@ -16,6 +16,24 @@
       "revId": "62394dd5c782e9f4911df7d0335bcdaf8ceb5d1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74e66e3b_8362f37a",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-09T10:13:09Z",
+      "side": 1,
+      "message": "Daniel, not sure if I understand correctly so I need to ask:\n\" I think it would be best to support 1 GB and 2 MB hugepages at the same time\" - does that mean if I call setup.sh with HUGEMEM\u003d1024 then according toy your description I\u0027d need to reserve 1024MB for both 2MB HP\u0027s AND for 1GB HP\u0027s?\nIf so, then why?",
+      "parentUuid": "dae0116a_76b7f56f",
+      "revId": "62394dd5c782e9f4911df7d0335bcdaf8ceb5d1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
