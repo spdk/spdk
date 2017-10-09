@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "25639cfa_27d6c4ec",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-09T18:59:44Z",
+      "side": 1,
+      "message": "Introducing struct virtio_scsi_ctrlr without multi queue (vq allocation) have little sense here.",
+      "parentUuid": "cf634a56_79dd7db5",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 2
+      },
+      "revId": "40a8eff41a5e6e1b0d7224b7163681d22d958fd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d01c8890_b6841613",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2017-10-09T15:16:42Z",
       "side": 1,
       "message": "i\u0027m not sure what this code is supposed to do. could you explain?",
+      "range": {
+        "startLine": 693,
+        "startChar": 1,
+        "endLine": 701,
+        "endChar": 2
+      },
+      "revId": "40a8eff41a5e6e1b0d7224b7163681d22d958fd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23f25bf2_3ba27cca",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 701,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-09T18:59:44Z",
+      "side": 1,
+      "message": "It is to allow deferred initialization (check bdev_virtio_initialize() and create_virtio_user_scsi_device()). I already wrote you that when vdev will be sutable for up-casting we can remove g_virtio_scsi_ctlrls list.",
+      "parentUuid": "d01c8890_b6841613",
       "range": {
         "startLine": 693,
         "startChar": 1,
