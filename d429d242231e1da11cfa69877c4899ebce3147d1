@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c7613a30_fd3d4e68",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1610,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-09T11:52:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9515c918_fe8217d7",
+      "revId": "d429d242231e1da11cfa69877c4899ebce3147d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a482886_0162a706",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 21
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "8c447965_ff48f0eb",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-09T11:52:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a482886_0162a706",
+      "revId": "d429d242231e1da11cfa69877c4899ebce3147d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4d38c05_e98ab0d0",
         "filename": "lib/blobfs/blobfs.c",
         "patchSetId": 21
@@ -47,6 +83,24 @@
       "writtenOn": "2017-10-06T22:43:52Z",
       "side": 1,
       "message": "This should probably use strncpy() just to be sure the rest of the bstype gets filled with \\0.  spdk_bs_opts_init() will zero it out already, but it\u0027s nice to be explicit here - plus, we should be able to use the full 16 characters (with no null terminator) if we want to.",
+      "revId": "d429d242231e1da11cfa69877c4899ebce3147d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad34769e_5574696a",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-09T11:52:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4d38c05_e98ab0d0",
       "revId": "d429d242231e1da11cfa69877c4899ebce3147d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
