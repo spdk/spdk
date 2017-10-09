@@ -128,13 +128,40 @@ uint16_t spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs
 				      uint16_t reqs_len);
 bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq);
 
-struct vring_desc *spdk_vhost_vq_get_desc(struct rte_vhost_vring *vq, uint16_t req_idx);
-
+/**
+ * Get a virtio descriptor at given index in given virtqueue.
+ * The descriptor will provide access to the entire descriptor
+ * chain. The subsequent descriptors are accesible via
+ * \c spdk_vhost_vring_desc_get_next.
+ * \param vq virtqueue
+ * \param req_idx descriptor index
+ * \param desc pointer to be set to the descriptor
+ * \param desc_table descriptor table to be used with
+ * \c spdk_vhost_vring_desc_get_next. This might be either
+ * default virtqueue descriptor table or per-chain indirect
+ * table.
+ * \param desc_table_size size of the *desc_table*
+ * \return 0 on success, -1 if given index is invalid.
+ * If -1 is returned, the params won't be changed.
+ */
+int spdk_vhost_vq_get_desc(struct rte_vhost_vring *vq, uint16_t req_idx, struct vring_desc **desc,
+			   struct vring_desc **desc_table, uint32_t *desc_table_size);
 void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
 				     uint16_t id, uint32_t len);
-bool spdk_vhost_vring_desc_has_next(struct vring_desc *cur_desc);
-struct vring_desc *spdk_vhost_vring_desc_get_next(struct vring_desc *vq_desc,
-		struct vring_desc *cur_desc);
+
+/**
+ * Get subsequent descriptor from given table.
+ * \param desc current descriptor, will be set to the
+ * next descriptor (NULL in case this is the last
+ * descriptor in the chain or the next desc is invalid)
+ * \param desc_table descriptor table
+ * \param desc_table_size size of the *desc_table*
+ * \return 0 on success, -1 if given index is invalid
+ * The *desc* param will be set regardless of the
+ * return value.
+ */
+int spdk_vhost_vring_desc_get_next(struct vring_desc **desc,
+				   struct vring_desc *desc_table, uint32_t desc_table_size);
 bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
 int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,

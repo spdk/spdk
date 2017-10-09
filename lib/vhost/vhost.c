@@ -114,11 +114,19 @@ spdk_vhost_vq_avail_ring_get(struct rte_vhost_vring *vq, uint16_t *reqs, uint16_
 	return count;
 }
 
-struct vring_desc *
-spdk_vhost_vq_get_desc(struct rte_vhost_vring *vq, uint16_t req_idx)
+int
+spdk_vhost_vq_get_desc(struct rte_vhost_vring *vq, uint16_t req_idx, struct vring_desc **desc,
+		       struct vring_desc **desc_table, uint32_t *desc_table_size)
 {
-	assert(req_idx < vq->size);
-	return &vq->desc[req_idx];
+	if (spdk_unlikely(req_idx >= vq->size)) {
+		return -1;
+	}
+
+	*desc = &vq->desc[req_idx];
+	*desc_table = vq->desc;
+	*desc_table_size = vq->size;
+
+	return 0;
 }
 
 /*
@@ -156,17 +164,26 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct rte_vhost_vr
 	}
 }
 
-bool
-spdk_vhost_vring_desc_has_next(struct vring_desc *cur_desc)
+int
+spdk_vhost_vring_desc_get_next(struct vring_desc **desc,
+			       struct vring_desc *desc_table, uint32_t desc_table_size)
 {
-	return !!(cur_desc->flags & VRING_DESC_F_NEXT);
-}
+	struct vring_desc *old_desc = *desc;
+	uint16_t next_idx;
 
-struct vring_desc *
-spdk_vhost_vring_desc_get_next(struct vring_desc *vq_desc, struct vring_desc *cur_desc)
-{
-	assert(spdk_vhost_vring_desc_has_next(cur_desc));
-	return &vq_desc[cur_desc->next];
+	if ((old_desc->flags & VRING_DESC_F_NEXT) == 0) {
+		*desc = NULL;
+		return 0;
+	}
+
+	next_idx = old_desc->next;
+	if (spdk_unlikely(next_idx >= desc_table_size)) {
+		*desc = NULL;
+		return -1;
+	}
+
+	*desc = &desc_table[next_idx];
+	return 0;
 }
 
 bool
