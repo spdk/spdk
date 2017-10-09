@@ -87,6 +87,24 @@
       "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c04b4cd_4447604e",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T16:44:21Z",
+      "side": 1,
+      "message": "i think this looks good except in spdk_scsi_dev_find_free_port() should it be:\n\nif (!dev-\u003eport[i].is_valid) {\n  return \u0026dev-\u003eport[i];\n}",
+      "parentUuid": "e6ccdf34_e32cc96f",
+      "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
