@@ -41,6 +41,7 @@
 #include <rte_pci.h>
 
 #include "spdk/env.h"
+#include "spdk/json.h"
 #include "virtio_dev.h"
 
 struct virtqueue;
@@ -88,6 +89,8 @@ struct virtio_pci_ops {
 	int (*setup_queue)(struct virtio_dev *hw, struct virtqueue *vq);
 	void (*del_queue)(struct virtio_dev *hw, struct virtqueue *vq);
 	void (*notify_queue)(struct virtio_dev *hw, struct virtqueue *vq);
+
+	void (*dump_json_config)(struct virtio_dev *hw, struct spdk_json_write_ctx *w);
 };
 
 struct virtio_hw {
@@ -163,6 +166,8 @@ uint8_t vtpci_isr(struct virtio_dev *);
 const struct virtio_pci_ops *vtpci_ops(struct virtio_dev *dev);
 
 void vtpci_deinit(uint32_t id);
+
+void vtpci_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w);
 
 extern const struct virtio_pci_ops virtio_user_ops;
 
