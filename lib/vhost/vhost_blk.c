@@ -125,9 +125,16 @@ static int
 blk_iovs_setup(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t req_idx,
 	       struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
 {
-	struct vring_desc *desc = spdk_vhost_vq_get_desc(vq, req_idx);
+	struct vring_desc *desc, *desc_table;
 	uint16_t out_cnt = 0, cnt = 0;
-	uint32_t len = 0;
+	uint32_t desc_table_size, len = 0;
+	int rc;
+
+	rc = spdk_vhost_vq_get_desc(vq, req_idx, &desc, &desc_table, &desc_table_size);
+	if (rc != 0) {
+		SPDK_ERRLOG("%s: Invalid descriptor at index %"PRIu16".\n", vdev->name, req_idx);
+		return -1;
+	}
 
 	while (1) {
 		/*
@@ -150,9 +157,12 @@ blk_iovs_setup(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t
 
 		out_cnt += spdk_vhost_vring_desc_is_wr(desc);
 
-		if (spdk_vhost_vring_desc_has_next(desc)) {
-			desc = spdk_vhost_vring_desc_get_next(vq->desc, desc);
-		} else {
+		rc = spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_size);
+		if (rc != 0) {
+			SPDK_ERRLOG("%s: Descriptor chain at index %"PRIu16" terminated unexpectedly.\n",
+				    vdev->name, req_idx);
+			return -1;
+		} else if (desc == NULL) {
 			break;
 		}
 	}
