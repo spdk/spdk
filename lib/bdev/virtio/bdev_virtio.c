@@ -664,6 +664,7 @@ out:
 
 static void bdev_virtio_finish(void)
 {
+	spdk_bdev_module_finish_done();
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio", SPDK_TRACE_VIRTIO)
