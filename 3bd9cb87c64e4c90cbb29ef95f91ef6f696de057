@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "37f22e38_cd0d32e5",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-09T07:25:43Z",
+      "side": 1,
+      "message": "Sure I can custom names.\n\nBy design it should be unique for controller. Currently port_id is not unique. It is a bug. I\u0027m addressing this issue here https://review.gerrithub.io/#/c/381553/4/lib/bdev/virtio/rte_virtio/virtio_dev.c",
+      "parentUuid": "6c9191e9_756233ac",
+      "revId": "3bd9cb87c64e4c90cbb29ef95f91ef6f696de057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5cae982_2a8dd3ff",
         "filename": "scripts/rpc.py",
         "patchSetId": 4
