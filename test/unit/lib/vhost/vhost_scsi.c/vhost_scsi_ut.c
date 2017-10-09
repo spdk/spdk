@@ -59,8 +59,8 @@ DEFINE_STUB_P(spdk_scsi_lun_get_name, const char, (const struct spdk_scsi_lun *l
 DEFINE_STUB(spdk_scsi_lun_get_id, int, (const struct spdk_scsi_lun *lun), 0);
 DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct rte_vhost_vring *vq, uint16_t *reqs,
 		uint16_t reqs_len), 0);
-DEFINE_STUB_P(spdk_vhost_vq_get_desc, struct vring_desc, (struct rte_vhost_vring *vq,
-		uint16_t req_idx), {0});
+DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct rte_vhost_vring *vq, uint16_t req_idx,
+		struct vring_desc **desc, struct vring_desc **desc_table, uint32_t *desc_table_size), 0);
 DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, uint64_t addr), {0});
 DEFINE_STUB_V(spdk_vhost_vq_used_ring_enqueue, (struct spdk_vhost_dev *vdev,
 		struct rte_vhost_vring *vq, uint16_t id, uint32_t len));
@@ -75,8 +75,8 @@ DEFINE_STUB_P(spdk_scsi_dev_find_port_by_id, struct spdk_scsi_port, (struct spdk
 DEFINE_STUB_V(spdk_scsi_task_construct, (struct spdk_scsi_task *task, spdk_scsi_task_cpl cpl_fn,
 		spdk_scsi_task_free free_fn, struct spdk_scsi_task *parent));
 DEFINE_STUB(spdk_vhost_vring_desc_has_next, bool, (struct vring_desc *cur_desc), false);
-DEFINE_STUB_P(spdk_vhost_vring_desc_get_next, struct vring_desc, (struct vring_desc *vq_desc,
-		struct vring_desc *cur_desc), {0});
+DEFINE_STUB(spdk_vhost_vring_desc_get_next, int, (struct vring_desc **desc,
+		struct vring_desc *desc_table, uint32_t desc_table_size), 0);
 DEFINE_STUB_P(spdk_scsi_dev_get_lun, struct spdk_scsi_lun, (struct spdk_scsi_dev *dev, int lun_id), {0});
 DEFINE_STUB(spdk_vhost_vring_desc_is_wr, bool, (struct vring_desc *cur_desc), false);
 DEFINE_STUB(spdk_vhost_vring_desc_to_iov, int, (struct spdk_vhost_dev *vdev, struct iovec *iov,
