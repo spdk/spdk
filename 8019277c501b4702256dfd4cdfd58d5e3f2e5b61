@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2f24149_8a4e368b",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-09T17:56:52Z",
+      "side": 1,
+      "message": "This desc-\u003elen check is done just above - can it be removed from one of these \u0027if\u0027 statements?",
+      "range": {
+        "startLine": 201,
+        "startChar": 5,
+        "endLine": 201,
+        "endChar": 33
+      },
+      "revId": "8019277c501b4702256dfd4cdfd58d5e3f2e5b61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
