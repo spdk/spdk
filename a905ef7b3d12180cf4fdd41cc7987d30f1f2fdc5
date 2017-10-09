@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "91135ae1_29ae2f76",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2017-10-09T09:44:01Z",
+      "side": 1,
+      "message": "This is done only when Nightly is set to 1. I think it is worth testing nvme 512 and 4096, because I noticed that sometimes test results may vary( pass or fail) when we use different block size.",
+      "parentUuid": "29912f11_729327e8",
+      "revId": "a905ef7b3d12180cf4fdd41cc7987d30f1f2fdc5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "25c75dc1_62bd2ae3",
         "filename": "test/vhost/initiator/blockdev.sh",
         "patchSetId": 22
