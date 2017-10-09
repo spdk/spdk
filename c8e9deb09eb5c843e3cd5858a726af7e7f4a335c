@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b2c31f5_5fdf0318",
+        "filename": "doc/virtio.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-09T18:43:54Z",
+      "side": 1,
+      "message": "Those are features that will be implemented up to the release. As you already stated in patch comment that we are awaiting for those features to be merged those limitations can be removed from this doc.",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 16
+      },
+      "revId": "c8e9deb09eb5c843e3cd5858a726af7e7f4a335c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
