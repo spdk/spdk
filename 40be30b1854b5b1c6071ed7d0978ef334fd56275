@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3297b1ce_2f7251ca",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-09T17:47:32Z",
+      "side": 1,
+      "message": "This needs to be updated to the new name.",
+      "revId": "40be30b1854b5b1c6071ed7d0978ef334fd56275",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
