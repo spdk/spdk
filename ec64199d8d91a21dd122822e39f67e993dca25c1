@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4d25bb92_022ce1df",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2017-10-09T09:44:01Z",
+      "side": 1,
+      "message": "Ok, will use different block size for malloc and block size for nvme that already exists.",
+      "parentUuid": "b5a8729d_b6736a28",
+      "revId": "ec64199d8d91a21dd122822e39f67e993dca25c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "099ec53c_31fedf1b",
         "filename": "test/vhost/initiator/blockdev.sh",
         "patchSetId": 25
@@ -30,6 +48,24 @@
       "writtenOn": "2017-10-06T21:32:06Z",
       "side": 1,
       "message": "Rather than adding a whole new test that calls bdevio, can we extend test/lib/bdev/blockdev.sh so that it can set up a vhost target and initiator bdevs?  This will help to avoid duplicating test code when we already have common test infrastructure for bdev modules.\n\nWe should also be able to just add multiple malloc bdevs with different block sizes at the same time and run the tests just once, rather than running all tests multiple times for each block size.",
+      "revId": "ec64199d8d91a21dd122822e39f67e993dca25c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13cdd3cc_3ccc16f0",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2017-10-09T09:44:01Z",
+      "side": 1,
+      "message": "I think, it will be difficult to find common code for Darek\u0027s and my code. Please, notice that in near future I will include more test for vhost initiator (for guest, multiqueue, multisocket, nmap, disc size +4G), and finally code will be much different.\n\nI guess that I cannot test many devices at the same time. So far only one socket for initiator is supported. So I have to run tests separatelly.",
+      "parentUuid": "099ec53c_31fedf1b",
       "revId": "ec64199d8d91a21dd122822e39f67e993dca25c1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
