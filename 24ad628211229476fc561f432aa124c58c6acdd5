@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc3d0e36_43cdb60b",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-10-09T19:07:02Z",
+      "side": 1,
+      "message": "Spell out \"initiator\" to make the error easier to understand.",
+      "range": {
+        "startLine": 53,
+        "startChar": 25,
+        "endLine": 53,
+        "endChar": 29
+      },
+      "revId": "24ad628211229476fc561f432aa124c58c6acdd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4eb03c4d_0d5b7b26",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-10-09T19:07:02Z",
+      "side": 1,
+      "message": "Adding tag\u003d%d will make it easy to understand what that number is at the end of the error.",
+      "range": {
+        "startLine": 59,
+        "startChar": 44,
+        "endLine": 59,
+        "endChar": 48
+      },
+      "revId": "24ad628211229476fc561f432aa124c58c6acdd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
