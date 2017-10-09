@@ -41,6 +41,7 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/json.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
@@ -282,11 +283,21 @@ bdev_virtio_destruct(void *ctx)
 	return 0;
 }
 
+static int
+bdev_virtio_dump_json_config(void *ctx, struct spdk_json_write_ctx *w)
+{
+	struct virtio_scsi_disk *disk = ctx;
+
+	vtpci_dump_json_config(disk->vdev, w);
+	return 0;
+}
+
 static const struct spdk_bdev_fn_table virtio_fn_table = {
 	.destruct		= bdev_virtio_destruct,
 	.submit_request		= bdev_virtio_submit_request,
 	.io_type_supported	= bdev_virtio_io_type_supported,
 	.get_io_channel		= bdev_virtio_get_io_channel,
+	.dump_config_json	= bdev_virtio_dump_json_config,
 };
 
 static void
