@@ -34,6 +34,24 @@
       "revId": "62394dd5c782e9f4911df7d0335bcdaf8ceb5d1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb163651_c10c2c5d",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-09T18:13:02Z",
+      "side": 1,
+      "message": "No, what I would prefer here is that if HUGEMEM\u003d1024 and a 1 GB hugepage is available, we would just reserve 1024 MB via one 1 GB page, and no 2 MB pages would be configured.  It gets more complicated if the user asks for e.g. 1.5 GB and we have both 1 GB and 2 MB pages available - we\u0027d probably want to allocate 1x1 GB page and 256x2 MB pages.",
+      "parentUuid": "74e66e3b_8362f37a",
+      "revId": "62394dd5c782e9f4911df7d0335bcdaf8ceb5d1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
