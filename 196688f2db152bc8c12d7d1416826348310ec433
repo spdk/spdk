@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f9ebdeaf_6831b126",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-09T19:43:42Z",
+      "side": 1,
+      "message": "see previous review - would be good to have a comment here explaining why we only do this when shm_id \u003c 0",
+      "revId": "196688f2db152bc8c12d7d1416826348310ec433",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
