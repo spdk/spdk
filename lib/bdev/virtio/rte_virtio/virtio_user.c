@@ -246,6 +246,18 @@ virtio_user_free(struct virtio_dev *vdev)
 	virtio_user_dev_uninit(dev);
 }
 
+static void
+virtio_user_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write_ctx *w)
+{
+	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+
+	spdk_json_write_name(w, "type");
+	spdk_json_write_string(w, "user");
+
+	spdk_json_write_name(w, "socket");
+	spdk_json_write_string(w, dev->path);
+}
+
 const struct virtio_pci_ops virtio_user_ops = {
 	.read_dev_cfg	= virtio_user_read_dev_config,
 	.write_dev_cfg	= virtio_user_write_dev_config,
@@ -261,4 +273,5 @@ const struct virtio_pci_ops virtio_user_ops = {
 	.setup_queue	= virtio_user_setup_queue,
 	.del_queue	= virtio_user_del_queue,
 	.notify_queue	= virtio_user_notify_queue,
+	.dump_json_config = virtio_user_dump_json_config,
 };
