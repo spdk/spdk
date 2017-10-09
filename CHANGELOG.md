@@ -49,6 +49,9 @@ as well as in the NVMe-oF Connect command.  The default host ID is also now a
 randomly-generated UUID, and the default host NQN uses the host ID to generate
 a UUID-based NQN.
 
+New API function spdk_nvme_ns_get_max_sectors_per_io() reports the maximum number of
+sectors that can be handled in a single NVMe read or write command.
+
 ### NVMe-oF Target (nvmf_tgt)
 
 The NVMe-oF target no longer requires any in capsule data buffers to run, and
