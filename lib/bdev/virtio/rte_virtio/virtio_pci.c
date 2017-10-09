@@ -245,6 +245,20 @@ legacy_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
 		VIRTIO_PCI_QUEUE_NOTIFY);
 }
 
+static void
+legacy_dump_json_config(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
+{
+	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr((struct spdk_pci_device *)vtpci_io(dev)->dev);
+	char addr[32];
+
+	spdk_json_write_name(w, "type");
+	spdk_json_write_string(w, "pci-legacy");
+
+	spdk_json_write_name(w, "pci_address");
+	spdk_pci_addr_fmt(addr, sizeof(addr), &pci_addr);
+	spdk_json_write_string(w, addr);
+}
+
 const struct virtio_pci_ops legacy_ops = {
 	.read_dev_cfg	= legacy_read_dev_config,
 	.write_dev_cfg	= legacy_write_dev_config,
@@ -260,6 +274,7 @@ const struct virtio_pci_ops legacy_ops = {
 	.setup_queue	= legacy_setup_queue,
 	.del_queue	= legacy_del_queue,
 	.notify_queue	= legacy_notify_queue,
+	.dump_json_config = legacy_dump_json_config,
 };
 
 static inline void
@@ -456,6 +471,21 @@ modern_notify_queue(struct virtio_dev *dev __rte_unused, struct virtqueue *vq)
 	rte_write16(vq->vq_queue_index, vq->notify_addr);
 }
 
+static void
+modern_dump_json_config(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
+{
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr(hw->pci_dev);
+	char addr[32];
+
+	spdk_json_write_name(w, "type");
+	spdk_json_write_string(w, "modern");
+
+	spdk_json_write_name(w, "pci_address");
+	spdk_pci_addr_fmt(addr, sizeof(addr), &pci_addr);
+	spdk_json_write_string(w, addr);
+}
+
 const struct virtio_pci_ops modern_ops = {
 	.read_dev_cfg	= modern_read_dev_config,
 	.write_dev_cfg	= modern_write_dev_config,
@@ -471,6 +501,7 @@ const struct virtio_pci_ops modern_ops = {
 	.setup_queue	= modern_setup_queue,
 	.del_queue	= modern_del_queue,
 	.notify_queue	= modern_notify_queue,
+	.dump_json_config = modern_dump_json_config,
 };
 
 
@@ -752,4 +783,21 @@ void
 vtpci_deinit(uint32_t id)
 {
 	g_virtio_driver.internal[id].vtpci_ops = NULL;
+}
+
+void
+vtpci_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_name(w, "virtio");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_string(w, "vq_count");
+	spdk_json_write_uint32(w, hw->max_queues);
+
+	spdk_json_write_string(w, "vq_size");
+	spdk_json_write_uint32(w, vtpci_ops(hw)->get_queue_num(hw, 0));
+
+	vtpci_ops(hw)->dump_json_config(hw, w);
+
+	spdk_json_write_object_end(w);
 }
