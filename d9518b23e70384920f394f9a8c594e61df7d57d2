@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "78c63534_d03679af",
+        "filename": "test/nvmf/pmem/nvmf_pmem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-10-09T14:14:08Z",
+      "side": 1,
+      "message": "a",
+      "range": {
+        "startLine": 69,
+        "startChar": 28,
+        "endLine": 69,
+        "endChar": 34
+      },
+      "revId": "d9518b23e70384920f394f9a8c594e61df7d57d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
