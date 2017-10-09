@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "69b8044a_6b0266c0",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-09T15:29:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "83c2d3b5_d23c1d9e",
+      "revId": "f0cf8d11cef11b39fadc35cdf6d0068df2f02c77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "674067d3_6abf5994",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "5f5dbe3e_4de31ca4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-09T15:29:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "674067d3_6abf5994",
+      "revId": "f0cf8d11cef11b39fadc35cdf6d0068df2f02c77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d13a782f_45fb23e6",
         "filename": "lib/event/app.c",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2017-10-06T19:13:08Z",
       "side": 1,
       "message": "I think we should hide some of these details in the subsystem code.  For example, pass it the app_finish_event and let it allocate and call this event and then execute the event parameter after subsystem fini is complete",
+      "revId": "f0cf8d11cef11b39fadc35cdf6d0068df2f02c77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30010f0d_f2ca3ef9",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-09T15:29:01Z",
+      "side": 1,
+      "message": "WIP",
+      "parentUuid": "d13a782f_45fb23e6",
       "revId": "f0cf8d11cef11b39fadc35cdf6d0068df2f02c77",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
