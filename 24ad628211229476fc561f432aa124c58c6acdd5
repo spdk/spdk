@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "21e09601_0ac5439d",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-10-10T01:21:24Z",
+      "side": 1,
+      "message": "\"Initiator group tag\" is correct term and my abbreviation may cause any misunderstanding. Thank you and I will fix this.",
+      "parentUuid": "dc3d0e36_43cdb60b",
+      "range": {
+        "startLine": 53,
+        "startChar": 25,
+        "endLine": 53,
+        "endChar": 29
+      },
+      "revId": "24ad628211229476fc561f432aa124c58c6acdd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4eb03c4d_0d5b7b26",
         "filename": "lib/iscsi/init_grp.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2017-10-09T19:07:02Z",
       "side": 1,
       "message": "Adding tag\u003d%d will make it easy to understand what that number is at the end of the error.",
+      "range": {
+        "startLine": 59,
+        "startChar": 44,
+        "endLine": 59,
+        "endChar": 48
+      },
+      "revId": "24ad628211229476fc561f432aa124c58c6acdd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec567217_b1af4d63",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-10-10T01:21:24Z",
+      "side": 1,
+      "message": "Thank you. I will add \"tag\u003d\" and change to the following.\n\nSPDK_ERRLOG(\"initiator group malloc error (tag\u003d%d)\\n\", tag)",
+      "parentUuid": "4eb03c4d_0d5b7b26",
       "range": {
         "startLine": 59,
         "startChar": 44,
