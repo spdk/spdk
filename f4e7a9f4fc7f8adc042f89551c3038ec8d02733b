@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82986567_5a1108ba",
+        "filename": "test/nvmf/pmem/nvmf_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-10T11:48:32Z",
+      "side": 1,
+      "message": "I tried to run the test with 10*10 Namespaces, but it failed- see previous test results on machine fedora-03 (NVMf connection drops and I/O errors)\n\nOther than that - VM fedora-06 started failing for other reason - cannot allocate memory to /dev/nvme-fabrics",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 17
+      },
+      "revId": "f4e7a9f4fc7f8adc042f89551c3038ec8d02733b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
