@@ -124,9 +124,15 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		void *cb_arg)
 {
 	struct spdk_lvol_store_req *req = cb_arg;
-	free(req);
-	free(lvs);
+
 	g_lvol_store = NULL;
+	free(lvs);
+
+	if (g_lvol == NULL)
+		g_bs_dev->destroy(g_bs_dev);
+
+	if (cb_fn != NULL)
+		cb_fn(req, 0);
 
 	return 0;
 }
@@ -505,6 +511,7 @@ ut_lvs_init(void)
 	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(g_bs_dev == NULL);
 	free(g_bs_dev);
 
 }
