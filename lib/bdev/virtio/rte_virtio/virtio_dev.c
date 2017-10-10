@@ -167,6 +167,9 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	vq->mz = mz;
 
+	vq->owner_lcore = SPDK_ENV_LCORE_ID_ANY;
+	vq->poller = NULL;
+
 	if (vtpci_ops(dev)->setup_queue(dev, vq) < 0) {
 		PMD_INIT_LOG(ERR, "setup_queue failed");
 		return -EINVAL;
@@ -331,4 +334,25 @@ virtio_dev_start(struct virtio_dev *vdev)
 	vdev->started = 1;
 
 	return 0;
+}
+
+struct virtqueue *
+get_next_unused_queue(struct virtio_dev *dev, uint16_t start_index)
+{
+	struct virtqueue *vq = NULL;
+	uint16_t i;
+
+	for (i = start_index; i < dev->max_queues; ++i) {
+		vq = dev->vqs[i];
+		if (vq != NULL && vq->owner_lcore == SPDK_ENV_LCORE_ID_ANY) {
+			break;
+		}
+	}
+
+	if (vq == NULL || i == dev->max_queues) {
+		PMD_DRV_LOG(ERR, "no more unused request queues\n");
+		return NULL;
+	}
+
+	return vq;
 }
