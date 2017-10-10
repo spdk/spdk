@@ -237,7 +237,10 @@ _spdk_lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
 
 	if (lvol->lvol_store->destruct_req && TAILQ_EMPTY(&lvol->lvol_store->lvols)) {
-		spdk_lvs_unload(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
+		if (lvol->lvol_store->uninit)
+			spdk_lvs_uninit(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
+		else
+			spdk_lvs_unload(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
 	}
 
 	free(lvol->name);
