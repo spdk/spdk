@@ -1471,6 +1471,52 @@ _spdk_bs_set_mask(struct spdk_bit_array *array, struct spdk_bs_md_mask *mask)
 }
 
 static void
+_spdk_bs_write_super(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
+		     struct spdk_bs_super_block *super, spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+{
+	/* Update the values in the super block */
+	super->super_blob = bs->super_blob;
+	super->crc = _spdk_blob_md_page_calc_crc(super);
+	spdk_bs_sequence_write(seq, super, _spdk_bs_page_to_lba(bs, 0),
+			       _spdk_bs_byte_to_lba(bs, sizeof(*super)),
+			       cb_fn, cb_arg);
+}
+
+static void
+_spdk_bs_write_used_clusters(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
+			     struct spdk_bs_super_block *super, struct spdk_bs_md_mask *mask, spdk_bs_sequence_cpl cb_fn,
+			     void *cb_arg)
+{
+	uint64_t			lba, lba_count;
+
+	mask->type = SPDK_MD_MASK_TYPE_USED_CLUSTERS;
+	mask->length = bs->total_clusters;
+	assert(mask->length == spdk_bit_array_capacity(bs->used_clusters));
+
+	_spdk_bs_set_mask(bs->used_clusters, mask);
+	lba = _spdk_bs_page_to_lba(bs, super->used_cluster_mask_start);
+	lba_count = _spdk_bs_page_to_lba(bs, super->used_cluster_mask_len);
+	spdk_bs_sequence_write(seq, mask, lba, lba_count, cb_fn, cb_arg);
+}
+
+static void
+_spdk_bs_write_used_md(spdk_bs_sequence_t *seq, struct spdk_blob_store *bs,
+		       struct spdk_bs_super_block *super, struct spdk_bs_md_mask *mask, spdk_bs_sequence_cpl cb_fn,
+		       void *cb_arg)
+{
+	uint64_t			lba, lba_count;
+
+	mask->type = SPDK_MD_MASK_TYPE_USED_PAGES;
+	mask->length = super->md_len;
+	assert(mask->length == spdk_bit_array_capacity(bs->used_md_pages));
+
+	_spdk_bs_set_mask(bs->used_md_pages, mask);
+	lba = _spdk_bs_page_to_lba(bs, super->used_page_mask_start);
+	lba_count = _spdk_bs_page_to_lba(bs, super->used_page_mask_len);
+	spdk_bs_sequence_write(seq, mask, lba, lba_count, cb_fn, cb_arg);
+}
+
+static void
 _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
@@ -1645,10 +1691,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 
 	ctx->super->clean = 0;
-	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
-	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
-			       _spdk_bs_byte_to_lba(ctx->bs, sizeof(*ctx->super)),
-			       _spdk_bs_load_write_super_cpl, ctx);
+	_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_load_write_super_cpl, ctx);
 }
 
 void
@@ -1929,21 +1972,16 @@ _spdk_bs_unload_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, i
 	struct spdk_bs_unload_ctx	*ctx = cb_arg;
 
 	spdk_dma_free(ctx->mask);
-
-	/* Update the values in the super block */
-	ctx->super->super_blob = ctx->bs->super_blob;
 	ctx->super->clean = 1;
-	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
-	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(ctx->bs, 0),
-			       _spdk_bs_byte_to_lba(ctx->bs, sizeof(*ctx->super)),
-			       _spdk_bs_unload_write_super_cpl, ctx);
+
+	_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_unload_write_super_cpl, ctx);
 }
 
 static void
 _spdk_bs_unload_write_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_unload_ctx	*ctx = cb_arg;
-	uint64_t			lba, lba_count, mask_size;
+	uint64_t	mask_size;
 
 	spdk_dma_free(ctx->mask);
 
@@ -1957,22 +1995,15 @@ _spdk_bs_unload_write_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int 
 		return;
 	}
 
-	ctx->mask->type = SPDK_MD_MASK_TYPE_USED_CLUSTERS;
-	ctx->mask->length = ctx->bs->total_clusters;
-	assert(ctx->mask->length == spdk_bit_array_capacity(ctx->bs->used_clusters));
-
-	_spdk_bs_set_mask(ctx->bs->used_clusters, ctx->mask);
-	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_start);
-	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_len);
-	spdk_bs_sequence_write(seq, ctx->mask, lba, lba_count,
-			       _spdk_bs_unload_write_used_clusters_cpl, ctx);
+	_spdk_bs_write_used_clusters(seq, ctx->bs, ctx->super, ctx->mask,
+				     _spdk_bs_unload_write_used_clusters_cpl, ctx);
 }
 
 static void
 _spdk_bs_unload_read_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_unload_ctx	*ctx = cb_arg;
-	uint64_t			lba, lba_count, mask_size;
+	uint64_t	mask_size;
 
 	/* Write out the used page mask */
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
@@ -1984,15 +2015,8 @@ _spdk_bs_unload_read_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrn
 		return;
 	}
 
-	ctx->mask->type = SPDK_MD_MASK_TYPE_USED_PAGES;
-	ctx->mask->length = ctx->super->md_len;
-	assert(ctx->mask->length == spdk_bit_array_capacity(ctx->bs->used_md_pages));
-
-	_spdk_bs_set_mask(ctx->bs->used_md_pages, ctx->mask);
-	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_page_mask_start);
-	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_page_mask_len);
-	spdk_bs_sequence_write(seq, ctx->mask, lba, lba_count,
-			       _spdk_bs_unload_write_used_pages_cpl, ctx);
+	_spdk_bs_write_used_md(seq, ctx->bs, ctx->super, ctx->mask, _spdk_bs_unload_write_used_pages_cpl,
+			       ctx);
 }
 
 void
