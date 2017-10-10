@@ -181,7 +181,6 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_
 	int rc;
 
 	assert(scsi_dev_num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
-
 	vq = &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ];
 
 	if (spdk_vhost_vq_avail_ring_get(vq, &req, 1) != 1) {
@@ -198,10 +197,9 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_
 	}
 
 	desc_ev = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr);
-	if (desc->len < sizeof(*desc_ev) || desc_ev == NULL) {
-		SPDK_ERRLOG("Controller %s: Invalid eventq descriptor at index %"PRIu16".\n",
-			    svdev->vdev.name, req);
-		req_size = 0;
+	if (desc_ev == NULL) {
+		SPDK_ERRLOG("Controller %s: Eventq descriptor at index %"PRIu16" has invalid address %p.\n",
+			    svdev->vdev.name, req, (void *)(uintptr_t)desc->addr);
 		goto out;
 	}
 
@@ -411,9 +409,9 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 	rc = spdk_vhost_vq_get_desc(vdev, task->vq, task->req_idx, &desc, &desc_table, &desc_table_len);
 	/* First descriptor must be readable */
 	if (rc != 0 || spdk_unlikely(spdk_vhost_vring_desc_is_wr(desc))) {
-		SPDK_WARNLOG("Invalid first (request) descriptor.\n");
-		task->resp = NULL;
-		goto abort_task;
+		SPDK_WARNLOG("%s: invalid first (request) descriptor at index %"PRIu16".\n",
+			     vdev->name, task->req_idx);
+		goto invalid_task;
 	}
 
 	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
@@ -423,8 +421,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 	if (desc == NULL) {
 		SPDK_WARNLOG("%s: Descriptor chain at index %d contains neither payload nor response buffer.\n",
 			     vdev->name, task->req_idx);
-		task->resp = NULL;
-		goto abort_task;
+		goto invalid_task;
 	}
 	task->scsi.dxfer_dir = spdk_vhost_vring_desc_is_wr(desc) ? SPDK_SCSI_DIR_FROM_DEV :
 			       SPDK_SCSI_DIR_TO_DEV;
@@ -440,8 +437,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		if (spdk_unlikely(rc != 0)) {
 			SPDK_WARNLOG("%s: invalid descriptor chain at request index %d (descriptor id overflow?).\n",
 				     vdev->name, task->req_idx);
-			task->resp = NULL;
-			goto abort_task;
+			goto invalid_task;
 		}
 
 		if (desc == NULL) {
@@ -462,13 +458,11 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		while (desc && iovcnt < iovcnt_max) {
 			if (spdk_unlikely(!spdk_vhost_vring_desc_is_wr(desc))) {
 				SPDK_WARNLOG("FROM DEV cmd: descriptor nr %" PRIu16" in payload chain is read only.\n", iovcnt);
-				task->resp = NULL;
-				goto abort_task;
+				goto invalid_task;
 			}
 
 			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &iovcnt, desc))) {
-				task->resp = NULL;
-				goto abort_task;
+				goto invalid_task;
 			}
 			len += desc->len;
 
@@ -476,8 +470,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			if (spdk_unlikely(rc != 0)) {
 				SPDK_WARNLOG("%s: invalid payload in descriptor chain starting at index %d.\n",
 					     vdev->name, task->req_idx);
-				task->resp = NULL;
-				goto abort_task;
+				goto invalid_task;
 			}
 		}
 	} else {
@@ -490,16 +483,14 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		/* Process descriptors up to response. */
 		while (!spdk_vhost_vring_desc_is_wr(desc) && iovcnt < iovcnt_max) {
 			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &iovcnt, desc))) {
-				task->resp = NULL;
-				goto abort_task;
+				goto invalid_task;
 			}
 			len += desc->len;
 
 			spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_len);
 			if (spdk_unlikely(desc == NULL)) {
 				SPDK_WARNLOG("TO_DEV cmd: no response descriptor.\n");
-				task->resp = NULL;
-				goto abort_task;
+				goto invalid_task;
 			}
 		}
 
@@ -508,7 +499,8 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 
 	if (iovcnt == iovcnt_max) {
 		SPDK_WARNLOG("Too many IO vectors in chain!\n");
-		goto abort_task;
+		task->resp->response = VIRTIO_SCSI_S_ABORTED;
+		goto invalid_task;
 	}
 
 	task->scsi.iovcnt = iovcnt;
@@ -516,11 +508,9 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 	task->scsi.transfer_len = len;
 	return 0;
 
-abort_task:
-	if (task->resp) {
-		task->resp->response = VIRTIO_SCSI_S_ABORTED;
-	}
-
+invalid_task:
+	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI_DATA, "%s: Invalid task at index %"PRIu16".\n",
+		      vdev->name, task->req_idx);
 	return -1;
 }
 
