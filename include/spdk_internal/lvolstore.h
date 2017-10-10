@@ -75,6 +75,7 @@ struct spdk_lvol_store {
 	uuid_t				uuid;
 	struct spdk_lvs_req		*destruct_req;
 	uint64_t			total_blocks;
+	int				lvols_number;
 	TAILQ_HEAD(, spdk_lvol)		lvols;
 };
 
