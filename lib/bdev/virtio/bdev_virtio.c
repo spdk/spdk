@@ -70,7 +70,6 @@ struct virtio_scsi_io_ctx {
 
 struct virtio_scsi_scan_base {
 	struct virtio_dev		*vdev;
-	struct spdk_bdev_poller		*scan_poller;
 
 	/* Currently queried target */
 	unsigned			target;
@@ -94,7 +93,9 @@ struct virtio_scsi_disk {
 
 struct bdev_virtio_io_channel {
 	struct virtio_dev	*vdev;
-	struct spdk_bdev_poller	*poller;
+
+	/* Virtqueue exclusively assigned to this channel. */
+	struct virtqueue	*vq;
 };
 
 static void scan_target(struct virtio_scsi_scan_base *base);
@@ -144,6 +145,7 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	struct virtio_scsi_disk *disk = SPDK_CONTAINEROF(bdev_io->bdev, struct virtio_scsi_disk, bdev);
 	struct virtio_req *vreq = bdev_virtio_init_io_vreq(ch, bdev_io);
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct bdev_virtio_io_channel *virtio_channel = spdk_io_channel_get_ctx(ch);
 
 	vreq->iov = bdev_io->u.bdev.iovs;
 	vreq->iovcnt = bdev_io->u.bdev.iovcnt;
@@ -158,15 +160,15 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		to_be16(&req->cdb[7], bdev_io->u.bdev.num_blocks);
 	}
 
-	virtio_xmit_pkts(disk->vdev->vqs[2], vreq);
+	virtio_xmit_pkts(virtio_channel->vq, vreq);
 }
 
 static void
 bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct virtio_scsi_disk *disk = SPDK_CONTAINEROF(bdev_io->bdev, struct virtio_scsi_disk, bdev);
 	struct virtio_req *vreq = bdev_virtio_init_io_vreq(ch, bdev_io);
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct bdev_virtio_io_channel *virtio_channel = spdk_io_channel_get_ctx(ch);
 	struct spdk_scsi_unmap_bdesc *desc, *first_desc;
 	uint8_t *buf;
 	uint64_t offset_blocks, num_blocks;
@@ -206,7 +208,7 @@ bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	to_be16(&buf[2], cmd_len - 8); /* length of block descriptors */
 	memset(&buf[4], 0, 4); /* reserved */
 
-	virtio_xmit_pkts(disk->vdev->vqs[2], vreq);
+	virtio_xmit_pkts(virtio_channel->vq, vreq);
 }
 
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -337,15 +339,51 @@ bdev_virtio_poll(void *arg)
 	}
 }
 
+static struct virtqueue *
+get_next_unused_requestq(struct virtio_dev *dev)
+{
+	struct virtqueue *vq;
+	int i;
+
+	for (i = 2; i < dev->max_queues; ++i) {
+		vq = dev->vqs[i];
+		if (vq != NULL && vq->owner_lcore == SPDK_ENV_LCORE_ID_ANY) {
+			break;
+		}
+	}
+
+	if (i == dev->max_queues) {
+		SPDK_ERRLOG("no more unused request queues\n");
+		return NULL;
+	}
+
+	return vq;
+}
+
 static int
 bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 {
-	struct virtio_dev **vdev = io_device;
+	struct virtio_dev **vdev_ptr = io_device;
+	struct virtio_dev *vdev = *vdev_ptr;
 	struct bdev_virtio_io_channel *ch = ctx_buf;
+	struct virtqueue *vq;
 
-	ch->vdev = *vdev;
-	spdk_bdev_poller_start(&ch->poller, bdev_virtio_poll, ch,
-			       spdk_env_get_current_core(), 0);
+	pthread_mutex_lock(&vdev->mutex);
+	vq = get_next_unused_requestq(vdev);
+	if (vq == NULL) {
+		SPDK_ERRLOG("Couldn't get an unused queue for io_channel.\n");
+		pthread_mutex_unlock(&vdev->mutex);
+		return -1;
+	}
+
+	ch->vdev = vdev;
+	ch->vq = vq;
+
+	vq->owner_lcore = spdk_env_get_current_core();
+	spdk_bdev_poller_start(&vq->poller, bdev_virtio_poll, ch,
+			       vq->owner_lcore, 0);
+
+	pthread_mutex_unlock(&vdev->mutex);
 	return 0;
 }
 
@@ -353,14 +391,20 @@ static void
 bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_virtio_io_channel *io_channel = ctx_buf;
+	struct virtio_dev *vdev = io_channel->vdev;
+	struct virtqueue *vq = io_channel->vq;
 
-	spdk_bdev_poller_stop(&io_channel->poller);
+	pthread_mutex_lock(&vdev->mutex);
+	spdk_bdev_poller_stop(&vq->poller);
+	vq->owner_lcore = SPDK_ENV_LCORE_ID_ANY;
+	pthread_mutex_unlock(&vdev->mutex);
 }
 
 static void
 scan_target_finish(struct virtio_scsi_scan_base *base)
 {
 	struct virtio_scsi_disk *disk;
+	struct virtqueue *vq;
 
 	base->target++;
 	if (base->target < BDEV_VIRTIO_MAX_TARGET) {
@@ -368,7 +412,9 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 		return;
 	}
 
-	spdk_bdev_poller_stop(&base->scan_poller);
+	vq = base->vdev->vqs[2];
+	spdk_bdev_poller_stop(&vq->poller);
+	vq->owner_lcore = SPDK_ENV_LCORE_ID_ANY;
 
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
 		TAILQ_REMOVE(&base->found_disks, disk, link);
@@ -663,9 +709,9 @@ bdev_virtio_initialize(void)
 		base->vdev = vdev;
 		TAILQ_INIT(&base->found_disks);
 
-		spdk_bdev_poller_start(&base->scan_poller, bdev_scan_poll, base,
-				       spdk_env_get_current_core(), 0);
-
+		vdev->vqs[2]->owner_lcore = spdk_env_get_current_core();
+		spdk_bdev_poller_start(&vdev->vqs[2]->poller, bdev_scan_poll, base,
+				       vdev->vqs[2]->owner_lcore, 0);
 		scan_target(base);
 	}
 
