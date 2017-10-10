@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "01400adb_511baf40",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-10-10T00:19:25Z",
+      "side": 1,
+      "message": "Thanks, I think I misunderstood about aligning with tabs. I was trying to make the variable names line up in a column on my editor, but of course that looks different on here. So when I align with tabs, do I just place 1 tab between the type and variable name and if they don\u0027t necessarily line up vertically that is ok?",
+      "parentUuid": "963ebfd2_9d2a7d1d",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b375aa10_79a60e58",
         "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
         "patchSetId": 9
@@ -104,6 +122,24 @@
     },
     {
       "key": {
+        "uuid": "8f434127_b547cae5",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-10-10T00:19:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "39d28ab2_e964aa34",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65f8d6ee_4b655ca8",
         "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
         "patchSetId": 9
@@ -121,6 +157,24 @@
     },
     {
       "key": {
+        "uuid": "5555894f_6b77ca67",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-10-10T00:19:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65f8d6ee_4b655ca8",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c83bfb37_eb93173c",
         "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
         "patchSetId": 9
@@ -132,6 +186,24 @@
       "writtenOn": "2017-10-09T22:30:42Z",
       "side": 1,
       "message": "same here - also use space between struct and spdk_env_opts",
+      "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52ebb3d6_8dcf89a3",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-10-10T00:19:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c83bfb37_eb93173c",
       "revId": "4dde86df1b58ce891c9cd6efd7ce4f5ac40eb7b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
