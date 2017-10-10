@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf5911ca_1ea2371b",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-10T13:55:58Z",
+      "side": 1,
+      "message": "could you make this a separate local variable and place in in line ~366? then it\u0027ll be straightforward that this function takes 3 params",
+      "range": {
+        "startLine": 381,
+        "startChar": 10,
+        "endLine": 381,
+        "endChar": 12
+      },
+      "revId": "be45bf693da18abff900f699dae21d2f2d277c71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e26b71bc_8b17afdf",
+        "filename": "test/vhost/initiator/vhost.conf.in",
+        "patchSetId": 33
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-10T13:55:58Z",
+      "side": 1,
+      "message": "unused section, can be removed",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 8
+      },
+      "revId": "be45bf693da18abff900f699dae21d2f2d277c71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
