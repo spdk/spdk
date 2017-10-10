@@ -79,7 +79,9 @@ for bdev in $bdevs; do
                                 echo -n "$b:" >> $testdir/bdev.fio
                         done
 
-                        run_fio --spdk_conf=$testdir/bdev.conf
+                        #run_fio --spdk_conf=$testdir/bdev.conf
+                        #temporarily disabled until fio_plugin multi-threading
+                        #issues are resolved
 
                         rm -f *.state
                         rm -f $testdir/bdev.fio

@@ -69,7 +69,7 @@ struct virtio_user_dev {
 int is_vhost_user_by_type(const char *path);
 int virtio_user_start_device(struct virtio_user_dev *dev);
 int virtio_user_stop_device(struct virtio_user_dev *dev);
-struct virtio_dev *virtio_user_dev_init(char *path, int queue_size);
+struct virtio_dev *virtio_user_dev_init(char *path,  uint64_t requested_queues, uint32_t queue_size);
 void virtio_user_dev_uninit(struct virtio_user_dev *dev);
 void virtio_user_handle_cq(struct virtio_user_dev *dev, uint16_t queue_idx);
 #endif
