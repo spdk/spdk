@@ -46,6 +46,7 @@ extern "C" {
 #endif
 
 #define SPDK_ENV_SOCKET_ID_ANY	(-1)
+#define SPDK_ENV_LCORE_ID_ANY	(UINT32_MAX)
 
 struct spdk_pci_device;
 
@@ -182,9 +183,11 @@ size_t spdk_mempool_count(const struct spdk_mempool *pool);
 uint32_t spdk_env_get_core_count(void);
 
 /**
- * \brief Return the CPU core index of the current thread. This
- *	  will only function when called from threads set up by
- *	  this environment abstraction.
+ * \brief Return the CPU core index of the current thread.
+ *
+ * This will only function when called from threads set up by
+ * this environment abstraction. For any other threads
+ * \c SPDK_ENV_LCORE_ID_ANY will be returned.
  */
 uint32_t spdk_env_get_current_core(void);
 
