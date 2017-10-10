@@ -2,6 +2,7 @@
 #  BSD LICENSE
 #
 #  Copyright (c) Intel Corporation.
+#  Copyright (c) 2017, IBM Corporation.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -48,7 +49,15 @@ endif
 
 OS := $(shell uname)
 
-COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -march=native -I$(SPDK_ROOT_DIR)/include
+
+COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
+
+UNAME_P := $(shell uname -p)
+ifneq ($(filter ppc%,$(UNAME_P)),)
+COMMON_CFLAGS += -mcpu=native
+else
+COMMON_CFLAGS += -march=native
+endif
 
 COMMON_CFLAGS += -include $(SPDK_ROOT_DIR)/config.h
 
