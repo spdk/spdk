@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f62b602a_a8f4d1fa",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 29
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011309
+      },
+      "writtenOn": "2017-10-10T21:45:02Z",
+      "side": 1,
+      "message": "Abandoned patch. Should be 378618. \nOr (even better) a file containing the plan (test/pmem/test_plan.md).",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 39
+      },
+      "revId": "191aca8e27ad53dab39786af6b6add5b0971aa4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
