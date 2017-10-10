@@ -64,42 +64,15 @@ struct spdk_vhost_blk_dev {
 	struct spdk_bdev_desc *bdev_desc;
 	struct spdk_io_channel *bdev_io_channel;
 	struct spdk_poller *requestq_poller;
-	struct spdk_ring *tasks_pool;
 	bool readonly;
 };
 
 static void
-spdk_vhost_blk_get_tasks(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_blk_task **tasks,
-			 size_t count)
+blk_task_finish(struct spdk_vhost_blk_task *task)
 {
-	size_t res_count;
-
-	bvdev->vdev.task_cnt += count;
-	res_count = spdk_ring_dequeue(bvdev->tasks_pool, (void **)tasks, count);
-
-	/* Allocated task count in init function is equal queue depth so dequeue must not fail. */
-	assert(res_count == count);
-
-	for (res_count = 0; res_count < count; res_count++) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK_TASK, "GET task %p\n", tasks[res_count]);
-	}
-}
-
-static void
-spdk_vhost_blk_put_tasks(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_blk_task **tasks,
-			 size_t count)
-{
-	size_t res_count;
-
-	for (res_count = 0; res_count < count; res_count++) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK_TASK, "PUT task %p\n", tasks[res_count]);
-	}
-
-	res_count = spdk_ring_enqueue(bvdev->tasks_pool, (void **)tasks, count);
-
-	/* Allocated task count in init function is equal queue depth so enqueue must not fail. */
-	assert(res_count == count);
-	bvdev->vdev.task_cnt -= count;
+	assert(task->bvdev->vdev.task_cnt > 0);
+	task->bvdev->vdev.task_cnt--;
+	task->bvdev = NULL;
 }
 
 static void
@@ -110,7 +83,7 @@ invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
 	}
 
 	spdk_vhost_vq_used_ring_enqueue(&task->bvdev->vdev, task->vq, task->req_idx, 0);
-	spdk_vhost_blk_put_tasks(task->bvdev, &task, 1);
+	blk_task_finish(task);
 	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK_DATA, "Invalid request (status=%" PRIu8")\n", status);
 }
 
@@ -189,7 +162,7 @@ blk_request_finish(bool success, struct spdk_vhost_blk_task *task)
 					task->length);
 	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Finished task (%p) req_idx=%d\n status: %s\n", task,
 		      task->req_idx, success ? "OK" : "FAIL");
-	spdk_vhost_blk_put_tasks(task->bvdev, &task, 1);
+	blk_task_finish(task);
 }
 
 static void
@@ -203,22 +176,15 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 
 static int
 process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev *bvdev,
-		    struct spdk_vhost_virtqueue *vq,
-		    uint16_t req_idx)
+		    struct spdk_vhost_virtqueue *vq)
 {
 	const struct virtio_blk_outhdr *req;
 	struct iovec *iov;
 	uint32_t type;
 	int rc;
 
-	assert(task->bvdev == bvdev);
-	task->req_idx = req_idx;
-	task->vq = vq;
-	task->iovcnt = SPDK_COUNTOF(task->iovs);
-	task->status = NULL;
-
-	if (blk_iovs_setup(&bvdev->vdev, vq, req_idx, task->iovs, &task->iovcnt, &task->length)) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Invalid request (req_idx = %"PRIu16").\n", req_idx);
+	if (blk_iovs_setup(&bvdev->vdev, vq, task->req_idx, task->iovs, &task->iovcnt, &task->length)) {
+		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
 		return -1;
@@ -228,7 +194,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 	if (spdk_unlikely(iov->iov_len != sizeof(*req))) {
 		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK,
 			      "First descriptor size is %zu but expected %zu (req_idx = %"PRIu16").\n",
-			      iov->iov_len, sizeof(*req), req_idx);
+			      iov->iov_len, sizeof(*req), task->req_idx);
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
 		return -1;
 	}
@@ -239,7 +205,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 	if (spdk_unlikely(iov->iov_len != 1)) {
 		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK,
 			      "Last descriptor size is %zu but expected %d (req_idx = %"PRIu16").\n",
-			      iov->iov_len, 1, req_idx);
+			      iov->iov_len, 1, task->req_idx);
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
 		return -1;
 	}
@@ -259,7 +225,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 	case VIRTIO_BLK_T_OUT:
 		if (spdk_unlikely((task->length & (512 - 1)) != 0)) {
 			SPDK_ERRLOG("%s - passed IO buffer is not multiple of 512b (req_idx = %"PRIu16").\n",
-				    type ? "WRITE" : "READ", req_idx);
+				    type ? "WRITE" : "READ", task->req_idx);
 			invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
 			return -1;
 		}
@@ -303,7 +269,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 static void
 process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_blk_task *tasks[32] = {0};
+	struct spdk_vhost_blk_task *task;
 	int rc;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -313,16 +279,39 @@ process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
 		return;
 	}
 
-	spdk_vhost_blk_get_tasks(bvdev, tasks, reqs_cnt);
 	for (i = 0; i < reqs_cnt; i++) {
 		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "====== Starting processing request idx %"PRIu16"======\n",
 			      reqs[i]);
-		rc = process_blk_request(tasks[i], bvdev, vq, reqs[i]);
+
+		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
+			SPDK_ERRLOG("%s: invalid entry in avail ring. Buffer '%"PRIu16"' exceeds virtqueue size (%"PRIu16")\n",
+				    bvdev->vdev.name, reqs[i], vq->vring.size);
+			spdk_vhost_vq_used_ring_enqueue(&bvdev->vdev, vq, reqs[i], 0);
+			continue;
+		}
+
+		task = &vq->blk_tasks[reqs[i]];
+		if (spdk_unlikely(task->bvdev != NULL)) {
+			SPDK_ERRLOG("%s: invalid entry in avail ring. Buffer '%"PRIu16"' is still in use!\n",
+				    bvdev->vdev.name, reqs[i]);
+			spdk_vhost_vq_used_ring_enqueue(&bvdev->vdev, vq, reqs[i], 0);
+			continue;
+		}
+
+		bvdev->vdev.task_cnt++;
+
+		task->bvdev = bvdev;
+		task->req_idx = reqs[i];
+		task->vq = vq;
+		task->iovcnt = SPDK_COUNTOF(task->iovs);
+		task->status = NULL;
+
+		rc = process_blk_request(task, bvdev, vq);
 		if (rc == 0) {
-			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", tasks[i],
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", task,
 				      reqs[i]);
 		} else {
-			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "====== Task %p req_idx %d failed ======\n", tasks[i], reqs[i]);
+			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "====== Task %p req_idx %d failed ======\n", task, reqs[i]);
 		}
 	}
 }
@@ -418,68 +407,38 @@ bdev_remove_cb(void *remove_ctx)
 	spdk_vhost_call_external_event(bvdev->vdev.name, _bdev_remove_cb, bvdev);
 }
 
-
 static void
 free_task_pool(struct spdk_vhost_blk_dev *bvdev)
 {
-	struct spdk_vhost_task *task;
+	struct spdk_vhost_virtqueue *vq;
+	uint16_t i;
 
-	if (!bvdev->tasks_pool) {
-		return;
+	for (i = 0; i < bvdev->vdev.num_queues; i++) {
+		vq = &bvdev->vdev.virtqueue[i];
+		if (vq->blk_tasks == NULL) {
+			continue;
+		}
+
+		spdk_dma_free(vq->blk_tasks);
+		vq->blk_tasks = NULL;
 	}
-
-	while (spdk_ring_dequeue(bvdev->tasks_pool, (void **)&task, 1) == 1) {
-		spdk_dma_free(task);
-	}
-
-	spdk_ring_free(bvdev->tasks_pool);
-	bvdev->tasks_pool = NULL;
 }
 
 static int
 alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
 {
-	struct spdk_vhost_blk_task *task;
+	struct spdk_vhost_virtqueue *vq;
 	uint32_t task_cnt = 0;
-	uint32_t ring_size, socket_id;
 	uint16_t i;
-	int rc;
 
 	for (i = 0; i < bvdev->vdev.num_queues; i++) {
-		/*
-		 * FIXME:
-		 * this is too big because we need only size/2 from each queue but for now
-		 * lets leave it as is to be sure we are not mistaken.
-		 *
-		 * Limit the pool size to 1024 * num_queues. This should be enough as QEMU have the
-		 * same hard limit for queue size.
-		 */
-		task_cnt += spdk_min(bvdev->vdev.virtqueue[i].vring.size, 1024);
-	}
-
-	ring_size = spdk_align32pow2(task_cnt + 1);
-	socket_id = spdk_env_get_socket_id(bvdev->vdev.lcore);
-
-	bvdev->tasks_pool = spdk_ring_create(SPDK_RING_TYPE_SP_SC, ring_size, socket_id);
-	if (bvdev->tasks_pool == NULL) {
-		SPDK_ERRLOG("Controller %s: Failed to init vhost blk task pool\n", bvdev->vdev.name);
-		return -1;
-	}
-
-	for (i = 0; i < task_cnt; ++i) {
-		task = spdk_dma_malloc_socket(sizeof(*task), SPDK_CACHE_LINE_SIZE, NULL, socket_id);
-		if (task == NULL) {
-			SPDK_ERRLOG("Controller %s: Failed to allocate task\n", bvdev->vdev.name);
-			free_task_pool(bvdev);
-			return -1;
-		}
-
-		task->bvdev = bvdev;
-
-		rc = spdk_ring_enqueue(bvdev->tasks_pool, (void **)&task, 1);
-		if (rc != 1) {
-			SPDK_ERRLOG("Controller %s: Failed to enqueue %"PRIu32" vhost blk tasks\n", bvdev->vdev.name,
-				    task_cnt);
+		vq = &bvdev->vdev.virtqueue[i];
+		task_cnt = spdk_min(vq->vring.size, 1024); /* sanity check */
+		vq->blk_tasks = spdk_dma_zmalloc(sizeof(struct spdk_vhost_blk_task) * task_cnt,
+						 SPDK_CACHE_LINE_SIZE, NULL);
+		if (vq->blk_tasks == NULL) {
+			SPDK_ERRLOG("Controller %s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
+				    bvdev->vdev.name, task_cnt, i);
 			free_task_pool(bvdev);
 			return -1;
 		}
@@ -763,5 +722,4 @@ spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_blk", SPDK_TRACE_VHOST_BLK)
-SPDK_LOG_REGISTER_TRACE_FLAG("vhost_blk_task", SPDK_TRACE_VHOST_BLK_TASK)
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_blk_data", SPDK_TRACE_VHOST_BLK_DATA)
