@@ -105,6 +105,24 @@
       "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27f7edf8_ab414bf6",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-10-10T00:54:08Z",
+      "side": 1,
+      "message": "Thank you for pointing out my bugs repeatedly.\nI fix the above bug and submit the patch again.\nAlso I submitted the UT code as an another change.\n\nThank you for your review.",
+      "parentUuid": "0c04b4cd_4447604e",
+      "revId": "4991de668cac4af767c0ca0c7197334c37abddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
