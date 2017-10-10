@@ -67,6 +67,11 @@
  */
 #define VQ_RING_DESC_CHAIN_END 32768
 
+/* This is a work-around for fio-plugin bug, where each
+ * fio job thread returns local lcore id = -1
+ */
+#define SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED (UINT32_MAX - 1)
+
 struct virtio_dev {
 	struct virtqueue **vqs;
 	uint16_t	started;
@@ -84,6 +89,9 @@ struct virtio_dev {
 
 	/** Modern/legacy virtio device flag. */
 	uint8_t		modern;
+
+	/** Mutex for asynchronous virtqueue-changing operations. */
+	pthread_mutex_t	mutex;
 
 	TAILQ_ENTRY(virtio_dev) tailq;
 };
@@ -127,6 +135,12 @@ struct virtqueue {
 	uint16_t  vq_desc_tail_idx;
 	uint16_t  vq_queue_index;   /**< PCI queue index */
 	uint16_t  *notify_addr;
+
+	/** Logical CPU ID that's polling this queue. */
+	uint32_t owner_lcore;
+
+	/** Response poller. */
+	struct spdk_bdev_poller	*poller;
 
 	struct vq_desc_extra vq_descx[0];
 };
@@ -211,5 +225,41 @@ virtqueue_kick_prepare(struct virtqueue *vq)
 {
 	return !(vq->vq_ring.used->flags & VRING_USED_F_NO_NOTIFY);
 }
+
+/**
+ * Bind a virtqueue with given index to the current CPU core.
+ *
+ * This function is thread-safe.
+ *
+ * \param vdev vhost device
+ * \param index virtqueue index
+ * \return 0 on success, -1 in case a virtqueue with given index either
+ * does not exists or is already acquired.
+ */
+int virtio_dev_acquire_queue(struct virtio_dev *vdev, uint16_t index);
+
+/**
+ * Look for unused queue and bind it to the current CPU core.  This will
+ * scan the queues in range from *start_index* (inclusive) up to
+ * vdev->max_queues (exclusive).
+ *
+ * This function is thread-safe.
+ *
+ * \param vdev vhost device
+ * \param start_index virtqueue index to start looking from
+ * \return index of acquired queue or -1 in case no unused queue in given range
+ * has been found
+ */
+int32_t virtio_dev_find_and_acquire_queue(struct virtio_dev *vdev, uint16_t start_index);
+
+/**
+ * Release previously acquired queue.
+ *
+ * This function must be called from the thread that acquired the queue.
+ *
+ * \param vdev vhost device
+ * \param index index of virtqueue to release
+ */
+void virtio_dev_release_queue(struct virtio_dev *vdev, uint16_t index);
 
 #endif /* _VIRTIO_DEV_H_ */
