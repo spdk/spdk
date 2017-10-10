@@ -263,10 +263,6 @@ spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (spdk_iscsi_init_grp_deletable(req.tag)) {
-		goto invalid;
-	}
-
 	ig = spdk_iscsi_init_grp_find_by_tag(req.tag);
 	if (!ig) {
 		goto invalid;

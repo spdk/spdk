@@ -342,36 +342,6 @@ spdk_initiator_group_unregister(struct spdk_iscsi_init_grp *ig)
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
 
-int
-spdk_iscsi_init_grp_deletable(int tag)
-{
-	int ret = 0;
-	struct spdk_iscsi_init_grp *ig;
-
-	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	ig = spdk_iscsi_init_grp_find_by_tag(tag);
-	if (ig == NULL) {
-		ret = -1;
-		goto out;
-	}
-
-	if (ig->state != GROUP_READY) {
-		ret = -1;
-		goto out;
-	}
-
-	if (ig->ref == 0) {
-		ret = 0;
-		goto out;
-	}
-
-out:
-	if (ret == 0)
-		ig->state = GROUP_DESTROY;
-	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-	return ret;
-}
-
 void
 spdk_iscsi_init_grp_release(struct spdk_iscsi_init_grp *ig)
 {
