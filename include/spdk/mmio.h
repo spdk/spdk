@@ -52,6 +52,34 @@ extern "C" {
 #define SPDK_MMIO_64BIT	0
 #endif
 
+static inline uint8_t
+spdk_mmio_read_1(const volatile uint8_t *addr)
+{
+	spdk_compiler_barrier();
+	return *addr;
+}
+
+static inline void
+spdk_mmio_write_1(volatile uint8_t *addr, uint8_t val)
+{
+	spdk_compiler_barrier();
+	*addr = val;
+}
+
+static inline uint16_t
+spdk_mmio_read_2(const volatile uint16_t *addr)
+{
+	spdk_compiler_barrier();
+	return *addr;
+}
+
+static inline void
+spdk_mmio_write_2(volatile uint16_t *addr, uint16_t val)
+{
+	spdk_compiler_barrier();
+	*addr = val;
+}
+
 static inline uint32_t
 spdk_mmio_read_4(const volatile uint32_t *addr)
 {
