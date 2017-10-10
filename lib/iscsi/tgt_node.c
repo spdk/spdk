@@ -466,19 +466,6 @@ spdk_iscsi_find_tgt_node(const char *target_name)
 	return NULL;
 }
 
-struct spdk_iscsi_init_grp *
-spdk_iscsi_find_init_grp(int tag)
-{
-	struct spdk_iscsi_init_grp *ig;
-
-	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
-		if (ig->tag == tag) {
-			return ig;
-		}
-	}
-	return NULL;
-}
-
 static int
 spdk_check_iscsi_name(const char *name)
 {
@@ -578,7 +565,7 @@ spdk_iscsi_tgt_node_add_map(struct spdk_iscsi_tgt_node *target,
 		SPDK_ERRLOG("%s: PortalGroup%d not active\n", target->name, pg_tag);
 		return NULL;
 	}
-	ig = spdk_iscsi_find_init_grp(ig_tag);
+	ig = spdk_iscsi_init_grp_find_by_tag(ig_tag);
 	if (ig == NULL) {
 		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 		SPDK_ERRLOG("%s: InitiatorGroup%d not found\n", target->name, ig_tag);

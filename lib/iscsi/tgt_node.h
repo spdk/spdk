@@ -85,9 +85,6 @@ int spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 			 const char *iaddr, const char *tiqn, uint8_t *data, int alloc_len,
 			 int data_len);
 
-struct spdk_iscsi_init_grp *
-spdk_iscsi_find_init_grp(int tag);
-
 /* This typedef exists to work around an astyle 2.05 bug.
  * Remove it when astyle is fixed.
  */
