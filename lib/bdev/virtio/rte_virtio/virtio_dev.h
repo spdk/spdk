@@ -45,10 +45,10 @@ struct virtio_dev {
 	/** Max number of queues the host supports. */
 	uint16_t	max_queues;
 
-	/* Device index. */
+	/** Device index. */
 	uint32_t	id;
 
-	/* Common device & guest features. */
+	/** Common device & guest features. */
 	uint64_t	negotiated_features;
 
 	int		is_hw;
@@ -81,8 +81,5 @@ uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
 int virtio_dev_init(struct virtio_dev *hw, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);
 int virtio_dev_start(struct virtio_dev *hw);
-struct virtio_dev *get_pci_virtio_hw(void);
-
-void virtio_interrupt_handler(void *param);
 
 #endif /* _VIRTIO_DEV_H_ */

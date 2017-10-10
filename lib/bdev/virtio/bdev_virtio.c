@@ -111,7 +111,7 @@ SPDK_BDEV_MODULE_REGISTER(virtio_scsi, bdev_virtio_initialize, bdev_virtio_finis
 SPDK_BDEV_MODULE_ASYNC_INIT(virtio_scsi)
 
 static struct virtio_req *
-bdev_virtio_init_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+bdev_virtio_init_io_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct virtio_req *vreq;
 	struct virtio_scsi_cmd_req *req;
@@ -141,8 +141,8 @@ bdev_virtio_init_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 static void
 bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
-	struct virtio_req *vreq = bdev_virtio_init_vreq(ch, bdev_io);
+	struct virtio_scsi_disk *disk = SPDK_CONTAINEROF(bdev_io->bdev, struct virtio_scsi_disk, bdev);
+	struct virtio_req *vreq = bdev_virtio_init_io_vreq(ch, bdev_io);
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
 
 	vreq->iov = bdev_io->u.bdev.iovs;
@@ -164,8 +164,8 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 static void
 bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	struct virtio_scsi_disk *disk = (struct virtio_scsi_disk *)bdev_io->bdev;
-	struct virtio_req *vreq = bdev_virtio_init_vreq(ch, bdev_io);
+	struct virtio_scsi_disk *disk = SPDK_CONTAINEROF(bdev_io->bdev, struct virtio_scsi_disk, bdev);
+	struct virtio_req *vreq = bdev_virtio_init_io_vreq(ch, bdev_io);
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
 	struct spdk_scsi_unmap_bdesc *desc, *first_desc;
 	uint8_t *buf;
