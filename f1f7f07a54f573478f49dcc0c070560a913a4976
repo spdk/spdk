@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fcfaed1a_1e8bc9f8",
+        "filename": "doc/blob.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-10T14:38:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "957c9194_690f11b6",
+      "revId": "f1f7f07a54f573478f49dcc0c070560a913a4976",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9344a6a1_80ba3e68",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 24
@@ -30,6 +48,24 @@
       "writtenOn": "2017-10-09T15:50:04Z",
       "side": 1,
       "message": "I would suggest choosing a different name here.  Normally this will be BLOBFS or LVOLSTORE - \"BLOBSTORE\" would never be used as a blobstore type and might confuse readers as to what this type would be used for in a real application.",
+      "revId": "f1f7f07a54f573478f49dcc0c070560a913a4976",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63489b86_e4f51058",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-10T14:38:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9344a6a1_80ba3e68",
       "revId": "f1f7f07a54f573478f49dcc0c070560a913a4976",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
