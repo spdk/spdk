@@ -165,6 +165,9 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	vq->mz = mz;
 
+	vq->owner_lcore = SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED;
+	vq->poller = NULL;
+
 	if (vtpci_ops(dev)->setup_queue(dev, vq) < 0) {
 		SPDK_ERRLOG("setup_queue failed\n");
 		return -EINVAL;
@@ -275,13 +278,6 @@ virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 	vtpci_set_status(dev, VIRTIO_CONFIG_S_DRIVER);
 	if (virtio_negotiate_features(dev, req_features) < 0)
 		return -1;
-
-	/* FIXME
-	 * Hardcode num_queues to 3 until we add proper
-	 * mutli-queue support. This value should be limited
-	 * by number of cores assigned to SPDK
-	 */
-	dev->max_queues = 3;
 
 	ret = virtio_alloc_queues(dev);
 	if (ret < 0)
@@ -530,6 +526,80 @@ virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req)
 	}
 
 	return 1;
+}
+
+int
+virtio_dev_acquire_queue(struct virtio_dev *vdev, uint16_t index)
+{
+	struct virtqueue *vq = NULL;
+
+	if (index >= vdev->max_queues) {
+		SPDK_ERRLOG("requested vq index %"PRIu16" exceeds max queue count %"PRIu16".\n",
+			    index, vdev->max_queues);
+		return -1;
+	}
+
+	pthread_mutex_lock(&vdev->mutex);
+	vq = vdev->vqs[index];
+	if (vq == NULL || vq->owner_lcore != SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED) {
+		pthread_mutex_unlock(&vdev->mutex);
+		return -1;
+	}
+
+	assert(vq->poller == NULL);
+	vq->owner_lcore = spdk_env_get_current_core();
+	pthread_mutex_unlock(&vdev->mutex);
+	return 0;
+}
+
+int32_t
+virtio_dev_find_and_acquire_queue(struct virtio_dev *vdev, uint16_t start_index)
+{
+	struct virtqueue *vq = NULL;
+	uint16_t i;
+
+	pthread_mutex_lock(&vdev->mutex);
+	for (i = start_index; i < vdev->max_queues; ++i) {
+		vq = vdev->vqs[i];
+		if (vq != NULL && vq->owner_lcore == SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED) {
+			break;
+		}
+	}
+
+	if (vq == NULL || i == vdev->max_queues) {
+		SPDK_ERRLOG("no more unused virtio queues with idx >= %"PRIu16".\n", start_index);
+		pthread_mutex_unlock(&vdev->mutex);
+		return -1;
+	}
+
+	assert(vq->poller == NULL);
+	vq->owner_lcore = spdk_env_get_current_core();
+	pthread_mutex_unlock(&vdev->mutex);
+	return i;
+}
+
+void
+virtio_dev_release_queue(struct virtio_dev *vdev, uint16_t index)
+{
+	struct virtqueue *vq = NULL;
+
+	if (index >= vdev->max_queues) {
+		SPDK_ERRLOG("given vq index %"PRIu16" exceeds max queue count %"PRIu16".\n",
+			    index, vdev->max_queues);
+		return;
+	}
+
+	pthread_mutex_lock(&vdev->mutex);
+	vq = vdev->vqs[index];
+	if (vq == NULL) {
+		SPDK_ERRLOG("virtqueue at index %"PRIu16" is not initialized.\n", index);
+		return;
+	}
+
+	assert(vq->poller == NULL);
+	assert(vq->owner_lcore == spdk_env_get_current_core());
+	vq->owner_lcore = SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED;
+	pthread_mutex_unlock(&vdev->mutex);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio_dev", SPDK_TRACE_VIRTIO_DEV)
