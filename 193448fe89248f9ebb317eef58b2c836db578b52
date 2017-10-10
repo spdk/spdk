@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d23db58_6bc57e51",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-10T16:21:36Z",
+      "side": 1,
+      "message": "Maybe \"pci_address\" to be consistent with other JSON-RPC output.",
+      "range": {
+        "startLine": 257,
+        "startChar": 26,
+        "endLine": 257,
+        "endChar": 29
+      },
+      "revId": "193448fe89248f9ebb317eef58b2c836db578b52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62130b1e_742edf1f",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-10T16:21:36Z",
+      "side": 1,
+      "message": "It\u0027s usually good to leave a trailing comma on struct initializers so future patches that add new entries don\u0027t have to touch unrelated lines.",
+      "revId": "193448fe89248f9ebb317eef58b2c836db578b52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f181f34_e244f9d3",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-10T16:21:36Z",
+      "side": 1,
+      "message": "It would be good to use \"pci_address\" here as well.",
+      "range": {
+        "startLine": 484,
+        "startChar": 26,
+        "endLine": 484,
+        "endChar": 29
+      },
+      "revId": "193448fe89248f9ebb317eef58b2c836db578b52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
