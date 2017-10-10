@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c35e89b_3b560bfa",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-10T15:30:41Z",
+      "side": 1,
+      "message": "leftover, shall be removed.",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 61
+      },
+      "revId": "a0f85e88602d2aae79122dbfb01d17fac63c2db8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
