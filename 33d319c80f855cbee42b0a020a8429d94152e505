@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85811383_7e18db0c",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-10T16:15:49Z",
+      "side": 1,
+      "message": "num_blocks is uint64_t, so it needs to use spdk_json_decode_uint64",
+      "range": {
+        "startLine": 111,
+        "startChar": 67,
+        "endLine": 111,
+        "endChar": 90
+      },
+      "revId": "33d319c80f855cbee42b0a020a8429d94152e505",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
