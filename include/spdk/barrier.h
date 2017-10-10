@@ -2,6 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation.
+ *   Copyright (c) 2017, IBM Corporation.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -48,10 +49,18 @@ extern "C" {
 #define spdk_compiler_barrier() __asm volatile("" ::: "memory")
 
 /** Write memory barrier */
+#ifdef __PPC64__
+#define spdk_wmb()	__asm volatile("sync" ::: "memory")
+#else
 #define spdk_wmb()	__asm volatile("sfence" ::: "memory")
+#endif
 
 /** Full read/write memory barrier */
+#ifdef __PPC64__
+#define spdk_mb()	__asm volatile("sync" ::: "memory")
+#else
 #define spdk_mb()	__asm volatile("mfence" ::: "memory")
+#endif
 
 #ifdef __cplusplus
 }
