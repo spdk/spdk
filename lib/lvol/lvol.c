@@ -163,6 +163,44 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 }
 
 static void
+_lvs_uninit_cb(void *cb_arg, int lvserrno)
+{
+	struct spdk_lvs_req *lvs_req = cb_arg;
+
+	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store uninitialized\n");
+	assert(lvs_req->cb_fn != NULL);
+	lvs_req->cb_fn(lvs_req->cb_arg, lvserrno);
+	free(lvs_req);
+}
+
+int
+spdk_lvs_uninit(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
+		void *cb_arg)
+{
+	struct spdk_lvs_req *lvs_req;
+
+	if (lvs == NULL) {
+		SPDK_ERRLOG("Lvol store is NULL\n");
+		return -ENODEV;
+	}
+
+	lvs_req = calloc(1, sizeof(*lvs_req));
+	if (!lvs_req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol store request pointer\n");
+		return -ENOMEM;
+	}
+
+	lvs_req->cb_fn = cb_fn;
+	lvs_req->cb_arg = cb_arg;
+
+	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Uninitalizing lvol store\n");
+	spdk_bs_uninit(lvs->blobstore, _lvs_uninit_cb, lvs_req);
+	free(lvs);
+
+	return 0;
+}
+
+static void
 _spdk_lvol_return_to_caller(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvol_with_handle_req *req = cb_arg;

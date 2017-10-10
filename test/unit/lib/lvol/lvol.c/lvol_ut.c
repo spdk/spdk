@@ -109,6 +109,14 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 }
 
 void
+spdk_bs_uninit(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_arg)
+{
+	free(bs);
+
+	cb_fn(cb_arg, 0);
+}
+
+void
 spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		       spdk_blob_op_complete cb_fn, void *cb_arg)
 {
@@ -220,6 +228,32 @@ lvs_init_unload_success(void)
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	spdk_free_thread();
+}
+
+static void
+lvs_init_uninit_success(void)
+{
+	struct spdk_bs_dev bs_dev;
+	int rc = 0;
+
+	init_dev(&bs_dev);
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
+
+	g_lvserrno = -1;
+
+	rc = spdk_lvs_init(&bs_dev, NULL, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_uninit(g_lvol_store, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
@@ -513,6 +547,7 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "lvs_init_unload_success", lvs_init_unload_success) == NULL ||
+		CU_add_test(suite, "lvs_init_uninit_success", lvs_init_uninit_success) == NULL ||
 		CU_add_test(suite, "lvs_init_opts_success", lvs_init_opts_success) == NULL ||
 		CU_add_test(suite, "lvs_unload_lvs_is_null_fail", lvs_unload_lvs_is_null_fail) == NULL ||
 		CU_add_test(suite, "lvol_create_destroy_success", lvol_create_destroy_success) == NULL ||
