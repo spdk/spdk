@@ -1,4 +1,5 @@
 spdk:
   spdk-sdk:
-  - dpdk:dpdk-sdk
-  - file://.
+    deps:
+    - dpdk:dpdk-sdk
+    - file://.
