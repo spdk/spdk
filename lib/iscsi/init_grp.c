@@ -44,6 +44,26 @@
 #include "iscsi/conn.h"
 #include "iscsi/init_grp.h"
 
+static struct spdk_iscsi_init_grp *
+spdk_iscsi_init_grp_create(int tag)
+{
+	struct spdk_iscsi_init_grp *ig;
+
+	if (spdk_iscsi_init_grp_find_by_tag(tag)) {
+		SPDK_ERRLOG("duplicate initiator group tag (%d)\n", tag);
+		return NULL;
+	}
+
+	ig = calloc(1, sizeof(*ig));
+	if (ig == NULL) {
+		SPDK_ERRLOG("initiator group malloc error (tag=%d)\n", tag);
+		return NULL;
+	}
+
+	ig->tag = tag;
+	ig->state = GROUP_INIT;
+	return ig;
+}
 
 /* Read spdk iscsi target's config file and create initiator group */
 int
@@ -174,25 +194,16 @@ spdk_iscsi_init_grp_create_from_initiator_list(int tag,
 		int num_initiator_masks,
 		char **initiator_masks)
 {
-	int i, rc = 0;
+	int i, rc = -1;
 	struct spdk_iscsi_init_grp *ig = NULL;
-
-	/* Make sure there are no duplicate initiator group tags */
-	if (spdk_iscsi_init_grp_find_by_tag(tag)) {
-		SPDK_ERRLOG("initiator group creation failed.  duplicate initiator group tag (%d)\n", tag);
-		rc = -EEXIST;
-		goto cleanup;
-	}
 
 	if (num_initiator_names > MAX_INITIATOR) {
 		SPDK_ERRLOG("%d > MAX_INITIATOR\n", num_initiator_names);
-		rc = -1;
 		goto cleanup;
 	}
 
 	if (num_initiator_masks > MAX_NETMASK) {
 		SPDK_ERRLOG("%d > MAX_NETMASK\n", num_initiator_masks);
-		rc = -1;
 		goto cleanup;
 	}
 
@@ -200,16 +211,11 @@ spdk_iscsi_init_grp_create_from_initiator_list(int tag,
 		      "add initiator group (from initiator list) tag=%d, #initiators=%d, #masks=%d\n",
 		      tag, num_initiator_names, num_initiator_masks);
 
-	ig = malloc(sizeof(*ig));
+	ig = spdk_iscsi_init_grp_create(tag);
 	if (!ig) {
-		SPDK_ERRLOG("initiator group malloc error (%d)\n", tag);
-		rc = -ENOMEM;
+		SPDK_ERRLOG("initiator group create error (%d)\n", tag);
 		goto cleanup;
 	}
-
-	memset(ig, 0, sizeof(*ig));
-	ig->ref = 0;
-	ig->tag = tag;
 
 	ig->ninitiators = num_initiator_names;
 	ig->nnetmasks = num_initiator_masks;
@@ -223,7 +229,6 @@ spdk_iscsi_init_grp_create_from_initiator_list(int tag,
 		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "Netmask %s\n",
 			      ig->netmasks[i]);
 
-	ig->state = GROUP_INIT;
 	spdk_iscsi_init_grp_register(ig);
 
 	return 0;
