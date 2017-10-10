@@ -35,6 +35,7 @@
 #include "spdk/rpc.h"
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
+#include "spdk/string.h"
 
 #include "vbdev_lvol.h"
 
@@ -610,11 +611,183 @@ vbdev_lvs_get_ctx_size(void)
 }
 
 static void
-vbdev_lvs_examine(struct spdk_bdev *bdev)
+_spdk_close_lvols_cb(void *cb_arg, int lvolerrno)
 {
-	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
 }
 
+static void
+_spdk_open_lvols_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
+{
+	struct spdk_lvol *lvol = cb_arg;
+	struct spdk_lvol *next_lvol;
+	struct spdk_bdev *bdev;
+
+	next_lvol = TAILQ_NEXT(lvol, link);
+
+	if (lvolerrno != 0) {
+		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Failed to open lvol %s\n", lvol->name);
+		TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
+		free(lvol->name);
+		free(lvol);
+		goto end;
+	}
+
+	lvol->blob = blob;
+	bdev = _create_lvol_disk(lvol);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("Cannot create bdev for lvol\n");
+		TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
+		spdk_bs_md_close_blob(&blob, _spdk_close_lvols_cb, NULL);
+		free(lvol->name);
+		free(lvol);
+		goto end;
+	}
+
+	lvol->bdev = bdev;
+	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Opening lvol %s succeeded\n", lvol->name);
+
+end:
+	if (next_lvol == NULL) {
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+	}
+}
+
+static void
+_spdk_open_lvols(struct spdk_lvol_store *lvs)
+{
+	struct spdk_blob_store *bs = lvs->blobstore;
+	struct spdk_lvol *lvol, *tmp;
+
+	if (TAILQ_EMPTY(&lvs->lvols)) {
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		return;
+	}
+
+	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+		spdk_bs_md_open_blob(bs, lvol->blob_id, _spdk_open_lvols_cb, lvol);
+	}
+}
+
+static void
+_spdk_load_lvols(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
+{
+	struct spdk_lvol_store *lvs = cb_arg;
+	struct spdk_blob_store *bs = lvs->blobstore;
+	struct spdk_lvol *lvol, *tmp;
+	spdk_blob_id blob_id;
+	char uuid[UUID_STRING_LEN];
+
+	if (lvolerrno == -ENOENT) {
+		/* Finished iterating - open all loaded blobs */
+		_spdk_open_lvols(lvs);
+		return;
+	} else if (lvolerrno < 0) {
+		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+			TAILQ_REMOVE(&lvs->lvols, lvol, link);
+			free(lvol->name);
+			free(lvol);
+		}
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		SPDK_ERRLOG("Failed to fetch blobs list\n");
+		return;
+	}
+
+	blob_id = spdk_blob_get_id(blob);
+
+	if (blob_id == lvs->super_blob_id) {
+		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "found superblob %"PRIu64"\n", (uint64_t)blob_id);
+		spdk_bs_md_iter_next(bs, &blob, _spdk_load_lvols, lvs);
+		return;
+	}
+
+	lvol = calloc(1, sizeof(*lvol));
+	if (!lvol) {
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		SPDK_ERRLOG("Cannot alloc memory for lvol base pointer\n");
+		return;
+	}
+
+	lvol->blob = blob;
+	lvol->blob_id = blob_id;
+	lvol->lvol_store = lvs;
+	lvol->num_clusters = spdk_blob_get_num_clusters(blob);
+	lvol->close_only = false;
+	uuid_unparse(lvol->lvol_store->uuid, uuid);
+	lvol->name = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
+	if (!lvol->name) {
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		SPDK_ERRLOG("Cannot assign lvol name\n");
+		free(lvol);
+		return;
+	}
+
+	TAILQ_INSERT_TAIL(&lvs->lvols, lvol, link);
+
+	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "added lvol %s\n", lvol->name);
+
+	spdk_bs_md_iter_next(bs, &blob, _spdk_load_lvols, lvs);
+}
+
+static void
+vbdev_lvs_add(void *arg, struct spdk_lvol_store *lvol_store, int lvserrno)
+{
+	struct lvol_store_bdev *lvs_bdev;
+	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)arg;
+
+	if (lvserrno != 0) {
+		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store not found on %s\n", req->base_bdev->name);
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		goto end;
+	}
+
+	lvs_bdev = calloc(1, sizeof(*lvs_bdev));
+	if (!lvs_bdev) {
+		SPDK_ERRLOG("Cannot alloc memory for lvs_bdev\n");
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		goto end;
+	}
+
+	lvs_bdev->lvs = lvol_store;
+	lvs_bdev->bdev = req->base_bdev;
+
+	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+
+	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store found on %s - begin parsing\n",
+		     req->base_bdev->name);
+
+	/* Get all lvols */
+	spdk_bs_md_iter_first(lvol_store->blobstore, _spdk_load_lvols, (void *)lvol_store);
+
+end:
+	free(req);
+	return;
+}
+
+static void
+vbdev_lvs_examine(struct spdk_bdev *bdev)
+{
+	struct spdk_bs_dev *bs_dev;
+	struct spdk_lvs_with_handle_req *req;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+		return;
+	}
+
+	bs_dev = spdk_bdev_create_bs_dev(bdev, vbdev_lvs_hotremove_cb, bdev);
+	if (!bs_dev) {
+		SPDK_ERRLOG("Cannot create bs dev\n");
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		free(req);
+		return;
+	}
+
+	req->base_bdev = bdev;
+
+	spdk_lvs_load(bs_dev, vbdev_lvs_add, req);
+}
 SPDK_BDEV_MODULE_REGISTER(lvol, vbdev_lvs_init, vbdev_lvs_fini, NULL, vbdev_lvs_get_ctx_size,
 			  vbdev_lvs_examine)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_lvol", SPDK_TRACE_VBDEV_LVOL);
