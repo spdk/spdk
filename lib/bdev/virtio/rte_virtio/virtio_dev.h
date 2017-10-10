@@ -56,6 +56,9 @@ struct virtio_dev {
 	/** Modern/legacy virtio device flag. */
 	uint8_t		modern;
 
+	/** Mutex for e.g. acquiring available virtqueue asynchronously */
+	pthread_mutex_t	mutex;
+
 	TAILQ_ENTRY(virtio_dev) tailq;
 };
 
