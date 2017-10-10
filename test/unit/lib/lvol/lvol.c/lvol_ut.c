@@ -51,8 +51,22 @@
 #define SPDK_BLOB_OPTS_MAX_MD_OPS 32
 #define SPDK_BLOB_OPTS_MAX_CHANNEL_OPS 512
 
+const char *uuid = "828d9766-ae50-11e7-bd8d-001e67edf35d";
+
+struct spdk_blob {
+	spdk_blob_id	id;
+};
+
+int g_lvolerrno;
 int g_lvserrno;
+int g_bs_load_status;
+int g_get_super_status;
+int g_open_blob_status;
+int g_get_uuid_status;
+int g_close_super_status;
 int g_resize_rc;
+int g_lvols_count;
+int g_fail_on_n_lvol_load = 0xFF;
 struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
 struct spdk_bs_opts g_bs_opts;
@@ -60,12 +74,71 @@ struct spdk_bs_opts g_bs_opts;
 struct spdk_blob_store {
 	int stub;
 };
+struct spdk_blob_store *g_blob_store;
+struct spdk_blob *g_blob;
+
+static void
+bs_iter(void)
+{
+	if (g_lvols_count > 0) {
+		g_blob->id = g_lvols_count + 1; /* skip super blob */
+		g_lvols_count--;
+		g_fail_on_n_lvol_load--;
+	} else {
+		g_lvolerrno = -ENOENT;
+	}
+
+	if (g_fail_on_n_lvol_load == 0) {
+		g_lvolerrno = -1;
+	}
+}
+
+void
+spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
+		     spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	bs_iter();
+
+	cb_fn(cb_arg, g_blob, g_lvolerrno);
+}
+
+void
+spdk_bs_md_iter_first(struct spdk_blob_store *bs,
+		      spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	bs_iter();
+
+	cb_fn(cb_arg, g_blob, g_lvolerrno);
+}
+
+uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob)
+{
+	return 0;
+}
+
+void
+spdk_bs_get_super(struct spdk_blob_store *bs,
+		  spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, 0, g_get_super_status);
+}
 
 void
 spdk_bs_set_super(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		  spdk_bs_op_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, 0);
+}
+
+void
+spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
+	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
+{
+	if (g_bs_load_status == 0) {
+		g_blob_store = calloc(1, sizeof(*g_blob_store));
+	}
+
+	cb_fn(cb_arg, g_blob_store, g_bs_load_status);
 }
 
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
@@ -78,6 +151,16 @@ spdk_blob_md_set_xattr(struct spdk_blob *blob, const char *name, const void *val
 		       uint16_t value_len)
 {
 	return 0;
+}
+
+int
+spdk_bs_md_get_xattr_value(struct spdk_blob *blob, const char *name,
+			   const void **value, size_t *value_len)
+{
+	*value = uuid;
+	*value_len = UUID_STRING_LEN;
+
+	return g_get_uuid_status;
 }
 
 uint64_t
@@ -125,8 +208,7 @@ spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 spdk_blob_id
 spdk_blob_get_id(struct spdk_blob *blob)
 {
-	spdk_blob_id id = 0;
-	return id;
+	return blob->id;
 }
 
 void
@@ -136,6 +218,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
+	memset(&opts->bstype, 0, sizeof(opts->bstype));
 }
 
 uint64_t
@@ -147,7 +230,9 @@ spdk_bs_get_cluster_size(struct spdk_blob_store *bs)
 void spdk_bs_md_close_blob(struct spdk_blob **b,
 			   spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	cb_fn(cb_arg, 0);
+	free(g_blob);
+
+	cb_fn(cb_arg, g_close_super_status);
 }
 
 int
@@ -167,7 +252,11 @@ void
 spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		     spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
-	cb_fn(cb_arg, NULL, 0);
+	if (g_open_blob_status == 0) {
+		g_blob = calloc(1, sizeof(*g_blob));
+	}
+
+	cb_fn(cb_arg, g_blob, g_open_blob_status);
 }
 
 uint64_t
@@ -503,6 +592,171 @@ lvol_resize(void)
 	spdk_free_thread();
 }
 
+static void
+lvs_load(void)
+{
+	int rc = -1;
+	struct spdk_bs_dev bs_dev;
+	struct spdk_lvs_with_handle_req *req;
+
+	req = calloc(1, sizeof(*req));
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	init_dev(&bs_dev);
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
+
+	/* Fail on bs load */
+	g_bs_load_status = -1;
+	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno != 0);
+	CU_ASSERT(g_lvol_store == NULL);
+
+	/* Fail on getting super blob */
+	g_bs_load_status = 0;
+	g_get_super_status = -1;
+	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno == -ENODEV);
+	CU_ASSERT(g_lvol_store == NULL);
+
+	/* Fail on opening super blob */
+	g_lvserrno = 0;
+	g_get_super_status = 0;
+	g_open_blob_status = -1;
+	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno == -ENODEV);
+	CU_ASSERT(g_lvol_store == NULL);
+
+	/* Fail on getting uuid */
+	g_lvserrno = 0;
+	g_get_super_status = 0;
+	g_open_blob_status = 0;
+	g_get_uuid_status = -1;
+	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno == -ENODEV);
+	CU_ASSERT(g_lvol_store == NULL);
+
+	/* Fail on closing super blob */
+	g_lvserrno = 0;
+	g_get_super_status = 0;
+	g_open_blob_status = 0;
+	g_get_uuid_status = 0;
+	g_close_super_status = -1;
+	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno == -ENODEV);
+	CU_ASSERT(g_lvol_store == NULL);
+
+	/* Load successfully */
+	g_lvserrno = 0;
+	g_get_super_status = 0;
+	g_open_blob_status = 0;
+	g_get_uuid_status = 0;
+	g_close_super_status = 0;
+	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store != NULL);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+
+	free(req);
+
+	spdk_free_thread();
+}
+
+static void
+lvols_load(void)
+{
+	int rc = -1;
+	struct spdk_bs_dev bs_dev;
+	struct spdk_lvs_with_handle_req *req;
+
+	req = calloc(1, sizeof(*req));
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	init_dev(&bs_dev);
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
+
+	/* Load lvs */
+	g_lvserrno = 0;
+	g_get_super_status = 0;
+	g_open_blob_status = 0;
+	g_get_uuid_status = 0;
+	g_close_super_status = 0;
+	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store != NULL);
+
+	g_blob = calloc(1, sizeof(*g_blob));
+
+	/* Fail on loading second lvol */
+	g_lvols_count = 3;
+	g_fail_on_n_lvol_load = 2;
+	spdk_load_lvols(g_lvol_store, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_store->lvols));
+	CU_ASSERT(g_lvserrno != 0);
+
+	/* Fail on opening lvol */
+	g_lvols_count = 3;
+	g_fail_on_n_lvol_load = 0xFF;
+	g_open_blob_status = -1;
+	spdk_load_lvols(g_lvol_store, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_store->lvols));
+	CU_ASSERT(g_lvserrno != 0);
+
+	/* Load successfully with 0 lvols */
+	g_lvserrno = 0;
+	g_lvolerrno = 0;
+	g_lvols_count = 0;
+	g_fail_on_n_lvol_load = 0xFF;
+	g_open_blob_status = 0;
+	spdk_load_lvols(g_lvol_store, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_store->lvols));
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+
+	free(g_blob);
+
+	/* Load lvs */
+	g_lvserrno = 0;
+	g_get_super_status = 0;
+	g_open_blob_status = 0;
+	g_get_uuid_status = 0;
+	g_close_super_status = 0;
+	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store != NULL);
+
+	g_blob = calloc(1, sizeof(*g_blob));
+
+	/* Load successfully with 3 lvols */
+	g_lvserrno = 0;
+	g_lvolerrno = 0;
+	g_lvols_count = 3;
+	g_fail_on_n_lvol_load = 0xFF;
+	g_open_blob_status = 0;
+	spdk_load_lvols(g_lvol_store, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(!TAILQ_EMPTY(&g_lvol_store->lvols));
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+
+	free(req);
+	free(g_blob);
+
+	spdk_free_thread();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -527,7 +781,9 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "lvol_destroy_fail", lvol_destroy_fail) == NULL ||
 		CU_add_test(suite, "lvol_close_fail", lvol_close_fail) == NULL ||
 		CU_add_test(suite, "lvol_close_success", lvol_close_success) == NULL ||
-		CU_add_test(suite, "lvol_resize", lvol_resize) == NULL
+		CU_add_test(suite, "lvol_resize", lvol_resize) == NULL ||
+		CU_add_test(suite, "lvol_load", lvs_load) == NULL ||
+		CU_add_test(suite, "lvol_load", lvols_load) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
