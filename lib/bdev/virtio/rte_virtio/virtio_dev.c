@@ -167,6 +167,9 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	vq->mz = mz;
 
+	vq->owner_lcore = SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED;
+	vq->poller = NULL;
+
 	if (vtpci_ops(dev)->setup_queue(dev, vq) < 0) {
 		PMD_INIT_LOG(ERR, "setup_queue failed");
 		return -EINVAL;
@@ -278,13 +281,6 @@ virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 	if (virtio_negotiate_features(dev, req_features) < 0)
 		return -1;
 
-	/* FIXME
-	 * Hardcode num_queues to 3 until we add proper
-	 * mutli-queue support. This value should be limited
-	 * by number of cores assigned to SPDK
-	 */
-	dev->max_queues = 3;
-
 	ret = virtio_alloc_queues(dev);
 	if (ret < 0)
 		return ret;
@@ -331,4 +327,41 @@ virtio_dev_start(struct virtio_dev *vdev)
 	vdev->started = 1;
 
 	return 0;
+}
+
+struct virtqueue *
+virtio_dev_acquire_queue(struct virtio_dev *vdev, uint16_t start_index)
+{
+	struct virtqueue *vq = NULL;
+	uint16_t i;
+
+	pthread_mutex_lock(&vdev->mutex);
+	for (i = start_index; i < vdev->max_queues; ++i) {
+		vq = vdev->vqs[i];
+		if (vq != NULL && vq->owner_lcore == SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED) {
+			break;
+		}
+	}
+
+	if (vq == NULL || i == vdev->max_queues) {
+		PMD_DRV_LOG(ERR, "no more unused request queues\n");
+		pthread_mutex_unlock(&vdev->mutex);
+		return NULL;
+	}
+
+	assert(vq->poller == NULL);
+	vq->owner_lcore = spdk_env_get_current_core();
+	assert(vq->owner_lcore != SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED);
+	pthread_mutex_unlock(&vdev->mutex);
+	return vq;
+}
+
+void
+virtio_dev_release_queue(struct virtio_dev *vdev, struct virtqueue *vq)
+{
+	assert(vq->poller == NULL);
+
+	pthread_mutex_lock(&vdev->mutex);
+	vq->owner_lcore = SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED;
+	pthread_mutex_unlock(&vdev->mutex);
 }

@@ -187,7 +187,7 @@ virtio_user_dev_setup(struct virtio_user_dev *dev)
 }
 
 struct virtio_dev *
-virtio_user_dev_init(char *path, int queue_size)
+virtio_user_dev_init(char *path, uint64_t requested_queues, uint32_t queue_size)
 {
 	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
@@ -215,12 +215,13 @@ virtio_user_dev_init(char *path, int queue_size)
 		goto err;
 	}
 
-	if (max_queues >= VIRTIO_MAX_VIRTQUEUES) {
-		PMD_INIT_LOG(ERR, "invalid get_queue_num value: %lu", max_queues);
+	if (requested_queues > max_queues) {
+		PMD_INIT_LOG(WARN, "requested %lu queues but only %lu available",
+			     requested_queues, max_queues);
 		goto err;
 	}
 
-	vdev->max_queues = max_queues;
+	vdev->max_queues = requested_queues;
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
 		PMD_INIT_LOG(ERR, "set_owner fails: %s", strerror(errno));
