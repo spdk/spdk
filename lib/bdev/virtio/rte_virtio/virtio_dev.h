@@ -56,6 +56,9 @@ struct virtio_dev {
 	/** Modern/legacy virtio device flag. */
 	uint8_t		modern;
 
+	/** Mutex for asynchronous virtqueue-changing operations. */
+	pthread_mutex_t	mutex;
+
 	TAILQ_ENTRY(virtio_dev) tailq;
 };
 
@@ -81,5 +84,29 @@ uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
 int virtio_dev_init(struct virtio_dev *hw, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);
 int virtio_dev_start(struct virtio_dev *hw);
+
+/**
+ * Look for unused queue and bind it to the current CPU core.  This will
+ * scan the queues in range from *start_index* (inclusive) up to to
+ * vdev->max_queues (exclusive).
+ *
+ * This function is thread-safe.
+ *
+ * \param vdev vhost device
+ * \param start_index virtqueue index to start looking from
+ * \return acquired queue or NULL in case no unused queue in given range
+ * has been found
+ */
+struct virtqueue *virtio_dev_acquire_queue(struct virtio_dev *vdev, uint16_t start_index);
+
+/**
+ * Release previously acquired queue.
+ *
+ * This function must be called from the thread that acquired the queue.
+ *
+ * \param vdev vhost device
+ * \param vq virtqueue to release
+ */
+void virtio_dev_release_queue(struct virtio_dev *vdev, struct virtqueue *vq);
 
 #endif /* _VIRTIO_DEV_H_ */

@@ -106,6 +106,12 @@ struct virtqueue {
 	uint16_t  vq_queue_index;   /**< PCI queue index */
 	uint16_t  *notify_addr;
 
+	/** Logical CPU ID that's polling this queue. */
+	uint32_t owner_lcore;
+
+	/** Response poller. */
+	struct spdk_bdev_poller	*poller;
+
 	struct vq_desc_extra vq_descx[0];
 };
 

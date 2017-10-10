@@ -1,5 +1,6 @@
 [VirtioUser0]
   Path /tmp/vhost.0
+  Queues 16
 
 [Rpc]
   Enable Yes

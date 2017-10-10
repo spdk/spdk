@@ -726,6 +726,7 @@ vtpci_init(struct virtio_dev *vdev, const struct virtio_pci_ops *ops)
 	}
 
 	vdev->id = vdev_num;
+	pthread_mutex_init(&vdev->mutex, NULL);
 	g_virtio_driver.internal[vdev_num].vtpci_ops = ops;
 
 	return 0;
