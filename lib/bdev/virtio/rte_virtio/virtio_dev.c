@@ -59,12 +59,6 @@
 #include "virtio_logs.h"
 #include "virtio_queue.h"
 
-static uint16_t
-virtio_get_nr_vq(struct virtio_dev *dev)
-{
-	return dev->max_queues;
-}
-
 static void
 virtio_init_vring(struct virtqueue *vq)
 {
@@ -190,7 +184,7 @@ fail_q_alloc:
 static void
 virtio_free_queues(struct virtio_dev *dev)
 {
-	uint16_t nr_vq = virtio_get_nr_vq(dev);
+	uint16_t nr_vq = dev->max_queues;
 	struct virtqueue *vq;
 	uint16_t i;
 
@@ -215,7 +209,7 @@ virtio_free_queues(struct virtio_dev *dev)
 static int
 virtio_alloc_queues(struct virtio_dev *dev)
 {
-	uint16_t nr_vq = virtio_get_nr_vq(dev);
+	uint16_t nr_vq = dev->max_queues;
 	uint16_t i;
 	int ret;
 
@@ -236,9 +230,9 @@ virtio_alloc_queues(struct virtio_dev *dev)
 	return 0;
 }
 
-/* Negotiate virtio features. This will also set dev->modern if virtio
- * device offers VIRTIO_F_VERSION_1 flag. If dev->modern has been set before,
- * the mentioned flag must be offered. Otherwise an error is returned.
+/**
+ * Negotiate virtio features. For virtio_user this will also set
+ * dev->modern flag if VIRTIO_F_VERSION_1 flag is negotiated.
  */
 static int
 virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
