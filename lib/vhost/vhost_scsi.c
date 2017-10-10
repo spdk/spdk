@@ -77,7 +77,6 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 
-	struct spdk_ring *task_pool;
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
 } __rte_cache_aligned;
@@ -95,6 +94,9 @@ struct spdk_vhost_scsi_task {
 	struct spdk_scsi_dev *scsi_dev;
 
 	int req_idx;
+
+	/* If set, the task is currently used for I/O processing. */
+	bool used;
 
 	struct spdk_vhost_virtqueue *vq;
 };
@@ -125,24 +127,7 @@ spdk_vhost_scsi_task_free_cb(struct spdk_scsi_task *scsi_task)
 
 	assert(task->svdev->vdev.task_cnt > 0);
 	task->svdev->vdev.task_cnt--;
-	spdk_ring_enqueue(task->svdev->task_pool, (void **) &task, 1);
-}
-
-static void
-spdk_vhost_get_tasks(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_scsi_task **tasks,
-		     size_t count)
-{
-	size_t res_count;
-
-	res_count = spdk_ring_dequeue(svdev->task_pool, (void **)tasks, count);
-	if (res_count != count) {
-		SPDK_ERRLOG("%s: couldn't get %zu tasks from task_pool\n", svdev->vdev.name, count);
-		/* FIXME: we should never run out of tasks, but what if we do? */
-		abort();
-	}
-
-	assert(svdev->vdev.task_cnt <= INT_MAX - (int) res_count);
-	svdev->vdev.task_cnt += res_count;
+	task->used = false;
 }
 
 static void
@@ -546,20 +531,31 @@ process_request(struct spdk_vhost_scsi_task *task)
 static void
 process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_scsi_task *tasks[32];
 	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
 
 	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
-	spdk_vhost_get_tasks(svdev, tasks, reqs_cnt);
 	for (i = 0; i < reqs_cnt; i++) {
-		task = tasks[i];
-		memset(task, 0, sizeof(*task));
-		task->vq = vq;
-		task->svdev = svdev;
-		task->req_idx = reqs[i];
+		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
+			SPDK_ERRLOG("%s: invalid entry in avail ring. Buffer '%"PRIu16"' exceeds virtqueue size (%"PRIu16")\n",
+				    svdev->vdev.name, reqs[i], vq->vring.size);
+			spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, reqs[i], 0);
+			continue;
+		}
 
+		task = &((struct spdk_vhost_scsi_task *)vq->tasks)[reqs[i]];
+		if (spdk_unlikely(task->used)) {
+			SPDK_ERRLOG("%s: invalid entry in avail ring. Buffer '%"PRIu16"' is still in use!\n",
+				    svdev->vdev.name, reqs[i]);
+			spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, reqs[i], 0);
+			continue;
+		}
+
+		svdev->vdev.task_cnt++;
+		memset(&task->scsi, 0, sizeof(task->scsi));
+		task->tmf_resp = NULL;
+		task->used = true;
 		process_ctrl_request(task);
 	}
 }
@@ -567,7 +563,6 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 static void
 process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_scsi_task *tasks[32];
 	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -576,17 +571,29 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 	reqs_cnt = spdk_vhost_vq_avail_ring_get(vq, reqs, SPDK_COUNTOF(reqs));
 	assert(reqs_cnt <= 32);
 
-	spdk_vhost_get_tasks(svdev, tasks, reqs_cnt);
-
 	for (i = 0; i < reqs_cnt; i++) {
 		SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI, "====== Starting processing request idx %"PRIu16"======\n",
 			      reqs[i]);
 
-		task = tasks[i];
-		memset(task, 0, sizeof(*task));
-		task->vq = vq;
-		task->svdev = svdev;
-		task->req_idx = reqs[i];
+		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
+			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
+				    svdev->vdev.name, reqs[i], vq->vring.size);
+			spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, reqs[i], 0);
+			continue;
+		}
+
+		task = &((struct spdk_vhost_scsi_task *)vq->tasks)[reqs[i]];
+		if (spdk_unlikely(task->used)) {
+			SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
+				    svdev->vdev.name, reqs[i]);
+			spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, reqs[i], 0);
+			continue;
+		}
+
+		svdev->vdev.task_cnt++;
+		memset(&task->scsi, 0, sizeof(task->scsi));
+		task->resp = NULL;
+		task->used = true;
 		result = process_request(task);
 		if (likely(result == 0)) {
 			task_submit(task);
@@ -926,64 +933,53 @@ spdk_vhost_scsi_controller_construct(void)
 static void
 free_task_pool(struct spdk_vhost_scsi_dev *svdev)
 {
-	struct spdk_vhost_task *task;
+	struct spdk_vhost_virtqueue *vq;
+	uint16_t i;
 
-	if (!svdev->task_pool) {
-		return;
+	for (i = 0; i < svdev->vdev.num_queues; i++) {
+		vq = &svdev->vdev.virtqueue[i];
+		if (vq->tasks == NULL) {
+			continue;
+		}
+
+		spdk_dma_free(vq->tasks);
+		vq->tasks = NULL;
 	}
-
-	while (spdk_ring_dequeue(svdev->task_pool, (void **)&task, 1) == 1) {
-		spdk_dma_free(task);
-	}
-
-	spdk_ring_free(svdev->task_pool);
-	svdev->task_pool = NULL;
 }
 
 static int
 alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 {
+	struct spdk_vhost_virtqueue *vq;
 	struct spdk_vhost_scsi_task *task;
-	uint32_t task_cnt = 0;
-	uint32_t ring_size, socket_id;
+	uint32_t task_cnt;
 	uint16_t i;
-	int rc;
+	uint32_t j;
 
 	for (i = 0; i < svdev->vdev.num_queues; i++) {
-		/*
-		 * FIXME:
-		 * this is too big because we need only size/2 from each queue but for now
-		 * lets leave it as is to be sure we are not mistaken.
-		 *
-		 * Limit the pool size to 1024 * num_queues. This should be enough as QEMU have the
-		 * same hard limit for queue size.
-		 */
-		task_cnt += spdk_min(svdev->vdev.virtqueue[i].vring.size, 1024);
-	}
-
-	ring_size = spdk_align32pow2(task_cnt + 1);
-	socket_id = spdk_env_get_socket_id(svdev->vdev.lcore);
-
-	svdev->task_pool = spdk_ring_create(SPDK_RING_TYPE_SP_SC, ring_size, socket_id);
-	if (svdev->task_pool == NULL) {
-		SPDK_ERRLOG("Controller %s: Failed to init vhost scsi task pool\n", svdev->vdev.name);
-		return -1;
-	}
-
-	for (i = 0; i < task_cnt; ++i) {
-		task = spdk_dma_zmalloc_socket(sizeof(*task), SPDK_CACHE_LINE_SIZE, NULL, socket_id);
-		if (task == NULL) {
-			SPDK_ERRLOG("Controller %s: Failed to allocate task\n", svdev->vdev.name);
+		vq = &svdev->vdev.virtqueue[i];
+		task_cnt = vq->vring.size;
+		if (task_cnt > SPDK_VHOST_MAX_VQ_SIZE) {
+			/* sanity check */
+			SPDK_ERRLOG("Controller %s: virtuque %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
+				    svdev->vdev.name, i, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
+			free_task_pool(svdev);
+			return -1;
+		}
+		vq->tasks = spdk_dma_zmalloc(sizeof(struct spdk_vhost_scsi_task) * task_cnt,
+					     SPDK_CACHE_LINE_SIZE, NULL);
+		if (vq->tasks == NULL) {
+			SPDK_ERRLOG("Controller %s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
+				    svdev->vdev.name, task_cnt, i);
 			free_task_pool(svdev);
 			return -1;
 		}
 
-		rc = spdk_ring_enqueue(svdev->task_pool, (void **)&task, 1);
-		if (rc != 1) {
-			SPDK_ERRLOG("Controller %s: Failed to enuqueue %"PRIu32" vhost scsi tasks\n", svdev->vdev.name,
-				    task_cnt);
-			free_task_pool(svdev);
-			return -1;
+		for (j = 0; j < task_cnt; j++) {
+			task = &((struct spdk_vhost_scsi_task *)vq->tasks)[j];
+			task->svdev = svdev;
+			task->vq = vq;
+			task->req_idx = j;
 		}
 	}
 
