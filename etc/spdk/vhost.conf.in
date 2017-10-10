@@ -29,7 +29,7 @@
   # Default is disabled.  Note that the RPC interface is not
   # authenticated, so users should be careful about enabling
   # RPC in non-trusted environments.
-  Enable No
+  Enable Yes
   # Listen address for the RPC service.
   # May be an IP address or an absolute path to a Unix socket.
   Listen 127.0.0.1
@@ -62,7 +62,7 @@
   BlockSize 4096
 
 # NVMe configuration options
-[Nvme]
+#[Nvme]
   # NVMe Device Whitelist
   # Users may specify which NVMe devices to claim by their transport id.
   # See spdk_nvme_transport_id_parse() in spdk/nvme.h for the correct format.
@@ -70,22 +70,22 @@
   # other sections in the configuration file. For NVMe devices, a namespace
   # is automatically appended to each name in the format <YourName>nY, where
   # Y is the NSID (starts at 1).
-  TransportID "trtype:PCIe traddr:0000:00:00.0" Nvme0
-  TransportID "trtype:PCIe traddr:0000:01:00.0" Nvme1
+  #TransportID "trtype:PCIe traddr:0000:00:00.0" Nvme0
+  #TransportID "trtype:PCIe traddr:0000:01:00.0" Nvme1
 
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.
-  RetryCount 4
+  #RetryCount 4
   # Timeout for each command, in seconds. If 0, don't track timeouts.
-  Timeout 0
+  #Timeout 0
   # Action to take on command time out. Only valid when Timeout is greater
   # than 0. This may be 'Reset' to reset the controller, 'Abort' to abort
   # the command, or 'None' to just print a message but do nothing.
   # Admin command timeouts will always result in a reset.
-  ActionOnTimeout None
+  #ActionOnTimeout None
   # Set how often the admin queue is polled for asynchronous events.
   # Units in microseconds.
-  AdminPollRate 100000
+  #AdminPollRate 100000
 
 # The Split virtual block device slices block devices into multiple smaller bdevs.
 [Split]
@@ -108,7 +108,7 @@
   Name vhost.0
   # Assign devices from backend
   # Use the first malloc device
-  Dev 0 Malloc0
+  #Dev 0 Malloc0
   # Use the first AIO device
   #Dev 1 AIO0
   # Use the frist Nvme device
@@ -137,3 +137,5 @@
   #  this cpumask.  By default, it not specified, will use any core in the
   #  SPDK process.
   #Cpumask 0x1
+[Nvme]
+  TransportID "trtype:PCIe traddr:0000:87:00.0" Nvme0
