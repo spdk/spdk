@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f255569e_631f2257",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-10T16:14:37Z",
+      "side": 1,
+      "message": "Why do we need to replace the standard memcmp()?",
+      "revId": "d463ac9ff1a5ef2c9587323ae19739c74a92bfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d3127a6_3d6373ea",
+        "filename": "test/unit/lib/bdev/pmem/bdev_pmem_ut.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-10T16:14:37Z",
+      "side": 1,
+      "message": "Indentation weirdness - the previous line should probably end with ; instead of ,",
+      "revId": "d463ac9ff1a5ef2c9587323ae19739c74a92bfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
