@@ -1070,6 +1070,7 @@ int main(int argc, char **argv)
 {
 	int				rc;
 	struct spdk_env_opts		opts;
+	struct spdk_nvme_ctrlr		*ctrlr;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
@@ -1088,7 +1089,18 @@ int main(int argc, char **argv)
 	}
 	spdk_env_init(&opts);
 
-	if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
+	/* A specific trid is required. */
+	if (strlen(g_trid.traddr) != 0) {
+		ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+		if (!ctrlr) {
+			fprintf(stderr, "spdk_nvme_connect() failed\n");
+			return 1;
+		}
+
+		g_controllers_found++;
+		print_controller(ctrlr, &g_trid);
+		spdk_nvme_detach(ctrlr);
+	} else if (spdk_nvme_probe(&g_trid, NULL, probe_cb, attach_cb, NULL) != 0) {
 		fprintf(stderr, "spdk_nvme_probe() failed\n");
 		return 1;
 	}
