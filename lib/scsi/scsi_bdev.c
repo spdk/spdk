@@ -452,9 +452,13 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			hlen = 4;
 
 			/* Identification descriptor list */
-			for (i = 0; i < dev->num_ports; i++) {
+			for (i = 0; i < SPDK_SCSI_DEV_MAX_PORTS; i++) {
 				struct spdk_scsi_port_desc *sdesc;
 				struct spdk_scsi_tgt_port_desc *pdesc;
+
+				if (!dev->port[i].is_valid) {
+					continue;
+				}
 
 				/* Identification descriptor N */
 				sdesc = (struct spdk_scsi_port_desc *)&vpage->params[len];
