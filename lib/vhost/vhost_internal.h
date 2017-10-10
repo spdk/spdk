@@ -61,6 +61,7 @@
 #endif
 
 #define SPDK_VHOST_MAX_VQUEUES	256
+#define SPDK_VHOST_MAX_VQ_SIZE	1024
 
 #define SPDK_VHOST_SCSI_CTRLR_MAX_DEVS 8
 
@@ -84,6 +85,7 @@ enum spdk_vhost_dev_type {
 
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
+	void *tasks;
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
 struct spdk_vhost_dev_backend {

@@ -781,6 +781,11 @@ start_device(int vid)
 			goto out;
 		}
 
+		if (vdev->virtqueue[i].vring.size == 0) {
+			SPDK_ERRLOG("vhost device %d: Queue %"PRIu16" has size 0.\n", vid, i);
+			goto out;
+		}
+
 		/* Disable notifications. */
 		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
 			SPDK_ERRLOG("vhost device %d: Failed to disable guest notification on queue %"PRIu16"\n", vid, i);
