@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "86355212_aded9374",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-10T18:14:13Z",
+      "side": 1,
+      "message": "coleasting -\u003e coalescing?",
+      "range": {
+        "startLine": 7,
+        "startChar": 24,
+        "endLine": 7,
+        "endChar": 34
+      },
+      "revId": "7587f620d5456d2bca029a088815b4a425e5da9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cbbb4021_897d222e",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 5
