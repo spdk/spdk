@@ -68,11 +68,11 @@ def parse_results(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_ti
         job_name = data['jobs'][job_pos]['jobname']
         # print "FIO job name: ", job_name
         if 'lat_ns' in data['jobs'][job_pos]['read']:
-            lat='lat_ns'
-            lat_units='ns'
+            lat = 'lat_ns'
+            lat_units = 'ns'
         else:
-            lat='lat'
-            lat_units='us'
+            lat = 'lat'
+            lat_units = 'us'
         read_iops = float(data['jobs'][job_pos]['read']['iops'])
         read_bw = float(data['jobs'][job_pos]['read']['bw'])
         read_avg_lat = float(data['jobs'][job_pos]['read'][lat]['mean'])
@@ -87,11 +87,11 @@ def parse_results(io_size_bytes, qd, rw_mix, cpu_mask, run_num, workload, run_ti
             "%-10s" % "Workload Type", "%-10s" % "CPU Mask", \
             "%-10s" % "Run Time", "%-10s" % "Run Num", \
             "%-15s" % "Read IOps", \
-            "%-10s" % "Read MBps", "%-15s" % "Read Avg. Lat("+lat_units+")", \
-            "%-15s" % "Read Min. Lat("+lat_units+")", "%-15s" % "Read Max. Lat("+lat_units+")", \
+            "%-10s" % "Read MBps", "%-15s" % "Read Avg. Lat(" + lat_units + ")", \
+            "%-15s" % "Read Min. Lat(" + lat_units + ")", "%-15s" % "Read Max. Lat(" + lat_units + ")", \
             "%-15s" % "Write IOps", \
-            "%-10s" % "Write MBps", "%-15s" % "Write Avg. Lat("+lat_units+")", \
-            "%-15s" % "Write Min. Lat("+lat_units+")", "%-15s" % "Write Max. Lat("+lat_units+")"
+            "%-10s" % "Write MBps", "%-15s" % "Write Avg. Lat(" + lat_units + ")", \
+            "%-15s" % "Write Min. Lat(" + lat_units + ")", "%-15s" % "Write Max. Lat(" + lat_units + ")"
         print "%-10s" % io_size_bytes, "%-10s" % qd, "%-10s" % rw_mix, \
             "%-10s" % workload, "%-10s" % cpu_mask, "%-10s" % run_time_sec, \
             "%-10s" % run_num, "%-15s" % read_iops, "%-10s" % read_bw, \
