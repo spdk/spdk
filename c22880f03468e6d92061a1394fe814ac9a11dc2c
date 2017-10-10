@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe0e6f8e_98807d5d",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-10T07:41:37Z",
+      "side": 1,
+      "message": "Invalid addres does\u0027t explain why it is invalid. Put some info about gpa_to_vva traslation failure.",
+      "range": {
+        "startLine": 201,
+        "startChar": 30,
+        "endLine": 201,
+        "endChar": 89
+      },
+      "revId": "c22880f03468e6d92061a1394fe814ac9a11dc2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
