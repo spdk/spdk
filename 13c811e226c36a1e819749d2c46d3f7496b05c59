@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ebb26ba_d30a2a59",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-10T22:44:54Z",
+      "side": 1,
+      "message": "if we bump this now, don\u0027t we protect from a downgraded SPDK based app reading in this metadata (its checked in the superblock) and I haven\u0027t really thought about the API change much but since we\u0027re changing that we could also update our example apps to check for API compatibility and fail if they\u0027re built with non-matching versions",
+      "revId": "13c811e226c36a1e819749d2c46d3f7496b05c59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
