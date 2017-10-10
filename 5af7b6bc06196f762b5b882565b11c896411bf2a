@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ec0de9f_cbe791ca",
+        "filename": "test/nvmf/nvmf.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-10T06:54:21Z",
+      "side": 1,
+      "message": "Why did you put LVOL into the \"if\" guard as well?",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 37
+      },
+      "revId": "5af7b6bc06196f762b5b882565b11c896411bf2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1043277a_310b579e",
+        "filename": "test/nvmf/pmem/nvmf_pmem.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-10T06:54:21Z",
+      "side": 1,
+      "message": "... on each what?",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 30
+      },
+      "revId": "5af7b6bc06196f762b5b882565b11c896411bf2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
