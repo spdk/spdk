@@ -69,6 +69,24 @@
       "revId": "f7327e236e6dfe9e4a73ee425fe558022658f6b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca2d147e_f33cc90f",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-10T07:06:48Z",
+      "side": 1,
+      "message": "Actually it was the other way - see if deleting pmem bdev would not randomly delete other types of bdevs",
+      "parentUuid": "33b3c59a_2727076c",
+      "revId": "f7327e236e6dfe9e4a73ee425fe558022658f6b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
