@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "481a62b9_14ed0e1e",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T16:18:42Z",
+      "side": 1,
+      "message": "The same comment like here https://review.gerrithub.io/#/c/369114/11/lib/vhost/vhost_scsi.c@102",
+      "range": {
+        "startLine": 57,
+        "startChar": 1,
+        "endLine": 57,
+        "endChar": 11
+      },
+      "revId": "34fb7716348fe54e5727f90e25096e5d491397b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bee8f4a1_dc500e8c",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T16:18:42Z",
+      "side": 1,
+      "message": "Again, why can\u0027t use some per-task field here to check if task is used? Eg task-\u003escsi_dev? In my mind less fields in structures we have to watch the simpler the code is.",
+      "range": {
+        "startLine": 102,
+        "startChar": 1,
+        "endLine": 102,
+        "endChar": 11
+      },
+      "revId": "34fb7716348fe54e5727f90e25096e5d491397b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bcc8514_fcc9353e",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T16:18:42Z",
+      "side": 1,
+      "message": "Do we need to put the req in used ring here? the same as in line 594?",
+      "range": {
+        "startLine": 559,
+        "startChar": 3,
+        "endLine": 559,
+        "endChar": 12
+      },
+      "revId": "34fb7716348fe54e5727f90e25096e5d491397b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c48977cc_f1f6ff31",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T16:18:42Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 566,
+        "startChar": 3,
+        "endLine": 566,
+        "endChar": 12
+      },
+      "revId": "34fb7716348fe54e5727f90e25096e5d491397b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "616f85cd_c0664d58",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T16:18:42Z",
+      "side": 1,
+      "message": "You are stepping on thin ice here. Can you clear out only task-\u003escsi?",
+      "range": {
+        "startLine": 570,
+        "startChar": 2,
+        "endLine": 570,
+        "endChar": 63
+      },
+      "revId": "34fb7716348fe54e5727f90e25096e5d491397b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
