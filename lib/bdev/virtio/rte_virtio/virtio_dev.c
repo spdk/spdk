@@ -578,6 +578,31 @@ virtio_dev_find_and_acquire_queue(struct virtio_dev *vdev, uint16_t start_index)
 	return i;
 }
 
+bool
+virtio_dev_queue_is_acquired(struct virtio_dev *vdev, uint16_t index)
+{
+	struct virtqueue *vq = NULL;
+	bool rc;
+
+	if (index >= vdev->max_queues) {
+		SPDK_ERRLOG("given vq index %"PRIu16" exceeds max queue count %"PRIu16"\n",
+			    index, vdev->max_queues);
+		return false;
+	}
+
+	vq = vdev->vqs[index];
+	if (vq == NULL) {
+		SPDK_ERRLOG("virtqueue at index %"PRIu16" is not initialized.\n", index);
+		return false;
+	}
+
+	pthread_mutex_lock(&vdev->mutex);
+	rc = (vq->owner_lcore == SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED);
+	pthread_mutex_unlock(&vdev->mutex);
+
+	return rc;
+}
+
 void
 virtio_dev_release_queue(struct virtio_dev *vdev, uint16_t index)
 {
