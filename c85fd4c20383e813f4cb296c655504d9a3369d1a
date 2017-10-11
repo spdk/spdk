@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1793d074_81acf326",
+        "filename": "test/vhost/hotplug/scsi_hotattach.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:54:46Z",
+      "side": 1,
+      "message": "It would be nice if these had a comment to describe what the test case is trying to accomplish (beyond just \"test case 1\").\n\nIf these are based on the test cases in the test plan, we could at least add a reference to that, but I\u0027d prefer to have a self-contained description here in the script.",
+      "revId": "c85fd4c20383e813f4cb296c655504d9a3369d1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9431c64d_4e3ff7c3",
+        "filename": "test/vhost/hotplug/scsi_hotdetach.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:54:46Z",
+      "side": 1,
+      "message": "This needs to be on the first line to work.",
+      "revId": "c85fd4c20383e813f4cb296c655504d9a3369d1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b6395f5_0b330bab",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:54:46Z",
+      "side": 1,
+      "message": "This should be indented to match the rest of the function.",
+      "revId": "c85fd4c20383e813f4cb296c655504d9a3369d1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbf79557_9abb8f77",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:54:46Z",
+      "side": 1,
+      "message": "I don\u0027t see any calls with this parameter in autotest.sh - is this actually executing in the test pool?  (If it\u0027s too long to run in normal per-patch tests, it could be under $RUN_NIGHTLY.)",
+      "revId": "c85fd4c20383e813f4cb296c655504d9a3369d1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
