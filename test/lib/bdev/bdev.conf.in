@@ -1,21 +1,3 @@
-[Malloc]
-  NumberOfLuns 3
-  LunSizeInMB 64
-
-[Split]
-  # Split Malloc1 into two auto-sized halves
-  Split Malloc1 2
-
-  # Split Malloc2 into eight 4-megabyte pieces,
-  # leaving the rest of the device inaccessible
-  Split Malloc2 8 4
-
-[AIO]
-  AIO /dev/ram0 AIO0
-  AIO /tmp/aiofile AIO1 2048
-
-[Rpc]
-  Enable Yes
-
-[Ioat]
-  Disable Yes
+[Nvme]
+  TransportID "trtype:PCIe traddr:0000:05:00.0" Nvme0
+  TransportID "trtype:PCIe traddr:0000:81:00.0" Nvme1

@@ -699,7 +699,7 @@ blockdev_test_reset(void)
 	}
 }
 
-static void
+static int
 test_main(void *arg1)
 {
 	CU_pSuite suite = NULL;
@@ -712,19 +712,19 @@ test_main(void *arg1)
 
 	if (bdevio_construct_targets() < 0) {
 		spdk_app_stop(-1);
-		return;
+		return -1;
 	}
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		spdk_app_stop(CU_get_error());
-		return;
+		return -1;
 	}
 
 	suite = CU_add_suite("components_suite", NULL, NULL);
 	if (suite == NULL) {
 		CU_cleanup_registry();
 		spdk_app_stop(CU_get_error());
-		return;
+		return -1;
 	}
 
 	if (
@@ -757,7 +757,7 @@ test_main(void *arg1)
 	) {
 		CU_cleanup_registry();
 		spdk_app_stop(CU_get_error());
-		return;
+		return -1;
 	}
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
@@ -766,6 +766,7 @@ test_main(void *arg1)
 	CU_cleanup_registry();
 	bdevio_cleanup_targets();
 	spdk_app_stop(num_failures);
+	return 0;
 }
 
 static void

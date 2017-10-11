@@ -198,7 +198,7 @@ bdev_aio_initialize_io_channel(struct bdev_aio_io_channel *ch)
 	return 0;
 }
 
-static void
+static int
 bdev_aio_poll(void *arg)
 {
 	struct bdev_aio_io_channel *ch = arg;
@@ -216,7 +216,7 @@ bdev_aio_poll(void *arg)
 
 	if (nr < 0) {
 		SPDK_ERRLOG("%s: io_getevents returned %d\n", __func__, nr);
-		return;
+		return -1;
 	}
 
 	for (i = 0; i < nr; i++) {
@@ -229,6 +229,7 @@ bdev_aio_poll(void *arg)
 
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
 	}
+	return 0;
 }
 
 static void

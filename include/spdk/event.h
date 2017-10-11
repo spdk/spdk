@@ -52,7 +52,7 @@ typedef void (*spdk_event_fn)(void *arg1, void *arg2);
  */
 struct spdk_event;
 
-typedef void (*spdk_poller_fn)(void *arg);
+typedef int (*spdk_poller_fn)(void *arg);
 
 /**
  * \brief A poller is a function that is repeatedly called on an lcore.

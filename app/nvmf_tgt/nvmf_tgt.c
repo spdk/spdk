@@ -116,12 +116,13 @@ spdk_nvmf_shutdown_cb(void)
 	spdk_poller_unregister(&g_acceptor_poller, event);
 }
 
-static void
+static int
 subsystem_poll(void *arg)
 {
 	struct nvmf_tgt_subsystem *app_subsys = arg;
 
 	spdk_nvmf_subsystem_poll(app_subsys->subsystem);
+	return 0;
 }
 
 static void
@@ -223,12 +224,13 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 	return -1;
 }
 
-static void
+static int
 acceptor_poll(void *arg)
 {
 	struct spdk_nvmf_tgt *tgt = arg;
 
 	spdk_nvmf_tgt_accept(tgt);
+	return 0;
 }
 
 static void

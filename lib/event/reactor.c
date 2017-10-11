@@ -113,6 +113,9 @@ struct spdk_reactor {
 	struct spdk_mempool				*event_mempool;
 
 	uint64_t					max_delay_us;
+
+	uint64_t					spin_time;
+	uint64_t					start_time;
 } __attribute__((aligned(64)));
 
 static struct spdk_reactor g_reactors[SPDK_MAX_REACTORS];
@@ -256,14 +259,14 @@ _spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	spdk_event_call(event);
 }
 
-static void
+static int
 get_rusage(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
 	struct rusage		rusage;
 
 	if (getrusage(RUSAGE_THREAD, &rusage) != 0) {
-		return;
+		return -1;
 	}
 
 	if (rusage.ru_nvcsw != reactor->rusage.ru_nvcsw || rusage.ru_nivcsw != reactor->rusage.ru_nivcsw) {
@@ -273,6 +276,7 @@ get_rusage(void *arg)
 			     rusage.ru_nivcsw - reactor->rusage.ru_nivcsw);
 	}
 	reactor->rusage = rusage;
+	return 0;
 }
 
 static void
@@ -344,6 +348,8 @@ spdk_reactor_context_switch_monitor_enabled(void)
  * \endcode
  *
  */
+
+static int completions = 0;
 static int
 _spdk_reactor_run(void *arg)
 {
@@ -371,6 +377,8 @@ _spdk_reactor_run(void *arg)
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
 	}
 	while (1) {
+		reactor->start_time = spdk_get_ticks();
+
 		bool took_action = false;
 
 		event_count = _spdk_event_queue_run_batch(reactor);
@@ -382,7 +390,13 @@ _spdk_reactor_run(void *arg)
 		if (poller) {
 			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
 			poller->state = SPDK_POLLER_STATE_RUNNING;
-			poller->fn(poller->arg);
+
+			completions = poller->fn(poller->arg);
+			if (! completions)
+			{
+				reactor->spin_time += (((spdk_get_ticks() - reactor->start_time)) * 1000000ULL) / spdk_get_ticks_hz();
+			}
+
 			if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 				_spdk_poller_unregister_complete(poller);
 			} else {
@@ -455,7 +469,7 @@ _spdk_reactor_run(void *arg)
 			break;
 		}
 	}
-
+	printf("%d\t%" PRIu64" \n", reactor->lcore, reactor->spin_time);
 	_spdk_reactor_context_switch_monitor_stop(reactor, NULL);
 	spdk_free_thread();
 	return 0;
@@ -476,6 +490,7 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 	assert(reactor->events != NULL);
 
 	reactor->event_mempool = g_spdk_event_mempool[reactor->socket_id];
+	reactor->spin_time = 0;
 }
 
 int

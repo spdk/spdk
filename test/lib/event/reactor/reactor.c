@@ -43,31 +43,35 @@ static struct spdk_poller *poller_500ms;
 static struct spdk_poller *poller_oneshot;
 static struct spdk_poller *poller_unregister;
 
-static void
+static int
 test_end(void *arg)
 {
 	printf("test_end\n");
 	spdk_app_stop(0);
+	return 0;
 }
 
-static void
+static int
 tick(void *arg)
 {
 	uintptr_t period = (uintptr_t)arg;
 
 	printf("tick %" PRIu64 "\n", (uint64_t)period);
+	return 0;
 }
 
-static void
+static int
 oneshot(void *arg)
 {
 	printf("oneshot\n");
 	spdk_poller_unregister(&poller_oneshot, NULL);
+	return 0;
 }
 
-static void
+static int
 nop(void *arg)
 {
+	return 0;
 }
 
 static void

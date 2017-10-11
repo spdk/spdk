@@ -41,11 +41,12 @@ static int g_queue_depth;
 static struct spdk_poller *test_end_poller;
 static uint64_t g_call_count = 0;
 
-static void
+static int
 __test_end(void *arg)
 {
 	printf("test_end\n");
 	spdk_app_stop(0);
+	return 0;
 }
 
 static void

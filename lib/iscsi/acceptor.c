@@ -45,7 +45,7 @@
 
 #define ACCEPT_TIMEOUT_US 1000 /* 1ms */
 
-static void
+static int
 spdk_iscsi_portal_accept(void *arg)
 {
 	struct spdk_iscsi_portal	*portal = arg;
@@ -53,7 +53,7 @@ spdk_iscsi_portal_accept(void *arg)
 	char				buf[64];
 
 	if (portal->sock < 0) {
-		return;
+		return -1;
 	}
 
 	while (1) {
@@ -74,6 +74,7 @@ spdk_iscsi_portal_accept(void *arg)
 			break;
 		}
 	}
+	return rc;
 }
 
 void
