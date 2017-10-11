@@ -58,6 +58,7 @@
 
 #define BDEV_VIRTIO_MAX_TARGET 64
 #define BDEV_VIRTIO_SCAN_PAYLOAD_SIZE 256
+#define CTRLQ_POLL_PERIOD_US (1000 * 5)
 
 #define VIRTIO_SCSI_CONTROLQ	0
 #define VIRTIO_SCSI_EVENTQ	1
@@ -68,8 +69,14 @@ static void bdev_virtio_finish(void);
 
 struct virtio_scsi_io_ctx {
 	struct virtio_req 		vreq;
-	struct virtio_scsi_cmd_req 	req;
-	struct virtio_scsi_cmd_resp 	resp;
+	union {
+		struct virtio_scsi_cmd_req req;
+		struct virtio_scsi_ctrl_tmf_req tmf_req;
+	};
+	union {
+		struct virtio_scsi_cmd_resp resp;
+		struct virtio_scsi_ctrl_tmf_resp tmf_resp;
+	};
 };
 
 struct virtio_scsi_scan_base {
@@ -77,6 +84,13 @@ struct virtio_scsi_scan_base {
 
 	/** Virtqueue used for the scan I/O. */
 	struct virtqueue		*vq;
+
+	/**
+	 * Pre-allocated ring for the per-vdev controlq tasks.
+	 * It's kept here to prevent us from doing any allocations
+	 * during the target scan.
+	 */
+	struct spdk_ring		*ctrlq_send_ring;
 
 	/* Currently queried target */
 	unsigned			target;
@@ -146,6 +160,34 @@ bdev_virtio_init_io_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	return vreq;
 }
 
+static struct virtio_req *
+bdev_virtio_init_tmf_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct virtio_req *vreq;
+	struct virtio_scsi_ctrl_tmf_req *tmf_req;
+	struct virtio_scsi_ctrl_tmf_resp *tmf_resp;
+	struct virtio_scsi_disk *disk = SPDK_CONTAINEROF(bdev_io->bdev, struct virtio_scsi_disk, bdev);
+	struct virtio_scsi_io_ctx *io_ctx = (struct virtio_scsi_io_ctx *)bdev_io->driver_ctx;
+
+	vreq = &io_ctx->vreq;
+	tmf_req = &io_ctx->tmf_req;
+	tmf_resp = &io_ctx->tmf_resp;
+
+	vreq->iov = NULL;
+	vreq->iov_req.iov_base = tmf_req;
+	vreq->iov_req.iov_len = sizeof(*tmf_req);
+	vreq->iov_resp.iov_base = tmf_resp;
+	vreq->iov_resp.iov_len = sizeof(*tmf_resp);
+	vreq->iovcnt = 0;
+	vreq->is_write = false;
+
+	memset(tmf_req, 0, sizeof(*tmf_req));
+	tmf_req->lun[0] = 1;
+	tmf_req->lun[1] = disk->target;
+
+	return vreq;
+}
+
 static void
 bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
@@ -168,6 +210,20 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	}
 
 	virtio_xmit_pkts(virtio_channel->vq, vreq);
+}
+
+static void
+bdev_virtio_reset(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct bdev_virtio_io_channel *virtio_ch = spdk_io_channel_get_ctx(ch);
+	struct virtio_req *vreq = bdev_virtio_init_tmf_vreq(ch, bdev_io);
+	struct virtio_scsi_ctrl_tmf_req *tmf_req = vreq->iov_req.iov_base;
+	struct spdk_ring *ctrlq_send_ring = virtio_ch->vdev->vqs[VIRTIO_SCSI_CONTROLQ]->poller_ctx;
+
+	tmf_req->type = VIRTIO_SCSI_T_TMF;
+	tmf_req->subtype = VIRTIO_SCSI_T_TMF_LOGICAL_UNIT_RESET;
+
+	spdk_ring_enqueue(ctrlq_send_ring, (void **)&vreq, 1);
 }
 
 static void
@@ -229,7 +285,8 @@ static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_b
 		bdev_virtio_rw(ch, bdev_io);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_RESET:
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		bdev_virtio_reset(ch, bdev_io);
+
 		return 0;
 	case SPDK_BDEV_IO_TYPE_UNMAP: {
 		uint64_t buf_len = 8 /* header size */ +
@@ -346,6 +403,49 @@ bdev_virtio_poll(void *arg)
 	}
 }
 
+static void
+bdev_virtio_tmf_cpl_cb(void *ctx)
+{
+	struct virtio_req *req = ctx;
+	struct virtio_scsi_io_ctx *io_ctx = SPDK_CONTAINEROF(req, struct virtio_scsi_io_ctx, vreq);
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(io_ctx);
+
+	if (io_ctx->tmf_resp.response == VIRTIO_SCSI_S_OK) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static void
+bdev_virtio_tmf_cpl(struct virtio_req *req)
+{
+	struct virtio_scsi_io_ctx *io_ctx = SPDK_CONTAINEROF(req, struct virtio_scsi_io_ctx, vreq);
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(io_ctx);
+
+	spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io), bdev_virtio_tmf_cpl_cb, req);
+}
+
+static void
+bdev_virtio_ctrlq_poll(void *arg)
+{
+	struct virtio_dev *vdev = arg;
+	struct virtqueue *ctrlq = vdev->vqs[VIRTIO_SCSI_CONTROLQ];
+	struct spdk_ring *send_ring = ctrlq->poller_ctx;
+	struct virtio_req *req[32];
+	uint16_t i, cnt;
+
+	cnt = spdk_ring_dequeue(send_ring, (void **)req, SPDK_COUNTOF(req));
+	for (i = 0; i < cnt; ++i) {
+		virtio_xmit_pkts(ctrlq, req[i]);
+	}
+
+	cnt = virtio_recv_pkts(ctrlq, req, SPDK_COUNTOF(req));
+	for (i = 0; i < cnt; ++i) {
+		bdev_virtio_tmf_cpl(req[i]);
+	}
+}
+
 static int
 bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 {
@@ -387,6 +487,8 @@ static void
 scan_target_finish(struct virtio_scsi_scan_base *base)
 {
 	struct virtio_scsi_disk *disk;
+	struct virtqueue *ctrlq;
+	int rc;
 
 	base->target++;
 	if (base->target < BDEV_VIRTIO_MAX_TARGET) {
@@ -396,6 +498,15 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 
 	spdk_bdev_poller_stop(&base->vq->poller);
 	virtio_dev_release_queue(base->vdev, base->vq->vq_queue_index);
+
+	rc = virtio_dev_acquire_queue(base->vdev, VIRTIO_SCSI_CONTROLQ);
+	if (rc != 0) {
+		assert(false);
+	}
+	ctrlq = base->vdev->vqs[VIRTIO_SCSI_CONTROLQ];
+	ctrlq->poller_ctx = base->ctrlq_send_ring;
+	spdk_bdev_poller_start(&ctrlq->poller, bdev_virtio_ctrlq_poll, base->vdev,
+			       ctrlq->owner_lcore, CTRLQ_POLL_PERIOD_US);
 
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
 		TAILQ_REMOVE(&base->found_disks, disk, link);
@@ -710,6 +821,14 @@ bdev_virtio_initialize(void)
 			goto out;
 		}
 
+		base->ctrlq_send_ring = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 16, SPDK_ENV_SOCKET_ID_ANY);
+		if (base->ctrlq_send_ring == NULL) {
+			SPDK_ERRLOG("Failed to allocate send queue for controlq.\n");
+			spdk_dma_free(base);
+			rc = -1;
+			goto out;
+		}
+
 		rc = virtio_dev_init(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
 		if (rc != 0) {
 			spdk_dma_free(base);
@@ -750,6 +869,8 @@ out:
 		if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_REQUESTQ)) {
 			vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
 			spdk_bdev_poller_stop(&vq->poller);
+			base = vq->poller_ctx;
+			spdk_ring_free(base->ctrlq_send_ring);
 			spdk_dma_free(vq->poller_ctx);
 			vq->poller_ctx = NULL;
 			virtio_dev_release_queue(vdev, VIRTIO_SCSI_REQUESTQ);
@@ -767,8 +888,21 @@ out:
 static void bdev_virtio_finish(void)
 {
 	struct virtio_dev *vdev, *next;
+	struct virtqueue *vq;
+	struct spdk_ring *send_ring;
+	struct virtio_req *vreq __attribute__((unused));
 
 	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.attached_ctrlrs, tailq, next) {
+		TAILQ_REMOVE(&g_virtio_driver.attached_ctrlrs, vdev, tailq);
+		if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_CONTROLQ)) {
+			vq = vdev->vqs[VIRTIO_SCSI_CONTROLQ];
+			send_ring = vq->poller_ctx;
+			/* bdevs built on top of this vdev mustn't be destroyed with outstanding I/O. */
+			assert(spdk_ring_dequeue(send_ring, (void **)&vreq, 1) == 0);
+			spdk_ring_free(send_ring);
+			vq->poller_ctx = NULL;
+			virtio_dev_release_queue(vdev, VIRTIO_SCSI_CONTROLQ);
+		}
 		virtio_dev_free(vdev);
 	}
 }
