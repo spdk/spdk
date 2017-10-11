@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b3e9f816_46f1eddf",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-10-11T07:13:38Z",
+      "side": 1,
+      "message": "Thank you for your feedback. As you said, static data is initialized to 0 or NULL in C. I want to follow the manner. If explicit zeroing to static data should be avoided, I will do that. I will follow your suggestion.",
+      "parentUuid": "1b2a0416_9eb2a919",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 63
+      },
+      "revId": "8c68d7dc0dff6f007ba7973590deb131f7559ee1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "80e034b2_7f7d2f7f",
         "filename": "lib/scsi/scsi_internal.h",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2017-10-11T07:03:17Z",
       "side": 1,
       "message": "I think that change is_valid to is_used is much meaningful",
+      "range": {
+        "startLine": 54,
+        "startChar": 11,
+        "endLine": 54,
+        "endChar": 19
+      },
+      "revId": "8c68d7dc0dff6f007ba7973590deb131f7559ee1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "864ead07_f61c8b46",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-10-11T07:13:38Z",
+      "side": 1,
+      "message": "Thank you. I found is_valid in other file of SPDK, hence I used it, but as you said is_used will be more natural. Hence I will change is_valid to is_used and submit again together with removing {{0}}.",
+      "parentUuid": "80e034b2_7f7d2f7f",
       "range": {
         "startLine": 54,
         "startChar": 11,
