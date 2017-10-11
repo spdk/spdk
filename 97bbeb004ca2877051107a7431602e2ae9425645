@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a84dd7e_c718ec42",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 42
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T23:15:11Z",
+      "side": 1,
+      "message": "where does the system-specific NVMe section come from?  previously you had a call to the gen_nvme.sh script here, but now it was removed\n\ni didn\u0027t see this getting done somewhere else but if i missed it please point it out",
+      "revId": "97bbeb004ca2877051107a7431602e2ae9425645",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
