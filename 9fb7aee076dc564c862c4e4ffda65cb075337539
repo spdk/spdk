@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d71be4ea_ab3378e6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T16:41:40Z",
+      "side": 1,
+      "message": "How can we trust you that it is \"ready\" when it still doesn\u0027t use multiqueue? :P",
+      "range": {
+        "startLine": 10,
+        "startChar": 22,
+        "endLine": 15,
+        "endChar": 6
+      },
+      "revId": "9fb7aee076dc564c862c4e4ffda65cb075337539",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
