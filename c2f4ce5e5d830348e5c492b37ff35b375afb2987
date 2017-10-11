@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2190b967_bbf0fca3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1900,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-11T13:34:53Z",
+      "side": 1,
+      "message": "*super is not required here - we can pass only *bs as a context.",
+      "range": {
+        "startLine": 1900,
+        "startChar": 1,
+        "endLine": 1900,
+        "endChar": 35
+      },
+      "revId": "c2f4ce5e5d830348e5c492b37ff35b375afb2987",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
