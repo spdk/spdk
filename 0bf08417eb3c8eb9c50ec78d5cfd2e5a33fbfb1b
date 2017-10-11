@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0d6ebf1_a24b4cf1",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T17:29:02Z",
+      "side": 1,
+      "message": "what if the lvolstore has logical volumes when it is destroyed?\n\nmaybe we don\u0027t allow destroy if there are logical volumes, but either way we need some tests to show what the expected behavior is\n\nand i\u0027m thinking if there are logical volumes, then there will be a memory leak if the lvolstore is destroyed",
+      "revId": "0bf08417eb3c8eb9c50ec78d5cfd2e5a33fbfb1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
