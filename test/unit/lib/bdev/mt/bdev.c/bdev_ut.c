@@ -160,6 +160,7 @@ module_init(void)
 static void
 module_fini(void)
 {
+	spdk_bdev_module_finish_done();
 }
 
 SPDK_BDEV_MODULE_REGISTER(bdev_ut, module_init, module_fini, NULL, NULL, NULL)
@@ -206,13 +207,24 @@ setup_test(void)
 	spdk_bdev_open(&g_bdev.bdev, true, NULL, NULL, &g_desc);
 }
 
+bool g_finish_done = false;
+
+static void
+finish_cb(void)
+{
+	g_finish_done = true;
+}
+
 static void
 teardown_test(void)
 {
+	g_finish_done = false;
 	spdk_bdev_close(g_desc);
 	g_desc = NULL;
 	unregister_bdev();
-	spdk_bdev_finish();
+	spdk_bdev_finish(finish_cb);
+	CU_ASSERT(g_finish_done == true);
+	g_finish_done = false;
 	free_threads();
 }
 

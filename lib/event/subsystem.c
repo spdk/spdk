@@ -43,6 +43,7 @@ static TAILQ_HEAD(subsystem_depend, spdk_subsystem_depend) g_depends =
 	TAILQ_HEAD_INITIALIZER(g_depends);
 static struct spdk_subsystem *g_next_subsystem;
 static struct spdk_event *g_app_start_event;
+static struct spdk_event *g_app_finish_event;
 
 void
 spdk_add_subsystem(struct spdk_subsystem *subsystem)
@@ -166,18 +167,34 @@ spdk_subsystem_init(void *arg1, void *arg2)
 }
 
 void
-spdk_subsystem_fini(void)
+spdk_subsystem_fini_next(void)
 {
-	struct spdk_subsystem *cur;
-
-	cur = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
-
-	while (cur) {
-		if (cur->fini) {
-			cur->fini();
-		}
-		cur = TAILQ_PREV(cur, spdk_subsystem_list, tailq);
+	if (!g_next_subsystem) {
+		g_next_subsystem = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
+	} else {
+		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
 	}
+
+	if (!g_next_subsystem) {
+		spdk_event_call(g_app_finish_event);
+		return;
+	}
+
+	if (g_next_subsystem->fini) {
+		g_next_subsystem->fini();
+	} else {
+		spdk_subsystem_fini_next();
+	}
+}
+
+void
+spdk_subsystem_fini(void *arg1, void *arg2)
+{
+	g_app_finish_event = (struct spdk_event *)arg1;
+
+	assert(g_next_subsystem == NULL);
+
+	spdk_subsystem_fini_next();
 }
 
 void

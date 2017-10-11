@@ -494,6 +494,7 @@ bdev_rbd_library_fini(void)
 		TAILQ_REMOVE(&g_rbds, rbd, tailq);
 		bdev_rbd_free(rbd);
 	}
+	spdk_bdev_module_finish_done();
 }
 
 struct spdk_bdev *

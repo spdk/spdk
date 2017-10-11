@@ -48,9 +48,15 @@ spdk_copy_engine_subsystem_initialize(void)
 }
 
 static void
+spdk_copy_engine_subsystem_finish_complete(void)
+{
+	spdk_subsystem_fini_next();
+}
+
+static void
 spdk_copy_engine_subsystem_finish(void)
 {
-	spdk_copy_engine_finish();
+	spdk_copy_engine_finish(spdk_copy_engine_subsystem_finish_complete);
 }
 
 SPDK_SUBSYSTEM_REGISTER(copy, spdk_copy_engine_subsystem_initialize,
