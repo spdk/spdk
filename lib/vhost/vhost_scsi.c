@@ -306,6 +306,10 @@ spdk_vhost_scsi_task_init_target(struct spdk_vhost_scsi_task *task, const __u8 *
 		return task->svdev->scsi_dev_state[lun[1]].removed ? 0 : -1;
 	}
 
+	if (task->svdev->scsi_dev_state[lun[1]].removed) {
+		return -1;
+	}
+
 	task->scsi.target_port = spdk_scsi_dev_find_port_by_id(task->scsi_dev, 0);
 	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_id);
 	return 0;
