@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf39eb29_ed3d41d2",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T17:55:41Z",
+      "side": 1,
+      "message": "unrelated whitespace change",
+      "revId": "05d56bcccece1c9e12c0d05d9e909dce99cc5f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9096044a_15122f51",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T17:55:41Z",
+      "side": 1,
+      "message": "I don\u0027t see where any of these field on g_io ever get set - from what I can tell, for example, g_io-\u003eu.bdev.iovcnt could be set to garbage, but lvol_write will just pass this garbage to spdk_bs_io_writev_blob, and we end up comparing garbage with garbage.",
+      "revId": "05d56bcccece1c9e12c0d05d9e909dce99cc5f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c19fa74_94ab1fcf",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T17:55:41Z",
+      "side": 1,
+      "message": "extra newline can be removed (there are some other cases of this below)",
+      "revId": "05d56bcccece1c9e12c0d05d9e909dce99cc5f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0cd0330_7501011b",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T17:55:41Z",
+      "side": 1,
+      "message": "what is this test testing?  I don\u0027t see any CU_ASSERT calls",
+      "revId": "05d56bcccece1c9e12c0d05d9e909dce99cc5f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "527e6074_fa4addab",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T17:55:41Z",
+      "side": 1,
+      "message": "extra newline can be removed",
+      "revId": "05d56bcccece1c9e12c0d05d9e909dce99cc5f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3d316e7_2de82b22",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T17:55:41Z",
+      "side": 1,
+      "message": "can you just make this:\n\nstruct lvol_task task;\n\nlvol_op_comp(\u0026task, 1);\nCU_ASSERT(task.status \u003d\u003d SPDK_BDEV_IO_STATUS_FAILED);\n\nin general if you can take this approach it reduces the complexity of the code, because you avoid the calloc/free and reduce the changes of unit test errors around memory allocation",
+      "revId": "05d56bcccece1c9e12c0d05d9e909dce99cc5f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f637a426_87940b4a",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T17:55:41Z",
+      "side": 1,
+      "message": "remove this?",
+      "revId": "05d56bcccece1c9e12c0d05d9e909dce99cc5f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60e596f7_67d3c2fd",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T17:55:41Z",
+      "side": 1,
+      "message": "the order of these CU_add_test calls should match the order of the function definition code",
+      "revId": "05d56bcccece1c9e12c0d05d9e909dce99cc5f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
