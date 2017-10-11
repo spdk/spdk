@@ -2,6 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation.
+ *   Copyright (c) 2017, IBM Corporation.
  *   All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
@@ -844,6 +845,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	uint64_t		phys_addr = 0;
 	uint64_t		offset;
 	uint16_t		num_trackers;
+	size_t 			page_size = sysconf(_SC_PAGESIZE);
 
 	if (qpair->id == 0) {
 		num_trackers = NVME_ADMIN_TRACKERS;
@@ -859,10 +861,10 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 
 	pqpair->sq_in_cmb = false;
 
-	/* cmd and cpl rings must be aligned on 4KB boundaries. */
+	/* cmd and cpl rings must be aligned on page size boundaries. */
 	if (ctrlr->opts.use_cmb_sqs) {
 		if (nvme_pcie_ctrlr_alloc_cmb(ctrlr, pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					      0x1000, &offset) == 0) {
+					      page_size, &offset) == 0) {
 			pqpair->cmd = pctrlr->cmb_bar_virt_addr + offset;
 			pqpair->cmd_bus_addr = pctrlr->cmb_bar_phys_addr + offset;
 			pqpair->sq_in_cmb = true;
@@ -870,7 +872,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	}
 	if (pqpair->sq_in_cmb == false) {
 		pqpair->cmd = spdk_dma_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					       0x1000,
+					       page_size,
 					       &pqpair->cmd_bus_addr);
 		if (pqpair->cmd == NULL) {
 			SPDK_ERRLOG("alloc qpair_cmd failed\n");
@@ -879,7 +881,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	}
 
 	pqpair->cpl = spdk_dma_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cpl),
-				       0x1000,
+				       page_size,
 				       &pqpair->cpl_bus_addr);
 	if (pqpair->cpl == NULL) {
 		SPDK_ERRLOG("alloc qpair_cpl failed\n");
