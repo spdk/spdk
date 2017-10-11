@@ -450,12 +450,13 @@ dev_add_port_max_ports(void)
 }
 
 static void
-dev_add_port_construct_failure(void)
+dev_add_port_construct_failure1(void)
 {
 	struct spdk_scsi_dev dev = { 0 };
 	const int port_name_length = SPDK_SCSI_PORT_MAX_NAME_LENGTH + 2;
 	char name[port_name_length];
-	int id, rc;
+	uint64_t id;
+	int rc;
 
 	dev.num_ports = 1;
 	/* Set the name such that the length exceeds SPDK_SCSI_PORT_MAX_NAME_LENGTH
@@ -472,7 +473,29 @@ dev_add_port_construct_failure(void)
 }
 
 static void
-dev_add_port_success(void)
+dev_add_port_construct_failure2(void)
+{
+	struct spdk_scsi_dev dev = { 0 };
+	const char *name;
+	uint64_t id;
+	int rc;
+
+	dev.num_ports = 1;
+	name = "Name of Port";
+	id = 1;
+
+	/* Initialize port[0] to be valid and its index is set to 1 */
+	dev.port[0].id = id;
+	dev.port[0].is_used = 1;
+
+	rc = spdk_scsi_dev_add_port(&dev, id, name);
+
+	/* returns -1; since the dev already has a port whose index to be 1 */
+	CU_ASSERT_TRUE(rc < 0);
+}
+
+static void
+dev_add_port_success1(void)
 {
 	struct spdk_scsi_dev dev = { 0 };
 	const char *name;
@@ -487,6 +510,52 @@ dev_add_port_success(void)
 	/* successfully adds a port */
 	CU_ASSERT_EQUAL(rc, 0);
 	/* Assert num_ports has been incremented to  2 */
+	CU_ASSERT_EQUAL(dev.num_ports, 2);
+}
+
+static void
+dev_add_port_success2(void)
+{
+	struct spdk_scsi_dev dev = { 0 };
+	const char *name;
+	uint64_t id;
+	int rc;
+
+	dev.num_ports = 1;
+	name = "Name of Port";
+	id = 1;
+	/* set id of invalid port[0] to 1. This must be ignored */
+	dev.port[0].id = id;
+	dev.port[0].is_used = 0;
+
+	rc = spdk_scsi_dev_add_port(&dev, id, name);
+
+	/* successfully adds a port */
+	CU_ASSERT_EQUAL(rc, 0);
+	/* Assert num_ports has been incremented to 1 */
+	CU_ASSERT_EQUAL(dev.num_ports, 2);
+}
+
+static void
+dev_add_port_success3(void)
+{
+	struct spdk_scsi_dev dev = { 0 };
+	const char *name;
+	uint64_t add_id;
+	int rc;
+
+	dev.num_ports = 1;
+	name = "Name of Port";
+	dev.port[0].id = 1;
+	dev.port[0].is_used = 1;
+	add_id = 2;
+
+	/* Add a port with id = 2 */
+	rc = spdk_scsi_dev_add_port(&dev, add_id, name);
+
+	/* successfully adds a port */
+	CU_ASSERT_EQUAL(rc, 0);
+	/* Assert num_ports has been incremented to 2 */
 	CU_ASSERT_EQUAL(dev.num_ports, 2);
 }
 
@@ -618,10 +687,16 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "dev stop - success", dev_stop_success) == NULL
 		|| CU_add_test(suite, "dev add port - max ports",
 			       dev_add_port_max_ports) == NULL
-		|| CU_add_test(suite, "dev add port - construct port failure",
-			       dev_add_port_construct_failure) == NULL
-		|| CU_add_test(suite, "dev add port - success",
-			       dev_add_port_success) == NULL
+		|| CU_add_test(suite, "dev add port - construct port failure 1",
+			       dev_add_port_construct_failure1) == NULL
+		|| CU_add_test(suite, "dev add port - construct port failure 2",
+			       dev_add_port_construct_failure2) == NULL
+		|| CU_add_test(suite, "dev add port - success 1",
+			       dev_add_port_success1) == NULL
+		|| CU_add_test(suite, "dev add port - success 2",
+			       dev_add_port_success2) == NULL
+		|| CU_add_test(suite, "dev add port - success 3",
+			       dev_add_port_success3) == NULL
 		|| CU_add_test(suite, "dev find port by id - num ports zero",
 			       dev_find_port_by_id_num_ports_zero) == NULL
 		|| CU_add_test(suite, "dev find port by id - different port id failure",
