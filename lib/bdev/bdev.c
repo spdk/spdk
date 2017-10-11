@@ -1628,6 +1628,12 @@ spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, int *
 	}
 }
 
+struct spdk_thread *
+spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io)
+{
+	return spdk_io_channel_get_thread(bdev_io->ch->channel);
+}
+
 static void
 _spdk_bdev_register(struct spdk_bdev *bdev)
 {
