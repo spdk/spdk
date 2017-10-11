@@ -418,6 +418,13 @@ void spdk_bdev_io_complete_nvme_status(struct spdk_bdev_io *bdev_io, int sct, in
 void spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_scsi_status sc,
 				       enum spdk_scsi_sense sk, uint8_t asc, uint8_t ascq);
 
+/**
+ * Get I/O channel that given bdev_io was submitted on.
+ *
+ * \param bdev_io I/O
+ * \return I/O channel
+ */
+struct spdk_io_channel *spdk_bdev_io_get_channel(struct spdk_bdev_io *bdev_io);
 
 void spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			      int *sc, int *sk, int *asc, int *ascq);
