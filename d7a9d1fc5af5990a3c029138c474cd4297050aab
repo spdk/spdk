@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "799b8d7c_19b01940",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T21:16:38Z",
+      "side": 1,
+      "message": "for consistency, should this be similar to the other commands here, where we check the return value of get_discovery_log_page(), and then either increment outstanding_commands here or do a printf denoting failure?\n\nbut...if you look at all of these functions like get_error_log_page, get_health_log_page and now get_discovery_log_page, they always return 0, and exit() in case of failure instead of return an error value; so maybe that should be cleaned up too",
+      "revId": "d7a9d1fc5af5990a3c029138c474cd4297050aab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12b8da2f_9896472d",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T21:16:38Z",
+      "side": 1,
+      "message": "should just be iWARP",
+      "revId": "d7a9d1fc5af5990a3c029138c474cd4297050aab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
