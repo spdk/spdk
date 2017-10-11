@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/endian.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
@@ -40,6 +41,8 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/pci_ids.h"
 #include "spdk/util.h"
+
+#define MAX_DISCOVERY_LOG_ENTRIES	((uint64_t)1000)
 
 static int outstanding_commands;
 
@@ -59,6 +62,10 @@ static struct spdk_nvme_intel_smart_information_page intel_smart_page;
 static struct spdk_nvme_intel_temperature_page intel_temperature_page;
 
 static struct spdk_nvme_intel_marketing_description_page intel_md_page;
+
+static struct spdk_nvmf_discovery_log_page *g_discovery_page;
+static size_t g_discovery_page_size;
+static uint64_t g_discovery_page_numrec;
 
 static bool g_hex_dump = false;
 
@@ -250,6 +257,99 @@ get_intel_md_log_page(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 static void
+get_discovery_log_page_header_completion(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvmf_discovery_log_page *new_discovery_page;
+	struct spdk_nvme_ctrlr *ctrlr = cb_arg;
+	uint16_t recfmt;
+	uint64_t remaining;
+	uint64_t offset;
+
+	outstanding_commands--;
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		/* Return without printing anything - this may not be a discovery controller */
+		free(g_discovery_page);
+		g_discovery_page = NULL;
+		return;
+	}
+
+	/* Got the first 4K of the discovery log page */
+	recfmt = from_le16(&g_discovery_page->recfmt);
+	if (recfmt != 0) {
+		printf("Unrecognized discovery log record format %" PRIu16 "\n", recfmt);
+		return;
+	}
+
+	g_discovery_page_numrec = from_le64(&g_discovery_page->numrec);
+
+	/* Pick an arbitrary limit to avoid ridiculously large buffer size. */
+	if (g_discovery_page_numrec > MAX_DISCOVERY_LOG_ENTRIES) {
+		printf("Discovery log has %" PRIu64 " entries - limiting to %" PRIu64 ".\n",
+		       g_discovery_page_numrec, MAX_DISCOVERY_LOG_ENTRIES);
+		g_discovery_page_numrec = MAX_DISCOVERY_LOG_ENTRIES;
+	}
+
+	/*
+	 * Now that we now how many entries should be in the log page, we can allocate
+	 * the full log page buffer.
+	 */
+	g_discovery_page_size += g_discovery_page_numrec * sizeof(struct
+				 spdk_nvmf_discovery_log_page_entry);
+	new_discovery_page = realloc(g_discovery_page, g_discovery_page_size);
+	if (new_discovery_page == NULL) {
+		printf("Discovery page allocation failed!\n");
+		return;
+	}
+
+	g_discovery_page = new_discovery_page;
+
+	/* Retrieve the rest of the discovery log page */
+	offset = offsetof(struct spdk_nvmf_discovery_log_page, entries);
+	remaining = g_discovery_page_size - offset;
+	while (remaining) {
+		uint32_t size;
+
+		/* Retrieve up to 4 KB at a time */
+		size = spdk_min(remaining, 4096);
+
+		if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY,
+						     0, (char *)g_discovery_page + offset, size, offset,
+						     get_log_page_completion, NULL)) {
+			printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
+			exit(1);
+		}
+
+		offset += size;
+		remaining -= size;
+		outstanding_commands++;
+	}
+}
+
+static int
+get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr)
+{
+	/* Allocate the initial discovery log page buffer - this will be resized later. */
+	g_discovery_page_size = sizeof(*g_discovery_page);
+	g_discovery_page = calloc(1, g_discovery_page_size);
+	if (g_discovery_page == NULL) {
+		printf("Discovery log page allocation failed!\n");
+		exit(1);
+	}
+
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_DISCOVERY,
+					     0, g_discovery_page, g_discovery_page_size, 0,
+					     get_discovery_log_page_header_completion, ctrlr)) {
+		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
+		exit(1);
+	}
+
+	outstanding_commands++;
+
+	return 0;
+}
+
+
+static void
 get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
 	const struct spdk_nvme_ctrlr_data *cdata;
@@ -293,6 +393,9 @@ get_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		}
 
 	}
+
+	get_discovery_log_page(ctrlr);
+
 	while (outstanding_commands) {
 		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 	}
@@ -963,6 +1066,83 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 
 	for (i = 1; i <= spdk_nvme_ctrlr_get_num_ns(ctrlr); i++) {
 		print_namespace(spdk_nvme_ctrlr_get_ns(ctrlr, i));
+	}
+
+	if (g_discovery_page) {
+		printf("Discovery Log Page\n");
+		printf("==================\n");
+
+		if (g_hex_dump) {
+			hex_dump(g_discovery_page, g_discovery_page_size);
+			printf("\n");
+		}
+
+		printf("Generation Counter:                    %" PRIu64 "\n",
+		       from_le64(&g_discovery_page->genctr));
+		printf("Number of Records:                     %" PRIu64 "\n",
+		       from_le64(&g_discovery_page->numrec));
+		printf("Record Format:                         %" PRIu16 "\n",
+		       from_le16(&g_discovery_page->recfmt));
+		printf("\n");
+
+		for (i = 0; i < g_discovery_page_numrec; i++) {
+			struct spdk_nvmf_discovery_log_page_entry *entry = &g_discovery_page->entries[i];
+
+			printf("Discovery Log Entry %u\n", i);
+			printf("----------------------\n");
+			printf("Transport Type:                        %u (%s)\n",
+			       entry->trtype, spdk_nvme_transport_id_trtype_str(entry->trtype));
+			printf("Address Family:                        %u (%s)\n",
+			       entry->adrfam, spdk_nvme_transport_id_adrfam_str(entry->adrfam));
+			printf("Subsystem Type:                        %u (%s)\n",
+			       entry->subtype,
+			       entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY ? "Discovery Service" :
+			       entry->subtype == SPDK_NVMF_SUBTYPE_NVME ? "NVM Subsystem" :
+			       "Unknown");
+			printf("Transport Requirements:\n");
+			printf("  Secure Channel:                      %s\n",
+			       entry->treq.secure_channel == SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_SPECIFIED ? "Not Specified" :
+			       entry->treq.secure_channel == SPDK_NVMF_TREQ_SECURE_CHANNEL_REQUIRED ? "Required" :
+			       entry->treq.secure_channel == SPDK_NVMF_TREQ_SECURE_CHANNEL_NOT_REQUIRED ? "Not Required" :
+			       "Reserved");
+			printf("Port ID:                               %" PRIu16 " (0x%04" PRIx16 ")\n",
+			       from_le16(&entry->portid), from_le16(&entry->portid));
+			printf("Controller ID:                         %" PRIu16 " (0x%04" PRIx16 ")\n",
+			       from_le16(&entry->cntlid), from_le16(&entry->cntlid));
+			printf("Admin Max SQ Size:                     %" PRIu16 "\n",
+			       from_le16(&entry->asqsz));
+			snprintf(str, sizeof(entry->trsvcid) + 1, "%s", entry->trsvcid);
+			printf("Transport Service Identifier:          %s\n", str);
+			snprintf(str, sizeof(entry->subnqn) + 1, "%s", entry->subnqn);
+			printf("NVM Subsystem Qualified Name:          %s\n", str);
+			snprintf(str, sizeof(entry->traddr) + 1, "%s", entry->traddr);
+			printf("Transport Address:                     %s\n", str);
+
+			if (entry->trtype == SPDK_NVMF_TRTYPE_RDMA) {
+				printf("Transport Specific Address Subtype - RDMA\n");
+				printf("  RDMA QP Service Type:                %u (%s)\n",
+				       entry->tsas.rdma.rdma_qptype,
+				       entry->tsas.rdma.rdma_qptype == SPDK_NVMF_RDMA_QPTYPE_RELIABLE_CONNECTED ? "Reliable Connected" :
+				       entry->tsas.rdma.rdma_qptype == SPDK_NVMF_RDMA_QPTYPE_RELIABLE_DATAGRAM ? "Reliable Datagram" :
+				       "Unknown");
+				printf("  RDMA Provider Type:                  %u (%s)\n",
+				       entry->tsas.rdma.rdma_prtype,
+				       entry->tsas.rdma.rdma_prtype == SPDK_NVMF_RDMA_PRTYPE_NONE ? "No provider specified" :
+				       entry->tsas.rdma.rdma_prtype == SPDK_NVMF_RDMA_PRTYPE_IB ? "InfiniBand" :
+				       entry->tsas.rdma.rdma_prtype == SPDK_NVMF_RDMA_PRTYPE_ROCE ? "InfiniBand RoCE" :
+				       entry->tsas.rdma.rdma_prtype == SPDK_NVMF_RDMA_PRTYPE_ROCE2 ? "InfiniBand RoCE v2" :
+				       entry->tsas.rdma.rdma_prtype == SPDK_NVMF_RDMA_PRTYPE_IWARP ? "InfiniBand iWARP" :
+				       "Unknown");
+				printf("  RDMA CM Service:                     %u (%s)\n",
+				       entry->tsas.rdma.rdma_cms,
+				       entry->tsas.rdma.rdma_cms == SPDK_NVMF_RDMA_CMS_RDMA_CM ? "RDMA_CM" :
+				       "Unknown");
+				if (entry->adrfam == SPDK_NVMF_ADRFAM_IB) {
+					printf("  RDMA Partition Key:                  %" PRIu32 "\n",
+					       from_le32(&entry->tsas.rdma.rdma_pkey));
+				}
+			}
+		}
 	}
 }
 
