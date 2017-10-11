@@ -1,0 +1,308 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50a31fe8_5fe50c11",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "It already \"is\" implemented ;) I don\u0027t think rest of the file should be written in future tense, as those features are present.",
+      "range": {
+        "startLine": 7,
+        "startChar": 23,
+        "endLine": 7,
+        "endChar": 30
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82c96706_86a1fec8",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "Please link to blob doc",
+      "range": {
+        "startLine": 7,
+        "startChar": 54,
+        "endLine": 7,
+        "endChar": 63
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d2a97fc_5a6678cc",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "Logical volume store uses super blob to hold uuid (and in future other metadata). Blobstore types are implemented in blobstore itself, and saved on disk.",
+      "range": {
+        "startLine": 7,
+        "startChar": 71,
+        "endLine": 8,
+        "endChar": 13
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba14b1e6_1d69a38c",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "Great idea to include shorter versions - as it is referenced many times in code.\nLogical volume store, lvol store, lvs are all equivalent.",
+      "range": {
+        "startLine": 10,
+        "startChar": 12,
+        "endLine": 10,
+        "endChar": 21
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ca1fc97_db01e2c5",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "Please use UUID, instead of GUID.",
+      "range": {
+        "startLine": 13,
+        "startChar": 29,
+        "endLine": 13,
+        "endChar": 33
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a70e416_a7c45c36",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "Not sure if this is required - it is assumed that separation is there for libraries, only with certain requirements. lib/lvol depends on blobstore, and lib/bdev/lvol depends on bdev and lib/lvol.",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 50
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "597d7620_2ad21709",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "UUID",
+      "range": {
+        "startLine": 27,
+        "startChar": 59,
+        "endLine": 27,
+        "endChar": 63
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3754ae8_cdee3722",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 50
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a0c1663_fbdfbc79",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "Please mention that a new bdev is created as a result of lvol bdev creation. It does not seem that clear, to me at least.\n\n- block_size of the created is always 4096, due to blobstore page size.\n- cluster_size parameter, that default is 1GiB and is configurable by parameter\n- size of the new bdev is will be rounded up to nearest multiple of cluster_size",
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc7574cc_41e79815",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "Please add more info on this call:\n- bdev is unmapped at initialization\n- bdev after construct is claimed\n- describe --cluster-size paramter",
+      "range": {
+        "startLine": 49,
+        "startChar": 1,
+        "endLine": 49,
+        "endChar": 39
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fbe7bc8_b259df36",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "uuid is used instead of bdev_name",
+      "range": {
+        "startLine": 50,
+        "startChar": 21,
+        "endLine": 50,
+        "endChar": 30
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41af9a8c_a7b60f57",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "Please add info that this call:\n- removes lvol store along with lvols on it, in one go",
+      "range": {
+        "startLine": 51,
+        "startChar": 1,
+        "endLine": 51,
+        "endChar": 36
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65563e8d_40f6e1b8",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "It would be worth mentioning restrictions and work in progress:\n- Nesting logical volumes on each other is currently not possible\n- resize lvol bdev, code is present but not used as more work is to be done",
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "346c475f_ff684150",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T13:12:10Z",
+      "side": 1,
+      "message": "I think more can be done here, please keep it mind it will be processed by doxygen. What callbacks to use when, describe parameters for functions etc.\nPlease see other headers for examples (include/spdk/ioat.h).",
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
