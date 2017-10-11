@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e247d7e_b16df51b",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 709,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T19:11:55Z",
+      "side": 1,
+      "message": "ok - so previous review i recommended using get_next_unused_queue() instead of hardcoding \"2\" - but that won\u0027t work here\n\nbut maybe instead you could have a \"scan_queue\" pointer in the vdev - if that\u0027s not-null then you can stop the poller for scan_queue and free the poller_ctx associated with it",
+      "revId": "f8ec30a054e19d91598e42d4473f15d2f25414e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
