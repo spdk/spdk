@@ -355,6 +355,25 @@ virtio_dev_acquire_queue(struct virtio_dev *vdev, uint16_t start_index)
 	return vq;
 }
 
+struct virtqueue *
+virtio_dev_get_acquired_queue(struct virtio_dev *vdev)
+{
+	struct virtqueue *vq = NULL;
+	uint32_t lcore = spdk_env_get_current_core();
+	uint16_t i;
+
+	pthread_mutex_lock(&vdev->mutex);
+	for (i = 0; i < vdev->max_queues; ++i) {
+		vq = vdev->vqs[i];
+		if (vq != NULL && vq->owner_lcore == lcore) {
+			pthread_mutex_unlock(&vdev->mutex);
+			return vq;
+		}
+	}
+	pthread_mutex_unlock(&vdev->mutex);
+	return NULL;
+}
+
 void
 virtio_dev_release_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 {

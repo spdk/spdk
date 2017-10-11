@@ -100,6 +100,15 @@ int virtio_dev_start(struct virtio_dev *hw);
 struct virtqueue *virtio_dev_acquire_queue(struct virtio_dev *vdev, uint16_t start_index);
 
 /**
+ * Look for a virtqueue acquired by the current lcore.  If multiple queues
+ * are found, the one with the lowest index will be returned.
+ *
+ * \param vdev vhost device
+ * \return virtqueue or NULL
+ */
+struct virtqueue *virtio_dev_get_acquired_queue(struct virtio_dev *vdev);
+
+/**
  * Release previously acquired queue.
  *
  * This function must be called from the thread that acquired the queue.
