@@ -1,0 +1,257 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1627a3a_08e02263",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-11T12:58:58Z",
+      "side": 1,
+      "message": "This will obviously need rebasing after hot-attach tests are merged, keep that in mind!",
+      "range": {
+        "startLine": 252,
+        "startChar": 0,
+        "endLine": 269,
+        "endChar": 1
+      },
+      "revId": "edb29a9e1c8a13750dcdd90e585a40ccbe3856cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "620a4e9f_76af84a0",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-11T12:58:58Z",
+      "side": 1,
+      "message": "This will obviously need rebasing after hot-attach tests are merged, keep that in mind!",
+      "range": {
+        "startLine": 300,
+        "startChar": 0,
+        "endLine": 313,
+        "endChar": 14
+      },
+      "revId": "edb29a9e1c8a13750dcdd90e585a40ccbe3856cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc4ee77e_9c7ce938",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-11T12:58:58Z",
+      "side": 1,
+      "message": "tabs/spaces consistency across file",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 1
+      },
+      "revId": "edb29a9e1c8a13750dcdd90e585a40ccbe3856cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bb8955c_21127cbb",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-11T12:58:58Z",
+      "side": 1,
+      "message": "I\u0027d suggest preparing a separate VM image which uses 1G HP\u0027s just for these tests. This  will help to save execution time.",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 14
+      },
+      "revId": "edb29a9e1c8a13750dcdd90e585a40ccbe3856cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60ba20bf_adc1e2df",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-11T12:58:58Z",
+      "side": 1,
+      "message": "Remove that from scripts, this should not be here (seriously man)",
+      "range": {
+        "startLine": 73,
+        "startChar": 1,
+        "endLine": 73,
+        "endChar": 58
+      },
+      "revId": "edb29a9e1c8a13750dcdd90e585a40ccbe3856cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e626f1f_08499994",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-11T12:58:58Z",
+      "side": 1,
+      "message": "Remove all proxy references",
+      "range": {
+        "startLine": 77,
+        "startChar": 18,
+        "endLine": 77,
+        "endChar": 70
+      },
+      "revId": "edb29a9e1c8a13750dcdd90e585a40ccbe3856cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "041ef970_8194a4ce",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-11T12:58:58Z",
+      "side": 1,
+      "message": "This will take a ton of time... maybe we could copy sources from test machine? Sources are already there (it\u0027d be best to just copy compiled SPDK and run, but we\u0027d have to have same systems on host and guest)",
+      "range": {
+        "startLine": 78,
+        "startChar": 1,
+        "endLine": 78,
+        "endChar": 56
+      },
+      "revId": "edb29a9e1c8a13750dcdd90e585a40ccbe3856cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8078e65_f6dfa4d6",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-11T12:58:58Z",
+      "side": 1,
+      "message": "Again, this will take lots of time to install deps.",
+      "range": {
+        "startLine": 80,
+        "startChar": 1,
+        "endLine": 80,
+        "endChar": 34
+      },
+      "revId": "edb29a9e1c8a13750dcdd90e585a40ccbe3856cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40fc9bae_faf879fc",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-11T12:58:58Z",
+      "side": 1,
+      "message": "We don\u0027t have any tests that run traffic on FreeBSD so why should we add them here? \nAlso - none our guest VMs are freebsd, so ...",
+      "range": {
+        "startLine": 111,
+        "startChar": 85,
+        "endLine": 111,
+        "endChar": 157
+      },
+      "revId": "edb29a9e1c8a13750dcdd90e585a40ccbe3856cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c169075e_3d83aa40",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-11T12:58:58Z",
+      "side": 1,
+      "message": "why do we need so many quotes / double quotes?",
+      "range": {
+        "startLine": 116,
+        "startChar": 79,
+        "endLine": 116,
+        "endChar": 84
+      },
+      "revId": "edb29a9e1c8a13750dcdd90e585a40ccbe3856cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "006eb54b_271a252f",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-11T12:58:58Z",
+      "side": 1,
+      "message": "vhost.0 was fine. Any reason to change that?",
+      "range": {
+        "startLine": 148,
+        "startChar": 57,
+        "endLine": 148,
+        "endChar": 68
+      },
+      "revId": "edb29a9e1c8a13750dcdd90e585a40ccbe3856cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
