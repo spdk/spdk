@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3b4f151_864588fd",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T20:20:56Z",
+      "side": 1,
+      "message": "could we just pick a core for this poller and keep it there?  or is there a reason to stop this poller and restart it\n\nthis only executes once every 5ms so the overhead is pretty low\n\nthis would be similar to the nvme hotplug poller (search for g_nvme_hotplug_poll_core) - it just starts the poller on one core and keeps it there\n\nthen you also wouldn\u0027t need the get_next_used_queue() function",
+      "revId": "5ea721db8fa8963196bff8a920a317e14232cc4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
