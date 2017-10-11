@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7b35153_208cd338",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T19:08:16Z",
+      "side": 1,
+      "message": "can poller start/stop be done outside of the mutex?  i\u0027m thinking the mutex just needs to protect the owner_lcore;  then you could push the mutex stuff down into get_next_unused_queue\n\nthen maybe also add a function like \"release_queue\" which acquires the mutex and resets the vq-\u003eowner_lcore",
+      "revId": "186a094337f930fe4251878ea1e04ec310eb20ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64668316_d2bc1da7",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T19:08:16Z",
+      "side": 1,
+      "message": "could you just use get_next_unused_queue() here, instead of hardcoding index 2?  then you can hide some of these details from bdev_virtio.c",
+      "revId": "186a094337f930fe4251878ea1e04ec310eb20ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "169d5516_82c6f5ac",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T19:08:16Z",
+      "side": 1,
+      "message": "i\u0027d suggest a more descriptive name here - virtio_dev_allocate_queue?",
+      "revId": "186a094337f930fe4251878ea1e04ec310eb20ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
