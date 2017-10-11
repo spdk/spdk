@@ -22,6 +22,30 @@
       "revId": "9fb7aee076dc564c862c4e4ffda65cb075337539",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d576127_6f20023f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-11T18:01:20Z",
+      "side": 1,
+      "message": "i swear it works! :)",
+      "parentUuid": "d71be4ea_ab3378e6",
+      "range": {
+        "startLine": 10,
+        "startChar": 22,
+        "endLine": 15,
+        "endChar": 6
+      },
+      "revId": "9fb7aee076dc564c862c4e4ffda65cb075337539",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
