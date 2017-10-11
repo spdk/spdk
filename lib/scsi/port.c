@@ -76,10 +76,17 @@ spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id, uint16_t inde
 		return -1;
 	}
 
+	port->is_used = 1;
 	port->id = id;
 	port->index = index;
 	snprintf(port->name, sizeof(port->name), "%s", name);
 	return 0;
+}
+
+void
+spdk_scsi_port_destruct(struct spdk_scsi_port *port)
+{
+	memset(port, 0, sizeof(struct spdk_scsi_port));
 }
 
 const char *

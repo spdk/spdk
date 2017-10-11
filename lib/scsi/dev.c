@@ -220,6 +220,20 @@ spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev,
 	}
 }
 
+static struct spdk_scsi_port *
+spdk_scsi_dev_find_free_port(struct spdk_scsi_dev *dev)
+{
+	int i;
+
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_PORTS; i++) {
+		if (!dev->port[i].is_used) {
+			return &dev->port[i];
+		}
+	}
+
+	return NULL;
+}
+
 int
 spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 {
@@ -231,7 +245,17 @@ spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 		return -1;
 	}
 
-	port = &dev->port[dev->num_ports];
+	port = spdk_scsi_dev_find_port_by_id(dev, id);
+	if (port != NULL) {
+		SPDK_ERRLOG("device already has port(%" PRIu64 ")\n", id);
+		return -1;
+	}
+
+	port = spdk_scsi_dev_find_free_port(dev);
+	if (port == NULL) {
+		assert(false);
+		return -1;
+	}
 
 	rc = spdk_scsi_port_construct(port, id, dev->num_ports, name);
 	if (rc != 0) {
@@ -242,12 +266,33 @@ spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 	return 0;
 }
 
+int
+spdk_scsi_dev_delete_port(struct spdk_scsi_dev *dev, uint64_t id)
+{
+	struct spdk_scsi_port *port;
+
+	port = spdk_scsi_dev_find_port_by_id(dev, id);
+	if (port == NULL) {
+		SPDK_ERRLOG("device does not have specified port(%" PRIu64 ")\n", id);
+		return -1;
+	}
+
+	spdk_scsi_port_destruct(port);
+
+	dev->num_ports--;
+
+	return 0;
+}
+
 struct spdk_scsi_port *
 spdk_scsi_dev_find_port_by_id(struct spdk_scsi_dev *dev, uint64_t id)
 {
 	int i;
 
-	for (i = 0; i < dev->num_ports; i++) {
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_PORTS; i++) {
+		if (!dev->port[i].is_used) {
+			continue;
+		}
 		if (dev->port[i].id == id) {
 			return &dev->port[i];
 		}
