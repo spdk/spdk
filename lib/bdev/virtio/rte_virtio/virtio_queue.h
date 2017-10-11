@@ -112,6 +112,9 @@ struct virtqueue {
 	/** Response poller. */
 	struct spdk_bdev_poller	*poller;
 
+	/** Context for response poller. */
+	void *poller_ctx;
+
 	struct vq_desc_extra vq_descx[0];
 };
 

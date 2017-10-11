@@ -393,6 +393,7 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 
 	vq = base->vdev->vqs[2];
 	spdk_bdev_poller_stop(&vq->poller);
+	vq->poller_ctx = NULL;
 	vq->owner_lcore = SPDK_ENV_LCORE_ID_ANY;
 
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
@@ -629,7 +630,7 @@ bdev_virtio_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Virtio");
 	struct virtio_scsi_scan_base *base;
-	struct virtio_dev *vdev = NULL;
+	struct virtio_dev *vdev, *next_vdev;
 	char *type, *path;
 	uint32_t i;
 	int rc = 0;
@@ -639,6 +640,7 @@ bdev_virtio_initialize(void)
 		goto out;
 	}
 
+	/* Create all vhost-user devices */
 	for (i = 0; spdk_conf_section_get_nval(sp, "Dev", i) != NULL; i++) {
 		type = spdk_conf_section_get_nmval(sp, "Dev", i, 0);
 		if (type == NULL) {
@@ -664,9 +666,11 @@ bdev_virtio_initialize(void)
 	}
 
 	if (scan_pci) {
+		/* Create all vhost-pci devices */
 		vtpci_enumerate_pci();
 	}
 
+	/* Initialize all created devices and scan available targets */
 	TAILQ_FOREACH(vdev, &g_virtio_driver.init_ctrlrs, tailq) {
 		base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
 		if (base == NULL) {
@@ -677,11 +681,13 @@ bdev_virtio_initialize(void)
 
 		rc = virtio_dev_init(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
 		if (rc != 0) {
+			spdk_dma_free(base);
 			goto out;
 		}
 
 		rc = virtio_dev_start(vdev);
 		if (rc != 0) {
+			spdk_dma_free(base);
 			goto out;
 		}
 
@@ -689,6 +695,7 @@ bdev_virtio_initialize(void)
 		TAILQ_INIT(&base->found_disks);
 
 		vdev->vqs[2]->owner_lcore = spdk_env_get_current_core();
+		vdev->vqs[2]->poller_ctx = base;
 		spdk_bdev_poller_start(&vdev->vqs[2]->poller, bdev_scan_poll, base,
 				       vdev->vqs[2]->owner_lcore, 0);
 		scan_target(base);
@@ -697,9 +704,18 @@ bdev_virtio_initialize(void)
 	return 0;
 
 out:
-	if (vdev) {
+	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.init_ctrlrs, tailq, next_vdev) {
+		TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+		if (vdev->vqs[2]->owner_lcore != SPDK_ENV_LCORE_ID_ANY) {
+			spdk_bdev_poller_stop(&vdev->vqs[2]->poller);
+			spdk_dma_free(vdev->vqs[2]->poller_ctx);
+		}
+		/* since scan pollers are being started on the current core they
+		 * couldn't do a single tick yet. it's safe to free the vdev now.
+		 */
 		virtio_dev_free(vdev);
 	}
+
 
 	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 	return rc;
