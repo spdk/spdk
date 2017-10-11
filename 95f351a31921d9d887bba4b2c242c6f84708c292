@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c63b8b63_9ba81aaa",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1908,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T17:26:57Z",
+      "side": 1,
+      "message": "we still need to free the bs and any other associated data structures - otherwise we get leaks (reported by the test pool for the new destroy unit test)\n\nin general though, i think the spdk_bs_destroy() still has to go through more of the sequence like unload - for example, where does bs_dev-\u003edestroy() get called",
+      "revId": "95f351a31921d9d887bba4b2c242c6f84708c292",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
