@@ -84,6 +84,7 @@ uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
 int virtio_dev_init(struct virtio_dev *hw, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);
 int virtio_dev_start(struct virtio_dev *hw);
+struct virtqueue *get_next_used_queue(struct virtio_dev *dev, uint16_t start_index);
 struct virtqueue *get_next_unused_queue(struct virtio_dev *dev, uint16_t start_index);
 
 #endif /* _VIRTIO_DEV_H_ */

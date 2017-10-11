@@ -356,3 +356,25 @@ get_next_unused_queue(struct virtio_dev *dev, uint16_t start_index)
 
 	return vq;
 }
+
+struct virtqueue *
+get_next_used_queue(struct virtio_dev *dev, uint16_t start_index)
+{
+	struct virtqueue *vq = NULL;
+	uint16_t i;
+
+	for (i = start_index; i < dev->max_queues; ++i) {
+		vq = dev->vqs[i];
+		if (vq != NULL && vq->owner_lcore != SPDK_ENV_LCORE_ID_ANY) {
+			break;
+		}
+	}
+
+	if (vq == NULL || i == dev->max_queues) {
+		PMD_DRV_LOG(ERR, "all queues starting from index %"PRIu16" are unused.\n",
+			    start_index);
+		return NULL;
+	}
+
+	return vq;
+}
