@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "5e640e86_6ff5b4c9",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-11T17:56:12Z",
+      "side": 1,
+      "message": "scsi_dev can be NULL in multiple cases.\ndepending on such fields (task-\u003estatus in vhost_blk as you suggested) will make things even more twisted.",
+      "parentUuid": "bee8f4a1_dc500e8c",
+      "range": {
+        "startLine": 102,
+        "startChar": 1,
+        "endLine": 102,
+        "endChar": 11
+      },
+      "revId": "34fb7716348fe54e5727f90e25096e5d491397b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7bcc8514_fcc9353e",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 11
@@ -59,6 +83,30 @@
       "writtenOn": "2017-10-11T16:18:42Z",
       "side": 1,
       "message": "Do we need to put the req in used ring here? the same as in line 594?",
+      "range": {
+        "startLine": 559,
+        "startChar": 3,
+        "endLine": 559,
+        "endChar": 12
+      },
+      "revId": "34fb7716348fe54e5727f90e25096e5d491397b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01447f4e_5bdd49bb",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 559,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-11T17:56:12Z",
+      "side": 1,
+      "message": "good catch, missed that. thanks!",
+      "parentUuid": "7bcc8514_fcc9353e",
       "range": {
         "startLine": 559,
         "startChar": 3,
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "41a132fe_44535d31",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-11T17:56:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c48977cc_f1f6ff31",
+      "range": {
+        "startLine": 566,
+        "startChar": 3,
+        "endLine": 566,
+        "endChar": 12
+      },
+      "revId": "34fb7716348fe54e5727f90e25096e5d491397b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "616f85cd_c0664d58",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 11
@@ -105,6 +177,30 @@
       "writtenOn": "2017-10-11T16:18:42Z",
       "side": 1,
       "message": "You are stepping on thin ice here. Can you clear out only task-\u003escsi?",
+      "range": {
+        "startLine": 570,
+        "startChar": 2,
+        "endLine": 570,
+        "endChar": 63
+      },
+      "revId": "34fb7716348fe54e5727f90e25096e5d491397b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "449497ae_d3bc6b1f",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-11T17:56:12Z",
+      "side": 1,
+      "message": "I\u0027m not sure if that doesn\u0027t break anything.\nwe used to memset entire task before, let\u0027s not change that now.",
+      "parentUuid": "616f85cd_c0664d58",
       "range": {
         "startLine": 570,
         "startChar": 2,
