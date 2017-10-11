@@ -52,7 +52,7 @@ vbdev_lvs_hotremove_cb(void *ctx)
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
 		if (lvs_bdev) {
 			if (lvs_bdev->bdev == bdev) {
-				vbdev_lvs_destruct(lvs_bdev->lvs, NULL, NULL);
+				vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
 			}
 		}
 	}
@@ -140,6 +140,51 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
 }
 
 static void
+_vbdev_lvs_unload_cb(void *cb_arg, int lvserrno)
+{
+	struct spdk_lvs_req *req = cb_arg;
+
+	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev unloaded\n");
+
+	if (req->cb_fn != NULL)
+		req->cb_fn(req->cb_arg, lvserrno);
+	free(req);
+}
+
+void
+vbdev_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
+		 void *cb_arg)
+{
+
+	struct spdk_lvs_req *req;
+	struct lvol_store_bdev *lvs_bdev;
+	struct spdk_lvol *lvol, *tmp;
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
+		return;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
+	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+
+	free(lvs_bdev);
+
+	if (TAILQ_EMPTY(&lvs->lvols)) {
+		spdk_lvs_unload(lvs, _vbdev_lvs_unload_cb, req);
+	} else {
+		lvs->destruct_req = req;
+		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+			lvol->close_only = true;
+			spdk_bdev_unregister(lvol->bdev);
+		}
+	}
+}
+
+static void
 _vbdev_lvs_destruct_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_lvs_req *req = cb_arg;
@@ -174,11 +219,12 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	free(lvs_bdev);
 
 	if (TAILQ_EMPTY(&lvs->lvols)) {
-		spdk_lvs_unload(lvs, _vbdev_lvs_destruct_cb, req);
+		spdk_lvs_destroy(lvs, _vbdev_lvs_destruct_cb, req);
 	} else {
 		lvs->destruct_req = req;
+		lvs->uninit = true;
 		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
-			lvol->close_only = true;
+			lvol->close_only = false;
 			spdk_bdev_unregister(lvol->bdev);
 		}
 	}
@@ -586,7 +632,7 @@ vbdev_lvs_fini(void)
 	struct lvol_store_bdev *lvs_bdev, *tmp;
 
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
-		vbdev_lvs_destruct(lvs_bdev->lvs, NULL, NULL);
+		vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
 	}
 }
 
