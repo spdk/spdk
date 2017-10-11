@@ -1,0 +1,296 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24b3c0a3_24be77b9",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "On failures other than failure to open (lvolerrno !\u003d 0), lvol has to be closed. Otherwise we end up with open blob and no lvol bdev.",
+      "range": {
+        "startLine": 624,
+        "startChar": 2,
+        "endLine": 624,
+        "endChar": 47
+      },
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfb08879_5af2aa61",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "Still need to consider that all the opens are not necessarily in order. Please see Jim\u0027s previous comment.",
+      "range": {
+        "startLine": 635,
+        "startChar": 1,
+        "endLine": 637,
+        "endChar": 2
+      },
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41944be9_49766fd0",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "req-\u003ecb_arg",
+      "range": {
+        "startLine": 56,
+        "startChar": 12,
+        "endLine": 56,
+        "endChar": 15
+      },
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e8321fc_f566805f",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "free(req)",
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e75fc491_507b5a3d",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "req-\u003ecb_arg",
+      "range": {
+        "startLine": 74,
+        "startChar": 12,
+        "endLine": 74,
+        "endChar": 15
+      },
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6a81f29_53b44df4",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "free(req)",
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c6c2e55_b0b2cff2",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "req-\u003ecb_arg",
+      "range": {
+        "startLine": 149,
+        "startChar": 13,
+        "endLine": 149,
+        "endChar": 16
+      },
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68b13524_6f8dfece",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "free(req)",
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d91ccd66_51e766e5",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "I don\u0027t think req-\u003ebase_bdev is available in spdk_lvs_load(), so it probably isn\u0027t here.",
+      "range": {
+        "startLine": 154,
+        "startChar": 7,
+        "endLine": 154,
+        "endChar": 27
+      },
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c60a21a3_cfd0931d",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "Too much whitespace",
+      "range": {
+        "startLine": 173,
+        "startChar": 41,
+        "endLine": 173,
+        "endChar": 44
+      },
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5ab44e2_7bc984e4",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "I don\u0027t think we should touch cb_arg passed here, just allocate new req. Req could be reused between function and callback in lvol.c, but not between lvol.c and vbdev_lvol.c",
+      "range": {
+        "startLine": 175,
+        "startChar": 33,
+        "endLine": 175,
+        "endChar": 46
+      },
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "123522bf_4144aa9a",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "As this is public function, should we check bs_dev \u003d\u003d NULL?\n Same as in spdk_lvs_init().",
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb5fed1c_fbfef77f",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "req-\u003ecb_arg \u003d cb_arg as well.",
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48b2d8c1_2bab7a21",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 68
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-11T14:34:13Z",
+      "side": 1,
+      "message": "Pass req here.",
+      "range": {
+        "startLine": 185,
+        "startChar": 47,
+        "endLine": 185,
+        "endChar": 53
+      },
+      "revId": "0c83515129592683edb5a1ea22b1374ebfb15b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
