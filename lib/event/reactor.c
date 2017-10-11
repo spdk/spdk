@@ -40,6 +40,12 @@
 #include "spdk/io_channel.h"
 #include "spdk/env.h"
 
+#ifdef SPDK_CONFIG_VTUNE
+#include "ittnotify.h"
+#include "ittnotify_types.h"
+#include "spdk/string.h"
+#endif
+
 #define SPDK_MAX_SOCKET		64
 
 #define SPDK_MAX_REACTORS		128
@@ -113,6 +119,14 @@ struct spdk_reactor {
 	struct spdk_mempool				*event_mempool;
 
 	uint64_t					max_delay_us;
+
+#ifdef SPDK_CONFIG_VTUNE
+	__itt_string_handle				*handle;
+	__itt_domain					*domain;
+	uint64_t					spin_time;
+	uint64_t					start_time;
+	uint64_t					interval_tsc;
+#endif
 } __attribute__((aligned(64)));
 
 static struct spdk_reactor g_reactors[SPDK_MAX_REACTORS];
@@ -256,14 +270,14 @@ _spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	spdk_event_call(event);
 }
 
-static void
+static int
 get_rusage(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
 	struct rusage		rusage;
 
 	if (getrusage(RUSAGE_THREAD, &rusage) != 0) {
-		return;
+		return -1;
 	}
 
 	if (rusage.ru_nvcsw != reactor->rusage.ru_nvcsw || rusage.ru_nivcsw != reactor->rusage.ru_nivcsw) {
@@ -273,6 +287,7 @@ get_rusage(void *arg)
 			     rusage.ru_nivcsw - reactor->rusage.ru_nivcsw);
 	}
 	reactor->rusage = rusage;
+	return 0;
 }
 
 static void
@@ -344,6 +359,7 @@ spdk_reactor_context_switch_monitor_enabled(void)
  * \endcode
  *
  */
+
 static int
 _spdk_reactor_run(void *arg)
 {
@@ -371,6 +387,9 @@ _spdk_reactor_run(void *arg)
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
 	}
 	while (1) {
+#ifdef SPDK_CONFIG_VTUNE
+		uint64_t now_tsc = spdk_get_ticks();
+#endif
 		bool took_action = false;
 
 		event_count = _spdk_event_queue_run_batch(reactor);
@@ -382,7 +401,19 @@ _spdk_reactor_run(void *arg)
 		if (poller) {
 			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
 			poller->state = SPDK_POLLER_STATE_RUNNING;
-			poller->fn(poller->arg);
+
+			if (poller->fn(poller->arg) == 0)
+			{
+#ifdef SPDK_CONFIG_VTUNE
+				reactor->spin_time += (((spdk_get_ticks() - now_tsc)) * 1000000ULL) / spdk_get_ticks_hz();
+				if (now_tsc > (reactor->start_time + reactor->interval_tsc)) {
+					__itt_metadata_add(reactor->domain, __itt_null, reactor->handle,
+				   __itt_metadata_u64, 1, &reactor->spin_time);
+					reactor->spin_time = 0;
+					reactor->start_time = now_tsc;
+				}
+#endif
+			}
 			if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
 				_spdk_poller_unregister_complete(poller);
 			} else {
@@ -455,7 +486,6 @@ _spdk_reactor_run(void *arg)
 			break;
 		}
 	}
-
 	_spdk_reactor_context_switch_monitor_stop(reactor, NULL);
 	spdk_free_thread();
 	return 0;
@@ -476,6 +506,18 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 	assert(reactor->events != NULL);
 
 	reactor->event_mempool = g_spdk_event_mempool[reactor->socket_id];
+#ifdef SPDK_CONFIG_VTUNE
+	reactor->start_time = spdk_get_ticks();
+	reactor->spin_time = 0;
+	reactor->interval_tsc = spdk_get_ticks_hz() / 100;
+	char *name = spdk_sprintf_alloc("spdk_reactor_%d_%d", reactor->socket_id, reactor->lcore);
+	if (!name) {
+		return;
+	}
+	reactor->handle = __itt_string_handle_create(name);
+	reactor->domain = __itt_domain_create("spdk_reactor");
+	free(name);
+#endif
 }
 
 int

@@ -324,7 +324,7 @@ bdev_virtio_io_cpl(struct virtio_req *req)
 	spdk_bdev_io_complete_scsi_status(bdev_io, io_ctx->resp.status, sk, asc, ascq);
 }
 
-static void
+static int
 bdev_virtio_poll(void *arg)
 {
 	struct bdev_virtio_io_channel *ch = arg;
@@ -335,6 +335,7 @@ bdev_virtio_poll(void *arg)
 	for (i = 0; i < cnt; ++i) {
 		bdev_virtio_io_cpl(req[i]);
 	}
+	return 0;
 }
 
 static int
@@ -549,7 +550,7 @@ process_scan_resp(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	}
 }
 
-static void
+static int
 bdev_scan_poll(void *arg)
 {
 	struct virtio_scsi_scan_base *base = arg;
@@ -560,6 +561,7 @@ bdev_scan_poll(void *arg)
 	if (cnt > 0) {
 		process_scan_resp(base, req);
 	}
+	return 0;
 }
 
 static void

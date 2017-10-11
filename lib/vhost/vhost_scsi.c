@@ -614,16 +614,17 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct rte_vhost_vring *vq)
 	}
 }
 
-static void
+static int
 vdev_mgmt_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
 
 	process_removed_devs(svdev);
 	process_controlq(svdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
+	return 0;
 }
 
-static void
+static int
 vdev_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
@@ -632,6 +633,7 @@ vdev_worker(void *arg)
 	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < svdev->vdev.num_queues; q_idx++) {
 		process_requestq(svdev, &svdev->vdev.virtqueue[q_idx]);
 	}
+	return 0;
 }
 
 static struct spdk_vhost_scsi_dev *
@@ -1048,7 +1050,7 @@ struct spdk_vhost_dev_destroy_ctx {
 	void *event_ctx;
 };
 
-static void
+static int
 destroy_device_poller_cb(void *arg)
 {
 	struct spdk_vhost_dev_destroy_ctx *ctx = arg;
@@ -1056,7 +1058,7 @@ destroy_device_poller_cb(void *arg)
 	uint32_t i;
 
 	if (svdev->vdev.task_cnt > 0) {
-		return;
+		return -1;
 	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
@@ -1073,6 +1075,7 @@ destroy_device_poller_cb(void *arg)
 
 	spdk_poller_unregister(&ctx->poller, NULL);
 	spdk_vhost_dev_backend_event_done(ctx->event_ctx, 0);
+	return 0;
 }
 
 static int

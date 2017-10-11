@@ -77,13 +77,14 @@ rpc_get_listen_addr(void)
 	return val;
 }
 
-static void
+static int
 spdk_rpc_subsystem_poll(void *arg)
 {
 	spdk_rpc_accept();
+	return 0;
 }
 
-static void
+static int
 spdk_rpc_subsystem_setup(void *arg)
 {
 	const char *listen_addr;
@@ -93,7 +94,7 @@ spdk_rpc_subsystem_setup(void *arg)
 	spdk_poller_unregister(&g_rpc_poller, NULL);
 
 	if (!enable_rpc()) {
-		return;
+		return -1;
 	}
 
 	listen_addr = rpc_get_listen_addr();
@@ -105,12 +106,13 @@ spdk_rpc_subsystem_setup(void *arg)
 	rc = spdk_rpc_listen(listen_addr);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to start RPC service at %s\n", listen_addr);
-		return;
+		return -1;
 	}
 
 	/* Register a poller to periodically check for RPCs */
 	spdk_poller_register(&g_rpc_poller, spdk_rpc_subsystem_poll, NULL, spdk_env_get_current_core(),
 			     RPC_SELECT_INTERVAL);
+	return rc;
 }
 
 static void

@@ -116,7 +116,7 @@ struct spdk_bdev_poller;
 
 typedef void (*spdk_bdev_init_cb)(void *cb_arg, int rc);
 
-typedef void (*spdk_bdev_poller_fn)(void *arg);
+typedef int (*spdk_bdev_poller_fn)(void *arg);
 typedef void (*spdk_bdev_poller_start_cb)(struct spdk_bdev_poller **ppoller,
 		spdk_bdev_poller_fn fn,
 		void *arg,

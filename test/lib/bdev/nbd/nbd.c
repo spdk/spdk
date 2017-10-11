@@ -57,7 +57,7 @@ nbd_shutdown(void)
 	spdk_app_stop(0);
 }
 
-static void
+static int
 nbd_poll(void *arg)
 {
 	int rc;
@@ -67,6 +67,7 @@ nbd_poll(void *arg)
 		SPDK_NOTICELOG("spdk_nbd_poll() returned %d; shutting down", rc);
 		nbd_shutdown();
 	}
+	return rc;
 }
 
 static void

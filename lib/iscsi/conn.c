@@ -86,9 +86,9 @@ static int g_poll_fd = 0;
 static struct spdk_poller *g_idle_conn_poller;
 static STAILQ_HEAD(idle_list, spdk_iscsi_conn) g_idle_conn_list_head;
 
-void spdk_iscsi_conn_login_do_work(void *arg);
-void spdk_iscsi_conn_full_feature_do_work(void *arg);
-void spdk_iscsi_conn_idle_do_work(void *arg);
+int spdk_iscsi_conn_login_do_work(void *arg);
+int spdk_iscsi_conn_full_feature_do_work(void *arg);
+int spdk_iscsi_conn_idle_do_work(void *arg);
 
 static void spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2);
 static struct spdk_event *spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn,
@@ -682,7 +682,7 @@ _spdk_iscsi_conn_free(void *arg1, void *arg2)
 	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
 }
 
-static void
+static int
 _spdk_iscsi_conn_check_shutdown(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
@@ -690,12 +690,14 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 
 	rc = spdk_iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
-		return;
+		return rc;
 	}
 
 	spdk_poller_unregister(&conn->shutdown_timer, NULL);
 
 	spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_env_get_current_core());
+
+	return rc;
 }
 
 void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
@@ -752,7 +754,7 @@ spdk_iscsi_conns_cleanup(void)
 	shm_unlink(g_shm_name);
 }
 
-static void
+static int
 spdk_iscsi_conn_check_shutdown(void *arg)
 {
 	if (spdk_iscsi_get_active_conns() == 0) {
@@ -760,6 +762,7 @@ spdk_iscsi_conn_check_shutdown(void *arg)
 		spdk_iscsi_conns_cleanup();
 		spdk_app_stop(0);
 	}
+	return 0;
 }
 
 static struct spdk_event *
@@ -1420,7 +1423,7 @@ spdk_iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 			     conn->lcore, 0);
 }
 
-void
+int
 spdk_iscsi_conn_login_do_work(void *arg)
 {
 	struct spdk_iscsi_conn	*conn = arg;
@@ -1431,7 +1434,7 @@ spdk_iscsi_conn_login_do_work(void *arg)
 	/* General connection processing */
 	rc = spdk_iscsi_conn_execute(conn);
 	if (rc < 0)
-		return;
+		return rc;
 
 	/* Check if this connection transitioned to full feature phase. If it
 	 * did, migrate it to a dedicated reactor for the target node.
@@ -1443,9 +1446,10 @@ spdk_iscsi_conn_login_do_work(void *arg)
 		spdk_net_framework_clear_socket_association(conn->sock);
 		spdk_poller_unregister(&conn->poller, event);
 	}
+	return rc;
 }
 
-void
+int
 spdk_iscsi_conn_full_feature_do_work(void *arg)
 {
 	struct spdk_iscsi_conn	*conn = arg;
@@ -1453,7 +1457,7 @@ spdk_iscsi_conn_full_feature_do_work(void *arg)
 
 	rc = spdk_iscsi_conn_execute(conn);
 	if (rc < 0) {
-		return;
+		return rc;
 	} else if (rc > 0) {
 		conn->last_activity_tsc = spdk_get_ticks();
 	}
@@ -1462,6 +1466,7 @@ spdk_iscsi_conn_full_feature_do_work(void *arg)
 	   and it was idle longer than the configured timeout, migrate this
 	   session to the master core. */
 	spdk_iscsi_conn_handle_idle(conn);
+	return rc;
 }
 
 /**
@@ -1480,7 +1485,7 @@ spdk_iscsi_conn_full_feature_do_work(void *arg)
  * to process required timer based actions that must be maintained
  * even though the connection is considered 'idle'.
  */
-void spdk_iscsi_conn_idle_do_work(void *arg)
+int spdk_iscsi_conn_idle_do_work(void *arg)
 {
 	uint64_t	tsc;
 	struct spdk_iscsi_conn *tconn;
@@ -1518,6 +1523,7 @@ void spdk_iscsi_conn_idle_do_work(void *arg)
 				      tconn->id, tconn->cid, &tconn->poller, lcore);
 		}
 	} /* for each conn in idle list */
+	return 0;
 }
 
 static void
@@ -1621,12 +1627,14 @@ spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 	return selected_core;
 }
 
-static void
+static int
 logout_timeout(void *arg)
 {
 	struct spdk_iscsi_conn *conn = arg;
 
 	spdk_iscsi_conn_destruct(conn);
+
+	return 0;
 }
 
 void

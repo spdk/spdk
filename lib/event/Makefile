@@ -35,8 +35,14 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS)
+
+ifeq ($(CONFIG_VTUNE),y)
+CFLAGS += -I$(VTUNE_SOURCE_DIR)/include -I$(VTUNE_SOURCE_DIR)/sdk/src/ittnotify
+endif
+
 LIBNAME = event
 C_SRCS = app.c reactor.c subsystem.c
+C_SRCS-$(CONFIG_VTUNE) += ../bdev/vtune.c
 
 DIRS-y = rpc subsystems
 
