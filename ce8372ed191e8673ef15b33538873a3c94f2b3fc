@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8efeae09_070edec8",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 879,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T16:46:30Z",
+      "side": 1,
+      "message": "This part need to be taken into account :(\n\nvtpci_enumerate_pci() need to have some callback that allow creating controllers.",
+      "range": {
+        "startLine": 877,
+        "startChar": 1,
+        "endLine": 879,
+        "endChar": 2
+      },
+      "revId": "ce8372ed191e8673ef15b33538873a3c94f2b3fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
