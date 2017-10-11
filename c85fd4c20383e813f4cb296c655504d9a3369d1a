@@ -67,6 +67,24 @@
       "revId": "c85fd4c20383e813f4cb296c655504d9a3369d1a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e95c6572_b3c669b7",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 40
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2017-10-11T20:07:10Z",
+      "side": 1,
+      "message": "It is not known how much time all test in hotplug will take. Under -hp will be more tests (Lukasz G. patches). So far tests are performed on jenkins.",
+      "parentUuid": "dbf79557_9abb8f77",
+      "revId": "c85fd4c20383e813f4cb296c655504d9a3369d1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
