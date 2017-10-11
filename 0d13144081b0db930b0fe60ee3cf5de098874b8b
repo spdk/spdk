@@ -45,6 +45,30 @@
       "revId": "0d13144081b0db930b0fe60ee3cf5de098874b8b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "147b12ae_acfa4c83",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T12:08:39Z",
+      "side": 1,
+      "message": "I don\u0027t want to reduce diff here since working on vring from now on. Will change line 75 to use vring.",
+      "parentUuid": "c12fa12e_5bcaf8fc",
+      "range": {
+        "startLine": 137,
+        "startChar": 0,
+        "endLine": 137,
+        "endChar": 51
+      },
+      "revId": "0d13144081b0db930b0fe60ee3cf5de098874b8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
