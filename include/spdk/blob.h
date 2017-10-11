@@ -157,6 +157,9 @@ void spdk_bs_load(struct spdk_bs_dev *dev,
 void spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 		  spdk_bs_op_with_handle_complete cb_fn, void *cb_arg);
 
+/* Destroy a blob store by unmapping super block and destroying in-memory structures. */
+void spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_arg);
+
 /* Flush all volatile data to disk and destroy in-memory structures. */
 void spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_arg);
 
