@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c88b75a1_a0100665",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:56:35Z",
+      "side": 1,
+      "message": "Random mix of spaces and tabs should be cleaned up.",
+      "revId": "009496901aee283b4f283c4beea5a7eb18bc514c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

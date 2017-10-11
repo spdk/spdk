@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e8174ca_a4e22ac6",
+        "filename": "test/vhost/initiator/vhost.conf.in",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:56:35Z",
+      "side": 0,
+      "message": "Unrelated whitespace change",
+      "revId": "8b94b766dcfbdc654bb208a802249512b7663d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
