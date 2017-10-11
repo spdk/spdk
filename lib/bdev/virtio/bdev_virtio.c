@@ -675,11 +675,7 @@ bdev_virtio_process_config(void)
 		rc = vtpci_enumerate_pci();
 	}
 
-	return rc;
 out:
-	if (vdev) {
-		virtio_dev_free(vdev);
-	}
 	return rc;
 }
 
@@ -688,7 +684,7 @@ static int
 bdev_virtio_initialize(void)
 {
 	struct virtio_scsi_scan_base *base;
-	struct virtio_dev *vdev = NULL;
+	struct virtio_dev *vdev, *next_vdev;
 	struct virtqueue *vq;
 	int rc = 0;
 
@@ -702,6 +698,7 @@ bdev_virtio_initialize(void)
 		return 0;
 	}
 
+	/* Initialize all created devices and scan available targets */
 	TAILQ_FOREACH(vdev, &g_virtio_driver.init_ctrlrs, tailq) {
 		base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
 		if (base == NULL) {
@@ -712,11 +709,13 @@ bdev_virtio_initialize(void)
 
 		rc = virtio_dev_init(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
 		if (rc != 0) {
+			spdk_dma_free(base);
 			goto out;
 		}
 
 		rc = virtio_dev_start(vdev);
 		if (rc != 0) {
+			spdk_dma_free(base);
 			goto out;
 		}
 
@@ -726,18 +725,39 @@ bdev_virtio_initialize(void)
 		vq = virtio_dev_acquire_queue(vdev, VIRTIO_SCSI_REQUESTQ);
 		if (vq == NULL) {
 			SPDK_ERRLOG("Couldn't get an unused queue for the target scan.\n");
+			spdk_dma_free(base);
+			rc = -1;
 			goto out;
 		}
 
 		base->vq = vq;
+		vq->poller_ctx = base;
 		spdk_bdev_poller_start(&vq->poller, bdev_scan_poll, base,
 				       vq->owner_lcore, 0);
+
 		scan_target(base);
 	}
 
 	return 0;
 
 out:
+	/* Remove any created devices */
+	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.init_ctrlrs, tailq, next_vdev) {
+		TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+		vq = virtio_dev_get_acquired_queue(vdev);
+		if (vq != NULL) {
+			spdk_bdev_poller_stop(&vq->poller);
+			spdk_dma_free(vq->poller_ctx);
+			vq->poller_ctx = NULL;
+			virtio_dev_release_queue(vdev, vq);
+		}
+		assert(virtio_dev_get_acquired_queue(vdev) == NULL);
+		/* since scan pollers couldn't do a single tick yet.
+		 * it's safe just to free the vdev now.
+		 */
+		virtio_dev_free(vdev);
+	}
+
 	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 	return rc;
 }
