@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf128180_20174286",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-10-11T23:27:12Z",
+      "side": 1,
+      "message": "In this case, looks like we need to free the original g_discovery_page",
+      "range": {
+        "startLine": 299,
+        "startChar": 1,
+        "endLine": 299,
+        "endChar": 34
+      },
+      "revId": "ccfde1759027f62fab2d74971488bc3520532968",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97105304_3d88f86a",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-10-11T23:27:12Z",
+      "side": 1,
+      "message": "Maybe we can just whether the ctrlr is the discovery ctrlr first. If not, just return. It looks like this function is also called from the probe() attach_cb() path?",
+      "range": {
+        "startLine": 329,
+        "startChar": 0,
+        "endLine": 329,
+        "endChar": 22
+      },
+      "revId": "ccfde1759027f62fab2d74971488bc3520532968",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
