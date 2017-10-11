@@ -198,7 +198,7 @@ spdk_gpt_check_mbr(struct spdk_gpt *gpt)
 			return -1;
 		}
 	} else {
-		SPDK_ERRLOG("Currently only support GPT Protective MBR format\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_GPT_PARSE, "Currently only support GPT Protective MBR format\n");
 		return -1;
 	}
 
