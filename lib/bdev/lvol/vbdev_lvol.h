@@ -48,6 +48,7 @@ struct lvol_store_bdev {
 int vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
 		     spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
 void vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg);
+void vbdev_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg);
 
 int vbdev_lvol_create(uuid_t uuid, size_t sz, spdk_lvol_op_with_handle_complete cb_fn,
 		      void *cb_arg);
