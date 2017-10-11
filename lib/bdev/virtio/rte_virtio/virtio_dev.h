@@ -142,6 +142,9 @@ struct virtqueue {
 	/** Response poller. */
 	struct spdk_bdev_poller	*poller;
 
+	/** Context for response poller. */
+	void *poller_ctx;
+
 	struct vq_desc_extra vq_descx[0];
 };
 
@@ -251,6 +254,17 @@ int virtio_dev_acquire_queue(struct virtio_dev *vdev, uint16_t index);
  * has been found
  */
 int32_t virtio_dev_find_and_acquire_queue(struct virtio_dev *vdev, uint16_t start_index);
+
+/**
+ * Check if virtqueue with given index is acquired.
+ *
+ * This function is thread-safe.
+ *
+ * \param vdev vhost device
+ * \param index index of virtqueue
+ * \return virtqueue acquire status. in case of invalid index *false* is returned.
+ */
+bool virtio_dev_queue_is_acquired(struct virtio_dev *vdev, uint16_t index);
 
 /**
  * Release previously acquired queue.
