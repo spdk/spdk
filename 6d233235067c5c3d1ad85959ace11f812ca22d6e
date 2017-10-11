@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "352b112c_81a5f44a",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T23:23:56Z",
+      "side": 1,
+      "message": "next should be lined up with ctrlr, ns and qpair",
+      "revId": "6d233235067c5c3d1ad85959ace11f812ca22d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "019d6303_fec0a6a7",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T23:23:56Z",
+      "side": 1,
+      "message": "entry should be lined up with cdata",
+      "revId": "6d233235067c5c3d1ad85959ace11f812ca22d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8611e031_df66dcec",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T23:23:56Z",
+      "side": 1,
+      "message": "ns_entry and rc should be lined up with context",
+      "revId": "6d233235067c5c3d1ad85959ace11f812ca22d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e21f6ab6_a05f7ae6",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T23:23:56Z",
+      "side": 1,
+      "message": "all of the variable names should be lined up with data",
+      "revId": "6d233235067c5c3d1ad85959ace11f812ca22d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27c9645b_1b8612c4",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T23:23:56Z",
+      "side": 1,
+      "message": "num_ns should be lined up with ns",
+      "revId": "6d233235067c5c3d1ad85959ace11f812ca22d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c097a77_05a6ec1a",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T23:23:56Z",
+      "side": 1,
+      "message": "i should be lined up with ns_entry",
+      "revId": "6d233235067c5c3d1ad85959ace11f812ca22d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4dbceee6_5452d47f",
+        "filename": "test/lib/nvme/deallocated_value/deallocated_value.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-11T23:23:56Z",
+      "side": 1,
+      "message": "rc should be lined up with opts",
+      "revId": "6d233235067c5c3d1ad85959ace11f812ca22d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
