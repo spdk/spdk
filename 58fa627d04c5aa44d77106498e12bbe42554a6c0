@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dbb27d06_91e19525",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-11T07:50:08Z",
+      "side": 1,
+      "message": "i couldn\u0027t decide between the union or void here.\ni\u0027ll change to void*",
+      "parentUuid": "13e7521e_ac1e016c",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 3
+      },
+      "revId": "58fa627d04c5aa44d77106498e12bbe42554a6c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "80414832_9fa19758",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2017-10-11T07:41:06Z",
       "side": 1,
       "message": "This can be set now during task array creation.",
+      "range": {
+        "startLine": 563,
+        "startChar": 2,
+        "endLine": 563,
+        "endChar": 16
+      },
+      "revId": "58fa627d04c5aa44d77106498e12bbe42554a6c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b2539c1_73ab424e",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-11T07:50:08Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "80414832_9fa19758",
       "range": {
         "startLine": 563,
         "startChar": 2,
