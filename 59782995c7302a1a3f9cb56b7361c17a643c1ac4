@@ -1,0 +1,187 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c2f3013_54f47f09",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:37:21Z",
+      "side": 1,
+      "message": "This commented-out code should be removed or converted into a SPDK_DEBUGLOG.",
+      "revId": "59782995c7302a1a3f9cb56b7361c17a643c1ac4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f1d9735_b46ebcab",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:37:21Z",
+      "side": 1,
+      "message": "Minor nitpick: \u0027\\0\u0027 seems a little odd here - this should probably just be 0.",
+      "range": {
+        "startLine": 298,
+        "startChar": 13,
+        "endLine": 298,
+        "endChar": 17
+      },
+      "revId": "59782995c7302a1a3f9cb56b7361c17a643c1ac4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "999dca05_d563dd4d",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:37:21Z",
+      "side": 1,
+      "message": "This cleanup sequence seems to be repeated a lot - can it be factored out into a helper function?",
+      "range": {
+        "startLine": 315,
+        "startChar": 0,
+        "endLine": 321,
+        "endChar": 18
+      },
+      "revId": "59782995c7302a1a3f9cb56b7361c17a643c1ac4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec8f6d30_d285264c",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:37:21Z",
+      "side": 1,
+      "message": "This case should probably be SPDK_JSONRPC_ERROR_INVALID_PARAMS.",
+      "range": {
+        "startLine": 376,
+        "startChar": 44,
+        "endLine": 376,
+        "endChar": 77
+      },
+      "revId": "59782995c7302a1a3f9cb56b7361c17a643c1ac4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81ced1d8_be2b1bf1",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:37:21Z",
+      "side": 1,
+      "message": "Please use snprintf() so there is no chance of a buffer overflow.",
+      "range": {
+        "startLine": 390,
+        "startChar": 2,
+        "endLine": 390,
+        "endChar": 9
+      },
+      "revId": "59782995c7302a1a3f9cb56b7361c17a643c1ac4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c4a98c5_59af439d",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:37:21Z",
+      "side": 1,
+      "message": "I think you probably need to move req into the heap-allocated context rather than just taking a pointer to a stack variable, since it needs to have a lifetime longer than this function.",
+      "revId": "59782995c7302a1a3f9cb56b7361c17a643c1ac4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6beb080_2aa64e92",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:37:21Z",
+      "side": 1,
+      "message": "I\u0027m not clear on what this loop is trying to do - I think it should just call spdk_bdev_open() on the target bdev and get a single descriptor.\n\nWhy is the list of descriptors needed?",
+      "revId": "59782995c7302a1a3f9cb56b7361c17a643c1ac4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8304bc6b_5185af8a",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:37:21Z",
+      "side": 1,
+      "message": "snprintf() here as well",
+      "range": {
+        "startLine": 420,
+        "startChar": 3,
+        "endLine": 420,
+        "endChar": 10
+      },
+      "revId": "59782995c7302a1a3f9cb56b7361c17a643c1ac4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b577e8d_d24dd6ea",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-11T17:37:21Z",
+      "side": 1,
+      "message": "Allocation needs a NULL check.",
+      "revId": "59782995c7302a1a3f9cb56b7361c17a643c1ac4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
