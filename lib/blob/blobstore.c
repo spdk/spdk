@@ -1893,6 +1893,79 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 /* END spdk_bs_init */
 
+/* START spdk_bs_destroy */
+
+struct spdk_bs_destroy_ctx {
+	struct spdk_blob_store		*bs;
+	struct spdk_bs_super_block	*super;
+};
+
+static void
+_spdk_bs_destroy_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_destroy_ctx *ctx = cb_arg;
+
+	spdk_dma_free(ctx->super);
+
+	/*
+	 * We need to defer calling spdk_bs_call_cpl() until after
+	 * dev destuction, so tuck these away for later use.
+	 */
+	ctx->bs->unload_err = bserrno;
+	memcpy(&ctx->bs->unload_cpl, &seq->cpl, sizeof(struct spdk_bs_cpl));
+	seq->cpl.type = SPDK_BS_CPL_TYPE_NONE;
+
+	spdk_bs_sequence_finish(seq, bserrno);
+
+	_spdk_bs_free(ctx->bs);
+	free(ctx);
+}
+
+void
+spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_bs_cpl	cpl;
+	spdk_bs_sequence_t	*seq;
+	struct spdk_bs_destroy_ctx *ctx;
+
+	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Syncing blobstore\n");
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->bs = bs;
+
+	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
+	if (!ctx->super) {
+		free(ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	cpl.type = SPDK_BS_CPL_TYPE_BS_BASIC;
+	cpl.u.bs_basic.cb_fn = cb_fn;
+	cpl.u.bs_basic.cb_arg = cb_arg;
+
+	seq = spdk_bs_sequence_start(bs->md_target.md_channel, &cpl);
+	if (!seq) {
+		spdk_dma_free(ctx->super);
+		free(ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	assert(TAILQ_EMPTY(&bs->blobs));
+
+	/* TRIM the super block */
+	spdk_bs_sequence_unmap(seq, 0, _spdk_bs_byte_to_lba(bs, sizeof(*ctx->super)),
+			       _spdk_bs_destroy_trim_cpl, ctx);
+}
+
+/* END spdk_bs_destroy */
+
 /* START spdk_bs_unload */
 
 struct spdk_bs_unload_ctx {
