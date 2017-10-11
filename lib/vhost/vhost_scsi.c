@@ -299,7 +299,7 @@ spdk_vhost_scsi_task_init_target(struct spdk_vhost_scsi_task *task, const __u8 *
 
 	dev = task->svdev->scsi_dev[lun[1]];
 	task->scsi_dev = dev;
-	if (dev == NULL) {
+	if (dev == NULL || task->svdev->scsi_dev_state[lun[1]].removed) {
 		/* If dev has been hotdetached, return 0 to allow sending
 		 * additional hotremove event via sense codes.
 		 */
