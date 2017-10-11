@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13e7521e_ac1e016c",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T07:41:06Z",
+      "side": 1,
+      "message": "This break vhost \u003c-\u003e backend isolation. Can this be type of \u0027void *\u0027?",
+      "range": {
+        "startLine": 86,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 3
+      },
+      "revId": "58fa627d04c5aa44d77106498e12bbe42554a6c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80414832_9fa19758",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T07:41:06Z",
+      "side": 1,
+      "message": "This can be set now during task array creation.",
+      "range": {
+        "startLine": 563,
+        "startChar": 2,
+        "endLine": 563,
+        "endChar": 16
+      },
+      "revId": "58fa627d04c5aa44d77106498e12bbe42554a6c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "545888ee_b6b8fa44",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T07:41:06Z",
+      "side": 1,
+      "message": "This can be set now during task array creation.",
+      "range": {
+        "startLine": 565,
+        "startChar": 2,
+        "endLine": 565,
+        "endChar": 26
+      },
+      "revId": "58fa627d04c5aa44d77106498e12bbe42554a6c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ceff321a_fb4d36e8",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T07:41:06Z",
+      "side": 1,
+      "message": "This can be set now during task array creation.",
+      "range": {
+        "startLine": 604,
+        "startChar": 2,
+        "endLine": 604,
+        "endChar": 16
+      },
+      "revId": "58fa627d04c5aa44d77106498e12bbe42554a6c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f661210_1eee342f",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-11T07:41:06Z",
+      "side": 1,
+      "message": "This can be set now during task array creation.",
+      "range": {
+        "startLine": 606,
+        "startChar": 2,
+        "endLine": 606,
+        "endChar": 26
+      },
+      "revId": "58fa627d04c5aa44d77106498e12bbe42554a6c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
