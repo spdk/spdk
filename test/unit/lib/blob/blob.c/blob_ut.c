@@ -143,6 +143,22 @@ blob_init(void)
 }
 
 static void
+blob_destroy(void)
+{
+	struct spdk_bs_dev *dev;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	spdk_bs_destroy(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
 blob_super(void)
 {
 	struct spdk_blob_store *bs;
@@ -1300,6 +1316,7 @@ int main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "blob_init", blob_init) == NULL ||
+		CU_add_test(suite, "blob_destroy", blob_destroy) == NULL ||
 		CU_add_test(suite, "blob_open", blob_open) == NULL ||
 		CU_add_test(suite, "blob_delete", blob_delete) == NULL ||
 		CU_add_test(suite, "blob_resize", blob_resize) == NULL ||
