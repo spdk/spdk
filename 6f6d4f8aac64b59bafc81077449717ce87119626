@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06d7a085_63be92d3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 1487,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-12T00:00:36Z",
+      "side": 1,
+      "message": "Hi Cunyin,\n\nIt would be better to either:\n\n1) just add declarations for these three functions, and keep the definitions at the end of the file, or\n2) make a separate patch that only moves these functions\n\nThis reduces the size of this patch and helps the reviewer.  When there is a major functionality change, plus functions are moved, the reviewer has to take extra time to see if any code was changed in those moved functions.\n\n-Jim",
+      "revId": "6f6d4f8aac64b59bafc81077449717ce87119626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
