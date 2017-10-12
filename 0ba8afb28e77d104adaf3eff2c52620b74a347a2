@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b72997f_2d253191",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-12T23:47:32Z",
+      "side": 1,
+      "message": "this should always be the scan queue, correct?\n\nwould it be better to just save the scan vq in the vdev?  then you can just release it directly if it is set;  this get_acquired_queue() function seems a bit hackish to me",
+      "revId": "0ba8afb28e77d104adaf3eff2c52620b74a347a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd50458c_cd0b4910",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-12T23:47:32Z",
+      "side": 1,
+      "message": "see previous file - this function seems a bit hackish to me - seems like the caller should know what queues they\u0027ve acquired - plus if one lcore has acquired multiple queues, this interface provides no way to get to anything but the first one",
+      "revId": "0ba8afb28e77d104adaf3eff2c52620b74a347a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
