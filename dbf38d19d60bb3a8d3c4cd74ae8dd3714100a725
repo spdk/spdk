@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a85309e_d622f5d9",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T13:38:48Z",
+      "side": 1,
+      "message": "Why did you change it?",
+      "range": {
+        "startLine": 10,
+        "startChar": 11,
+        "endLine": 10,
+        "endChar": 12
+      },
+      "revId": "dbf38d19d60bb3a8d3c4cd74ae8dd3714100a725",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28a564b9_0e413757",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T13:38:48Z",
+      "side": 1,
+      "message": "are OS and FIO_BIN paths correct?",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 28
+      },
+      "revId": "dbf38d19d60bb3a8d3c4cd74ae8dd3714100a725",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "767e989e_66b20845",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T13:38:48Z",
+      "side": 1,
+      "message": "Why can\u0027t we keep it in a file?",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 1
+      },
+      "revId": "dbf38d19d60bb3a8d3c4cd74ae8dd3714100a725",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61f8cd9d_5277f950",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T13:38:48Z",
+      "side": 1,
+      "message": "what\u0027s the point of having \"test-type\" argument if you always run with blk controllers?",
+      "range": {
+        "startLine": 106,
+        "startChar": 7,
+        "endLine": 106,
+        "endChar": 75
+      },
+      "revId": "dbf38d19d60bb3a8d3c4cd74ae8dd3714100a725",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19d20d7f_e3540e68",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T13:38:48Z",
+      "side": 1,
+      "message": "what happens if I run with scsi and line above you always create BLK ctrlr?",
+      "range": {
+        "startLine": 107,
+        "startChar": 56,
+        "endLine": 107,
+        "endChar": 78
+      },
+      "revId": "dbf38d19d60bb3a8d3c4cd74ae8dd3714100a725",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ddead0a1_0e0b8fdf",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T13:38:48Z",
+      "side": 1,
+      "message": "Don\u0027t do that unless you know what\u0027s inside WORK_DIR. In my case it does not work. Add \"used_vms\" variable and run only specified VMs.",
+      "range": {
+        "startLine": 110,
+        "startChar": 46,
+        "endLine": 110,
+        "endChar": 48
+      },
+      "revId": "dbf38d19d60bb3a8d3c4cd74ae8dd3714100a725",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
