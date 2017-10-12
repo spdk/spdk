@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "7f4cf07a_61beb7d7",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-10-12T10:21:01Z",
+      "side": 1,
+      "message": "Error case:./blobcli -s aaaa, ruturn nothing.",
+      "range": {
+        "startLine": 161,
+        "startChar": 11,
+        "endLine": 161,
+        "endChar": 13
+      },
+      "revId": "697f2dba57dada58364ce853577ca0f2787f31d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0cbaa74_bde9261b",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 6
@@ -41,6 +64,46 @@
         "startChar": 0,
         "endLine": 165,
         "endChar": 59
+      },
+      "revId": "697f2dba57dada58364ce853577ca0f2787f31d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5185c79_e5d5a53d",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 866,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-10-12T10:21:01Z",
+      "side": 1,
+      "message": "When I test \"-n 1;(-n 2 Missed);-f $B0 60;-f $B1 65\", app will report \"*ERROR*: Blobid (0) doesn\u0027t match what\u0027s in metadata\".\nSo I think if need add a judgment here, such as bellow:\nblobid \u003d cli_context-\u003eblobid;\nif (blobid \u003d\u003d 0) {\n\tprintf(\"Blob id is 0!!\\n\");\n\t...}",
+      "revId": "697f2dba57dada58364ce853577ca0f2787f31d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7262ddb3_241247eb",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1119,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-10-12T10:21:01Z",
+      "side": 1,
+      "message": "If argv[3] does not exist, for example \"./blobcli -f aaaa\".\nThe app will cause Segmentation fault (core dumped).",
+      "range": {
+        "startLine": 1119,
+        "startChar": 2,
+        "endLine": 1119,
+        "endChar": 42
       },
       "revId": "697f2dba57dada58364ce853577ca0f2787f31d5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
