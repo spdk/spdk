@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa3a57f3_42ffc25a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1924,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-12T00:19:28Z",
+      "side": 1,
+      "message": "I was thinking of this a little bit differently.\n\nSo instead of making the completion function itself common (which requires the load/unload\u003d\u003eoperation changes and the operation type), instead make a helper function that does lines 1931-1936.  It could be called _spdk_bs_write_super().  Then this function stays called _spdk_bs_unload_write_used_clusters_cpl(), and calls _spdk_bs_write_super().  It probably passes seq, ctx-\u003esuper, ctx-\u003ebs, plus cpl function/argument as parameters.\n\nThen you can use this same _spdk_bs_write_super() function in your recovery patch.",
+      "revId": "25867f8775f2c1e43ad4f75f62363ae253f6dfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6393af91_e317d8be",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1948,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-12T00:19:28Z",
+      "side": 1,
+      "message": "same here - you can keep this function as _spdk_bs_unload_write_used_pages_cpl(), and make a helper function for lines 1949-1966.",
+      "revId": "25867f8775f2c1e43ad4f75f62363ae253f6dfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e49c94a6_84f92188",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1970,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-12T00:19:28Z",
+      "side": 1,
+      "message": "same here, keep this as _spdk_bs_unload_read_super_cpl() and create a helper function for lines 1976-1993.",
+      "revId": "25867f8775f2c1e43ad4f75f62363ae253f6dfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
