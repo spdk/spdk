@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50bc4935_3a052b36",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1905,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-12T13:45:22Z",
+      "side": 1,
+      "message": "destruction",
+      "range": {
+        "startLine": 1905,
+        "startChar": 8,
+        "endLine": 1905,
+        "endChar": 18
+      },
+      "revId": "e6fc1b04a4b7ee0afe5d6c6adae00f4c330d7bd9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
