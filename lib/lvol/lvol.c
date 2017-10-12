@@ -244,6 +244,11 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		return -ENODEV;
 	}
 
+	if (!TAILQ_EMPTY(&lvs->lvols)) {
+		SPDK_ERRLOG("Lvols still open on lvol store\n");
+		return -EBUSY;
+	}
+
 	lvs_req = calloc(1, sizeof(*lvs_req));
 	if (!lvs_req) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol store request pointer\n");

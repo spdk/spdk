@@ -225,6 +225,20 @@ lvs_init_unload_success(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
+	spdk_lvol_create(g_lvol_store, 10, lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+
+	/* Lvol store has an open lvol, this unload should fail. */
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, NULL, NULL);
+	CU_ASSERT(rc == -EBUSY);
+	CU_ASSERT(g_lvserrno == -1);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+	/* Lvol has to be closed (or destroyed) before unloading lvol store. */
+	spdk_lvol_close(g_lvol);
+
 	g_lvserrno = -1;
 	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == 0);
