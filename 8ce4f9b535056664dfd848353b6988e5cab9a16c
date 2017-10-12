@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3165bcda_03c5de65",
+        "filename": "test/pmem/common.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-12T10:15:52Z",
+      "side": 1,
+      "message": "pmempool might not point to /usr/bin/pmempool. Use hash in \u0027if\u0027 statement. See check_format.sh there is a check if astyle is installed.",
+      "range": {
+        "startLine": 73,
+        "startChar": 2,
+        "endLine": 73,
+        "endChar": 10
+      },
+      "revId": "8ce4f9b535056664dfd848353b6988e5cab9a16c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6da5464_fa723ec2",
+        "filename": "test/pmem/common.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-12T10:15:52Z",
+      "side": 1,
+      "message": "No need to have a separate function. This if can be inlined in test.",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 3
+      },
+      "revId": "8ce4f9b535056664dfd848353b6988e5cab9a16c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6aa783d7_b166b239",
+        "filename": "test/pmem/common.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-12T10:15:52Z",
+      "side": 1,
+      "message": "TAB",
+      "range": {
+        "startLine": 81,
+        "startChar": 2,
+        "endLine": 81,
+        "endChar": 3
+      },
+      "revId": "8ce4f9b535056664dfd848353b6988e5cab9a16c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a332688_0e6b103f",
+        "filename": "test/pmem/common.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-12T10:15:52Z",
+      "side": 1,
+      "message": "\u0027-d \u0027 only check for directory existance. You need to check if it is mounted\n\n   if mount | grep -q \"$TEST_DIR/test/pmem/ramspace\"; then",
+      "range": {
+        "startLine": 87,
+        "startChar": 1,
+        "endLine": 88,
+        "endChar": 37
+      },
+      "revId": "8ce4f9b535056664dfd848353b6988e5cab9a16c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65fd56e9_8514e7a6",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-12T10:15:52Z",
+      "side": 1,
+      "message": "-\u003e $ENOENT",
+      "range": {
+        "startLine": 377,
+        "startChar": 57,
+        "endLine": 377,
+        "endChar": 63
+      },
+      "revId": "8ce4f9b535056664dfd848353b6988e5cab9a16c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
