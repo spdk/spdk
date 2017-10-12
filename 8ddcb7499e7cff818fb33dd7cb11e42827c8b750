@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52353182_6ad1844f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 11
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T07:16:04Z",
+      "side": 1,
+      "message": "Could you please try to keep your patches up to date?\nYour commit is pased on PS25 of parrent commit while current version is something about 40...\nhttps://review.gerrithub.io/#/c/372268/",
+      "range": {
+        "startLine": 1,
+        "startChar": 12,
+        "endLine": 1,
+        "endChar": 20
+      },
+      "revId": "8ddcb7499e7cff818fb33dd7cb11e42827c8b750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4c0b96d_1620a7e1",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T07:16:04Z",
+      "side": 1,
+      "message": "please read previous comments - we do not want to disable x flag",
+      "range": {
+        "startLine": 33,
+        "startChar": 9,
+        "endLine": 33,
+        "endChar": 10
+      },
+      "revId": "8ddcb7499e7cff818fb33dd7cb11e42827c8b750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a2a3198_7e2b28f6",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T07:16:04Z",
+      "side": 1,
+      "message": "I pointed this out before - I know that we have no other way but to rely on \"sleep\", but please change order of these calls.\nIt\u0027s very unintuitive as it looks like you do an unbind BEFORE you run FIO, instead of doing unbind during FIO",
+      "range": {
+        "startLine": 34,
+        "startChar": 4,
+        "endLine": 36,
+        "endChar": 12
+      },
+      "revId": "8ddcb7499e7cff818fb33dd7cb11e42827c8b750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5747ef8d_053d4d6c",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T07:16:04Z",
+      "side": 1,
+      "message": "If there are no default values then I suppose we should not allow to run the test if we have disks missing, right?",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 13
+      },
+      "revId": "8ddcb7499e7cff818fb33dd7cb11e42827c8b750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd91d941_49bcfbf5",
+        "filename": "test/vhost/hotfeatures/common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T07:16:04Z",
+      "side": 1,
+      "message": "descriptions?",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 26
+      },
+      "revId": "8ddcb7499e7cff818fb33dd7cb11e42827c8b750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
