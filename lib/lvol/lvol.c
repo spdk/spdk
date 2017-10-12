@@ -218,6 +218,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	lvs_req->cb_arg = cb_arg;
 	lvs_req->lvol_store = lvs;
 	lvs->bs_dev = bs_dev;
+	lvs->destruct = false;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Initializing lvol store\n");
 	spdk_bs_init(bs_dev, &opts, _spdk_lvs_init_cb, lvs_req);
@@ -345,7 +346,10 @@ _spdk_lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 	}
 
 	if (lvol->lvol_store->destruct_req && TAILQ_EMPTY(&lvol->lvol_store->lvols)) {
-		spdk_lvs_unload(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
+		if (lvol->lvol_store->destruct)
+			spdk_lvs_destroy(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
+		else
+			spdk_lvs_unload(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
 	}
 
 	free(lvol->name);
