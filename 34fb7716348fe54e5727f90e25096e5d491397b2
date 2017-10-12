@@ -210,6 +210,30 @@
       "revId": "34fb7716348fe54e5727f90e25096e5d491397b2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ec74f19_4d461dc0",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-12T08:15:17Z",
+      "side": 1,
+      "message": "Yes, because before whole task were present. Memseting part of structure is not quite usual/safe thing.\n\nI would like to not have those kind of hacks. Also changes in struct spdk_vhost_scsi_task will not be required.",
+      "parentUuid": "449497ae_d3bc6b1f",
+      "range": {
+        "startLine": 570,
+        "startChar": 2,
+        "endLine": 570,
+        "endChar": 63
+      },
+      "revId": "34fb7716348fe54e5727f90e25096e5d491397b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
