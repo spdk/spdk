@@ -59,9 +59,8 @@ DEFINE_STUB_P(spdk_scsi_lun_get_name, const char, (const struct spdk_scsi_lun *l
 DEFINE_STUB(spdk_scsi_lun_get_id, int, (const struct spdk_scsi_lun *lun), 0);
 DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct rte_vhost_vring *vq, uint16_t *reqs,
 		uint16_t reqs_len), 0);
-DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
-		uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
-		uint32_t *desc_table_size), 0);
+DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct rte_vhost_vring *vq, uint16_t req_idx,
+		struct vring_desc **desc, struct vring_desc **desc_table, uint32_t *desc_table_size), 0);
 DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, uint64_t addr), {0});
 DEFINE_STUB_V(spdk_vhost_vq_used_ring_enqueue, (struct spdk_vhost_dev *vdev,
 		struct rte_vhost_vring *vq, uint16_t id, uint32_t len));

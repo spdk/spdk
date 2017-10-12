@@ -130,7 +130,7 @@ blk_iovs_setup(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, uint16_t
 	uint32_t desc_table_size, len = 0;
 	int rc;
 
-	rc = spdk_vhost_vq_get_desc(vdev, vq, req_idx, &desc, &desc_table, &desc_table_size);
+	rc = spdk_vhost_vq_get_desc(vq, req_idx, &desc, &desc_table, &desc_table_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: Invalid descriptor at index %"PRIu16".\n", vdev->name, req_idx);
 		return -1;
