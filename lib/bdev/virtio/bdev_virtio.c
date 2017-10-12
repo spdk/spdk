@@ -59,6 +59,10 @@
 #define BDEV_VIRTIO_MAX_TARGET 64
 #define BDEV_VIRTIO_SCAN_PAYLOAD_SIZE 256
 
+#define VIRTIO_SCSI_CONTROLQ	0
+#define VIRTIO_SCSI_EVENTQ	1
+#define VIRTIO_SCSI_REQUESTQ	2
+
 static int bdev_virtio_initialize(void);
 static void bdev_virtio_finish(void);
 
@@ -351,7 +355,7 @@ bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 	struct virtqueue *vq;
 	int32_t queue_idx;
 
-	queue_idx = virtio_dev_find_and_acquire_queue(vdev, 2);
+	queue_idx = virtio_dev_find_and_acquire_queue(vdev, VIRTIO_SCSI_REQUESTQ);
 	if (queue_idx < 0) {
 		SPDK_ERRLOG("Couldn't get an unused queue for the io_channel.\n");
 		return queue_idx;
@@ -722,13 +726,13 @@ bdev_virtio_initialize(void)
 		base->vdev = vdev;
 		TAILQ_INIT(&base->found_disks);
 
-		rc = virtio_dev_acquire_queue(vdev, 2);
+		rc = virtio_dev_acquire_queue(vdev, VIRTIO_SCSI_REQUESTQ);
 		if (rc != 0) {
 			SPDK_ERRLOG("Couldn't acquire requestq for the target scan.\n");
 			goto out;
 		}
 
-		vq = vdev->vqs[2];
+		vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
 		base->vq = vq;
 		spdk_bdev_poller_start(&vq->poller, bdev_scan_poll, base,
 				       vq->owner_lcore, 0);
