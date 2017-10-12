@@ -16,6 +16,24 @@
       "revId": "97bbeb004ca2877051107a7431602e2ae9425645",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6b24282_6f46692c",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 42
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T07:07:47Z",
+      "side": 1,
+      "message": "gen_nvme.sh is done in vhost/common/common.sh spdk_vhost_run() function\n\nhttps://review.gerrithub.io/#/c/372268/42/test/vhost/common/common.sh line 151",
+      "parentUuid": "4a84dd7e_c718ec42",
+      "revId": "97bbeb004ca2877051107a7431602e2ae9425645",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
