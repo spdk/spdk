@@ -163,6 +163,29 @@
     },
     {
       "key": {
+        "uuid": "06eabe98_82a12993",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-12T07:54:24Z",
+      "side": 1,
+      "message": "it sound like there are two separate things for identifying. Let\u0027s write something like \"... combined blob ID and UUID... \"",
+      "range": {
+        "startLine": 27,
+        "startChar": 43,
+        "endLine": 27,
+        "endChar": 63
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3754ae8_cdee3722",
         "filename": "doc/lvol.md",
         "patchSetId": 2
@@ -289,6 +312,24 @@
     },
     {
       "key": {
+        "uuid": "dc7f685a_22be9d87",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-12T07:54:24Z",
+      "side": 1,
+      "message": "You can also add information that user can list lvols using get_bdevs command",
+      "parentUuid": "65563e8d_40f6e1b8",
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "346c475f_ff684150",
         "filename": "include/spdk/lvol.h",
         "patchSetId": 2
@@ -300,6 +341,29 @@
       "writtenOn": "2017-10-11T13:12:10Z",
       "side": 1,
       "message": "I think more can be done here, please keep it mind it will be processed by doxygen. What callbacks to use when, describe parameters for functions etc.\nPlease see other headers for examples (include/spdk/ioat.h).",
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a7f0725_36970198",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-12T07:54:24Z",
+      "side": 1,
+      "message": "This function unloads only lvs. Lvols are unloaded in vbdev layer.",
+      "range": {
+        "startLine": 61,
+        "startChar": 3,
+        "endLine": 61,
+        "endChar": 69
+      },
       "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
