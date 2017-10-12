@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58f46268_a15e8cbf",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T14:51:56Z",
+      "side": 1,
+      "message": "Why is removing the X flag here again? You removed it in PS12",
+      "range": {
+        "startLine": 33,
+        "startChar": 9,
+        "endLine": 33,
+        "endChar": 10
+      },
+      "revId": "854ff393d42bbfd5215fc643b1cf51f2ad8cf65c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0884d9f5_ab6f3924",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T14:51:56Z",
+      "side": 1,
+      "message": "I still stay with my opinion that this cannot remain in that form. Please think of some other solution.",
+      "range": {
+        "startLine": 34,
+        "startChar": 4,
+        "endLine": 36,
+        "endChar": 12
+      },
+      "revId": "854ff393d42bbfd5215fc643b1cf51f2ad8cf65c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cef7e07_f11df23b",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T14:51:56Z",
+      "side": 1,
+      "message": "And what if we try to run the test when there is only 1 disk on server?",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 18
+      },
+      "revId": "854ff393d42bbfd5215fc643b1cf51f2ad8cf65c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1ac18d80_f0f5759e",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T14:51:56Z",
+      "side": 1,
+      "message": "Do we even need to choose on which VM we perform hot-remove? Do we care? I\u0027d say it should be an arbitrary choice",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 75
+      },
+      "revId": "854ff393d42bbfd5215fc643b1cf51f2ad8cf65c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0279bd4_3f95fc35",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T14:51:56Z",
+      "side": 1,
+      "message": "After all these patches I still don\u0027t get what is happening here",
+      "range": {
+        "startLine": 128,
+        "startChar": 0,
+        "endLine": 132,
+        "endChar": 1
+      },
+      "revId": "854ff393d42bbfd5215fc643b1cf51f2ad8cf65c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fadbf66_56bc7a42",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T14:51:56Z",
+      "side": 1,
+      "message": "Doesnt changing \"used_vmd\" to $1 break tests from hot-attach? I think it will break as these tests rely on \"used_vms\" and not just single VM.\nPlease retest hot-attach with this commit.",
+      "range": {
+        "startLine": 172,
+        "startChar": 4,
+        "endLine": 173,
+        "endChar": 27
+      },
+      "revId": "854ff393d42bbfd5215fc643b1cf51f2ad8cf65c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e0d997a_4ae09bf8",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T14:51:56Z",
+      "side": 1,
+      "message": "not needed",
+      "revId": "854ff393d42bbfd5215fc643b1cf51f2ad8cf65c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
