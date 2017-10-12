@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "735aa710_59ae5102",
+        "filename": "examples/blob/cli/README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-12T15:12:43Z",
+      "side": 1,
+      "message": "this is a markdown file, those are formatting characters not meant to be copied into the script file.",
+      "parentUuid": "3df1014a_9313ad1b",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 7
+      },
+      "revId": "697f2dba57dada58364ce853577ca0f2787f31d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7f4cf07a_61beb7d7",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2017-10-12T10:21:01Z",
       "side": 1,
       "message": "Error case:./blobcli -s aaaa, ruturn nothing.",
+      "range": {
+        "startLine": 161,
+        "startChar": 11,
+        "endLine": 161,
+        "endChar": 13
+      },
+      "revId": "697f2dba57dada58364ce853577ca0f2787f31d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56961238_a4aca207",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-12T15:12:43Z",
+      "side": 1,
+      "message": "that\u0027s expected. remember this is a dev tool, not an \"end user tool\" so someone typing in complete garbage isn\u0027t always going to get a totally friendly message.  It should be obvious that \"ssss\" is not a valid blobid.  What I want to avoid is application crashes",
+      "parentUuid": "7f4cf07a_61beb7d7",
       "range": {
         "startLine": 161,
         "startChar": 11,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "5bbca150_79b24731",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-12T15:12:43Z",
+      "side": 1,
+      "message": "I\u0027m not sure we\u0027re on the same page here regarding usage, this is to be fully automated with no human innervation and for now it\u0027s simply to be executed and the return value checked much in the same way nearly all other tools are run. The efficiency gain is totally real in this model, unmistakable. When you run once command at a time is takes at least 3 seconds because of the init of DPDK so running 20 commands one at a time can take a minute.  With -T it will take just a few seconds.  We will eventually improve our ability to automatically check tool output versus expected with this: https://trello.com/c/zMuSToLy but that\u0027s not something that needs to be bundled with this patch.",
+      "parentUuid": "d0cbaa74_bde9261b",
+      "range": {
+        "startLine": 165,
+        "startChar": 0,
+        "endLine": 165,
+        "endChar": 59
+      },
+      "revId": "697f2dba57dada58364ce853577ca0f2787f31d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5185c79_e5d5a53d",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 6
@@ -88,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "51df7929_59fba758",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 866,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-12T15:12:43Z",
+      "side": 1,
+      "message": "I\u0027m not clear on what you are trying to do, what are the semi-colons in your example? What does (-n 2 missed) mean? Are you trying to say that this if you have a script like this:\n-n 1\n-s $B1\nWhere you are putting in a $B1 when you never created a blob for that position that you get an error? You\u0027re supposed to obviously but yeah I can easily add an error saying that the script is invalid - saying that \"blobid is 0\" won\u0027t mean anything to anyone... good suggestion, thanks",
+      "parentUuid": "c5185c79_e5d5a53d",
+      "revId": "697f2dba57dada58364ce853577ca0f2787f31d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7262ddb3_241247eb",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 6
@@ -99,6 +189,30 @@
       "writtenOn": "2017-10-12T10:21:01Z",
       "side": 1,
       "message": "If argv[3] does not exist, for example \"./blobcli -f aaaa\".\nThe app will cause Segmentation fault (core dumped).",
+      "range": {
+        "startLine": 1119,
+        "startChar": 2,
+        "endLine": 1119,
+        "endChar": 42
+      },
+      "revId": "697f2dba57dada58364ce853577ca0f2787f31d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3f37690_9cc24fcc",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1119,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-12T15:12:43Z",
+      "side": 1,
+      "message": "oh geeze, thanks",
+      "parentUuid": "7262ddb3_241247eb",
       "range": {
         "startLine": 1119,
         "startChar": 2,
