@@ -600,46 +600,75 @@ scan_target(struct virtio_scsi_scan_base *base)
 }
 
 static int
+bdev_virtio_process_config(void)
+{
+	struct spdk_conf_section *sp;
+	struct virtio_dev *vdev = NULL;
+	char *path;
+	unsigned vdev_num;
+	bool enable_pci;
+	int rc = 0;
+
+	for (sp = spdk_conf_first_section(NULL); sp != NULL; sp = spdk_conf_next_section(sp)) {
+		if (!spdk_conf_section_match_prefix(sp, "VirtioUser")) {
+			continue;
+		}
+
+		if (sscanf(spdk_conf_section_get_name(sp), "VirtioUser%u", &vdev_num) != 1) {
+			SPDK_ERRLOG("Section '%s' has non-numeric suffix.\n",
+				    spdk_conf_section_get_name(sp));
+			rc = -1;
+			goto out;
+		}
+
+		path = spdk_conf_section_get_val(sp, "Path");
+		if (path == NULL) {
+			SPDK_ERRLOG("VirtioUser%u: missing Path\n", vdev_num);
+			rc = -1;
+			goto out;
+		}
+
+		vdev = virtio_user_dev_init(path, 512);
+		if (vdev == NULL) {
+			rc = -1;
+			goto out;
+		}
+	}
+
+	sp = spdk_conf_find_section(NULL, "VirtioPci");
+	if (sp == NULL) {
+		return 0;
+	}
+
+	enable_pci = spdk_conf_section_get_boolval(sp, "Enable", false);
+	if (enable_pci) {
+		rc = vtpci_enumerate_pci();
+	}
+
+	return rc;
+out:
+	if (vdev) {
+		virtio_dev_free(vdev);
+	}
+	return rc;
+}
+
+
+static int
 bdev_virtio_initialize(void)
 {
-	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Virtio");
 	struct virtio_scsi_scan_base *base;
 	struct virtio_dev *vdev = NULL;
-	char *type, *path;
-	uint32_t i;
 	int rc = 0;
-	bool scan_pci = false;
 
-	if (sp == NULL) {
+	rc = bdev_virtio_process_config();
+	if (rc != 0) {
 		goto out;
 	}
 
-	for (i = 0; spdk_conf_section_get_nval(sp, "Dev", i) != NULL; i++) {
-		type = spdk_conf_section_get_nmval(sp, "Dev", i, 0);
-		if (type == NULL) {
-			SPDK_ERRLOG("No type specified for index %d\n", i);
-			continue;
-		}
-		if (!strcmp("User", type)) {
-			path = spdk_conf_section_get_nmval(sp, "Dev", i, 1);
-			if (path == NULL) {
-				SPDK_ERRLOG("No path specified for index %d\n", i);
-				continue;
-			}
-			vdev = virtio_user_dev_init(path, 512);
-			if (vdev == NULL) {
-				goto out;
-			}
-		} else if (!strcmp("Pci", type)) {
-			scan_pci = true;
-		} else {
-			SPDK_ERRLOG("Invalid type %s specified for index %d\n", type, i);
-			continue;
-		}
-	}
-
-	if (scan_pci) {
-		vtpci_enumerate_pci();
+	if (TAILQ_EMPTY(&g_virtio_driver.init_ctrlrs)) {
+		spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+		return 0;
 	}
 
 	TAILQ_FOREACH(vdev, &g_virtio_driver.init_ctrlrs, tailq) {
@@ -672,10 +701,6 @@ bdev_virtio_initialize(void)
 	return 0;
 
 out:
-	if (vdev) {
-		virtio_dev_free(vdev);
-	}
-
 	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 	return rc;
 }

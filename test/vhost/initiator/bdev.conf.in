@@ -1,5 +1,5 @@
-[Virtio]
-  Dev User /tmp/vhost.0
+[VirtioUser0]
+  Path /tmp/vhost.0
 
 [Rpc]
   Enable Yes
