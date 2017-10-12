@@ -211,9 +211,9 @@ SPDK_BDEV_MODULE_REGISTER(rbd, bdev_rbd_library_init, bdev_rbd_library_fini, NUL
 			  bdev_rbd_get_ctx_size, NULL)
 
 static int64_t
-bdev_rbd_readv(struct bdev_rbd *disk, struct spdk_io_channel *ch,
-	       struct spdk_bdev_io *bdev_io, struct iovec *iov,
-	       int iovcnt, size_t len, uint64_t offset)
+bdev_rbd_rw(struct bdev_rbd *disk, struct spdk_io_channel *ch,
+	    struct spdk_bdev_io *bdev_io, struct iovec *iov,
+	    int iovcnt, size_t len, uint64_t offset)
 {
 	struct bdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
 
@@ -221,19 +221,6 @@ bdev_rbd_readv(struct bdev_rbd *disk, struct spdk_io_channel *ch,
 		return -1;
 
 	return bdev_rbd_start_aio(rbdio_ch->image, bdev_io, iov->iov_base, offset, len);
-}
-
-static int64_t
-bdev_rbd_writev(struct bdev_rbd *disk, struct spdk_io_channel *ch,
-		struct spdk_bdev_io *bdev_io, struct iovec *iov,
-		int iovcnt, size_t len, uint64_t offset)
-{
-	struct bdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
-
-	if ((iovcnt != 1) || (iov->iov_len != len))
-		return -1;
-
-	return bdev_rbd_start_aio(rbdio_ch->image, bdev_io, (void *)iov->iov_base, offset, len);
 }
 
 static int64_t
@@ -255,13 +242,13 @@ static void bdev_rbd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io 
 {
 	int ret;
 
-	ret = bdev_rbd_readv(bdev_io->bdev->ctxt,
-			     ch,
-			     bdev_io,
-			     bdev_io->u.bdev.iovs,
-			     bdev_io->u.bdev.iovcnt,
-			     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
-			     bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+	ret = bdev_rbd_rw(bdev_io->bdev->ctxt,
+			  ch,
+			  bdev_io,
+			  bdev_io->u.bdev.iovs,
+			  bdev_io->u.bdev.iovcnt,
+			  bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+			  bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
 
 	if (ret != 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -277,13 +264,14 @@ static int _bdev_rbd_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 		return 0;
 
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		return bdev_rbd_writev((struct bdev_rbd *)bdev_io->bdev->ctxt,
-				       ch,
-				       bdev_io,
-				       bdev_io->u.bdev.iovs,
-				       bdev_io->u.bdev.iovcnt,
-				       bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
-				       bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+		return bdev_rbd_rw((struct bdev_rbd *)bdev_io->bdev->ctxt,
+				   ch,
+				   bdev_io,
+				   bdev_io->u.bdev.iovs,
+				   bdev_io->u.bdev.iovcnt,
+				   bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+				   bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		return bdev_rbd_flush((struct bdev_rbd *)bdev_io->bdev->ctxt,
 				      ch,
