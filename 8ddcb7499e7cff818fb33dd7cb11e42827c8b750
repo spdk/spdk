@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "135ccb9c_b787b010",
+        "filename": "test/vhost/hotfeatures/blk_hotremove.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011416
+      },
+      "writtenOn": "2017-10-12T09:40:22Z",
+      "side": 1,
+      "message": "but i need response with fio, no hot remove disk, so i think that solution, first start hot remove with \"time-stopper\" in another thread and start major path tests",
+      "parentUuid": "8a2a3198_7e2b28f6",
+      "range": {
+        "startLine": 34,
+        "startChar": 4,
+        "endLine": 36,
+        "endChar": 12
+      },
+      "revId": "8ddcb7499e7cff818fb33dd7cb11e42827c8b750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5747ef8d_053d4d6c",
         "filename": "test/vhost/hotfeatures/common.sh",
         "patchSetId": 11
