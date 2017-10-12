@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a75e726_87992427",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T15:04:51Z",
+      "side": 1,
+      "message": "besides having a number - one sentence summary or some kind of id would be good.\nExample:\nTest case 1 - nvme_fio_test\nTest case 2 - malloc_fio_test\n\nor \n\nTest case 1 - Vhost initiator test with NVMe disk\n\netc, you get it?",
+      "range": {
+        "startLine": 80,
+        "startChar": 5,
+        "endLine": 80,
+        "endChar": 16
+      },
+      "revId": "1c622dab7655d98f15a8272ed71c2bb75e652ee7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8959dd29_8383bf35",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T15:04:51Z",
+      "side": 1,
+      "message": "read and write, comma not needed",
+      "range": {
+        "startLine": 110,
+        "startChar": 21,
+        "endLine": 110,
+        "endChar": 32
+      },
+      "revId": "1c622dab7655d98f15a8272ed71c2bb75e652ee7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e665e4e0_b0058fd9",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-12T15:04:51Z",
+      "side": 1,
+      "message": "No need to put fio config here, just describe the sequence.\nAlso - what is the expected result of TRIM operation? How do we check if TRIM works?",
+      "range": {
+        "startLine": 137,
+        "startChar": 0,
+        "endLine": 148,
+        "endChar": 10
+      },
+      "revId": "1c622dab7655d98f15a8272ed71c2bb75e652ee7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
