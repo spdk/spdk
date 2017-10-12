@@ -51,6 +51,24 @@
       "revId": "cdec42c14a45d015db518c6799caf780ebe46907",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4f92577_aa2b242b",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-12T23:40:13Z",
+      "side": 1,
+      "message": "ok - I\u0027m fine with that - removing the lcore param and keeping this restriction",
+      "parentUuid": "094c0386_e6ea2263",
+      "revId": "cdec42c14a45d015db518c6799caf780ebe46907",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
