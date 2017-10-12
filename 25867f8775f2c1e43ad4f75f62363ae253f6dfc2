@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "675bb3f0_f34c7726",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1948,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-10-12T02:48:37Z",
+      "side": 1,
+      "message": "for line 1949 - 1956, if we do not make the load/unload data structure as one, we need to know the exactly data structure in the helper function(spdk_bs_unload_ctx or spdk_bs_load_ctx) because we need to free the ctx when we fail to allocate memory for mask, so I just keep the logic in the load/unload function, not add it into the helper function.",
+      "parentUuid": "6393af91_e317d8be",
+      "revId": "25867f8775f2c1e43ad4f75f62363ae253f6dfc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e49c94a6_84f92188",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 2
