@@ -23,8 +23,8 @@ Use the following configuration file snippet to enumerate a virtio-scsi PCI
 device and present its LUNs as bdevs.
 
 ~~~{.sh}
-[Virtio]
-  Dev Pci
+[VirtioPci]
+  Enable Yes
 ~~~
 
 Use the following configuration file snippet to enumerate an SPDK vhost-scsi
@@ -33,14 +33,11 @@ target has created an SPDK vhost-scsi controller which is accessible through
 the /tmp/vhost.0 domain socket.
 
 ~~~{.sh}
-[Virtio]
-  Dev User /tmp/vhost.0
+[VirtioUser0]
+  Path /tmp/vhost.0
 ~~~
 
 ## Todo:
-* Support multiple PCI devices, including specifying the PCI device by PCI
-  bus/domain/function.
-* Add unmap support.
 * Add I/O channel support.  Includes requesting correct number of queues
   (based on core count).  Fail device initialization if not enough queues 
   can be allocated.
@@ -57,16 +54,7 @@ the /tmp/vhost.0 domain socket.
   scsi and blk.  If these should be separate, then this driver should be
   renamed to something scsi specific.
 * Add reset support.
-* Finish cleaning up "eth" references.  This includes filenames like
-  virtio_ethdev.c and "eth" in various API calls.
 * Understand and handle queue full conditions.
-* Clear interrupt flag for completions - since we are polling, we do not
-  need the virtio-scsi backend to signal completion.
-* Check interrupt flag for submission.  If the backend requires an interrupt,
-  we need to signal it.
-* Change read/write to use READ_16/WRITE_16 to handle LBA > 4G.  We can add
-  a basic check and bail during enumeration if INQUIRY indicates the LUN does
-  not support >= SBC-3.
 * Automated test scripts for both PCI and vhost-user scenarios.
 * Document Virtio config file section in examples.  Should wait on this until
   enough of the above items are implemented to consider this module as ready
