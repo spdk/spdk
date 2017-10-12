@@ -33,6 +33,24 @@
       "revId": "cdec42c14a45d015db518c6799caf780ebe46907",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "094c0386_e6ea2263",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-12T20:59:24Z",
+      "side": 1,
+      "message": "Since only the vq-\u003elcore is now set under the mutex, we must introduce this restriction to prevent other threads from releasing our virtqueue while for example we still register the vq-\u003epoller.\n\nHowever, I think that lcore param on acquire function is not necessary right now and could be removed.",
+      "parentUuid": "46dbbf58_305d22dc",
+      "revId": "cdec42c14a45d015db518c6799caf780ebe46907",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
