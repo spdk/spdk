@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e7bc5fc_bb26e2aa",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-12T20:00:54Z",
+      "side": 1,
+      "message": "to to \u003d\u003e to",
+      "revId": "cdec42c14a45d015db518c6799caf780ebe46907",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46dbbf58_305d22dc",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-12T20:00:54Z",
+      "side": 1,
+      "message": "do we need this restriction?\n\nwhat happens if user calls virtio_dev_acquire_queue from core 0, but passes lcore\u003d1 as parameter; does that mean user must call virtio_dev_release_queue from core 0 or core 1?",
+      "revId": "cdec42c14a45d015db518c6799caf780ebe46907",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
