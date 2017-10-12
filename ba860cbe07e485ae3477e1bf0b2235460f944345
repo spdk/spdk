@@ -139,6 +139,24 @@
     },
     {
       "key": {
+        "uuid": "ee45b8ae_11adbc39",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 61
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-12T06:49:00Z",
+      "side": 1,
+      "message": "I\u0027d have to agree that adding print to not implemented cases would be best. If someone runs all tests and only looks at test plan - it would not be obvious these test cases are not running.",
+      "parentUuid": "54e18287_4224475f",
+      "revId": "ba860cbe07e485ae3477e1bf0b2235460f944345",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "595bfb99_479da2d9",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 61
@@ -168,6 +186,24 @@
       "side": 1,
       "message": "comment above",
       "parentUuid": "595bfb99_479da2d9",
+      "revId": "ba860cbe07e485ae3477e1bf0b2235460f944345",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce996772_2ef77d60",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 61
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-12T06:49:00Z",
+      "side": 1,
+      "message": "I think this case can be ran in current lvol implementation. Other tests destroy_lvol_store before delete_bdev. Meanwhile this one is basically testing hotplug.\n\n\"TEST CASE 20 - Name: delete_bdev_positive\nPositive test for deleting malloc bdev.\nCall construct_lvol_store with correct base bdev name.\nSteps:\n- create a malloc bdev\n- construct_lvol_store on correct, exisitng malloc bdev\n- check correct uuid values in response get_lvol_stores command\n- delete malloc bdev\n- check response get_lvol_stores command\"",
+      "parentUuid": "c6bc7750_03ba3213",
       "revId": "ba860cbe07e485ae3477e1bf0b2235460f944345",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
