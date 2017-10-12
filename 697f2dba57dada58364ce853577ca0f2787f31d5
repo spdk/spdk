@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3df1014a_9313ad1b",
+        "filename": "examples/blob/cli/README.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-10-12T03:17:39Z",
+      "side": 1,
+      "message": "If added ~~{.sh} in bs file, the test will terminate after DPDK initialized, when run blobcli -T test.bs.\nIf only commands, the test run OK.",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 7
+      },
+      "revId": "697f2dba57dada58364ce853577ca0f2787f31d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0cbaa74_bde9261b",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-10-12T03:17:39Z",
+      "side": 1,
+      "message": "This model does improve the efficiency. If you can print corresponding commands before results at the same time, it will be better. Once there are hundreds of similarly commands, finding the corresponding print is time-consuming. Thanks.",
+      "range": {
+        "startLine": 165,
+        "startChar": 0,
+        "endLine": 165,
+        "endChar": 59
+      },
+      "revId": "697f2dba57dada58364ce853577ca0f2787f31d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
