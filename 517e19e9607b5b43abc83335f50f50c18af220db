@@ -70,6 +70,24 @@
     },
     {
       "key": {
+        "uuid": "e74c5da9_13279f5f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-12T15:39:48Z",
+      "side": 1,
+      "message": "This have something to do with vring_need_event(). Kernel always pay attention for that. I think that this have something to do with unsigned math in vring_need_event(). We don\u0027t use this function so lets watch last_used_idx for overflow.",
+      "parentUuid": "ae7a20be_544a5855",
+      "revId": "517e19e9607b5b43abc83335f50f50c18af220db",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fcb8d44e_d8bed352",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 6
