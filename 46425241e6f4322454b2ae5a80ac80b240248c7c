@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b73e7e9_aa537aa7",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 971,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-13T09:48:21Z",
+      "side": 1,
+      "message": "If vq-\u003evring.size \u003e\u003d 1024 there will be buffer overflow in lines 557 and 595. To avoid this this must be converted into error condition and return -1. The same for vhost_blk.c",
+      "range": {
+        "startLine": 971,
+        "startChar": 2,
+        "endLine": 971,
+        "endChar": 63
+      },
+      "revId": "46425241e6f4322454b2ae5a80ac80b240248c7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
