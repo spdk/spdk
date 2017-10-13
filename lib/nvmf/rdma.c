@@ -977,22 +977,21 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				break;
 			}
 
-			TAILQ_REMOVE(&rqpair->pending_data_buf_queue, rdma_req, link);
-
 			/* Try to get a data buffer */
 			rc = spdk_nvmf_rdma_request_parse_sgl(rtransport, device, rdma_req);
 			if (rc < 0) {
+				TAILQ_REMOVE(&rqpair->pending_data_buf_queue, rdma_req, link);
 				rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
 				break;
 			}
 
 			if (!rdma_req->req.data) {
-				/* No buffers available. Put this request back at the head of
-				 * the queue. */
-				TAILQ_INSERT_HEAD(&rqpair->pending_data_buf_queue, rdma_req, link);
+				/* No buffers available. */
 				break;
 			}
+
+			TAILQ_REMOVE(&rqpair->pending_data_buf_queue, rdma_req, link);
 
 			/* If data is transferring from host to controller and the data didn't
 			 * arrive using in capsule data, we need to do a transfer from the host.
