@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5b33cd7_889819a5",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-13T18:47:45Z",
+      "side": 1,
+      "message": "still present or still open?\n\ni think we should make sure there are no lvols open, but it is ok to destroy it if there are lvols still present on the lvolstore",
+      "revId": "73c713138353e23c8841ab18243d4ceddff8357e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2175cdbd_5fab54a4",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-13T18:47:45Z",
+      "side": 1,
+      "message": "i think it is OK for the lvolstore to contain an lvol when it is destroyed?\n\nif so then this comment should say \"lvolstore has an open lvol, this destroy should fail\"",
+      "revId": "73c713138353e23c8841ab18243d4ceddff8357e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4aa204eb_5d16be7f",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-13T18:47:45Z",
+      "side": 1,
+      "message": "maybe close it instead of destroying it?",
+      "revId": "73c713138353e23c8841ab18243d4ceddff8357e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "533f0d04_35596c2b",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-13T18:47:45Z",
+      "side": 1,
+      "message": "should try to do an spdk_lvs_load here - but I guess that needs to wait until after Maciek\u0027s lvol tasting patch goes in",
+      "revId": "73c713138353e23c8841ab18243d4ceddff8357e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
