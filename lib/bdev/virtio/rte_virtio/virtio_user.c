@@ -122,7 +122,7 @@ virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 }
 
 static uint8_t
-virtio_user_get_isr(struct virtio_dev *vdev __rte_unused)
+virtio_user_get_isr(struct virtio_dev *vdev)
 {
 	/* rxq interrupts and config interrupt are separated in virtio-user,
 	 * here we only report config change.
@@ -131,15 +131,15 @@ virtio_user_get_isr(struct virtio_dev *vdev __rte_unused)
 }
 
 static uint16_t
-virtio_user_set_config_irq(struct virtio_dev *vdev __rte_unused,
-		    uint16_t vec __rte_unused)
+virtio_user_set_config_irq(struct virtio_dev *vdev,
+			   uint16_t vec)
 {
 	return 0;
 }
 
 static uint16_t
-virtio_user_set_queue_irq(struct virtio_dev *vdev __rte_unused,
-			  struct virtqueue *vq __rte_unused,
+virtio_user_set_queue_irq(struct virtio_dev *vdev,
+			  struct virtqueue *vq,
 			  uint16_t vec)
 {
 	/* pretend we have done that */
@@ -151,7 +151,7 @@ virtio_user_set_queue_irq(struct virtio_dev *vdev __rte_unused,
  * max supported queues.
  */
 static uint16_t
-virtio_user_get_queue_num(struct virtio_dev *vdev, uint16_t queue_id __rte_unused)
+virtio_user_get_queue_num(struct virtio_dev *vdev, uint16_t queue_id)
 {
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 

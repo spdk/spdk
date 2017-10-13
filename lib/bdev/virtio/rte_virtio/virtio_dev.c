@@ -307,8 +307,6 @@ virtio_dev_free(struct virtio_dev *dev)
 int
 virtio_dev_start(struct virtio_dev *vdev)
 {
-	struct virtnet_tx *txvq __rte_unused;
-
 	/* Enable uio/vfio intr/eventfd mapping: althrough we already did that
 	 * in device configure, but it could be unmapped  when device is
 	 * stopped.

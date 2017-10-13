@@ -445,7 +445,7 @@ modern_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 }
 
 static void
-modern_notify_queue(struct virtio_dev *dev __rte_unused, struct virtqueue *vq)
+modern_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
 	spdk_mmio_write_2(vq->notify_addr, vq->vq_queue_index);
 }
