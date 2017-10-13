@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fe35064_8b3f53e0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1171,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-13T21:55:23Z",
+      "side": 1,
+      "message": "We can probably simplify this even more by just allowing a single iovec entry in the fallback path.\n\nThat would also mean that we can drop the iov allocation and  extra iovs pointer from the previous patch and always use bdev_io-\u003eu.bdev.iov, which is already allocated as part of the I/O.",
+      "revId": "28d000998942cbf34f4ccd0b5a9e5b697cdb2460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ad1d5b0_bd2774c8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2046,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-13T21:55:23Z",
+      "side": 1,
+      "message": "I think this may be a copy-paste mistake from the bdev_part code - you are passing the original caller\u0027s cb_arg here, which is not a spdk_bdev_io.",
+      "revId": "28d000998942cbf34f4ccd0b5a9e5b697cdb2460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e93d6c9_9c857eb2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2050,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-13T21:55:23Z",
+      "side": 1,
+      "message": "This part_io should probably be bdev_io.",
+      "range": {
+        "startLine": 2050,
+        "startChar": 24,
+        "endLine": 2050,
+        "endChar": 31
+      },
+      "revId": "28d000998942cbf34f4ccd0b5a9e5b697cdb2460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
