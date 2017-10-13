@@ -55,7 +55,10 @@ _spdk_super_create_close_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Lvol store init failed: could not close super blob\n");
+		req->cb_fn(req->cb_arg, NULL, lvolerrno);
 		free(lvs);
+		free(req);
+		return;
 	}
 
 	req->cb_fn(req->cb_arg, lvs, lvolerrno);
