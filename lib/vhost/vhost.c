@@ -135,6 +135,10 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq, 
 		*desc_table = spdk_vhost_gpa_to_vva(vdev, (*desc)->addr);
 		*desc_table_size = (*desc)->len / sizeof(**desc);
 		*desc = *desc_table;
+		if (*desc == NULL) {
+			return -1;
+		}
+
 		return 0;
 	}
 
