@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14a07018_994d6bd2",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-13T18:44:20Z",
+      "side": 1,
+      "message": "should be named bs_destroy (we are destroying a blobstore, not a blob)\n\nthen also move this function down to the end of the bs_ tests",
+      "revId": "8b137ad832fcee18bc1b89c80a991c0288f09497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c469d9eb_1c6cb8af",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-13T18:44:20Z",
+      "side": 1,
+      "message": "this should try to spdk_bs_load() after the destroy, to confirm that it fails to load",
+      "revId": "8b137ad832fcee18bc1b89c80a991c0288f09497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f630eef_e5589c6e",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1319,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-13T18:44:20Z",
+      "side": 1,
+      "message": "since this will be called bs_destroy (not blob_destroy), move it down with the other bs_ unit tests",
+      "revId": "8b137ad832fcee18bc1b89c80a991c0288f09497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
