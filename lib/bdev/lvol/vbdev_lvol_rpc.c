@@ -424,10 +424,10 @@ spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
 		spdk_json_write_name(w, "base_bdev");
 		spdk_json_write_string(w, spdk_bdev_get_name(lvs_bdev->bdev));
 
-		spdk_json_write_name(w, "total_num_blocks");
+		spdk_json_write_name(w, "total_blocks");
 		spdk_json_write_uint64(w, lvs_bdev->lvs->total_blocks);
 
-		spdk_json_write_name(w, "free_num_blocks");
+		spdk_json_write_name(w, "free_blocks");
 		spdk_json_write_uint64(w, free_blocks);
 
 		spdk_json_write_name(w, "block_size");
