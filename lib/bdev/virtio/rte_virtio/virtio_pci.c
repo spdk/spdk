@@ -32,11 +32,6 @@
  */
 #include <stdint.h>
 
-#ifdef RTE_EXEC_ENV_LINUXAPP
- #include <dirent.h>
- #include <fcntl.h>
-#endif
-
 #include <linux/virtio_scsi.h>
 
 #include "spdk/mmio.h"
