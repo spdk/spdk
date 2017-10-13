@@ -45,6 +45,9 @@ struct spdk_lvol_store *g_lvs = NULL;
 struct spdk_lvol *g_lvol = NULL;
 struct lvol_store_bdev *g_lvs_bdev = NULL;
 struct spdk_bdev *g_base_bdev = NULL;
+struct spdk_bdev_io *g_io = NULL;
+struct spdk_io_channel *g_ch = NULL;
+struct lvol_task *g_task = NULL;
 
 
 static struct spdk_bdev g_bdev = {};
@@ -192,12 +195,14 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol)
 {
-	return NULL;
+	CU_ASSERT(lvol == g_lvol);
+	return g_ch;
 }
 
 void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
 {
+	CU_ASSERT(cb == lvol_read);
 }
 
 void
@@ -219,6 +224,10 @@ spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 		       struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
 		       spdk_blob_op_complete cb_fn, void *cb_arg)
 {
+	CU_ASSERT(blob == NULL);
+	CU_ASSERT(channel == g_ch);
+	CU_ASSERT(offset == g_io->u.bdev.offset_blocks);
+	CU_ASSERT(length == g_io->u.bdev.num_blocks);
 }
 
 void
@@ -226,6 +235,10 @@ spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 		      struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
 		      spdk_blob_op_complete cb_fn, void *cb_arg)
 {
+	CU_ASSERT(blob == NULL);
+	CU_ASSERT(channel == g_ch);
+	CU_ASSERT(offset == g_io->u.bdev.offset_blocks);
+	CU_ASSERT(length == g_io->u.bdev.num_blocks);
 }
 
 void
@@ -500,6 +513,115 @@ ut_lvs_init(void)
 
 }
 
+static void
+ut_vbdev_lvol_get_io_channel(void)
+{
+	struct spdk_io_channel *ch;
+
+	g_lvol = calloc(1, sizeof(struct spdk_lvol));
+
+	ch = vbdev_lvol_get_io_channel(g_lvol);
+	CU_ASSERT(ch == g_ch);
+
+	free(g_lvol);
+
+}
+
+static void
+ut_vbdev_lvol_io_type_supported(void)
+{
+	struct spdk_lvol *lvol = g_lvol;
+	bool ret;
+	/* Supported types */
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_READ);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_WRITE);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_FLUSH);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_RESET);
+	CU_ASSERT(ret == true);
+
+	/* Unsupported types */
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_UNMAP);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_ADMIN);
+	CU_ASSERT(ret == false);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_IO);
+	CU_ASSERT(ret == false);
+}
+
+static void
+ut_lvol_op_comp(void)
+{
+	struct lvol_task task;
+
+	lvol_op_comp(&task, 1);
+	CU_ASSERT(task.status == SPDK_BDEV_IO_STATUS_FAILED);
+}
+
+static void
+ut_lvol_flush(void)
+{
+	g_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct lvol_task));
+	g_base_bdev = calloc(1, sizeof(struct spdk_bdev));
+
+	g_lvol = calloc(1, sizeof(struct spdk_lvol));
+
+	g_task = (struct lvol_task *)g_io->driver_ctx;
+	g_io->bdev = g_base_bdev;
+	g_io->bdev->ctxt = g_lvol;
+
+	/* Successful flush to lvol */
+	lvol_flush(g_ch, g_io);
+
+	CU_ASSERT(g_task->status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	free(g_io);
+	free(g_base_bdev);
+	free(g_lvol);
+}
+
+static void
+ut_lvol_read_write(void)
+{
+	g_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct lvol_task));
+	g_base_bdev = calloc(1, sizeof(struct spdk_bdev));
+	g_lvol = calloc(1, sizeof(struct spdk_lvol));
+
+	g_task = (struct lvol_task *)g_io->driver_ctx;
+	g_io->bdev = g_base_bdev;
+	g_io->bdev->ctxt = g_lvol;
+	g_io->u.bdev.offset_blocks = 20;
+	g_io->u.bdev.num_blocks = 20;
+
+	lvol_read(g_ch, g_io);
+	CU_ASSERT(g_task->status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	lvol_write(g_lvol, g_ch, g_io);
+	CU_ASSERT(g_task->status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	free(g_io);
+	free(g_base_bdev);
+	free(g_lvol);
+}
+
+static void
+ut_vbdev_lvol_submit_request(void)
+{
+	g_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct lvol_task));
+	g_base_bdev = calloc(1, sizeof(struct spdk_bdev));
+	g_task = (struct lvol_task *)g_io->driver_ctx;
+
+	g_io->bdev = g_base_bdev;
+
+	g_io->type = SPDK_BDEV_IO_TYPE_READ;
+	vbdev_lvol_submit_request(g_ch, g_io);
+
+	free(g_io);
+	free(g_base_bdev);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -519,7 +641,13 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_lvs_init", ut_lvs_init) == NULL ||
 		CU_add_test(suite, "ut_lvol_init", ut_lvol_init) == NULL ||
 		CU_add_test(suite, "ut_lvol_resize", ut_lvol_resize) == NULL ||
-		CU_add_test(suite, "lvol_hotremove", ut_lvol_hotremove) == NULL
+		CU_add_test(suite, "lvol_hotremove", ut_lvol_hotremove) == NULL ||
+		CU_add_test(suite, "ut_vbdev_lvol_get_io_channel", ut_vbdev_lvol_get_io_channel) == NULL ||
+		CU_add_test(suite, "ut_vbdev_lvol_io_type_supported", ut_vbdev_lvol_io_type_supported) == NULL ||
+		CU_add_test(suite, "ut_lvol_op_comp", ut_lvol_op_comp) == NULL ||
+		CU_add_test(suite, "ut_lvol_flush", ut_lvol_flush) == NULL ||
+		CU_add_test(suite, "ut_lvol_read_write", ut_lvol_read_write) == NULL ||
+		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
