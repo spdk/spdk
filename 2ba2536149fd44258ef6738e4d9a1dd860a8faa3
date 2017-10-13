@@ -22,6 +22,30 @@
       "revId": "2ba2536149fd44258ef6738e4d9a1dd860a8faa3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45d83d98_021565c3",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-13T21:46:14Z",
+      "side": 1,
+      "message": "This happens if someone runs setup.sh twice in a row without specifying the reset flag.  The first time setup.sh runs, it will bind the device to uio/vfio.  The second time setup.sh runs, there will be no kernel block device associated with the NVMe SSD, so $blkname will be empty and so we treat that as 0 mountpoints.",
+      "parentUuid": "2c7857a3_e1bbb735",
+      "range": {
+        "startLine": 95,
+        "startChar": 3,
+        "endLine": 95,
+        "endChar": 18
+      },
+      "revId": "2ba2536149fd44258ef6738e4d9a1dd860a8faa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
