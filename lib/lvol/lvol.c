@@ -299,8 +299,6 @@ _spdk_lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 		return;
 	}
 
-	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
-
 	if (lvol->lvol_store->destruct_req && TAILQ_EMPTY(&lvol->lvol_store->lvols)) {
 		spdk_lvs_unload(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
 	}
@@ -514,6 +512,7 @@ spdk_lvol_close(struct spdk_lvol *lvol)
 		return;
 	}
 
+	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
 	spdk_bs_md_close_blob(&(lvol->blob), _spdk_lvol_close_blob_cb, lvol);
 }
 
