@@ -469,7 +469,9 @@ ut_lvol_resize(void)
 	CU_ASSERT(rc != 0);
 
 	/* Resize with correct bdev name, but wrong lvol name */
-	sprintf(g_lvol->name, "wrong name");
+	free(g_lvol->name);
+	g_lvol->name = strdup("wrong name");
+	SPDK_CU_ASSERT_FATAL(g_lvol->name != NULL);
 	rc = vbdev_lvol_resize(g_base_bdev->name, 20, vbdev_lvol_resize_complete, NULL);
 	CU_ASSERT(rc != 0);
 
