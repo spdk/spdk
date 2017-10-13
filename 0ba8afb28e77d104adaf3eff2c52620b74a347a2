@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3f27f08b_7cc14ff9",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-13T05:18:23Z",
+      "side": 1,
+      "message": "\u003e this should always be the scan queue, correct?\n\ncorrect.\n\n\u003e would it be better to just save the scan vq in the vdev?\n\ni was trying to keep scsi specific stuff out of vdev whenever that\u0027s possible. Hmm...",
+      "parentUuid": "1b72997f_2d253191",
+      "revId": "0ba8afb28e77d104adaf3eff2c52620b74a347a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd50458c_cd0b4910",
         "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
         "patchSetId": 2
