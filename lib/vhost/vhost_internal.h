@@ -143,7 +143,7 @@ bool spdk_vhost_vq_should_notify(struct spdk_vhost_dev *vdev, struct rte_vhost_v
  * table.
  * \param desc_table_size size of the *desc_table*
  * \return 0 on success, -1 if given index is invalid.
- * If -1 is returned, the params won't be changed.
+ * If -1 is returned, the content of params is undefined.
  */
 int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct rte_vhost_vring *vq,
 			   uint16_t req_idx,
