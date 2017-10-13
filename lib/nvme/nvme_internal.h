@@ -473,6 +473,8 @@ struct nvme_driver {
 
 extern struct nvme_driver *g_spdk_nvme_driver;
 
+extern struct spdk_nvme_global_hooks g_spdk_nvme_hooks;
+
 /*
  * Used for the spdk_nvme_connect() public API to save user specified opts.
  */

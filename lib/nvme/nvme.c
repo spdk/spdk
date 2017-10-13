@@ -45,6 +45,8 @@ int32_t			spdk_nvme_retry_count;
 /* gross timeout of 180 seconds in milliseconds */
 static int g_nvme_driver_timeout_ms = 3 * 60 * 1000;
 
+struct spdk_nvme_global_hooks g_spdk_nvme_hooks;
+
 int
 spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -763,6 +765,12 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 	}
 
 	return 0;
+}
+
+void
+spdk_nvme_set_global_hooks(const struct spdk_nvme_global_hooks *hooks)
+{
+	g_spdk_nvme_hooks = *hooks;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("nvme", SPDK_TRACE_NVME)
