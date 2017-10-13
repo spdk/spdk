@@ -342,6 +342,8 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	lvol->name = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
 	if (!lvol->name) {
 		spdk_bs_md_close_blob(&blob, _spdk_lvol_delete_blob_cb, lvol);
+		SPDK_ERRLOG("Cannot alloc memory for lvol name\n");
+		lvolerrno = -ENOMEM;
 		goto invalid;
 	}
 

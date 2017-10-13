@@ -362,6 +362,7 @@ spdk_rpc_resize_lvol_bdev(struct spdk_jsonrpc_request *request,
 
 	if (req.name == NULL) {
 		SPDK_ERRLOG("missing name param\n");
+		rc = -EINVAL;
 		goto invalid;
 	}
 
