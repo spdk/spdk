@@ -60,6 +60,38 @@ struct ut_bdev_channel {
 struct ut_bdev g_bdev;
 struct spdk_bdev_desc *g_desc;
 
+typedef void (*spdk_event_fn)(void *arg1, void *arg2);
+
+struct spdk_event {
+	spdk_event_fn		fn;
+	void			*arg1;
+	void			*arg2;
+};
+
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
+struct spdk_event *
+spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
+{
+	struct spdk_event *event = calloc(1, sizeof(*event));
+
+	event->fn = fn;
+	event->arg1 = arg1;
+	event->arg2 = arg2;
+
+	return event;
+}
+
+void spdk_event_call(struct spdk_event *event)
+{
+	event->fn(event->arg1, event->arg2);
+	free(event);
+}
+
 static int
 stub_create_ch(void *io_device, void *ctx_buf)
 {
@@ -160,6 +192,7 @@ module_init(void)
 static void
 module_fini(void)
 {
+	spdk_bdev_module_finish_done();
 }
 
 SPDK_BDEV_MODULE_REGISTER(bdev_ut, module_init, module_fini, NULL, NULL, NULL)
@@ -206,13 +239,24 @@ setup_test(void)
 	spdk_bdev_open(&g_bdev.bdev, true, NULL, NULL, &g_desc);
 }
 
+bool g_finish_done = false;
+
+static void
+finish_cb(void)
+{
+	g_finish_done = true;
+}
+
 static void
 teardown_test(void)
 {
+	g_finish_done = false;
 	spdk_bdev_close(g_desc);
 	g_desc = NULL;
 	unregister_bdev();
-	spdk_bdev_finish();
+	spdk_bdev_finish(finish_cb);
+	CU_ASSERT(g_finish_done == true);
+	g_finish_done = false;
 	free_threads();
 }
 

@@ -41,14 +41,37 @@ static struct spdk_subsystem g_ut_subsystems[8];
 static struct spdk_subsystem_depend g_ut_subsystem_deps[8];
 static int global_rc;
 
+typedef void (*spdk_event_fn)(void *arg1, void *arg2);
+
 void
 spdk_app_stop(int rc)
 {
 	global_rc = rc;
 }
 
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
+struct spdk_event *
+spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
+{
+	struct spdk_event *event = calloc(1, sizeof(*event));
+
+	event->fn = fn;
+	event->arg1 = arg1;
+	event->arg2 = arg2;
+
+	return event;
+}
+
 void spdk_event_call(struct spdk_event *event)
 {
+	if (event->fn != NULL)
+		event->fn(event->arg1, event->arg2);
+	free(event);
 }
 
 static void
@@ -89,9 +112,10 @@ subsystem_sort_test_depends_on_single(void)
 	struct spdk_subsystem *subsystem;
 	int i;
 	char subsystem_name[16];
+	struct spdk_event *app_start_event = calloc(1, sizeof(*app_start_event));
 
 	global_rc = -1;
-	spdk_subsystem_init(NULL, NULL);
+	spdk_subsystem_init(app_start_event, NULL);
 
 	i = 4;
 	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
@@ -107,6 +131,7 @@ subsystem_sort_test_depends_on_multiple(void)
 {
 	int i;
 	struct spdk_subsystem *subsystem;
+	struct spdk_event *app_start_event;
 
 	subsystem_clear();
 	set_up_subsystem(&g_ut_subsystems[0], "iscsi");
@@ -135,8 +160,9 @@ subsystem_sort_test_depends_on_multiple(void)
 		spdk_add_subsystem_depend(&g_ut_subsystem_deps[i]);
 	}
 
+	app_start_event = calloc(1, sizeof(*app_start_event));
 	global_rc = -1;
-	spdk_subsystem_init(NULL, NULL);
+	spdk_subsystem_init(app_start_event, NULL);
 
 	subsystem = TAILQ_FIRST(&g_subsystems);
 	CU_ASSERT(strcmp(subsystem->name, "interface") == 0);
