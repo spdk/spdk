@@ -45,6 +45,8 @@
 #include "virtio_dev.h"
 #include "virtio_logs.h"
 
+#include "spdk/likely.h"
+
 /*
  * Per virtio_config.h in Linux.
  *     For virtio_pci on SMP, we don't need to order with respect to MMIO
@@ -156,7 +158,7 @@ vq_update_avail_ring(struct virtqueue *vq, uint16_t desc_idx)
 	 * descriptor.
 	 */
 	avail_idx = (uint16_t)(vq->vq_avail_idx & (vq->vq_nentries - 1));
-	if (unlikely(vq->vq_ring.avail->ring[avail_idx] != desc_idx))
+	if (spdk_unlikely(vq->vq_ring.avail->ring[avail_idx] != desc_idx))
 		vq->vq_ring.avail->ring[avail_idx] = desc_idx;
 	vq->vq_avail_idx++;
 }
