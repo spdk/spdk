@@ -359,6 +359,7 @@ test_spdk_nvme_detach(void)
 	CU_ASSERT(rc == 0);
 
 	g_spdk_nvme_driver = NULL;
+	pthread_mutex_destroy(&test_driver.lock);
 }
 
 static void
