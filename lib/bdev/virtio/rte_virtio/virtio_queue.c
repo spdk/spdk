@@ -40,7 +40,6 @@
 #include <rte_cycles.h>
 #include <rte_memory.h>
 #include <rte_memzone.h>
-#include <rte_branch_prediction.h>
 #include <rte_prefetch.h>
 
 #include "virtio_logs.h"
@@ -100,7 +99,7 @@ virtqueue_dequeue_burst_rx(struct virtqueue *vq, struct virtio_req **rx_pkts,
 		len[i] = uep->len;
 		cookie = (struct virtio_req *)vq->vq_descx[desc_idx].cookie;
 
-		if (unlikely(cookie == NULL)) {
+		if (spdk_unlikely(cookie == NULL)) {
 			PMD_DRV_LOG(ERR, "vring descriptor with no mbuf cookie at %u",
 				vq->vq_used_cons_idx);
 			break;
@@ -201,16 +200,16 @@ virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkt
 	uint32_t i;
 
 	nb_rx = 0;
-	if (unlikely(vdev->started == 0))
+	if (spdk_unlikely(vdev->started == 0))
 		return nb_rx;
 
 	nb_used = VIRTQUEUE_NUSED(vq);
 
 	virtio_rmb();
 
-	num = (uint16_t)(likely(nb_used <= nb_pkts) ? nb_used : nb_pkts);
-	num = (uint16_t)(likely(num <= VIRTIO_MBUF_BURST_SZ) ? num : VIRTIO_MBUF_BURST_SZ);
-	if (likely(num > DESC_PER_CACHELINE))
+	num = (uint16_t)(spdk_likely(nb_used <= nb_pkts) ? nb_used : nb_pkts);
+	num = (uint16_t)(spdk_likely(num <= VIRTIO_MBUF_BURST_SZ) ? num : VIRTIO_MBUF_BURST_SZ);
+	if (spdk_likely(num > DESC_PER_CACHELINE))
 		num = num - ((vq->vq_used_cons_idx + num) % DESC_PER_CACHELINE);
 
 	num = virtqueue_dequeue_burst_rx(vq, rcv_pkts, len, num);
@@ -234,7 +233,7 @@ virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req)
 {
 	struct virtio_dev *vdev = vq->vdev;
 
-	if (unlikely(vdev->started == 0))
+	if (spdk_unlikely(vdev->started == 0))
 		return 0;
 
 	virtio_rmb();
@@ -243,7 +242,7 @@ virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req)
 
 	vq_update_avail_idx(vq);
 
-	if (unlikely(virtqueue_kick_prepare(vq))) {
+	if (spdk_unlikely(virtqueue_kick_prepare(vq))) {
 		virtqueue_notify(vq);
 		PMD_TX_LOG(DEBUG, "Notified backend after xmit");
 	}
