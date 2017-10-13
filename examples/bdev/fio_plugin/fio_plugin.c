@@ -94,11 +94,32 @@ struct spdk_fio_thread {
 };
 
 static __thread struct spdk_fio_thread *g_thread;
+extern __thread unsigned per_lcore__lcore_id;
+static unsigned lcore_counter = 1;
 
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
 static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 			      unsigned int max, const struct timespec *t);
+
+/**
+ * Force-set unique lcore id for this thread.
+ * Currently the only supported way to start an SPDK thread is to
+ * call spdk_env_init(). This function is called as a part of fio
+ * initialization, however fio starts it's own per-job threads
+ * internally, so they have to use the following hack to make SPDK
+ * see them as valid, non-external threads. Despite it's name,
+ * lcore defines a unique ID for a thread, not necessarily bound
+ * to any logical CPU core.
+ *
+ * The original thread that called spdk_env_init() will have
+ * it's lcore set to 0, so we start with 1 to avoid conflicts.
+ */
+static void
+force_make_eal_thread(void)
+{
+	per_lcore__lcore_id = lcore_counter++;
+}
 
 static void
 spdk_fio_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
@@ -346,6 +367,7 @@ spdk_fio_init(struct thread_data *td)
 	struct fio_file *f;
 	int rc;
 
+	force_make_eal_thread();
 	spdk_fio_init_thread(td);
 
 	fio_thread = td->io_ops_data;
