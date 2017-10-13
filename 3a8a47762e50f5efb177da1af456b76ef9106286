@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca40b0cb_d3f93865",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-13T13:43:35Z",
+      "side": 1,
+      "message": "tabs/spaces consistency",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 1
+      },
+      "revId": "3a8a47762e50f5efb177da1af456b76ef9106286",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3adb461d_17839f92",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-13T13:43:35Z",
+      "side": 1,
+      "message": "Fix whitespaces in previous commit as well",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 10
+      },
+      "revId": "3a8a47762e50f5efb177da1af456b76ef9106286",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
