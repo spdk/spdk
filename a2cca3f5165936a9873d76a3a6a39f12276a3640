@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6335a72_72742c1b",
+        "filename": "test/iscsi_tgt/pmem/iscsi_pmem.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-13T16:45:06Z",
+      "side": 1,
+      "message": "The timing_exit uses iscsi_pmem, so the enter looks to be mismatched.",
+      "range": {
+        "startLine": 11,
+        "startChar": 13,
+        "endLine": 11,
+        "endChar": 22
+      },
+      "revId": "a2cca3f5165936a9873d76a3a6a39f12276a3640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7171197_f887562b",
+        "filename": "test/iscsi_tgt/pmem/iscsi_pmem.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-13T16:45:06Z",
+      "side": 1,
+      "message": "This timing_enter is also mismatched.",
+      "range": {
+        "startLine": 27,
+        "startChar": 13,
+        "endLine": 27,
+        "endChar": 28
+      },
+      "revId": "a2cca3f5165936a9873d76a3a6a39f12276a3640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "654dd70a_49b891d1",
+        "filename": "test/iscsi_tgt/pmem/iscsi_pmem.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-13T16:45:06Z",
+      "side": 1,
+      "message": "10 + 10 seconds is probably overkill for the per-patch tests - can this be reduced? (We can make it longer for $RUN_NIGHTLY.)",
+      "revId": "a2cca3f5165936a9873d76a3a6a39f12276a3640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66920b5a_f3d5d297",
+        "filename": "test/iscsi_tgt/test_plan.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-13T16:45:06Z",
+      "side": 1,
+      "message": "NVMeOF -\u003e iSCSI target?",
+      "range": {
+        "startLine": 4,
+        "startChar": 65,
+        "endLine": 4,
+        "endChar": 71
+      },
+      "revId": "a2cca3f5165936a9873d76a3a6a39f12276a3640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27483c9f_4c68f9ac",
+        "filename": "test/iscsi_tgt/test_plan.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-13T16:45:06Z",
+      "side": 1,
+      "message": "I think this is meant to be just 4096 or 4k, not 4096k.",
+      "range": {
+        "startLine": 30,
+        "startChar": 54,
+        "endLine": 30,
+        "endChar": 59
+      },
+      "revId": "a2cca3f5165936a9873d76a3a6a39f12276a3640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
