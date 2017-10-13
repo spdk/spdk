@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "198757d5_b54b4545",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-13T10:12:27Z",
+      "side": 1,
+      "message": "Still \u0027$\u0027 missing. Just thinking that error function doesn\u0027t need errno code. It can just \u0027return 1\u0027 as message is already printed.",
+      "range": {
+        "startLine": 378,
+        "startChar": 62,
+        "endLine": 378,
+        "endChar": 63
+      },
+      "revId": "731a72fdacfb551cc34bbc7ba0f42f873153c0bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "199698ce_bfb525ec",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-13T10:12:27Z",
+      "side": 1,
+      "message": "ditto.",
+      "range": {
+        "startLine": 399,
+        "startChar": 59,
+        "endLine": 399,
+        "endChar": 66
+      },
+      "revId": "731a72fdacfb551cc34bbc7ba0f42f873153c0bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fd6b52b_8ebf4795",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-13T10:12:27Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 421,
+        "startChar": 60,
+        "endLine": 421,
+        "endChar": 66
+      },
+      "revId": "731a72fdacfb551cc34bbc7ba0f42f873153c0bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "471324c8_ef574452",
+        "filename": "test/pmem/pmem.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-13T10:12:27Z",
+      "side": 1,
+      "message": "No need to check this. truncate will fail if it can\u0027t create file.",
+      "range": {
+        "startLine": 479,
+        "startChar": 1,
+        "endLine": 481,
+        "endChar": 3
+      },
+      "revId": "731a72fdacfb551cc34bbc7ba0f42f873153c0bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
