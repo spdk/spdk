@@ -558,13 +558,13 @@ vbdev_lvol_resize(char *name, size_t sz,
 	lvol = vbdev_get_lvol_by_name(name);
 	if (lvol == NULL) {
 		SPDK_ERRLOG("lvol '%s' does not exist\n", name);
-		return -1;
+		return -ENODEV;
 	}
 
 	bdev = spdk_bdev_get_by_name(name);
 	if (bdev == NULL) {
 		SPDK_ERRLOG("bdev '%s' does not exist\n", name);
-		return -1;
+		return -ENODEV;
 	}
 
 	lvs = lvol->lvol_store;
