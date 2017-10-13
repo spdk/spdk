@@ -416,6 +416,12 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		goto abort_task;
 	}
 
+	if (desc->len < sizeof(struct virtio_scsi_cmd_req)) {
+		SPDK_WARNLOG("%s: something\n",
+			     vdev->name);
+		task->resp = NULL;
+		goto abort_task;
+	}
 	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 
 	/* Each request must have at least 2 descriptors (e.g. request and response) */
@@ -434,6 +440,14 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		/*
 		 * FROM_DEV (READ): [RD_req][WR_resp][WR_buf0]...[WR_bufN]
 		 */
+
+		if (desc->len < sizeof(struct virtio_scsi_cmd_resp)) {
+			SPDK_WARNLOG("%s: something\n",
+				     vdev->name);
+			task->resp = NULL;
+			goto abort_task;
+		}
+
 		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 
 		rc = spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_len);
@@ -503,6 +517,12 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			}
 		}
 
+		if (desc->len < sizeof(struct virtio_scsi_cmd_resp)) {
+			SPDK_WARNLOG("%s: something\n",
+				     vdev->name);
+			task->resp = NULL;
+			goto abort_task;
+		}
 		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
 	}
 
