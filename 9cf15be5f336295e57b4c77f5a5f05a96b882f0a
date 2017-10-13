@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c61c5115_e692ad3e",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-13T14:44:32Z",
+      "side": 1,
+      "message": "This is probably used to verify that this function was called in vbdev_lvol_submit_request UT.\nYet spdk_bdev_io_get_buf() does not set status on the task.\n\nShould it be here ?",
+      "range": {
+        "startLine": 205,
+        "startChar": 0,
+        "endLine": 206,
+        "endChar": 46
+      },
+      "revId": "9cf15be5f336295e57b4c77f5a5f05a96b882f0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a55ad74_2987b99f",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-13T14:44:32Z",
+      "side": 1,
+      "message": "This seems like same case as above in writev in previous patch set. Either set those to certain values, or not compare.",
+      "range": {
+        "startLine": 241,
+        "startChar": 0,
+        "endLine": 242,
+        "endChar": 42
+      },
+      "revId": "9cf15be5f336295e57b4c77f5a5f05a96b882f0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
