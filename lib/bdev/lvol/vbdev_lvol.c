@@ -401,7 +401,7 @@ lvol_flush(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 static int
 lvol_reset(struct spdk_bdev_io *bdev_io)
 {
-	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	return 0;
 }
