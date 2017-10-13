@@ -10,7 +10,72 @@ function linux_iter_pci {
 	lspci -mm -n -D | grep $1 | tr -d '"' | awk -F " " '{print $1}'
 }
 
+function get_nvme_name_from_bdf {
+	if ! [ $(lsblk -d --output NAME | grep "^nvme") ]; then
+		return
+	fi
+	nvme_devs=`lsblk -d --output NAME | grep "^nvme"`
+	for dev in $nvme_devs; do
+		bdf=$(basename $(readlink /sys/block/$dev/device/device))
+		if [ "$bdf" = "$1" ]; then
+			eval "$2=$dev"
+			return
+		fi
+	done
+}
+
 timing_enter nvme
+
+# check that our setup.sh script does not bind NVMe devices to uio/vfio if they
+# have an active mountpoint
+$rootdir/scripts/setup.sh reset
+blkname=''
+# first, find an NVMe device that does not have an active mountpoint already
+# this covers rare case where someone is running this test script on a system
+# that has a mounted NVMe filesystem
+#
+# note: more work probably needs to be done to properly handle devices with multiple
+# namespaces
+for bdf in $(linux_iter_pci 0108); do
+	get_nvme_name_from_bdf "$bdf" blkname
+	if [ "$blkname" != "" ]; then
+		mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
+		if [ "$mountpoints" = "0" ]; then
+			break
+		else
+			blkname=''
+		fi
+	fi
+done
+# if we found an NVMe block device without an active mountpoint, create and mount
+# a filesystem on it for purposes of testing the setup.sh script
+if [ "$blkname" != "" ]; then
+	parted -s /dev/$blkname mklabel gpt
+	# just create a 100MB partition - this tests our ability to detect mountpoints
+	# on partitions of the device, not just the device itself;  it also is faster
+	# since we don't trim and initialize the whole namespace
+	parted -s /dev/$blkname mkpart primary 1 100
+	sleep 1
+	mkfs.ext4 -F /dev/${blkname}p1
+	mkdir -p /tmp/nvmetest
+	mount /dev/${blkname}p1 /tmp/nvmetest
+	$rootdir/scripts/setup.sh
+	driver=$(basename $(readlink /sys/bus/pci/devices/$bdf/driver))
+	# check that the nvme driver is still loaded against the device
+	if [ "$driver" != "nvme" ]; then
+		exit 1
+	fi
+	umount /tmp/nvmetest
+	rmdir /tmp/nvmetest
+	# write zeroes to the device to blow away the partition table and filesystem
+	dd if=/dev/zero of=/dev/$blkname oflag=direct bs=1M count=1
+	$rootdir/scripts/setup.sh
+	driver=$(basename $(readlink /sys/bus/pci/devices/$bdf/driver))
+	# check that the nvme driver is not loaded against the device
+	if [ "$driver" = "nvme" ]; then
+		exit 1
+	fi
+fi
 
 if [ `uname` = Linux ]; then
 	start_stub "-s 2048 -i 0 -m 0xF"
