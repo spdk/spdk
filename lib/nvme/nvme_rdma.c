@@ -191,9 +191,16 @@ nvme_rdma_get_event(struct rdma_event_channel *channel,
 static int
 nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 {
+	struct ibv_pd		*pd;
 	int			rc;
 	struct ibv_qp_init_attr	attr;
 	char buf[64];
+
+	pd = NULL;
+	if (g_spdk_nvme_hooks.get_ibv_pd) {
+		struct spdk_nvme_hooks *hooks = rqpair->qpair.ctrlr->ctrlr_hook;
+		pd = g_spdk_nvme_hooks.get_ibv_pd(hooks->hook_ctx);
+	}
 
 	rqpair->cq = ibv_create_cq(rqpair->cm_id->verbs, rqpair->num_entries * 2, rqpair, NULL, 0);
 	if (!rqpair->cq) {
@@ -212,7 +219,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 	attr.cap.max_send_sge	= NVME_RDMA_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVME_RDMA_DEFAULT_RX_SGE;
 
-	rc = rdma_create_qp(rqpair->cm_id, NULL, &attr);
+	rc = rdma_create_qp(rqpair->cm_id, pd, &attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed\n");
 		return -1;
@@ -677,6 +684,11 @@ nvme_rdma_register_mem(struct nvme_rdma_qpair *rqpair)
 	struct ibv_pd *pd = rqpair->cm_id->qp->pd;
 	struct spdk_mem_map *mr_map;
 
+	if (g_spdk_nvme_hooks.get_keys != NULL) {
+		/* Don't allocate a mem_map if the user provided a mr hook */
+		return 0;
+	}
+
 	// TODO: look up existing mem map registration for this pd
 
 	mr_map = spdk_mem_map_alloc((uint64_t)NULL, nvme_rdma_mr_map_notify, pd);
@@ -834,20 +846,30 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair, struct nvme_reque
 {
 	void *payload = req->payload.u.contig + req->payload_offset;
 	struct ibv_mr *mr;
+	uint64_t *rkey;
 
 	assert(req->payload_size != 0);
 	assert(req->payload.type == NVME_PAYLOAD_TYPE_CONTIG);
 
-	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map, (uint64_t)payload);
-	if (mr == NULL) {
-		return -1;
+	if (g_spdk_nvme_hooks.get_keys) {
+		struct spdk_nvme_hooks *hooks = rqpair->qpair.ctrlr->ctrlr_hook;
+		g_spdk_nvme_hooks.get_keys(hooks->hook_ctx, payload, req->payload_size, rkey, NULL);
+	} else {
+		mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map, (uint64_t)payload);
+
+		if (mr == NULL) {
+			return -1;
+		}
+
+		rkey = mr->rkey;
 	}
+
 
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	req->cmd.dptr.sgl1.keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
 	req->cmd.dptr.sgl1.keyed.length = req->payload_size;
-	req->cmd.dptr.sgl1.keyed.key = mr->rkey;
+	req->cmd.dptr.sgl1.keyed.key = rkey;
 	req->cmd.dptr.sgl1.address = (uint64_t)payload;
 
 	return 0;
