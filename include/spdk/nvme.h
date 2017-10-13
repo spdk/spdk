@@ -302,6 +302,47 @@ int spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
  */
 bool spdk_nvme_transport_available(enum spdk_nvme_transport_type trtype);
 
+struct ibv_context;
+struct ibv_pd;
+
+/**
+ * Hook functions per controller.
+ */
+struct spdk_nvme_hooks {
+	/**
+	 * Include user provided protection domain and memory region per controller.
+	 */
+	void *hook_ctx;
+
+	/**
+	 * IP address of a controller.
+	 */
+	uint32_t ipaddr;
+
+	/**
+	 * Get a InfiniBand Verbs protection domain when connecting to an RDMA NVMe-oF target.
+	 */
+	struct ibv_pd *(*get_ibv_pd)(void *hook_ctx);
+
+	/**
+	 * Get a rkey/lkey for a buffer.
+	 */
+	bool (*get_keys)(void *hook_ctx, void *buf, size_t size, uint64_t *rkey, uint64_t *lkey);
+};
+
+/**
+ * Set global NVMe hook functions.
+ *
+ * This function overwrites any previous hooks - callers are responsible for making sure it is only
+ * called once.
+ */
+void spdk_nvme_set_global_hooks(const struct spdk_nvme_hooks *hooks);
+
+/**
+ * Set ctrlr_hook of a controller.
+ */
+void spdk_nvme_set_ctrlr_hook(struct spdk_nvme_ctrlr *ctrlr);
+
 /**
  * Callback for spdk_nvme_probe() enumeration.
  *
