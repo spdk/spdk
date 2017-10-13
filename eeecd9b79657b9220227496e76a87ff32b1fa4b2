@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f79bad95_277fc6e5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1638,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-13T16:33:02Z",
+      "side": 1,
+      "message": "Minor nitpick: comparing against zeros twice looks a little confusing to me; I would write it something like this:\n\n    if (memcmp(\u0026ctx-\u003ebs-\u003ebstype, \u0026ctx-\u003esuper-\u003ebstype, ...) \u003d\u003d 0) {\n        log(\"bstype matched\");\n    } else if (memcmp(\u0026ctx-\u003ebs-\u003ebstype, zeroes, ...) \u003d\u003d 0) {\n        log(\"wildcard\");\n    } else {\n        log(\"unexpected bstype\");\n    }\n\n(As long as there are no other issues, I\u0027m OK with leaving this the way it is to avoid extra patch churn, though.)",
+      "revId": "eeecd9b79657b9220227496e76a87ff32b1fa4b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
