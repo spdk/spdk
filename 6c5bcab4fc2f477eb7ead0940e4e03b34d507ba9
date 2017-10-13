@@ -22,6 +22,29 @@
       "revId": "6c5bcab4fc2f477eb7ead0940e4e03b34d507ba9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d0205ee_77480440",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1055,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-10-13T09:49:35Z",
+      "side": 1,
+      "message": "I think exit(-1); is more appropriate here corresponding to the above \"./blobcli -n 0\" problem. Thanks.",
+      "range": {
+        "startLine": 1055,
+        "startChar": 5,
+        "endLine": 1055,
+        "endChar": 23
+      },
+      "revId": "6c5bcab4fc2f477eb7ead0940e4e03b34d507ba9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
