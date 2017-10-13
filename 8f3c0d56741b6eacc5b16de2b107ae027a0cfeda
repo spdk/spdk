@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd85e602_06135f0e",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-13T22:49:04Z",
+      "side": 1,
+      "message": "I guess this desc-\u003elen check can be removed because it is a duplicate of the one above? (desc hasn\u0027t changed in between the previous check and here)",
+      "revId": "8f3c0d56741b6eacc5b16de2b107ae027a0cfeda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
