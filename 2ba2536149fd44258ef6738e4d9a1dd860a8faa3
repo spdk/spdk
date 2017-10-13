@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c7857a3_e1bbb735",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-13T20:52:34Z",
+      "side": 1,
+      "message": "out of curiosity: when can this happen? what\u0027s the real-case scenario for this?",
+      "range": {
+        "startLine": 95,
+        "startChar": 3,
+        "endLine": 95,
+        "endChar": 18
+      },
+      "revId": "2ba2536149fd44258ef6738e4d9a1dd860a8faa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
