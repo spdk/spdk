@@ -350,6 +350,11 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	switch (ctrl_req->type) {
 	case VIRTIO_SCSI_T_TMF:
 		task->tmf_resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+		if (desc->len < sizeof(struct virtio_scsi_ctrl_tmf_resp) || task->tmf_resp == NULL) {
+			SPDK_ERRLOG("%s: TMF response descriptor at index %d points to invalid guest memory address\n",
+				    vdev->name, task->req_idx);
+			goto out;
+		}
 
 		/* Check if we are processing a valid request */
 		if (task->scsi_dev == NULL) {
@@ -374,6 +379,12 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	case VIRTIO_SCSI_T_AN_QUERY:
 	case VIRTIO_SCSI_T_AN_SUBSCRIBE: {
 		an_resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+		if (desc->len < sizeof(struct virtio_scsi_ctrl_an_resp) || an_resp == NULL) {
+			SPDK_WARNLOG("%s: Asynchronous response descriptor points to invalid guest memory address\n",
+				     vdev->name);
+			goto out;
+		}
+
 		an_resp->response = VIRTIO_SCSI_S_ABORTED;
 		break;
 	}
@@ -408,13 +419,19 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 
 	rc = spdk_vhost_vq_get_desc(vdev, task->vq, task->req_idx, &desc, &desc_table, &desc_table_len);
 	/* First descriptor must be readable */
-	if (rc != 0 || spdk_unlikely(spdk_vhost_vring_desc_is_wr(desc))) {
+	if (spdk_unlikely(spdk_vhost_vring_desc_is_wr(desc) || rc != 0 ||
+			  desc->len < sizeof(struct virtio_scsi_cmd_req))) {
 		SPDK_WARNLOG("%s: invalid first (request) descriptor at index %"PRIu16".\n",
 			     vdev->name, task->req_idx);
 		goto invalid_task;
 	}
 
 	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+	if (*req == NULL) {
+		SPDK_WARNLOG("%s: Request descriptor at index %d points to invalid guest memory address\n",
+			     vdev->name, task->req_idx);
+		goto invalid_task;
+	}
 
 	/* Each request must have at least 2 descriptors (e.g. request and response) */
 	spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_len);
@@ -432,7 +449,11 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		 * FROM_DEV (READ): [RD_req][WR_resp][WR_buf0]...[WR_bufN]
 		 */
 		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
-
+		if (desc->len < sizeof(struct virtio_scsi_cmd_resp) || task->resp == NULL) {
+			SPDK_WARNLOG("%s: Response descriptor at index %d points to invalid guest memory address\n",
+				     vdev->name, task->req_idx);
+			goto invalid_task;
+		}
 		rc = spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_len);
 		if (spdk_unlikely(rc != 0)) {
 			SPDK_WARNLOG("%s: invalid descriptor chain at request index %d (descriptor id overflow?).\n",
@@ -495,6 +516,11 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		}
 
 		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+		if (desc->len < sizeof(struct virtio_scsi_cmd_resp) || task->resp == NULL) {
+			SPDK_WARNLOG("%s: Response descriptor at index %d points to invalid guest memory address\n",
+				     vdev->name, task->req_idx);
+			goto invalid_task;
+		}
 	}
 
 	if (iovcnt == iovcnt_max) {
