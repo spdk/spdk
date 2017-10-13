@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94c931c4_979a7184",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-10-13T02:23:25Z",
+      "side": 1,
+      "message": "The code you updated are all tested OK. But when I retest a previous ERROR case \"./blobcli -n 0\", the app will switch to -S mode unexpectedly. This is a new problem, only in this version.",
+      "range": {
+        "startLine": 158,
+        "startChar": 11,
+        "endLine": 158,
+        "endChar": 13
+      },
+      "revId": "6c5bcab4fc2f477eb7ead0940e4e03b34d507ba9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
