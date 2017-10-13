@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d5d9ef0_6e02b6ee",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 529,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-13T13:55:23Z",
+      "side": 1,
+      "message": "could you check task-\u003eresp against NULL here as well?",
+      "revId": "56cd4392ae444c47e318465e1c1b1719b787cb1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
