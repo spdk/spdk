@@ -45,6 +45,21 @@ function linux_bind_driver() {
 	fi
 }
 
+function linux_unbind_driver() {
+	bdf="$1"
+	ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
+
+	if ! [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
+		return 0
+	fi
+
+	old_driver_name=$(basename $(readlink /sys/bus/pci/devices/$bdf/driver))
+
+	echo "$ven_dev_id" > "/sys/bus/pci/devices/$bdf/driver/remove_id" 2> /dev/null || true
+	echo "$bdf" > "/sys/bus/pci/devices/$bdf/driver/unbind"
+	echo "$bdf ($ven_dev_id): $old_driver_name -> no driver"
+}
+
 function linux_hugetlbfs_mount() {
 	mount | grep ' type hugetlbfs ' | awk '{ print $3 }'
 }
@@ -130,9 +145,16 @@ function configure_linux {
 
 function reset_linux {
 	# NVMe
-	modprobe nvme || true
+	set +e
+	lsmod | grep nvme > /dev/null
+	driver_loaded=$?
+	set -e
 	for bdf in $(linux_iter_pci_class_code 0108); do
-		linux_bind_driver "$bdf" nvme
+		if [ $driver_loaded -eq 0 ]; then
+			linux_bind_driver "$bdf" nvme
+		else
+			linux_unbind_driver "$bdf"
+		fi
 	done
 
 
@@ -142,10 +164,17 @@ function reset_linux {
 	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
 
-	modprobe ioatdma || true
+	set +e
+	lsmod | grep ioatdma > /dev/null
+	driver_loaded=$?
+	set -e
 	for dev_id in `cat $TMP`; do
 		for bdf in $(linux_iter_pci_dev_id 8086 $dev_id); do
-			linux_bind_driver "$bdf" ioatdma
+			if [ $driver_loaded -eq 0 ]; then
+				linux_bind_driver "$bdf" ioatdma
+			else
+				linux_unbind_driver "$bdf"
+			fi
 		done
 	done
 	rm $TMP
@@ -156,6 +185,10 @@ function reset_linux {
 	grep "VIRTIO_PCI_DEVICEID_SCSI" $rootdir/lib/bdev/virtio/rte_virtio/virtio_pci.h \
 	| awk -F"x" '{print $2}' > $TMP
 
+	# TODO: check if virtio-pci is loaded first and just unbind if it is not loaded
+	# Requires some more investigation - for example, some kernels do not seem to have
+	#  virtio-pci but just virtio_scsi instead.  Also need to make sure we get the
+	#  underscore vs. dash right in the virtio_scsi name.
 	modprobe virtio-pci || true
 	for dev_id in `cat $TMP`; do
 		for bdf in $(linux_iter_pci_dev_id 1af4 $dev_id); do
