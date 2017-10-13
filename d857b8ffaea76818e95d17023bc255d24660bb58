@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5327620_8d5f03cf",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 747,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-13T19:11:39Z",
+      "side": 1,
+      "message": "sure - makes sense to try to keep scsi-specific stuff out of the vdev structure\n\ni still think that this virtio_dev_get_acquired_queue() function is really hackish though - it is only there specifically because the bdev driver is not keeping track of which queues it has allocated;  it is also not generally useful - for example, if we do multi queue, this function cannot tell you *all* of the queues this core has acquired, only the first one\n\nit seems to me like we need two different structures - one used internally by the rte_virtio code currently that represents generic virtio devices and is also not tied at all to bdev details (for example, pollers)\n\nthen we should have a separate bdev structure for these devices, where we could store things like a bdev poller, also could have two different types of bdev structures - one for scsi now, another in the future for blk - this one knows details about pollers or anything else not relevant to the rte_virtio code\n\nthis is basically how you\u0027ve done it for the vhost target - dpdk code has its internal representation of a device and spdk has its spdk_vhost_dev;  then there are separate extensions of spdk_vhost_dev for scsi and blk",
+      "revId": "d857b8ffaea76818e95d17023bc255d24660bb58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
