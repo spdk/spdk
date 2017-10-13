@@ -97,6 +97,7 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 		return NULL;
 
 	bs_dev = calloc(1, sizeof(*bs_dev));
+	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
 	bs_dev->destroy = bdev_blob_destroy;
 
 	CU_ASSERT(g_bs_dev == NULL);
@@ -120,6 +121,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		error = -1;
 	} else {
 		lvs = calloc(1, sizeof(*lvs));
+		SPDK_CU_ASSERT_FATAL(lvs != NULL);
 		lvs->bs_dev = bs_dev;
 		error = 0;
 	}
@@ -322,13 +324,14 @@ ut_lvol_init(void)
 	int rc;
 
 	g_lvs = calloc(1, sizeof(*g_lvs));
+	SPDK_CU_ASSERT_FATAL(g_lvs != NULL);
 	g_lvs_bdev = calloc(1, sizeof(*g_lvs_bdev));
+	SPDK_CU_ASSERT_FATAL(g_lvs_bdev != NULL);
 	g_base_bdev = calloc(1, sizeof(*g_base_bdev));
+	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
 
 	g_lvs_bdev->lvs = g_lvs;
 	g_lvs_bdev->bdev = g_base_bdev;
-
-	SPDK_CU_ASSERT_FATAL(g_lvs != NULL);
 
 	uuid_generate_time(g_lvs->uuid);
 	uuid_generate_time(wrong_uuid);
