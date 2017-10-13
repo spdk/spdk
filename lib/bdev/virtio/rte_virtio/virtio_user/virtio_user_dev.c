@@ -153,25 +153,12 @@ int virtio_user_stop_device(struct virtio_user_dev *dev)
 	return virtio_user_queue_setup(dev, virtio_user_stop_queue);
 }
 
-int
-is_vhost_user_by_type(const char *path)
-{
-	struct stat sb;
-
-	if (stat(path, &sb) == -1)
-		return 0;
-
-	return S_ISSOCK(sb.st_mode);
-}
-
 static int
 virtio_user_dev_setup(struct virtio_user_dev *dev)
 {
 	uint16_t i;
 
 	dev->vhostfd = -1;
-	dev->vhostfds = NULL;
-	dev->tapfds = NULL;
 
 	for (i = 0; i < VIRTIO_MAX_VIRTQUEUES; ++i) {
 		dev->callfds[i] = -1;
@@ -242,14 +229,5 @@ err:
 void
 virtio_user_dev_uninit(struct virtio_user_dev *dev)
 {
-	uint32_t i;
-
 	close(dev->vhostfd);
-
-	if (dev->vhostfds) {
-		for (i = 0; i < dev->vdev.max_queues; ++i)
-			close(dev->vhostfds[i]);
-		free(dev->vhostfds);
-		free(dev->tapfds);
-	}
 }

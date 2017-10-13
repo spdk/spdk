@@ -49,27 +49,20 @@ struct virtio_user_dev {
 	/* for vhost_user backend */
 	int		vhostfd;
 
-	/* for vhost_kernel backend */
-	char		*ifname;
-	int		*vhostfds;
-	int		*tapfds;
-
 	/* for both vhost_user and vhost_kernel */
 	int		callfds[VIRTIO_MAX_VIRTQUEUES];
 	int		kickfds[VIRTIO_MAX_VIRTQUEUES];
 	uint32_t	queue_size;
 
 	uint8_t		status;
-	uint8_t		port_id;
 	char		path[PATH_MAX];
 	struct vring	vrings[VIRTIO_MAX_VIRTQUEUES];
 	struct virtio_user_backend_ops *ops;
 };
 
-int is_vhost_user_by_type(const char *path);
 int virtio_user_start_device(struct virtio_user_dev *dev);
 int virtio_user_stop_device(struct virtio_user_dev *dev);
 struct virtio_dev *virtio_user_dev_init(char *path, int queue_size);
 void virtio_user_dev_uninit(struct virtio_user_dev *dev);
-void virtio_user_handle_cq(struct virtio_user_dev *dev, uint16_t queue_idx);
+
 #endif
