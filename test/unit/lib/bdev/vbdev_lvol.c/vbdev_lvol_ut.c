@@ -250,6 +250,18 @@ spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
 	return 0;
 }
 
+int
+spdk_json_write_object_begin(struct spdk_json_write_ctx *w)
+{
+	return 0;
+}
+
+int
+spdk_json_write_object_end(struct spdk_json_write_ctx *w)
+{
+	return 0;
+}
+
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
