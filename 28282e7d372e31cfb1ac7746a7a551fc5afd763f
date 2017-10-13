@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cd8b166_ea2664e0",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-13T18:38:12Z",
+      "side": 1,
+      "message": "Should say \"lvols still open on lvol store\".\n\n\"Still present\" indicates that lvols must be destroyed (not just closed) to unload the lvolstore.",
+      "revId": "28282e7d372e31cfb1ac7746a7a551fc5afd763f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cff55fdf_5d986a6b",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-13T18:38:12Z",
+      "side": 1,
+      "message": "Comment should say \"lvol store has an open lvol\"\n\nIt is OK for the lvolstore to contain an lvol, it just cannot be open.",
+      "revId": "28282e7d372e31cfb1ac7746a7a551fc5afd763f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
