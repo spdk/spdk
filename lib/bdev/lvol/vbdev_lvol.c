@@ -299,12 +299,17 @@ vbdev_lvol_dump_config_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct spdk_lvol *lvol = ctx;
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_bdev *bdev;
+	char lvol_store_uuid[UUID_STRING_LEN];
 
 	spdk_json_write_name(w, "lvol");
 	spdk_json_write_object_begin(w);
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
 	bdev = lvs_bdev->bdev;
+
+	uuid_unparse(lvol->lvol_store->uuid, lvol_store_uuid);
+	spdk_json_write_name(w, "lvol_store_uuid");
+	spdk_json_write_string(w, lvol_store_uuid);
 
 	spdk_json_write_name(w, "base_bdev");
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
