@@ -331,6 +331,10 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	}
 
 	ctrl_req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+	if (desc->len < sizeof(struct virtio_scsi_ctrl_tmf_req) || ctrl_req == NULL) {
+		SPDK_WARNLOG("%s: Invalid controlq descriptor at index %d.\n", vdev->name, task->req_idx);
+		goto out;
+	}
 
 	SPDK_DEBUGLOG(SPDK_TRACE_VHOST_SCSI_QUEUE,
 		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
@@ -352,6 +356,10 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	switch (ctrl_req->type) {
 	case VIRTIO_SCSI_T_TMF:
 		task->tmf_resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+		if (desc->len < sizeof(struct virtio_scsi_ctrl_tmf_resp) || task->tmf_resp == NULL) {
+			SPDK_ERRLOG("%s: Invalid TMF response descriptor %d\n", vdev->name, task->req_idx);
+			goto out;
+		}
 
 		/* Check if we are processing a valid request */
 		if (task->scsi_dev == NULL) {
@@ -376,6 +384,11 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	case VIRTIO_SCSI_T_AN_QUERY:
 	case VIRTIO_SCSI_T_AN_SUBSCRIBE: {
 		an_resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+		if (desc->len < sizeof(struct virtio_scsi_ctrl_an_resp) || an_resp == NULL) {
+			SPDK_WARNLOG("%s: Invalid asynchronous response descriptor\n", vdev->name);
+			goto out;
+		}
+
 		an_resp->response = VIRTIO_SCSI_S_ABORTED;
 		break;
 	}
@@ -417,6 +430,11 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 	}
 
 	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+	if (desc->len < sizeof(struct virtio_scsi_cmd_req) || *req == NULL) {
+		SPDK_WARNLOG("%s: Invalid request descriptor %d\n", vdev->name, task->req_idx);
+		task->resp = NULL;
+		goto abort_task;
+	}
 
 	/* Each request must have at least 2 descriptors (e.g. request and response) */
 	spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_len);
@@ -426,6 +444,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		task->resp = NULL;
 		goto abort_task;
 	}
+
 	task->scsi.dxfer_dir = spdk_vhost_vring_desc_is_wr(desc) ? SPDK_SCSI_DIR_FROM_DEV :
 			       SPDK_SCSI_DIR_TO_DEV;
 	task->scsi.iovs = iovs;
@@ -435,7 +454,11 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		 * FROM_DEV (READ): [RD_req][WR_resp][WR_buf0]...[WR_bufN]
 		 */
 		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
-
+		if (desc->len < sizeof(struct virtio_scsi_cmd_resp) || task->resp == NULL) {
+			SPDK_WARNLOG("%s: Invalid response descriptor at index %d\n",
+				     vdev->name, task->req_idx);
+			goto abort_task;
+		}
 		rc = spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_len);
 		if (spdk_unlikely(rc != 0)) {
 			SPDK_WARNLOG("%s: invalid descriptor chain at request index %d (descriptor id overflow?).\n",
@@ -502,8 +525,13 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 				goto abort_task;
 			}
 		}
-
 		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr);
+		if (desc->len < sizeof(struct virtio_scsi_cmd_resp)) {
+			SPDK_WARNLOG("%s: Invalid response descriptor at index %d\n",
+				     vdev->name, task->req_idx);
+			task->resp = NULL;
+			goto abort_task;
+		}
 	}
 
 	if (iovcnt == iovcnt_max) {
