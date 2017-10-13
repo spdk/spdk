@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "920478f1_c2b9aba1",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-13T13:34:04Z",
+      "side": 1,
+      "message": "long line, please split",
+      "range": {
+        "startLine": 15,
+        "startChar": 86,
+        "endLine": 15,
+        "endChar": 102
+      },
+      "revId": "6f9b6e89abbcae53131005429fc9256885412603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bda03325_e59bdd32",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-13T13:34:04Z",
+      "side": 1,
+      "message": "is that change necessary?",
+      "range": {
+        "startLine": 119,
+        "startChar": 26,
+        "endLine": 119,
+        "endChar": 39
+      },
+      "revId": "6f9b6e89abbcae53131005429fc9256885412603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93e2d690_31077947",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-13T13:34:04Z",
+      "side": 1,
+      "message": "is that change necessary?",
+      "range": {
+        "startLine": 130,
+        "startChar": 56,
+        "endLine": 130,
+        "endChar": 72
+      },
+      "revId": "6f9b6e89abbcae53131005429fc9256885412603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df1ee670_ef6a3d23",
+        "filename": "test/vhost/initiator/vhost.conf.in",
+        "patchSetId": 15
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-13T13:34:04Z",
+      "side": 1,
+      "message": "is that change necessary?",
+      "range": {
+        "startLine": 8,
+        "startChar": 7,
+        "endLine": 8,
+        "endChar": 20
+      },
+      "revId": "6f9b6e89abbcae53131005429fc9256885412603",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
