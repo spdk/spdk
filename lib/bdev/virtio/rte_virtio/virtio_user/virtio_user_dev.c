@@ -194,6 +194,10 @@ virtio_user_dev_init(char *path, int queue_size)
 	uint64_t max_queues;
 
 	dev = calloc(1, sizeof(*dev));
+	if (dev == NULL) {
+		return NULL;
+	}
+
 	vdev = &dev->vdev;
 	vdev->is_hw = 0;
 
