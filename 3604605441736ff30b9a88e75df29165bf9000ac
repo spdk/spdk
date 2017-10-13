@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c923c589_69b4861e",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-13T13:57:46Z",
+      "side": 1,
+      "message": "Probably not needed if its commented?",
+      "range": {
+        "startLine": 81,
+        "startChar": 24,
+        "endLine": 81,
+        "endChar": 46
+      },
+      "revId": "3604605441736ff30b9a88e75df29165bf9000ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e77bfc27_5710476e",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-13T13:57:46Z",
+      "side": 1,
+      "message": "Is that ok? for rw in ... what?",
+      "range": {
+        "startLine": 82,
+        "startChar": 24,
+        "endLine": 82,
+        "endChar": 37
+      },
+      "revId": "3604605441736ff30b9a88e75df29165bf9000ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f21f37a_cb31a48e",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-13T13:57:46Z",
+      "side": 1,
+      "message": "Why do we need read and write here? From what I understand you want to  make sure that there is some data on disk before you zero it with trim?\n\nDoes that pass? I\u0027m not sure if \"read\" job will actually verify with the same pattern as write job before it. Maybe we could be explicit with \"verify_pattern\" parameter? But if it passes then I suppose it works fine:P",
+      "range": {
+        "startLine": 123,
+        "startChar": 24,
+        "endLine": 126,
+        "endChar": 59
+      },
+      "revId": "3604605441736ff30b9a88e75df29165bf9000ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ac191dc_fb70001b",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-13T13:57:46Z",
+      "side": 1,
+      "message": "Also not sure about this one - does FIO trim verifies that there are \"zeroes\" on disk after sending trim? Or should we verify that manually using read + verify_pattern\u003d0x00000000 ?",
+      "range": {
+        "startLine": 128,
+        "startChar": 24,
+        "endLine": 129,
+        "endChar": 59
+      },
+      "revId": "3604605441736ff30b9a88e75df29165bf9000ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
