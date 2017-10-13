@@ -64,6 +64,19 @@ function linux_hugetlbfs_mount() {
 	mount | grep ' type hugetlbfs ' | awk '{ print $3 }'
 }
 
+function get_nvme_name_from_bdf {
+	set +e
+	nvme_devs=`lsblk -d --output NAME | grep "^nvme"`
+	set -e
+	for dev in $nvme_devs; do
+		bdf=$(basename $(readlink /sys/block/$dev/device/device))
+		if [ "$bdf" = "$1" ]; then
+			eval "$2=$dev"
+			return
+		fi
+	done
+}
+
 function configure_linux {
 	driver_name=vfio-pci
 	if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
@@ -74,7 +87,18 @@ function configure_linux {
 	# NVMe
 	modprobe $driver_name || true
 	for bdf in $(linux_iter_pci_class_code 0108); do
-		linux_bind_driver "$bdf" "$driver_name"
+		blkname=''
+		get_nvme_name_from_bdf "$bdf" blkname
+		if [ "$blkname" != "" ]; then
+			mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
+		else
+			mountpoints="0"
+		fi
+		if [ "$mountpoints" = "0" ]; then
+			linux_bind_driver "$bdf" "$driver_name"
+		else
+			echo Active mountpoints on /dev/$blkname, so not binding PCI dev $bdf
+		fi
 	done
 
 
