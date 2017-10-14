@@ -243,7 +243,7 @@ virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req)
 	vq_update_avail_idx(vq);
 
 	if (spdk_unlikely(virtqueue_kick_prepare(vq))) {
-		virtqueue_notify(vq);
+		vtpci_ops(vdev)->notify_queue(vdev, vq);
 		PMD_TX_LOG(DEBUG, "Notified backend after xmit");
 	}
 

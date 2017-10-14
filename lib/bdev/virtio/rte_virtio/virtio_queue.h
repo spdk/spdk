@@ -169,15 +169,4 @@ virtqueue_kick_prepare(struct virtqueue *vq)
 	return !(vq->vq_ring.used->flags & VRING_USED_F_NO_NOTIFY);
 }
 
-static inline void
-virtqueue_notify(struct virtqueue *vq)
-{
-	/*
-	 * Ensure updated avail->idx is visible to host.
-	 * For virtio on IA, the notificaiton is through io port operation
-	 * which is a serialization instruction itself.
-	 */
-	vtpci_ops(vq->vdev)->notify_queue(vq->vdev, vq);
-}
-
 #endif /* _VIRTQUEUE_H_ */
