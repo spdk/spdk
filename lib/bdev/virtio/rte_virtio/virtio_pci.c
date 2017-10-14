@@ -37,7 +37,6 @@
 #include "spdk/mmio.h"
 
 #include "virtio_pci.h"
-#include "virtio_logs.h"
 
 struct virtio_driver g_virtio_driver = {
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.init_ctrlrs),
@@ -65,7 +64,7 @@ check_vq_phys_addr_ok(struct virtqueue *vq)
 	 */
 	if ((vq->vq_ring_mem + vq->vq_ring_size - 1) >>
 			(VIRTIO_PCI_QUEUE_ADDR_SHIFT + 32)) {
-		PMD_INIT_LOG(ERR, "vring address shouldn't be above 16TB!");
+		SPDK_ERRLOG("vring address shouldn't be above 16TB!\n");
 		return 0;
 	}
 
@@ -139,8 +138,7 @@ static int
 legacy_set_features(struct virtio_dev *dev, uint64_t features)
 {
 	if ((features >> 32) != 0) {
-		PMD_DRV_LOG(ERR,
-			"only 32 bit features are allowed for legacy virtio!");
+		SPDK_ERRLOG("only 32 bit features are allowed for legacy virtio!\n");
 		return -1;
 	}
 	rte_pci_ioport_write(vtpci_io(dev), &features, 4,
@@ -317,8 +315,7 @@ modern_set_features(struct virtio_dev *dev, uint64_t features)
 	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 
 	if ((features & (1ULL << VIRTIO_F_VERSION_1)) == 0) {
-		PMD_INIT_LOG(ERR,
-			     "VIRTIO_F_VERSION_1 feature is not enabled.");
+		SPDK_ERRLOG("VIRTIO_F_VERSION_1 feature is not enabled.\n");
 		return -1;
 	}
 
@@ -416,11 +413,11 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_enable, 1);
 
-	PMD_INIT_LOG(DEBUG, "queue %u addresses:", vq->vq_queue_index);
-	PMD_INIT_LOG(DEBUG, "\t desc_addr: %" PRIx64, desc_addr);
-	PMD_INIT_LOG(DEBUG, "\t aval_addr: %" PRIx64, avail_addr);
-	PMD_INIT_LOG(DEBUG, "\t used_addr: %" PRIx64, used_addr);
-	PMD_INIT_LOG(DEBUG, "\t notify addr: %p (notify offset: %u)",
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "queue %u addresses:\n", vq->vq_queue_index);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "\t desc_addr: %" PRIx64 "\n", desc_addr);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "\t aval_addr: %" PRIx64 "\n", avail_addr);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "\t used_addr: %" PRIx64 "\n", used_addr);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "\t notify addr: %p (notify offset: %u)\n",
 		vq->notify_addr, notify_off);
 
 	return 0;
@@ -524,25 +521,24 @@ get_cfg_addr(struct virtio_hw *hw, struct virtio_pci_cap *cap)
 	uint32_t offset = cap->offset;
 
 	if (bar > 5) {
-		PMD_INIT_LOG(ERR, "invalid bar: %u", bar);
+		SPDK_ERRLOG("invalid bar: %u\n", bar);
 		return NULL;
 	}
 
 	if (offset + length < offset) {
-		PMD_INIT_LOG(ERR, "offset(%u) + length(%u) overflows",
+		SPDK_ERRLOG("offset(%u) + length(%u) overflows\n",
 			offset, length);
 		return NULL;
 	}
 
 	if (offset + length > hw->pci_bar[bar].len) {
-		PMD_INIT_LOG(ERR,
-			"invalid cap: overflows bar space: %u > %" PRIu64,
-			offset + length, dev->mem_resource[bar].len);
+		SPDK_ERRLOG("invalid cap: overflows bar space: %u > %" PRIu32 "\n",
+			    offset + length, hw->pci_bar[bar].len);
 		return NULL;
 	}
 
 	if (hw->pci_bar[bar].vaddr == NULL) {
-		PMD_INIT_LOG(ERR, "bar %u base addr is NULL", bar);
+		SPDK_ERRLOG("bar %u base addr is NULL\n", bar);
 		return NULL;
 	}
 
@@ -558,15 +554,14 @@ virtio_read_caps(struct virtio_hw *hw)
 
 	ret = spdk_pci_device_cfg_read(hw->pci_dev, &pos, 1, PCI_CAPABILITY_LIST);
 	if (ret < 0) {
-		PMD_INIT_LOG(DEBUG, "failed to read pci capability list");
+		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "failed to read pci capability list\n");
 		return -1;
 	}
 
 	while (pos) {
 		ret = spdk_pci_device_cfg_read(hw->pci_dev, &cap, sizeof(cap), pos);
 		if (ret < 0) {
-			PMD_INIT_LOG(ERR,
-				"failed to read pci cap at pos: %x", pos);
+			SPDK_ERRLOG("failed to read pci cap at pos: %x\n", pos);
 			break;
 		}
 
@@ -574,15 +569,15 @@ virtio_read_caps(struct virtio_hw *hw)
 			hw->use_msix = 1;
 
 		if (cap.cap_vndr != PCI_CAP_ID_VNDR) {
-			PMD_INIT_LOG(DEBUG,
-				"[%2x] skipping non VNDR cap id: %02x",
-				pos, cap.cap_vndr);
+			SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI,
+				      "[%2x] skipping non VNDR cap id: %02x\n",
+				      pos, cap.cap_vndr);
 			goto next;
 		}
 
-		PMD_INIT_LOG(DEBUG,
-			"[%2x] cfg type: %u, bar: %u, offset: %04x, len: %u",
-			pos, cap.cfg_type, cap.bar, cap.offset, cap.length);
+		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI,
+			      "[%2x] cfg type: %u, bar: %u, offset: %04x, len: %u\n",
+			      pos, cap.cfg_type, cap.bar, cap.offset, cap.length);
 
 		switch (cap.cfg_type) {
 		case VIRTIO_PCI_CAP_COMMON_CFG:
@@ -607,16 +602,16 @@ next:
 
 	if (hw->common_cfg == NULL || hw->notify_base == NULL ||
 	    hw->dev_cfg == NULL    || hw->isr == NULL) {
-		PMD_INIT_LOG(INFO, "no modern virtio pci device found.");
+		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "no modern virtio pci device found.\n");
 		return -1;
 	}
 
-	PMD_INIT_LOG(INFO, "found modern virtio pci device.");
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "found modern virtio pci device.\n");
 
-	PMD_INIT_LOG(DEBUG, "common cfg mapped at: %p", hw->common_cfg);
-	PMD_INIT_LOG(DEBUG, "device cfg mapped at: %p", hw->dev_cfg);
-	PMD_INIT_LOG(DEBUG, "isr cfg mapped at: %p", hw->isr);
-	PMD_INIT_LOG(DEBUG, "notify base: %p, notify off multiplier: %u",
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "common cfg mapped at: %p\n", hw->common_cfg);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "device cfg mapped at: %p\n", hw->dev_cfg);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "isr cfg mapped at: %p\n", hw->isr);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "notify base: %p, notify off multiplier: %u\n",
 		hw->notify_base, hw->notify_off_multiplier);
 
 	return 0;
@@ -634,7 +629,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 	hw = calloc(1, sizeof(*hw));
 	if (hw == NULL) {
-		PMD_DRV_LOG(ERR, "calloc failed");
+		SPDK_ERRLOG("calloc failed\n");
 		return -1;
 	}
 
@@ -646,7 +641,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		rc = spdk_pci_device_map_bar(pci_dev, i, (void *) &bar_vaddr, &bar_paddr,
 					     &bar_len);
 		if (rc != 0) {
-			PMD_DRV_LOG(ERR, "failed to memmap PCI BAR %d", i);
+			SPDK_ERRLOG("failed to memmap PCI BAR %d\n", i);
 			goto err;
 		}
 
@@ -660,7 +655,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	 * virtio handling.
 	 */
 	if (virtio_read_caps(hw) == 0) {
-		PMD_INIT_LOG(INFO, "modern virtio pci detected.");
+		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "modern virtio pci detected.");
 		rc = vtpci_init(vdev, &modern_ops);
 		if (rc != 0) {
 			goto err;
@@ -714,7 +709,7 @@ vtpci_init(struct virtio_dev *vdev, const struct virtio_pci_ops *ops)
 	}
 
 	if (vdev_num == VIRTIO_MAX_DEVICES) {
-		PMD_INIT_LOG(ERR, "Max vhost device limit reached (%d).", VIRTIO_MAX_DEVICES);
+		SPDK_ERRLOG("Max vhost device limit reached (%d).\n", VIRTIO_MAX_DEVICES);
 		return -ENOSPC;
 	}
 
@@ -728,7 +723,7 @@ int
 vtpci_enumerate_pci(void)
 {
 	if (!spdk_process_is_primary()) {
-		PMD_INIT_LOG(INFO, "virtio_pci secondary process support is not implemented yet.");
+		SPDK_WARNLOG("virtio_pci secondary process support is not implemented yet.\n");
 		return 0;
 	}
 
@@ -746,3 +741,5 @@ vtpci_deinit(uint32_t id)
 {
 	g_virtio_driver.internal[id].vtpci_ops = NULL;
 }
+
+SPDK_LOG_REGISTER_TRACE_FLAG("virtio_pci", SPDK_TRACE_VIRTIO_PCI)
