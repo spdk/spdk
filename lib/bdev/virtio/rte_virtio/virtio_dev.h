@@ -43,8 +43,7 @@
 #include <rte_memory.h>
 #include <rte_mempool.h>
 
-#include "virtio_logs.h"
-
+#include "spdk_internal/log.h"
 #include "spdk/likely.h"
 
 /*

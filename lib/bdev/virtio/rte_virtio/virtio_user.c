@@ -46,7 +46,6 @@
 #include <rte_alarm.h>
 
 #include "virtio_dev.h"
-#include "virtio_logs.h"
 #include "virtio_pci.h"
 #include "virtio_user/virtio_user_dev.h"
 
@@ -57,14 +56,14 @@ static void
 virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 		     void *dst, int length)
 {
-	PMD_DRV_LOG(ERR, "not supported offset=%zu, len=%d", offset, length);
+	SPDK_ERRLOG("not supported offset=%zu, len=%d\n", offset, length);
 }
 
 static void
 virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
 		      const void *src, int length)
 {
-	PMD_DRV_LOG(ERR, "not supported offset=%zu, len=%d", offset, length);
+	SPDK_ERRLOG("not supported offset=%zu, len=%d\n", offset, length);
 }
 
 static void
@@ -96,7 +95,7 @@ virtio_user_get_features(struct virtio_dev *vdev)
 	uint64_t features;
 
 	if (dev->ops->send_request(dev, VHOST_USER_GET_FEATURES, &features) < 0) {
-		PMD_INIT_LOG(ERR, "get_features failed: %s", strerror(errno));
+		SPDK_ERRLOG("get_features failed: %s\n", strerror(errno));
 		return 0;
 	}
 
@@ -168,7 +167,7 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	int kickfd;
 
 	if (dev->callfds[queue_idx] != -1 || dev->kickfds[queue_idx] != -1) {
-		PMD_DRV_LOG(ERR, "queue %u already exists", queue_sel);
+		SPDK_ERRLOG("queue %"PRIu16" already exists\n", queue_idx);
 		return -1;
 	}
 
@@ -178,13 +177,13 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	 */
 	callfd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
 	if (callfd < 0) {
-		PMD_DRV_LOG(ERR, "callfd error, %s", strerror(errno));
+		SPDK_ERRLOG("callfd error, %s\n", strerror(errno));
 		return -1;
 	}
 
 	kickfd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
 	if (kickfd < 0) {
-		PMD_DRV_LOG(ERR, "kickfd error, %s", strerror(errno));
+		SPDK_ERRLOG("kickfd error, %s\n", strerror(errno));
 		close(callfd);
 		return -1;
 	}
@@ -233,8 +232,7 @@ virtio_user_notify_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	if (write(dev->kickfds[vq->vq_queue_index], &buf, sizeof(buf)) < 0)
-		PMD_DRV_LOG(ERR, "failed to kick backend: %s",
-			    strerror(errno));
+		SPDK_ERRLOG("failed to kick backend: %s.\n", strerror(errno));
 }
 
 static void
