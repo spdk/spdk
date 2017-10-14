@@ -38,8 +38,9 @@
 #include <linux/types.h>
 #include <linux/ioctl.h>
 
+#include "spdk_internal/log.h"
+
 #include "../virtio_pci.h"
-#include "../virtio_logs.h"
 
 struct vhost_vring_state {
 	unsigned int index;
