@@ -122,15 +122,15 @@ vhost_user_read(int fd, struct vhost_user_msg *msg)
 
 	ret = recv(fd, (void *)msg, sz_hdr, 0);
 	if (ret < sz_hdr) {
-		PMD_DRV_LOG(ERR, "Failed to recv msg hdr: %d instead of %d.",
+		SPDK_WARNLOG("Failed to recv msg hdr: %d instead of %d.\n",
 			    ret, sz_hdr);
 		goto fail;
 	}
 
 	/* validate msg flags */
 	if (msg->flags != (valid_flags)) {
-		PMD_DRV_LOG(ERR, "Failed to recv msg: flags %x instead of %x.",
-			    msg->flags, valid_flags);
+		SPDK_WARNLOG("Failed to recv msg: flags %"PRIx32" instead of %"PRIx32".\n",
+			     msg->flags, valid_flags);
 		goto fail;
 	}
 
@@ -138,9 +138,8 @@ vhost_user_read(int fd, struct vhost_user_msg *msg)
 	if (sz_payload) {
 		ret = recv(fd, (void *)((char *)msg + sz_hdr), sz_payload, 0);
 		if (ret < sz_payload) {
-			PMD_DRV_LOG(ERR,
-				"Failed to recv msg payload: %d instead of %d.",
-				ret, msg->size);
+			SPDK_WARNLOG("Failed to recv msg payload: %d instead of %"PRIu32".\n",
+				     ret, msg->size);
 			goto fail;
 		}
 	}
@@ -177,14 +176,14 @@ get_hugepage_file_info(struct hugepage_file_info huges[], int max)
 
 	f = fopen("/proc/self/maps", "r");
 	if (!f) {
-		PMD_DRV_LOG(ERR, "cannot open /proc/self/maps");
+		SPDK_ERRLOG("cannot open /proc/self/maps\n");
 		return -1;
 	}
 
 	idx = 0;
 	while (fgets(buf, sizeof(buf), f) != NULL) {
 		if (sscanf(buf, "%" PRIx64 "-%" PRIx64, &v_start, &v_end) < 2) {
-			PMD_DRV_LOG(ERR, "Failed to parse address");
+			SPDK_ERRLOG("Failed to parse address\n");
 			goto error;
 		}
 
@@ -214,7 +213,7 @@ get_hugepage_file_info(struct hugepage_file_info huges[], int max)
 			continue;
 
 		if (idx >= max) {
-			PMD_DRV_LOG(ERR, "Exceed maximum of %d", max);
+			SPDK_ERRLOG("Exceed maximum of %d\n", max);
 			goto error;
 		}
 		huges[idx].addr = v_start;
@@ -239,7 +238,7 @@ prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 
 	num = get_hugepage_file_info(huges, VHOST_MEMORY_MAX_NREGIONS);
 	if (num < 0) {
-		PMD_INIT_LOG(ERR, "Failed to prepare memory for vhost-user");
+		SPDK_ERRLOG("Failed to prepare memory for vhost-user\n");
 		return -1;
 	}
 
@@ -291,7 +290,7 @@ vhost_user_sock(struct virtio_user_dev *dev,
 
 	RTE_SET_USED(m);
 
-	PMD_DRV_LOG(INFO, "%d = %s", req, vhost_msg_strings[req]);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_USER, "sent message %d = %s\n", req, vhost_msg_strings[req]);
 
 	msg.request = req;
 	msg.flags = VHOST_USER_VERSION;
@@ -357,13 +356,13 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		break;
 
 	default:
-		PMD_DRV_LOG(ERR, "trying to send unhandled msg type");
+		SPDK_ERRLOG("trying to send unhandled msg type\n");
 		return -1;
 	}
 
 	len = VHOST_USER_HDR_SIZE + msg.size;
 	if (vhost_user_write(vhostfd, &msg, len, fds, fd_num) < 0) {
-		PMD_DRV_LOG(ERR, "%s failed: %s",
+		SPDK_ERRLOG("%s failed: %s\n",
 			    vhost_msg_strings[req], strerror(errno));
 		return -1;
 	}
@@ -374,13 +373,13 @@ vhost_user_sock(struct virtio_user_dev *dev,
 
 	if (need_reply) {
 		if (vhost_user_read(vhostfd, &msg) < 0) {
-			PMD_DRV_LOG(ERR, "Received msg failed: %s",
+			SPDK_WARNLOG("Received msg failed: %s\n",
 				    strerror(errno));
 			return -1;
 		}
 
 		if (req != msg.request) {
-			PMD_DRV_LOG(ERR, "Received unexpected msg type");
+			SPDK_WARNLOG("Received unexpected msg type\n");
 			return -1;
 		}
 
@@ -388,21 +387,21 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		case VHOST_USER_GET_FEATURES:
 		case VHOST_USER_GET_QUEUE_NUM:
 			if (msg.size != sizeof(m.payload.u64)) {
-				PMD_DRV_LOG(ERR, "Received bad msg size");
+				SPDK_WARNLOG("Received bad msg size\n");
 				return -1;
 			}
 			*((__u64 *)arg) = msg.payload.u64;
 			break;
 		case VHOST_USER_GET_VRING_BASE:
 			if (msg.size != sizeof(m.payload.state)) {
-				PMD_DRV_LOG(ERR, "Received bad msg size");
+				SPDK_WARNLOG("Received bad msg size\n");
 				return -1;
 			}
 			memcpy(arg, &msg.payload.state,
 			       sizeof(struct vhost_vring_state));
 			break;
 		default:
-			PMD_DRV_LOG(ERR, "Received unexpected msg type");
+			SPDK_WARNLOG("Received unexpected msg type\n");
 			return -1;
 		}
 	}
@@ -427,24 +426,24 @@ vhost_user_setup(struct virtio_user_dev *dev)
 
 	fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (fd < 0) {
-		PMD_DRV_LOG(ERR, "socket() error, %s", strerror(errno));
+		SPDK_ERRLOG("socket() error, %s\n", strerror(errno));
 		return -1;
 	}
 
 	flag = fcntl(fd, F_GETFD);
 	if (fcntl(fd, F_SETFD, flag | FD_CLOEXEC) < 0)
-		PMD_DRV_LOG(WARNING, "fcntl failed, %s", strerror(errno));
+		SPDK_ERRLOG("fcntl failed, %s\n", strerror(errno));
 
 	memset(&un, 0, sizeof(un));
 	un.sun_family = AF_UNIX;
 	rc = snprintf(un.sun_path, sizeof(un.sun_path), "%s", dev->path);
 	if (rc < 0 || (size_t)rc >= sizeof(un.sun_path)) {
-		PMD_DRV_LOG(ERR, "socket path too long");
+		SPDK_ERRLOG("socket path too long\n");
 		close(fd);
 		return -1;
 	}
 	if (connect(fd, (struct sockaddr *)&un, sizeof(un)) < 0) {
-		PMD_DRV_LOG(ERR, "connect error, %s", strerror(errno));
+		SPDK_ERRLOG("connect error, %s\n", strerror(errno));
 		close(fd);
 		return -1;
 	}
@@ -457,3 +456,5 @@ struct virtio_user_backend_ops ops_user = {
 	.setup = vhost_user_setup,
 	.send_request = vhost_user_sock,
 };
+
+SPDK_LOG_REGISTER_TRACE_FLAG("virtio_user", SPDK_TRACE_VIRTIO_USER)
