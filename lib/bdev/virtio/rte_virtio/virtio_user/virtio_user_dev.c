@@ -119,7 +119,7 @@ virtio_user_queue_setup(struct virtio_user_dev *dev,
 
 	for (i = 0; i < dev->vdev.max_queues; ++i) {
 		if (fn(dev, i) < 0) {
-			PMD_DRV_LOG(INFO, "setup tx vq fails: %u", i);
+			SPDK_ERRLOG("setup tx vq fails: %u\n", i);
 			return -1;
 		}
 	}
@@ -189,7 +189,7 @@ virtio_user_dev_init(char *path, int queue_size)
 	vdev->is_hw = 0;
 
 	if (vtpci_init(vdev, &virtio_user_ops) != 0) {
-		PMD_INIT_LOG(ERR, "Failed to init device: %s", path);
+		SPDK_ERRLOG("Failed to init device: %s\n", path);
 		goto err;
 	}
 
@@ -197,24 +197,24 @@ virtio_user_dev_init(char *path, int queue_size)
 	dev->queue_size = queue_size;
 
 	if (virtio_user_dev_setup(dev) < 0) {
-		PMD_INIT_LOG(ERR, "backend set up fails");
+		SPDK_ERRLOG("backend set up fails\n");
 		goto err;
 	}
 
 	if (dev->ops->send_request(dev, VHOST_USER_GET_QUEUE_NUM, &max_queues) < 0) {
-		PMD_INIT_LOG(ERR, "get_queue_num fails: %s", strerror(errno));
+		SPDK_ERRLOG("get_queue_num fails: %s\n", strerror(errno));
 		goto err;
 	}
 
 	if (max_queues >= VIRTIO_MAX_VIRTQUEUES) {
-		PMD_INIT_LOG(ERR, "invalid get_queue_num value: %lu", max_queues);
+		SPDK_ERRLOG("invalid get_queue_num value: %lu\n", max_queues);
 		goto err;
 	}
 
 	vdev->max_queues = max_queues;
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
-		PMD_INIT_LOG(ERR, "set_owner fails: %s", strerror(errno));
+		SPDK_ERRLOG("set_owner fails: %s\n", strerror(errno));
 		goto err;
 	}
 

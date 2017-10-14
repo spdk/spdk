@@ -57,7 +57,6 @@
 #include "virtio_user/vhost.h"
 #include "virtio_dev.h"
 #include "virtio_pci.h"
-#include "virtio_logs.h"
 
 static void
 virtio_init_vring(struct virtqueue *vq)
@@ -65,8 +64,6 @@ virtio_init_vring(struct virtqueue *vq)
 	int size = vq->vq_nentries;
 	struct vring *vr = &vq->vq_ring;
 	uint8_t *ring_mem = vq->vq_ring_virt_mem;
-
-	PMD_INIT_FUNC_TRACE();
 
 	/*
 	 * Reinitialise since virtio port might have been stopped and restarted
@@ -97,21 +94,22 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	struct virtqueue *vq;
 	int ret;
 
-	PMD_INIT_LOG(DEBUG, "setting up queue: %u", vtpci_queue_idx);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "setting up queue: %u\n", vtpci_queue_idx);
 
 	/*
 	 * Read the virtqueue size from the Queue Size field
 	 * Always power of 2 and if 0 virtqueue does not exist
 	 */
 	vq_size = vtpci_ops(dev)->get_queue_num(dev, vtpci_queue_idx);
-	PMD_INIT_LOG(DEBUG, "vq_size: %u", vq_size);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "vq_size: %u\n", vq_size);
 	if (vq_size == 0) {
-		PMD_INIT_LOG(ERR, "virtqueue does not exist");
+		SPDK_WARNLOG("virtqueue %"PRIu16" does not exist\n", vtpci_queue_idx);
 		return -EINVAL;
 	}
 
 	if (!rte_is_power_of_2(vq_size)) {
-		PMD_INIT_LOG(ERR, "virtqueue size is not powerof 2");
+		SPDK_ERRLOG("virtqueue %"PRIu16" size (%u) is not powerof 2\n",
+			    vtpci_queue_idx, vq_size);
 		return -EINVAL;
 	}
 
@@ -125,7 +123,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	vq = rte_zmalloc_socket(vq_name, size, RTE_CACHE_LINE_SIZE,
 				SOCKET_ID_ANY);
 	if (vq == NULL) {
-		PMD_INIT_LOG(ERR, "can not allocate vq");
+		SPDK_ERRLOG("can not allocate vq\n");
 		return -ENOMEM;
 	}
 	dev->vqs[vtpci_queue_idx] = vq;
@@ -139,7 +137,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	 */
 	size = vring_size(vq_size, VIRTIO_PCI_VRING_ALIGN);
 	vq->vq_ring_size = RTE_ALIGN_CEIL(size, VIRTIO_PCI_VRING_ALIGN);
-	PMD_INIT_LOG(DEBUG, "vring_size: %d, rounded_vring_size: %d",
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "vring_size: %d, rounded_vring_size: %d\n",
 		     size, vq->vq_ring_size);
 
 	mz = rte_memzone_reserve_aligned(vq_name, vq->vq_ring_size,
@@ -158,9 +156,9 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	vq->vq_ring_mem = mz->phys_addr;
 	vq->vq_ring_virt_mem = mz->addr;
-	PMD_INIT_LOG(DEBUG, "vq->vq_ring_mem:      0x%" PRIx64,
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "vq->vq_ring_mem:      0x%" PRIx64 "\n",
 		     (uint64_t)mz->phys_addr);
-	PMD_INIT_LOG(DEBUG, "vq->vq_ring_virt_mem: 0x%" PRIx64,
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "vq->vq_ring_virt_mem: 0x%" PRIx64 "\n",
 		     (uint64_t)(uintptr_t)mz->addr);
 
 	virtio_init_vring(vq);
@@ -168,7 +166,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	vq->mz = mz;
 
 	if (vtpci_ops(dev)->setup_queue(dev, vq) < 0) {
-		PMD_INIT_LOG(ERR, "setup_queue failed");
+		SPDK_ERRLOG("setup_queue failed\n");
 		return -EINVAL;
 	}
 
@@ -215,7 +213,7 @@ virtio_alloc_queues(struct virtio_dev *dev)
 
 	dev->vqs = rte_zmalloc(NULL, sizeof(struct virtqueue *) * nr_vq, 0);
 	if (!dev->vqs) {
-		PMD_INIT_LOG(ERR, "failed to allocate vqs");
+		SPDK_ERRLOG("failed to allocate %"PRIu16" vqs\n", nr_vq);
 		return -ENOMEM;
 	}
 
@@ -240,21 +238,21 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	uint64_t host_features = vtpci_ops(dev)->get_features(dev);
 	int rc;
 
-	PMD_INIT_LOG(DEBUG, "guest features = %" PRIx64, req_features);
-	PMD_INIT_LOG(DEBUG, "device features = %" PRIx64, host_features);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "guest features = %" PRIx64 "\n", req_features);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "device features = %" PRIx64 "\n", host_features);
 
 	rc = vtpci_ops(dev)->set_features(dev, req_features & host_features);
 	if (rc != 0) {
-		PMD_INIT_LOG(ERR, "failed to negotiate device features.");
+		SPDK_ERRLOG("failed to negotiate device features.\n");
 		return -1;
 	}
 
-	PMD_INIT_LOG(DEBUG, "negotiated features = %" PRIx64, dev->negotiated_features);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "negotiated features = %" PRIx64 "\n",
+		      dev->negotiated_features);
 
 	vtpci_set_status(dev, VIRTIO_CONFIG_S_FEATURES_OK);
 	if (!(vtpci_get_status(dev) & VIRTIO_CONFIG_S_FEATURES_OK)) {
-		PMD_INIT_LOG(ERR,
-			     "failed to set FEATURES_OK status!");
+		SPDK_ERRLOG("failed to set FEATURES_OK status!\n");
 		return -1;
 	}
 
@@ -324,7 +322,7 @@ virtio_dev_start(struct virtio_dev *vdev)
 	}
 #endif
 
-	PMD_INIT_LOG(DEBUG, "Notified backend at initialization");
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "Notified backend at initialization\n");
 
 	vdev->started = 1;
 
@@ -383,8 +381,8 @@ virtqueue_dequeue_burst_rx(struct virtqueue *vq, struct virtio_req **rx_pkts,
 		cookie = (struct virtio_req *)vq->vq_descx[desc_idx].cookie;
 
 		if (spdk_unlikely(cookie == NULL)) {
-			PMD_DRV_LOG(ERR, "vring descriptor with no mbuf cookie at %u",
-				vq->vq_used_cons_idx);
+			SPDK_WARNLOG("vring descriptor with no mbuf cookie at %u\n",
+				     vq->vq_used_cons_idx);
 			break;
 		}
 
@@ -421,8 +419,9 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 	struct iovec *iov = req->iov;
 
 	if (total_iovs > vq->vq_free_cnt) {
-		PMD_DRV_LOG(ERR, "not enough free descriptors. requested %"PRIu32", got %"PRIu32"\n",
-			total_iovs, vq->vq_free_cnt);
+		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV,
+			      "not enough free descriptors. requested %"PRIu32", got %"PRIu32"\n",
+			      total_iovs, vq->vq_free_cnt);
 		return;
 	}
 
@@ -496,12 +495,12 @@ virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkt
 		num = num - ((vq->vq_used_cons_idx + num) % DESC_PER_CACHELINE);
 
 	num = virtqueue_dequeue_burst_rx(vq, rcv_pkts, len, num);
-	PMD_RX_LOG(DEBUG, "used:%d dequeue:%d", nb_used, num);
+	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "used:%d dequeue:%d\n", nb_used, num);
 
 	for (i = 0; i < num ; i++) {
 		rxm = rcv_pkts[i];
 
-		PMD_RX_LOG(DEBUG, "packet len:%d", len[i]);
+		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "packet len:%d\n", len[i]);
 
 		rxm->data_transferred = (uint16_t)(len[i]);
 
@@ -527,8 +526,10 @@ virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req)
 
 	if (spdk_unlikely(virtqueue_kick_prepare(vq))) {
 		vtpci_ops(vdev)->notify_queue(vdev, vq);
-		PMD_TX_LOG(DEBUG, "Notified backend after xmit");
+		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "Notified backend after xmit\n");
 	}
 
 	return 1;
 }
+
+SPDK_LOG_REGISTER_TRACE_FLAG("virtio_dev", SPDK_TRACE_VIRTIO_DEV)
