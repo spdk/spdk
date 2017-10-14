@@ -1,0 +1,371 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "004b75cd_edf1bc7e",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "please be consistent with the padding",
+      "range": {
+        "startLine": 76,
+        "startChar": 1,
+        "endLine": 80,
+        "endChar": 13
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d640f3a8_52c74da5",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "why dont you init it inline for less lines?",
+      "range": {
+        "startLine": 382,
+        "startChar": 1,
+        "endLine": 382,
+        "endChar": 15
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6533d93_63423b47",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "you *probably* want to call this callback after the vdev has been inserted to the attached_ctrlrs.\nIt doesn\u0027t break anything - just a pedantic thing",
+      "range": {
+        "startLine": 393,
+        "startChar": 0,
+        "endLine": 396,
+        "endChar": 2
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5f15a69_dce0e13c",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "could you make this a part of base-\u003ecb_fn called from bdev_virtio_initialize?\nThen you could drop base-\u003ein_module_init variable",
+      "range": {
+        "startLine": 403,
+        "startChar": 2,
+        "endLine": 403,
+        "endChar": 64
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7def5799_b7d6068c",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "since this function will insert the vdev into g_virtio_driver-\u003eattached_ctrlrs, I would suggest calling it bdev_virtio_attach_vdev",
+      "range": {
+        "startLine": 626,
+        "startChar": 12,
+        "endLine": 626,
+        "endChar": 16
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e15c33e_6dc6b286",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "you could drop it together with base-\u003ein_module_init as suggested above",
+      "range": {
+        "startLine": 628,
+        "startChar": 7,
+        "endLine": 628,
+        "endChar": 19
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3f68cf0_27da0a32",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "use strdup please, then free it on base destruction\nnothing prevents the user from freeing the passed char* before we create bdevs.",
+      "range": {
+        "startLine": 644,
+        "startChar": 16,
+        "endLine": 644,
+        "endChar": 22
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27ee25d4_366b643f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 665,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "this seems unused, either pass it to virtio_user_dev_init or remove",
+      "range": {
+        "startLine": 665,
+        "startChar": 73,
+        "endLine": 665,
+        "endChar": 83
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "313b5b6d_307c0b1f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 671,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "this could use some error messages",
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65542e9e_8913b3a6",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "^",
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc182c1d_f9d9970b",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "what is this for?\nvirtio_user_dev_init (called in bdev_virtio.c:668) does the same thing already\nthis will corrupt the init_ctrlrs list",
+      "range": {
+        "startLine": 679,
+        "startChar": 2,
+        "endLine": 679,
+        "endChar": 63
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7aab6323_2d51fdd2",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "newline pls",
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5e77ebe_87d0fc84",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "could i suggest name virtio_create_device_cb?",
+      "range": {
+        "startLine": 38,
+        "startChar": 15,
+        "endLine": 38,
+        "endChar": 38
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b55a4c7_8392c857",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "please mention it can be NULL",
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4246d5bd_7d0f9ca1",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "Please reword, this suggests that the callback will be called multiple times. Also doesn\u0027t mention that this param is optional.\n\"An optional callback to be called after scanning all targets on the controller. Provides access to all created bdevs.\"",
+      "range": {
+        "startLine": 49,
+        "startChar": 5,
+        "endLine": 49,
+        "endChar": 64
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ebd4dfd4_6a46497f",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "why so hacky? could you iterate through (i; i \u003c cnt; ++i)?",
+      "range": {
+        "startLine": 79,
+        "startChar": 2,
+        "endLine": 82,
+        "endChar": 3
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a7e301b_1de6f701",
+        "filename": "lib/bdev/virtio/bdev_virtio_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-14T07:22:27Z",
+      "side": 1,
+      "message": "this could use some public define",
+      "range": {
+        "startLine": 105,
+        "startChar": 16,
+        "endLine": 105,
+        "endChar": 19
+      },
+      "revId": "5cc17cf47e0b4ac9ca7ec314ef9d58bad09e441b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
