@@ -652,5 +652,6 @@ static void fio_init spdk_fio_register(void)
 
 static void fio_exit spdk_fio_unregister(void)
 {
+	spdk_bdev_finish();
 	unregister_ioengine(&ioengine);
 }
