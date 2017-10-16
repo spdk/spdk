@@ -379,8 +379,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	app_start_event = spdk_event_allocate(spdk_env_get_current_core(), start_fn,
 					      arg1, arg2);
 
-	spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_init,
-					    app_start_event, NULL));
+	spdk_subsystem_init(app_start_event);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
