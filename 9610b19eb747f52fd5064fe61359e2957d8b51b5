@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5da75754_7bdc8422",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 54
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-16T15:58:57Z",
+      "side": 1,
+      "message": "I think there should be a comment here then.  Otherwise reader has to figure out that gen_config returns and then pre_test_case function is called.  pre_test_case calls run_vhost (from test/hoplug/common.sh) which executes test/vhost/common/run_vhost.sh.  Then run_vhost.sh calls spdk_vhost_run function which generates the nvme portion of the configuration file.\n\nDoes not have to be a long comment but I think something is needed otherwise to help avoid confusion how this works.",
+      "revId": "9610b19eb747f52fd5064fe61359e2957d8b51b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
