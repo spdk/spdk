@@ -328,6 +328,12 @@ enum spdk_spc_vpd {
 	SPDK_SPC_VPD_BLOCK_THIN_PROVISION = 0xb2,
 };
 
+enum spdk_spc_peripheral_qualifier {
+	SPDK_SPC_PERIPHERAL_QUALIFIER_CONNECTED = 0,
+	SPDK_SPC_PERIPHERAL_QUALIFIER_NOT_CONNECTED = 1,
+	SPDK_SPC_PERIPHERAL_QUALIFIER_NOT_CAPABLE = 3,
+};
+
 enum {
 	SPDK_SPC_PERIPHERAL_DEVICE_TYPE_DISK = 0x00,
 	SPDK_SPC_PERIPHERAL_DEVICE_TYPE_TAPE = 0x01,
@@ -379,7 +385,8 @@ struct spdk_scsi_cdb_inquiry {
 SPDK_STATIC_ASSERT(sizeof(struct spdk_scsi_cdb_inquiry) == 6, "incorrect CDB size");
 
 struct spdk_scsi_cdb_inquiry_data {
-	uint8_t peripheral;
+	uint8_t peripheral_device_type : 5;
+	uint8_t peripheral_qualifier : 3;
 	uint8_t rmb;
 	uint8_t version;
 	uint8_t response;
@@ -397,7 +404,8 @@ struct spdk_scsi_cdb_inquiry_data {
 };
 
 struct spdk_scsi_vpd_page {
-	uint8_t peripheral;
+	uint8_t peripheral_device_type : 5;
+	uint8_t peripheral_qualifier : 3;
 	uint8_t page_code;
 	uint8_t alloc_len[2];
 	uint8_t params[];
