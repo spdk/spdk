@@ -16,6 +16,24 @@
       "revId": "b15a12de807bcadb60d7fa2892d76d0bc3a44796",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "703d1bf7_95242bea",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 1612,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-16T20:28:07Z",
+      "side": 1,
+      "message": "0 was never a valid SPDK_BS_VERSION (we started at 1), so we should fail if we ever see 0.",
+      "parentUuid": "0e58a1e8_04329458",
+      "revId": "b15a12de807bcadb60d7fa2892d76d0bc3a44796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
