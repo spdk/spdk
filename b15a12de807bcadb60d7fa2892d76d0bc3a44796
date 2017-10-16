@@ -34,6 +34,57 @@
       "revId": "b15a12de807bcadb60d7fa2892d76d0bc3a44796",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "350bebda_6e056334",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 868,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-16T20:33:56Z",
+      "side": 1,
+      "message": "could you fix this as part of your patch?  this should be super_block, not super_blob",
+      "revId": "b15a12de807bcadb60d7fa2892d76d0bc3a44796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3210437_898f1c1c",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-16T20:33:56Z",
+      "side": 1,
+      "message": "name should be super_block_v1",
+      "revId": "b15a12de807bcadb60d7fa2892d76d0bc3a44796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "582753c9_9ef43a44",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 1018,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-16T20:33:56Z",
+      "side": 1,
+      "message": "Could you put these tests in a new unit test function?\n\nThe tests look good, except for the confusion between super_blob and super_block.  Some of this is from the existing code, which uses the variable name super_blob for a super_block pointer.  The two are very different things.",
+      "revId": "b15a12de807bcadb60d7fa2892d76d0bc3a44796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
