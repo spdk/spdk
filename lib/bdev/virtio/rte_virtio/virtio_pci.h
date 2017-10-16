@@ -50,10 +50,6 @@ struct virtqueue;
 /* Extra status define for readability */
 #define VIRTIO_CONFIG_S_RESET 0
 
-/* VirtIO PCI vendor/device ID. */
-#define VIRTIO_PCI_VENDORID     0x1AF4
-#define VIRTIO_PCI_DEVICEID_SCSI_MODERN 0x1004
-
 struct virtio_pci_ops {
 	void (*read_dev_cfg)(struct virtio_dev *hw, size_t offset,
 			     void *dst, int len);
