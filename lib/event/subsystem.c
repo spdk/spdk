@@ -36,6 +36,7 @@
 #include "spdk/log.h"
 
 #include "spdk_internal/event.h"
+#include "spdk/env.h"
 
 static TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem) g_subsystems =
 	TAILQ_HEAD_INITIALIZER(g_subsystems);
@@ -138,12 +139,10 @@ spdk_subsystem_init_next(int rc)
 	}
 }
 
-void
-spdk_subsystem_init(void *arg1, void *arg2)
+static void
+spdk_subsystem_verify(void *arg1, void *arg2)
 {
 	struct spdk_subsystem_depend *dep;
-
-	g_app_start_event = (struct spdk_event *)arg1;
 
 	/* Verify that all dependency name and depends_on subsystems are registered */
 	TAILQ_FOREACH(dep, &g_depends, tailq) {
@@ -163,6 +162,17 @@ spdk_subsystem_init(void *arg1, void *arg2)
 	subsystem_sort();
 
 	spdk_subsystem_init_next(0);
+}
+
+void
+spdk_subsystem_init(struct spdk_event *app_start_event)
+{
+	struct spdk_event *verify_event;
+
+	g_app_start_event = app_start_event;
+
+	verify_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_verify, NULL, NULL);
+	spdk_event_call(verify_event);
 }
 
 void
