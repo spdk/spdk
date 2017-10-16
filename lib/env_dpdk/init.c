@@ -45,6 +45,9 @@
 #define SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_ENV_DPDK_DEFAULT_CORE_MASK		"0x1"
 
+static char **eal_cmdline;
+static int eal_cmdline_argcount;
+
 static char *
 _sprintf_alloc(const char *format, ...)
 {
@@ -133,10 +136,7 @@ spdk_free_args(char **args, int argcount)
 {
 	int i;
 
-	assert(args != NULL);
-
 	for (i = 0; i < argcount; i++) {
-		assert(args[i] != NULL);
 		free(args[i]);
 	}
 
@@ -164,17 +164,19 @@ spdk_push_arg(char *args[], int *argcount, char *arg)
 	return tmp;
 }
 
+static void
+spdk_destruct_eal_cmdline(void)
+{
+	spdk_free_args(eal_cmdline, eal_cmdline_argcount);
+}
+
+
 static int
-spdk_build_eal_cmdline(const struct spdk_env_opts *opts, char **out[])
+spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 {
 	int argcount = 0;
 	char **args;
 
-	if (out == NULL) {
-		return -1;
-	}
-
-	*out = NULL;
 	args = NULL;
 
 	/* set the program name */
@@ -250,28 +252,31 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts, char **out[])
 	}
 #endif
 
-	*out = args;
+	eal_cmdline = args;
+	eal_cmdline_argcount = argcount;
+	if (atexit(spdk_destruct_eal_cmdline) != 0) {
+		fprintf(stderr, "Failed to register cleanup handler\n");
+	}
 
 	return argcount;
 }
 
 void spdk_env_init(const struct spdk_env_opts *opts)
 {
-	char **args = NULL;
 	char **dpdk_args = NULL;
-	int argcount, i, rc;
+	int i, rc;
 	int orig_optind;
 
-	argcount = spdk_build_eal_cmdline(opts, &args);
-	if (argcount <= 0) {
+	rc = spdk_build_eal_cmdline(opts);
+	if (rc < 0) {
 		fprintf(stderr, "Invalid arguments to initialize DPDK\n");
 		exit(-1);
 	}
 
 	printf("Starting %s initialization...\n", rte_version());
 	printf("[ DPDK EAL parameters: ");
-	for (i = 0; i < argcount; i++) {
-		printf("%s ", args[i]);
+	for (i = 0; i < eal_cmdline_argcount; i++) {
+		printf("%s ", eal_cmdline[i]);
 	}
 	printf("]\n");
 
@@ -279,20 +284,19 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 	 * before passing so we can still free the individual strings
 	 * correctly.
 	 */
-	dpdk_args = calloc(argcount, sizeof(char *));
+	dpdk_args = calloc(eal_cmdline_argcount, sizeof(char *));
 	if (dpdk_args == NULL) {
 		fprintf(stderr, "Failed to allocate dpdk_args\n");
 		exit(-1);
 	}
-	memcpy(dpdk_args, args, sizeof(char *) * argcount);
+	memcpy(dpdk_args, eal_cmdline, sizeof(char *) * eal_cmdline_argcount);
 
 	fflush(stdout);
 	orig_optind = optind;
 	optind = 1;
-	rc = rte_eal_init(argcount, dpdk_args);
+	rc = rte_eal_init(eal_cmdline_argcount, dpdk_args);
 	optind = orig_optind;
 
-	spdk_free_args(args, argcount);
 	free(dpdk_args);
 
 	if (rc < 0) {
