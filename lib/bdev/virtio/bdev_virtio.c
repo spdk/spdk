@@ -453,9 +453,18 @@ process_scan_inquiry(struct virtio_scsi_scan_base *base, struct virtio_req *vreq
 {
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
 	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
+	struct spdk_scsi_cdb_inquiry_data *inquiry_data = vreq->iov[0].iov_base;
 	uint8_t target_id;
 
 	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
+		return -1;
+	}
+
+	if (inquiry_data->peripheral_device_type != SPDK_SPC_PERIPHERAL_DEVICE_TYPE_DISK ||
+	    inquiry_data->peripheral_qualifier != SPDK_SPC_PERIPHERAL_QUALIFIER_CONNECTED) {
+		SPDK_WARNLOG("Unsupported peripheral device type 0x%02x (qualifier 0x%02x)\n",
+			     inquiry_data->peripheral_device_type,
+			     inquiry_data->peripheral_qualifier);
 		return -1;
 	}
 
