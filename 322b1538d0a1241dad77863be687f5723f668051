@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07b46038_8563f22f",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-16T08:09:40Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 1
+      },
+      "revId": "322b1538d0a1241dad77863be687f5723f668051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82565ebe_f85a18a2",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-16T08:09:40Z",
+      "side": 1,
+      "message": "Changing from  ndb to vhost is already done in parent commit, could you please check that and rebase?",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 10
+      },
+      "revId": "322b1538d0a1241dad77863be687f5723f668051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eca21610_ae6dc9a4",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-16T08:09:40Z",
+      "side": 1,
+      "message": "And how will you test that after test which kills the vhost?",
+      "range": {
+        "startLine": 41,
+        "startChar": 8,
+        "endLine": 41,
+        "endChar": 56
+      },
+      "revId": "322b1538d0a1241dad77863be687f5723f668051",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
