@@ -71,6 +71,12 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 	return;
 }
 
+void
+spdk_bdev_module_finish_done(void)
+{
+	return;
+}
+
 uint64_t
 spdk_bs_get_page_size(struct spdk_blob_store *bs)
 {

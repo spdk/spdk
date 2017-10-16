@@ -43,7 +43,7 @@ C_SRCS = fio_plugin.c
 CFLAGS += -I. $(ENV_CFLAGS) -I$(FIO_SOURCE_DIR)
 LDFLAGS += -shared -rdynamic
 
-SPDK_LIB_LIST +=  util bdev conf copy rpc jsonrpc json log
+SPDK_LIB_LIST +=  event util bdev conf copy rpc jsonrpc json log
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)

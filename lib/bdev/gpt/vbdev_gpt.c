@@ -357,6 +357,7 @@ static void
 vbdev_gpt_fini(void)
 {
 	spdk_bdev_part_tailq_fini(&g_gpt_disks);
+	spdk_bdev_module_finish_done();
 }
 
 static void

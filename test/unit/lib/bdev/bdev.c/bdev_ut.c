@@ -40,6 +40,12 @@
 
 #include "bdev.c"
 
+struct spdk_event {
+	spdk_event_fn           fn;
+	void                    *arg1;
+	void                    *arg2;
+};
+
 SPDK_DECLARE_BDEV_MODULE(vbdev_ut);
 
 void *
@@ -62,6 +68,30 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 void
 spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
 {
+}
+
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
+struct spdk_event *
+spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
+{
+	struct spdk_event *event = calloc(1, sizeof(*event));
+
+	event->fn = fn;
+	event->arg1 = arg1;
+	event->arg2 = arg2;
+
+	return event;
+}
+
+void spdk_event_call(struct spdk_event *event)
+{
+	event->fn(event->arg1, event->arg2);
+	free(event);
 }
 
 struct spdk_io_channel *

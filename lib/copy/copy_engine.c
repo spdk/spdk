@@ -36,6 +36,7 @@
 #include "spdk_internal/copy_engine.h"
 
 #include "spdk/env.h"
+#include "spdk/event.h"
 #include "spdk/log.h"
 #include "spdk/io_channel.h"
 
@@ -224,14 +225,50 @@ spdk_copy_engine_module_initialize(void)
 	}
 }
 
+struct spdk_copy_module_if *g_copy_engine_module = NULL;
+spdk_copy_fini_cb g_fini_cb_fn = NULL;
+
 static void
+spdk_copy_engine_module_finish_cb(void)
+{
+	spdk_copy_fini_cb cb_fn = g_fini_cb_fn;
+
+	g_fini_cb_fn = NULL;
+
+	cb_fn();
+}
+
+static void
+spdk_copy_engine_module_schedule_next(void *arg1, void *arg2)
+{
+	void (*fini)(void) = arg1;
+
+	fini();
+}
+
+void
 spdk_copy_engine_module_finish(void)
 {
-	struct spdk_copy_module_if *copy_engine_module;
+	struct spdk_event *fini_schedule_next;
 
-	TAILQ_FOREACH(copy_engine_module, &spdk_copy_module_list, tailq) {
-		if (copy_engine_module->module_fini)
-			copy_engine_module->module_fini();
+	if (!g_copy_engine_module) {
+		g_copy_engine_module = TAILQ_FIRST(&spdk_copy_module_list);
+	} else {
+		g_copy_engine_module = TAILQ_NEXT(g_copy_engine_module, tailq);
+	}
+
+	if (!g_copy_engine_module) {
+		spdk_copy_engine_module_finish_cb();
+		return;
+	}
+
+	if (g_copy_engine_module->module_fini) {
+		fini_schedule_next = spdk_event_allocate(spdk_env_get_current_core(),
+				     spdk_copy_engine_module_schedule_next,
+				     g_copy_engine_module->module_fini, NULL);
+		spdk_event_call(fini_schedule_next);
+	} else {
+		spdk_copy_engine_module_finish();
 	}
 }
 
@@ -249,9 +286,13 @@ spdk_copy_engine_initialize(void)
 	return 0;
 }
 
+
+
 void
-spdk_copy_engine_finish(void)
+spdk_copy_engine_finish(spdk_copy_fini_cb cb_fn)
 {
+	g_fini_cb_fn = cb_fn;
+
 	spdk_copy_engine_module_finish();
 }
 
