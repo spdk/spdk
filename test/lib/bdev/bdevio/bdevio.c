@@ -46,6 +46,9 @@
 #define BUFFER_SIZE 		260 * 1024
 #define BDEV_TASK_ARRAY_SIZE	2048
 
+#define LCORE_ID_INIT		0
+#define LCORE_ID_UT		1
+#define LCORE_ID_IO		2
 
 #include "../common.c"
 
@@ -76,7 +79,7 @@ execute_spdk_function(spdk_event_fn fn, void *arg1, void *arg2)
 {
 	struct spdk_event *event;
 
-	event = spdk_event_allocate(1, fn, arg1, arg2);
+	event = spdk_event_allocate(LCORE_ID_IO, fn, arg1, arg2);
 	pthread_mutex_lock(&g_test_mutex);
 	spdk_event_call(event);
 	pthread_cond_wait(&g_test_cond, &g_test_mutex);
@@ -700,30 +703,38 @@ blockdev_test_reset(void)
 }
 
 static void
-test_main(void *arg1)
+__stop_init_thread(void *arg1, void *arg2)
+{
+	unsigned num_failures = (unsigned)(uintptr_t)arg1;
+
+	bdevio_cleanup_targets();
+	spdk_app_stop(num_failures);
+}
+
+static void
+stop_init_thread(unsigned num_failures)
+{
+	struct spdk_event *event;
+
+	event = spdk_event_allocate(LCORE_ID_UT, __stop_init_thread, (void *)(uintptr_t)num_failures, NULL);
+	spdk_event_call(event);
+}
+
+static void
+__run_ut_thread(void *arg1, void *arg2)
 {
 	CU_pSuite suite = NULL;
-	unsigned int num_failures;
-
-	spdk_poller_unregister(&g_start_timer, NULL);
-
-	pthread_mutex_init(&g_test_mutex, NULL);
-	pthread_cond_init(&g_test_cond, NULL);
-
-	if (bdevio_construct_targets() < 0) {
-		spdk_app_stop(-1);
-		return;
-	}
+	unsigned num_failures;
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
-		spdk_app_stop(CU_get_error());
+		stop_init_thread(CU_get_error());
 		return;
 	}
 
 	suite = CU_add_suite("components_suite", NULL, NULL);
 	if (suite == NULL) {
 		CU_cleanup_registry();
-		spdk_app_stop(CU_get_error());
+		stop_init_thread(CU_get_error());
 		return;
 	}
 
@@ -756,7 +767,7 @@ test_main(void *arg1)
 			       blockdev_test_reset) == NULL
 	) {
 		CU_cleanup_registry();
-		spdk_app_stop(CU_get_error());
+		stop_init_thread(CU_get_error());
 		return;
 	}
 
@@ -764,14 +775,32 @@ test_main(void *arg1)
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
-	bdevio_cleanup_targets();
-	spdk_app_stop(num_failures);
+	stop_init_thread(num_failures);
+}
+
+static void
+test_main(void *arg1)
+{
+	struct spdk_event *event;
+
+	spdk_poller_unregister(&g_start_timer, NULL);
+
+	pthread_mutex_init(&g_test_mutex, NULL);
+	pthread_cond_init(&g_test_cond, NULL);
+
+	if (bdevio_construct_targets() < 0) {
+		spdk_app_stop(-1);
+		return;
+	}
+
+	event = spdk_event_allocate(LCORE_ID_UT, __run_ut_thread, NULL, NULL);
+	spdk_event_call(event);
 }
 
 static void
 start_timer(void *arg1, void *arg2)
 {
-	spdk_poller_register(&g_start_timer, test_main, NULL, spdk_env_get_current_core(), 1000 * 1000);
+	spdk_poller_register(&g_start_timer, test_main, NULL, LCORE_ID_INIT, 1000 * 1000);
 }
 
 int
@@ -786,7 +815,7 @@ main(int argc, char **argv)
 	} else {
 		config_file = argv[1];
 	}
-	bdevtest_init(config_file, "0x3", &opts);
+	bdevtest_init(config_file, "0x7", &opts);
 
 	num_failures = spdk_app_start(&opts, start_timer, NULL, NULL);
 	spdk_app_fini();
