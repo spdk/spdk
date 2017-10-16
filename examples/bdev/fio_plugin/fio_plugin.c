@@ -395,14 +395,15 @@ spdk_fio_cleanup(struct thread_data *td)
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct spdk_fio_target *target, *tmp;
 
-	g_thread = NULL;
-
 	TAILQ_FOREACH_SAFE(target, &fio_thread->targets, link, tmp) {
 		TAILQ_REMOVE(&fio_thread->targets, target, link);
 		spdk_put_io_channel(target->ch);
 		spdk_bdev_close(target->desc);
 		free(target);
 	}
+
+	spdk_bdev_finish();
+	g_thread = NULL;
 
 	spdk_free_thread();
 	spdk_ring_free(fio_thread->ring);
