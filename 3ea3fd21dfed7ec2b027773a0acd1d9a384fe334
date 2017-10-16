@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f53fa6c3_90b3103f",
+        "filename": "test/iscsi_tgt/pmem/iscsi_pmem.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-16T13:09:58Z",
+      "side": 1,
+      "message": "why is this change in vhost test commit?",
+      "range": {
+        "startLine": 11,
+        "startChar": 13,
+        "endLine": 11,
+        "endChar": 23
+      },
+      "revId": "3ea3fd21dfed7ec2b027773a0acd1d9a384fe334",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
