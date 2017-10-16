@@ -48,7 +48,7 @@ spdk_vhost_subsystem_init(void)
 }
 
 static void
-spdk_vhost_subsystem_fini(void)
+spdk_vhost_subsystem_fini(void *arg1, void *arg2)
 {
 	spdk_vhost_fini();
 }

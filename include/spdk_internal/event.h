@@ -55,7 +55,7 @@ struct spdk_subsystem {
 	const char *name;
 	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
 	void (*init)(void);
-	void (*fini)(void);
+	void (*fini)(void *arg1, void *arg2);
 	void (*config)(FILE *fp);
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };

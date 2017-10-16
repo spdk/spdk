@@ -48,7 +48,7 @@ spdk_copy_engine_subsystem_initialize(void)
 }
 
 static void
-spdk_copy_engine_subsystem_finish(void)
+spdk_copy_engine_subsystem_finish(void *arg1, void *arg2)
 {
 	spdk_copy_engine_finish();
 }
