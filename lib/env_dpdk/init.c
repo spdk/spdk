@@ -96,18 +96,18 @@ _sprintf_alloc(const char *format, ...)
 }
 
 static void
-spdk_env_delete_shared_files(void)
+spdk_env_unlink_shared_files(void)
 {
 	char buffer[PATH_MAX];
 
 	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_config", getpid());
-	if (remove(buffer)) {
-		fprintf(stderr, "Unable to remove shared memory file: %s. Error code: %d\n", buffer, errno);
+	if (unlink(buffer)) {
+		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
 	}
 
 	snprintf(buffer, PATH_MAX, "/var/run/.spdk_pid%d_hugepage_info", getpid());
-	if (remove(buffer)) {
-		fprintf(stderr, "Unable to remove shared memory file: %s. Error code: %d\n", buffer, errno);
+	if (unlink(buffer)) {
+		fprintf(stderr, "Unable to unlink shared memory file: %s. Error code: %d\n", buffer, errno);
 	}
 }
 
@@ -229,6 +229,15 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts, char **out[])
 		if (args == NULL) {
 			return -1;
 		}
+
+		/*
+		 * Unlink hugepage references after init - this will ensure they get deleted
+		 *  on app exit, even if the app crashes and does not exit normally.
+		 */
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--huge-unlink"));
+		if (args == NULL) {
+			return -1;
+		}
 	} else {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk%d",
 				     opts->shm_id));
@@ -300,16 +309,12 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 		exit(-1);
 	}
 
-	/* If the shared memory id is less than 0, that means that we are
-	 * starting a single process application. There will be no other
-	 * processes relying on the shared configuration files created by
-	 * dpdk for this process, and they can be deleted upon exit.
-	 * Specifying a shared memory id >= 0 implies that there will be multiple
-	 * processes relying on those configuration files, and we cannot delete
-	 * them when this process exits.
-	 */
 	if (opts->shm_id < 0) {
-		atexit(spdk_env_delete_shared_files);
+		/*
+		 * Unlink hugepage and config info files after init.  This will ensure they get
+		 *  deleted on app exit, even if the app crashes and does not exit normally.
+		 */
+		spdk_env_unlink_shared_files();
 	}
 
 	spdk_mem_map_init();
