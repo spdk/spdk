@@ -59,6 +59,9 @@ bdev_blob_io_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
 	struct spdk_bs_dev_cb_args *cb_args = arg;
 	int bserrno;
 
+	if (!success) {
+		SPDK_ERRLOG("!!! bdev_blob_io_complete success != true");
+	}
 	if (success) {
 		bserrno = 0;
 	} else {
@@ -132,6 +135,7 @@ bdev_blob_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64
 	rc = spdk_bdev_unmap_blocks(__get_desc(dev), channel, lba, lba_count,
 				    bdev_blob_io_complete, cb_args);
 	if (rc) {
+		SPDK_ERRLOG("!!! bdev_blob_unmap rc != 0");
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
 	}
 }
