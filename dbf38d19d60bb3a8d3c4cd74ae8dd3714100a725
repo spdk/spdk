@@ -95,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "a9fe6513_fce7f0aa",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-16T12:25:40Z",
+      "side": 1,
+      "message": "How does is a block of echoes different in maintaining than a block of strings in conf file?\nAll other tests keep (or at least try to keep) FIO configs in files. Please let\u0027s do that here as well.",
+      "parentUuid": "61c8082e_8cbf2aef",
+      "range": {
+        "startLine": 22,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 1
+      },
+      "revId": "dbf38d19d60bb3a8d3c4cd74ae8dd3714100a725",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "61f8cd9d_5277f950",
         "filename": "test/vhost/pmem/vhost_pmem.sh",
         "patchSetId": 10
