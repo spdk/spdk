@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b2cc60e9_f0862889",
+        "filename": "examples/blob/cli/Makefile",
+        "patchSetId": 15
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-16T20:41:08Z",
+      "side": 1,
+      "message": "This seems unrelated.\n\nBy the way, you can use `make CONFIG_DEBUG\u003dy` while developing to turn off optimizations.",
+      "revId": "3e99abedbfb56235f5082b0e2876f2fd71206482",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d6a28bf_f867da8f",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 979,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-16T20:41:08Z",
+      "side": 1,
+      "message": "I don\u0027t think this should be looking at argv[3] - maybe you want optarg?",
+      "revId": "3e99abedbfb56235f5082b0e2876f2fd71206482",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4639020f_efef20e4",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-16T20:41:08Z",
+      "side": 1,
+      "message": "Same for all of these other argv[3] instances - I think this is baking in some assumptions about the order of command line options, and it should be using optarg from getopt() instead.",
+      "revId": "3e99abedbfb56235f5082b0e2876f2fd71206482",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
