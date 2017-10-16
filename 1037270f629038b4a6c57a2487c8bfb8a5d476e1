@@ -22,6 +22,30 @@
       "revId": "1037270f629038b4a6c57a2487c8bfb8a5d476e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72e1aaa2_0badfab9",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-16T18:07:51Z",
+      "side": 1,
+      "message": "OK, thanks - fixed.  I needed to make sure I null all allocated * values after free\u0027ing since in -T as well as -S mode I check * existence before doing many things.\n\nAnyway, in -S mode you have to either type it in or copy-n-paste it in manually.  If we didn\u0027t need to get this wrapped up for release we could easily add the $Bn stuff to -S mode but for now I\u0027ll put that in trello for someone (doesn\u0027t have to be me) to add post release",
+      "parentUuid": "e83ac979_5959e468",
+      "range": {
+        "startLine": 175,
+        "startChar": 12,
+        "endLine": 175,
+        "endChar": 49
+      },
+      "revId": "1037270f629038b4a6c57a2487c8bfb8a5d476e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
