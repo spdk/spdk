@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93126f29_ba9d7423",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-16T12:02:24Z",
+      "side": 1,
+      "message": "It might be a good idea to test if TRIM in fact \"zeroes\" the disk space.\nYou might want to try running:\na) FIO with read / verify / verify_pattern \u003d 0x0000 or something like that, or if it doesnt work:\nb) try DD; dd\u003d/TRIMMED/DISK of\u003d/some/file bs\u003dX count\u003dY and then see if it\u0027s zeroed",
+      "range": {
+        "startLine": 68,
+        "startChar": 8,
+        "endLine": 69,
+        "endChar": 43
+      },
+      "revId": "08acad081a727a283184fc866bfb5890d64cb041",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25810296_6a9ec228",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-16T12:02:24Z",
+      "side": 1,
+      "message": "white space",
+      "range": {
+        "startLine": 180,
+        "startChar": 46,
+        "endLine": 180,
+        "endChar": 47
+      },
+      "revId": "08acad081a727a283184fc866bfb5890d64cb041",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
