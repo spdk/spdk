@@ -150,7 +150,7 @@ function spdk_vhost_run()
 	cp $vhost_conf_template $vhost_conf_file
 	$BASE_DIR/../../../scripts/gen_nvme.sh >> $vhost_conf_file
 
-	local cmd="$VHOST_APP -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
+	local cmd="$VHOST_APP -t all -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
 
 	echo "INFO: Loging to:   $vhost_log_file"
 	echo "INFO: Config file: $vhost_conf_file"
