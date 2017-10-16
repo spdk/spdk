@@ -202,7 +202,8 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		struct spdk_scsi_vpd_page *vpage = (struct spdk_scsi_vpd_page *)data;
 
 		/* PERIPHERAL QUALIFIER(7-5) PERIPHERAL DEVICE TYPE(4-0) */
-		vpage->peripheral = pd;
+		vpage->peripheral_device_type = pd;
+		vpage->peripheral_qualifier = SPDK_SPC_PERIPHERAL_QUALIFIER_CONNECTED;
 		/* PAGE CODE */
 		vpage->page_code = pc;
 
@@ -670,7 +671,8 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 
 		/* Standard INQUIRY data */
 		/* PERIPHERAL QUALIFIER(7-5) PERIPHERAL DEVICE TYPE(4-0) */
-		inqdata->peripheral = pd;
+		inqdata->peripheral_device_type = pd;
+		inqdata->peripheral_qualifier = SPDK_SPC_PERIPHERAL_QUALIFIER_CONNECTED;
 
 		/* RMB(7) */
 		inqdata->rmb = 0;
