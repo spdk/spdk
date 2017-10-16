@@ -429,3 +429,235 @@ Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
 - no other operation fails
+
+# Lvol tasting test plan
+
+## Objective
+The purpose of these tests is to verify the  introduces lvol store and lvols parameters saving
+on persistent memories and loading it from saved data on app start in SPDK.
+
+## Methodology
+Configuration in test is to be done using example stub application.
+All management is done using RPC calls, including logical volumes management.
+All tests are performed using malloc backends.
+
+Tests will be executed as scenarios - sets of smaller test step in which check correct response
+call get_lvol_stores after again start vhost app
+
+## Tests
+
+### construct_lvol_store
+
+#### TEST CASE 1
+Steps:
+- run the vhost app
+- create a malloc bdev
+- construct_lvol_store on correct, exisitng malloc bdev and cluster size is equal
+  to malloc size in bytes
+- check correct uuid values in response get_lvol_stores command
+- check response get_lvol_stores
+- restart the vhost app
+- check response get_lvol_stores
+- destroy lvol store
+- delete malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response call get_lvol_stores after restart vhost app has not changed
+- no other operation fails
+
+### construct_lvol_bdev
+
+#### TEST CASE 2
+Steps:
+- run the vhost app - run the vhost app - create a malloc bdev
+- construct_lvol_store on correct, exisitng malloc bdev
+- check correct uuid values in response get_lvol_stores command
+- construct_lvol_bdev on correct lvs_uuid and size
+- check response get_lvol_stores
+- restart the vhost app
+- check response get_lvol_stores
+- delete lvol bdev
+- destroy lvol store
+- delete malloc bdev
+
+
+Expected result:
+- calls successful, return code = 0
+- the response call get_lvol_stores after restart vhost app has not changed
+- no other operation fails
+
+#### TEST CASE 3
+Steps:
+- run the vhost app
+- create a malloc bdev
+- construct_lvol_store on correct, exisitng malloc bdev
+- check correct uuid values in response get_lvol_stores command
+- construct_lvol_bdev on correct lvs_uuid and size
+  (size is approximately equal to one quarter of the bdev size,
+  because of lvol metadata)
+- repeat the previous step three more times
+- restart the vhost app
+- check response get_lvol_stores
+- delete lvol bdevs
+- destroy lvol store
+- delete malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response call get_lvol_stores after restart vhost app has not changed
+- no other operation fails
+
+
+#### TEST CASE 4
+Steps:
+- run the vhost app
+- create a malloc bdev
+- construct_lvol_store on correct, exisitng malloc bdev
+- check correct uuid values in response get_lvol_stores command
+- check response get_lvol_stores
+- restart the vhost app
+- check response get_lvol_stores
+- construct_lvol_bdev on correct lvs_uuid and size
+  (size is approximately equal to one quarter of the bdev size,
+  because of lvol metadata)
+- repeat the previous step three more times
+- delete lvol bdevs
+- destroy lvol store
+- delete malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response call get_lvol_stores after restart vhost app has not changed
+- no other operation fails
+
+### resize_lvol_store
+
+#### TEST CASE 5
+Steps:
+- run the vhost app
+- create a malloc bdev
+- construct_lvol_store on created malloc bdev and cluster size is equal
+  1048576 bytes (1MB)
+- check correct uuid values in response get_lvol_stores command
+- construct_lvol_bdev on correct lvs_uuid and size is
+  equal to one quarter of size malloc bdev
+- check response get_lvol_stores
+- restart the vhost app
+- check response get_lvol_stores
+- check size of the lvol bdev by command RPC : get_bdevs
+- resize_lvol_bdev on correct lvs_uuid and size is
+  equal half to size malloc bdev
+- check size of the lvol bdev by command RPC : get_bdevs
+- resize_lvol_bdev on the correct lvs_uuid and size is smaller by 1 MB
+  from the full size malloc bdev
+- check size of the lvol bdev by command RPC : get_bdevs
+- resize_lvol_bdev on the correct lvs_uuid and size is equal 0 MiB
+- check size of the lvol bdev by command RPC : get_bdevs
+- check response get_lvol_stores
+- restart the vhost app
+- check response get_lvol_stores
+- delete lvol bdev
+- destroy lvol store
+- delete malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response call get_lvol_stores after restart vhost app has not changed
+- no other operation fails
+
+
+#### TEST CASE 6
+Steps:
+- run the vhost app - run the vhost app - create a malloc bdev
+- construct_lvol_store on correct, exisitng malloc bdev
+- check correct uuid values in response get_lvol_stores command
+- construct_lvol_bdev on correct lvs_uuid and size
+  (size is equal to one quarter of the bdev size)
+- repeat the previous step four times
+- check response get_lvol_stores
+- restart the vhost app
+- check response get_lvol_stores
+- destroy_lvol_store
+- check correct response get_lvol_stores command
+- delete malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response call get_lvol_stores after restart vhost app has not changed
+- no other operation fails
+
+### nested_construct_logical_volume
+
+#### TEST CASE 7
+Steps:
+- run the vhost app
+- create a malloc bdev
+- construct_lvol_store on created malloc bdev and cluster size is equal
+  1048576 bytes (1MB)
+- check correct uuid values in response get_lvol_stores command
+- construct_lvol_bdev on correct lvs_uuid and size is
+  equal to size malloc bdev
+- construct first nested lvol store on created lvol_bdev
+- check correct uuid values in response get_lvol_stores command
+- construct first nested lvol bdev on correct lvs_uuid and size
+- construct second nested lvol store on created first nested lvol bdev
+- check correct uuid values in response get_lvol_stores command
+- construct second nested lvol bdev on correct first nested lvs uuid and size
+- check response get_lvol_stores
+- restart the vhost app
+- check response get_lvol_stores
+- delete nested lvol bdev and lvol store
+- delete base lvol bdev and lvol store
+- delete malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response call get_lvol_stores after restart vhost app has not changed
+- no other operation fails
+
+#### TEST CASE 8
+Steps:
+- run the vhost app
+- create a malloc bdev
+- construct_lvol_store on created malloc bdev and cluster size is equal
+  1048576 bytes (1MB)
+- check response get_lvol_store
+- restart the vhost app
+- check response get_lvol_stores
+- construct_lvol_bdev on correct lvs_uuid and size is
+  equal to size malloc bdev
+- construct first nested lvol store on created lvol_bdev
+- check correct uuid values in response get_lvol_stores command
+- construct first nested lvol bdev on correct lvs_uuid and size
+- construct second nested lvol store on created first nested lvol bdev
+- check correct uuid values in response get_lvol_stores command
+- construct second nested lvol bdev on correct first nested lvs uuid and size
+- delete nested lvol bdev and lvol store
+- delete base lvol bdev and lvol store
+- delete malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response call get_lvol_stores after restart vhost app has not changed
+- no other operation fails
+
+### SIGTERM
+
+#### TEST CASE 9 - Name: SIGTERM - positive tests
+Steps:
+- run the vhost app
+- create a malloc bdev
+- construct_lvol_store on created malloc bdev and cluster size is equal
+  1048576 bytes (1MB)
+- check correct uuid values in response get_lvol_stores command
+- Send SIGTERM signal to the application
+- run the vhost app
+- check response get_lvol_stores
+- destroy lvol store
+- delete malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response call get_lvol_stores after restart vhost app has not changed
+- no other operation fails
