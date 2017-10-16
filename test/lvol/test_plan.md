@@ -429,3 +429,57 @@ Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
 - no other operation fails
+
+# Lvol tasting test plan
+
+## Objective
+The purpose of these tests is to verify the introduced lvol store and lvols parameters saving
+on persistent memories and loading it from saved data on app start in SPDK.
+
+## Methodology
+Configuration test cases uses vhost app.
+All tests are performed using NVMe device backends.
+All management is done using RPC calls, including logical volumes management.
+
+Tests will be executed as scenarios - A set of test steps in which checks get_lvol_stores response
+(rpc command) after again start vhost app
+
+## Tests
+
+### tasting_construct_multi_logical_bdevs_reboot_app
+
+#### TEST CASE 1
+Positive test for tasting a multi lvol bdev configuration.
+Calls get_lvol_stores, get_bdevs, delete_bdev, destroy_lvol_store with correct responses
+after restart vhost app.
+Steps:
+- run vhost app
+- create a NVMe bdev
+- construct_lvol_store on correct, exisitng NVMe bdev
+- construct_lvol_bdev on correct lvs_uuid and size
+  (size is approximately equal to one quarter of the bdev size,
+  because of lvol metadata)
+- check correct configuration in response get_lvol_stores command
+- check correct configuration in response get_bdevs command
+- repeat the previous step three more times
+- send SIGTERM signal to the application
+- run vhost app
+- check compliance response get_lvol_stores command with response
+  in first run of the vhost app
+- check compatibility response get_bdevs command with response
+  in first run of the vhost app
+- delete lvol bdevs
+- destroy lvol store
+- construct_lvol_store on correct, exisitng NVMe bdev
+- construct_lvol_bdev on correct lvs_uuid and size
+  (size is approximately equal to one quarter of the bdev size)
+- repeat previous step three more times
+- check response get_bdevs
+- delete lvol bdevs
+- destroy lvol store
+- delete NVMe bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response calls get_lvol_stores and get_bdevs after run vhost app has not changed
+- no other operation fails
