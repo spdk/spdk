@@ -63,6 +63,8 @@ spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
 {
 	struct spdk_event *event = calloc(1, sizeof(*event));
 
+	SPDK_CU_ASSERT_FATAL(event != NULL);
+
 	event->fn = fn;
 	event->arg1 = arg1;
 	event->arg2 = arg2;
