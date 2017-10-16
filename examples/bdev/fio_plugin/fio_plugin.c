@@ -404,6 +404,7 @@ spdk_fio_cleanup(struct thread_data *td)
 		free(target);
 	}
 
+	spdk_bdev_finish();
 	spdk_free_thread();
 	spdk_ring_free(fio_thread->ring);
 	free(fio_thread);
