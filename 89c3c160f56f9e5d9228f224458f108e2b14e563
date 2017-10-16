@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58e6433e_189a16ef",
+        "filename": "doc/lvol.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-16T14:01:58Z",
+      "side": 1,
+      "message": "Better wording ?",
+      "range": {
+        "startLine": 7,
+        "startChar": 66,
+        "endLine": 7,
+        "endChar": 156
+      },
+      "revId": "89c3c160f56f9e5d9228f224458f108e2b14e563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cc9a033_dd85e9ce",
+        "filename": "doc/lvol.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-16T14:01:58Z",
+      "side": 1,
+      "message": "Could be useful to note that those are combined.",
+      "range": {
+        "startLine": 24,
+        "startChar": 38,
+        "endLine": 24,
+        "endChar": 58
+      },
+      "revId": "89c3c160f56f9e5d9228f224458f108e2b14e563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "078fc3a5_7a1e3aef",
+        "filename": "doc/lvol.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-16T14:01:58Z",
+      "side": 1,
+      "message": "\"created device\" or \"created bdev\" ?",
+      "range": {
+        "startLine": 36,
+        "startChar": 18,
+        "endLine": 36,
+        "endChar": 25
+      },
+      "revId": "89c3c160f56f9e5d9228f224458f108e2b14e563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7aa96d5_1e5a0960",
+        "filename": "doc/lvol.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-16T14:01:58Z",
+      "side": 1,
+      "message": "Could be mentioned why its important. Something like \"bdev is unmapped at initialization, so all data already present on it is lost.\"",
+      "range": {
+        "startLine": 47,
+        "startChar": 4,
+        "endLine": 47,
+        "endChar": 38
+      },
+      "revId": "89c3c160f56f9e5d9228f224458f108e2b14e563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ddc765c1_eba8d0b7",
+        "filename": "doc/lvol.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-16T14:01:58Z",
+      "side": 1,
+      "message": "It might not be clear what it means. \", so it cannot be used by other ...\"(backends? controllers?)",
+      "range": {
+        "startLine": 48,
+        "startChar": 4,
+        "endLine": 48,
+        "endChar": 35
+      },
+      "revId": "89c3c160f56f9e5d9228f224458f108e2b14e563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
