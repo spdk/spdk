@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f32ce8b1_364afec6",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-16T16:44:30Z",
+      "side": 1,
+      "message": "Don\u0027t think this is needed anymore.",
+      "range": {
+        "startLine": 433,
+        "startChar": 2,
+        "endLine": 433,
+        "endChar": 20
+      },
+      "revId": "8b5a927075074513018c9dc7dec18255cda9d4c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "861dab3a_54e667dc",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-16T16:44:30Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 523,
+        "startChar": 3,
+        "endLine": 523,
+        "endChar": 21
+      },
+      "revId": "8b5a927075074513018c9dc7dec18255cda9d4c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
