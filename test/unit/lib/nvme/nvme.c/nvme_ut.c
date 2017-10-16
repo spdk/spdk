@@ -188,6 +188,9 @@ test_spdk_nvme_probe(void)
 	/* reset to pre-test values */
 	MOCK_SET_P(spdk_memzone_lookup, void *, MOCK_PASS_THRU_P);
 	MOCK_SET(check_trtype, bool, false);
+
+	pthread_mutex_destroy(&dummy.lock);
+	pthread_mutexattr_destroy(&attr);
 }
 
 static void
