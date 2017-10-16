@@ -43,6 +43,8 @@
 #include "vhost.h"
 #include "virtio_user_dev.h"
 
+#include "spdk/string.h"
+
 /* The version of the protocol we support */
 #define VHOST_USER_VERSION    0x1
 
@@ -282,6 +284,7 @@ vhost_user_sock(struct virtio_user_dev *dev,
 {
 	struct vhost_user_msg msg;
 	struct vhost_vring_file *file = 0;
+	char err_str[64];
 	int need_reply = 0;
 	int fds[VHOST_MEMORY_MAX_NREGIONS];
 	int fd_num = 0;
@@ -362,8 +365,9 @@ vhost_user_sock(struct virtio_user_dev *dev,
 
 	len = VHOST_USER_HDR_SIZE + msg.size;
 	if (vhost_user_write(vhostfd, &msg, len, fds, fd_num) < 0) {
+		spdk_strerror_r(errno, err_str, sizeof(err_str));
 		SPDK_ERRLOG("%s failed: %s\n",
-			    vhost_msg_strings[req], strerror(errno));
+			    vhost_msg_strings[req], err_str);
 		return -1;
 	}
 
@@ -373,8 +377,8 @@ vhost_user_sock(struct virtio_user_dev *dev,
 
 	if (need_reply) {
 		if (vhost_user_read(vhostfd, &msg) < 0) {
-			SPDK_WARNLOG("Received msg failed: %s\n",
-				    strerror(errno));
+			spdk_strerror_r(errno, err_str, sizeof(err_str));
+			SPDK_WARNLOG("Received msg failed: %s\n", err_str);
 			return -1;
 		}
 
@@ -423,16 +427,19 @@ vhost_user_setup(struct virtio_user_dev *dev)
 	int flag;
 	struct sockaddr_un un;
 	ssize_t rc;
+	char err_str[64];
 
 	fd = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (fd < 0) {
-		SPDK_ERRLOG("socket() error, %s\n", strerror(errno));
+		spdk_strerror_r(errno, err_str, sizeof(err_str));
+		SPDK_ERRLOG("socket() error, %s\n", err_str);
 		return -1;
 	}
 
 	flag = fcntl(fd, F_GETFD);
 	if (fcntl(fd, F_SETFD, flag | FD_CLOEXEC) < 0)
-		SPDK_ERRLOG("fcntl failed, %s\n", strerror(errno));
+		spdk_strerror_r(errno, err_str, sizeof(err_str));
+		SPDK_ERRLOG("fcntl failed, %s\n", err_str);
 
 	memset(&un, 0, sizeof(un));
 	un.sun_family = AF_UNIX;
@@ -443,7 +450,8 @@ vhost_user_setup(struct virtio_user_dev *dev)
 		return -1;
 	}
 	if (connect(fd, (struct sockaddr *)&un, sizeof(un)) < 0) {
-		SPDK_ERRLOG("connect error, %s\n", strerror(errno));
+		spdk_strerror_r(errno, err_str, sizeof(err_str));
+		SPDK_ERRLOG("connect error, %s\n", err_str);
 		close(fd);
 		return -1;
 	}

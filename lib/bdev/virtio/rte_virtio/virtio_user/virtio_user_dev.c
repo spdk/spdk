@@ -47,6 +47,8 @@
 #include "virtio_user_dev.h"
 #include "../virtio_dev.h"
 
+#include "spdk/string.h"
+
 static int
 virtio_user_create_queue(struct virtio_user_dev *dev, uint32_t queue_sel)
 {
@@ -179,6 +181,7 @@ virtio_user_dev_init(char *path, uint16_t requested_queues, uint32_t queue_size)
 	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
 	uint64_t max_queues;
+	char err_str[64];
 
 	dev = calloc(1, sizeof(*dev));
 	if (dev == NULL) {
@@ -202,7 +205,8 @@ virtio_user_dev_init(char *path, uint16_t requested_queues, uint32_t queue_size)
 	}
 
 	if (dev->ops->send_request(dev, VHOST_USER_GET_QUEUE_NUM, &max_queues) < 0) {
-		SPDK_ERRLOG("get_queue_num fails: %s\n", strerror(errno));
+		spdk_strerror_r(errno, err_str, sizeof(err_str));
+		SPDK_ERRLOG("get_queue_num fails: %s\n", err_str);
 		goto err;
 	}
 
@@ -215,7 +219,8 @@ virtio_user_dev_init(char *path, uint16_t requested_queues, uint32_t queue_size)
 	vdev->max_queues = requested_queues;
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
-		SPDK_ERRLOG("set_owner fails: %s\n", strerror(errno));
+		spdk_strerror_r(errno, err_str, sizeof(err_str));
+		SPDK_ERRLOG("set_owner fails: %s\n", err_str);
 		goto err;
 	}
 
