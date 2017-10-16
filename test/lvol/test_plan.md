@@ -429,3 +429,137 @@ Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
 - no other operation fails
+
+# Lvol tasting test plan
+
+## Objective
+The purpose of these tests is to verify the introduced lvol store and lvols parameters saving
+on persistent memories and loading it from saved data on app start in SPDK.
+
+## Methodology
+Configuration test cases uses vhost app.
+All tests are performed using NVMe device backends.
+All management is done using RPC calls, including logical volumes management.
+
+Tests will be executed as scenarios - A set of test steps in which checks get_lvol_stores response 
+(rpc command) after again start vhost app
+
+## Tests
+
+### check_lvol_store_after_reboot_app
+
+#### TEST CASE 1
+Positive test for checking a lvol store configuration.
+Call get_lvol_stores with correct response after restart vhost app.
+Steps:
+- run the vhost app
+- create a NVMe bdev
+- construct_lvol_store on correct, exisitng NVMe bdev and cluster size is equal
+  to NVMe size in bytes
+- check correct uuid values in response get_lvol_stores command
+- check response get_lvol_stores
+- restart the vhost app
+- check response get_lvol_stores
+- destroy lvol store
+- delete NVMe bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response call get_lvol_stores after restart vhost app has not changed
+- no other operation fails
+
+### check_lvol_store_after_reboot_app
+
+#### TEST CASE 2
+Positive test for checking a lvol bdev configuration.
+Calls get_lvol_stores and get_bdevs with correct responses after restart vhost app.
+Steps:
+- run the vhost app - run the vhost app - create a NVMe bdev
+- construct_lvol_store on correct, exisitng NVMe bdev
+- check correct uuid values in response get_lvol_stores command
+- construct_lvol_bdev on correct lvs_uuid and size
+- check response get_lvol_stores
+- restart the vhost app
+- check response get_lvol_stores
+- check response get_bdevs
+- delete lvol bdev
+- destroy lvol store
+- delete NVMe bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response calls get_lvol_stores and get_bdevs after restart vhost app has not changed
+- no other operation fails
+
+### check_multi_logical_volumes_reboot_app
+
+#### TEST CASE 3
+Positive test for checking a multi lvol bdev configuration.
+Calls get_lvol_stores and get_bdevs with correct responses after restart vhost app.
+Steps:
+- run the vhost app
+- create a NVMe bdev
+- construct_lvol_store on correct, exisitng NVMe bdev
+- check correct uuid values in response get_lvol_stores command
+- construct_lvol_bdev on correct lvs_uuid and size
+  (size is approximately equal to one quarter of the bdev size,
+  because of lvol metadata)
+- repeat the previous step three more times
+- restart the vhost app
+- check response get_lvol_stores
+- check response get_bdevs
+- delete lvol bdevs
+- destroy lvol store
+- delete NVMe bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response calls get_lvol_stores and get_bdevs after restart vhost app has not changed
+- no other operation fails
+
+### construct_lvol_store_after_reboot_app
+
+#### TEST CASE 4
+Positive test for checking a multi lvol bdev configuration.
+Calls get_lvol_stores and get_bdevs with correct responses after restart vhost app.
+Steps:
+- run the vhost app
+- create a NVMe bdev
+- construct_lvol_store on correct, exisitng NVMe bdev
+- check correct uuid values in response get_lvol_stores command
+- check response get_lvol_stores
+- restart the vhost app
+- check response get_lvol_stores
+- construct_lvol_bdev on correct lvs_uuid and size
+  (size is approximately equal to one quarter of the bdev size,
+  because of lvol metadata)
+- repeat the previous step three more times
+- check response get_bdevs
+- delete lvol bdevs
+- destroy lvol store
+- delete NVMe bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response call get_lvol_stores after restart vhost app has not changed
+- no other operation fails
+
+### SIGTERM
+
+#### TEST CASE 5 - Name: SIGTERM - positive tests
+Steps:
+- run the vhost app
+- create a NVMe bdev
+- construct_lvol_store on created NVMe bdev and cluster size is equal
+  1048576 bytes (1MB)
+- check correct uuid values in response get_lvol_stores command
+- Send SIGTERM signal to the application
+- run the vhost app
+- check response get_lvol_stores
+- destroy lvol store
+- delete NVMe bdev
+
+Expected result:
+- calls successful, return code = 0
+- the response calls get_lvol_stores and get_bdevs after restart vhost app has not changed
+- no other operation fails
