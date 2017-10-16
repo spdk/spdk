@@ -54,7 +54,7 @@ void spdk_reactors_stop(void);
 struct spdk_subsystem {
 	const char *name;
 	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
-	void (*init)(void);
+	void (*init)(void *arg1, void *arg2);
 	void (*fini)(void);
 	void (*config)(FILE *fp);
 	TAILQ_ENTRY(spdk_subsystem) tailq;

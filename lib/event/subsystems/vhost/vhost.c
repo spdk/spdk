@@ -38,7 +38,7 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_vhost_subsystem_init(void)
+spdk_vhost_subsystem_init(void *arg1, void *arg2)
 {
 	int rc = 0;
 

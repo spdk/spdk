@@ -38,7 +38,7 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_interface_subsystem_init(void)
+spdk_interface_subsystem_init(void *arg1, void *arg2)
 {
 	int rc;
 
@@ -57,7 +57,7 @@ SPDK_SUBSYSTEM_REGISTER(interface, spdk_interface_subsystem_init,
 			spdk_interface_subsystem_destroy, NULL)
 
 static void
-spdk_net_subsystem_start(void)
+spdk_net_subsystem_start(void *arg1, void *arg2)
 {
 	int rc;
 

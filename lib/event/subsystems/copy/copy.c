@@ -38,7 +38,7 @@
 #include "spdk_internal/event.h"
 
 static void
-spdk_copy_engine_subsystem_initialize(void)
+spdk_copy_engine_subsystem_initialize(void *arg1, void *arg2)
 {
 	int rc;
 
