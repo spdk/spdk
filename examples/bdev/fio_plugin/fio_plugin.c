@@ -408,6 +408,7 @@ spdk_fio_cleanup(struct thread_data *td)
 	spdk_ring_free(fio_thread->ring);
 	free(fio_thread);
 
+	spdk_bdev_finish();
 	td->io_ops_data = NULL;
 }
 
