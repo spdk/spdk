@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f610dae_e4edc668",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 1668,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-16T19:25:23Z",
+      "side": 1,
+      "message": "This condition looks incorrect - if cur_desc is close to the end of the array, we will access beyond the end of the array.  We need to make sure we have at least sizeof(spdk_blob_md_descriptor) bytes left in the array.\n\nOnce we read the spdk_blob_md_descriptor, we should also verify that its length field fits within the remaining descriptors array length.",
+      "revId": "39f5e0e8b49a0155e12d9e2115f9cdf3317e5e4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a85e772_66d90121",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 1681,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-16T19:25:23Z",
+      "side": 1,
+      "message": "If desc_extent is on-disk data, we shouldn\u0027t asert() that it follows the correct on-disk format - we should just treat this as an invalid blobstore and return an error.",
+      "revId": "39f5e0e8b49a0155e12d9e2115f9cdf3317e5e4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "880226dc_236a9ea2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 1782,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-16T19:25:23Z",
+      "side": 1,
+      "message": "This entire block looks identical to the one above in \u0027if (ctx-\u003epage-\u003esequence_num \u003d\u003d 0)\u0027 - can we combine the two conditions?\n\ne.g.\n\n    if (ctx-\u003epage-\u003esequence_num \u003d\u003d 0 || ctx-\u003ein_page_chain) {",
+      "revId": "39f5e0e8b49a0155e12d9e2115f9cdf3317e5e4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
