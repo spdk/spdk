@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "7362c81d_0614bc49",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1909,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-16T18:27:28Z",
+      "side": 1,
+      "message": "LOL, knew this would get reused eventually!",
+      "revId": "8b137ad832fcee18bc1b89c80a991c0288f09497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a87521cd_a0ed591d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1936,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-16T18:27:28Z",
+      "side": 1,
+      "message": "I think we should trim the whole device otherwise we\u0027re leaving data here right?",
+      "revId": "8b137ad832fcee18bc1b89c80a991c0288f09497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "14a07018_994d6bd2",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 6
