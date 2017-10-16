@@ -35,26 +35,20 @@
 
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
+#include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/io_channel.h"
-#include "spdk/string.h"
-#include "spdk/endian.h"
-#include "spdk/stdinc.h"
-#include "spdk/util.h"
 #include "spdk/scsi_spec.h"
+#include "spdk/string.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
-
-#include <getopt.h>
-#include <sys/param.h>
 
 #include <linux/virtio_scsi.h>
 
 #include <virtio_dev.h>
 #include <virtio_user/virtio_user_dev.h>
-
-#include "spdk/scsi_spec.h"
 
 #define BDEV_VIRTIO_MAX_TARGET 64
 #define BDEV_VIRTIO_SCAN_PAYLOAD_SIZE 256
