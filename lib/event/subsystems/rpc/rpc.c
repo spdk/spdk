@@ -114,7 +114,7 @@ spdk_rpc_subsystem_setup(void *arg)
 }
 
 static void
-spdk_rpc_subsystem_initialize(void)
+spdk_rpc_subsystem_initialize(void *arg1, void *arg2)
 {
 	/*
 	 * Defer setup of the RPC service until the reactor has started.  This

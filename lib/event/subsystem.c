@@ -115,6 +115,8 @@ subsystem_sort(void)
 void
 spdk_subsystem_init_next(int rc)
 {
+	struct spdk_event *next_init_event;
+
 	if (rc) {
 		spdk_app_stop(rc);
 		assert(g_next_subsystem != NULL);
@@ -134,7 +136,9 @@ spdk_subsystem_init_next(int rc)
 	}
 
 	if (g_next_subsystem->init) {
-		g_next_subsystem->init();
+		next_init_event = spdk_event_allocate(spdk_env_get_current_core(), g_next_subsystem->init, NULL,
+						      NULL);
+		spdk_event_call(next_init_event);
 	} else {
 		spdk_subsystem_init_next(0);
 	}

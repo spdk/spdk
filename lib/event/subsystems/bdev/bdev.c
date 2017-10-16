@@ -65,7 +65,7 @@ spdk_bdev_subsystem_stop_poller(struct spdk_bdev_poller **ppoller)
 }
 
 static void
-spdk_bdev_subsystem_initialize(void)
+spdk_bdev_subsystem_initialize(void *arg1, void *arg2)
 {
 	spdk_bdev_initialize(spdk_bdev_initialize_complete, NULL,
 			     spdk_bdev_subsystem_start_poller,
