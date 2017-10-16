@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86b2df35_c82eea11",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 969,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-16T16:11:50Z",
+      "side": 1,
+      "message": "This is not thread safe - there is a single rtransport instance for the whole application, and it is shared between all threads.",
+      "revId": "174d8eda7b72aeee510aa9355085d69f21befb85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
