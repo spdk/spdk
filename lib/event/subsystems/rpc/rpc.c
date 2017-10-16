@@ -128,7 +128,7 @@ spdk_rpc_subsystem_initialize(void)
 }
 
 static void
-spdk_rpc_subsystem_finish(void)
+spdk_rpc_subsystem_finish(void *arg1, void *arg2)
 {
 	spdk_rpc_close();
 	spdk_poller_unregister(&g_rpc_poller, NULL);

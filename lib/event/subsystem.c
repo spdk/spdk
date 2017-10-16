@@ -179,12 +179,14 @@ void
 spdk_subsystem_fini(void)
 {
 	struct spdk_subsystem *cur;
+	struct spdk_event *next_fini_event;
 
 	cur = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
 
 	while (cur) {
 		if (cur->fini) {
-			cur->fini();
+			next_fini_event = spdk_event_allocate(spdk_env_get_current_core(), cur->fini, NULL, NULL);
+			spdk_event_call(next_fini_event);
 		}
 		cur = TAILQ_PREV(cur, spdk_subsystem_list, tailq);
 	}
