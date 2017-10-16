@@ -95,6 +95,9 @@ struct spdk_fio_thread {
 
 static __thread struct spdk_fio_thread *g_thread;
 
+static int td_count;
+static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
 static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
@@ -386,6 +389,10 @@ spdk_fio_init(struct thread_data *td)
 		TAILQ_INSERT_TAIL(&fio_thread->targets, target, link);
 	}
 
+	pthread_mutex_lock(&mutex);
+	td_count++;
+	pthread_mutex_lock(&mutex);
+
 	return 0;
 }
 
@@ -403,6 +410,14 @@ spdk_fio_cleanup(struct thread_data *td)
 		spdk_bdev_close(target->desc);
 		free(target);
 	}
+
+	pthread_mutex_lock(&mutex);
+	if (td_count > 0) {
+		if (!(--td_count)) {
+			spdk_bdev_finish();
+		}
+	}
+	pthread_mutex_unlock(&mutex);
 
 	spdk_free_thread();
 	spdk_ring_free(fio_thread->ring);
