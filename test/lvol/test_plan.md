@@ -454,3 +454,63 @@ Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
 - no other operation fails
+
+# Lvol tasting test plan
+
+## Objective
+The purpose of these tests is to verify the introduced lvol store and lvols parameters saving
+on persistent memory and loading it from saved data on app start in SPDK.
+
+## Methodology
+Configuration test cases use vhost app.
+All tests are performed using NVMe device backends.
+All management is done using RPC calls, including logical volumes management.
+
+Tests will be executed as scenarios - A set of test steps in which checks get_lvol_stores response
+(rpc command) after again start vhost app
+
+## Tests
+
+### tasting_positive
+
+#### TEST CASE 1
+Positive test for tasting a multi lvol bdev configuration.
+Create a lvol store with some lvol bdevs on NVMe drive and restart vhost app.
+After restarting configuration should be automatically loaded and should be exactly
+the same as before restarting.
+Check that running configuration can be modified after restarting and tasting.
+Steps:
+- run vhost app with NVMe bdev
+- construct lvol store on NVMe bdev
+- using get_lvol_stores command verify lvol store was correctly created
+- construct five lvol bdevs on previously created lvol store;
+  each lvol bdev size is approximately equal to 10% of total lvol store size
+  (approximately because of the lvol metadata which consumes some of the space)
+- using get_bdevs command verify lvol bdevs were correctly created
+- shutdown vhost application by sending SIGTERM signal
+- start vhost application with the same NVMe bdev as in the first step
+- using get_lvol_stores command verify that previously created lvol strore
+  was correctly discovered and loaded by tasting feature (including UUID's)
+- using get_bdevs command verify that previously created lvol bdevs were
+  correctly discovered and loaded by tasting feature (including UUID's)
+- verify if configuration can be modified after tasting:
+  construct five more lvol bdevs to fill up loaded lvol store,
+  delete all existing lvol bdevs,
+  destroy existing lvol store,
+  verify removal results using get_lvol_stores and get_bdevs commands
+- re-create initial configuration by repeating steps 2-5:
+  create lvol store on NVMe bdev, create four lvol bdevs on lvol store and
+  verify all configuration call results
+- clean running configuration:
+  delete all lvol bdevs,
+  destroy lvol store
+  verify removal results using get_lvol_stores and get_bdevs commands
+
+Expected results:
+- configuration is successfully tasted and loaded after restarting vhost
+- lvol store attributes (UUID, total size, cluster size, etc.) remain the same after
+  loading existing configuration
+- lvol bdev attributes (UUID, size, etc.) remain the same after
+  loading existing configuration
+- all RPC configuration calls successful, return code = 0
+- no other operation fails
