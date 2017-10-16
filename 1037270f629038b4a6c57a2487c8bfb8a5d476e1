@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e83ac979_5959e468",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-10-16T06:43:48Z",
+      "side": 1,
+      "message": "Thanks for your update. There is a bug found this morning, when I run ./blobcli -T test.bs(as bellow). In addition to the bug, there is no other.\n-i\n-s bs\n-n 1\n-i (Note here)\n\nprints:\n...\nSCRIPT NOW PROCESSING: -i\nInit blobstore using bdev Product Name: NVMe disk\nblobstore init\u0027d: (0x7f1c6bf62a10)\nnvme_pcie.c:1123:nvme_pcie_qpair_abort_trackers: *ERROR*: aborting outstanding command\nnvme_qpair.c: 131:nvme_io_qpair_print_command: *NOTICE*: WRITE sqid:1 cid:253 nsid:1 lba:8 len:192\nnvme_qpair.c: 283:nvme_qpair_print_completion: *NOTICE*: ABORTED - BY REQUEST (00/07) sqid:1 cid:253 cdw0:0 sqhd:0000 p:0 m:0 dnr:1\nSegmentation fault (core dumped)\n\nIn -S mode,it is the same. \nIn addition, ask a question. In -S mode, how can I input -s $B0?",
+      "range": {
+        "startLine": 175,
+        "startChar": 12,
+        "endLine": 175,
+        "endChar": 49
+      },
+      "revId": "1037270f629038b4a6c57a2487c8bfb8a5d476e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
