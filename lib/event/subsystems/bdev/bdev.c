@@ -72,7 +72,7 @@ spdk_bdev_subsystem_initialize(void *arg1, void *arg2)
 }
 
 static void
-spdk_bdev_subsystem_finish(void)
+spdk_bdev_subsystem_finish(void *arg1, void *arg2)
 {
 	spdk_bdev_finish();
 }
