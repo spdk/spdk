@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e58a1e8_04329458",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 1612,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-16T18:18:59Z",
+      "side": 1,
+      "message": "What is the \u003d\u003d 0 version check for again?",
+      "revId": "b15a12de807bcadb60d7fa2892d76d0bc3a44796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
