@@ -523,6 +523,7 @@ function vm_setup()
 
 	echo "INFO: TASK MASK: $task_mask"
 	local cmd="taskset -a $task_mask $INSTALL_DIR/bin/qemu-system-x86_64 ${eol}"
+#	local cmd="taskset -a $task_mask /home/pniedzwx/data/qemu/build/x86_64-softmmu/qemu-system-x86_64 ${eol}"
 	local vm_socket_offset=$(( 10000 + 100 * vm_num ))
 
 	local ssh_socket=$(( vm_socket_offset + 0 ))
