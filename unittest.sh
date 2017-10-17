@@ -92,6 +92,7 @@ $valgrind test/unit/lib/lvol/lvol.c/lvol_ut
 $valgrind test/unit/lib/iscsi/param.c/param_ut
 $valgrind test/unit/lib/iscsi/tgt_node.c/tgt_node_ut test/unit/lib/iscsi/tgt_node.c/tgt_node.conf
 $valgrind test/unit/lib/iscsi/iscsi.c/iscsi_ut
+$valgrind test/unit/lib/iscsi/init_grp.c/init_grp_ut test/unit/lib/iscsi/init_grp.c/init_grp.conf
 
 $valgrind test/unit/lib/util/bit_array.c/bit_array_ut
 $valgrind test/unit/lib/util/crc32_ieee.c/crc32_ieee_ut
