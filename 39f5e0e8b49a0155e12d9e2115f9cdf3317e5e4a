@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2f7a182b_a272b2d4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 1668,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-10-17T01:11:19Z",
+      "side": 1,
+      "message": "I suppose we do this work in line 1701?",
+      "parentUuid": "0f610dae_e4edc668",
+      "revId": "39f5e0e8b49a0155e12d9e2115f9cdf3317e5e4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a85e772_66d90121",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 63
@@ -30,6 +48,24 @@
       "writtenOn": "2017-10-16T19:25:23Z",
       "side": 1,
       "message": "If desc_extent is on-disk data, we shouldn\u0027t asert() that it follows the correct on-disk format - we should just treat this as an invalid blobstore and return an error.",
+      "revId": "39f5e0e8b49a0155e12d9e2115f9cdf3317e5e4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2f74f97_e9c1b83a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 1681,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-10-17T01:11:19Z",
+      "side": 1,
+      "message": "oh, yes, just as you mentioned, the on-disk data format should already been checked before written on the disk, so I suppose we just remove the assert here ?",
+      "parentUuid": "6a85e772_66d90121",
       "revId": "39f5e0e8b49a0155e12d9e2115f9cdf3317e5e4a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
