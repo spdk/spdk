@@ -129,7 +129,6 @@ static void
 spdk_fio_start_poller(struct spdk_bdev_poller **ppoller,
 		      spdk_bdev_poller_fn fn,
 		      void *arg,
-		      uint32_t lcore,
 		      uint64_t period_microseconds)
 {
 	struct spdk_fio_thread *fio_thread;

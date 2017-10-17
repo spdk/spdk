@@ -451,10 +451,9 @@ void
 spdk_bdev_poller_start(struct spdk_bdev_poller **ppoller,
 		       spdk_bdev_poller_fn fn,
 		       void *arg,
-		       uint32_t lcore,
 		       uint64_t period_microseconds)
 {
-	g_bdev_mgr.start_poller_fn(ppoller, fn, arg, lcore, period_microseconds);
+	g_bdev_mgr.start_poller_fn(ppoller, fn, arg, period_microseconds);
 }
 
 void

@@ -367,12 +367,27 @@ int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *d
 				struct spdk_bdev_module_if *module);
 void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
 
+/**
+ * Start a poller on the current thread to periodically call fn.
+ *
+ * \param[out] ppoller Will be filled with initialized poller pointer.
+ * \param fn Function to run periodically.
+ * \param arg Argument to be passed to fn.
+ * \param period_microseconds Delay between calls of the poller function,
+ *                            or 0 to call as frequently as possible.
+ *
+ * The user must call spdk_bdev_poller_stop() to clean up the resources allocated by this function.
+ */
 void spdk_bdev_poller_start(struct spdk_bdev_poller **ppoller,
 			    spdk_bdev_poller_fn fn,
 			    void *arg,
-			    uint32_t lcore,
 			    uint64_t period_microseconds);
 
+/**
+ * Stop a poller started by spdk_bdev_poller_start().
+ *
+ * \param ppoller Poller to stop.
+ */
 void spdk_bdev_poller_stop(struct spdk_bdev_poller **ppoller);
 
 /**
