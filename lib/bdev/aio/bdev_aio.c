@@ -312,8 +312,7 @@ bdev_aio_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	spdk_bdev_poller_start(&ch->poller, bdev_aio_poll, ch,
-			       spdk_env_get_current_core(), 0);
+	spdk_bdev_poller_start(&ch->poller, bdev_aio_poll, ch, 0);
 	return 0;
 }
 

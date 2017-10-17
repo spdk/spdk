@@ -129,7 +129,6 @@ static int g_timeout = 0;
 static int g_nvme_adminq_poll_timeout_us = 0;
 static bool g_nvme_hotplug_enabled = false;
 static int g_nvme_hotplug_poll_timeout_us = 0;
-static int g_nvme_hotplug_poll_core = 0;
 static struct spdk_bdev_poller *g_hotplug_poller;
 static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -499,8 +498,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	spdk_bdev_poller_start(&ch->poller, bdev_nvme_poll, ch,
-			       spdk_env_get_current_core(), 0);
+	spdk_bdev_poller_start(&ch->poller, bdev_nvme_poll, ch, 0);
 	return 0;
 }
 
@@ -849,7 +847,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	spdk_bdev_poller_start(&nvme_ctrlr->adminq_timer_poller, bdev_nvme_poll_adminq, ctrlr,
-			       spdk_env_get_current_core(), g_nvme_adminq_poll_timeout_us);
+			       g_nvme_adminq_poll_timeout_us);
 
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
@@ -1029,12 +1027,6 @@ bdev_nvme_library_init(void)
 		g_nvme_hotplug_poll_timeout_us = 100000;
 	}
 
-	g_nvme_hotplug_poll_core = spdk_conf_section_get_intval(sp, "HotplugPollCore");
-	if (g_nvme_hotplug_poll_core <= 0) {
-		g_nvme_hotplug_poll_core = spdk_env_get_current_core();
-	}
-
-
 	for (i = 0; i < NVME_MAX_CONTROLLERS; i++) {
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
 		if (val == NULL) {
@@ -1084,7 +1076,6 @@ bdev_nvme_library_init(void)
 
 	if (g_nvme_hotplug_enabled) {
 		spdk_bdev_poller_start(&g_hotplug_poller, bdev_nvme_hotplug, NULL,
-				       g_nvme_hotplug_poll_core,
 				       g_nvme_hotplug_poll_timeout_us);
 	}
 
