@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0f6ef8a3_d259d045",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-17T12:16:34Z",
+      "side": 1,
+      "message": "ack, will remove",
+      "parentUuid": "c546aa53_f9b6b1c5",
+      "range": {
+        "startLine": 202,
+        "startChar": 25,
+        "endLine": 202,
+        "endChar": 42
+      },
+      "revId": "3e17ac9022f32bf8275adbbbbbf6c8ff0b5619be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b742b2f_26a37af0",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 1
@@ -87,6 +111,30 @@
         "startChar": 59,
         "endLine": 176,
         "endChar": 60
+      },
+      "revId": "3e17ac9022f32bf8275adbbbbbf6c8ff0b5619be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "345887cd_39f21484",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_dev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-17T12:16:34Z",
+      "side": 1,
+      "message": "technically, as it\u0027s done currently, there is no difference.\nthis is stated here separately just for the *user*.",
+      "parentUuid": "614bb7ca_0ed76fdf",
+      "range": {
+        "startLine": 175,
+        "startChar": 62,
+        "endLine": 176,
+        "endChar": 25
       },
       "revId": "3e17ac9022f32bf8275adbbbbbf6c8ff0b5619be",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
