@@ -165,7 +165,18 @@ struct virtio_req {
 uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 		uint16_t nb_pkts);
 
-uint16_t virtio_xmit_pkts(struct virtqueue *vq, struct virtio_req *req);
+/**
+ * Put given request into the virtqueue.  The virtio device owning
+ * the virtqueue must be started. This will also send an interrupt unless
+ * the host explicitly set VRING_USED_F_NO_NOTIFY in virtqueue flags.
+ *
+ * \param vq virtio queue
+ * \param req virtio request
+ * \return 0 on success, negative errno on error. In case the ring is full
+ * or no free descriptors are available -ENOMEM is returned. If virtio
+ * device owning the virtqueue is not started -EIO is returned.
+ */
+int virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req);
 
 int virtio_dev_init(struct virtio_dev *hw, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);
