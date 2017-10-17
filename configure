@@ -31,6 +31,8 @@ function usage()
 	echo "                           example: /usr/share/dpdk/x86_64-default-linuxapp-gcc"
 	echo " fio                       Required to build fio_plugin."
 	echo "                           example: /usr/src/fio"
+	echo " virtio                    Required to build vhost initiator (Virtio) bdev module."
+	echo "                           No path required."
 	echo " nvml                      Required to build persistent memory bdev."
 	echo "                           example: /usr/share/nvml"
 	echo " rbd                       [disabled]"
@@ -110,6 +112,12 @@ for i in "$@"; do
 			;;
 		--without-dpdk)
 			CONFIG_DPDK_DIR=
+			;;
+		--with-virtio)
+			CONFIG_VIRTIO=y
+			;;
+		--without-virtio)
+			CONFIG_VIRTIO=n
 			;;
 		--with-nvml)
 			CONFIG_NVML=y
@@ -217,6 +225,9 @@ if [ -n "$CONFIG_ENV" ]; then
 fi
 if [ -n "$CONFIG_DPDK_DIR" ]; then
 	echo "CONFIG_DPDK_DIR?=$CONFIG_DPDK_DIR" >> CONFIG.local
+fi
+if [ -n "$CONFIG_VIRTIO" ]; then
+	echo "CONFIG_VIRTIO?=$CONFIG_VIRTIO" >> CONFIG.local
 fi
 if [ -n "$CONFIG_NVML" ]; then
 	echo "CONFIG_NVML?=$CONFIG_NVML" >> CONFIG.local
