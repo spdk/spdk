@@ -50,6 +50,9 @@ struct virtqueue;
 /* Extra status define for readability */
 #define VIRTIO_CONFIG_S_RESET 0
 
+/* Number of non-request queues - eventq and controlq */
+#define SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED 2
+
 struct virtio_pci_ops {
 	void (*read_dev_cfg)(struct virtio_dev *hw, size_t offset,
 			     void *dst, int len);
