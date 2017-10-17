@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99d26fa7_4a10f73e",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-17T20:12:53Z",
+      "side": 0,
+      "message": "Based on my reading of the code, owner_lcore is always the current core here - is that correct?",
+      "revId": "80b44ea20fc0c1205e10966327362e769df57bb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70bcd0f2_000d980a",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-17T20:12:53Z",
+      "side": 0,
+      "message": "Same question here.",
+      "revId": "80b44ea20fc0c1205e10966327362e769df57bb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
