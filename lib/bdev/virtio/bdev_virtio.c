@@ -119,7 +119,7 @@ struct bdev_virtio_io_channel {
 	struct virtqueue	*vq;
 };
 
-static void scan_target(struct virtio_scsi_scan_base *base);
+static int scan_target(struct virtio_scsi_scan_base *base);
 
 static int
 bdev_virtio_get_ctx_size(void)
@@ -549,7 +549,10 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 
 	base->target++;
 	if (base->target < BDEV_VIRTIO_MAX_TARGET) {
-		scan_target(base);
+		rc = scan_target(base);
+		if (rc != 0) {
+			assert(false);
+		}
 		return;
 	}
 
@@ -587,6 +590,7 @@ send_read_cap_10(struct virtio_scsi_scan_base *base, uint8_t target_id, struct v
 {
 	struct iovec *iov = vreq->iov;
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	int rc;
 
 	memset(req, 0, sizeof(*req));
 	req->lun[0] = 1;
@@ -595,7 +599,10 @@ send_read_cap_10(struct virtio_scsi_scan_base *base, uint8_t target_id, struct v
 	iov[0].iov_len = 8;
 	req->cdb[0] = SPDK_SBC_READ_CAPACITY_10;
 
-	virtio_xmit_pkt(base->vq, vreq);
+	rc = virtio_xmit_pkt(base->vq, vreq);
+	if (rc != 0) {
+		assert(false);
+	}
 }
 
 static void
@@ -603,6 +610,7 @@ send_read_cap_16(struct virtio_scsi_scan_base *base, uint8_t target_id, struct v
 {
 	struct iovec *iov = vreq->iov;
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	int rc;
 
 	memset(req, 0, sizeof(*req));
 	req->lun[0] = 1;
@@ -613,7 +621,10 @@ send_read_cap_16(struct virtio_scsi_scan_base *base, uint8_t target_id, struct v
 	req->cdb[1] = SPDK_SBC_SAI_READ_CAPACITY_16;
 	to_be32(&req->cdb[10], iov[0].iov_len);
 
-	virtio_xmit_pkt(base->vq, vreq);
+	rc = virtio_xmit_pkt(base->vq, vreq);
+	if (rc != 0) {
+		assert(false);
+	}
 }
 
 static int
@@ -757,7 +768,7 @@ bdev_scan_poll(void *arg)
 	}
 }
 
-static void
+static int
 scan_target(struct virtio_scsi_scan_base *base)
 {
 	struct iovec *iov;
@@ -791,7 +802,7 @@ scan_target(struct virtio_scsi_scan_base *base)
 	cdb->opcode = SPDK_SPC_INQUIRY;
 	cdb->alloc_len[1] = 255;
 
-	virtio_xmit_pkt(base->vq, vreq);
+	return virtio_xmit_pkt(base->vq, vreq);
 }
 
 static int
@@ -914,7 +925,11 @@ bdev_virtio_initialize(void)
 		spdk_bdev_poller_start(&vq->poller, bdev_scan_poll, base,
 				       vq->owner_lcore, 0);
 
-		scan_target(base);
+		rc = scan_target(base);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to start target scan.\n");
+			goto out;
+		}
 	}
 
 	return 0;
