@@ -949,12 +949,14 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 	int op;
 	int cmd_chosen = 0;
 	char resp;
+	bool cfg_specified = false;
 
 	while ((op = getopt(argc, argv, "c:d:f:hil:m:n:p:r:s:ST:Xx:")) != -1) {
 		switch (op) {
 		case 'c':
 			if (cli_context->app_started == false) {
 				cmd_chosen++;
+				cfg_specified = true;
 				cli_context->config_file = optarg;
 			} else {
 				usage(cli_context, "ERROR: -c option not valid during shell mode.\n");
@@ -1077,10 +1079,8 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			usage(cli_context, "ERROR: invalid option\n");
 		}
 		/* config file is the only option that can be combined */
-		if (op != 'c') {
-			if (cmd_chosen > 1) {
-				usage(cli_context, "Error: Please choose only one command\n");
-			}
+		if (cfg_specified == false  && cmd_chosen > 1) {
+			usage(cli_context, "Error: Please choose only one command\n");
 		}
 	}
 
