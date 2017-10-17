@@ -94,7 +94,7 @@ enum spdk_log_level spdk_log_get_print_level(void);
 void spdk_log(enum spdk_log_level level, const char *file, const int line, const char *func,
 	      const char *format, ...) __attribute__((__format__(__printf__, 5, 6)));
 
-void spdk_trace_dump(FILE *fp, const char *label, const uint8_t *buf, size_t len);
+void spdk_trace_dump(FILE *fp, const char *label, const void *buf, size_t len);
 
 bool spdk_log_get_trace_flag(const char *flag);
 int spdk_log_set_trace_flag(const char *flag);

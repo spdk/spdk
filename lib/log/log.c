@@ -166,7 +166,7 @@ fdump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
 }
 
 void
-spdk_trace_dump(FILE *fp, const char *label, const uint8_t *buf, size_t len)
+spdk_trace_dump(FILE *fp, const char *label, const void *buf, size_t len)
 {
 	fdump(fp, label, buf, len);
 }
