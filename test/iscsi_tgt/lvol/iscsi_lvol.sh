@@ -35,6 +35,7 @@ echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
 
+timing_enter setup
 $rpc_py add_portal_group 1 $TARGET_IP:$PORT
 for i in `seq 0 9`; do
     INITIATOR_TAG=$((i+2))
@@ -48,12 +49,18 @@ for i in `seq 0 9`; do
     done
     $rpc_py construct_target_node Target$i Target${i}_alias "$LUNs" "1:$INITIATOR_TAG" 256 1 0 0 0
 done
+timing_exit setup
+
 sleep 1
 
+timing_enter discovery
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
 iscsiadm -m node --login -p $TARGET_IP:$PORT
+timing_exit discovery
 
+timing_enter fio
 $fio_py 131072 8 randwrite 10 verify
+timing_exit fio
 
 rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
