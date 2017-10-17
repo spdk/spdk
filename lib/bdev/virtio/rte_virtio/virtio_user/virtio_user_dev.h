@@ -62,7 +62,21 @@ struct virtio_user_dev {
 
 int virtio_user_start_device(struct virtio_user_dev *dev);
 int virtio_user_stop_device(struct virtio_user_dev *dev);
-struct virtio_dev *virtio_user_dev_init(char *path,  uint16_t requested_queues, uint32_t queue_size);
+
+/**
+ * Connect to a vhost-user device and create corresponding virtio_dev.
+ *
+ * \param path path to the Unix domain socket of the vhost-user device
+ * \param requested_queues maximum number of request queues that this
+ * device will support
+ * \param queue_size size of each of the queues
+ * \param fixed_queue_num number of queues preceeding the first
+ * request queue. For Virtio-SCSI this is equal to 2, as there are
+ * additional event and control queues.
+ * \return virtio device
+ */
+struct virtio_dev *virtio_user_dev_init(char *path, uint16_t requested_queues,
+					uint32_t queue_size, uint16_t fixed_queue_num);
 void virtio_user_dev_uninit(struct virtio_user_dev *dev);
 
 #endif

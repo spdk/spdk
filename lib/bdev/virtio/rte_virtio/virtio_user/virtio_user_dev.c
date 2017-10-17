@@ -176,7 +176,8 @@ virtio_user_dev_setup(struct virtio_user_dev *dev)
 }
 
 struct virtio_dev *
-virtio_user_dev_init(char *path, uint16_t requested_queues, uint32_t queue_size)
+virtio_user_dev_init(char *path, uint16_t requested_queues,
+		     uint32_t queue_size, uint16_t fixed_queue_num)
 {
 	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
@@ -211,12 +212,12 @@ virtio_user_dev_init(char *path, uint16_t requested_queues, uint32_t queue_size)
 	}
 
 	if (requested_queues > max_queues) {
-		SPDK_ERRLOG("requested %"PRIu16" queues but only %"PRIu64" available\n",
+		SPDK_ERRLOG("requested %"PRIu16" request queues but only %"PRIu64" available\n",
 			     requested_queues, max_queues);
 		goto err;
 	}
 
-	vdev->max_queues = requested_queues;
+	vdev->max_queues = fixed_queue_num + requested_queues;
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
 		spdk_strerror_r(errno, err_str, sizeof(err_str));
