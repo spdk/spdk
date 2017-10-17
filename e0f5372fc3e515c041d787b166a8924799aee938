@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64e0bbdd_e466df01",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 83
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-17T21:52:29Z",
+      "side": 1,
+      "message": "Log needs a \\n",
+      "revId": "e0f5372fc3e515c041d787b166a8924799aee938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81dfc2e7_e3063552",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 83
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-17T21:52:29Z",
+      "side": 1,
+      "message": "Before we read from attr, we should verify that the buffer is valid - something like:\n\n    if (value_len !\u003d UUID_STRING_LEN || attr[UUID_STRING_LEN - 1] !\u003d \u0027\\0\u0027) {\n        // error\n    }\n\nOtherwise, if the xattr was corrupted on disk (or maliciously modified), uuid_parse() could read past the end of the buffer  and potentially crash.",
+      "revId": "e0f5372fc3e515c041d787b166a8924799aee938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
