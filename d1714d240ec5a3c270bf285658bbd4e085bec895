@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8922347_738c58ef",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T17:35:41Z",
+      "side": 1,
+      "message": "check return code so we can fail the bdev_io if the ring is somehow full",
+      "revId": "d1714d240ec5a3c270bf285658bbd4e085bec895",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f7ea5ee_9dfbba20",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T17:35:41Z",
+      "side": 1,
+      "message": "ring size is hardcoded to 16 below - why make this an array of 32?",
+      "revId": "d1714d240ec5a3c270bf285658bbd4e085bec895",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffe0a7f2_bf40a22e",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T17:35:41Z",
+      "side": 1,
+      "message": "should this return here so we don\u0027t proceed?  i think we need an error message too\n\ni think if we cannot acquire the CONTROLQ for some reason, we should not still create a poller for it - maybe you just continue without a CONTROLQ but really if we cannot get the CONTROLQ something very bad has gone wrong and we should just return and not add this bdev",
+      "revId": "d1714d240ec5a3c270bf285658bbd4e085bec895",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bab92ef_cb91a1c4",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 901,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T17:35:41Z",
+      "side": 1,
+      "message": "we should add a spdk_ring_count() instead in env.h, using rte_ring_count for implementation\n\ni\u0027ll leave it up to you if you want to add it - maybe comment that there is no spdk_ring_count so you have to do a dequeue instead",
+      "revId": "d1714d240ec5a3c270bf285658bbd4e085bec895",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
