@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a91cfdbf_e6a3bcac",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T22:58:16Z",
+      "side": 1,
+      "message": "can you just keep the print_cmds() function and call it from here?\n\nif you want to inline the function, let\u0027s make that a separate patch - this patch already is almost 500 lines in one file",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5663d7e_5003a27e",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1043,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T22:58:16Z",
+      "side": 1,
+      "message": "how is this related to script mode?",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee83facf_14cb8bd6",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1304,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T22:58:16Z",
+      "side": 1,
+      "message": "what does this line do?",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd5d7ee5_88e786c7",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1388,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T22:58:16Z",
+      "side": 1,
+      "message": "I\u0027d suggest just allocating the cli_context first - if that fails, you can just exit\n\nthen you can just assert(cli_context !\u003d NULL) in usage() and avoid all of the extra cli_context checks",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebc47882_7d93d4db",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1431,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T22:58:16Z",
+      "side": 1,
+      "message": "global",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
