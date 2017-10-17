@@ -753,12 +753,21 @@ spdk_iscsi_conns_cleanup(void)
 }
 
 static void
+spdk_iscsi_conn_check_shutdown_cb(void *arg1, void *arg2)
+{
+	spdk_iscsi_conns_cleanup();
+	spdk_app_stop(0);
+}
+
+static void
 spdk_iscsi_conn_check_shutdown(void *arg)
 {
+	struct spdk_event *event;
+
 	if (spdk_iscsi_get_active_conns() == 0) {
-		spdk_poller_unregister(&g_shutdown_timer, NULL);
-		spdk_iscsi_conns_cleanup();
-		spdk_app_stop(0);
+		event = spdk_event_allocate(spdk_env_get_current_core(), spdk_iscsi_conn_check_shutdown_cb, NULL,
+					    NULL);
+		spdk_poller_unregister(&g_shutdown_timer, event);
 	}
 }
 
