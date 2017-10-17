@@ -17,6 +17,7 @@ case $1 in
 		echo "  -ils|--integrity-lvol-scsi  for running an integrity test with vhost scsi and lvol backends"
 		echo "  -ilb|--integrity-lvol-blk   for running an integrity test with vhost blk and lvol backends"
 		echo "  -hp|--hotplug               for running hotplug tests"
+		echo "  -ro|--readonly              for running readonly test for vhost blk"
 		echo "  -h |--help                  prints this message"
 		echo ""
 		echo "Environment:"
@@ -113,6 +114,10 @@ case $1 in
 			--vm=3,$VM_IMAGE,Nvme0n1p6:Nvme0n1p7 \
 			--test-type=spdk_vhost_scsi \
 			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
+		;;
+	-ro|--readonly)
+		echo 'Running readonly tests suite...'
+		./readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1_size_1G
 		;;
 	*)
 		echo "unknown test type: $1"
