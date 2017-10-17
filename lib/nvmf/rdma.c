@@ -135,6 +135,9 @@ struct spdk_nvmf_rdma_request {
 	} data;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
+
+	/** Entry to the list need_buf of struct spdk_rdma_mgmt_channel. */
+	TAILQ_ENTRY(spdk_nvmf_rdma_request) buf_link;
 };
 
 struct spdk_nvmf_rdma_qpair {
@@ -165,9 +168,6 @@ struct spdk_nvmf_rdma_qpair {
 
 	/* Requests that are not in use */
 	TAILQ_HEAD(, spdk_nvmf_rdma_request)	free_queue;
-
-	/* Requests that are waiting to obtain a data buffer */
-	TAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_data_buf_queue;
 
 	/* Requests that are waiting to perform an RDMA READ or WRITE */
 	TAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_rdma_rw_queue;
@@ -252,7 +252,70 @@ struct spdk_nvmf_rdma_transport {
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_device)	devices;
 	TAILQ_HEAD(, spdk_nvmf_rdma_port)	ports;
+
+	/* Channel for the transport */
+	struct spdk_io_channel *mgmt_channel;
 };
+
+typedef TAILQ_HEAD(, spdk_nvmf_rdma_request) nvmf_rdma_req_tailq_t;
+
+struct spdk_nvmf_rdma_mgmt_channel {
+	nvmf_rdma_req_tailq_t need_buf;
+};
+
+static int
+spdk_nvmf_rdma_mgmt_channel_create(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_rdma_mgmt_channel *ch = ctx_buf;
+
+	TAILQ_INIT(&ch->need_buf);
+	return 0;
+}
+
+static void
+spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_rdma_mgmt_channel *ch = ctx_buf;
+
+	if (!TAILQ_EMPTY(&ch->need_buf)) {
+		SPDK_ERRLOG("Pending I/O list wasn't empty on channel destruction\n");
+	}
+}
+
+static void
+spdk_nvmf_rdma_req_get_buf(struct spdk_nvmf_rdma_transport *rtransport,
+			   struct spdk_nvmf_rdma_request *rdma_req)
+{
+	struct spdk_nvmf_rdma_mgmt_channel *ch;
+
+	ch = spdk_io_channel_get_ctx(rtransport->mgmt_channel);
+	assert(ch != NULL);
+
+	rdma_req->req.data = spdk_mempool_get(rtransport->data_buf_pool);
+	if (!rdma_req) {
+		TAILQ_INSERT_TAIL(&ch->need_buf, rdma_req, buf_link);
+	}
+}
+
+static void
+spdk_nvmf_rdma_req_put_buf(struct spdk_nvmf_rdma_transport *rtransport,
+			   struct spdk_nvmf_rdma_request *rdma_req)
+{
+	struct spdk_nvmf_rdma_request *tmp;
+	void *buf;
+	struct spdk_nvmf_rdma_mgmt_channel *ch;
+
+	buf = rdma_req->req.data;
+	ch = spdk_io_channel_get_ctx(rtransport->mgmt_channel);
+
+	if (TAILQ_EMPTY(&ch->need_buf)) {
+		spdk_mempool_put(rtransport->data_buf_pool, buf);
+	} else {
+		tmp = TAILQ_FIRST(&ch->need_buf);
+		TAILQ_REMOVE(&ch->need_buf, tmp, buf_link);
+		tmp->req.data = buf;
+	}
+}
 
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rdma_qpair)
@@ -314,7 +377,6 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 	rdma_qpair->max_rw_depth = max_rw_depth;
 	TAILQ_INIT(&rdma_qpair->incoming_queue);
 	TAILQ_INIT(&rdma_qpair->free_queue);
-	TAILQ_INIT(&rdma_qpair->pending_data_buf_queue);
 	TAILQ_INIT(&rdma_qpair->pending_rdma_rw_queue);
 
 	rdma_qpair->cq = ibv_create_cq(id->verbs, max_queue_depth * 3, rdma_qpair, NULL, 0);
@@ -865,7 +927,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		rdma_req->req.length = sgl->keyed.length;
-		rdma_req->req.data = spdk_mempool_get(rtransport->data_buf_pool);
+		spdk_nvmf_rdma_req_get_buf(rtransport, rdma_req);
 		if (!rdma_req->req.data) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
@@ -967,20 +1029,13 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 
 			rdma_req->state = RDMA_REQUEST_STATE_NEED_BUFFER;
-			TAILQ_INSERT_TAIL(&rqpair->pending_data_buf_queue, rdma_req, link);
 			break;
 		case RDMA_REQUEST_STATE_NEED_BUFFER:
 			assert(rdma_req->req.xfer != SPDK_NVME_DATA_NONE);
 
-			if (rdma_req != TAILQ_FIRST(&rqpair->pending_data_buf_queue)) {
-				/* This request needs to wait in line to obtain a buffer */
-				break;
-			}
-
 			/* Try to get a data buffer */
 			rc = spdk_nvmf_rdma_request_parse_sgl(rtransport, device, rdma_req);
 			if (rc < 0) {
-				TAILQ_REMOVE(&rqpair->pending_data_buf_queue, rdma_req, link);
 				rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
 				break;
@@ -990,8 +1045,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				/* No buffers available. */
 				break;
 			}
-
-			TAILQ_REMOVE(&rqpair->pending_data_buf_queue, rdma_req, link);
 
 			/* If data is transferring from host to controller and the data didn't
 			 * arrive using in capsule data, we need to do a transfer from the host.
@@ -1067,8 +1120,9 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 			if (rdma_req->data_from_pool) {
 				/* Put the buffer back in the pool */
-				spdk_mempool_put(rtransport->data_buf_pool, rdma_req->req.data);
 				rdma_req->data_from_pool = false;
+				spdk_nvmf_rdma_req_put_buf(rtransport, rdma_req);
+
 			}
 			rdma_req->req.length = 0;
 			rdma_req->req.data = NULL;
@@ -1139,6 +1193,17 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
 		free(rtransport);
 		return NULL;
+	}
+
+	spdk_io_device_register(rtransport, spdk_nvmf_rdma_mgmt_channel_create,
+				spdk_nvmf_rdma_mgmt_channel_destroy,
+				sizeof(struct spdk_nvmf_rdma_mgmt_channel));
+
+
+	rtransport->mgmt_channel = spdk_get_io_channel(rtransport);
+	if (!rtransport->mgmt_channel) {
+		free(rtransport);
+		return -1;
 	}
 
 	contexts = rdma_get_devices(NULL);
@@ -1212,6 +1277,7 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 	}
 
 	spdk_mempool_free(rtransport->data_buf_pool);
+	spdk_io_device_unregister(rtransport, NULL);
 	free(rtransport);
 
 	return 0;
@@ -1621,13 +1687,6 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 
 	/* We process I/O in the pending_rdma_rw queue at the highest priority. */
 	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->pending_rdma_rw_queue, link, req_tmp) {
-		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false) {
-			break;
-		}
-	}
-
-	/* The second highest priority is I/O waiting on memory buffers. */
-	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->pending_data_buf_queue, link, req_tmp) {
 		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false) {
 			break;
 		}
