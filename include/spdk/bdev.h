@@ -115,6 +115,8 @@ struct spdk_bdev_io_stat {
 struct spdk_bdev_poller;
 
 typedef void (*spdk_bdev_init_cb)(void *cb_arg, int rc);
+typedef void (*spdk_bdev_fini_cb)(void);
+typedef void (*spdk_bdev_module_fini_next)(void *fn_next);
 
 typedef void (*spdk_bdev_poller_fn)(void *arg);
 typedef void (*spdk_bdev_poller_start_cb)(struct spdk_bdev_poller **ppoller,
@@ -127,7 +129,7 @@ typedef void (*spdk_bdev_poller_stop_cb)(struct spdk_bdev_poller **ppoller);
 void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 			  spdk_bdev_poller_start_cb start_poller_fn,
 			  spdk_bdev_poller_stop_cb stop_poller_fn);
-void spdk_bdev_finish(void);
+void spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, spdk_bdev_module_fini_next fn_next);
 void spdk_bdev_config_text(FILE *fp);
 
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
