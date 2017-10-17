@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "b0eb5361_93fc5a5f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 1612,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-17T15:21:06Z",
+      "side": 1,
+      "message": "That\u0027s what I assumed but wanted to make sure.  Maybe we can have  a #define SPDK_INITIAL_VERSION 1 and change the condition to \u003e SPDK_BS_VERSION || \u003c SPDK_INITIAL_VERSION so its clearer that this isn\u0027t some special case?",
+      "parentUuid": "703d1bf7_95242bea",
+      "revId": "b15a12de807bcadb60d7fa2892d76d0bc3a44796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "350bebda_6e056334",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 32
