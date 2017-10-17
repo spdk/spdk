@@ -49,7 +49,7 @@
 int
 spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 {
-	int i, rc = 0;
+	int i, rc = -1;
 	const char *val = NULL;
 	int num_initiator_names;
 	int num_initiator_masks;
