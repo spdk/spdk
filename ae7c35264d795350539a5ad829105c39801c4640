@@ -2,6 +2,98 @@
   "comments": [
     {
       "key": {
+        "uuid": "90da3de6_98117997",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "double space",
+      "range": {
+        "startLine": 436,
+        "startChar": 43,
+        "endLine": 436,
+        "endChar": 45
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "64cf0074_45868fc7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "introduced",
+      "range": {
+        "startLine": 436,
+        "startChar": 45,
+        "endLine": 436,
+        "endChar": 55
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c5c6a6e_240fc1e3",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "is done",
+      "range": {
+        "startLine": 440,
+        "startChar": 22,
+        "endLine": 440,
+        "endChar": 35
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b655a0ae_6cc59736",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "in test cases you use vhost app",
+      "range": {
+        "startLine": 440,
+        "startChar": 36,
+        "endLine": 440,
+        "endChar": 66
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5ffbc3b_f4740867",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 1
@@ -18,6 +110,52 @@
         "startChar": 0,
         "endLine": 442,
         "endChar": 45
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5deba9d1_fba4a6ed",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "it won\u0027t work on malloc as this is not persistent memory",
+      "range": {
+        "startLine": 442,
+        "startChar": 30,
+        "endLine": 442,
+        "endChar": 36
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bc21b93_a0341209",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "not correct English sentence",
+      "range": {
+        "startLine": 444,
+        "startChar": 38,
+        "endLine": 445,
+        "endChar": 48
       },
       "revId": "ae7c35264d795350539a5ad829105c39801c4640",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -48,6 +186,29 @@
     },
     {
       "key": {
+        "uuid": "e0704f84_73b63b30",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "again: won\u0027t work on malloc",
+      "range": {
+        "startLine": 454,
+        "startChar": 11,
+        "endLine": 454,
+        "endChar": 17
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "60ac9778_43fbb67c",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 1
@@ -71,6 +232,52 @@
     },
     {
       "key": {
+        "uuid": "565c7cab_fa872d3a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "won\u0027t work on malloc",
+      "range": {
+        "startLine": 473,
+        "startChar": 51,
+        "endLine": 473,
+        "endChar": 57
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f38df36_2eaa157e",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "same thing twice",
+      "range": {
+        "startLine": 473,
+        "startChar": 2,
+        "endLine": 473,
+        "endChar": 39
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22afe867_6ae6c903",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 1
@@ -82,6 +289,29 @@
       "writtenOn": "2017-10-17T12:43:53Z",
       "side": 1,
       "message": "get_bdevs() should be issued as only then we can be sure that lvol persisted after restart.",
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a9098e3_985588b4",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "it would be good to check lvol presence using get_bdevs before trying to delete it",
+      "range": {
+        "startLine": 480,
+        "startChar": 1,
+        "endLine": 480,
+        "endChar": 18
+      },
       "revId": "ae7c35264d795350539a5ad829105c39801c4640",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -111,6 +341,23 @@
     },
     {
       "key": {
+        "uuid": "e49b8fba_e5d0cac3",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "missing name for test case 3",
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a717277_47c6eb30",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 1
@@ -127,6 +374,52 @@
         "startChar": 0,
         "endLine": 490,
         "endChar": 16
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bdb8d7c6_e97cfca7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "won\u0027t work on malloc",
+      "range": {
+        "startLine": 494,
+        "startChar": 44,
+        "endLine": 494,
+        "endChar": 50
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c83b4577_d8db712c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "it would be good to check lvol presence using get_bdevs before trying to delete it",
+      "range": {
+        "startLine": 502,
+        "startChar": 2,
+        "endLine": 502,
+        "endChar": 19
       },
       "revId": "ae7c35264d795350539a5ad829105c39801c4640",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -157,6 +450,92 @@
     },
     {
       "key": {
+        "uuid": "a525ed21_3fcd6dc6",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "missing name for test case",
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5ef218b_78c018a8",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "won\u0027t work on malloc",
+      "range": {
+        "startLine": 515,
+        "startChar": 11,
+        "endLine": 515,
+        "endChar": 17
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38e03a73_e843a7db",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 518,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "two times?",
+      "range": {
+        "startLine": 517,
+        "startChar": 0,
+        "endLine": 518,
+        "endChar": 32
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c439953d_b61cefae",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "it would be good to check lvol presence using get_bdevs before trying to delete it",
+      "range": {
+        "startLine": 525,
+        "startChar": 0,
+        "endLine": 525,
+        "endChar": 19
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f649338b_f7d30574",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 1
@@ -180,6 +559,29 @@
     },
     {
       "key": {
+        "uuid": "fdfef07c_281ece6f",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "resize is not supported for this release",
+      "range": {
+        "startLine": 534,
+        "startChar": 4,
+        "endLine": 534,
+        "endChar": 21
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fe7c633_5e14b0b3",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 1
@@ -191,6 +593,29 @@
       "writtenOn": "2017-10-17T12:43:53Z",
       "side": 1,
       "message": "Please add a name. Not sure what is accomplished here comparing to test case 2 ? That get_lvol_stores is called once more after destroying lvol store ? If yes, I don\u0027t think it is needed.",
+      "range": {
+        "startLine": 570,
+        "startChar": 0,
+        "endLine": 570,
+        "endChar": 16
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40c9cb5e_e064e60c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "this test case is useless in terms tasting and previous test cases",
       "range": {
         "startLine": 570,
         "startChar": 0,
@@ -226,6 +651,29 @@
     },
     {
       "key": {
+        "uuid": "6b8ceb2c_42406200",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "nested lvols are not supported for this release",
+      "range": {
+        "startLine": 590,
+        "startChar": 4,
+        "endLine": 590,
+        "endChar": 35
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ffc250b_baf328cd",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 1
@@ -240,6 +688,29 @@
       "range": {
         "startLine": 619,
         "startChar": 0,
+        "endLine": 619,
+        "endChar": 16
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e54d565_27264248",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:45:38Z",
+      "side": 1,
+      "message": "same here",
+      "range": {
+        "startLine": 619,
+        "startChar": 5,
         "endLine": 619,
         "endChar": 16
       },
