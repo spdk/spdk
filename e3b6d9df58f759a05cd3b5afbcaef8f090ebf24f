@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6928fbf5_75abf9c9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1668,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-17T15:47:32Z",
+      "side": 1,
+      "message": "the logic here of a while() followed by an increment at the end with a check and a break is a little odd.  I think you\u0027d be better off having a do  and advancing the * in each of the valid if conditions then the condition at the end of the do becomes the if check you are using at the end now to decide when to break.",
+      "revId": "e3b6d9df58f759a05cd3b5afbcaef8f090ebf24f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2bd9e9b_cb75a624",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1689,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-17T15:47:32Z",
+      "side": 1,
+      "message": "I think this assert should be an error and the rebuild process should halt.  Same with the condition below where you know you have run into an unknown desc type",
+      "revId": "e3b6d9df58f759a05cd3b5afbcaef8f090ebf24f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9090354a_1947063c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1715,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-17T15:47:32Z",
+      "side": 1,
+      "message": "this should use _spdk_bs_page_to_blobid() and can be combined into the next condition to eliniate the local id variable",
+      "revId": "e3b6d9df58f759a05cd3b5afbcaef8f090ebf24f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9191497_c321b32f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1782,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-17T15:47:32Z",
+      "side": 1,
+      "message": "combine these two into do...while() ?",
+      "revId": "e3b6d9df58f759a05cd3b5afbcaef8f090ebf24f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2310ef63_ce328120",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1897,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-17T15:47:32Z",
+      "side": 1,
+      "message": "yeah, this is a minor nit but maybe reverse these so the common (positive) condition is true (reverse your logic)",
+      "revId": "e3b6d9df58f759a05cd3b5afbcaef8f090ebf24f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0e33c49_9e9ee493",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1337,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-17T15:47:32Z",
+      "side": 1,
+      "message": "Can you explain the rest of this UT? I was expecting to see everything up to this point and then maybe code that read in the raw metadata here followed by execution of the recovery code and then another raw disk read of the metadata read and a comparison against what was read previously where the only difference would be the clean bit.\n\nYour comments only explain each step, which is already clear, but don\u0027t explain the sequences - what are you doing each time (where are you injecting a dirty shutdown, what are you looking for when you re-init) so what you are doing here may be sufficient and/or better than what I suggest but people reading this code shouldn\u0027t have to make assumptions or read each complete sequence to figure that out.",
+      "revId": "e3b6d9df58f759a05cd3b5afbcaef8f090ebf24f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
