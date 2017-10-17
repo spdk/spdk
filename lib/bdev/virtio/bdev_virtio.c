@@ -360,8 +360,7 @@ bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 	ch->vdev = vdev;
 	ch->vq = vq;
 
-	spdk_bdev_poller_start(&vq->poller, bdev_virtio_poll, ch,
-			       vq->owner_lcore, 0);
+	spdk_bdev_poller_start(&vq->poller, bdev_virtio_poll, ch, 0);
 
 	return 0;
 }
@@ -738,9 +737,7 @@ bdev_virtio_initialize(void)
 		vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
 		base->vq = vq;
 		vq->poller_ctx = base;
-		spdk_bdev_poller_start(&vq->poller, bdev_scan_poll, base,
-				       vq->owner_lcore, 0);
-
+		spdk_bdev_poller_start(&vq->poller, bdev_scan_poll, base, 0);
 		scan_target(base);
 	}
 
