@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4bfe4dbd_687f52bf",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:20:01Z",
+      "side": 1,
+      "message": "this should not be here",
+      "range": {
+        "startLine": 72,
+        "startChar": 17,
+        "endLine": 72,
+        "endChar": 27
+      },
+      "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4bcb442b_367ea149",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:20:01Z",
+      "side": 1,
+      "message": "there probably should be this line here:\npid_path \u003d path.join(self.path, \u0027vhost.pid\u0027)",
+      "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3bbb7b6_9f2d8dec",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 441,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:20:01Z",
+      "side": 1,
+      "message": "Nested lvols are not supported for this release. Do we want to have this code anyway?",
+      "range": {
+        "startLine": 404,
+        "startChar": 0,
+        "endLine": 441,
+        "endChar": 25
+      },
+      "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
