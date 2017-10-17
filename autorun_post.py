@@ -1,12 +1,13 @@
 #! /usr/bin/python3
 
+import shutil
 import subprocess
 import argparse
 import os
 import glob
 import re
 
-def main(output_dir, repo_dir):
+def generateCoverageReport(output_dir, repo_dir):
     with open(os.path.join(output_dir, 'coverage.log'), 'w+') as log_file:
         coveragePath = os.path.join(output_dir, '**', 'cov_total.info')
         covfiles = glob.glob(coveragePath, recursive=True)
@@ -46,6 +47,24 @@ def main(output_dir, repo_dir):
         except subprocess.CalledProcessError as e:
             print("genhtml failed", file=log_file)
             print(e, file=log_file)
+
+
+def prepDocumentation(output_dir, repo_dir):
+    # Find one instance of 'doc' output directory and move it to the top level
+    docDirs = glob.glob(os.path.join(output_dir, '*', 'doc'))
+    docDirs.sort()
+    if len(docDirs == 0):
+        return
+
+    print("docDirs: ", docDirs)
+    docDir = docDirs[0]
+    print("docDir: ", docDir)
+    shutil.move(docDir, os.path.join(output_dir, 'doc'))
+
+
+def main(output_dir, repo_dir):
+    generateCoverageReport(output_dir, repo_dir)
+    prepDocumentation(output_dir, repo_dir)
 
 
 if __name__ == "__main__":
