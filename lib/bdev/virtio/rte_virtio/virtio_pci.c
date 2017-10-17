@@ -71,12 +71,6 @@ check_vq_phys_addr_ok(struct virtqueue *vq)
 	return 1;
 }
 
-static struct rte_pci_ioport *
-vtpci_io(struct virtio_dev *vdev)
-{
-	return &g_virtio_driver.internal[vdev->id].io;
-}
-
 static void
 free_virtio_hw(struct virtio_dev *dev)
 {
@@ -92,6 +86,14 @@ free_virtio_hw(struct virtio_dev *dev)
 	}
 
 	free(hw);
+}
+
+#ifdef PCI_LEGACY_SUPPORT
+
+static struct rte_pci_ioport *
+vtpci_io(struct virtio_dev *vdev)
+{
+	return &g_virtio_driver.internal[vdev->id].io;
 }
 
 /*
@@ -274,6 +276,8 @@ const struct virtio_pci_ops legacy_ops = {
 	.notify_queue	= legacy_notify_queue,
 	.dump_json_config = pci_dump_json_config,
 };
+
+#endif /* PCI_LEGACY_SUPPORT */
 
 static inline void
 io_write64_twopart(uint64_t val, uint32_t *lo, uint32_t *hi)
@@ -695,6 +699,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		return 0;
 	}
 
+#ifdef PCI_LEGACY_SUPPORT
 #if 0
 	PMD_INIT_LOG(INFO, "trying with legacy virtio pci.");
 	if (rte_pci_ioport_map(dev, 0, vtpci_io(hw)) < 0) {
@@ -717,6 +722,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	vdev->modern = 0;
 	virtio_dev_pci_init(vdev);
 	return 0;
+#endif
 
 err:
 	free_virtio_hw(vdev);
