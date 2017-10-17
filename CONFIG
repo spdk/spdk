@@ -81,5 +81,8 @@ CONFIG_RBD?=n
 # Build vhost library.
 CONFIG_VHOST?=y
 
+# Build vhost initiator (Virtio) driver.
+CONFIG_VIRTIO?=y
+
 # Build with NVML backends
 CONFIG_NVML?=n
