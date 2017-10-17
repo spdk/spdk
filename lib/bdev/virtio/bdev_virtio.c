@@ -59,6 +59,9 @@
 #define VIRTIO_SCSI_EVENTQ	1
 #define VIRTIO_SCSI_REQUESTQ	2
 
+/* Number of non-request queues - eventq and controlq */
+#define SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED 2
+
 static int bdev_virtio_initialize(void);
 static void bdev_virtio_finish(void);
 
@@ -806,7 +809,8 @@ bdev_virtio_process_config(void)
 			num_queues = 1;
 		}
 
-		vdev = virtio_user_dev_init(path, num_queues + 2, 512);
+		vdev = virtio_user_dev_init(path, num_queues, 512,
+					    SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
 		if (vdev == NULL) {
 			rc = -1;
 			goto out;
@@ -820,7 +824,7 @@ bdev_virtio_process_config(void)
 
 	enable_pci = spdk_conf_section_get_boolval(sp, "Enable", false);
 	if (enable_pci) {
-		rc = vtpci_enumerate_pci();
+		rc = vtpci_enumerate_pci(SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
 	}
 
 out:

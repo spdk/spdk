@@ -132,8 +132,14 @@ vtpci_with_feature(struct virtio_dev *dev, uint64_t bit)
 
 /**
  * Init all compatible Virtio PCI devices.
+ *
+ * \param fixed_queue_num number of queues preceeding the first
+ * request queue. For Virtio-SCSI this is equal to 2, as there are
+ * additional event and control queues.
+ * \return 0 on success, -1 on error. If -1 is returned, no devices
+ * have been initialized.
  */
-int vtpci_enumerate_pci(void);
+int vtpci_enumerate_pci(uint16_t fixed_queue_num);
 
 /**
  * Init virtual PCI layer for given device.  This
