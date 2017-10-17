@@ -1641,10 +1641,17 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 			return -1;
 		}
 
-		phys_addr = spdk_vtophys(virt_addr);
-		if (phys_addr == SPDK_VTOPHYS_ERROR) {
-			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
-			return -1;
+		if (virt_addr == NULL) {
+			sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_BIT_BUCKET;
+			sgl->address = 0;
+		} else {
+			phys_addr = spdk_vtophys(virt_addr);
+			if (phys_addr == SPDK_VTOPHYS_ERROR) {
+				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+				return -1;
+			}
+			sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+			sgl->address = phys_addr;
 		}
 
 		length = spdk_min(remaining_transfer_len, length);
@@ -1652,7 +1659,6 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 
 		sgl->unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
 		sgl->unkeyed.length = length;
-		sgl->address = phys_addr;
 		sgl->unkeyed.subtype = 0;
 
 		sgl++;
