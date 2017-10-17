@@ -1,0 +1,94 @@
+#!/usr/bin/env bash
+set +x
+
+BASE_DIR=$(readlink -f $(dirname $0))
+[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
+
+#TODO: add more options, make debug option
+function usage()
+{
+	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	echo "Shortcut script for automated readonly test fo vhost-block"
+	echo "For test details, check test_plan.md"
+	echo
+	echo "Usage: $(basename $1) [OPTIONS]"
+	echo
+	echo "-h, --help                Print help and exit"
+	echo "-x                        set -x for script debug"
+	exit 0
+}
+
+while getopts 'xh-:' optchar; do
+	case "$optchar" in
+		-)
+		case "$OPTARG" in
+			help) usage $0 ;;
+			*) usage $0 "Invalid argument '$OPTARG'" ;;
+		esac
+		;;
+	h) usage $0 ;;
+	x) enable_script_debug=true ;;
+	*) usage $0 "Invalid argument '$OPTARG'"
+	esac
+done
+
+test_type=spdk_vhost_blk
+
+if [[ $EUID -ne 0 ]]; then
+	echo "Go away user come back as root"
+	exit 1
+fi
+. $BASE_DIR/../common/common.sh
+source $BASE_DIR/common.sh
+
+function blk_ro_tc1()
+{
+	print_tc_name ${FUNCNAME[0]}
+	local vm_no="0"
+	local disk_name="Nvme0n1"
+	local vhost_blk_name="naa.$disk_name.$vm_no"
+
+	$rpc_py get_bdevs
+	$rpc_py construct_vhost_blk_controller $vhost_blk_name $disk_name
+	$rpc_py get_vhost_controllers
+
+#TODO: reduce size of vhost block disk to 1GB
+	setup_cmd="$BASE_DIR/../common/vm_setup.sh $x --work-dir=$TEST_DIR --test-type=$test_type"
+	setup_cmd+=" -f $vm_no"
+#TODO: temporary local path to vm image. maybe add option for specifying path? what's the default path anyway?
+    setup_cmd+=" --os=/home/pniedzwx/data/fedora-25.qcow2"
+    setup_cmd+=" --disk=$disk_name"
+	$setup_cmd
+
+	echo "stating up the VM"
+	$BASE_DIR/../common/vm_run.sh $x --work-dir=$TEST_DIR $vm_no
+	vm_wait_for_boot 600
+	echo "executing script on the VM"
+	vm_ssh $vm_no "bash -s" < $BASE_DIR/disabled_readonly_vm.sh
+	vm_shutdown $vm_no
+#TODO: vm needs to be shut down before removing controller. maybe kill it instead?
+	sleep 6
+
+	$rpc_py remove_vhost_controller $vhost_blk_name
+	$rpc_py construct_vhost_blk_controller -r $vhost_blk_name $disk_name
+	$setup_cmd
+
+	echo "stating up the VM"
+	$BASE_DIR/../common/vm_run.sh $x --work-dir=$TEST_DIR $vm_no
+	vm_wait_for_boot 600
+	echo "executing script on the VM"
+	vm_ssh $vm_no "bash -s" < $BASE_DIR/enabled_readonly_vm.sh
+	vm_shutdown $vm_no
+#TODO this sleep isn't necessary if there isn't a second test case. or maybe kill it instead?
+	sleep 6
+}
+
+function blk_ro_tc2()
+{
+	print_tc_name ${FUNCNAME[0]}
+}
+
+spdk_vhost_run $BASE_DIR
+blk_ro_tc1
+blk_ro_tc2
+spdk_vhost_kill
