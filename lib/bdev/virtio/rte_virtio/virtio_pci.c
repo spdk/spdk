@@ -31,12 +31,17 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 #include <stdint.h>
-
 #include <linux/virtio_scsi.h>
+
+#include <rte_version.h>
 
 #include "spdk/mmio.h"
 
 #include "virtio_pci.h"
+
+#if RTE_VERSION < RTE_VERSION_NUM(17, 05, 0, 4)
+#error SPDK Virtio driver requires DPDK version >= 17.05-rc4
+#endif
 
 struct virtio_driver g_virtio_driver = {
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.init_ctrlrs),
