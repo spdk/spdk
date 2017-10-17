@@ -43,6 +43,10 @@ struct virtio_driver g_virtio_driver = {
 	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.attached_ctrlrs),
 };
 
+struct pci_enum_virtio_ctx {
+	uint16_t fixed_queue_num;
+};
+
 /*
  * Following macros are derived from linux/pci_regs.h, however,
  * we can't simply include that header here, as there is no such
@@ -617,9 +621,19 @@ next:
 	return 0;
 }
 
+static void
+virtio_dev_pci_init(struct virtio_dev *vdev, struct pci_enum_virtio_ctx *virtio_ctx)
+{
+	vtpci_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
+			      &vdev->max_queues, sizeof(vdev->max_queues));
+	vdev->max_queues += virtio_ctx->fixed_queue_num;
+	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+}
+
 static int
 pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
+	struct pci_enum_virtio_ctx *virtio_ctx = ctx;
 	struct virtio_hw *hw;
 	struct virtio_dev *vdev;
 	uint8_t *bar_vaddr;
@@ -661,7 +675,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 			goto err;
 		}
 		vdev->modern = 1;
-		TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+		virtio_dev_pci_init(vdev, virtio_ctx);
 		return 0;
 	}
 
@@ -685,11 +699,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		goto err;
 	}
 	vdev->modern = 0;
-
-	vtpci_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
-			      &vdev->max_queues, sizeof(vdev->max_queues));
-
-	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+	virtio_dev_pci_init(vdev, virtio_ctx);
 	return 0;
 
 err:
@@ -721,14 +731,26 @@ vtpci_init(struct virtio_dev *vdev, const struct virtio_pci_ops *ops)
 }
 
 int
-vtpci_enumerate_pci(void)
+vtpci_enumerate_pci(uint16_t fixed_queue_num)
 {
+	struct pci_enum_virtio_ctx *ctx;
+	int rc;
+
 	if (!spdk_process_is_primary()) {
 		SPDK_WARNLOG("virtio_pci secondary process support is not implemented yet.\n");
 		return 0;
 	}
 
-	return spdk_pci_virtio_enumerate(pci_enum_virtio_probe_cb, NULL);
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("Failed to alloc memory for PCI enumeration.\n");
+		return -1;
+	}
+
+	rc = spdk_pci_virtio_enumerate(pci_enum_virtio_probe_cb, ctx);
+	free(ctx);
+
+	return rc;
 }
 
 const struct virtio_pci_ops *
