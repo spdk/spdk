@@ -46,7 +46,6 @@ for i in `seq 0 9`; do
         lb_guid=$($rpc_py construct_lvol_bdev $ls_guid 10)
         LUNs+="$lb_guid:$j "
     done
-    sleep 0.1
     $rpc_py construct_target_node Target$i Target${i}_alias "$LUNs" "1:$INITIATOR_TAG" 256 1 0 0 0
 done
 sleep 1
