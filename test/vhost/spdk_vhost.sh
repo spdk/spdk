@@ -77,6 +77,10 @@ case $param in
 	--test-type=spdk_vhost_scsi \
 	--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
     ;;
+	-ro|--readonly)
+	echo Running readonly tests suite...
+	./readonly/readonly.sh --image=/home/sys_sgsw/vhost_vm_image.qcow2 --disk==Nvme0n1_size_1G
+	;;
     -h|--help)
 	echo "-i |--integrity             for running an integrity test with vhost scsi"
 	echo "-fs|--fs-integrity-scsi     for running an integrity test with filesystem"
@@ -87,6 +91,7 @@ case $param in
 	echo "-ils|--integrity-lvol-scsi  for running an integrity test with vhost scsi and lvol backends"
 	echo "-ilb|--integrity-lvol-blk   for running an integrity test with vhost blk and lvol backends"
 	echo "-hp|--hotplug               for running hotplug tests"
+	echo "-ro|--readonly              for running readonly test for vhost-block"
 	echo "-h |--help                  prints this message"
     ;;
     *)
