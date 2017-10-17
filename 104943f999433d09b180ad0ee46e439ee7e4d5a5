@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "558a5b62_78707661",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-17T06:48:29Z",
+      "side": 1,
+      "message": "you can get native spdk_pci_device via\nstruct virtio_hw *hw \u003d virtio_dev_get_hw(dev);\nhw-\u003epci_dev",
+      "range": {
+        "startLine": 247,
+        "startChar": 58,
+        "endLine": 247,
+        "endChar": 102
+      },
+      "revId": "104943f999433d09b180ad0ee46e439ee7e4d5a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
