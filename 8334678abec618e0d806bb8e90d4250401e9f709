@@ -16,6 +16,24 @@
       "revId": "8334678abec618e0d806bb8e90d4250401e9f709",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e25bf168_6ee8f6b7",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-17T14:59:51Z",
+      "side": 1,
+      "message": "As Tomek pointed out, we are not setting status in spdk_bdev_io_get_buf, so there is no point of checking it here. \nNote, that we are checking if proper callback was passed to spdk_bdev_io_get_buf.",
+      "parentUuid": "687eb8e7_f7bca201",
+      "revId": "8334678abec618e0d806bb8e90d4250401e9f709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
