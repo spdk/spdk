@@ -370,7 +370,6 @@ void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
 void spdk_bdev_poller_start(struct spdk_bdev_poller **ppoller,
 			    spdk_bdev_poller_fn fn,
 			    void *arg,
-			    uint32_t lcore,
 			    uint64_t period_microseconds);
 
 void spdk_bdev_poller_stop(struct spdk_bdev_poller **ppoller);
