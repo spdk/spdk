@@ -1,0 +1,274 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5ffbc3b_f4740867",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "Tasting cannot be performed using malloc at all. Some kind of persistent device is required - such as NVMe device.",
+      "range": {
+        "startLine": 442,
+        "startChar": 0,
+        "endLine": 442,
+        "endChar": 45
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a09d9d9_a1498734",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "Name could be more descriptive, this name is already present in previous non-tasting part of this test plan.",
+      "range": {
+        "startLine": 449,
+        "startChar": 4,
+        "endLine": 449,
+        "endChar": 24
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60ac9778_43fbb67c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 469,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 469,
+        "startChar": 4,
+        "endLine": 469,
+        "endChar": 23
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22afe867_6ae6c903",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "get_bdevs() should be issued as only then we can be sure that lvol persisted after restart.",
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "208d29ca_67e39bb6",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "get_bdevs",
+      "range": {
+        "startLine": 487,
+        "startChar": 20,
+        "endLine": 487,
+        "endChar": 35
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a717277_47c6eb30",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "Please add a name if this case is to be used.",
+      "range": {
+        "startLine": 490,
+        "startChar": 0,
+        "endLine": 490,
+        "endChar": 16
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21871dd8_51d073bc",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "get_bdevs same as in test case 2.",
+      "range": {
+        "startLine": 508,
+        "startChar": 20,
+        "endLine": 508,
+        "endChar": 35
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f649338b_f7d30574",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "Lvol bdev resize is not supported currently.",
+      "range": {
+        "startLine": 534,
+        "startChar": 0,
+        "endLine": 534,
+        "endChar": 21
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fe7c633_5e14b0b3",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "Please add a name. Not sure what is accomplished here comparing to test case 2 ? That get_lvol_stores is called once more after destroying lvol store ? If yes, I don\u0027t think it is needed.",
+      "range": {
+        "startLine": 570,
+        "startChar": 0,
+        "endLine": 570,
+        "endChar": 16
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3dfca32f_4dabe5c0",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "Nested lvols not supported.",
+      "range": {
+        "startLine": 590,
+        "startChar": 0,
+        "endLine": 590,
+        "endChar": 35
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ffc250b_baf328cd",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "Nested lvols not supported.",
+      "range": {
+        "startLine": 619,
+        "startChar": 0,
+        "endLine": 619,
+        "endChar": 16
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bceb4fd1_a74de12c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:43:53Z",
+      "side": 1,
+      "message": "I don\u0027t think this case is any different than lets say case 2. How to you \"restart the vhost app\" in previous tests ?",
+      "range": {
+        "startLine": 647,
+        "startChar": 0,
+        "endLine": 647,
+        "endChar": 49
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
