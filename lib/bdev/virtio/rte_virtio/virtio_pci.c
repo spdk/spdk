@@ -617,6 +617,15 @@ next:
 	return 0;
 }
 
+static void
+virtio_dev_pci_init(struct virtio_dev *vdev)
+{
+	vtpci_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
+			      &vdev->max_queues, sizeof(vdev->max_queues));
+	vdev->max_queues += 2;
+	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+}
+
 static int
 pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
@@ -661,7 +670,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 			goto err;
 		}
 		vdev->modern = 1;
-		TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+		virtio_dev_pci_init(vdev);
 		return 0;
 	}
 
@@ -685,11 +694,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		goto err;
 	}
 	vdev->modern = 0;
-
-	vtpci_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
-			      &vdev->max_queues, sizeof(vdev->max_queues));
-
-	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+	virtio_dev_pci_init(vdev);
 	return 0;
 
 err:
