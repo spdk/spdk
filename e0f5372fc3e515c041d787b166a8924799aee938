@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "891111f0_d872e93f",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 83
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T23:10:10Z",
+      "side": 1,
+      "message": "num_lvols or lvol_count would be a better name",
+      "revId": "e0f5372fc3e515c041d787b166a8924799aee938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97294e18_89c03d92",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 83
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T23:10:10Z",
+      "side": 1,
+      "message": "return not needed",
+      "revId": "e0f5372fc3e515c041d787b166a8924799aee938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64e0bbdd_e466df01",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 83
@@ -30,6 +64,74 @@
       "writtenOn": "2017-10-17T21:52:29Z",
       "side": 1,
       "message": "Before we read from attr, we should verify that the buffer is valid - something like:\n\n    if (value_len !\u003d UUID_STRING_LEN || attr[UUID_STRING_LEN - 1] !\u003d \u0027\\0\u0027) {\n        // error\n    }\n\nOtherwise, if the xattr was corrupted on disk (or maliciously modified), uuid_parse() could read past the end of the buffer  and potentially crash.",
+      "revId": "e0f5372fc3e515c041d787b166a8924799aee938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9e6c02f_c003a236",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 83
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T23:10:10Z",
+      "side": 1,
+      "message": "have same name, but one with a \"2\" at the end makes it hard to know what the difference is between these two variables",
+      "revId": "e0f5372fc3e515c041d787b166a8924799aee938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4aec5a3_cfbca71c",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 83
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T23:10:10Z",
+      "side": 1,
+      "message": "g_lvols_count or g_num_lvols",
+      "revId": "e0f5372fc3e515c041d787b166a8924799aee938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a570cbad_3c633b2f",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 83
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T23:10:10Z",
+      "side": 1,
+      "message": "g_examine_done",
+      "revId": "e0f5372fc3e515c041d787b166a8924799aee938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "183b8c7d_a00c520c",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 83
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T23:10:10Z",
+      "side": 1,
+      "message": "I think this would be easier to understand if the spdk_bs_md_iter_next and spdk_bs_md_iter_first were combined.\n\nBasically put 197-207 in a common function and have both iter_first() and iter_next() call that function.  Then we don\u0027t have separate logic for failing the first blob v. second or later.",
       "revId": "e0f5372fc3e515c041d787b166a8924799aee938",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
