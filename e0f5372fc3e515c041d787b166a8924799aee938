@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "eb86137b_ce7437e8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 83
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-17T23:22:52Z",
+      "side": 1,
+      "message": "how much of this code should be in lvol.c?\n\nit seems to me like the process of opening all the blobs and putting them in the lvs-\u003elvols list is not specific to bdev",
+      "revId": "e0f5372fc3e515c041d787b166a8924799aee938",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97294e18_89c03d92",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 83
