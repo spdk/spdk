@@ -1211,6 +1211,13 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 		free(device);
 	}
 
+	if (spdk_mempool_count(rtransport->data_buf_pool) != (rtransport->max_queue_depth * 4)) {
+		SPDK_ERRLOG("transprot buffer pool count is %zu but should be %u\n",
+			    spdk_mempool_count(rtransport->data_buf_pool),
+			    rtransport->max_queue_depth * 4);
+		assert(false);
+	}
+
 	spdk_mempool_free(rtransport->data_buf_pool);
 	free(rtransport);
 
