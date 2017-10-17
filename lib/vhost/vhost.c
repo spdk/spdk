@@ -947,7 +947,7 @@ spdk_vhost_startup(void *arg1, void *arg2)
 		ret = snprintf(dev_dirname, sizeof(dev_dirname) - 2, "%s", basename);
 		if ((size_t)ret >= sizeof(dev_dirname) - 2) {
 			SPDK_ERRLOG("Char dev dir path length %d is too long\n", ret);
-			abort();
+			goto out;
 		}
 
 		if (dev_dirname[ret - 1] != '/') {
@@ -959,14 +959,19 @@ spdk_vhost_startup(void *arg1, void *arg2)
 	ret = spdk_vhost_scsi_controller_construct();
 	if (ret != 0) {
 		SPDK_ERRLOG("Cannot construct vhost controllers\n");
-		abort();
+		goto out;
 	}
 
 	ret = spdk_vhost_blk_controller_construct();
 	if (ret != 0) {
 		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
-		abort();
+		goto out;
 	}
+
+	return;
+
+out:
+	spdk_vhost_shutdown_cb();
 }
 
 static void
