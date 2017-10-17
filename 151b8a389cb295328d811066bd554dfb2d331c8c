@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b64f019f_54553409",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-17T21:28:46Z",
+      "side": 1,
+      "message": "Instead of failing to build completely, can we disable just the legacy device support (which I think is the only part that needs I/O port access) for older versions of DPDK?\n\nOr can we just remove legacy device support entirely? I don\u0027t know how this would impact compatibility - are there  QEMU versions (or other virtio device providers) still in use that only support legacy mode?\n\nIf these are too complicated for the release, we should at least get this patch in to avoid confusing compilation failures, but I\u0027d prefer not to have to require a special configure switch if we can detect it automatically.",
+      "revId": "151b8a389cb295328d811066bd554dfb2d331c8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
