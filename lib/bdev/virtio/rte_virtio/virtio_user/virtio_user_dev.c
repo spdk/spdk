@@ -211,12 +211,12 @@ virtio_user_dev_init(char *path, uint16_t requested_queues, uint32_t queue_size)
 	}
 
 	if (requested_queues > max_queues) {
-		SPDK_ERRLOG("requested %"PRIu16" queues but only %"PRIu64" available\n",
+		SPDK_ERRLOG("requested %"PRIu16" request queues but only %"PRIu64" available\n",
 			     requested_queues, max_queues);
 		goto err;
 	}
 
-	vdev->max_queues = requested_queues;
+	vdev->max_queues = SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED + requested_queues;
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
 		spdk_strerror_r(errno, err_str, sizeof(err_str));

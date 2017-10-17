@@ -664,7 +664,7 @@ bdev_virtio_process_config(void)
 			num_queues = 1;
 		}
 
-		vdev = virtio_user_dev_init(path, num_queues + 2, 512);
+		vdev = virtio_user_dev_init(path, num_queues, 512);
 		if (vdev == NULL) {
 			rc = -1;
 			goto out;

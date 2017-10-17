@@ -72,6 +72,12 @@
  */
 #define SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED (UINT32_MAX - 1)
 
+/* The queue size negotiation protocols negotiate the number of
+ * *request* queues. We have to manually increase that number to
+ * take into account controlq and eventq.
+ */
+#define SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED 2
+
 struct virtio_dev {
 	struct virtqueue **vqs;
 	uint16_t	started;
