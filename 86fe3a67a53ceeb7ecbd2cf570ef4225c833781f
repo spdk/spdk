@@ -2,6 +2,63 @@
   "comments": [
     {
       "key": {
+        "uuid": "305425fc_368f3159",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:21:06Z",
+      "side": 1,
+      "message": "Cases other than for cluster_sz should not be changed.",
+      "range": {
+        "startLine": 48,
+        "startChar": 36,
+        "endLine": 49,
+        "endChar": 61
+      },
+      "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09324b32_91b896e8",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:21:06Z",
+      "side": 1,
+      "message": "Seems like unrelated change.",
+      "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2cfd3c74_42924d50",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:21:06Z",
+      "side": 1,
+      "message": "Seems like unrelated change.",
+      "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4bfe4dbd_687f52bf",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 8
@@ -18,6 +75,46 @@
         "startChar": 17,
         "endLine": 72,
         "endChar": 27
+      },
+      "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e60994e6_b45b4195",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:21:06Z",
+      "side": 1,
+      "message": "Unnecessary whitespace change.",
+      "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f7d9d26_3a9f8cc2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:21:06Z",
+      "side": 1,
+      "message": "Isn\u0027t header() usually at beginning of test case ?",
+      "range": {
+        "startLine": 367,
+        "startChar": 8,
+        "endLine": 367,
+        "endChar": 18
       },
       "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -42,6 +139,52 @@
     },
     {
       "key": {
+        "uuid": "48fddb79_51bf577d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:21:06Z",
+      "side": 1,
+      "message": "Unnecessary whitespace change.",
+      "range": {
+        "startLine": 400,
+        "startChar": 0,
+        "endLine": 400,
+        "endChar": 2
+      },
+      "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "faab3234_eb2b68f9",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:21:06Z",
+      "side": 1,
+      "message": "This new case is not relevant to cluster_sz directly. I don\u0027t it should be added, besides nesting lvols is not currently supported.",
+      "range": {
+        "startLine": 404,
+        "startChar": 0,
+        "endLine": 404,
+        "endChar": 26
+      },
+      "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3bbb7b6_9f2d8dec",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 8
@@ -59,6 +202,23 @@
         "endLine": 441,
         "endChar": 25
       },
+      "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bae5735e_354329f0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 442,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-17T12:21:06Z",
+      "side": 1,
+      "message": "Test pool fails here due to trailing whitespace at the end of the file.",
       "revId": "86fe3a67a53ceeb7ecbd2cf570ef4225c833781f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
