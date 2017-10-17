@@ -270,6 +270,7 @@ bdev_null_finish(void)
 		TAILQ_REMOVE(&g_null_bdev_head, bdev, tailq);
 		spdk_dma_free(bdev);
 	}
+	spdk_bdev_module_finish_done();
 }
 
 static void
