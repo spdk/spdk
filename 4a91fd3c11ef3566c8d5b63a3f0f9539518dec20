@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e618b396_57c92d57",
+        "filename": "doc/virtio.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-17T20:36:16Z",
+      "side": 1,
+      "message": "I think at least some of this should go into doc/bdev.md (like the other bdev module types).  If there\u0027s too much stuff to put into the bdev page, it might still make sense to have a separate page for the virtio feature like this, but we should at least have a pointer from the bdev docs.",
+      "revId": "4a91fd3c11ef3566c8d5b63a3f0f9539518dec20",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
