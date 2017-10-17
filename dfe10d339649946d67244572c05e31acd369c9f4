@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "508d6a03_71bf47da",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-10-17T01:35:35Z",
+      "side": 1,
+      "message": "Since SPDK are running with polling mode, so for most cases, SPDK will post an event to Guest(avail-\u003eidx \u003d\u003d last_avail_idx), can we put a simple interrupt coalescing logic in this function, when SPDK has outstanding I/Os, which means there are events in future, so can eliminate some events?",
+      "revId": "dfe10d339649946d67244572c05e31acd369c9f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
