@@ -135,6 +135,9 @@ struct spdk_nvmf_rdma_request {
 	} data;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
+
+	/** Entry to the list need_buf of struct spdk_rdma_mgmt_channel. */
+	TAILQ_ENTRY(spdk_nvmf_rdma_request) buf_link;
 };
 
 struct spdk_nvmf_rdma_qpair {
@@ -198,6 +201,9 @@ struct spdk_nvmf_rdma_qpair {
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	link;
 	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	pending_link;
+
+	/* Mgmt channel */
+	struct spdk_io_channel *mgmt_channel;
 };
 
 /* List of RDMA connections that have not yet received a CONNECT capsule */
@@ -254,6 +260,70 @@ struct spdk_nvmf_rdma_transport {
 	TAILQ_HEAD(, spdk_nvmf_rdma_port)	ports;
 };
 
+typedef TAILQ_HEAD(, spdk_nvmf_rdma_request) nvmf_rdma_req_tailq_t;
+static bool spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
+		struct spdk_nvmf_rdma_request *rdma_req);
+struct spdk_nvmf_rdma_mgmt_channel {
+	nvmf_rdma_req_tailq_t need_buf;
+};
+
+static int
+spdk_nvmf_rdma_mgmt_channel_create(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_rdma_mgmt_channel *ch = ctx_buf;
+
+	TAILQ_INIT(&ch->need_buf);
+	return 0;
+}
+
+static void
+spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_rdma_mgmt_channel *ch = ctx_buf;
+
+	if (!TAILQ_EMPTY(&ch->need_buf)) {
+		SPDK_ERRLOG("Pending I/O list wasn't empty on channel destruction\n");
+	}
+}
+
+static void
+spdk_nvmf_rdma_req_get_buf(struct spdk_nvmf_rdma_transport *rtransport,
+			   struct spdk_nvmf_rdma_request *rdma_req)
+{
+	struct spdk_nvmf_rdma_mgmt_channel *ch;
+	struct spdk_nvmf_rdma_qpair	*rdma_qpair;
+	rdma_qpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+	ch = spdk_io_channel_get_ctx(rdma_qpair->mgmt_channel);
+	assert(ch != NULL);
+
+	rdma_req->req.data = spdk_mempool_get(rtransport->data_buf_pool);
+	if (!rdma_req) {
+		TAILQ_INSERT_TAIL(&ch->need_buf, rdma_req, buf_link);
+	} else {
+		rdma_req->data_from_pool = true;
+	}
+}
+
+static void
+spdk_nvmf_rdma_req_put_buf(struct spdk_nvmf_rdma_transport *rtransport,
+			   void *buf, struct spdk_nvmf_rdma_qpair *rdma_qpair)
+{
+	struct spdk_nvmf_rdma_request *tmp;
+	struct spdk_nvmf_rdma_mgmt_channel *ch;
+
+	ch = spdk_io_channel_get_ctx(rdma_qpair->mgmt_channel);
+
+	if (TAILQ_EMPTY(&ch->need_buf)) {
+		spdk_mempool_put(rtransport->data_buf_pool, buf);
+	} else {
+		tmp = TAILQ_FIRST(&ch->need_buf);
+		TAILQ_REMOVE(&ch->need_buf, tmp, buf_link);
+		tmp->req.data = buf;
+		tmp->data_from_pool = true;
+	}
+}
+
 static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rdma_qpair)
 {
@@ -278,6 +348,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rdma_qpair)
 		ibv_destroy_cq(rdma_qpair->cq);
 	}
 
+	spdk_put_io_channel(rdma_qpair->mgmt_channel);
 	/* Free all memory */
 	spdk_dma_free(rdma_qpair->cmds);
 	spdk_dma_free(rdma_qpair->cpls);
@@ -658,6 +729,11 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	 * is received. */
 	TAILQ_INSERT_TAIL(&g_pending_conns, rdma_qpair, pending_link);
 
+	rdma_qpair->mgmt_channel = spdk_get_io_channel(rtransport);
+	if (!rdma_qpair->mgmt_channel) {
+		goto err2;
+	}
+
 	return 0;
 
 err2:
@@ -865,14 +941,15 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		rdma_req->req.length = sgl->keyed.length;
-		rdma_req->req.data = spdk_mempool_get(rtransport->data_buf_pool);
-		if (!rdma_req->req.data) {
-			/* No available buffers. Queue this request up. */
-			SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
-			return 0;
+		if (!rdma_req->data_from_pool) {
+			spdk_nvmf_rdma_req_get_buf(rtransport, rdma_req);
+			if (!rdma_req->req.data) {
+				/* No available buffers. Queue this request up. */
+				SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
+				return 0;
+			}
 		}
 
-		rdma_req->data_from_pool = true;
 		rdma_req->data.sgl[0].addr = (uintptr_t)rdma_req->req.data;
 		rdma_req->data.sgl[0].length = sgl->keyed.length;
 		rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
@@ -1064,16 +1141,23 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 		case RDMA_REQUEST_STATE_COMPLETED:
 			assert(rqpair->cur_queue_depth > 0);
 			rqpair->cur_queue_depth--;
-
-			if (rdma_req->data_from_pool) {
-				/* Put the buffer back in the pool */
-				spdk_mempool_put(rtransport->data_buf_pool, rdma_req->req.data);
+			void *buf;
+			bool data_from_pool = rdma_req->data_from_pool;
+			if (data_from_pool) {
 				rdma_req->data_from_pool = false;
+				buf = rdma_req->req.data;
 			}
+
 			rdma_req->req.length = 0;
 			rdma_req->req.data = NULL;
 			rdma_req->state = RDMA_REQUEST_STATE_FREE;
 			TAILQ_INSERT_TAIL(&rqpair->free_queue, rdma_req, link);
+
+			if (data_from_pool) {
+				/* Put the buffer back in the pool */
+				spdk_nvmf_rdma_req_put_buf(rtransport, buf, rqpair);
+			}
+
 			break;
 		}
 
@@ -1140,6 +1224,10 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		free(rtransport);
 		return NULL;
 	}
+
+	spdk_io_device_register(rtransport, spdk_nvmf_rdma_mgmt_channel_create,
+				spdk_nvmf_rdma_mgmt_channel_destroy,
+				sizeof(struct spdk_nvmf_rdma_mgmt_channel));
 
 	contexts = rdma_get_devices(NULL);
 	i = 0;
@@ -1212,6 +1300,7 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 	}
 
 	spdk_mempool_free(rtransport->data_buf_pool);
+	spdk_io_device_unregister(rtransport, NULL);
 	free(rtransport);
 
 	return 0;
