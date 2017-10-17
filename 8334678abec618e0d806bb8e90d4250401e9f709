@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "687eb8e7_f7bca201",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-17T12:53:37Z",
+      "side": 1,
+      "message": "why assert went missing in last version?",
+      "revId": "8334678abec618e0d806bb8e90d4250401e9f709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
