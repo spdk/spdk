@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cc42e78c_59b0c7cc",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1092,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-17T02:56:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9e938cd0_1046cecf",
+      "revId": "94b9e97cc4c1969a22fdd38e35d5f727f0cfbe79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d9287ba_44f3fd8f",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 16
@@ -30,6 +48,30 @@
       "writtenOn": "2017-10-17T02:18:01Z",
       "side": 1,
       "message": "I\u0027m not sure it should be argv[optind + 1]?",
+      "range": {
+        "startLine": 1107,
+        "startChar": 48,
+        "endLine": 1107,
+        "endChar": 55
+      },
+      "revId": "94b9e97cc4c1969a22fdd38e35d5f727f0cfbe79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4ccb8c6_9f3a87af",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1107,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-17T02:56:49Z",
+      "side": 1,
+      "message": "oh, nice catch,  tanks",
+      "parentUuid": "2d9287ba_44f3fd8f",
       "range": {
         "startLine": 1107,
         "startChar": 48,
