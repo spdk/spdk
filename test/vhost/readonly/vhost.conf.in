@@ -1,0 +1,6 @@
+[Ioat]
+  Disable Yes
+
+[Rpc]
+  Enable Yes
+  Listen /var/tmp/spdk.sock
