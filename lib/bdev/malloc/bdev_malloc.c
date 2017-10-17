@@ -480,6 +480,7 @@ static void bdev_malloc_finish(void)
 		g_malloc_disk_head = mdisk->next;
 		free_malloc_disk(mdisk);
 	}
+	spdk_bdev_module_finish_done();
 }
 
 static void

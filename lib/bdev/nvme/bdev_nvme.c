@@ -1106,6 +1106,7 @@ bdev_nvme_library_fini(void)
 		TAILQ_REMOVE(&g_nvme_bdevs, nvme_bdev, link);
 		bdev_nvme_destruct(&nvme_bdev->disk);
 	}
+	spdk_bdev_module_finish_done();
 }
 
 static int

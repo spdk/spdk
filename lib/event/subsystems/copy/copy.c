@@ -36,6 +36,7 @@
 #include "spdk/copy_engine.h"
 
 #include "spdk_internal/event.h"
+#include "spdk/env.h"
 
 static void
 spdk_copy_engine_subsystem_initialize(void)
@@ -48,9 +49,28 @@ spdk_copy_engine_subsystem_initialize(void)
 }
 
 static void
+spdk_copy_engine_subsystem_call_next(void *arg1, void *arg2)
+{
+	void (*copy_engine_fini)(void) = arg1;
+
+	copy_engine_fini();
+}
+
+static void
+spdk_copy_engine_subsystem_schedule_next(void *fini_fn)
+{
+	struct spdk_event *fini_schedule_next;
+
+	fini_schedule_next = spdk_event_allocate(spdk_env_get_current_core(),
+			     spdk_copy_engine_subsystem_call_next, fini_fn, NULL);
+	spdk_event_call(fini_schedule_next);
+}
+
+
+static void
 spdk_copy_engine_subsystem_finish(void *arg1, void *arg2)
 {
-	spdk_copy_engine_finish();
+	spdk_copy_engine_finish(spdk_subsystem_fini_next, spdk_copy_engine_subsystem_schedule_next);
 }
 
 SPDK_SUBSYSTEM_REGISTER(copy, spdk_copy_engine_subsystem_initialize,

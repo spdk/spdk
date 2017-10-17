@@ -36,6 +36,7 @@
 #include "spdk/bdev.h"
 
 #include "spdk_internal/event.h"
+#include "spdk/env.h"
 
 static void
 spdk_bdev_initialize_complete(void *cb_arg, int rc)
@@ -72,9 +73,27 @@ spdk_bdev_subsystem_initialize(void)
 }
 
 static void
+spdk_bdev_module_finish_call_next(void *arg1, void *arg2)
+{
+	void (*bdev_module_fini)(void) = arg1;
+
+	bdev_module_fini();
+}
+
+static void
+spdk_bdev_subsystem_schedule_next(void *fini_fn)
+{
+	struct spdk_event *fini_schedule_next;
+
+	fini_schedule_next = spdk_event_allocate(spdk_env_get_current_core(),
+			     spdk_bdev_module_finish_call_next, fini_fn, NULL);
+	spdk_event_call(fini_schedule_next);
+}
+
+static void
 spdk_bdev_subsystem_finish(void *arg1, void *arg2)
 {
-	spdk_bdev_finish();
+	spdk_bdev_finish(spdk_subsystem_fini_next, spdk_bdev_subsystem_schedule_next);
 }
 
 SPDK_SUBSYSTEM_REGISTER(bdev, spdk_bdev_subsystem_initialize,

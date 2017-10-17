@@ -44,6 +44,7 @@ static TAILQ_HEAD(subsystem_depend, spdk_subsystem_depend) g_depends =
 	TAILQ_HEAD_INITIALIZER(g_depends);
 static struct spdk_subsystem *g_next_subsystem;
 static struct spdk_event *g_app_start_event;
+static struct spdk_event *g_app_stop_event;
 
 void
 spdk_add_subsystem(struct spdk_subsystem *subsystem)
@@ -176,20 +177,48 @@ spdk_subsystem_init(struct spdk_event *app_start_event)
 }
 
 void
-spdk_subsystem_fini(void)
+spdk_subsystem_fini_next(void)
 {
-	struct spdk_subsystem *cur;
 	struct spdk_event *next_fini_event;
 
-	cur = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
-
-	while (cur) {
-		if (cur->fini) {
-			next_fini_event = spdk_event_allocate(spdk_env_get_current_core(), cur->fini, NULL, NULL);
-			spdk_event_call(next_fini_event);
-		}
-		cur = TAILQ_PREV(cur, spdk_subsystem_list, tailq);
+	if (!g_next_subsystem) {
+		g_next_subsystem = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
+	} else {
+		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
 	}
+
+	if (!g_next_subsystem) {
+		spdk_event_call(g_app_stop_event);
+		return;
+	}
+
+	if (g_next_subsystem->fini) {
+		next_fini_event = spdk_event_allocate(spdk_env_get_current_core(), g_next_subsystem->fini, NULL,
+						      NULL);
+		spdk_event_call(next_fini_event);
+	} else {
+		spdk_subsystem_fini_next();
+	}
+}
+
+static void
+spdk_subsystem_fini_schedule(void *arg1, void *arg2)
+{
+	spdk_subsystem_fini_next();
+}
+
+void
+spdk_subsystem_fini(struct spdk_event *app_stop_event)
+{
+	struct spdk_event *fini_event;
+
+	assert(g_next_subsystem == NULL);
+
+	g_app_stop_event = app_stop_event;
+
+	fini_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_fini_schedule, NULL,
+					 NULL);
+	spdk_event_call(fini_event);
 }
 
 void
