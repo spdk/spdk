@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff0ad529_bd537f71",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1218,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-10-18T08:31:56Z",
+      "side": 1,
+      "message": "I think a huge warning log information is enough, probably assert is not required.",
+      "revId": "695ec363e22babd80d503c132cc0d393a1cfc51b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
