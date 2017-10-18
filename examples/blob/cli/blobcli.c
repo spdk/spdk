@@ -851,7 +851,7 @@ load_bs_cb(void *arg1, struct spdk_blob_store *bs, int bserrno)
 
 	default:
 		/* should never get here */
-		spdk_app_stop(-1);
+		exit(-1);
 		break;
 	}
 }
@@ -1291,7 +1291,7 @@ cli_shell(void *arg1, void *arg2)
 		cli_context->argv[cli_context->argc] = strdup(tok);
 		tok_len = strlen(tok);
 		cli_context->argc++;
-		tok = strtok(NULL, " ,.-");
+		tok = strtok(NULL, " ");
 	}
 
 	/* replace newline on last arg with null */
@@ -1375,7 +1375,7 @@ cli_start(void *arg1, void *arg2)
 		break;
 	default:
 		/* should never get here */
-		spdk_app_stop(-1);
+		exit(-1);
 		break;
 	}
 }
@@ -1432,7 +1432,7 @@ main(int argc, char **argv)
 		printf("To create a config file named 'blobcli.conf' for your NVMe device:\n");
 		printf("   <path to spdk>/scripts/gen_nvme.sh > blobcli.conf\n");
 		printf("and then re-run the cli tool.\n");
-		exit(1);
+		exit(-1);
 	}
 
 	/*
