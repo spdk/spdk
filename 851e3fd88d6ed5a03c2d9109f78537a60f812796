@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "2332e0fe_fd1db1dd",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T01:04:32Z",
+      "side": 1,
+      "message": "ok - but it looks like you moved the print_cmds() code verbatim into this function - I\u0027m just saying keep print_cmds() even if it only gets called from this function just to reduce the size of the patch - otherwise I need to compare all of it to see if anything changed and if it did figure out why or comment on it",
+      "parentUuid": "bae0d2d5_09912f5a",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5663d7e_5003a27e",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 20
@@ -107,6 +125,24 @@
     },
     {
       "key": {
+        "uuid": "b264fe0a_3943f67a",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1304,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T01:04:32Z",
+      "side": 1,
+      "message": "sure - in some cases I understand why you\u0027d need to set it to NULL, but in this case \"line\" is a local variable so it\u0027s scope ends right after you set it to NULL",
+      "parentUuid": "21897626_c745f244",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd5d7ee5_88e786c7",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 20
@@ -136,6 +172,24 @@
       "side": 1,
       "message": "the extra checks in unload, I think is what you mean, are there to make the static analyzer happy",
       "parentUuid": "fd5d7ee5_88e786c7",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36e9de24_0d993f8f",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1388,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T01:04:32Z",
+      "side": 1,
+      "message": "no - I mean usage() - it does if (cli_context \u0026\u0026 cli_context-\u003emode \u003d\u003d BLAH)",
+      "parentUuid": "c944e6e9_03712934",
       "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
