@@ -106,6 +106,11 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 	return bs_dev;
 }
 
+void
+spdk_lvs_opts_init(struct spdk_lvs_opts *opts)
+{
+}
+
 int
 spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	      spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
