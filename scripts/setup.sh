@@ -118,7 +118,7 @@ function configure_linux {
 	# virtio-scsi
 	TMP=`mktemp`
 	#collect all the device_id info of virtio-scsi devices.
-	grep "VIRTIO_PCI_DEVICEID_SCSI" $rootdir/lib/bdev/virtio/rte_virtio/virtio_pci.h \
+	grep "PCI_DEVICE_ID_VIRTIO_SCSI" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
 
 	for dev_id in `cat $TMP`; do
@@ -206,7 +206,7 @@ function reset_linux {
 	# virtio-scsi
 	TMP=`mktemp`
 	#collect all the device_id info of virtio-scsi devices.
-	grep "VIRTIO_PCI_DEVICEID_SCSI" $rootdir/lib/bdev/virtio/rte_virtio/virtio_pci.h \
+	grep "PCI_DEVICE_ID_VIRTIO_SCSI" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
 
 	# TODO: check if virtio-pci is loaded first and just unbind if it is not loaded
@@ -260,7 +260,7 @@ function status_linux {
 	echo "virtio"
 
 	#collect all the device_id info of virtio-scsi devices.
-	TMP=`grep "VIRTIO_PCI_DEVICEID_SCSI" $rootdir/lib/bdev/virtio/rte_virtio/virtio_pci.h \
+	TMP=`grep "PCI_DEVICE_ID_VIRTIO_SCSI" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}'`
 	echo -e "BDF\t\tNuma Node\tDriver Name"
 	for dev_id in $TMP; do
