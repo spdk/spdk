@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cc60e9e9_53f93fe6",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-18T06:04:03Z",
+      "side": 0,
+      "message": "Yes, that\u0027s correct",
+      "parentUuid": "99d26fa7_4a10f73e",
+      "revId": "80b44ea20fc0c1205e10966327362e769df57bb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70bcd0f2_000d980a",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2017-10-17T20:12:53Z",
       "side": 0,
       "message": "Same question here.",
+      "revId": "80b44ea20fc0c1205e10966327362e769df57bb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "000a9956_d3e9290f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-18T06:04:03Z",
+      "side": 0,
+      "message": "Yes",
+      "parentUuid": "70bcd0f2_000d980a",
       "revId": "80b44ea20fc0c1205e10966327362e769df57bb5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
