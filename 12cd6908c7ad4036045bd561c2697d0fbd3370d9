@@ -48,6 +48,54 @@
     },
     {
       "key": {
+        "uuid": "203565ce_67510357",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-18T16:03:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "82c96706_86a1fec8",
+      "range": {
+        "startLine": 7,
+        "startChar": 54,
+        "endLine": 7,
+        "endChar": 63
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaca8716_c32bb11a",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-18T16:03:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50a31fe8_5fe50c11",
+      "range": {
+        "startLine": 7,
+        "startChar": 23,
+        "endLine": 7,
+        "endChar": 30
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d2a97fc_5a6678cc",
         "filename": "doc/lvol.md",
         "patchSetId": 2
@@ -128,6 +176,30 @@
       "writtenOn": "2017-10-11T13:12:10Z",
       "side": 1,
       "message": "Not sure if this is required - it is assumed that separation is there for libraries, only with certain requirements. lib/lvol depends on blobstore, and lib/bdev/lvol depends on bdev and lib/lvol.",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 50
+      },
+      "revId": "12cd6908c7ad4036045bd561c2697d0fbd3370d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc6e225b_5907c1da",
+        "filename": "doc/lvol.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-18T16:03:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a70e416_a7c45c36",
       "range": {
         "startLine": 16,
         "startChar": 0,
