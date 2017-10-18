@@ -1989,7 +1989,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 static void
 _spdk_bs_destroy_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_store *bs = cb_arg;
+	struct spdk_bs_init_ctx *ctx = cb_arg;
+	struct spdk_blob_store *bs = ctx->bs;
 
 	/*
 	 * We need to defer calling spdk_bs_call_cpl() until after
@@ -2002,6 +2003,8 @@ _spdk_bs_destroy_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 
 	_spdk_bs_free(bs);
+	free(ctx->super);
+	free(ctx);
 }
 
 void
@@ -2009,6 +2012,7 @@ spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_
 {
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t	*seq;
+	struct spdk_bs_init_ctx *ctx;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Syncing blobstore\n");
 
@@ -2024,9 +2028,13 @@ spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_
 
 	assert(TAILQ_EMPTY(&bs->blobs));
 
-	/* TRIM the super block */
-	spdk_bs_sequence_unmap(seq, 0, _spdk_bs_byte_to_lba(bs, sizeof(struct spdk_bs_super_block)),
-			       _spdk_bs_destroy_trim_cpl, bs);
+	ctx = calloc(1, sizeof(*ctx));
+	ctx->super = calloc(1, sizeof(*ctx->super));
+	ctx->bs = bs;
+	/* Write zeroes to the super block */
+	spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_byte_to_lba(bs, 0),
+			       _spdk_bs_byte_to_lba(bs, sizeof(*ctx->super)),
+			       _spdk_bs_destroy_trim_cpl, ctx);
 }
 
 /* END spdk_bs_destroy */
