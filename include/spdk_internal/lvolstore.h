@@ -77,6 +77,8 @@ struct spdk_lvol_store {
 	uint64_t			total_blocks;
 	int				lvol_count;
 	TAILQ_HEAD(, spdk_lvol)		lvols;
+	bool				on_list;
+	TAILQ_ENTRY(spdk_lvol_store)	link;
 };
 
 struct spdk_lvol {

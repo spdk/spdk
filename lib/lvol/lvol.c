@@ -42,6 +42,9 @@
 
 SPDK_LOG_REGISTER_TRACE_FLAG("lvol", SPDK_TRACE_LVOL)
 
+static TAILQ_HEAD(, spdk_lvol_store) g_lvol_stores = TAILQ_HEAD_INITIALIZER(g_lvol_stores);
+static pthread_mutex_t g_lvol_stores_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 static inline size_t
 divide_round_up(size_t num, size_t divisor)
 {
@@ -51,6 +54,9 @@ divide_round_up(size_t num, size_t divisor)
 static void
 _spdk_lvs_free(struct spdk_lvol_store *lvs)
 {
+	if (lvs->on_list) {
+		TAILQ_REMOVE(&g_lvol_stores, lvs, link);
+	}
 	free(lvs);
 }
 
@@ -267,6 +273,16 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		spdk_bs_md_close_blob(&blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
+
+	/*
+	 * Wait to put lvs on the global list until this point, because a future patch
+	 * will add lvolstore name uniqueness checking - and we don't know a loaded
+	 * lvolstore's name until this point.
+	 */
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+	lvs->on_list = true;
+	TAILQ_INSERT_TAIL(&g_lvol_stores, lvs, link);
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
 
 	lvs->super_blob_id = spdk_blob_get_id(blob);
 
@@ -506,6 +522,11 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	}
 
 	uuid_generate_time(lvs->uuid);
+
+	pthread_mutex_lock(&g_lvol_stores_mutex);
+	lvs->on_list = true;
+	TAILQ_INSERT_TAIL(&g_lvol_stores, lvs, link);
+	pthread_mutex_unlock(&g_lvol_stores_mutex);
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
 	if (!lvs_req) {
