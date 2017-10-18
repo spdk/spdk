@@ -786,10 +786,10 @@ vtpci_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w)
 	spdk_json_write_name(w, "virtio");
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_string(w, "vq_count");
+	spdk_json_write_name(w, "vq_count");
 	spdk_json_write_uint32(w, hw->max_queues);
 
-	spdk_json_write_string(w, "vq_size");
+	spdk_json_write_name(w, "vq_size");
 	spdk_json_write_uint32(w, vtpci_ops(hw)->get_queue_num(hw, 0));
 
 	vtpci_ops(hw)->dump_json_config(hw, w);
