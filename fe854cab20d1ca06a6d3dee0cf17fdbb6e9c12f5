@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "128e29db_910b09b1",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T03:31:30Z",
+      "side": 1,
+      "message": "you\u0027re killing me :)\n\ncan\u0027t we just keep the print_cmds() function?  and just remove the msg parameter\n\nthat reduces the size of this patch by 50 lines or so",
+      "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cf0bce2_070cca2a",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T03:31:30Z",
+      "side": 1,
+      "message": "remove extra semicolon",
+      "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c36a16e_a6618865",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T03:31:30Z",
+      "side": 1,
+      "message": "I see a bunch of lines like this added in cmd_parser now - how are these related to script mode?  i\u0027m not following the usage of optind here either - that seems non-standard",
+      "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c571c4c0_04a447f7",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T03:31:30Z",
+      "side": 1,
+      "message": "Your entire\n\ntypo was in previous revision but might as well fix it while you\u0027re modifying this part of the code",
+      "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
