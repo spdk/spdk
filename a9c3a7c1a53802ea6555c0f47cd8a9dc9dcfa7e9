@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "423f6584_df19e368",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T06:23:34Z",
+      "side": 1,
+      "message": "whitespaces",
+      "range": {
+        "startLine": 37,
+        "startChar": 53,
+        "endLine": 37,
+        "endChar": 55
+      },
+      "revId": "a9c3a7c1a53802ea6555c0f47cd8a9dc9dcfa7e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5feed65c_4f073728",
+        "filename": "test/iscsi_tgt/pmem/iscsi_pmem.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T06:23:34Z",
+      "side": 1,
+      "message": "Start at the end of test?",
+      "range": {
+        "startLine": 81,
+        "startChar": 12,
+        "endLine": 81,
+        "endChar": 28
+      },
+      "revId": "a9c3a7c1a53802ea6555c0f47cd8a9dc9dcfa7e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
