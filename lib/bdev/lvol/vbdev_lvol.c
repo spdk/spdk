@@ -603,10 +603,13 @@ vbdev_lvs_init(void)
 	return 0;
 }
 
+int g_lvs_to_destroy = 0;
+
 static void
 vbdev_lvs_finished(void *cb_arg, int lvserrno)
 {
-	if (TAILQ_EMPTY(&g_spdk_lvol_pairs)) {
+	g_lvs_to_destroy--;
+	if (TAILQ_EMPTY(&g_spdk_lvol_pairs) && g_lvs_to_destroy <= 0) {
 		spdk_bdev_module_finish_done();
 	}
 }
@@ -621,6 +624,7 @@ vbdev_lvs_fini(void)
 		return;
 	}
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
+		g_lvs_to_destroy++;
 		vbdev_lvs_destruct(lvs_bdev->lvs, vbdev_lvs_finished, NULL);
 	}
 }
