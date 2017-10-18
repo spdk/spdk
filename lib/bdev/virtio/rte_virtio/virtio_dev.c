@@ -433,7 +433,7 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 	descs[idx].flags = VRING_DESC_F_NEXT;
 	idx = descs[idx].next;
 
-	if (req->is_write) {
+	if (req->is_write || req->iovcnt == 0) {
 		for (i = 0; i < req->iovcnt; i++) {
 			virtqueue_iov_to_desc(vq, idx, &iov[i]);
 			descs[idx].flags = VRING_DESC_F_NEXT;
