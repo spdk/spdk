@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ec5eccc_fcfb5062",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T03:20:00Z",
+      "side": 1,
+      "message": "this is a nop - \"pointer\" is passed by value here\n\nbut there are a bunch of places below where this function gets called when it\u0027s not necessary - once you take those out I think just doing the free and NULL set inline will make it easier to understand (won\u0027t have to go figure out what the free_and_null function does)",
+      "revId": "b398930ab606bb9e3599b1723c8d9bf4da73980a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e680038_a9881603",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T03:20:00Z",
+      "side": 1,
+      "message": "cli_context is passed by value - no need to set it to NULL",
+      "revId": "b398930ab606bb9e3599b1723c8d9bf4da73980a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adb1e0f7_4e10469e",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T03:20:00Z",
+      "side": 1,
+      "message": "names is a local variable - no need to set it to NULL",
+      "revId": "b398930ab606bb9e3599b1723c8d9bf4da73980a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f7e619a_8e8e2537",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1305,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T03:20:00Z",
+      "side": 1,
+      "message": "line is a local variable, no need to set it to NULL",
+      "revId": "b398930ab606bb9e3599b1723c8d9bf4da73980a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
