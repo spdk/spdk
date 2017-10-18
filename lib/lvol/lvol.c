@@ -172,15 +172,18 @@ _spdk_lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	spdk_bs_md_create_blob(lvs->blobstore, _spdk_super_blob_create_cb, lvs_req);
 }
 
-static void
-spdk_setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o)
+void
+spdk_lvs_opts_init(struct spdk_lvs_opts *o)
 {
+	o->cluster_sz = SPDK_LVS_OPTS_CLUSTER_SZ;
+}
+
+static void
+_spdk_setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o)
+{
+	assert(o != NULL);
 	spdk_bs_opts_init(bs_opts);
-	if (o) {
-		bs_opts->cluster_sz = o->cluster_sz;
-	} else {
-		bs_opts->cluster_sz = SPDK_LVS_OPTS_CLUSTER_SZ;
-	}
+	bs_opts->cluster_sz = o->cluster_sz;
 }
 
 int
@@ -196,7 +199,12 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		return -ENODEV;
 	}
 
-	spdk_setup_lvs_opts(&opts, o);
+	if (o == NULL) {
+		SPDK_ERRLOG("spdk_lvs_opts not specified\n");
+		return -EINVAL;
+	}
+
+	_spdk_setup_lvs_opts(&opts, o);
 
 	lvs = calloc(1, sizeof(*lvs));
 	if (!lvs) {
