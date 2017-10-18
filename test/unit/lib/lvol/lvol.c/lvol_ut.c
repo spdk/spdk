@@ -311,10 +311,12 @@ lvs_init_unload_success(void)
 
 	g_lvserrno = -1;
 
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 	rc = spdk_lvs_init(&bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(!TAILQ_EMPTY(&g_lvol_stores));
 
 	spdk_lvol_create(g_lvol_store, 10, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
@@ -326,6 +328,7 @@ lvs_init_unload_success(void)
 	CU_ASSERT(rc == -EBUSY);
 	CU_ASSERT(g_lvserrno == -1);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(!TAILQ_EMPTY(&g_lvol_stores));
 
 	/* Lvol has to be closed (or destroyed) before unloading lvol store. */
 	spdk_lvol_close(g_lvol);
@@ -335,6 +338,7 @@ lvs_init_unload_success(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 
 	spdk_free_thread();
 }
@@ -642,9 +646,11 @@ lvs_load(void)
 
 	/* Fail on bs load */
 	g_bs_load_status = -1;
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
 	CU_ASSERT(g_lvserrno != 0);
 	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 
 	/* Fail on getting super blob */
 	g_bs_load_status = 0;
@@ -652,6 +658,7 @@ lvs_load(void)
 	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
 	CU_ASSERT(g_lvserrno == -ENODEV);
 	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 
 	/* Fail on opening super blob */
 	g_lvserrno = 0;
@@ -660,6 +667,7 @@ lvs_load(void)
 	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
 	CU_ASSERT(g_lvserrno == -ENODEV);
 	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 
 	/* Fail on getting uuid */
 	g_lvserrno = 0;
@@ -669,6 +677,7 @@ lvs_load(void)
 	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
 	CU_ASSERT(g_lvserrno == -ENODEV);
 	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 
 	/* Fail on closing super blob */
 	g_lvserrno = 0;
@@ -679,6 +688,7 @@ lvs_load(void)
 	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
 	CU_ASSERT(g_lvserrno == -ENODEV);
 	CU_ASSERT(g_lvol_store == NULL);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 
 	/* Load successfully */
 	g_lvserrno = 0;
@@ -689,11 +699,13 @@ lvs_load(void)
 	spdk_lvs_load(&bs_dev, lvol_store_op_with_handle_complete, req);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store != NULL);
+	CU_ASSERT(!TAILQ_EMPTY(&g_lvol_stores));
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 
 	free(req);
 
