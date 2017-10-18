@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4187d0e3_186bb702",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-18T15:26:59Z",
+      "side": 1,
+      "message": "in legacy dump you got \"pci-legacy\" type. should this be pci-modern?\nalso, it doesn\u0027t seem like we need 2 separate functions for json dump, could we use the following single function?\ne.g. hw_dump_json_config(), then \nif (virtio_dev-\u003emodern) {\n// pci-modern\n} else {\n// pci-legacy\n}\n\ni don\u0027t think there are any modern/legacy specific fields we need to dump here., so the common function should do.",
+      "range": {
+        "startLine": 473,
+        "startChar": 28,
+        "endLine": 473,
+        "endChar": 34
+      },
+      "revId": "34792d2ca44300c807c7b88107a1e366523ab261",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
