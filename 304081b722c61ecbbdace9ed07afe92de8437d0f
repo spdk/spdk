@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aea83fcb_78660824",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T16:30:08Z",
+      "side": 1,
+      "message": "i don\u0027t see why this change is needed\n\nevery place where cli_cleanup() gets called, cli_context is a local variable and the call is immediately followed by either an exit() or it returns from the function",
+      "revId": "304081b722c61ecbbdace9ed07afe92de8437d0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
