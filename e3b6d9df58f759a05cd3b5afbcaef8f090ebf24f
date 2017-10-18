@@ -101,6 +101,24 @@
       "revId": "e3b6d9df58f759a05cd3b5afbcaef8f090ebf24f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e50ce63_63ed016a",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1337,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-10-18T00:39:40Z",
+      "side": 1,
+      "message": "I will add some comments to explain the detail of the test case.",
+      "parentUuid": "e0e33c49_9e9ee493",
+      "revId": "e3b6d9df58f759a05cd3b5afbcaef8f090ebf24f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
