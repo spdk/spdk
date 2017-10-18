@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e07ac982_63390418",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T11:16:27Z",
+      "side": 1,
+      "message": "double dot",
+      "range": {
+        "startLine": 54,
+        "startChar": 34,
+        "endLine": 54,
+        "endChar": 35
+      },
+      "revId": "c2fe409d51a0311f0db849ac890210a424230d65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d4f5816_ccf2d24b",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 872,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T11:16:27Z",
+      "side": 1,
+      "message": "tabs / spaces consistency across file",
+      "range": {
+        "startLine": 828,
+        "startChar": 0,
+        "endLine": 872,
+        "endChar": 1
+      },
+      "revId": "c2fe409d51a0311f0db849ac890210a424230d65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8002537c_126692c8",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T11:16:27Z",
+      "side": 1,
+      "message": "I think you should source it, not call it",
+      "revId": "c2fe409d51a0311f0db849ac890210a424230d65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cce889e8_15275b14",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T11:16:27Z",
+      "side": 1,
+      "message": "Not sure if this will work. Here you specify for FIO to run 4G IO over first 1G of target disk space but PMEM dbev has only 128MB. Not sure if this is a safe thing to do.",
+      "range": {
+        "startLine": 30,
+        "startChar": 9,
+        "endLine": 30,
+        "endChar": 18
+      },
+      "revId": "c2fe409d51a0311f0db849ac890210a424230d65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db54a906_3102d449",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T11:16:27Z",
+      "side": 1,
+      "message": "I still vote for having this in separate file instead of \"echo\" function.",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 1
+      },
+      "revId": "c2fe409d51a0311f0db849ac890210a424230d65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cda1d7b3_e6730145",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T11:16:27Z",
+      "side": 1,
+      "message": "you\u0027re always adding just single device to each controller. Why not just use \u00270\u0027 ?",
+      "range": {
+        "startLine": 48,
+        "startChar": 12,
+        "endLine": 48,
+        "endChar": 61
+      },
+      "revId": "c2fe409d51a0311f0db849ac890210a424230d65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65269b8c_620b35d8",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T11:16:27Z",
+      "side": 1,
+      "message": "you\u0027re always adding just single device to each controller. Why not just use \u00270\u0027 ?",
+      "range": {
+        "startLine": 122,
+        "startChar": 54,
+        "endLine": 122,
+        "endChar": 66
+      },
+      "revId": "c2fe409d51a0311f0db849ac890210a424230d65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "704909e9_348316ad",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T11:16:27Z",
+      "side": 1,
+      "message": "Please read my previous comment here.",
+      "range": {
+        "startLine": 135,
+        "startChar": 0,
+        "endLine": 138,
+        "endChar": 4
+      },
+      "revId": "c2fe409d51a0311f0db849ac890210a424230d65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
