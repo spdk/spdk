@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bae0d2d5_09912f5a",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T00:58:36Z",
+      "side": 1,
+      "message": "it doesn\u0027t make sense to keep it anymore you may have seen that once you got to the revised command parsing.  Hold off on this comment until after I break this up",
+      "parentUuid": "a91cfdbf_e6a3bcac",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5663d7e_5003a27e",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 20
@@ -30,6 +48,24 @@
       "writtenOn": "2017-10-17T22:58:16Z",
       "side": 1,
       "message": "how is this related to script mode?",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5a0791c_88051f1e",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1043,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T00:58:36Z",
+      "side": 1,
+      "message": "it\u0027s a bug that wasn\u0027t discovered until this review, it doesn\u0027t belong here.  Will move",
+      "parentUuid": "c5663d7e_5003a27e",
       "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "21897626_c745f244",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1304,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T00:58:36Z",
+      "side": 1,
+      "message": "I have a few cases where if I don\u0027t NULL a free\u0027d pointer it screws up various checks for NULL on that pointer in both shell and script modes so instead of just NULL\u0027ing those out after freeing I went through and NULL\u0027d everything after I free it to make sure I didn\u0027t miss any.  I will pull these out also and make separate and might just make an inline function to free \u0026 null the parm.",
+      "parentUuid": "ee83facf_14cb8bd6",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd5d7ee5_88e786c7",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 20
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "c944e6e9_03712934",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1388,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T00:58:36Z",
+      "side": 1,
+      "message": "the extra checks in unload, I think is what you mean, are there to make the static analyzer happy",
+      "parentUuid": "fd5d7ee5_88e786c7",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ebc47882_7d93d4db",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 20
@@ -81,6 +153,24 @@
       "writtenOn": "2017-10-17T22:58:16Z",
       "side": 1,
       "message": "global",
+      "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ec1b27c_c3547fd9",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1431,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T00:58:36Z",
+      "side": 1,
+      "message": "shit",
+      "parentUuid": "ebc47882_7d93d4db",
       "revId": "851e3fd88d6ed5a03c2d9109f78537a60f812796",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
