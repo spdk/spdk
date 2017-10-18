@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df3a5d26_c7a02868",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T14:09:54Z",
+      "side": 1,
+      "message": "rebase remains",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 59
+      },
+      "revId": "35677b97413b98a0b2ecfe73a6fe5ea65f8b7e64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b0765eb_758916ed",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T14:09:54Z",
+      "side": 1,
+      "message": "unrelated change",
+      "revId": "35677b97413b98a0b2ecfe73a6fe5ea65f8b7e64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c270e320_24cfe234",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T14:09:54Z",
+      "side": 1,
+      "message": "if you really need to have cluster size configurable by .sh script then you probably need to also remove that line",
+      "range": {
+        "startLine": 16,
+        "startChar": 4,
+        "endLine": 16,
+        "endChar": 61
+      },
+      "revId": "35677b97413b98a0b2ecfe73a6fe5ea65f8b7e64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e244d5df_51a57170",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T14:09:54Z",
+      "side": 1,
+      "message": "Unrelated change. This commit applies to cluster size.\n\nAlso - it\u0027d be enough to just extend test case 23 to have nested configuration. There\u0027s no need for 2 almost identical tests",
+      "range": {
+        "startLine": 43,
+        "startChar": 8,
+        "endLine": 43,
+        "endChar": 33
+      },
+      "revId": "35677b97413b98a0b2ecfe73a6fe5ea65f8b7e64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f6e47c9_bed48a60",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T14:09:54Z",
+      "side": 1,
+      "message": "Please use the same if-else method as in tests above.\nException is caught elsewhere so here you will return false negatives.",
+      "range": {
+        "startLine": 366,
+        "startChar": 7,
+        "endLine": 372,
+        "endChar": 16
+      },
+      "revId": "35677b97413b98a0b2ecfe73a6fe5ea65f8b7e64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29ebdecd_1574344c",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T14:09:54Z",
+      "side": 1,
+      "message": "Please use the same if-else method as in tests above",
+      "range": {
+        "startLine": 381,
+        "startChar": 8,
+        "endLine": 386,
+        "endChar": 16
+      },
+      "revId": "35677b97413b98a0b2ecfe73a6fe5ea65f8b7e64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78425bbc_3674a040",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T14:09:54Z",
+      "side": 1,
+      "message": "unrelated change",
+      "range": {
+        "startLine": 410,
+        "startChar": 25,
+        "endLine": 414,
+        "endChar": 37
+      },
+      "revId": "35677b97413b98a0b2ecfe73a6fe5ea65f8b7e64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aead7856_01b072e0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T14:09:54Z",
+      "side": 1,
+      "message": "Unrelated and not needed",
+      "range": {
+        "startLine": 418,
+        "startChar": 0,
+        "endLine": 421,
+        "endChar": 12
+      },
+      "revId": "35677b97413b98a0b2ecfe73a6fe5ea65f8b7e64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
