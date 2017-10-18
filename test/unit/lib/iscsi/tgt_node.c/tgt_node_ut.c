@@ -108,6 +108,227 @@ config_file_fail_cases(void)
 	spdk_conf_free(config);
 }
 
+static void
+allow_ipv6_allowed(void)
+{
+	int rc;
+	char *netmask;
+	char *addr;
+
+	netmask = "[2001:ad6:1234::]/48";
+	addr = "2001:ad6:1234:5678:9abc::";
+
+	rc = spdk_iscsi_tgt_node_allow_ipv6(netmask, addr);
+	CU_ASSERT(rc != 0);
+
+	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	CU_ASSERT(rc != 0);
+}
+
+static void
+allow_ipv6_denied(void)
+{
+	int rc;
+	char *netmask;
+	char *addr;
+
+	netmask = "[2001:ad6:1234::]/56";
+	addr = "2001:ad6:1234:5678:9abc::";
+
+	rc = spdk_iscsi_tgt_node_allow_ipv6(netmask, addr);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	CU_ASSERT(rc == 0);
+}
+
+static void
+allow_ipv4_allowed(void)
+{
+	int rc;
+	char *netmask;
+	char *addr;
+
+	netmask = "192.168.2.0/24";
+	addr = "192.168.2.1";
+
+	rc = spdk_iscsi_tgt_node_allow_ipv4(netmask, addr);
+	CU_ASSERT(rc != 0);
+
+	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	CU_ASSERT(rc != 0);
+}
+
+static void
+allow_ipv4_denied(void)
+{
+	int rc;
+	char *netmask;
+	char *addr;
+
+	netmask = "192.168.2.0";
+	addr  = "192.168.2.1";
+
+	rc = spdk_iscsi_tgt_node_allow_ipv4(netmask, addr);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	CU_ASSERT(rc == 0);
+}
+
+static void
+node_access_allowed1(void)
+{
+	struct spdk_iscsi_tgt_node tgtnode;
+	struct spdk_iscsi_portal_grp pg;
+	struct spdk_iscsi_init_grp ig;
+	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_portal portal;
+	char *initiators[] = {"iqn.2017-10.spdk.io:0001"};
+	char *netmasks[] = {"192.168.2.0/24"};
+	char *iqn, *addr;
+	int rc;
+
+	/* portal group initialization */
+	memset(&pg, 0, sizeof(struct spdk_iscsi_portal_grp));
+	pg.tag = 1;
+
+	/* initiator group initialization */
+	memset(&ig, 0, sizeof(struct spdk_iscsi_init_grp));
+	ig.tag = 1;
+
+	ig.ninitiators = 1;
+	ig.initiators = &initiators[0];
+
+	ig.nnetmasks = 1;
+	ig.netmasks = &netmasks[0];
+
+	/* target initialization */
+	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
+	tgtnode.maxmap = 1;
+	tgtnode.name = "iqn.2017-10.spdk.io:0001";
+	tgtnode.map[0].pg = &pg;
+	tgtnode.map[0].ig = &ig;
+
+	/* portal initialization */
+	memset(&portal, 0, sizeof(struct spdk_iscsi_portal));
+	portal.group = &pg;
+	portal.host = "192.168.2.0";
+	portal.port = "3260";
+
+	/* input for UT */
+	memset(&conn, 0, sizeof(struct spdk_iscsi_conn));
+	conn.portal = &portal;
+
+	iqn = "iqn.2017-10.spdk.io:0001";
+	addr = "192.168.2.1";
+
+	rc = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(rc == 1);
+}
+
+static void
+node_access_allowed2(void)
+{
+	struct spdk_iscsi_tgt_node tgtnode;
+	struct spdk_iscsi_portal_grp pg;
+	struct spdk_iscsi_init_grp ig;
+	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_portal portal;
+	char *initiators[] = {"iqn.2017-10.spdk.io:0001"};
+	char *iqn, *addr;
+	int rc;
+
+	/* portal group initialization */
+	memset(&pg, 0, sizeof(struct spdk_iscsi_portal_grp));
+	pg.tag = 1;
+
+	/* initiator group initialization */
+	memset(&ig, 0, sizeof(struct spdk_iscsi_init_grp));
+	ig.tag = 1;
+
+	ig.ninitiators = 1;
+	ig.initiators = &initiators[0];
+
+	ig.nnetmasks = 0;
+	ig.netmasks = NULL;
+
+	/* target initialization */
+	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
+	tgtnode.maxmap = 1;
+	tgtnode.name = "iqn.2017-10.spdk.io:0001";
+	tgtnode.map[0].pg = &pg;
+	tgtnode.map[0].ig = &ig;
+
+	/* portal initialization */
+	memset(&portal, 0, sizeof(struct spdk_iscsi_portal));
+	portal.group = &pg;
+	portal.host = "192.168.2.0";
+	portal.port = "3260";
+
+	/* input for UT */
+	memset(&conn, 0, sizeof(struct spdk_iscsi_conn));
+	conn.portal = &portal;
+
+	iqn = "iqn.2017-10.spdk.io:0001";
+	addr = "192.168.2.1";
+
+	rc = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(rc == 1);
+}
+
+static void
+node_access_denied(void)
+{
+	struct spdk_iscsi_tgt_node tgtnode;
+	struct spdk_iscsi_portal_grp pg;
+	struct spdk_iscsi_init_grp ig;
+	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_portal portal;
+	char *initiators[] = {"iqn.2017-10.spdk.io:0001"};
+	char *netmasks[] = {"192.168.2.0/24"};
+	char *iqn, *addr;
+	int rc;
+
+	/* portal group initialization */
+	memset(&pg, 0, sizeof(struct spdk_iscsi_portal_grp));
+	pg.tag = 1;
+
+	/* initiator group initialization */
+	memset(&ig, 0, sizeof(struct spdk_iscsi_init_grp));
+	ig.tag = 1;
+
+	ig.ninitiators = 1;
+	ig.initiators = &initiators[0];
+
+	ig.nnetmasks = 1;
+	ig.netmasks = &netmasks[0];
+
+	/* target initialization */
+	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
+	tgtnode.maxmap = 1;
+	tgtnode.name = "iqn.2017-10.spdk.io:0001";
+	tgtnode.map[0].pg = &pg;
+	tgtnode.map[0].ig = &ig;
+
+	/* portal initialization */
+	memset(&portal, 0, sizeof(struct spdk_iscsi_portal));
+	portal.group = &pg;
+	portal.host = "192.168.2.0";
+	portal.port = "3260";
+
+	/* input for UT */
+	memset(&conn, 0, sizeof(struct spdk_iscsi_conn));
+	conn.portal = &portal;
+
+	iqn = "iqn.2017-10.spdk.io:0001";
+	addr = "192.168.3.1";
+
+	rc = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(rc == 0);
+
+}
+
 int
 main(int argc, char **argv)
 {
@@ -133,6 +354,13 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "config file fail cases", config_file_fail_cases) == NULL
+		|| CU_add_test(suite, "allow ipv6 allowed case", allow_ipv6_allowed) == NULL
+		|| CU_add_test(suite, "allow ipv6 denied case", allow_ipv6_denied) == NULL
+		|| CU_add_test(suite, "allow ipv4 allowed case", allow_ipv4_allowed) == NULL
+		|| CU_add_test(suite, "allow ipv4 denied case", allow_ipv4_denied) == NULL
+		|| CU_add_test(suite, "node access allowed case1", node_access_allowed1) == NULL
+		|| CU_add_test(suite, "node access allowed case2", node_access_allowed2) == NULL
+		|| CU_add_test(suite, "node access denied case", node_access_denied) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

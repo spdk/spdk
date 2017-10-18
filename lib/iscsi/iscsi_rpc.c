@@ -165,8 +165,6 @@ spdk_rpc_add_initiator_group(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_initiator_group req = {};
-	size_t i;
-	char **initiators = NULL, **netmasks = NULL;
 	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_initiator_group_decoders,
@@ -175,38 +173,15 @@ spdk_rpc_add_initiator_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (req.initiator_list.num_initiators == 0 ||
-	    req.netmask_list.num_netmasks == 0) {
+	if (req.initiator_list.num_initiators == 0) {
 		goto invalid;
-	}
-
-	initiators = calloc(req.initiator_list.num_initiators, sizeof(char *));
-	if (initiators == NULL) {
-		goto invalid;
-	}
-	for (i = 0; i < req.initiator_list.num_initiators; i++) {
-		initiators[i] = strdup(req.initiator_list.initiators[i]);
-		if (initiators[i] == NULL) {
-			goto invalid;
-		}
-	}
-
-	netmasks = calloc(req.netmask_list.num_netmasks, sizeof(char *));
-	if (netmasks == NULL) {
-		goto invalid;
-	}
-	for (i = 0; i < req.netmask_list.num_netmasks; i++) {
-		netmasks[i] = strdup(req.netmask_list.netmasks[i]);
-		if (netmasks[i] == NULL) {
-			goto invalid;
-		}
 	}
 
 	if (spdk_iscsi_init_grp_create_from_initiator_list(req.tag,
 			req.initiator_list.num_initiators,
-			initiators,
+			req.initiator_list.initiators,
 			req.netmask_list.num_netmasks,
-			netmasks)) {
+			req.netmask_list.netmasks)) {
 		SPDK_ERRLOG("create_from_initiator_list failed\n");
 		goto invalid;
 	}
@@ -224,18 +199,6 @@ spdk_rpc_add_initiator_group(struct spdk_jsonrpc_request *request,
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	if (initiators) {
-		for (i = 0; i < req.initiator_list.num_initiators; i++) {
-			free(initiators[i]);
-		}
-		free(initiators);
-	}
-	if (netmasks) {
-		for (i = 0; i < req.netmask_list.num_netmasks; i++) {
-			free(netmasks[i]);
-		}
-		free(netmasks);
-	}
 	free_rpc_initiator_group(&req);
 }
 SPDK_RPC_REGISTER("add_initiator_group", spdk_rpc_add_initiator_group)
