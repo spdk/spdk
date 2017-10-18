@@ -16,6 +16,24 @@
       "revId": "6d4a1213e6c3e95d3d33374017424516a988d537",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1017ef97_c5e3ab03",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T16:17:44Z",
+      "side": 1,
+      "message": "I agree with Changpeng.  It seems the logic for the extra 2 queues belongs here.  This file already needs to know that request queues start at 2.  Also if we want to support virtio-blk in the future, we won\u0027t want all devs to have these two extra queues.",
+      "parentUuid": "8f24babc_9b127845",
+      "revId": "6d4a1213e6c3e95d3d33374017424516a988d537",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
