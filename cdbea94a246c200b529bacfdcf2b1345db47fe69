@@ -1,0 +1,146 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "808d3ab8_fad87f6d",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-18T18:19:15Z",
+      "side": 1,
+      "message": "This function doesn\u0027t seem to be used in the current patch - it can be removed.",
+      "revId": "cdbea94a246c200b529bacfdcf2b1345db47fe69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a15fadcf_37b8f098",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-18T18:19:15Z",
+      "side": 1,
+      "message": "Can this just be a struct spdk_bdev pointer rather than void pointer?\n\nAlso, I think we should call this something like spdk_bdev_nvme_get_ctrlr(), since it is specific to bdev_nvme, not a generic bdev function.",
+      "revId": "cdbea94a246c200b529bacfdcf2b1345db47fe69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19fc8b32_722abec1",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1380,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-18T18:19:15Z",
+      "side": 1,
+      "message": "Casting bdev-\u003ectxt to a struct nvme_bdev pointer is only safe if we already know this bdev is a NVMe bdev - it could be a bdev from a different module.  If we absolutely must expose this function, it needs to check if the bdev is in g_nvme_bdevs to verify that it really is an NVMe bdev.",
+      "revId": "cdbea94a246c200b529bacfdcf2b1345db47fe69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5807e5d_d1bef970",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1381,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-18T18:19:15Z",
+      "side": 1,
+      "message": "This logic with all of the ternary operators looks quite confusing to me - I think it would be simpler to do the NULL checks one at a time and return early rather than chaining them all together.",
+      "revId": "cdbea94a246c200b529bacfdcf2b1345db47fe69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0d781a4_56516842",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-18T18:19:15Z",
+      "side": 1,
+      "message": "Why all the extra dots in these messages?",
+      "range": {
+        "startLine": 236,
+        "startChar": 32,
+        "endLine": 236,
+        "endChar": 36
+      },
+      "revId": "cdbea94a246c200b529bacfdcf2b1345db47fe69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "adeb02fd_087c59a0",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-18T18:19:15Z",
+      "side": 1,
+      "message": "Either uncomment this or remove it.",
+      "revId": "cdbea94a246c200b529bacfdcf2b1345db47fe69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95af24b9_7b21cfaf",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-18T18:19:15Z",
+      "side": 1,
+      "message": "These will always be set, since they are non-optional in the JSON decoder list - spdk_json_decode_object() will return a failure code if they are missing, so it is not possible to enter this \u0027if\u0027 block.",
+      "revId": "cdbea94a246c200b529bacfdcf2b1345db47fe69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d3ac977_d2a742d1",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-18T18:19:15Z",
+      "side": 1,
+      "message": "This ctrlr_tmp01 never seems to be used anywhere else, so maybe just:\n\n    if (spdk_bdev_get_ctrlr(bdev2) !\u003d ctrlr) {\n        continue;\n    }",
+      "revId": "cdbea94a246c200b529bacfdcf2b1345db47fe69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
