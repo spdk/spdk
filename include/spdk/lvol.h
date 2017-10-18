@@ -49,6 +49,9 @@ struct spdk_lvs_opts {
 	uint32_t cluster_sz;
 };
 
+/* Initialize an spdk_lvs_opts structure to the default logical volume store option values. */
+void spdk_lvs_opts_init(struct spdk_lvs_opts *opts);
+
 typedef void (*spdk_lvs_op_with_handle_complete)(void *cb_arg, struct spdk_lvol_store *lvol_store,
 		int lvserrno);
 typedef void (*spdk_lvs_op_complete)(void *cb_arg, int lvserrno);
