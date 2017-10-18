@@ -1263,6 +1263,38 @@ bs_resize_md(void)
 	g_bs = NULL;
 }
 
+static void
+bs_destroy(void)
+{
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_opts opts;
+
+	/* Initialize a new blob store */
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Destroy the blob store */
+	g_bserrno = -1;
+	spdk_bs_destroy(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Loading an non-existent blob store should fail. */
+	g_bserrno = -1;
+	g_bs = NULL;
+	dev = init_dev();
+
+	g_scheduler_delay = true;
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+	_bs_flush_scheduler();
+	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	g_scheduler_delay = true;
+}
+
 /* Try to hit all of the corner cases associated with serializing
  * a blob to disk
  */
@@ -1482,6 +1514,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "bs_unload", bs_unload) == NULL ||
 		CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz) == NULL ||
 		CU_add_test(suite, "bs_resize_md", bs_resize_md) == NULL ||
+		CU_add_test(suite, "bs_destroy", bs_destroy) == NULL ||
 		CU_add_test(suite, "bs_type", bs_type) == NULL ||
 		CU_add_test(suite, "bs_super_block", bs_super_block) == NULL ||
 		CU_add_test(suite, "blob_serialize", blob_serialize) == NULL ||
