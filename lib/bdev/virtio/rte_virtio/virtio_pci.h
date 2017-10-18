@@ -56,7 +56,7 @@ struct virtio_pci_ops {
 	void (*write_dev_cfg)(struct virtio_dev *hw, size_t offset,
 			      const void *src, int len);
 	uint8_t (*get_status)(struct virtio_dev *hw);
-	void    (*set_status)(struct virtio_dev *hw, uint8_t status);
+	void (*set_status)(struct virtio_dev *hw, uint8_t status);
 
 	/**
 	 * Get device features. The features might be already
@@ -69,7 +69,7 @@ struct virtio_pci_ops {
 	 * The negotiation can fail with return code -1.
 	 * This function should also set vdev->negotiated_features field.
 	 */
-	int     (*set_features)(struct virtio_dev *vdev, uint64_t features);
+	int (*set_features)(struct virtio_dev *vdev, uint64_t features);
 
 	uint8_t (*get_isr)(struct virtio_dev *hw);
 
@@ -78,7 +78,7 @@ struct virtio_pci_ops {
 	/** Deinit and free virtio device */
 	void (*free_vdev)(struct virtio_dev *vdev);
 	uint16_t (*set_queue_irq)(struct virtio_dev *hw, struct virtqueue *vq,
-			uint16_t vec);
+				  uint16_t vec);
 
 	uint16_t (*get_queue_num)(struct virtio_dev *hw, uint16_t queue_id);
 	int (*setup_queue)(struct virtio_dev *hw, struct virtqueue *vq);

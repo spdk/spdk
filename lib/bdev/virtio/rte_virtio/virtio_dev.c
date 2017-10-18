@@ -117,8 +117,8 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 		 dev->id, vtpci_queue_idx);
 
 	size = RTE_ALIGN_CEIL(sizeof(*vq) +
-				vq_size * sizeof(struct vq_desc_extra),
-				RTE_CACHE_LINE_SIZE);
+			      vq_size * sizeof(struct vq_desc_extra),
+			      RTE_CACHE_LINE_SIZE);
 
 	vq = rte_zmalloc_socket(vq_name, size, RTE_CACHE_LINE_SIZE,
 				SOCKET_ID_ANY);
@@ -138,7 +138,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	size = vring_size(vq_size, VIRTIO_PCI_VRING_ALIGN);
 	vq->vq_ring_size = RTE_ALIGN_CEIL(size, VIRTIO_PCI_VRING_ALIGN);
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "vring_size: %u, rounded_vring_size: %u\n",
-		     size, vq->vq_ring_size);
+		      size, vq->vq_ring_size);
 
 	mz = rte_memzone_reserve_aligned(vq_name, vq->vq_ring_size,
 					 SOCKET_ID_ANY,
@@ -157,9 +157,9 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	vq->vq_ring_mem = mz->phys_addr;
 	vq->vq_ring_virt_mem = mz->addr;
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "vq->vq_ring_mem:      0x%" PRIx64 "\n",
-		     (uint64_t)mz->phys_addr);
+		      (uint64_t)mz->phys_addr);
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "vq->vq_ring_virt_mem: 0x%" PRIx64 "\n",
-		     (uint64_t)(uintptr_t)mz->addr);
+		      (uint64_t)(uintptr_t)mz->addr);
 
 	virtio_init_vring(vq);
 

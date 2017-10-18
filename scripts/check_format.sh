@@ -17,7 +17,7 @@ if hash astyle; then
 	#  rather than making diffs more complicated by a lot of changes to follow SPDK
 	#  coding standards.
 	git ls-files '*.[ch]' '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' | \
-		grep -v rte_vhost | grep -v rte_virtio | grep -v cpp_headers | \
+		grep -v rte_vhost | grep -v cpp_headers | \
 		xargs astyle --options=.astylerc >> astyle.log
 	if grep -q "^Formatted" astyle.log; then
 		echo " errors detected"
@@ -39,7 +39,7 @@ fi
 echo -n "Checking comment style..."
 
 git grep --line-number -e '/[*][^ *-]' -- '*.[ch]' > comment.log || true
-git grep --line-number -e '[^ ][*]/' -- '*.[ch]' ':!lib/vhost/rte_vhost*/*' ':!lib/bdev/virtio/rte_virtio*/*' >> comment.log || true
+git grep --line-number -e '[^ ][*]/' -- '*.[ch]' ':!lib/vhost/rte_vhost*/*' >> comment.log || true
 git grep --line-number -e '^[*]' -- '*.[ch]' >> comment.log || true
 
 if [ -s comment.log ]; then
