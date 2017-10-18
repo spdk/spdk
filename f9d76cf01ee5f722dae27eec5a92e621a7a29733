@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d878470_9ad8fd01",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T13:12:03Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 134,
+        "startChar": 32,
+        "endLine": 134,
+        "endChar": 33
+      },
+      "revId": "f9d76cf01ee5f722dae27eec5a92e621a7a29733",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c867b02_a402c1d2",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T13:12:03Z",
+      "side": 1,
+      "message": "Test failed for me before getting to the end of the loop but I am pretty sure that it will fail - you run FIO which will take some time but you do it in a sub shell and you do not wait for the process to finish.\nI am quite sure we will start calling \"vm_shutdown_all\" before all FIO finish.",
+      "range": {
+        "startLine": 135,
+        "startChar": 31,
+        "endLine": 135,
+        "endChar": 32
+      },
+      "revId": "f9d76cf01ee5f722dae27eec5a92e621a7a29733",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8cd7e044_90f6c42e",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T13:12:03Z",
+      "side": 1,
+      "message": "I get errors from perpare_fio that no disks could be found. Did you check that PMEM BDEV shows up and matches filter in \"check_disk_location\" functions?",
+      "range": {
+        "startLine": 135,
+        "startChar": 5,
+        "endLine": 135,
+        "endChar": 16
+      },
+      "revId": "f9d76cf01ee5f722dae27eec5a92e621a7a29733",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
