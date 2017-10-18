@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbf8ec2d_d13a0b83",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 25
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-18T16:43:36Z",
+      "side": 1,
+      "message": "I think this should also be under $SPDK_TEST_NVML",
+      "revId": "e3adfd5086a20e47683ca79a3289f2d77f46a470",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
