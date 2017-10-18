@@ -16,6 +16,24 @@
       "revId": "d97dd1fa3e0b4ae55848336f6d0a47711136fd41",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d76faa2_a641224b",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-18T16:11:52Z",
+      "side": 1,
+      "message": "Copying my PS12 comment:\n```\nI added CTRLQ_RING_SIZE define but I don\u0027t think this req array should scale with the ring size.\nIt has size 16 now - that\u0027s probably still too much for any real-case scenario.\n```",
+      "parentUuid": "0a7f3eac_0df41705",
+      "revId": "d97dd1fa3e0b4ae55848336f6d0a47711136fd41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
