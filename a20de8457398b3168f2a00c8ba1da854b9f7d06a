@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccc67bda_79e26bfd",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2017-10-18T16:06:59Z",
+      "side": 1,
+      "message": "I still don\u0027t understand what IP addresses are used when there is no Netmask specified in an initiator group. I think this might be a good place to put some information describing which IP addresses an initiator group without Netmask will use including where it will get them.",
+      "range": {
+        "startLine": 239,
+        "startChar": 1,
+        "endLine": 241,
+        "endChar": 2
+      },
+      "revId": "a20de8457398b3168f2a00c8ba1da854b9f7d06a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
