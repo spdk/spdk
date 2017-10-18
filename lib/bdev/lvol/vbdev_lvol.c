@@ -40,6 +40,7 @@
 
 SPDK_DECLARE_BDEV_MODULE(lvol);
 
+uint64_t g_lvs_refcnt = 0;
 static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 			g_spdk_lvol_pairs);
 
@@ -90,6 +91,7 @@ _vbdev_lvs_create_cb(void *cb_arg, struct spdk_lvol_store *lvs, int lvserrno)
 	lvs_bdev->bdev = bdev;
 
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+	g_lvs_refcnt++;
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev inserted\n");
 
 end:
@@ -152,7 +154,11 @@ _vbdev_lvs_destruct_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_lvs_req *req = cb_arg;
 
-	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store bdev deleted\n");
+	if (lvserrno != 0) {
+		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Could not destruct lvol store\n");
+	} else {
+		g_lvs_refcnt--;
+	}
 
 	if (req->cb_fn != NULL)
 		req->cb_fn(req->cb_arg, lvserrno);
@@ -600,6 +606,8 @@ vbdev_lvol_resize(char *name, size_t sz,
 static int
 vbdev_lvs_init(void)
 {
+	g_lvs_refcnt = 0;
+
 	return 0;
 }
 
@@ -608,6 +616,9 @@ vbdev_lvs_fini(void)
 {
 	struct lvol_store_bdev *lvs_bdev, *tmp;
 
+	if (TAILQ_EMPTY(&g_spdk_lvol_pairs)) {
+		return;
+	}
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
 		vbdev_lvs_destruct(lvs_bdev->lvs, NULL, NULL);
 	}
