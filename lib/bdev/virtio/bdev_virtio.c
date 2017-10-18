@@ -486,7 +486,13 @@ alloc_virtio_disk(struct virtio_scsi_scan_base *base, uint8_t target_id, uint64_
 	disk->target = target_id;
 
 	bdev = &disk->bdev;
-	bdev->name = spdk_sprintf_alloc("Virtio0");
+	bdev->name = spdk_sprintf_alloc("VirtioScsi%"PRIu32"t%"PRIu8, disk->vdev->id, target_id);
+	if (bdev->name == NULL) {
+		SPDK_ERRLOG("Couldn't alloc memory for the bdev name.\n");
+		free(disk);
+		return -1;
+	}
+
 	bdev->product_name = "Virtio SCSI Disk";
 	bdev->write_cache = 0;
 	bdev->blocklen = disk->block_size;
