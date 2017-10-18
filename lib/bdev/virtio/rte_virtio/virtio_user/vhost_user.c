@@ -31,14 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/un.h>
-#include <string.h>
-#include <errno.h>
+#include "spdk/stdinc.h"
 
 #include "vhost.h"
 #include "virtio_user_dev.h"
