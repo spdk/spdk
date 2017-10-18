@@ -239,9 +239,10 @@ virtio_user_notify_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 	char err_str[64];
 
-	if (write(dev->kickfds[vq->vq_queue_index], &buf, sizeof(buf)) < 0)
+	if (write(dev->kickfds[vq->vq_queue_index], &buf, sizeof(buf)) < 0) {
 		spdk_strerror_r(errno, err_str, sizeof(err_str));
 		SPDK_ERRLOG("failed to kick backend: %s.\n", err_str);
+	}
 }
 
 static void

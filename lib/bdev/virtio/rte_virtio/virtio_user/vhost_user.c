@@ -437,9 +437,10 @@ vhost_user_setup(struct virtio_user_dev *dev)
 	}
 
 	flag = fcntl(fd, F_GETFD);
-	if (fcntl(fd, F_SETFD, flag | FD_CLOEXEC) < 0)
+	if (fcntl(fd, F_SETFD, flag | FD_CLOEXEC) < 0) {
 		spdk_strerror_r(errno, err_str, sizeof(err_str));
 		SPDK_ERRLOG("fcntl failed, %s\n", err_str);
+	}
 
 	memset(&un, 0, sizeof(un));
 	un.sun_family = AF_UNIX;
