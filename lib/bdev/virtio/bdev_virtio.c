@@ -352,7 +352,7 @@ bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 	queue_idx = virtio_dev_find_and_acquire_queue(vdev, VIRTIO_SCSI_REQUESTQ);
 	if (queue_idx < 0) {
 		SPDK_ERRLOG("Couldn't get an unused queue for the io_channel.\n");
-		return queue_idx;
+		return -1;
 	}
 
 	vq = vdev->vqs[queue_idx];
