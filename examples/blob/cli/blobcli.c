@@ -609,7 +609,7 @@ read_dump_cb(void *arg1, int bserrno)
 				     NUM_PAGES, read_dump_cb, cli_context);
 	} else {
 		/* done reading */
-		printf("\nFile write complete.\n");
+		printf("\nFile write complete (to %s).\n", cli_context->file);
 		fclose(cli_context->fp);
 		spdk_bs_md_close_blob(&cli_context->blob, close_cb,
 				      cli_context);
@@ -658,7 +658,7 @@ write_imp_cb(void *arg1, int bserrno)
 				      NUM_PAGES, write_imp_cb, cli_context);
 	} else {
 		/* done writing */
-		printf("\nBlob import complete.\n");;
+		printf("\nBlob import complete (from %s).\n", cli_context->file);
 		fclose(cli_context->fp);
 		spdk_bs_md_close_blob(&cli_context->blob, close_cb, cli_context);
 	}
@@ -749,7 +749,7 @@ write_cb(void *arg1, int bserrno)
 				      NUM_PAGES, write_cb, cli_context);
 	} else {
 		/* done writing */
-		printf("\nBlob fill complete.\n");
+		printf("\nBlob fill complete (with 0x%x).\n", cli_context->fill_value);
 		spdk_bs_md_close_blob(&cli_context->blob, close_cb,
 				      cli_context);
 	}
