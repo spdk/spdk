@@ -689,8 +689,8 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	cli_context->buff = spdk_dma_malloc(cli_context->page_size,
 					    ALIGN_4K, NULL);
 	if (cli_context->buff == NULL) {
-		unload_bs(cli_context, "Error in allocating memory",
-			  -ENOMEM);
+		printf("Error in allocating memory\n");
+		spdk_bs_md_close_blob(&cli_context->blob, close_cb, cli_context);
 		return;
 	}
 	printf("Working");
@@ -698,6 +698,11 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	cli_context->page_count = 0;
 	if (cli_context->action == CLI_DUMP) {
 		cli_context->fp = fopen(cli_context->file, "w");
+		if (cli_context->fp == NULL) {
+			printf("Error in opening file\n");
+			spdk_bs_md_close_blob(&cli_context->blob, close_cb, cli_context);
+			return;
+		}
 
 		/* read a page of data from the blob */
 		spdk_bs_io_read_blob(cli_context->blob, cli_context->channel,
@@ -705,6 +710,11 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 				     NUM_PAGES, read_dump_cb, cli_context);
 	} else {
 		cli_context->fp = fopen(cli_context->file, "r");
+		if (cli_context->fp == NULL) {
+			printf("Error in opening file\n");
+			spdk_bs_md_close_blob(&cli_context->blob, close_cb, cli_context);
+			return;
+		}
 
 		/* get the filesize then rewind read a page of data from file */
 		fseek(cli_context->fp, 0L, SEEK_END);
