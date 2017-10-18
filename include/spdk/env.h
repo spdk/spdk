@@ -270,6 +270,14 @@ struct spdk_ring *spdk_ring_create(enum spdk_ring_type type, size_t count, int s
 void spdk_ring_free(struct spdk_ring *ring);
 
 /**
+ * Get the number of objects in the ring.
+ *
+ * \param ring the ring
+ * \return number of objects in the ring
+ */
+size_t spdk_ring_count(struct spdk_ring *ring);
+
+/**
  * Queue the array of objects (with length count) on the ring.
  *
  * Return the number of objects enqueued.

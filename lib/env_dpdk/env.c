@@ -298,6 +298,12 @@ spdk_ring_free(struct spdk_ring *ring)
 }
 
 size_t
+spdk_ring_count(struct spdk_ring *ring)
+{
+	return rte_ring_count((struct rte_ring *)ring);
+}
+
+size_t
 spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
 {
 	int rc;
