@@ -22,6 +22,30 @@
       "revId": "a20de8457398b3168f2a00c8ba1da854b9f7d06a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26ac8d9d_3f9fafba",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-10-18T23:18:13Z",
+      "side": 1,
+      "message": "In the login accessibility control for initiator (spdk_iscsi_tgt_node_access() in\nlib/iscsi/tgt_node.c), initiator group (IG) function is used.The initiator has to satisfy the following two conditions:\n\nC1) any IG mapped to the target has \"ALL\" or the same name as the initiator\u0027s one in the IG\u0027s name list\nC2) the IG which satisfies C1) has empty netmask list (the following *\u0027s lines) or includes the initiator\u0027s IP address in any netmask in the netmask list.\n\nEmpty netmask list of IG will be helpful for development and test. However we can not make the netmask list of IG empty at creation.\n\nThe following is rough excerpt of code. Please check lib/iscsi/tgt_node.c around the line 213 to 216 too.\n\nI hope these make sense for you.\n\n  for (i \u003d 0; i \u003c target-\u003emaxmap; i++) {\n    if (pg !\u003d target-\u003emap[i].pg)\n      continue;\n    igp \u003d target-\u003emap[i].ig;\n    for (j \u003d 0; j \u003c igp-\u003eninitiators; j++) {\n      if (igp-\u003einitiators[j][0] \u003d\u003d \u0027!\u0027 \u0026\u0026\n          (!strcasecmp(\u0026igp-\u003einitiators[j][1], \"ALL\") ||\n           !strcasecmp(\u0026igp-\u003einitiators[j][1], iqn))) {\n        return 0;\n      }\n\n      if (!strcasecmp(igp-\u003einitiators[j], \"ALL\") ||\n          !strcasecmp(igp-\u003einitiators[j], iqn)) {\n*       /* OK iqn, check netmask */\n*       if (igp-\u003ennetmasks \u003d\u003d 0) {\n*         /* OK, empty netmask as ALL */\n*         return 1;\n*       }\n\n        for (k \u003d 0; k \u003c igp-\u003ennetmasks; k++) {\n          rc \u003d spdk_iscsi_tgt_node_allow_netmask(igp-\u003enetmasks[k], addr);\n          if (rc \u003e 0) {\n            return 1;\n          }\n        }\n\n  (snip)",
+      "parentUuid": "ccc67bda_79e26bfd",
+      "range": {
+        "startLine": 239,
+        "startChar": 1,
+        "endLine": 241,
+        "endChar": 2
+      },
+      "revId": "a20de8457398b3168f2a00c8ba1da854b9f7d06a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
