@@ -191,12 +191,12 @@ usage(struct cli_context_t *cli_context, char *msg)
  * Free up memory that we allocated.
  */
 static void
-cli_cleanup(struct cli_context_t *cli_context)
+cli_cleanup(struct cli_context_t **cli_context)
 {
-	if (cli_context->buff) {
-		spdk_dma_free(cli_context->buff);
+	if ((*cli_context)->buff) {
+		spdk_dma_free((*cli_context)->buff);
 	}
-	if (cli_context->cli_mode == CLI_MODE_SCRIPT) {
+	if ((*cli_context)->cli_mode == CLI_MODE_SCRIPT) {
 		int i;
 
 		for (i = 0; i <= g_script.max_index; i++) {
@@ -204,7 +204,8 @@ cli_cleanup(struct cli_context_t *cli_context)
 			g_script.cmdline[i] = NULL;
 		}
 	}
-	free(cli_context);
+	free(*cli_context);
+	*cli_context = NULL;
 }
 
 /*
@@ -228,7 +229,8 @@ unload_complete(void *cb_arg, int bserrno)
 	    cli_context->action == CLI_SHELL_EXIT) {
 		spdk_app_stop(cli_context->rc);
 	} else {
-		/* when action is NONE, we know we need to remain in the shell */
+		/* when action is CLI_NONE, we know we need to remain in the shell */
+		cli_context->bs = NULL;
 		cli_context->action = CLI_NONE;
 		cli_start(cli_context, NULL);
 	}
@@ -248,6 +250,7 @@ unload_bs(struct cli_context_t *cli_context, char *msg, int bserrno)
 	if (cli_context->bs) {
 		if (cli_context->channel) {
 			spdk_bs_free_io_channel(cli_context->channel);
+			cli_context->channel = NULL;
 		}
 		spdk_bs_unload(cli_context->bs, unload_complete, cli_context);
 	} else {
@@ -1219,7 +1222,7 @@ parse_script(struct cli_context_t *cli_context)
 	if (fp == NULL) {
 		printf("ERROR: unable to open script: %s\n",
 		       cli_context->script_file);
-		cli_cleanup(cli_context);
+		cli_cleanup(&cli_context);
 		exit(-1);
 	}
 
@@ -1293,6 +1296,7 @@ cli_shell(void *arg1, void *arg2)
 	/* free strdup mem & reset arg count for next shell interaction */
 	for (i = start_idx; i < cli_context->argc; i++) {
 		free(cli_context->argv[i]);
+		cli_context->argv[i] = NULL;
 	}
 	cli_context->argc = 1;
 
@@ -1397,14 +1401,14 @@ main(int argc, char **argv)
 	free(cli_context->argv[0]);
 	cli_context->argv[0] = NULL;
 	if (cmd_chosen == false) {
-		cli_cleanup(cli_context);
+		cli_cleanup(&cli_context);
 		exit(-1);
 	}
 
 	/* after displaying help, just exit */
 	if (cli_context->action == CLI_HELP) {
 		usage(cli_context, "");
-		cli_cleanup(cli_context);
+		cli_cleanup(&cli_context);
 		exit(-1);
 	}
 
@@ -1447,7 +1451,7 @@ main(int argc, char **argv)
 	}
 
 	/* Free up memory that we allocated */
-	cli_cleanup(cli_context);
+	cli_cleanup(&cli_context);
 
 	/* Gracefully close out all of the SPDK subsystems. */
 	spdk_app_fini();
