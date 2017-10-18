@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f3b5b5a5_f4c01450",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T14:25:00Z",
+      "side": 1,
+      "message": "OMG, breaking a patch into parts and adding code along the way is apparently too much for my brain :)  my bad",
+      "parentUuid": "5ec5eccc_fcfb5062",
+      "revId": "b398930ab606bb9e3599b1723c8d9bf4da73980a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e680038_a9881603",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2017-10-18T03:20:00Z",
       "side": 1,
       "message": "cli_context is passed by value - no need to set it to NULL",
+      "revId": "b398930ab606bb9e3599b1723c8d9bf4da73980a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b34c842_d442d466",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T14:25:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e680038_a9881603",
       "revId": "b398930ab606bb9e3599b1723c8d9bf4da73980a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "20113050_78d5c423",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T14:25:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "adb1e0f7_4e10469e",
+      "revId": "b398930ab606bb9e3599b1723c8d9bf4da73980a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f7e619a_8e8e2537",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2017-10-18T03:20:00Z",
       "side": 1,
       "message": "line is a local variable, no need to set it to NULL",
+      "revId": "b398930ab606bb9e3599b1723c8d9bf4da73980a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a412b73d_c1110845",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1305,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T14:25:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f7e619a_8e8e2537",
       "revId": "b398930ab606bb9e3599b1723c8d9bf4da73980a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
