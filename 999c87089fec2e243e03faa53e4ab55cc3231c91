@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccdcf300_becbdca2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T00:48:46Z",
+      "side": 1,
+      "message": "maybe put a struct spdk_nvmf_rdma_mgmt_channel pointer here too?  then you don\u0027t have to call the spdk_io_channel_get_ctx() function in the main I/O path - it\u0027s not a huge deal but I think this would be a nice optimization",
+      "revId": "999c87089fec2e243e03faa53e4ab55cc3231c91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fb08db1_8815f521",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1099,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T00:48:46Z",
+      "side": 1,
+      "message": "unrelated whitespace change here and below (line 1104)",
+      "revId": "999c87089fec2e243e03faa53e4ab55cc3231c91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
