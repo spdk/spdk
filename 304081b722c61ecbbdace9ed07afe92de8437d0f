@@ -16,6 +16,24 @@
       "revId": "304081b722c61ecbbdace9ed07afe92de8437d0f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0a03bc6_bed08a53",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T17:30:29Z",
+      "side": 1,
+      "message": "you are correct, fixed",
+      "parentUuid": "aea83fcb_78660824",
+      "revId": "304081b722c61ecbbdace9ed07afe92de8437d0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
