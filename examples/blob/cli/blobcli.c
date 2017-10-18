@@ -976,16 +976,24 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			}
 			break;
 		case 'd':
-			cmd_chosen++;
-			cli_context->action = CLI_DUMP;
-			cli_context->blobid = atoll(optarg);
-			snprintf(cli_context->file, BUFSIZE, "%s", argv[optind]);
+			if (argv[optind] != NULL) {
+				cmd_chosen++;
+				cli_context->action = CLI_DUMP;
+				cli_context->blobid = atoll(optarg);
+				snprintf(cli_context->file, BUFSIZE, "%s", argv[optind]);
+			} else {
+				usage(cli_context, "ERROR: missing parameter.\n");
+			}
 			break;
 		case 'f':
-			cmd_chosen++;
-			cli_context->action = CLI_FILL;
-			cli_context->blobid = atoll(optarg);
-			cli_context->fill_value = atoi(argv[optind]);
+			if (argv[optind] != NULL) {
+				cmd_chosen++;
+				cli_context->action = CLI_FILL;
+				cli_context->blobid = atoll(optarg);
+				cli_context->fill_value = atoi(argv[optind]);
+			} else {
+				usage(cli_context, "ERROR: missing parameter.\n");
+			}
 			break;
 		case 'h':
 			cmd_chosen++;
@@ -1011,10 +1019,14 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			}
 			break;
 		case 'r':
-			cmd_chosen++;
-			cli_context->action = CLI_REM_XATTR;
-			cli_context->blobid = atoll(optarg);
-			snprintf(cli_context->key, BUFSIZE, "%s", argv[optind]);
+			if (argv[optind] != NULL) {
+				cmd_chosen++;
+				cli_context->action = CLI_REM_XATTR;
+				cli_context->blobid = atoll(optarg);
+				snprintf(cli_context->key, BUFSIZE, "%s", argv[optind]);
+			} else {
+				usage(cli_context, "ERROR: missing parameter.\n");
+			}
 			break;
 		case 'l':
 			if (strcmp("bdevs", optarg) == 0) {
@@ -1028,15 +1040,19 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			}
 			break;
 		case 'm':
-			cmd_chosen++;
-			cli_context->action = CLI_IMPORT;
-			cli_context->blobid = atoll(optarg);
-			snprintf(cli_context->file, BUFSIZE, "%s", argv[optind]);
+			if (argv[optind] != NULL) {
+				cmd_chosen++;
+				cli_context->action = CLI_IMPORT;
+				cli_context->blobid = atoll(optarg);
+				snprintf(cli_context->file, BUFSIZE, "%s", argv[optind]);
+			} else {
+				usage(cli_context, "ERROR: missing parameter.\n");
+			}
 			break;
 		case 'n':
-			cmd_chosen++;
 			cli_context->num_clusters = atoi(optarg);
 			if (cli_context->num_clusters > 0) {
+				cmd_chosen++;
 				cli_context->action = CLI_CREATE_BLOB;
 			} else {
 				usage(cli_context, "ERROR: invalid option for new\n");
@@ -1049,7 +1065,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			break;
 		case 'S':
 			if (cli_context->cli_mode == CLI_MODE_CMD) {
-				cli_context->action = CLI_NONE;
+				cmd_chosen++;
 				cli_context->cli_mode = CLI_MODE_SHELL;
 			}
 			cli_context->action = CLI_NONE;
@@ -1082,11 +1098,15 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			cli_context->action = CLI_SHELL_EXIT;
 			break;
 		case 'x':
-			cmd_chosen++;
-			cli_context->action = CLI_SET_XATTR;
-			cli_context->blobid = atoll(optarg);
-			snprintf(cli_context->key, BUFSIZE, "%s", argv[optind]);
-			snprintf(cli_context->value, BUFSIZE, "%s", argv[optind + 1]);
+			if (argv[optind] != NULL || argv[optind + 1] != NULL) {
+				cmd_chosen++;
+				cli_context->action = CLI_SET_XATTR;
+				cli_context->blobid = atoll(optarg);
+				snprintf(cli_context->key, BUFSIZE, "%s", argv[optind]);
+				snprintf(cli_context->value, BUFSIZE, "%s", argv[optind + 1]);
+			} else {
+				usage(cli_context, "ERROR: missing parameter.\n");
+			}
 			break;
 		default:
 			usage(cli_context, "ERROR: invalid option\n");
@@ -1099,25 +1119,6 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 
 	if (cli_context->cli_mode == CLI_MODE_CMD && cmd_chosen == 0) {
 		usage(cli_context, "Error: Please choose a command.\n");
-		exit(1);
-	}
-
-	/* a few options require some extra paramters */
-	if (cli_context->action == CLI_SET_XATTR) {
-		snprintf(cli_context->key, BUFSIZE, "%s", argv[3]);
-		snprintf(cli_context->value, BUFSIZE, "%s", argv[4]);
-	}
-	if (cli_context->action == CLI_REM_XATTR) {
-		snprintf(cli_context->key, BUFSIZE, "%s", argv[3]);
-	}
-
-	if (cli_context->action == CLI_DUMP ||
-	    cli_context->action == CLI_IMPORT) {
-		snprintf(cli_context->file, BUFSIZE, "%s", argv[3]);
-	}
-
-	if (cli_context->action == CLI_FILL) {
-		cli_context->fill_value = atoi(argv[3]);
 	}
 
 	/* in shell mode we'll call getopt multiple times so need to reset its index */
