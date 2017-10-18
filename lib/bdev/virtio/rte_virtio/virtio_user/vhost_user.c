@@ -125,7 +125,7 @@ vhost_user_read(int fd, struct vhost_user_msg *msg)
 	ret = recv(fd, (void *)msg, sz_hdr, 0);
 	if (ret < sz_hdr) {
 		SPDK_WARNLOG("Failed to recv msg hdr: %d instead of %d.\n",
-			    ret, sz_hdr);
+			     ret, sz_hdr);
 		goto fail;
 	}
 
@@ -261,7 +261,7 @@ prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 
 static struct vhost_user_msg m;
 
-const char * const vhost_msg_strings[] = {
+const char *const vhost_msg_strings[] = {
 	[VHOST_USER_SET_OWNER] = "VHOST_SET_OWNER",
 	[VHOST_USER_RESET_OWNER] = "VHOST_RESET_OWNER",
 	[VHOST_USER_SET_FEATURES] = "VHOST_SET_FEATURES",

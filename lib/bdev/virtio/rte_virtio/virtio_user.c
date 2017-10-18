@@ -56,14 +56,14 @@
 
 static void
 virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
-		     void *dst, int length)
+			    void *dst, int length)
 {
 	SPDK_ERRLOG("not supported offset=%zu, len=%d\n", offset, length);
 }
 
 static void
 virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
-		      const void *src, int length)
+			     const void *src, int length)
 {
 	SPDK_ERRLOG("not supported offset=%zu, len=%d\n", offset, length);
 }
@@ -76,7 +76,7 @@ virtio_user_set_status(struct virtio_dev *vdev, uint8_t status)
 	if (status & VIRTIO_CONFIG_S_DRIVER_OK) {
 		virtio_user_start_device(dev);
 	} else if (status == VIRTIO_CONFIG_S_RESET &&
-			(dev->status & VIRTIO_CONFIG_S_DRIVER_OK)) {
+		   (dev->status & VIRTIO_CONFIG_S_DRIVER_OK)) {
 		virtio_user_stop_device(dev);
 	}
 	dev->status = status;
@@ -201,7 +201,7 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	desc_addr = (uintptr_t)vq->vq_ring_virt_mem;
 	avail_addr = desc_addr + vq->vq_nentries * sizeof(struct vring_desc);
 	used_addr = RTE_ALIGN_CEIL(avail_addr + offsetof(struct vring_avail,
-							 ring[vq->vq_nentries]),
+				   ring[vq->vq_nentries]),
 				   VIRTIO_PCI_VRING_ALIGN);
 
 	dev->vrings[queue_idx].num = vq->vq_nentries;

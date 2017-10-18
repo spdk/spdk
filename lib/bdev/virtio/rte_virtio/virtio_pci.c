@@ -63,7 +63,7 @@ check_vq_phys_addr_ok(struct virtqueue *vq)
 	 * Check if the allocated physical memory exceeds 16TB.
 	 */
 	if ((vq->vq_ring_mem + vq->vq_ring_size - 1) >>
-			(VIRTIO_PCI_QUEUE_ADDR_SHIFT + 32)) {
+	    (VIRTIO_PCI_QUEUE_ADDR_SHIFT + 32)) {
 		SPDK_ERRLOG("vring address shouldn't be above 16TB!\n");
 		return 0;
 	}
@@ -112,7 +112,7 @@ legacy_read_dev_config(struct virtio_dev *dev, size_t offset,
 	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 
 	rte_pci_ioport_read(vtpci_io(dev), dst, length,
-		VIRTIO_PCI_CONFIG_OFF(hw->use_msix) + offset);
+			    VIRTIO_PCI_CONFIG_OFF(hw->use_msix) + offset);
 }
 
 static void
@@ -122,7 +122,7 @@ legacy_write_dev_config(struct virtio_dev *dev, size_t offset,
 	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 
 	rte_pci_ioport_write(vtpci_io(dev), src, length,
-		VIRTIO_PCI_CONFIG_OFF(hw->use_msix) + offset);
+			     VIRTIO_PCI_CONFIG_OFF(hw->use_msix) + offset);
 }
 
 static uint64_t
@@ -142,7 +142,7 @@ legacy_set_features(struct virtio_dev *dev, uint64_t features)
 		return -1;
 	}
 	rte_pci_ioport_write(vtpci_io(dev), &features, 4,
-		VIRTIO_PCI_GUEST_FEATURES);
+			     VIRTIO_PCI_GUEST_FEATURES);
 	dev->negotiated_features = features;
 
 	return 0;
@@ -189,7 +189,7 @@ legacy_set_queue_irq(struct virtio_dev *dev, struct virtqueue *vq, uint16_t vec)
 	uint16_t dst;
 
 	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
-		VIRTIO_PCI_QUEUE_SEL);
+			     VIRTIO_PCI_QUEUE_SEL);
 	rte_pci_ioport_write(vtpci_io(dev), &vec, 2, VIRTIO_MSI_QUEUE_VECTOR);
 	rte_pci_ioport_read(vtpci_io(dev), &dst, 2, VIRTIO_MSI_QUEUE_VECTOR);
 	return dst;
@@ -214,7 +214,7 @@ legacy_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 		return -1;
 
 	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
-		VIRTIO_PCI_QUEUE_SEL);
+			     VIRTIO_PCI_QUEUE_SEL);
 	src = vq->vq_ring_mem >> VIRTIO_PCI_QUEUE_ADDR_SHIFT;
 	rte_pci_ioport_write(vtpci_io(dev), &src, 4, VIRTIO_PCI_QUEUE_PFN);
 
@@ -227,7 +227,7 @@ legacy_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	uint32_t src = 0;
 
 	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
-		VIRTIO_PCI_QUEUE_SEL);
+			     VIRTIO_PCI_QUEUE_SEL);
 	rte_pci_ioport_write(vtpci_io(dev), &src, 4, VIRTIO_PCI_QUEUE_PFN);
 }
 
@@ -235,7 +235,7 @@ static void
 legacy_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
 	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
-		VIRTIO_PCI_QUEUE_NOTIFY);
+			     VIRTIO_PCI_QUEUE_NOTIFY);
 }
 
 const struct virtio_pci_ops legacy_ops = {
@@ -395,21 +395,21 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	desc_addr = vq->vq_ring_mem;
 	avail_addr = desc_addr + vq->vq_nentries * sizeof(struct vring_desc);
 	used_addr = RTE_ALIGN_CEIL(avail_addr + offsetof(struct vring_avail,
-							 ring[vq->vq_nentries]),
+				   ring[vq->vq_nentries]),
 				   VIRTIO_PCI_VRING_ALIGN);
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_select, vq->vq_queue_index);
 
 	io_write64_twopart(desc_addr, &hw->common_cfg->queue_desc_lo,
-				      &hw->common_cfg->queue_desc_hi);
+			   &hw->common_cfg->queue_desc_hi);
 	io_write64_twopart(avail_addr, &hw->common_cfg->queue_avail_lo,
-				       &hw->common_cfg->queue_avail_hi);
+			   &hw->common_cfg->queue_avail_hi);
 	io_write64_twopart(used_addr, &hw->common_cfg->queue_used_lo,
-				      &hw->common_cfg->queue_used_hi);
+			   &hw->common_cfg->queue_used_hi);
 
 	notify_off = spdk_mmio_read_2(&hw->common_cfg->queue_notify_off);
 	vq->notify_addr = (void *)((uint8_t *)hw->notify_base +
-				notify_off * hw->notify_off_multiplier);
+				   notify_off * hw->notify_off_multiplier);
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_enable, 1);
 
@@ -418,7 +418,7 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "\t aval_addr: %" PRIx64 "\n", avail_addr);
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "\t used_addr: %" PRIx64 "\n", used_addr);
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "\t notify addr: %p (notify offset: %"PRIu16")\n",
-		vq->notify_addr, notify_off);
+		      vq->notify_addr, notify_off);
 
 	return 0;
 }
@@ -431,11 +431,11 @@ modern_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	spdk_mmio_write_2(&hw->common_cfg->queue_select, vq->vq_queue_index);
 
 	io_write64_twopart(0, &hw->common_cfg->queue_desc_lo,
-				  &hw->common_cfg->queue_desc_hi);
+			   &hw->common_cfg->queue_desc_hi);
 	io_write64_twopart(0, &hw->common_cfg->queue_avail_lo,
-				  &hw->common_cfg->queue_avail_hi);
+			   &hw->common_cfg->queue_avail_hi);
 	io_write64_twopart(0, &hw->common_cfg->queue_used_lo,
-				  &hw->common_cfg->queue_used_hi);
+			   &hw->common_cfg->queue_used_hi);
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_enable, 0);
 }
@@ -527,7 +527,7 @@ get_cfg_addr(struct virtio_hw *hw, struct virtio_pci_cap *cap)
 
 	if (offset + length < offset) {
 		SPDK_ERRLOG("offset(%"PRIu32") + length(%"PRIu32") overflows\n",
-			offset, length);
+			    offset, length);
 		return NULL;
 	}
 
@@ -585,7 +585,7 @@ virtio_read_caps(struct virtio_hw *hw)
 			break;
 		case VIRTIO_PCI_CAP_NOTIFY_CFG:
 			spdk_pci_device_cfg_read(hw->pci_dev, &hw->notify_off_multiplier,
-					4, pos + sizeof(cap));
+						 4, pos + sizeof(cap));
 			hw->notify_base = get_cfg_addr(hw, &cap);
 			break;
 		case VIRTIO_PCI_CAP_DEVICE_CFG:
@@ -612,7 +612,7 @@ next:
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "device cfg mapped at: %p\n", hw->dev_cfg);
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "isr cfg mapped at: %p\n", hw->isr);
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "notify base: %p, notify off multiplier: %u\n",
-		hw->notify_base, hw->notify_off_multiplier);
+		      hw->notify_base, hw->notify_off_multiplier);
 
 	return 0;
 }
@@ -680,9 +680,9 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		if (dev->kdrv == RTE_KDRV_UNKNOWN &&
 		    (!dev->device.devargs ||
 		     dev->device.devargs->type !=
-			RTE_DEVTYPE_WHITELISTED_PCI)) {
+		     RTE_DEVTYPE_WHITELISTED_PCI)) {
 			PMD_INIT_LOG(INFO,
-				"skip kernel managed virtio device.");
+				     "skip kernel managed virtio device.");
 			return 1;
 		}
 		return -1;

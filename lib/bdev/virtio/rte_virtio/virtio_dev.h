@@ -163,7 +163,7 @@ struct virtio_req {
 	 1ULL << VIRTIO_F_VERSION_1)
 
 uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
-		uint16_t nb_pkts);
+			  uint16_t nb_pkts);
 
 /**
  * Put given request into the virtqueue.  The virtio device owning

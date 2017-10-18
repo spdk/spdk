@@ -213,7 +213,7 @@ virtio_user_dev_init(char *path, uint16_t requested_queues,
 
 	if (requested_queues > max_queues) {
 		SPDK_ERRLOG("requested %"PRIu16" request queues but only %"PRIu64" available\n",
-			     requested_queues, max_queues);
+			    requested_queues, max_queues);
 		goto err;
 	}
 
