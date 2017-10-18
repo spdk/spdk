@@ -201,7 +201,6 @@ cli_cleanup(struct cli_context_t *cli_context)
 
 		for (i = 0; i <= g_script.max_index; i++) {
 			free(g_script.cmdline[i]);
-			g_script.cmdline[i] = NULL;
 		}
 	}
 	free(cli_context);
@@ -228,7 +227,8 @@ unload_complete(void *cb_arg, int bserrno)
 	    cli_context->action == CLI_SHELL_EXIT) {
 		spdk_app_stop(cli_context->rc);
 	} else {
-		/* when action is NONE, we know we need to remain in the shell */
+		/* when action is CLI_NONE, we know we need to remain in the shell */
+		cli_context->bs = NULL;
 		cli_context->action = CLI_NONE;
 		cli_start(cli_context, NULL);
 	}
@@ -248,6 +248,7 @@ unload_bs(struct cli_context_t *cli_context, char *msg, int bserrno)
 	if (cli_context->bs) {
 		if (cli_context->channel) {
 			spdk_bs_free_io_channel(cli_context->channel);
+			cli_context->channel = NULL;
 		}
 		spdk_bs_unload(cli_context->bs, unload_complete, cli_context);
 	} else {
@@ -1293,6 +1294,7 @@ cli_shell(void *arg1, void *arg2)
 	/* free strdup mem & reset arg count for next shell interaction */
 	for (i = start_idx; i < cli_context->argc; i++) {
 		free(cli_context->argv[i]);
+		cli_context->argv[i] = NULL;
 	}
 	cli_context->argc = 1;
 
