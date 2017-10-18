@@ -1,0 +1,435 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8806ff8_a540b2cf",
+        "filename": "test/vhost/pmem/vhost.conf.in",
+        "patchSetId": 18
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "Why is vhost.conf.in deleted?\nTest won\u0027t run without it",
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a83477c_96650d04",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "wrong assignment expression",
+      "range": {
+        "startLine": 4,
+        "startChar": 10,
+        "endLine": 4,
+        "endChar": 12
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7053dee5_d493dfbe",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "evaluating \"cd\" command won\u0027t give you path to common as a result.\nplease take a loot into test/vhost/lvol for example",
+      "range": {
+        "startLine": 4,
+        "startChar": 13,
+        "endLine": 4,
+        "endChar": 38
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54966dab_7a7b88d3",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "This will not work because current test/vhost/common/autotest.config has mask definitions for only 1 VM at the moment.\nPlease rebase to appropriate commit which adds new masks or (I think this is better) - add your own masks set",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 13
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c984d59_485cd519",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "$COMMON_DIR defined couple of lines above, could be used here",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 31
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5bd595b_092cb0c6",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "Why is verify option skipped? Please take a look at default_integrity.job",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 20
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "272de8e5_8c6bf3a6",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "This will take too long. Use 4G",
+      "range": {
+        "startLine": 28,
+        "startChar": 18,
+        "endLine": 28,
+        "endChar": 21
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db56c9c4_f3848cdf",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "I\u0027d rather use blocksize range if possible, 4k-512k",
+      "range": {
+        "startLine": 31,
+        "startChar": 9,
+        "endLine": 31,
+        "endChar": 16
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7dd9984c_dd4084a3",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "I didn\u0027t notice that before - why did you add spaces before parentheses? I think this style is not used anywhere else in .sh scripts, so let\u0027s keep it consistent.",
+      "range": {
+        "startLine": 49,
+        "startChar": 20,
+        "endLine": 49,
+        "endChar": 23
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20b00c60_6a99add1",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "What about checking SCSI disk locations and not only BLK?",
+      "range": {
+        "startLine": 55,
+        "startChar": 7,
+        "endLine": 55,
+        "endChar": 37
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f976986d_147dc6d7",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "white spaces before and after operator",
+      "range": {
+        "startLine": 57,
+        "startChar": 16,
+        "endLine": 57,
+        "endChar": 18
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15a24d88_c3c9a9b2",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "Nitpicking: either use our real default_integrity job or change the name, because it\u0027s not the same job.BTW, what does _disc stand for?",
+      "range": {
+        "startLine": 58,
+        "startChar": 50,
+        "endLine": 58,
+        "endChar": 72
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10adf030_6ed00a35",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "Why do we need this function if \"-x\" is enabled at very top of this file anyway?",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 60
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3efa3211_9bd25a7f",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 77,
+        "startChar": 19,
+        "endLine": 77,
+        "endChar": 20
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab9b3a8e_5da42141",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 109,
+        "startChar": 46,
+        "endLine": 109,
+        "endChar": 47
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0782244_c5b10f64",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "Default value for test_type is \"spdk_vhost_blk\", so this script for default values instead of creating BLK controllers creates SCSI controllers",
+      "range": {
+        "startLine": 109,
+        "startChar": 6,
+        "endLine": 109,
+        "endChar": 40
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28fa1490_b25adf5c",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "This will not work for LOOP_RANGE \u003e 8 because max dev num is 8 if I remember correctly. Please test locally.",
+      "range": {
+        "startLine": 113,
+        "startChar": 8,
+        "endLine": 113,
+        "endChar": 65
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e51e622_9f979f62",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "this will fail because function is not defined anywhere",
+      "range": {
+        "startLine": 124,
+        "startChar": 0,
+        "endLine": 124,
+        "endChar": 11
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf49be75_ee350559",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T07:23:46Z",
+      "side": 1,
+      "message": "This will run FIO test sequentially for each VM and will cause the test to take more time. Can you run FIO for  all VMs at once?",
+      "range": {
+        "startLine": 126,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 4
+      },
+      "revId": "78bf1bbf5f8b4e02bdfb157dfe3b64833d944a46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
