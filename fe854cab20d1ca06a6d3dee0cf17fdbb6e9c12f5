@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d7d3a6f3_26f9a0b1",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T16:34:48Z",
+      "side": 1,
+      "message": "Should I also alphabetize? LOL, yeah I can do that :)",
+      "parentUuid": "128e29db_910b09b1",
+      "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6cf0bce2_070cca2a",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 21
@@ -30,6 +48,24 @@
       "writtenOn": "2017-10-18T03:31:30Z",
       "side": 1,
       "message": "remove extra semicolon",
+      "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9dee94fa_5f1d2ea9",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T16:34:48Z",
+      "side": 1,
+      "message": "just added that to test your review skilz ;)",
+      "parentUuid": "6cf0bce2_070cca2a",
       "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,41 @@
     },
     {
       "key": {
+        "uuid": "092a6ca9_4f0c2137",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T16:34:48Z",
+      "side": 1,
+      "message": "so this one is tied to script mode because I need the filename (-\u003efile) in the script function so I store it in the cli_context.  I use that same file element for dump file name and import filename.\n\nthe optind is the best Daniel and I could come up with for getting to multiple string args following an option, getopt() doesn\u0027t appear to have that capability built in but using optind is safe as its the relative index following the selected topion (before I was hardcoding the arg value).",
+      "parentUuid": "4c36a16e_a6618865",
+      "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54a5247f_1cf45573",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 973,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T16:34:48Z",
+      "side": 1,
+      "message": "OK this is a one liner that belongs in another patch but I\u0027m assuming you\u0027re OK with it since it\u0027s pretty clear what it is.  It was just a miss on my part while breaking up the script patch.  It\u0027s part of the refactor of cmd_parser but I\u0027ll of course move it if you\u0027d like",
+      "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c571c4c0_04a447f7",
         "filename": "examples/blob/cli/blobcli.c",
         "patchSetId": 21
@@ -64,6 +135,58 @@
       "writtenOn": "2017-10-18T03:31:30Z",
       "side": 1,
       "message": "Your entire\n\ntypo was in previous revision but might as well fix it while you\u0027re modifying this part of the code",
+      "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d583ff9_b02698ec",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T16:34:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c571c4c0_04a447f7",
+      "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "947e3f25_b943a77d",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1002,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T16:34:48Z",
+      "side": 1,
+      "message": "OK, 2 lines that belong in the refactor cmd_parser patch, argh",
+      "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c84a6108_355225d7",
+        "filename": "examples/blob/cli/blobcli.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1073,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-18T16:34:48Z",
+      "side": 1,
+      "message": "bah, these 2 also.  why do bad things happen to good people???",
       "revId": "fe854cab20d1ca06a6d3dee0cf17fdbb6e9c12f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
