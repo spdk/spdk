@@ -1157,6 +1157,8 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 
 	bdev_io->ch = channel;
 	bdev_io->type = SPDK_BDEV_IO_TYPE_UNMAP;
+	bdev_io->u.bdev.iov.iov_base = NULL;
+	bdev_io->u.bdev.iov.iov_len = 0;
 	bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
 	bdev_io->u.bdev.iovcnt = 1;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
