@@ -327,6 +327,11 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 	}
 
 	gpt_base->ch = spdk_bdev_get_io_channel(gpt_base->part_base.desc);
+	if (gpt_base->ch == NULL) {
+		SPDK_ERRLOG("Failed to get an io_channel.\n");
+		spdk_bdev_part_base_free(&gpt_base->part_base);
+		return -1;
+	}
 
 	rc = spdk_bdev_read(gpt_base->part_base.desc, gpt_base->ch, gpt_base->gpt.buf, 0,
 			    SPDK_GPT_BUFFER_SIZE, spdk_gpt_bdev_complete, gpt_base);
