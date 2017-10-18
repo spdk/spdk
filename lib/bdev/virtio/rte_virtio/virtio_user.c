@@ -31,12 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdint.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/socket.h>
+#include "spdk/stdinc.h"
+
 #include <sys/eventfd.h>
 
 #include <linux/virtio_scsi.h>

@@ -34,9 +34,7 @@
 #ifndef _VHOST_NET_USER_H
 #define _VHOST_NET_USER_H
 
-#include <stdint.h>
-#include <linux/types.h>
-#include <linux/ioctl.h>
+#include "spdk/stdinc.h"
 
 #include "spdk_internal/log.h"
 
