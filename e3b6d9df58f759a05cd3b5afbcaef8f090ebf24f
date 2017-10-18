@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "440de17f_5f35db9a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1668,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-10-18T00:44:54Z",
+      "side": 1,
+      "message": "this part of logic come from _spdk_blob_parse_page(), we can have a separate patch to modify the logic for the two functions?",
+      "parentUuid": "6928fbf5_75abf9c9",
+      "revId": "e3b6d9df58f759a05cd3b5afbcaef8f090ebf24f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f2bd9e9b_cb75a624",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 64
