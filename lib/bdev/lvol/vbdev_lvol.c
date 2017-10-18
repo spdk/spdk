@@ -105,8 +105,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *lvs_req;
-	struct spdk_lvs_opts *opts = NULL;
-	struct spdk_lvs_opts temp;
+	struct spdk_lvs_opts opts;
 	int rc;
 
 	if (base_bdev == NULL) {
@@ -114,9 +113,9 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
 		return -ENODEV;
 	}
 
+	spdk_lvs_opts_init(&opts);
 	if (cluster_sz != 0) {
-		temp.cluster_sz = cluster_sz;
-		opts = &temp;
+		opts.cluster_sz = cluster_sz;
 	}
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
@@ -137,7 +136,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
 	lvs_req->cb_fn = cb_fn;
 	lvs_req->cb_arg = cb_arg;
 
-	rc = spdk_lvs_init(bs_dev, opts, _vbdev_lvs_create_cb, lvs_req);
+	rc = spdk_lvs_init(bs_dev, &opts, _vbdev_lvs_create_cb, lvs_req);
 	if (rc < 0) {
 		free(lvs_req);
 		bs_dev->destroy(bs_dev);
