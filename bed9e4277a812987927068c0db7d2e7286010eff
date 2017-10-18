@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "edeb3d8f_eca0d1bc",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2017-10-18T14:11:07Z",
+      "side": 1,
+      "message": "Add \nrm -f *.state\nrm -f $testdir/bdev.fio\nat the end of test",
+      "revId": "bed9e4277a812987927068c0db7d2e7286010eff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
