@@ -78,6 +78,8 @@ struct spdk_lvol_store {
 	int				lvol_count;
 	int				lvols_opened;
 	TAILQ_HEAD(, spdk_lvol)		lvols;
+	bool				on_list;
+	TAILQ_ENTRY(spdk_lvol_store)	link;
 };
 
 struct spdk_lvol {
