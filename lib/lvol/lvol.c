@@ -77,12 +77,13 @@ _spdk_open_lvols_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_lvol_with_handle_req *req = cb_arg;
 	struct spdk_lvs_with_handle_req *lvs_req = req->cb_arg;
 	struct spdk_lvol *lvol = req->lvol;
+	struct spdk_lvol_store *lvs = lvol->lvol_store;
 	static int lvols_opened = 0;
 
 	if (lvolerrno != 0) {
 		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Failed to open lvol %s\n", lvol->name);
-		TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
-		lvol->lvol_store->lvol_count--;
+		TAILQ_REMOVE(&lvs->lvols, lvol, link);
+		lvs->lvol_count--;
 		free(lvol->name);
 		free(lvol);
 		goto end;
@@ -92,9 +93,9 @@ _spdk_open_lvols_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	lvol->blob = blob;
 
 end:
-	if (lvols_opened >= lvol->lvol_store->lvol_count) {
+	if (lvols_opened >= lvs->lvol_count) {
 		lvols_opened = 0;
-		lvs_req->cb_fn(lvs_req->cb_arg, lvol->lvol_store, 0);
+		lvs_req->cb_fn(lvs_req->cb_arg, lvs, 0);
 		free(lvs_req);
 	}
 
