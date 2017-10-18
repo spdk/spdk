@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f24babc_9b127845",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-10-18T09:17:50Z",
+      "side": 1,
+      "message": "Why removed extra 2 queues? I think maybe we should keep it consistent with virtio_scsi config space.",
+      "revId": "6d4a1213e6c3e95d3d33374017424516a988d537",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
