@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "62b3556d_c85afec5",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-18T08:37:53Z",
+      "side": 1,
+      "message": "I already mentioned this in other commit - please change first line so that it reflects what you\u0027re doing in commit.\ntest/lvol: update test plan with tasting tests or something similar",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 40
+      },
+      "revId": "ae7c35264d795350539a5ad829105c39801c4640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90da3de6_98117997",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 1
