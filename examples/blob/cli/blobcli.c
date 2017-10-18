@@ -53,8 +53,6 @@ static void cli_start(void *arg1, void *arg2);
 static const char *program_name = "blobcli";
 /* default name for .conf file, any name can be used however with -c switch */
 static const char *program_conf = "blobcli.conf";
-/* default name for the first NVMe device, this needs to match what is in th conf */
-static const char *bdev_name = "Nvme0n1";
 
 /*
  * CMD mode runs one command at a time which can be annoying as the init takes
@@ -116,7 +114,7 @@ struct cli_context_t {
 	char file[BUFSIZE + 1];
 	uint64_t filesize;
 	int fill_value;
-	const char *bdev_name;
+	char bdev_name[BUFSIZE];
 	int rc;
 	int num_clusters;
 	enum cli_mode_type cli_mode;
@@ -147,6 +145,7 @@ static void
 print_cmds(void)
 {
 	printf("\nCommands include:\n");
+	printf("\t-b bdev - name of the block device to use (example: Nvme0n1)\n");
 	printf("\t-d <blobid> filename - dump contents of a blob to a file\n");
 	printf("\t-f <blobid> value - fill a blob with a decimal value\n");
 	printf("\t-h - this help screen\n");
@@ -970,9 +969,20 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 	int cmd_chosen = 0;
 	char resp;
 	bool cfg_specified = false;
+	bool bdev_specified = false;
 
-	while ((op = getopt(argc, argv, "c:d:f:hil:m:n:p:r:s:ST:Xx:")) != -1) {
+	while ((op = getopt(argc, argv, "b:c:d:f:hil:m:n:p:r:s:ST:Xx:")) != -1) {
 		switch (op) {
+		case 'b':
+			if (strcmp(cli_context->bdev_name, "") == 0) {
+				cmd_chosen++;
+				bdev_specified = true;
+				snprintf(cli_context->bdev_name, BUFSIZE, "%s", optarg);
+			} else {
+				printf("Current setting for -b is: %s\n", cli_context->bdev_name);
+				usage(cli_context, "ERROR: -b option can only be set once.\n");
+			}
+			break;
 		case 'c':
 			if (cli_context->app_started == false) {
 				cmd_chosen++;
@@ -1118,14 +1128,23 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 		default:
 			usage(cli_context, "ERROR: invalid option\n");
 		}
-		/* config file is the only option that can be combined */
-		if (cfg_specified == false  && cmd_chosen > 1) {
+		/* only a few options can be combined */
+		if ((!cfg_specified && !bdev_specified)  && cmd_chosen > 1) {
 			usage(cli_context, "Error: Please choose only one command\n");
 		}
 	}
 
 	if (cli_context->cli_mode == CLI_MODE_CMD && cmd_chosen == 0) {
 		usage(cli_context, "Error: Please choose a command.\n");
+	}
+
+	/*
+	 * We don't check the local boolean because in some modes it will have been set
+	 * on and earlier command.
+	 */
+	if (strcmp(cli_context->bdev_name, "") == 0) {
+		usage(cli_context, "Error: -b option is required.\n");
+		cmd_chosen = 0;
 	}
 
 	/* in shell mode we'll call getopt multiple times so need to reset its index */
@@ -1398,10 +1417,9 @@ main(int argc, char **argv)
 		printf("ERROR: could not allocate context structure\n");
 		exit(-1);
 	}
-	cli_context->bdev_name = bdev_name;
+
 	/* default to CMD mode until we've parsed the first parms */
 	cli_context->cli_mode = CLI_MODE_CMD;
-
 	cli_context->argv[0] = strdup(argv[0]);
 	cli_context->argc = 1;
 
