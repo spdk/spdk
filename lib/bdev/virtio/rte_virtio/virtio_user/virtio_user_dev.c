@@ -31,17 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdint.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <string.h>
-#include <errno.h>
-#include <sys/mman.h>
-#include <unistd.h>
-#include <sys/eventfd.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include "spdk/stdinc.h"
 
 #include "vhost.h"
 #include "virtio_user_dev.h"

@@ -34,7 +34,8 @@
 #ifndef _VIRTIO_PCI_H_
 #define _VIRTIO_PCI_H_
 
-#include <stdint.h>
+#include "spdk/stdinc.h"
+
 #include <linux/virtio_config.h>
 #include <linux/virtio_pci.h>
 

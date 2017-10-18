@@ -34,9 +34,7 @@
 #ifndef _VIRTIO_DEV_H_
 #define _VIRTIO_DEV_H_
 
-#include <stdint.h>
-#include <sys/uio.h>
-#include <sys/queue.h>
+#include "spdk/stdinc.h"
 
 #include <linux/virtio_ring.h>
 
@@ -45,6 +43,7 @@
 
 #include "spdk_internal/log.h"
 #include "spdk/likely.h"
+#include "spdk/queue.h"
 
 /*
  * Per virtio_config.h in Linux.
