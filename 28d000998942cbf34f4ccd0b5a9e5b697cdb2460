@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "04c52db8_f09ba00a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1171,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-10-18T18:16:17Z",
+      "side": 1,
+      "message": "Yeah, that made it a lot simpler. Thank you!",
+      "parentUuid": "3fe35064_8b3f53e0",
+      "revId": "28d000998942cbf34f4ccd0b5a9e5b697cdb2460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4ad1d5b0_bd2774c8",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "8eb83779_a1379122",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2046,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-10-18T18:16:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4ad1d5b0_bd2774c8",
+      "revId": "28d000998942cbf34f4ccd0b5a9e5b697cdb2460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e93d6c9_9c857eb2",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -47,6 +83,30 @@
       "writtenOn": "2017-10-13T21:55:23Z",
       "side": 1,
       "message": "This part_io should probably be bdev_io.",
+      "range": {
+        "startLine": 2050,
+        "startChar": 24,
+        "endLine": 2050,
+        "endChar": 31
+      },
+      "revId": "28d000998942cbf34f4ccd0b5a9e5b697cdb2460",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75445b9b_76653fe6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2050,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-10-18T18:16:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e93d6c9_9c857eb2",
       "range": {
         "startLine": 2050,
         "startChar": 24,
