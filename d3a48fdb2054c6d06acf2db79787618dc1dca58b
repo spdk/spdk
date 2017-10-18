@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4b0662e_4553f29c",
+        "filename": "test/nvmf/nvmf.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-18T17:03:10Z",
+      "side": 1,
+      "message": "can\u0027t this be removed?  it is the same as line 43 below",
+      "revId": "d3a48fdb2054c6d06acf2db79787618dc1dca58b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
