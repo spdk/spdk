@@ -129,7 +129,7 @@ copy_engine_ioat_exit(void)
 		ioat_free_device(dev);
 		spdk_dma_free(dev);
 	}
-	return;
+	spdk_copy_engine_module_finish();
 }
 
 static void

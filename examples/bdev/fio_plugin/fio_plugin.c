@@ -37,6 +37,7 @@
 #include "spdk/copy_engine.h"
 #include "spdk/conf.h"
 #include "spdk/env.h"
+#include "spdk/event.h"
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
 #include "spdk/string.h"
@@ -646,9 +647,35 @@ static void fio_init spdk_fio_register(void)
 	register_ioengine(&ioengine);
 }
 
+static void
+spdk_finish_call_next_event(void *arg1, void *arg2)
+{
+	void (*call_event)(void) = arg1;
+
+	call_event();
+}
+
+static void
+spdk_finish_schedule_next_event(void *fini_fn)
+{
+	struct spdk_event *fini_schedule_next;
+
+	fini_schedule_next = spdk_event_allocate(spdk_env_get_current_core(),
+			     spdk_finish_call_next_event, fini_fn, NULL);
+	spdk_event_call(fini_schedule_next);
+}
+
+static void fio_exit spdk_fio_unregister_io_engine(void)
+{
+	unregister_ioengine(&ioengine);
+}
+
+static void fio_exit spdk_fio_cop_engine_finish(void)
+{
+	spdk_copy_engine_finish(spdk_fio_unregister_io_engine, spdk_finish_schedule_next_event);
+}
+
 static void fio_exit spdk_fio_unregister(void)
 {
-	spdk_bdev_finish();
-	spdk_copy_engine_finish();
-	unregister_ioengine(&ioengine);
+	spdk_bdev_finish(spdk_fio_cop_engine_finish, spdk_finish_schedule_next_event);
 }
