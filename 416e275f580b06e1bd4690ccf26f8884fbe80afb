@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "71d20344_aa5b75e2",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T10:41:25Z",
+      "side": 1,
+      "message": "Yes - for now. This fails with NVMe drive. Working with Darek on fix.",
+      "parentUuid": "ac886dff_68b28c6f",
+      "revId": "416e275f580b06e1bd4690ccf26f8884fbe80afb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c7f58801_a846690f",
         "filename": "test/vhost/initiator/blockdev.sh",
         "patchSetId": 8
