@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8ed65c7_80c9c6f2",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 96
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-19T19:14:32Z",
+      "side": 1,
+      "message": "Unchecked allocation.",
+      "revId": "658fd2dfea81c4cdf34be0bc265c3c081f9a0a31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
