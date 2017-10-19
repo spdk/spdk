@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85033e27_a82ffc4a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1995,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-19T15:29:05Z",
+      "side": 1,
+      "message": "it should fail if the arg for destroy with unmap was set",
+      "revId": "5590122f3dc7c9c26303b634c7e52c2ba437a1d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
