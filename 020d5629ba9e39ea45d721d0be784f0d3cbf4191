@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e159ac36_9805e152",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 88
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T00:23:48Z",
+      "side": 1,
+      "message": "we can\u0027t have a static int here - what happens if we are loading multiple lvol_stores in parallel?  this value needs to be saved in the lvol_store for tracking",
+      "revId": "020d5629ba9e39ea45d721d0be784f0d3cbf4191",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0401f81_ca776522",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 88
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T00:23:48Z",
+      "side": 1,
+      "message": "if lvolerrno !\u003d 0, lvol gets free and then we do lvol-\u003elvol_store here\n\nbest to create an lvs local variable, set at the beginning of the function and then use it throughout",
+      "revId": "020d5629ba9e39ea45d721d0be784f0d3cbf4191",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
