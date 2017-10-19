@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4d30e83_fae4eda6",
+        "filename": "doc/virtio.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-19T08:56:48Z",
+      "side": 1,
+      "message": "Mmmmmmm....",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 6
+      },
+      "revId": "a46e21dca76cd229d1d7a49d39e003bcc7ce4897",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
