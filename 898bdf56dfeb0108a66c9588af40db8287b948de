@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6e046e9_8781ca99",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T11:10:44Z",
+      "side": 1,
+      "message": "What specifically are we checking for here? Describe that.",
+      "range": {
+        "startLine": 466,
+        "startChar": 0,
+        "endLine": 467,
+        "endChar": 26
+      },
+      "revId": "898bdf56dfeb0108a66c9588af40db8287b948de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84d3c71c_8c73c447",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T11:10:44Z",
+      "side": 1,
+      "message": "Also destry lvol store and recreate it afterwards",
+      "range": {
+        "startLine": 468,
+        "startChar": 2,
+        "endLine": 468,
+        "endChar": 19
+      },
+      "revId": "898bdf56dfeb0108a66c9588af40db8287b948de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
