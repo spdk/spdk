@@ -525,8 +525,7 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 
 	ctrlq = base->vdev->vqs[VIRTIO_SCSI_CONTROLQ];
 	ctrlq->poller_ctx = ctrlq_ring;
-	spdk_bdev_poller_start(&ctrlq->poller, bdev_virtio_ctrlq_poll, base->vdev,
-			       ctrlq->owner_lcore, CTRLQ_POLL_PERIOD_US);
+	spdk_bdev_poller_start(&ctrlq->poller, bdev_virtio_ctrlq_poll, base->vdev, CTRLQ_POLL_PERIOD_US);
 
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
 		TAILQ_REMOVE(&base->found_disks, disk, link);
