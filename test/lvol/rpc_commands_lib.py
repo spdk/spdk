@@ -34,7 +34,7 @@ class Commands_Rpc(object):
         for i in range(len(json_value)):
             uuid_json = json_value[i]['name']
             if uuid_bdev in [uuid_json]:
-                print("Info: UUID:{uuid} is found in RPC Commnad: "
+                print("Info: UUID:{uuid} is found in RPC Command: "
                       "gets_bdevs response".format(uuid=uuid_bdev))
                 # num_block and block_size have values in bytes
                 num_blocks = json_value[i]['num_blocks']
@@ -66,7 +66,7 @@ class Commands_Rpc(object):
                     print("INFO: base_name:{base_name} is found in RPC "
                           "Command: get_lvol_stores "
                           "response".format(base_name=base_name))
-                    print("INFO: UUID:{uuid} is found in RPC Commnad: "
+                    print("INFO: UUID:{uuid} is found in RPC Command: "
                           "get_lvol_stores response".format(uuid=uuid))
                     print("INFO: Cluster size :{cluster_size} is found in RPC "
                           "Commnad: get_lvol_stores "
