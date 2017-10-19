@@ -1728,6 +1728,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
+	ctx->bs->super_blob = ctx->super->super_blob;
 	ctx->super->clean = 0;
 	_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_load_write_super_cpl, ctx);
 }
