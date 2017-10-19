@@ -49,13 +49,13 @@ int spdk_reactors_init(unsigned int max_delay_us);
 void spdk_reactors_fini(void);
 
 void spdk_reactors_start(void);
-void spdk_reactors_stop(void);
+void spdk_reactors_stop(void *arg1, void *arg2);
 
 struct spdk_subsystem {
 	const char *name;
 	/* User must call spdk_subsystem_init_next() when they are done with their initialization. */
 	void (*init)(void);
-	void (*fini)(void);
+	void (*fini)(void *arg1, void *arg2);
 	void (*config)(FILE *fp);
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
@@ -71,8 +71,9 @@ void spdk_add_subsystem(struct spdk_subsystem *subsystem);
 void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
 
 void spdk_subsystem_init(struct spdk_event *app_start_event);
-void spdk_subsystem_fini(void);
+void spdk_subsystem_fini(struct spdk_event *app_finish_event);
 void spdk_subsystem_init_next(int rc);
+void spdk_subsystem_fini_next(void);
 void spdk_subsystem_config(FILE *fp);
 
 /**
