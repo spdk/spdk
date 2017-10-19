@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d6c68b0_da7a632c",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-19T07:17:54Z",
+      "side": 1,
+      "message": "new line",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 0
+      },
+      "revId": "416e275f580b06e1bd4690ccf26f8884fbe80afb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac886dff_68b28c6f",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-19T07:17:54Z",
+      "side": 1,
+      "message": "Is this section should be commented out?",
+      "revId": "416e275f580b06e1bd4690ccf26f8884fbe80afb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7f58801_a846690f",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-19T07:17:54Z",
+      "side": 1,
+      "message": "new line",
+      "revId": "416e275f580b06e1bd4690ccf26f8884fbe80afb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
