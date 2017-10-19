@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75cdfda9_3059c9e7",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T09:12:04Z",
+      "side": 1,
+      "message": "unrelated change. this commit applies only to tests for cluster size, not \"nested\"\nTomek mentioned that before",
+      "range": {
+        "startLine": 48,
+        "startChar": 36,
+        "endLine": 49,
+        "endChar": 61
+      },
+      "revId": "6c56930bc0ac48b66740685d1ffb8489db5c4bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "952fd705_c8eb543d",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T09:12:04Z",
+      "side": 1,
+      "message": "unrelated change",
+      "revId": "6c56930bc0ac48b66740685d1ffb8489db5c4bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89026834_4c026bac",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T09:12:04Z",
+      "side": 1,
+      "message": "double space",
+      "range": {
+        "startLine": 42,
+        "startChar": 59,
+        "endLine": 42,
+        "endChar": 61
+      },
+      "revId": "6c56930bc0ac48b66740685d1ffb8489db5c4bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3eaf900_aaee2582",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T09:12:04Z",
+      "side": 1,
+      "message": "\"correct\" was ok in last patch",
+      "range": {
+        "startLine": 43,
+        "startChar": 27,
+        "endLine": 43,
+        "endChar": 36
+      },
+      "revId": "6c56930bc0ac48b66740685d1ffb8489db5c4bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee154d2d_65216899",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T09:12:04Z",
+      "side": 1,
+      "message": "why rename it to size? \"cluster_size\" is much more meaningful name",
+      "range": {
+        "startLine": 88,
+        "startChar": 46,
+        "endLine": 88,
+        "endChar": 50
+      },
+      "revId": "6c56930bc0ac48b66740685d1ffb8489db5c4bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c157c40d_53b9d8bc",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T09:12:04Z",
+      "side": 1,
+      "message": "does that pass pep-8? didn\u0027t check, but you should",
+      "range": {
+        "startLine": 90,
+        "startChar": 8,
+        "endLine": 91,
+        "endChar": 77
+      },
+      "revId": "6c56930bc0ac48b66740685d1ffb8489db5c4bdd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
