@@ -268,6 +268,7 @@ static void
 vbdev_split_fini(void)
 {
 	spdk_bdev_part_tailq_fini(&g_split_disks);
+	spdk_bdev_module_finish_done();
 }
 
 static int
