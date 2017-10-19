@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "b22ed917_285bf1d7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1936,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-19T14:54:05Z",
+      "side": 1,
+      "message": "Done, added argument to specify whether whole device should be unmapped.",
+      "parentUuid": "a87521cd_a0ed591d",
+      "revId": "8b137ad832fcee18bc1b89c80a991c0288f09497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "14a07018_994d6bd2",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 6
@@ -47,6 +65,24 @@
       "writtenOn": "2017-10-13T18:44:20Z",
       "side": 1,
       "message": "should be named bs_destroy (we are destroying a blobstore, not a blob)\n\nthen also move this function down to the end of the bs_ tests",
+      "revId": "8b137ad832fcee18bc1b89c80a991c0288f09497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "672f390f_18505082",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-19T14:54:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "14a07018_994d6bd2",
       "revId": "8b137ad832fcee18bc1b89c80a991c0288f09497",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "2c547d8c_d387afa2",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-19T14:54:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c469d9eb_1c6cb8af",
+      "revId": "8b137ad832fcee18bc1b89c80a991c0288f09497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f630eef_e5589c6e",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 6
@@ -81,6 +135,24 @@
       "writtenOn": "2017-10-13T18:44:20Z",
       "side": 1,
       "message": "since this will be called bs_destroy (not blob_destroy), move it down with the other bs_ unit tests",
+      "revId": "8b137ad832fcee18bc1b89c80a991c0288f09497",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43e4f95b_bf90615d",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1319,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-19T14:54:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9f630eef_e5589c6e",
       "revId": "8b137ad832fcee18bc1b89c80a991c0288f09497",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
