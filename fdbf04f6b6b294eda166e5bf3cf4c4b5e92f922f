@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37982ed4_d9fd4907",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-19T13:03:35Z",
+      "side": 1,
+      "message": "this should be the first condition, otherwise you might dereference NULL desc in spdk_vhost_vring_desc_is_wr",
+      "range": {
+        "startLine": 422,
+        "startChar": 56,
+        "endLine": 422,
+        "endChar": 63
+      },
+      "revId": "fdbf04f6b6b294eda166e5bf3cf4c4b5e92f922f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c17e2a30_5c909704",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 431,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-19T13:03:35Z",
+      "side": 1,
+      "message": "maybe call all these a \"region\"?",
+      "range": {
+        "startLine": 431,
+        "startChar": 82,
+        "endLine": 431,
+        "endChar": 89
+      },
+      "revId": "fdbf04f6b6b294eda166e5bf3cf4c4b5e92f922f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
