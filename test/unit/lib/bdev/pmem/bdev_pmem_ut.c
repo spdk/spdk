@@ -254,6 +254,11 @@ pmemblk_check(const char *path, size_t bsize)
 }
 
 void
+spdk_bdev_module_finish_done(void)
+{
+}
+
+void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
 	bdev_io->status = status;
