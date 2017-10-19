@@ -1,0 +1,259 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "460aad0c_e585b7ec",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "what if we called this split_remaining_num_blocks?  I think this will make some of your math and code simpler",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2dcf9820_d9c7fa47",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "split_current_offset_blocks\n\nI just want the \"split\" in the name to make it clear what this variable is for - otherwise it would be very easy to confuse it with offset_blocks in the u.bdev union",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f572436a_25b6fb7d",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "i don\u0027t think you need this one - you should always be able to compute it by adding split_current_offset_blocks to the number of blocks in the I/O that was just completed",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "752acf27_51c9f055",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "I think the comment and name need some more work - it will be difficult for someone reading this header file to really know why this would ever be needed.",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "009610ce_5cb3b50a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "let\u0027s just use a #define ZERO_BUFFER_SIZE 0x100000 - this will always be a constant",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1299bdf3_5d1e1bcd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "is there a case where this could get called with a NULL bdev_io?",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "397dc4be_ce2114bd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "should this still set iovs \u003d NULL and iovcnt \u003d 0?",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c7fa3a9_61cba43c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "better to put these error checks at the beginning of the code block - then you avoid doing unnecessary work if the parameters are invalid",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88d4858b_08325152",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 1150,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "this can all be on one line",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9567dcf_969155e1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 2005,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "you can just make this if (!success) and avoid the status variable altogether (you\u0027re not using it anywhere else)",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "192a68a5_8f1af3a8",
+        "filename": "test/lib/bdev/bdevio/bdevio.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "should \u003d\u003e will",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a535a5c_3b4101ac",
+        "filename": "test/lib/bdev/bdevio/bdevio.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "Not all bdev modules split I/O - nvme is probably more the exception than the rule.\n\nI would just remove references to lower bdev layers in these comments.",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b56f09c6_2b4ea678",
+        "filename": "test/lib/bdev/bdevio/bdevio.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "need spaces after the * and before the first word (several lines of this here and next comment block below)",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5062430d_5142b7d1",
+        "filename": "test/lib/bdev/bdevio/bdevio.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "I would remove this - this is very Intel NVMe SSD specific - other bdevs and even other NVMe SSDs do not split on 128KB boundaries.\n\nYou can just say this will get split into 5 separate 1MB operations to the bdev module.",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7563aa6_81a4f0ad",
+        "filename": "test/lib/bdev/bdevio/bdevio.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-19T16:13:16Z",
+      "side": 1,
+      "message": "same comment as above.",
+      "revId": "a3d2dce2c32e112f5361a5cfd913fccb97c7e14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
