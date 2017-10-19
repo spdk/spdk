@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e955f281_8beb7a91",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-19T07:41:19Z",
+      "side": 1,
+      "message": "How you can know how many queues device need before knowing what device is? Move this to pci_enum_virtio_probe_cb(). There you can check the type of device and add +2 to max_queues for Virtio SCSI PCI.",
+      "range": {
+        "startLine": 827,
+        "startChar": 7,
+        "endLine": 827,
+        "endChar": 60
+      },
+      "revId": "da7cb0fc50e3f3802daad7e8f405dffeafdc3e09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3734481_64f5e964",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-19T07:41:19Z",
+      "side": 1,
+      "message": "Am I blind or you are not using this parameter?",
+      "range": {
+        "startLine": 734,
+        "startChar": 29,
+        "endLine": 734,
+        "endChar": 44
+      },
+      "revId": "da7cb0fc50e3f3802daad7e8f405dffeafdc3e09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
