@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d5757cb_5087079b",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 773,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-19T19:39:25Z",
+      "side": 1,
+      "message": "This and vq_size below should be write_name, not write_string.",
+      "range": {
+        "startLine": 773,
+        "startChar": 1,
+        "endLine": 773,
+        "endChar": 23
+      },
+      "revId": "d99efd4bb413e5c46eb1d83f576a0ea019f813fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
