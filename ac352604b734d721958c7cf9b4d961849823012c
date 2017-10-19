@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61fc8dd5_4e927cfc",
+        "filename": "autotest.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T11:07:32Z",
+      "side": 1,
+      "message": "This is added only to confirm that vhost+pmem configuration works.\nWe would prefer to have nvmf+pmem tests run as per-patch on test pool.\nvhost + pmem adds about 2minutes extra time (scsi + blk) so this block may be removed before merging and may be run only on Jenkins",
+      "range": {
+        "startLine": 133,
+        "startChar": 0,
+        "endLine": 138,
+        "endChar": 2
+      },
+      "revId": "ac352604b734d721958c7cf9b4d961849823012c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
