@@ -202,11 +202,14 @@ class TestCases(object):
         uuid_bdev = self.c.construct_lvol_bdev(uuid_store, size)
         fail_count += self.c.check_get_bdevs_methods(uuid_bdev,
                                                      size)
-        self.c.resize_lvol_bdev(uuid_bdev, size + 1)
-        self.c.resize_lvol_bdev(uuid_bdev, size * 2)
-        self.c.resize_lvol_bdev(uuid_bdev, size * 3)
-        self.c.resize_lvol_bdev(uuid_bdev, (size * 4) - 1)
-        self.c.resize_lvol_bdev(uuid_bdev, 0)
+
+        # TODO: Improve resize_lvol_bdev tests to verify if bdev was actually
+        # correctly resized
+        fail_count += self.c.resize_lvol_bdev(uuid_bdev, size + 1)
+        fail_count += self.c.resize_lvol_bdev(uuid_bdev, size * 2)
+        fail_count += self.c.resize_lvol_bdev(uuid_bdev, size * 3)
+        fail_count += self.c.resize_lvol_bdev(uuid_bdev, (size * 4) - 1)
+        fail_count += self.c.resize_lvol_bdev(uuid_bdev, 0)
 
         self.c.destroy_lvol_store(uuid_store)
         fail_count += self.c.check_get_lvol_stores("", "")
