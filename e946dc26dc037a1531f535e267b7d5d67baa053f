@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51351105_bd75b41b",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 24
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T15:20:13Z",
+      "side": 1,
+      "message": "I think you mentioned that for these tests we need 3 CPU for BOTH host and VM? And here host vhost has only 1 CPU.\nOr did I misunderstand?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 22
+      },
+      "revId": "e946dc26dc037a1531f535e267b7d5d67baa053f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54980ce0_16ac271c",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 24
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T15:20:13Z",
+      "side": 1,
+      "message": "rebase your commit to latest master. Base of this file shows up as only having VM0, but it actually has definitions for 12 VMs",
+      "revId": "e946dc26dc037a1531f535e267b7d5d67baa053f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a3a1d41_44e97e51",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 561,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T15:20:13Z",
+      "side": 1,
+      "message": "You could change the \"if\" a little and put this as well as part of conditional. No need to calculate number of queues if we\u0027re not going to use it",
+      "range": {
+        "startLine": 558,
+        "startChar": 0,
+        "endLine": 561,
+        "endChar": 5
+      },
+      "revId": "e946dc26dc037a1531f535e267b7d5d67baa053f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a69b261_5deba953",
+        "filename": "test/vhost/common/fio_jobs/default_initiator.job",
+        "patchSetId": 24
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T15:20:13Z",
+      "side": 1,
+      "message": "Why that low? Why not 128-ish or more like in other tests?",
+      "range": {
+        "startLine": 10,
+        "startChar": 8,
+        "endLine": 10,
+        "endChar": 10
+      },
+      "revId": "e946dc26dc037a1531f535e267b7d5d67baa053f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d5c5e75_5fd06c7c",
+        "filename": "test/vhost/common/vm_setup.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T15:20:13Z",
+      "side": 1,
+      "message": "Isn\u0027t that calculated based on QEMU CPU mask in vhost/common/common.sh from autotest.config file?",
+      "range": {
+        "startLine": 30,
+        "startChar": 8,
+        "endLine": 30,
+        "endChar": 66
+      },
+      "revId": "e946dc26dc037a1531f535e267b7d5d67baa053f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "616e7304_4d93cc07",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T15:20:13Z",
+      "side": 1,
+      "message": "runtime\u003d10 please",
+      "range": {
+        "startLine": 16,
+        "startChar": 16,
+        "endLine": 16,
+        "endChar": 27
+      },
+      "revId": "e946dc26dc037a1531f535e267b7d5d67baa053f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86d8d91f_2a637de0",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T15:20:13Z",
+      "side": 1,
+      "message": "do we need to change the name?",
+      "range": {
+        "startLine": 132,
+        "startChar": 57,
+        "endLine": 132,
+        "endChar": 60
+      },
+      "revId": "e946dc26dc037a1531f535e267b7d5d67baa053f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b95174f5_d62676b7",
+        "filename": "test/vhost/initiator/vhost.conf.in",
+        "patchSetId": 24
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-19T15:20:13Z",
+      "side": 1,
+      "message": "is that change necessary?",
+      "range": {
+        "startLine": 11,
+        "startChar": 7,
+        "endLine": 11,
+        "endChar": 10
+      },
+      "revId": "e946dc26dc037a1531f535e267b7d5d67baa053f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
