@@ -46,7 +46,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#define SPDK_WORK_BLOCK_SIZE		(1ULL * 1024ULL * 1024ULL)
+#define SPDK_WORK_BLOCK_SIZE		(4ULL * 1024ULL * 1024ULL)
 #define SPDK_WORK_ATS_BLOCK_SIZE	(1ULL * 1024ULL * 1024ULL)
 #define MAX_SERIAL_STRING		32
 
