@@ -648,7 +648,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	}
 
 	lvol_req = calloc(1, sizeof(*lvol_req));
-	if (!req) {
+	if (!lvol_req) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
 		cb_fn(cb_arg, -ENOMEM);
 		free(req);
