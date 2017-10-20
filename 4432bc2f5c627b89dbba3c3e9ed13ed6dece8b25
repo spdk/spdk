@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55b69e23_610c5a27",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-20T16:43:31Z",
+      "side": 1,
+      "message": "This description sounds backwards to me - unmap_device \u003d\u003d false should mean only unmap the super block, and unmap_device \u003d\u003d true should mean unmap the entire device.",
+      "range": {
+        "startLine": 167,
+        "startChar": 3,
+        "endLine": 168,
+        "endChar": 32
+      },
+      "revId": "4432bc2f5c627b89dbba3c3e9ed13ed6dece8b25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
