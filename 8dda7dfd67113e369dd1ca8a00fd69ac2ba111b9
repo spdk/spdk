@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b0f429c_aae4f1cf",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-20T16:31:03Z",
+      "side": 1,
+      "message": "numactl-devel is already installed here.",
+      "revId": "8dda7dfd67113e369dd1ca8a00fd69ac2ba111b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2416a5f9_2e65da46",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-20T16:31:03Z",
+      "side": 1,
+      "message": "libnuma-dev is already installed here.",
+      "revId": "8dda7dfd67113e369dd1ca8a00fd69ac2ba111b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
