@@ -71,6 +71,23 @@
     },
     {
       "key": {
+        "uuid": "f07bb1f2_5cc772d3",
+        "filename": "doc/lvol.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-20T16:35:33Z",
+      "side": 1,
+      "message": "Please trim the trailing whitespace on all of these lines.",
+      "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b1bcbd27_900d5a04",
         "filename": "include/spdk/lvol.h",
         "patchSetId": 8
