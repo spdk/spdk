@@ -166,6 +166,7 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	struct spdk_lvs_req *req;
 	struct lvol_store_bdev *lvs_bdev;
 	struct spdk_lvol *lvol, *tmp;
+	bool all_lvols_closed = true;
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
@@ -181,7 +182,13 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	if (TAILQ_EMPTY(&lvs->lvols)) {
+	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+		if (lvol->ref_count != 0) {
+			all_lvols_closed = false;
+		}
+	}
+
+	if (all_lvols_closed == true) {
 		spdk_lvs_unload(lvs, _vbdev_lvs_destruct_cb, req);
 	} else {
 		lvs->destruct_req = calloc(1, sizeof(*lvs->destruct_req));
@@ -288,6 +295,13 @@ _vbdev_lvol_destroy_cb(void *cb_arg, int lvserrno)
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol destroyed\n");
 }
 
+static void
+_vbdev_lvol_destroy_after_close_cb(void *cb_arg, struct spdk_lvol *lvol, int lvserrno)
+{
+	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol %s closed, begin destroying\n", lvol->name);
+	spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, NULL);
+}
+
 static int
 vbdev_lvol_destruct(void *ctx)
 {
@@ -298,7 +312,7 @@ vbdev_lvol_destruct(void *ctx)
 	if (lvol->close_only) {
 		spdk_lvol_close(lvol, _vbdev_lvol_close_cb, NULL);
 	} else {
-		spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, NULL);
+		spdk_lvol_close(lvol, _vbdev_lvol_destroy_after_close_cb, lvol);
 	}
 
 	return 0;
