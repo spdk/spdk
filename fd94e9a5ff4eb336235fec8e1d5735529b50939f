@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac96a42a_3c678f72",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-20T15:20:05Z",
+      "side": 1,
+      "message": "this change is not related to this patch subject",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 226,
+        "endChar": 59
+      },
+      "revId": "fd94e9a5ff4eb336235fec8e1d5735529b50939f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
