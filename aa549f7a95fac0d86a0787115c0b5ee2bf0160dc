@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0bd5d84_d84689de",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 106
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-20T22:36:07Z",
+      "side": 1,
+      "message": "Is this left over by accident from a test?",
+      "revId": "aa549f7a95fac0d86a0787115c0b5ee2bf0160dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
