@@ -189,6 +189,8 @@ spdk_vhost_vring_desc_get_next(struct vring_desc **desc,
 	struct vring_desc *old_desc = *desc;
 	uint16_t next_idx;
 
+	assert((old_desc->flags & VRING_DESC_F_INDIRECT) == 0);
+
 	if ((old_desc->flags & VRING_DESC_F_NEXT) == 0) {
 		*desc = NULL;
 		return 0;
