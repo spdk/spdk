@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1974d6a8_7d153934",
+        "filename": "doc/bdev.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T16:15:13Z",
+      "side": 1,
+      "message": "\"perform a target scan\"",
+      "revId": "611fc16bb3981d45e77fb6a54385f488efff5b69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87dbba79_fe82c00f",
+        "filename": "doc/bdev.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T16:15:13Z",
+      "side": 1,
+      "message": "an --\u003e a",
+      "revId": "611fc16bb3981d45e77fb6a54385f488efff5b69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "422c4ea6_64a27897",
+        "filename": "doc/bdev.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T16:15:13Z",
+      "side": 1,
+      "message": "Since you\u0027re in here fixing a few minor things anyway, I\u0027d consider moving this sentence to above the snippet example.",
+      "revId": "611fc16bb3981d45e77fb6a54385f488efff5b69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89993802_333e85d7",
+        "filename": "doc/virtio.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T16:15:13Z",
+      "side": 1,
+      "message": "other --\u003e another",
+      "revId": "611fc16bb3981d45e77fb6a54385f488efff5b69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b395a35_cf3d0bf4",
+        "filename": "doc/virtio.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T16:15:13Z",
+      "side": 1,
+      "message": "delete the word \u0027being\u0027",
+      "revId": "611fc16bb3981d45e77fb6a54385f488efff5b69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8eb25623_651f2cd4",
+        "filename": "doc/virtio.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T16:15:13Z",
+      "side": 1,
+      "message": "comma after the word \u0027host\u0027",
+      "revId": "611fc16bb3981d45e77fb6a54385f488efff5b69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efa6a8b1_a7f64bcc",
+        "filename": "doc/virtio.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T16:15:13Z",
+      "side": 1,
+      "message": "\"an I/O\"",
+      "revId": "611fc16bb3981d45e77fb6a54385f488efff5b69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "660dd2e4_d2e00c13",
+        "filename": "doc/virtio.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T16:15:13Z",
+      "side": 1,
+      "message": "an --\u003e a",
+      "revId": "611fc16bb3981d45e77fb6a54385f488efff5b69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "236df78f_674dfb9a",
+        "filename": "doc/virtio.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T16:15:13Z",
+      "side": 1,
+      "message": "queues --\u003e queue",
+      "revId": "611fc16bb3981d45e77fb6a54385f488efff5b69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d85488f3_e465f292",
+        "filename": "doc/virtio.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T16:15:13Z",
+      "side": 1,
+      "message": "\"possible yet\" --\u003e \"supported\"",
+      "revId": "611fc16bb3981d45e77fb6a54385f488efff5b69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "343e505d_f9786fef",
+        "filename": "doc/virtio.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T16:15:13Z",
+      "side": 1,
+      "message": "suggest: supports only up to 8 hugepages (implies only 1GB sized pages are practical)",
+      "revId": "611fc16bb3981d45e77fb6a54385f488efff5b69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
