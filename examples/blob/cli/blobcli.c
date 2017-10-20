@@ -1265,7 +1265,7 @@ parse_script(struct cli_context_t *cli_context)
 				i++;
 			}
 		}
-	} while (bytes_in != -1 && i < MAX_SCRIPT_LINES);
+	} while (bytes_in != -1 && i < MAX_SCRIPT_LINES - 1);
 	fclose(fp);
 
 	/* add an exit cmd in case they didn't */
