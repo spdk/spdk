@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5d14a04_033537e1",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-20T16:55:06Z",
+      "side": 1,
+      "message": "Do we want to expose the unmap_device parameter as a spdk_lvs_destroy() option instead of hard-coding it here?\n\nThis should also probably be \u0027false\u0027, not 0, to make it clearer what the type is.",
+      "range": {
+        "startLine": 343,
+        "startChar": 32,
+        "endLine": 343,
+        "endChar": 34
+      },
+      "revId": "29858dadb1a05a4e635e692f14a7df6fb754ca42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
