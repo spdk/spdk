@@ -76,6 +76,9 @@ makes it explicit that the default is being used.
 
 ### Blobstore
 
+spdk_bs_destroy() was added to allow destroying blobstore on device
+with an initialized blobstore.
+
 spdk_bs_io_readv_blob() and spdk_bs_io_writev_blob() were added to enable
 scattered payloads.
 
