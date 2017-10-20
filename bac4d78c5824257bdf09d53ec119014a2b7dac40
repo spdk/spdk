@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e5854e6_0cf19f7d",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 932,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-20T19:19:55Z",
+      "side": 1,
+      "message": "but you\u0027re calling it from bdev_virtio_finish on fully-attached devices :)",
+      "range": {
+        "startLine": 931,
+        "startChar": 4,
+        "endLine": 932,
+        "endChar": 29
+      },
+      "revId": "bac4d78c5824257bdf09d53ec119014a2b7dac40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1039a8fc_e0845f63",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-20T19:19:55Z",
+      "side": 1,
+      "message": "the vdev might be in attached_ctrlrs list. This call might (?) corrupt both of these lists.",
+      "range": {
+        "startLine": 940,
+        "startChar": 1,
+        "endLine": 940,
+        "endChar": 57
+      },
+      "revId": "bac4d78c5824257bdf09d53ec119014a2b7dac40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82823572_dd9c34aa",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 950,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-20T19:19:55Z",
+      "side": 1,
+      "message": "this is relevant only for attached devices (which have already registered their bdevs)",
+      "range": {
+        "startLine": 941,
+        "startChar": 1,
+        "endLine": 950,
+        "endChar": 2
+      },
+      "revId": "bac4d78c5824257bdf09d53ec119014a2b7dac40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52d26997_51ce823d",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-20T19:19:55Z",
+      "side": 1,
+      "message": "where did the error check go? this is not rebased properly",
+      "range": {
+        "startLine": 1005,
+        "startChar": 1,
+        "endLine": 1005,
+        "endChar": 19
+      },
+      "revId": "bac4d78c5824257bdf09d53ec119014a2b7dac40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e66bcc1_507132a4",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-20T19:19:55Z",
+      "side": 1,
+      "message": "are these required?",
+      "range": {
+        "startLine": 1011,
+        "startChar": 43,
+        "endLine": 1011,
+        "endChar": 67
+      },
+      "revId": "bac4d78c5824257bdf09d53ec119014a2b7dac40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4bd651b3_728e5f0a",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1061,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-20T19:19:55Z",
+      "side": 1,
+      "message": "as I commented above, this shouldn\u0027t probably be changed. could you revert?",
+      "range": {
+        "startLine": 1061,
+        "startChar": 2,
+        "endLine": 1061,
+        "endChar": 30
+      },
+      "revId": "bac4d78c5824257bdf09d53ec119014a2b7dac40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
