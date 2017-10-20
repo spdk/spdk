@@ -82,6 +82,7 @@ _spdk_lvol_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		goto end;
 	}
 
+	lvol->ref_count++;
 	lvol->blob = blob;
 end:
 	req->cb_fn(req->cb_arg, lvol, lvolerrno);
