@@ -249,15 +249,24 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		void *cb_arg)
 {
 	struct spdk_lvs_req *lvs_req;
+	struct spdk_lvol *lvol, *tmp;
 
 	if (lvs == NULL) {
 		SPDK_ERRLOG("Lvol store is NULL\n");
 		return -ENODEV;
 	}
 
-	if (!TAILQ_EMPTY(&lvs->lvols)) {
-		SPDK_ERRLOG("Lvols still open on lvol store\n");
-		return -EBUSY;
+	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+		if (lvol->ref_count != 0) {
+			SPDK_ERRLOG("Lvols still open on lvol store\n");
+			return -EBUSY;
+		}
+	}
+
+	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
+		TAILQ_REMOVE(&lvs->lvols, lvol, link);
+		free(lvol->name);
+		free(lvol);
 	}
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
@@ -277,16 +286,6 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 }
 
 static void
-_spdk_lvol_return_to_caller(void *cb_arg, int lvolerrno)
-{
-	struct spdk_lvol_with_handle_req *req = cb_arg;
-
-	assert(req->cb_fn != NULL);
-	req->cb_fn(req->cb_arg, req->lvol, lvolerrno);
-	free(req);
-}
-
-static void
 _spdk_lvs_destruct_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_lvs_req *req = cb_arg;
@@ -303,6 +302,8 @@ _spdk_lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvol_req *req = cb_arg;
 	struct spdk_lvol *lvol = req->lvol;
+	struct spdk_lvol *iter_lvol, *tmp;
+	bool all_lvols_closed = true;
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not close blob on lvol\n");
@@ -311,14 +312,19 @@ _spdk_lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 		goto end;
 	}
 
-	if (lvol->lvol_store->destruct_req && TAILQ_EMPTY(&lvol->lvol_store->lvols)) {
-		spdk_lvs_unload(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
+	lvol->ref_count--;
+
+	TAILQ_FOREACH_SAFE(iter_lvol, &lvol->lvol_store->lvols, link, tmp) {
+		if (iter_lvol->ref_count != 0) {
+			all_lvols_closed = false;
+		}
 	}
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol %s closed\n", lvol->name) ;
 
-	free(lvol->name);
-	free(lvol);
+	if (lvol->lvol_store->destruct_req && all_lvols_closed == true) {
+		spdk_lvs_unload(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
+	}
 
 end:
 	req->cb_fn(req->cb_arg, lvolerrno);
@@ -378,6 +384,21 @@ _spdk_lvol_destroy_cb(void *cb_arg, int lvolerrno)
 
 
 static void
+_spdk_lvol_sync_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_with_handle_req *req = cb_arg;
+	struct spdk_lvol *lvol = req->lvol;
+
+	if (lvolerrno != 0) {
+		spdk_bs_md_close_blob(&lvol->blob, _spdk_lvol_delete_blob_cb, lvol);
+	}
+
+	assert(req->cb_fn != NULL);
+	req->cb_fn(req->cb_arg, req->lvol, lvolerrno);
+	free(req);
+}
+
+static void
 _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 {
 	struct spdk_lvol_with_handle_req *req = cb_arg;
@@ -399,18 +420,19 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		spdk_bs_md_close_blob(&blob, _spdk_lvol_delete_blob_cb, lvol);
 		SPDK_ERRLOG("Cannot alloc memory for lvol name\n");
 		lvolerrno = -ENOMEM;
+		free(lvol);
 		goto invalid;
 	}
 
 	lvolerrno = spdk_bs_md_resize_blob(blob, lvol->num_clusters);
 	if (lvolerrno < 0) {
-		spdk_bs_md_close_blob(&blob, _spdk_lvol_delete_blob_cb, lvol);
+		spdk_bs_md_close_blob(&blob, _spdk_lvol_destroy_cb, lvol);
 		goto invalid;
 	}
 
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 
-	spdk_bs_md_sync_blob(blob, _spdk_lvol_return_to_caller, req);
+	spdk_bs_md_sync_blob(blob, _spdk_lvol_sync_cb, req);
 
 	return;
 
@@ -549,12 +571,19 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 {
 	struct spdk_lvol_with_handle_req *req;
 	struct spdk_lvol_req *lvol_req;
+	struct spdk_blob_store *bs = lvol->lvol_store->blobstore;
 
 	assert(cb_fn != NULL);
 
 	if (lvol == NULL) {
 		SPDK_ERRLOG("lvol does not exist\n");
 		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	if (lvol->ref_count != 0) {
+		SPDK_ERRLOG("Cannot destroy lvol %s because it is still open\n", lvol->name);
+		cb_fn(cb_arg, -EBUSY);
 		return;
 	}
 
@@ -579,7 +608,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	req->lvol = lvol;
 
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
-	spdk_bs_md_close_blob(&(lvol->blob), _spdk_lvol_destroy_cb, req);
+	spdk_bs_md_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
 }
 
 void
@@ -606,7 +635,6 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
 
-	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
 	spdk_bs_md_close_blob(&(lvol->blob), _spdk_lvol_close_blob_cb, req);
 }
 
