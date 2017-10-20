@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e64c36d1_5d15a51d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2026,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T00:18:02Z",
+      "side": 1,
+      "message": "question: what\u0027s our policy on use of asserts? it doesn\u0027t seem like in the destroy path we should leave any in the code after development (assuming we only use them in case of data corruption possibility)",
+      "revId": "abe40879944161139f873630c71fd10ecac4d192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "887a1a40_dddd695b",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1295,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-20T00:18:02Z",
+      "side": 1,
+      "message": "shouldn\u0027t this be false?",
+      "revId": "abe40879944161139f873630c71fd10ecac4d192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
