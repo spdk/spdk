@@ -87,6 +87,7 @@ struct spdk_lvol {
 	char				*name;
 	bool				close_only;
 	struct spdk_bdev		*bdev;
+	int				ref_count;
 	TAILQ_ENTRY(spdk_lvol) link;
 };
 
