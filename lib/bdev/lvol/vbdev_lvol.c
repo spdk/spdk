@@ -276,6 +276,18 @@ vbdev_get_lvol_by_name(const char *name)
 	return NULL;
 }
 
+static void
+_vbdev_lvol_close_cb(void *cb_arg, struct spdk_lvol *lvol, int lvserrno)
+{
+	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol closed");
+}
+
+static void
+_vbdev_lvol_destroy_cb(void *cb_arg, int lvserrno)
+{
+	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol destroyed");
+}
+
 static int
 vbdev_lvol_destruct(void *ctx)
 {
@@ -284,9 +296,9 @@ vbdev_lvol_destruct(void *ctx)
 	assert(lvol != NULL);
 	free(lvol->bdev);
 	if (lvol->close_only) {
-		spdk_lvol_close(lvol);
+		spdk_lvol_close(lvol, _vbdev_lvol_close_cb, NULL);
 	} else {
-		spdk_lvol_destroy(lvol);
+		spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, NULL);
 	}
 
 	return 0;
