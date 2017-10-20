@@ -959,6 +959,91 @@ lvols_load(void)
 	spdk_free_thread();
 }
 
+static void
+lvol_open(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvs_with_handle_req *req;
+	struct spdk_bs_opts bs_opts;
+	struct spdk_blob *super_blob, *blob1, *blob2, *blob3;
+	struct spdk_lvol *lvol, *tmp;
+
+	req = calloc(1, sizeof(*req));
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	init_dev(&dev);
+	spdk_bs_opts_init(&bs_opts);
+	strncpy(bs_opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
+	spdk_bs_init(&dev.bs_dev, &bs_opts, null_cb, NULL);
+	super_blob = calloc(1, sizeof(*super_blob));
+	super_blob->id = 0x100;
+	spdk_blob_md_set_xattr(super_blob, "uuid", uuid, UUID_STRING_LEN);
+	TAILQ_INSERT_TAIL(&dev.bs->blobs, super_blob, link);
+	dev.bs->super_blobid = 0x100;
+
+	/*
+	 * Create 3 blobs, write different char values to the last char in the UUID
+	 *  to make sure they are unique.
+	 */
+	blob1 = calloc(1, sizeof(*blob1));
+	blob1->id = 0x1;
+	spdk_blob_md_set_xattr(blob1, "uuid", uuid, UUID_STRING_LEN);
+	blob1->uuid[UUID_STRING_LEN - 2] = '1';
+
+	blob2 = calloc(1, sizeof(*blob2));
+	blob2->id = 0x2;
+	spdk_blob_md_set_xattr(blob2, "uuid", uuid, UUID_STRING_LEN);
+	blob2->uuid[UUID_STRING_LEN - 2] = '2';
+
+	blob3 = calloc(1, sizeof(*blob3));
+	blob3->id = 0x2;
+	spdk_blob_md_set_xattr(blob2, "uuid", uuid, UUID_STRING_LEN);
+	blob3->uuid[UUID_STRING_LEN - 2] = '3';
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
+
+	TAILQ_INSERT_TAIL(&dev.bs->blobs, blob1, link);
+	TAILQ_INSERT_TAIL(&dev.bs->blobs, blob2, link);
+	TAILQ_INSERT_TAIL(&dev.bs->blobs, blob3, link);
+
+	/* Load lvs with 3 blobs */
+	g_lvol_store = NULL;
+	g_lvserrno = 0;
+	spdk_lvs_load(&dev.bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&g_lvol_stores));
+
+	blob1->open_status = -1;
+	blob2->open_status = -1;
+	blob3->open_status = -1;
+
+	/* Fail opening all lvols */
+	TAILQ_FOREACH_SAFE(lvol, &g_lvol_store->lvols, link, tmp) {
+		spdk_lvol_open(lvol, lvol_op_with_handle_complete, NULL);
+		CU_ASSERT(g_lvserrno != 0);
+	}
+
+	blob1->open_status = 0;
+	blob2->open_status = 0;
+	blob3->open_status = 0;
+
+	/* Open all lvols */
+	TAILQ_FOREACH_SAFE(lvol, &g_lvol_store->lvols, link, tmp) {
+		spdk_lvol_open(lvol, lvol_op_with_handle_complete, NULL);
+		CU_ASSERT(g_lvserrno == 0);
+	}
+
+	g_lvserrno = -1;
+	spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+
+	free(req);
+	free_dev(&dev);
+
+	spdk_free_thread();
+}
+
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -986,7 +1071,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "lvol_close_success", lvol_close_success) == NULL ||
 		CU_add_test(suite, "lvol_resize", lvol_resize) == NULL ||
 		CU_add_test(suite, "lvol_load", lvs_load) == NULL ||
-		CU_add_test(suite, "lvs_load", lvols_load) == NULL
+		CU_add_test(suite, "lvs_load", lvols_load) == NULL ||
+		CU_add_test(suite, "lvol_open", lvol_open) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
