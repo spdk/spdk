@@ -62,6 +62,13 @@ struct spdk_lvs_with_handle_req {
 	struct spdk_bdev		*base_bdev;
 };
 
+struct spdk_lvs_destroy_req {
+	spdk_lvs_op_complete    cb_fn;
+	void                    *cb_arg;
+	struct spdk_lvol_store	*lvs;
+	bool			unmap_device;
+};
+
 struct spdk_lvol_with_handle_req {
 	spdk_lvol_op_with_handle_complete cb_fn;
 	void				*cb_arg;

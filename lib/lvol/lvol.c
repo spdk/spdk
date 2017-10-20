@@ -597,7 +597,7 @@ _spdk_lvs_destruct_cb(void *cb_arg, int lvserrno)
 static void
 _lvs_destroy_cb(void *cb_arg, int lvserrno)
 {
-	struct spdk_lvs_req *lvs_req = cb_arg;
+	struct spdk_lvs_destroy_req *lvs_req = cb_arg;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store destroyed\n");
 	assert(lvs_req->cb_fn != NULL);
@@ -605,11 +605,24 @@ _lvs_destroy_cb(void *cb_arg, int lvserrno)
 	free(lvs_req);
 }
 
+static void
+_lvs_destroy_super_cb(void *cb_arg, int bserrno)
+{
+	struct spdk_lvs_destroy_req *lvs_req = cb_arg;
+	struct spdk_lvol_store *lvs = lvs_req->lvs;
+
+	assert(lvs != NULL);
+
+	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Destroying lvol store\n");
+	spdk_bs_destroy(lvs->blobstore, lvs_req->unmap_device, _lvs_destroy_cb, lvs_req);
+	_spdk_lvs_free(lvs);
+}
+
 int
 spdk_lvs_destroy(struct spdk_lvol_store *lvs, bool unmap_device, spdk_lvs_op_complete cb_fn,
 		 void *cb_arg)
 {
-	struct spdk_lvs_req *lvs_req;
+	struct spdk_lvs_destroy_req *lvs_req;
 	struct spdk_lvol *iter_lvol, *tmp;
 
 	if (lvs == NULL) {
@@ -637,10 +650,11 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, bool unmap_device, spdk_lvs_op_com
 
 	lvs_req->cb_fn = cb_fn;
 	lvs_req->cb_arg = cb_arg;
+	lvs_req->lvs = lvs;
+	lvs_req->unmap_device = unmap_device;
 
-	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Destroying lvol store\n");
-	spdk_bs_destroy(lvs->blobstore, unmap_device, _lvs_destroy_cb, lvs_req);
-	_spdk_lvs_free(lvs);
+	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Deleting super blob\n");
+	spdk_bs_md_delete_blob(lvs->blobstore, lvs->super_blob_id, _lvs_destroy_super_cb, lvs_req);
 
 	return 0;
 }
