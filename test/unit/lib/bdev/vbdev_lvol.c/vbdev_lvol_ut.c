@@ -175,8 +175,13 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
+static void
+close_cb(void *cb_arg, int lvolerrno)
+{
+}
+
 void
-spdk_lvol_close(struct spdk_lvol *lvol)
+spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvs_req *destruct_req;
 
@@ -193,13 +198,15 @@ spdk_lvol_close(struct spdk_lvol *lvol)
 	free(lvol->name);
 	free(lvol);
 	g_lvol = NULL;
+	cb_fn(NULL, 0);
 }
 
 void
-spdk_lvol_destroy(struct spdk_lvol *lvol)
+spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	/* Lvol destroy and close are effectively the same from UT perspective */
-	spdk_lvol_close(lvol);
+	spdk_lvol_close(lvol, close_cb, NULL);
+	cb_fn(NULL, 0);
 }
 
 void
