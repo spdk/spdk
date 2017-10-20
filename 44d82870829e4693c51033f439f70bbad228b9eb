@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c65d6670_a0ec1c33",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-20T21:10:58Z",
+      "side": 1,
+      "message": "should say increase max I/O size to 4 MiB",
+      "revId": "44d82870829e4693c51033f439f70bbad228b9eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
