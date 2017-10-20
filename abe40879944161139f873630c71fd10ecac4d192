@@ -37,6 +37,23 @@
     },
     {
       "key": {
+        "uuid": "41a5f270_5dde38c9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2033,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-20T03:12:22Z",
+      "side": 1,
+      "message": "For now, can you allocate a 4KB buffer, initialize it to zeroes, and then write it to LBA 0?\n\nThat can be a temporary solution until we get the write_zeroes support in.  I talked to Daniel today - he and Seth are going to work on getting that in tomorrow.",
+      "revId": "abe40879944161139f873630c71fd10ecac4d192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "887a1a40_dddd695b",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 9
