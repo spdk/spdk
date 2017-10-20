@@ -82,6 +82,7 @@ _spdk_lvol_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		goto end;
 	}
 
+	lvol->ref_count++;
 	lvol->blob = blob;
 end:
 	req->cb_fn(req->cb_arg, lvol, lvolerrno);
@@ -98,6 +99,12 @@ spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, 
 	if (lvol == NULL) {
 		SPDK_ERRLOG("lvol does not exist\n");
 		cb_fn(cb_arg, NULL, -ENODEV);
+		return;
+	}
+
+	if (lvol->ref_count > 0) {
+		lvol->ref_count++;
+		cb_fn(cb_arg, lvol, 0);
 		return;
 	}
 
@@ -998,6 +1005,13 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
+
+	if (lvol->ref_count > 1) {
+		lvol->ref_count--;
+		/* This needs to be uncommented after rebase */
+		//cb_fn(cb_arg, 0);
+		return;
+	}
 
 	spdk_bs_md_close_blob(&(lvol->blob), _spdk_lvol_close_blob_cb, req);
 }
