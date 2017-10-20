@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33ecb2cb_42701c25",
+        "filename": "doc/lvol.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-20T15:42:12Z",
+      "side": 1,
+      "message": "still need to address Tomek\u0027s comment:\n\"Logical volume store uses super blob to hold uuid (and in future other metadata). Blobstore types are implemented in blobstore itself, and saved on disk.\"\n\nblobstore type is kept in super block.",
+      "range": {
+        "startLine": 9,
+        "startChar": 60,
+        "endLine": 9,
+        "endChar": 157
+      },
+      "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48ca7ea7_670a167b",
+        "filename": "doc/lvol.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-20T15:42:12Z",
+      "side": 1,
+      "message": "Some lines are split to next line and some no - like in line 9. This should be done in the same style.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 17
+      },
+      "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dad39d5_e8f640ad",
+        "filename": "doc/lvol.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-20T15:42:12Z",
+      "side": 1,
+      "message": "is will",
+      "range": {
+        "startLine": 35,
+        "startChar": 21,
+        "endLine": 35,
+        "endChar": 28
+      },
+      "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1bcbd27_900d5a04",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-20T15:42:12Z",
+      "side": 1,
+      "message": "In latest version it does not close lvol, but requires that lvol is not open. There are also callback function and argument added as parameters.",
+      "range": {
+        "startLine": 133,
+        "startChar": 10,
+        "endLine": 133,
+        "endChar": 21
+      },
+      "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa9bcbc5_9c33d4ef",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-20T15:42:12Z",
+      "side": 1,
+      "message": "There are callback function and argument added as parameters in latest version.",
+      "range": {
+        "startLine": 142,
+        "startChar": 20,
+        "endLine": 142,
+        "endChar": 45
+      },
+      "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75727b6b_494fbc17",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-20T15:42:12Z",
+      "side": 1,
+      "message": "There are 2 new functions in tasting patch: spdk_lvs_laod and spdk_lvol_open.",
+      "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
