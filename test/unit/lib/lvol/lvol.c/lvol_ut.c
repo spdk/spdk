@@ -211,6 +211,7 @@ lvol_store_op_complete(void *cb_arg, int lvserrno)
 static void
 close_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 {
+	g_lvol = lvol;
 	g_lvserrno = lvolerrno;
 }
 
@@ -252,6 +253,7 @@ lvs_init_unload_success(void)
 
 	/* Lvol has to be closed (or destroyed) before unloading lvol store. */
 	spdk_lvol_close(g_lvol, close_cb, NULL);
+	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvserrno == 0);
 
 	g_lvserrno = -1;
@@ -330,6 +332,9 @@ lvol_create_destroy_success(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
+	spdk_lvol_close(g_lvol, close_cb, NULL);
+	CU_ASSERT(g_lvol != NULL);
+	CU_ASSERT(g_lvserrno == 0);
 	spdk_lvol_destroy(g_lvol, destroy_cb, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 
@@ -405,6 +410,9 @@ lvol_destroy_fail(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
+	spdk_lvol_close(g_lvol, close_cb, NULL);
+	CU_ASSERT(g_lvol != NULL);
+	CU_ASSERT(g_lvserrno == 0);
 	spdk_lvol_destroy(g_lvol, destroy_cb, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 
@@ -441,6 +449,7 @@ lvol_close_fail(void)
 
 	spdk_lvol_close(g_lvol, close_cb, NULL);
 	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol != NULL);
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
@@ -475,6 +484,7 @@ lvol_close_success(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
 	spdk_lvol_close(g_lvol, close_cb, NULL);
+	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvserrno == 0);
 
 	g_lvserrno = -1;
@@ -541,6 +551,9 @@ lvol_resize(void)
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvserrno != 0);
 
+	spdk_lvol_close(g_lvol, close_cb, NULL);
+	CU_ASSERT(g_lvol != NULL);
+	CU_ASSERT(g_lvserrno == 0);
 	spdk_lvol_destroy(g_lvol, destroy_cb, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 
