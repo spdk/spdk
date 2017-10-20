@@ -175,37 +175,39 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
-static void
-close_cb(void *cb_arg, int lvolerrno)
-{
-}
-
 void
 spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvs_req *destruct_req;
+	struct spdk_lvol *iter_lvol, *tmp;
+	bool all_lvols_closed = true;
 
 	SPDK_CU_ASSERT_FATAL(lvol == g_lvol);
 
-	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
+	lvol->ref_count--;
+
+	TAILQ_FOREACH_SAFE(iter_lvol, &lvol->lvol_store->lvols, link, tmp) {
+		if (iter_lvol->ref_count != 0) {
+			all_lvols_closed = false;
+		}
+	}
 
 	destruct_req = lvol->lvol_store->destruct_req;
-	if (destruct_req && TAILQ_EMPTY(&lvol->lvol_store->lvols)) {
+	if (destruct_req && all_lvols_closed == true) {
 		spdk_lvs_unload(lvol->lvol_store, destruct_req->cb_fn, destruct_req->cb_arg);
 		free(destruct_req);
 	}
 
-	free(lvol->name);
-	free(lvol);
-	g_lvol = NULL;
 	cb_fn(NULL, 0);
 }
 
 void
 spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
-	/* Lvol destroy and close are effectively the same from UT perspective */
-	spdk_lvol_close(lvol, close_cb, NULL);
+	free(lvol->name);
+	free(lvol);
+	g_lvol = NULL;
+
 	cb_fn(NULL, 0);
 }
 
@@ -311,6 +313,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz, spdk_lvol_op_with_handl
 	SPDK_CU_ASSERT_FATAL(lvol != NULL);
 
 	lvol->lvol_store = lvs;
+	lvol->ref_count++;
 	lvol->name = spdk_sprintf_alloc("%s", "UNIT_TEST_UUID");
 	SPDK_CU_ASSERT_FATAL(lvol->name != NULL);
 
@@ -369,18 +372,19 @@ ut_lvs_destroy(void)
 
 	uuid_generate_time(lvs->uuid);
 
-	/* Suuccessfully create lvol, which should be destroyed with lvs later */
+	/* Suuccessfully create lvol, which should be unloaded with lvs later */
 	g_lvolerrno = -1;
 	rc = vbdev_lvol_create(lvs->uuid, sz, vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvolerrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
-	/* Destroy lvol store */
+	/* Unload lvol store */
 	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
-	CU_ASSERT(g_lvol == NULL);
+	free(g_lvol->name);
+	free(g_lvol);
 }
 
 static void
