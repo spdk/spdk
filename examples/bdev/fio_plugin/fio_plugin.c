@@ -45,6 +45,7 @@
 #include "config-host.h"
 #include "fio.h"
 #include "optgroup.h"
+#include "rte_lcore.h"
 
 struct spdk_fio_options {
 	void *pad;
@@ -176,6 +177,7 @@ static int
 spdk_fio_init_thread(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread;
+	static int core_id_count = 1;
 
 	fio_thread = calloc(1, sizeof(*fio_thread));
 	if (!fio_thread) {
@@ -208,6 +210,7 @@ spdk_fio_init_thread(struct thread_data *td)
 	assert(fio_thread->iocq != NULL);
 
 	TAILQ_INIT(&fio_thread->targets);
+	RTE_PER_LCORE(_lcore_id) = core_id_count++;
 
 	/* Cache the thread in a thread-local variable for easy access */
 	g_thread = fio_thread;
