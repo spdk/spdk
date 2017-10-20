@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbd1c31f_f0d20cee",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-20T13:12:00Z",
+      "side": 1,
+      "message": "1GiB to be exact",
+      "range": {
+        "startLine": 52,
+        "startChar": 63,
+        "endLine": 52,
+        "endChar": 66
+      },
+      "revId": "8aa1869552018674407061aaa6800e5dc29660ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b65e3f20_3418b614",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-20T13:12:00Z",
+      "side": 1,
+      "message": "lvol_store is NULL when error is set.",
+      "range": {
+        "startLine": 64,
+        "startChar": 21,
+        "endLine": 64,
+        "endChar": 41
+      },
+      "revId": "8aa1869552018674407061aaa6800e5dc29660ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "292d3015_a509edb6",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-20T13:12:00Z",
+      "side": 1,
+      "message": "lvol is NULL when error is set.",
+      "range": {
+        "startLine": 81,
+        "startChar": 15,
+        "endLine": 81,
+        "endChar": 29
+      },
+      "revId": "8aa1869552018674407061aaa6800e5dc29660ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10c9180c_62ef665f",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-20T13:12:00Z",
+      "side": 1,
+      "message": "Not bdev but bs_dev. Please mention that to create bs_dev spdk_bdev_create_bs_dev() has to be used.",
+      "range": {
+        "startLine": 95,
+        "startChar": 40,
+        "endLine": 95,
+        "endChar": 44
+      },
+      "revId": "8aa1869552018674407061aaa6800e5dc29660ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b579017_de2395db",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-20T13:12:00Z",
+      "side": 1,
+      "message": "All lvols have to be at least closed beforehand, when doing unload.",
+      "range": {
+        "startLine": 105,
+        "startChar": 29,
+        "endLine": 105,
+        "endChar": 71
+      },
+      "revId": "8aa1869552018674407061aaa6800e5dc29660ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81411dad_a0da2eea",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-20T13:12:00Z",
+      "side": 1,
+      "message": "lvol library does not create bdevs. That is done in lib/bdev/lvol/vbdev_lvol.c.",
+      "range": {
+        "startLine": 105,
+        "startChar": 76,
+        "endLine": 105,
+        "endChar": 115
+      },
+      "revId": "8aa1869552018674407061aaa6800e5dc29660ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdfb6152_68a8fba7",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-20T13:12:00Z",
+      "side": 1,
+      "message": "specify unit",
+      "range": {
+        "startLine": 117,
+        "startChar": 13,
+        "endLine": 117,
+        "endChar": 29
+      },
+      "revId": "8aa1869552018674407061aaa6800e5dc29660ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
