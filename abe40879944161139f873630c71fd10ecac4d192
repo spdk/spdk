@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5378be1d_03dc0249",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2026,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-20T03:10:51Z",
+      "side": 1,
+      "message": "asserts are encouraged - if assumptions are defined by asserts(), then a lot of times if you start seeing weird crashes or behavior, a debug build will trigger an assert() and make the problem a lot easier to debug\n\nbut for this assert in particular - this cannot be an assumption, since it is entirely possible that a user will call spdk_bs_destroy() with this blobs list not-empty (meaning some blobs are open).  So I think we return error here instead of doing an assert.",
+      "parentUuid": "e64c36d1_5d15a51d",
+      "revId": "abe40879944161139f873630c71fd10ecac4d192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "887a1a40_dddd695b",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 9
