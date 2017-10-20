@@ -1178,18 +1178,23 @@ line_parser(struct cli_context_t *cli_context)
 		if (tok[0] == '$' && tok[1] == 'B') {
 			tok += 2;
 			blob_num = atoi(tok);
-			cli_context->argv[cli_context->argc] =
-				realloc(cli_context->argv[cli_context->argc], BUFSIZE);
-			if (cli_context->argv[cli_context->argc] == NULL) {
-				printf("ERROR: unable to realloc memory\n");
-				spdk_app_stop(-1);
+			if (blob_num >= 0 && blob_num < MAX_SCRIPT_BLOBS) {
+				cli_context->argv[cli_context->argc] =
+					realloc(cli_context->argv[cli_context->argc], BUFSIZE);
+				if (cli_context->argv[cli_context->argc] == NULL) {
+					printf("ERROR: unable to realloc memory\n");
+					spdk_app_stop(-1);
+				}
+				if (g_script.blobid[blob_num] == 0) {
+					printf("ERROR: There is no blob for $B%d\n",
+					       blob_num);
+				}
+				snprintf(cli_context->argv[cli_context->argc], BUFSIZE,
+					 "%" PRIu64, g_script.blobid[blob_num]);
+			} else {
+				printf("ERROR: Invalid token or exceeded max blobs of %d\n",
+				       MAX_SCRIPT_BLOBS);
 			}
-			if (g_script.blobid[blob_num] == 0) {
-				printf("ERROR: There is no blob for $B%d\n",
-				       blob_num);
-			}
-			snprintf(cli_context->argv[cli_context->argc], BUFSIZE,
-				 "%" PRIu64, g_script.blobid[blob_num]);
 		}
 		cli_context->argc++;
 		tok = strtok(NULL, " ");
@@ -1265,7 +1270,7 @@ parse_script(struct cli_context_t *cli_context)
 				i++;
 			}
 		}
-	} while (bytes_in != -1 && i < MAX_SCRIPT_LINES);
+	} while (bytes_in != -1 && i < MAX_SCRIPT_LINES - 1);
 	fclose(fp);
 
 	/* add an exit cmd in case they didn't */
