@@ -39,7 +39,7 @@ the /tmp/vhost.0 domain socket.
 
 ## Todo:
 * Add I/O channel support.  Includes requesting correct number of queues
-  (based on core count).  Fail device initialization if not enough queues 
+  (based on core count).  Fail device initialization if not enough queues
   can be allocated.
 * Add RPCs.
 * Break out the "rte_virtio" code into a separate library that is not

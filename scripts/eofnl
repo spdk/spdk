@@ -29,4 +29,10 @@ if grep -q $'\r' "$f"; then
 	exit 1
 fi
 
+if grep -q $'[\t ]$' "$f"; then
+	echo "$f: Trailing whitespace"
+	sed -i $'s/[ \t]*$//' "$f"
+	exit 1
+fi
+
 exit 0

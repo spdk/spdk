@@ -1,6 +1,6 @@
 These scripts are used to perform benchmark testing with fio.
 The run_fio_test.py is the main script that runs the performance test and parses the test results.
-Users can populate test parameters for different fio workloads in the lists (q_depth, io_size, workload_type, mix, core_mask and run_time) at the top of the run_fio_test.py script. 
+Users can populate test parameters for different fio workloads in the lists (q_depth, io_size, workload_type, mix, core_mask and run_time) at the top of the run_fio_test.py script.
 The run_fio_test.py puts the test results in a csv file named <hostname>_<num ssds>_perf_output.csv.
 The run_fio_test.sh script demonstrates how to invoke the run_fio_test.py script with the
 input parameters: path_to_fio_conf, path_to_ioengine and num_ssds. The run_fio_test.sh script will
