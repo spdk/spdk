@@ -41,13 +41,16 @@
 #include "spdk/stdinc.h"
 
 typedef void (*spdk_copy_completion_cb)(void *ref, int status);
+typedef void (*spdk_copy_fini_cb)(void);
+typedef void (*spdk_copy_module_fini)(void *fn_next);
 
 struct spdk_io_channel;
 
 struct spdk_copy_task;
 
 int spdk_copy_engine_initialize(void);
-void spdk_copy_engine_finish(void);
+void spdk_copy_engine_finish(spdk_copy_fini_cb cb_fn, spdk_copy_module_fini fn_next);
+void spdk_copy_engine_module_finish(void);
 
 struct spdk_io_channel *spdk_copy_engine_get_io_channel(void);
 int spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch, void *dst,
