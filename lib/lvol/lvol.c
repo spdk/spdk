@@ -226,6 +226,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	lvs_req->cb_arg = cb_arg;
 	lvs_req->lvol_store = lvs;
 	lvs->bs_dev = bs_dev;
+	lvs->destruct = false;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Initializing lvol store\n");
 	spdk_bs_init(bs_dev, &opts, _spdk_lvs_init_cb, lvs_req);
@@ -374,7 +375,9 @@ _spdk_lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol %s closed\n", lvol->name) ;
 
 	if (lvol->lvol_store->destruct_req && all_lvols_closed == true) {
-		spdk_lvs_unload(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
+		if (!lvol->lvol_store->destruct) {
+			spdk_lvs_unload(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
+		}
 	}
 
 end:
@@ -396,8 +399,11 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 		goto end;
 	}
 
+	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
+
 	if (lvol->lvol_store->destruct_req && TAILQ_EMPTY(&lvol->lvol_store->lvols)) {
-		spdk_lvs_unload(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
+		if (lvol->lvol_store->destruct)
+			spdk_lvs_destroy(lvol->lvol_store, false, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
 	}
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol %s deleted\n", lvol->name);
@@ -660,7 +666,6 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	req->cb_arg = lvol_req;
 	req->lvol = lvol;
 
-	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
 	spdk_bs_md_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
 }
 
