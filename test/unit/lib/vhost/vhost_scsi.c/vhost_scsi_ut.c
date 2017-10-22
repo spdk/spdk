@@ -41,33 +41,14 @@
 #include "spdk/scsi.h"
 #include "vhost_scsi.c"
 #include "../scsi/scsi_internal.h"
+#include "unit/lib/vhost/test_vhost.c"
 
 #include "spdk/env.h"
 
-struct spdk_conf_section {
-	struct spdk_conf_section *next;
-	char *name;
-	int num;
-	struct spdk_conf_item *item;
-};
-
 DEFINE_STUB_V(spdk_scsi_task_put, (struct spdk_scsi_task *task));
-DEFINE_STUB(spdk_ring_enqueue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);
-DEFINE_STUB(spdk_ring_dequeue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);
 DEFINE_STUB(spdk_scsi_dev_allocate_io_channels, int, (struct spdk_scsi_dev *dev), 0);
 DEFINE_STUB_P(spdk_scsi_lun_get_name, const char, (const struct spdk_scsi_lun *lun), {0});
 DEFINE_STUB(spdk_scsi_lun_get_id, int, (const struct spdk_scsi_lun *lun), 0);
-DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct spdk_vhost_virtqueue *vq,
-		uint16_t *reqs, uint16_t reqs_len), 0);
-DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct spdk_vhost_dev *vdev,
-		struct spdk_vhost_virtqueue *vq, uint16_t req_idx, struct vring_desc **desc,
-		struct vring_desc **desc_table, uint32_t *desc_table_size), 0);
-DEFINE_STUB(spdk_vhost_vq_used_signal, int, (struct spdk_vhost_dev *vdev,
-		struct spdk_vhost_virtqueue *virtqueue), 0);
-DEFINE_STUB_V(spdk_vhost_dev_used_signal, (struct spdk_vhost_dev *vdev));
-DEFINE_STUB_VP(spdk_vhost_gpa_to_vva, (struct spdk_vhost_dev *vdev, uint64_t addr), {0});
-DEFINE_STUB_V(spdk_vhost_vq_used_ring_enqueue, (struct spdk_vhost_dev *vdev,
-		struct spdk_vhost_virtqueue *vq, uint16_t id, uint32_t len));
 DEFINE_STUB(spdk_scsi_dev_has_pending_tasks, bool, (const struct spdk_scsi_dev *dev), false);
 DEFINE_STUB_V(spdk_scsi_dev_free_io_channels, (struct spdk_scsi_dev *dev));
 DEFINE_STUB_V(spdk_scsi_dev_destruct, (struct spdk_scsi_dev *dev));
@@ -78,88 +59,15 @@ DEFINE_STUB_P(spdk_scsi_dev_find_port_by_id, struct spdk_scsi_port, (struct spdk
 		uint64_t id), {0});
 DEFINE_STUB_V(spdk_scsi_task_construct, (struct spdk_scsi_task *task, spdk_scsi_task_cpl cpl_fn,
 		spdk_scsi_task_free free_fn, struct spdk_scsi_task *parent));
-DEFINE_STUB(spdk_vhost_vring_desc_has_next, bool, (struct vring_desc *cur_desc), false);
-DEFINE_STUB(spdk_vhost_vring_desc_get_next, int, (struct vring_desc **desc,
-		struct vring_desc *desc_table, uint32_t desc_table_size), 0);
 DEFINE_STUB_P(spdk_scsi_dev_get_lun, struct spdk_scsi_lun, (struct spdk_scsi_dev *dev, int lun_id), {0});
-DEFINE_STUB(spdk_vhost_vring_desc_is_wr, bool, (struct vring_desc *cur_desc), false);
-DEFINE_STUB(spdk_vhost_vring_desc_to_iov, int, (struct spdk_vhost_dev *vdev, struct iovec *iov,
-		uint16_t *iov_index, const struct vring_desc *desc), 0);
 DEFINE_STUB_V(spdk_scsi_task_process_null_lun, (struct spdk_scsi_task *task));
-DEFINE_STUB_V(spdk_vhost_dev_mem_register, (struct spdk_vhost_dev *vdev));
-DEFINE_STUB_V(spdk_poller_register, (struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
-				     uint32_t lcore, uint64_t period_microseconds));
-DEFINE_STUB_V(spdk_ring_free, (struct spdk_ring *ring));
-DEFINE_STUB(spdk_vhost_dev_has_feature, bool, (struct spdk_vhost_dev *vdev, unsigned feature_id),
-	    false);
 DEFINE_STUB_P(spdk_scsi_lun_get_dev, const struct spdk_scsi_dev, (const struct spdk_scsi_lun *lun), {0});
 DEFINE_STUB_P(spdk_scsi_dev_get_name, const char, (const struct spdk_scsi_dev *dev), {0});
-DEFINE_STUB_V(spdk_vhost_dev_mem_unregister, (struct spdk_vhost_dev *vdev));
-DEFINE_STUB_P(spdk_vhost_dev_find, struct spdk_vhost_dev, (const char *ctrlr_name), {0});
 DEFINE_STUB_P(spdk_scsi_dev_construct, struct spdk_scsi_dev, (const char *name,
 		char *lun_name_list[], int *lun_id_list, int num_luns, uint8_t protocol_id,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *), void *hotremove_ctx), {0});
 DEFINE_STUB(spdk_scsi_dev_add_port, int, (struct spdk_scsi_dev *dev, uint64_t id, const char *name),
 	    0);
-DEFINE_STUB_P(spdk_conf_first_section, struct spdk_conf_section, (struct spdk_conf *cp), {0});
-DEFINE_STUB_P(spdk_conf_section_get_nmval, char, (struct spdk_conf_section *sp, const char *key,
-		int idx1, int idx2), {0});
-DEFINE_STUB(spdk_conf_section_match_prefix, bool, (const struct spdk_conf_section *sp,
-		const char *name_prefix), false);
-DEFINE_STUB_P(spdk_conf_next_section, struct spdk_conf_section, (struct spdk_conf_section *sp), {0});
-DEFINE_STUB_P(spdk_conf_section_get_name, const char, (const struct spdk_conf_section *sp), {0});
-DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
-DEFINE_STUB(spdk_vhost_event_send, int, (struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
-		void *arg, unsigned timeout_sec, const char *errmsg), 0);
-DEFINE_STUB_V(spdk_poller_unregister, (struct spdk_poller **ppoller, struct spdk_event *complete));
-DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
-DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_uint32, int, (struct spdk_json_write_ctx *w, uint32_t val), 0);
-DEFINE_STUB(spdk_scsi_dev_get_id, int, (const struct spdk_scsi_dev *dev), {0});
-DEFINE_STUB(spdk_json_write_int32, int, (struct spdk_json_write_ctx *w, int32_t val), 0);
-DEFINE_STUB(spdk_json_write_string, int, (struct spdk_json_write_ctx *w, const char *val), 0);
-DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB_V(spdk_vhost_dev_backend_event_done, (void *event_ctx, int response));
-DEFINE_STUB_V(spdk_vhost_lock, (void));
-DEFINE_STUB_V(spdk_vhost_unlock, (void));
-
-/* This sets spdk_vhost_dev_remove to either to fail or success */
-DEFINE_STUB(spdk_vhost_dev_remove_fail, bool, (void), false);
-/* This sets spdk_vhost_dev_construct to either to fail or success */
-DEFINE_STUB(spdk_vhost_dev_construct_fail, bool, (void), false);
-
-static struct spdk_vhost_dev *g_spdk_vhost_device;
-int
-spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
-{
-	if (spdk_vhost_dev_construct_fail()) {
-		return -1;
-	}
-
-	g_spdk_vhost_device = vdev;
-	return 0;
-}
-
-int
-spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
-{
-	if (spdk_vhost_dev_remove_fail()) {
-		return -1;
-	}
-
-	free(vdev->name);
-	g_spdk_vhost_device = NULL;
-	return 0;
-}
-
-struct spdk_ring *
-spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
-{
-	return NULL;
-}
 
 char *
 spdk_conf_section_get_nval(struct spdk_conf_section *sp, const char *key, int idx)

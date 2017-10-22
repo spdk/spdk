@@ -36,134 +36,30 @@
 #include "CUnit/Basic.h"
 #include "spdk_cunit.h"
 #include "spdk_internal/mock.h"
-
 #include "lib/test_env.c"
 
 #include "vhost_blk.c"
+#include "unit/lib/vhost/test_vhost.c"
 
 #include "spdk_internal/bdev.h"
 #include "spdk/env.h"
 
-struct spdk_conf_section {
-	struct spdk_conf_section *next;
-	char *name;
-	int num;
-	struct spdk_conf_item *item;
-};
-
-struct spdk_io_channel {
-	struct spdk_thread		*thread;
-	struct io_device		*dev;
-	uint32_t			ref;
-	TAILQ_ENTRY(spdk_io_channel)	tailq;
-	spdk_io_channel_destroy_cb	destroy_cb;
-};
-
-DEFINE_STUB(spdk_ring_enqueue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);
-DEFINE_STUB(spdk_ring_dequeue, size_t, (struct spdk_ring *ring, void **objs, size_t count), 0);
-DEFINE_STUB_V(spdk_vhost_vq_used_ring_enqueue, (struct spdk_vhost_dev *vdev,
-		struct spdk_vhost_virtqueue *vq, uint16_t id, uint32_t len));
-DEFINE_STUB(spdk_vhost_vq_get_desc, int, (struct spdk_vhost_dev *vdev,
-		struct spdk_vhost_virtqueue *vq, uint16_t req_idx, struct vring_desc **desc,
-		struct vring_desc **desc_table, uint32_t *desc_table_size), 0);
-DEFINE_STUB(spdk_vhost_vq_used_signal, int, (struct spdk_vhost_dev *vdev,
-		struct spdk_vhost_virtqueue *virtqueue), 0);
-DEFINE_STUB_V(spdk_vhost_dev_used_signal, (struct spdk_vhost_dev *vdev));
-DEFINE_STUB(spdk_vhost_vring_desc_is_wr, bool, (struct vring_desc *cur_desc), false);
-DEFINE_STUB(spdk_vhost_vring_desc_to_iov, int, (struct spdk_vhost_dev *vdev, struct iovec *iov,
-		uint16_t *iov_index, const struct vring_desc *desc), 0);
-DEFINE_STUB(spdk_vhost_vring_desc_get_next, int, (struct vring_desc **desc,
-		struct vring_desc *desc_table, uint32_t desc_table_size), 0);
 DEFINE_STUB(spdk_bdev_free_io, int, (struct spdk_bdev_io *bdev_io), 0);
 DEFINE_STUB(spdk_bdev_readv, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-				   struct iovec *iov, int iovcnt,
-				   uint64_t offset, uint64_t nbytes,
-				   spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+				   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes, spdk_bdev_io_completion_cb cb,
+				   void *cb_arg), 0);
 DEFINE_STUB(spdk_bdev_writev, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-				    struct iovec *iov, int iovcnt,
-				    uint64_t offset, uint64_t len,
-				    spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+				    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t len, spdk_bdev_io_completion_cb cb,
+				    void *cb_arg), 0);
 DEFINE_STUB_P(spdk_bdev_get_product_name, const char, (const struct spdk_bdev *bdev), {0});
-DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct spdk_vhost_virtqueue *vq,
-		uint16_t *reqs,
-		uint16_t reqs_len), 0);
-DEFINE_STUB_V(spdk_vhost_dev_mem_register, (struct spdk_vhost_dev *vdev));
-DEFINE_STUB_V(spdk_poller_register, (struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
-				     uint32_t lcore, uint64_t period_microseconds));
-DEFINE_STUB_V(spdk_vhost_dev_mem_unregister, (struct spdk_vhost_dev *vdev));
-DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
-DEFINE_STUB(spdk_vhost_event_send, int, (struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
-		void *arg, unsigned timeout_sec, const char *errmsg), 0);
-DEFINE_STUB_V(spdk_poller_unregister, (struct spdk_poller **ppoller, struct spdk_event *complete));
-DEFINE_STUB_V(spdk_ring_free, (struct spdk_ring *ring));
-DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
 DEFINE_STUB_P(spdk_bdev_get_name, const char, (const struct spdk_bdev *bdev), {0});
-DEFINE_STUB_P(spdk_conf_first_section, struct spdk_conf_section, (struct spdk_conf *cp), {0});
-DEFINE_STUB(spdk_conf_section_match_prefix, bool, (const struct spdk_conf_section *sp,
-		const char *name_prefix), false);
-DEFINE_STUB_P(spdk_conf_section_get_name, const char, (const struct spdk_conf_section *sp), {0});
 DEFINE_STUB_P(spdk_conf_section_get_val, char, (struct spdk_conf_section *sp, const char *key), {0});
-DEFINE_STUB(spdk_conf_section_get_boolval, bool, (struct spdk_conf_section *sp, const char *key,
-		bool default_val), false);
-DEFINE_STUB_P(spdk_conf_next_section, struct spdk_conf_section, (struct spdk_conf_section *sp), {0});
 DEFINE_STUB_P(spdk_bdev_get_by_name, struct spdk_bdev, (const char *bdev_name), {0});
 DEFINE_STUB(spdk_bdev_open, int, (struct spdk_bdev *bdev, bool write,
-				  spdk_bdev_remove_cb_t remove_cb,
-				  void *remove_ctx, struct spdk_bdev_desc **desc), 0);
+				  spdk_bdev_remove_cb_t remove_cb, void *remove_ctx, struct spdk_bdev_desc **desc), 0);
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(rte_vhost_driver_enable_features, int, (const char *path, uint64_t features), 0);
-DEFINE_STUB(spdk_json_write_null, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_bool, int, (struct spdk_json_write_ctx *w, bool val), 0);
-DEFINE_STUB(spdk_json_write_name, int, (struct spdk_json_write_ctx *w, const char *name), 0);
-DEFINE_STUB(spdk_json_write_object_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_uint32, int, (struct spdk_json_write_ctx *w, uint32_t val), 0);
-DEFINE_STUB(spdk_json_write_int32, int, (struct spdk_json_write_ctx *w, int32_t val), 0);
-DEFINE_STUB(spdk_json_write_string, int, (struct spdk_json_write_ctx *w, const char *val), 0);
-DEFINE_STUB(spdk_json_write_array_begin, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_object_end, int, (struct spdk_json_write_ctx *w), 0);
-DEFINE_STUB(spdk_json_write_array_end, int, (struct spdk_json_write_ctx *w), 0);
 DEFINE_STUB_P(spdk_bdev_get_io_channel, struct spdk_io_channel, (struct spdk_bdev_desc *desc), {0});
-DEFINE_STUB_V(spdk_vhost_call_external_event, (const char *ctrlr_name, spdk_vhost_event_fn fn,
-		void *arg));
-DEFINE_STUB_V(spdk_vhost_dev_backend_event_done, (void *event_ctx, int response));
-DEFINE_STUB_V(spdk_vhost_lock, (void));
-DEFINE_STUB_V(spdk_vhost_unlock, (void));
-
-/* This sets spdk_vhost_dev_remove to either to fail or success */
-DEFINE_STUB(spdk_vhost_dev_remove_fail, bool, (void), false);
-/* This sets spdk_vhost_dev_construct to either to fail or success */
-DEFINE_STUB(spdk_vhost_dev_construct_fail, bool, (void), false);
-
-static struct spdk_vhost_dev *g_spdk_vhost_device;
-int
-spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
-			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
-{
-	if (spdk_vhost_dev_construct_fail()) {
-		return -1;
-	}
-
-	g_spdk_vhost_device = vdev;
-	return 0;
-}
-
-int
-spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
-{
-	if (spdk_vhost_dev_remove_fail()) {
-		return -1;
-	}
-
-	free(vdev->name);
-	g_spdk_vhost_device = NULL;
-	return 0;
-}
-
-struct spdk_ring *
-spdk_ring_create(enum spdk_ring_type type, size_t count, int socket_id)
-{
-	return NULL;
-}
 
 static void
 vhost_blk_controller_construct_test(void)
