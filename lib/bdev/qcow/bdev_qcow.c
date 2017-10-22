@@ -71,10 +71,121 @@ struct spdk_qcow_disk {
 static struct spdk_qcow_disk *g_qcow;
 
 static void
+bdev_qcow_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	/* FIXME */
+}
+
+static int
+_bdev_qcow_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		spdk_bdev_io_get_buf(bdev_io, bdev_qcow_read,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		return 0;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		/* FIXME
+		 * Don't allow any writes until READs are confirmed
+		 * to work correctly, so that no data gets corrupted.
+		 */
+		return -1;
+	case SPDK_BDEV_IO_TYPE_RESET:
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		return 0;
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+	default:
+		return -1;
+	}
+	return 0;
+}
+
+static void
+bdev_qcow_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	if (_bdev_qcow_submit_request(ch, bdev_io) < 0) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static bool
+bdev_qcow_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
+{
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_RESET:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return true;
+
+	default:
+		return false;
+	}
+}
+
+static struct spdk_io_channel *
+bdev_qcow_get_io_channel(void *ctx)
+{
+	struct spdk_qcow_disk *qcow = ctx;
+
+	return spdk_get_io_channel(qcow);
+}
+
+static int
+bdev_qcow_destruct(void *ctx)
+{
+	return 0;
+}
+
+static const struct spdk_bdev_fn_table qcow_fn_table = {
+	.destruct		= bdev_qcow_destruct,
+	.submit_request		= bdev_qcow_submit_request,
+	.io_type_supported	= bdev_qcow_io_type_supported,
+	.get_io_channel		= bdev_qcow_get_io_channel,
+};
+
+static int
+bdev_qcow_create_cb(void *io_device, void *ctx_buf)
+{
+	return 0;
+}
+
+static void
+bdev_qcow_destroy_cb(void *io_device, void *ctx_buf)
+{
+}
+
+static int
+create_qcow_bdev(struct spdk_qcow_disk *qcow, uint64_t num_blocks, uint32_t block_size)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = calloc(1, sizeof(*bdev));
+	assert(bdev);
+
+	bdev->name = spdk_sprintf_alloc("QCOW");
+	bdev->product_name = "QEMU Copy On Write (QCOW) Disk";
+	bdev->blocklen = block_size;
+	bdev->blockcnt = num_blocks;
+	bdev->ctxt = qcow;
+	bdev->fn_table = &qcow_fn_table;
+	bdev->module = SPDK_GET_BDEV_MODULE(qcow);
+
+	spdk_io_device_register(qcow, bdev_qcow_create_cb, bdev_qcow_destroy_cb, 0);
+	spdk_bdev_register(bdev);
+	return 0;
+}
+
+static void
 qcow_header_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_qcow_disk *qcow = cb_arg;
 	uint8_t *data;
+	uint64_t num_blocks;
+	uint32_t block_size;
+	int rc;
 
 	spdk_bdev_free_io(bdev_io);
 
@@ -103,6 +214,20 @@ qcow_header_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	if (qcow->header.version < 2) {
 		SPDK_ERRLOG("unsupported QCOW image version %"PRIu32"\n", qcow->header.version);
 		goto out;
+	}
+
+	if (qcow->header.cluster_bits < 9 || qcow->header.cluster_bits > 31) {
+		SPDK_ERRLOG("cluster size must be in range <512, UINT32_MAX>, got (1ULL << %"PRIu32")\n",
+			    qcow->header.cluster_bits);
+		goto out;
+	}
+
+	block_size = 1ULL << qcow->header.cluster_bits;
+	num_blocks = qcow->header.size / block_size;
+
+	rc = create_qcow_bdev(qcow, num_blocks, block_size);
+	if (rc != 0) {
+		assert(false);
 	}
 
 out:
