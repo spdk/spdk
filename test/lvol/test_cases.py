@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 import io
+import sys
 import random
 import signal
+import subprocess
+import pprint
 
 from errno import ESRCH
-from os import kill, path
+from os import kill, path, unlink, path, listdir, remove
 from rpc_commands_lib import Commands_Rpc
 from time import sleep
 from uuid import uuid4
@@ -14,7 +17,8 @@ def test_counter():
     '''
     :return: the number of tests
     '''
-    return 23
+    return 24
+
 
 def header(num):
     test_name = {
@@ -40,7 +44,8 @@ def header(num):
         20: 'delete_bdev_positive',
         21: 'construct_lvs_with_cluster_sz_out_of_range_max',
         22: 'construct_lvs_with_cluster_sz_out_of_range_min',
-        23: 'SIGTERM',
+        23: 'tasting_positive',
+        24: 'SIGTERM',
     }
     print("========================================================")
     print("Test Case {num}: Start".format(num=num))
@@ -51,14 +56,15 @@ def footer(num):
     print("Test Case {num}: END\n".format(num=num))
     print("========================================================")
 
-
 class TestCases(object):
-    def __init__(self, rpc_py, total_size, block_size, cluster_size, base_dir_path):
+
+    def __init__(self, rpc_py, total_size, block_size, cluster_size, base_dir_path, app_path):
         self.c = Commands_Rpc(rpc_py)
         self.total_size = total_size
         self.block_size = block_size
         self.cluster_size = cluster_size
         self.path = base_dir_path
+        self.app_path = app_path
         self.lvs_name = "lvs_test"
         self.lbd_name = "lbd_test"
 
@@ -67,6 +73,40 @@ class TestCases(object):
 
     def _gen_lvb_uudi(self):
         return "_".join([str(uuid4()), str(random.randrange(9999999999))])
+
+    def _stop_vhost(self, pid_path):
+        with io.open(pid_path, 'r') as vhost_pid:
+            pid = int(vhost_pid.readline())
+            if pid:
+                try:
+                    kill(pid, signal.SIGTERM)
+                    for count in range(30):
+                        sleep(1)
+                        kill(pid, 0)
+                except OSError, err:
+                    if err.errno == ESRCH:
+                        pass
+                    else:
+                        return 1
+                else:
+                    return 1
+            else:
+                return 1
+        return 0
+
+    def _start_vhost(self, vhost_path, config_path, pid_path):
+        subprocess.call("{app} -c {config} -f "
+                        "{pid} &".format(app=vhost_path,
+                                         config=config_path,
+                                         pid=pid_path), shell=True)
+
+        while not path.exists(pid_path):
+            sleep(20)
+        with io.open(pid_path, 'r') as vhost_pid:
+            pid = int(vhost_pid.readline())
+            if not pid:
+                return 1
+        return 0
 
     # positive tests
     def test_case1(self):
@@ -431,6 +471,108 @@ class TestCases(object):
 
     def test_case23(self):
         header(23)
+        fail_count = 0
+        uuid_bdevs = []
+        base_name = "Nvme0n1"
+
+        # TODO: Replace fixed size with calculated 10% of total NVMe disk size
+        size = 1000
+
+        base_path = path.dirname(sys.argv[0])
+        vhost_path = path.join(self.app_path, 'vhost')
+        config_path = path.join(base_path, 'vhost.conf')
+        pid_path = path.join(base_path, 'vhost.pid')
+
+        # Create initial configuration on running vhost instance
+        # create lvol store, create 5 bdevs
+        # save info of all lvs and lvol bdevs
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count += self.c.check_get_lvol_stores(base_name,
+                                                   uuid_store,
+                                                   self.cluster_size)
+
+        for i in range(5):
+            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                                   self.lbd_name + str(i),
+                                                   size)
+            uuid_bdevs.append(uuid_bdev)
+            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+
+        old_bdevs = sorted(self.c.get_lvol_bdevs(), key = lambda x: x["name"])
+        old_stores = self.c.get_lvol_stores()
+
+        # Shut down vhost instance and restart with new instance
+        fail_count += self._stop_vhost(pid_path)
+        remove(pid_path)
+        fail_count += self._start_vhost(vhost_path, config_path, pid_path)
+
+        # Check if configuration was properly loaded after tasting
+        # get all info all lvs and lvol bdevs, compare with previous info
+        new_bdevs = sorted(self.c.get_lvol_bdevs(), key = lambda x: x["name"])
+        new_stores = self.c.get_lvol_stores()
+
+        if old_stores != new_stores:
+            fail_count += 1
+            print("ERROR: old and loaded lvol store is not the same")
+            print("DIFF:")
+            print(old_stores)
+            print(new_stores)
+
+        if len(old_bdevs) != len(new_bdevs):
+            fail_count += 1
+            print("ERROR: old and loaded lvol bdev list is not equal")
+
+        for o, n in zip(old_bdevs, new_bdevs):
+            if o != n:
+                fail_count += 1
+                print("ERROR: old and loaded lvol bdev is not the same")
+                print("DIFF:")
+                pprint.pprint([o, n])
+
+        # Try modifying loaded configuration
+        # Add some lvol bdevs to existing lvol store then
+        # remove all lvol configuration and re-create it again
+        for i in range(5, 10):
+            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                                   self.lbd_name + str(i),
+                                                   size)
+            uuid_bdevs.append(uuid_bdev)
+            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+
+        for uuid_bdev in uuid_bdevs:
+            self.c.delete_bdev(uuid_bdev)
+
+        if self.c.destroy_lvol_store(uuid_store) != 0:
+            fail_count += 1
+
+        uuid_bdevs = []
+
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count += self.c.check_get_lvol_stores(base_name,
+                                                   uuid_store,
+                                                   self.cluster_size)
+
+        for i in range(10):
+            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                                   self.lbd_name + str(i),
+                                                   size)
+            uuid_bdevs.append(uuid_bdev)
+            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+
+        if self.c.destroy_lvol_store(uuid_store) != 0:
+            fail_count += 1
+
+        footer(23)
+        return fail_count
+
+    def test_case24(self):
+        header(24)
+        pid_path = path.join(self.path, 'vhost.pid')
+
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -438,23 +580,7 @@ class TestCases(object):
                                                  self.cluster_size)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
-        pid_path = path.join(self.path, 'vhost.pid')
-        with io.open(pid_path, 'r') as vhost_pid:
-            pid = int(vhost_pid.readline())
-            if pid:
-                try:
-                    kill(pid, signal.SIGTERM)
-                    for count in range(30):
-                        sleep(1)
-                        kill(pid, 0)
-                except OSError, err:
-                    if err.errno == ESRCH:
-                        pass
-                    else:
-                        fail_count += 1
-                else:
-                    fail_count += 1
-            else:
-                fail_count += 1
-        footer(23)
+
+        fail_count += self._stop_vhost(pid_path)
+        footer(24)
         return fail_count
