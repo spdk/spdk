@@ -1,0 +1,326 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "756730c3_baf002b9",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "having variables \"TEST_DIR\" and \"testdir\" is not really pleasant.",
+      "range": {
+        "startLine": 7,
+        "startChar": 8,
+        "endLine": 7,
+        "endChar": 16
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6c342c4_d9bd9d8d",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "Dead?",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 14
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3709bd03_36a470b3",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "First shutdown VM then vhost.",
+      "range": {
+        "startLine": 20,
+        "startChar": 2,
+        "endLine": 21,
+        "endChar": 31
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c078062_a9bfbc8e",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "What is fio_status variable for?\nWhy you don\u0027t installe error handler to do this?",
+      "range": {
+        "startLine": 17,
+        "startChar": 7,
+        "endLine": 23,
+        "endChar": 10
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "645e78ee_57e07f3f",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "Please use \u0027local \u0027 everywhere you an to no pollute global name space.\n\nPlease also fix other functions in this file.",
+      "range": {
+        "startLine": 27,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 22
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a00092dc_c1cfe064",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "ditto.",
+      "range": {
+        "startLine": 54,
+        "startChar": 1,
+        "endLine": 55,
+        "endChar": 22
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a069de53_d0aed400",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "Is this really working?",
+      "range": {
+        "startLine": 78,
+        "startChar": 16,
+        "endLine": 78,
+        "endChar": 20
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e80d0b9_839578f0",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "This is dead option. Please remove.",
+      "range": {
+        "startLine": 118,
+        "startChar": 17,
+        "endLine": 118,
+        "endChar": 25
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b491a283_9d7738b9",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "This belong to start_and_prepare_vm()",
+      "range": {
+        "startLine": 148,
+        "startChar": 6,
+        "endLine": 152,
+        "endChar": 44
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23667560_6c1976d7",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "Please move as much of this function to separete script and just run this script by vm_ssh.",
+      "range": {
+        "startLine": 154,
+        "startChar": 0,
+        "endLine": 161,
+        "endChar": 31
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be267570_709e25dd",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "Why \"ls\" ?",
+      "range": {
+        "startLine": 164,
+        "startChar": 16,
+        "endLine": 164,
+        "endChar": 35
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb020694_e882fe54",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "First shutdown VM then vhost.",
+      "range": {
+        "startLine": 166,
+        "startChar": 16,
+        "endLine": 167,
+        "endChar": 31
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9436ac0_4f952d0d",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "Can we have one file this this already defined?",
+      "range": {
+        "startLine": 185,
+        "startChar": 0,
+        "endLine": 188,
+        "endChar": 76
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5129f29_3504f8b1",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T13:51:16Z",
+      "side": 1,
+      "message": "What is this?",
+      "range": {
+        "startLine": 191,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 56
+      },
+      "revId": "d2f05f4d7ad924ed899a863fe8686975cf35c6b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
