@@ -37,6 +37,7 @@
 #include "spdk/env.h"
 
 #include "spdk_internal/event.h"
+#include "spdk/env.h"
 
 static void
 spdk_bdev_initialize_complete(void *cb_arg, int rc)
@@ -72,9 +73,9 @@ spdk_bdev_subsystem_initialize(void)
 }
 
 static void
-spdk_bdev_subsystem_finish(void)
+spdk_bdev_subsystem_finish(void *arg1, void *arg2)
 {
-	spdk_bdev_finish();
+	spdk_bdev_finish(spdk_subsystem_fini_next);
 }
 
 SPDK_SUBSYSTEM_REGISTER(bdev, spdk_bdev_subsystem_initialize,
