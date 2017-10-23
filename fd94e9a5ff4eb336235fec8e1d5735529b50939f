@@ -22,6 +22,53 @@
       "revId": "fd94e9a5ff4eb336235fec8e1d5735529b50939f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdaf0d74_5dcc879e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-23T11:04:25Z",
+      "side": 1,
+      "message": "This change is done in previous patch now. Should be fine.",
+      "parentUuid": "ac96a42a_3c678f72",
+      "range": {
+        "startLine": 219,
+        "startChar": 0,
+        "endLine": 226,
+        "endChar": 59
+      },
+      "revId": "fd94e9a5ff4eb336235fec8e1d5735529b50939f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8525e046_b5694dfc",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-23T11:04:25Z",
+      "side": 1,
+      "message": "Can\u0027t fail_count be just increased here? Then returned at the end of test, otherwise footer(23) is skipped.\nBesides, it seems like unrelated change.",
+      "range": {
+        "startLine": 399,
+        "startChar": 0,
+        "endLine": 404,
+        "endChar": 37
+      },
+      "revId": "fd94e9a5ff4eb336235fec8e1d5735529b50939f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
