@@ -276,12 +276,6 @@ spdk_iscsi_init_grp_find_by_tag(int tag)
 }
 
 void
-spdk_iscsi_init_grp_destroy_by_tag(int tag)
-{
-	spdk_iscsi_init_grp_destroy(spdk_iscsi_init_grp_find_by_tag(tag));
-}
-
-void
 spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
 {
 	assert(ig != NULL);
