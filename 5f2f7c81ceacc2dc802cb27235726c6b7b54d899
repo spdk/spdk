@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c887e2b5_e2a2046a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-23T19:17:47Z",
+      "side": 1,
+      "message": "The issue is that fio trimwrite tests send WRITE I/O just after sending UNMAP and expects these two to execute in the same order.\nHowever, that is not guaranteed by neither Virtio nor NVMe standards. FIO should wait for the UNMAP to complete before sending the WRITE, but it\u0027s not.\nWRITE sometimes executes before the UNMAP and fio fails with verification errors (expected 0xACCA at offset X, got 0). This is clearly a FIO-2.21 bug.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 45
+      },
+      "revId": "5f2f7c81ceacc2dc802cb27235726c6b7b54d899",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
