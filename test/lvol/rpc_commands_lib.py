@@ -130,3 +130,12 @@ class Commands_Rpc(object):
         print("INFO: RPC COMMAND get_lvol_stores")
         output = self.rpc.get_lvol_stores()[0]
         return output.rstrip('\n')
+
+    def get_lvol_bdevs(self):
+        print("INFO: RPC COMMAND get_bdevs; lvol bdevs only")
+        output = []
+        rpc_output = json.loads(self.rpc.get_bdevs()[0])
+        for bdev in rpc_output:
+            if bdev["product_name"] == "Logical Volume":
+                output.append(bdev)
+        return output
