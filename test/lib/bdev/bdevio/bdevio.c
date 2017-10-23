@@ -845,7 +845,8 @@ stop_init_thread(unsigned num_failures)
 {
 	struct spdk_event *event;
 
-	event = spdk_event_allocate(LCORE_ID_UT, __stop_init_thread, (void *)(uintptr_t)num_failures, NULL);
+	event = spdk_event_allocate(LCORE_ID_INIT, __stop_init_thread,
+				    (void *)(uintptr_t)num_failures, NULL);
 	spdk_event_call(event);
 }
 
