@@ -1,0 +1,10 @@
+[VirtioUser0]
+  Path /tmp/vhost.0
+  Queues 6
+
+[Rpc]
+  Enable Yes
+  Listen 127.0.0.1:5261
+
+[Ioat]
+  Disable Yes

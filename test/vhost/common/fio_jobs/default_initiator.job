@@ -7,3 +7,5 @@ time_based=1
 do_verify=1
 verify=md5
 verify_backlog=1024
+iodepth=128
+bs=4K
