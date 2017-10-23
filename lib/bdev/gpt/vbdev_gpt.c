@@ -132,7 +132,8 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 	}
 
 	gpt = &gpt_base->gpt;
-	gpt->buf = spdk_dma_zmalloc(SPDK_GPT_BUFFER_SIZE, 0x1000, NULL);
+	gpt->buf_size = spdk_max(SPDK_GPT_BUFFER_SIZE, bdev->blocklen);
+	gpt->buf = spdk_dma_zmalloc(gpt->buf_size, 0x1000, NULL);
 	if (!gpt->buf) {
 		SPDK_ERRLOG("Cannot alloc buf\n");
 		spdk_bdev_part_base_free(&gpt_base->part_base);
@@ -342,7 +343,7 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 	}
 
 	rc = spdk_bdev_read(gpt_base->part_base.desc, gpt_base->ch, gpt_base->gpt.buf, 0,
-			    SPDK_GPT_BUFFER_SIZE, spdk_gpt_bdev_complete, gpt_base);
+			    gpt_base->gpt.buf_size, spdk_gpt_bdev_complete, gpt_base);
 	if (rc < 0) {
 		spdk_put_io_channel(gpt_base->ch);
 		spdk_bdev_part_base_free(&gpt_base->part_base);
