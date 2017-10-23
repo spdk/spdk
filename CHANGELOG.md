@@ -123,6 +123,13 @@ It is possible to create pmem devices on top of pmem pool files using RPC.
 
 See the [Pmem Block Device](http://www.spdk.io/doc/bdev.html#bdev_config_pmem) documentation for more information.
 
+### Virtio SCSI driver
+
+A userspace driver for Virtio SCSI devices has been added.
+The driver is capable of creating block devices on top of LUNs exposed by another SPDK vhost-scsi application.
+
+See the [Virtio SCSI](http://www.spdk.io/doc/virtio.html) documentation and [Getting Started](http://www.spdk.io/doc/bdev.html#bdev_config_virtio_scsi) guide for more information.
+
 
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
