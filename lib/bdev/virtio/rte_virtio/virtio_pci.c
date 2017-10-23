@@ -88,6 +88,25 @@ free_virtio_hw(struct virtio_dev *dev)
 	free(hw);
 }
 
+static void
+pci_dump_json_config(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
+{
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr((struct spdk_pci_device *)hw->pci_dev);
+	char addr[32];
+
+	spdk_json_write_name(w, "type");
+	if (dev->modern) {
+		spdk_json_write_string(w, "pci-modern");
+	} else {
+		spdk_json_write_string(w, "pci-legacy");
+	}
+
+	spdk_json_write_name(w, "pci_address");
+	spdk_pci_addr_fmt(addr, sizeof(addr), &pci_addr);
+	spdk_json_write_string(w, addr);
+}
+
 #ifdef PCI_LEGACY_SUPPORT
 
 static struct rte_pci_ioport *
@@ -238,25 +257,6 @@ legacy_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
 	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
 		VIRTIO_PCI_QUEUE_NOTIFY);
-}
-
-static void
-pci_dump_json_config(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
-{
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
-	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr((struct spdk_pci_device *)hw->pci_dev);
-	char addr[32];
-
-	spdk_json_write_name(w, "type");
-	if (dev->modern) {
-		spdk_json_write_string(w, "pci-modern");
-	} else {
-		spdk_json_write_string(w, "pci-legacy");
-	}
-
-	spdk_json_write_name(w, "pci_address");
-	spdk_pci_addr_fmt(addr, sizeof(addr), &pci_addr);
-	spdk_json_write_string(w, addr);
 }
 
 const struct virtio_pci_ops legacy_ops = {
