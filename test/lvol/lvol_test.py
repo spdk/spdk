@@ -19,17 +19,18 @@ if __name__ == "__main__":
     tc_failed = []
     tc_list = []
 
-    if len(sys.argv) >= 5 and len(sys.argv) <= test_counter():
+    if len(sys.argv) >= 8 and len(sys.argv[7].split(',')) <= test_counter():
         rpc_py = sys.argv[1]
         total_size = int(sys.argv[2])
         block_size = int(sys.argv[3])
         cluster_size = int(sys.argv[4])
         base_dir_path = sys.argv[5]
-        tc_list = sys.argv[6].split(',')
+        app_path = sys.argv[6]
+        tc_list = sys.argv[7].split(',')
     else:
         print("Invalid argument")
     try:
-        tc = TestCases(rpc_py, total_size, block_size, cluster_size, base_dir_path)
+        tc = TestCases(rpc_py, total_size, block_size, cluster_size, base_dir_path, app_path)
 
         if "all" in tc_list:
             for num_test in range(1, test_counter() + 1):
