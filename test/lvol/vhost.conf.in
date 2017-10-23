@@ -3,3 +3,5 @@
 [Rpc]
   Enable Yes
   Listen 127.0.0.1
+[Nvme]
+  TransportID "trtype:PCIe traddr:0000:0b:00.0" Nvme0
