@@ -48,6 +48,7 @@
 
 struct spdk_gpt {
 	unsigned char *buf;
+	uint64_t buf_size;
 	uint64_t lba_start;
 	uint64_t lba_end;
 	uint64_t total_sectors;
