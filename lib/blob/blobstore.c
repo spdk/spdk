@@ -2320,6 +2320,12 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 
 	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Syncing blobstore\n");
 
+	if (!TAILQ_EMPTY(&bs->blobs)) {
+		SPDK_ERRLOG("Blobstore still has open blobs\n");
+		cb_fn(cb_arg, -EBUSY);
+		return;
+	}
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		cb_fn(cb_arg, -ENOMEM);
@@ -2346,8 +2352,6 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
-
-	assert(TAILQ_EMPTY(&bs->blobs));
 
 	/* Read super block */
 	spdk_bs_sequence_read(seq, ctx->super, _spdk_bs_page_to_lba(bs, 0),

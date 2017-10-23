@@ -1112,12 +1112,41 @@ static void
 bs_unload(void)
 {
 	struct spdk_bs_dev *dev;
+	struct spdk_blob_store *bs;
+	spdk_blob_id blobid;
+	struct spdk_blob *blob;
 
 	dev = init_dev();
 
 	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Create a blob and open it. */
+	g_bserrno = -1;
+	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid > 0);
+	blobid = g_blobid;
+
+	g_bserrno = -1;
+	spdk_bs_md_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob = g_blob;
+
+	/* Try to unload blobstore, should fail with open blob */
+	g_bserrno = -1;
+	spdk_bs_unload(bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == -EBUSY);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Close the blob, then successfully unload blobstore */
+	g_bserrno = -1;
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(blob == NULL);
 
 	g_bserrno = -1;
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
