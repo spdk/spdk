@@ -7,8 +7,8 @@ The purpose of these tests is to verify the possibility of using lvol configurat
 Configuration in test is to be done using example stub application.
 All management is done using RPC calls, including logical volumes management.
 All tests are performed using malloc backends.
-One exception to malloc backends is the last test, which is for logical volume
-tasting - this one requires NVMe backend.
+One exception to malloc backends is are the tests for logical volume
+tasting - these require persistent merory like NVMe backend.
 
 Tests will be executed as scenarios - sets of smaller test step
 in which return codes from RPC calls is validated.
@@ -236,9 +236,7 @@ Expected result:
 - return code != 0
 - Error code: ENODEV ("No such device") response printed to stdout
 
-### construct_lvol_bdev - negative tests
-
-#### TEST CASE 11 Name: construct_lvs_on_bdev_twice
+#### TEST CASE 11 - Name: construct_lvs_on_bdev_twice
 Negative test for constructing a new lvol store.
 Call construct_lvol_store with base bdev name twice.
 Steps:
@@ -255,6 +253,8 @@ Expected result:
 - second construct_lvol_store call return code != 0
 - EEXIST response printed to stdout
 - no other operation fails
+
+### construct_lvol_bdev - negative tests
 
 #### TEST CASE 12 - Name: construct_logical_volume_nonexistent_lvs_uuid
 Negative test for constructing a new logical_volume.
@@ -440,40 +440,9 @@ Expected result:
 - return code != 0
 - Error code response printed to stdout
 
-### SIGTERM
+### logical volume tasting tests
 
-#### TEST CASE 23 - Name: SIGTERM
-Call CTRL+C (SIGTERM) occurs after creating lvol store
-Steps:
-- create a malloc bdev
-- construct_lvol_store on created malloc bdev
-- check correct uuid values in response get_lvol_stores command
-- Send SIGTERM signal to the application
-
-Expected result:
-- calls successful, return code = 0
-- get_bdevs: no change
-- no other operation fails
-
-# Lvol tasting test plan
-
-## Objective
-The purpose of these tests is to verify the introduced lvol store and lvols parameters saving
-on persistent memory and loading it from saved data on app start in SPDK.
-
-## Methodology
-Configuration test cases use vhost app.
-All tests are performed using NVMe device backends.
-All management is done using RPC calls, including logical volumes management.
-
-Tests will be executed as scenarios - A set of test steps in which checks get_lvol_stores response
-(rpc command) after again start vhost app
-
-## Tests
-
-### tasting_positive
-
-#### TEST CASE 1
+#### TEST CASE 23 - Name: tasting_positive
 Positive test for tasting a multi lvol bdev configuration.
 Create a lvol store with some lvol bdevs on NVMe drive and restart vhost app.
 After restarting configuration should be automatically loaded and should be exactly
@@ -513,4 +482,18 @@ Expected results:
 - lvol bdev attributes (UUID, size, etc.) remain the same after
   loading existing configuration
 - all RPC configuration calls successful, return code = 0
+- no other operation fails
+### SIGTERM
+
+#### TEST CASE 24 - Name: SIGTERM
+Call CTRL+C (SIGTERM) occurs after creating lvol store
+Steps:
+- create a malloc bdev
+- construct_lvol_store on created malloc bdev
+- check correct uuid values in response get_lvol_stores command
+- Send SIGTERM signal to the application
+
+Expected result:
+- calls successful, return code = 0
+- get_bdevs: no change
 - no other operation fails
