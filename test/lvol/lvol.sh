@@ -6,6 +6,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 total_size=64
 block_size=512
 cluster_sz=1048576 #1MiB
+tasting=no
 test_cases=all
 x=""
 
@@ -22,6 +23,9 @@ function usage() {
     echo "    --block-size          Block size for this bdev"
     echo "    --cluster-sz          size of cluster (in bytes)"
     echo "-x                        set -x for script debug"
+    echo "    --testing             run tasting lvol test case
+                                    Parameters expected: yes or no,
+                                    default: no"
     echo "    --test-cases=         List test cases which will be run:
                                     1: 'construct_lvs_positive',
                                     2: 'construct_logical_volume_positive',
@@ -48,7 +52,11 @@ function usage() {
                                     23: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
-                                    Ex: \"1,2,19,20\", default: all"
+                                    Ex: \"1,2,19,20\", default: all
+                                    If testing = yes
+                                    List tasting lvol test cases which will be run:
+                                    1:
+                                    'tasting_construct_multi_logical_bdevs_reboot_app'"
     echo
     echo
     exit 0
@@ -63,6 +71,7 @@ while getopts 'xh-:' optchar; do
             block-size=*) block_size="${OPTARG#*=}" ;;
             cluster-sz=*) cluster_sz="${OPTARG#*=}" ;;
             test-cases=*) test_cases="${OPTARG#*=}" ;;
+            tasting=*) tasting="${OPTARG#*=}" ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -97,9 +106,12 @@ function vhost_kill()
 
 trap "vhost_kill; exit 1" SIGINT SIGTERM EXIT
 
-vhost_start
+if [ $tasting == "yes" ]; then
+    $BASE_DIR/lvol_test.py $tasting $rpc_py $total_size $block_size $cluster_sz $BASE_DIR $TEST_DIR/app/vhost "${test_cases[@]}"
+else
+    vhost_start
+    $BASE_DIR/lvol_test.py  $tasting $rpc_py $total_size $block_size $cluster_sz $BASE_DIR "${test_cases[@]}"
+fi
 
-$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $cluster_sz $BASE_DIR "${test_cases[@]}"
-
-trap - SIGINT SIGTERM EXIT
 vhost_kill
+trap - SIGINT SIGTERM EXIT
