@@ -45,7 +45,8 @@ function usage() {
                                     20: 'delete_bdev_positive',
                                     21: 'construct_lvs_with_cluster_sz_out_of_range_max',
                                     22: 'construct_lvs_with_cluster_sz_out_of_range_min',
-                                    23: 'SIGTERM'
+                                    23: 'tasting_positive',
+                                    24: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"
@@ -79,7 +80,9 @@ source $TEST_DIR/scripts/autotest_common.sh
 ###  Function starts vhost app
 function vhost_start()
 {
-    $TEST_DIR/app/vhost/vhost -c $BASE_DIR/vhost.conf.in &
+    cp $BASE_DIR/vhost.conf.in $BASE_DIR/vhost.conf
+    $TEST_DIR/scripts/gen_nvme.sh >> $BASE_DIR/vhost.conf
+    $TEST_DIR/app/vhost/vhost -c $BASE_DIR/vhost.conf &
     vhost_pid=$!
     echo $vhost_pid > $BASE_DIR/vhost.pid
     waitforlisten $vhost_pid $RPC_PORT
@@ -93,13 +96,13 @@ function vhost_kill()
         sleep 1
     fi
     rm $BASE_DIR/vhost.pid || true
+    rm $BASE_DIR/vhost.conf || true
 }
 
 trap "vhost_kill; exit 1" SIGINT SIGTERM EXIT
 
 vhost_start
+$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $cluster_sz $BASE_DIR $TEST_DIR/app/vhost "${test_cases[@]}"
 
-$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $cluster_sz $BASE_DIR "${test_cases[@]}"
-
-trap - SIGINT SIGTERM EXIT
 vhost_kill
+trap - SIGINT SIGTERM EXIT
