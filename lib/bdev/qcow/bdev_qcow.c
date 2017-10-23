@@ -52,20 +52,20 @@
 SPDK_DECLARE_BDEV_MODULE(qcow);
 SPDK_BDEV_MODULE_ASYNC_INIT(qcow)
 
-struct qcow_header_l1_entry {
+struct qcow_header_l1 {
 	uint64_t	reserved1	: 9;
 	uint64_t	l2_offset	: 47;
 	uint64_t	reserved2	: 7;
 	uint64_t	cow_required	: 1;
 };
-SPDK_STATIC_ASSERT(sizeof(struct qcow_header_l1_entry) == 8, "incorrect L1 entry size");
+SPDK_STATIC_ASSERT(sizeof(struct qcow_header_l1) == sizeof(uint64_t), "incorrect L1 entry size");
 
-struct qcow_header_l2_entry {
+struct qcow_header_l2 {
 	uint64_t	desc		: 62;
 	uint64_t	compressed	: 1;
 	uint64_t	cow_required	: 1;
 };
-SPDK_STATIC_ASSERT(sizeof(struct qcow_header_l2_entry) == 8, "incorrect L2 entry size");
+SPDK_STATIC_ASSERT(sizeof(struct qcow_header_l2) == sizeof(uint64_t), "incorrect L2 entry size");
 
 struct qcow_header_standard_desc {
 	uint64_t	read_zeroes	: 1;
@@ -77,7 +77,7 @@ struct qcow_header_standard_desc {
 /**
  * struct qcow_header_compressed_desc {
  * 	uint64_t	cluster_offset	: (63 - (cluster_bits - 8)); // unaligned
- * 	uint64_t	cluster_size	: fill to 64 bits;
+ * 	uint64_t	cluster_size	: fill to 62 bits;
  * }
  */
 
@@ -99,14 +99,114 @@ struct spdk_qcow_disk {
 	struct spdk_bdev_desc	*desc;
 	struct spdk_io_channel	*ch;
 	struct qcow_header_essentials header;
+
+	/* The L1 entries are 64-bit unsigned ints in big endian */
+	uint64_t		*l1_table;
 };
 
 static struct spdk_qcow_disk *g_qcow;
 
 static void
+physical_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+
+	spdk_trace_dump(stderr, "qcow cluster", orig_io->u.bdev.iovs[0].iov_base,
+			4096);
+
+	spdk_bdev_free_io(bdev_io);
+
+	if (success) {
+		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else {
+		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static void
+l2_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_bdev_io *orig_io = cb_arg;
+	struct spdk_qcow_disk *disk = orig_io->bdev->ctxt;
+	uint64_t cluster_size = 1ULL << disk->header.cluster_bits;
+	int rc;
+
+	if (!success) {
+		spdk_bdev_free_io(bdev_io);
+		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		assert(false);
+		return;
+	}
+
+	uint64_t *l2_table = bdev_io->u.bdev.iovs[0].iov_base;
+	assert(bdev_io->u.bdev.iovs[0].iov_len >= cluster_size);
+
+	uint64_t l2_entries = cluster_size / sizeof(struct qcow_header_l2);
+	uint64_t virtual_offset = orig_io->u.bdev.offset_blocks * disk->bdev->blocklen;
+	uint64_t l2_index = (virtual_offset >> disk->header.cluster_bits) % l2_entries;
+	uint64_t l2_uint = from_be64(l2_table + l2_index);
+	struct qcow_header_l2 *l2 = (struct qcow_header_l2 *) &l2_uint;
+
+	if (l2->compressed) {
+		/* FIXME */
+		assert(false);
+	}
+
+	/* cast first 62 bytes of the l2 entry to a desc */
+	struct qcow_header_standard_desc *desc = (struct qcow_header_standard_desc *) l2;
+
+	spdk_dma_free(l2_table);
+	spdk_bdev_free_io(bdev_io);
+
+	if (desc->read_zeroes) {
+		for (int i = 0; i < orig_io->u.bdev.iovcnt; ++i) {
+			memset(orig_io->u.bdev.iovs[i].iov_base, 0, orig_io->u.bdev.iovs[i].iov_len);
+		}
+		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		return;
+	}
+
+	uint64_t physical_offset = desc->cluster_offset << 9;
+
+	rc = spdk_bdev_readv(disk->desc, disk->ch, orig_io->u.bdev.iovs, orig_io->u.bdev.iovcnt, physical_offset, orig_io->u.bdev.num_blocks * orig_io->bdev->blocklen, physical_read_cb, orig_io);
+	if (rc != 0) {
+		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
+		assert(false);
+		return;
+	}
+}
+
+
+static void
 bdev_qcow_read(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	/* FIXME */
+	struct spdk_qcow_disk *disk = bdev_io->bdev->ctxt;
+	uint64_t cluster_size = 1ULL << disk->header.cluster_bits;
+	uint64_t l2_entries = cluster_size / sizeof(struct qcow_header_l2);
+	uint64_t l1_index = bdev_io->u.bdev.offset_blocks / l2_entries;
+	int rc;
+
+	if (bdev_io->u.bdev.num_blocks > 1) {
+		SPDK_ERRLOG("I/O with num_blocks > 1 is not supported yet.\n");
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	uint64_t l1_uint = from_be64(disk->l1_table + l1_index);
+	struct qcow_header_l1 *l1 = (struct qcow_header_l1 *) &l1_uint;
+
+	/* FIXME check overflow */
+	uint64_t l2_offset = l1->l2_offset << 9;
+	uint64_t l2_bytes = cluster_size;
+
+	void *l2_table_buf = spdk_dma_zmalloc(cluster_size, 0x1000, NULL);
+
+	rc = spdk_bdev_read(disk->desc, disk->ch, l2_table_buf, l2_offset, l2_bytes, l2_read_cb, bdev_io);
+	if (rc != 0) {
+		spdk_dma_free(l2_table_buf);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		assert(false);
+	}
 }
 
 static int
@@ -212,18 +312,63 @@ create_qcow_bdev(struct spdk_qcow_disk *qcow, uint64_t num_blocks, uint32_t bloc
 }
 
 static void
-qcow_header_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+l1_table_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	struct spdk_qcow_disk *qcow = cb_arg;
-	uint8_t *data;
+	struct spdk_qcow_disk *disk = cb_arg;
+	uint64_t *l1_table = bdev_io->u.bdev.iovs[0].iov_base;
 	uint64_t num_blocks;
 	uint32_t block_size;
 	int rc;
 
+	if (!success) {
+		spdk_bdev_free_io(bdev_io);
+		assert(false);
+		return;
+	}
+
+	block_size = 1ULL << disk->header.cluster_bits;
+	num_blocks = disk->header.size / block_size;
+
+	assert(bdev_io->u.bdev.iovs[0].iov_len >= disk->header.l1_size * block_size);
 	spdk_bdev_free_io(bdev_io);
+
+	disk->l1_table = l1_table;
+
+	rc = create_qcow_bdev(disk, num_blocks, block_size);
+	if (rc != 0) {
+		assert(false);
+	}
+
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(qcow));
+}
+
+static int
+read_l1_table(struct spdk_qcow_disk *disk)
+{
+	uint64_t l1_offset = disk->header.l1_table_offset;
+	uint64_t l1_bytes = disk->header.l1_size << disk->header.cluster_bits;
+	int rc;
+
+	void *l1_table_buf = spdk_dma_malloc(l1_bytes, 0x1000, NULL);
+	memset(l1_table_buf, 0xacca, l1_bytes);
+	rc = spdk_bdev_read(disk->desc, disk->ch, l1_table_buf, l1_offset, l1_bytes, l1_table_read_cb, disk);
+	if (rc != 0) {
+		spdk_dma_free(l1_table_buf);
+	}
+
+	return rc;
+}
+
+static void
+qcow_header_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct spdk_qcow_disk *qcow = cb_arg;
+	uint8_t *data;
+	int rc;
 
 	if (!success) {
 		SPDK_ERRLOG("header read failed\n");
+		spdk_bdev_free_io(bdev_io);
 		goto out;
 	}
 
@@ -241,7 +386,9 @@ qcow_header_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	qcow->header.crypt_method = from_be32(&data[32]);
 	qcow->header.l1_size = from_be32(&data[36]);
-	qcow->header.l1_table_offset = from_be32(&data[40]);
+	qcow->header.l1_table_offset = from_be64(&data[40]);
+
+	spdk_bdev_free_io(bdev_io);
 
 	if (memcmp(qcow->header.magic, "QFI\xfb", 4) != 0) {
 		SPDK_ERRLOG("not a QCOW image\n");
@@ -259,14 +406,12 @@ qcow_header_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		goto out;
 	}
 
-	block_size = 1ULL << qcow->header.cluster_bits;
-	num_blocks = qcow->header.size / block_size;
-
-	rc = create_qcow_bdev(qcow, num_blocks, block_size);
+	rc = read_l1_table(qcow);
 	if (rc != 0) {
 		assert(false);
 	}
 
+	return;
 out:
 	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(qcow));
 }
