@@ -137,7 +137,7 @@ static TAILQ_HEAD(, nvme_bdev) g_nvme_bdevs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev
 
 static int nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_library_init(void);
-static void bdev_nvme_library_fini(void);
+static void bdev_nvme_library_fini(void *ctx);
 static int bdev_nvme_queue_cmd(struct nvme_bdev *bdev, struct spdk_nvme_qpair *qpair,
 			       struct nvme_bdev_io *bio,
 			       int direction, struct iovec *iov, int iovcnt, uint64_t lba_count,
@@ -1085,7 +1085,7 @@ end:
 }
 
 static void
-bdev_nvme_library_fini(void)
+bdev_nvme_library_fini(void *ctx)
 {
 	struct nvme_bdev *nvme_bdev, *btmp;
 
@@ -1097,6 +1097,7 @@ bdev_nvme_library_fini(void)
 		TAILQ_REMOVE(&g_nvme_bdevs, nvme_bdev, link);
 		bdev_nvme_destruct(&nvme_bdev->disk);
 	}
+	spdk_bdev_module_finish_done();
 }
 
 static int
