@@ -454,6 +454,8 @@ function vm_setup()
 	local disks=""
 	local raw_cache=""
 	local force_vm=""
+	local guest_memory=1024
+	local queue_number=""
 	while getopts ':-:' optchar; do
 		case "$optchar" in
 			-)
@@ -465,6 +467,8 @@ function vm_setup()
 				disks=*) local disks="${OPTARG#*=}" ;;
 				raw-cache=*) local raw_cache=",cache${OPTARG#*=}" ;;
 				force=*) local force_vm=${OPTARG#*=} ;;
+				memory=*) local guest_memory=${OPTARG#*=} ;;
+				queue_num=*) local queue_number=${OPTARG#*=} ;;
 				*)
 					error "unknown argument $OPTARG"
 					return 1
@@ -476,6 +480,7 @@ function vm_setup()
 			;;
 		esac
 	done
+	hp=$(echo $(($guest_memory/1024)) )
 
 	# Find next directory we can use
 	if [[ ! -z $force_vm ]]; then
@@ -538,12 +543,15 @@ function vm_setup()
 	do
 		(($task_mask&1<<$cpu)) && ((cpu_num++)) || :
 	done
+	if [ -z $queue_number ]; then
+		queue_number=$cpu_num
+	fi
 
 	#-cpu host
 	local node_num=${!qemu_numa_node_param}
 	echo "INFO: NUMA NODE: $node_num"
-	cmd+="-m 1024 --enable-kvm -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize -snapshot ${eol}"
-	cmd+="-object memory-backend-file,id=mem,size=1G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
+	cmd+="-m $guest_memory --enable-kvm -cpu host -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize -snapshot ${eol}"
+	cmd+="-object memory-backend-file,id=mem,size=${hp}G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
 	cmd+="-numa node,memdev=mem ${eol}"
 	cmd+="-pidfile $qemu_pid_file ${eol}"
 	cmd+="-serial file:$vm_dir/serial.log ${eol}"
@@ -594,7 +602,7 @@ function vm_setup()
 			spdk_vhost_scsi)
 				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$cpu_num,chardev=char_$disk ${eol}"
+				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=${queue_number},chardev=char_$disk ${eol}"
 				;;
 			spdk_vhost_blk)
 				[[ $disk =~ _size_([0-9]+[MG]?) ]] || true
@@ -605,7 +613,7 @@ function vm_setup()
 				disk=${disk%%_*}
 				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-blk-pci,num_queues=$cpu_num,chardev=char_$disk,"
+				cmd+="-device vhost-user-blk-pci,num_queues=${queue_number},chardev=char_$disk,"
 				cmd+="logical_block_size=4096,size=$size ${eol}"
 				;;
 			kernel_vhost)
