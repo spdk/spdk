@@ -45,7 +45,8 @@ function usage() {
                                     20: 'delete_bdev_positive',
                                     21: 'construct_lvs_with_cluster_sz_out_of_range_max',
                                     22: 'construct_lvs_with_cluster_sz_out_of_range_min',
-                                    23: 'SIGTERM'
+                                    23: 'tasting_positive',
+                                    24: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"
@@ -98,8 +99,7 @@ function vhost_kill()
 trap "vhost_kill; exit 1" SIGINT SIGTERM EXIT
 
 vhost_start
+$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $cluster_sz $BASE_DIR $TEST_DIR/app/vhost "${test_cases[@]}"
 
-$BASE_DIR/lvol_test.py $rpc_py $total_size $block_size $cluster_sz $BASE_DIR "${test_cases[@]}"
-
-trap - SIGINT SIGTERM EXIT
 vhost_kill
+trap - SIGINT SIGTERM EXIT
