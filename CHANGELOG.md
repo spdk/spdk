@@ -1,24 +1,26 @@
 # Changelog
 
-## v17.10: (Upcoming Release)
+## v17.10: Logical Volumes
 
-### New dependency
+### New dependencies
 
-libuuid added as new depenency for logical volumes.
+libuuid was added as new dependency for logical volumes.
+
+libnuma is now required unconditionally now that the DPDK submodule has been updated to DPDK 17.08.
 
 ### Block Device Abstraction Layer (bdev)
 
 An [fio](http://github.com/axboe/fio) plugin was added that can route
-I/O to the bdev layer. See the [plugin documentation](https://github.com/spdk/spdk/blob/master/examples/bdev/fio_plugin/README.md)
+I/O to the bdev layer. See the [plugin documentation](https://github.com/spdk/spdk/tree/master/examples/bdev/fio_plugin/)
 for more information.
 
 spdk_bdev_unmap() was modified to take an offset and a length in bytes as
 arguments instead of requiring the user to provide an array of SCSI
 unmap descriptors. This limits unmaps to a single contiguous range.
 
-spdk_bdev_write_zeroes() was introduced as an alternative to spdk_bdev_unmap().
-It ensures that all unmapped blocks will be zeroed out. This function is
-currently only supported by NVMe block devices.
+spdk_bdev_write_zeroes() was introduced.  It ensures that all specified blocks will be zeroed out.
+If a block device doesn't natively support a write zeroes command, the bdev layer emulates it using
+write commands.
 
 New API functions that accept I/O parameters in units of blocks instead of bytes
 have been added:
@@ -26,6 +28,9 @@ have been added:
 - spdk_bdev_write_blocks(), spdk_bdev_writev_blocks()
 - spdk_bdev_write_zeroes_blocks()
 - spdk_bdev_unmap_blocks()
+
+The bdev layer now handles temporary out-of-memory I/O failures internally by queueing the I/O to be
+retried later.
 
 ### Linux AIO bdev
 
@@ -40,7 +45,7 @@ into account when splitting I/O requests.
 The HotplugEnable option in `[Nvme]` sections of the configuration file is now
 "No" by default. It was previously "Yes".
 
-The NVMe library now includes a function spdk_nvme_ns_get_ctrlr which returns the
+The NVMe library now includes a spdk_nvme_ns_get_ctrlr() function which returns the
 NVMe Controller associated with a given namespace.
 
 The NVMe library now allows the user to specify a host identifier when attaching
@@ -49,10 +54,13 @@ as well as in the NVMe-oF Connect command.  The default host ID is also now a
 randomly-generated UUID, and the default host NQN uses the host ID to generate
 a UUID-based NQN.
 
+spdk_nvme_connect() was added to allow the user to connect directly to a single
+NVMe or NVMe-oF controller.
+
 ### NVMe-oF Target (nvmf_tgt)
 
-The NVMe-oF target no longer requires any in capsule data buffers to run, and
-the feature is now entirely optional. Previously, at least 4KiB in capsule
+The NVMe-oF target no longer requires any in-capsule data buffers to run, and
+the feature is now entirely optional. Previously, at least 4 KiB in-capsule
 data buffers were required.
 
 NVMe-oF subsytems have a new configuration option, AllowAnyHost, to control
@@ -76,39 +84,45 @@ makes it explicit that the default is being used.
 
 ### Blobstore
 
+The blobstore super block now contains a bstype field to identify the type of the blobstore.
+Existing code should be updated to fill out bstype when calling spdk_bs_init() and spdk_bs_load().
+
 spdk_bs_destroy() was added to allow destroying blobstore on device
 with an initialized blobstore.
 
 spdk_bs_io_readv_blob() and spdk_bs_io_writev_blob() were added to enable
 scattered payloads.
 
-Add a CLI tool for blobstore allowing basic operations through either command
-line or shell interface.
+A CLI tool for blobstore has been added, allowing basic operations through either command
+line or shell interface.  See the [blobcli](https://github.com/spdk/spdk/tree/master/examples/blob/cli)
+documentation for more details.
 
 ### Event Framework
 
 The ability to set a thread name, previously only used by the reactor code, is
-now part of the `spdk_thread_allocate()` API.  Users may specify a thread name
+now part of the spdk_thread_allocate() API.  Users may specify a thread name
 which will show up in tools like `gdb`.
 
 ### Log
 
-The API spdk_trace_dump() now takes a new parameter to allow the caller to
-specify stdout or stderr for example.
+The spdk_trace_dump() function now takes a new parameter to allow the caller to
+specify an output file handle (stdout or stderr, for example).
 
 ### Logical Volumes
 
 Logical volumes library built on top of SPDK blobstore has been added.
-It is possible create logical volumes on top of other devices using RPC.
+It is possible to create logical volumes on top of other devices using RPC.
 
-See [logical volumes](http://www.spdk.io/doc/lvol.html) documentation for more information.
+See the [logical volumes](http://www.spdk.io/doc/lvolstore.html) documentation for more information.
 
 ### Persistent Memory
 
-New bdev type has been added. Persistent memory block device is built on top of libpmemblk.
-It is possible create pmem devices on top of pmem pool files using RPC.
+A new persistent memory bdev type has been added.
+The persistent memory block device is built on top of [libpmemblk](http://pmem.io/nvml/libpmemblk/).
+It is possible to create pmem devices on top of pmem pool files using RPC.
 
-See [Block Device](http://www.spdk.io/doc/bdev.html) documentation for more information.
+See the [Pmem Block Device](http://www.spdk.io/doc/bdev.html#bdev_config_pmem) documentation for more information.
+
 
 ## v17.07: Build system improvements, userspace vhost-blk target, and GPT bdev
 
