@@ -43,14 +43,16 @@ struct cache_buffer {
 	bool			in_progress;
 };
 
-#define CACHE_BUFFER_SHIFT (18)
-#define CACHE_BUFFER_SIZE (1U << CACHE_BUFFER_SHIFT)
+extern uint32_t g_fs_cache_buffer_shift;
+
+#define CACHE_BUFFER_SHIFT_DEFAULT 18
+#define CACHE_BUFFER_SIZE (1U << g_fs_cache_buffer_shift)
 #define NEXT_CACHE_BUFFER_OFFSET(offset)	\
-	(((offset + CACHE_BUFFER_SIZE) >> CACHE_BUFFER_SHIFT) << CACHE_BUFFER_SHIFT)
+	(((offset + CACHE_BUFFER_SIZE) >> g_fs_cache_buffer_shift) << g_fs_cache_buffer_shift)
 
 #define CACHE_TREE_SHIFT 6
 #define CACHE_TREE_WIDTH (1U << CACHE_TREE_SHIFT)
-#define CACHE_TREE_LEVEL_SHIFT(level)	(CACHE_BUFFER_SHIFT + (level) * CACHE_TREE_SHIFT)
+#define CACHE_TREE_LEVEL_SHIFT(level)	(g_fs_cache_buffer_shift + (level) * CACHE_TREE_SHIFT)
 #define CACHE_TREE_LEVEL_SIZE(level)	(1ULL << CACHE_TREE_LEVEL_SHIFT(level))
 #define CACHE_TREE_LEVEL_MASK(level)	(CACHE_TREE_LEVEL_SIZE(level) - 1)
 #define CACHE_TREE_INDEX(level, offset)	((offset >> CACHE_TREE_LEVEL_SHIFT(level)) & (CACHE_TREE_WIDTH - 1))
