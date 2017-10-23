@@ -144,11 +144,13 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
 	timing_exit integrity_lvol_blk
 
-	timing_enter lvol
-	run_test ./test/lvol/lvol.sh --test-cases=1,2,3,5,6,7,10,11,12,13,16,17,21,22,23
-	timing_exit lvol
-
 	timing_exit vhost
+fi
+
+if [ $SPDK_TEST_LVOL -eq 1 ]; then
+	timing_enter lvol
+	run_test ./test/lvol/lvol.sh --test-cases=1,2,3,5,6,7,10,11,12,13,16,17,21,22,23,24
+	timing_exit lvol
 fi
 
 if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then

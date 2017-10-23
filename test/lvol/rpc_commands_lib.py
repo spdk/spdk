@@ -54,8 +54,7 @@ class Commands_Rpc(object):
 
     def check_get_lvol_stores(self, base_name, uuid, cluster_size):
         print("INFO: RPC COMMAND get_lvol_stores")
-        output = self.rpc.get_lvol_stores()[0]
-        json_value = json.loads(output)
+        json_value = self.get_lvol_stores()
         if json_value:
             for i in range(len(json_value)):
                 uuid_json_response = json_value[i]['uuid']
@@ -128,5 +127,14 @@ class Commands_Rpc(object):
 
     def get_lvol_stores(self):
         print("INFO: RPC COMMAND get_lvol_stores")
-        output = self.rpc.get_lvol_stores()[0]
-        return output.rstrip('\n')
+        output = json.loads(self.rpc.get_lvol_stores()[0])
+        return output
+
+    def get_lvol_bdevs(self):
+        print("INFO: RPC COMMAND get_bdevs; lvol bdevs only")
+        output = []
+        rpc_output = json.loads(self.rpc.get_bdevs()[0])
+        for bdev in rpc_output:
+            if bdev["product_name"] == "Logical Volume":
+                output.append(bdev)
+        return output
