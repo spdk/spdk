@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ad88cef_a82cbab8",
+        "filename": "doc/lvol.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-23T16:30:24Z",
+      "side": 1,
+      "message": "Please check the generated output to see how the formatting looks: https://ci.spdk.io/builds/review/f31fa45ad81e68d04f511c3ec7e8b582950014a2.1508758846/doc/html/md_lvol.html\n\nYou can also generate the docs locally to see how they will look (see doc/README.md).",
+      "revId": "f31fa45ad81e68d04f511c3ec7e8b582950014a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e44d7b7_f77c29a7",
+        "filename": "doc/lvol.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-23T16:30:24Z",
+      "side": 1,
+      "message": "managamanet -\u003e management",
+      "range": {
+        "startLine": 3,
+        "startChar": 45,
+        "endLine": 3,
+        "endChar": 56
+      },
+      "revId": "f31fa45ad81e68d04f511c3ec7e8b582950014a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63b4f401_b865894b",
+        "filename": "doc/lvol.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-23T16:30:24Z",
+      "side": 1,
+      "message": "Instead of a URL, please use a Doxygen \u0027@ref blob\u0027 so the link works on locally generated docs, PDF version, etc.",
+      "range": {
+        "startLine": 3,
+        "startChar": 188,
+        "endLine": 3,
+        "endChar": 231
+      },
+      "revId": "f31fa45ad81e68d04f511c3ec7e8b582950014a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b8f1ea0_2baf1456",
+        "filename": "doc/lvol.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-23T16:30:24Z",
+      "side": 1,
+      "message": "magaging -\u003e managing",
+      "range": {
+        "startLine": 3,
+        "startChar": 90,
+        "endLine": 3,
+        "endChar": 98
+      },
+      "revId": "f31fa45ad81e68d04f511c3ec7e8b582950014a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e61ef3a_ca61b935",
+        "filename": "doc/lvol.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-23T16:30:24Z",
+      "side": 1,
+      "message": "Since these are in a single paragraph with single line breaks, they will get combined into one big line in the final output.  It might be better to use a list or a table to format these.",
+      "revId": "f31fa45ad81e68d04f511c3ec7e8b582950014a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13d57ce0_da7f6c34",
+        "filename": "doc/lvol.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-23T16:30:24Z",
+      "side": 1,
+      "message": "\"its\" -\u003e \"it is\" (or \"it\u0027s\", but I think \"it is\" would be better for formal docs).",
+      "range": {
+        "startLine": 33,
+        "startChar": 217,
+        "endLine": 33,
+        "endChar": 220
+      },
+      "revId": "f31fa45ad81e68d04f511c3ec7e8b582950014a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
