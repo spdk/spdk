@@ -865,6 +865,7 @@ function at_app_exit()
 function error_exit()
 {
 	trap - ERR
+	print_backtrace
 	set +e
 	echo "Error on $1 $2"
 
