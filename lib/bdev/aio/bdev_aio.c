@@ -368,11 +368,10 @@ static void aio_free_disk(struct file_disk *fdisk)
 }
 
 struct spdk_bdev *
-create_aio_disk(const char *name, const char *filename, uint32_t block_size)
+create_aio_disk(const char *name, const char *filename, uint32_t block_size, uint64_t size)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
-	uint64_t disk_size;
 
 	fdisk = calloc(sizeof(*fdisk), 1);
 	if (!fdisk) {
@@ -389,8 +388,6 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", filename, fdisk->fd, errno);
 		goto error_return;
 	}
-
-	disk_size = spdk_fd_get_size(fdisk->fd);
 
 	fdisk->disk.name = strdup(name);
 	if (!fdisk->disk.name) {
@@ -437,13 +434,17 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 
 	fdisk->disk.blocklen = block_size;
 
-	if (disk_size % fdisk->disk.blocklen != 0) {
+	if (size == 0) {
+		size = spdk_fd_get_size(fdisk->fd);
+	}
+
+	if (size % fdisk->disk.blocklen != 0) {
 		SPDK_ERRLOG("Disk size %" PRIu64 " is not a multiple of block size %" PRIu32 "\n",
-			    disk_size, fdisk->disk.blocklen);
+			    size, fdisk->disk.blocklen);
 		goto error_return;
 	}
 
-	fdisk->disk.blockcnt = disk_size / fdisk->disk.blocklen;
+	fdisk->disk.blockcnt = size / fdisk->disk.blocklen;
 	fdisk->disk.ctxt = fdisk;
 
 	fdisk->disk.fn_table = &aio_fn_table;
@@ -479,7 +480,9 @@ bdev_aio_initialize(void)
 		const char *file;
 		const char *name;
 		const char *block_size_str;
+		const char *size_str;
 		uint32_t block_size = 0;
+		uint64_t size;
 
 		file = spdk_conf_section_get_nmval(sp, "AIO", i, 0);
 		if (!file) {
@@ -498,7 +501,12 @@ bdev_aio_initialize(void)
 			block_size = atoi(block_size_str);
 		}
 
-		bdev = create_aio_disk(name, file, block_size);
+		size_str = spdk_conf_section_get_nmval(sp, "AIO", i, 3);
+		if (size_str) {
+			size = atoi(size_str) * 1024 * 1024;
+		}
+
+		bdev = create_aio_disk(name, file, block_size, size);
 		if (!bdev) {
 			SPDK_ERRLOG("Unable to create AIO bdev from file %s\n", file);
 			i++;

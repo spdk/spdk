@@ -62,6 +62,7 @@ struct file_disk {
 	bool			block_size_override;
 };
 
-struct spdk_bdev *create_aio_disk(const char *name, const char *filename, uint32_t block_size);
+struct spdk_bdev *create_aio_disk(const char *name, const char *filename,
+				  uint32_t block_size, uint64_t size);
 
 #endif // SPDK_BDEV_AIO_H
