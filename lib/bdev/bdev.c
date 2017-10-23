@@ -2002,7 +2002,8 @@ spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *c
 	uint64_t len;
 
 	if (!success) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		bdev_io->cb = bdev_io->stored_user_cb;
+		_spdk_bdev_io_complete(bdev_io);
 		return;
 	}
 
