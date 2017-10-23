@@ -747,6 +747,15 @@ vbdev_lvs_init(void)
 static void
 vbdev_lvs_finished(void *cb_arg, int lvserrno)
 {
+	struct spdk_thread *current_thread = spdk_get_thread();
+	struct spdk_thread *old_thread = (struct spdk_thread *)cb_arg;
+
+	if (current_thread != old_thread) {
+		SPDK_ERRLOG("current_thread does not equal old_thread\n");
+	} else {
+		SPDK_ERRLOG("current_thread match old_thread\n");
+	}
+
 	if (TAILQ_EMPTY(&g_spdk_lvol_pairs)) {
 		spdk_bdev_module_finish_done();
 	}
@@ -756,13 +765,14 @@ static void
 vbdev_lvs_fini(void *ctx)
 {
 	struct lvol_store_bdev *lvs_bdev, *tmp;
+	struct spdk_thread *thread = spdk_get_thread();
 
 	if (TAILQ_EMPTY(&g_spdk_lvol_pairs)) {
 		spdk_bdev_module_finish_done();
 		return;
 	}
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
-		vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_finished, NULL);
+		vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_finished, thread);
 	}
 }
 
