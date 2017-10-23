@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "839213f4_6046ba52",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-23T09:44:06Z",
+      "side": 1,
+      "message": "are we 100% sure this is being called from the same thread that called vbdev_lvs_fini?\ni believe this is the reason the testpool fails on bdev_virtio: the bdev_virtio_finish has to be called from the same core that called bdev_virtio_init\nvbdev_lvol might \"break the chain\" here and make all subsequent bdev finishes to be called from other core\n\njust a suspicion",
+      "revId": "c4e2d15aca09706890be07b7d5b48f3bf0b59bec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
