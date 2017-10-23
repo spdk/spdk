@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4b7f398b_c631651a",
+        "filename": "doc/lvol.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-23T07:38:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "33ecb2cb_42701c25",
+      "range": {
+        "startLine": 9,
+        "startChar": 60,
+        "endLine": 9,
+        "endChar": 157
+      },
+      "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48ca7ea7_670a167b",
         "filename": "doc/lvol.md",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2017-10-20T15:42:12Z",
       "side": 1,
       "message": "Some lines are split to next line and some no - like in line 9. This should be done in the same style.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 17
+      },
+      "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18b00e8f_073adafd",
+        "filename": "doc/lvol.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-23T07:38:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "48ca7ea7_670a167b",
       "range": {
         "startLine": 14,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "599f5b51_7cc7f79b",
+        "filename": "doc/lvol.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-23T07:38:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8dad39d5_e8f640ad",
+      "range": {
+        "startLine": 35,
+        "startChar": 21,
+        "endLine": 35,
+        "endChar": 28
+      },
+      "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f07bb1f2_5cc772d3",
         "filename": "doc/lvol.md",
         "patchSetId": 8
@@ -82,6 +154,24 @@
       "writtenOn": "2017-10-20T16:35:33Z",
       "side": 1,
       "message": "Please trim the trailing whitespace on all of these lines.",
+      "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ba41196_46a3191e",
+        "filename": "doc/lvol.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-23T07:38:14Z",
+      "side": 1,
+      "message": "It was explicit line break/br element in a list, but I reformatted the code to avoid such style.",
+      "parentUuid": "f07bb1f2_5cc772d3",
       "revId": "ebeaebdca353a8578a320facdf6acb28f0bd8b3b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
