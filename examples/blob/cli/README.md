@@ -37,7 +37,7 @@ script lines will simply be skipped, otherwise the tool will exit if
 it runs into an invalid line (ie './blobcli -T test.bs ignore`).
 
 Sample test/bs file:
-~~{.sh}
+~~~{.sh}
 # this is a comment
 -i
 -s bs
@@ -58,4 +58,4 @@ Sample test/bs file:
 -s $B0
 -s $B1
 -s bs
-~~
+~~~
