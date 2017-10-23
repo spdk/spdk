@@ -52,6 +52,35 @@
 SPDK_DECLARE_BDEV_MODULE(qcow);
 SPDK_BDEV_MODULE_ASYNC_INIT(qcow)
 
+struct qcow_header_l1_entry {
+	uint64_t	reserved1	: 9;
+	uint64_t	l2_offset	: 47;
+	uint64_t	reserved2	: 7;
+	uint64_t	cow_required	: 1;
+};
+SPDK_STATIC_ASSERT(sizeof(struct qcow_header_l1_entry) == 8, "incorrect L1 entry size");
+
+struct qcow_header_l2_entry {
+	uint64_t	desc		: 62;
+	uint64_t	compressed	: 1;
+	uint64_t	cow_required	: 1;
+};
+SPDK_STATIC_ASSERT(sizeof(struct qcow_header_l2_entry) == 8, "incorrect L2 entry size");
+
+struct qcow_header_standard_desc {
+	uint64_t	read_zeroes	: 1;
+	uint64_t	reserved1	: 8;
+	uint64_t	cluster_offset	: 47; // must be aligned to cluster boundary
+	uint64_t	reserved2	: 6;
+};
+
+/**
+ * struct qcow_header_compressed_desc {
+ * 	uint64_t	cluster_offset	: (63 - (cluster_bits - 8)); // unaligned
+ * 	uint64_t	cluster_size	: fill to 64 bits;
+ * }
+ */
+
 struct qcow_header_essentials {
 	uint8_t		magic[4];
 	uint32_t	version;
@@ -59,6 +88,10 @@ struct qcow_header_essentials {
 	uint32_t	backing_file_size;
 	uint32_t	cluster_bits;
 	uint64_t	size;
+
+	uint32_t	crypt_method;
+	uint32_t	l1_size;
+	uint64_t	l1_table_offset;
 };
 
 struct spdk_qcow_disk {
@@ -206,6 +239,10 @@ qcow_header_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	qcow->header.cluster_bits = from_be32(&data[20]);
 	qcow->header.size = from_be64(&data[24]);
 
+	qcow->header.crypt_method = from_be32(&data[32]);
+	qcow->header.l1_size = from_be32(&data[36]);
+	qcow->header.l1_table_offset = from_be32(&data[40]);
+
 	if (memcmp(qcow->header.magic, "QFI\xfb", 4) != 0) {
 		SPDK_ERRLOG("not a QCOW image\n");
 		goto out;
@@ -216,8 +253,8 @@ qcow_header_read_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		goto out;
 	}
 
-	if (qcow->header.cluster_bits < 9 || qcow->header.cluster_bits > 31) {
-		SPDK_ERRLOG("cluster size must be in range <512, UINT32_MAX>, got (1ULL << %"PRIu32")\n",
+	if (qcow->header.cluster_bits < 9 || qcow->header.cluster_bits > 24) {
+		SPDK_ERRLOG("cluster size must be in range <512, (1 << 24)> , got (1ULL << %"PRIu32")\n",
 			    qcow->header.cluster_bits);
 		goto out;
 	}
