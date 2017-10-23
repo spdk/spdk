@@ -6,10 +6,6 @@
   Path /tmp/vhost.1
   Queues 4
 
-[VirtioUser2]
-  Path /tmp/vhost.2
-  Queues 4
-
 [Rpc]
   Enable Yes
   Listen 127.0.0.1:5261
