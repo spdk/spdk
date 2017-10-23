@@ -4,11 +4,23 @@
 [Ioat]
   Disable Yes
 
+[Split]
+  Split Nvme0n1 6
+
 [VhostScsi0]
-  Name vhost.0
+  Name naa.Nvme0n1p0.0
 
 [VhostScsi1]
-  Name vhost.1
+  Name naa.Nvme0n1p1.0
 
 [VhostScsi2]
-  Name vhost.2
+  Name naa.Nvme0n1.2
+
+[VhostScsi3]
+  Name naa.Nvme0n1.3
+
+[VhostScsi4]
+  Name naa.Malloc0.4
+
+[VhostScsi5]
+  Name naa.Malloc1.5
