@@ -117,3 +117,15 @@ class Commands_Rpc(object):
         print("INFO: RPC COMMAND get_lvol_stores")
         output = self.rpc.get_lvol_stores()[0]
         return output.rstrip('\n')
+
+    def response_call(self, rpc_command):
+        print("INFO: Transfer of output RPC COMMAND ")
+        output = None
+        exec("output = self.rpc.{rpc_call}[0]".format(rpc_call=rpc_command))
+        return output
+
+    def check_compatibility_response(self, first_response, second_response):
+        print("Check compatibility response")
+        if first_response in [second_response]:
+            return 0
+        return 1
