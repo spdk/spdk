@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "67c7eced_52b513d5",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-23T08:02:50Z",
+      "side": 1,
+      "message": "This is only for local development and will be removed as this patch is still in draft stage",
+      "parentUuid": "b8cba3c2_e7cdb0f2",
+      "revId": "0f5452b958477c757a36312f2d2473f2f7e7db2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22d5577e_7844a772",
         "filename": "test/vhost/readonly/readonly.sh",
         "patchSetId": 8
