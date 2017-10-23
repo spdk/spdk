@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6f74a69_f712ef08",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-23T10:46:09Z",
+      "side": 1,
+      "message": "Please fix this whitespace",
+      "range": {
+        "startLine": 130,
+        "startChar": 3,
+        "endLine": 130,
+        "endChar": 6
+      },
+      "revId": "8af5871635fab3f02e3f21774a62a6ecf080c4fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1096053e_e28a0ded",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-23T10:46:09Z",
+      "side": 1,
+      "message": "\"and\" can be removed",
+      "range": {
+        "startLine": 137,
+        "startChar": 21,
+        "endLine": 137,
+        "endChar": 24
+      },
+      "revId": "8af5871635fab3f02e3f21774a62a6ecf080c4fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
