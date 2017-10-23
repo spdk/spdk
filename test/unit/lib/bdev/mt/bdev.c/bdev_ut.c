@@ -61,6 +61,11 @@ struct ut_bdev g_bdev;
 struct spdk_bdev_desc *g_desc;
 bool g_teardown_done = false;
 
+uint32_t spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
 static int
 stub_create_ch(void *io_device, void *ctx_buf)
 {

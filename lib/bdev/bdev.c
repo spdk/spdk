@@ -592,6 +592,7 @@ spdk_bdev_module_finish_complete(void)
 void
 spdk_bdev_module_finish_done(void)
 {
+	SPDK_ERRLOG("FINISH_DONE current core %d\n", spdk_env_get_current_core());
 	if (!g_bdev_module) {
 		g_bdev_module = TAILQ_FIRST(&g_bdev_mgr.bdev_modules);
 	} else {

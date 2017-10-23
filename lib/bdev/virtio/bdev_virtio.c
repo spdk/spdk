@@ -999,6 +999,8 @@ static void bdev_virtio_finish(void *ctx)
 	struct virtqueue *vq;
 	struct spdk_ring *send_ring;
 
+
+	SPDK_ERRLOG("FINISH virtio on core %d\n", spdk_env_get_current_core());
 	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.attached_ctrlrs, tailq, next) {
 		TAILQ_REMOVE(&g_virtio_driver.attached_ctrlrs, vdev, tailq);
 		if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_CONTROLQ)) {

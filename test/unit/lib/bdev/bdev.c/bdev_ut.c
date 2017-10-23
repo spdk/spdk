@@ -48,6 +48,11 @@ spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 {
 }
 
+uint32_t spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
 static int
 null_init(void)
 {
