@@ -95,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "09a2475c_314a1cac",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 950,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T06:47:03Z",
+      "side": 1,
+      "message": "True.",
+      "parentUuid": "82823572_dd9c34aa",
+      "range": {
+        "startLine": 941,
+        "startChar": 1,
+        "endLine": 950,
+        "endChar": 2
+      },
+      "revId": "bac4d78c5824257bdf09d53ec119014a2b7dac40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "52d26997_51ce823d",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 13
@@ -141,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "9ee03ac9_0f10b51b",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T06:47:03Z",
+      "side": 1,
+      "message": "It is used in other parts of library so might be needed.",
+      "parentUuid": "4e66bcc1_507132a4",
+      "range": {
+        "startLine": 1011,
+        "startChar": 43,
+        "endLine": 1011,
+        "endChar": 67
+      },
+      "revId": "bac4d78c5824257bdf09d53ec119014a2b7dac40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4bd651b3_728e5f0a",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 13
@@ -152,6 +200,30 @@
       "writtenOn": "2017-10-20T19:19:55Z",
       "side": 1,
       "message": "as I commented above, this shouldn\u0027t probably be changed. could you revert?",
+      "range": {
+        "startLine": 1061,
+        "startChar": 2,
+        "endLine": 1061,
+        "endChar": 30
+      },
+      "revId": "bac4d78c5824257bdf09d53ec119014a2b7dac40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7014f1b8_9bd3da5d",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1061,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-23T06:47:03Z",
+      "side": 1,
+      "message": "Disagree.",
+      "parentUuid": "4bd651b3_728e5f0a",
       "range": {
         "startLine": 1061,
         "startChar": 2,
