@@ -63,10 +63,9 @@ function prepare_fio_job_for_unmap() {
 
         # Check that after TRIM/UNMAP operation disk space can be used for read
         # by using write with verify (which implies reads)
-        echo "[trim_write_read]" >> $testdir/bdev.fio
+        echo "[write]" >> $testdir/bdev.fio
         echo "stonewall" >> $testdir/bdev.fio
-        echo "rw=trimwrite" >> $testdir/bdev.fio
-        echo "trim_verify_zero=1" >> $testdir/bdev.fio
+        echo "rw=write" >> $testdir/bdev.fio
 }
 
 source $rootdir/test/vhost/common/common.sh
