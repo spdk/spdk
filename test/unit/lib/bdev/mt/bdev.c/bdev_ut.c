@@ -61,6 +61,24 @@ struct ut_bdev g_bdev;
 struct spdk_bdev_desc *g_desc;
 bool g_teardown_done = false;
 
+void
+spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
+		     uint32_t lcore, uint64_t period_microseconds)
+{
+}
+
+void
+spdk_poller_unregister(struct spdk_poller **ppoller,
+		       struct spdk_event *complete)
+{
+}
+
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
 static int
 stub_create_ch(void *io_device, void *ctx_buf)
 {
