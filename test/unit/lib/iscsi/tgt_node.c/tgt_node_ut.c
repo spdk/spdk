@@ -224,7 +224,7 @@ node_access_allowed(void)
 	addr = "192.168.2.1";
 
 	rc = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
-	CU_ASSERT(rc == 1);
+	CU_ASSERT(rc == 0);
 
 }
 
@@ -275,7 +275,7 @@ node_access_denied_by_empty_netmask(void)
 	addr = "192.168.3.1";
 
 	rc = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc < 0);
 
 }
 

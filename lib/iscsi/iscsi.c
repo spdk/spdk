@@ -1408,13 +1408,6 @@ spdk_iscsi_op_login_check_target(struct spdk_iscsi_conn *conn,
 					conn->initiator_name,
 					conn->initiator_addr);
 	if (rc < 0) {
-		SPDK_WARNLOG("lu_access() failed\n");
-		/* Not found */
-		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
-		rsph->status_detail = ISCSI_LOGIN_TARGET_NOT_FOUND;
-		return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
-	}
-	if (rc == 0) {
 		SPDK_ERRLOG("access denied\n");
 		/* Not found */
 		rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
