@@ -360,6 +360,7 @@ static void
 show_bs_cb(void *arg1, spdk_blob_id blobid, int bserrno)
 {
 	struct cli_context_t *cli_context = arg1;
+	struct spdk_bs_type bstype;
 	uint64_t val;
 	struct spdk_bdev *bdev = NULL;
 
@@ -395,6 +396,9 @@ show_bs_cb(void *arg1, spdk_blob_id blobid, int bserrno)
 
 	val = spdk_bs_free_cluster_count(cli_context->bs);
 	printf("\t# free clusters: %" PRIu64 "\n", val);
+
+	bstype = spdk_bs_get_bstype(cli_context->bs);
+	spdk_trace_dump(stdout, "\tblobstore type:", &bstype, sizeof(bstype));
 
 	/*
 	 * Private info isn't accessible via the public API but
