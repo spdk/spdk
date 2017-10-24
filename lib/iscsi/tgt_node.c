@@ -52,7 +52,7 @@
 #define MAX_TMPBUF 1024
 #define MAX_MASKBUF 128
 
-static int
+static bool
 spdk_iscsi_tgt_node_allow_ipv6(const char *netmask, const char *addr)
 {
 	struct in6_addr in6_mask;
@@ -64,13 +64,13 @@ spdk_iscsi_tgt_node_allow_ipv6(const char *netmask, const char *addr)
 	int i;
 
 	if (netmask[0] != '[')
-		return 0;
+		return false;
 	p = strchr(netmask, ']');
 	if (p == NULL)
-		return 0;
+		return false;
 	n = p - (netmask + 1);
 	if (n + 1 > sizeof mask)
-		return 0;
+		return false;
 
 	memcpy(mask, netmask + 1, n);
 	mask[n] = '\0';
@@ -79,7 +79,7 @@ spdk_iscsi_tgt_node_allow_ipv6(const char *netmask, const char *addr)
 	if (p[0] == '/') {
 		bits = (int) strtol(p + 1, NULL, 10);
 		if (bits < 0 || bits > 128)
-			return 0;
+			return false;
 	} else {
 		bits = 128;
 	}
@@ -92,25 +92,25 @@ spdk_iscsi_tgt_node_allow_ipv6(const char *netmask, const char *addr)
 	/* presentation to network order binary */
 	if (inet_pton(AF_INET6, mask, &in6_mask) <= 0
 	    || inet_pton(AF_INET6, addr, &in6_addr) <= 0) {
-		return 0;
+		return false;
 	}
 
 	/* check 128bits */
 	for (i = 0; i < (bits / 8); i++) {
 		if (in6_mask.s6_addr[i] != in6_addr.s6_addr[i])
-			return 0;
+			return false;
 	}
 	if (bits % 8) {
 		bmask = (0xffU << (8 - (bits % 8))) & 0xffU;
 		if ((in6_mask.s6_addr[i] & bmask) != (in6_addr.s6_addr[i] & bmask))
-			return 0;
+			return false;
 	}
 
 	/* match */
-	return 1;
+	return true;
 }
 
-static int
+static bool
 spdk_iscsi_tgt_node_allow_ipv4(const char *netmask, const char *addr)
 {
 	struct in_addr in4_mask;
@@ -127,7 +127,7 @@ spdk_iscsi_tgt_node_allow_ipv4(const char *netmask, const char *addr)
 	}
 	n = p - netmask;
 	if (n + 1 > sizeof mask)
-		return 0;
+		return false;
 
 	memcpy(mask, netmask, n);
 	mask[n] = '\0';
@@ -135,7 +135,7 @@ spdk_iscsi_tgt_node_allow_ipv4(const char *netmask, const char *addr)
 	if (p[0] == '/') {
 		bits = (int) strtol(p + 1, NULL, 10);
 		if (bits < 0 || bits > 32)
-			return 0;
+			return false;
 	} else {
 		bits = 32;
 	}
@@ -143,48 +143,47 @@ spdk_iscsi_tgt_node_allow_ipv4(const char *netmask, const char *addr)
 	/* presentation to network order binary */
 	if (inet_pton(AF_INET, mask, &in4_mask) <= 0
 	    || inet_pton(AF_INET, addr, &in4_addr) <= 0) {
-		return 0;
+		return false;
 	}
 
 	/* check 32bits */
 	bmask = (0xffffffffULL << (32 - bits)) & 0xffffffffU;
 	if ((ntohl(in4_mask.s_addr) & bmask) != (ntohl(in4_addr.s_addr) & bmask))
-		return 0;
+		return false;
 
 	/* match */
-	return 1;
+	return true;
 }
 
-static int
+static bool
 spdk_iscsi_tgt_node_allow_netmask(const char *netmask, const char *addr)
 {
 	if (netmask == NULL || addr == NULL)
-		return 0;
+		return false;
 	if (strcasecmp(netmask, "ALL") == 0)
-		return 1;
+		return true;
 	if (netmask[0] == '[') {
 		/* IPv6 */
 		if (spdk_iscsi_tgt_node_allow_ipv6(netmask, addr))
-			return 1;
+			return true;
 	} else {
 		/* IPv4 */
 		if (spdk_iscsi_tgt_node_allow_ipv4(netmask, addr))
-			return 1;
+			return true;
 	}
-	return 0;
+	return false;
 }
 
-int
+bool
 spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 			   struct spdk_iscsi_tgt_node *target, const char *iqn, const char *addr)
 {
 	struct spdk_iscsi_portal_grp *pg;
 	struct spdk_iscsi_init_grp *igp;
-	int rc;
 	int i, j, k;
 
 	if (conn == NULL || target == NULL || iqn == NULL || addr == NULL)
-		return 0;
+		return false;
 	pg = conn->portal->group;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "pg=%d, iqn=%s, addr=%s\n",
@@ -205,7 +204,7 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 					      "access denied from %s (%s) to %s (%s:%s,%d)\n",
 					      iqn, addr, target->name, conn->portal->host,
 					      conn->portal->port, conn->portal->group->tag);
-				return 0;
+				return false;
 			}
 			/* allow initiators */
 			if (strcasecmp(igp->initiators[j], "ALL") == 0
@@ -215,10 +214,9 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 					SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
 						      "netmask=%s, addr=%s\n",
 						      igp->netmasks[k], addr);
-					rc = spdk_iscsi_tgt_node_allow_netmask(igp->netmasks[k], addr);
-					if (rc > 0) {
+					if (spdk_iscsi_tgt_node_allow_netmask(igp->netmasks[k], addr)) {
 						/* OK netmask */
-						return 1;
+						return true;
 					}
 				}
 				/* NG netmask in this group */
@@ -230,17 +228,17 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "access denied from %s (%s) to %s (%s:%s,%d)\n",
 		      iqn, addr, target->name, conn->portal->host,
 		      conn->portal->port, conn->portal->group->tag);
-	return 0;
+	return false;
 }
 
-static int
+static bool
 spdk_iscsi_tgt_node_visible(struct spdk_iscsi_tgt_node *target, const char *iqn)
 {
 	struct spdk_iscsi_init_grp *igp;
 	int i, j;
 
 	if (target == NULL || iqn == NULL)
-		return 0;
+		return false;
 
 	for (i = 0; i < target->maxmap; i++) {
 		/* iqn is initiator group? */
@@ -250,18 +248,18 @@ spdk_iscsi_tgt_node_visible(struct spdk_iscsi_tgt_node *target, const char *iqn)
 			    && (strcasecmp(&igp->initiators[j][1], "ALL") == 0
 				|| strcasecmp(&igp->initiators[j][1], iqn) == 0)) {
 				/* NG */
-				return 0;
+				return false;
 			}
 			if (strcasecmp(igp->initiators[j], "ALL") == 0
 			    || strcasecmp(igp->initiators[j], iqn) == 0) {
 				/* OK iqn, no check addr */
-				return 1;
+				return true;
 			}
 		}
 	}
 
 	/* NG */
-	return 0;
+	return false;
 }
 
 int
