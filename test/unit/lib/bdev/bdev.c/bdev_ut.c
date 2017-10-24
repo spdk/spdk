@@ -60,6 +60,24 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 }
 
 void
+spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
+		     uint32_t lcore, uint64_t period_microseconds)
+{
+}
+
+void
+spdk_poller_unregister(struct spdk_poller **ppoller,
+		       struct spdk_event *complete)
+{
+}
+
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
+void
 spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
 {
 }
