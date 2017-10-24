@@ -22,6 +22,30 @@
       "revId": "20a1bfaf7b031149ddc546abaafeec975a1dda2f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a01097a_581cd75a",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-24T15:16:33Z",
+      "side": 0,
+      "message": "not for the unit tests - basically the blobstore stays attached to the lvol_ut_bs_dev until the lvolstore is destroyed - this allows us to do things like initialize an lvolstore and add some lvols, then unload it and then load it again.  Since we don\u0027t persist anything to disk for unit tests, the \"persistence\" is done in our unit test blobstore implementation",
+      "parentUuid": "2c71b8a6_1558f902",
+      "range": {
+        "startLine": 201,
+        "startChar": 0,
+        "endLine": 201,
+        "endChar": 10
+      },
+      "revId": "20a1bfaf7b031149ddc546abaafeec975a1dda2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
