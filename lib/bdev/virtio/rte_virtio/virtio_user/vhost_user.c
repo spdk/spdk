@@ -131,6 +131,13 @@ vhost_user_read(int fd, struct vhost_user_msg *msg)
 	}
 
 	sz_payload = msg->size;
+
+	if (sizeof(*msg) - sz_hdr < sz_payload) {
+		SPDK_WARNLOG("Received oversized msg: payload size %zu > available space %zu\n",
+			     sz_payload, sizeof(*msg) - sz_hdr);
+		goto fail;
+	}
+
 	if (sz_payload) {
 		ret = recv(fd, (void *)((char *)msg + sz_hdr), sz_payload, 0);
 		if ((size_t)ret != sz_payload) {
