@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e930812_1d0e4003",
+        "filename": "examples/blob/hello_nvme_blob/hello_nvme_blob.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-24T20:44:49Z",
+      "side": 1,
+      "message": "hate to be a nitpicky reviewer but circumventing has some negative connotations.  It\u0027s an optional layer so you\u0027re not circumventing anything, you\u0027re just showing how to use blobstore w/o using the bdev layer",
+      "revId": "0a2161e2b4fce4c56d8a193740222ea7bc70e8a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67ae4b0b_57dc97d1",
+        "filename": "examples/blob/hello_nvme_blob/hello_nvme_blob.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-24T20:44:49Z",
+      "side": 1,
+      "message": "Also probably worth mentioning here that this example does not use the SPDK app frameork whereas the hello_blob example does",
+      "revId": "0a2161e2b4fce4c56d8a193740222ea7bc70e8a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8bb04a8_d5345a14",
+        "filename": "examples/blob/hello_nvme_blob/hello_nvme_blob.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-24T20:44:49Z",
+      "side": 1,
+      "message": "assuming g_namespace can be non-NULL here don\u0027t you want to free this before you NULL it?",
+      "revId": "0a2161e2b4fce4c56d8a193740222ea7bc70e8a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e694be81_e185dee4",
+        "filename": "examples/blob/hello_nvme_blob/hello_nvme_blob.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 576,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-24T20:44:49Z",
+      "side": 1,
+      "message": "suggest not using uncommon words like allegory especially with an international audience.  Maybe just \"is similar in nature to...\" or something like that :)",
+      "revId": "0a2161e2b4fce4c56d8a193740222ea7bc70e8a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
