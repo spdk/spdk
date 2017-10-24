@@ -588,7 +588,7 @@ vbdev_lvol_create(uuid_t uuid, size_t sz,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	rc = spdk_lvol_create(lvs, sz, _vbdev_lvol_create_cb, req);
+	rc = spdk_lvol_create(lvs, "name", sz, _vbdev_lvol_create_cb, req);
 	if (rc != 0) {
 		free(req);
 	}
