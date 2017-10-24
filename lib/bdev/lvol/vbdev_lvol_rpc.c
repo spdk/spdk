@@ -247,7 +247,7 @@ _spdk_rpc_construct_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvole
 	}
 
 	spdk_json_write_array_begin(w);
-	spdk_json_write_string(w, lvol->name);
+	spdk_json_write_string(w, lvol->old_name);
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 	return;
