@@ -74,11 +74,12 @@ def run_fio(vms, fio_cfg_fname, out_path, perf_vmex=False):
         # if for some reason output contains lines with "eta" - remove them
         out = re.sub(r'.+\[eta\s+\d{2}m:\d{2}s\]', '', out)
 
+        print(out)
+
         if rc != 0:
-            print("ERROR! While executing FIO jobs - RC: {rc}, Err message: {out}".format(rc=rc, out=out))
+            print("ERROR! While executing FIO jobs - RC: {rc}".format(rc=rc, out=out))
             sys.exit(rc)
         else:
-            print(out)
             save_file(os.path.join(out_path, ".".join([fio_cfg_prefix, "log"])), "w", out)
 
         if perf_vmex:
@@ -170,7 +171,7 @@ def main():
                     out = exec_cmd("./test/vhost/common/vm_ssh.sh {vm_num} sh -c 'echo {line} >> {cfg}'"
                                    .format(vm_num=i, line=line.strip(), cfg=fio_cfg_fname), blocking=True)
                     if out[0] != 0:
-                        print("ERROR! While copying FIO job config file to VM {vm_num} - {vm_ip}"
+                        print("ERROR! While copying FIO job config file to VM {vm_num} - {vm_ip}\n"
                               .format(vm_num=1, vm_ip=vm[0]))
                         sys.exit(1)
 
