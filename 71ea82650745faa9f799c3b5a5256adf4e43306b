@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8373044_46056e48",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T11:48:18Z",
+      "side": 0,
+      "message": "Just a note: this works with DC3700 with kernel.\nAlso, for some reason test passess after removing verify_backlog from [global] section",
+      "range": {
+        "startLine": 44,
+        "startChar": 8,
+        "endLine": 47,
+        "endChar": 54
+      },
+      "revId": "71ea82650745faa9f799c3b5a5256adf4e43306b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
