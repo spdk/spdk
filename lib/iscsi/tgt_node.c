@@ -211,10 +211,6 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 			if (strcasecmp(igp->initiators[j], "ALL") == 0
 			    || strcasecmp(igp->initiators[j], iqn) == 0) {
 				/* OK iqn, check netmask */
-				if (igp->nnetmasks == 0) {
-					/* OK, empty netmask as ALL */
-					return 1;
-				}
 				for (k = 0; k < igp->nnetmasks; k++) {
 					SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
 						      "netmask=%s, addr=%s\n",
