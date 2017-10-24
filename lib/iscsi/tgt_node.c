@@ -234,26 +234,14 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 }
 
 static int
-spdk_iscsi_tgt_node_visible(struct spdk_iscsi_tgt_node *target, const char *iqn, int pg_tag)
+spdk_iscsi_tgt_node_visible(struct spdk_iscsi_tgt_node *target, const char *iqn)
 {
 	struct spdk_iscsi_init_grp *igp;
-	int match_pg_tag;
 	int i, j;
 
 	if (target == NULL || iqn == NULL)
 		return 0;
-	/* pg_tag exist map? */
-	match_pg_tag = 0;
-	for (i = 0; i < target->maxmap; i++) {
-		if (target->map[i].pg->tag == pg_tag) {
-			match_pg_tag = 1;
-			break;
-		}
-	}
-	if (match_pg_tag == 0) {
-		/* cat't access from pg_tag */
-		return 0;
-	}
+
 	for (i = 0; i < target->maxmap; i++) {
 		/* iqn is initiator group? */
 		igp = target->map[i].ig;
@@ -269,50 +257,6 @@ spdk_iscsi_tgt_node_visible(struct spdk_iscsi_tgt_node *target, const char *iqn,
 				/* OK iqn, no check addr */
 				return 1;
 			}
-		}
-	}
-
-	/* NG */
-	return 0;
-}
-
-static int
-spdk_iscsi_portal_grp_is_visible(struct spdk_iscsi_tgt_node *target,
-				 const char *iqn, int pg_tag)
-{
-	struct spdk_iscsi_init_grp *igp;
-	int match_idx;
-	int i, j;
-
-	if (target == NULL || iqn == NULL)
-		return 0;
-	match_idx = -1;
-	for (i = 0; i < target->maxmap; i++) {
-		if (target->map[i].pg->tag == pg_tag) {
-			match_idx = i;
-			break;
-		}
-	}
-	if (match_idx < 0) {
-		/* cant't find pg_tag */
-		return 0;
-	}
-
-	/* iqn is initiator group? */
-	igp = target->map[match_idx].ig;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "iqn=%s, pg=%d, ig=%d\n", iqn, pg_tag, igp->tag);
-
-	for (j = 0; j < igp->ninitiators; j++) {
-		if (igp->initiators[j][0] == '!'
-		    && (strcasecmp(&igp->initiators[j][1], "ALL") == 0
-			|| strcasecmp(&igp->initiators[j][1], iqn) == 0)) {
-			/* NG */
-			return 0;
-		}
-		if (strcasecmp(igp->initiators[j], "ALL") == 0
-		    || strcasecmp(igp->initiators[j], iqn) == 0) {
-			/* OK iqn, no check addr */
-			return 1;
 		}
 	}
 
@@ -363,8 +307,7 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 		    && strcasecmp(tiqn, target->name) != 0) {
 			continue;
 		}
-		rc = spdk_iscsi_tgt_node_visible(target, iiqn,
-						 conn->pg_tag);
+		rc = spdk_iscsi_tgt_node_visible(target, iiqn);
 		if (rc == 0) {
 			continue;
 		}
@@ -382,14 +325,6 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 					goto skip_pg_tag;
 				}
 			}
-			rc = spdk_iscsi_portal_grp_is_visible(target, iiqn, pg_tag);
-			if (rc == 0) {
-				SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
-					      "SKIP pg=%d, iqn=%s for %s from %s (%s)\n",
-					      pg_tag, tiqn, target->name, iiqn, iaddr);
-				goto skip_pg_tag;
-			}
-
 			/* write to data */
 			TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
 				if (pg->tag != pg_tag)
