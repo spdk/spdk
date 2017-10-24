@@ -127,13 +127,6 @@ spdk_sock_create(const char *ip, int port, enum spdk_sock_create_type type)
 		if (p != NULL)
 			*p = '\0';
 		ip = (const char *) &buf[0];
-		if (strcasecmp(ip, "*") == 0) {
-			snprintf(buf, sizeof(buf), "::");
-			ip = (const char *) &buf[0];
-		}
-	} else if (strcasecmp(ip, "*") == 0) {
-		snprintf(buf, sizeof(buf), "0.0.0.0");
-		ip = (const char *) &buf[0];
 	}
 
 	snprintf(portnum, sizeof portnum, "%d", port);
