@@ -111,69 +111,69 @@ config_file_fail_cases(void)
 static void
 allow_ipv6_allowed(void)
 {
-	int rc;
+	bool result;
 	char *netmask;
 	char *addr;
 
 	netmask = "[2001:ad6:1234::]/48";
 	addr = "2001:ad6:1234:5678:9abc::";
 
-	rc = spdk_iscsi_tgt_node_allow_ipv6(netmask, addr);
-	CU_ASSERT(rc != 0);
+	result = spdk_iscsi_tgt_node_allow_ipv6(netmask, addr);
+	CU_ASSERT(result == true);
 
-	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
-	CU_ASSERT(rc != 0);
+	result = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	CU_ASSERT(result == true);
 }
 
 static void
 allow_ipv6_denied(void)
 {
-	int rc;
+	bool result;
 	char *netmask;
 	char *addr;
 
 	netmask = "[2001:ad6:1234::]/56";
 	addr = "2001:ad6:1234:5678:9abc::";
 
-	rc = spdk_iscsi_tgt_node_allow_ipv6(netmask, addr);
-	CU_ASSERT(rc == 0);
+	result = spdk_iscsi_tgt_node_allow_ipv6(netmask, addr);
+	CU_ASSERT(result == false);
 
-	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
-	CU_ASSERT(rc == 0);
+	result = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	CU_ASSERT(result == false);
 }
 
 static void
 allow_ipv4_allowed(void)
 {
-	int rc;
+	bool result;
 	char *netmask;
 	char *addr;
 
 	netmask = "192.168.2.0/24";
 	addr = "192.168.2.1";
 
-	rc = spdk_iscsi_tgt_node_allow_ipv4(netmask, addr);
-	CU_ASSERT(rc != 0);
+	result = spdk_iscsi_tgt_node_allow_ipv4(netmask, addr);
+	CU_ASSERT(result == true);
 
-	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
-	CU_ASSERT(rc != 0);
+	result = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	CU_ASSERT(result == true);
 }
 
 static void
 allow_ipv4_denied(void)
 {
-	int rc;
+	bool result;
 	char *netmask;
 	char *addr;
 
 	netmask = "192.168.2.0";
 	addr  = "192.168.2.1";
 
-	rc = spdk_iscsi_tgt_node_allow_ipv4(netmask, addr);
-	CU_ASSERT(rc == 0);
+	result = spdk_iscsi_tgt_node_allow_ipv4(netmask, addr);
+	CU_ASSERT(result == false);
 
-	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
-	CU_ASSERT(rc == 0);
+	result = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	CU_ASSERT(result == false);
 }
 
 static void
@@ -187,7 +187,7 @@ node_access_allowed(void)
 	char *initiators[] = {"iqn.2017-10.spdk.io:0001"};
 	char *netmasks[] = {"192.168.2.0/24"};
 	char *iqn, *addr;
-	int rc;
+	bool result;
 
 	/* portal group initialization */
 	memset(&pg, 0, sizeof(struct spdk_iscsi_portal_grp));
@@ -223,9 +223,8 @@ node_access_allowed(void)
 	iqn = "iqn.2017-10.spdk.io:0001";
 	addr = "192.168.2.1";
 
-	rc = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
-	CU_ASSERT(rc == 1);
-
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == true);
 }
 
 static void
@@ -238,7 +237,7 @@ node_access_denied_by_empty_netmask(void)
 	struct spdk_iscsi_portal portal;
 	char *initiators[] = {"iqn.2017-10.spdk.io:0001"};
 	char *iqn, *addr;
-	int rc;
+	bool result;
 
 	/* portal group initialization */
 	memset(&pg, 0, sizeof(struct spdk_iscsi_portal_grp));
@@ -274,8 +273,8 @@ node_access_denied_by_empty_netmask(void)
 	iqn = "iqn.2017-10.spdk.io:0001";
 	addr = "192.168.3.1";
 
-	rc = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
-	CU_ASSERT(rc == 0);
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == false);
 
 }
 
