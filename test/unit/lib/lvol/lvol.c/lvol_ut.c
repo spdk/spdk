@@ -894,6 +894,7 @@ lvols_load(void)
 	strncpy(bs_opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
 	spdk_bs_init(&dev.bs_dev, &bs_opts, null_cb, NULL);
 	super_blob = calloc(1, sizeof(*super_blob));
+	SPDK_CU_ASSERT_FATAL(super_blob != NULL);
 	super_blob->id = 0x100;
 	spdk_blob_md_set_xattr(super_blob, "uuid", uuid, UUID_STRING_LEN);
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, super_blob, link);
@@ -904,16 +905,19 @@ lvols_load(void)
 	 *  to make sure they are unique.
 	 */
 	blob1 = calloc(1, sizeof(*blob1));
+	SPDK_CU_ASSERT_FATAL(blob1 != NULL);
 	blob1->id = 0x1;
 	spdk_blob_md_set_xattr(blob1, "uuid", uuid, UUID_STRING_LEN);
 	blob1->uuid[UUID_STRING_LEN - 2] = '1';
 
 	blob2 = calloc(1, sizeof(*blob2));
+	SPDK_CU_ASSERT_FATAL(blob2 != NULL);
 	blob2->id = 0x2;
 	spdk_blob_md_set_xattr(blob2, "uuid", uuid, UUID_STRING_LEN);
 	blob2->uuid[UUID_STRING_LEN - 2] = '2';
 
 	blob3 = calloc(1, sizeof(*blob3));
+	SPDK_CU_ASSERT_FATAL(blob3 != NULL);
 	blob3->id = 0x2;
 	spdk_blob_md_set_xattr(blob2, "uuid", uuid, UUID_STRING_LEN);
 	blob3->uuid[UUID_STRING_LEN - 2] = '3';
