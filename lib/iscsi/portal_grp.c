@@ -84,7 +84,20 @@ spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 		SPDK_ERRLOG("portal malloc error (%s, %s)\n", host, port);
 		return NULL;
 	}
-	p->host = strdup(host);
+
+	/* check and overwrite abbreviation of wildcard */
+	if (strcasecmp(host, "[*]") == 0) {
+		SPDK_WARNLOG("Please use \"[::]\" used as IPv6 wildcard\n");
+		SPDK_WARNLOG("Convert \"[*]\" to \"[::]\" forcefully\n");
+		p->host = strdup("[::]");
+	} else if (strcasecmp(host, "*") == 0) {
+		SPDK_WARNLOG("Please use \"0.0.0.0\" used as IPv4 wildcard\n");
+		SPDK_WARNLOG("Convert \"*\" to \"0.0.0.0\" forcefully\n");
+		p->host = strdup("0.0.0.0");
+	} else {
+		p->host = strdup(host);
+	}
+
 	p->port = strdup(port);
 	p->cpumask = cpumask;
 	p->sock = -1;
