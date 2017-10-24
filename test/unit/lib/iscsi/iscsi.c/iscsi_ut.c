@@ -51,12 +51,12 @@ spdk_iscsi_find_tgt_node(const char *target_name)
 	return NULL;
 }
 
-int
+bool
 spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 			   struct spdk_iscsi_tgt_node *target,
 			   const char *iqn, const char *addr)
 {
-	return 0;
+	return false;
 }
 
 int
