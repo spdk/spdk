@@ -119,10 +119,10 @@ allow_ipv6_allowed(void)
 	addr = "2001:ad6:1234:5678:9abc::";
 
 	rc = spdk_iscsi_tgt_node_allow_ipv6(netmask, addr);
-	CU_ASSERT(rc != 0);
+	CU_ASSERT(rc == 0);
 
 	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
-	CU_ASSERT(rc != 0);
+	CU_ASSERT(rc == 0);
 }
 
 static void
@@ -136,10 +136,10 @@ allow_ipv6_denied(void)
 	addr = "2001:ad6:1234:5678:9abc::";
 
 	rc = spdk_iscsi_tgt_node_allow_ipv6(netmask, addr);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc != 0);
 
 	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc != 0);
 }
 
 static void
@@ -153,10 +153,10 @@ allow_ipv4_allowed(void)
 	addr = "192.168.2.1";
 
 	rc = spdk_iscsi_tgt_node_allow_ipv4(netmask, addr);
-	CU_ASSERT(rc != 0);
+	CU_ASSERT(rc == 0);
 
 	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
-	CU_ASSERT(rc != 0);
+	CU_ASSERT(rc == 0);
 }
 
 static void
@@ -170,10 +170,10 @@ allow_ipv4_denied(void)
 	addr  = "192.168.2.1";
 
 	rc = spdk_iscsi_tgt_node_allow_ipv4(netmask, addr);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc != 0);
 
 	rc = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc != 0);
 }
 
 static void
@@ -224,7 +224,7 @@ node_access_allowed(void)
 	addr = "192.168.2.1";
 
 	rc = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
-	CU_ASSERT(rc == 1);
+	CU_ASSERT(rc == 0);
 
 }
 
@@ -275,7 +275,7 @@ node_access_denied_by_empty_netmask(void)
 	addr = "192.168.3.1";
 
 	rc = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc < 0);
 
 }
 
