@@ -47,6 +47,7 @@ struct spdk_lvol;
 
 /* Must include null terminator. */
 #define SPDK_LVS_NAME_MAX	64
+#define SPDK_LVOL_NAME_MAX	64
 
 struct spdk_lvs_opts {
 	uint32_t	cluster_sz;
@@ -68,7 +69,7 @@ int spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 int spdk_lvs_unload(struct spdk_lvol_store *lvol_store, spdk_lvs_op_complete cb_fn, void *cb_arg);
 int spdk_lvs_destroy(struct spdk_lvol_store *lvol_store, bool unmap_device,
 		     spdk_lvs_op_complete cb_fn, void *cb_arg);
-int spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
+int spdk_lvol_create(struct spdk_lvol_store *lvs, char *name, uint64_t sz,
 		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 void spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
 void spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
