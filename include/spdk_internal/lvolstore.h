@@ -96,7 +96,7 @@ struct spdk_lvol {
 	struct spdk_blob		*blob;
 	uint64_t			num_clusters;
 	spdk_blob_id			blob_id;
-	char				*name;
+	char				*old_name;
 	bool				close_only;
 	struct spdk_bdev		*bdev;
 	int				ref_count;

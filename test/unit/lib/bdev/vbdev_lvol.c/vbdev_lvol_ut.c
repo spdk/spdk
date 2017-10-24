@@ -183,7 +183,7 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *c
 	while (!TAILQ_EMPTY(&lvs->lvols)) {
 		lvol = TAILQ_FIRST(&lvs->lvols);
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
-		free(lvol->name);
+		free(lvol->old_name);
 		free(lvol);
 	}
 
@@ -251,7 +251,7 @@ void
 spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
-	free(lvol->name);
+	free(lvol->old_name);
 	free(lvol);
 	g_lvol = NULL;
 
@@ -372,8 +372,8 @@ _lvol_create(struct spdk_lvol_store *lvs)
 
 	lvol->lvol_store = lvs;
 	lvol->ref_count++;
-	lvol->name = spdk_sprintf_alloc("%s", "UNIT_TEST_UUID");
-	SPDK_CU_ASSERT_FATAL(lvol->name != NULL);
+	lvol->old_name = spdk_sprintf_alloc("%s", "UNIT_TEST_UUID");
+	SPDK_CU_ASSERT_FATAL(lvol->old_name != NULL);
 
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 
@@ -638,11 +638,11 @@ ut_lvol_resize(void)
 
 	g_base_bdev->ctxt = g_lvol;
 
-	g_base_bdev->name = spdk_sprintf_alloc("%s", g_lvol->name);
+	g_base_bdev->name = spdk_sprintf_alloc("%s", g_lvol->old_name);
 	SPDK_CU_ASSERT_FATAL(g_base_bdev->name != NULL);
 
 	/* Successful lvol resize */
-	rc = vbdev_lvol_resize(g_lvol->name, 20, vbdev_lvol_resize_complete, NULL);
+	rc = vbdev_lvol_resize(g_lvol->old_name, 20, vbdev_lvol_resize_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_base_bdev->blockcnt == 20 * g_cluster_size / g_base_bdev->blocklen);
 
@@ -651,9 +651,9 @@ ut_lvol_resize(void)
 	CU_ASSERT(rc != 0);
 
 	/* Resize with correct bdev name, but wrong lvol name */
-	free(g_lvol->name);
-	g_lvol->name = strdup("wrong name");
-	SPDK_CU_ASSERT_FATAL(g_lvol->name != NULL);
+	free(g_lvol->old_name);
+	g_lvol->old_name = strdup("wrong name");
+	SPDK_CU_ASSERT_FATAL(g_lvol->old_name != NULL);
 	rc = vbdev_lvol_resize(g_base_bdev->name, 20, vbdev_lvol_resize_complete, NULL);
 	CU_ASSERT(rc != 0);
 
