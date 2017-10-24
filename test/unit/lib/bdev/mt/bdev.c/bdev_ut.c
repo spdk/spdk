@@ -61,9 +61,27 @@ struct ut_bdev g_bdev;
 struct spdk_bdev_desc *g_desc;
 bool g_teardown_done = false;
 
+void
+spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
+		     uint64_t period_microseconds)
+{
+}
+
+void
+spdk_poller_unregister(struct spdk_poller **ppoller)
+{
+}
+
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
 static int
 stub_create_ch(void *io_device, void *ctx_buf)
 {
+	printf("%s here\n", __func__);
 	struct ut_bdev_channel *ch = ctx_buf;
 
 	TAILQ_INIT(&ch->outstanding_io);
@@ -86,6 +104,8 @@ stub_destroy_ch(void *io_device, void *ctx_buf)
 static struct spdk_io_channel *
 stub_get_io_channel(void *ctx)
 {
+	printf("%s here\n", __func__);
+
 	return spdk_get_io_channel(&g_bdev.io_target);
 }
 
@@ -437,6 +457,96 @@ io_during_reset(void)
 }
 
 static void
+io_during_qos(void)
+{
+	struct spdk_io_channel *io_ch[2];
+	struct spdk_bdev_channel *bdev_ch[2];
+	enum spdk_bdev_io_status status0, status1, status_reset;
+	int rc;
+
+	setup_test();
+
+	/*
+	 * First test normal case - submit an I/O on each of two channels (with no resets)
+	 *  and verify they complete successfully.
+	 */
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	spdk_bdev_enable_qos(io_ch[0]);
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_done, &status0);
+	CU_ASSERT(rc == 0);
+
+	set_thread(1);
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
+	CU_ASSERT(bdev_ch[1]->flags == 0);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_done, &status1);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
+
+	set_thread(0);
+	stub_complete_io(0);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	set_thread(1);
+	stub_complete_io(0);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/*
+	 * Now submit a reset, and leave it pending while we submit I?O on two different
+	 *  channels.  These I/O should be failed by the bdev layer since the reset is in
+	 *  progress.
+	 */
+	set_thread(0);
+	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_reset(g_desc, io_ch[0], io_during_reset_done, &status_reset);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
+	CU_ASSERT(bdev_ch[1]->flags == 0);
+	poll_threads();
+	CU_ASSERT(bdev_ch[0]->flags & BDEV_CH_RESET_IN_PROGRESS);
+	CU_ASSERT(bdev_ch[1]->flags & BDEV_CH_RESET_IN_PROGRESS);
+
+	set_thread(0);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_done, &status0);
+	CU_ASSERT(rc == 0);
+
+	set_thread(1);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_done, &status1);
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * A reset is in progress so these read I/O should complete with failure.  Note that we
+	 *  need to poll_threads() since I/O completed inline have their completion deferred.
+	 */
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_FAILED);
+
+	set_thread(0);
+	stub_complete_io(0);
+	spdk_put_io_channel(io_ch[0]);
+	set_thread(1);
+	spdk_put_io_channel(io_ch[1]);
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	teardown_test();
+}
+
+static void
 enomem_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	enum spdk_bdev_io_status *status = cb_arg;
@@ -573,6 +683,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL ||
 		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL ||
 		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL ||
+		CU_add_test(suite, "io_during_qos", io_during_qos) == NULL ||
 		CU_add_test(suite, "enomem", enomem) == NULL
 	) {
 		CU_cleanup_registry();
