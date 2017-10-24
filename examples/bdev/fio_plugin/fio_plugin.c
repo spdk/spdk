@@ -286,6 +286,43 @@ spdk_fio_init_env(struct thread_data *td)
 	return 0;
 }
 
+bool g_finish_done = false;
+
+static void
+spdk_fio_module_finish_done(void)
+{
+	g_finish_done = true;
+}
+
+static void
+spdk_fio_finish_env(struct thread_data *td)
+{
+	int				rc;
+
+	/* Create an SPDK thread temporarily */
+	rc = spdk_fio_init_thread(td);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to create finish thread\n");
+		return;
+	}
+
+	spdk_bdev_finish(spdk_fio_module_finish_done);
+
+	while (!g_finish_done) {
+		spdk_fio_getevents(td, 0, 128, NULL);
+	}
+	g_finish_done = false;
+
+	spdk_copy_engine_finish(spdk_fio_module_finish_done);
+
+	while (!g_finish_done) {
+		spdk_fio_getevents(td, 0, 128, NULL);
+	}
+
+	/* Destroy the temporary SPDK thread */
+	spdk_fio_cleanup(td);
+}
+
 /* Called for each thread to fill in the 'real_file_size' member for
  * each file associated with this thread. This is called prior to
  * the init operation (spdk_fio_init()) below. This call will occur
@@ -390,6 +427,7 @@ spdk_fio_cleanup(struct thread_data *td)
 {
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct spdk_fio_target *target, *tmp;
+	static bool env_finished = false;
 
 	g_thread = NULL;
 
@@ -398,6 +436,11 @@ spdk_fio_cleanup(struct thread_data *td)
 		spdk_put_io_channel(target->ch);
 		spdk_bdev_close(target->desc);
 		free(target);
+	}
+
+	if (!env_finished) {
+		spdk_fio_finish_env(td);
+		env_finished = true;
 	}
 
 	spdk_free_thread();
