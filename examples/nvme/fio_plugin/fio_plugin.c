@@ -37,6 +37,7 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/log.h"
+#include "spdk/event.h"
 
 #include "config-host.h"
 #include "fio.h"
