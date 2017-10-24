@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2f755da_9b40486b",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-24T16:37:00Z",
+      "side": 1,
+      "message": "hight \u003d\u003e high",
+      "revId": "7c56580b03fee5b231c97c7884819a4dc405d614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00041e33_d574f1fe",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-24T16:37:00Z",
+      "side": 1,
+      "message": "inefficient",
+      "revId": "7c56580b03fee5b231c97c7884819a4dc405d614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "987aeed4_3be64304",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-24T16:37:00Z",
+      "side": 1,
+      "message": "effectively,  of course",
+      "revId": "7c56580b03fee5b231c97c7884819a4dc405d614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
