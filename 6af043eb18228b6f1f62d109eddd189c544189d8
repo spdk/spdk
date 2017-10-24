@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e54a3b9_57257f02",
+        "filename": "doc/lvol.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-24T21:09:58Z",
+      "side": 1,
+      "message": "\"A logical volume\" should read \"The Logical Volumes Library\". and the later add \"The\" in front of \"SPDK Logical...\"",
+      "revId": "6af043eb18228b6f1f62d109eddd189c544189d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6f01beb_0e23615d",
+        "filename": "doc/lvol.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-24T21:09:58Z",
+      "side": 1,
+      "message": "\"A logical volume store uses the super blob feature of blobstore to...\"",
+      "revId": "6af043eb18228b6f1f62d109eddd189c544189d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f437ba0_3a785b66",
+        "filename": "doc/lvol.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-24T21:09:58Z",
+      "side": 1,
+      "message": "\"lvol store\" --\u003e lvolstore",
+      "revId": "6af043eb18228b6f1f62d109eddd189c544189d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9effed4_f4d00f86",
+        "filename": "doc/lvol.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-24T21:09:58Z",
+      "side": 1,
+      "message": "Blockdev I think should either be blockdev, \"block device\" or \"block dev\" unless we are always capitalizing it this way",
+      "revId": "6af043eb18228b6f1f62d109eddd189c544189d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "476bdcfc_26b4bd89",
+        "filename": "doc/lvol.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-24T21:09:58Z",
+      "side": 1,
+      "message": "just a nit, I\u0027d avoid the word \"yet\" as it implies incompleteness and commitment to do this soon",
+      "revId": "6af043eb18228b6f1f62d109eddd189c544189d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecb0cd8c_40e441b9",
+        "filename": "doc/lvol.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-24T21:09:58Z",
+      "side": 1,
+      "message": "\"is currently not possible\" --\u003e \"is not supported\"",
+      "revId": "6af043eb18228b6f1f62d109eddd189c544189d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f296077_9de313f2",
+        "filename": "doc/lvol.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-24T21:09:58Z",
+      "side": 1,
+      "message": "delete the \"More work...\" sentence as this is clear based on the first two sentences.",
+      "revId": "6af043eb18228b6f1f62d109eddd189c544189d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
