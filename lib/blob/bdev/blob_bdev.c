@@ -227,7 +227,7 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 	b->bs_dev.readv = bdev_blob_readv;
 	b->bs_dev.writev = bdev_blob_writev;
 	b->bs_dev.write_zeroes = bdev_blob_write_zeroes;
-	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+	if (0 && spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
 		b->bs_dev.unmap = bdev_blob_unmap;
 	} else {
 		/*

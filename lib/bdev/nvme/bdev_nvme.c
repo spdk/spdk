@@ -459,6 +459,8 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		return cdata->oncs.dsm;
 
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		return false;
+#if 0
 		cdata = spdk_nvme_ctrlr_get_data(nbdev->nvme_ctrlr->ctrlr);
 		/*
 		 * If an NVMe controller guarantees reading unallocated blocks returns zero,
@@ -474,6 +476,7 @@ bdev_nvme_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 		 * Until this is resolved, we only claim support for write_zeroes if deallocated blocks return 0's when read.
 		 */
 		return false;
+#endif
 
 	default:
 		return false;
