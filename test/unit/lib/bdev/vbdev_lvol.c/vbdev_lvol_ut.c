@@ -381,8 +381,8 @@ _lvol_create(struct spdk_lvol_store *lvs)
 }
 
 int
-spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz, spdk_lvol_op_with_handle_complete cb_fn,
-		 void *cb_arg)
+spdk_lvol_create(struct spdk_lvol_store *lvs, char *name, size_t sz,
+		 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol *lvol;
 
