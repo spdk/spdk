@@ -113,12 +113,13 @@ static int
 vhost_user_read(int fd, struct vhost_user_msg *msg)
 {
 	uint32_t valid_flags = VHOST_USER_REPLY_MASK | VHOST_USER_VERSION;
-	int ret, sz_hdr = VHOST_USER_HDR_SIZE, sz_payload;
+	ssize_t ret;
+	size_t sz_hdr = VHOST_USER_HDR_SIZE, sz_payload;
 
 	ret = recv(fd, (void *)msg, sz_hdr, 0);
-	if (ret < sz_hdr) {
-		SPDK_WARNLOG("Failed to recv msg hdr: %d instead of %d.\n",
-			     ret, sz_hdr);
+	if ((size_t)ret != sz_hdr) {
+		SPDK_WARNLOG("Failed to recv msg hdr: %zd instead of %zu.\n",
+			    ret, sz_hdr);
 		goto fail;
 	}
 
@@ -132,8 +133,8 @@ vhost_user_read(int fd, struct vhost_user_msg *msg)
 	sz_payload = msg->size;
 	if (sz_payload) {
 		ret = recv(fd, (void *)((char *)msg + sz_hdr), sz_payload, 0);
-		if (ret < sz_payload) {
-			SPDK_WARNLOG("Failed to recv msg payload: %d instead of %"PRIu32".\n",
+		if ((size_t)ret != sz_payload) {
+			SPDK_WARNLOG("Failed to recv msg payload: %zd instead of %"PRIu32".\n",
 				     ret, msg->size);
 			goto fail;
 		}
