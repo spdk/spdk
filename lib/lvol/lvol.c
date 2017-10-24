@@ -842,6 +842,13 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		goto invalid;
 	}
 
+	lvolerrno = spdk_blob_md_set_xattr(blob, "name", lvol->name,
+					   strnlen(lvol->name, SPDK_LVOL_NAME_MAX) + 1);
+	if (lvolerrno < 0) {
+		spdk_bs_md_close_blob(&blob, _spdk_lvol_destroy_cb, lvol);
+		goto invalid;
+	}
+
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 
 	spdk_bs_md_sync_blob(blob, _spdk_lvol_sync_cb, req);
@@ -874,18 +881,36 @@ _spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 }
 
 int
-spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
+spdk_lvol_create(struct spdk_lvol_store *lvs, char *name, uint64_t sz,
 		 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
 	struct spdk_blob_store *bs;
-	struct spdk_lvol *lvol;
+	struct spdk_lvol *lvol, *tmp;
 	uint64_t num_clusters, free_clusters;
 
 	if (lvs == NULL) {
 		SPDK_ERRLOG("lvol store does not exist\n");
 		return -ENODEV;
 	}
+
+	if (name == NULL || strnlen(name, SPDK_LVS_NAME_MAX) == 0) {
+		SPDK_ERRLOG("No name specified.\n");
+		return -EINVAL;
+	}
+
+	if (strnlen(name, SPDK_LVOL_NAME_MAX) == SPDK_LVOL_NAME_MAX) {
+		SPDK_ERRLOG("Name has no null terminator.\n");
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH(tmp, &lvs->lvols, link) {
+		if (!strncmp(name, tmp->name, SPDK_LVOL_NAME_MAX)) {
+			SPDK_ERRLOG("lvol with name %s already exists\n", name);
+			return -EINVAL;
+		}
+	}
+
 	bs = lvs->blobstore;
 
 	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
@@ -914,6 +939,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
 	lvol->lvol_store = lvs;
 	lvol->num_clusters = num_clusters;
 	lvol->close_only = false;
+	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
 	req->lvol = lvol;
 
 	spdk_bs_md_create_blob(lvs->blobstore, _spdk_lvol_create_cb, req);
