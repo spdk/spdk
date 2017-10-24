@@ -631,6 +631,16 @@ int spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
+ * Enable the qos to the bdev on the given channel.
+ *
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param max_ios_per_ms QoS rate limiting. Max IOs per millisecond.
+ *
+ * \return 0 on success. Or negated errno on failure.
+ */
+int spdk_bdev_enable_qos(struct spdk_io_channel *ch, uint64_t max_ios_per_ms);
+
+/**
  * Submit an NVMe Admin command to the bdev. This passes directly through
  * the block layer to the device. Support for NVMe passthru is optional,
  * indicated by calling spdk_bdev_io_type_supported().
