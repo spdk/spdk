@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3dab19_480fd60d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 110
+      },
+      "lineNbr": 700,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-24T08:27:51Z",
+      "side": 1,
+      "message": "I know that this is working because I looked into SPDK_GET_BDEV_MODULE() but for someone who is looking at this first time this look like use-after-free.",
+      "range": {
+        "startLine": 700,
+        "startChar": 53,
+        "endLine": 700,
+        "endChar": 57
+      },
+      "revId": "551f0c52326ae52a4178ec9dbbaa50943da181f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
