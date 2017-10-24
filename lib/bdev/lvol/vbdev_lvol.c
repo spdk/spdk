@@ -574,6 +574,8 @@ vbdev_lvol_create(uuid_t uuid, size_t sz,
 {
 	struct spdk_lvol_with_handle_req *req;
 	struct spdk_lvol_store *lvs;
+	uuid_t lvol_uuid;
+	char name[SPDK_LVOL_NAME_MAX];
 	int rc;
 
 	lvs = vbdev_get_lvol_store_by_uuid(uuid);
@@ -588,7 +590,14 @@ vbdev_lvol_create(uuid_t uuid, size_t sz,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	rc = spdk_lvol_create(lvs, sz, _vbdev_lvol_create_cb, req);
+	/*
+	 * This is temporary until the RPCs take a name parameter for creating
+	 *  an lvol.
+	 */
+	uuid_generate(lvol_uuid);
+	uuid_unparse(lvol_uuid, name);
+
+	rc = spdk_lvol_create(lvs, name, sz, _vbdev_lvol_create_cb, req);
 	if (rc != 0) {
 		free(req);
 	}
