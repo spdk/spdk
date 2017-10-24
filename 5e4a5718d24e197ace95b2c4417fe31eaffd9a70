@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17e8f1dd_c4ba8dff",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-24T13:27:16Z",
+      "side": 1,
+      "message": "Does this change affect anything in UTs?",
+      "range": {
+        "startLine": 55,
+        "startChar": 55,
+        "endLine": 55,
+        "endChar": 56
+      },
+      "revId": "5e4a5718d24e197ace95b2c4417fe31eaffd9a70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
