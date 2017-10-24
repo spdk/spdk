@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75eec2ac_3adfef8b",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1002,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-24T12:49:48Z",
+      "side": 1,
+      "message": "What about a case when we are doing spdk_lvol_close on already closed lvol (ref_count \u003d\u003d 0) ?",
+      "range": {
+        "startLine": 1002,
+        "startChar": 2,
+        "endLine": 1002,
+        "endChar": 2
+      },
+      "revId": "ef3785e29d3177a871bcc429cb0d7d9ada337c1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
