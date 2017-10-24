@@ -42,6 +42,12 @@
 
 SPDK_DECLARE_BDEV_MODULE(vbdev_ut);
 
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
 void
 spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
 			 int *sc, int *sk, int *asc, int *ascq)

@@ -198,6 +198,9 @@ struct spdk_bdev {
 	/** Number of blocks */
 	uint64_t blockcnt;
 
+	/** QoS in second */
+	uint64_t ios_per_sec;
+
 	/** write cache enabled, not used at the moment */
 	int write_cache;
 
