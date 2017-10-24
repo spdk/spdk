@@ -1,0 +1,251 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13792c59_e83b7e27",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T09:43:48Z",
+      "side": 1,
+      "message": "I think we don\u0027t need a separate switch for that",
+      "range": {
+        "startLine": 130,
+        "startChar": 30,
+        "endLine": 130,
+        "endChar": 43
+      },
+      "revId": "722a847367da5fde250c4489e57d74cde5fcc07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d97379c0_5a2e3b8d",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T09:43:48Z",
+      "side": 1,
+      "message": "Don\u0027t think it\u0027s needed",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 10
+      },
+      "revId": "722a847367da5fde250c4489e57d74cde5fcc07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e1abdca_abdd38f3",
+        "filename": "test/lvol/lvol.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T09:43:48Z",
+      "side": 1,
+      "message": "I think it\u0027s better if we stick to single way of starting the tests",
+      "range": {
+        "startLine": 109,
+        "startChar": 0,
+        "endLine": 114,
+        "endChar": 2
+      },
+      "revId": "722a847367da5fde250c4489e57d74cde5fcc07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b01d8322_3486553c",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T09:43:48Z",
+      "side": 1,
+      "message": "Unrelated change.\nIf you\u0027d like to refactor some code then please do it in a separate commit, so taht we can keep commit sizes as small as possible for better readability and easier review.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 20
+      },
+      "revId": "722a847367da5fde250c4489e57d74cde5fcc07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99999c4a_e972593c",
+        "filename": "test/lvol/lvol_test.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T09:43:48Z",
+      "side": 1,
+      "message": "I think above commit applies here as well.",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 42
+      },
+      "revId": "722a847367da5fde250c4489e57d74cde5fcc07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c52c2f8d_5902b963",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T09:43:48Z",
+      "side": 1,
+      "message": "unrelated new line",
+      "revId": "722a847367da5fde250c4489e57d74cde5fcc07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc5e3070_d3b35cf2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T09:43:48Z",
+      "side": 1,
+      "message": "I suppose this is rather a refactoring step rather than related to tasting tests, so I think it\u0027d be better to put this in a separate commit.",
+      "range": {
+        "startLine": 81,
+        "startChar": 9,
+        "endLine": 81,
+        "endChar": 36
+      },
+      "revId": "722a847367da5fde250c4489e57d74cde5fcc07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "797ae840_93e7f83c",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T09:43:48Z",
+      "side": 1,
+      "message": "Do we need an entirely new class for this test?\nIf it\u0027s a must-have - why not inherit from TestCases class?",
+      "range": {
+        "startLine": 416,
+        "startChar": 0,
+        "endLine": 416,
+        "endChar": 31
+      },
+      "revId": "722a847367da5fde250c4489e57d74cde5fcc07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33783961_f17e97b2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 450,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T09:43:48Z",
+      "side": 1,
+      "message": "Not sure if we really need loop. Most of it\u0027s contents are run only once in a two-pass loop, so...",
+      "range": {
+        "startLine": 450,
+        "startChar": 8,
+        "endLine": 450,
+        "endChar": 32
+      },
+      "revId": "722a847367da5fde250c4489e57d74cde5fcc07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1ee49dc_5e76e599",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T09:43:48Z",
+      "side": 1,
+      "message": "Are we sure it\u0027s enough time? What if it takes more time than that to run vhost app?",
+      "range": {
+        "startLine": 457,
+        "startChar": 16,
+        "endLine": 457,
+        "endChar": 24
+      },
+      "revId": "722a847367da5fde250c4489e57d74cde5fcc07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "417ac331_8fc93b96",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-24T09:43:48Z",
+      "side": 1,
+      "message": "before",
+      "range": {
+        "startLine": 465,
+        "startChar": 66,
+        "endLine": 465,
+        "endChar": 71
+      },
+      "revId": "722a847367da5fde250c4489e57d74cde5fcc07e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
