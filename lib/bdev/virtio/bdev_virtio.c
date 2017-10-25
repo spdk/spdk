@@ -878,7 +878,7 @@ scan_target(struct virtio_scsi_scan_base *base)
 
 	cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
 	cdb->opcode = SPDK_SPC_INQUIRY;
-	cdb->alloc_len[1] = 255;
+	to_be16(cdb->alloc_len, BDEV_VIRTIO_SCAN_PAYLOAD_SIZE);
 
 	base->retries = SCAN_REQUEST_RETRIES;
 	return virtio_xmit_pkt(base->vq, vreq);
