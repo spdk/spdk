@@ -61,7 +61,7 @@
 #define VIRTIO_SCSI_REQUESTQ	2
 
 static int bdev_virtio_initialize(void);
-static void bdev_virtio_finish(void);
+static void bdev_virtio_finish(void *ctx);
 
 struct virtio_scsi_io_ctx {
 	struct virtio_req 		vreq;
@@ -997,7 +997,7 @@ out:
 	return rc;
 }
 
-static void bdev_virtio_finish(void)
+static void bdev_virtio_finish(void *ctx)
 {
 	struct virtio_dev *vdev, *next;
 	struct virtqueue *vq;
@@ -1017,6 +1017,7 @@ static void bdev_virtio_finish(void)
 		}
 		virtio_dev_free(vdev);
 	}
+	spdk_bdev_module_finish_done();
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio", SPDK_TRACE_VIRTIO)
