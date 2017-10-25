@@ -16,6 +16,24 @@
       "revId": "c4e2d15aca09706890be07b7d5b48f3bf0b59bec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7576c16_14e55892",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-25T14:22:21Z",
+      "side": 1,
+      "message": "Test Pool failure was due to issue that you\u0027ve fixed in this patch https://review.gerrithub.io/#/c/383431/\nThanks !\n\nBesides that I\u0027ve added asserts in subsystem.c to check if core is the same after each subsystem finishes. This suggestion was great.",
+      "parentUuid": "839213f4_6046ba52",
+      "revId": "c4e2d15aca09706890be07b7d5b48f3bf0b59bec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
