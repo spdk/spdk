@@ -112,6 +112,12 @@ spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, 
 		return;
 	}
 
+	if (lvol->action_in_progress == true) {
+		SPDK_ERRLOG("Cannot open lvol - operations on lvol pending\n");
+		cb_fn(cb_arg, lvol, -EBUSY);
+		return;
+	}
+
 	if (lvol->ref_count > 0) {
 		lvol->ref_count++;
 		cb_fn(cb_arg, lvol, 0);
@@ -602,8 +608,13 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	}
 
 	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
-		if (lvol->ref_count != 0) {
+		if (lvol->action_in_progress == true) {
+			SPDK_ERRLOG("Cannot unload lvol store - operations on lvols pending\n");
+			cb_fn(cb_arg, -EBUSY);
+			return -EBUSY;
+		} else if (lvol->ref_count != 0) {
 			SPDK_ERRLOG("Lvols still open on lvol store\n");
+			cb_fn(cb_arg, -EBUSY);
 			return -EBUSY;
 		}
 	}
@@ -679,8 +690,13 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, bool unmap_device, spdk_lvs_op_com
 	}
 
 	TAILQ_FOREACH_SAFE(iter_lvol, &lvs->lvols, link, tmp) {
-		if (iter_lvol->ref_count != 0) {
+		if (iter_lvol->action_in_progress == true) {
+			SPDK_ERRLOG("Cannot destroy lvol store - operations on lvols pending\n");
+			cb_fn(cb_arg, -EBUSY);
+			return -EBUSY;
+		} else if (iter_lvol->ref_count != 0) {
 			SPDK_ERRLOG("Lvols still open on lvol store\n");
+			cb_fn(cb_arg, -EBUSY);
 			return -EBUSY;
 		}
 	}
@@ -730,7 +746,9 @@ _spdk_lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 		}
 	}
 
-	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol %s closed\n", lvol->old_name) ;
+	lvol->action_in_progress = false;
+
+	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol %s closed\n", lvol->old_name);
 
 	if (lvol->lvol_store->destruct_req && all_lvols_closed == true) {
 		spdk_lvs_unload(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
@@ -1025,6 +1043,8 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 		return;
 	}
 
+	lvol->action_in_progress = true;
+
 	req = calloc(1, sizeof(*req));
 	if (!req) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
@@ -1070,6 +1090,8 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
+
+	lvol->action_in_progress = true;
 
 	req = calloc(1, sizeof(*req));
 	if (!req) {
