@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc11172e_f3d260fa",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 562,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-25T16:52:06Z",
+      "side": 1,
+      "message": "I think this should be changed just like in the scan_target_finish() function.\nIf target scan is aborted for rpc-added device, the module_init_done for bdev_virtio module might be called for a second time. it will trigger an assert() there.",
+      "range": {
+        "startLine": 560,
+        "startChar": 1,
+        "endLine": 562,
+        "endChar": 2
+      },
+      "revId": "c39b912233f2c14d96325713a400548e1dc73f31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8c6c1c9_0a76e88a",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_user/virtio_user_dev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-25T16:52:06Z",
+      "side": 1,
+      "message": "why was this changed? it seems like you\u0027re passing only uint32_t here. queue_size is also being assigned right away to dev-\u003equeue_size, which is uint32_t as well.",
+      "range": {
+        "startLine": 170,
+        "startChar": 84,
+        "endLine": 170,
+        "endChar": 92
+      },
+      "revId": "c39b912233f2c14d96325713a400548e1dc73f31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
