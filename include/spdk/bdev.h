@@ -124,26 +124,81 @@ typedef void (*spdk_bdev_poller_start_cb)(struct spdk_bdev_poller **ppoller,
 		uint64_t period_microseconds);
 typedef void (*spdk_bdev_poller_stop_cb)(struct spdk_bdev_poller **ppoller);
 
+/**
+ * Initialize the bdev module.
+ *
+ * \param cb_fn Called when the initialization is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ * \param start_poller_fn This function is called to request starting the poller.
+ * \param stop_poller_fn This function is called to request stopping the poller.
+ */
 void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 			  spdk_bdev_poller_start_cb start_poller_fn,
 			  spdk_bdev_poller_stop_cb stop_poller_fn);
+
+/**
+ * Perform cleanup work when removing the registered bdev module.
+ *
+ * \param cb_fn Called when the removal is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
 void spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg);
+
+/**
+ * Get the configuration options for the registered bdev module.
+ *
+ * \param fp The pointer to a file containing the configuration options.
+ */
 void spdk_bdev_config_text(FILE *fp);
 
+/**
+ * Get block device by block device name.
+ *
+ * \param bdev_name The name of the block device.
+ * \return Block device associated with the name.
+ */
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
 
 /**
- * These two functions iterate the full list of bdevs, including bdevs
- *  that have virtual bdevs on top of them.
+ * Get the first bdev in the linklist.
+ *
+ * This function will traverse the full list of bdevs, including bdevs that have virtual
+ * bdevs on top of them, then get the first bdev.
+ *
+ * \return The first bdev in the linklist.
  */
 struct spdk_bdev *spdk_bdev_first(void);
+
+/**
+ * Get the next bdev in the linklist.
+ *
+ * This function will traverse the full list of bdevs, including bdevs that have virtual
+ * bdevs on top of them, then get the next bdev.
+ *
+ * \param prev The previous bdev.
+ * \return The next bdev in the linklist.
+ */
 struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
 
 /**
- * These two functions only iterate over bdevs which have no virtual
- *  bdevs on top of them.
+ * Get the first bdev without virtual bdevs on top.
+ *
+ * This function only traverses over bdevs which have no virtual bdevs on top of them,
+ * then get the first bdev.
+ *
+ * \return The first bdev without virtual bdevs on top.
  */
 struct spdk_bdev *spdk_bdev_first_leaf(void);
+
+/**
+ * Get the next bdev without virtual bdevs on top.
+ *
+ * This function only traverses over bdevs which have no virtual bdevs on top of them,
+ * then get the next bdev.
+ *
+ * \param prev The previous bdev.
+ * \return The next bdev without virtual bdevs on top.
+ */
 struct spdk_bdev *spdk_bdev_next_leaf(struct spdk_bdev *prev);
 
 /**
@@ -174,8 +229,23 @@ void spdk_bdev_close(struct spdk_bdev_desc *desc);
  */
 struct spdk_bdev *spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc);
 
+/**
+ * Check whether the block device supports the I/O type.
+ *
+ * \param bdev Block device to check.
+ * \param io_type The specific I/O type like read, write, flush, unmap.
+ * \return true if support, false otherwise.
+ */
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 
+/**
+ * Output driver-specific configuration to a JSON stream.
+ *
+ * The JSON write context will be Initialized with an open object, so the bdev
+ * driver should write a name(based on the driver name) followed by a JSON value
+ * (most likely another nested object).
+ *
+ */
 int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
 /**
