@@ -124,12 +124,33 @@ typedef void (*spdk_bdev_poller_start_cb)(struct spdk_bdev_poller **ppoller,
 		uint64_t period_microseconds);
 typedef void (*spdk_bdev_poller_stop_cb)(struct spdk_bdev_poller **ppoller);
 
+/**
+ * Initialize a block device.
+ *
+ * \param cb_fn Callback function for initializing block device.
+ * \param cb_arg Argument passed to function cb_fn.
+ * \param start_poller_fn Callback function when poller starts.
+ * \param stop_poller_fn Callback function when poller stop.
+ */
 void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 			  spdk_bdev_poller_start_cb start_poller_fn,
 			  spdk_bdev_poller_stop_cb stop_poller_fn);
+
 void spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg);
+
+/**
+ * Get the configuration options for modules registered by the block device.
+ *
+ * \param fp The pointer of a file containing the configuration options.
+ */
 void spdk_bdev_config_text(FILE *fp);
 
+/**
+ * Get block device by block device name.
+ *
+ * \param bdev_name The name of block device.
+ * \return Block device associated with the name.
+ */
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
 
 /**
@@ -174,8 +195,18 @@ void spdk_bdev_close(struct spdk_bdev_desc *desc);
  */
 struct spdk_bdev *spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc);
 
+/**
+ * Check whether the block device supports the I/O type.
+ *
+ * \param bdev Block device to be checked.
+ * \param io_type The specific I/O type like read, write, flush, unmap.
+ * \return true if support, false otherwise.
+ */
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 
+/**
+ * Output driver-specific configuration to a JSON stream.
+ */
 int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
 /**
