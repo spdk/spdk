@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22df1ea4_0242c0a4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-25T14:22:21Z",
+      "side": 1,
+      "message": "\"There\u0027s already an SPDK_BDEV_MODULE_ASYNC_INIT macro that marks the bdev as \"I need async init\". Could we do the same for bdev finish?\nThis would keep the API consistent\"\nI\u0027m not sure I see that the same.\nUnlike init there is dependency that some bdev modules finish in certain order. Even if similar macro would be added to finish (or just marking certain bdev module as async), I don\u0027t think the logic here would be any different.\n\nIf this requires more work to refine, both init and fini to similar API. I could work on it as a separate patch after this one. Darek, would that be fine with you ?",
+      "revId": "0c398b794d54c35eadae2b5f2319430d4de3664a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
