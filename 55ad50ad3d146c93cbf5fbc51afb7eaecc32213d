@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40d0e9fe_5d7766fe",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T14:16:39Z",
+      "side": 1,
+      "message": "See previous patch set comment",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 104
+      },
+      "revId": "55ad50ad3d146c93cbf5fbc51afb7eaecc32213d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8079582_6bc922c8",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T14:16:39Z",
+      "side": 1,
+      "message": "Sorry for not stating that before: you could also add a sentence why we additionally run write after trim",
+      "range": {
+        "startLine": 125,
+        "startChar": 54,
+        "endLine": 125,
+        "endChar": 60
+      },
+      "revId": "55ad50ad3d146c93cbf5fbc51afb7eaecc32213d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a514d1da_775c9d9f",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T14:16:39Z",
+      "side": 1,
+      "message": "these",
+      "range": {
+        "startLine": 126,
+        "startChar": 7,
+        "endLine": 126,
+        "endChar": 11
+      },
+      "revId": "55ad50ad3d146c93cbf5fbc51afb7eaecc32213d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "278bcd03_592319eb",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T14:16:39Z",
+      "side": 1,
+      "message": "We should explicitly state that \"zeroes\" are checked after performing trim.",
+      "range": {
+        "startLine": 126,
+        "startChar": 39,
+        "endLine": 126,
+        "endChar": 46
+      },
+      "revId": "55ad50ad3d146c93cbf5fbc51afb7eaecc32213d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
