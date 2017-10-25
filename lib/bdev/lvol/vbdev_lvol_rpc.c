@@ -41,6 +41,7 @@
 SPDK_LOG_REGISTER_TRACE_FLAG("lvolrpc", SPDK_TRACE_LVOL_RPC)
 
 struct rpc_construct_lvol_store {
+	char *name;
 	char *base_name;
 	uint32_t cluster_sz;
 };
@@ -54,6 +55,7 @@ free_rpc_construct_lvol_store(struct rpc_construct_lvol_store *req)
 static const struct spdk_json_object_decoder rpc_construct_lvol_store_decoders[] = {
 	{"base_name", offsetof(struct rpc_construct_lvol_store, base_name), spdk_json_decode_string},
 	{"cluster_sz", offsetof(struct rpc_construct_lvol_store, cluster_sz), spdk_json_decode_uint32, true},
+	{"name", offsetof(struct rpc_construct_lvol_store, name), spdk_json_decode_string, true},
 };
 
 static void
@@ -107,6 +109,11 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("missing name param\n");
 		rc = -EINVAL;
 		goto invalid;
+	}
+
+	if (req.name) {
+		/* Add friendly name logic here */
+
 	}
 
 	bdev = spdk_bdev_get_by_name(req.base_name);
@@ -215,18 +222,23 @@ invalid:
 SPDK_RPC_REGISTER("destroy_lvol_store", spdk_rpc_destroy_lvol_store)
 
 struct rpc_construct_lvol_bdev {
-	char *lvol_store_uuid;
+	char *uuid;
+	char *name;
 	uint64_t size;
 };
 
 static void
 free_rpc_construct_lvol_bdev(struct rpc_construct_lvol_bdev *req)
 {
-	free(req->lvol_store_uuid);
+	if (req->uuid)
+		free(req->uuid);
+	if (req->name)
+		free(req->name);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_lvol_bdev_decoders[] = {
-	{"lvol_store_uuid", offsetof(struct rpc_construct_lvol_bdev, lvol_store_uuid), spdk_json_decode_string},
+	{"uuid", offsetof(struct rpc_construct_lvol_bdev, uuid), spdk_json_decode_string, true},
+	{"name", offsetof(struct rpc_construct_lvol_bdev, name), spdk_json_decode_string, true},
 	{"size", offsetof(struct rpc_construct_lvol_bdev, size), spdk_json_decode_uint64},
 };
 
@@ -276,9 +288,16 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 		rc = -EINVAL;
 		goto invalid;
 	}
-
-	if (uuid_parse(req.lvol_store_uuid, lvol_store_uuid)) {
-		SPDK_INFOLOG(SPDK_TRACE_LVOL_RPC, "incorrect UUID '%s'\n", req.lvol_store_uuid);
+	if (req.uuid) {
+		if (uuid_parse(req.uuid, lvol_store_uuid)) {
+			SPDK_INFOLOG(SPDK_TRACE_LVOL_RPC, "incorrect UUID '%s'\n", req.uuid);
+			rc = -EINVAL;
+			goto invalid;
+		}
+	} else if (req.name) {
+		/* TODO: Add friendly names logic here */
+		/* Find lvol_store uuid based on name */
+	} else {
 		rc = -EINVAL;
 		goto invalid;
 	}
