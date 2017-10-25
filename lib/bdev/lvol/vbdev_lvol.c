@@ -202,7 +202,7 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		lvs->destruct_req->cb_arg = req;
 		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
 			lvol->close_only = true;
-			spdk_vbdev_unregister(lvol->bdev);
+			spdk_vbdev_unregister(lvol->bdev, NULL, NULL);
 		}
 	}
 
@@ -308,29 +308,58 @@ _vbdev_lvol_close_cb(void *cb_arg, int lvserrno)
 static void
 _vbdev_lvol_destroy_cb(void *cb_arg, int lvserrno)
 {
+	struct spdk_lvol_req *req = cb_arg;
+
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol destroyed\n");
+
+	if (req->cb_fn != NULL) {
+		req->cb_fn(req->cb_arg, lvserrno);
+	}
+	free(req);
 }
 
 static void
 _vbdev_lvol_destroy_after_close_cb(void *cb_arg, int lvserrno)
 {
-	struct spdk_lvol *lvol = cb_arg;
+	struct spdk_lvol_req *req = cb_arg;
+	struct spdk_lvol *lvol = req->lvol;
+
+	if (lvserrno != 0) {
+		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Could not close Lvol %s\n", lvol->name);
+		if (req->cb_fn != NULL) {
+			req->cb_fn(req->cb_arg, lvserrno);
+		}
+		free(req);
+		return;
+	}
 
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol %s closed, begin destroying\n", lvol->name);
-	spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, NULL);
+	spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, req);
 }
 
 static int
-vbdev_lvol_destruct(void *ctx)
+vbdev_lvol_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct spdk_lvol *lvol = ctx;
+	struct spdk_lvol_req *req;
 
 	assert(lvol != NULL);
 	free(lvol->bdev);
+
 	if (lvol->close_only) {
 		spdk_lvol_close(lvol, _vbdev_lvol_close_cb, NULL);
 	} else {
-		spdk_lvol_close(lvol, _vbdev_lvol_destroy_after_close_cb, lvol);
+		req = calloc(1, sizeof(*req));
+		if (!req) {
+			SPDK_ERRLOG("Cannot alloc memory for request\n");
+			return -ENOMEM;
+		}
+
+		req->cb_fn = cb_fn;
+		req->cb_arg = cb_arg;
+		req->lvol = lvol;
+
+		spdk_lvol_close(lvol, _vbdev_lvol_destroy_after_close_cb, req);
 	}
 
 	return 0;

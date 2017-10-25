@@ -350,8 +350,12 @@ bdev_virtio_get_io_channel(void *ctx)
 }
 
 static int
-bdev_virtio_destruct(void *ctx)
+bdev_virtio_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
+
 	return 0;
 }
 

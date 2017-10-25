@@ -173,7 +173,7 @@ bdev_aio_flush(struct file_disk *fdisk, struct bdev_aio_task *aio_task,
 }
 
 static int
-bdev_aio_destruct(void *ctx)
+bdev_aio_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct file_disk *fdisk = ctx;
 	int rc = 0;
@@ -184,6 +184,11 @@ bdev_aio_destruct(void *ctx)
 		SPDK_ERRLOG("bdev_aio_close() failed\n");
 	}
 	aio_free_disk(fdisk);
+
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, rc);
+	}
+
 	return rc;
 }
 
