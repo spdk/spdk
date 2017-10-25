@@ -233,8 +233,12 @@ bdev_rbd_flush(struct bdev_rbd *disk, struct spdk_io_channel *ch,
 }
 
 static int
-bdev_rbd_destruct(void *ctx)
+bdev_rbd_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
+
 	return 0;
 }
 

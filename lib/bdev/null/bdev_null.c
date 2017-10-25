@@ -60,13 +60,17 @@ bdev_null_get_ctx_size(void)
 }
 
 static int
-bdev_null_destruct(void *ctx)
+bdev_null_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct null_bdev *bdev = ctx;
 
 	TAILQ_REMOVE(&g_null_bdev_head, bdev, tailq);
 	free(bdev->bdev.name);
 	spdk_dma_free(bdev);
+
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
 
 	return 0;
 }

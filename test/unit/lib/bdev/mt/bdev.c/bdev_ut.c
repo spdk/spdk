@@ -89,8 +89,12 @@ stub_get_io_channel(void *ctx)
 }
 
 static int
-stub_destruct(void *ctx)
+stub_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
+
 	return 0;
 }
 
@@ -183,7 +187,7 @@ unregister_bdev(void)
 {
 	/* Handle any deferred messages. */
 	poll_threads();
-	spdk_bdev_unregister(&g_bdev.bdev);
+	spdk_bdev_unregister(&g_bdev.bdev, NULL, NULL);
 	spdk_io_device_unregister(&g_bdev.io_target, NULL);
 	memset(&g_bdev, 0, sizeof(g_bdev));
 }
