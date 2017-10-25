@@ -35,6 +35,8 @@
 
 #include <linux/virtio_scsi.h>
 
+#include <rte_interrupts.h>
+
 #include "spdk/mmio.h"
 
 #include "virtio_pci.h"
@@ -76,7 +78,10 @@ static void
 free_virtio_hw(struct virtio_dev *dev)
 {
 	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct rte_pci_device *pci_dev = (struct rte_pci_device *)hw->pci_dev;
 	unsigned i;
+
+	rte_intr_disable(&pci_dev->intr_handle);
 
 	for (i = 0; i < 6; ++i) {
 		if (hw->pci_bar[i].vaddr == NULL) {
@@ -512,9 +517,33 @@ vtpci_reset(struct virtio_dev *dev)
 	vtpci_ops(dev)->get_status(dev);
 }
 
+
+static int
+virtio_configure_intr(struct virtio_hw *hw)
+{
+	struct rte_pci_device *dev = (struct rte_pci_device *)hw->pci_dev;
+	uint16_t i;
+
+	if (rte_intr_enable(&dev->intr_handle) < 0) {
+		SPDK_ERRLOG("interrupt enable failed\n");
+		return -1;
+	}
+
+	vtpci_ops(&hw->vdev)->set_config_irq(&hw->vdev, VIRTIO_MSI_NO_VECTOR);
+
+	for (i = 0; i < hw->vdev.max_queues; ++i) {
+		vtpci_ops(&hw->vdev)->set_queue_irq(&hw->vdev, hw->vdev.vqs[i], VIRTIO_MSI_NO_VECTOR);
+	}
+
+	return 0;
+}
+
 void
 vtpci_reinit_complete(struct virtio_dev *dev)
 {
+	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+
+	virtio_configure_intr(hw);
 	vtpci_set_status(dev, VIRTIO_CONFIG_S_DRIVER_OK);
 }
 

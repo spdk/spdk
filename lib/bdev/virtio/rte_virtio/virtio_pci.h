@@ -41,6 +41,7 @@
 
 #include <rte_version.h>
 #include <rte_pci.h>
+#include <rte_interrupts.h>
 
 #include "spdk/env.h"
 #include "spdk/json.h"
@@ -115,6 +116,7 @@ struct virtio_hw {
 
 	struct virtio_pci_common_cfg *common_cfg;
 	struct spdk_pci_device *pci_dev;
+	struct rte_intr_handle *intr_handle;
 	struct virtio_scsi_config *dev_cfg;
 };
 
