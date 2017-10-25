@@ -80,7 +80,7 @@
  * Currently coalescing is not used by default.
  * Setting this to value > 0 here or by RPC will enable coalescing.
  */
-#define SPDK_VHOST_COALESCING_DELAY_BASE_US 0
+#define SPDK_VHOST_COALESCING_DELAY_BASE_US 45
 
 
 #define SPDK_VHOST_FEATURES ((1ULL << VHOST_F_LOG_ALL) | \
