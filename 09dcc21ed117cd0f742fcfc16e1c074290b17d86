@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0f6992a_af6e8bc9",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-25T16:49:41Z",
+      "side": 1,
+      "message": "I think this is going to be a bit confusing.  It\u0027s probably OK for now but we definitely should simplify this later on.\n\nWe now have a destruct_req which is sometimes used for destruct and sometimes for unload.\n\nWe should also talk about a context that\u0027s specific to vbdev_lvol so that we do not have to store bdev-specific fields in the lvol itself.  Same for lvolstore.  Then we could drastically simplify this code and basically just:\n\n1) set a flag in the vbdev lvs structure (or even the lvol_pair structure for now) saying that this lvs is being unloaded\n2) loop through all lvols and unregister them\n3) once each lvol is unregistered, vbdev_lvol_destruct is called\n4) once vbdev_lvol_destruct detects that all lvols have been unregistered, it can call the unload operation\n\nlvs destroy could happen the same way\n\nThen we can completely avoid having to set these destruct_reqs which lvol.c then has to invoke.",
+      "revId": "09dcc21ed117cd0f742fcfc16e1c074290b17d86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
