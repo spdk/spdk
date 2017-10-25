@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ee62d60_3e9c8ddb",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T12:02:21Z",
+      "side": 1,
+      "message": "Is this change necessary?",
+      "range": {
+        "startLine": 104,
+        "startChar": 8,
+        "endLine": 104,
+        "endChar": 107
+      },
+      "revId": "5262065bbafa0134af39e61f70fc41a5123bc7cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb3add18_d4a1316b",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T12:02:21Z",
+      "side": 1,
+      "message": "I understand that we can remove \"write\", because some lines up\nwe do non-verified write and then read with verify (which actually checks what was written), but I think it\u0027d be more clear to instead remove \"read\" tests and leave \"write\" and \"rw\" with verify enabled. That way we can remove excessive \"if\" conditaionals like in line 118.",
+      "range": {
+        "startLine": 110,
+        "startChar": 0,
+        "endLine": 112,
+        "endChar": 39
+      },
+      "revId": "5262065bbafa0134af39e61f70fc41a5123bc7cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a3a56bb_66b40fe8",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T12:02:21Z",
+      "side": 1,
+      "message": "Why change name to vbdevs?",
+      "range": {
+        "startLine": 126,
+        "startChar": 49,
+        "endLine": 126,
+        "endChar": 55
+      },
+      "revId": "5262065bbafa0134af39e61f70fc41a5123bc7cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
