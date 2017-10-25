@@ -22,6 +22,30 @@
       "revId": "2752a89d35063ebbaaf19f81158d5314f0e271eb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d6627d7_26cab347",
+        "filename": "lib/copy/copy_engine.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-25T14:22:21Z",
+      "side": 1,
+      "message": "Unfortunately yes, whole path of finishing the application is done in one patch for it to pass the Test Pool.\nHere currently there are just two modules and only one has a fini function, but still more could be added.",
+      "parentUuid": "11f24fbb_ff76fde4",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 46
+      },
+      "revId": "2752a89d35063ebbaaf19f81158d5314f0e271eb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
