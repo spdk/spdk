@@ -81,7 +81,7 @@ _bdev_pmem_submit_io_write(PMEMblkpool *pbp, void *buf, long long blockno)
 }
 
 static int
-bdev_pmem_destruct(void *ctx)
+bdev_pmem_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct pmem_disk *pdisk = ctx;
 
@@ -89,6 +89,10 @@ bdev_pmem_destruct(void *ctx)
 	free(pdisk->disk.name);
 	pmemblk_close(pdisk->pool);
 	free(pdisk);
+
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
 
 	return 0;
 }

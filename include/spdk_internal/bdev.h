@@ -124,6 +124,8 @@ struct spdk_bdev_module_if {
 	TAILQ_ENTRY(spdk_bdev_module_if) tailq;
 };
 
+typedef void (*spdk_bdev_unregister_cb)(void *cb_arg, int rc);
+
 /**
  * Function table for a block device backend.
  *
@@ -133,7 +135,7 @@ struct spdk_bdev_module_if {
  */
 struct spdk_bdev_fn_table {
 	/** Destroy the backend block device object */
-	int (*destruct)(void *ctx);
+	int (*destruct)(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 
 	/** Process the IO. */
 	void (*submit_request)(struct spdk_io_channel *ch, struct spdk_bdev_io *);
@@ -364,11 +366,11 @@ struct spdk_bdev_io {
 };
 
 void spdk_bdev_register(struct spdk_bdev *bdev);
-void spdk_bdev_unregister(struct spdk_bdev *bdev);
+void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 
 void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 			 int base_bdev_count);
-void spdk_vbdev_unregister(struct spdk_bdev *vbdev);
+void spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 
 void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module);
 void spdk_bdev_module_init_done(struct spdk_bdev_module_if *module);

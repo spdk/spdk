@@ -89,7 +89,7 @@ spdk_gpt_base_bdev_hotremove_cb(void *_base_bdev)
 	spdk_bdev_part_base_hotremove(_base_bdev, &g_gpt_disks);
 }
 
-static int vbdev_gpt_destruct(void *ctx);
+static int vbdev_gpt_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 static void vbdev_gpt_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io);
 static int vbdev_gpt_dump_config_json(void *ctx, struct spdk_json_write_ctx *w);
 
@@ -139,11 +139,16 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 }
 
 static int
-vbdev_gpt_destruct(void *ctx)
+vbdev_gpt_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct gpt_disk *gpt_disk = ctx;
 
 	spdk_bdev_part_free(&gpt_disk->part);
+
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
+
 	return 0;
 }
 
