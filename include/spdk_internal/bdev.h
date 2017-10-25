@@ -121,6 +121,11 @@ struct spdk_bdev_module_if {
 	 */
 	uint32_t action_in_progress;
 
+	/**
+	 * Denotes if the module_fini function may complete asynchronously.
+	 */
+	bool async_fini;
+
 	TAILQ_ENTRY(spdk_bdev_module_if) tailq;
 };
 
@@ -380,6 +385,7 @@ void spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_f
 
 void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module);
 void spdk_bdev_module_init_done(struct spdk_bdev_module_if *module);
+void spdk_bdev_module_finish_done(void);
 int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				struct spdk_bdev_module_if *module);
 void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
@@ -536,12 +542,22 @@ void spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spd
 
 /*
  * Set module initialization to be asynchronous. After using this macro, the module
- * initialization has to be explicitly finished by calling spdk_bdev_module_init_done().
+ * initialization has to be explicitly completed by calling spdk_bdev_module_init_done().
  */
 #define SPDK_BDEV_MODULE_ASYNC_INIT(name)							\
 	__attribute__((constructor)) static void name ## _async_init(void)			\
 	{											\
 		SPDK_GET_BDEV_MODULE(name)->action_in_progress = 1;				\
+	}
+
+/*
+ * Set module finish to be asynchronous. After using this macro, the module
+ * finishing has to be explicitly completed by calling spdk_bdev_module_fini_done().
+ */
+#define SPDK_BDEV_MODULE_ASYNC_FINI(name)							\
+	__attribute__((constructor)) static void name ## _async_fini(void)			\
+	{											\
+		SPDK_GET_BDEV_MODULE(name)->async_fini = true;					\
 	}
 
 /*
