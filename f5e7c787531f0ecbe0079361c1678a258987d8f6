@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a55278af_2b472310",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-25T08:06:53Z",
+      "side": 1,
+      "message": "I think we could iterate over lvols within lvs just once and check both conditions.",
+      "revId": "f5e7c787531f0ecbe0079361c1678a258987d8f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "362e5517_827a4c2a",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-25T08:06:53Z",
+      "side": 1,
+      "message": "Same as above.",
+      "revId": "f5e7c787531f0ecbe0079361c1678a258987d8f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
