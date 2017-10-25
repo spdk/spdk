@@ -266,6 +266,11 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 	g_bdev = bdev;
 }
 
+void
+spdk_bdev_module_finish_done(void)
+{
+}
+
 static void
 ut_bdev_pmem_destruct(struct spdk_bdev *bdev)
 {
