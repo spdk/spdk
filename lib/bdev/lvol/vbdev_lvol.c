@@ -202,7 +202,7 @@ vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		lvs->destruct_req->cb_arg = req;
 		TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
 			lvol->close_only = true;
-			spdk_vbdev_unregister(lvol->bdev);
+			spdk_vbdev_unregister(lvol->bdev, NULL, NULL);
 		}
 	}
 
@@ -308,16 +308,29 @@ _vbdev_lvol_close_cb(void *cb_arg, int lvserrno)
 static void
 _vbdev_lvol_destroy_cb(void *cb_arg, int lvserrno)
 {
+	struct spdk_bdev *bdev = cb_arg;
+
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol destroyed\n");
+
+	spdk_bdev_unregister_done(bdev->unregister_cb, bdev->unregister_ctx, lvserrno);
+	free(bdev);
 }
 
 static void
 _vbdev_lvol_destroy_after_close_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_lvol *lvol = cb_arg;
+	struct spdk_bdev *bdev = lvol->bdev;
+
+	if (lvserrno != 0) {
+		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Could not close Lvol %s\n", lvol->name);
+		spdk_bdev_unregister_done(bdev->unregister_cb, bdev->unregister_ctx, lvserrno);
+		free(bdev);
+		return;
+	}
 
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol %s closed, begin destroying\n", lvol->name);
-	spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, NULL);
+	spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, bdev);
 }
 
 static int
@@ -326,14 +339,16 @@ vbdev_lvol_destruct(void *ctx)
 	struct spdk_lvol *lvol = ctx;
 
 	assert(lvol != NULL);
-	free(lvol->bdev);
+
 	if (lvol->close_only) {
+		free(lvol->bdev);
 		spdk_lvol_close(lvol, _vbdev_lvol_close_cb, NULL);
 	} else {
 		spdk_lvol_close(lvol, _vbdev_lvol_destroy_after_close_cb, lvol);
 	}
 
-	return 0;
+	/* return 1 so that spdk_bdev_unregister_done function will not be called */
+	return 1;
 }
 
 static int

@@ -172,14 +172,14 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 static void
 free_bdev(struct spdk_bdev *bdev)
 {
-	spdk_bdev_unregister(bdev);
+	spdk_bdev_unregister(bdev, NULL, NULL);
 	free(bdev);
 }
 
 static void
 free_vbdev(struct spdk_bdev *bdev)
 {
-	spdk_vbdev_unregister(bdev);
+	spdk_vbdev_unregister(bdev, NULL, NULL);
 	free(bdev);
 }
 
@@ -400,7 +400,7 @@ part_test(void)
 	CU_ASSERT(TAILQ_EMPTY(&bdev_base.vbdevs));
 
 	spdk_bdev_part_base_free(base);
-	spdk_bdev_unregister(&bdev_base);
+	spdk_bdev_unregister(&bdev_base, NULL, NULL);
 }
 
 int
