@@ -101,6 +101,7 @@ struct spdk_lvol {
 	bool				close_only;
 	struct spdk_bdev		*bdev;
 	int				ref_count;
+	bool				action_in_progress;
 	TAILQ_ENTRY(spdk_lvol) link;
 };
 
