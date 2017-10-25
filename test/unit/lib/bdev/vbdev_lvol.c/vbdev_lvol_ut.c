@@ -104,10 +104,10 @@ spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *modul
 }
 
 void
-spdk_vbdev_unregister(struct spdk_bdev *vbdev)
+spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	SPDK_CU_ASSERT_FATAL(vbdev != NULL);
-	vbdev->fn_table->destruct(vbdev->ctxt);
+	vbdev->fn_table->destruct(vbdev->ctxt, cb_fn, cb_arg);
 }
 
 uint64_t
@@ -488,7 +488,7 @@ ut_lvol_init(void)
 	CU_ASSERT(g_lvolerrno == 0);
 
 	/* Successful lvol destruct */
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destruct(g_lvol, NULL, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
@@ -658,7 +658,7 @@ ut_lvol_resize(void)
 	CU_ASSERT(rc != 0);
 
 	/* Successful lvol destruct */
-	vbdev_lvol_destruct(g_lvol);
+	vbdev_lvol_destruct(g_lvol, NULL, NULL);
 	CU_ASSERT(g_lvol == NULL);
 
 	TAILQ_REMOVE(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);

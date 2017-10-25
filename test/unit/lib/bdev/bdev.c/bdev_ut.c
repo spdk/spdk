@@ -106,8 +106,12 @@ null_clean(void)
 }
 
 static int
-stub_destruct(void *ctx)
+stub_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
+
 	return 0;
 }
 
@@ -172,14 +176,14 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 static void
 free_bdev(struct spdk_bdev *bdev)
 {
-	spdk_bdev_unregister(bdev);
+	spdk_bdev_unregister(bdev, NULL, NULL);
 	free(bdev);
 }
 
 static void
 free_vbdev(struct spdk_bdev *bdev)
 {
-	spdk_vbdev_unregister(bdev);
+	spdk_vbdev_unregister(bdev, NULL, NULL);
 	free(bdev);
 }
 
@@ -353,8 +357,12 @@ io_valid_test(void)
 }
 
 static int
-__destruct(void *ctx)
+__destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
+
 	return 0;
 }
 
@@ -400,7 +408,7 @@ part_test(void)
 	CU_ASSERT(TAILQ_EMPTY(&bdev_base.vbdevs));
 
 	spdk_bdev_part_base_free(base);
-	spdk_bdev_unregister(&bdev_base);
+	spdk_bdev_unregister(&bdev_base, NULL, NULL);
 }
 
 int

@@ -140,11 +140,16 @@ malloc_disk_free(struct malloc_disk *malloc_disk)
 }
 
 static int
-bdev_malloc_destruct(void *ctx)
+bdev_malloc_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct malloc_disk *malloc_disk = ctx;
 	bdev_malloc_delete_from_list(malloc_disk);
 	malloc_disk_free(malloc_disk);
+
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
+
 	return 0;
 }
 
