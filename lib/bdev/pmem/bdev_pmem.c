@@ -54,7 +54,7 @@ static TAILQ_HEAD(, pmem_disk) g_pmem_disks = TAILQ_HEAD_INITIALIZER(g_pmem_disk
 static int pmem_disk_count = 0;
 
 static int bdev_pmem_initialize(void);
-static void bdev_pmem_finish(void);
+static void bdev_pmem_finish(void *ctx);
 
 static int
 bdev_pmem_get_ctx_size(void)
@@ -381,7 +381,13 @@ bdev_pmem_initialize(void)
 }
 
 static void
-bdev_pmem_finish(void)
+bdev_pmem_finish_done(void *io_device)
+{
+	spdk_bdev_module_finish_done();
+}
+
+static void
+bdev_pmem_finish(void *ctx)
 {
 	struct pmem_disk *pdisk, *tmp;
 
@@ -389,7 +395,7 @@ bdev_pmem_finish(void)
 		bdev_pmem_destruct(pdisk, NULL, NULL);
 	}
 
-	spdk_io_device_unregister(&g_pmem_disks, NULL);
+	spdk_io_device_unregister(&g_pmem_disks, bdev_pmem_finish_done);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_pmem", SPDK_TRACE_BDEV_PMEM)
