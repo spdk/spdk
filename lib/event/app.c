@@ -56,6 +56,7 @@ struct spdk_app {
 
 static struct spdk_app g_spdk_app;
 static struct spdk_event *g_shutdown_event = NULL;
+static int g_init_lcore;
 
 int
 spdk_app_get_shm_id(void)
@@ -376,8 +377,8 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	}
 
 	g_spdk_app.rc = 0;
-	app_start_event = spdk_event_allocate(spdk_env_get_current_core(), start_fn,
-					      arg1, arg2);
+	g_init_lcore = spdk_env_get_current_core();
+	app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
 
 	spdk_subsystem_init(app_start_event);
 
@@ -390,16 +391,28 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 void
 spdk_app_fini(void)
 {
-	spdk_subsystem_fini();
 	spdk_trace_cleanup();
 	spdk_reactors_fini();
 	spdk_conf_free(g_spdk_app.config);
 	spdk_log_close();
 }
 
+static void
+_spdk_app_stop(void *arg1, void *arg2)
+{
+	struct spdk_event *app_stop_event;
+
+	app_stop_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_reactors_stop, NULL, NULL);
+	spdk_subsystem_fini(app_stop_event);
+}
+
 void
 spdk_app_stop(int rc)
 {
-	spdk_reactors_stop();
 	g_spdk_app.rc = rc;
+	/*
+	 * We want to run spdk_subsystem_fini() from the same lcore where spdk_subsystem_init()
+	 * was called.
+	 */
+	spdk_event_call(spdk_event_allocate(g_init_lcore, _spdk_app_stop, NULL, NULL));
 }

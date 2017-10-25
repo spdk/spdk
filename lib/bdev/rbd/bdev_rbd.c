@@ -199,7 +199,7 @@ bdev_rbd_start_aio(rbd_image_t image, struct spdk_bdev_io *bdev_io,
 }
 
 static int bdev_rbd_library_init(void);
-static void bdev_rbd_library_fini(void);
+static void bdev_rbd_library_fini(void *ctx);
 
 static int
 bdev_rbd_get_ctx_size(void)
@@ -472,7 +472,7 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 };
 
 static void
-bdev_rbd_library_fini(void)
+bdev_rbd_library_fini(void *ctx)
 {
 	struct bdev_rbd *rbd;
 
@@ -481,6 +481,7 @@ bdev_rbd_library_fini(void)
 		TAILQ_REMOVE(&g_rbds, rbd, tailq);
 		bdev_rbd_free(rbd);
 	}
+	spdk_bdev_module_finish_done();
 }
 
 struct spdk_bdev *
