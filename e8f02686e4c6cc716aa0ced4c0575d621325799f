@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96dea217_69e2a0f7",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-25T15:21:15Z",
+      "side": 1,
+      "message": "We will want to pass spdk_bdev_unregister callbacks here as well. This is for hotremove case when delete_bdev is called on device underlying lvolstore.",
+      "range": {
+        "startLine": 56,
+        "startChar": 4,
+        "endLine": 56,
+        "endChar": 50
+      },
+      "revId": "e8f02686e4c6cc716aa0ced4c0575d621325799f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b8eeec3_fa0eab52",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 882,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-25T15:21:15Z",
+      "side": 1,
+      "message": "Haven\u0027t tested here myself, but probably same as in vbdev_lol.c. Will need to pass callbacks.",
+      "range": {
+        "startLine": 882,
+        "startChar": 2,
+        "endLine": 882,
+        "endChar": 53
+      },
+      "revId": "e8f02686e4c6cc716aa0ced4c0575d621325799f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
