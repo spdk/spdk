@@ -106,7 +106,7 @@ struct ioat_task {
 };
 
 static int copy_engine_ioat_init(void);
-static void copy_engine_ioat_exit(void);
+static void copy_engine_ioat_exit(void *ctx);
 
 static size_t
 copy_engine_ioat_get_ctx_size(void)
@@ -118,7 +118,7 @@ SPDK_COPY_MODULE_REGISTER(copy_engine_ioat_init, copy_engine_ioat_exit, NULL,
 			  copy_engine_ioat_get_ctx_size)
 
 static void
-copy_engine_ioat_exit(void)
+copy_engine_ioat_exit(void *ctx)
 {
 	struct ioat_device *dev;
 
@@ -129,7 +129,7 @@ copy_engine_ioat_exit(void)
 		ioat_free_device(dev);
 		spdk_dma_free(dev);
 	}
-	return;
+	spdk_copy_engine_module_finish();
 }
 
 static void

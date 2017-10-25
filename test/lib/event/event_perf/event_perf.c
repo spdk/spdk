@@ -56,7 +56,9 @@ submit_new_event(void *arg1, void *arg2)
 	static __thread uint32_t next_lcore = RTE_MAX_LCORE;
 
 	if (spdk_get_ticks() > g_tsc_end) {
-		spdk_app_stop(0);
+		if (rte_lcore_id() == rte_get_master_lcore()) {
+			spdk_app_stop(0);
+		}
 		return;
 	}
 
