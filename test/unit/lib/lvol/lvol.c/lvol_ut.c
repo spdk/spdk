@@ -907,6 +907,7 @@ lvol_resize(void)
 	rc = spdk_lvol_resize(g_lvol, 10, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvserrno != 0);
+	g_resize_rc = 0;
 
 	g_resize_rc = 0;
 	spdk_lvol_close(g_lvol, close_cb, NULL);
@@ -1291,6 +1292,65 @@ lvol_names(void)
 
 	spdk_free_thread();
 }
+static void lvol_refcnt(void)
+{
+	struct lvol_ut_bs_dev dev;
+	struct spdk_lvs_opts opts;
+	int rc = 0;
+
+	init_dev(&dev);
+
+	spdk_allocate_thread(_lvol_send_msg, NULL, NULL);
+	spdk_lvs_opts_init(&opts);
+	strncpy(opts.name, "lvs", sizeof(opts.name));
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_init(&dev.bs_dev, &opts, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+
+
+	spdk_lvol_create(g_lvol_store, "lvol", 10, lvol_op_with_handle_complete, NULL);
+
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	CU_ASSERT(g_lvol->ref_count == 1);
+
+	spdk_lvol_open(g_lvol, lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvol->ref_count == 2);
+
+	/* Trying to destroy lvol while its open should fail */
+	spdk_lvol_destroy(g_lvol, lvol_op_complete, NULL);
+	CU_ASSERT(g_lvolerrno != 0);
+
+	spdk_lvol_close(g_lvol, lvol_op_complete, NULL);
+	CU_ASSERT(g_lvol->ref_count == 1);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	spdk_lvol_close(g_lvol, lvol_op_complete, NULL);
+	CU_ASSERT(g_lvol->ref_count == 0);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	/* Try to close already closed lvol */
+	spdk_lvol_close(g_lvol, lvol_op_complete, NULL);
+	CU_ASSERT(g_lvol->ref_count == 0);
+	CU_ASSERT(g_lvolerrno != 0);
+
+	g_lvserrno = -1;
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	g_lvol_store = NULL;
+
+	free_dev(&dev);
+
+	spdk_free_thread();
+}
 
 
 int main(int argc, char **argv)
@@ -1323,6 +1383,10 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "lvs_load", lvs_load) == NULL ||
 		CU_add_test(suite, "lvols_load", lvols_load) == NULL ||
 		CU_add_test(suite, "lvol_open", lvol_open) == NULL ||
+		CU_add_test(suite, "lvol_load", lvs_load) == NULL ||
+		CU_add_test(suite, "lvs_load", lvols_load) == NULL ||
+		CU_add_test(suite, "lvol_open", lvol_open) == NULL ||
+		CU_add_test(suite, "lvol_refcnt", lvol_refcnt) == NULL ||
 		CU_add_test(suite, "lvol_names", lvol_names) == NULL
 	) {
 		CU_cleanup_registry();
