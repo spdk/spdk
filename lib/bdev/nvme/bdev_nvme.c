@@ -875,7 +875,7 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 
 	TAILQ_FOREACH_SAFE(nvme_bdev, &removed_bdevs, link, btmp) {
 		TAILQ_REMOVE(&removed_bdevs, nvme_bdev, link);
-		spdk_bdev_unregister(&nvme_bdev->disk);
+		spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
 	}
 }
 

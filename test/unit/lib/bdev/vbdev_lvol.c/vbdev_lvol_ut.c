@@ -60,6 +60,11 @@ bool lvol_already_opened = false;
 bool g_examine_done = false;
 
 void
+spdk_bdev_unregister_done(spdk_bdev_unregister_cb cb_fn, void *cb_arg, int bdeverrno)
+{
+}
+
+void
 spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, lvol, g_lvolerrno);
@@ -104,7 +109,7 @@ spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *modul
 }
 
 void
-spdk_vbdev_unregister(struct spdk_bdev *vbdev)
+spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	SPDK_CU_ASSERT_FATAL(vbdev != NULL);
 	vbdev->fn_table->destruct(vbdev->ctxt);
@@ -255,7 +260,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	free(lvol);
 	g_lvol = NULL;
 
-	cb_fn(NULL, 0);
+	cb_fn(cb_arg, 0);
 }
 
 void

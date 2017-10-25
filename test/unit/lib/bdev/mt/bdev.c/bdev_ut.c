@@ -183,7 +183,7 @@ unregister_bdev(void)
 {
 	/* Handle any deferred messages. */
 	poll_threads();
-	spdk_bdev_unregister(&g_bdev.bdev);
+	spdk_bdev_unregister(&g_bdev.bdev, NULL, NULL);
 	spdk_io_device_unregister(&g_bdev.io_target, NULL);
 	memset(&g_bdev, 0, sizeof(g_bdev));
 }
