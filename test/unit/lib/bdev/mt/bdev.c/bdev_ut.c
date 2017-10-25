@@ -59,6 +59,7 @@ struct ut_bdev_channel {
 
 struct ut_bdev g_bdev;
 struct spdk_bdev_desc *g_desc;
+bool g_teardown_done = false;
 
 static int
 stub_create_ch(void *io_device, void *ctx_buf)
@@ -158,8 +159,9 @@ module_init(void)
 }
 
 static void
-module_fini(void)
+module_fini(void *ctx)
 {
+	spdk_bdev_module_finish_done();
 }
 
 SPDK_BDEV_MODULE_REGISTER(bdev_ut, module_init, module_fini, NULL, NULL, NULL)
@@ -207,12 +209,22 @@ setup_test(void)
 }
 
 static void
+finish_cb(void *cb_arg)
+{
+	g_teardown_done = true;
+}
+
+static void
 teardown_test(void)
 {
+	g_teardown_done = false;
 	spdk_bdev_close(g_desc);
 	g_desc = NULL;
 	unregister_bdev();
-	spdk_bdev_finish();
+	spdk_bdev_finish(finish_cb, NULL);
+	poll_threads();
+	CU_ASSERT(g_teardown_done == true);
+	g_teardown_done = false;
 	free_threads();
 }
 

@@ -92,7 +92,7 @@ static struct malloc_disk *g_malloc_disk_head = NULL;
 int malloc_disk_count = 0;
 
 static int bdev_malloc_initialize(void);
-static void bdev_malloc_finish(void);
+static void bdev_malloc_finish(void *ctx);
 static void bdev_malloc_get_spdk_running_config(FILE *fp);
 
 static int
@@ -471,7 +471,7 @@ end:
 	return rc;
 }
 
-static void bdev_malloc_finish(void)
+static void bdev_malloc_finish(void *ctx)
 {
 	struct malloc_disk *mdisk;
 
@@ -480,6 +480,7 @@ static void bdev_malloc_finish(void)
 		g_malloc_disk_head = mdisk->next;
 		free_malloc_disk(mdisk);
 	}
+	spdk_bdev_module_finish_done();
 }
 
 static void
