@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75fb855d_fc1d9bb5",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-25T17:01:25Z",
+      "side": 1,
+      "message": "could we just add a req pointer to lvol_store_bdev?  then we can avoid yet another allocation here - we can just pass the lvs_bdev as the context pointer\n\nthis could even replace the destruct_in_progress flag - instead you just check if the req pointer is NULL or not",
+      "revId": "ea0d82644d40367652aae0d96e9d56976b686df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47701c71_76876f93",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-25T17:01:25Z",
+      "side": 1,
+      "message": "this whole function is almost an exact duplicate of vbdev_lvs_unload() - is there a way we consolidate them?  the duplication is made worse with the extra code added in this patch",
+      "revId": "ea0d82644d40367652aae0d96e9d56976b686df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49509523_007d9f11",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-25T17:01:25Z",
+      "side": 1,
+      "message": "i always prefer something like this:\n\nif (lvs_bdev-\u003edestruct_in_progress) {\n  continue;\n}\n\nthen you do not have to modify the rest of the code in this loop by adding the extra level of indentation",
+      "revId": "ea0d82644d40367652aae0d96e9d56976b686df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9f91d40_f07134a8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-25T17:01:25Z",
+      "side": 1,
+      "message": "why is this needed?  if g_spdk_lvol_pairs is empty, the following loop will not execute so it will just return",
+      "revId": "ea0d82644d40367652aae0d96e9d56976b686df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
