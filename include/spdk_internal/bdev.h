@@ -124,6 +124,8 @@ struct spdk_bdev_module_if {
 	TAILQ_ENTRY(spdk_bdev_module_if) tailq;
 };
 
+typedef void (*spdk_bdev_unregister_cb)(void *cb_arg, int rc);
+
 /**
  * Function table for a block device backend.
  *
@@ -234,6 +236,12 @@ struct spdk_bdev {
 	 *  bdevs on top of it.  Set to NULL if the bdev has not been claimed.
 	 */
 	struct spdk_bdev_module_if *claim_module;
+
+	/** Callback function that will be called after bdev destruct is completed. */
+	spdk_bdev_unregister_cb	unregister_cb;
+
+	/** Unregister call context */
+	void *unregister_ctx;
 
 	/** List of open descriptors for this block device. */
 	TAILQ_HEAD(, spdk_bdev_desc) open_descs;
@@ -364,11 +372,11 @@ struct spdk_bdev_io {
 };
 
 void spdk_bdev_register(struct spdk_bdev *bdev);
-void spdk_bdev_unregister(struct spdk_bdev *bdev);
-
+void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
+void spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno);
 void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
 			 int base_bdev_count);
-void spdk_vbdev_unregister(struct spdk_bdev *vbdev);
+void spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 
 void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module);
 void spdk_bdev_module_init_done(struct spdk_bdev_module_if *module);

@@ -173,12 +173,26 @@ static const struct spdk_json_object_decoder rpc_delete_bdev_decoders[] = {
 };
 
 static void
+_spdk_rpc_delete_bdev_cb(void *cb_arg, int bdeverrno)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, bdeverrno == true);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
 spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
 		     const struct spdk_json_val *params)
 {
 	struct rpc_delete_bdev req = {};
 	struct spdk_bdev *bdev;
-	struct spdk_json_write_ctx *w;
 
 	if (spdk_json_decode_object(params, rpc_delete_bdev_decoders,
 				    sizeof(rpc_delete_bdev_decoders) / sizeof(*rpc_delete_bdev_decoders),
@@ -198,17 +212,10 @@ spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_bdev_unregister(bdev);
+	spdk_bdev_unregister(bdev, _spdk_rpc_delete_bdev_cb, request);
 
 	free_rpc_delete_bdev(&req);
 
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
