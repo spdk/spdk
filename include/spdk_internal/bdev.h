@@ -91,7 +91,7 @@ struct spdk_bdev_module_if {
 	 *
 	 * Modules are not required to define this function.
 	 */
-	void (*module_fini)(void);
+	void (*module_fini)(void *ctx);
 
 	/**
 	 * Function called to return a text string representing the
@@ -380,6 +380,7 @@ void spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_f
 
 void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module);
 void spdk_bdev_module_init_done(struct spdk_bdev_module_if *module);
+void spdk_bdev_module_finish_done(void);
 int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				struct spdk_bdev_module_if *module);
 void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
