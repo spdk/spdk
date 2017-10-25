@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "5fa666bc_4c652071",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 930,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-25T16:55:02Z",
+      "side": 1,
+      "message": "could you bring back the comment from the previous PS here?",
+      "range": {
+        "startLine": 930,
+        "startChar": 0,
+        "endLine": 930,
+        "endChar": 11
+      },
+      "revId": "c39b912233f2c14d96325713a400548e1dc73f31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f8c6c1c9_0a76e88a",
         "filename": "lib/bdev/virtio/rte_virtio/virtio_user/virtio_user_dev.c",
         "patchSetId": 17
