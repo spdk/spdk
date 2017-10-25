@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "023967a9_235db1c6",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-25T12:43:33Z",
+      "side": 1,
+      "message": "this could be:\n\nif (!bdev || !bdev-\u003ectxt)\n\nthen you could avoid the if (nbdev) check below and reduce one level of indentation\n\nbut i\u0027m ok with the code as-is",
+      "revId": "28a494c2a97f8244d84d7c4ce1707008513a3229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93cc71ec_d49ba88d",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-25T12:43:33Z",
+      "side": 1,
+      "message": "why pass firm_ctx-\u003ep here?  or did you have a problem if you passed NULL instead?\n\ntransfer size is 0 so we should not have to pass a buffer",
+      "revId": "28a494c2a97f8244d84d7c4ce1707008513a3229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52510a6a_1c9c9cbc",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-25T12:43:33Z",
+      "side": 1,
+      "message": "this is ok, but probably more efficient to create spdk_bdev_nvme_first/next functions so that we can iterate only on the nvme bdevs\n\nthat can be a future optimization",
+      "revId": "28a494c2a97f8244d84d7c4ce1707008513a3229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
