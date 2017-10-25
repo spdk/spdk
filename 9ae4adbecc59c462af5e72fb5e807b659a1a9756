@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85c9e59f_05086bad",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1115,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-25T15:15:09Z",
+      "side": 1,
+      "message": "Unnecessary new line. Couple places above here have double new lines as well.",
+      "revId": "9ae4adbecc59c462af5e72fb5e807b659a1a9756",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
