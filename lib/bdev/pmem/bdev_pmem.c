@@ -64,6 +64,7 @@ bdev_pmem_get_ctx_size(void)
 
 SPDK_BDEV_MODULE_REGISTER(pmem, bdev_pmem_initialize, bdev_pmem_finish,
 			  NULL, bdev_pmem_get_ctx_size, NULL)
+SPDK_BDEV_MODULE_ASYNC_FINI(pmem);
 
 
 typedef int(*spdk_bdev_pmem_io_request)(PMEMblkpool *pbp, void *buf, long long blockno);
@@ -377,6 +378,12 @@ bdev_pmem_initialize(void)
 }
 
 static void
+bdev_pmem_finish_done(void *io_device)
+{
+	spdk_bdev_module_finish_done();
+}
+
+static void
 bdev_pmem_finish(void)
 {
 	struct pmem_disk *pdisk, *tmp;
@@ -385,7 +392,7 @@ bdev_pmem_finish(void)
 		bdev_pmem_destruct(pdisk);
 	}
 
-	spdk_io_device_unregister(&g_pmem_disks, NULL);
+	spdk_io_device_unregister(&g_pmem_disks, bdev_pmem_finish_done);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_pmem", SPDK_TRACE_BDEV_PMEM)
