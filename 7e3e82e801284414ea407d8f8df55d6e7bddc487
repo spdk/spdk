@@ -1,0 +1,641 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24e59fcd_7d9a222a",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "I think we shouldn\u0027t care if there is some partition already on the disk. We should force creating a new one anyways.",
+      "range": {
+        "startLine": 23,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 53
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1be862a6_ae3b0e21",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "No need to pipe to fdisk.\nYou can try using parted with \"-s\" option like \"parted -s /dev/X\".\nCheck out test/vhost/integrity/integrity_vm.sh for example.",
+      "range": {
+        "startLine": 25,
+        "startChar": 1,
+        "endLine": 25,
+        "endChar": 42
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4703ed97_2c90b074",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "nitpicking: space",
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "990858de_59917056",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "nitpicking: space",
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "229506f8_402895ba",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "No need to put a new line I suppose",
+      "range": {
+        "startLine": 75,
+        "startChar": 24,
+        "endLine": 75,
+        "endChar": 26
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "834f42f6_b59b44de",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "set -e ?",
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0021323f_61c090dc",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "It\u0027s already in other file",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 1
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1d4f26c_c956cf74",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "No need for shopt; just doing cd /sys/block; echo vd* is enough",
+      "range": {
+        "startLine": 11,
+        "startChar": 10,
+        "endLine": 11,
+        "endChar": 55
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca42001a_6ac91332",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "Previously",
+      "range": {
+        "startLine": 25,
+        "startChar": 8,
+        "endLine": 25,
+        "endChar": 19
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "419a295f_afe2eb60",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "Failed to remove copied file",
+      "range": {
+        "startLine": 74,
+        "startChar": 7,
+        "endLine": 74,
+        "endChar": 40
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5752fa0_1cbbaca2",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "Don\u0027t you want to use \"set -e\"?",
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d63b639_7bd36823",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "comma unnecessary",
+      "range": {
+        "startLine": 17,
+        "startChar": 23,
+        "endLine": 17,
+        "endChar": 24
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f64dfc37_a8d2f147",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "path",
+      "range": {
+        "startLine": 22,
+        "startChar": 33,
+        "endLine": 22,
+        "endChar": 38
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62149cf4_ad547a20",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "have",
+      "range": {
+        "startLine": 23,
+        "startChar": 62,
+        "endLine": 23,
+        "endChar": 66
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ae7c5d7_80174c40",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "No need for that, we don\u0027t have a RO option in SCSI ctrlr",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 24
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c62f99a1_ff973f4a",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "Use COMMON_DIR\u003d\"$(cd $BASE_DIR/../common \u0026\u0026 pwd)\" instead so you can avoid using \"BASE_DIR/../common/.\nTake a look into test/vhost/fiotest as an example",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 31
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0b32612_26e54d64",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "No need to use grep, try something like this:\nif [[ $string \u003d~ .*My.* ]]\nhttps://stackoverflow.com/questions/229551/string-contains-in-bash",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 2
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5be94847_4f0a6ce4",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "Duplicate sourcing",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 31
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84e542a6_4a369f47",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "Other if checks use double brackets, change that here for consistency",
+      "range": {
+        "startLine": 84,
+        "startChar": 2,
+        "endLine": 86,
+        "endChar": 4
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e920c309_20823b0e",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "Starting",
+      "range": {
+        "startLine": 102,
+        "startChar": 7,
+        "endLine": 102,
+        "endChar": 14
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e25bf22_c809cb16",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "For each of this informative echoes, could you use echo \"INFO: ...\"? It makes searching in output a little easier if need occurs.",
+      "range": {
+        "startLine": 105,
+        "startChar": 1,
+        "endLine": 105,
+        "endChar": 36
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5649970_74f75eb1",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "Since you only create 1 VM here and you don\u0027t need any other to be running - could you use \"vm_shutdown_all\" from common/common.sh?",
+      "range": {
+        "startLine": 108,
+        "startChar": 1,
+        "endLine": 120,
+        "endChar": 6
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2351a92f_374a58b6",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "description",
+      "range": {
+        "startLine": 7,
+        "startChar": 14,
+        "endLine": 7,
+        "endChar": 24
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78b20a68_88abf475",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 9,
+        "startChar": 114,
+        "endLine": 9,
+        "endChar": 115
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fe76e8f_d60fe890",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "Detailed steps are in the next section, I think you could remove this completely or put some more general description.",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 27
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5745b4fc_e5d92b03",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "comma not needed",
+      "range": {
+        "startLine": 18,
+        "startChar": 66,
+        "endLine": 18,
+        "endChar": 67
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "150e459d_f1a92f30",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "vhost blk controller",
+      "range": {
+        "startLine": 18,
+        "startChar": 11,
+        "endLine": 18,
+        "endChar": 18
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3b506d9_eb5d2446",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "Shutdown",
+      "range": {
+        "startLine": 23,
+        "startChar": 3,
+        "endLine": 23,
+        "endChar": 7
+      },
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "779c09fb_d5554d20",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:35:55Z",
+      "side": 1,
+      "message": "Spaces after point number",
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
