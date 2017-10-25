@@ -302,7 +302,7 @@ function print_backtrace() {
 	for i in $(seq 1 $((${#FUNCNAME[@]} - 1))); do
 		local func="${FUNCNAME[$i]}"
 		local line_nr="${BASH_LINENO[$((i - 1))]}"
-		local src="${BASH_SOURCE[$i]/#$rootdir/.}"
+		local src="${BASH_SOURCE[$i]}"
 		echo "in $src:$line_nr -> $func()"
 		echo "     ..."
 		nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^$line_nr" | \
