@@ -410,9 +410,9 @@ lvs_init_unload_success(void)
 
 	/* Lvol store has an open lvol, this unload should fail. */
 	g_lvserrno = -1;
-	rc = spdk_lvs_unload(g_lvol_store, NULL, NULL);
+	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == -EBUSY);
-	CU_ASSERT(g_lvserrno == -1);
+	CU_ASSERT(g_lvserrno == -EBUSY);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 	CU_ASSERT(!TAILQ_EMPTY(&g_lvol_stores));
 
@@ -457,9 +457,9 @@ lvs_init_destroy_success(void)
 
 	/* Lvol store contains one lvol, this destroy should fail. */
 	g_lvserrno = -1;
-	rc = spdk_lvs_destroy(g_lvol_store, true, NULL, NULL);
+	rc = spdk_lvs_destroy(g_lvol_store, true, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == -EBUSY);
-	CU_ASSERT(g_lvserrno == -1);
+	CU_ASSERT(g_lvserrno == -EBUSY);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
 	spdk_lvol_close(g_lvol, close_cb, NULL);
