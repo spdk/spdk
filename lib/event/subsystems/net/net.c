@@ -48,9 +48,10 @@ spdk_interface_subsystem_init(void)
 }
 
 static void
-spdk_interface_subsystem_destroy(void)
+spdk_interface_subsystem_destroy(void *arg1, void *arg2)
 {
 	spdk_interface_destroy();
+	spdk_subsystem_fini_next();
 }
 
 SPDK_SUBSYSTEM_REGISTER(interface, spdk_interface_subsystem_init,
@@ -67,9 +68,10 @@ spdk_net_subsystem_start(void)
 }
 
 static void
-spdk_net_subsystem_fini(void)
+spdk_net_subsystem_fini(void *arg1, void *arg2)
 {
 	spdk_net_framework_fini();
+	spdk_subsystem_fini_next();
 }
 
 SPDK_SUBSYSTEM_REGISTER(net_framework, spdk_net_subsystem_start,
