@@ -39,17 +39,30 @@
 #define MAX_TMPBUF 1024
 #define PORTNUMLEN 32
 
-static int get_addr_str(struct sockaddr_in *paddr, char *host, size_t hlen)
+static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 {
-	uint8_t *pa;
+	const char *result = NULL;
 
-	if (paddr == NULL || host == NULL)
+	if (sa == NULL || host == NULL)
 		return -1;
 
-	pa = (uint8_t *)&paddr->sin_addr.s_addr;
-	snprintf(host, hlen, "%u.%u.%u.%u", pa[0], pa[1], pa[2], pa[3]);
+	switch (sa->sa_family) {
+	case AF_INET:
+		result = inet_ntop(AF_INET, &(((struct sockaddr_in *)sa)->sin_addr),
+				   host, hlen);
+		break;
+	case AF_INET6:
+		result = inet_ntop(AF_INET6, &(((struct sockaddr_in6 *)sa)->sin6_addr),
+				   host, hlen);
+		break;
+	default:
+		break;
+	}
 
-	return 0;
+	if (result != NULL)
+		return 0;
+	else
+		return -1;
 }
 
 int
@@ -80,7 +93,7 @@ spdk_sock_getaddr(int sock, char *saddr, int slen, char *caddr, int clen)
 		return -1;
 	}
 
-	rc = get_addr_str((struct sockaddr_in *)&sa, saddr, slen);
+	rc = get_addr_str((struct sockaddr *)&sa, saddr, slen);
 	if (rc != 0) {
 		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", errno);
 		return -1;
@@ -94,7 +107,7 @@ spdk_sock_getaddr(int sock, char *saddr, int slen, char *caddr, int clen)
 		return -1;
 	}
 
-	rc = get_addr_str((struct sockaddr_in *)&sa, caddr, clen);
+	rc = get_addr_str((struct sockaddr *)&sa, caddr, clen);
 	if (rc != 0) {
 		SPDK_ERRLOG("getnameinfo() failed (errno=%d)\n", errno);
 		return -1;
