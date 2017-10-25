@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e73176aa_052db584",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-25T13:30:11Z",
+      "side": 1,
+      "message": "Shouldn\u0027t it pass req-\u003ecb_arg here ?",
+      "range": {
+        "startLine": 330,
+        "startChar": 14,
+        "endLine": 330,
+        "endChar": 20
+      },
+      "revId": "04afe38871ce3e1847248b4aee042f61432bdc9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
