@@ -63,11 +63,16 @@ vbdev_split_base_free(struct spdk_bdev_part_base *base)
 }
 
 static int
-vbdev_split_destruct(void *ctx)
+vbdev_split_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct spdk_bdev_part *part = ctx;
 
 	spdk_bdev_part_free(part);
+
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
+
 	return 0;
 }
 
