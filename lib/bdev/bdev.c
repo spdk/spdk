@@ -1734,7 +1734,7 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 }
 
 void
-spdk_bdev_unregister(struct spdk_bdev *bdev)
+spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct spdk_bdev_desc	*desc, *tmp;
 	int			rc;
@@ -1750,6 +1750,8 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 		if (desc->remove_cb) {
 			pthread_mutex_unlock(&bdev->mutex);
 			do_destruct = false;
+			bdev->unregister_cb = cb_fn;
+			bdev->unregister_ctx = cb_arg;
 			desc->remove_cb(desc->remove_ctx);
 			pthread_mutex_lock(&bdev->mutex);
 		}
@@ -1767,14 +1769,14 @@ spdk_bdev_unregister(struct spdk_bdev *bdev)
 
 	spdk_io_device_unregister(bdev, NULL);
 
-	rc = bdev->fn_table->destruct(bdev->ctxt);
+	rc = bdev->fn_table->destruct(bdev->ctxt, cb_fn, cb_arg);
 	if (rc < 0) {
 		SPDK_ERRLOG("destruct failed\n");
 	}
 }
 
 void
-spdk_vbdev_unregister(struct spdk_bdev *vbdev)
+spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct spdk_bdev *base_bdev;
 
@@ -1782,7 +1784,7 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev)
 	TAILQ_FOREACH(base_bdev, &vbdev->base_bdevs, base_bdev_link) {
 		TAILQ_REMOVE(&base_bdev->vbdevs, vbdev, vbdev_link);
 	}
-	spdk_bdev_unregister(vbdev);
+	spdk_bdev_unregister(vbdev, cb_fn, cb_arg);
 }
 
 int
@@ -1835,7 +1837,7 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	pthread_mutex_unlock(&bdev->mutex);
 
 	if (do_unregister == true) {
-		spdk_bdev_unregister(bdev);
+		spdk_bdev_unregister(bdev, bdev->unregister_cb, bdev->unregister_ctx);
 	}
 }
 
@@ -1965,7 +1967,7 @@ spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tail
 
 	TAILQ_FOREACH_SAFE(part, tailq, tailq, tmp) {
 		if (part->base->bdev == base_bdev) {
-			spdk_vbdev_unregister(&part->bdev);
+			spdk_vbdev_unregister(&part->bdev, NULL, NULL);
 		}
 	}
 }

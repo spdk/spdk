@@ -270,7 +270,7 @@ static void
 ut_bdev_pmem_destruct(struct spdk_bdev *bdev)
 {
 	SPDK_CU_ASSERT_FATAL(g_bdev != NULL);
-	CU_ASSERT_EQUAL(bdev_pmem_destruct(bdev->ctxt), 0);
+	CU_ASSERT_EQUAL(bdev_pmem_destruct(bdev->ctxt, NULL, NULL), 0);
 	g_bdev = NULL;
 }
 

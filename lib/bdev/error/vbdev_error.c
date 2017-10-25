@@ -183,11 +183,16 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 }
 
 static int
-vbdev_error_destruct(void *ctx)
+vbdev_error_destruct(void *ctx, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct error_disk *error_disk = ctx;
 
 	spdk_bdev_part_free(&error_disk->part);
+
+	if (cb_fn != NULL) {
+		cb_fn(cb_arg, 0);
+	}
+
 	return 0;
 }
 
