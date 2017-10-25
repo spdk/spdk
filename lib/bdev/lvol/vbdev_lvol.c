@@ -101,13 +101,12 @@ end:
 }
 
 int
-vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
+vbdev_lvs_create(struct spdk_bdev *base_bdev, char *name, uint32_t cluster_sz,
 		 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *lvs_req;
 	struct spdk_lvs_opts opts;
-	uuid_t uuid;
 	int rc;
 
 	if (base_bdev == NULL) {
@@ -120,12 +119,11 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
 		opts.cluster_sz = cluster_sz;
 	}
 
-	/*
-	 * This is temporary until the RPCs take a name parameter for creating
-	 *  an lvolstore.
-	 */
-	uuid_generate(uuid);
-	uuid_unparse(uuid, opts.name);
+	if (name == NULL) {
+		SPDK_ERRLOG("missing name param\n");
+		return -EINVAL;
+	}
+	strncpy(opts.name, name, sizeof(opts.name));
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
 	if (!lvs_req) {
@@ -252,6 +250,22 @@ vbdev_get_lvol_store_by_uuid(uuid_t uuid)
 	while (lvs_bdev != NULL) {
 		lvs = lvs_bdev->lvs;
 		if (uuid_compare(lvs->uuid, uuid) == 0) {
+			return lvs;
+		}
+		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
+	}
+	return NULL;
+}
+
+struct spdk_lvol_store *
+vbdev_get_lvol_store_by_name(char *name)
+{
+	struct spdk_lvol_store *lvs = NULL;
+	struct lvol_store_bdev *lvs_bdev = vbdev_lvol_store_first();
+
+	while (lvs_bdev != NULL) {
+		lvs = lvs_bdev->lvs;
+		if (strncmp(lvs->name, name, sizeof(lvs->name)) == 0) {
 			return lvs;
 		}
 		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
