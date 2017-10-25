@@ -36,6 +36,7 @@
 #include "spdk/copy_engine.h"
 
 #include "spdk_internal/event.h"
+#include "spdk/env.h"
 
 static void
 spdk_copy_engine_subsystem_initialize(void)
@@ -48,9 +49,15 @@ spdk_copy_engine_subsystem_initialize(void)
 }
 
 static void
-spdk_copy_engine_subsystem_finish(void)
+spdk_copy_engine_subsystem_finish_done(void *cb_arg)
 {
-	spdk_copy_engine_finish();
+	spdk_subsystem_fini_next();
+}
+
+static void
+spdk_copy_engine_subsystem_finish(void *arg1, void *arg2)
+{
+	spdk_copy_engine_finish(spdk_copy_engine_subsystem_finish_done, NULL);
 }
 
 SPDK_SUBSYSTEM_REGISTER(copy, spdk_copy_engine_subsystem_initialize,
