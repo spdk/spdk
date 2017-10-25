@@ -7,15 +7,21 @@ rootdir=$(readlink -f $testdir/../../..)
 plugindir=$rootdir/examples/bdev/fio_plugin
 rpc_py="$rootdir/scripts/rpc.py"
 
+if [ $RUN_NIGHTLY -eq 1 ]; then
+        fio_rw=("write" "randwrite" "rw" "randrw")
+else
+        fio_rw=("randwrite")
+fi
 
-function run_fio()
-{
+function run_fio() {
         LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=4k --runtime=10 $testdir/bdev.fio "$@" --spdk_mem=1024
         fio_status=$?
         if [ $fio_status != 0 ]; then
                 spdk_vhost_kill
                 exit 1
         fi
+        rm -f *.state
+        rm -f $testdir/bdev.fio
 }
 
 function prepare_fio_job_for_unmap() {
@@ -81,27 +87,9 @@ for bdev in $bdevs; do
 
         if [ -d /usr/src/fio ]; then
                 timing_enter fio
-                if [ $RUN_NIGHTLY -eq 1 ]; then
-                        fio_rw=("write" "read" "randwrite" "randread" "rw" "randrw")
-                else
-                        fio_rw=("write" "read")
-                fi
                 for rw in "${fio_rw[@]}"; do
                         timing_enter fio_rw_verify
                         cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
-                        if [ $rw == "read" ] || [ $rw == "randread" ]; then
-                                echo "size=100m" >> $testdir/bdev.fio
-                                echo "io_size=400m" >> $testdir/bdev.fio
-                                echo "[job_write]" >> $testdir/bdev.fio
-                                echo "stonewall" >> $testdir/bdev.fio
-                                echo "rw=write" >> $testdir/bdev.fio
-                                echo "do_verify=0" >> $testdir/bdev.fio
-                                echo -n "filename=" >> $testdir/bdev.fio
-                                for b in $(echo $bdevs | jq -r '.name'); do
-                                        echo -n "$b:" >> $testdir/bdev.fio
-                                done
-                                echo "" >> $testdir/bdev.fio
-                        fi
                         echo "[job_$rw]" >> $testdir/bdev.fio
                         echo "stonewall" >> $testdir/bdev.fio
                         echo "rw=$rw" >> $testdir/bdev.fio
@@ -112,8 +100,6 @@ for bdev in $bdevs; do
 
                         run_fio --spdk_conf=$testdir/bdev.conf
 
-                        rm -f *.state
-                        rm -f $testdir/bdev.fio
                         timing_exit fio_rw_verify
                 done
 
@@ -121,9 +107,6 @@ for bdev in $bdevs; do
                 cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
                 prepare_fio_job_for_unmap
                 run_fio --spdk_conf=$testdir/bdev.conf
-                rm -f *.state
-                rm -f $testdir/bdev.fio
-
                 timing_exit fio
         fi
 
