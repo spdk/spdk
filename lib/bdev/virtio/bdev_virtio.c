@@ -57,6 +57,7 @@
 #define BDEV_VIRTIO_SCAN_PAYLOAD_SIZE 256
 #define CTRLQ_POLL_PERIOD_US (1000 * 5)
 #define CTRLQ_RING_SIZE 16
+#define SCAN_REQUEST_RETRIES 5
 
 #define VIRTIO_SCSI_CONTROLQ	0
 #define VIRTIO_SCSI_EVENTQ	1
@@ -91,6 +92,9 @@ struct virtio_scsi_scan_base {
 
 	/* Disks to be registered after the scan finishes */
 	TAILQ_HEAD(, virtio_scsi_disk) found_disks;
+
+	/** Remaining attempts for sending the current request. */
+	unsigned                        retries;
 
 	struct virtio_scsi_io_ctx	io_ctx;
 	struct iovec			iov;
@@ -782,7 +786,9 @@ static void
 process_scan_resp(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 {
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
-	int rc;
+	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
+	int rc, sk, asc, ascq;
+	uint8_t target_id;
 
 	if (vreq->iov_req.iov_len < sizeof(struct virtio_scsi_cmd_req) ||
 	    vreq->iov_resp.iov_len < sizeof(struct virtio_scsi_cmd_resp)) {
@@ -790,6 +796,32 @@ process_scan_resp(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 		scan_target_finish(base);
 		return;
 	}
+
+	get_scsi_status(resp, &sk, &asc, &ascq);
+	target_id = req->lun[1];
+
+	if (resp->response == VIRTIO_SCSI_S_OK &&
+	    resp->status == SPDK_SCSI_STATUS_CHECK_CONDITION &&
+	    sk != SPDK_SCSI_SENSE_ILLEGAL_REQUEST) {
+		assert(base->retries > 0);
+		base->retries--;
+		if (base->retries == 0) {
+			SPDK_NOTICELOG("Target %"PRIu8" is present, but unavailable.\n", target_id);
+			SPDK_TRACEDUMP(SPDK_TRACE_VIRTIO, "CDB", req->cdb, sizeof(req->cdb));
+			SPDK_TRACEDUMP(SPDK_TRACE_VIRTIO, "SENSE DATA", resp->sense, sizeof(resp->sense));
+			scan_target_finish(base);
+			return;
+		}
+
+		/* resend the same request */
+		rc = virtio_xmit_pkt(base->vq, vreq);
+		if (rc != 0) {
+			assert(false);
+		}
+		return;
+	}
+
+	base->retries = SCAN_REQUEST_RETRIES;
 
 	switch (req->cdb[0]) {
 	case SPDK_SPC_INQUIRY:
@@ -859,6 +891,7 @@ scan_target(struct virtio_scsi_scan_base *base)
 	cdb->opcode = SPDK_SPC_INQUIRY;
 	cdb->alloc_len[1] = 255;
 
+	base->retries = SCAN_REQUEST_RETRIES;
 	return virtio_xmit_pkt(base->vq, vreq);
 }
 
