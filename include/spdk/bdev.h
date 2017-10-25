@@ -93,7 +93,7 @@ enum spdk_bdev_io_type {
 };
 
 /**
- * Block device completion callback
+ * Block device completion callback.
  *
  * \param bdev_io Block device I/O that has completed.
  * \param success true if I/O completed successfully or false if it failed; additional error
@@ -124,26 +124,76 @@ typedef void (*spdk_bdev_poller_start_cb)(struct spdk_bdev_poller **ppoller,
 		uint64_t period_microseconds);
 typedef void (*spdk_bdev_poller_stop_cb)(struct spdk_bdev_poller **ppoller);
 
+/**
+ * Initialize block device modules.
+ *
+ * \param cb_fn Called when the initialization is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ * \param start_poller_fn This function is called to request starting a poller.
+ * \param stop_poller_fn This function is called to request stopping a poller.
+ */
 void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 			  spdk_bdev_poller_start_cb start_poller_fn,
 			  spdk_bdev_poller_stop_cb stop_poller_fn);
+
+/**
+ * Perform cleanup work to remove the registered block device modules.
+ *
+ * \param cb_fn Called when the removal is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
 void spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg);
+
+/**
+ * Get the configuration options for the registered block device modules.
+ *
+ * \param fp The pointer to a file that will be written to the configuration options.
+ */
 void spdk_bdev_config_text(FILE *fp);
 
+/**
+ * Get block device by the block device name.
+ *
+ * \param bdev_name The name of the block device.
+ * \return Block device associated with the name or NULL if no block device with
+ *               bdev_name is currently registered.
+ */
 struct spdk_bdev *spdk_bdev_get_by_name(const char *bdev_name);
 
 /**
- * These two functions iterate the full list of bdevs, including bdevs
- *  that have virtual bdevs on top of them.
+ * Get the first registered block device.
+ *
+ * \return The first registered block device.
  */
 struct spdk_bdev *spdk_bdev_first(void);
+
+/**
+ * Get the next registered block device.
+ *
+ * \param prev The current block device.
+ * \return The next registered block device.
+ */
 struct spdk_bdev *spdk_bdev_next(struct spdk_bdev *prev);
 
 /**
- * These two functions only iterate over bdevs which have no virtual
- *  bdevs on top of them.
+ * Get the first block device without virtual block devices on top.
+ *
+ * This function only traverses over block devices which have no virtual block
+ * devices on top of them, then get the first one.
+ *
+ * \return The first block device without virtual block devices on top.
  */
 struct spdk_bdev *spdk_bdev_first_leaf(void);
+
+/**
+ * Get the next block device without virtual block devices on top.
+ *
+ * This function only traverses over block devices which have no virtual block
+ * devices on top of them, then get the next one.
+ *
+ * \param prev The current block device.
+ * \return The next block device without virtual block devices on top.
+ */
 struct spdk_bdev *spdk_bdev_next_leaf(struct spdk_bdev *prev);
 
 /**
@@ -174,8 +224,26 @@ void spdk_bdev_close(struct spdk_bdev_desc *desc);
  */
 struct spdk_bdev *spdk_bdev_desc_get_bdev(struct spdk_bdev_desc *desc);
 
+/**
+ * Check whether the block device supports the I/O type.
+ *
+ * \param bdev Block device to check.
+ * \param io_type The specific I/O type like read, write, flush, unmap.
+ * \return true if support, false otherwise.
+ */
 bool spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type);
 
+/**
+ * Output driver-specific configuration to a JSON stream.
+ *
+ * The JSON write context will be initialized with an open object, so the bdev
+ * driver should write a name(based on the driver name) followed by a JSON value
+ * (most likely another nested object).
+ *
+ * \param bdev Block device to query.
+ * \param w JSON write context. It will store the driver-specific configuration context.
+ * \return 0 on success, negated errno on failure.
+ */
 int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
 
 /**
@@ -246,7 +314,7 @@ bool spdk_bdev_has_write_cache(const struct spdk_bdev *bdev);
  * channel may only be used from the thread it was originally obtained
  * from.
  *
- * \param desc Block device descriptor
+ * \param desc Block device descriptor.
  *
  * \return A handle to the I/O channel or NULL on failure.
  */
@@ -255,7 +323,7 @@ struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc);
 /**
  * Submit a read request to the bdev on the given channel.
  *
- * \param bdev Block device
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param buf Data buffer to read into.
  * \param offset The offset, in bytes, from the start of the block device.
@@ -274,7 +342,7 @@ int spdk_bdev_read(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 /**
  * Submit a read request to the bdev on the given channel.
  *
- * \param desc Block device descriptor
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param buf Data buffer to read into.
  * \param offset_blocks The offset, in blocks, from the start of the block device.
@@ -297,7 +365,7 @@ int spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
  * data and may not be able to directly transfer into the buffers provided. In
  * this case, the request may fail.
  *
- * \param bdev Block device
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param iov A scatter gather list of buffers to be read into.
  * \param iovcnt The number of elements in iov.
@@ -322,7 +390,7 @@ int spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * data and may not be able to directly transfer into the buffers provided. In
  * this case, the request may fail.
  *
- * \param desc Block device descriptor
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param iov A scatter gather list of buffers to be read into.
  * \param iovcnt The number of elements in iov.
@@ -343,7 +411,7 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 /**
  * Submit a write request to the bdev on the given channel.
  *
- * \param bdev Block device
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param buf Data buffer to written from.
  * \param offset The offset, in bytes, from the start of the block device.
@@ -362,7 +430,7 @@ int spdk_bdev_write(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 /**
  * Submit a write request to the bdev on the given channel.
  *
- * \param desc Block device descriptor
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param buf Data buffer to written from.
  * \param offset_blocks The offset, in blocks, from the start of the block device.
@@ -385,12 +453,12 @@ int spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  * data and may not be able to directly transfer out of the buffers provided. In
  * this case, the request may fail.
  *
- * \param bdev Block device
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param iov A scatter gather list of buffers to be written from.
  * \param iovcnt The number of elements in iov.
  * \param offset The offset, in bytes, from the start of the block device.
- * \param nbytes The number of bytes to read. buf must be greater than or equal to this size.
+ * \param len The size of data to write.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
@@ -410,12 +478,12 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * data and may not be able to directly transfer out of the buffers provided. In
  * this case, the request may fail.
  *
- * \param desc Block device descriptor
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param iov A scatter gather list of buffers to be written from.
  * \param iovcnt The number of elements in iov.
  * \param offset_blocks The offset, in blocks, from the start of the block device.
- * \param num_blocks The number of blocks to write. buf must be greater than or equal to this size.
+ * \param num_blocks The number of blocks to write.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
@@ -432,10 +500,10 @@ int spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel 
  * Submit a write zeroes request to the bdev on the given channel. This command
  *  ensures that all bytes in the specified range are set to 00h
  *
- * \param bdev Block device
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param offset The offset, in bytes, from the start of the block device.
- * \param nbytes The number of bytes to zero.
+ * \param len The size of data to zero.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
  *
@@ -451,7 +519,7 @@ int spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  * Submit a write zeroes request to the bdev on the given channel. This command
  *  ensures that all bytes in the specified range are set to 00h
  *
- * \param desc Block device descriptor
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param offset_blocks The offset, in blocks, from the start of the block device.
  * \param num_blocks The number of blocks to zero.
@@ -471,7 +539,7 @@ int spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_ch
  * deallocate. This notifies the device that the data in the blocks described is no
  * longer valid. Reading blocks that have been unmapped results in indeterminate data.
  *
- * \param bdev Block device
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param offset The offset, in bytes, from the start of the block device.
  * \param nbytes The number of bytes to unmap. Must be a multiple of the block size.
@@ -491,7 +559,7 @@ int spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * deallocate. This notifies the device that the data in the blocks described is no
  * longer valid. Reading blocks that have been unmapped results in indeterminate data.
  *
- * \param desc Block device descriptor
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param offset_blocks The offset, in blocks, from the start of the block device.
  * \param num_blocks The number of blocks to unmap.
@@ -511,7 +579,7 @@ int spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  * caches, data is not guaranteed to be persistent until the completion of a flush
  * request. Call spdk_bdev_has_write_cache() to check if the bdev has a volatile cache.
  *
- * \param bdev Block device
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param offset The offset, in bytes, from the start of the block device.
  * \param length The number of bytes.
@@ -531,7 +599,7 @@ int spdk_bdev_flush(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * caches, data is not guaranteed to be persistent until the completion of a flush
  * request. Call spdk_bdev_has_write_cache() to check if the bdev has a volatile cache.
  *
- * \param desc Block device descriptor
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param offset_blocks The offset, in blocks, from the start of the block device.
  * \param num_blocks The number of blocks.
@@ -549,7 +617,7 @@ int spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 /**
  * Submit a reset request to the bdev on the given channel.
  *
- * \param bdev Block device
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
@@ -569,7 +637,7 @@ int spdk_bdev_reset(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * The SGL/PRP will be automated generated based on the given buffer,
  * so that portion of the command may be left empty.
  *
- * \param bdev Block device
+ * \param desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param cmd The raw NVMe command. Must be an admin command.
  * \param buf Data buffer to written from.
@@ -596,7 +664,7 @@ int spdk_bdev_nvme_admin_passthru(struct spdk_bdev_desc *desc,
  * so that portion of the command may be left empty. Also, the namespace
  * id (nsid) will be populated automatically.
  *
- * \param bdev Block device
+ * \param bdev_desc Block device descriptor.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param cmd The raw NVMe command. Must be in the NVM command set.
  * \param buf Data buffer to written from.
@@ -618,7 +686,7 @@ int spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *bdev_desc,
  * Free an I/O request. This should be called after the callback for the I/O has
  * been called and notifies the bdev layer that memory may now be released.
  *
- * \param bdev_io I/O request
+ * \param bdev_io I/O request.
  *
  * \return -1 on failure, 0 on success.
  */
@@ -628,7 +696,7 @@ int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
  * Return I/O statistics for this channel. After returning stats, zero out
  * the current state of the statistics.
  *
- * \param bdev Block device
+ * \param bdev Block device.
  * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
  * \param stat The per-channel statistics.
  *
