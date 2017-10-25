@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca91e7a4_0e88e120",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-25T12:56:46Z",
+      "side": 1,
+      "message": "could you mention that we\u0027re testing both vhost-user (virtio initiator connecting to the socket on the same host) and virtio-pci (virtio initiator in a VM connecting to the virtual PCI SCSI device created by the hypervisor)",
+      "range": {
+        "startLine": 78,
+        "startChar": 27,
+        "endLine": 78,
+        "endChar": 43
+      },
+      "revId": "ef2436a3cbe8daead331c729767e7a4fd852e81f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c349b6ee_c9fa8a4b",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-25T12:56:46Z",
+      "side": 1,
+      "message": "would \"bdevio test application\" be more descriptive here?",
+      "range": {
+        "startLine": 83,
+        "startChar": 7,
+        "endLine": 83,
+        "endChar": 14
+      },
+      "revId": "ef2436a3cbe8daead331c729767e7a4fd852e81f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c980be18_48bb64d0",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 18
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-25T12:56:46Z",
+      "side": 1,
+      "message": "is this still up-to-date?",
+      "range": {
+        "startLine": 127,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 89
+      },
+      "revId": "ef2436a3cbe8daead331c729767e7a4fd852e81f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
