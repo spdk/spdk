@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "684821a9_6fe22c08",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:54:41Z",
+      "side": 1,
+      "message": "I removed just \"read\" and \"randread\" in other patch.\nNow we are testing with just write, randwrite, rw and randwr with verification enabled (which of course implies reads), so I think it\u0027d be safe to rephrase it so that it\u0027s clear that we don\u0027t test with plain \"read\"",
+      "range": {
+        "startLine": 77,
+        "startChar": 44,
+        "endLine": 77,
+        "endChar": 48
+      },
+      "revId": "abe290f2226ca1b6ec6ba701c30ad541be1e0e25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2728ceac_1de85a03",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:54:41Z",
+      "side": 1,
+      "message": "I\u0027d rephrase it:\nAll tests are run in virtio-user mode. Tests 2-3 and 5-9 are additionally run in virtio-pci mode.",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 60
+      },
+      "revId": "abe290f2226ca1b6ec6ba701c30ad541be1e0e25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0532045_0fbea167",
+        "filename": "lib/vhost/test_plan.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-25T13:54:41Z",
+      "side": 1,
+      "message": "We should also mention that TRIMs are verified by FIO too. (trim_zero_verify or whatever this option was called)",
+      "range": {
+        "startLine": 125,
+        "startChar": 3,
+        "endLine": 125,
+        "endChar": 78
+      },
+      "revId": "abe290f2226ca1b6ec6ba701c30ad541be1e0e25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
