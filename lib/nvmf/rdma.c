@@ -1729,6 +1729,21 @@ spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	bool error = false;
 	char buf[64];
 
+	/* reset the mgmt_channel and thread info of qpair */
+	if ((rqpair->qpair.thread != NULL) && (rqpair->qpair.thread != spdk_get_thread())) {
+		spdk_put_io_channel(rqpair->mgmt_channel);
+		rqpair->mgmt_channel = spdk_get_io_channel(rtransport);
+		if (!rqpair->mgmt_channel) {
+			SPDK_ERRLOG("Can not allocate mgmt_channel\n");
+			return -1;
+		}
+
+		rqpair->ch = spdk_io_channel_get_ctx(rqpair->mgmt_channel);
+		assert(rqpair->ch != NULL);
+
+		rqpair->qpair.thread = spdk_get_thread();
+	}
+
 	/* Poll for completing operations. */
 	reaped = ibv_poll_cq(rqpair->cq, 32, wc);
 	if (reaped < 0) {
