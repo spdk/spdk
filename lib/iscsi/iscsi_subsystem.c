@@ -567,12 +567,9 @@ spdk_iscsi_log_globals(void)
 }
 
 static int
-spdk_iscsi_app_read_parameters(void)
+spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 {
-	struct spdk_conf_section *sp;
-	const char *ag_tag;
 	const char *val;
-	int ag_tag_i;
 	int MaxSessions;
 	int MaxConnectionsPerSession;
 	int DefaultTime2Wait;
@@ -581,12 +578,165 @@ spdk_iscsi_app_read_parameters(void)
 	int ErrorRecoveryLevel;
 	int timeout;
 	int nopininterval;
-	int rc;
-	int i;
 	int AllowDuplicateIsid;
 	int min_conn_per_core = 0;
 	int conn_idle_interval = 0;
 	int flush_timeout = 0;
+	const char *ag_tag;
+	int ag_tag_i;
+	int i;
+
+	val = spdk_conf_section_get_val(sp, "Comment");
+	if (val != NULL) {
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "Comment %s\n", val);
+	}
+
+	val = spdk_conf_section_get_val(sp, "AuthFile");
+	if (val != NULL) {
+		free(g_spdk_iscsi.authfile);
+		g_spdk_iscsi.authfile = strdup(val);
+		if (!g_spdk_iscsi.authfile) {
+			perror("authfile");
+			return -ENOMEM;
+		}
+	}
+
+	val = spdk_conf_section_get_val(sp, "NodeBase");
+	if (val != NULL) {
+		free(g_spdk_iscsi.nodebase);
+		g_spdk_iscsi.nodebase = strdup(val);
+		if (!g_spdk_iscsi.nodebase) {
+			perror("nodebase");
+			free(g_spdk_iscsi.nodebase);
+			return -ENOMEM;
+		}
+	}
+
+	MaxSessions = spdk_conf_section_get_intval(sp, "MaxSessions");
+	if (MaxSessions >= 0) {
+		g_spdk_iscsi.MaxSessions = MaxSessions;
+	}
+
+	MaxConnectionsPerSession = spdk_conf_section_get_intval(sp, "MaxConnectionsPerSession");
+	if (MaxConnectionsPerSession >= 0) {
+		g_spdk_iscsi.MaxConnectionsPerSession = MaxConnectionsPerSession;
+	}
+	DefaultTime2Wait = spdk_conf_section_get_intval(sp, "DefaultTime2Wait");
+	if (DefaultTime2Wait >= 0) {
+		g_spdk_iscsi.DefaultTime2Wait = DefaultTime2Wait;
+	}
+	DefaultTime2Retain = spdk_conf_section_get_intval(sp, "DefaultTime2Retain");
+	if (DefaultTime2Retain >= 0) {
+		g_spdk_iscsi.DefaultTime2Retain = DEFAULT_DEFAULTTIME2RETAIN;
+	}
+	val = spdk_conf_section_get_val(sp, "ImmediateData");
+	if (val != NULL) {
+		if (strcasecmp(val, "Yes") == 0) {
+			ImmediateData = 1;
+		} else if (strcasecmp(val, "No") == 0) {
+			ImmediateData = 0;
+		} else {
+			SPDK_ERRLOG("unknown value %s\n", val);
+			return -1;
+		}
+		g_spdk_iscsi.ImmediateData = ImmediateData;
+	}
+
+	/* This option is only for test.
+	 * If AllowDuplicateIsid is enabled, it allows different connections carrying
+	 * TSIH=0 login the target within the same session.
+	 */
+	val = spdk_conf_section_get_val(sp, "AllowDuplicateIsid");
+	if (val != NULL) {
+		if (strcasecmp(val, "Yes") == 0) {
+			AllowDuplicateIsid = 1;
+		} else if (strcasecmp(val, "No") == 0) {
+			AllowDuplicateIsid = 0;
+		} else {
+			SPDK_ERRLOG("unknown value %s\n", val);
+			return -1;
+		}
+		g_spdk_iscsi.AllowDuplicateIsid = AllowDuplicateIsid;
+	}
+	ErrorRecoveryLevel = spdk_conf_section_get_intval(sp, "ErrorRecoveryLevel");
+	if (ErrorRecoveryLevel >= 0) {
+		if (ErrorRecoveryLevel > 2) {
+			SPDK_ERRLOG("ErrorRecoveryLevel %d not supported,\n", ErrorRecoveryLevel);
+			return -1;
+		}
+		g_spdk_iscsi.ErrorRecoveryLevel = ErrorRecoveryLevel;
+	}
+	timeout = spdk_conf_section_get_intval(sp, "Timeout");
+	if (timeout >= 0) {
+		g_spdk_iscsi.timeout = timeout;
+	}
+	flush_timeout = spdk_conf_section_get_intval(sp, "FlushTimeout");
+	if (flush_timeout >= 0) {
+		g_spdk_iscsi.flush_timeout = flush_timeout;
+	}
+	nopininterval = spdk_conf_section_get_intval(sp, "NopInInterval");
+	if (nopininterval >= 0) {
+		g_spdk_iscsi.nopininterval = nopininterval;
+	}
+	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
+	if (val != NULL) {
+		g_spdk_iscsi.no_discovery_auth = 0;
+		for (i = 0; ; i++) {
+			val = spdk_conf_section_get_nmval(sp, "DiscoveryAuthMethod", 0, i);
+			if (val == NULL)
+				break;
+			if (strcasecmp(val, "CHAP") == 0) {
+				g_spdk_iscsi.req_discovery_auth = 1;
+			} else if (strcasecmp(val, "Mutual") == 0) {
+				g_spdk_iscsi.req_discovery_auth_mutual = 1;
+			} else if (strcasecmp(val, "Auto") == 0) {
+				g_spdk_iscsi.req_discovery_auth = 0;
+				g_spdk_iscsi.req_discovery_auth_mutual = 0;
+			} else if (strcasecmp(val, "None") == 0) {
+				g_spdk_iscsi.no_discovery_auth = 1;
+				g_spdk_iscsi.req_discovery_auth = 0;
+				g_spdk_iscsi.req_discovery_auth_mutual = 0;
+			} else {
+				SPDK_ERRLOG("unknown auth\n");
+				return -1;
+			}
+		}
+	}
+	val = spdk_conf_section_get_val(sp, "DiscoveryAuthGroup");
+	if (val != NULL) {
+		ag_tag = val;
+		if (strcasecmp(ag_tag, "None") == 0) {
+			ag_tag_i = 0;
+		} else {
+			if (strncasecmp(ag_tag, "AuthGroup",
+					strlen("AuthGroup")) != 0
+			    || sscanf(ag_tag, "%*[^0-9]%d", &ag_tag_i) != 1) {
+				SPDK_ERRLOG("auth group error\n");
+				return -1;
+			}
+			if (ag_tag_i == 0) {
+				SPDK_ERRLOG("invalid auth group %d\n", ag_tag_i);
+				return -1;
+			}
+		}
+		g_spdk_iscsi.discovery_auth_group = ag_tag_i;
+	}
+	min_conn_per_core = spdk_conf_section_get_intval(sp, "MinConnectionsPerCore");
+	if (min_conn_per_core >= 0)
+		spdk_iscsi_conn_set_min_per_core(min_conn_per_core);
+
+	conn_idle_interval = spdk_conf_section_get_intval(sp, "MinConnectionIdleInterval");
+	if (conn_idle_interval > 0)
+		spdk_iscsi_set_min_conn_idle_interval(conn_idle_interval);
+
+	return 0;
+}
+
+static int
+spdk_iscsi_app_read_parameters(void)
+{
+	struct spdk_conf_section *sp;
+	int rc;
 
 	g_spdk_iscsi.MaxSessions = DEFAULT_MAX_SESSIONS;
 	g_spdk_iscsi.MaxConnectionsPerSession = DEFAULT_MAX_CONNECTIONS_PER_SESSION;
@@ -621,47 +771,12 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 
-	val = spdk_conf_section_get_val(sp, "Comment");
-	if (val != NULL) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "Comment %s\n", val);
-	}
-
-	val = spdk_conf_section_get_val(sp, "AuthFile");
-	if (val != NULL) {
-		free(g_spdk_iscsi.authfile);
-		g_spdk_iscsi.authfile = strdup(val);
-		if (!g_spdk_iscsi.authfile) {
-			perror("authfile");
-			return -ENOMEM;
-		}
-	}
-
-	/* ISCSI Global */
-	val = spdk_conf_section_get_val(sp, "NodeBase");
-	if (val != NULL) {
-		free(g_spdk_iscsi.nodebase);
-		g_spdk_iscsi.nodebase = strdup(val);
-		if (!g_spdk_iscsi.nodebase) {
-			perror("nodebase");
-			free(g_spdk_iscsi.nodebase);
-			return -ENOMEM;
-		}
-	}
-
-	MaxSessions = spdk_conf_section_get_intval(sp, "MaxSessions");
-	if (MaxSessions >= 0) {
-		g_spdk_iscsi.MaxSessions = MaxSessions;
-	}
+	spdk_iscsi_read_parameters_from_config_file(sp);
 
 	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
 		perror("Unable to allocate session pointer array\n");
 		return -1;
-	}
-
-	MaxConnectionsPerSession = spdk_conf_section_get_intval(sp, "MaxConnectionsPerSession");
-	if (MaxConnectionsPerSession >= 0) {
-		g_spdk_iscsi.MaxConnectionsPerSession = MaxConnectionsPerSession;
 	}
 
 	/*
@@ -671,16 +786,6 @@ spdk_iscsi_app_read_parameters(void)
 	 *  pools, we can bump this up to support more connections.
 	 */
 	g_spdk_iscsi.MaxConnections = g_spdk_iscsi.MaxSessions;
-
-	DefaultTime2Wait = spdk_conf_section_get_intval(sp, "DefaultTime2Wait");
-	if (DefaultTime2Wait >= 0) {
-		g_spdk_iscsi.DefaultTime2Wait = DefaultTime2Wait;
-	}
-
-	DefaultTime2Retain = spdk_conf_section_get_intval(sp, "DefaultTime2Retain");
-	if (DefaultTime2Retain >= 0) {
-		g_spdk_iscsi.DefaultTime2Retain = DEFAULT_DEFAULTTIME2RETAIN;
-	}
 
 	if (g_spdk_iscsi.MaxSessions == 0 || g_spdk_iscsi.MaxSessions > 0xffff) {
 		SPDK_ERRLOG("%d MaxSessions not supported, must be between 1 and 65535.\n",
@@ -704,121 +809,17 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 
-	val = spdk_conf_section_get_val(sp, "ImmediateData");
-	if (val != NULL) {
-		if (strcasecmp(val, "Yes") == 0) {
-			ImmediateData = 1;
-		} else if (strcasecmp(val, "No") == 0) {
-			ImmediateData = 0;
-		} else {
-			SPDK_ERRLOG("unknown value %s\n", val);
-			return -1;
-		}
-		g_spdk_iscsi.ImmediateData = ImmediateData;
-	}
-
-	/* This option is only for test.
-	 * If AllowDuplicateIsid is enabled, it allows different connections carrying
-	 * TSIH=0 login the target within the same session.
-	 */
-	val = spdk_conf_section_get_val(sp, "AllowDuplicateIsid");
-	if (val != NULL) {
-		if (strcasecmp(val, "Yes") == 0) {
-			AllowDuplicateIsid = 1;
-		} else if (strcasecmp(val, "No") == 0) {
-			AllowDuplicateIsid = 0;
-		} else {
-			SPDK_ERRLOG("unknown value %s\n", val);
-			return -1;
-		}
-		g_spdk_iscsi.AllowDuplicateIsid = AllowDuplicateIsid;
-	}
-
-	ErrorRecoveryLevel = spdk_conf_section_get_intval(sp, "ErrorRecoveryLevel");
-	if (ErrorRecoveryLevel >= 0) {
-		if (ErrorRecoveryLevel > 2) {
-			SPDK_ERRLOG("ErrorRecoveryLevel %d not supported,\n", ErrorRecoveryLevel);
-			return -1;
-		}
-		g_spdk_iscsi.ErrorRecoveryLevel = ErrorRecoveryLevel;
-	}
-
-	timeout = spdk_conf_section_get_intval(sp, "Timeout");
-	if (timeout >= 0) {
-		g_spdk_iscsi.timeout = timeout;
-	}
-
-	flush_timeout = spdk_conf_section_get_intval(sp, "FlushTimeout");
-	if (flush_timeout >= 0) {
-		g_spdk_iscsi.flush_timeout = flush_timeout;
-	}
 	g_spdk_iscsi.flush_timeout *= (spdk_get_ticks_hz() >> 20);
 
-	nopininterval = spdk_conf_section_get_intval(sp, "NopInInterval");
-	if (nopininterval >= 0) {
-		g_spdk_iscsi.nopininterval = nopininterval;
-	}
 	if (g_spdk_iscsi.nopininterval > MAX_NOPININTERVAL) {
 		SPDK_ERRLOG("%d NopInInterval too big, using %d instead.\n",
 			    g_spdk_iscsi.nopininterval, DEFAULT_NOPININTERVAL);
 		g_spdk_iscsi.nopininterval = DEFAULT_NOPININTERVAL;
 	}
-
-
-	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
-	if (val != NULL) {
-		g_spdk_iscsi.no_discovery_auth = 0;
-		for (i = 0; ; i++) {
-			val = spdk_conf_section_get_nmval(sp, "DiscoveryAuthMethod", 0, i);
-			if (val == NULL)
-				break;
-			if (strcasecmp(val, "CHAP") == 0) {
-				g_spdk_iscsi.req_discovery_auth = 1;
-			} else if (strcasecmp(val, "Mutual") == 0) {
-				g_spdk_iscsi.req_discovery_auth_mutual = 1;
-			} else if (strcasecmp(val, "Auto") == 0) {
-				g_spdk_iscsi.req_discovery_auth = 0;
-				g_spdk_iscsi.req_discovery_auth_mutual = 0;
-			} else if (strcasecmp(val, "None") == 0) {
-				g_spdk_iscsi.no_discovery_auth = 1;
-				g_spdk_iscsi.req_discovery_auth = 0;
-				g_spdk_iscsi.req_discovery_auth_mutual = 0;
-			} else {
-				SPDK_ERRLOG("unknown auth\n");
-				return -1;
-			}
-		}
-	}
 	if (g_spdk_iscsi.req_discovery_auth_mutual && !g_spdk_iscsi.req_discovery_auth) {
 		SPDK_ERRLOG("Mutual but not CHAP\n");
 		return -1;
 	}
-	val = spdk_conf_section_get_val(sp, "DiscoveryAuthGroup");
-	if (val != NULL) {
-		ag_tag = val;
-		if (strcasecmp(ag_tag, "None") == 0) {
-			ag_tag_i = 0;
-		} else {
-			if (strncasecmp(ag_tag, "AuthGroup",
-					strlen("AuthGroup")) != 0
-			    || sscanf(ag_tag, "%*[^0-9]%d", &ag_tag_i) != 1) {
-				SPDK_ERRLOG("auth group error\n");
-				return -1;
-			}
-			if (ag_tag_i == 0) {
-				SPDK_ERRLOG("invalid auth group %d\n", ag_tag_i);
-				return -1;
-			}
-		}
-		g_spdk_iscsi.discovery_auth_group = ag_tag_i;
-	}
-	min_conn_per_core = spdk_conf_section_get_intval(sp, "MinConnectionsPerCore");
-	if (min_conn_per_core >= 0)
-		spdk_iscsi_conn_set_min_per_core(min_conn_per_core);
-
-	conn_idle_interval = spdk_conf_section_get_intval(sp, "MinConnectionIdleInterval");
-	if (conn_idle_interval > 0)
-		spdk_iscsi_set_min_conn_idle_interval(conn_idle_interval);
 
 	spdk_iscsi_log_globals();
 
