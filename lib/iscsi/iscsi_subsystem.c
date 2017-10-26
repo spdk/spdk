@@ -782,12 +782,9 @@ spdk_iscsi_app_read_parameters(void)
 	/* Process parameters */
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_app_read_parameters\n");
 	sp = spdk_conf_find_section(NULL, "iSCSI");
-	if (sp == NULL) {
-		SPDK_ERRLOG("iSCSI config section not found.\n");
-		return -1;
+	if (sp != NULL) {
+		spdk_iscsi_read_parameters_from_config_file(sp);
 	}
-
-	spdk_iscsi_read_parameters_from_config_file(sp);
 
 	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
