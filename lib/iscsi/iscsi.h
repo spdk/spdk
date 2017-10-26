@@ -282,10 +282,7 @@ struct spdk_iscsi_globals {
 	uint32_t FirstBurstLength;
 	uint32_t MaxBurstLength;
 	uint32_t MaxRecvDataSegmentLength;
-	uint32_t InitialR2T;
 	uint32_t ImmediateData;
-	uint32_t DataPDUInOrder;
-	uint32_t DataSequenceInOrder;
 	uint32_t ErrorRecoveryLevel;
 	uint32_t AllowDuplicateIsid;
 
