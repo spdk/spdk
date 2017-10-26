@@ -231,7 +231,8 @@ SPDK_RPC_REGISTER("destroy_lvol_store", spdk_rpc_destroy_lvol_store)
 
 struct rpc_construct_lvol_bdev {
 	char *uuid;
-	char *name;
+	char *lvsname;
+	char *bdev;
 	uint64_t size;
 };
 
@@ -240,13 +241,16 @@ free_rpc_construct_lvol_bdev(struct rpc_construct_lvol_bdev *req)
 {
 	if (req->uuid)
 		free(req->uuid);
-	if (req->name)
-		free(req->name);
+	if (req->lvsname)
+		free(req->lvsname);
+	if (req->bdev)
+		free(req->bdev);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_lvol_bdev_decoders[] = {
 	{"uuid", offsetof(struct rpc_construct_lvol_bdev, uuid), spdk_json_decode_string, true},
-	{"name", offsetof(struct rpc_construct_lvol_bdev, name), spdk_json_decode_string, true},
+	{"lvsname", offsetof(struct rpc_construct_lvol_bdev, lvsname), spdk_json_decode_string, true},
+	{"bdev", offsetof(struct rpc_construct_lvol_bdev, bdev), spdk_json_decode_string, true},
 	{"size", offsetof(struct rpc_construct_lvol_bdev, size), spdk_json_decode_uint64},
 };
 
@@ -297,7 +301,7 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 		rc = -EINVAL;
 		goto invalid;
 	}
-	if ((req.uuid && req.name) || (req.uuid == NULL && req.name == NULL)) {
+	if ((req.uuid && req.lvsname) || (req.uuid == NULL && req.lvsname == NULL)) {
 		rc = -EINVAL;
 		goto invalid;
 	} else if (req.uuid) {
@@ -307,8 +311,8 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 			goto invalid;
 		}
 		lvs = vbdev_get_lvol_store_by_uuid(lvol_store_uuid);
-	} else if (req.name) {
-		lvs = vbdev_get_lvol_store_by_name(req.name);
+	} else if (req.lvsname) {
+		lvs = vbdev_get_lvol_store_by_name(req.lvsname);
 	}
 	if (lvs == NULL) {
 		SPDK_INFOLOG(SPDK_TRACE_LVOL_RPC, "blobstore with UUID '%p' not found\n", &lvol_store_uuid);
@@ -317,7 +321,7 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 	}
 	sz = (size_t)req.size;
 
-	rc = vbdev_lvol_create(lvs->uuid, sz, _spdk_rpc_construct_lvol_bdev_cb, request);
+	rc = vbdev_lvol_create(lvs->uuid, req.bdev, sz, _spdk_rpc_construct_lvol_bdev_cb, request);
 	if (rc < 0) {
 		goto invalid;
 	}
