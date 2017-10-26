@@ -16,6 +16,24 @@
       "revId": "09dcc21ed117cd0f742fcfc16e1c074290b17d86",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78b2873b_5742bcdd",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-26T11:01:02Z",
+      "side": 1,
+      "message": "Definitely agree with all points you made. Added spdk_vbdev_unregister() should simplify things as well.\nWill work on improving those parts after release.",
+      "parentUuid": "d0f6992a_af6e8bc9",
+      "revId": "09dcc21ed117cd0f742fcfc16e1c074290b17d86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
