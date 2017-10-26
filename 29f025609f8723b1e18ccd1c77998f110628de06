@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3451d061_92e32b7a",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:02:31Z",
+      "side": 1,
+      "message": "Why is this comparing an int to true?\n\nShould this be bdeverrno \u003d\u003d 0?",
+      "range": {
+        "startLine": 186,
+        "startChar": 25,
+        "endLine": 186,
+        "endChar": 42
+      },
+      "revId": "29f025609f8723b1e18ccd1c77998f110628de06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
