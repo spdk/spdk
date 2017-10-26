@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e768e2a5_2443251a",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-10-26T06:27:00Z",
+      "side": 1,
+      "message": "static variables is better.",
+      "revId": "409fb5cd54f911b8f3a7b970199b2a79276fc2b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f336a3bc_5667ce3b",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-10-26T06:27:00Z",
+      "side": 1,
+      "message": "NULL should be \u0026done, or how it works for the last while(!done)?",
+      "revId": "409fb5cd54f911b8f3a7b970199b2a79276fc2b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
