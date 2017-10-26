@@ -310,18 +310,20 @@ p.set_defaults(func=construct_lvol_store)
 
 def construct_lvol_bdev(args):
     num_bytes = (args.size * 1024 * 1024)
-    params = {'size': num_bytes}
+    params = {'size': num_bytes,
+              'name': name}
     if (args.uuid and args.name) or (not args.uuid and not args.name):
         print("You need to specify either uuid or name of lvolstore")
     else:
         if args.uuid:
             params['uuid'] = args.uuid
-        if args.name:
-            params['name'] = args.name
+        if args.lvsname:
+            params['lvsname'] = args.lvsname
         print_array(jsonrpc_call('construct_lvol_bdev', params))
 p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
 p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
-p.add_argument('-n', '--name', help='lvol store name', required=False)
+p.add_argument('-n', '--lvsname', help='lvol store name', required=False)
+p.add_argument('-b', '--bdev', help='bdev name', required=False)
 p.add_argument('size', help='size in MiB for this bdev', type=int)
 p.set_defaults(func=construct_lvol_bdev)
 
