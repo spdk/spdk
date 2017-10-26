@@ -77,7 +77,9 @@ main(int argc, char **argv)
 	/* default value in opts */
 	spdk_app_opts_init(&opts);
 	opts.name = "nvmf";
-	opts.config_file = SPDK_NVMF_DEFAULT_CONFIG;
+	if (access(SPDK_NVMF_DEFAULT_CONFIG, F_OK) == 0) {
+		opts.config_file = SPDK_NVMF_DEFAULT_CONFIG;
+	}
 	opts.max_delay_us = 1000; /* 1 ms */
 
 	while ((ch = getopt(argc, argv, "c:de:i:m:n:p:qs:t:DH")) != -1) {

@@ -179,16 +179,14 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	struct spdk_nvmf_tgt_opts opts;
 	int rc;
 
-	sp = spdk_conf_find_section(NULL, "Nvmf");
-	if (sp == NULL) {
-		SPDK_ERRLOG("No Nvmf section in configuration file.\n");
-		return -1;
-	}
-
 	spdk_nvmf_tgt_opts_init(&opts);
 	g_spdk_nvmf_tgt_conf.acceptor_lcore = spdk_env_get_current_core();
 	g_spdk_nvmf_tgt_conf.acceptor_poll_rate = ACCEPT_TIMEOUT_US;
-	spdk_nvmf_read_config_file_params(sp, &opts);
+
+	sp = spdk_conf_find_section(NULL, "Nvmf");
+	if (sp != NULL) {
+		spdk_nvmf_read_config_file_params(sp, &opts);
+	}
 
 	g_tgt = spdk_nvmf_tgt_create(&opts);
 	if (!g_tgt) {
