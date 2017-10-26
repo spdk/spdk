@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91a43d96_400c9076",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:47:36Z",
+      "side": 1,
+      "message": "I\u0027m not at all a PPC expert, but from a quick look at some related documentation[1], I\u0027m not sure lwsync is sufficient for the cases where we use spdk_wmb().\n\nThe main place we use spdk_wmb() today is for ensuring all of the NVMe submission queue entry has been flushed to memory before ringing the queue doorbell to cause the device to DMA it.  The docs I read seem to indicate that lwsync doesn\u0027t create a barrier for device access - I\u0027m assuming that means we need a full sync for this case.\n\n[1]: https://www.ibm.com/developerworks/systems/articles/powerpc.html",
+      "range": {
+        "startLine": 52,
+        "startChar": 35,
+        "endLine": 52,
+        "endChar": 41
+      },
+      "revId": "06c67e362668536edfa365aa17494c9dcab53895",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
