@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "573a976a_00e4228a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-26T07:52:34Z",
+      "side": 1,
+      "message": "this should be \u003d\u003d 0 since used_req_cnt is not a bool",
+      "revId": "0ebd61a692224e65a08a1715bb02bad7961fe293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c332a2f_7376585c",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-26T07:52:34Z",
+      "side": 1,
+      "message": "io_treshold \u003d\u003e io_threshold",
+      "revId": "0ebd61a692224e65a08a1715bb02bad7961fe293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a00f68a_2dda990a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-26T07:52:34Z",
+      "side": 1,
+      "message": "is this ++ needed?  or can we just change the previous to set this value to io_rate + 1?\n\nif it\u0027s needed, let\u0027s add a comment to explain why - it\u0027s not obvious to me at least",
+      "revId": "0ebd61a692224e65a08a1715bb02bad7961fe293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43475091_a6b54a3d",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-26T07:52:34Z",
+      "side": 1,
+      "message": "not sure what these changes are for?",
+      "revId": "0ebd61a692224e65a08a1715bb02bad7961fe293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
