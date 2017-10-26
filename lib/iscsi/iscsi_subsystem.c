@@ -68,7 +68,6 @@
 "  MaxSessions %d\n" \
 "  MaxConnectionsPerSession %d\n" \
 "  MaxConnections %d\n" \
-"  MaxOutstandingR2T %d\n" \
 "\n" \
 "  # iSCSI initial parameters negotiate with initiators\n" \
 "  # NOTE: incorrect values might crash\n" \
@@ -107,7 +106,7 @@ spdk_iscsi_config_dump_section(FILE *fp)
 		g_spdk_iscsi.nodebase, g_spdk_iscsi.authfile,
 		g_spdk_iscsi.timeout, authmethod, authgroup,
 		g_spdk_iscsi.MaxSessions, g_spdk_iscsi.MaxConnectionsPerSession,
-		g_spdk_iscsi.MaxConnections, g_spdk_iscsi.MaxOutstandingR2T,
+		g_spdk_iscsi.MaxConnections,
 		g_spdk_iscsi.DefaultTime2Wait, g_spdk_iscsi.DefaultTime2Retain,
 		(g_spdk_iscsi.ImmediateData == 1) ? "Yes" : "No",
 		(g_spdk_iscsi.DataPDUInOrder == 1) ? "Yes" : "No",
@@ -646,11 +645,6 @@ spdk_iscsi_app_read_parameters(void)
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DefaultTime2Retain %d\n",
 		      g_spdk_iscsi.DefaultTime2Retain);
 
-	/* check size limit - RFC3720(12.15, 12.16, 12.17) */
-	if (g_spdk_iscsi.MaxOutstandingR2T > 65535) {
-		SPDK_ERRLOG("MaxOutstandingR2T(%d) > 65535\n", g_spdk_iscsi.MaxOutstandingR2T);
-		return -1;
-	}
 	if (g_spdk_iscsi.DefaultTime2Wait > 3600) {
 		SPDK_ERRLOG("DefaultTime2Wait(%d) > 3600\n", g_spdk_iscsi.DefaultTime2Wait);
 		return -1;

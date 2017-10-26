@@ -277,7 +277,6 @@ struct spdk_iscsi_globals {
 	uint32_t MaxSessions;
 	uint32_t MaxConnectionsPerSession;
 	uint32_t MaxConnections;
-	uint32_t MaxOutstandingR2T;
 	uint32_t DefaultTime2Wait;
 	uint32_t DefaultTime2Retain;
 	uint32_t FirstBurstLength;
