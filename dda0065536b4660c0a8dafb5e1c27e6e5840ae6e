@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "026ada54_bf7fa44d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-10-26T08:14:04Z",
+      "side": 1,
+      "message": "function",
+      "range": {
+        "startLine": 129,
+        "startChar": 25,
+        "endLine": 129,
+        "endChar": 32
+      },
+      "revId": "dda0065536b4660c0a8dafb5e1c27e6e5840ae6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "548c10af_e2cd8755",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-10-26T08:14:04Z",
+      "side": 1,
+      "message": "function",
+      "range": {
+        "startLine": 130,
+        "startChar": 36,
+        "endLine": 130,
+        "endChar": 45
+      },
+      "revId": "dda0065536b4660c0a8dafb5e1c27e6e5840ae6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d146ae3c_c3a1e298",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-10-26T08:14:04Z",
+      "side": 1,
+      "message": "from?",
+      "range": {
+        "startLine": 144,
+        "startChar": 76,
+        "endLine": 144,
+        "endChar": 80
+      },
+      "revId": "dda0065536b4660c0a8dafb5e1c27e6e5840ae6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
