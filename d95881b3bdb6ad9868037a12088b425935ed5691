@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f024b60_dec9c9da",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 17
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-26T07:30:37Z",
+      "side": 1,
+      "message": "You still use quite an old commit as base. Please rebase your patch to latest master.",
+      "range": {
+        "startLine": 1,
+        "startChar": 12,
+        "endLine": 1,
+        "endChar": 20
+      },
+      "revId": "d95881b3bdb6ad9868037a12088b425935ed5691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "087c8a8f_ad0f4805",
+        "filename": "test/vhost/hotplug/blk_hotremove.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-26T07:30:37Z",
+      "side": 1,
+      "message": "I think 1 second should be enough",
+      "range": {
+        "startLine": 35,
+        "startChar": 4,
+        "endLine": 35,
+        "endChar": 11
+      },
+      "revId": "d95881b3bdb6ad9868037a12088b425935ed5691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c88e84c_b164266f",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-26T07:30:37Z",
+      "side": 1,
+      "message": "spaces/tabs consistency",
+      "range": {
+        "startLine": 122,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 1
+      },
+      "revId": "d95881b3bdb6ad9868037a12088b425935ed5691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0a0ffcd_93ce50f4",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-26T07:30:37Z",
+      "side": 1,
+      "message": "Why create BLK controller in SCSI test?",
+      "range": {
+        "startLine": 24,
+        "startChar": 12,
+        "endLine": 24,
+        "endChar": 58
+      },
+      "revId": "d95881b3bdb6ad9868037a12088b425935ed5691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc3d9d85_d425e6a7",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-26T07:30:37Z",
+      "side": 1,
+      "message": "This will not work because you have a BLK controller a line up",
+      "range": {
+        "startLine": 25,
+        "startChar": 12,
+        "endLine": 25,
+        "endChar": 58
+      },
+      "revId": "d95881b3bdb6ad9868037a12088b425935ed5691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1570e407_41be4289",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-26T07:30:37Z",
+      "side": 1,
+      "message": "Added device name will vary from test case to test case because you try to rely on hot plug which changes the device name",
+      "range": {
+        "startLine": 27,
+        "startChar": 49,
+        "endLine": 27,
+        "endChar": 58
+      },
+      "revId": "d95881b3bdb6ad9868037a12088b425935ed5691",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
