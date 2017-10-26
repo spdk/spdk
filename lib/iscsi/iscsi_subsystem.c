@@ -651,31 +651,16 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 			g_spdk_iscsi.DefaultTime2Retain = DEFAULT_DEFAULTTIME2RETAIN;
 		}
 	}
-	val = spdk_conf_section_get_val(sp, "ImmediateData");
-	if (val != NULL) {
-		if (strcasecmp(val, "Yes") == 0) {
-			g_spdk_iscsi.ImmediateData = 1;
-		} else if (strcasecmp(val, "No") == 0) {
-			g_spdk_iscsi.ImmediateData = 0;
-		} else {
-			SPDK_ERRLOG("unknown ImmediateData value %s, ignoring\n", val);
-		}
-	}
+	g_spdk_iscsi.ImmediateData = spdk_conf_section_get_boolval(sp, "ImmediateData",
+				     g_spdk_iscsi.ImmediateData);
 
 	/* This option is only for test.
 	 * If AllowDuplicateIsid is enabled, it allows different connections carrying
 	 * TSIH=0 login the target within the same session.
 	 */
-	val = spdk_conf_section_get_val(sp, "AllowDuplicateIsid");
-	if (val != NULL) {
-		if (strcasecmp(val, "Yes") == 0) {
-			g_spdk_iscsi.AllowDuplicateIsid = 1;
-		} else if (strcasecmp(val, "No") == 0) {
-			g_spdk_iscsi.AllowDuplicateIsid = 0;
-		} else {
-			SPDK_ERRLOG("unknown AllowDuplicateIsid value %s, ignoring\n", val);
-		}
-	}
+	g_spdk_iscsi.AllowDuplicateIsid = spdk_conf_section_get_boolval(sp, "AllowDuplicateIsid",
+					  g_spdk_iscsi.AllowDuplicateIsid);
+
 	ErrorRecoveryLevel = spdk_conf_section_get_intval(sp, "ErrorRecoveryLevel");
 	if (ErrorRecoveryLevel >= 0) {
 		if (ErrorRecoveryLevel > 2) {
@@ -770,12 +755,12 @@ spdk_iscsi_app_read_parameters(void)
 	g_spdk_iscsi.discovery_auth_group = 0;
 	g_spdk_iscsi.authfile = strdup(SPDK_ISCSI_DEFAULT_AUTHFILE);
 	if (!g_spdk_iscsi.authfile) {
-		perror("authfile");
+		SPDK_ERRLOG("could not strdup() default authfile name\n");
 		return -ENOMEM;
 	}
 	g_spdk_iscsi.nodebase = strdup(SPDK_ISCSI_DEFAULT_NODEBASE);
 	if (!g_spdk_iscsi.nodebase) {
-		perror("nodebase");
+		SPDK_ERRLOG("could not strdup() default nodebase\n");
 		return -ENOMEM;
 	}
 
@@ -788,7 +773,7 @@ spdk_iscsi_app_read_parameters(void)
 
 	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
-		perror("Unable to allocate session pointer array\n");
+		SPDK_ERRLOG("could not allocate session array\n");
 		return -1;
 	}
 
