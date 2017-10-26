@@ -49,7 +49,7 @@ int vbdev_lvs_create(struct spdk_bdev *base_bdev, char *name, uint32_t cluster_s
 		     spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
 void vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg);
 
-int vbdev_lvol_create(uuid_t uuid, size_t sz, spdk_lvol_op_with_handle_complete cb_fn,
+int vbdev_lvol_create(uuid_t uuid, char* name, size_t sz, spdk_lvol_op_with_handle_complete cb_fn,
 		      void *cb_arg);
 
 int vbdev_lvol_resize(char *name, size_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg);

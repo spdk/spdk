@@ -441,7 +441,7 @@ ut_lvs_destroy(void)
 
 	/* Suuccessfully create lvol, which should be unloaded with lvs later */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(lvs->uuid, sz, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(lvs->uuid, "lvol", sz, vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvolerrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
@@ -475,14 +475,14 @@ ut_lvol_init(void)
 
 	/* Incorrect uuid set */
 	g_lvolerrno = 0;
-	rc = vbdev_lvol_create(wrong_uuid, sz, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(wrong_uuid, "lvol", sz, vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(rc == -ENODEV);
 
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
 
 	/* Successful lvol create */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(g_lvs->uuid, sz, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(g_lvs->uuid, "lvol", sz, vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
@@ -631,7 +631,7 @@ ut_lvol_resize(void)
 
 	/* Successful lvol create */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(g_lvs->uuid, sz, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(g_lvs->uuid, "lvol", sz, vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvolerrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
