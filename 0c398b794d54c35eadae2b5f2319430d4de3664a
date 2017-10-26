@@ -34,6 +34,24 @@
       "revId": "0c398b794d54c35eadae2b5f2319430d4de3664a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6f35f31_7d1f43c2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-26T19:05:22Z",
+      "side": 1,
+      "message": "Agree with Darek.  Would be better to fix it now so we don\u0027t have to touch all of the modules once for this patch and then revert the changes in those files in a future patch.",
+      "parentUuid": "3e7246ee_b108baab",
+      "revId": "0c398b794d54c35eadae2b5f2319430d4de3664a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
