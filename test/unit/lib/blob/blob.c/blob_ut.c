@@ -1188,6 +1188,19 @@ bs_cluster_sz(void)
 	CU_ASSERT(g_bserrno == -ENOMEM);
 	SPDK_CU_ASSERT_FATAL(g_bs == NULL);
 
+	/*
+	 * Set cluster size to lower than page size,
+	 * to work it is required to be at least twice the blobstore page size.
+	 */
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	opts.cluster_sz = SPDK_BS_PAGE_SIZE - 1;
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == -ENOMEM);
+	SPDK_CU_ASSERT_FATAL(g_bs == NULL);
+
 	/* Set cluster size to twice the default */
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
