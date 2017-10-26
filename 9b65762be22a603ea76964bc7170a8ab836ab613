@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c7c18c5_a617adc0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1737,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-26T15:48:18Z",
+      "side": 1,
+      "message": "we should be able to just pass the bdev here - see the comments on vbdev_lvol.c",
+      "revId": "9b65762be22a603ea76964bc7170a8ab836ab613",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0f096e6_2706ae4c",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-26T15:48:18Z",
+      "side": 1,
+      "message": "why can\u0027t you just pass the bdev here?  spdk_bdev_unregister_done is synchronous, so it is safe to let bdev.c pull the unregister_cb and unregister_ctx from the bdev",
+      "revId": "9b65762be22a603ea76964bc7170a8ab836ab613",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45256397_a35126a7",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-26T15:48:18Z",
+      "side": 1,
+      "message": "why do we need to pass g_lvol here?  this doesn\u0027t seem to be used\n\n(same for similar changes below)",
+      "revId": "9b65762be22a603ea76964bc7170a8ab836ab613",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
