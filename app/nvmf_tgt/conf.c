@@ -130,17 +130,53 @@ spdk_add_nvmf_discovery_subsystem(void)
 	return 0;
 }
 
-static int
-spdk_nvmf_parse_nvmf_tgt(void)
+static void
+spdk_nvmf_read_config_file_params(struct spdk_conf_section *sp,
+				  struct spdk_nvmf_tgt_opts *opts)
 {
-	struct spdk_conf_section *sp;
-	struct spdk_nvmf_tgt_opts opts;
 	int max_queue_depth;
 	int max_queues_per_sess;
 	int in_capsule_data_size;
 	int max_io_size;
 	int acceptor_lcore;
 	int acceptor_poll_rate;
+
+	max_queue_depth = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
+	if (max_queue_depth >= 0) {
+		opts->max_queue_depth = max_queue_depth;
+	}
+
+	max_queues_per_sess = spdk_conf_section_get_intval(sp, "MaxQueuesPerSession");
+	if (max_queues_per_sess >= 0) {
+		opts->max_qpairs_per_ctrlr = max_queues_per_sess;
+	}
+
+	in_capsule_data_size = spdk_conf_section_get_intval(sp, "InCapsuleDataSize");
+	if (in_capsule_data_size >= 0) {
+		opts->in_capsule_data_size = in_capsule_data_size;
+	}
+
+	max_io_size = spdk_conf_section_get_intval(sp, "MaxIOSize");
+	if (max_io_size >= 0) {
+		opts->max_io_size = max_io_size;
+	}
+
+	acceptor_lcore = spdk_conf_section_get_intval(sp, "AcceptorCore");
+	if (acceptor_lcore >= 0) {
+		g_spdk_nvmf_tgt_conf.acceptor_lcore = acceptor_lcore;
+	}
+
+	acceptor_poll_rate = spdk_conf_section_get_intval(sp, "AcceptorPollRate");
+	if (acceptor_poll_rate >= 0) {
+		g_spdk_nvmf_tgt_conf.acceptor_poll_rate = acceptor_poll_rate;
+	}
+}
+
+static int
+spdk_nvmf_parse_nvmf_tgt(void)
+{
+	struct spdk_conf_section *sp;
+	struct spdk_nvmf_tgt_opts opts;
 	int rc;
 
 	sp = spdk_conf_find_section(NULL, "Nvmf");
@@ -150,38 +186,9 @@ spdk_nvmf_parse_nvmf_tgt(void)
 	}
 
 	spdk_nvmf_tgt_opts_init(&opts);
-
-	max_queue_depth = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
-	if (max_queue_depth >= 0) {
-		opts.max_queue_depth = max_queue_depth;
-	}
-
-	max_queues_per_sess = spdk_conf_section_get_intval(sp, "MaxQueuesPerSession");
-	if (max_queues_per_sess >= 0) {
-		opts.max_qpairs_per_ctrlr = max_queues_per_sess;
-	}
-
-	in_capsule_data_size = spdk_conf_section_get_intval(sp, "InCapsuleDataSize");
-	if (in_capsule_data_size >= 0) {
-		opts.in_capsule_data_size = in_capsule_data_size;
-	}
-
-	max_io_size = spdk_conf_section_get_intval(sp, "MaxIOSize");
-	if (max_io_size >= 0) {
-		opts.max_io_size = max_io_size;
-	}
-
-	acceptor_lcore = spdk_conf_section_get_intval(sp, "AcceptorCore");
-	if (acceptor_lcore < 0) {
-		acceptor_lcore = spdk_env_get_current_core();
-	}
-	g_spdk_nvmf_tgt_conf.acceptor_lcore = acceptor_lcore;
-
-	acceptor_poll_rate = spdk_conf_section_get_intval(sp, "AcceptorPollRate");
-	if (acceptor_poll_rate < 0) {
-		acceptor_poll_rate = ACCEPT_TIMEOUT_US;
-	}
-	g_spdk_nvmf_tgt_conf.acceptor_poll_rate = acceptor_poll_rate;
+	g_spdk_nvmf_tgt_conf.acceptor_lcore = spdk_env_get_current_core();
+	g_spdk_nvmf_tgt_conf.acceptor_poll_rate = ACCEPT_TIMEOUT_US;
+	spdk_nvmf_read_config_file_params(sp, &opts);
 
 	g_tgt = spdk_nvmf_tgt_create(&opts);
 	if (!g_tgt) {
