@@ -645,13 +645,19 @@ next:
 	return 0;
 }
 
-static void
+static int
 virtio_dev_pci_init(struct virtio_dev *vdev)
 {
+	vdev->name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, vdev->id);
+	if (!vdev->name) {
+		return -1;
+	}
+
 	vtpci_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
 			      &vdev->max_queues, sizeof(vdev->max_queues));
 	vdev->max_queues += SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED;
 	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+	return 0;
 }
 
 static int
@@ -698,7 +704,13 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 			goto err;
 		}
 		vdev->modern = 1;
-		virtio_dev_pci_init(vdev);
+
+		rc = virtio_dev_pci_init(vdev);
+		if (rc != 0) {
+			vtpci_deinit(vdev->id);
+			goto err;
+		}
+
 		return 0;
 	}
 
@@ -718,18 +730,18 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	}
 #endif
 
-	vdev->name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, vdev->id);
-	if (!vdev->name) {
-		goto err;
-	}
-
 	rc = vtpci_init(vdev, &legacy_ops);
 	if (rc != 0) {
 		goto err;
 	}
 
 	vdev->modern = 0;
-	virtio_dev_pci_init(vdev);
+	rc = virtio_dev_pci_init(vdev);
+	if (rc != 0) {
+		vtpci_deinit(vdev->id);
+		goto err;
+	}
+
 	return 0;
 #endif
 
