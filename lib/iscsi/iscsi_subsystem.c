@@ -75,8 +75,6 @@
 "  DefaultTime2Retain %d\n" \
 "\n" \
 "  ImmediateData %s\n" \
-"  DataPDUInOrder %s\n" \
-"  DataSequenceInOrder %s\n" \
 "  ErrorRecoveryLevel %d\n" \
 "\n" \
 "  # Defines whether iSCSI target will enable configuration via RPC\n" \
@@ -109,8 +107,6 @@ spdk_iscsi_config_dump_section(FILE *fp)
 		g_spdk_iscsi.MaxConnections,
 		g_spdk_iscsi.DefaultTime2Wait, g_spdk_iscsi.DefaultTime2Retain,
 		(g_spdk_iscsi.ImmediateData == 1) ? "Yes" : "No",
-		(g_spdk_iscsi.DataPDUInOrder == 1) ? "Yes" : "No",
-		(g_spdk_iscsi.DataSequenceInOrder == 1) ? "Yes" : "No",
 		g_spdk_iscsi.ErrorRecoveryLevel);
 }
 
@@ -536,10 +532,7 @@ spdk_iscsi_app_read_parameters(void)
 	int MaxConnectionsPerSession;
 	int DefaultTime2Wait;
 	int DefaultTime2Retain;
-	int InitialR2T;
 	int ImmediateData;
-	int DataPDUInOrder;
-	int DataSequenceInOrder;
 	int ErrorRecoveryLevel;
 	int timeout;
 	int nopininterval;
@@ -685,26 +678,6 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 
-	val = spdk_conf_section_get_val(sp, "InitialR2T");
-	if (val == NULL) {
-		InitialR2T = DEFAULT_INITIALR2T;
-	} else if (strcasecmp(val, "Yes") == 0) {
-		InitialR2T = 1;
-	} else if (strcasecmp(val, "No") == 0) {
-#if 0
-		InitialR2T = 0;
-#else
-		SPDK_ERRLOG("not supported value %s\n", val);
-		return -1;
-#endif
-	} else {
-		SPDK_ERRLOG("unknown value %s\n", val);
-		return -1;
-	}
-	g_spdk_iscsi.InitialR2T = InitialR2T;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "InitialR2T %s\n",
-		      g_spdk_iscsi.InitialR2T ? "Yes" : "No");
-
 	val = spdk_conf_section_get_val(sp, "ImmediateData");
 	if (val == NULL) {
 		ImmediateData = DEFAULT_IMMEDIATEDATA;
@@ -719,26 +692,6 @@ spdk_iscsi_app_read_parameters(void)
 	g_spdk_iscsi.ImmediateData = ImmediateData;
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "ImmediateData %s\n",
 		      g_spdk_iscsi.ImmediateData ? "Yes" : "No");
-
-	val = spdk_conf_section_get_val(sp, "DataPDUInOrder");
-	if (val == NULL) {
-		DataPDUInOrder = DEFAULT_DATAPDUINORDER;
-	} else if (strcasecmp(val, "Yes") == 0) {
-		DataPDUInOrder = 1;
-	} else if (strcasecmp(val, "No") == 0) {
-#if 0
-		DataPDUInOrder = 0;
-#else
-		SPDK_ERRLOG("not supported value %s\n", val);
-		return -1;
-#endif
-	} else {
-		SPDK_ERRLOG("unknown value %s\n", val);
-		return -1;
-	}
-	g_spdk_iscsi.DataPDUInOrder = DataPDUInOrder;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DataPDUInOrder %s\n",
-		      g_spdk_iscsi.DataPDUInOrder ? "Yes" : "No");
 
 	/* This option is only for test.
 	 * If AllowDuplicateIsid is enabled, it allows different connections carrying
@@ -758,26 +711,6 @@ spdk_iscsi_app_read_parameters(void)
 	g_spdk_iscsi.AllowDuplicateIsid = AllowDuplicateIsid;
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AllowDuplicateIsid %s\n",
 		      g_spdk_iscsi.AllowDuplicateIsid ? "Yes" : "No");
-
-	val = spdk_conf_section_get_val(sp, "DataSequenceInOrder");
-	if (val == NULL) {
-		DataSequenceInOrder = DEFAULT_DATASEQUENCEINORDER;
-	} else if (strcasecmp(val, "Yes") == 0) {
-		DataSequenceInOrder = 1;
-	} else if (strcasecmp(val, "No") == 0) {
-#if 0
-		DataSequenceInOrder = 0;
-#else
-		SPDK_ERRLOG("not supported value %s\n", val);
-		return -1;
-#endif
-	} else {
-		SPDK_ERRLOG("unknown value %s\n", val);
-		return -1;
-	}
-	g_spdk_iscsi.DataSequenceInOrder = DataSequenceInOrder;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DataSequenceInOrder %s\n",
-		      g_spdk_iscsi.DataSequenceInOrder ? "Yes" : "No");
 
 	ErrorRecoveryLevel = spdk_conf_section_get_intval(sp, "ErrorRecoveryLevel");
 	if (ErrorRecoveryLevel < 0) {

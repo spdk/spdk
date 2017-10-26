@@ -4493,10 +4493,10 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 	sess->DefaultTime2Retain = g_spdk_iscsi.DefaultTime2Retain;
 	sess->FirstBurstLength = g_spdk_iscsi.FirstBurstLength;
 	sess->MaxBurstLength = g_spdk_iscsi.MaxBurstLength;
-	sess->InitialR2T = g_spdk_iscsi.InitialR2T;
+	sess->InitialR2T = DEFAULT_INITIALR2T;
 	sess->ImmediateData = g_spdk_iscsi.ImmediateData;
-	sess->DataPDUInOrder = g_spdk_iscsi.DataPDUInOrder;
-	sess->DataSequenceInOrder = g_spdk_iscsi.DataSequenceInOrder;
+	sess->DataPDUInOrder = DEFAULT_DATAPDUINORDER;
+	sess->DataSequenceInOrder = DEFAULT_DATASEQUENCEINORDER;
 	sess->ErrorRecoveryLevel = g_spdk_iscsi.ErrorRecoveryLevel;
 
 	if (target != NULL)
