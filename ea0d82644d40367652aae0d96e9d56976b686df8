@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1823f537_00ab3a88",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-26T11:04:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "75fb855d_fc1d9bb5",
+      "revId": "ea0d82644d40367652aae0d96e9d56976b686df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47701c71_76876f93",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2017-10-25T17:01:25Z",
       "side": 1,
       "message": "this whole function is almost an exact duplicate of vbdev_lvs_unload() - is there a way we consolidate them?  the duplication is made worse with the extra code added in this patch",
+      "revId": "ea0d82644d40367652aae0d96e9d56976b686df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78f86a2f_f816b717",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-26T11:04:01Z",
+      "side": 1,
+      "message": "Did just that. Those two now use same underlying function. Thanks.\nAs this function was just added in previous patch, I\u0027ve consolidated those functions in that patch.\nhttps://review.gerrithub.io/#/c/383908/",
+      "parentUuid": "47701c71_76876f93",
       "revId": "ea0d82644d40367652aae0d96e9d56976b686df8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "315c2c58_5b5cb2cd",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 389,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-26T11:04:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "49509523_007d9f11",
+      "revId": "ea0d82644d40367652aae0d96e9d56976b686df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f9f91d40_f07134a8",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 8
@@ -64,6 +118,24 @@
       "writtenOn": "2017-10-25T17:01:25Z",
       "side": 1,
       "message": "why is this needed?  if g_spdk_lvol_pairs is empty, the following loop will not execute so it will just return",
+      "revId": "ea0d82644d40367652aae0d96e9d56976b686df8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3444ea49_03476de0",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 799,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-26T11:04:01Z",
+      "side": 1,
+      "message": "Removed, it was part of next patch. It will call spdk_bdev_module_finish() if the list is empty.",
+      "parentUuid": "f9f91d40_f07134a8",
       "revId": "ea0d82644d40367652aae0d96e9d56976b686df8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
