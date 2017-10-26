@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "886d3119_d1c08f11",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:37:53Z",
+      "side": 1,
+      "message": "This won\u0027t work for cross compilation (it will check the uname of the build machine).\n\nHowever, the SPDK build system is already not really set up for cross compilation, so this is OK for now.",
+      "revId": "2cbe173584f802909e7ef7ee397629941c3093fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
