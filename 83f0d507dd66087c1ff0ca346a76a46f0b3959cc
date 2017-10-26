@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b865e739_22563432",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-26T13:47:35Z",
+      "side": 1,
+      "message": "Why fio path is hardcoded? On my Ubuntu 16.04 this is /usr/bin/fio. I think this should be just \"fio\" so using different versions of fio is allowed.",
+      "range": {
+        "startLine": 16,
+        "startChar": 42,
+        "endLine": 16,
+        "endChar": 58
+      },
+      "revId": "83f0d507dd66087c1ff0ca346a76a46f0b3959cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "183a23f6_9c721812",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-26T13:47:35Z",
+      "side": 1,
+      "message": "Please use error handlers",
+      "range": {
+        "startLine": 18,
+        "startChar": 8,
+        "endLine": 24,
+        "endChar": 10
+      },
+      "revId": "83f0d507dd66087c1ff0ca346a76a46f0b3959cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d05ec8d_ef148ce0",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-26T13:47:35Z",
+      "side": 1,
+      "message": "I can tell that it is \u00270\u0027. Use \u0027$b\u0027",
+      "range": {
+        "startLine": 64,
+        "startChar": 41,
+        "endLine": 64,
+        "endChar": 43
+      },
+      "revId": "83f0d507dd66087c1ff0ca346a76a46f0b3959cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42ffe184_f5a7fe8c",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-26T13:47:35Z",
+      "side": 1,
+      "message": "Why?",
+      "range": {
+        "startLine": 69,
+        "startChar": 16,
+        "endLine": 69,
+        "endChar": 26
+      },
+      "revId": "83f0d507dd66087c1ff0ca346a76a46f0b3959cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02acca52_07e88a86",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-26T13:47:35Z",
+      "side": 1,
+      "message": "Whitespace",
+      "range": {
+        "startLine": 156,
+        "startChar": 49,
+        "endLine": 156,
+        "endChar": 65
+      },
+      "revId": "83f0d507dd66087c1ff0ca346a76a46f0b3959cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b74e1ebe_b2352134",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-26T13:47:35Z",
+      "side": 1,
+      "message": "-\u003e error handlers",
+      "range": {
+        "startLine": 154,
+        "startChar": 6,
+        "endLine": 160,
+        "endChar": 10
+      },
+      "revId": "83f0d507dd66087c1ff0ca346a76a46f0b3959cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da39995e_245e30d6",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-26T13:47:35Z",
+      "side": 1,
+      "message": "This is not working for sure.",
+      "range": {
+        "startLine": 231,
+        "startChar": 16,
+        "endLine": 231,
+        "endChar": 20
+      },
+      "revId": "83f0d507dd66087c1ff0ca346a76a46f0b3959cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
