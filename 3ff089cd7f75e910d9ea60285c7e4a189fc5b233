@@ -34,6 +34,24 @@
       "revId": "3ff089cd7f75e910d9ea60285c7e4a189fc5b233",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d377bb6_db24c304",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-26T20:34:35Z",
+      "side": 1,
+      "message": "Doh!  I was thinking 4TB.  My mistake.",
+      "parentUuid": "8998adce_b78e80f7",
+      "revId": "3ff089cd7f75e910d9ea60285c7e4a189fc5b233",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
