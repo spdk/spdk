@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c65f1621_0e8310e0",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-26T17:56:45Z",
+      "side": 1,
+      "message": "I think I\u0027m missing something here.  How do we know if Nvme0n1 is bigger than 4GB?",
+      "revId": "3ff089cd7f75e910d9ea60285c7e4a189fc5b233",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
