@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c43993a9_00df3ffa",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:21:47Z",
+      "side": 1,
+      "message": "Allocation needs a failure check.",
+      "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50466277_7b700cb3",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:21:47Z",
+      "side": 1,
+      "message": "name should probably be const char *",
+      "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be43f8c9_5da72f02",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:21:47Z",
+      "side": 1,
+      "message": "This is renaming the \"name\" paramter that was just introduced in the previous patch - this should be named correctly from the beginning to avoid extra churn in this patch.",
+      "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a67762ae_650a9ef6",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:21:47Z",
+      "side": 1,
+      "message": "Typo?",
+      "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
