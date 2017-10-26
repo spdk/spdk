@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb9aa5ef_dff58ad6",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-26T11:42:50Z",
+      "side": 0,
+      "message": "unnecessary whitespace change",
+      "revId": "a85a4452f3c148ec90554df605b8c487a936a2ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "324776e3_9e2fbafd",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-26T11:42:50Z",
+      "side": 1,
+      "message": "I think destroy_lvol_store() could use same treatment as construct_lvol_bdev(), adding possibility to refer to lvs by uuid or name.",
+      "range": {
+        "startLine": 152,
+        "startChar": 1,
+        "endLine": 152,
+        "endChar": 104
+      },
+      "revId": "438c30a3f2f80f4576fca2d6eff37ef6561f3471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2e371ce_1dbb2be7",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-26T11:42:50Z",
+      "side": 1,
+      "message": "This is used for selecting on which lvs to create lvol bdev. If this is \"--name\". What will be called argument for specifying lvol friendly name ?",
+      "range": {
+        "startLine": 321,
+        "startChar": 0,
+        "endLine": 321,
+        "endChar": 70
+      },
+      "revId": "438c30a3f2f80f4576fca2d6eff37ef6561f3471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc0e5e6d_059a47ce",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-26T11:42:50Z",
+      "side": 1,
+      "message": "unnecessary whitespace change",
+      "revId": "438c30a3f2f80f4576fca2d6eff37ef6561f3471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
