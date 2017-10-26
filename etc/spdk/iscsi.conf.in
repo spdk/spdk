@@ -47,6 +47,8 @@
   Timeout 30
 
   # authentication information for discovery session
+  # Options:
+  # None, Auto, CHAP and Mutual.  Note that Manual infers CHAP.
   DiscoveryAuthMethod Auto
 
   #MaxSessions 128

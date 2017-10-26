@@ -583,7 +583,6 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 	int flush_timeout = 0;
 	const char *ag_tag;
 	int ag_tag_i;
-	int i;
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
@@ -704,25 +703,24 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 	}
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
 	if (val != NULL) {
-		g_spdk_iscsi.no_discovery_auth = 0;
-		for (i = 0; ; i++) {
-			val = spdk_conf_section_get_nmval(sp, "DiscoveryAuthMethod", 0, i);
-			if (val == NULL)
-				break;
-			if (strcasecmp(val, "CHAP") == 0) {
-				g_spdk_iscsi.req_discovery_auth = 1;
-			} else if (strcasecmp(val, "Mutual") == 0) {
-				g_spdk_iscsi.req_discovery_auth_mutual = 1;
-			} else if (strcasecmp(val, "Auto") == 0) {
-				g_spdk_iscsi.req_discovery_auth = 0;
-				g_spdk_iscsi.req_discovery_auth_mutual = 0;
-			} else if (strcasecmp(val, "None") == 0) {
-				g_spdk_iscsi.no_discovery_auth = 1;
-				g_spdk_iscsi.req_discovery_auth = 0;
-				g_spdk_iscsi.req_discovery_auth_mutual = 0;
-			} else {
-				SPDK_ERRLOG("unknown auth %s, ignoring\n", val);
-			}
+		if (strcasecmp(val, "CHAP") == 0) {
+			g_spdk_iscsi.no_discovery_auth = 0;
+			g_spdk_iscsi.req_discovery_auth = 1;
+			g_spdk_iscsi.req_discovery_auth_mutual = 0;
+		} else if (strcasecmp(val, "Mutual") == 0) {
+			g_spdk_iscsi.no_discovery_auth = 0;
+			g_spdk_iscsi.req_discovery_auth = 1;
+			g_spdk_iscsi.req_discovery_auth_mutual = 1;
+		} else if (strcasecmp(val, "Auto") == 0) {
+			g_spdk_iscsi.no_discovery_auth = 0;
+			g_spdk_iscsi.req_discovery_auth = 0;
+			g_spdk_iscsi.req_discovery_auth_mutual = 0;
+		} else if (strcasecmp(val, "None") == 0) {
+			g_spdk_iscsi.no_discovery_auth = 1;
+			g_spdk_iscsi.req_discovery_auth = 0;
+			g_spdk_iscsi.req_discovery_auth_mutual = 0;
+		} else {
+			SPDK_ERRLOG("unknown auth %s, ignoring\n", val);
 		}
 	}
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthGroup");
@@ -806,11 +804,6 @@ spdk_iscsi_app_read_parameters(void)
 	g_spdk_iscsi.MaxConnections = g_spdk_iscsi.MaxSessions;
 
 	g_spdk_iscsi.flush_timeout *= (spdk_get_ticks_hz() >> 20);
-
-	if (g_spdk_iscsi.req_discovery_auth_mutual && !g_spdk_iscsi.req_discovery_auth) {
-		SPDK_ERRLOG("Mutual specified but not CHAP, disabling mutual\n");
-		g_spdk_iscsi.req_discovery_auth_mutual = 0;
-	}
 
 	spdk_iscsi_log_globals();
 
