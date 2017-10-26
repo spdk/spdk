@@ -521,6 +521,51 @@ struct spdk_iscsi_pdu *spdk_get_pdu(void)
 	return pdu;
 }
 
+static void
+spdk_iscsi_log_globals(void)
+{
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AuthFile %s\n", g_spdk_iscsi.authfile);
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "NodeBase %s\n", g_spdk_iscsi.nodebase);
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxSessions %d\n", g_spdk_iscsi.MaxSessions);
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxConnectionsPerSession %d\n",
+		      g_spdk_iscsi.MaxConnectionsPerSession);
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DefaultTime2Wait %d\n",
+		      g_spdk_iscsi.DefaultTime2Wait);
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DefaultTime2Retain %d\n",
+		      g_spdk_iscsi.DefaultTime2Retain);
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "ImmediateData %s\n",
+		      g_spdk_iscsi.ImmediateData ? "Yes" : "No");
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AllowDuplicateIsid %s\n",
+		      g_spdk_iscsi.AllowDuplicateIsid ? "Yes" : "No");
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "ErrorRecoveryLevel %d\n",
+		      g_spdk_iscsi.ErrorRecoveryLevel);
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "Timeout %d\n", g_spdk_iscsi.timeout);
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "FlushTimeout %"PRIu64"\n", g_spdk_iscsi.flush_timeout);
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "NopInInterval %d\n",
+		      g_spdk_iscsi.nopininterval);
+	if (g_spdk_iscsi.no_discovery_auth != 0) {
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+			      "DiscoveryAuthMethod None\n");
+	} else if (g_spdk_iscsi.req_discovery_auth == 0) {
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+			      "DiscoveryAuthMethod Auto\n");
+	} else {
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+			      "DiscoveryAuthMethod %s %s\n",
+			      g_spdk_iscsi.req_discovery_auth ? "CHAP" : "",
+			      g_spdk_iscsi.req_discovery_auth_mutual ? "Mutual" : "");
+	}
+
+	if (g_spdk_iscsi.discovery_auth_group == 0) {
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+			      "DiscoveryAuthGroup None\n");
+	} else {
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
+			      "DiscoveryAuthGroup AuthGroup%d\n",
+			      g_spdk_iscsi.discovery_auth_group);
+	}
+}
+
 static int
 spdk_iscsi_app_read_parameters(void)
 {
@@ -591,8 +636,6 @@ spdk_iscsi_app_read_parameters(void)
 		}
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AuthFile %s\n", g_spdk_iscsi.authfile);
-
 	/* ISCSI Global */
 	val = spdk_conf_section_get_val(sp, "NodeBase");
 	if (val != NULL) {
@@ -604,13 +647,11 @@ spdk_iscsi_app_read_parameters(void)
 			return -ENOMEM;
 		}
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "NodeBase %s\n", g_spdk_iscsi.nodebase);
 
 	MaxSessions = spdk_conf_section_get_intval(sp, "MaxSessions");
 	if (MaxSessions >= 0) {
 		g_spdk_iscsi.MaxSessions = MaxSessions;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxSessions %d\n", g_spdk_iscsi.MaxSessions);
 
 	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
@@ -622,8 +663,6 @@ spdk_iscsi_app_read_parameters(void)
 	if (MaxConnectionsPerSession >= 0) {
 		g_spdk_iscsi.MaxConnectionsPerSession = MaxConnectionsPerSession;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxConnectionsPerSession %d\n",
-		      g_spdk_iscsi.MaxConnectionsPerSession);
 
 	/*
 	 * For now, just support same number of total connections, rather
@@ -637,15 +676,11 @@ spdk_iscsi_app_read_parameters(void)
 	if (DefaultTime2Wait >= 0) {
 		g_spdk_iscsi.DefaultTime2Wait = DefaultTime2Wait;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DefaultTime2Wait %d\n",
-		      g_spdk_iscsi.DefaultTime2Wait);
 
 	DefaultTime2Retain = spdk_conf_section_get_intval(sp, "DefaultTime2Retain");
 	if (DefaultTime2Retain >= 0) {
 		g_spdk_iscsi.DefaultTime2Retain = DEFAULT_DEFAULTTIME2RETAIN;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DefaultTime2Retain %d\n",
-		      g_spdk_iscsi.DefaultTime2Retain);
 
 	if (g_spdk_iscsi.MaxSessions == 0 || g_spdk_iscsi.MaxSessions > 0xffff) {
 		SPDK_ERRLOG("%d MaxSessions not supported, must be between 1 and 65535.\n",
@@ -681,8 +716,6 @@ spdk_iscsi_app_read_parameters(void)
 		}
 		g_spdk_iscsi.ImmediateData = ImmediateData;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "ImmediateData %s\n",
-		      g_spdk_iscsi.ImmediateData ? "Yes" : "No");
 
 	/* This option is only for test.
 	 * If AllowDuplicateIsid is enabled, it allows different connections carrying
@@ -700,8 +733,6 @@ spdk_iscsi_app_read_parameters(void)
 		}
 		g_spdk_iscsi.AllowDuplicateIsid = AllowDuplicateIsid;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "AllowDuplicateIsid %s\n",
-		      g_spdk_iscsi.AllowDuplicateIsid ? "Yes" : "No");
 
 	ErrorRecoveryLevel = spdk_conf_section_get_intval(sp, "ErrorRecoveryLevel");
 	if (ErrorRecoveryLevel >= 0) {
@@ -711,21 +742,17 @@ spdk_iscsi_app_read_parameters(void)
 		}
 		g_spdk_iscsi.ErrorRecoveryLevel = ErrorRecoveryLevel;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "ErrorRecoveryLevel %d\n",
-		      g_spdk_iscsi.ErrorRecoveryLevel);
 
 	timeout = spdk_conf_section_get_intval(sp, "Timeout");
 	if (timeout >= 0) {
 		g_spdk_iscsi.timeout = timeout;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "Timeout %d\n", g_spdk_iscsi.timeout);
 
 	flush_timeout = spdk_conf_section_get_intval(sp, "FlushTimeout");
 	if (flush_timeout >= 0) {
 		g_spdk_iscsi.flush_timeout = flush_timeout;
 	}
 	g_spdk_iscsi.flush_timeout *= (spdk_get_ticks_hz() >> 20);
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "FlushTimeout %"PRIu64"\n", g_spdk_iscsi.flush_timeout);
 
 	nopininterval = spdk_conf_section_get_intval(sp, "NopInInterval");
 	if (nopininterval >= 0) {
@@ -737,8 +764,6 @@ spdk_iscsi_app_read_parameters(void)
 		g_spdk_iscsi.nopininterval = DEFAULT_NOPININTERVAL;
 	}
 
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "NopInInterval %d\n",
-		      g_spdk_iscsi.nopininterval);
 
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthMethod");
 	if (val != NULL) {
@@ -768,19 +793,6 @@ spdk_iscsi_app_read_parameters(void)
 		SPDK_ERRLOG("Mutual but not CHAP\n");
 		return -1;
 	}
-	if (g_spdk_iscsi.no_discovery_auth != 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
-			      "DiscoveryAuthMethod None\n");
-	} else if (g_spdk_iscsi.req_discovery_auth == 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
-			      "DiscoveryAuthMethod Auto\n");
-	} else {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
-			      "DiscoveryAuthMethod %s %s\n",
-			      g_spdk_iscsi.req_discovery_auth ? "CHAP" : "",
-			      g_spdk_iscsi.req_discovery_auth_mutual ? "Mutual" : "");
-	}
-
 	val = spdk_conf_section_get_val(sp, "DiscoveryAuthGroup");
 	if (val != NULL) {
 		ag_tag = val;
@@ -800,15 +812,6 @@ spdk_iscsi_app_read_parameters(void)
 		}
 		g_spdk_iscsi.discovery_auth_group = ag_tag_i;
 	}
-	if (g_spdk_iscsi.discovery_auth_group == 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
-			      "DiscoveryAuthGroup None\n");
-	} else {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
-			      "DiscoveryAuthGroup AuthGroup%d\n",
-			      g_spdk_iscsi.discovery_auth_group);
-	}
-
 	min_conn_per_core = spdk_conf_section_get_intval(sp, "MinConnectionsPerCore");
 	if (min_conn_per_core >= 0)
 		spdk_iscsi_conn_set_min_per_core(min_conn_per_core);
@@ -816,6 +819,8 @@ spdk_iscsi_app_read_parameters(void)
 	conn_idle_interval = spdk_conf_section_get_intval(sp, "MinConnectionIdleInterval");
 	if (conn_idle_interval > 0)
 		spdk_iscsi_set_min_conn_idle_interval(conn_idle_interval);
+
+	spdk_iscsi_log_globals();
 
 	/* portal groups */
 	rc = spdk_iscsi_portal_grp_array_create();
