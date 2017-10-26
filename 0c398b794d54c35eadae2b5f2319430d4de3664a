@@ -16,6 +16,24 @@
       "revId": "0c398b794d54c35eadae2b5f2319430d4de3664a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e7246ee_b108baab",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-26T12:49:13Z",
+      "side": 1,
+      "message": "That won\u0027t change any logic, but will let us keep most bdev modules unchanged, significantly reducing the size of this patch.\n\nMy idea was just that modules wouldn\u0027t have to call spdk_bdev_module_finish_done() *by themselves* unless they are marked \"I need async finish\". If they\u0027re synchronous, spdk_bdev_module_finish_done() could be called by the bdev layer, just *after* calling the module_fini.",
+      "parentUuid": "22df1ea4_0242c0a4",
+      "revId": "0c398b794d54c35eadae2b5f2319430d4de3664a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
