@@ -122,6 +122,24 @@
     },
     {
       "key": {
+        "uuid": "8c52c019_97e1ca13",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-26T12:03:37Z",
+      "side": 1,
+      "message": "Do we need set -e here? We expect that most of the tests here will fail as writing on a readonly disk is not allowed.",
+      "parentUuid": "834f42f6_b59b44de",
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0021323f_61c090dc",
         "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
         "patchSetId": 13
