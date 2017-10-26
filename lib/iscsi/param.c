@@ -534,10 +534,10 @@ spdk_iscsi_special_param_construction(struct spdk_iscsi_conn *conn,
 
 		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
 			      "returning MaxRecvDataSegmentLength=%d\n",
-			      g_spdk_iscsi.MaxRecvDataSegmentLength);
+			      SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 		len = snprintf((char *)data + total, alloc_len - total,
 			       "MaxRecvDataSegmentLength=%d",
-			       g_spdk_iscsi.MaxRecvDataSegmentLength);
+			       SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 		total += len + 1;
 	}
 

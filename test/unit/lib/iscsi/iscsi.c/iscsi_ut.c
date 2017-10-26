@@ -147,8 +147,6 @@ maxburstlength_test(void)
 	req->write_bit = 1;
 	req->final_bit = 1;
 
-	g_spdk_iscsi.MaxRecvDataSegmentLength = 1024;
-
 	rc = spdk_iscsi_execute(&conn, req_pdu);
 	CU_ASSERT_FATAL(rc == 0);
 

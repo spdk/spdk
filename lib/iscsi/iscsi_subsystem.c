@@ -647,37 +647,6 @@ spdk_iscsi_app_read_parameters(void)
 		return -1;
 	}
 
-	g_spdk_iscsi.FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "FirstBurstLength %d\n",
-		      g_spdk_iscsi.FirstBurstLength);
-
-	g_spdk_iscsi.MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxBurstLength %d\n",
-		      g_spdk_iscsi.MaxBurstLength);
-
-	g_spdk_iscsi.MaxRecvDataSegmentLength = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxRecvDataSegmentLength %d\n",
-		      g_spdk_iscsi.MaxRecvDataSegmentLength);
-
-	/* check size limit (up to 24bits - RFC3720(12.12)) */
-	if (g_spdk_iscsi.MaxBurstLength < 512) {
-		SPDK_ERRLOG("MaxBurstLength(%d) < 512\n", g_spdk_iscsi.MaxBurstLength);
-		return -1;
-	}
-	if (g_spdk_iscsi.FirstBurstLength < 512) {
-		SPDK_ERRLOG("FirstBurstLength(%d) < 512\n", g_spdk_iscsi.FirstBurstLength);
-		return -1;
-	}
-	if (g_spdk_iscsi.FirstBurstLength > g_spdk_iscsi.MaxBurstLength) {
-		SPDK_ERRLOG("FirstBurstLength(%d) > MaxBurstLength(%d)\n",
-			    g_spdk_iscsi.FirstBurstLength, g_spdk_iscsi.MaxBurstLength);
-		return -1;
-	}
-	if (g_spdk_iscsi.MaxBurstLength > 0x00ffffff) {
-		SPDK_ERRLOG("MaxBurstLength(%d) > 0x00ffffff\n", g_spdk_iscsi.MaxBurstLength);
-		return -1;
-	}
-
 	val = spdk_conf_section_get_val(sp, "ImmediateData");
 	if (val == NULL) {
 		ImmediateData = DEFAULT_IMMEDIATEDATA;
