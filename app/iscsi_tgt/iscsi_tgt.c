@@ -98,7 +98,9 @@ main(int argc, char **argv)
 	/* default value in opts structure */
 	spdk_app_opts_init(&opts);
 
-	opts.config_file = SPDK_ISCSI_DEFAULT_CONFIG;
+	if (access(SPDK_ISCSI_DEFAULT_CONFIG, F_OK) == 0) {
+		opts.config_file = SPDK_ISCSI_DEFAULT_CONFIG;
+	}
 	opts.name = "iscsi";
 
 	while ((ch = getopt(argc, argv, "bc:de:i:m:n:p:qs:t:H")) != -1) {
