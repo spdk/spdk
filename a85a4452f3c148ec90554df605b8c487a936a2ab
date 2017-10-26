@@ -16,6 +16,29 @@
       "revId": "a85a4452f3c148ec90554df605b8c487a936a2ab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37a24800_e39b66d7",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:17:23Z",
+      "side": 0,
+      "message": "I would prefer to keep this named \"lvol_store_uuid\" rather than just \"uuid\" - otherwise, it looks like it is the UUID of the bdev being created, rather than that of the lvol store.",
+      "range": {
+        "startLine": 310,
+        "startChar": 9,
+        "endLine": 310,
+        "endChar": 24
+      },
+      "revId": "a85a4452f3c148ec90554df605b8c487a936a2ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

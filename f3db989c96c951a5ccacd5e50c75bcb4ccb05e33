@@ -1,0 +1,112 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4924c4a_38db206f",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:17:23Z",
+      "side": 1,
+      "message": "Need to also free req-\u003ename here.",
+      "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf0079bf_69750f6f",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:17:23Z",
+      "side": 1,
+      "message": "This message will be wrong if name was specified rather than uuid.\n\nAlso, it is printing out the pointer of a stack object, which is fairly useless - it should print the uuid or name that the RPC parameter specified.",
+      "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f73f19c2_25519a17",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:17:23Z",
+      "side": 1,
+      "message": "free(NULL) is defined to be a no-op, so these checks are not necessary.",
+      "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d5f0477_f8f5ca50",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:17:23Z",
+      "side": 1,
+      "message": "Same as above - this message is uuid-specific, but it is printed in both cases, and it prints out a pointer rather than the actual parameter value.",
+      "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1079cf00_0235c21c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:17:23Z",
+      "side": 1,
+      "message": "If this parameter is required, then there\u0027s no need for the \u0027if args.name\u0027 check above.\n\nAlso, if it is supposed to be required, then all of the test scripts that call construct_lvol_store need to be updated.",
+      "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d689ce9_ab5bb430",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-26T17:17:23Z",
+      "side": 1,
+      "message": "Same argument for name - I would prefer that this be called lvol_store_name to avoid confusion.",
+      "range": {
+        "startLine": 320,
+        "startChar": 20,
+        "endLine": 320,
+        "endChar": 24
+      },
+      "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
