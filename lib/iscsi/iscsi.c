@@ -517,7 +517,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAOUT) {
 			max_segment_len = spdk_get_data_out_buffer_size();
 		} else if (pdu->bhs.opcode == ISCSI_OP_NOPOUT) {
-			max_segment_len = g_spdk_iscsi.MaxRecvDataSegmentLength;
+			max_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 		} else {
 			max_segment_len = spdk_get_immediate_data_buffer_size();
 		}
@@ -1118,10 +1118,9 @@ spdk_iscsi_check_values(struct spdk_iscsi_conn *conn)
 			    conn->sess->MaxBurstLength);
 		return -1;
 	}
-	if (conn->sess->FirstBurstLength > g_spdk_iscsi.FirstBurstLength) {
+	if (conn->sess->FirstBurstLength > SPDK_ISCSI_FIRST_BURST_LENGTH) {
 		SPDK_ERRLOG("FirstBurstLength(%d) > iSCSI target restriction(%d)\n",
-			    conn->sess->FirstBurstLength,
-			    g_spdk_iscsi.FirstBurstLength);
+			    conn->sess->FirstBurstLength, SPDK_ISCSI_FIRST_BURST_LENGTH);
 		return -1;
 	}
 	if (conn->sess->MaxBurstLength > 0x00ffffff) {
@@ -3504,7 +3503,7 @@ spdk_add_transfer_task(struct spdk_iscsi_conn *conn,
 	transfer_len = task->scsi.transfer_len;
 	data_len = spdk_iscsi_task_get_pdu(task)->data_segment_len;
 	max_burst_len = conn->sess->MaxBurstLength;
-	segment_len = g_spdk_iscsi.MaxRecvDataSegmentLength;
+	segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 	data_out_req = 1 + (transfer_len - data_len - 1) / segment_len;
 	task->data_out_cnt = data_out_req;
 
@@ -4491,8 +4490,8 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 
 	sess->DefaultTime2Wait = g_spdk_iscsi.DefaultTime2Wait;
 	sess->DefaultTime2Retain = g_spdk_iscsi.DefaultTime2Retain;
-	sess->FirstBurstLength = g_spdk_iscsi.FirstBurstLength;
-	sess->MaxBurstLength = g_spdk_iscsi.MaxBurstLength;
+	sess->FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH;
+	sess->MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 	sess->InitialR2T = DEFAULT_INITIALR2T;
 	sess->ImmediateData = g_spdk_iscsi.ImmediateData;
 	sess->DataPDUInOrder = DEFAULT_DATAPDUINORDER;

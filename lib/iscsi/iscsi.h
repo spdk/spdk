@@ -279,9 +279,6 @@ struct spdk_iscsi_globals {
 	uint32_t MaxConnections;
 	uint32_t DefaultTime2Wait;
 	uint32_t DefaultTime2Retain;
-	uint32_t FirstBurstLength;
-	uint32_t MaxBurstLength;
-	uint32_t MaxRecvDataSegmentLength;
 	uint32_t ImmediateData;
 	uint32_t ErrorRecoveryLevel;
 	uint32_t AllowDuplicateIsid;
@@ -371,7 +368,7 @@ spdk_get_immediate_data_buffer_size(void)
 	 *  take up much space and we need to make sure the worst-case scenario
 	 *  can be satisified by the size returned here.
 	 */
-	return g_spdk_iscsi.FirstBurstLength +
+	return SPDK_ISCSI_FIRST_BURST_LENGTH +
 	       ISCSI_DIGEST_LEN + /* data digest */
 	       ISCSI_DIGEST_LEN + /* header digest */
 	       8 +		   /* bidirectional AHS */
@@ -381,7 +378,7 @@ spdk_get_immediate_data_buffer_size(void)
 static inline int
 spdk_get_data_out_buffer_size(void)
 {
-	return g_spdk_iscsi.MaxRecvDataSegmentLength;
+	return SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 }
 
 #endif /* SPDK_ISCSI_H */
