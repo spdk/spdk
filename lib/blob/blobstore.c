@@ -1408,6 +1408,12 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 			    opts->cluster_sz);
 		return NULL;
 	}
+	if (opts->cluster_sz < SPDK_BS_PAGE_SIZE) {
+		/* Cluster size cannot be smaller than page size */
+		SPDK_ERRLOG("Cluster size %d is smaller than page size %d\n",
+		opts->cluster_sz, SPDK_BS_PAGE_SIZE);
+		return NULL;		
+	}
 	bs = calloc(1, sizeof(struct spdk_blob_store));
 	if (!bs) {
 		return NULL;
