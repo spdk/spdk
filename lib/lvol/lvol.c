@@ -905,7 +905,7 @@ _spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 }
 
 int
-spdk_lvol_create(struct spdk_lvol_store *lvs, char *name, uint64_t sz,
+spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
