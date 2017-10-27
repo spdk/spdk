@@ -146,6 +146,13 @@ function configure_linux {
 	fi
 
 	echo "$NRHUGE" > "$hugepages_target"
+	allocated_hugepages=`cat $hugepages_target`
+	if [ "$allocated_hugepages" -lt "$NRHUGE" ]; then
+		echo ""
+		echo "## ERROR: requested $NRHUGE hugepages but only $allocated_hugepages could be allocated."
+		echo "## Memory might be heavily fragmented. Please try flushing the system cache, or reboot the machine."
+		exit 1
+	fi
 
 	if [ "$driver_name" = "vfio-pci" ]; then
 		if [ "$username" != "" ]; then
