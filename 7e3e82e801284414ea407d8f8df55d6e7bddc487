@@ -140,6 +140,24 @@
     },
     {
       "key": {
+        "uuid": "4de9f218_68cdc2c0",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:55:50Z",
+      "side": 1,
+      "message": "That seems right",
+      "parentUuid": "8c52c019_97e1ca13",
+      "revId": "7e3e82e801284414ea407d8f8df55d6e7bddc487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0021323f_61c090dc",
         "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
         "patchSetId": 13
