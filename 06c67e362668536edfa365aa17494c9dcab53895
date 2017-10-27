@@ -46,6 +46,30 @@
       "revId": "06c67e362668536edfa365aa17494c9dcab53895",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de06dd35_2d464d18",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1012121
+      },
+      "writtenOn": "2017-10-27T08:33:12Z",
+      "side": 1,
+      "message": "Although this might be misleading instead we could introduce a spdk_smp_mb() resp. spdk_smp_wmb() like the linux kernel does\n* http://elixir.free-electrons.com/linux/latest/source/arch/powerpc/include/asm/barrier.h",
+      "parentUuid": "468b74e9_6b5cf3be",
+      "range": {
+        "startLine": 52,
+        "startChar": 35,
+        "endLine": 52,
+        "endChar": 41
+      },
+      "revId": "06c67e362668536edfa365aa17494c9dcab53895",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
