@@ -1,0 +1,297 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ca3a1b5_7e32b41a",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "do we need capital letters here?",
+      "range": {
+        "startLine": 95,
+        "startChar": 8,
+        "endLine": 95,
+        "endChar": 25
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "296fd362_966b7553",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "is",
+      "range": {
+        "startLine": 99,
+        "startChar": 25,
+        "endLine": 99,
+        "endChar": 27
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fc54899_a2c867a8",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "NVMe",
+      "range": {
+        "startLine": 105,
+        "startChar": 28,
+        "endLine": 105,
+        "endChar": 32
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "203c50a6_9efe7e56",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "Describe whether we expect it to pass or fail",
+      "range": {
+        "startLine": 119,
+        "startChar": 3,
+        "endLine": 119,
+        "endChar": 67
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "918cc668_dc235775",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "Test case 3 has 2 BLK controllers with 1 NVMe in each.",
+      "range": {
+        "startLine": 125,
+        "startChar": 3,
+        "endLine": 125,
+        "endChar": 42
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc893fda_5562da71",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "\"on on\"",
+      "range": {
+        "startLine": 127,
+        "startChar": 48,
+        "endLine": 127,
+        "endChar": 54
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "420b4e6f_31d83cd6",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "Also - I think we should run FIO on BOTH VMs / disks and check that only hot-removed disk fails. The other should pass.",
+      "range": {
+        "startLine": 127,
+        "startChar": 48,
+        "endLine": 127,
+        "endChar": 72
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e258b55c_8e14c475",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "first... but in previous points you didnt explain that we use more than one",
+      "range": {
+        "startLine": 127,
+        "startChar": 55,
+        "endLine": 127,
+        "endChar": 60
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "735bbc40_5b80a1a2",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "What about the other disk?",
+      "range": {
+        "startLine": 129,
+        "startChar": 3,
+        "endLine": 129,
+        "endChar": 67
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "973f037b_bf2136e1",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "Like in test case 3 - you don\u0027t mention how many controllers are created.",
+      "range": {
+        "startLine": 135,
+        "startChar": 0,
+        "endLine": 135,
+        "endChar": 42
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a07c0803_149bff79",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "Do we attach to the same controller or to separate ones?",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 136,
+        "endChar": 40
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13a0bd6d_2a15aaa6",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "First mention that we use more than 1 disk",
+      "range": {
+        "startLine": 137,
+        "startChar": 55,
+        "endLine": 137,
+        "endChar": 59
+      },
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1f836eb_64248b2f",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T07:45:13Z",
+      "side": 1,
+      "message": "reboot and restest?",
+      "revId": "2e94f4845c49d9915ba0caeea05e58d4619c6a6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
