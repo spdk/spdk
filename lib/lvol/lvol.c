@@ -211,7 +211,7 @@ _spdk_bs_unload_with_error_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)cb_arg;
 
-	req->cb_fn(req->cb_arg, NULL, -ENODEV);
+	req->cb_fn(req->cb_arg, NULL, req->lvserrno);
 	free(req);
 }
 
@@ -225,6 +225,7 @@ _spdk_close_super_cb(void *cb_arg, int lvolerrno)
 	if (lvolerrno != 0) {
 		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Could not close super blob\n");
 		_spdk_lvs_free(lvs);
+		req->lvserrno = -ENODEV;
 		spdk_bs_unload(bs, _spdk_bs_unload_with_error_cb, req);
 		return;
 	}
@@ -258,6 +259,7 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	if (lvolerrno != 0) {
 		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Could not open super blob\n");
 		_spdk_lvs_free(lvs);
+		req->lvserrno = -ENODEV;
 		spdk_bs_unload(bs, _spdk_bs_unload_with_error_cb, req);
 		return;
 	}
@@ -265,12 +267,14 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	rc = spdk_bs_md_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len != UUID_STRING_LEN || attr[UUID_STRING_LEN - 1] != '\0') {
 		SPDK_INFOLOG(SPDK_TRACE_LVOL, "missing or incorrect UUID\n");
+		req->lvserrno = -EINVAL;
 		spdk_bs_md_close_blob(&blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
 
 	if (uuid_parse(attr, lvs->uuid)) {
 		SPDK_INFOLOG(SPDK_TRACE_LVOL, "incorrect UUID '%s'\n", attr);
+		req->lvserrno = -EINVAL;
 		spdk_bs_md_close_blob(&blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
@@ -278,6 +282,7 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	rc = spdk_bs_md_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len > SPDK_LVS_NAME_MAX) {
 		SPDK_INFOLOG(SPDK_TRACE_LVOL, "missing or invalid name\n");
+		req->lvserrno = -EINVAL;
 		spdk_bs_md_close_blob(&blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
@@ -287,6 +292,7 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	rc = _spdk_add_lvs_to_list(lvs);
 	if (rc) {
 		SPDK_INFOLOG(SPDK_TRACE_LVOL, "lvolstore with name %s already exists\n", lvs->name);
+		req->lvserrno = -EEXIST;
 		spdk_bs_md_close_blob(&blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
@@ -306,6 +312,7 @@ _spdk_lvs_open_super(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 	if (lvolerrno != 0) {
 		SPDK_INFOLOG(SPDK_TRACE_LVOL, "Super blob not found\n");
 		_spdk_lvs_free(lvs);
+		req->lvserrno = -ENODEV;
 		spdk_bs_unload(bs, _spdk_bs_unload_with_error_cb, req);
 		return;
 	}
@@ -554,14 +561,11 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	strncpy(lvs->name, o->name, SPDK_LVS_NAME_MAX);
 
 	rc = _spdk_add_lvs_to_list(lvs);
-
 	if (rc) {
 		SPDK_ERRLOG("lvolstore with name %s already exists\n", lvs->name);
 		_spdk_lvs_free(lvs);
-		return -EINVAL;
+		return -EEXIST;
 	}
-
-	_spdk_add_lvs_to_list(lvs);
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
 	if (!lvs_req) {
