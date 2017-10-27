@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eeb16412_4818740e",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-27T16:35:58Z",
+      "side": 1,
+      "message": "This one is still printing uuid with %p - it should use %s, uuid like the other paths.\n\nThis is what the existing code does, though, so we can fix it in another patch.",
+      "range": {
+        "startLine": 71,
+        "startChar": 61,
+        "endLine": 71,
+        "endChar": 63
+      },
+      "revId": "95e89e385052884b1acce4d122040b42a91b4bf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
