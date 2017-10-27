@@ -82,6 +82,7 @@ struct virtio_scsi_scan_info {
 	uint64_t			num_blocks;
 	uint32_t			block_size;
 	uint8_t				target;
+	bool				unmap_supported;
 };
 
 struct virtio_scsi_scan_base {
@@ -344,13 +345,17 @@ static void bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_b
 static bool
 bdev_virtio_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
+	struct virtio_scsi_disk *disk = ctx;
+
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
-	case SPDK_BDEV_IO_TYPE_UNMAP:
 		return true;
+
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return disk->info.unmap_supported;
 
 	default:
 		return false;
@@ -639,6 +644,31 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 }
 
 static void
+send_inquiry_vpd(struct virtio_scsi_scan_base *base, uint8_t target_id, struct virtio_req *vreq,
+		 uint8_t page_code)
+{
+	struct iovec *iov = vreq->iov;
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct spdk_scsi_cdb_inquiry *inquiry_cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
+	int rc;
+
+	memset(req, 0, sizeof(*req));
+	req->lun[0] = 1;
+	req->lun[1] = target_id;
+
+	iov[0].iov_len = BDEV_VIRTIO_SCAN_PAYLOAD_SIZE;
+	inquiry_cdb->opcode = SPDK_SPC_INQUIRY;
+	inquiry_cdb->evpd = 1;
+	inquiry_cdb->page_code = page_code;
+	to_be16(inquiry_cdb->alloc_len, iov[0].iov_len);
+
+	rc = virtio_xmit_pkt(base->vq, vreq);
+	if (rc != 0) {
+		assert(false);
+	}
+}
+
+static void
 send_read_cap_10(struct virtio_scsi_scan_base *base, uint8_t target_id, struct virtio_req *vreq)
 {
 	struct iovec *iov = vreq->iov;
@@ -681,7 +711,7 @@ send_read_cap_16(struct virtio_scsi_scan_base *base, uint8_t target_id, struct v
 }
 
 static int
-process_scan_inquiry(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
+process_scan_inquiry_standard(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 {
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
 	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
@@ -701,8 +731,48 @@ process_scan_inquiry(struct virtio_scsi_scan_base *base, struct virtio_req *vreq
 	}
 
 	target_id = req->lun[1];
+	send_inquiry_vpd(base, target_id, vreq, SPDK_SPC_VPD_BLOCK_THIN_PROVISION);
+	return 0;
+}
+
+static int
+process_scan_inquiry_vpd_block_thin_provision(struct virtio_scsi_scan_base *base,
+		struct virtio_req *vreq)
+{
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
+	uint8_t target_id;
+
+	/* For now, just check whether we retrieved the page successfully. */
+	if (resp->response == VIRTIO_SCSI_S_OK && resp->status == SPDK_SCSI_STATUS_GOOD) {
+		base->info.unmap_supported = true;
+	}
+
+	SPDK_INFOLOG(SPDK_TRACE_VIRTIO, "Target %u: unmap supported = %d\n",
+		     base->info.target, (int)base->info.unmap_supported);
+
+	target_id = req->lun[1];
 	send_read_cap_10(base, target_id, vreq);
 	return 0;
+}
+
+static int
+process_scan_inquiry(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
+{
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct spdk_scsi_cdb_inquiry *inquiry_cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
+
+	if ((inquiry_cdb->evpd & 1) == 0) {
+		return process_scan_inquiry_standard(base, vreq);
+	}
+
+	switch (inquiry_cdb->page_code) {
+	case SPDK_SPC_VPD_BLOCK_THIN_PROVISION:
+		return process_scan_inquiry_vpd_block_thin_provision(base, vreq);
+	default:
+		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO, "Unexpected VPD page 0x%02x\n", inquiry_cdb->page_code);
+		return -1;
+	}
 }
 
 static int
