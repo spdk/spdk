@@ -25,7 +25,11 @@
 - @ref blobfs
 - @ref jsonrpc
 
-# Programmer Guides {#general}
+# Programmer Guides {#prog_guides}
+
+- @ref blob
+
+# General Information {#general}
 
 - @ref bdev_pg
 - @ref bdev_module
