@@ -20,7 +20,11 @@
 - @ref blobfs_getting_started
 - @ref jsonrpc
 
-# Programmer Guides {#general}
+# Programmer Guides {#prog_guides}
+
+- @ref blob_pg
+
+# General Information {#general}
 
 - @ref directory_structure
 - [Public API header files](files.html)
