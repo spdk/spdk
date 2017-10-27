@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c806f14c_855e8937",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-27T09:55:34Z",
+      "side": 1,
+      "message": "It\u0027s magic :)",
+      "parentUuid": "6b94a09c_91724654",
+      "range": {
+        "startLine": 21,
+        "startChar": 8,
+        "endLine": 21,
+        "endChar": 46
+      },
+      "revId": "8d8404f215ec7e63f7e41d044688721637c582f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0bffbccb_9d87314a",
         "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
         "patchSetId": 15
@@ -109,6 +133,52 @@
         "startLine": 21,
         "startChar": 12,
         "endLine": 21,
+        "endChar": 14
+      },
+      "revId": "8d8404f215ec7e63f7e41d044688721637c582f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "287c227e_339668ee",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-27T09:55:34Z",
+      "side": 1,
+      "message": "Karol, at the end of this test case do we need to remove created files \u0026 partition (we will need to create vhost block controller and boot to VM again)?",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 17
+      },
+      "revId": "8d8404f215ec7e63f7e41d044688721637c582f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7ea14dd_ecccee00",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-10-27T09:55:34Z",
+      "side": 1,
+      "message": "Do we need a second test case where do the same test but on two VMs?",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 37,
         "endChar": 14
       },
       "revId": "8d8404f215ec7e63f7e41d044688721637c582f6",
