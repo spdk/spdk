@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "098aeae8_250db665",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 36
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:41:04Z",
+      "side": 1,
+      "message": "Why does only first VM get 3 cores and others 2?\nI think this config is very specific to this test. Maybe instead of modifying the common autotest.config file you could create a dedicated one and use it instead?",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 21
+      },
+      "revId": "cf196da3ec153aca3c283a90e1e3698f86dede28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df8f8103_e0e6198e",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:41:04Z",
+      "side": 1,
+      "message": "tabs/spaces consistency",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 1
+      },
+      "revId": "cf196da3ec153aca3c283a90e1e3698f86dede28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6a9be4d_128c1739",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:41:04Z",
+      "side": 1,
+      "message": "Take a look at lines 4 and 6 - we no longer have \"read\" in the scope, so this conditional will never kick in.",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 10
+      },
+      "revId": "cf196da3ec153aca3c283a90e1e3698f86dede28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "522143e3_490ceeee",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:41:04Z",
+      "side": 1,
+      "message": "As in previous comment.",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 10
+      },
+      "revId": "cf196da3ec153aca3c283a90e1e3698f86dede28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86864524_4d64e3c5",
+        "filename": "test/vhost/initiator/guest_fio.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:41:04Z",
+      "side": 1,
+      "message": "split the line, its too long",
+      "revId": "cf196da3ec153aca3c283a90e1e3698f86dede28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
