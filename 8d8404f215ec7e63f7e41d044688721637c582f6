@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b94a09c_91724654",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:55:50Z",
+      "side": 1,
+      "message": "That\u0027s a fine way of not using grep :)",
+      "range": {
+        "startLine": 21,
+        "startChar": 8,
+        "endLine": 21,
+        "endChar": 46
+      },
+      "revId": "8d8404f215ec7e63f7e41d044688721637c582f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bffbccb_9d87314a",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:55:50Z",
+      "side": 1,
+      "message": "This is strange. I\u0027ll try it out on my system later",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 3
+      },
+      "revId": "8d8404f215ec7e63f7e41d044688721637c582f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27613e8a_310de5c5",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:55:50Z",
+      "side": 1,
+      "message": "You use NVMe in other lines, I think you could change it here too",
+      "range": {
+        "startLine": 8,
+        "startChar": 81,
+        "endLine": 8,
+        "endChar": 85
+      },
+      "revId": "8d8404f215ec7e63f7e41d044688721637c582f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f6dc29f_a965acbb",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:55:50Z",
+      "side": 1,
+      "message": "You capitalize as VM in other lines",
+      "range": {
+        "startLine": 9,
+        "startChar": 83,
+        "endLine": 9,
+        "endChar": 85
+      },
+      "revId": "8d8404f215ec7e63f7e41d044688721637c582f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9f5cf89_9176742e",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:55:50Z",
+      "side": 1,
+      "message": "You capitalize as VM in other lines",
+      "range": {
+        "startLine": 21,
+        "startChar": 12,
+        "endLine": 21,
+        "endChar": 14
+      },
+      "revId": "8d8404f215ec7e63f7e41d044688721637c582f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
