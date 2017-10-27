@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24f91c93_729dc1ee",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T10:10:24Z",
+      "side": 1,
+      "message": "memory",
+      "range": {
+        "startLine": 462,
+        "startChar": 14,
+        "endLine": 462,
+        "endChar": 22
+      },
+      "revId": "bca2fe6d272fe0bb0f2e54f4289400cfffe92457",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b8d3a71_dd30d9cd",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T10:10:24Z",
+      "side": 1,
+      "message": "test cases use",
+      "range": {
+        "startLine": 465,
+        "startChar": 25,
+        "endLine": 465,
+        "endChar": 29
+      },
+      "revId": "bca2fe6d272fe0bb0f2e54f4289400cfffe92457",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d8d1574_0e626110",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T10:10:24Z",
+      "side": 1,
+      "message": "is",
+      "range": {
+        "startLine": 487,
+        "startChar": 22,
+        "endLine": 487,
+        "endChar": 24
+      },
+      "revId": "bca2fe6d272fe0bb0f2e54f4289400cfffe92457",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d91dc02e_c2b19869",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T10:10:24Z",
+      "side": 1,
+      "message": "Like Maciek noted, it might be worth to try interacting with loaded lvs by adding new lvol to it.",
+      "revId": "bca2fe6d272fe0bb0f2e54f4289400cfffe92457",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
