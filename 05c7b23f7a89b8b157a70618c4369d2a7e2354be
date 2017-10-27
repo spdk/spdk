@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a08e235d_6cb422e8",
+        "filename": "test/vhost/pmem/pmem_integrity.job",
+        "patchSetId": 27
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-27T14:03:11Z",
+      "side": 1,
+      "message": "In testplan iodepth\u003d128",
+      "range": {
+        "startLine": 3,
+        "startChar": 8,
+        "endLine": 3,
+        "endChar": 10
+      },
+      "revId": "05c7b23f7a89b8b157a70618c4369d2a7e2354be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43b2100a_fc0f304f",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-27T14:03:11Z",
+      "side": 1,
+      "message": "\u0027$\u0027 is not needed in bash contexts (( )) and [[ ]]. The same for all above.",
+      "range": {
+        "startLine": 138,
+        "startChar": 14,
+        "endLine": 138,
+        "endChar": 15
+      },
+      "revId": "05c7b23f7a89b8b157a70618c4369d2a7e2354be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae5ad6e5_27513ca9",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-10-27T14:03:11Z",
+      "side": 1,
+      "message": "Why \u0027.0\u0027?",
+      "range": {
+        "startLine": 141,
+        "startChar": 37,
+        "endLine": 141,
+        "endChar": 39
+      },
+      "revId": "05c7b23f7a89b8b157a70618c4369d2a7e2354be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
