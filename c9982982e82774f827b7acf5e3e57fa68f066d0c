@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8f06a4a_b198174f",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-27T17:32:00Z",
+      "side": 1,
+      "message": "This file needs to be added to the INPUT list in doc/Doxyfile so that Doxygen will see it.\n\nPlease run `make -C doc` locally and check the doc/output/html directory to see how the output looks.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b2cec09_cfa95c3f",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-27T17:32:00Z",
+      "side": 1,
+      "message": "This type of header is used by Jekyll (which is used for the spdk.github.io repo), but not by Doxygen (which is used for doc/ in the spdk repo).",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10c5195e_b9eb1ff6",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-27T17:32:00Z",
+      "side": 1,
+      "message": "Each Doxygen .md file needs to have an initial first-level heading with a name that defines the title of the page and the output HTML file name, something like:\n\n    # Blobstore Programmer\u0027s Guide {#blob_pg}",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bea81f0b_2eb5b664",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-27T17:32:00Z",
+      "side": 1,
+      "message": "Doxygen has a built-in way to generate named anchors - the header line can be modified to look like this:\n\n  ## Target Audience {#audience}\n\nHowever, we should use more specific names, since these are global to the whole Doxygen project - it should probably be something like {#blob_pg_audience} to avoid conflicts.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61d81dec_f7b53aec",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-27T17:32:00Z",
+      "side": 1,
+      "message": "A lot of the heading lines seem to have the section name and then the first sentence on the same line, but I think the sentence should be split off onto its own line.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1080792_7fd13e5a",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-27T17:32:00Z",
+      "side": 1,
+      "message": "Split this up too.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
