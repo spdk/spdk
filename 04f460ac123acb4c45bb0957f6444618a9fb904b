@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28dda4a2_0815e7cb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T11:55:39Z",
+      "side": 1,
+      "message": "Many similar formatting changes in this file. Please keep it same as it is in rest of this file. Return type, then name.",
+      "range": {
+        "startLine": 104,
+        "startChar": 0,
+        "endLine": 104,
+        "endChar": 4
+      },
+      "revId": "04f460ac123acb4c45bb0957f6444618a9fb904b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca14a191_4f4078a2",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T11:55:39Z",
+      "side": 1,
+      "message": "Weird formatting change.",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 13
+      },
+      "revId": "04f460ac123acb4c45bb0957f6444618a9fb904b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d57e7701_600d5386",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T11:55:39Z",
+      "side": 1,
+      "message": "I think this could be formatted better.",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 22
+      },
+      "revId": "04f460ac123acb4c45bb0957f6444618a9fb904b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
