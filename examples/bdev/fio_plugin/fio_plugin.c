@@ -402,6 +402,7 @@ spdk_fio_cleanup(struct thread_data *td)
 
 	spdk_free_thread();
 	spdk_ring_free(fio_thread->ring);
+	free(fio_thread->iocq);
 	free(fio_thread);
 
 	td->io_ops_data = NULL;
@@ -646,7 +647,54 @@ static void fio_init spdk_fio_register(void)
 	register_ioengine(&ioengine);
 }
 
+static void
+spdk_fio_module_finish_done(void *cb_arg)
+{
+	*(bool *)cb_arg = true;
+}
+
+static void
+spdk_fio_finish_env(void)
+{
+	struct thread_data		*td;
+	int				rc;
+	bool				done = false;
+
+	SPDK_ERRLOG("FINISHING ENV\n");
+
+	td = calloc(1, sizeof(*td));
+	if (!td) {
+		return;
+	}
+	/* Create an SPDK thread temporarily */
+	rc = spdk_fio_init_thread(td);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to create finish thread\n");
+		return;
+	}
+	SPDK_ERRLOG("FINISHING INITIALIZED THREAD\n");
+
+	spdk_bdev_finish(spdk_fio_module_finish_done, &done);
+
+	while (!done) {
+		spdk_fio_getevents(td, 0, 128, NULL);
+	}
+	done = false;
+
+	spdk_copy_engine_finish(spdk_fio_module_finish_done, &done);
+
+	while (!done) {
+		spdk_fio_getevents(td, 0, 128, NULL);
+	}
+
+	/* Destroy the temporary SPDK thread */
+	spdk_fio_cleanup(td);
+	free(td);
+	SPDK_ERRLOG("FINISHING DONE\n");
+}
+
 static void fio_exit spdk_fio_unregister(void)
 {
+	spdk_fio_finish_env();
 	unregister_ioengine(&ioengine);
 }
