@@ -41,19 +41,59 @@
 SPDK_LOG_REGISTER_TRACE_FLAG("lvolrpc", SPDK_TRACE_LVOL_RPC)
 
 struct rpc_construct_lvol_store {
-	char *base_name;
+	char *lvs_name;
+	char *bdev_name;
 	uint32_t cluster_sz;
 };
+
+int
+vbdev_get_lvol_store_by_uuid_xor_name(const char *uuid, const char *lvs_name,
+				      struct spdk_lvol_store **lvs)
+{
+	uuid_t lvol_store_uuid;
+
+	if ((uuid == NULL && lvs_name == NULL)) {
+		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "lvs UUID nor lvs name specified\n");
+		return -EINVAL;
+	} else if ((uuid && lvs_name)) {
+		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "both lvs UUID '%s' and lvs name '%s' specified\n", uuid,
+			     lvs_name);
+		return -EINVAL;
+	} else if (uuid) {
+		if (uuid_parse(uuid, lvol_store_uuid)) {
+			SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "incorrect UUID '%s'\n", uuid);
+			return -EINVAL;
+		}
+
+		*lvs = vbdev_get_lvol_store_by_uuid(lvol_store_uuid);
+
+		if (*lvs == NULL) {
+			SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "blobstore with UUID '%p' not found\n", &lvol_store_uuid);
+			return -ENODEV;
+		}
+	} else if (lvs_name) {
+
+		*lvs = vbdev_get_lvol_store_by_name(lvs_name);
+
+		if (*lvs == NULL) {
+			SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "blobstore with name '%s' not found\n", lvs_name);
+			return -ENODEV;
+		}
+	}
+	return 0;
+}
 
 static void
 free_rpc_construct_lvol_store(struct rpc_construct_lvol_store *req)
 {
-	free(req->base_name);
+	free(req->bdev_name);
+	free(req->lvs_name);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_lvol_store_decoders[] = {
-	{"base_name", offsetof(struct rpc_construct_lvol_store, base_name), spdk_json_decode_string},
+	{"bdev_name", offsetof(struct rpc_construct_lvol_store, bdev_name), spdk_json_decode_string},
 	{"cluster_sz", offsetof(struct rpc_construct_lvol_store, cluster_sz), spdk_json_decode_uint32, true},
+	{"lvs_name", offsetof(struct rpc_construct_lvol_store, lvs_name), spdk_json_decode_string},
 };
 
 static void
@@ -103,20 +143,26 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (req.base_name == NULL) {
-		SPDK_ERRLOG("missing name param\n");
+	if (req.bdev_name == NULL) {
+		SPDK_ERRLOG("missing bdev_name param\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
 
-	bdev = spdk_bdev_get_by_name(req.base_name);
+	if (req.lvs_name == NULL) {
+		SPDK_ERRLOG("missing lvs_name param\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+	bdev = spdk_bdev_get_by_name(req.bdev_name);
 	if (bdev == NULL) {
-		SPDK_ERRLOG("bdev '%s' does not exist\n", req.base_name);
+		SPDK_ERRLOG("bdev '%s' does not exist\n", req.bdev_name);
 		rc = -ENODEV;
 		goto invalid;
 	}
 
-	rc = vbdev_lvs_create(bdev, req.cluster_sz, _spdk_rpc_lvol_store_construct_cb, request);
+	rc = vbdev_lvs_create(bdev, req.lvs_name, req.cluster_sz, _spdk_rpc_lvol_store_construct_cb,
+			      request);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -132,17 +178,20 @@ invalid:
 SPDK_RPC_REGISTER("construct_lvol_store", spdk_rpc_construct_lvol_store)
 
 struct rpc_destroy_lvol_store {
-	char *lvol_store_uuid;
+	char *uuid;
+	char *lvs_name;
 };
 
 static void
 free_rpc_destroy_lvol_store(struct rpc_destroy_lvol_store *req)
 {
-	free(req->lvol_store_uuid);
+	free(req->uuid);
+	free(req->lvs_name);
 }
 
 static const struct spdk_json_object_decoder rpc_destroy_lvol_store_decoders[] = {
-	{"lvol_store_uuid", offsetof(struct rpc_destroy_lvol_store, lvol_store_uuid), spdk_json_decode_string},
+	{"uuid", offsetof(struct rpc_destroy_lvol_store, uuid), spdk_json_decode_string, true},
+	{"lvs_name", offsetof(struct rpc_destroy_lvol_store, lvs_name), spdk_json_decode_string, true},
 };
 
 static void
@@ -175,8 +224,7 @@ spdk_rpc_destroy_lvol_store(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
 	struct rpc_destroy_lvol_store req = {};
-	struct spdk_lvol_store *lvs;
-	uuid_t lvol_store_uuid;
+	struct spdk_lvol_store *lvs = NULL;
 	int rc;
 	char buf[64];
 
@@ -188,16 +236,8 @@ spdk_rpc_destroy_lvol_store(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (uuid_parse(req.lvol_store_uuid, lvol_store_uuid)) {
-		SPDK_INFOLOG(SPDK_TRACE_LVOL_RPC, "incorrect UUID '%s'\n", req.lvol_store_uuid);
-		rc = -EINVAL;
-		goto invalid;
-	}
-
-	lvs = vbdev_get_lvol_store_by_uuid(lvol_store_uuid);
-	if (lvs == NULL) {
-		SPDK_INFOLOG(SPDK_TRACE_LVOL_RPC, "blobstore with UUID '%p' not found\n", &lvol_store_uuid);
-		rc = -ENODEV;
+	rc = vbdev_get_lvol_store_by_uuid_xor_name(req.uuid, req.lvs_name, &lvs);
+	if (rc != 0) {
 		goto invalid;
 	}
 
@@ -215,18 +255,24 @@ invalid:
 SPDK_RPC_REGISTER("destroy_lvol_store", spdk_rpc_destroy_lvol_store)
 
 struct rpc_construct_lvol_bdev {
-	char *lvol_store_uuid;
+	char *uuid;
+	char *lvs_name;
+	char *lvol_name;
 	uint64_t size;
 };
 
 static void
 free_rpc_construct_lvol_bdev(struct rpc_construct_lvol_bdev *req)
 {
-	free(req->lvol_store_uuid);
+	free(req->uuid);
+	free(req->lvs_name);
+	free(req->lvol_name);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_lvol_bdev_decoders[] = {
-	{"lvol_store_uuid", offsetof(struct rpc_construct_lvol_bdev, lvol_store_uuid), spdk_json_decode_string},
+	{"uuid", offsetof(struct rpc_construct_lvol_bdev, uuid), spdk_json_decode_string, true},
+	{"lvs_name", offsetof(struct rpc_construct_lvol_bdev, lvs_name), spdk_json_decode_string, true},
+	{"lvol_name", offsetof(struct rpc_construct_lvol_bdev, lvol_name), spdk_json_decode_string, true},
 	{"size", offsetof(struct rpc_construct_lvol_bdev, size), spdk_json_decode_uint64},
 };
 
@@ -247,7 +293,7 @@ _spdk_rpc_construct_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvole
 	}
 
 	spdk_json_write_array_begin(w);
-	spdk_json_write_string(w, lvol->old_name);
+	spdk_json_write_string(w, lvol->bdev->name);
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -262,10 +308,10 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_construct_lvol_bdev req = {};
-	uuid_t lvol_store_uuid;
 	size_t sz;
 	int rc;
 	char buf[64];
+	struct spdk_lvol_store *lvs = NULL;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL_RPC, "Creating blob\n");
 
@@ -277,15 +323,20 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (uuid_parse(req.lvol_store_uuid, lvol_store_uuid)) {
-		SPDK_INFOLOG(SPDK_TRACE_LVOL_RPC, "incorrect UUID '%s'\n", req.lvol_store_uuid);
+	rc = vbdev_get_lvol_store_by_uuid_xor_name(req.uuid, req.lvs_name, &lvs);
+	if (rc != 0) {
+		goto invalid;
+	}
+
+	if (req.lvol_name == NULL) {
+		SPDK_INFOLOG(SPDK_TRACE_LVOL_RPC, "no bdev name\n");
 		rc = -EINVAL;
 		goto invalid;
 	}
 
 	sz = (size_t)req.size;
 
-	rc = vbdev_lvol_create(lvol_store_uuid, sz, _spdk_rpc_construct_lvol_bdev_cb, request);
+	rc = vbdev_lvol_create(lvs->uuid, req.lvol_name, sz, _spdk_rpc_construct_lvol_bdev_cb, request);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -420,6 +471,9 @@ spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
 		uuid_unparse(lvs_bdev->lvs->uuid, uuid);
 		spdk_json_write_name(w, "uuid");
 		spdk_json_write_string(w, uuid);
+
+		spdk_json_write_name(w, "name");
+		spdk_json_write_string(w, lvs_bdev->lvs->name);
 
 		spdk_json_write_name(w, "base_bdev");
 		spdk_json_write_string(w, spdk_bdev_get_name(lvs_bdev->bdev));
