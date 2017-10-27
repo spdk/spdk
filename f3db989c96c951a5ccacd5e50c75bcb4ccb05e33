@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "7eb5aa45_7c20121e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-27T09:01:04Z",
+      "side": 1,
+      "message": "this should be const char *",
+      "range": {
+        "startLine": 261,
+        "startChar": 29,
+        "endLine": 261,
+        "endChar": 39
+      },
+      "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4924c4a_38db206f",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 6
@@ -13,6 +36,23 @@
       "writtenOn": "2017-10-26T17:17:23Z",
       "side": 1,
       "message": "Need to also free req-\u003ename here.",
+      "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "feef42a6_d00df106",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-27T09:01:04Z",
+      "side": 1,
+      "message": "add infolog with error description",
       "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +93,23 @@
     },
     {
       "key": {
+        "uuid": "20423600_035ab01e",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-27T09:01:04Z",
+      "side": 1,
+      "message": "add infolog with error description",
+      "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d5f0477_f8f5ca50",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 6
@@ -81,6 +138,24 @@
       "writtenOn": "2017-10-26T17:17:23Z",
       "side": 1,
       "message": "If this parameter is required, then there\u0027s no need for the \u0027if args.name\u0027 check above.\n\nAlso, if it is supposed to be required, then all of the test scripts that call construct_lvol_store need to be updated.",
+      "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f101e24_dbbbd342",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-27T09:01:04Z",
+      "side": 1,
+      "message": "If this parameter is required, do we need to specify -n flag? Can we just add it as a next parameter after base_name w/o a flag?\nShould we also add required\u003dTrue for base_name?",
+      "parentUuid": "1079cf00_0235c21c",
       "revId": "f3db989c96c951a5ccacd5e50c75bcb4ccb05e33",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
