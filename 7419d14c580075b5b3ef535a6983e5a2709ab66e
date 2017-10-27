@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16ff2951_02785ebc",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T12:53:20Z",
+      "side": 1,
+      "message": "const char",
+      "range": {
+        "startLine": 195,
+        "startChar": 53,
+        "endLine": 195,
+        "endChar": 57
+      },
+      "revId": "7419d14c580075b5b3ef535a6983e5a2709ab66e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d76c0ebf_e75e27f5",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T12:53:20Z",
+      "side": 1,
+      "message": "const char",
+      "range": {
+        "startLine": 105,
+        "startChar": 46,
+        "endLine": 105,
+        "endChar": 50
+      },
+      "revId": "7419d14c580075b5b3ef535a6983e5a2709ab66e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55295673_6b819aa3",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T12:53:20Z",
+      "side": 1,
+      "message": "const char",
+      "range": {
+        "startLine": 288,
+        "startChar": 29,
+        "endLine": 288,
+        "endChar": 33
+      },
+      "revId": "7419d14c580075b5b3ef535a6983e5a2709ab66e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ec8f4b0_2bacfbc8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T12:53:20Z",
+      "side": 1,
+      "message": "const",
+      "range": {
+        "startLine": 50,
+        "startChar": 50,
+        "endLine": 50,
+        "endChar": 54
+      },
+      "revId": "7419d14c580075b5b3ef535a6983e5a2709ab66e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7915d3c5_b20143c4",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T12:53:20Z",
+      "side": 1,
+      "message": "Can we abstract this away in both here and spdk_rpc_destroy_lvol_store() ? Other wise it is duplicating same code. Function that takes uuid and name as argument and returns lvs.",
+      "range": {
+        "startLine": 309,
+        "startChar": 0,
+        "endLine": 337,
+        "endChar": 2
+      },
+      "revId": "7419d14c580075b5b3ef535a6983e5a2709ab66e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
