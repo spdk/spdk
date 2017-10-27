@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "d36e18e1_1cf52e69",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-27T13:59:32Z",
+      "side": 1,
+      "message": "i think this should also check that strnlen(name, SPDK_LVS_NAME_MAX) !\u003d 0 and \u003c SPDK_LVS_NAME_MAX.",
+      "revId": "8d75c1946402d9c000b6659f152285825ce751c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "746c4fd1_7180852c",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-27T13:59:32Z",
+      "side": 1,
+      "message": "i think now that we are adding lvs_name, we should change base_name to bdev_name - it will make it more clear what \"base_name\" means\n\nI know this changes the RPC API but better to do that now than later.  What do you think?",
+      "revId": "8d75c1946402d9c000b6659f152285825ce751c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "613b3ba5_7d3c21d5",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-27T13:59:32Z",
+      "side": 1,
+      "message": "not really related to this patch, but I think it\u0027s OK to change it here:\n\ninstead of \"for this bdev\", would \"for this lvol\" be better?",
+      "revId": "8d75c1946402d9c000b6659f152285825ce751c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2376014c_ad022e29",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 16
