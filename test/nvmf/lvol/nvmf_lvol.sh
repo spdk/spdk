@@ -47,7 +47,7 @@ lvol_bdevs=()
 # Create malloc backends and creat lvol store on each
 for i in `seq 1 $SUBSYS_NR`; do
 	bdev="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
-	ls_guid="$($rpc_py construct_lvol_store $bdev -c 1048576)"
+	ls_guid="$($rpc_py construct_lvol_store $bdev lvs_$i -c 1048576)"
 	lvol_stores+=("$ls_guid")
 
 	# 1 NVMe-OF subsystem per malloc bdev / lvol store / 10 lvol bdevs
@@ -55,7 +55,7 @@ for i in `seq 1 $SUBSYS_NR`; do
 
 	# Create lvol bdevs on each lvol store
 	for j in `seq 1 10`; do
-		lb_guid="$($rpc_py construct_lvol_bdev $ls_guid $LVOL_BDEV_SIZE)"
+		lb_guid="$($rpc_py construct_lvol_bdev -u $ls_guid $LVOL_BDEV_SIZE)"
 		lvol_bdevs+=("$lb_guid")
 		ns_bdevs+="$lb_guid "
 	done

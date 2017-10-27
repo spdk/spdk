@@ -120,7 +120,7 @@ used_vms=""
 # On each NVMe create one lvol store
 for (( i=0; i<$max_disks; i++ ));do
     echo "INFO: Creating lvol store on device Nvme${i}n1"
-    ls_guid=$($rpc_py construct_lvol_store Nvme${i}n1)
+    ls_guid=$($rpc_py construct_lvol_store Nvme${i}n1 lvs_$i)
     lvol_stores+=("$ls_guid")
 done
 
@@ -129,11 +129,11 @@ if $nested_lvol; then
     for lvol_store in "${lvol_stores[@]}"; do
 
         echo "INFO: Creating lvol bdev on lvol store $lvol_store"
-        lb_guid=$($rpc_py construct_lvol_bdev $lvol_store 16000)
+        lb_guid=$($rpc_py construct_lvol_bdev -u $lvol_store 16000)
         lvol_bdevs+=("$lb_guid")
 
         echo "INFO: Creating nested lvol store on lvol bdev: $lb_guid"
-        ls_guid=$($rpc_py construct_lvol_store $lb_guid)
+        ls_guid=$($rpc_py construct_lvol_store $lb_guid lvs_n_$i)
         nest_lvol_stores+=("$ls_guid")
     done
 fi
@@ -143,7 +143,7 @@ for (( i=0; i<$vm_count; i++)); do
     bdevs=()
     echo "INFO: Creating lvol bdevs for VM $i"
     for lvol_store in "${lvol_stores[@]}"; do
-        lb_guid=$($rpc_py construct_lvol_bdev $lvol_store 10000)
+        lb_guid=$($rpc_py construct_lvol_bdev -u $lvol_store 10000)
         lvol_bdevs+=("$lb_guid")
         bdevs+=("$lb_guid")
     done
@@ -151,7 +151,7 @@ for (( i=0; i<$vm_count; i++)); do
     if $nested_lvol; then
         echo "INFO: Creating nested lvol bdevs for VM $i"
         for lvol_store in "${nest_lvol_stores[@]}"; do
-            lb_guid=$($rpc_py construct_lvol_bdev $lvol_store 2000)
+            lb_guid=$($rpc_py construct_lvol_bdev -u $lvol_store 2000)
             nest_lvol_bdevs+=("$lb_guid")
             bdevs+=("$lb_guid")
         done
@@ -266,7 +266,7 @@ done
 
 echo "INFO: Removing nested lvol stores"
 for lvol_store in "${nest_lvol_stores[@]}"; do
-    $rpc_py destroy_lvol_store $lvol_store
+    $rpc_py destroy_lvol_store -u $lvol_store
     echo -e "\tINFO: nested lvol store $lvol_store removed"
 done
 
@@ -278,7 +278,7 @@ done
 
 echo "INFO: Removing lvol stores"
 for lvol_store in "${lvol_stores[@]}"; do
-    $rpc_py destroy_lvol_store $lvol_store
+    $rpc_py destroy_lvol_store -u $lvol_store
     echo -e "\tINFO: lvol store $lvol_store removed"
 done
 

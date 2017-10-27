@@ -102,13 +102,12 @@ end:
 }
 
 int
-vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
+vbdev_lvs_create(struct spdk_bdev *base_bdev, char *name, uint32_t cluster_sz,
 		 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *lvs_req;
 	struct spdk_lvs_opts opts;
-	uuid_t uuid;
 	int rc;
 
 	if (base_bdev == NULL) {
@@ -121,12 +120,11 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, uint32_t cluster_sz,
 		opts.cluster_sz = cluster_sz;
 	}
 
-	/*
-	 * This is temporary until the RPCs take a name parameter for creating
-	 *  an lvolstore.
-	 */
-	uuid_generate(uuid);
-	uuid_unparse(uuid, opts.name);
+	if (name == NULL) {
+		SPDK_ERRLOG("missing name param\n");
+		return -EINVAL;
+	}
+	strncpy(opts.name, name, sizeof(opts.name));
 
 	lvs_req = calloc(1, sizeof(*lvs_req));
 	if (!lvs_req) {
@@ -279,6 +277,22 @@ vbdev_get_lvol_store_by_uuid(uuid_t uuid)
 	while (lvs_bdev != NULL) {
 		lvs = lvs_bdev->lvs;
 		if (uuid_compare(lvs->uuid, uuid) == 0) {
+			return lvs;
+		}
+		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
+	}
+	return NULL;
+}
+
+struct spdk_lvol_store *
+vbdev_get_lvol_store_by_name(char *name)
+{
+	struct spdk_lvol_store *lvs = NULL;
+	struct lvol_store_bdev *lvs_bdev = vbdev_lvol_store_first();
+
+	while (lvs_bdev != NULL) {
+		lvs = lvs_bdev->lvs;
+		if (strncmp(lvs->name, name, sizeof(lvs->name)) == 0) {
 			return lvs;
 		}
 		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
@@ -551,11 +565,11 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 }
 
 static struct spdk_bdev_fn_table vbdev_lvol_fn_table = {
-	.destruct		= vbdev_lvol_destruct,
-	.io_type_supported	= vbdev_lvol_io_type_supported,
-	.submit_request		= vbdev_lvol_submit_request,
-	.get_io_channel		= vbdev_lvol_get_io_channel,
-	.dump_config_json	= vbdev_lvol_dump_config_json,
+	.destruct               = vbdev_lvol_destruct,
+	.io_type_supported      = vbdev_lvol_io_type_supported,
+	.submit_request         = vbdev_lvol_submit_request,
+	.get_io_channel         = vbdev_lvol_get_io_channel,
+	.dump_config_json       = vbdev_lvol_dump_config_json,
 };
 
 static struct spdk_bdev *
@@ -581,7 +595,11 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		return NULL;
 	}
 
-	bdev->name = lvol->old_name;
+	bdev->name = spdk_sprintf_alloc("%s/%s", lvs_bdev->lvs->name, lvol->name);
+	if (bdev->name == NULL) {
+		SPDK_ERRLOG("Cannot alloc memory for bdev name\n");
+		return NULL;
+	}
 	bdev->product_name = "Logical Volume";
 	bdev->write_cache = 1;
 	bdev->blocklen = spdk_bs_get_page_size(lvol->lvol_store->blobstore);
@@ -621,13 +639,11 @@ end:
 }
 
 int
-vbdev_lvol_create(uuid_t uuid, size_t sz,
+vbdev_lvol_create(uuid_t uuid, const char *name, size_t sz,
 		  spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
 	struct spdk_lvol_store *lvs;
-	uuid_t lvol_uuid;
-	char name[SPDK_LVOL_NAME_MAX];
 	int rc;
 
 	lvs = vbdev_get_lvol_store_by_uuid(uuid);
@@ -642,13 +658,6 @@ vbdev_lvol_create(uuid_t uuid, size_t sz,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	/*
-	 * This is temporary until the RPCs take a name parameter for creating
-	 *  an lvol.
-	 */
-	uuid_generate(lvol_uuid);
-	uuid_unparse(lvol_uuid, name);
-
 	rc = spdk_lvol_create(lvs, name, sz, _vbdev_lvol_create_cb, req);
 	if (rc != 0) {
 		free(req);
@@ -662,7 +671,7 @@ _vbdev_lvol_resize_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_lvol_req *req = cb_arg;
 
-	req->cb_fn(req->cb_arg,  lvolerrno);
+	req->cb_fn(req->cb_arg, lvolerrno);
 	free(req);
 }
 
