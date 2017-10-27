@@ -1,4 +1,5 @@
 import json
+from uuid import UUID
 from subprocess import check_output, CalledProcessError
 
 
@@ -87,20 +88,32 @@ class Commands_Rpc(object):
         output = self.rpc.construct_malloc_bdev(total_size, block_size)[0]
         return output.rstrip('\n')
 
-    def construct_lvol_store(self, base_name, cluster_size):
+    def construct_lvol_store(self, base_name, lvs_name, cluster_size):
         print("INFO: RPC COMMAND construct_lvol_store")
         output = self.rpc.construct_lvol_store(
-            base_name, "-c {cluster_sz}".format(cluster_sz=cluster_size))[0]
+            base_name,
+            lvs_name,
+            "-c {cluster_sz}".format(cluster_sz=cluster_size))[0]
         return output.rstrip('\n')
 
-    def construct_lvol_bdev(self, uuid, size):
+    def construct_lvol_bdev(self, uuid, lbd_name, size):
         print("INFO: RPC COMMAND construct_lvol_bdev")
-        output = self.rpc.construct_lvol_bdev(uuid, size)[0]
+        try:
+            uuid_obj = UUID(uuid)
+            name_opt = "-u"
+        except ValueError:
+            name_opt = "-l"
+        output = self.rpc.construct_lvol_bdev(name_opt, uuid, lbd_name, size)[0]
         return output.rstrip('\n')
 
     def destroy_lvol_store(self, uuid):
         print("INFO: RPC COMMAND destroy_lvol_store")
-        output, rc = self.rpc.destroy_lvol_store(uuid)
+        try:
+            uuid_obj = UUID(uuid)
+            name_opt = "-u"
+        except ValueError:
+            name_opt = "-l"
+        output, rc = self.rpc.destroy_lvol_store(name_opt, uuid)
         return rc
 
     def delete_bdev(self, base_name):

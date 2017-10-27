@@ -41,11 +41,11 @@ for i in `seq 0 9`; do
     INITIATOR_TAG=$((i+2))
     $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
     bdev=$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
-    ls_guid=$($rpc_py construct_lvol_store $bdev -c 1048576)
+    ls_guid=$($rpc_py construct_lvol_store $bdev lvs_$i -c 1048576)
     LUNs=""
     for j in `seq 0 9`; do
-        lb_guid=$($rpc_py construct_lvol_bdev $ls_guid 10)
-        LUNs+="$lb_guid:$j "
+        lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j 10)
+        LUNs+="$lb_name:$j "
     done
     $rpc_py construct_target_node Target$i Target${i}_alias "$LUNs" "1:$INITIATOR_TAG" 256 1 0 0 0
 done
