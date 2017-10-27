@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4e9833d_cb040d78",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T12:06:57Z",
+      "side": 1,
+      "message": "on PS 11 when constricting lvol bdev I get assertion error as I\u0027ve shown you:\nrequest.c: 153:spdk_bs_sequence_write: *INFO*: Writing 8 blocks to LBA 32\nbdev_malloc.c: 217:bdev_malloc_writev: *INFO*: wrote 4096 bytes to offset 0x4000\nvbdev_lvol.c: 252:vbdev_lvol_store_first: *INFO*: Starting lvolstore iteration at 0xfb5860\nvbdev_lvol.c: 265:vbdev_lvol_store_next: *INFO*: Continuing lvolstore iteration at 0xfb3af0\nvhost: vbdev_lvol.c:607: _create_lvol_disk: Assertion `(total_size % bdev-\u003eblocklen) \u003d\u003d 0\u0027 failed.\nAborted (core dumped)",
+      "range": {
+        "startLine": 308,
+        "startChar": 4,
+        "endLine": 308,
+        "endChar": 29
+      },
+      "revId": "536645b8b38e4d604c713f8b8ec1d0459885ef90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e63a76a9_4d399a36",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T12:06:57Z",
+      "side": 1,
+      "message": "should be args.bdev_name otherwise wont work",
+      "range": {
+        "startLine": 310,
+        "startChar": 27,
+        "endLine": 310,
+        "endChar": 36
+      },
+      "revId": "536645b8b38e4d604c713f8b8ec1d0459885ef90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
