@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abb25f63_1287765e",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 0,
+      "message": "unrelated line removal",
+      "revId": "9583e739016d8175c2651674496a7dd3c2699f4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

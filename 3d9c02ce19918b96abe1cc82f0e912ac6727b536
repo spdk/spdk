@@ -1,0 +1,274 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0401062b_91e00b90",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 34
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "Why does only first VM get 3 cores and others 2?\n\nI think this config is very specific to this test. Maybe instead of modifying the common autotest.config file you could create a dedicated one and use it instead?",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 21
+      },
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1be4e6fa_d2dc58d9",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "Why don\u0027t we have -e? I just noticed that",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 6
+      },
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b56b303_29c4e843",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "Since we\u0027ve removed read and randread from $fio_rw you can delete this part",
+      "range": {
+        "startLine": 38,
+        "startChar": 8,
+        "endLine": 52,
+        "endChar": 10
+      },
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b049d6fb_a6ab741f",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "Why do we change that? This is not related to this commit.",
+      "range": {
+        "startLine": 113,
+        "startChar": 15,
+        "endLine": 113,
+        "endChar": 21
+      },
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f803a0f_376433fa",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "Why do we change that? This is not related to this commit.",
+      "range": {
+        "startLine": 115,
+        "startChar": 14,
+        "endLine": 115,
+        "endChar": 23
+      },
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f23d7f81_0f9bb75a",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "Could you make the OS image as an argument and not hard coded?",
+      "range": {
+        "startLine": 119,
+        "startChar": 18,
+        "endLine": 119,
+        "endChar": 53
+      },
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bccc5af9_4e3bb8d8",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "whitespace",
+      "range": {
+        "startLine": 162,
+        "startChar": 49,
+        "endLine": 162,
+        "endChar": 65
+      },
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f9188d8_9b13d65a",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "This is already on line 5",
+      "range": {
+        "startLine": 207,
+        "startChar": 8,
+        "endLine": 211,
+        "endChar": 10
+      },
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5957d67_3e80aebe",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "Could you put it inside run_gest_fio function?",
+      "range": {
+        "startLine": 220,
+        "startChar": 16,
+        "endLine": 221,
+        "endChar": 40
+      },
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70877633_d4c62f16",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "This is already inside run_host_fio function",
+      "range": {
+        "startLine": 233,
+        "startChar": 16,
+        "endLine": 234,
+        "endChar": 40
+      },
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "966a949e_69a7ded6",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "already inside run_host_fio function",
+      "range": {
+        "startLine": 247,
+        "startChar": 15,
+        "endLine": 248,
+        "endChar": 40
+      },
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e1259c0_521e2364",
+        "filename": "test/vhost/initiator/guest_fio.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T06:44:56Z",
+      "side": 1,
+      "message": "break the line please, it\u0027s too long",
+      "revId": "3d9c02ce19918b96abe1cc82f0e912ac6727b536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
