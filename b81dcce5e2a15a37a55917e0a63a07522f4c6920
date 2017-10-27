@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b9812a5e_f48a4499",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-27T11:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c43993a9_00df3ffa",
+      "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8abac320_53946870",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 3
@@ -30,6 +48,30 @@
       "writtenOn": "2017-10-27T09:19:27Z",
       "side": 1,
       "message": "Name parameter in rpc is optional. What will happen if the user don\u0027t enter one? Won\u0027t we end up with lvol named \"lvsname/\" ?",
+      "range": {
+        "startLine": 586,
+        "startChar": 0,
+        "endLine": 587,
+        "endChar": 58
+      },
+      "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf119200_206c7c37",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 587,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-27T11:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8abac320_53946870",
       "range": {
         "startLine": 586,
         "startChar": 0,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "b66fa583_176154db",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-27T11:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50466277_7b700cb3",
+      "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be43f8c9_5da72f02",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 3
@@ -70,6 +130,24 @@
       "writtenOn": "2017-10-26T17:21:47Z",
       "side": 1,
       "message": "This is renaming the \"name\" paramter that was just introduced in the previous patch - this should be named correctly from the beginning to avoid extra churn in this patch.",
+      "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f17a56c0_4cb89e2d",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-27T11:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be43f8c9_5da72f02",
       "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -99,6 +177,30 @@
     },
     {
       "key": {
+        "uuid": "f07e36d8_954e8efd",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-27T11:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "506c2bb8_87be84c3",
+      "range": {
+        "startLine": 253,
+        "startChar": 3,
+        "endLine": 253,
+        "endChar": 7
+      },
+      "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a67762ae_650a9ef6",
         "filename": "scripts/rpc.py",
         "patchSetId": 3
@@ -116,6 +218,24 @@
     },
     {
       "key": {
+        "uuid": "8e2839d8_0e26e336",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-27T11:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a67762ae_650a9ef6",
+      "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b87d4481_9fd41d51",
         "filename": "scripts/rpc.py",
         "patchSetId": 3
@@ -127,6 +247,30 @@
       "writtenOn": "2017-10-27T09:19:27Z",
       "side": 1,
       "message": "Can we change that to lvolname? bdev name can be misleading.",
+      "range": {
+        "startLine": 327,
+        "startChar": 0,
+        "endLine": 327,
+        "endChar": 64
+      },
+      "revId": "b81dcce5e2a15a37a55917e0a63a07522f4c6920",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc29eb84_f5c6b1d8",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 327,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-10-27T11:58:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b87d4481_9fd41d51",
       "range": {
         "startLine": 327,
         "startChar": 0,
