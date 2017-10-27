@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2bf26a79_17493420",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1385,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-27T08:40:00Z",
+      "side": 1,
+      "message": "Unnecessary empty line",
+      "revId": "9bbc667b0541761b22fc0b0bf8700567978b75c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
