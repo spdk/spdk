@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c041ead4_8b641092",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1749,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-27T07:10:30Z",
+      "side": 1,
+      "message": "should this be an assert()?\n\nit seems like if this case ever happens, then this poller will never do anything\n\nan SPDK_ERRLOG would be nice, but if this case hit then we would just print this message over and over again\n\nwhat do you think about just leaking the channel if this case happens, by setting rqpair-\u003emgmt_channel \u003d NULL?  then next time it will allocate a channel for the correct thread",
+      "revId": "b15df022c6eb1a80a01904ba3290024ed64d29a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85a618e1_f3d3408a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1752,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-27T07:10:30Z",
+      "side": 1,
+      "message": "can the else and if be combined here?",
+      "revId": "b15df022c6eb1a80a01904ba3290024ed64d29a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
