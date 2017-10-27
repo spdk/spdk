@@ -138,7 +138,14 @@ function configure_linux {
 		mkdir -p "$hugetlbfs_mount"
 		mount -t hugetlbfs nodev "$hugetlbfs_mount"
 	fi
-	echo "$NRHUGE" > /proc/sys/vm/nr_hugepages
+
+	if [ -z "$HUGENODE" ]; then
+		hugepages_target="/proc/sys/vm/nr_hugepages"
+	else
+		hugepages_target="/sys/devices/system/node/node${HUGENODE}/hugepages/hugepages-${HUGEPGSZ}kB/nr_hugepages"
+	fi
+
+	echo "$NRHUGE" > "$hugepages_target"
 
 	if [ "$driver_name" = "vfio-pci" ]; then
 		if [ "$username" != "" ]; then
@@ -328,8 +335,9 @@ fi
 : ${HUGEMEM:=2048}
 
 if [ `uname` = Linux ]; then
-	HUGEPGSZ=$(( `grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9'` / 1024 ))
-	: ${NRHUGE=$(( (HUGEMEM + HUGEPGSZ - 1) / HUGEPGSZ ))}
+	HUGEPGSZ=$(( `grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9'` ))
+	HUGEPGSZ_MB=$(( $HUGEPGSZ / 1024 ))
+	: ${NRHUGE=$(( (HUGEMEM + HUGEPGSZ_MB - 1) / HUGEPGSZ_MB ))}
 
 	if [ "$mode" == "config" ]; then
 		configure_linux
