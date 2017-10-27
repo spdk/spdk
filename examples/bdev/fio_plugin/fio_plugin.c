@@ -94,6 +94,7 @@ struct spdk_fio_thread {
 };
 
 static __thread struct spdk_fio_thread *g_thread;
+static bool g_spdk_env_initialized = false;
 
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
@@ -296,7 +297,6 @@ spdk_fio_init_env(struct thread_data *td)
 static int
 spdk_fio_setup(struct thread_data *td)
 {
-	static bool env_initialized = false;
 	unsigned int i;
 	struct fio_file *f;
 
@@ -305,13 +305,13 @@ spdk_fio_setup(struct thread_data *td)
 		return -1;
 	}
 
-	if (!env_initialized) {
+	if (!g_spdk_env_initialized) {
 		if (spdk_fio_init_env(td)) {
 			SPDK_ERRLOG("failed to initialize\n");
 			return -1;
 		}
 
-		env_initialized = true;
+		g_spdk_env_initialized = true;
 	}
 
 	for_each_file(td, f, i) {
@@ -402,6 +402,7 @@ spdk_fio_cleanup(struct thread_data *td)
 
 	spdk_free_thread();
 	spdk_ring_free(fio_thread->ring);
+	free(fio_thread->iocq);
 	free(fio_thread);
 
 	td->io_ops_data = NULL;
@@ -646,7 +647,54 @@ static void fio_init spdk_fio_register(void)
 	register_ioengine(&ioengine);
 }
 
+static void
+spdk_fio_module_finish_done(void *cb_arg)
+{
+	*(bool *)cb_arg = true;
+}
+
+static void
+spdk_fio_finish_env(void)
+{
+	struct thread_data		*td;
+	int				rc;
+	bool				done = false;
+
+	td = calloc(1, sizeof(*td));
+	if (!td) {
+		return;
+	}
+	/* Create an SPDK thread temporarily */
+	rc = spdk_fio_init_thread(td);
+	if (rc < 0) {
+		SPDK_ERRLOG("Failed to create finish thread\n");
+		free(td);
+		return;
+	}
+
+	spdk_bdev_finish(spdk_fio_module_finish_done, &done);
+
+	while (!done) {
+		spdk_fio_getevents(td, 0, 128, NULL);
+	}
+	done = false;
+
+	spdk_copy_engine_finish(spdk_fio_module_finish_done, &done);
+
+	while (!done) {
+		spdk_fio_getevents(td, 0, 128, NULL);
+	}
+
+	/* Destroy the temporary SPDK thread */
+	spdk_fio_cleanup(td);
+	free(td);
+}
+
 static void fio_exit spdk_fio_unregister(void)
 {
+	if (g_spdk_env_initialized) {
+		spdk_fio_finish_env();
+		g_spdk_env_initialized = false;
+	}
 	unregister_ioengine(&ioengine);
 }
