@@ -78,6 +78,12 @@ struct virtio_scsi_io_ctx {
 	};
 };
 
+struct virtio_scsi_scan_info {
+	uint64_t			num_blocks;
+	uint32_t			block_size;
+	uint8_t				target;
+};
+
 struct virtio_scsi_scan_base {
 	struct virtio_dev		*vdev;
 
@@ -99,15 +105,16 @@ struct virtio_scsi_scan_base {
 	struct virtio_scsi_io_ctx	io_ctx;
 	struct iovec			iov;
 	uint8_t				payload[BDEV_VIRTIO_SCAN_PAYLOAD_SIZE];
+
+	/** Scan results for the current target. */
+	struct virtio_scsi_scan_info	info;
 };
 
 struct virtio_scsi_disk {
-	struct spdk_bdev	bdev;
-	struct virtio_dev	*vdev;
-	uint64_t		num_blocks;
-	uint32_t		block_size;
-	uint8_t			target;
-	TAILQ_ENTRY(virtio_scsi_disk) link;
+	struct spdk_bdev		bdev;
+	struct virtio_dev		*vdev;
+	struct virtio_scsi_scan_info	info;
+	TAILQ_ENTRY(virtio_scsi_disk)	link;
 };
 
 struct bdev_virtio_io_channel {
@@ -153,7 +160,7 @@ bdev_virtio_init_io_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 	memset(req, 0, sizeof(*req));
 	req->lun[0] = 1;
-	req->lun[1] = disk->target;
+	req->lun[1] = disk->info.target;
 
 	return vreq;
 }
@@ -181,7 +188,7 @@ bdev_virtio_init_tmf_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 
 	memset(tmf_req, 0, sizeof(*tmf_req));
 	tmf_req->lun[0] = 1;
-	tmf_req->lun[1] = disk->target;
+	tmf_req->lun[1] = disk->info.target;
 
 	return vreq;
 }
@@ -214,7 +221,7 @@ bdev_virtio_rw(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	vreq->iov = bdev_io->u.bdev.iovs;
 	vreq->iovcnt = bdev_io->u.bdev.iovcnt;
 
-	if (disk->num_blocks > (1ULL << 32)) {
+	if (disk->info.num_blocks > (1ULL << 32)) {
 		req->cdb[0] = vreq->is_write ? SPDK_SBC_WRITE_16 : SPDK_SBC_READ_16;
 		to_be64(&req->cdb[2], bdev_io->u.bdev.offset_blocks);
 		to_be32(&req->cdb[10], bdev_io->u.bdev.num_blocks);
@@ -699,8 +706,7 @@ process_scan_inquiry(struct virtio_scsi_scan_base *base, struct virtio_req *vreq
 }
 
 static int
-alloc_virtio_disk(struct virtio_scsi_scan_base *base, uint8_t target_id, uint64_t num_blocks,
-		  uint32_t block_size)
+alloc_virtio_disk(struct virtio_scsi_scan_base *base)
 {
 	struct virtio_scsi_disk *disk;
 	struct spdk_bdev *bdev;
@@ -712,12 +718,10 @@ alloc_virtio_disk(struct virtio_scsi_scan_base *base, uint8_t target_id, uint64_
 	}
 
 	disk->vdev = base->vdev;
-	disk->num_blocks = num_blocks;
-	disk->block_size = block_size;
-	disk->target = target_id;
+	disk->info = base->info;
 
 	bdev = &disk->bdev;
-	bdev->name = spdk_sprintf_alloc("%st%"PRIu8, base->vdev->name, target_id);
+	bdev->name = spdk_sprintf_alloc("%st%"PRIu8, base->vdev->name, disk->info.target);
 	if (bdev->name == NULL) {
 		SPDK_ERRLOG("Couldn't alloc memory for the bdev name.\n");
 		free(disk);
@@ -726,8 +730,8 @@ alloc_virtio_disk(struct virtio_scsi_scan_base *base, uint8_t target_id, uint64_
 
 	bdev->product_name = "Virtio SCSI Disk";
 	bdev->write_cache = 0;
-	bdev->blocklen = disk->block_size;
-	bdev->blockcnt = disk->num_blocks;
+	bdev->blocklen = disk->info.block_size;
+	bdev->blockcnt = disk->info.num_blocks;
 
 	bdev->ctxt = disk;
 	bdev->fn_table = &virtio_fn_table;
@@ -760,7 +764,10 @@ process_read_cap_10(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 		return 0;
 	}
 
-	return alloc_virtio_disk(base, target_id, max_block + 1, block_size);
+	base->info.num_blocks = (uint64_t)max_block + 1;
+	base->info.block_size = block_size;
+
+	return alloc_virtio_disk(base);
 }
 
 static int
@@ -768,8 +775,6 @@ process_read_cap_16(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 {
 	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
 	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
-	uint64_t num_blocks;
-	uint32_t block_size;
 	uint8_t target_id = req->lun[1];
 
 	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
@@ -777,9 +782,9 @@ process_read_cap_16(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 		return -1;
 	}
 
-	num_blocks = from_be64((uint64_t *)(vreq->iov[0].iov_base)) + 1;
-	block_size = from_be32((uint32_t *)(vreq->iov[0].iov_base + 8));
-	return alloc_virtio_disk(base, target_id, num_blocks, block_size);
+	base->info.num_blocks = from_be64((uint64_t *)(vreq->iov[0].iov_base)) + 1;
+	base->info.block_size = from_be32((uint32_t *)(vreq->iov[0].iov_base + 8));
+	return alloc_virtio_disk(base);
 }
 
 static void
@@ -866,6 +871,9 @@ scan_target(struct virtio_scsi_scan_base *base)
 	struct virtio_scsi_cmd_resp *resp;
 	struct spdk_scsi_cdb_inquiry *cdb;
 
+	memset(&base->info, 0, sizeof(base->info));
+	base->info.target = base->target;
+
 	vreq = &base->io_ctx.vreq;
 	req = &base->io_ctx.req;
 	resp = &base->io_ctx.resp;
@@ -885,7 +893,7 @@ scan_target(struct virtio_scsi_scan_base *base)
 	iov[0].iov_len = BDEV_VIRTIO_SCAN_PAYLOAD_SIZE;
 
 	req->lun[0] = 1;
-	req->lun[1] = base->target;
+	req->lun[1] = base->info.target;
 
 	cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
 	cdb->opcode = SPDK_SPC_INQUIRY;
