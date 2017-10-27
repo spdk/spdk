@@ -22,6 +22,30 @@
       "revId": "06c67e362668536edfa365aa17494c9dcab53895",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "468b74e9_6b5cf3be",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1012121
+      },
+      "writtenOn": "2017-10-27T08:27:20Z",
+      "side": 1,
+      "message": "Good catch. How about introducing new barriers for mmio, i.e. spdk_mmio_wmb() and spdk_mmio_mb()?",
+      "parentUuid": "91a43d96_400c9076",
+      "range": {
+        "startLine": 52,
+        "startChar": 35,
+        "endLine": 52,
+        "endChar": 41
+      },
+      "revId": "06c67e362668536edfa365aa17494c9dcab53895",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
