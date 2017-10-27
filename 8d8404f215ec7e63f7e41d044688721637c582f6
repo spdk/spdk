@@ -164,6 +164,30 @@
     },
     {
       "key": {
+        "uuid": "81c33ada_67904b66",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:56:06Z",
+      "side": 1,
+      "message": "Yes please",
+      "parentUuid": "287c227e_339668ee",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 17
+      },
+      "revId": "8d8404f215ec7e63f7e41d044688721637c582f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7ea14dd_ecccee00",
         "filename": "test/vhost/readonly/test_plan.md",
         "patchSetId": 15
@@ -175,6 +199,30 @@
       "writtenOn": "2017-10-27T09:55:34Z",
       "side": 1,
       "message": "Do we need a second test case where do the same test but on two VMs?",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 14
+      },
+      "revId": "8d8404f215ec7e63f7e41d044688721637c582f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df951d56_0384a065",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:56:06Z",
+      "side": 1,
+      "message": "Come to think about it - I don\u0027t think so. We could later improve first test case by splitting the disk and creating two controllers, to check if RO on first doesnt affect the other.",
+      "parentUuid": "f7ea14dd_ecccee00",
       "range": {
         "startLine": 30,
         "startChar": 0,
