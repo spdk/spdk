@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c22d6c7_1687bc2a",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T12:53:20Z",
+      "side": 1,
+      "message": "Why is this change here ?",
+      "range": {
+        "startLine": 359,
+        "startChar": 0,
+        "endLine": 361,
+        "endChar": 17
+      },
+      "revId": "4d469f168823022a4d12b9be89b13929e87e2a13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea1e9815_ecb3e84b",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T12:53:20Z",
+      "side": 1,
+      "message": "Why is this change here ?",
+      "range": {
+        "startLine": 400,
+        "startChar": 0,
+        "endLine": 402,
+        "endChar": 26
+      },
+      "revId": "4d469f168823022a4d12b9be89b13929e87e2a13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
