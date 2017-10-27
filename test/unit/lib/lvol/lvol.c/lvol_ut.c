@@ -59,6 +59,7 @@ struct spdk_blob {
 	uint32_t		ref;
 	int			close_status;
 	int			open_status;
+	int 			load_status;
 	TAILQ_ENTRY(spdk_blob)	link;
 	char			uuid[UUID_STRING_LEN];
 	char			name[SPDK_LVS_NAME_MAX];
@@ -96,6 +97,8 @@ spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
 	next = TAILQ_NEXT(*b, link);
 	if (next == NULL) {
 		_errno = -ENOENT;
+	} else if (next->load_status != 0) {
+		_errno = next->load_status;
 	}
 
 	cb_fn(cb_arg, next, _errno);
@@ -111,6 +114,8 @@ spdk_bs_md_iter_first(struct spdk_blob_store *bs,
 	first = TAILQ_FIRST(&bs->blobs);
 	if (first == NULL) {
 		_errno = -ENOENT;
+	} else if (first->load_status != 0) {
+		_errno = first->load_status;
 	}
 
 	cb_fn(cb_arg, first, _errno);
@@ -1091,13 +1096,34 @@ lvols_load(void)
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, blob2, link);
 	TAILQ_INSERT_TAIL(&dev.bs->blobs, blob3, link);
 
-	/* Load lvs again with 3 blobs */
-	/* TODO: add some more unit tests where some of these blobs fail to open. */
+	/* Load lvs again with 3 blobs, but fail on 1st one */
 	g_lvol_store = NULL;
 	g_lvserrno = 0;
+	blob1->load_status = -1;
+	spdk_lvs_load(&dev.bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno != 0);
+	CU_ASSERT(g_lvol_store == NULL);
+
+	/* Load lvs again with 3 blobs, but fail on 3rd one */
+	g_lvol_store = NULL;
+	g_lvserrno = 0;
+	blob1->load_status = 0;
+	blob2->load_status = 0;
+	blob3->load_status = -1;
+	spdk_lvs_load(&dev.bs_dev, lvol_store_op_with_handle_complete, req);
+	CU_ASSERT(g_lvserrno != 0);
+	CU_ASSERT(g_lvol_store == NULL);
+
+	/* Load lvs again with 3 blobs, with success */
+	g_lvol_store = NULL;
+	g_lvserrno = 0;
+	blob1->load_status = 0;
+	blob2->load_status = 0;
+	blob3->load_status = 0;
 	spdk_lvs_load(&dev.bs_dev, lvol_store_op_with_handle_complete, req);
 	CU_ASSERT(g_lvserrno == 0);
-	CU_ASSERT(g_lvol_store != NULL);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(!TAILQ_EMPTY(&g_lvol_store->lvols));
 
 	g_lvserrno = -1;
 	/* rc = */ spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);
