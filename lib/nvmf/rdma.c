@@ -199,6 +199,7 @@ struct spdk_nvmf_rdma_qpair {
 	/* Mgmt channel */
 	struct spdk_io_channel			*mgmt_channel;
 	struct spdk_nvmf_rdma_mgmt_channel	*ch;
+	struct spdk_thread                      *thread;
 };
 
 /* List of RDMA connections that have not yet received a CONNECT capsule */
@@ -277,6 +278,21 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 	if (!TAILQ_EMPTY(&ch->pending_data_buf_queue)) {
 		SPDK_ERRLOG("Pending I/O list wasn't empty on channel destruction\n");
 	}
+}
+
+static int
+spdk_nvmf_rdma_qpair_allocate_channel(struct spdk_nvmf_rdma_qpair *rdma_qpair,
+				      struct spdk_nvmf_rdma_transport *rtransport)
+{
+	rdma_qpair->mgmt_channel = spdk_get_io_channel(rtransport);
+	if (!rdma_qpair->mgmt_channel) {
+		return -1;
+	}
+
+	rdma_qpair->thread = spdk_get_thread();
+	rdma_qpair->ch = spdk_io_channel_get_ctx(rdma_qpair->mgmt_channel);
+	assert(rdma_qpair->ch != NULL);
+	return 0;
 }
 
 static void
@@ -684,13 +700,10 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	 * is received. */
 	TAILQ_INSERT_TAIL(&g_pending_conns, rdma_qpair, pending_link);
 
-	rdma_qpair->mgmt_channel = spdk_get_io_channel(rtransport);
-	if (!rdma_qpair->mgmt_channel) {
+	rc = spdk_nvmf_rdma_qpair_allocate_channel(rdma_qpair, rtransport);
+	if (rc) {
 		goto err2;
 	}
-
-	rdma_qpair->ch = spdk_io_channel_get_ctx(rdma_qpair->mgmt_channel);
-	assert(rdma_qpair->ch != NULL);
 
 	return 0;
 
@@ -1423,6 +1436,8 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, pending_link);
 			spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
 		} else if (rc > 0) {
+			spdk_put_io_channel(rdma_qpair->mgmt_channel);
+			rdma_qpair->mgmt_channel = NULL;
 			/* At least one request was processed which is assumed to be
 			 * a CONNECT. Remove this connection from our list. */
 			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, pending_link);
@@ -1729,6 +1744,15 @@ spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	int count = 0;
 	bool error = false;
 	char buf[64];
+
+	/* reset the mgmt_channel and thread info of qpair */
+	if (rqpair->mgmt_channel != NULL) {
+		if (rqpair->thread != spdk_get_thread()) {
+			return 0;
+		}
+	} else if (spdk_nvmf_rdma_qpair_allocate_channel(rqpair, rtransport)) {
+		return -1;
+	}
 
 	/* Poll for completing operations. */
 	reaped = ibv_poll_cq(rqpair->cq, 32, wc);
