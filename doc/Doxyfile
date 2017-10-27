@@ -788,6 +788,7 @@ INPUT                  = ../include/spdk \
                          memory.md \
                          porting.md \
                          blob.md \
+                         blob_pg.md \
                          blobfs.md \
                          bdev.md \
                          event.md \
@@ -798,6 +799,7 @@ INPUT                  = ../include/spdk \
                          nvme.md \
                          nvme-cli.md \
                          nvmf.md \
+                         template_pg.md \
                          vagrant.md \
                          vhost.md \
                          virtio.md
