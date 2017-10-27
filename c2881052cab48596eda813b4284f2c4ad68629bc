@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e98541b_d3e3b198",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-27T14:23:59Z",
+      "side": 1,
+      "message": "i think we should be consistent on the uuid type - get_lvol_store_by_uuid takes a uuid_t, but here we take a const char *.",
+      "revId": "c2881052cab48596eda813b4284f2c4ad68629bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a95d920_89502ae9",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-27T14:23:59Z",
+      "side": 1,
+      "message": "maybe \"name must be between 1 and %d characters\", SPDK_LVS_NAME_MAX - 1",
+      "revId": "c2881052cab48596eda813b4284f2c4ad68629bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "808ca52d_c9491665",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-27T14:23:59Z",
+      "side": 1,
+      "message": "newline needed before \"int\"",
+      "revId": "c2881052cab48596eda813b4284f2c4ad68629bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b237b967_107c663d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-27T14:23:59Z",
+      "side": 1,
+      "message": "should this just return struct spdk_lvol_store *, instead of int + output parameter?\n\nI see the different return codes, but the RPC code is not using them - it is just checking for 0 or !0.  I\u0027m just thinking it\u0027s simple and consistent with the other functions if we just return a NULL pointer if there was a problem.",
+      "revId": "c2881052cab48596eda813b4284f2c4ad68629bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
