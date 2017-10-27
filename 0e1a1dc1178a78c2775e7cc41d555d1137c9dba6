@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df67dd00_8c42e679",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-10-27T09:42:56Z",
+      "side": 1,
+      "message": "It won\u0027t work on malloc as all the data is gone after vhost is stopped.",
+      "range": {
+        "startLine": 425,
+        "startChar": 12,
+        "endLine": 426,
+        "endChar": 69
+      },
+      "revId": "0e1a1dc1178a78c2775e7cc41d555d1137c9dba6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
