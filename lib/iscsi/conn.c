@@ -678,8 +678,6 @@ _spdk_iscsi_conn_free(void *arg1, void *arg2)
 	pthread_mutex_lock(&g_conns_mutex);
 	spdk_iscsi_remove_conn(conn);
 	pthread_mutex_unlock(&g_conns_mutex);
-
-	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
 }
 
 static void
