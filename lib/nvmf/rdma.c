@@ -309,6 +309,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rdma_qpair)
 	spdk_dma_free(rdma_qpair->cpls);
 	spdk_dma_free(rdma_qpair->bufs);
 	free(rdma_qpair->reqs);
+	free(rdma_qpair->recvs);
 	free(rdma_qpair);
 }
 
