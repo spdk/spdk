@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8383d323_cc5ab6ef",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-10-27T15:29:41Z",
+      "side": 1,
+      "message": "Does this seem correct?  I think this may be exposing a problem with our logic here.\n\nUsually, if g_lvserrno !\u003d 0, then it was a failure and we should *not* get a valid logical volume store.\n\nOr to look at it another way, if we get a valid logical volume store, then the errno should be 0.\n\nI think for now, if we cannot load a blob, we should not return a valid logical volume store.  Long-term, we should skip this blob and try to open the next one, but blobstore doesn\u0027t have a good API for that yet.",
+      "revId": "f39a4ec36e94776e47338a833fe311cf7dd48cb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
