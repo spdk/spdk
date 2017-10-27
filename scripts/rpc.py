@@ -292,27 +292,34 @@ p.set_defaults(func=construct_error_bdev)
 
 
 def construct_lvol_store(args):
-    params = {'base_name': args.base_name}
+    params = {'bdev_name': args.bdev_name, 'lvs_name': args.lvs_name}
 
     if args.cluster_sz:
         params['cluster_sz'] = args.cluster_sz
 
     print_array(jsonrpc_call('construct_lvol_store', params))
 p = subparsers.add_parser('construct_lvol_store', help='Add logical volume store on base bdev')
-p.add_argument('base_name', help='base bdev name')
+p.add_argument('bdev_name', help='base bdev name')
+p.add_argument('lvs_name', help='name for lvol store')
 p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int, required=False)
 p.set_defaults(func=construct_lvol_store)
 
 
 def construct_lvol_bdev(args):
     num_bytes = (args.size * 1024 * 1024)
-    params = {
-        'lvol_store_uuid': args.lvol_store_uuid,
-        'size': num_bytes,
-    }
-    print_array(jsonrpc_call('construct_lvol_bdev', params))
+    params = {'lvol_name': args.lvol_name, 'size': num_bytes}
+    if (args.uuid and args.lvs_name) or (not args.uuid and not args.lvs_name):
+        print("You need to specify either uuid or name of lvolstore")
+    else:
+        if args.uuid:
+            params['uuid'] = args.uuid
+        if args.lvs_name:
+            params['lvs_name'] = args.lvs_name
+        print_array(jsonrpc_call('construct_lvol_bdev', params))
 p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
-p.add_argument('lvol_store_uuid', help='lvol store UUID')
+p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
+p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
+p.add_argument('lvol_name', help='name for this lvol')
 p.add_argument('size', help='size in MiB for this bdev', type=int)
 p.set_defaults(func=construct_lvol_bdev)
 
@@ -331,10 +338,18 @@ p.set_defaults(func=construct_lvol_bdev)
 
 
 def destroy_lvol_store(args):
-    params = {'lvol_store_uuid': args.lvol_store_uuid}
-    jsonrpc_call('destroy_lvol_store', params)
+    params = {}
+    if (args.uuid and args.lvs_name) or (not args.uuid and not args.lvs_name):
+        print("You need to specify either uuid or name of lvolstore")
+    else:
+        if args.uuid:
+            params['uuid'] = args.uuid
+        if args.lvs_name:
+            params['lvs_name'] = args.lvs_name
+        jsonrpc_call('destroy_lvol_store', params)
 p = subparsers.add_parser('destroy_lvol_store', help='Destroy an logical volume store')
-p.add_argument('lvol_store_uuid', help='lvol store UUID')
+p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
+p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
 p.set_defaults(func=destroy_lvol_store)
 
 
