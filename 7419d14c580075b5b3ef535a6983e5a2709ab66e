@@ -114,6 +114,121 @@
       "revId": "7419d14c580075b5b3ef535a6983e5a2709ab66e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cab460a9_21070703",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T13:11:16Z",
+      "side": 1,
+      "message": "I don\u0027t think there is need to refer to name as \"friendly name\".",
+      "range": {
+        "startLine": 303,
+        "startChar": 33,
+        "endLine": 303,
+        "endChar": 41
+      },
+      "revId": "7419d14c580075b5b3ef535a6983e5a2709ab66e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "068973ad_8295784e",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T13:11:16Z",
+      "side": 1,
+      "message": "I don\u0027t think this change is necessary.",
+      "range": {
+        "startLine": 360,
+        "startChar": 0,
+        "endLine": 361,
+        "endChar": 17
+      },
+      "revId": "7419d14c580075b5b3ef535a6983e5a2709ab66e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52ca1443_1bc9a079",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T13:11:16Z",
+      "side": 1,
+      "message": "I don\u0027t think this change is necessary.",
+      "range": {
+        "startLine": 401,
+        "startChar": 0,
+        "endLine": 402,
+        "endChar": 26
+      },
+      "revId": "7419d14c580075b5b3ef535a6983e5a2709ab66e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c86fe63a_4493b83c",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 924,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T13:11:16Z",
+      "side": 1,
+      "message": "I don\u0027t think this change is necessary.",
+      "range": {
+        "startLine": 923,
+        "startChar": 0,
+        "endLine": 924,
+        "endChar": 27
+      },
+      "revId": "7419d14c580075b5b3ef535a6983e5a2709ab66e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a741d7fc_f20c7641",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 949,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-10-27T13:11:16Z",
+      "side": 1,
+      "message": "I don\u0027t think this change is necessary.",
+      "range": {
+        "startLine": 949,
+        "startChar": 61,
+        "endLine": 949,
+        "endChar": 64
+      },
+      "revId": "7419d14c580075b5b3ef535a6983e5a2709ab66e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
