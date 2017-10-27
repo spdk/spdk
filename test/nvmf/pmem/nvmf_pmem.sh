@@ -7,7 +7,7 @@ source $rootdir/test/nvmf/common.sh
 
 RUNTIME=$1
 PMEM_BDEVS=""
-SUBSYS_NR=1
+SUBSYS_NR=10
 PMEM_PER_SUBSYS=8
 rpc_py="python $rootdir/scripts/rpc.py"
 
