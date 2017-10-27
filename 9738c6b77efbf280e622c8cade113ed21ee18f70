@@ -1,0 +1,257 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc9c8c14_2fb50663",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:33:30Z",
+      "side": 1,
+      "message": "controllers",
+      "range": {
+        "startLine": 115,
+        "startChar": 37,
+        "endLine": 115,
+        "endChar": 47
+      },
+      "revId": "9738c6b77efbf280e622c8cade113ed21ee18f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86d6aa94_3f1e0cf1",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:33:30Z",
+      "side": 1,
+      "message": "Originally this test case has only 1 controller",
+      "range": {
+        "startLine": 115,
+        "startChar": 28,
+        "endLine": 115,
+        "endChar": 47
+      },
+      "revId": "9738c6b77efbf280e622c8cade113ed21ee18f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbfa0def_dc7ecc17",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:33:30Z",
+      "side": 1,
+      "message": "you cannot use one disk in multiple controllers, it will be claimed by one of them",
+      "range": {
+        "startLine": 115,
+        "startChar": 48,
+        "endLine": 115,
+        "endChar": 64
+      },
+      "revId": "9738c6b77efbf280e622c8cade113ed21ee18f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0260f910_b2534031",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:33:30Z",
+      "side": 1,
+      "message": "Use rpc command to create two blk controllers, each with separate NVMe disk.",
+      "range": {
+        "startLine": 128,
+        "startChar": 3,
+        "endLine": 128,
+        "endChar": 66
+      },
+      "revId": "9738c6b77efbf280e622c8cade113ed21ee18f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d0a7850_f4eaf469",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:33:30Z",
+      "side": 1,
+      "message": "What about second controller? What do we need it for?",
+      "range": {
+        "startLine": 130,
+        "startChar": 3,
+        "endLine": 130,
+        "endChar": 46
+      },
+      "revId": "9738c6b77efbf280e622c8cade113ed21ee18f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2010709f_4ba8818b",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:33:30Z",
+      "side": 1,
+      "message": "disk",
+      "range": {
+        "startLine": 131,
+        "startChar": 63,
+        "endLine": 131,
+        "endChar": 68
+      },
+      "revId": "9738c6b77efbf280e622c8cade113ed21ee18f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efd775c3_0b8e98f5",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:33:30Z",
+      "side": 1,
+      "message": "What about second disk? Do we run fio on it as well?",
+      "range": {
+        "startLine": 131,
+        "startChar": 3,
+        "endLine": 131,
+        "endChar": 69
+      },
+      "revId": "9738c6b77efbf280e622c8cade113ed21ee18f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82e73b61_81d93f57",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:33:30Z",
+      "side": 1,
+      "message": "As in TC3",
+      "range": {
+        "startLine": 141,
+        "startChar": 3,
+        "endLine": 141,
+        "endChar": 66
+      },
+      "revId": "9738c6b77efbf280e622c8cade113ed21ee18f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a931dd07_f37f70b2",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:33:30Z",
+      "side": 1,
+      "message": "controllers",
+      "range": {
+        "startLine": 143,
+        "startChar": 29,
+        "endLine": 143,
+        "endChar": 39
+      },
+      "revId": "9738c6b77efbf280e622c8cade113ed21ee18f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9377a63a_82a66995",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:33:30Z",
+      "side": 1,
+      "message": "apostrophe not needed",
+      "range": {
+        "startLine": 150,
+        "startChar": 16,
+        "endLine": 150,
+        "endChar": 17
+      },
+      "revId": "9738c6b77efbf280e622c8cade113ed21ee18f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c473b8c_8309a90f",
+        "filename": "test/vhost/hotplug/test_plan.md",
+        "patchSetId": 8
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-27T10:33:30Z",
+      "side": 1,
+      "message": "\"with\"\nControllers use disks but are not created ON them",
+      "range": {
+        "startLine": 160,
+        "startChar": 54,
+        "endLine": 160,
+        "endChar": 56
+      },
+      "revId": "9738c6b77efbf280e622c8cade113ed21ee18f70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
