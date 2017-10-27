@@ -777,7 +777,13 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)arg;
 	struct spdk_lvol *lvol, *tmp;
 
-	if (lvserrno != 0) {
+	if (lvserrno == -EEXIST) {
+		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL,
+			     "Name for lvolstore on device %s conflicts with name for already loaded lvs\n",
+			     req->base_bdev->name);
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		goto end;
+	} else if (lvserrno != 0) {
 		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store not found on %s\n", req->base_bdev->name);
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
 		goto end;

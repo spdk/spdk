@@ -598,7 +598,7 @@ lvs_names(void)
 
 	/* Test that we cannot create another lvolstore with name 'x'. */
 	rc = spdk_lvs_init(&dev_x2.bs_dev, &opts_x, lvol_store_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(rc == -EEXIST);
 
 	/* Now destroy lvolstore 'x' and then confirm we can create a new lvolstore with name 'x'. */
 	g_lvserrno = -1;
@@ -983,7 +983,7 @@ lvs_load(void)
 	g_lvserrno = 0;
 	super_blob->open_status = 0;
 	spdk_lvs_load(&dev.bs_dev, lvol_store_op_with_handle_complete, req);
-	CU_ASSERT(g_lvserrno == -ENODEV);
+	CU_ASSERT(g_lvserrno == -EINVAL);
 	CU_ASSERT(g_lvol_store == NULL);
 	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 
@@ -991,7 +991,7 @@ lvs_load(void)
 	g_lvserrno = 0;
 	spdk_blob_md_set_xattr(super_blob, "uuid", uuid, UUID_STRING_LEN);
 	spdk_lvs_load(&dev.bs_dev, lvol_store_op_with_handle_complete, req);
-	CU_ASSERT(g_lvserrno == -ENODEV);
+	CU_ASSERT(g_lvserrno == -EINVAL);
 	CU_ASSERT(g_lvol_store == NULL);
 	CU_ASSERT(TAILQ_EMPTY(&g_lvol_stores));
 
