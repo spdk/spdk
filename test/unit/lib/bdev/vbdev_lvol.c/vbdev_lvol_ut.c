@@ -59,27 +59,23 @@ bool lvol_store_initialize_cb_fail = false;
 bool lvol_already_opened = false;
 bool g_examine_done = false;
 
-void
-spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno)
+void spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno)
 {
 }
 
-void
-spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+void spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, lvol, g_lvolerrno);
 }
 
-void
-spdk_bs_md_close_blob(struct spdk_blob **b, spdk_blob_op_complete cb_fn, void *cb_arg)
+void spdk_bs_md_close_blob(struct spdk_blob **b, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 }
 
 static struct spdk_lvol *_lvol_create(struct spdk_lvol_store *lvs);
 
-void
-spdk_lvs_load(struct spdk_bs_dev *dev,
-	      spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+void spdk_lvs_load(struct spdk_bs_dev *dev,
+		   spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_store *lvs;
 	int i;
@@ -97,8 +93,7 @@ spdk_lvs_load(struct spdk_bs_dev *dev,
 	cb_fn(cb_arg, g_lvol_store, g_lvserrno);
 }
 
-int
-spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *module)
+int spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *module)
 {
 	if (lvol_already_opened == true)
 		return -1;
@@ -108,8 +103,7 @@ spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *modul
 	return 0;
 }
 
-void
-spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+void spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	SPDK_CU_ASSERT_FATAL(vbdev != NULL);
 	vbdev->fn_table->destruct(vbdev->ctxt);
@@ -149,14 +143,12 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 	return bs_dev;
 }
 
-void
-spdk_lvs_opts_init(struct spdk_lvs_opts *opts)
+void spdk_lvs_opts_init(struct spdk_lvs_opts *opts)
 {
 }
 
-int
-spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
-	      spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+int spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
+		  spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_store *lvs;
 	int error = 0;
@@ -180,8 +172,7 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	return 0;
 }
 
-int
-spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg)
+int spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol *lvol, *tmp;
 
@@ -201,9 +192,8 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *c
 	return 0;
 }
 
-int
-spdk_lvs_destroy(struct spdk_lvol_store *lvs,  bool unmap_device, spdk_lvs_op_complete cb_fn,
-		 void *cb_arg)
+int spdk_lvs_destroy(struct spdk_lvol_store *lvs, bool unmap_device, spdk_lvs_op_complete cb_fn,
+		     void *cb_arg)
 {
 	struct spdk_lvol *lvol, *tmp;
 
@@ -223,8 +213,7 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs,  bool unmap_device, spdk_lvs_op_co
 	return 0;
 }
 
-int
-spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,  spdk_lvol_op_complete cb_fn, void *cb_arg)
+int spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	cb_fn(cb_arg, 0);
 
@@ -247,8 +236,7 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
-void
-spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+void spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvs_req *destruct_req;
 	struct spdk_lvol *iter_lvol, *tmp;
@@ -273,8 +261,7 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 	cb_fn(cb_arg, 0);
 }
 
-void
-spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+void spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvs_req *destruct_req;
 
@@ -302,8 +289,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	cb_fn(cb_arg, 0);
 }
 
-void
-spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
+void spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
 }
 
@@ -313,30 +299,26 @@ struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol)
 	return g_ch;
 }
 
-void
-spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
+void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
 {
 	CU_ASSERT(cb == lvol_read);
 }
 
-void
-spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-		     void *payload, uint64_t offset, uint64_t length,
-		     spdk_blob_op_complete cb_fn, void *cb_arg)
+void spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			  void *payload, uint64_t offset, uint64_t length,
+			  spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 }
 
-void
-spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-		      void *payload, uint64_t offset, uint64_t length,
-		      spdk_blob_op_complete cb_fn, void *cb_arg)
+void spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			   void *payload, uint64_t offset, uint64_t length,
+			   spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 }
 
-void
-spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-		       struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-		       spdk_blob_op_complete cb_fn, void *cb_arg)
+void spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			    spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	CU_ASSERT(blob == NULL);
 	CU_ASSERT(channel == g_ch);
@@ -344,10 +326,9 @@ spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 	CU_ASSERT(length == g_io->u.bdev.num_blocks);
 }
 
-void
-spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-		      struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-		      spdk_blob_op_complete cb_fn, void *cb_arg)
+void spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+			   spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	CU_ASSERT(blob == NULL);
 	CU_ASSERT(channel == g_ch);
@@ -355,36 +336,31 @@ spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 	CU_ASSERT(length == g_io->u.bdev.num_blocks);
 }
 
-void
-spdk_bs_io_flush_channel(struct spdk_io_channel *channel, spdk_blob_op_complete cb_fn, void *cb_arg)
+void spdk_bs_io_flush_channel(struct spdk_io_channel *channel, spdk_blob_op_complete cb_fn,
+			      void *cb_arg)
 {
 }
 
-void
-spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
+void spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 {
 }
 
-int
-spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
+int spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
 {
 	return 0;
 }
 
-int
-spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
+int spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
 {
 	return 0;
 }
 
-int
-spdk_json_write_object_begin(struct spdk_json_write_ctx *w)
+int spdk_json_write_object_begin(struct spdk_json_write_ctx *w)
 {
 	return 0;
 }
 
-int
-spdk_json_write_object_end(struct spdk_json_write_ctx *w)
+int spdk_json_write_object_end(struct spdk_json_write_ctx *w)
 {
 	return 0;
 }
@@ -395,14 +371,13 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 	return "test";
 }
 
-void
-spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int base_bdev_count)
+void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
+			 int base_bdev_count)
 {
 	g_registered_bdevs++;
 }
 
-void
-spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
+void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module)
 {
 	g_examine_done = true;
 }
@@ -424,9 +399,8 @@ _lvol_create(struct spdk_lvol_store *lvs)
 	return lvol;
 }
 
-int
-spdk_lvol_create(struct spdk_lvol_store *lvs, char *name, size_t sz,
-		 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+int spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
+		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol *lvol;
 
@@ -472,7 +446,7 @@ ut_lvs_destroy(void)
 	struct spdk_lvol_store *lvs;
 
 	/* Lvol store is succesfully created */
-	rc = vbdev_lvs_create(&g_bdev, 0, lvol_store_op_with_handle_complete, NULL);
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
@@ -485,7 +459,7 @@ ut_lvs_destroy(void)
 
 	/* Suuccessfully create lvol, which should be unloaded with lvs later */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(lvs->uuid, sz, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(lvs->uuid, "lvol", sz, vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvolerrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
@@ -519,14 +493,14 @@ ut_lvol_init(void)
 
 	/* Incorrect uuid set */
 	g_lvolerrno = 0;
-	rc = vbdev_lvol_create(wrong_uuid, sz, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(wrong_uuid, "lvol", sz, vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(rc == -ENODEV);
 
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
 
 	/* Successful lvol create */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(g_lvs->uuid, sz, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(g_lvs->uuid, "lvol", sz, vbdev_lvol_create_complete, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
@@ -540,8 +514,6 @@ ut_lvol_init(void)
 	free(g_lvs);
 	free(g_lvs_bdev);
 	free(g_base_bdev);
-
-
 }
 
 static void
@@ -555,7 +527,7 @@ ut_lvol_hotremove(void)
 	g_bs_dev = NULL;
 
 	/* Lvol store is succesfully created */
-	rc = vbdev_lvs_create(&g_bdev, 0, lvol_store_op_with_handle_complete, NULL);
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store != NULL);
@@ -569,7 +541,6 @@ ut_lvol_hotremove(void)
 
 	CU_ASSERT(g_lvol_store == NULL);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_lvol_pairs));
-
 }
 
 static void
@@ -668,14 +639,13 @@ ut_lvol_resize(void)
 	g_lvs_bdev->lvs = g_lvs;
 	g_lvs_bdev->bdev = g_base_bdev;
 
-
 	uuid_generate_time(g_lvs->uuid);
 	g_base_bdev->blocklen = 4096;
 	TAILQ_INSERT_TAIL(&g_spdk_lvol_pairs, g_lvs_bdev, lvol_stores);
 
 	/* Successful lvol create */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(g_lvs->uuid, sz, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(g_lvs->uuid, "lvol", sz, vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvolerrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
@@ -720,7 +690,7 @@ ut_lvs_unload(void)
 	struct spdk_lvol_store *lvs;
 
 	/* Lvol store is succesfully created */
-	rc = vbdev_lvs_create(&g_bdev, 0, lvol_store_op_with_handle_complete, NULL);
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
@@ -733,7 +703,7 @@ ut_lvs_unload(void)
 
 	/* Suuccessfully create lvol, which should be destroyed with lvs later */
 	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(lvs->uuid, sz, vbdev_lvol_create_complete, NULL);
+	rc = vbdev_lvol_create(lvs->uuid, "lvol", sz, vbdev_lvol_create_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvolerrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
@@ -755,7 +725,7 @@ ut_lvs_init(void)
 	/* spdk_lvs_init() fails */
 	lvol_store_initialize_fail = true;
 
-	rc = vbdev_lvs_create(&g_bdev, 0, lvol_store_op_with_handle_complete, NULL);
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
@@ -766,7 +736,7 @@ ut_lvs_init(void)
 	/* spdk_lvs_init_cb() fails */
 	lvol_store_initialize_cb_fail = true;
 
-	rc = vbdev_lvs_create(&g_bdev, 0, lvol_store_op_with_handle_complete, NULL);
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno != 0);
 	CU_ASSERT(g_lvol_store == NULL);
@@ -775,7 +745,7 @@ ut_lvs_init(void)
 	lvol_store_initialize_cb_fail = false;
 
 	/* Lvol store is succesfully created */
-	rc = vbdev_lvs_create(&g_bdev, 0, lvol_store_op_with_handle_complete, NULL);
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store != NULL);
@@ -787,7 +757,7 @@ ut_lvs_init(void)
 	g_bs_dev = NULL;
 
 	/* Bdev with lvol store already claimed */
-	rc = vbdev_lvs_create(&g_bdev, 0, lvol_store_op_with_handle_complete, NULL);
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
@@ -801,7 +771,6 @@ ut_lvs_init(void)
 	CU_ASSERT(g_lvol_store == NULL);
 	CU_ASSERT(g_bs_dev == NULL);
 	free(g_bs_dev);
-
 }
 
 static void
@@ -816,7 +785,6 @@ ut_vbdev_lvol_get_io_channel(void)
 	CU_ASSERT(ch == g_ch);
 
 	free(g_lvol);
-
 }
 
 static void
@@ -923,8 +891,8 @@ ut_vbdev_lvol_submit_request(void)
 
 int main(int argc, char **argv)
 {
-	CU_pSuite	suite = NULL;
-	unsigned int	num_failures;
+	CU_pSuite suite = NULL;
+	unsigned int num_failures;
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();
@@ -949,8 +917,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_lvol_flush", ut_lvol_flush) == NULL ||
 		CU_add_test(suite, "ut_lvol_read_write", ut_lvol_read_write) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL ||
-		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL
-	) {
+		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
