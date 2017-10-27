@@ -219,14 +219,11 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			vpage->params[4] = SPDK_SPC_VPD_EXTENDED_INQUIRY_DATA;
 			vpage->params[5] = SPDK_SPC_VPD_MODE_PAGE_POLICY;
 			vpage->params[6] = SPDK_SPC_VPD_SCSI_PORTS;
-			/* SBC Block Limits */
-			vpage->params[7] = 0xb0;
-			/* SBC Block Device Characteristics */
-			vpage->params[8] = 0xb1;
+			vpage->params[7] = SPDK_SPC_VPD_BLOCK_LIMITS;
+			vpage->params[8] = SPDK_SPC_VPD_BLOCK_DEV_CHARS;
 			len = 9;
 			if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-				/* SBC Thin Provisioning */
-				vpage->params[9] = 0xb2;
+				vpage->params[9] = SPDK_SPC_VPD_BLOCK_THIN_PROVISION;
 				len++;
 			}
 
