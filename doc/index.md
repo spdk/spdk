@@ -22,7 +22,11 @@
 - @ref blobfs_getting_started
 - @ref jsonrpc
 
-# Programmer Guides {#general}
+# Programmer Guides {#prog_guides}
+
+- @ref blob
+
+# General Information {#general}
 
 - @ref directory_structure
 - [Public API header files](files.html)
@@ -35,7 +39,6 @@
 - @ref ioat
 - @ref iscsi
 - @ref bdev
-- @ref blob
 - @ref blobfs
 - @ref vhost
 - @ref virtio
