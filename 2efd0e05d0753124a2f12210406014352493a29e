@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10ab8f99_016f664f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-10-29T18:15:31Z",
+      "side": 1,
+      "message": "seems like this got superseded by virtio_scsi_scan_info-\u003etarget and is now unused, should it be removed?",
+      "range": {
+        "startLine": 97,
+        "startChar": 1,
+        "endLine": 97,
+        "endChar": 19
+      },
+      "revId": "2efd0e05d0753124a2f12210406014352493a29e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
