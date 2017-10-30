@@ -27,6 +27,10 @@ h6 {
 	padding: 0;
 }
 
+#side-nav * {
+	box-sizing: content-box;
+}
+
 /* Original Stylesheet */
 
 h1.groupheader {
