@@ -51,74 +51,78 @@ function run_host_fio() {
 function prepare_fio_job_for_guest() {
         local rw="$1"
         local fio_bdevs="$2"
-        echo "[job_$rw]" >> $BASE_DIR/bdev.fio
-        echo "stonewall" >> $BASE_DIR/bdev.fio
-        echo "rw=$rw" >> $BASE_DIR/bdev.fio
-        echo -n "filename=" >> $BASE_DIR/bdev.fio
+        local fio_job_name="$3"
+        echo "[job_$rw]" >> $BASE_DIR/$fio_job_name
+        echo "stonewall" >> $BASE_DIR/$fio_job_name
+        echo "rw=$rw" >> $BASE_DIR/$fio_job_name
+        echo -n "filename=" >> $BASE_DIR/$fio_job_name
         for b in $(echo $fio_bdevs | jq -r '.name'); do
-                echo -n "$b:" >> $BASE_DIR/bdev.fio
+                echo -n "$b:" >> $BASE_DIR/$fio_job_name
         done
 }
 
 function prepare_fio_job_for_host() {
         local rw="$1"
         local fio_bdevs="$2"
+        local fio_job_name="$3"
         for b in $(echo $fio_bdevs | jq -r '.name'); do
-                echo "[job_$rw_$b]" >> $BASE_DIR/bdev.fio
-                echo "rw=$rw" >> $BASE_DIR/bdev.fio
-                echo "filename=$b" >> $BASE_DIR/bdev.fio
+                echo "[job_$rw_$b]" >> $BASE_DIR/$fio_job_name
+                echo "rw=$rw" >> $BASE_DIR/$fio_job_name
+                echo "filename=$b" >> $BASE_DIR/$fio_job_name
         done
 }
 
 function prepare_fio_job_4G() {
         rw="$1"
         fio_bdevs="$2"
-        echo "size=1G" >> $BASE_DIR/bdev.fio
-        echo "io_size=4G" >> $BASE_DIR/bdev.fio
-        echo "offset=4G" >> $BASE_DIR/bdev.fio
-        echo "[job_$rw]" >> $BASE_DIR/bdev.fio
-        echo "stonewall" >> $BASE_DIR/bdev.fio
-        echo "rw=$rw" >> $BASE_DIR/bdev.fio
-        echo -n "filename=" >> $BASE_DIR/bdev.fio
+        fio_job_name="$3"
+        echo "size=1G" >> $BASE_DIR/$fio_job_name
+        echo "io_size=4G" >> $BASE_DIR/$fio_job_name
+        echo "offset=4G" >> $BASE_DIR/$fio_job_name
+        echo "[job_$rw]" >> $BASE_DIR/$fio_job_name
+        echo "stonewall" >> $BASE_DIR/$fio_job_name
+        echo "rw=$rw" >> $BASE_DIR/$fio_job_name
+        echo -n "filename=" >> $BASE_DIR/$fio_job_name
         for b in $(echo $fio_bdevs | jq -r '.name'); do
-                echo -n "$b:" >> $BASE_DIR/bdev.fio
+                echo -n "$b:" >> $BASE_DIR/$fio_job_name
         done
 }
 
 function prepare_fio_job_for_unmap() {
         local fio_bdevs="$1"
-        echo -n "filename=" >> $BASE_DIR/bdev.fio
+        local fio_job_name="$2"
+        echo -n "filename=" >> $BASE_DIR/$fio_job_name
         for b in $(echo $fio_bdevs | jq -r '.name'); do
-                echo -n "$b:" >> $BASE_DIR/bdev.fio
+                echo -n "$b:" >> $BASE_DIR/$fio_job_name
         done
-        echo "" >> $BASE_DIR/bdev.fio
-        echo "size=100m" >> $BASE_DIR/bdev.fio
-        echo "io_size=400m" >> $BASE_DIR/bdev.fio
+        echo "" >> $BASE_DIR/$fio_job_name
+        echo "size=100m" >> $BASE_DIR/$fio_job_name
+        echo "io_size=400m" >> $BASE_DIR/$fio_job_name
 
         # Check that sequential TRIM/UNMAP operations 'zeroes' disk space
-        echo "[trim_sequential]" >> $BASE_DIR/bdev.fio
-        echo "stonewall" >> $BASE_DIR/bdev.fio
-        echo "rw=trim" >> $BASE_DIR/bdev.fio
-        echo "trim_verify_zero=1" >> $BASE_DIR/bdev.fio
+        echo "[trim_sequential]" >> $BASE_DIR/$fio_job_name
+        echo "stonewall" >> $BASE_DIR/$fio_job_name
+        echo "rw=trim" >> $BASE_DIR/$fio_job_name
+        echo "trim_verify_zero=1" >> $BASE_DIR/$fio_job_name
 
         # Check that random TRIM/UNMAP operations 'zeroes' disk space
-        echo "[trim_random]" >> $BASE_DIR/bdev.fio
-        echo "stonewall" >> $BASE_DIR/bdev.fio
-        echo "rw=randtrim" >> $BASE_DIR/bdev.fio
-        echo "trim_verify_zero=1" >> $BASE_DIR/bdev.fio
+        echo "[trim_random]" >> $BASE_DIR/$fio_job_name
+        echo "stonewall" >> $BASE_DIR/$fio_job_name
+        echo "rw=randtrim" >> $BASE_DIR/$fio_job_name
+        echo "trim_verify_zero=1" >> $BASE_DIR/$fio_job_name
 
         # Check that after TRIM/UNMAP operation disk space can be used for read
         # by using write with verify (which implies reads)
-        echo "[trim_write_read]" >> $BASE_DIR/bdev.fio
-        echo "stonewall" >> $BASE_DIR/bdev.fio
-        echo "rw=trimwrite" >> $BASE_DIR/bdev.fio
-        echo "trim_verify_zero=1" >> $testdir/bdev.fio
+        echo "[trim_write_read]" >> $BASE_DIR/$fio_job_name
+        echo "stonewall" >> $BASE_DIR/$fio_job_name
+        echo "rw=trimwrite" >> $BASE_DIR/$fio_job_name
+        echo "trim_verify_zero=1" >> $testdir/$fio_job_name
 }
 
 function start_and_prepare_vm() {
         local os="$os_image"
         local test_type="spdk_vhost_scsi"
-        local disk="Nvme0n1"
+        local disk="Nvme0n1p0"
         local force_vm_num="0"
         local vm_num="0"
         local fio_bin="root/fio_src/fio"
@@ -152,11 +156,11 @@ function run_guest_fio() {
         echo "INFO: Running fio jobs ..."
         local fio_bdev_conf=$1
         local vm_num="0"
-        local fio_job="$BASE_DIR/bdev.fio"
+        local fio_job="$BASE_DIR/bdevvm.fio"
         vm_scp $vm_num $fio_job "127.0.0.1:/root/bdev.fio"
         vm_ssh $vm_num "/root/spdk/test/vhost/initiator/guest_fio.sh $fio_bdev_conf"
         vm_ssh $vm_num "rm -f *.state"
-        rm -f $BASE_DIR/bdev.fio
+        rm -f $BASE_DIR/bdevvm.fio
 }
 
 function on_error_exit() {
@@ -174,18 +178,19 @@ spdk_vhost_run $BASE_DIR
 trap 'on_error_exit ${FUNCNAME} - ${LINENO}' ERR
 $RPC_PY construct_malloc_bdev 128 512
 $RPC_PY construct_malloc_bdev 128 4096
-$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 0 Nvme0n1
-$RPC_PY add_vhost_scsi_lun naa.Malloc0.1 0 Malloc0
-$RPC_PY add_vhost_scsi_lun naa.Malloc1.2 0 Malloc1
+$RPC_PY add_vhost_scsi_lun naa.Nvme0n1p0.0 0 Nvme0n1p0
+$RPC_PY add_vhost_scsi_lun naa.Nvme0n1p1.1 0 Nvme0n1p1
+$RPC_PY add_vhost_scsi_lun naa.Malloc0.2 0 Malloc0
+$RPC_PY add_vhost_scsi_lun naa.Malloc1.3 0 Malloc1
 $RPC_PY get_bdevs
 bdevs=( $($RPC_PY get_bdevs | jq -r '.[] | .name') )
 
 timing_enter bdev
 
 cp $BASE_DIR/bdev.conf.in $BASE_DIR/bdev.conf
-sed -i "s|/tmp/vhost.0|$ROOT_DIR/../vhost/naa.Nvme0n1.0|g" $BASE_DIR/bdev.conf
-sed -i "s|/tmp/vhost.1|$ROOT_DIR/../vhost/naa.Malloc0.1|g" $BASE_DIR/bdev.conf
-sed -i "s|/tmp/vhost.2|$ROOT_DIR/../vhost/naa.Malloc1.2|g" $BASE_DIR/bdev.conf
+sed -i "s|/tmp/vhost.0|$ROOT_DIR/../vhost/naa.Nvme0n1p1.1|g" $BASE_DIR/bdev.conf
+sed -i "s|/tmp/vhost.1|$ROOT_DIR/../vhost/naa.Malloc0.2|g" $BASE_DIR/bdev.conf
+sed -i "s|/tmp/vhost.2|$ROOT_DIR/../vhost/naa.Malloc1.3|g" $BASE_DIR/bdev.conf
 
 timing_enter bounds
 $ROOT_DIR/test/lib/bdev/bdevio/bdevio $BASE_DIR/bdev.conf
@@ -196,25 +201,36 @@ vbdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf 5261 | jq -r '.[] | select
 timing_exit bdev_svc
 if [ -d /usr/src/fio ]; then
         timing_enter fio
+        {
+                #Test for guest
+                start_and_prepare_vm
+                run_guest_bdevio
+                for rw in "${fio_rw[@]}"; do
+                        cp $BASE_DIR/../common/fio_jobs/default_initiator.job $BASE_DIR/bdevvm.fio
+                        prepare_fio_job_for_guest "$rw" "" "bdevvm.fio"
+                        echo "Guest $bdev"
+                        run_guest_fio --spdk_conf=/root/bdev.conf
+                        rm -f *.state
+                        rm -f $BASE_DIR/bdev.fio
+                done
 
-        #Test for guest
-        start_and_prepare_vm
-        run_guest_bdevio
-        for rw in "${fio_rw[@]}"; do
-                cp $BASE_DIR/../common/fio_jobs/default_initiator.job $BASE_DIR/bdev.fio
-                prepare_fio_job_for_guest "$rw" ""
-                echo "Guest $bdev"
-                run_guest_fio --spdk_conf=/root/bdev.conf
-                rm -f *.state
-                rm -f $BASE_DIR/bdev.fio
-        done
-        vm_shutdown_all
+                #Guest test for unmap
+                cp $BASE_DIR/../common/fio_jobs/default_initiator.job $BASE_DIR/bdevvm.fio
+                prepare_fio_job_for_unmap "" "bdevvm.fio"
+                echo "Guest unmap"
+                run_guest_fio --spdk_conf=/root/bdev.conf 1
+                rm -f $BASE_DIR/bdevvm.fio
+
+                vm_shutdown_all
+        } &
+        guest_pid=$!
+        
 
         #Test for host
         for rw in "${fio_rw[@]}"; do
                 timing_enter fio_rw_verify
                 cp $BASE_DIR/../common/fio_jobs/default_initiator.job $BASE_DIR/bdev.fio
-                prepare_fio_job_for_host "$rw" "$vbdevs"
+                prepare_fio_job_for_host "$rw" "$vbdevs" "bdev.fio"
                 echo "Host $bdevs"
                 run_host_fio --spdk_conf=$BASE_DIR/bdev.conf
 
@@ -226,7 +242,7 @@ if [ -d /usr/src/fio ]; then
         for vbdev in $(echo $vbdevs | jq -r '.name'); do
                 cp $BASE_DIR/../common/fio_jobs/default_initiator.job $BASE_DIR/bdev.fio
                 virtio_bdevs=$(echo $vbdevs | jq -r ". | select(.name == \"$vbdev\")")
-                prepare_fio_job_for_unmap "$virtio_bdevs"
+                prepare_fio_job_for_unmap "$virtio_bdevs" "bdev.fio"
                 echo "Host unmap ${bdevs[i]}"
                 run_host_fio  --spdk_conf=$BASE_DIR/bdev.conf
                 i=$((i+1))
@@ -250,5 +266,6 @@ if [ -d /usr/src/fio ]; then
 fi
 
 rm -f $BASE_DIR/bdev.conf
+wait $guest_pid
 timing_exit bdev
 spdk_vhost_kill
