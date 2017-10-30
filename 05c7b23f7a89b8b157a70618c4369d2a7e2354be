@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "932b4b72_c7069be5",
+        "filename": "test/vhost/pmem/pmem_integrity.job",
+        "patchSetId": 27
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-30T09:56:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a08e235d_6cb422e8",
+      "range": {
+        "startLine": 3,
+        "startChar": 8,
+        "endLine": 3,
+        "endChar": 10
+      },
+      "revId": "05c7b23f7a89b8b157a70618c4369d2a7e2354be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "43b2100a_fc0f304f",
         "filename": "test/vhost/pmem/vhost_pmem.sh",
         "patchSetId": 27
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "bd9df0a3_6417f82d",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-30T09:56:33Z",
+      "side": 1,
+      "message": "Done for (()). Nitpicking lvl hard though, as it is not needed but does not hurt too:P \nYou sure it\u0027s not needed for [[]] ?",
+      "parentUuid": "43b2100a_fc0f304f",
+      "range": {
+        "startLine": 138,
+        "startChar": 14,
+        "endLine": 138,
+        "endChar": 15
+      },
+      "revId": "05c7b23f7a89b8b157a70618c4369d2a7e2354be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ae5ad6e5_27513ca9",
         "filename": "test/vhost/pmem/vhost_pmem.sh",
         "patchSetId": 27
@@ -59,6 +107,30 @@
       "writtenOn": "2017-10-27T14:03:11Z",
       "side": 1,
       "message": "Why \u0027.0\u0027?",
+      "range": {
+        "startLine": 141,
+        "startChar": 37,
+        "endLine": 141,
+        "endChar": 39
+      },
+      "revId": "05c7b23f7a89b8b157a70618c4369d2a7e2354be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ee35539_7a451aaf",
+        "filename": "test/vhost/pmem/vhost_pmem.sh",
+        "patchSetId": 27
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-10-30T09:56:33Z",
+      "side": 1,
+      "message": "It\u0027s because of how vm_setup in common.sh works.\nIt takes \"naa.$disk_num.$vm_num\" as \"input\" for creating a path to socket. We don\u0027t really need first disk_num \"argument\" here, so 0 was OK for us.",
+      "parentUuid": "ae5ad6e5_27513ca9",
       "range": {
         "startLine": 141,
         "startChar": 37,
