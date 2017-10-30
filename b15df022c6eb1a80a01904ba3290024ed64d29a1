@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d4602d0e_4f7443c2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1749,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-10-30T01:44:31Z",
+      "side": 1,
+      "message": "This case will be happen. Since the channel is created by acceptor, and it will be shift to subsystem core to schedule. And when it is handled by acceptor core, we should not let the subsystem call to poll it.\n\n\nFor the logic, set the mgmt_channel to NULL is not correct. Since We already have this logic spdk_nvmf_rdma_accept. \n\nFor multiple core usage cases,  accept is driven by acceptor_core, and subsystem poll is driven by subsystem core. And the transition from acceptor core to subsystem is core is that the fabric commands is handled",
+      "parentUuid": "c041ead4_8b641092",
+      "revId": "b15df022c6eb1a80a01904ba3290024ed64d29a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "85a618e1_f3d3408a",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
