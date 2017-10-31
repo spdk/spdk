@@ -31,14 +31,27 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-DIRS-y = iscsi.c param.c tgt_node.c init_grp.c
+SPDK_LIB_LIST = log conf util cunit
 
-.PHONY: all clean $(DIRS-y)
+CFLAGS += $(ENV_CFLAGS)
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
+LIBS += $(SPDK_LIB_LINKER_ARGS)
+LIBS += -lcunit
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+APP = init_grp_ut
+C_SRCS = init_grp_ut.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+all: $(APP)
+
+$(APP): $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
