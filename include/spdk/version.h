@@ -41,12 +41,12 @@
 /**
  * Major version number (year of original release minus 2000).
  */
-#define SPDK_VERSION_MAJOR	17
+#define SPDK_VERSION_MAJOR	18
 
 /**
  * Minor version number (month of original release).
  */
-#define SPDK_VERSION_MINOR	10
+#define SPDK_VERSION_MINOR	1
 
 /**
  * Patch level.
@@ -59,7 +59,7 @@
 /**
  * Version string suffix.
  */
-#define SPDK_VERSION_SUFFIX	""
+#define SPDK_VERSION_SUFFIX	"-pre"
 
 /**
  * Single numeric value representing a version number for compile-time comparisons.
