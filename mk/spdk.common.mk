@@ -46,7 +46,17 @@ ifeq ($(MAKECMDGOALS),)
 MAKECMDGOALS=$(.DEFAULT_GOAL)
 endif
 
-OS := $(shell uname)
+TARGET_TRIPLET := $(shell $(CC) -dumpmachine)
+TARGET_TRIPLET_WORDS := $(subst -, ,$(TARGET_TRIPLET))
+
+TARGET_OS := $(word 3, $(TARGET_TRIPLET_WORDS))
+
+ifeq ($(TARGET_OS),linux)
+OS = Linux
+endif
+ifeq ($(patsubst freebsd%,freebsd,$(TARGET_OS)),freebsd)
+OS = FreeBSD
+endif
 
 COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -march=native -I$(SPDK_ROOT_DIR)/include
 
