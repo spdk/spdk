@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9e7d18a_2901c2cd",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-31T16:01:51Z",
+      "side": 1,
+      "message": "We can\u0027t do a reset while the stub is running (see \"start_stub\" above).\n\nIt would also be better to just use a different device that doesn\u0027t require us to reset, since it takes a long time to run a reset and then setup again.",
+      "revId": "39accedba7bb03d4ae4423114cfb420ab1ae8c07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84b3d325_e0357949",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-10-31T16:01:51Z",
+      "side": 1,
+      "message": "This could use /dev/ram0 like the AIO bdev test - it is only available on the Ubuntu machines in the test pool currently (other distros don\u0027t set up RAM block devices), but that should be enough to get some coverage.",
+      "revId": "39accedba7bb03d4ae4423114cfb420ab1ae8c07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
