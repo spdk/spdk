@@ -80,6 +80,35 @@ spdk_iscsi_init_grp_find_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 	return NULL;
 }
 
+static char *
+_spdk_iscsi_replace_str(char *s, char *old, char *new)
+{
+	char *buf;
+	char *p;
+
+	p = strstr(s, old);
+	if (p == NULL) {
+		return s;
+	}
+
+	SPDK_WARNLOG("Please use not \"%s\" but \"%s\"", old, new);
+	SPDK_WARNLOG("Replace \"%s\" by \"%s\" forcefully", old, new);
+	buf = malloc(strlen(s));
+	if (buf == NULL) {
+		SPDK_WARNLOG("Failed to replace \"%s\" by \"%s\" forcefully due to malloc failure", old, new);
+		return s;
+	}
+
+	strncpy(buf, s, p - s);
+	buf[p - s] = '\0';
+
+	sprintf(buf + (p - s), "%s%s", new, p + strlen(old));
+
+	free(s);
+
+	return buf;
+}
+
 static int
 spdk_iscsi_init_grp_add_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 {
@@ -105,6 +134,9 @@ spdk_iscsi_init_grp_add_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 		free(iname);
 		return -ENOMEM;
 	}
+
+	/* Replace "ALL" by "ANY" if set */
+	iname->name = _spdk_iscsi_replace_str(iname->name, "ALL", "ANY");
 
 	TAILQ_INSERT_TAIL(&ig->initiator_head, iname, tailq);
 	ig->ninitiators++;
@@ -203,6 +235,9 @@ spdk_iscsi_init_grp_add_netmask(struct spdk_iscsi_init_grp *ig, char *mask)
 		free(imask);
 		return -ENOMEM;
 	}
+
+	/* Replace "ALL" by "ANY" if set */
+	imask->mask = _spdk_iscsi_replace_str(imask->mask, "ALL", "ANY");
 
 	TAILQ_INSERT_TAIL(&ig->netmask_head, imask, tailq);
 	ig->nnetmasks++;
