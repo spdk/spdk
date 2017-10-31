@@ -107,6 +107,11 @@ timing_exit identify
 
 timing_enter perf
 $rootdir/examples/nvme/perf/perf -q 128 -w read -s 12288 -t 1 -LL -i 0
+#Test perf with AIO devices
+$rootdir/scripts/setup.sh reset
+nvme_dev = `lsblk -d --output NAME | grep "^nvme" | head -1`
+$rootdir/examples/nvme/perf/perf /dev/$nvme_dev -q 128 -w read -s 12288 -t 1 -LL -i 0
+$rootdir/scripts/setup.sh
 timing_exit perf
 
 timing_enter reserve
