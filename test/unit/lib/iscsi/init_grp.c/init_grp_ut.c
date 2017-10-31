@@ -375,6 +375,74 @@ delete_all_netmasks_success_case(void)
 	spdk_iscsi_init_grp_destroy(ig);
 }
 
+static void
+initiator_name_overwrite_all_to_any_case(void)
+{
+	int rc;
+	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_initiator_name *iname;
+	char *all = "ALL";
+	char *any = "ANY";
+	char *all_not = "!ALL";
+	char *any_not = "!ANY";
+
+	ig = spdk_iscsi_init_grp_create(1);
+	CU_ASSERT(ig != NULL);
+
+	rc = spdk_iscsi_init_grp_add_initiator(ig, all);
+	CU_ASSERT(rc == 0);
+
+	iname = spdk_iscsi_init_grp_find_initiator(ig, all);
+	CU_ASSERT(iname == NULL);
+
+	iname = spdk_iscsi_init_grp_find_initiator(ig, any);
+	CU_ASSERT(iname != NULL);
+
+	rc = spdk_iscsi_init_grp_delete_initiator(ig, any);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_iscsi_init_grp_add_initiator(ig, all_not);
+	CU_ASSERT(rc == 0);
+
+	iname = spdk_iscsi_init_grp_find_initiator(ig, all_not);
+	CU_ASSERT(iname == NULL);
+
+	iname = spdk_iscsi_init_grp_find_initiator(ig, any_not);
+	CU_ASSERT(iname != NULL);
+
+	rc = spdk_iscsi_init_grp_delete_initiator(ig, any_not);
+	CU_ASSERT(rc == 0);
+
+	spdk_iscsi_init_grp_destroy(ig);
+}
+
+static void
+netmask_overwrite_all_to_any_case(void)
+{
+	int rc;
+	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_initiator_netmask *imask;
+	char *all = "ALL";
+	char *any = "ANY";
+
+	ig = spdk_iscsi_init_grp_create(1);
+	CU_ASSERT(ig != NULL);
+
+	rc = spdk_iscsi_init_grp_add_netmask(ig, all);
+	CU_ASSERT(rc == 0);
+
+	imask = spdk_iscsi_init_grp_find_netmask(ig, all);
+	CU_ASSERT(imask == NULL);
+
+	imask = spdk_iscsi_init_grp_find_netmask(ig, any);
+	CU_ASSERT(imask != NULL);
+
+	rc = spdk_iscsi_init_grp_delete_netmask(ig, any);
+	CU_ASSERT(rc == 0);
+
+	spdk_iscsi_init_grp_destroy(ig);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -419,7 +487,10 @@ main(int argc, char **argv)
 			       add_netmask_fail_case) == NULL
 		|| CU_add_test(suite, "delete all initiator netmasks success case",
 			       delete_all_netmasks_success_case) == NULL
-
+		|| CU_add_test(suite, "overwrite all to any for name case",
+			       initiator_name_overwrite_all_to_any_case) == NULL
+		|| CU_add_test(suite, "overwrite all to any for netmask case",
+			       netmask_overwrite_all_to_any_case) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
