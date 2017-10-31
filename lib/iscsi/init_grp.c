@@ -157,7 +157,6 @@ spdk_iscsi_init_grp_delete_all_netmasks(struct spdk_iscsi_init_grp *ig)
 	free(ig->netmasks);
 }
 
-
 /* Read spdk iscsi target's config file and create initiator group */
 int
 spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
@@ -184,7 +183,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 	}
 	if (i == 0) {
 		SPDK_ERRLOG("num_initiator_names = 0\n");
-		goto cleanup;
+		return -1;
 	}
 	num_initiator_names = i;
 	if (num_initiator_names > MAX_INITIATOR) {
@@ -198,7 +197,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 	}
 	if (i == 0) {
 		SPDK_ERRLOG("num_initiator_mask = 0\n");
-		goto cleanup;
+		return -1;
 	}
 	num_initiator_masks = i;
 	if (num_initiator_masks > MAX_NETMASK) {
