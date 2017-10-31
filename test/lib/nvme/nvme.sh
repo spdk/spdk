@@ -107,6 +107,10 @@ timing_exit identify
 
 timing_enter perf
 $rootdir/examples/nvme/perf/perf -q 128 -w read -s 12288 -t 1 -LL -i 0
+if [ -b /dev/ram0 ]; then
+	# Test perf with AIO device
+	$rootdir/examples/nvme/perf/perf /dev/ram0 -q 128 -w read -s 12288 -t 1 -LL -i 0
+fi
 timing_exit perf
 
 timing_enter reserve
