@@ -98,6 +98,216 @@ create_from_config_file_cases(void)
 	spdk_conf_free(config);
 }
 
+static void
+create_initiator_group_success_case(void)
+{
+	struct spdk_iscsi_init_grp *ig;
+
+	ig = spdk_iscsi_init_grp_create(1);
+	CU_ASSERT(ig != NULL);
+
+	spdk_iscsi_init_grp_destroy(ig);
+}
+
+static void
+find_initiator_group_success_case(void)
+{
+	struct spdk_iscsi_init_grp *ig;
+
+	ig = spdk_iscsi_init_grp_create(1);
+	CU_ASSERT(ig != NULL);
+
+	spdk_iscsi_init_grp_register(ig);
+
+	ig = spdk_iscsi_init_grp_find_by_tag(1);
+	CU_ASSERT(ig != NULL);
+
+	spdk_initiator_group_unregister(ig);
+	spdk_iscsi_init_grp_destroy(ig);
+
+	ig = spdk_iscsi_init_grp_find_by_tag(1);
+	CU_ASSERT(ig == NULL);
+}
+
+static void
+create_initiator_group_fail_case(void)
+{
+	struct spdk_iscsi_init_grp *ig;
+
+	ig = spdk_iscsi_init_grp_create(1);
+	CU_ASSERT(ig != NULL);
+
+	spdk_iscsi_init_grp_register(ig);
+
+	ig = spdk_iscsi_init_grp_create(1);
+	CU_ASSERT(ig == NULL);
+
+	ig = spdk_iscsi_init_grp_find_by_tag(1);
+	CU_ASSERT(ig != NULL);
+
+	spdk_initiator_group_unregister(ig);
+	spdk_iscsi_init_grp_destroy(ig);
+
+	ig = spdk_iscsi_init_grp_find_by_tag(1);
+	CU_ASSERT(ig == NULL);
+}
+
+static void
+add_initiator_name_success_case(void)
+{
+	int rc;
+	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_initiator_name *iname;
+	char *name1 = "iqn.2017-10.spdk.io:0001";
+	char *name2 = "iqn.2017-10.spdk.io:0002";
+
+	ig = spdk_iscsi_init_grp_create(1);
+	CU_ASSERT(ig != NULL);
+
+	/* add two different names to the empty name list */
+	rc = spdk_iscsi_init_grp_add_initiator(ig, name1);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_iscsi_init_grp_add_initiator(ig, name2);
+	CU_ASSERT(rc == 0);
+
+	/* check if two names are added correctly. */
+	iname = spdk_iscsi_init_grp_find_initiator(ig, name1);
+	CU_ASSERT(iname != NULL);
+
+	iname = spdk_iscsi_init_grp_find_initiator(ig, name2);
+	CU_ASSERT(iname != NULL);
+
+	/* restore the initial state */
+	rc = spdk_iscsi_init_grp_delete_initiator(ig, name1);
+	CU_ASSERT(rc == 0);
+
+	iname = spdk_iscsi_init_grp_find_initiator(ig, name1);
+	CU_ASSERT(iname == NULL);
+
+	rc = spdk_iscsi_init_grp_delete_initiator(ig, name2);
+	CU_ASSERT(rc == 0);
+
+	iname = spdk_iscsi_init_grp_find_initiator(ig, name2);
+	CU_ASSERT(iname == NULL);
+
+	spdk_iscsi_init_grp_destroy(ig);
+}
+
+static void
+add_initiator_name_fail_case(void)
+{
+	int rc;
+	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_initiator_name *iname;
+	char *name1 = "iqn.2017-10.spdk.io:0001";
+
+	ig = spdk_iscsi_init_grp_create(1);
+	CU_ASSERT(ig != NULL);
+
+	/* add an name to the full name list */
+	ig->ninitiators = MAX_INITIATOR;
+
+	rc = spdk_iscsi_init_grp_add_initiator(ig, name1);
+	CU_ASSERT(rc != 0);
+
+	ig->ninitiators = 0;
+
+	/* add the same name to the name list twice */
+	rc = spdk_iscsi_init_grp_add_initiator(ig, name1);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_iscsi_init_grp_add_initiator(ig, name1);
+	CU_ASSERT(rc != 0);
+
+	/* restore the initial state */
+	rc = spdk_iscsi_init_grp_delete_initiator(ig, name1);
+	CU_ASSERT(rc == 0);
+
+	iname = spdk_iscsi_init_grp_find_initiator(ig, name1);
+	CU_ASSERT(iname == NULL);
+
+	spdk_iscsi_init_grp_destroy(ig);
+}
+
+static void
+add_netmask_success_case(void)
+{
+	int rc;
+	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_initiator_netmask *imask;
+	char *netmask1 = "192.168.2.0";
+	char *netmask2 = "192.168.2.1";
+
+	ig = spdk_iscsi_init_grp_create(1);
+	CU_ASSERT(ig != NULL);
+
+	/* add two different netmasks to the empty netmask list */
+	rc = spdk_iscsi_init_grp_add_netmask(ig, netmask1);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_iscsi_init_grp_add_netmask(ig, netmask2);
+	CU_ASSERT(rc == 0);
+
+	/* check if two netmasks are added correctly. */
+	imask = spdk_iscsi_init_grp_find_netmask(ig, netmask1);
+	CU_ASSERT(imask != NULL);
+
+	imask = spdk_iscsi_init_grp_find_netmask(ig, netmask2);
+	CU_ASSERT(imask != NULL);
+
+	/* restore the initial state */
+	rc = spdk_iscsi_init_grp_delete_netmask(ig, netmask1);
+	CU_ASSERT(rc == 0);
+
+	imask = spdk_iscsi_init_grp_find_netmask(ig, netmask1);
+	CU_ASSERT(imask == NULL);
+
+	rc = spdk_iscsi_init_grp_delete_netmask(ig, netmask2);
+	CU_ASSERT(rc == 0);
+
+	imask = spdk_iscsi_init_grp_find_netmask(ig, netmask2);
+	CU_ASSERT(imask == NULL);
+
+	spdk_iscsi_init_grp_destroy(ig);
+}
+
+static void
+add_netmask_fail_case(void)
+{
+	int rc;
+	struct spdk_iscsi_init_grp *ig;
+	struct spdk_iscsi_initiator_netmask *imask;
+	char *netmask1 = "192.168.2.0";
+
+	ig = spdk_iscsi_init_grp_create(1);
+	CU_ASSERT(ig != NULL);
+
+	/* add an netmask to the full netmask list */
+	ig->nnetmasks = MAX_NETMASK;
+
+	rc = spdk_iscsi_init_grp_add_netmask(ig, netmask1);
+	CU_ASSERT(rc != 0);
+
+	ig->nnetmasks = 0;
+
+	/* add the same netmask to the netmask list twice */
+	rc = spdk_iscsi_init_grp_add_netmask(ig, netmask1);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_iscsi_init_grp_add_netmask(ig, netmask1);
+	CU_ASSERT(rc != 0);
+
+	/* restore the initial state */
+	rc = spdk_iscsi_init_grp_delete_netmask(ig, netmask1);
+	CU_ASSERT(rc == 0);
+
+	imask = spdk_iscsi_init_grp_find_netmask(ig, netmask1);
+	CU_ASSERT(imask == NULL);
+
+	spdk_iscsi_init_grp_destroy(ig);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -124,6 +334,20 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "create from config file cases",
 			    create_from_config_file_cases) == NULL
+		|| CU_add_test(suite, "create initiator group success case",
+			       create_initiator_group_success_case) == NULL
+		|| CU_add_test(suite, "find initiator group success case",
+			       find_initiator_group_success_case) == NULL
+		|| CU_add_test(suite, "create initiator group fail case",
+			       create_initiator_group_fail_case) == NULL
+		|| CU_add_test(suite, "add initiator name success case",
+			       add_initiator_name_success_case) == NULL
+		|| CU_add_test(suite, "add initiator name fail case",
+			       add_initiator_name_fail_case) == NULL
+		|| CU_add_test(suite, "add initiator netmask success case",
+			       add_netmask_success_case) == NULL
+		|| CU_add_test(suite, "add initiator netmask fail case",
+			       add_netmask_fail_case) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

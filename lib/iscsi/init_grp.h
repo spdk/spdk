@@ -43,15 +43,25 @@ enum group_state {
 	GROUP_DESTROY = 0x2,
 };
 
+struct spdk_iscsi_initiator_name {
+	char *name;
+	TAILQ_ENTRY(spdk_iscsi_initiator_name) tailq;
+};
+
+struct spdk_iscsi_initiator_netmask {
+	char *mask;
+	TAILQ_ENTRY(spdk_iscsi_initiator_netmask) tailq;
+};
+
 struct spdk_iscsi_init_grp {
 	int ninitiators;
-	char **initiators;
+	TAILQ_HEAD(, spdk_iscsi_initiator_name) initiator_head;
 	int nnetmasks;
-	char **netmasks;
+	TAILQ_HEAD(, spdk_iscsi_initiator_netmask) netmask_head;
 	int ref;
 	int tag;
 	enum group_state state;
-	TAILQ_ENTRY(spdk_iscsi_init_grp)	tailq;
+	TAILQ_ENTRY(spdk_iscsi_init_grp) tailq;
 };
 
 /* SPDK iSCSI Initiator Group management API */
