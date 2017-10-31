@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48389c34_52bbb805",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-31T15:15:27Z",
+      "side": 1,
+      "message": "of --\u003e to",
+      "revId": "1066a81163241c86e4a047f0555fdd0133be449b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b219178_dcbbd804",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-10-31T15:15:27Z",
+      "side": 1,
+      "message": "\"of block\" --\u003e \"of the block\"",
+      "revId": "1066a81163241c86e4a047f0555fdd0133be449b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
