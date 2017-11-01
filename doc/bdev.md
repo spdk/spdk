@@ -222,3 +222,24 @@ kill $nbd_pid
 
 The SPDK lvol driver allows to dynamically partition other SPDK backends.
 No static configuration for this driver. Refer to @ref lvol for detailed RPC configuration.
+
+
+## RAID 1 {#bdev_config_raid1}
+
+The RAID 1 bdev is meant as an example of how to implement a virtual block device and is not
+a fully-functional RAID implementation. It builds a virtual raid1 bdev upon two bdevs and
+currently it does not support the following feature, e.g.,
+
+1) Hot remove of one of the disks
+2) Rebuild if a removed disk is re-inserted
+3) On-disk metadata scanning to compose a raid1 bdev from two bdevs
+4) Not perform any fallback if a read/write fails on one of the disks
+5) RPC configuration
+
+Configuration file syntax:
+~~~
+[Raid1]
+  # Raid1 <name> <bdev_name1> <bdev_name2>
+  # Example, create a new Raid1 device based on bdev Malloc0 and Malloc1
+  Raid1 Raid1_malloc Malloc0 Malloc1
+ ~~~
