@@ -39,16 +39,9 @@
 #include <linux/virtio_config.h>
 #include <linux/virtio_pci.h>
 
-#include <rte_version.h>
-#include <rte_pci.h>
-
 #include "spdk/env.h"
 #include "spdk/json.h"
 #include "virtio_dev.h"
-
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-#define PCI_LEGACY_SUPPORT
-#endif
 
 struct virtqueue;
 
@@ -125,9 +118,6 @@ struct virtio_hw {
  */
 struct vtpci_internal {
 	const struct virtio_pci_ops *vtpci_ops;
-#ifdef PCI_LEGACY_SUPPORT
-	struct rte_pci_ioport io;
-#endif
 };
 
 struct virtio_driver {

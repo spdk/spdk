@@ -110,178 +110,6 @@ pci_dump_json_config(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
 	spdk_json_write_string(w, addr);
 }
 
-#ifdef PCI_LEGACY_SUPPORT
-
-static struct rte_pci_ioport *
-vtpci_io(struct virtio_dev *vdev)
-{
-	return &g_virtio_driver.internal[vdev->id].io;
-}
-
-/*
- * Since we are in legacy mode:
- * http://ozlabs.org/~rusty/virtio-spec/virtio-0.9.5.pdf
- *
- * "Note that this is possible because while the virtio header is PCI (i.e.
- * little) endian, the device-specific region is encoded in the native endian of
- * the guest (where such distinction is applicable)."
- *
- * For powerpc which supports both, qemu supposes that cpu is big endian and
- * enforces this for the virtio-net stuff.
- */
-static void
-legacy_read_dev_config(struct virtio_dev *dev, size_t offset,
-		       void *dst, int length)
-{
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
-
-	rte_pci_ioport_read(vtpci_io(dev), dst, length,
-			    VIRTIO_PCI_CONFIG_OFF(hw->use_msix) + offset);
-}
-
-static void
-legacy_write_dev_config(struct virtio_dev *dev, size_t offset,
-			const void *src, int length)
-{
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
-
-	rte_pci_ioport_write(vtpci_io(dev), src, length,
-			     VIRTIO_PCI_CONFIG_OFF(hw->use_msix) + offset);
-}
-
-static uint64_t
-legacy_get_features(struct virtio_dev *dev)
-{
-	uint32_t dst;
-
-	rte_pci_ioport_read(vtpci_io(dev), &dst, 4, VIRTIO_PCI_HOST_FEATURES);
-	return dst;
-}
-
-static int
-legacy_set_features(struct virtio_dev *dev, uint64_t features)
-{
-	if ((features >> 32) != 0) {
-		SPDK_ERRLOG("only 32 bit features are allowed for legacy virtio!\n");
-		return -1;
-	}
-	rte_pci_ioport_write(vtpci_io(dev), &features, 4,
-			     VIRTIO_PCI_GUEST_FEATURES);
-	dev->negotiated_features = features;
-
-	return 0;
-}
-
-static uint8_t
-legacy_get_status(struct virtio_dev *dev)
-{
-	uint8_t dst;
-
-	rte_pci_ioport_read(vtpci_io(dev), &dst, 1, VIRTIO_PCI_STATUS);
-	return dst;
-}
-
-static void
-legacy_set_status(struct virtio_dev *dev, uint8_t status)
-{
-	rte_pci_ioport_write(vtpci_io(dev), &status, 1, VIRTIO_PCI_STATUS);
-}
-
-static uint8_t
-legacy_get_isr(struct virtio_dev *dev)
-{
-	uint8_t dst;
-
-	rte_pci_ioport_read(vtpci_io(dev), &dst, 1, VIRTIO_PCI_ISR);
-	return dst;
-}
-
-/* Enable one vector (0) for Link State Intrerrupt */
-static uint16_t
-legacy_set_config_irq(struct virtio_dev *dev, uint16_t vec)
-{
-	uint16_t dst;
-
-	rte_pci_ioport_write(vtpci_io(dev), &vec, 2, VIRTIO_MSI_CONFIG_VECTOR);
-	rte_pci_ioport_read(vtpci_io(dev), &dst, 2, VIRTIO_MSI_CONFIG_VECTOR);
-	return dst;
-}
-
-static uint16_t
-legacy_set_queue_irq(struct virtio_dev *dev, struct virtqueue *vq, uint16_t vec)
-{
-	uint16_t dst;
-
-	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
-			     VIRTIO_PCI_QUEUE_SEL);
-	rte_pci_ioport_write(vtpci_io(dev), &vec, 2, VIRTIO_MSI_QUEUE_VECTOR);
-	rte_pci_ioport_read(vtpci_io(dev), &dst, 2, VIRTIO_MSI_QUEUE_VECTOR);
-	return dst;
-}
-
-static uint16_t
-legacy_get_queue_num(struct virtio_dev *dev, uint16_t queue_id)
-{
-	uint16_t dst;
-
-	rte_pci_ioport_write(vtpci_io(dev), &queue_id, 2, VIRTIO_PCI_QUEUE_SEL);
-	rte_pci_ioport_read(vtpci_io(dev), &dst, 2, VIRTIO_PCI_QUEUE_NUM);
-	return dst;
-}
-
-static int
-legacy_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
-{
-	uint32_t src;
-
-	if (!check_vq_phys_addr_ok(vq))
-		return -1;
-
-	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
-			     VIRTIO_PCI_QUEUE_SEL);
-	src = vq->vq_ring_mem >> VIRTIO_PCI_QUEUE_ADDR_SHIFT;
-	rte_pci_ioport_write(vtpci_io(dev), &src, 4, VIRTIO_PCI_QUEUE_PFN);
-
-	return 0;
-}
-
-static void
-legacy_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
-{
-	uint32_t src = 0;
-
-	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
-			     VIRTIO_PCI_QUEUE_SEL);
-	rte_pci_ioport_write(vtpci_io(dev), &src, 4, VIRTIO_PCI_QUEUE_PFN);
-}
-
-static void
-legacy_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
-{
-	rte_pci_ioport_write(vtpci_io(dev), &vq->vq_queue_index, 2,
-			     VIRTIO_PCI_QUEUE_NOTIFY);
-}
-
-const struct virtio_pci_ops legacy_ops = {
-	.read_dev_cfg	= legacy_read_dev_config,
-	.write_dev_cfg	= legacy_write_dev_config,
-	.get_status	= legacy_get_status,
-	.set_status	= legacy_set_status,
-	.get_features	= legacy_get_features,
-	.set_features	= legacy_set_features,
-	.get_isr	= legacy_get_isr,
-	.set_config_irq	= legacy_set_config_irq,
-	.free_vdev	= free_virtio_hw,
-	.set_queue_irq  = legacy_set_queue_irq,
-	.get_queue_num	= legacy_get_queue_num,
-	.setup_queue	= legacy_setup_queue,
-	.del_queue	= legacy_del_queue,
-	.notify_queue	= legacy_notify_queue,
-	.dump_json_config = pci_dump_json_config,
-};
-
-#endif /* PCI_LEGACY_SUPPORT */
-
 static inline void
 io_write64_twopart(uint64_t val, uint32_t *lo, uint32_t *hi)
 {
@@ -692,50 +520,20 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		hw->pci_bar[i].len = bar_len;
 	}
 
-	/*
-	 * Try if we can succeed reading virtio pci caps, which exists
-	 * only on modern pci device. If failed, we fallback to legacy
-	 * virtio handling.
+	/* Virtio PCI caps exist only on modern PCI devices.
+	 * Legacy devices are not supported.
 	 */
-	if (virtio_read_caps(hw) == 0) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_PCI, "modern virtio pci detected.\n");
-		rc = vtpci_init(vdev, &modern_ops);
-		if (rc != 0) {
-			goto err;
-		}
-		vdev->modern = 1;
-
-		rc = virtio_dev_pci_init(vdev);
-		if (rc != 0) {
-			vtpci_deinit(vdev->id);
-			goto err;
-		}
-
-		return 0;
-	}
-
-#ifdef PCI_LEGACY_SUPPORT
-#if 0
-	PMD_INIT_LOG(INFO, "trying with legacy virtio pci.");
-	if (rte_pci_ioport_map(dev, 0, vtpci_io(hw)) < 0) {
-		if (dev->kdrv == RTE_KDRV_UNKNOWN &&
-		    (!dev->device.devargs ||
-		     dev->device.devargs->type !=
-		     RTE_DEVTYPE_WHITELISTED_PCI)) {
-			PMD_INIT_LOG(INFO,
-				     "skip kernel managed virtio device.");
-			return 1;
-		}
-		return -1;
-	}
-#endif
-
-	rc = vtpci_init(vdev, &legacy_ops);
-	if (rc != 0) {
+	if (virtio_read_caps(hw) != 0) {
+		SPDK_NOTICELOG("Ignoring legacy PCI device.\n");
 		goto err;
 	}
 
-	vdev->modern = 0;
+	rc = vtpci_init(vdev, &modern_ops);
+	if (rc != 0) {
+		goto err;
+	}
+	vdev->modern = 1;
+
 	rc = virtio_dev_pci_init(vdev);
 	if (rc != 0) {
 		vtpci_deinit(vdev->id);
@@ -743,7 +541,6 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	}
 
 	return 0;
-#endif
 
 err:
 	free_virtio_hw(vdev);
