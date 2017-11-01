@@ -1,5 +1,5 @@
 [Malloc]
-  NumberOfLuns 3
+  NumberOfLuns 5
   LunSizeInMB 64
 
 [Split]
@@ -9,6 +9,9 @@
   # Split Malloc2 into eight 4-megabyte pieces,
   # leaving the rest of the device inaccessible
   Split Malloc2 8 4
+
+[Raid1]
+  Raid1 Malloc_raid1 Malloc3 Malloc4
 
 [AIO]
   AIO /dev/ram0 AIO0
