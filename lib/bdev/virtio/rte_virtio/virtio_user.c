@@ -119,31 +119,6 @@ virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 	return 0;
 }
 
-static uint8_t
-virtio_user_get_isr(struct virtio_dev *vdev)
-{
-	/* rxq interrupts and config interrupt are separated in virtio-user,
-	 * here we only report config change.
-	 */
-	return VIRTIO_PCI_ISR_CONFIG;
-}
-
-static uint16_t
-virtio_user_set_config_irq(struct virtio_dev *vdev,
-			   uint16_t vec)
-{
-	return 0;
-}
-
-static uint16_t
-virtio_user_set_queue_irq(struct virtio_dev *vdev,
-			  struct virtqueue *vq,
-			  uint16_t vec)
-{
-	/* pretend we have done that */
-	return vec;
-}
-
 /* This function is to get the queue size, aka, number of descs, of a specified
  * queue. Different with the VHOST_USER_GET_QUEUE_NUM, which is used to get the
  * max supported queues.
@@ -268,10 +243,7 @@ const struct virtio_pci_ops virtio_user_ops = {
 	.set_status	= virtio_user_set_status,
 	.get_features	= virtio_user_get_features,
 	.set_features	= virtio_user_set_features,
-	.get_isr	= virtio_user_get_isr,
-	.set_config_irq	= virtio_user_set_config_irq,
 	.free_vdev	= virtio_user_free,
-	.set_queue_irq	= virtio_user_set_queue_irq,
 	.get_queue_num	= virtio_user_get_queue_num,
 	.setup_queue	= virtio_user_setup_queue,
 	.del_queue	= virtio_user_del_queue,

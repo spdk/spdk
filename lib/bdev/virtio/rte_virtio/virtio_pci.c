@@ -201,33 +201,6 @@ modern_set_status(struct virtio_dev *dev, uint8_t status)
 	spdk_mmio_write_1(&hw->common_cfg->device_status, status);
 }
 
-static uint8_t
-modern_get_isr(struct virtio_dev *dev)
-{
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
-
-	return spdk_mmio_read_1(hw->isr);
-}
-
-static uint16_t
-modern_set_config_irq(struct virtio_dev *dev, uint16_t vec)
-{
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
-
-	spdk_mmio_write_2(&hw->common_cfg->msix_config, vec);
-	return spdk_mmio_read_2(&hw->common_cfg->msix_config);
-}
-
-static uint16_t
-modern_set_queue_irq(struct virtio_dev *dev, struct virtqueue *vq, uint16_t vec)
-{
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
-
-	spdk_mmio_write_2(&hw->common_cfg->queue_select, vq->vq_queue_index);
-	spdk_mmio_write_2(&hw->common_cfg->queue_msix_vector, vec);
-	return spdk_mmio_read_2(&hw->common_cfg->queue_msix_vector);
-}
-
 static uint16_t
 modern_get_queue_num(struct virtio_dev *dev, uint16_t queue_id)
 {
@@ -308,10 +281,7 @@ const struct virtio_pci_ops modern_ops = {
 	.set_status	= modern_set_status,
 	.get_features	= modern_get_features,
 	.set_features	= modern_set_features,
-	.get_isr	= modern_get_isr,
-	.set_config_irq	= modern_set_config_irq,
 	.free_vdev	= free_virtio_hw,
-	.set_queue_irq  = modern_set_queue_irq,
 	.get_queue_num	= modern_get_queue_num,
 	.setup_queue	= modern_setup_queue,
 	.del_queue	= modern_del_queue,
@@ -355,12 +325,6 @@ uint8_t
 vtpci_get_status(struct virtio_dev *dev)
 {
 	return vtpci_ops(dev)->get_status(dev);
-}
-
-uint8_t
-vtpci_isr(struct virtio_dev *dev)
-{
-	return vtpci_ops(dev)->get_isr(dev);
 }
 
 static void *
