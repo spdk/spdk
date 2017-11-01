@@ -860,3 +860,70 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_iscsi_connections", spdk_rpc_get_iscsi_connections)
+
+struct rpc_target_lun {
+	char *name;
+	char *lun_name;
+	int32_t lun_id;
+};
+
+static void
+free_rpc_target_lun(struct rpc_target_lun *req)
+{
+	free(req->name);
+	free(req->lun_name);
+}
+
+static const struct spdk_json_object_decoder rpc_target_lun_decoders[] = {
+	{"name", offsetof(struct rpc_target_lun, name), spdk_json_decode_string},
+	{"lun_name", offsetof(struct rpc_target_lun, lun_name), spdk_json_decode_string},
+	{"lun_id", offsetof(struct rpc_target_lun, lun_id), spdk_json_decode_int32, true},
+};
+
+static void
+spdk_rpc_add_lun(struct spdk_jsonrpc_request *request,
+		 const struct spdk_json_val *params)
+{
+	struct rpc_target_lun req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_iscsi_tgt_node *target;
+	int rc;
+
+	req.lun_id = -1;
+
+	if (spdk_json_decode_object(params, rpc_target_lun_decoders,
+				    SPDK_COUNTOF(rpc_target_lun_decoders), &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	target = spdk_iscsi_find_tgt_node(req.name);
+	if (target == NULL) {
+		SPDK_ERRLOG("target is not found\n");
+		goto invalid;
+	}
+
+	rc = spdk_iscsi_tgt_node_add_lun(target, req.lun_name, req.lun_id);
+	if (rc < 0) {
+		SPDK_ERRLOG("add lun failed\n");
+		goto invalid;
+	}
+
+	free_rpc_target_lun(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+	free_rpc_target_lun(&req);
+}
+SPDK_RPC_REGISTER("add_lun", spdk_rpc_add_lun)
+
