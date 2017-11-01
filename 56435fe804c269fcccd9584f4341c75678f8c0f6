@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "218893a7_43908da9",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-01T19:58:17Z",
+      "side": 1,
+      "message": "This seems to assume the list of namespaces in a subsystem is static - what happens if we dynamically add a namespace after creating the poll group?\n\nAlso, it would be nice to keep this isolated to ctrlr_bdev.c like spdk_nvmf_subsystem_bdev_attach() was before.",
+      "revId": "56435fe804c269fcccd9584f4341c75678f8c0f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
