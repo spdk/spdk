@@ -232,7 +232,7 @@ spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_request *request,
 	if (!ig) {
 		goto invalid;
 	}
-	spdk_iscsi_tgt_node_delete_map(NULL, ig);
+	spdk_iscsi_delete_tgt_node_map(NULL, ig);
 	spdk_iscsi_init_grp_release(ig);
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -770,7 +770,7 @@ spdk_rpc_delete_portal_group(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_iscsi_tgt_node_delete_map(pg, NULL);
+	spdk_iscsi_delete_tgt_node_map(pg, NULL);
 	spdk_iscsi_portal_grp_release(pg);
 
 	w = spdk_jsonrpc_begin_result(request);

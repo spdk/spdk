@@ -69,6 +69,12 @@ spdk_iscsi_init_grp_find_by_tag(int tag)
 	return NULL;
 }
 
+int
+spdk_scsi_dev_delete_port(struct spdk_scsi_dev *dev, uint64_t id)
+{
+	return -1;
+}
+
 struct spdk_scsi_lun *
 spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 {

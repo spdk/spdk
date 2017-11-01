@@ -270,19 +270,19 @@ spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 
 	if (dev->num_ports == SPDK_SCSI_DEV_MAX_PORTS) {
 		SPDK_ERRLOG("device already has %d ports\n", SPDK_SCSI_DEV_MAX_PORTS);
-		return -1;
+		return -ENOSPC;
 	}
 
 	port = spdk_scsi_dev_find_port_by_id(dev, id);
 	if (port != NULL) {
 		SPDK_ERRLOG("device already has port(%" PRIu64 ")\n", id);
-		return -1;
+		return -EEXIST;
 	}
 
 	port = spdk_scsi_dev_find_free_port(dev);
 	if (port == NULL) {
 		assert(false);
-		return -1;
+		return -ENOSPC;
 	}
 
 	rc = spdk_scsi_port_construct(port, id, dev->num_ports, name);

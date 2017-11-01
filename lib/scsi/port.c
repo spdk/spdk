@@ -73,7 +73,7 @@ spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id, uint16_t inde
 {
 	if (strlen(name) >= sizeof(port->name)) {
 		SPDK_ERRLOG("port name too long\n");
-		return -1;
+		return -ENAMETOOLONG;
 	}
 
 	port->is_used = 1;
