@@ -147,8 +147,6 @@ int vtpci_init(struct virtio_dev *vdev, const struct virtio_pci_ops *ops);
 
 void vtpci_reset(struct virtio_dev *);
 
-void vtpci_reinit_complete(struct virtio_dev *);
-
 uint8_t vtpci_get_status(struct virtio_dev *);
 void vtpci_set_status(struct virtio_dev *, uint8_t);
 

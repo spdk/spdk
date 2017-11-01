@@ -279,7 +279,7 @@ virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 	if (ret < 0)
 		return ret;
 
-	vtpci_reinit_complete(dev);
+	vtpci_set_status(dev, VIRTIO_CONFIG_S_DRIVER_OK);
 	return 0;
 }
 
