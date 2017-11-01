@@ -16,6 +16,24 @@
       "revId": "ea16fedd7fcb60faa91710e2a1d804befc3c1930",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1665ab44_a485c5ec",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1410,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-01T23:29:04Z",
+      "side": 1,
+      "message": "I will modify this together with new UT code and submit these again. Thank you.",
+      "parentUuid": "9cea6c5b_3ad659ae",
+      "revId": "ea16fedd7fcb60faa91710e2a1d804befc3c1930",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
