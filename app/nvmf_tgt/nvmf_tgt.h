@@ -61,9 +61,35 @@ struct nvmf_tgt_subsystem {
 	uint32_t lcore;
 };
 
+enum nvmf_tgt_state {
+	NVMF_TGT_INIT_NONE = 0,
+	NVMF_TGT_INIT_PARSE_CONFIG,
+	NVMF_TGT_INIT_CREATE_POLL_GROUP,
+	NVMF_TGT_INIT_START_POLLER,
+	NVMF_TGT_INIT_START_ACCEPTOR,
+	NVMF_TGT_RUNNING,
+	NVMF_TGT_FINI_STOP_ACCEPTOR,
+	NVMF_TGT_FINI_STOP_POLLER,
+	NVMF_TGT_FINI_DESTROY_POLL_GROUP,
+	NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS,
+	NVMF_TGT_FINI_FREE_RESOURCES,
+	NVMF_TGT_STOPPED,
+	NVMF_TGT_ERROR,
+};
+
+struct nvmf_tgt {
+	enum nvmf_tgt_state state;
+
+	struct spdk_nvmf_tgt *tgt;
+
+	// Used at initialization only
+	uint32_t core; // The current core when allocating pollers
+
+};
+
 extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
-extern struct spdk_nvmf_tgt *g_tgt;
+extern struct nvmf_tgt g_tgt;
 
 struct nvmf_tgt_subsystem *
 nvmf_tgt_subsystem_first(void);
