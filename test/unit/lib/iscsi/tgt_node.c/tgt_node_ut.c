@@ -79,6 +79,20 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 	return dev->lun[lun_id];
 }
 
+int
+spdk_scsi_dev_find_lowest_free_lun_id(struct spdk_scsi_dev *dev)
+{
+	return -1;
+}
+
+int
+spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, char *lun_name, int lun_id,
+		      void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		      void *hotremove_ctx)
+{
+	return -1;
+}
+
 static void
 config_file_fail_cases(void)
 {
