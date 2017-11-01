@@ -481,7 +481,8 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 {
 	union spdk_nvme_cc_register	cc;
 	union spdk_nvme_csts_register	csts;
-	int				ms_waited = 0;
+	uint32_t			ms_waited = 0;
+	uint32_t			shutdown_timeout_ms;
 
 	if (ctrlr->is_removed) {
 		return;
@@ -500,11 +501,18 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/*
-	 * The NVMe spec does not define a timeout period
-	 *  for shutdown notification, so we just pick
-	 *  5 seconds as a reasonable amount of time to
+	 * The NVMe specification defines RTD3E to be the time between
+	 *  setting SHN = 1 until the controller will set SHST = 10b.
+	 * If the device doesn't report RTD3 entry latency, or if it
+	 *  reports RTD3 entry latency less than 10 seconds, pick
+	 *  10 seconds as a reasonable amount of time to
 	 *  wait before proceeding.
 	 */
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "RTD3E = %" PRIu32 " us\n", ctrlr->cdata.rtd3e);
+	shutdown_timeout_ms = (ctrlr->cdata.rtd3e + 999) / 1000;
+	shutdown_timeout_ms = spdk_max(shutdown_timeout_ms, 10000);
+	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "shutdown timeout = %" PRIu32 " ms\n", shutdown_timeout_ms);
+
 	do {
 		if (nvme_ctrlr_get_csts(ctrlr, &csts)) {
 			SPDK_ERRLOG("get_csts() failed\n");
@@ -512,15 +520,16 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 		}
 
 		if (csts.bits.shst == SPDK_NVME_SHST_COMPLETE) {
-			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "shutdown complete\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "shutdown complete in %u milliseconds\n",
+				      ms_waited);
 			return;
 		}
 
 		nvme_delay(1000);
 		ms_waited++;
-	} while (ms_waited < 5000);
+	} while (ms_waited < shutdown_timeout_ms);
 
-	SPDK_ERRLOG("did not shutdown within 5 seconds\n");
+	SPDK_ERRLOG("did not shutdown within %u milliseconds\n", shutdown_timeout_ms);
 }
 
 static int
