@@ -188,8 +188,8 @@ spdk_nvmf_parse_nvmf_tgt(void)
 		spdk_nvmf_read_config_file_params(sp, &opts);
 	}
 
-	g_tgt = spdk_nvmf_tgt_create(&opts);
-	if (!g_tgt) {
+	g_tgt.tgt = spdk_nvmf_tgt_create(&opts);
+	if (!g_tgt.tgt) {
 		SPDK_ERRLOG("spdk_nvmf_tgt_create() failed\n");
 		return -1;
 	}
@@ -455,7 +455,7 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 		snprintf(trid.traddr, sizeof(trid.traddr), "%s", addresses[i].traddr);
 		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", addresses[i].trsvcid);
 
-		rc = spdk_nvmf_tgt_listen(g_tgt, &trid);
+		rc = spdk_nvmf_tgt_listen(g_tgt.tgt, &trid);
 		if (rc) {
 			SPDK_ERRLOG("Failed to listen on transport %s, adrfam %s, traddr %s, trsvcid %s\n",
 				    addresses[i].transport,
