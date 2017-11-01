@@ -39,6 +39,30 @@
       "revId": "418116d77b95ada076f4fc18446b15cf34b6bdb8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f46ac7a_49771ec8",
+        "filename": "unittest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-01T23:42:17Z",
+      "side": 1,
+      "message": "What I want to do is that init_grp_ut uses init_grp.conf in the same directory. I did not understand valgrind at all and hence did not notice this bug. Thank you so much.\n\nIs it OK for me to modify to the following or anything I should do additionally?\n\n$valgrind test/unit/lib/iscsi/init_grp.c/init_grp_ut test/unit/lib/iscsi/init_grp.c/init_grp.conf",
+      "parentUuid": "a6cb722d_3142d3eb",
+      "range": {
+        "startLine": 99,
+        "startChar": 73,
+        "endLine": 99,
+        "endChar": 83
+      },
+      "revId": "418116d77b95ada076f4fc18446b15cf34b6bdb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
