@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "746e8a2f_1bd76b73",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-01T05:23:52Z",
+      "side": 1,
+      "message": "This API is to initialize the bdev module generally. Not for a single block device. Same for below cb_fn parameter.",
+      "range": {
+        "startLine": 128,
+        "startChar": 3,
+        "endLine": 128,
+        "endChar": 29
+      },
+      "revId": "1066a81163241c86e4a047f0555fdd0133be449b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2cd74dc6_386f0553",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-01T05:23:52Z",
+      "side": 1,
+      "message": "Also need comment for this API.",
+      "range": {
+        "startLine": 139,
+        "startChar": 5,
+        "endLine": 139,
+        "endChar": 21
+      },
+      "revId": "1066a81163241c86e4a047f0555fdd0133be449b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbccae8b_aec87d4f",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-01T05:23:52Z",
+      "side": 1,
+      "message": "Get the configuration option for the registered bdev module.",
+      "range": {
+        "startLine": 142,
+        "startChar": 3,
+        "endLine": 142,
+        "endChar": 76
+      },
+      "revId": "1066a81163241c86e4a047f0555fdd0133be449b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48389c34_52bbb805",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 2
