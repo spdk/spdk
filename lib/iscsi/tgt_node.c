@@ -174,15 +174,56 @@ spdk_iscsi_netmask_allow_addr(const char *netmask, const char *addr)
 	return false;
 }
 
+static bool
+spdk_iscsi_init_grp_allow_addr(struct spdk_iscsi_init_grp *igp,
+				      const char *addr)
+{
+	struct spdk_iscsi_initiator_netmask *imask;
+
+	TAILQ_FOREACH(imask, &igp->netmask_head, tailq) {
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "netmask=%s, addr=%s\n",
+			      imask->mask, addr);
+		if (spdk_iscsi_netmask_allow_addr(imask->mask, addr)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+static int
+spdk_iscsi_init_grp_allow_iscsi_name(struct spdk_iscsi_init_grp *igp,
+				     const char *iqn, bool *result)
+{
+	struct spdk_iscsi_initiator_name *iname;
+
+	TAILQ_FOREACH(iname, &igp->initiator_head, tailq) {
+		/* denied if iqn is matched */
+		if ((iname->name[0] == '!')
+		    && (strcasecmp(&iname->name[1], "ANY") == 0
+			|| strcasecmp(&iname->name[1], iqn) == 0)) {
+			*result = false;
+			return 0;
+		}
+		/* allowed if iqn is matched */
+		if (strcasecmp(iname->name, "ANY") == 0
+		    || strcasecmp(iname->name, iqn) == 0) {
+			*result = true;
+			return 0;
+		}
+	}
+
+	return -1;
+}
+
 bool
 spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 			   struct spdk_iscsi_tgt_node *target, const char *iqn, const char *addr)
 {
 	struct spdk_iscsi_portal_grp *pg;
 	struct spdk_iscsi_init_grp *igp;
-	struct spdk_iscsi_initiator_name *iname;
-	struct spdk_iscsi_initiator_netmask *imask;
 	int i;
+	int rc;
+	bool allowed = false;
 
 	if (conn == NULL || target == NULL || iqn == NULL || addr == NULL)
 		return false;
@@ -195,27 +236,17 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 		if (pg != target->map[i].pg)
 			continue;
 		igp = target->map[i].ig;
-		TAILQ_FOREACH(iname, &igp->initiator_head, tailq) {
-			/* denied if iqn is matched */
-			if ((iname->name[0] == '!')
-			    && (strcasecmp(&iname->name[1], "ANY") == 0
-				|| strcasecmp(&iname->name[1], iqn) == 0)) {
+		rc = spdk_iscsi_init_grp_allow_iscsi_name(igp, iqn, &allowed);
+		if (rc == 0) {
+			if (allowed == false) {
 				goto denied;
-			}
-			/* allowed if iqn is matched */
-			if (strcasecmp(iname->name, "ANY") == 0
-			    || strcasecmp(iname->name, iqn) == 0) {
-				/* iqn is allowed, then check netmask */
-				TAILQ_FOREACH(imask, &igp->netmask_head, tailq) {
-					SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
-						      "netmask=%s, addr=%s\n",
-						      imask->mask, addr);
-					if (spdk_iscsi_netmask_allow_addr(imask->mask, addr)) {
-						return true;
-					}
+			} else {
+				if (spdk_iscsi_init_grp_allow_addr(igp, addr)) {
+					return true;
 				}
-				/* netmask is denied in this initiator group */
 			}
+		} else {
+			/* netmask is denied in this initiator group */
 		}
 	}
 
@@ -230,25 +261,27 @@ static bool
 spdk_iscsi_tgt_node_allow_iscsi_name(struct spdk_iscsi_tgt_node *target, const char *iqn)
 {
 	struct spdk_iscsi_init_grp *igp;
-	struct spdk_iscsi_initiator_name *iname;
-	int i;
+	int i, j;
+	int rc;
+	bool result = false;
 
 	if (target == NULL || iqn == NULL)
 		return false;
 
 	for (i = 0; i < target->maxmap; i++) {
 		igp = target->map[i].ig;
-		TAILQ_FOREACH(iname, &igp->initiator_head, tailq) {
-			if ((iname->name[0] == '!')
-			    && (strcasecmp(&iname->name[1], "ANY") == 0
-				|| strcasecmp(&iname->name[1], iqn) == 0)) {
-				return false;
-			}
-			if (strcasecmp(iname->name, "ANY") == 0
-			    || strcasecmp(iname->name, iqn) == 0) {
-				return true;
+		/* skip same ig_tag */
+		for (j = 0; j < i; j++) {
+			if (target->map[j].ig->tag == igp->tag) {
+				goto skip_ig_tag;
 			}
 		}
+		rc = spdk_iscsi_init_grp_allow_iscsi_name(igp, iqn, &result);
+		if (rc == 0) {
+			return result;
+		}
+skip_ig_tag:
+		;
 	}
 
 	return false;
