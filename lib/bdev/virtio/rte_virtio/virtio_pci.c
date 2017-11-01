@@ -343,12 +343,6 @@ vtpci_reset(struct virtio_dev *dev)
 }
 
 void
-vtpci_reinit_complete(struct virtio_dev *dev)
-{
-	vtpci_set_status(dev, VIRTIO_CONFIG_S_DRIVER_OK);
-}
-
-void
 vtpci_set_status(struct virtio_dev *dev, uint8_t status)
 {
 	if (status != VIRTIO_CONFIG_S_RESET)
