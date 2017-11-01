@@ -252,6 +252,58 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 	}
 }
 
+struct call_thread {
+	struct spdk_thread *cur_thread;
+	spdk_thread_fn fn;
+	void *ctx;
+
+	struct spdk_thread *orig_thread;
+	spdk_thread_fn cpl;
+};
+
+static void
+spdk_on_thread(void *ctx)
+{
+	struct call_thread *ct = ctx;
+
+	ct->fn(ct->ctx);
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	ct->cur_thread = TAILQ_NEXT(ct->cur_thread, tailq);
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	if (!ct->cur_thread) {
+		spdk_thread_send_msg(ct->orig_thread, ct->cpl, ct->ctx);
+		free(ctx);
+	} else {
+		spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ctx);
+	}
+}
+
+void
+spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
+{
+	struct call_thread *ct;
+
+	ct = calloc(1, sizeof(*ct));
+	if (!ct) {
+		SPDK_ERRLOG("Unable to perform thread iteration\n");
+		cpl(ctx);
+		return;
+	}
+
+	ct->fn = fn;
+	ct->ctx = ctx;
+	ct->cpl = cpl;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	ct->orig_thread = _get_thread();
+	ct->cur_thread = TAILQ_FIRST(&g_threads);
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ct);
+}
+
 void
 spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 			spdk_io_channel_destroy_cb destroy_cb, uint32_t ctx_size)
