@@ -54,6 +54,9 @@ if [ $(uname -s) = Linux ]; then
 	for dev in $devs; do
 		parted -s /dev/$dev mklabel msdos
 	done
+
+	# Load RAM disk driver if available
+	modprobe brd || true
 fi
 timing_exit cleanup
 
