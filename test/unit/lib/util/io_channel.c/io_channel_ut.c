@@ -97,6 +97,44 @@ thread_send_msg(void)
 	free_threads();
 }
 
+static void
+for_each_cb(void *ctx)
+{
+	int *count = ctx;
+
+	(*count)++;
+}
+
+static void
+thread_for_each(void)
+{
+	int count = 0;
+	int i;
+
+	allocate_threads(3);
+	set_thread(0);
+
+	spdk_for_each_thread(for_each_cb, &count, for_each_cb);
+
+	/* We have not polled thread 0 yet, so count should be 0 */
+	CU_ASSERT(count == 0);
+
+	/* Poll each thread to verify the message is passed to each */
+	for (i = 0; i < 3; i++) {
+		poll_thread(i);
+		CU_ASSERT(count == (i + 1));
+	}
+
+	/*
+	 * After each thread is called, the completion calls it
+	 * one more time.
+	 */
+	poll_thread(0);
+	CU_ASSERT(count == 4);
+
+	free_threads();
+}
+
 static int
 channel_create(void *io_device, void *ctx_buf)
 {
@@ -393,6 +431,7 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "thread_alloc", thread_alloc) == NULL ||
 		CU_add_test(suite, "thread_send_msg", thread_send_msg) == NULL ||
+		CU_add_test(suite, "thread_for_each", thread_for_each) == NULL ||
 		CU_add_test(suite, "for_each_channel_remove", for_each_channel_remove) == NULL ||
 		CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg) == NULL ||
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
