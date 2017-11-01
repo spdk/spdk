@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ecd101ef_4b5c4308",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-01T23:33:13Z",
+      "side": 1,
+      "message": "This should probably return a negated errno code to match the other possible return values of this function (e.g. -EINVAL).",
+      "revId": "418116d77b95ada076f4fc18446b15cf34b6bdb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
