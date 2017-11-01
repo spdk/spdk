@@ -74,14 +74,8 @@ struct virtio_pci_ops {
 	 */
 	int (*set_features)(struct virtio_dev *vdev, uint64_t features);
 
-	uint8_t (*get_isr)(struct virtio_dev *hw);
-
-	uint16_t (*set_config_irq)(struct virtio_dev *hw, uint16_t vec);
-
 	/** Deinit and free virtio device */
 	void (*free_vdev)(struct virtio_dev *vdev);
-	uint16_t (*set_queue_irq)(struct virtio_dev *hw, struct virtqueue *vq,
-				  uint16_t vec);
 
 	uint16_t (*get_queue_num)(struct virtio_dev *hw, uint16_t queue_id);
 	int (*setup_queue)(struct virtio_dev *hw, struct virtqueue *vq);
