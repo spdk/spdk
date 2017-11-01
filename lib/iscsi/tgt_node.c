@@ -176,7 +176,7 @@ spdk_iscsi_netmask_allow_addr(const char *netmask, const char *addr)
 
 static bool
 spdk_iscsi_init_grp_allow_addr(struct spdk_iscsi_init_grp *igp,
-				      const char *addr)
+			       const char *addr)
 {
 	struct spdk_iscsi_initiator_netmask *imask;
 
@@ -1052,4 +1052,46 @@ loop:
 			}
 		}
 	}
+}
+
+int
+spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
+			    char *lun_name, int lun_id)
+{
+	struct spdk_scsi_dev *dev;
+	int rc;
+
+	if (target->num_active_conns > 0) {
+		SPDK_ERRLOG("Target has active connections (count=%d)\n",
+			    target->num_active_conns);
+		return -1;
+	}
+
+	if (lun_id < -1 || lun_id >= SPDK_SCSI_DEV_MAX_LUN) {
+		SPDK_ERRLOG("Specified LUN ID (%d) is invalid\n", lun_id);
+		return -1;
+	}
+
+	dev = target->dev;
+	if (dev == NULL) {
+		SPDK_ERRLOG("SCSI device is not found\n");
+		return -1;
+	}
+
+	/* Search the lowest free LUN ID if LUN ID is default */
+	if (lun_id == -1) {
+		lun_id = spdk_scsi_dev_find_lowest_free_lun_id(dev);
+		if (lun_id == -1) {
+			SPDK_ERRLOG("Free LUN ID is not found\n");
+			return -1;
+		}
+	}
+
+	rc = spdk_scsi_dev_add_lun(dev, lun_name, lun_id, NULL, NULL);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_scsi_dev_add_lun failed\n");
+		return -1;
+	}
+
+	return 0;
 }
