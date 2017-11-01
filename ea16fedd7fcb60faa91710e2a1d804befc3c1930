@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cea6c5b_3ad659ae",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1410,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-01T23:19:37Z",
+      "side": 1,
+      "message": "I think this check needs to be updated: rc is an int here, but it is being assigned the result of spdk_iscsi_tgt_node_access(), which now returns a bool.  We should modify the type of the variable (or just check the return code directly) to be bool and drop the \u0027\u003c 0\u0027 check, since that doesn\u0027t make sense for bool.",
+      "revId": "ea16fedd7fcb60faa91710e2a1d804befc3c1930",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
