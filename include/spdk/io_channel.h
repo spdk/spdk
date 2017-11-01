@@ -117,6 +117,18 @@ const char *spdk_thread_get_name(const struct spdk_thread *thread);
 void spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx);
 
 /**
+ * \brief Send a message to each thread, serially. The message
+ * is sent asynchronously - i.e. spdk_for_each_thread
+ * will return prior to `fn` being called on each thread.
+ *
+ * @param fn This is the function that will be called on each thread.
+ * @param ctx This context will be passed to fn when called.
+ * @param cpl This will be called on the originating thread after `fn` has been
+ *            called on each thread.
+ */
+void spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl);
+
+/**
  * \brief Register a poller on the current thread. The poller can be
  * unregistered by calling spdk_poller_unregister().
  *
