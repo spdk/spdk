@@ -16,6 +16,29 @@
       "revId": "418116d77b95ada076f4fc18446b15cf34b6bdb8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6cb722d_3142d3eb",
+        "filename": "unittest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-01T23:33:53Z",
+      "side": 1,
+      "message": "This probably is meant to be using the tgt_node.conf from init_grp.c directory (or if it can reuse the same one, the other file shouldn\u0027t be added).",
+      "range": {
+        "startLine": 99,
+        "startChar": 73,
+        "endLine": 99,
+        "endChar": 83
+      },
+      "revId": "418116d77b95ada076f4fc18446b15cf34b6bdb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
