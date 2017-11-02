@@ -153,6 +153,12 @@ spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_
 }
 
 int
+spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
+{
+	abort();
+}
+
+int
 nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	abort();

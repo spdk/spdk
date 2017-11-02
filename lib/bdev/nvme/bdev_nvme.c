@@ -721,7 +721,6 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		struct spdk_pci_addr pci_addr;
 		bool claim_device = false;
 		struct nvme_probe_ctx *ctx = cb_ctx;
 		size_t i;
@@ -735,14 +734,6 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 		if (!claim_device) {
 			SPDK_DEBUGLOG(SPDK_TRACE_BDEV_NVME, "Not claiming device at %s\n", trid->traddr);
-			return false;
-		}
-
-		if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
-			return false;
-		}
-
-		if (spdk_pci_device_claim(&pci_addr) < 0) {
 			return false;
 		}
 	}
