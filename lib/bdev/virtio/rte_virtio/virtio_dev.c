@@ -286,11 +286,8 @@ virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 void
 virtio_dev_free(struct virtio_dev *dev)
 {
-	uint32_t vdev_id = dev->id;
-
 	virtio_free_queues(dev);
 	vtpci_ops(dev)->free_vdev(dev);
-	vtpci_deinit(vdev_id);
 	pthread_mutex_destroy(&dev->mutex);
 	free(dev);
 }
