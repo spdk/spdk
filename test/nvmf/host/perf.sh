@@ -22,7 +22,12 @@ fi
 timing_enter perf
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -c $testdir/../nvmf.conf &
+cp $testdir/../nvmf.conf $testdir/nvmf.conf
+$rootdir/scripts/gen_nvme.sh >> $testdir/nvmf.conf
+
+local_nvme_trid=$(grep TransportID $testdir/nvmf.conf | head -n1 | awk '{print $2}')
+
+$NVMF_APP -c $testdir/nvmf.conf -i 0 &
 nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
@@ -34,11 +39,18 @@ bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SI
 
 $rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" '' -a -s SPDK00000000000001 -n "$bdevs"
 
-$rootdir/examples/nvme/perf/perf -q 128 -s 4096 -w randrw -M 50 -t 1 -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420"
+# Test multi-process access to local NVMe device
+if [ -n "$local_nvme_trid" ]; then
+	$rootdir/examples/nvme/perf/perf -i 0 -q 32 -s 4096 -w randrw -M 50 -t 1 -r "$local_nvme_trid"
+fi
+
+$rootdir/examples/nvme/perf/perf -q 32 -s 4096 -w randrw -M 50 -t 1 -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420"
 sync
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
 trap - SIGINT SIGTERM EXIT
+
+rm -f $testdir/nvmf.conf
 
 killprocess $nvmfpid
 timing_exit perf
