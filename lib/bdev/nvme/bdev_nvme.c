@@ -742,7 +742,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 			return false;
 		}
 
-		if (spdk_pci_device_claim(&pci_addr) != 0) {
+		if (spdk_pci_device_claim(&pci_addr) < 0) {
 			return false;
 		}
 	}

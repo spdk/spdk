@@ -51,7 +51,7 @@ pci_test(void)
 	pci_addr.func = 1;
 
 	rc = spdk_pci_device_claim(&pci_addr);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc >= 0);
 
 	childPid = fork();
 	CU_ASSERT(childPid >= 0);

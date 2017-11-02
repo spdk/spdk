@@ -495,7 +495,7 @@ spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 	*(int *)dev_map = (int)getpid();
 	munmap(dev_map, sizeof(int));
 	/* Keep dev_fd open to maintain the lock. */
-	return 0;
+	return dev_fd;
 }
 #endif /* __linux__ */
 

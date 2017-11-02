@@ -345,6 +345,20 @@ struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
 int spdk_pci_device_get_socket_id(struct spdk_pci_device *dev);
 
 int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t len);
+
+/**
+ * Claim a PCI device for exclusive SPDK userspace access.
+ *
+ * Uses F_SETLK on a shared memory file with the PCI address embedded in its name.
+ *  As long as this file remains open with the lock acquired, other processes will
+ *  not be able to successfully call this function on the same PCI device.
+ *
+ * \param pci_addr PCI address of the device to claim
+ *
+ * \return -1 if the device has already been claimed, an fd otherwise.  This fd
+ *	   should be closed when the application no longer needs access to the
+ *	   PCI device (including when it is hot removed).
+ */
 int spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr);
 void spdk_pci_device_detach(struct spdk_pci_device *device);
 
