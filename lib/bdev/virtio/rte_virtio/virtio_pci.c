@@ -470,6 +470,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 
 	rc = virtio_dev_pci_init(vdev);
 	if (rc != 0) {
+		virtio_dev_free(vdev);
 		goto err;
 	}
 
