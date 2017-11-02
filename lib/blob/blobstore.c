@@ -2404,6 +2404,12 @@ spdk_bs_free_cluster_count(struct spdk_blob_store *bs)
 	return bs->num_free_clusters;
 }
 
+uint64_t
+spdk_bs_total_cluster_count(struct spdk_blob_store *bs)
+{
+	return bs->total_clusters;
+}
+
 int spdk_bs_register_md_thread(struct spdk_blob_store *bs)
 {
 	bs->md_target.md_channel = spdk_get_io_channel(&bs->md_target);
