@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82f9ff53_ed30b05a",
+        "filename": "unittest.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-02T04:02:08Z",
+      "side": 1,
+      "message": "Please review if this is correct. Thank you.",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 97
+      },
+      "revId": "75f661ee7eda3d155d4f0304752ee4a968b4cbfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
