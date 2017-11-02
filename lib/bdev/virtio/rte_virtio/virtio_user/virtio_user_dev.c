@@ -245,6 +245,6 @@ virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queu
 
 err:
 	free(vdev->name);
-	free(dev);
+	virtio_dev_free(vdev);
 	return NULL;
 }
