@@ -148,6 +148,9 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_lvol *lvol, *tmp;
 	spdk_blob_id blob_id;
 	char uuid[UUID_STRING_LEN];
+	const char *attr;
+	size_t value_len;
+	int rc;
 
 	if (lvolerrno == -ENOENT) {
 		/* Finished iterating */
@@ -196,6 +199,18 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		free(lvol);
 		return;
 	}
+
+	rc = spdk_bs_md_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
+	if (rc != 0 || value_len > SPDK_LVOL_NAME_MAX) {
+		SPDK_ERRLOG("Cannot assign lvol name\n");
+		req->cb_fn(req->cb_arg, lvs, -EINVAL);
+		free(lvol->old_name);
+		free(req);
+		free(lvol);
+		return;
+	}
+
+	strncpy(lvol->name, attr, SPDK_LVOL_NAME_MAX);
 
 	TAILQ_INSERT_TAIL(&lvs->lvols, lvol, link);
 
