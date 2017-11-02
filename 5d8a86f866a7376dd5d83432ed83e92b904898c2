@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "e91ccab6_a077b5a7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2410,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-02T16:17:41Z",
+      "side": 1,
+      "message": "I\u0027m not sure bs-\u003etotal_clusters is all that useful to user. Currently this returns number of clusters that are present on the blob store, which includes those that have metadata on them.",
+      "range": {
+        "startLine": 2410,
+        "startChar": 12,
+        "endLine": 2410,
+        "endChar": 26
+      },
+      "revId": "5d8a86f866a7376dd5d83432ed83e92b904898c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "27c3a15a_57eb9723",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 4
@@ -13,6 +36,29 @@
       "writtenOn": "2017-11-02T16:00:35Z",
       "side": 1,
       "message": "this is a bit awkward with ( on this line and bs) on the next line",
+      "revId": "5d8a86f866a7376dd5d83432ed83e92b904898c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28f1fd64_95dd7b1e",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-02T16:17:41Z",
+      "side": 1,
+      "message": "Idea behind total_blocks for lvs was to let user know how many blocks are addressable. This excludes those that are reserved for metadata.\n\nSimilar thing is done in _spdk_lvs_init_cb(), but then we are sure lvs does not contain lvols. In such case spdk_bs_free_cluster_count() is enough.",
+      "range": {
+        "startLine": 357,
+        "startChar": 1,
+        "endLine": 357,
+        "endChar": 18
+      },
       "revId": "5d8a86f866a7376dd5d83432ed83e92b904898c2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
