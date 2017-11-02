@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18386e65_9962eac7",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-02T02:25:22Z",
+      "side": 1,
+      "message": "obviously someone can override me as I continue to learn the style here but personally I\u0027d prefer #defines over naked constants even if they\u0027re defined right here so the name clearly states what the constant means (like I assume his is 1 \u003c\u003c 18)",
+      "revId": "3b8a8d75ba47b9ae77277db9e1611ba70455ae31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c7b688d_0fe8faa6",
+        "filename": "lib/blobfs/tree.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-02T02:25:22Z",
+      "side": 1,
+      "message": "do we typically use globals freely? Just another preference, a function to retrieve this from where it\u0027s defined I think is better to avoid unclear scope, etc., all the unwanted stuff that comes with globals",
+      "revId": "3b8a8d75ba47b9ae77277db9e1611ba70455ae31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "593be656_7fd7ba3d",
+        "filename": "test/lib/blobfs/blobfs_async_ut/blobfs_async_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-02T02:25:22Z",
+      "side": 1,
+      "message": "suggestion: a short comment here and in the other UT file that says /* return NULL/-1 to test hardcoded defaults */ or something like that would be good.",
+      "revId": "3b8a8d75ba47b9ae77277db9e1611ba70455ae31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

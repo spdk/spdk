@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd1f3d13_075f9b8a",
+        "filename": "lib/blobfs/tree.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-02T02:25:22Z",
+      "side": 0,
+      "message": "oh, so you can leave this and use it in the prev place I commented on",
+      "revId": "5069496ddc2a98d71cadcf72b32df708d8613fab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
