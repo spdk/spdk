@@ -98,6 +98,9 @@ struct virtio_dev {
 	/** Mutex for asynchronous virtqueue-changing operations. */
 	pthread_mutex_t	mutex;
 
+	/** Backend-specific callbacks. */
+	const struct virtio_pci_ops *backend_ops;
+
 	/** Context for the backend ops */
 	void		*ctx;
 

@@ -45,8 +45,6 @@
 
 struct virtqueue;
 
-#define VIRTIO_MAX_DEVICES 128
-
 /* Extra status define for readability */
 #define VIRTIO_CONFIG_S_RESET 0
 
@@ -104,19 +102,12 @@ struct virtio_hw {
 	struct virtio_scsi_config *dev_cfg;
 };
 
-/*
- * While virtio_hw is stored in shared memory, this structure stores
- * some infos that may vary in the multiple process model locally.
- * For example, the vtpci_ops pointer.
- */
-struct vtpci_internal {
-	const struct virtio_pci_ops *vtpci_ops;
-};
-
 struct virtio_driver {
-	struct vtpci_internal internal[VIRTIO_MAX_DEVICES];
 	TAILQ_HEAD(, virtio_dev) init_ctrlrs;
 	TAILQ_HEAD(, virtio_dev) attached_ctrlrs;
+
+	/* Increment-only virtio_dev counter */
+	unsigned ctrlr_counter;
 };
 
 extern struct virtio_driver g_virtio_driver;
@@ -144,8 +135,6 @@ void vtpci_write_dev_config(struct virtio_dev *, size_t, const void *, int);
 void vtpci_read_dev_config(struct virtio_dev *, size_t, void *, int);
 
 const struct virtio_pci_ops *vtpci_ops(struct virtio_dev *dev);
-
-void vtpci_deinit(uint32_t id);
 
 void vtpci_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w);
 
