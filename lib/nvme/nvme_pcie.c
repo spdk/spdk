@@ -36,7 +36,7 @@
  */
 
 #include "spdk/stdinc.h"
-
+#include "spdk/env.h"
 #include "spdk/likely.h"
 #include "nvme_internal.h"
 #include "nvme_uevent.h"
@@ -86,6 +86,9 @@ struct nvme_pcie_ctrlr {
 
 	/* Opaque handle to associated PCI device. */
 	struct spdk_pci_device *devhandle;
+
+	/* File descriptor returned from spdk_pci_device_claim().  Closed when ctrlr is detached. */
+	int claim_fd;
 
 	/* Flag to indicate the MMIO register has been remapped */
 	bool is_remapped;
@@ -660,8 +663,20 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	struct nvme_pcie_ctrlr *pctrlr;
 	union spdk_nvme_cap_register cap;
 	uint32_t cmd_reg;
-	int rc;
+	int rc, claim_fd;
 	struct spdk_pci_id pci_id;
+	struct spdk_pci_addr pci_addr;
+
+	if (spdk_pci_addr_parse(&pci_addr, trid->traddr)) {
+		SPDK_ERRLOG("could not parse pci address\n");
+		return NULL;
+	}
+
+	claim_fd = spdk_pci_device_claim(&pci_addr);
+	if (claim_fd < 0) {
+		SPDK_ERRLOG("could not claim device %s\n", trid->traddr);
+		return NULL;
+	}
 
 	pctrlr = spdk_dma_zmalloc(sizeof(struct nvme_pcie_ctrlr), 64, NULL);
 	if (pctrlr == NULL) {
@@ -674,6 +689,7 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 	pctrlr->ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	pctrlr->devhandle = devhandle;
 	pctrlr->ctrlr.opts = *opts;
+	pctrlr->claim_fd = claim_fd;
 	memcpy(&pctrlr->ctrlr.trid, trid, sizeof(pctrlr->ctrlr.trid));
 
 	rc = nvme_pcie_ctrlr_allocate_bars(pctrlr);
@@ -764,6 +780,8 @@ nvme_pcie_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
 	struct spdk_pci_device *devhandle = nvme_ctrlr_proc_get_devhandle(ctrlr);
+
+	close(pctrlr->claim_fd);
 
 	if (ctrlr->adminq) {
 		nvme_pcie_qpair_destroy(ctrlr->adminq);
