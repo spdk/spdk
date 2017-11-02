@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23ae3937_bed97002",
+        "filename": "README.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-02T09:25:21Z",
+      "side": 1,
+      "message": "We have this information on our spdk.io/document related page. However still thinking have it here for a quick reference on user configurable choice. What\u0027s your opinion?",
+      "range": {
+        "startLine": 174,
+        "startChar": 0,
+        "endLine": 174,
+        "endChar": 34
+      },
+      "revId": "b78ca1c8720a33aa32b3816cf58a7fda3d762b74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
