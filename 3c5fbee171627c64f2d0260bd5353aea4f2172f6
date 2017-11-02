@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6eaf8bdd_a964cf2e",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-02T01:27:14Z",
+      "side": 1,
+      "message": "call back function for the file system initialization.",
+      "range": {
+        "startLine": 75,
+        "startChar": 16,
+        "endLine": 75,
+        "endChar": 22
+      },
+      "revId": "3c5fbee171627c64f2d0260bd5353aea4f2172f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "971ecc66_f6ebd9dd",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-02T01:27:14Z",
+      "side": 1,
+      "message": "remove one \".\"",
+      "range": {
+        "startLine": 76,
+        "startChar": 50,
+        "endLine": 76,
+        "endChar": 52
+      },
+      "revId": "3c5fbee171627c64f2d0260bd5353aea4f2172f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e472d8e_8d9b43b5",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-02T01:27:14Z",
+      "side": 1,
+      "message": "Argument for call back function",
+      "range": {
+        "startLine": 76,
+        "startChar": 26,
+        "endLine": 76,
+        "endChar": 32
+      },
+      "revId": "3c5fbee171627c64f2d0260bd5353aea4f2172f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e05bf7a7_f838170b",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-02T01:27:14Z",
+      "side": 1,
+      "message": "Load the file system from given device",
+      "range": {
+        "startLine": 82,
+        "startChar": 12,
+        "endLine": 82,
+        "endChar": 22
+      },
+      "revId": "3c5fbee171627c64f2d0260bd5353aea4f2172f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1525657_9c03eef1",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-02T01:27:14Z",
+      "side": 1,
+      "message": "Call back function for loading the file system.",
+      "range": {
+        "startLine": 86,
+        "startChar": 16,
+        "endLine": 86,
+        "endChar": 22
+      },
+      "revId": "3c5fbee171627c64f2d0260bd5353aea4f2172f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e9380ac_541181d2",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-02T01:27:14Z",
+      "side": 1,
+      "message": "Argument for call back function",
+      "range": {
+        "startLine": 87,
+        "startChar": 17,
+        "endLine": 87,
+        "endChar": 25
+      },
+      "revId": "3c5fbee171627c64f2d0260bd5353aea4f2172f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c9a0023_c3c5126e",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-02T01:27:14Z",
+      "side": 1,
+      "message": "file system",
+      "range": {
+        "startLine": 93,
+        "startChar": 14,
+        "endLine": 93,
+        "endChar": 24
+      },
+      "revId": "3c5fbee171627c64f2d0260bd5353aea4f2172f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "675412fe_138a5dbb",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-02T01:27:14Z",
+      "side": 1,
+      "message": "Call back function for unload file system.",
+      "range": {
+        "startLine": 96,
+        "startChar": 16,
+        "endLine": 96,
+        "endChar": 22
+      },
+      "revId": "3c5fbee171627c64f2d0260bd5353aea4f2172f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26679c87_81a4c7e3",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-02T01:27:14Z",
+      "side": 1,
+      "message": "Argument for call back function",
+      "range": {
+        "startLine": 97,
+        "startChar": 17,
+        "endLine": 97,
+        "endChar": 25
+      },
+      "revId": "3c5fbee171627c64f2d0260bd5353aea4f2172f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd34ab63_efabe8fc",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-02T01:27:14Z",
+      "side": 1,
+      "message": "add one space before \"maninly\"",
+      "range": {
+        "startLine": 131,
+        "startChar": 38,
+        "endLine": 131,
+        "endChar": 44
+      },
+      "revId": "3c5fbee171627c64f2d0260bd5353aea4f2172f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
