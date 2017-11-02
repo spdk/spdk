@@ -46,6 +46,8 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 #include "spdk/io_channel.h"
+#include "spdk/string.h"
+
 
 struct bdevperf_task {
 	struct iovec			iov;
@@ -74,6 +76,7 @@ static void bdevperf_submit_single(struct io_target *target);
 #include "../common.c"
 
 struct io_target {
+	char				*name;
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*bdev_desc;
 	struct spdk_io_channel	*ch;
@@ -116,6 +119,24 @@ blockdev_heads_init(void)
 	}
 }
 
+
+static void
+blockdev_heads_destroy(void)
+{
+	uint32_t i;
+	struct io_target *target, *next_target;
+
+	for (i = 0; i < RTE_MAX_LCORE; i++) {
+		target = head[i];
+		if (target != NULL) {
+			next_target = target->next;
+			free(target->name);
+			free(target);
+			target = next_target;
+		}
+	}
+}
+
 static void
 bdevperf_construct_targets(void)
 {
@@ -146,6 +167,14 @@ bdevperf_construct_targets(void)
 			SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
 			bdev = spdk_bdev_next_leaf(bdev);
 			continue;
+		}
+
+		target->name = spdk_sprintf_alloc("%s", spdk_bdev_get_name(bdev));
+		if (!target->name) {
+			fprintf(stderr, "Unable to allocate memory for target name.\n");
+			free(target);
+			/* Return immediately because all mallocs will presumably fail after this */
+			return;
 		}
 
 		target->bdev = bdev;
@@ -507,8 +536,7 @@ performance_dump(int io_time)
 			mb_per_second = io_per_second * g_io_size /
 					(1024 * 1024);
 			printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
-			       spdk_bdev_get_name(target->bdev), io_per_second,
-			       mb_per_second);
+			       target->name, io_per_second, mb_per_second);
 			total_io_per_second += io_per_second;
 			total_mb_per_second += mb_per_second;
 			target = target->next;
@@ -735,6 +763,7 @@ main(int argc, char **argv)
 	spdk_app_start(&opts, bdevperf_run, NULL, NULL);
 
 	performance_dump(g_time_in_sec);
+	blockdev_heads_destroy();
 	spdk_app_fini();
 	printf("done.\n");
 	return g_run_failed;
