@@ -224,10 +224,42 @@ nvmf_tgt_poll_group_poll(void *arg)
 }
 
 static void
+nvmf_tgt_create_poll_group_done(void *arg1, void *arg2)
+{
+	struct nvmf_tgt_poll_group *pg;
+
+	pg = &g_poll_groups[g_tgt.core];
+	if (pg->group == NULL) {
+		g_tgt.state = NVMF_TGT_ERROR;
+	} else {
+		g_tgt.state = NVMF_TGT_INIT_START_POLLER;
+	}
+
+	nvmf_tgt_advance_state(NULL, NULL);
+}
+
+static void
+nvmf_tgt_create_poll_group(void *arg1, void *arg2)
+{
+	struct nvmf_tgt_poll_group *pg;
+	struct spdk_event *event = arg1;
+
+	assert(g_tgt.core == spdk_env_get_current_core());
+
+	pg = &g_poll_groups[g_tgt.core];
+	pg->group = spdk_nvmf_poll_group_create(g_tgt.tgt);
+	if (pg->group == NULL) {
+		SPDK_ERRLOG("Failed to create poll group for core %u\n", g_tgt.core);
+	}
+
+	spdk_event_call(event);
+}
+
+static void
 nvmf_tgt_advance_state(void *arg1, void *arg2)
 {
 	enum nvmf_tgt_state prev_state;
-	int rc = 0;
+	int rc = -1;
 
 	do {
 		prev_state = g_tgt.state;
@@ -271,26 +303,18 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUP;
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUP: {
-			struct nvmf_tgt_poll_group *pg;
+			struct spdk_event *event, *return_event;
 
-			pg = &g_poll_groups[g_tgt.core];
-			assert(pg != NULL);
-
-			pg->group = spdk_nvmf_poll_group_create(g_tgt.tgt);
-			if (pg->group == NULL) {
-				SPDK_ERRLOG("Failed to create poll group for core %u\n", g_tgt.core);
-				rc = -ENOMEM;
-				g_tgt.state = NVMF_TGT_ERROR;
-				break;
-			}
-			g_tgt.state = NVMF_TGT_INIT_START_POLLER;
+			/* Send an event to the poller core, create an event, and event back to this core. */
+			return_event = spdk_event_allocate(spdk_env_get_current_core(), nvmf_tgt_create_poll_group_done,
+							   NULL, NULL);
+			event = spdk_event_allocate(g_tgt.core, nvmf_tgt_create_poll_group,
+						    return_event, NULL);
+			spdk_event_call(event);
 			break;
 		}
 		case NVMF_TGT_INIT_START_POLLER: {
-			struct nvmf_tgt_poll_group *pg;
-
-			pg = &g_poll_groups[g_tgt.core];
-			assert(pg != NULL);
+			struct nvmf_tgt_poll_group *pg = &g_poll_groups[g_tgt.core];
 
 			spdk_poller_register(&pg->poller,
 					     nvmf_tgt_poll_group_poll, pg,
