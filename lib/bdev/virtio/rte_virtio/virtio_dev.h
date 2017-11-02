@@ -71,6 +71,8 @@
  */
 #define SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED (UINT32_MAX - 1)
 
+struct virtio_pci_ops;
+
 struct virtio_dev {
 	struct virtqueue **vqs;
 
@@ -94,6 +96,9 @@ struct virtio_dev {
 
 	/** Mutex for asynchronous virtqueue-changing operations. */
 	pthread_mutex_t	mutex;
+
+	/** Backend-specific callbacks. */
+	const struct virtio_pci_ops *backend_ops;
 
 	/** Context for backend ops */
 	void		*ctx;
@@ -161,8 +166,6 @@ struct virtio_req {
 	int		is_write;
 	uint32_t	data_transferred;
 };
-
-struct virtio_pci_ops;
 
 /* Features desired/implemented by this driver. */
 #define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
