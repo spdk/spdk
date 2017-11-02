@@ -39,7 +39,26 @@
 #include "spdk/string.h"
 #include "spdk/env.h"
 
-#include "virtio_pci.h"
+#include "virtio_dev.h"
+
+struct virtio_hw {
+	uint8_t	    use_msix;
+	uint32_t    notify_off_multiplier;
+	uint8_t     *isr;
+	uint16_t    *notify_base;
+
+	struct {
+		/** Mem-mapped resources from given PCI BAR */
+		void        *vaddr;
+
+		/** Length of the address space */
+		uint32_t    len;
+	} pci_bar[6];
+
+	struct virtio_pci_common_cfg *common_cfg;
+	struct spdk_pci_device *pci_dev;
+	struct virtio_scsi_config *dev_cfg;
+};
 
 /*
  * Following macros are derived from linux/pci_regs.h, however,
@@ -462,7 +481,7 @@ err:
 }
 
 int
-vtpci_enumerate_pci(void)
+virtio_enumerate_pci(void)
 {
 	if (!spdk_process_is_primary()) {
 		SPDK_WARNLOG("virtio_pci secondary process support is not implemented yet.\n");

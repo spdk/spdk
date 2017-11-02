@@ -1081,7 +1081,7 @@ bdev_virtio_process_config(void)
 
 	enable_pci = spdk_conf_section_get_boolval(sp, "Enable", false);
 	if (enable_pci) {
-		rc = vtpci_enumerate_pci();
+		rc = virtio_enumerate_pci();
 	}
 
 out:
