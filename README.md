@@ -167,6 +167,13 @@ This script should be run as root.
 sudo scripts/setup.sh
 ~~~
 
+Users may wish to configure a specific memory size. Below is an example of
+configuring 8192MB memory.
+
+~~~{.sh}
+sudo HUGEMEM=8192 scripts/setup.sh
+~~~
+
 <a id="examples"></a>
 ## Example Code
 
