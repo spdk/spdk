@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ed97139f_2e9104f0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2410,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-02T17:54:35Z",
+      "side": 1,
+      "message": "Agreed.  I think we should have a new field called num_data_clusters.  This field can represent the total number of data clusters that are addressable.\n\nNote that num_free_clusters already represents the number of free data clusters.\n\nLet\u0027s make that a separate patch though, not associated with lvols.",
+      "parentUuid": "e91ccab6_a077b5a7",
+      "range": {
+        "startLine": 2410,
+        "startChar": 12,
+        "endLine": 2410,
+        "endChar": 26
+      },
+      "revId": "5d8a86f866a7376dd5d83432ed83e92b904898c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "27c3a15a_57eb9723",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 4
