@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e9ad8f6_9b480490",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-02T02:37:45Z",
+      "side": 1,
+      "message": "maybe say \"stops\" as \"stopped working\" can imply something broke",
+      "revId": "03eaca5f06ef20061d43b8d9e3a2833f1de55316",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
