@@ -416,7 +416,7 @@ virtio_dev_pci_init(struct virtio_dev *vdev)
 		return -1;
 	}
 
-	vtpci_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
+	virtio_dev_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
 			      &vdev->max_queues, sizeof(vdev->max_queues));
 	vdev->max_queues += SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED;
 	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
