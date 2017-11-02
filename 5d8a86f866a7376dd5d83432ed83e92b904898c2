@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27c3a15a_57eb9723",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 357,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-02T16:00:35Z",
+      "side": 1,
+      "message": "this is a bit awkward with ( on this line and bs) on the next line",
+      "revId": "5d8a86f866a7376dd5d83432ed83e92b904898c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
