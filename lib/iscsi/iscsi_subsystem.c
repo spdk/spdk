@@ -231,21 +231,18 @@ static const char *target_nodes_section = \
 static void
 spdk_iscsi_config_dump_target_nodes(FILE *fp)
 {
-	int t = 0, l = 0, m = 0;
+	int l = 0, m = 0;
 	struct spdk_scsi_dev *dev = NULL;
 	struct spdk_iscsi_tgt_node *target = NULL;
 
 	/* Create target nodes section */
 	fprintf(fp, "%s", target_nodes_section);
 
-	for (t = 0; t < MAX_ISCSI_TARGET_NODE; t++) {
+	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
 		int idx;
 		const char *authmethod = "None";
 		char authgroup[32] = "None";
 		const char *usedigest = "Auto";
-
-		target = g_spdk_iscsi.target[t];
-		if (NULL == target) continue;
 
 		dev = target->dev;
 		if (NULL == dev) continue;
