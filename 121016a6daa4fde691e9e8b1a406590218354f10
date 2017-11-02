@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "afa2e2b5_8484ef4f",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-02T21:52:42Z",
+      "side": 1,
+      "message": "The functions \u0027start_poller_fn\u0027 and \u0027stop_poller_fn\u0027 aren\u0027t called when a poller is started or stopped - they\u0027re called to request starting a poller or stopping a poller.",
+      "revId": "121016a6daa4fde691e9e8b1a406590218354f10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
