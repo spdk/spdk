@@ -201,7 +201,8 @@ virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queu
 	vdev = virtio_dev_construct(&virtio_user_ops, dev);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Failed to init device: %s\n", path);
-		goto err;
+		free(dev);
+		return NULL;
 	}
 
 	vdev->is_hw = 0;
@@ -243,7 +244,6 @@ virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queu
 	return vdev;
 
 err:
-	free(vdev->name);
-	free(dev);
+	virtio_dev_free(vdev);
 	return NULL;
 }
