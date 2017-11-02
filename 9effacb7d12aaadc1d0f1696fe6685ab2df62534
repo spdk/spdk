@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77afa690_8ca033c1",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 562,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-02T22:09:04Z",
+      "side": 1,
+      "message": "We should replace these perror() calls with SPDK_ERRLOG() and spdk_strerror_r() - can be a separate patch if you prefer to keep that apart from the code movement.",
+      "revId": "9effacb7d12aaadc1d0f1696fe6685ab2df62534",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91bbd59e_fc09d6af",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-02T22:09:04Z",
+      "side": 1,
+      "message": "This whole block could be replaced with spdk_conf_section_get_boolval().\n\n(We can do that in a separate patch if you prefer.)",
+      "revId": "9effacb7d12aaadc1d0f1696fe6685ab2df62534",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c89cdff7_d19b0635",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-02T22:09:04Z",
+      "side": 1,
+      "message": "Same here - this is actually a bool value and can use spdk_conf_section_get_boolval().",
+      "revId": "9effacb7d12aaadc1d0f1696fe6685ab2df62534",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
