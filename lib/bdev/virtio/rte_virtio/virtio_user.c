@@ -113,7 +113,7 @@ virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 	}
 
 	vdev->negotiated_features = features;
-	vdev->modern = vtpci_with_feature(vdev, VIRTIO_F_VERSION_1);
+	vdev->modern = virtio_dev_has_feature(vdev, VIRTIO_F_VERSION_1);
 
 	return 0;
 }
