@@ -43,6 +43,7 @@
 struct virtio_driver g_virtio_driver = {
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.init_ctrlrs),
 	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.attached_ctrlrs),
+	.ctrlr_counter = 0,
 };
 
 /*
@@ -519,27 +520,17 @@ struct virtio_dev *
 	struct virtio_dev *vdev;
 	unsigned vdev_num;
 
-	for (vdev_num = 0; vdev_num < VIRTIO_MAX_DEVICES; vdev_num++) {
-		if (g_virtio_driver.internal[vdev_num].vtpci_ops == NULL) {
-			break;
-		}
-	}
-
-	if (vdev_num == VIRTIO_MAX_DEVICES) {
-		SPDK_ERRLOG("Max vhost device limit reached (%u).\n", VIRTIO_MAX_DEVICES);
-		return NULL;
-	}
-
 	vdev = calloc(1, sizeof(*vdev));
 	if (vdev == NULL) {
 		SPDK_ERRLOG("virtio device calloc failed\n");
 		return NULL;
 	}
 
+	vdev_num = __sync_add_and_fetch(&g_virtio_driver.ctrlr_counter, 1);
 	vdev->id = vdev_num;
 	pthread_mutex_init(&vdev->mutex, NULL);
+	vdev->backend_ops = ops;
 	vdev->ctx = ctx;
-	g_virtio_driver.internal[vdev_num].vtpci_ops = ops;
 
 	return vdev;
 }
@@ -558,13 +549,7 @@ vtpci_enumerate_pci(void)
 const struct virtio_pci_ops *
 vtpci_ops(struct virtio_dev *dev)
 {
-	return g_virtio_driver.internal[dev->id].vtpci_ops;
-}
-
-void
-vtpci_deinit(uint32_t id)
-{
-	g_virtio_driver.internal[id].vtpci_ops = NULL;
+	return dev->backend_ops;
 }
 
 void
