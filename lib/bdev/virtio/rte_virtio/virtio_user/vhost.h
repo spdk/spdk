@@ -38,7 +38,7 @@
 
 #include "spdk_internal/log.h"
 
-#include "../virtio_pci.h"
+#include "../virtio_dev.h"
 
 struct vhost_vring_state {
 	unsigned int index;
