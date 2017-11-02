@@ -647,55 +647,7 @@ static void fio_init spdk_fio_register(void)
 	register_ioengine(&ioengine);
 }
 
-static void
-spdk_fio_module_finish_done(void *cb_arg)
-{
-	*(bool *)cb_arg = true;
-}
-
-static void
-spdk_fio_finish_env(void)
-{
-	struct thread_data		*td;
-	int				rc;
-	bool				done = false;
-
-	td = calloc(1, sizeof(*td));
-	if (!td) {
-		SPDK_ERRLOG("Unable to allocate thread_data\n");
-		return;
-	}
-	/* Create an SPDK thread temporarily */
-	rc = spdk_fio_init_thread(td);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to create finish thread\n");
-		free(td);
-		return;
-	}
-
-	spdk_bdev_finish(spdk_fio_module_finish_done, &done);
-
-	while (!done) {
-		spdk_fio_getevents(td, 0, 128, NULL);
-	}
-	done = false;
-
-	spdk_copy_engine_finish(spdk_fio_module_finish_done, &done);
-
-	while (!done) {
-		spdk_fio_getevents(td, 0, 128, NULL);
-	}
-
-	/* Destroy the temporary SPDK thread */
-	spdk_fio_cleanup(td);
-	free(td);
-}
-
 static void fio_exit spdk_fio_unregister(void)
 {
-	if (g_spdk_env_initialized) {
-		spdk_fio_finish_env();
-		g_spdk_env_initialized = false;
-	}
 	unregister_ioengine(&ioengine);
 }
