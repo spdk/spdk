@@ -378,6 +378,11 @@ vtpci_with_feature(struct virtio_dev *dev, uint64_t bit)
 
 void vtpci_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w);
 
+/**
+ * Init all compatible Virtio PCI devices.
+ */
+int virtio_enumerate_pci(void);
+
 extern const struct virtio_pci_ops virtio_user_ops;
 
 #endif /* _VIRTIO_DEV_H_ */
