@@ -354,6 +354,8 @@ _spdk_lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 		return;
 	}
 
+	lvs->total_blocks = (spdk_bs_get_cluster_size(bs) * spdk_bs_total_cluster_count(
+				     bs)) / spdk_bs_get_page_size(bs);
 	lvs->blobstore = bs;
 	lvs->bs_dev = req->bs_dev;
 	TAILQ_INIT(&lvs->lvols);
