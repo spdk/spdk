@@ -34,6 +34,8 @@
 #include "spdk/stdinc.h"
 
 #include <linux/virtio_scsi.h>
+#include <linux/virtio_pci.h>
+#include <linux/virtio_config.h>
 
 #include <rte_memcpy.h>
 #include <rte_string_fns.h>
@@ -50,9 +52,15 @@
 #include <rte_dev.h>
 #include <rte_prefetch.h>
 
-#include "virtio_user/vhost.h"
+#include "spdk/env.h"
+
 #include "virtio_dev.h"
-#include "virtio_pci.h"
+
+struct virtio_driver g_virtio_driver = {
+	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.init_ctrlrs),
+	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.attached_ctrlrs),
+	.ctrlr_counter = 0,
+};
 
 static void
 virtio_init_vring(struct virtqueue *vq)
@@ -256,6 +264,27 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	}
 
 	return 0;
+}
+
+struct virtio_dev *
+virtio_dev_alloc(const struct virtio_pci_ops *ops, void *ctx)
+{
+	struct virtio_dev *vdev;
+	unsigned vdev_num;
+
+	vdev = calloc(1, sizeof(*vdev));
+	if (vdev == NULL) {
+		SPDK_ERRLOG("virtio device calloc failed\n");
+		return NULL;
+	}
+
+	vdev_num = __sync_add_and_fetch(&g_virtio_driver.ctrlr_counter, 1);
+	vdev->id = vdev_num;
+	pthread_mutex_init(&vdev->mutex, NULL);
+	vdev->backend_ops = ops;
+	vdev->ctx = ctx;
+
+	return vdev;
 }
 
 /* reset device and renegotiate features if needed */
@@ -626,6 +655,66 @@ virtio_dev_release_queue(struct virtio_dev *vdev, uint16_t index)
 	assert(vq->owner_lcore == spdk_env_get_current_core());
 	vq->owner_lcore = SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED;
 	pthread_mutex_unlock(&vdev->mutex);
+}
+
+void
+vtpci_read_dev_config(struct virtio_dev *dev, size_t offset,
+		      void *dst, int length)
+{
+	vtpci_ops(dev)->read_dev_cfg(dev, offset, dst, length);
+}
+
+void
+vtpci_write_dev_config(struct virtio_dev *dev, size_t offset,
+		       const void *src, int length)
+{
+	vtpci_ops(dev)->write_dev_cfg(dev, offset, src, length);
+}
+
+void
+vtpci_reset(struct virtio_dev *dev)
+{
+	vtpci_ops(dev)->set_status(dev, VIRTIO_CONFIG_S_RESET);
+	/* flush status write */
+	vtpci_ops(dev)->get_status(dev);
+}
+
+void
+vtpci_set_status(struct virtio_dev *dev, uint8_t status)
+{
+	if (status != VIRTIO_CONFIG_S_RESET)
+		status |= vtpci_ops(dev)->get_status(dev);
+
+	vtpci_ops(dev)->set_status(dev, status);
+}
+
+uint8_t
+vtpci_get_status(struct virtio_dev *dev)
+{
+	return vtpci_ops(dev)->get_status(dev);
+}
+
+const struct virtio_pci_ops *
+vtpci_ops(struct virtio_dev *dev)
+{
+	return dev->backend_ops;
+}
+
+void
+vtpci_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w)
+{
+	spdk_json_write_name(w, "virtio");
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "vq_count");
+	spdk_json_write_uint32(w, hw->max_queues);
+
+	spdk_json_write_name(w, "vq_size");
+	spdk_json_write_uint32(w, vtpci_ops(hw)->get_queue_num(hw, 0));
+
+	vtpci_ops(hw)->dump_json_config(hw, w);
+
+	spdk_json_write_object_end(w);
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio_dev", SPDK_TRACE_VIRTIO_DEV)
