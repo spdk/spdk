@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f342e0b7_868db7f9",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-02T21:28:08Z",
+      "side": 1,
+      "message": "\"name\" should be aligned with other data members",
+      "revId": "f57a5212a6ae6674f4ae763d52fd61ddac1f664d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d41aea60_f35da143",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-02T21:28:08Z",
+      "side": 1,
+      "message": "would it be better to do this allocation after the other malloc, and before the spdk_bdev_open?",
+      "revId": "f57a5212a6ae6674f4ae763d52fd61ddac1f664d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
