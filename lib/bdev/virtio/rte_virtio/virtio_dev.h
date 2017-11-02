@@ -95,6 +95,9 @@ struct virtio_dev {
 	/** Mutex for asynchronous virtqueue-changing operations. */
 	pthread_mutex_t	mutex;
 
+	/** Context for backend ops */
+	void		*ctx;
+
 	TAILQ_ENTRY(virtio_dev) tailq;
 };
 
@@ -159,6 +162,8 @@ struct virtio_req {
 	uint32_t	data_transferred;
 };
 
+struct virtio_pci_ops;
+
 /* Features desired/implemented by this driver. */
 #define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
 	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
@@ -179,6 +184,15 @@ uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
  * device owning the virtqueue is not started -EIO is returned.
  */
 int virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req);
+
+/**
+ * Construct virtio device.  This will set vdev->id field.
+ * The device has to be freed with \c virtio_dev_free.
+ *
+ * \param ops backend callbacks
+ * \param ctx argument for the backend callbacks
+ */
+struct virtio_dev *virtio_dev_alloc(const struct virtio_pci_ops *ops, void *ctx);
 
 int virtio_dev_init(struct virtio_dev *hw, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);

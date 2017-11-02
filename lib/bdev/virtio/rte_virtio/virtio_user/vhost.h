@@ -107,7 +107,7 @@ struct virtio_user_dev;
 
 struct virtio_user_backend_ops {
 	int (*setup)(struct virtio_user_dev *dev);
-	int (*send_request)(struct virtio_user_dev *dev,
+	int (*send_request)(struct virtio_dev *vdev,
 			    enum vhost_user_request req,
 			    void *arg);
 };

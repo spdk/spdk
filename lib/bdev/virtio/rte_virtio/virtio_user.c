@@ -47,8 +47,8 @@
 
 #include "spdk/string.h"
 
-#define virtio_dev_get_user_dev(dev) \
-	((struct virtio_user_dev *)((uintptr_t)(dev) - offsetof(struct virtio_user_dev, vdev)))
+#define virtio_dev_get_user_dev(vdev) \
+	((struct virtio_user_dev *)vdev->ctx)
 
 static void
 virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
@@ -70,10 +70,10 @@ virtio_user_set_status(struct virtio_dev *vdev, uint8_t status)
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	if (status & VIRTIO_CONFIG_S_DRIVER_OK) {
-		virtio_user_start_device(dev);
+		virtio_user_start_device(vdev);
 	} else if (status == VIRTIO_CONFIG_S_RESET &&
 		   (dev->status & VIRTIO_CONFIG_S_DRIVER_OK)) {
-		virtio_user_stop_device(dev);
+		virtio_user_stop_device(vdev);
 	}
 	dev->status = status;
 }
@@ -93,7 +93,7 @@ virtio_user_get_features(struct virtio_dev *vdev)
 	char err_str[64];
 	uint64_t features;
 
-	if (dev->ops->send_request(dev, VHOST_USER_GET_FEATURES, &features) < 0) {
+	if (dev->ops->send_request(vdev, VHOST_USER_GET_FEATURES, &features) < 0) {
 		spdk_strerror_r(errno, err_str, sizeof(err_str));
 		SPDK_ERRLOG("get_features failed: %s\n", err_str);
 		return 0;
@@ -108,7 +108,7 @@ virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 	int ret;
 
-	ret = dev->ops->send_request(dev, VHOST_USER_SET_FEATURES, &features);
+	ret = dev->ops->send_request(vdev, VHOST_USER_SET_FEATURES, &features);
 	if (ret < 0) {
 		return -1;
 	}
@@ -222,6 +222,7 @@ virtio_user_free(struct virtio_dev *vdev)
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
 	virtio_user_dev_uninit(dev);
+	free(vdev->name);
 }
 
 static void

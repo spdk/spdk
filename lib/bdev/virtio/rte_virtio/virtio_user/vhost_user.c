@@ -279,12 +279,13 @@ const char *const vhost_msg_strings[] = {
 };
 
 static int
-vhost_user_sock(struct virtio_user_dev *dev,
+vhost_user_sock(struct virtio_dev *vdev,
 		enum vhost_user_request req,
 		void *arg)
 {
 	struct vhost_user_msg msg;
 	struct vhost_vring_file *file = 0;
+	struct virtio_user_dev *dev = (struct virtio_user_dev *) vdev->ctx;
 	char err_str[64];
 	int need_reply = 0;
 	int fds[VHOST_MEMORY_MAX_NREGIONS];

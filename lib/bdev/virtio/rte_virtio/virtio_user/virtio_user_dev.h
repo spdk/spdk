@@ -45,8 +45,6 @@
 #define VIRTIO_MAX_VIRTQUEUES 0x100
 
 struct virtio_user_dev {
-	struct virtio_dev vdev;
-
 	/* for vhost_user backend */
 	int		vhostfd;
 
@@ -61,8 +59,8 @@ struct virtio_user_dev {
 	struct virtio_user_backend_ops *ops;
 };
 
-int virtio_user_start_device(struct virtio_user_dev *dev);
-int virtio_user_stop_device(struct virtio_user_dev *dev);
+int virtio_user_start_device(struct virtio_dev *vdev);
+int virtio_user_stop_device(struct virtio_dev *vdev);
 
 /**
  * Connect to a vhost-user device and create corresponding virtio_dev.

@@ -54,8 +54,8 @@ struct virtio_driver g_virtio_driver = {
 #define PCI_CAP_ID_VNDR		0x09
 #define PCI_CAP_ID_MSIX		0x11
 
-#define virtio_dev_get_hw(hw) \
-	((struct virtio_hw *)((uintptr_t)(hw) - offsetof(struct virtio_hw, vdev)))
+#define virtio_dev_get_hw(vdev) \
+	((struct virtio_hw *)vdev->ctx)
 
 static inline int
 check_vq_phys_addr_ok(struct virtqueue *vq)
@@ -462,8 +462,6 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		return -1;
 	}
 
-	vdev = &hw->vdev;
-	vdev->is_hw = 1;
 	hw->pci_dev = pci_dev;
 
 	for (i = 0; i < 6; ++i) {
@@ -486,10 +484,11 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		goto err;
 	}
 
-	rc = vtpci_init(vdev, &modern_ops);
-	if (rc != 0) {
+	vdev = virtio_dev_alloc(&modern_ops, hw);
+	if (vdev == NULL) {
 		goto err;
 	}
+	vdev->is_hw = 1;
 	vdev->modern = 1;
 
 	rc = virtio_dev_pci_init(vdev);
@@ -505,9 +504,10 @@ err:
 	return -1;
 }
 
-int
-vtpci_init(struct virtio_dev *vdev, const struct virtio_pci_ops *ops)
+struct virtio_dev *
+virtio_dev_alloc(const struct virtio_pci_ops *ops, void *ctx)
 {
+	struct virtio_dev *vdev;
 	unsigned vdev_num;
 
 	for (vdev_num = 0; vdev_num < VIRTIO_MAX_DEVICES; vdev_num++) {
@@ -518,14 +518,21 @@ vtpci_init(struct virtio_dev *vdev, const struct virtio_pci_ops *ops)
 
 	if (vdev_num == VIRTIO_MAX_DEVICES) {
 		SPDK_ERRLOG("Max vhost device limit reached (%u).\n", VIRTIO_MAX_DEVICES);
-		return -ENOSPC;
+		return NULL;
+	}
+
+	vdev = calloc(1, sizeof(*vdev));
+	if (vdev == NULL) {
+		SPDK_ERRLOG("virtio device calloc failed\n");
+		return NULL;
 	}
 
 	vdev->id = vdev_num;
 	pthread_mutex_init(&vdev->mutex, NULL);
+	vdev->ctx = ctx;
 	g_virtio_driver.internal[vdev_num].vtpci_ops = ops;
 
-	return 0;
+	return vdev;
 }
 
 int

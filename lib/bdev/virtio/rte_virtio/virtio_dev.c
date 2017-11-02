@@ -291,6 +291,8 @@ virtio_dev_free(struct virtio_dev *dev)
 	virtio_free_queues(dev);
 	vtpci_ops(dev)->free_vdev(dev);
 	vtpci_deinit(vdev_id);
+	pthread_mutex_destroy(&dev->mutex);
+	free(dev);
 }
 
 int
