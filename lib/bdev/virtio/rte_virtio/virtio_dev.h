@@ -357,26 +357,80 @@ bool virtio_dev_queue_is_acquired(struct virtio_dev *vdev, uint16_t index);
  */
 void virtio_dev_release_queue(struct virtio_dev *vdev, uint16_t index);
 
-void vtpci_reset(struct virtio_dev *);
+/**
+ * Reset given virtio device.  This will leave the device in unusable state.
+ * To reuse the device, call \c virtio_dev_init.
+ *
+ * \param vdev virtio device
+ */
+void virtio_dev_reset(struct virtio_dev *vdev);
 
-uint8_t vtpci_get_status(struct virtio_dev *);
-void vtpci_set_status(struct virtio_dev *, uint8_t);
+/**
+ * Get Virtio status flags.
+ *
+ * \param vdev virtio device
+ */
+uint8_t virtio_dev_get_status(struct virtio_dev *vdev);
 
-uint64_t vtpci_negotiate_features(struct virtio_dev *, uint64_t);
+/**
+ * Set Virtio status flag.  Unless the flag is \c VIRTIO_CONFIG_S_RESET,
+ * it will be bitwise-and'ed with current status flags. To unset the flags,
+ * call \c virtio_dev_reset or set \c VIRTIO_CONFIG_S_RESET flag. There is
+ * no way to unset particular flags.
+ *
+ * \param vdev virtio device
+ * \param flag flag to set
+ */
+void virtio_dev_set_status(struct virtio_dev *vdev, uint8_t flag);
 
-void vtpci_write_dev_config(struct virtio_dev *, size_t, const void *, int);
+/**
+ * Write raw data into the device config at given offset.  This call does not
+ * provide any error checking.
+ *
+ * \param vdev virtio device
+ * \param offset offset in bytes
+ * \param src pointer to data to copy from
+ * \param len length of data to copy in bytes
+ */
+void virtio_dev_write_dev_config(struct virtio_dev *vdev, size_t offset, const void *src, int len);
 
-void vtpci_read_dev_config(struct virtio_dev *, size_t, void *, int);
+/**
+ * Read raw data from the device config at given offset.  This call does not
+ * provide any error checking.
+ *
+ * \param vdev virtio device
+ * \param offset offset in bytes
+ * \param dst pointer to buffer to copy data into
+ * \param len length of data to copy in bytes
+ */
+void virtio_dev_read_dev_config(struct virtio_dev *vdev, size_t offset, void *dst, int len);
 
-const struct virtio_pci_ops *vtpci_ops(struct virtio_dev *dev);
+/**
+ * Get backend-specific ops for given device.
+ *
+ * \param vdev virtio device
+ */
+const struct virtio_pci_ops *virtio_dev_backend_ops(struct virtio_dev *vdev);
 
-static inline int
-vtpci_with_feature(struct virtio_dev *dev, uint64_t bit)
+/**
+ * Check if the device has negotiated given feature bit.
+ *
+ * \param vdev virtio device
+ * \param bit feature bit
+ */
+static inline bool
+virtio_dev_has_feature(struct virtio_dev *vdev, uint64_t bit)
 {
-	return (dev->negotiated_features & (1ULL << bit)) != 0;
+	return !!(vdev->negotiated_features & (1ULL << bit));
 }
 
-void vtpci_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w);
+/**
+ * Dump all device specific information into given json stream.
+ *
+ * \param vdev virtio device
+ * \param w json stream
+ */
+void virtio_dev_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write_ctx *w);
 
 /**
  * Init all compatible Virtio PCI devices.

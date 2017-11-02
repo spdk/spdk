@@ -387,7 +387,7 @@ bdev_virtio_dump_json_config(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct virtio_scsi_disk *disk = ctx;
 
-	vtpci_dump_json_config(disk->vdev, w);
+	virtio_dev_dump_json_config(disk->vdev, w);
 	return 0;
 }
 
@@ -576,7 +576,7 @@ scan_target_abort(struct virtio_scsi_scan_base *base, int error)
 	}
 
 	TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, base->vdev, tailq);
-	vtpci_reset(base->vdev);
+	virtio_dev_reset(base->vdev);
 	virtio_dev_free(base->vdev);
 
 
@@ -1101,7 +1101,7 @@ bdev_virtio_scsi_free(struct virtio_dev *vdev)
 		virtio_dev_release_queue(vdev, VIRTIO_SCSI_REQUESTQ);
 	}
 
-	vtpci_reset(vdev);
+	virtio_dev_reset(vdev);
 	virtio_dev_free(vdev);
 }
 
@@ -1221,7 +1221,7 @@ bdev_virtio_finish(void)
 			vq->poller_ctx = NULL;
 			virtio_dev_release_queue(vdev, VIRTIO_SCSI_CONTROLQ);
 		}
-		vtpci_reset(vdev);
+		virtio_dev_reset(vdev);
 		virtio_dev_free(vdev);
 	}
 }

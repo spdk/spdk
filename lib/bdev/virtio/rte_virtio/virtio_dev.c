@@ -104,7 +104,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	 * Read the virtqueue size from the Queue Size field
 	 * Always power of 2 and if 0 virtqueue does not exist
 	 */
-	vq_size = vtpci_ops(dev)->get_queue_num(dev, vtpci_queue_idx);
+	vq_size = virtio_dev_backend_ops(dev)->get_queue_num(dev, vtpci_queue_idx);
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "vq_size: %u\n", vq_size);
 	if (vq_size == 0) {
 		SPDK_ERRLOG("virtqueue %"PRIu16" does not exist\n", vtpci_queue_idx);
@@ -172,7 +172,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	vq->owner_lcore = SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED;
 	vq->poller = NULL;
 
-	if (vtpci_ops(dev)->setup_queue(dev, vq) < 0) {
+	if (virtio_dev_backend_ops(dev)->setup_queue(dev, vq) < 0) {
 		SPDK_ERRLOG("setup_queue failed\n");
 		return -EINVAL;
 	}
@@ -242,13 +242,13 @@ virtio_alloc_queues(struct virtio_dev *dev)
 static int
 virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 {
-	uint64_t host_features = vtpci_ops(dev)->get_features(dev);
+	uint64_t host_features = virtio_dev_backend_ops(dev)->get_features(dev);
 	int rc;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "guest features = %" PRIx64 "\n", req_features);
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "device features = %" PRIx64 "\n", host_features);
 
-	rc = vtpci_ops(dev)->set_features(dev, req_features & host_features);
+	rc = virtio_dev_backend_ops(dev)->set_features(dev, req_features & host_features);
 	if (rc != 0) {
 		SPDK_ERRLOG("failed to negotiate device features.\n");
 		return -1;
@@ -257,8 +257,8 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "negotiated features = %" PRIx64 "\n",
 		      dev->negotiated_features);
 
-	vtpci_set_status(dev, VIRTIO_CONFIG_S_FEATURES_OK);
-	if (!(vtpci_get_status(dev) & VIRTIO_CONFIG_S_FEATURES_OK)) {
+	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_FEATURES_OK);
+	if (!(virtio_dev_get_status(dev) & VIRTIO_CONFIG_S_FEATURES_OK)) {
 		SPDK_ERRLOG("failed to set FEATURES_OK status!\n");
 		return -1;
 	}
@@ -294,13 +294,13 @@ virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 	int ret;
 
 	/* Reset the device although not necessary at startup */
-	vtpci_reset(dev);
+	virtio_dev_reset(dev);
 
 	/* Tell the host we've noticed this device. */
-	vtpci_set_status(dev, VIRTIO_CONFIG_S_ACKNOWLEDGE);
+	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_ACKNOWLEDGE);
 
 	/* Tell the host we've known how to drive the device. */
-	vtpci_set_status(dev, VIRTIO_CONFIG_S_DRIVER);
+	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_DRIVER);
 	if (virtio_negotiate_features(dev, req_features) < 0)
 		return -1;
 
@@ -308,7 +308,7 @@ virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 	if (ret < 0)
 		return ret;
 
-	vtpci_set_status(dev, VIRTIO_CONFIG_S_DRIVER_OK);
+	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_DRIVER_OK);
 	return 0;
 }
 
@@ -316,7 +316,7 @@ void
 virtio_dev_free(struct virtio_dev *dev)
 {
 	virtio_free_queues(dev);
-	vtpci_ops(dev)->free_vdev(dev);
+	virtio_dev_backend_ops(dev)->free_vdev(dev);
 	pthread_mutex_destroy(&dev->mutex);
 	free(dev);
 }
@@ -549,7 +549,7 @@ virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req)
 	vq_update_avail_idx(vq);
 
 	if (spdk_unlikely(virtqueue_kick_prepare(vq))) {
-		vtpci_ops(vdev)->notify_queue(vdev, vq);
+		virtio_dev_backend_ops(vdev)->notify_queue(vdev, vq);
 		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "Notified backend after xmit\n");
 	}
 
@@ -658,50 +658,50 @@ virtio_dev_release_queue(struct virtio_dev *vdev, uint16_t index)
 }
 
 void
-vtpci_read_dev_config(struct virtio_dev *dev, size_t offset,
-		      void *dst, int length)
+virtio_dev_read_dev_config(struct virtio_dev *dev, size_t offset,
+			   void *dst, int length)
 {
-	vtpci_ops(dev)->read_dev_cfg(dev, offset, dst, length);
+	virtio_dev_backend_ops(dev)->read_dev_cfg(dev, offset, dst, length);
 }
 
 void
-vtpci_write_dev_config(struct virtio_dev *dev, size_t offset,
-		       const void *src, int length)
+virtio_dev_write_dev_config(struct virtio_dev *dev, size_t offset,
+			    const void *src, int length)
 {
-	vtpci_ops(dev)->write_dev_cfg(dev, offset, src, length);
+	virtio_dev_backend_ops(dev)->write_dev_cfg(dev, offset, src, length);
 }
 
 void
-vtpci_reset(struct virtio_dev *dev)
+virtio_dev_reset(struct virtio_dev *dev)
 {
-	vtpci_ops(dev)->set_status(dev, VIRTIO_CONFIG_S_RESET);
+	virtio_dev_backend_ops(dev)->set_status(dev, VIRTIO_CONFIG_S_RESET);
 	/* flush status write */
-	vtpci_ops(dev)->get_status(dev);
+	virtio_dev_backend_ops(dev)->get_status(dev);
 }
 
 void
-vtpci_set_status(struct virtio_dev *dev, uint8_t status)
+virtio_dev_set_status(struct virtio_dev *dev, uint8_t status)
 {
 	if (status != VIRTIO_CONFIG_S_RESET)
-		status |= vtpci_ops(dev)->get_status(dev);
+		status |= virtio_dev_backend_ops(dev)->get_status(dev);
 
-	vtpci_ops(dev)->set_status(dev, status);
+	virtio_dev_backend_ops(dev)->set_status(dev, status);
 }
 
 uint8_t
-vtpci_get_status(struct virtio_dev *dev)
+virtio_dev_get_status(struct virtio_dev *dev)
 {
-	return vtpci_ops(dev)->get_status(dev);
+	return virtio_dev_backend_ops(dev)->get_status(dev);
 }
 
 const struct virtio_pci_ops *
-vtpci_ops(struct virtio_dev *dev)
+virtio_dev_backend_ops(struct virtio_dev *dev)
 {
 	return dev->backend_ops;
 }
 
 void
-vtpci_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w)
+virtio_dev_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_name(w, "virtio");
 	spdk_json_write_object_begin(w);
@@ -710,9 +710,9 @@ vtpci_dump_json_config(struct virtio_dev *hw, struct spdk_json_write_ctx *w)
 	spdk_json_write_uint32(w, hw->max_queues);
 
 	spdk_json_write_name(w, "vq_size");
-	spdk_json_write_uint32(w, vtpci_ops(hw)->get_queue_num(hw, 0));
+	spdk_json_write_uint32(w, virtio_dev_backend_ops(hw)->get_queue_num(hw, 0));
 
-	vtpci_ops(hw)->dump_json_config(hw, w);
+	virtio_dev_backend_ops(hw)->dump_json_config(hw, w);
 
 	spdk_json_write_object_end(w);
 }
