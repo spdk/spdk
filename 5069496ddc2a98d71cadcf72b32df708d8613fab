@@ -16,6 +16,24 @@
       "revId": "5069496ddc2a98d71cadcf72b32df708d8613fab",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e669fc7b_98c722db",
+        "filename": "lib/blobfs/tree.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-02T03:06:44Z",
+      "side": 0,
+      "message": "Hi Paul, for this part, I add the CACHE_BUFFER_SHIFT_DEFAULT for default value for the cache buffer shift to avoid hardcode 18, please review this and for the global g_fs_cache_buffer_shift, I try to make the minimal impact for other definitions rely on CACHE_BUFFER_SHIFT, I am not catch your point very well, so could you please give more detail about remove the g_fs_cache_buffer_shift?",
+      "parentUuid": "dd1f3d13_075f9b8a",
+      "revId": "5069496ddc2a98d71cadcf72b32df708d8613fab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
