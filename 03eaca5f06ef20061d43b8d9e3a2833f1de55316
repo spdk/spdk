@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "5862847c_038be1b4",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-02T03:57:03Z",
+      "side": 1,
+      "message": "\"initialization\" may be more proper.",
+      "range": {
+        "startLine": 130,
+        "startChar": 32,
+        "endLine": 130,
+        "endChar": 39
+      },
+      "revId": "03eaca5f06ef20061d43b8d9e3a2833f1de55316",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e9ad8f6_9b480490",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 4
@@ -13,6 +36,75 @@
       "writtenOn": "2017-11-02T02:37:45Z",
       "side": 1,
       "message": "maybe say \"stops\" as \"stopped working\" can imply something broke",
+      "revId": "03eaca5f06ef20061d43b8d9e3a2833f1de55316",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e9a42b0_cfcd56b5",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-02T03:57:03Z",
+      "side": 1,
+      "message": "Maybe just:\n\nPerform cleanup work when removing the registered bdev module.",
+      "range": {
+        "startLine": 140,
+        "startChar": 3,
+        "endLine": 140,
+        "endChar": 101
+      },
+      "revId": "03eaca5f06ef20061d43b8d9e3a2833f1de55316",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a69ab4a9_df4ec422",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-02T03:57:03Z",
+      "side": 1,
+      "message": "\"removal\" may be more proper.",
+      "range": {
+        "startLine": 142,
+        "startChar": 32,
+        "endLine": 142,
+        "endChar": 39
+      },
+      "revId": "03eaca5f06ef20061d43b8d9e3a2833f1de55316",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0abd2a2_279af94b",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-02T03:57:03Z",
+      "side": 1,
+      "message": "Prefer to have a specific comment for these two functions. Thanks.",
+      "range": {
+        "startLine": 167,
+        "startChar": 0,
+        "endLine": 167,
+        "endChar": 57
+      },
       "revId": "03eaca5f06ef20061d43b8d9e3a2833f1de55316",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
