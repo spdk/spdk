@@ -507,7 +507,7 @@ virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkt
 
 	nb_used = VIRTQUEUE_NUSED(vq);
 
-	virtio_rmb();
+	spdk_compiler_barrier();
 
 	num = (uint16_t)(spdk_likely(nb_used <= nb_pkts) ? nb_used : nb_pkts);
 	num = (uint16_t)(spdk_likely(num <= VIRTIO_MBUF_BURST_SZ) ? num : VIRTIO_MBUF_BURST_SZ);
@@ -539,7 +539,7 @@ virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req)
 	if (spdk_unlikely(vdev->started == 0))
 		return -EIO;
 
-	virtio_rmb();
+	spdk_compiler_barrier();
 
 	rc = virtqueue_enqueue_xmit(vq, req);
 	if (spdk_unlikely(rc != 0)) {

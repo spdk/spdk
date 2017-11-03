@@ -40,24 +40,13 @@
 #include <linux/virtio_pci.h>
 #include <linux/virtio_config.h>
 
-#include <rte_memory.h>
 #include <rte_mempool.h>
 
 #include "spdk_internal/log.h"
 #include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/json.h"
-
-/*
- * Per virtio_config.h in Linux.
- *     For virtio_pci on SMP, we don't need to order with respect to MMIO
- *     accesses through relaxed memory I/O windows, so smp_mb() et al are
- *     sufficient.
- *
- */
-#define virtio_mb()	rte_smp_mb()
-#define virtio_rmb()	rte_smp_rmb()
-#define virtio_wmb()	rte_smp_wmb()
+#include "spdk/barrier.h"
 
 #define VIRTQUEUE_MAX_NAME_SZ 32
 
@@ -283,7 +272,7 @@ virtqueue_full(const struct virtqueue *vq)
 static inline void
 vq_update_avail_idx(struct virtqueue *vq)
 {
-	virtio_wmb();
+	spdk_compiler_barrier();
 	vq->vq_ring.avail->idx = vq->vq_avail_idx;
 }
 
