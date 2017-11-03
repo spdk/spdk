@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31dea1b9_66d65cde",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T09:46:53Z",
+      "side": 1,
+      "message": "You have fio_bin variable pointing to fio binary. I think you should use that instead of just checking if the directory exists.\nAlso - after \"if\" you should somehow notify of error if condition failed.",
+      "range": {
+        "startLine": 196,
+        "startChar": 4,
+        "endLine": 196,
+        "endChar": 20
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63b5de2a_dacdf0c7",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T09:46:53Z",
+      "side": 1,
+      "message": "Isn\u0027t that already done in line 91?",
+      "range": {
+        "startLine": 225,
+        "startChar": 8,
+        "endLine": 225,
+        "endChar": 56
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "054b1aaf_42c42d38",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T09:46:53Z",
+      "side": 1,
+      "message": "Why not just pass whole $bdevs here?\nprepare+fio_job_for_unmap loops over all provided bdevs and creates a config which runs once over all disks instead of doing it multiple times",
+      "range": {
+        "startLine": 228,
+        "startChar": 42,
+        "endLine": 228,
+        "endChar": 57
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cce27c2_8bbabdea",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T09:46:53Z",
+      "side": 1,
+      "message": "It\u0027s the same loop as in 213 - can these be merged?",
+      "range": {
+        "startLine": 235,
+        "startChar": 8,
+        "endLine": 235,
+        "endChar": 36
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd0c5f08_60a4bc25",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T09:46:53Z",
+      "side": 1,
+      "message": "\"run_host_fio\" already does that",
+      "range": {
+        "startLine": 243,
+        "startChar": 16,
+        "endLine": 244,
+        "endChar": 40
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
