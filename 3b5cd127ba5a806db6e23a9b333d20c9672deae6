@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "c7a3815b_b7ce57ce",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T09:53:00Z",
+      "side": 1,
+      "message": "fix: over $vbdevs",
+      "parentUuid": "054b1aaf_42c42d38",
+      "range": {
+        "startLine": 228,
+        "startChar": 42,
+        "endLine": 228,
+        "endChar": 57
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7cce27c2_8bbabdea",
         "filename": "test/vhost/initiator/blockdev.sh",
         "patchSetId": 47
