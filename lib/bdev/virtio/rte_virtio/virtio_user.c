@@ -256,13 +256,6 @@ err:
 }
 
 static void
-virtio_user_dev_uninit(struct virtio_user_dev *dev)
-{
-	close(dev->vhostfd);
-	free(dev);
-}
-
-static void
 virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 			    void *dst, int length)
 {
@@ -433,7 +426,8 @@ virtio_user_free(struct virtio_dev *vdev)
 {
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
-	virtio_user_dev_uninit(dev);
+	close(dev->vhostfd);
+	free(dev);
 	free(vdev->name);
 }
 
