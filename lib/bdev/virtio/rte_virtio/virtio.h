@@ -31,8 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef _VIRTIO_DEV_H_
-#define _VIRTIO_DEV_H_
+#ifndef SPDK_VIRTIO_H
+#define SPDK_VIRTIO_H
 
 #include "spdk/stdinc.h"
 
@@ -456,4 +456,4 @@ struct virtio_dev *virtio_user_dev_init(const char *name, const char *path,
 
 extern const struct virtio_pci_ops virtio_user_ops;
 
-#endif /* _VIRTIO_DEV_H_ */
+#endif /* SPDK_VIRTIO_H */

@@ -41,8 +41,8 @@
 #include <rte_vdev.h>
 #include <rte_alarm.h>
 
-#include "virtio_dev.h"
 #include "virtio_user/vhost.h"
+#include "virtio.h"
 
 #include "spdk/string.h"
 

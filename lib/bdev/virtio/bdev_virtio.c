@@ -48,8 +48,7 @@
 
 #include <linux/virtio_scsi.h>
 
-#include <virtio_dev.h>
-
+#include "rte_virtio/virtio.h"
 #include "bdev_virtio.h"
 
 #define BDEV_VIRTIO_MAX_TARGET 64
