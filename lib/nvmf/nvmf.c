@@ -191,12 +191,12 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_
 }
 
 void
-spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt)
+spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn)
 {
 	struct spdk_nvmf_transport *transport, *tmp;
 
 	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, tmp) {
-		spdk_nvmf_transport_accept(transport);
+		spdk_nvmf_transport_accept(transport, cb_fn);
 	}
 }
 
@@ -311,6 +311,8 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	int rc = -1;
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
+	qpair->group = group;
+
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
 			rc = spdk_nvmf_transport_poll_group_add(tgroup, qpair);
@@ -327,6 +329,8 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 {
 	int rc = -1;
 	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	qpair->group = NULL;
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {

@@ -44,17 +44,6 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
-void
-spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
-{
-	struct spdk_nvmf_ctrlr *ctrlr;
-
-	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
-		/* For each connection in the ctrlr, check for completions */
-		spdk_nvmf_ctrlr_poll(ctrlr);
-	}
-}
-
 static bool
 spdk_nvmf_valid_nqn(const char *nqn)
 {

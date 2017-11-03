@@ -132,12 +132,6 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 int
-spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
-{
-	return -1;
-}
-
-int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 	       void *remove_ctx, struct spdk_bdev_desc **desc)
 {

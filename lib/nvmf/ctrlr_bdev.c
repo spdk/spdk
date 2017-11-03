@@ -380,7 +380,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_io_channel *ch;
-	struct spdk_nvmf_poll_group *group = req->qpair->ctrlr->group;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
 	struct spdk_nvmf_subsystem *subsystem = req->qpair->ctrlr->subsys;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;

@@ -73,13 +73,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
-	ctrlr->group = spdk_nvmf_poll_group_create(subsystem->tgt);
-	if (ctrlr->group == NULL) {
-		SPDK_ERRLOG("spdk_nvmf_transport_poll_group_create() failed\n");
-		free(ctrlr);
-		return NULL;
-	}
-
 	TAILQ_INIT(&ctrlr->qpairs);
 	ctrlr->kato = connect_cmd->kato;
 	ctrlr->async_event_config.raw = 0;
@@ -88,12 +81,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->max_qpairs_allowed = tgt->opts.max_qpairs_per_ctrlr;
 
 	memcpy(ctrlr->hostid, connect_data->hostid, sizeof(ctrlr->hostid));
-
-	if (spdk_nvmf_poll_group_add(ctrlr->group, admin_qpair)) {
-		spdk_nvmf_poll_group_destroy(ctrlr->group);
-		free(ctrlr);
-		return NULL;
-	}
 
 	ctrlr->vcprop.cap.raw = 0;
 	ctrlr->vcprop.cap.bits.cqr = 1; /* NVMe-oF specification required */
@@ -123,7 +110,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 
 	if (spdk_nvmf_subsystem_add_ctrlr(subsystem, ctrlr)) {
 		SPDK_ERRLOG("Unable to add controller to subsystem\n");
-		spdk_nvmf_poll_group_destroy(ctrlr->group);
 		free(ctrlr);
 		return NULL;
 	}
@@ -134,7 +120,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 static void ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
-	spdk_nvmf_poll_group_destroy(ctrlr->group);
 	free(ctrlr);
 }
 
@@ -317,11 +302,6 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 			rsp->status.sc = SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
-
-		if (spdk_nvmf_poll_group_add(ctrlr->group, qpair)) {
-			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, qid);
-			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-		}
 	}
 
 	assert(qpair->thread == NULL);
@@ -347,7 +327,6 @@ spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair)
 	ctrlr->num_qpairs--;
 	TAILQ_REMOVE(&ctrlr->qpairs, qpair, link);
 
-	spdk_nvmf_poll_group_remove(ctrlr->group, qpair);
 	spdk_nvmf_transport_qpair_fini(qpair);
 
 	if (ctrlr->num_qpairs == 0) {
@@ -587,12 +566,6 @@ spdk_nvmf_property_set(struct spdk_nvmf_request *req)
 	}
 
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-}
-
-int
-spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
-{
-	return spdk_nvmf_poll_group_poll(ctrlr->group);
 }
 
 static int

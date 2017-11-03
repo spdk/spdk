@@ -46,6 +46,15 @@
 #include "spdk/queue.h"
 
 struct spdk_nvmf_tgt;
+struct spdk_nvmf_subsystem;
+struct spdk_nvmf_ctrlr;
+struct spdk_nvmf_qpair;
+struct spdk_nvmf_request;
+struct spdk_bdev;
+struct spdk_nvmf_request;
+struct spdk_nvmf_host;
+struct spdk_nvmf_listener;
+struct spdk_nvmf_poll_group;
 
 struct spdk_nvmf_tgt_opts {
 	uint16_t max_queue_depth;
@@ -86,20 +95,12 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
 int spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 			 struct spdk_nvme_transport_id *trid);
 
+typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
+
 /**
  * Poll the target for incoming connections.
  */
-void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt);
-
-struct spdk_nvmf_subsystem;
-struct spdk_nvmf_ctrlr;
-struct spdk_nvmf_qpair;
-struct spdk_nvmf_request;
-struct spdk_bdev;
-struct spdk_nvmf_request;
-struct spdk_nvmf_host;
-struct spdk_nvmf_listener;
-struct spdk_nvmf_poll_group;
+void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt, new_qpair_fn cb_fn);
 
 /**
  * Create a poll group.
@@ -110,6 +111,18 @@ struct spdk_nvmf_poll_group *spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *t
  * Destroy a poll group.
  */
 void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group);
+
+/**
+ * Add the given qpair to the poll group.
+ */
+int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
+	struct spdk_nvmf_qpair *qpair);
+
+/**
+ * Remove the given qpair from the poll group.
+ */
+int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
+	   struct spdk_nvmf_qpair *qpair);
 
 /**
  * Check a poll group for work completions.
@@ -246,9 +259,6 @@ struct spdk_nvmf_listener *spdk_nvmf_subsystem_get_next_listener(
  */
 const struct spdk_nvme_transport_id *spdk_nvmf_listener_get_trid(
 	struct spdk_nvmf_listener *listener);
-
-
-void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
 
 /**
  * Add a namespace to a subsytem.
