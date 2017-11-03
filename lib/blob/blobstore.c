@@ -1875,6 +1875,7 @@ static void
 _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint64_t	md_used_clusters_number;
 	uint32_t	crc;
 	static const char zeros[SPDK_BLOBSTORE_TYPE_LENGTH];
 
@@ -1926,6 +1927,9 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	ctx->bs->pages_per_cluster = ctx->bs->cluster_sz / SPDK_BS_PAGE_SIZE;
 	ctx->bs->md_start = ctx->super->md_start;
 	ctx->bs->md_len = ctx->super->md_len;
+	md_used_clusters_number = ((ctx->bs->md_start % ctx->bs->pages_per_cluster) + ctx->bs->md_len +
+				   ctx->bs->pages_per_cluster - 1) / ctx->bs->pages_per_cluster;
+	ctx->bs->total_data_clusters = ctx->bs->total_clusters - md_used_clusters_number;
 	ctx->bs->super_blob = ctx->super->super_blob;
 	memcpy(&ctx->bs->bstype, &ctx->super->bstype, sizeof(ctx->super->bstype));
 
@@ -2169,6 +2173,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		_spdk_bs_claim_cluster(bs, i);
 	}
 
+	bs->total_data_clusters = bs->num_free_clusters;
+
 	cpl.type = SPDK_BS_CPL_TYPE_BS_HANDLE;
 	cpl.u.bs_handle.cb_fn = cb_fn;
 	cpl.u.bs_handle.cb_arg = cb_arg;
@@ -2402,6 +2408,12 @@ uint64_t
 spdk_bs_free_cluster_count(struct spdk_blob_store *bs)
 {
 	return bs->num_free_clusters;
+}
+
+uint64_t
+spdk_bs_total_data_cluster_count(struct spdk_blob_store *bs)
+{
+	return bs->total_data_clusters;
 }
 
 int spdk_bs_register_md_thread(struct spdk_blob_store *bs)
