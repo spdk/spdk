@@ -36,8 +36,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <linux/virtio_ring.h>
-
 #include "vhost.h"
 
 #include "../virtio_dev.h"

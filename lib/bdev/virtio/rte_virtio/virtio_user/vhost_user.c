@@ -42,7 +42,9 @@
 #define VHOST_USER_VERSION    0x1
 
 #define VHOST_MEMORY_MAX_NREGIONS 8
-struct vhost_memory {
+
+/** Fixed-size vhost_memory struct */
+struct vhost_memory_padded {
 	uint32_t nregions;
 	uint32_t padding;
 	struct vhost_memory_region regions[VHOST_MEMORY_MAX_NREGIONS];
@@ -61,7 +63,7 @@ struct vhost_user_msg {
 		uint64_t u64;
 		struct vhost_vring_state state;
 		struct vhost_vring_addr addr;
-		struct vhost_memory memory;
+		struct vhost_memory_padded memory;
 	} payload;
 	int fds[VHOST_MEMORY_MAX_NREGIONS];
 } __attribute((packed));
@@ -250,7 +252,7 @@ prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 		msg->payload.memory.regions[i].guest_phys_addr = huges[i].addr; /* use vaddr! */
 		msg->payload.memory.regions[i].userspace_addr = huges[i].addr;
 		msg->payload.memory.regions[i].memory_size = huges[i].size;
-		msg->payload.memory.regions[i].mmap_offset = 0;
+		msg->payload.memory.regions[i].flags_padding = 0;
 		fds[i] = open(huges[i].path, O_RDWR);
 	}
 
