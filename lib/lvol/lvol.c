@@ -356,6 +356,7 @@ _spdk_lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 
 	lvs->blobstore = bs;
 	lvs->bs_dev = req->bs_dev;
+	lvs->total_data_clusters = spdk_bs_total_data_cluster_count(bs);
 	TAILQ_INIT(&lvs->lvols);
 
 	req->lvol_store = lvs;
@@ -510,9 +511,8 @@ _spdk_lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 
 	assert(bs != NULL);
 	lvs->blobstore = bs;
+	lvs->total_data_clusters = spdk_bs_total_data_cluster_count(bs);
 	TAILQ_INIT(&lvs->lvols);
-	lvs->total_blocks = (spdk_bs_get_cluster_size(bs) * spdk_bs_free_cluster_count(
-				     bs)) / spdk_bs_get_page_size(bs);
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store initialized\n");
 
