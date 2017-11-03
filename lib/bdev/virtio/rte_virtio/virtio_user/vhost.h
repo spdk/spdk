@@ -40,7 +40,7 @@
 
 #include "spdk_internal/log.h"
 
-#include "../virtio_dev.h"
+#include "../virtio.h"
 
 #define VIRTIO_MAX_VIRTQUEUES 0x100
 
