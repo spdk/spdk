@@ -201,6 +201,11 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 	struct spdk_bdev_desc *desc;
 	int rc;
 
+	if (!TAILQ_EMPTY(&bdev->vbdevs)) {
+		SPDK_ERRLOG("No allocation on base bdev %s\n", bdev->name);
+		return NULL;
+	}
+
 	b = calloc(1, sizeof(*b));
 
 	if (b == NULL) {
