@@ -154,6 +154,7 @@ struct spdk_blob_store {
 
 	uint32_t			cluster_sz;
 	uint64_t			total_clusters;
+	uint64_t			total_data_clusters;
 	uint64_t			num_free_clusters;
 	uint32_t			pages_per_cluster;
 
