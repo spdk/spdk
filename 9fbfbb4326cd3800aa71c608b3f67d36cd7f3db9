@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12967855_ed540c6d",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T19:41:07Z",
+      "side": 1,
+      "message": "do we need this field?  i am thinking we can just always use spdk_bs_total_data_cluster_count(lvs-\u003eblobstore) to get this value rather than saving our own copy of it here\n\nthe only real reason to save it separately is if we are going to access it a lot and we want to avoid extra overhead of a function call - but in this case that does not apply",
+      "revId": "9fbfbb4326cd3800aa71c608b3f67d36cd7f3db9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
