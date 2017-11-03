@@ -1,0 +1,648 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f22dcaa_c584e21f",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Why setting this here?",
+      "range": {
+        "startLine": 546,
+        "startChar": 0,
+        "endLine": 549,
+        "endChar": 2
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "faac1dcb_e3836b15",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "I don\u0027t see a reason to pass ifname here. This look like some kind of bypass of all vhost layers abstraction we worked out.",
+      "range": {
+        "startLine": 1030,
+        "startChar": 55,
+        "endLine": 1030,
+        "endChar": 66
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2758203c_b469540f",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Why we can\u0027t use vring-\u003ecallfd? QEMU could (should) use those to pass us proper eventfd.",
+      "range": {
+        "startLine": 1037,
+        "startChar": 0,
+        "endLine": 1037,
+        "endChar": 27
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4ea7fd2_f5cc6f7d",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1040,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Ditto",
+      "range": {
+        "startLine": 1040,
+        "startChar": 49,
+        "endLine": 1040,
+        "endChar": 60
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f9f8f4c_3a47acbc",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1050,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 1050,
+        "startChar": 45,
+        "endLine": 1050,
+        "endChar": 56
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c77822d8_4d520d6f",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Is this a right place for those variables? I think they should be moved to request handlers.",
+      "range": {
+        "startLine": 1063,
+        "startChar": 0,
+        "endLine": 1067,
+        "endChar": 19
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95b785b9_aeb3369a",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1127,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Copy-paste code?",
+      "range": {
+        "startLine": 1126,
+        "startChar": 0,
+        "endLine": 1127,
+        "endChar": 23
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e2ca57d_6ddbe914",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "type of virq should be \u0027int\u0027.",
+      "range": {
+        "startLine": 76,
+        "startChar": 1,
+        "endLine": 76,
+        "endChar": 13
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2899231_4fd70aa1",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Why we need those two global lists? spdk_vhost_devs are already managed by vhost.c file.",
+      "range": {
+        "startLine": 141,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 92
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b4e0ff1_07edba88",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Is there any requirement in nvme spec that sq-\u003esize must be power of 2 so we can replace division by masking with (sq-\u003esize - 1)?",
+      "range": {
+        "startLine": 165,
+        "startChar": 33,
+        "endLine": 165,
+        "endChar": 43
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b7fa94b_40900eec",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "-\u003e spdk_vhost_gpa_to_vva(). It also return \u0027void *\u0027 so no need to cast it.",
+      "range": {
+        "startLine": 207,
+        "startChar": 20,
+        "endLine": 207,
+        "endChar": 40
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26a100a9_853f55b8",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 216,
+        "startChar": 20,
+        "endLine": 216,
+        "endChar": 40
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f1c92b5_d6e8bcec",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 224,
+        "startChar": 21,
+        "endLine": 224,
+        "endChar": 41
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68906bae_34760e5e",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "-\u003e spdk_vhost_gpa_to_vva(). It also return \u0027void *\u0027 so no need to cast it.",
+      "range": {
+        "startLine": 404,
+        "startChar": 19,
+        "endLine": 404,
+        "endChar": 39
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e61f14b7_1819cc23",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "This is buffer overflow.",
+      "range": {
+        "startLine": 454,
+        "startChar": 19,
+        "endLine": 454,
+        "endChar": 21
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ab0c0d4_629f708c",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Each mfence will slow us down. Do we need that many of those instructions? Also do we need to sync this at all? If we miss some request now we poll for them in while so do we need spdk_mb() at all?",
+      "range": {
+        "startLine": 460,
+        "startChar": 2,
+        "endLine": 460,
+        "endChar": 12
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "444c3a26_5f645694",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "This casting is redundant.",
+      "range": {
+        "startLine": 461,
+        "startChar": 13,
+        "endLine": 461,
+        "endChar": 35
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2cfee342_44c610e3",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 461,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "I have some impression that there would be good to introduce some interface functions for those operations. The same in line 484.",
+      "range": {
+        "startLine": 461,
+        "startChar": 2,
+        "endLine": 461,
+        "endChar": 71
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "258d83b0_f041ef63",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 463,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Casting not needed? Can you just do:\n\nsq-\u003esq_tail \u003d nvme-\u003edbbuf_dbs[sq_offset(qid, 1)];\n\n?",
+      "range": {
+        "startLine": 463,
+        "startChar": 16,
+        "endLine": 463,
+        "endChar": 26
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9aef9e1c_404aecd9",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 469,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Can there be some",
+      "range": {
+        "startLine": 469,
+        "startChar": 9,
+        "endLine": 469,
+        "endChar": 26
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3b12a01_2b6ffbb5",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 469,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Can there be some",
+      "range": {
+        "startLine": 469,
+        "startChar": 9,
+        "endLine": 469,
+        "endChar": 26
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79ce2801_434186bc",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "No need to casto to \u0027void *\u0027",
+      "range": {
+        "startLine": 472,
+        "startChar": 15,
+        "endLine": 472,
+        "endChar": 23
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79301ada_50ad3999",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "This casting is redundant.",
+      "range": {
+        "startLine": 484,
+        "startChar": 3,
+        "endLine": 484,
+        "endChar": 26
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "022964d4_b45be2e8",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Is this casting to uint32_t needed?",
+      "range": {
+        "startLine": 484,
+        "startChar": 63,
+        "endLine": 484,
+        "endChar": 73
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e4374d5_76387752",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "-\u003e spdk_vhost_gpa_to_vva(). It also return \u0027void *\u0027 so no need to cast it.",
+      "range": {
+        "startLine": 546,
+        "startChar": 33,
+        "endLine": 546,
+        "endChar": 53
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c2a3cd7_dc3e7f8b",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "-\u003e spdk_vhost_gpa_to_vva(). It also return \u0027void *\u0027 so no need to cast it.",
+      "range": {
+        "startLine": 605,
+        "startChar": 33,
+        "endLine": 605,
+        "endChar": 53
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d624701_15de0f6c",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "This is file descriptor leak.",
+      "range": {
+        "startLine": 764,
+        "startChar": 2,
+        "endLine": 764,
+        "endChar": 53
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3df763a9_50b446ca",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:27:07Z",
+      "side": 1,
+      "message": "Please don\u0027t reinvent the wheel all over again.  Is there particular reason to have one more copy of mem table?\n\nA also can\u0027t see where you free this memory so this is memory leak.",
+      "range": {
+        "startLine": 781,
+        "startChar": 1,
+        "endLine": 781,
+        "endChar": 48
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
