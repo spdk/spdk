@@ -69,9 +69,6 @@ struct virtio_hw {
 #define PCI_CAP_ID_VNDR		0x09
 #define PCI_CAP_ID_MSIX		0x11
 
-#define virtio_dev_get_hw(vdev) \
-	((struct virtio_hw *)vdev->ctx)
-
 static inline int
 check_vq_phys_addr_ok(struct virtqueue *vq)
 {
@@ -91,7 +88,7 @@ check_vq_phys_addr_ok(struct virtqueue *vq)
 static void
 free_virtio_hw(struct virtio_dev *dev)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct virtio_hw *hw = dev->ctx;
 	unsigned i;
 
 	for (i = 0; i < 6; ++i) {
@@ -109,7 +106,7 @@ free_virtio_hw(struct virtio_dev *dev)
 static void
 pci_dump_json_config(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct virtio_hw *hw = dev->ctx;
 	struct spdk_pci_addr pci_addr = spdk_pci_device_get_addr((struct spdk_pci_device *)hw->pci_dev);
 	char addr[32];
 
@@ -136,7 +133,7 @@ static void
 modern_read_dev_config(struct virtio_dev *dev, size_t offset,
 		       void *dst, int length)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct virtio_hw *hw = dev->ctx;
 	int i;
 	uint8_t *p;
 	uint8_t old_gen, new_gen;
@@ -156,7 +153,7 @@ static void
 modern_write_dev_config(struct virtio_dev *dev, size_t offset,
 			const void *src, int length)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct virtio_hw *hw = dev->ctx;
 	int i;
 	const uint8_t *p = src;
 
@@ -167,7 +164,7 @@ modern_write_dev_config(struct virtio_dev *dev, size_t offset,
 static uint64_t
 modern_get_features(struct virtio_dev *dev)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct virtio_hw *hw = dev->ctx;
 	uint32_t features_lo, features_hi;
 
 	spdk_mmio_write_4(&hw->common_cfg->device_feature_select, 0);
@@ -182,7 +179,7 @@ modern_get_features(struct virtio_dev *dev)
 static int
 modern_set_features(struct virtio_dev *dev, uint64_t features)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct virtio_hw *hw = dev->ctx;
 
 	if ((features & (1ULL << VIRTIO_F_VERSION_1)) == 0) {
 		SPDK_ERRLOG("VIRTIO_F_VERSION_1 feature is not enabled.\n");
@@ -203,7 +200,7 @@ modern_set_features(struct virtio_dev *dev, uint64_t features)
 static uint8_t
 modern_get_status(struct virtio_dev *dev)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct virtio_hw *hw = dev->ctx;
 
 	return spdk_mmio_read_1(&hw->common_cfg->device_status);
 }
@@ -211,7 +208,7 @@ modern_get_status(struct virtio_dev *dev)
 static void
 modern_set_status(struct virtio_dev *dev, uint8_t status)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct virtio_hw *hw = dev->ctx;
 
 	spdk_mmio_write_1(&hw->common_cfg->device_status, status);
 }
@@ -219,7 +216,7 @@ modern_set_status(struct virtio_dev *dev, uint8_t status)
 static uint16_t
 modern_get_queue_num(struct virtio_dev *dev, uint16_t queue_id)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct virtio_hw *hw = dev->ctx;
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_select, queue_id);
 	return spdk_mmio_read_2(&hw->common_cfg->queue_size);
@@ -228,7 +225,7 @@ modern_get_queue_num(struct virtio_dev *dev, uint16_t queue_id)
 static int
 modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct virtio_hw *hw = dev->ctx;
 	uint64_t desc_addr, avail_addr, used_addr;
 	uint16_t notify_off;
 
@@ -269,7 +266,7 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 static void
 modern_del_queue(struct virtio_dev *dev, struct virtqueue *vq)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
+	struct virtio_hw *hw = dev->ctx;
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_select, vq->vq_queue_index);
 

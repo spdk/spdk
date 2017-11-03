@@ -46,9 +46,6 @@
 
 #include "spdk/string.h"
 
-#define virtio_dev_get_user_dev(vdev) \
-	((struct virtio_user_dev *)vdev->ctx)
-
 static int
 virtio_user_create_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 {
@@ -272,7 +269,7 @@ virtio_user_write_dev_config(struct virtio_dev *vdev, size_t offset,
 static void
 virtio_user_set_status(struct virtio_dev *vdev, uint8_t status)
 {
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	struct virtio_user_dev *dev = vdev->ctx;
 
 	if (status & VIRTIO_CONFIG_S_DRIVER_OK) {
 		virtio_user_start_device(vdev);
@@ -286,7 +283,7 @@ virtio_user_set_status(struct virtio_dev *vdev, uint8_t status)
 static uint8_t
 virtio_user_get_status(struct virtio_dev *vdev)
 {
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	struct virtio_user_dev *dev = vdev->ctx;
 
 	return dev->status;
 }
@@ -294,7 +291,7 @@ virtio_user_get_status(struct virtio_dev *vdev)
 static uint64_t
 virtio_user_get_features(struct virtio_dev *vdev)
 {
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	struct virtio_user_dev *dev = vdev->ctx;
 	char err_str[64];
 	uint64_t features;
 
@@ -310,7 +307,7 @@ virtio_user_get_features(struct virtio_dev *vdev)
 static int
 virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 {
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	struct virtio_user_dev *dev = vdev->ctx;
 	int ret;
 
 	ret = dev->ops->send_request(dev, VHOST_USER_SET_FEATURES, &features);
@@ -331,7 +328,7 @@ virtio_user_set_features(struct virtio_dev *vdev, uint64_t features)
 static uint16_t
 virtio_user_get_queue_num(struct virtio_dev *vdev, uint16_t queue_id)
 {
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	struct virtio_user_dev *dev = vdev->ctx;
 
 	/* Currently, each queue has same queue size */
 	return dev->queue_size;
@@ -340,7 +337,7 @@ virtio_user_get_queue_num(struct virtio_dev *vdev, uint16_t queue_id)
 static int
 virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 {
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	struct virtio_user_dev *dev = vdev->ctx;
 	uint16_t queue_idx = vq->vq_queue_index;
 	uint64_t desc_addr, avail_addr, used_addr;
 	char err_str[64];
@@ -400,7 +397,7 @@ virtio_user_del_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	 * Here we just care about what information to deliver to vhost-user
 	 * or vhost-kernel. So we just close ioeventfd for now.
 	 */
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	struct virtio_user_dev *dev = vdev->ctx;
 
 	close(dev->callfds[vq->vq_queue_index]);
 	close(dev->kickfds[vq->vq_queue_index]);
@@ -412,7 +409,7 @@ static void
 virtio_user_notify_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 {
 	uint64_t buf = 1;
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	struct virtio_user_dev *dev = vdev->ctx;
 	char err_str[64];
 
 	if (write(dev->kickfds[vq->vq_queue_index], &buf, sizeof(buf)) < 0) {
@@ -424,7 +421,7 @@ virtio_user_notify_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 static void
 virtio_user_free(struct virtio_dev *vdev)
 {
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	struct virtio_user_dev *dev = vdev->ctx;
 
 	close(dev->vhostfd);
 	free(dev);
@@ -434,7 +431,7 @@ virtio_user_free(struct virtio_dev *vdev)
 static void
 virtio_user_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write_ctx *w)
 {
-	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
+	struct virtio_user_dev *dev = vdev->ctx;
 
 	spdk_json_write_name(w, "type");
 	spdk_json_write_string(w, "user");
