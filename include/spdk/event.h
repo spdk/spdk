@@ -44,6 +44,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
+#include "spdk/log.h"
 
 typedef void (*spdk_event_fn)(void *arg1, void *arg2);
 
@@ -81,6 +82,7 @@ struct spdk_app_opts {
 	int	 		master_core;
 	int			mem_size;
 	bool			no_pci;
+	enum spdk_log_level	print_level;
 
 	/* The maximum latency allowed when passing an event
 	 * from one core to another. A value of 0
