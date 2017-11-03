@@ -429,3 +429,62 @@ spdk_app_stop(int rc)
 	 */
 	spdk_event_call(spdk_event_allocate(g_init_lcore, _spdk_app_stop, NULL, NULL));
 }
+
+int
+spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts)
+{
+	char ch;
+	int rc;
+
+	opterr = 0;
+	while ((ch = getopt(argc, argv, SPDK_APP_GETOPT_STRING)) != -1) {
+		switch (ch) {
+		case 'c':
+			opts->config_file = optarg;
+			break;
+		case 'd':
+			opts->enable_coredump = false;
+			break;
+		case 'e':
+			opts->tpoint_group_mask = optarg;
+			break;
+		case 'i':
+			opts->shm_id = atoi(optarg);
+			break;
+		case 'm':
+			opts->reactor_mask = optarg;
+			break;
+		case 'n':
+			opts->mem_channel = atoi(optarg);
+			break;
+		case 'N':
+			opts->no_pci = true;
+			break;
+		case 'p':
+			opts->master_core = atoi(optarg);
+			break;
+		case 'q':
+			opts->print_level = SPDK_LOG_WARN;
+			break;
+		case 's':
+			opts->mem_size = atoi(optarg);
+			break;
+		case 't':
+			rc = spdk_log_set_trace_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag %s\n", optarg);
+				return -1;
+			}
+			opts->print_level = SPDK_LOG_DEBUG;
+#ifndef DEBUG
+			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n", argv[0]);
+			return -1;
+#endif
+			break;
+		}
+	}
+	opterr = 1;
+	optind = 1;
+
+	return 0;
+}

@@ -152,6 +152,13 @@ int spdk_app_get_core_count(void) __attribute__((deprecated));
  */
 uint32_t spdk_app_get_current_core(void) __attribute__((deprecated));
 
+#define SPDK_APP_GETOPT_STRING "c:de:i:m:n:Np:qs:t:"
+
+/**
+ *
+ */
+int spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts);
+
 /**
  * \brief Allocate an event to be passed to \ref spdk_event_call
  */
