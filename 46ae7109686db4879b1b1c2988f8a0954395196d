@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56920f96_337a8434",
+        "filename": "lib/log/log.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-03T08:03:27Z",
+      "side": 1,
+      "message": "add {} to make the code style consistent to SPDK\u0027s requirements. And could you also add the err info using SPDK_errlog",
+      "range": {
+        "startLine": 254,
+        "startChar": 22,
+        "endLine": 254,
+        "endChar": 23
+      },
+      "revId": "46ae7109686db4879b1b1c2988f8a0954395196d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14f0bd18_e7453891",
+        "filename": "lib/log/log.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-03T08:03:27Z",
+      "side": 1,
+      "message": "Supposing the string is : bdev,XXX,nvme. The first and third is valid, and we set 1st and return. Maybe we do not return here, but continue the loop. And finally, if we did not set any trace flag, we may return failure.",
+      "range": {
+        "startLine": 261,
+        "startChar": 3,
+        "endLine": 261,
+        "endChar": 18
+      },
+      "revId": "46ae7109686db4879b1b1c2988f8a0954395196d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "445c2de0_fa83e571",
+        "filename": "lib/log/log.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-03T08:03:27Z",
+      "side": 1,
+      "message": "May add a new line here",
+      "range": {
+        "startLine": 265,
+        "startChar": 0,
+        "endLine": 265,
+        "endChar": 2
+      },
+      "revId": "46ae7109686db4879b1b1c2988f8a0954395196d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
