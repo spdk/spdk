@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca24dfba_51a475f4",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-03T22:38:05Z",
+      "side": 1,
+      "message": "Should this be DefaultTime2Retain? Otherwise, it looks like we are ignoring the value from the conf file.\n\n(We can fix this in another patch since it was already broken like this, and this patch should just be code movement.)",
+      "range": {
+        "startLine": 630,
+        "startChar": 36,
+        "endLine": 630,
+        "endChar": 62
+      },
+      "revId": "4a5eec61958eac1533e1a2e329ba0ccb73fef4a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
