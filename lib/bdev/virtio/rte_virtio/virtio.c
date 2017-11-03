@@ -268,7 +268,7 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 }
 
 struct virtio_dev *
-	virtio_dev_construct(const struct virtio_pci_ops *ops, void *ctx)
+	virtio_dev_construct(const struct virtio_dev_ops *ops, void *ctx)
 {
 	struct virtio_dev *vdev;
 	unsigned vdev_num;
@@ -695,7 +695,7 @@ virtio_dev_get_status(struct virtio_dev *dev)
 	return virtio_dev_backend_ops(dev)->get_status(dev);
 }
 
-const struct virtio_pci_ops *
+const struct virtio_dev_ops *
 virtio_dev_backend_ops(struct virtio_dev *dev)
 {
 	return dev->backend_ops;
