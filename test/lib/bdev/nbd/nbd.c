@@ -50,11 +50,19 @@ static char *g_nbd_name = "/dev/nbd0";
 #include "../common.c"
 
 static void
-nbd_shutdown(void)
+nbd_stop(void *arg1, void *arg2)
 {
-	spdk_poller_unregister(&g_nbd_poller, NULL);
 	spdk_nbd_stop(g_nbd_disk);
 	spdk_app_stop(0);
+}
+
+static void
+nbd_shutdown(void)
+{
+	struct spdk_event *stop_event;
+
+	stop_event = spdk_event_allocate(spdk_env_get_current_core(), nbd_stop, NULL, NULL);
+	spdk_poller_unregister(&g_nbd_poller, stop_event);
 }
 
 static void

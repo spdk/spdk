@@ -202,12 +202,11 @@ function waitforlisten() {
 	set -x
 }
 
-function waitforbdev() {
-	bdev_name=$1
-	rpc_py=$2
+function waitfornbd() {
+	nbd_name=$1
 
-	for ((i=1; i<=10; i++)); do
-		if $rpc_py get_bdevs -b "$bdev_name" &>/dev/null; then
+	for ((i=1; i<=20; i++)); do
+		if grep -q -w $nbd_name /proc/partitions; then
 			return 0
 		else
 			sleep 0.1
@@ -326,6 +325,10 @@ function part_dev_by_gpt () {
 			return 1
 		fi
 
+		if [ ! -e /dev/nbd0 ]; then
+			return 1
+		fi
+
 		if [ -z "$operation" ]; then
 			operation="create"
 		fi
@@ -339,19 +342,18 @@ function part_dev_by_gpt () {
 		nbd_pid=$!
 		echo "Process nbd pid: $nbd_pid"
 		waitforlisten $nbd_pid 5260
-		waitforbdev $devname "python $rootdir/scripts/rpc.py"
+		waitfornbd nbd0
 
-		if [ -e /dev/nbd0 ]; then
-			if [ "$operation" = create ]; then
-				parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
-				# change the GUID to SPDK GUID value
-				sgdisk -t 1:$SPDK_GPT_GUID /dev/nbd0
-				sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0
-			elif [ "$operation" = reset ]; then
-				# clear the partition table
-				dd if=/dev/zero of=/dev/nbd0 bs=4096 count=8 oflag=direct
-			fi
+		if [ "$operation" = create ]; then
+			parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
+			# change the GUID to SPDK GUID value
+			sgdisk -t 1:$SPDK_GPT_GUID /dev/nbd0
+			sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0
+		elif [ "$operation" = reset ]; then
+			# clear the partition table
+			dd if=/dev/zero of=/dev/nbd0 bs=4096 count=8 oflag=direct
 		fi
+
 		killprocess $nbd_pid
 		rm -f ${conf}.gpt
 	fi
