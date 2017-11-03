@@ -186,6 +186,29 @@
     },
     {
       "key": {
+        "uuid": "a3f78f36_7c912658",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:49:56Z",
+      "side": 1,
+      "message": "Already present in vdev. Please remove.",
+      "range": {
+        "startLine": 91,
+        "startChar": 1,
+        "endLine": 91,
+        "endChar": 15
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2899231_4fd70aa1",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
@@ -317,6 +340,29 @@
         "startChar": 19,
         "endLine": 404,
         "endChar": 39
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8c1b08c_e66994c8",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:49:56Z",
+      "side": 1,
+      "message": "Casting not needed.",
+      "range": {
+        "startLine": 446,
+        "startChar": 36,
+        "endLine": 446,
+        "endChar": 66
       },
       "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -554,6 +600,29 @@
     },
     {
       "key": {
+        "uuid": "c158b258_1aee5332",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:49:56Z",
+      "side": 1,
+      "message": "As this is called from DPDK vhost-dev thread that handle the connection this is not good place to register a poller. start/stop device are design to this and guarantee thread safety.",
+      "range": {
+        "startLine": 517,
+        "startChar": 1,
+        "endLine": 517,
+        "endChar": 86
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e4374d5_76387752",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
@@ -623,6 +692,29 @@
     },
     {
       "key": {
+        "uuid": "449329a4_d387a737",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:49:56Z",
+      "side": 1,
+      "message": "Please introduce \u0027to_nvme_dev()\u0027. Like we have to_scsi_dev() and to_blk_dev().",
+      "range": {
+        "startLine": 776,
+        "startChar": 36,
+        "endLine": 778,
+        "endChar": 13
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3df763a9_50b446ca",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
@@ -639,6 +731,75 @@
         "startChar": 1,
         "endLine": 781,
         "endChar": 48
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d41cbdbd_045a603c",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 805,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:49:56Z",
+      "side": 1,
+      "message": "This is another vote against reinventing the wheel. Stop device callback is for stopping *one* particular device pointed by vdev not whole world.",
+      "range": {
+        "startLine": 798,
+        "startChar": 0,
+        "endLine": 805,
+        "endChar": 2
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c06a9ce1_3828370b",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 909,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:49:56Z",
+      "side": 1,
+      "message": "Any particular reason to have this structure be 4k aligned?",
+      "range": {
+        "startLine": 909,
+        "startChar": 39,
+        "endLine": 909,
+        "endChar": 45
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18dcf878_3ae894cd",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:49:56Z",
+      "side": 1,
+      "message": "hardcoded",
+      "range": {
+        "startLine": 951,
+        "startChar": 50,
+        "endLine": 951,
+        "endChar": 55
       },
       "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
