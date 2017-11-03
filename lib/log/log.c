@@ -247,7 +247,26 @@ set_trace_flag(const char *name, bool value)
 int
 spdk_log_set_trace_flag(const char *name)
 {
-	return set_trace_flag(name, true);
+	int ret = 0;
+	char *tok = NULL;
+	char *copy_name = strdup(name);
+
+	if (copy_name == NULL){
+		return -1;
+        }
+
+	tok = strtok(copy_name, ",");
+	while (tok != NULL) {
+		ret = set_trace_flag(tok, true);
+		if (ret < 0) {
+			free(copy_name);
+			return ret;
+		}
+		tok = strtok(NULL, ",");
+	}
+  
+	free(copy_name);
+	return ret;
 }
 
 int
