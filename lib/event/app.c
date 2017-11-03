@@ -187,6 +187,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
 	opts->reactor_mask = NULL;
 	opts->max_delay_us = 0;
+	opts->print_level = SPDK_LOG_NOTICE;
 }
 
 static int
@@ -263,6 +264,18 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		SPDK_ERRLOG("opts should not be NULL\n");
 		exit(EXIT_FAILURE);
 	}
+
+	if (opts->print_level > SPDK_LOG_WARN &&
+	    isatty(STDERR_FILENO) &&
+	    !strncmp(ttyname(STDERR_FILENO), "/dev/tty", strlen("/dev/tty"))) {
+		printf("Warning: printing stderr to console terminal without -q option specified.\n");
+		printf("Suggest using -q to disable logging to stderr and monitor syslog, or\n");
+		printf("redirect stderr to a file.\n");
+		printf("(Delaying for 10 seconds...)\n");
+		sleep(10);
+	}
+
+	spdk_log_set_print_level(opts->print_level);
 
 	if (opts->enable_coredump) {
 		struct rlimit core_limits;
