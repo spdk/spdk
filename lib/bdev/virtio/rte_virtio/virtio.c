@@ -54,7 +54,7 @@
 
 #include "spdk/env.h"
 
-#include "virtio_dev.h"
+#include "virtio.h"
 
 struct virtio_driver g_virtio_driver = {
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.init_ctrlrs),
