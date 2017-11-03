@@ -761,6 +761,52 @@
     },
     {
       "key": {
+        "uuid": "d2c05802_14c9e96b",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:55:26Z",
+      "side": 1,
+      "message": "This need some deffine.",
+      "range": {
+        "startLine": 841,
+        "startChar": 29,
+        "endLine": 841,
+        "endChar": 33
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9115a787_9d0802b3",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 843,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-03T14:55:26Z",
+      "side": 1,
+      "message": "Are you sure this is proper VID/SSID?",
+      "range": {
+        "startLine": 842,
+        "startChar": 0,
+        "endLine": 843,
+        "endChar": 23
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c06a9ce1_3828370b",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
