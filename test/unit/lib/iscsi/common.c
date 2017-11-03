@@ -122,6 +122,12 @@ spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 }
 
 int
+spdk_scsi_dev_delete_port(struct spdk_scsi_dev *dev, uint64_t id)
+{
+	return 0;
+}
+
+int
 spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 		      int drop_all)
 {
