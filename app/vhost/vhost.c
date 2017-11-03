@@ -105,63 +105,30 @@ main(int argc, char *argv[])
 
 	vhost_app_opts_init(&opts);
 
-	while ((ch = getopt(argc, argv, "c:de:f:i:m:Np:qs:S:t:h")) != -1) {
+	rc = spdk_app_parse_args(argc, argv, &opts);
+	if (rc != 0) {
+		usage(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	while ((ch = getopt(argc, argv, SPDK_APP_GETOPT_STRING "f:S:h")) != -1) {
 		switch (ch) {
-		case 'c':
-			opts.config_file = optarg;
-			break;
-		case 'd':
-			opts.enable_coredump = false;
-			break;
-		case 'e':
-			opts.tpoint_group_mask = optarg;
-			break;
 		case 'f':
 			pid_path = optarg;
 			break;
 		case 'h':
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
-		case 'i':
-			opts.shm_id = strtoul(optarg, NULL, 10);
-			break;
-		case 'm':
-			opts.reactor_mask = optarg;
-			break;
-		case 'N':
-			opts.no_pci = true;
-			break;
-		case 'p':
-			opts.master_core = strtoul(optarg, NULL, 10);
-			break;
-		case 'q':
-			opts.print_level = SPDK_LOG_WARN;
-			break;
-		case 's':
-			opts.mem_size = strtoul(optarg, NULL, 10);
-			break;
 		case 'S':
 			socket_path = optarg;
 			break;
-		case 't':
-			rc = spdk_log_set_trace_flag(optarg);
-			if (rc < 0) {
-				fprintf(stderr, "unknown flag\n");
-				usage(argv[0]);
-				exit(EXIT_FAILURE);
-			}
-			opts.print_level = SPDK_LOG_DEBUG;
-#ifndef DEBUG
-			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
-				argv[0]);
-			usage(argv[0]);
-			exit(EXIT_FAILURE);
-#endif
-			break;
-		default:
+		case '?':
 			fprintf(stderr, "%s Unknown option '-%c'.\n", argv[0], ch);
 			usage(argv[0]);
 			exit(EXIT_FAILURE);
+		default:
+			/* This was an spdk_app option, so just skip it. */
+			break;
 		}
 	}
 
