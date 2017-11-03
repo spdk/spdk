@@ -49,6 +49,8 @@ static int g_time_in_sec;
 
 static uint64_t call_count[RTE_MAX_LCORE];
 
+static bool g_app_stopped = false;
+
 static void
 submit_new_event(void *arg1, void *arg2)
 {
@@ -56,7 +58,7 @@ submit_new_event(void *arg1, void *arg2)
 	static __thread uint32_t next_lcore = RTE_MAX_LCORE;
 
 	if (spdk_get_ticks() > g_tsc_end) {
-		if (rte_lcore_id() == rte_get_master_lcore()) {
+		if (__sync_bool_compare_and_swap(&g_app_stopped, false, true)) {
 			spdk_app_stop(0);
 		}
 		return;
