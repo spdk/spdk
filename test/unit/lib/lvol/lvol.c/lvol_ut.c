@@ -45,6 +45,7 @@
 #define DEV_BUFFER_BLOCKCNT (DEV_BUFFER_SIZE / DEV_BUFFER_BLOCKLEN)
 #define BS_CLUSTER_SIZE (1024 * 1024)
 #define BS_FREE_CLUSTERS (DEV_BUFFER_SIZE / BS_CLUSTER_SIZE)
+#define BS_TOTAL_DATA_CLUSTERS (DEV_BUFFER_SIZE / BS_CLUSTER_SIZE)
 #define BS_PAGE_SIZE (4096)
 
 #define SPDK_BLOB_OPTS_CLUSTER_SZ (1024 * 1024)
@@ -340,6 +341,12 @@ uint64_t
 spdk_bs_free_cluster_count(struct spdk_blob_store *bs)
 {
 	return BS_FREE_CLUSTERS;
+}
+
+uint64_t
+spdk_bs_total_data_cluster_count(struct spdk_blob_store *bs)
+{
+	return BS_TOTAL_DATA_CLUSTERS;
 }
 
 void

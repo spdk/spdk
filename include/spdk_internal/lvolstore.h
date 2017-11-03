@@ -83,7 +83,7 @@ struct spdk_lvol_store {
 	spdk_blob_id			super_blob_id;
 	uuid_t				uuid;
 	struct spdk_lvs_req		*destruct_req;
-	uint64_t			total_blocks;
+	uint64_t			total_data_clusters;
 	int				lvol_count;
 	int				lvols_opened;
 	bool				destruct;
