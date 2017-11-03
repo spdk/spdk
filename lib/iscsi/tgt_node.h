@@ -121,6 +121,12 @@ int spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 				     struct spdk_iscsi_tgt_node *target);
 void spdk_iscsi_delete_all_ig_maps_for_ig(struct spdk_iscsi_init_grp *ig);
 void spdk_iscsi_delete_all_pg_maps_for_pg(struct spdk_iscsi_portal_grp *pg);
+int spdk_iscsi_tgt_node_add_maps(struct spdk_iscsi_tgt_node *target,
+				 int *pg_tags, int *ig_tags,
+				 uint16_t num_maps);
+int spdk_iscsi_tgt_node_delete_maps(struct spdk_iscsi_tgt_node *target,
+				    int *pg_tags, int *ig_tags,
+				    uint16_t num_maps);
 int spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
 				char *lun_name, int lun_id);
 #endif /* SPDK_ISCSI_TGT_NODE_H_ */

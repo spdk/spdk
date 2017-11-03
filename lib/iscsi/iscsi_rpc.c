@@ -516,6 +516,120 @@ invalid:
 }
 SPDK_RPC_REGISTER("construct_target_node", spdk_rpc_construct_target_node)
 
+struct rpc_pg_ig_maps {
+	char *name;
+	struct rpc_pg_tags pg_tags;
+	struct rpc_ig_tags ig_tags;
+};
+
+static const struct spdk_json_object_decoder rpc_pg_ig_maps_decoders[] = {
+	{"name", offsetof(struct rpc_pg_ig_maps, name), spdk_json_decode_string},
+	{"pg_tags", offsetof(struct rpc_pg_ig_maps, pg_tags), decode_rpc_pg_tags},
+	{"ig_tags", offsetof(struct rpc_pg_ig_maps, ig_tags), decode_rpc_ig_tags},
+};
+
+static void
+spdk_rpc_add_pg_ig_maps(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
+{
+	struct rpc_pg_ig_maps req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_iscsi_tgt_node *target;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_pg_ig_maps_decoders,
+				    SPDK_COUNTOF(rpc_pg_ig_maps_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (req.pg_tags.num_tags != req.ig_tags.num_tags) {
+		SPDK_ERRLOG("pg_tags/ig_tags count mismatch\n");
+		goto invalid;
+	}
+
+	target = spdk_iscsi_find_tgt_node(req.name);
+	if (target == NULL) {
+		SPDK_ERRLOG("target is not found\n");
+		goto invalid;
+	}
+
+	rc = spdk_iscsi_tgt_node_add_maps(target, req.pg_tags.tags,
+					  req.ig_tags.tags,
+					  req.pg_tags.num_tags);
+	if (rc < 0) {
+		SPDK_ERRLOG("add pg-ig maps failed\n");
+		goto invalid;
+	}
+
+	free(req.name);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w != NULL) {
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
+	}
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+	free(req.name);
+}
+SPDK_RPC_REGISTER("add_pg_ig_maps", spdk_rpc_add_pg_ig_maps)
+
+static void
+spdk_rpc_delete_pg_ig_maps(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_pg_ig_maps req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_iscsi_tgt_node *target;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_pg_ig_maps_decoders,
+				    SPDK_COUNTOF(rpc_pg_ig_maps_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (req.pg_tags.num_tags != req.ig_tags.num_tags) {
+		SPDK_ERRLOG("pg_tags/ig_tags count mismatch\n");
+		goto invalid;
+	}
+
+	target = spdk_iscsi_find_tgt_node(req.name);
+	if (target == NULL) {
+		SPDK_ERRLOG("target is not found\n");
+		goto invalid;
+	}
+
+	rc = spdk_iscsi_tgt_node_delete_maps(target, req.pg_tags.tags,
+					     req.ig_tags.tags,
+					     req.pg_tags.num_tags);
+	if (rc < 0) {
+		SPDK_ERRLOG("remove pg-ig maps failed\n");
+		goto invalid;
+	}
+
+	free(req.name);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w != NULL) {
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
+	}
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 "Invalid parameters");
+	free(req.name);
+}
+SPDK_RPC_REGISTER("delete_pg_ig_maps", spdk_rpc_delete_pg_ig_maps)
+
 struct rpc_delete_target_node {
 	char *name;
 };

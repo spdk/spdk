@@ -162,6 +162,77 @@ p.add_argument('chap_auth_group', help="""Authentication group ID for this targe
 *** Authentication group must be precreated ***""", type=int)
 p.set_defaults(func=construct_target_node)
 
+def add_pg_ig_maps(args):
+    pg_tags = []
+    ig_tags = []
+    for u in args.pg_ig_mappings.strip().split(" "):
+        pg, ig = u.split(":")
+        pg_tags.append(int(pg))
+        ig_tags.append(int(ig))
+
+    params = {
+        'name': args.name,
+        'pg_tags': pg_tags,
+        'ig_tags': ig_tags,
+    }
+    jsonrpc_call('add_pg_ig_maps', params)
+
+p = subparsers.add_parser('add_pg_ig_maps', help='Add PG-IG maps to the target node')
+p.add_argument('name', help='Target node name (ASCII)')
+p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
+Whitespace separated, quoted, mapping defined with colon
+separated list of "tags" (int > 0)
+Example: '1:1 2:2 2:1'
+*** The Portal/Initiator Groups must be precreated ***""")
+p.set_defaults(func=add_pg_ig_maps)
+
+
+def delete_pg_ig_maps(args):
+    pg_tags = []
+    ig_tags = []
+    for u in args.pg_ig_mappings.strip().split(" "):
+        pg, ig = u.split(":")
+        pg_tags.append(int(pg))
+        ig_tags.append(int(ig))
+
+    params = {
+        'name': args.name,
+        'pg_tags': pg_tags,
+        'ig_tags': ig_tags,
+    }
+    jsonrpc_call('delete_pg_ig_maps', params)
+
+p = subparsers.add_parser('delete_pg_ig_maps', help='Delete PG-IG maps from the target node')
+p.add_argument('name', help='Target node name (ASCII)')
+p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
+Whitespace separated, quoted, mapping defined with colon
+separated list of "tags" (int > 0)
+Example: '1:1 2:2 2:1'
+*** The Portal/Initiator Groups must be precreated ***""")
+p.set_defaults(func=delete_pg_ig_maps)
+
+
+def clear_pg_ig_maps(args):
+    params = {
+        'name': args.name,
+    }
+    jsonrpc_call('clear_pg_ig_maps', params)
+
+p = subparsers.add_parser('clear_pg_ig_maps', help='Clear all PG-IG maps from the target node')
+p.add_argument('name', help='Target node name (ASCII)')
+p.set_defaults(func=clear_pg_ig_maps)
+
+
+def construct_malloc_bdev(args):
+    num_blocks = (args.total_size * 1024 * 1024) / args.block_size
+    params = {'num_blocks': num_blocks, 'block_size': args.block_size}
+    print_array(jsonrpc_call('construct_malloc_bdev', params))
+
+p = subparsers.add_parser('construct_malloc_bdev', help='Add a bdev with malloc backend')
+p.add_argument('total_size', help='Size of malloc bdev in MB (int > 0)', type=int)
+p.add_argument('block_size', help='Block size for this bdev', type=int)
+p.set_defaults(func=construct_malloc_bdev)
+
 
 def add_lun(args):
     params = {
