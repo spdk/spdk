@@ -178,79 +178,6 @@ virtio_user_dev_setup(struct virtio_dev *vdev)
 	return 0;
 }
 
-struct virtio_dev *
-virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queues,
-		     uint32_t queue_size,
-		     uint16_t fixed_queue_num)
-{
-	struct virtio_dev *vdev;
-	struct virtio_user_dev *dev;
-	uint64_t max_queues;
-	char err_str[64];
-
-	if (name == NULL) {
-		SPDK_ERRLOG("No name gived for controller: %s\n", path);
-		return NULL;
-	} else if (requested_queues == 0) {
-		SPDK_ERRLOG("Can't create controller with no queues: %s\n", path);
-		return NULL;
-	}
-
-	dev = calloc(1, sizeof(*dev));
-	if (dev == NULL) {
-		return NULL;
-	}
-
-	vdev = virtio_dev_construct(&virtio_user_ops, dev);
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Failed to init device: %s\n", path);
-		free(dev);
-		return NULL;
-	}
-
-	vdev->is_hw = 0;
-	vdev->name = strdup(name);
-	if (!vdev->name) {
-		SPDK_ERRLOG("Failed to reserve memory for controller name: %s\n", path);
-		goto err;
-	}
-
-	snprintf(dev->path, PATH_MAX, "%s", path);
-	dev->queue_size = queue_size;
-
-	if (virtio_user_dev_setup(vdev) < 0) {
-		SPDK_ERRLOG("backend set up fails\n");
-		goto err;
-	}
-
-	if (dev->ops->send_request(dev, VHOST_USER_GET_QUEUE_NUM, &max_queues) < 0) {
-		spdk_strerror_r(errno, err_str, sizeof(err_str));
-		SPDK_ERRLOG("get_queue_num fails: %s\n", err_str);
-		goto err;
-	}
-
-	if (requested_queues > max_queues) {
-		SPDK_ERRLOG("requested %"PRIu16" request queues but only %"PRIu64" available\n",
-			    requested_queues, max_queues);
-		goto err;
-	}
-
-	vdev->max_queues = fixed_queue_num + requested_queues;
-
-	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
-		spdk_strerror_r(errno, err_str, sizeof(err_str));
-		SPDK_ERRLOG("set_owner fails: %s\n", err_str);
-		goto err;
-	}
-
-	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
-	return vdev;
-
-err:
-	virtio_dev_free(vdev);
-	return NULL;
-}
-
 static void
 virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
 			    void *dst, int length)
@@ -439,7 +366,7 @@ virtio_user_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write_ctx
 	spdk_json_write_string(w, dev->path);
 }
 
-const struct virtio_dev_ops virtio_user_ops = {
+static const struct virtio_dev_ops virtio_user_ops = {
 	.read_dev_cfg	= virtio_user_read_dev_config,
 	.write_dev_cfg	= virtio_user_write_dev_config,
 	.get_status	= virtio_user_get_status,
@@ -453,3 +380,76 @@ const struct virtio_dev_ops virtio_user_ops = {
 	.notify_queue	= virtio_user_notify_queue,
 	.dump_json_config = virtio_user_dump_json_config,
 };
+
+struct virtio_dev *
+virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queues,
+		     uint32_t queue_size,
+		     uint16_t fixed_queue_num)
+{
+	struct virtio_dev *vdev;
+	struct virtio_user_dev *dev;
+	uint64_t max_queues;
+	char err_str[64];
+
+	if (name == NULL) {
+		SPDK_ERRLOG("No name gived for controller: %s\n", path);
+		return NULL;
+	} else if (requested_queues == 0) {
+		SPDK_ERRLOG("Can't create controller with no queues: %s\n", path);
+		return NULL;
+	}
+
+	dev = calloc(1, sizeof(*dev));
+	if (dev == NULL) {
+		return NULL;
+	}
+
+	vdev = virtio_dev_construct(&virtio_user_ops, dev);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Failed to init device: %s\n", path);
+		free(dev);
+		return NULL;
+	}
+
+	vdev->is_hw = 0;
+	vdev->name = strdup(name);
+	if (!vdev->name) {
+		SPDK_ERRLOG("Failed to reserve memory for controller name: %s\n", path);
+		goto err;
+	}
+
+	snprintf(dev->path, PATH_MAX, "%s", path);
+	dev->queue_size = queue_size;
+
+	if (virtio_user_dev_setup(vdev) < 0) {
+		SPDK_ERRLOG("backend set up fails\n");
+		goto err;
+	}
+
+	if (dev->ops->send_request(dev, VHOST_USER_GET_QUEUE_NUM, &max_queues) < 0) {
+		spdk_strerror_r(errno, err_str, sizeof(err_str));
+		SPDK_ERRLOG("get_queue_num fails: %s\n", err_str);
+		goto err;
+	}
+
+	if (requested_queues > max_queues) {
+		SPDK_ERRLOG("requested %"PRIu16" request queues but only %"PRIu64" available\n",
+			    requested_queues, max_queues);
+		goto err;
+	}
+
+	vdev->max_queues = fixed_queue_num + requested_queues;
+
+	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
+		spdk_strerror_r(errno, err_str, sizeof(err_str));
+		SPDK_ERRLOG("set_owner fails: %s\n", err_str);
+		goto err;
+	}
+
+	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+	return vdev;
+
+err:
+	virtio_dev_free(vdev);
+	return NULL;
+}
