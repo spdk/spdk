@@ -221,7 +221,9 @@ virtio_user_free(struct virtio_dev *vdev)
 {
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 
-	virtio_user_dev_uninit(dev);
+	close(dev->vhostfd);
+	free(vdev->name);
+	free(dev);
 }
 
 static void
