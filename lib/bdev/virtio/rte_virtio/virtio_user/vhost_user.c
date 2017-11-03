@@ -34,7 +34,6 @@
 #include "spdk/stdinc.h"
 
 #include "vhost.h"
-#include "virtio_user_dev.h"
 
 #include "spdk/string.h"
 
