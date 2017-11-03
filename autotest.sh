@@ -146,7 +146,9 @@ fi
 timing_enter cleanup
 rbd_cleanup
 ./scripts/setup.sh reset
-./scripts/build_kmod.sh clean
+if [ $SPDK_BUILD_IOAT_KMOD -eq 1 ]; then
+	./scripts/build_kmod.sh clean
+fi
 timing_exit cleanup
 
 timing_exit autotest
