@@ -36,40 +36,11 @@
 
 #include "spdk/stdinc.h"
 
+#include <linux/vhost.h>
+
 #include "spdk_internal/log.h"
 
 #include "../virtio_dev.h"
-
-struct vhost_vring_state {
-	unsigned int index;
-	unsigned int num;
-};
-
-struct vhost_vring_file {
-	unsigned int index;
-	int fd;
-};
-
-struct vhost_vring_addr {
-	unsigned int index;
-	/* Option flags. */
-	unsigned int flags;
-	/* Flag values: */
-	/* Whether log address is valid. If set enables logging. */
-#define VHOST_VRING_F_LOG 0
-
-	/* Start of array of descriptors (virtually contiguous) */
-	uint64_t desc_user_addr;
-	/* Used structure address. Must be 32 bit aligned */
-	uint64_t used_user_addr;
-	/* Available structure address. Must be 16 bit aligned */
-	uint64_t avail_user_addr;
-	/* Logging support. */
-	/* Log writes to used structure, at offset calculated from specified
-	 * address. Address must be 32 bit aligned.
-	 */
-	uint64_t log_guest_addr;
-};
 
 enum vhost_user_request {
 	VHOST_USER_NONE = 0,
@@ -95,13 +66,6 @@ enum vhost_user_request {
 };
 
 extern const char *const vhost_msg_strings[VHOST_USER_MAX];
-
-struct vhost_memory_region {
-	uint64_t guest_phys_addr;
-	uint64_t memory_size; /* bytes */
-	uint64_t userspace_addr;
-	uint64_t mmap_offset;
-};
 
 struct virtio_user_dev;
 
