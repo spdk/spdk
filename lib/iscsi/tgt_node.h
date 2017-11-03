@@ -40,14 +40,25 @@
 #include "spdk/scsi.h"
 
 struct spdk_iscsi_conn;
+struct spdk_iscsi_init_grp;
+struct spdk_iscsi_portal_grp;
+struct spdk_iscsi_portal;
 
 #define SPDK_ISCSI_MAX_QUEUE_DEPTH	64
 #define MAX_TARGET_MAP			256
+#define	MAX_IG_MAPS_PER_PG_MAP		256
 #define SPDK_TN_TAG_MAX 0x0000ffff
 
-struct spdk_iscsi_tgt_node_map {
-	struct spdk_iscsi_portal_grp	*pg;
-	struct spdk_iscsi_init_grp	*ig;
+struct spdk_iscsi_ig_map {
+	struct spdk_iscsi_init_grp *ig;
+	TAILQ_ENTRY(spdk_iscsi_ig_map) tailq;
+};
+
+struct spdk_iscsi_pg_map {
+	struct spdk_iscsi_portal_grp *pg;
+	int num_ig_maps;
+	TAILQ_HEAD(, spdk_iscsi_ig_map) ig_map_head;
+	TAILQ_ENTRY(spdk_iscsi_pg_map) tailq ;
 };
 
 struct spdk_iscsi_tgt_node {
@@ -73,8 +84,8 @@ struct spdk_iscsi_tgt_node {
 	uint32_t num_active_conns;
 	int lcore;
 
-	int maxmap;
-	struct spdk_iscsi_tgt_node_map map[MAX_TARGET_MAP];
+	int num_pg_maps;
+	TAILQ_HEAD(, spdk_iscsi_pg_map) pg_map_head;
 	TAILQ_ENTRY(spdk_iscsi_tgt_node) tailq;
 };
 
@@ -108,8 +119,8 @@ int spdk_iscsi_tgt_node_reset(struct spdk_iscsi_tgt_node *target,
 			      uint64_t lun);
 int spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 				     struct spdk_iscsi_tgt_node *target);
-void spdk_iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
-				    struct spdk_iscsi_init_grp *initiator_group);
+void spdk_iscsi_delete_all_ig_maps_for_ig(struct spdk_iscsi_init_grp *ig);
+void spdk_iscsi_delete_all_pg_maps_for_pg(struct spdk_iscsi_portal_grp *pg);
 int spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
 				char *lun_name, int lun_id);
 #endif /* SPDK_ISCSI_TGT_NODE_H_ */

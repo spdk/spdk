@@ -231,9 +231,11 @@ static const char *target_nodes_section = \
 static void
 spdk_iscsi_config_dump_target_nodes(FILE *fp)
 {
-	int l = 0, m = 0;
+	int l = 0;
 	struct spdk_scsi_dev *dev = NULL;
 	struct spdk_iscsi_tgt_node *target = NULL;
+	struct spdk_iscsi_pg_map *pg_map;
+	struct spdk_iscsi_ig_map *ig_map;
 
 	/* Create target nodes section */
 	fprintf(fp, "%s", target_nodes_section);
@@ -250,13 +252,12 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 		idx = target->num;
 		fprintf(fp, TARGET_NODE_TMPL, idx, idx, target->name, spdk_scsi_dev_get_name(dev));
 
-		for (m = 0; m < target->maxmap; m++) {
-			if (NULL == target->map[m].pg) continue;
-			if (NULL == target->map[m].ig) continue;
-
-			fprintf(fp, TARGET_NODE_PGIG_MAPPING_TMPL,
-				target->map[m].pg->tag,
-				target->map[m].ig->tag);
+		TAILQ_FOREACH(pg_map, &target->pg_map_head, tailq) {
+			TAILQ_FOREACH(ig_map, &pg_map->ig_map_head, tailq) {
+				fprintf(fp, TARGET_NODE_PGIG_MAPPING_TMPL,
+					pg_map->pg->tag,
+					ig_map->ig->tag);
+			}
 		}
 
 		if (target->auth_chap_disabled)
