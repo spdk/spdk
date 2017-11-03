@@ -41,7 +41,6 @@
 #include <linux/virtio_config.h>
 
 #include <rte_config.h>
-#include <rte_memory.h>
 #include <rte_mempool.h>
 
 #include "spdk_internal/log.h"
@@ -49,17 +48,6 @@
 #include "spdk/queue.h"
 #include "spdk/json.h"
 #include "spdk/io_channel.h"
-
-/*
- * Per virtio_config.h in Linux.
- *     For virtio_pci on SMP, we don't need to order with respect to MMIO
- *     accesses through relaxed memory I/O windows, so smp_mb() et al are
- *     sufficient.
- *
- */
-#define virtio_mb()	rte_smp_mb()
-#define virtio_rmb()	rte_smp_rmb()
-#define virtio_wmb()	rte_smp_wmb()
 
 #define VIRTQUEUE_MAX_NAME_SZ 32
 
@@ -249,64 +237,6 @@ int virtio_dev_init(struct virtio_dev *hw, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);
 int virtio_dev_start(struct virtio_dev *hw);
 
-/* Chain all the descriptors in the ring with an END */
-static inline void
-vring_desc_init(struct vring_desc *dp, uint16_t n)
-{
-	uint16_t i;
-
-	for (i = 0; i < n - 1; i++)
-		dp[i].next = (uint16_t)(i + 1);
-	dp[i].next = VQ_RING_DESC_CHAIN_END;
-}
-
-/**
- * Tell the backend not to interrupt us.
- */
-static inline void
-virtqueue_disable_intr(struct virtqueue *vq)
-{
-	vq->vq_ring.avail->flags |= VRING_AVAIL_F_NO_INTERRUPT;
-}
-
-static inline int
-virtqueue_full(const struct virtqueue *vq)
-{
-	return vq->vq_free_cnt == 0;
-}
-
-#define VIRTQUEUE_NUSED(vq) ((uint16_t)((vq)->vq_ring.used->idx - (vq)->vq_used_cons_idx))
-
-static inline void
-vq_update_avail_idx(struct virtqueue *vq)
-{
-	virtio_wmb();
-	vq->vq_ring.avail->idx = vq->vq_avail_idx;
-}
-
-static inline void
-vq_update_avail_ring(struct virtqueue *vq, uint16_t desc_idx)
-{
-	uint16_t avail_idx;
-	/*
-	 * Place the head of the descriptor chain into the next slot and make
-	 * it usable to the host. The chain is made available now rather than
-	 * deferring to virtqueue_notify() in the hopes that if the host is
-	 * currently running on another CPU, we can keep it processing the new
-	 * descriptor.
-	 */
-	avail_idx = (uint16_t)(vq->vq_avail_idx & (vq->vq_nentries - 1));
-	if (spdk_unlikely(vq->vq_ring.avail->ring[avail_idx] != desc_idx))
-		vq->vq_ring.avail->ring[avail_idx] = desc_idx;
-	vq->vq_avail_idx++;
-}
-
-static inline int
-virtqueue_kick_prepare(struct virtqueue *vq)
-{
-	return !(vq->vq_ring.used->flags & VRING_USED_F_NO_NOTIFY);
-}
-
 /**
  * Bind a virtqueue with given index to the current thread;
  *
@@ -462,7 +392,5 @@ int virtio_enumerate_pci(void);
 struct virtio_dev *virtio_user_dev_init(const char *name, const char *path,
 					uint16_t requested_queues,
 					uint32_t queue_size, uint16_t fixed_queue_num);
-
-extern const struct virtio_dev_ops virtio_user_ops;
 
 #endif /* SPDK_VIRTIO_H */
