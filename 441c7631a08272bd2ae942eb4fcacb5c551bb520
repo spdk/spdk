@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74537d66_3f8e1963",
+        "filename": "doc/bdev.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T20:16:33Z",
+      "side": 1,
+      "message": "Can you clarify what is meant by \"same type\"?",
+      "revId": "441c7631a08272bd2ae942eb4fcacb5c551bb520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ea34398_58122dd0",
+        "filename": "doc/bdev.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T20:16:33Z",
+      "side": 1,
+      "message": "utilize",
+      "revId": "441c7631a08272bd2ae942eb4fcacb5c551bb520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10647c18_079e6ab5",
+        "filename": "lib/bdev/raid1/vbdev_raid1.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T20:16:33Z",
+      "side": 1,
+      "message": "why 8?  the code clearly only supports 2",
+      "revId": "441c7631a08272bd2ae942eb4fcacb5c551bb520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba4d6635_5c0eb44c",
+        "filename": "lib/bdev/raid1/vbdev_raid1.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T20:16:33Z",
+      "side": 1,
+      "message": "num_children would be a better name - but not sure if this is needed if it is only 2 children",
+      "revId": "441c7631a08272bd2ae942eb4fcacb5c551bb520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f41794b1_cf031c87",
+        "filename": "lib/bdev/raid1/vbdev_raid1.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T20:16:33Z",
+      "side": 1,
+      "message": "need to complete the I/O here if rc \u003c 0\n\nyou cannot rely on the completion at line 272 - this callback may get deferred if there are no buffers available when the I/O is submitted",
+      "revId": "441c7631a08272bd2ae942eb4fcacb5c551bb520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cf3976d_63dd414d",
+        "filename": "lib/bdev/raid1/vbdev_raid1.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T20:16:33Z",
+      "side": 1,
+      "message": "you should just return here, and you\u0027ll need to put a separate child_io_num check in vbdev_raid1_get_buf_cb to handle the deferred callback case",
+      "revId": "441c7631a08272bd2ae942eb4fcacb5c551bb520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b302dd04_52229341",
+        "filename": "lib/bdev/raid1/vbdev_raid1.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T20:16:33Z",
+      "side": 1,
+      "message": "extra newline",
+      "revId": "441c7631a08272bd2ae942eb4fcacb5c551bb520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec1255bc_dfc0237e",
+        "filename": "lib/bdev/raid1/vbdev_raid1.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T20:16:33Z",
+      "side": 1,
+      "message": "extra tab",
+      "revId": "441c7631a08272bd2ae942eb4fcacb5c551bb520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a5caffb_7011dc26",
+        "filename": "lib/bdev/raid1/vbdev_raid1.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T20:16:33Z",
+      "side": 1,
+      "message": "I would rename this to something like raid1_vbdev_free\n\nJust naming this spdk_vbdev (with no raid1 in the name) makes it seem like this is a generic spdk API function and not specific to the raid1 module",
+      "revId": "441c7631a08272bd2ae942eb4fcacb5c551bb520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0941119d_b5311241",
+        "filename": "lib/bdev/raid1/vbdev_raid1.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T20:16:33Z",
+      "side": 1,
+      "message": "I would rename this to something like raid1_base_construct",
+      "revId": "441c7631a08272bd2ae942eb4fcacb5c551bb520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c944b8ca_65b1e520",
+        "filename": "lib/bdev/raid1/vbdev_raid1.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T20:16:33Z",
+      "side": 1,
+      "message": "if you have:\n\nbdev 0: blockcnt \u003d 16, blocklen \u003d 512\nbdev 1: blockcnt \u003d 2, blocklen \u003d 4096\n\nthe loop above will set rdisk-\u003ebdev.blocklen \u003d 4096\nbut we still use bdev 0\u0027s blockcnt - instead it should use bdev 1\u0027s blockcnt\n\nwhat if the two devices are different sizes?  even two different 800GB SSDs from different vendors could have slightly different sizes - I think we need to pick the minimum here",
+      "revId": "441c7631a08272bd2ae942eb4fcacb5c551bb520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
