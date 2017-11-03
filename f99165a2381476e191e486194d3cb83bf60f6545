@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30292f41_ef1d43ce",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-03T08:03:23Z",
+      "side": 1,
+      "message": "Looks like this original comment is also incorrect. From the implementation, it just get the first bdev on the linklist. This paragraph can be removed.",
+      "range": {
+        "startLine": 165,
+        "startChar": 0,
+        "endLine": 166,
+        "endChar": 49
+      },
+      "revId": "f99165a2381476e191e486194d3cb83bf60f6545",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e653eded_a1d26ef0",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-03T08:03:23Z",
+      "side": 1,
+      "message": "Same to remove this comment.",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 176,
+        "endChar": 48
+      },
+      "revId": "f99165a2381476e191e486194d3cb83bf60f6545",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e530ada_3cf9141c",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-03T08:03:23Z",
+      "side": 1,
+      "message": "current",
+      "range": {
+        "startLine": 178,
+        "startChar": 19,
+        "endLine": 178,
+        "endChar": 27
+      },
+      "revId": "f99165a2381476e191e486194d3cb83bf60f6545",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce198a2a_d2b96d72",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-03T08:03:23Z",
+      "side": 1,
+      "message": "current",
+      "range": {
+        "startLine": 199,
+        "startChar": 19,
+        "endLine": 199,
+        "endChar": 27
+      },
+      "revId": "f99165a2381476e191e486194d3cb83bf60f6545",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "330a1581_0276db5e",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-03T08:03:23Z",
+      "side": 1,
+      "message": "initialzied",
+      "range": {
+        "startLine": 244,
+        "startChar": 34,
+        "endLine": 244,
+        "endChar": 45
+      },
+      "revId": "f99165a2381476e191e486194d3cb83bf60f6545",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c03b8245_b886e461",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-03T08:03:23Z",
+      "side": 1,
+      "message": "Missing the comments for these parameters. Thanks.",
+      "range": {
+        "startLine": 249,
+        "startChar": 31,
+        "endLine": 249,
+        "endChar": 84
+      },
+      "revId": "f99165a2381476e191e486194d3cb83bf60f6545",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb0c5cae_dd067511",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-03T08:03:23Z",
+      "side": 1,
+      "message": "Please remove this extra line.",
+      "revId": "f99165a2381476e191e486194d3cb83bf60f6545",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
