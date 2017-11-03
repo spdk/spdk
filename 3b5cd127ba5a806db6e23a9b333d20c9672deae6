@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "f1046e95_2cb461d9",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T10:00:28Z",
+      "side": 1,
+      "message": "This kind of loop is present in multiple places. Can something be done to reduce its occurrences?",
+      "range": {
+        "startLine": 58,
+        "startChar": 8,
+        "endLine": 60,
+        "endChar": 12
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e678232_a7e83730",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T10:00:28Z",
+      "side": 1,
+      "message": "4G only uses 1 possible device - NVMe. I think this loop is not needed.",
+      "range": {
+        "startLine": 83,
+        "startChar": 8,
+        "endLine": 85,
+        "endChar": 12
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31dea1b9_66d65cde",
         "filename": "test/vhost/initiator/blockdev.sh",
         "patchSetId": 47
@@ -25,6 +71,52 @@
     },
     {
       "key": {
+        "uuid": "8f2f67ad_321453d5",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T10:00:28Z",
+      "side": 1,
+      "message": "Where is \"$bdev\" assigned? I only see $vbdev, $vbdevs and $bdevs\nDo we need that echo?\nIf it\u0027s supposed to be a kind of notice message then please add something like \"INFO:\" prefix to it.",
+      "range": {
+        "startLine": 205,
+        "startChar": 16,
+        "endLine": 205,
+        "endChar": 34
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6696cea0_701af4fe",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T10:00:28Z",
+      "side": 1,
+      "message": "Do we need that?\nIf it\u0027s supposed to be a kind of notice message then please add something like \"INFO:\" prefix to it.",
+      "range": {
+        "startLine": 217,
+        "startChar": 16,
+        "endLine": 217,
+        "endChar": 33
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "63b5de2a_dacdf0c7",
         "filename": "test/vhost/initiator/blockdev.sh",
         "patchSetId": 47
@@ -38,6 +130,29 @@
       "message": "Isn\u0027t that already done in line 91?",
       "range": {
         "startLine": 225,
+        "startChar": 8,
+        "endLine": 225,
+        "endChar": 56
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b60860c_c91adfff",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T10:00:28Z",
+      "side": 1,
+      "message": "I think it\u0027d be better / more readable to assign vbdev names to a list before the loop and replace i\u003d0 and i\u003d$((i+1)) with a C-like syntax for loop",
+      "range": {
+        "startLine": 224,
         "startChar": 8,
         "endLine": 225,
         "endChar": 56
@@ -95,6 +210,29 @@
     },
     {
       "key": {
+        "uuid": "93d4e5ec_4249f949",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T10:00:28Z",
+      "side": 1,
+      "message": "If it\u0027s supposed to be a kind of notice message then please add something like \"INFO:\" prefix to it.",
+      "range": {
+        "startLine": 229,
+        "startChar": 16,
+        "endLine": 229,
+        "endChar": 45
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7cce27c2_8bbabdea",
         "filename": "test/vhost/initiator/blockdev.sh",
         "patchSetId": 47
@@ -111,6 +249,29 @@
         "startChar": 8,
         "endLine": 235,
         "endChar": 36
+      },
+      "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73a2c7cd_9a80553e",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-03T10:00:28Z",
+      "side": 1,
+      "message": "Do we need that echo?\nIf it\u0027s supposed to be a kind of notice message then please add something like \"INFO:\" prefix to it.",
+      "range": {
+        "startLine": 240,
+        "startChar": 16,
+        "endLine": 240,
+        "endChar": 31
       },
       "revId": "3b5cd127ba5a806db6e23a9b333d20c9672deae6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
