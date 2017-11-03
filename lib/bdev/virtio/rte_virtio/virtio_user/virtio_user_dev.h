@@ -57,9 +57,6 @@ struct virtio_user_dev {
 	struct virtio_user_backend_ops *ops;
 };
 
-int virtio_user_start_device(struct virtio_dev *vdev);
-int virtio_user_stop_device(struct virtio_dev *vdev);
-
 /**
  * Connect to a vhost-user device and create corresponding virtio_dev.
  *
@@ -76,6 +73,5 @@ int virtio_user_stop_device(struct virtio_dev *vdev);
 struct virtio_dev *virtio_user_dev_init(const char *name, const char *path,
 					uint16_t requested_queues,
 					uint32_t queue_size, uint16_t fixed_queue_num);
-void virtio_user_dev_uninit(struct virtio_user_dev *dev);
 
 #endif
