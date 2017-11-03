@@ -1,44 +1,17 @@
 # Getting Started {#getting_started}
 
-# Installing Prerequisites {#getting_started_prerequisites}
-
-Fedora/CentOS:
-
-~~~{.sh}
-sudo dnf install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-	git astyle-devel python-pep8 lcov python clang-analyzer
-# Additional dependencies for RDMA (NVMe over Fabrics)
-sudo dnf install -y libibverbs-devel librdmacm-devel
-# Additional dependencies for building docs
-sudo dnf install -y doxygen mscgen
-~~~
-
-Ubuntu/Debian:
-
-~~~{.sh}
-sudo apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
-	git astyle pep8 lcov clang
-# Additional dependencies for RDMA (NVMe over Fabrics)
-sudo apt-get install -y libibverbs-dev librdmacm
-# Additional dependencies for building docs
-sudo apt-get install -y doxygen mscgen
-~~~
-
-FreeBSD:
-
-~~~{.sh}
-sudo pkg install gmake cunit openssl git devel/astyle bash devel/pep8 \
-	python
-# Additional dependencies for building docs
-sudo pkg install doxygen mscgen
-~~~
-
 # Getting the Source Code {#getting_started_source}
 
 ~~~{.sh}
 git clone https://github.com/spdk/spdk
 cd spdk
 git submodule update --init
+~~~
+
+# Installing Prerequisites {#getting_started_prerequisites}
+
+~~~{.sh}
+scripts/pkgdep.sh
 ~~~
 
 # Building {#getting_started_building}
