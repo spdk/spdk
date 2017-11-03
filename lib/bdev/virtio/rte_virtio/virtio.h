@@ -40,8 +40,6 @@
 #include <linux/virtio_pci.h>
 #include <linux/virtio_config.h>
 
-#include <rte_mempool.h>
-
 #include "spdk_internal/log.h"
 #include "spdk/likely.h"
 #include "spdk/queue.h"
@@ -156,9 +154,7 @@ struct virtqueue {
 	void *vq_ring_virt_mem;  /**< virtual address of vring */
 	unsigned int vq_ring_size;
 
-	const struct rte_memzone *mz;    /**< mem zone to populate TX ring. */
-
-	phys_addr_t vq_ring_mem; /**< physical address of vring */
+	uint64_t vq_ring_mem; /**< physical address of vring */
 
 	/**
 	 * Head of the free chain in the descriptor table. If

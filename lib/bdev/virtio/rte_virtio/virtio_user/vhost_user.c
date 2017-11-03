@@ -293,8 +293,6 @@ vhost_user_sock(struct virtio_user_dev *dev,
 	int i, len;
 	int vhostfd = dev->vhostfd;
 
-	RTE_SET_USED(m);
-
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_USER, "sent message %d = %s\n", req, vhost_msg_strings[req]);
 
 	msg.request = req;

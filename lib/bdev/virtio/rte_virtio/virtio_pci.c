@@ -234,9 +234,8 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 
 	desc_addr = vq->vq_ring_mem;
 	avail_addr = desc_addr + vq->vq_nentries * sizeof(struct vring_desc);
-	used_addr = RTE_ALIGN_CEIL(avail_addr + offsetof(struct vring_avail,
-				   ring[vq->vq_nentries]),
-				   VIRTIO_PCI_VRING_ALIGN);
+	used_addr = (avail_addr + offsetof(struct vring_avail, ring[vq->vq_nentries])
+		     + VIRTIO_PCI_VRING_ALIGN - 1) & ~(VIRTIO_PCI_VRING_ALIGN - 1);
 
 	spdk_mmio_write_2(&hw->common_cfg->queue_select, vq->vq_queue_index);
 
