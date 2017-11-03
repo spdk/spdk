@@ -238,11 +238,3 @@ err:
 	free(dev);
 	return NULL;
 }
-
-void
-virtio_user_dev_uninit(struct virtio_user_dev *dev)
-{
-	close(dev->vhostfd);
-	free(dev->vdev.name);
-	free(dev);
-}
