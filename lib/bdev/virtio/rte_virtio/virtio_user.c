@@ -42,7 +42,7 @@
 #include <rte_alarm.h>
 
 #include "virtio_dev.h"
-#include "virtio_user/virtio_user_dev.h"
+#include "virtio_user/vhost.h"
 
 #include "spdk/string.h"
 

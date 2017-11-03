@@ -42,6 +42,8 @@
 
 #include "../virtio_dev.h"
 
+#define VIRTIO_MAX_VIRTQUEUES 0x100
+
 enum vhost_user_request {
 	VHOST_USER_NONE = 0,
 	VHOST_USER_GET_FEATURES = 1,
@@ -67,7 +69,22 @@ enum vhost_user_request {
 
 extern const char *const vhost_msg_strings[VHOST_USER_MAX];
 
-struct virtio_user_dev;
+struct virtio_user_backend_ops;
+
+struct virtio_user_dev {
+	/* for vhost_user backend */
+	int		vhostfd;
+
+	/* for both vhost_user and vhost_kernel */
+	int		callfds[VIRTIO_MAX_VIRTQUEUES];
+	int		kickfds[VIRTIO_MAX_VIRTQUEUES];
+	uint32_t	queue_size;
+
+	uint8_t		status;
+	char		path[PATH_MAX];
+	struct vring	vrings[VIRTIO_MAX_VIRTQUEUES];
+	struct virtio_user_backend_ops *ops;
+};
 
 struct virtio_user_backend_ops {
 	int (*setup)(struct virtio_user_dev *dev);
