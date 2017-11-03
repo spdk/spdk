@@ -145,8 +145,9 @@ static int
 virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 {
 	char vq_name[VIRTQUEUE_MAX_NAME_SZ];
-	const struct rte_memzone *mz = NULL;
+	void *queue_mem;
 	unsigned int vq_size, size;
+	uint64_t queue_mem_phys_addr;
 	struct virtqueue *vq;
 	int ret;
 
@@ -196,30 +197,20 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "vring_size: %u, rounded_vring_size: %u\n",
 		      size, vq->vq_ring_size);
 
-	mz = rte_memzone_reserve_aligned(vq_name, vq->vq_ring_size,
-					 SOCKET_ID_ANY,
-					 0, VIRTIO_PCI_VRING_ALIGN);
-	if (mz == NULL) {
-		if (rte_errno == EEXIST)
-			mz = rte_memzone_lookup(vq_name);
-		if (mz == NULL) {
-			ret = -ENOMEM;
-			goto fail_q_alloc;
-		}
+	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VIRTIO_PCI_VRING_ALIGN, &queue_mem_phys_addr);
+	if (queue_mem == NULL) {
+		ret = -ENOMEM;
+		goto fail_q_alloc;
 	}
 
-	memset(mz->addr, 0, sizeof(mz->len));
-
-	vq->vq_ring_mem = mz->phys_addr;
-	vq->vq_ring_virt_mem = mz->addr;
+	vq->vq_ring_mem = queue_mem_phys_addr;
+	vq->vq_ring_virt_mem = queue_mem;
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "vq->vq_ring_mem:      0x%" PRIx64 "\n",
-		      (uint64_t)mz->phys_addr);
+		      vq->vq_ring_mem);
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "vq->vq_ring_virt_mem: 0x%" PRIx64 "\n",
-		      (uint64_t)(uintptr_t)mz->addr);
+		      (uint64_t)(uintptr_t)vq->vq_ring_virt_mem);
 
 	virtio_init_vring(vq);
-
-	vq->mz = mz;
 
 	vq->owner_lcore = SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED;
 	vq->poller = NULL;
@@ -232,7 +223,6 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	return 0;
 
 fail_q_alloc:
-	rte_memzone_free(mz);
 	rte_free(vq);
 
 	return ret;
@@ -253,7 +243,7 @@ virtio_free_queues(struct virtio_dev *dev)
 		if (!vq)
 			continue;
 
-		rte_memzone_free(vq->mz);
+		spdk_dma_free(vq->vq_ring_virt_mem);
 
 		rte_free(vq);
 		dev->vqs[i] = NULL;
