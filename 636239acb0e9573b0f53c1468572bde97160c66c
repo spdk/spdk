@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43bcbc82_f14620d6",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-03T23:34:18Z",
+      "side": 1,
+      "message": "This can use strdup() instead as a simpler alternative.",
+      "revId": "636239acb0e9573b0f53c1468572bde97160c66c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
