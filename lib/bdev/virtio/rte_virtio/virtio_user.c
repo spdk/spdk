@@ -440,7 +440,7 @@ virtio_user_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write_ctx
 	spdk_json_write_string(w, dev->path);
 }
 
-const struct virtio_pci_ops virtio_user_ops = {
+const struct virtio_dev_backend_ops virtio_user_ops = {
 	.read_dev_cfg	= virtio_user_read_dev_config,
 	.write_dev_cfg	= virtio_user_write_dev_config,
 	.get_status	= virtio_user_get_status,

@@ -286,7 +286,7 @@ modern_notify_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	spdk_mmio_write_2(vq->notify_addr, vq->vq_queue_index);
 }
 
-const struct virtio_pci_ops modern_ops = {
+const struct virtio_dev_backend_ops modern_ops = {
 	.read_dev_cfg	= modern_read_dev_config,
 	.write_dev_cfg	= modern_write_dev_config,
 	.get_status	= modern_get_status,

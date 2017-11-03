@@ -80,7 +80,7 @@
 /* Extra status define for readability */
 #define VIRTIO_CONFIG_S_RESET 0
 
-struct virtio_pci_ops;
+struct virtio_dev_backend_ops;
 
 struct virtio_dev {
 	struct virtqueue **vqs;
@@ -107,7 +107,7 @@ struct virtio_dev {
 	pthread_mutex_t	mutex;
 
 	/** Backend-specific callbacks. */
-	const struct virtio_pci_ops *backend_ops;
+	const struct virtio_dev_backend_ops *backend_ops;
 
 	/** Context for backend ops */
 	void		*ctx;
@@ -115,7 +115,7 @@ struct virtio_dev {
 	TAILQ_ENTRY(virtio_dev) tailq;
 };
 
-struct virtio_pci_ops {
+struct virtio_dev_backend_ops {
 	void (*read_dev_cfg)(struct virtio_dev *hw, size_t offset,
 			     void *dst, int len);
 	void (*write_dev_cfg)(struct virtio_dev *hw, size_t offset,
@@ -246,7 +246,7 @@ int virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req);
  * \param ops backend callbacks
  * \param ctx argument for the backend callbacks
  */
-struct virtio_dev *virtio_dev_alloc(const struct virtio_pci_ops *ops, void *ctx);
+struct virtio_dev *virtio_dev_alloc(const struct virtio_dev_backend_ops *ops, void *ctx);
 
 int virtio_dev_init(struct virtio_dev *hw, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);
@@ -410,7 +410,7 @@ void virtio_dev_read_dev_config(struct virtio_dev *vdev, size_t offset, void *ds
  *
  * \param vdev virtio device
  */
-const struct virtio_pci_ops *virtio_dev_backend_ops(struct virtio_dev *vdev);
+const struct virtio_dev_backend_ops *virtio_dev_backend_ops(struct virtio_dev *vdev);
 
 /**
  * Check if the device has negotiated given feature bit.
@@ -454,6 +454,6 @@ struct virtio_dev *virtio_user_dev_init(const char *name, const char *path,
 					uint16_t requested_queues,
 					uint32_t queue_size, uint16_t fixed_queue_num);
 
-extern const struct virtio_pci_ops virtio_user_ops;
+extern const struct virtio_dev_backend_ops virtio_user_ops;
 
 #endif /* SPDK_VIRTIO_H */
