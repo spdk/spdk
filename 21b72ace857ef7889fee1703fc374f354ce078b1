@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65ba378e_3b227c69",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1932,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T19:18:23Z",
+      "side": 1,
+      "message": "This doesn\u0027t look right.  We really need some unit tests for this.  I think even a simple unit test will fail - do an init(), get total clusters, unload, load, get total clusters again.  They should match.\n\nFor example, I\u0027m not sure why we do md_start % pages_per_cluster here?  I think removing that %/mod operation will fix all of this.",
+      "revId": "21b72ace857ef7889fee1703fc374f354ce078b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1762739_a822ef06",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2176,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-03T19:18:23Z",
+      "side": 1,
+      "message": "isn\u0027t this already done in _spdk_bs_alloc() which is called earlier in this function?",
+      "revId": "21b72ace857ef7889fee1703fc374f354ce078b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
