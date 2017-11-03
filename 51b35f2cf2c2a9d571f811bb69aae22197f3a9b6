@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6dc71ed1_f03dd07d",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-03T17:57:46Z",
+      "side": 1,
+      "message": "A few minor comments on the wording:\n\n1) Please use [::] as the IPv6 wildcard\n\n2) Converting [*] to [::] automatically.\n\nAlso, maybe say \"Use of [*] will be deprecated in a future release\"",
+      "revId": "51b35f2cf2c2a9d571f811bb69aae22197f3a9b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10b92f10_d64b4dff",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-03T17:57:46Z",
+      "side": 1,
+      "message": "This else statement is dead code - it\u0027s either [::] or 0.0.0.0 at this point.",
+      "revId": "51b35f2cf2c2a9d571f811bb69aae22197f3a9b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
