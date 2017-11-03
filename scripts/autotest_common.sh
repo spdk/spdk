@@ -325,10 +325,6 @@ function part_dev_by_gpt () {
 			return 1
 		fi
 
-		if [ ! -e /dev/nbd0 ]; then
-			return 1
-		fi
-
 		if [ -z "$operation" ]; then
 			operation="create"
 		fi
