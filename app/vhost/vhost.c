@@ -101,7 +101,6 @@ main(int argc, char *argv[])
 	int ch;
 	int rc;
 	const char *socket_path = NULL;
-	enum spdk_log_level print_level = SPDK_LOG_NOTICE;
 	const char *pid_path = NULL;
 
 	vhost_app_opts_init(&opts);
@@ -136,7 +135,7 @@ main(int argc, char *argv[])
 			opts.master_core = strtoul(optarg, NULL, 10);
 			break;
 		case 'q':
-			print_level = SPDK_LOG_WARN;
+			opts.print_level = SPDK_LOG_WARN;
 			break;
 		case 's':
 			opts.mem_size = strtoul(optarg, NULL, 10);
@@ -151,7 +150,7 @@ main(int argc, char *argv[])
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
 			}
-			print_level = SPDK_LOG_DEBUG;
+			opts.print_level = SPDK_LOG_DEBUG;
 #ifndef DEBUG
 			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
 				argv[0]);
@@ -169,18 +168,6 @@ main(int argc, char *argv[])
 	if (pid_path) {
 		save_pid(pid_path);
 	}
-
-	if (print_level > SPDK_LOG_WARN &&
-	    isatty(STDERR_FILENO) &&
-	    !strncmp(ttyname(STDERR_FILENO), "/dev/tty", strlen("/dev/tty"))) {
-		printf("Warning: printing stderr to console terminal without -q option specified.\n");
-		printf("Suggest using -q to disable logging to stderr and monitor syslog, or\n");
-		printf("redirect stderr to a file.\n");
-		printf("(Delaying for 10 seconds...)\n");
-		sleep(10);
-	}
-
-	spdk_log_set_print_level(print_level);
 
 	opts.shutdown_cb = spdk_vhost_shutdown_cb;
 
