@@ -72,7 +72,6 @@ main(int argc, char **argv)
 	int ch;
 	int rc;
 	struct spdk_app_opts opts = {};
-	enum spdk_log_level print_level = SPDK_LOG_NOTICE;
 
 	/* default value in opts */
 	spdk_app_opts_init(&opts);
@@ -100,7 +99,7 @@ main(int argc, char **argv)
 				usage();
 				exit(EXIT_FAILURE);
 			}
-			print_level = SPDK_LOG_DEBUG;
+			opts.print_level = SPDK_LOG_DEBUG;
 #ifndef DEBUG
 			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
 				argv[0]);
@@ -124,7 +123,7 @@ main(int argc, char **argv)
 			opts.tpoint_group_mask = optarg;
 			break;
 		case 'q':
-			print_level = SPDK_LOG_WARN;
+			opts.print_level = SPDK_LOG_WARN;
 			break;
 		case 'D':
 		case 'H':
@@ -133,18 +132,6 @@ main(int argc, char **argv)
 			exit(EXIT_SUCCESS);
 		}
 	}
-
-	if (print_level > SPDK_LOG_WARN &&
-	    isatty(STDERR_FILENO) &&
-	    !strncmp(ttyname(STDERR_FILENO), "/dev/tty", strlen("/dev/tty"))) {
-		printf("Warning: printing stderr to console terminal without -q option specified.\n");
-		printf("Suggest using -q to disable logging to stderr and monitor syslog, or\n");
-		printf("redirect stderr to a file.\n");
-		printf("(Delaying for 10 seconds...)\n");
-		sleep(10);
-	}
-
-	spdk_log_set_print_level(print_level);
 
 	rc = spdk_nvmf_tgt_start(&opts);
 
