@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "993a53b3_9a8753c9",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-03T10:48:55Z",
+      "side": 1,
+      "message": "What happens when pid_path will never be created due to some failure in subprocess.call?",
+      "revId": "92ab530f0a075062d154a090e9cbab302ae4c50f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f0d800b_9e0d318d",
+        "filename": "test/lvol/vhost.conf.in",
+        "patchSetId": 11
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-03T10:48:55Z",
+      "side": 1,
+      "message": "we don\u0027t need this as we generate this at test start",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 53
+      },
+      "revId": "92ab530f0a075062d154a090e9cbab302ae4c50f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
