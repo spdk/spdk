@@ -1,6 +1,6 @@
 # vhost {#vhost}
 
-# Getting Started Guide {#vhost_getting_started}
+# vhost Users Guide {#vhost_users_guide}
 
 The Storage Performance Development Kit vhost application is named `vhost`.
 This application extends SPDK to present virtio storage controllers to QEMU-based
@@ -8,31 +8,31 @@ VMs and process I/O submitted to devices attached to those controllers.
 
 # Prerequisites {#vhost_prereqs}
 
-The base SPDK build instructions are located in README.md in the SPDK root directory.
-This guide assumes familiarity with building SPDK using the default options.
-
-If you want to kill the application using signal, make sure use the SIGTERM, then the application
-will release all the share memory resource before exit, the SIGKILL will make the share memory
-resource have no chance to be released by application, you may need to release the resource manually.
+This guide assumes the SPDK has been built according to the instructions in @ref
+getting_started.  The SPDK vhost target is built with the default configure options.
 
 ## Supported Guest Operating Systems
 
-The guest OS must contain virtio drivers. The SPDK vhost target has been tested
-with Ubuntu 16.04, Fedora 25, Windows 2012 R2.
-
-# Building
-
-## SPDK
-
-The vhost target is built by default.
-Once built, the binary will be at `app/vhost/vhost`.
+The guest OS must contain virtio-scsi or virtio-blk drivers.  Most Linux and FreeBSD
+distributions include virtio drivers.
+[Windows virtio drivers](https://fedoraproject.org/wiki/Windows_Virtio_Drivers) must be
+installed separately.  The SPDK vhost target has been tested with Ubuntu 16.04, Fedora
+25, and Windows 2012 R2.
 
 ## QEMU
 
-Vhost functionality is dependent on QEMU patches to enable virtio-scsi and
-virtio-blk in userspace - those patches are currently working their way
-through the QEMU mailing list, but temporary patches to enable this
-functionality are available in the spdk branch at https://github.com/spdk/qemu.
+Userspace vhost-scsi target support was added to upstream QEMU in v2.10.0.
+Userspace vhost-blk target support is not yet upstream in QEMU, but patches
+are available in SPDK's QEMU repository:
+
+~~~{.sh}
+git clone -b spdk https://github.com/spdk/qemu
+cd qemu
+mkdir build
+cd build
+../configure
+make
+~~~
 
 # Configuration {#vhost_config}
 
