@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4d96e124_0d8c02d8",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-04T06:38:16Z",
+      "side": 1,
+      "message": "Thank you so much for correcting my comments. I will adopt all but will do after Nov 13th after returning to my office. Please wait for a while.",
+      "parentUuid": "6dc71ed1_f03dd07d",
+      "revId": "51b35f2cf2c2a9d571f811bb69aae22197f3a9b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10b92f10_d64b4dff",
         "filename": "lib/iscsi/tgt_node.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2017-11-03T17:57:46Z",
       "side": 1,
       "message": "This else statement is dead code - it\u0027s either [::] or 0.0.0.0 at this point.",
+      "revId": "51b35f2cf2c2a9d571f811bb69aae22197f3a9b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "091d52a6_fdd8137d",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-04T06:38:16Z",
+      "side": 1,
+      "message": "Thank you so much.\n\nThe local variable host is the IP address of the portal p. This IP address is already bound to the socket and hence as you said if it is ipv4 it must be \"0.0.0.0 and if it is ipv6 it must be [::].\nHow about is the following?\n\nif (strcasecmp(host, \"[::]\") \u003d\u003d 0\n    || strcasecmp(host, \"0.0.0.0\") \u003d\u003d 0) {\n  if (spdk_sock_is_ipv6(conn-\u003esock)) {\n    snprintf(buf, sizeof buf, \"[%s]\", conn-\u003etarget_addr);\n    host \u003d buf;\n  } else if (spdk_sock_is_ipv4(conn-\u003esock)) {\n    snprintf(buf, sizeof buf, \"%s\", conn-\u003etarget_addr);\n    host \u003d buf;\n  } else {\n    continue;\n  }\n}    \n\nI will include your feedback and submit again after Nov 13th due to the connectivity issue and please wait for that. Sorry for inconvenience.",
+      "parentUuid": "10b92f10_d64b4dff",
       "revId": "51b35f2cf2c2a9d571f811bb69aae22197f3a9b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
