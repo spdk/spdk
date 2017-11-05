@@ -65,6 +65,7 @@ static int g_queue_depth;
 static int g_time_in_sec;
 static int g_show_performance_real_time = 0;
 static bool g_run_failed = false;
+static bool g_run_all_io_failed = true;
 static bool g_zcopy = true;
 
 static struct spdk_poller *g_perf_timer = NULL;
@@ -382,13 +383,24 @@ bdevperf_submit_single(struct io_target *target)
 	}
 
 	target->current_queue_depth++;
+	g_run_all_io_failed = false;
 }
 
 static void
 bdevperf_submit_io(struct io_target *target, int queue_depth)
 {
+	struct spdk_event *complete;
+
 	while (queue_depth-- > 0) {
 		bdevperf_submit_single(target);
+	}
+
+	if (g_run_all_io_failed == true) {
+		printf("All IOs submited to device (%s) failed.\n",
+		       spdk_bdev_get_name(target->bdev));
+
+		complete = spdk_event_allocate(rte_get_master_lcore(), end_run, target, NULL);
+		spdk_event_call(complete);
 	}
 }
 
