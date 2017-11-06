@@ -44,10 +44,38 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
+bool g_nvmf_hotplug_enabled = false;
+
 int
 spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 {
 	return spdk_nvmf_subsystem_bdev_attach(subsystem);
+}
+
+static void
+_nvmf_hotplug_process(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_ns *ns;
+	uint32_t i, max_nsid = 0, cur_nsid = 0;
+
+	for (i = 0; i < subsystem->max_nsid; i++) {
+		ns = _spdk_nvmf_subsystem_get_ns(subsystem, i + 1);
+		if (ns && cur_nsid < ns->id) {
+			cur_nsid = ns->id;
+		}
+		if (ns && ns->is_removed) {
+			spdk_nvmf_ns_bdev_detach(ns);
+			ns->allocated = false;
+			cur_nsid = 0;
+			subsystem->num_allocated_nsid--;
+		}
+		if (cur_nsid) {
+			max_nsid = cur_nsid;
+		}
+	}
+	if (subsystem->max_nsid != max_nsid) {
+		subsystem->max_nsid = max_nsid;
+	}
 }
 
 void
@@ -58,6 +86,9 @@ spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem)
 	TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
 		/* For each connection in the ctrlr, check for completions */
 		spdk_nvmf_ctrlr_poll(ctrlr);
+	}
+	if (subsystem->tgt->opts.hotplug_enabled) {
+		_nvmf_hotplug_process(subsystem);
 	}
 }
 
@@ -320,6 +351,14 @@ spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener *listener)
 	return &listener->trid;
 }
 
+static void
+spdk_nvmf_hot_remove(void *remove_ctx)
+{
+	struct spdk_nvmf_ns *ns = remove_ctx;
+
+	ns->is_removed = true;
+}
+
 uint32_t
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
 			   uint32_t nsid)
@@ -385,7 +424,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	memset(ns, 0, sizeof(*ns));
 	ns->bdev = bdev;
 	ns->id = nsid;
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &ns->desc);
+	rc = spdk_bdev_open(bdev, true, spdk_nvmf_hot_remove, ns, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
