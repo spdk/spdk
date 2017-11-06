@@ -529,7 +529,7 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 		ms_waited++;
 	} while (ms_waited < shutdown_timeout_ms);
 
-	SPDK_ERRLOG("did not shutdown within 5 seconds\n");
+	SPDK_ERRLOG("did not shutdown within %u milliseconds\n", shutdown_timeout_ms);
 }
 
 static int
