@@ -170,6 +170,10 @@ spdk_nvmf_read_config_file_params(struct spdk_conf_section *sp,
 	if (acceptor_poll_rate >= 0) {
 		g_spdk_nvmf_tgt_conf.acceptor_poll_rate = acceptor_poll_rate;
 	}
+
+	if (spdk_process_is_primary()) {
+		g_nvmf_hotplug_enabled = spdk_conf_section_get_boolval(sp, "HotplugEnable", false);
+	}
 }
 
 static int

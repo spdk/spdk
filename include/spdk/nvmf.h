@@ -45,6 +45,8 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
+extern bool g_nvmf_hotplug_enabled;
+
 struct spdk_nvmf_tgt;
 
 struct spdk_nvmf_tgt_opts {
