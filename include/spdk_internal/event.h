@@ -76,6 +76,10 @@ void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_fini_next(void);
 void spdk_subsystem_config(FILE *fp);
 
+void spdk_rpc_initialize(void);
+void spdk_rpc_finish(void);
+void spdk_rpc_config_text(FILE *fp);
+
 /**
  * \brief Register a new subsystem
  */

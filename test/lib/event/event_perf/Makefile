@@ -39,7 +39,7 @@ CFLAGS += $(ENV_CFLAGS)
 APP = event_perf
 C_SRCS := event_perf.c
 
-SPDK_LIB_LIST = event trace conf util log
+SPDK_LIB_LIST = event trace conf util log rpc jsonrpc json
 
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
