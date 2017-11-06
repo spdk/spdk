@@ -216,6 +216,20 @@ function waitfornbd() {
 	return 1
 }
 
+function waitfornbd2() {
+	nbd_name=$1
+
+	for ((i=1; i<=20; i++)); do
+		if dd if=/dev/$nbd_name of=/dev/null bs=4096 count=1 iflag=direct; then
+			return 0
+		else
+			sleep 0.1
+		fi
+	done
+
+	return 1
+}
+
 function killprocess() {
 	# $1 = process pid
 	if [ -z "$1" ]; then
@@ -339,6 +353,7 @@ function part_dev_by_gpt () {
 		echo "Process nbd pid: $nbd_pid"
 		waitforlisten $nbd_pid 5260
 		waitfornbd nbd0
+		waitfornbd2 nbd0
 
 		if [ "$operation" = create ]; then
 			parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
