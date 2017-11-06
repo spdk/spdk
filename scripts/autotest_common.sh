@@ -206,7 +206,7 @@ function waitfornbd() {
 	nbd_name=$1
 
 	for ((i=1; i<=20; i++)); do
-		if grep -q -w $nbd_name /proc/partitions; then
+		if lsblk -d /dev/nbd0; then
 			return 0
 		else
 			sleep 0.1
