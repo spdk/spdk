@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12e142c6_e2b7fc6e",
+        "filename": "autotest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-06T10:59:25Z",
+      "side": 1,
+      "message": "I think this shows that test cases should be categorized, so that any new test can increase its just number within category. Instead of changing all test case numbering for all following tests. This should be done as separate patch to this one, but would be really useful.\n\n\nHere test now named \"TEST CASE 25 - Name: delete_bdev_positive\" was enabled. I agree it should be enabled, but don\u0027t see how it is relevant to friendly name tests. Mistype ?",
+      "range": {
+        "startLine": 132,
+        "startChar": 43,
+        "endLine": 132,
+        "endChar": 100
+      },
+      "revId": "7876438be203b0dabb3b6453b311baa90a946826",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d6e95c7_4ec0cbc0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-06T10:59:25Z",
+      "side": 1,
+      "message": "I think this TODO can be removed.",
+      "range": {
+        "startLine": 202,
+        "startChar": 7,
+        "endLine": 202,
+        "endChar": 33
+      },
+      "revId": "7876438be203b0dabb3b6453b311baa90a946826",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
