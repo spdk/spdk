@@ -473,6 +473,10 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 	TAILQ_INIT(&reactor->timer_pollers);
 
 	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, reactor->socket_id);
+	if (!reactor->events) {
+		reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536,
+						   SPDK_ENV_SOCKET_ID_ANY);
+	}
 	assert(reactor->events != NULL);
 
 	reactor->event_mempool = g_spdk_event_mempool[reactor->socket_id];
