@@ -46,6 +46,7 @@
 
 struct nbd_io {
 	enum spdk_bdev_io_type	type;
+	int			ref;
 	void			*payload;
 
 	/* NOTE: for TRIM, this represents number of bytes to trim. */
@@ -116,7 +117,10 @@ spdk_nbd_stop(struct spdk_nbd_disk *nbd)
 		close(nbd->fd);
 	}
 
-	free(nbd);
+	nbd->io.ref--;
+	if (nbd->io.ref == 0) {
+		free(nbd);
+	}
 }
 
 static int64_t
@@ -169,6 +173,11 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	if (bdev_io != NULL) {
 		spdk_bdev_free_io(bdev_io);
 	}
+
+	io->ref--;
+	if (io->ref == 0) {
+		free(SPDK_CONTAINEROF(io, struct spdk_nbd_disk, io));
+	}
 }
 
 static void
@@ -176,6 +185,8 @@ nbd_submit_bdev_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		   struct spdk_io_channel *ch, struct nbd_io *io)
 {
 	int rc;
+
+	io->ref++;
 
 	switch (io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
@@ -376,6 +387,7 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 		goto err;
 	}
 
+	nbd->io.ref = 1;
 	nbd->bdev = bdev;
 	nbd->ch = spdk_bdev_get_io_channel(nbd->bdev_desc);
 	nbd->buf_align = spdk_max(spdk_bdev_get_buf_align(bdev), 64);
