@@ -39,6 +39,8 @@
 #include "spdk/log.h"
 #include "spdk/net.h"
 
+static int g_daemon_mode = 0;
+
 static void
 spdk_sigusr1(int signo __attribute__((__unused__)))
 {
@@ -86,12 +88,70 @@ spdk_startup(void *arg1, void *arg2)
 	}
 }
 
+static void
+iscsi_parse_args(int argc, char **argv, struct spdk_app_opts *opts)
+{
+	int ch, rc;
+
+	while ((ch = getopt(argc, argv, "bc:de:i:m:n:p:qs:t:H")) != -1) {
+		switch (ch) {
+		case 'd':
+			opts->enable_coredump = false;
+			break;
+		case 'c':
+			opts->config_file = optarg;
+			break;
+		case 'i':
+			opts->shm_id = atoi(optarg);
+			break;
+		case 't':
+			rc = spdk_log_set_trace_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0]);
+				exit(EXIT_FAILURE);
+			}
+			opts->print_level = SPDK_LOG_DEBUG;
+#ifndef DEBUG
+			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -t flag\n",
+				argv[0]);
+			usage(argv[0]);
+			exit(EXIT_FAILURE);
+#endif
+			break;
+		case 'e':
+			opts->tpoint_group_mask = optarg;
+			break;
+		case 'q':
+			opts->print_level = SPDK_LOG_WARN;
+			break;
+		case 'm':
+			opts->reactor_mask = optarg;
+			break;
+		case 'n':
+			opts->mem_channel = atoi(optarg);
+			break;
+		case 'p':
+			opts->master_core = atoi(optarg);
+			break;
+		case 's':
+			opts->mem_size = atoi(optarg);
+			break;
+		case 'b':
+			g_daemon_mode = 1;
+			break;
+		case 'H':
+		default:
+			usage(argv[0]);
+			exit(EXIT_SUCCESS);
+		}
+	}
+}
+
 int
 main(int argc, char **argv)
 {
-	int ch;
 	int rc;
-	int daemon_mode = 0;
 	struct spdk_app_opts opts = {};
 
 	/* default value in opts structure */
@@ -102,61 +162,9 @@ main(int argc, char **argv)
 	}
 	opts.name = "iscsi";
 
-	while ((ch = getopt(argc, argv, "bc:de:i:m:n:p:qs:t:H")) != -1) {
-		switch (ch) {
-		case 'd':
-			opts.enable_coredump = false;
-			break;
-		case 'c':
-			opts.config_file = optarg;
-			break;
-		case 'i':
-			opts.shm_id = atoi(optarg);
-			break;
-		case 't':
-			rc = spdk_log_set_trace_flag(optarg);
-			if (rc < 0) {
-				fprintf(stderr, "unknown flag\n");
-				usage(argv[0]);
-				exit(EXIT_FAILURE);
-			}
-			opts.print_level = SPDK_LOG_DEBUG;
-#ifndef DEBUG
-			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -t flag\n",
-				argv[0]);
-			usage(argv[0]);
-			exit(EXIT_FAILURE);
-#endif
-			break;
-		case 'e':
-			opts.tpoint_group_mask = optarg;
-			break;
-		case 'q':
-			opts.print_level = SPDK_LOG_WARN;
-			break;
-		case 'm':
-			opts.reactor_mask = optarg;
-			break;
-		case 'n':
-			opts.mem_channel = atoi(optarg);
-			break;
-		case 'p':
-			opts.master_core = atoi(optarg);
-			break;
-		case 's':
-			opts.mem_size = atoi(optarg);
-			break;
-		case 'b':
-			daemon_mode = 1;
-			break;
-		case 'H':
-		default:
-			usage(argv[0]);
-			exit(EXIT_SUCCESS);
-		}
-	}
+	iscsi_parse_args(argc, argv, &opts);
 
-	if (daemon_mode) {
+	if (g_daemon_mode) {
 		if (daemon(1, 0) < 0) {
 			SPDK_ERRLOG("Start iscsi target daemon faild.\n");
 			exit(EXIT_FAILURE);
