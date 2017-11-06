@@ -115,6 +115,7 @@ struct spdk_nvmf_ns {
 	struct spdk_io_channel *ch;
 	uint32_t id;
 	bool allocated;
+	bool is_removed;
 };
 
 enum spdk_nvmf_qpair_type {
@@ -224,7 +225,7 @@ bool spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr);
 bool spdk_nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr);
 
 int spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns_data *nsdata);
-
+void spdk_nvmf_ns_bdev_detach(struct spdk_nvmf_ns *ns);
 int spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem);
 void spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem);
 int spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
