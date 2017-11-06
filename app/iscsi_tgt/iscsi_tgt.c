@@ -57,7 +57,7 @@ spdk_sigusr1(int signo __attribute__((__unused__)))
 }
 
 static void
-usage(char *executable_name)
+common_usage(char *executable_name)
 {
 	struct spdk_app_opts opts;
 
@@ -74,9 +74,15 @@ usage(char *executable_name)
 	printf(" -s size    memory size in MB for DPDK\n");
 	spdk_tracelog_usage(stdout, "-t");
 	printf(" -H         show this usage\n");
-	printf(" -b         run iscsi target background, the default is foreground\n");
 	printf(" -d         disable coredump file enabling\n");
 	printf(" -q         disable notice level logging to stderr\n");
+}
+
+static void
+usage(char *executable_name)
+{
+	common_usage(executable_name);
+	printf(" -b         run iscsi target background, the default is foreground\n");
 }
 
 static void

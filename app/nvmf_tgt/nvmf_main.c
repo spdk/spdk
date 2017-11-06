@@ -42,7 +42,7 @@
 #define SPDK_NVMF_DEFAULT_CONFIG SPDK_NVMF_BUILD_ETC "/nvmf.conf"
 
 static void
-usage(void)
+common_usage(void)
 {
 	struct spdk_app_opts opts;
 
@@ -63,6 +63,12 @@ usage(void)
 	printf(" -v         - verbose (enable warnings)\n");
 	printf(" -H         - show this usage\n");
 	printf(" -d         - disable coredump file enabling\n");
+}
+
+static void
+usage(void)
+{
+	common_usage();
 }
 
 static void
