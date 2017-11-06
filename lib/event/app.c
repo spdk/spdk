@@ -58,6 +58,10 @@ static struct spdk_app g_spdk_app;
 static struct spdk_event *g_shutdown_event = NULL;
 static int g_init_lcore;
 
+static spdk_event_fn g_app_start_fn;
+static void *g_app_start_arg1;
+static void *g_app_start_arg2;
+
 int
 spdk_app_get_shm_id(void)
 {
@@ -129,6 +133,7 @@ spdk_app_get_running_config(char **config_str, char *name)
 	setvbuf(fp, vbuf, _IOFBF, BUFSIZ);
 
 	spdk_app_config_dump_global_section(fp);
+	spdk_rpc_config_text(fp);
 	spdk_subsystem_config(fp);
 
 	length = ftell(fp);
@@ -244,6 +249,13 @@ spdk_app_setup_signal_handlers(struct spdk_app_opts *opts)
 	pthread_sigmask(SIG_UNBLOCK, &sigmask, NULL);
 
 	return 0;
+}
+
+static void
+start_rpc(void *arg1, void *arg2)
+{
+	spdk_rpc_initialize();
+	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
 }
 
 int
@@ -378,7 +390,10 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
-	app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
+	g_app_start_fn = start_fn;
+	g_app_start_arg1 = arg1;
+	g_app_start_arg2 = arg2;
+	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, NULL, NULL);
 
 	spdk_subsystem_init(app_start_event);
 
@@ -401,6 +416,8 @@ static void
 _spdk_app_stop(void *arg1, void *arg2)
 {
 	struct spdk_event *app_stop_event;
+
+	spdk_rpc_finish();
 
 	app_stop_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_reactors_stop, NULL, NULL);
 	spdk_subsystem_fini(app_stop_event);
