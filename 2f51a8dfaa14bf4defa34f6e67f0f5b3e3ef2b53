@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77d285bf_0d3af54c",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-06T20:11:04Z",
+      "side": 1,
+      "message": "a -\u003e an",
+      "revId": "2f51a8dfaa14bf4defa34f6e67f0f5b3e3ef2b53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2281a30a_9336bfae",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 332,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-06T20:11:04Z",
+      "side": 1,
+      "message": "What about thread safety? You can\u0027t call this while I/O is occurring.",
+      "revId": "2f51a8dfaa14bf4defa34f6e67f0f5b3e3ef2b53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
