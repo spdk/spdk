@@ -1235,6 +1235,83 @@ bs_cluster_sz(void)
 }
 
 /*
+ * Create a blobstore, reload it and ensure total usable cluster count
+ *  stays the same.
+ */
+static void
+bs_usable_clusters(void)
+{
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_opts opts;
+	uint32_t clusters;
+	int i, rc;
+
+	/* Init blobstore */
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	clusters = spdk_bs_total_data_cluster_count(g_bs);
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	dev = init_dev();
+	/* Load an existing blob store */
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	CU_ASSERT(spdk_bs_total_data_cluster_count(g_bs) == clusters);
+
+	/* Create and resize blobs to make sure that useable cluster count won't change */
+	for (i = 0; i < 4; i++) {
+		g_bserrno = -1;
+		g_blobid = SPDK_BLOBID_INVALID;
+		spdk_bs_md_create_blob(g_bs,
+				       blob_op_with_id_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(g_blobid !=  SPDK_BLOBID_INVALID);
+
+		g_bserrno = -1;
+		g_blob = NULL;
+		spdk_bs_md_open_blob(g_bs, g_blobid, blob_op_with_handle_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+		CU_ASSERT(g_blob !=  NULL);
+
+		rc = spdk_bs_md_resize_blob(g_blob, 10);
+		CU_ASSERT(rc == 0);
+
+		g_bserrno = -1;
+		spdk_bs_md_close_blob(&g_blob, blob_op_complete, NULL);
+		CU_ASSERT(g_bserrno == 0);
+	}
+
+	CU_ASSERT(spdk_bs_total_data_cluster_count(g_bs) == clusters);
+
+	/* Reload the blob store to make sure that nothing changed */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	dev = init_dev();
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	CU_ASSERT(spdk_bs_total_data_cluster_count(g_bs) == clusters);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+/*
  * Test resizing of the metadata blob.  This requires creating enough blobs
  *  so that one cluster is not enough to fit the metadata for those blobs.
  *  To induce this condition to happen more quickly, we reduce the cluster
@@ -1845,6 +1922,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "bs_load", bs_load) == NULL ||
 		CU_add_test(suite, "bs_unload", bs_unload) == NULL ||
 		CU_add_test(suite, "bs_cluster_sz", bs_cluster_sz) == NULL ||
+		CU_add_test(suite, "bs_usable_clusters", bs_usable_clusters) == NULL ||
 		CU_add_test(suite, "bs_resize_md", bs_resize_md) == NULL ||
 		CU_add_test(suite, "bs_destroy", bs_destroy) == NULL ||
 		CU_add_test(suite, "bs_type", bs_type) == NULL ||
