@@ -23,7 +23,6 @@ trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 
 export NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i 0"
 
-run_test test/nvmf/fio/fio.sh
 run_test test/nvmf/filesystem/filesystem.sh
 run_test test/nvmf/discovery/discovery.sh
 run_test test/nvmf/nvme_cli/nvme_cli.sh
@@ -59,6 +58,7 @@ kill_stub
 
 # TODO: enable nvme device detachment for multi-process so that
 #  we can use the stub for this test
+run_test test/nvmf/fio/fio.sh
 run_test test/nvmf/rpc/rpc.sh
 revert_soft_roce
 timing_exit nvmf_tgt
