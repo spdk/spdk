@@ -59,27 +59,32 @@ vhost_app_opts_init(struct spdk_app_opts *opts)
 }
 
 static void
+common_usage(char *executable_name, struct spdk_app_opts *default_opts)
+{
+	printf("%s [options]\n", executable_name);
+	printf("options:\n");
+	printf(" -c config  config file (default: %s)\n", default_opts->config_file);
+	printf(" -e mask    tracepoint group mask for spdk trace buffers (default: 0x0)\n");
+	printf(" -i shm_id  shared memory ID (optional)\n");
+	printf(" -m mask    reactor core mask (default: 0x1)\n");
+	printf(" -N         pass --no-pci to DPDK\n");
+	printf(" -p core    master (primary) core for DPDK\n");
+	printf(" -s size    memory size in MB for DPDK (default: %dMB)\n", default_opts->mem_size);
+	spdk_tracelog_usage(stdout, "-t");
+	printf(" -h         show this usage\n");
+	printf(" -d         disable coredump file enabling\n");
+	printf(" -q         disable notice level logging to stderr\n");
+}
+
+static void
 usage(char *executable_name)
 {
 	struct spdk_app_opts defaults;
 
 	vhost_app_opts_init(&defaults);
-
-	printf("%s [options]\n", executable_name);
-	printf("options:\n");
-	printf(" -c config  config file (default: %s)\n", defaults.config_file);
-	printf(" -e mask    tracepoint group mask for spdk trace buffers (default: 0x0)\n");
+	common_usage(executable_name, &defaults);
 	printf(" -f pidfile save pid to file under given path\n");
-	printf(" -i shm_id  shared memory ID (optional)\n");
-	printf(" -m mask    reactor core mask (default: 0x1)\n");
-	printf(" -N         pass --no-pci to DPDK\n");
-	printf(" -p core    master (primary) core for DPDK\n");
-	printf(" -s size    memory size in MB for DPDK (default: %dMB)\n", defaults.mem_size);
 	printf(" -S dir     directory where to create vhost sockets (default: pwd)\n");
-	spdk_tracelog_usage(stdout, "-t");
-	printf(" -h         show this usage\n");
-	printf(" -d         disable coredump file enabling\n");
-	printf(" -q         disable notice level logging to stderr\n");
 }
 
 static void

@@ -57,15 +57,11 @@ spdk_sigusr1(int signo __attribute__((__unused__)))
 }
 
 static void
-usage(char *executable_name)
+common_usage(const char *executable_name, struct spdk_app_opts *default_opts)
 {
-	struct spdk_app_opts opts;
-
-	spdk_app_opts_init(&opts);
-
 	printf("%s [options]\n", executable_name);
 	printf("options:\n");
-	printf(" -c config  config file (default %s)\n", SPDK_ISCSI_DEFAULT_CONFIG);
+	printf(" -c config  config file (default %s)\n", default_opts->config_file);
 	printf(" -e mask    tracepoint group mask for spdk trace buffers (default 0x0)\n");
 	printf(" -m mask    core mask for DPDK\n");
 	printf(" -i shared memory ID (optional)\n");
@@ -74,9 +70,19 @@ usage(char *executable_name)
 	printf(" -s size    memory size in MB for DPDK\n");
 	spdk_tracelog_usage(stdout, "-t");
 	printf(" -H         show this usage\n");
-	printf(" -b         run iscsi target background, the default is foreground\n");
 	printf(" -d         disable coredump file enabling\n");
 	printf(" -q         disable notice level logging to stderr\n");
+}
+
+static void
+usage(char *executable_name)
+{
+	struct spdk_app_opts default_opts;
+
+	spdk_app_opts_init(&default_opts);
+	default_opts.config_file = SPDK_ISCSI_DEFAULT_CONFIG;
+	common_usage(executable_name, &default_opts);
+	printf(" -b         run iscsi target background, the default is foreground\n");
 }
 
 static void
