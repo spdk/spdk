@@ -207,6 +207,17 @@ function waitfornbd() {
 
 	for ((i=1; i<=20; i++)); do
 		if lsblk -d /dev/nbd0; then
+			break
+		else
+			sleep 0.1
+		fi
+	done
+
+	for ((i=1; i<=20; i++)); do
+		dd if=/dev/$nbd_name of=/tmp/nbdtest bs=4096 count=1 iflag=direct;
+		size=`stat -c %s /tmp/nbdtest`
+		rm -f /tmp/nbdtest
+		if [ "$size" != "0" ]; then
 			return 0
 		else
 			sleep 0.1
