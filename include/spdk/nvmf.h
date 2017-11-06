@@ -52,6 +52,7 @@ struct spdk_nvmf_tgt_opts {
 	uint16_t max_qpairs_per_ctrlr;
 	uint32_t in_capsule_data_size;
 	uint32_t max_io_size;
+	bool	 hotplug_enabled;
 };
 
 void spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts);

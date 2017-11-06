@@ -46,6 +46,11 @@ spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
 }
 
 void
+spdk_nvmf_ns_bdev_detach(struct spdk_nvmf_ns *ns)
+{
+}
+
+void
 spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem)
 {
 }
