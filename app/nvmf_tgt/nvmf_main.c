@@ -42,15 +42,11 @@
 #define SPDK_NVMF_DEFAULT_CONFIG SPDK_NVMF_BUILD_ETC "/nvmf.conf"
 
 static void
-usage(void)
+common_usage(const char *executable_name, struct spdk_app_opts *default_opts)
 {
-	struct spdk_app_opts opts;
-
-	spdk_app_opts_init(&opts);
-
-	printf("nvmf [options]\n");
+	printf("%s [options]\n", executable_name);
 	printf("options:\n");
-	printf(" -c config  - config file (default %s)\n", SPDK_NVMF_DEFAULT_CONFIG);
+	printf(" -c config  - config file (default %s)\n", default_opts->config_file);
 	printf(" -e mask    - tracepoint group mask for spdk trace buffers (default 0x0)\n");
 	printf(" -m mask    - core mask for DPDK\n");
 	printf(" -i shared memory ID (optional)\n");
@@ -63,6 +59,16 @@ usage(void)
 	printf(" -v         - verbose (enable warnings)\n");
 	printf(" -H         - show this usage\n");
 	printf(" -d         - disable coredump file enabling\n");
+}
+
+static void
+usage(const char *executable_name)
+{
+	struct spdk_app_opts default_opts;
+
+	spdk_app_opts_init(&default_opts);
+	default_opts.config_file = SPDK_NVMF_DEFAULT_CONFIG;
+	common_usage(executable_name, &default_opts);
 }
 
 static void
@@ -85,14 +91,14 @@ nvmf_parse_args(int argc, char **argv, struct spdk_app_opts *opts)
 			rc = spdk_log_set_trace_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
-				usage();
+				usage(argv[0]);
 				exit(EXIT_FAILURE);
 			}
 			opts->print_level = SPDK_LOG_DEBUG;
 #ifndef DEBUG
 			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
 				argv[0]);
-			usage();
+			usage(argv[0]);
 			exit(EXIT_FAILURE);
 #endif
 			break;
@@ -117,7 +123,7 @@ nvmf_parse_args(int argc, char **argv, struct spdk_app_opts *opts)
 		case 'D':
 		case 'H':
 		default:
-			usage();
+			usage(argv[0]);
 			exit(EXIT_SUCCESS);
 		}
 	}
