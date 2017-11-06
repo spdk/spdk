@@ -57,4 +57,3 @@ spdk_iscsi_subsystem_fini(void *arg1, void *arg2)
 SPDK_SUBSYSTEM_REGISTER(iscsi, spdk_iscsi_subsystem_init, spdk_iscsi_subsystem_fini,
 			spdk_iscsi_config_text)
 SPDK_SUBSYSTEM_DEPEND(iscsi, scsi)
-SPDK_SUBSYSTEM_DEPEND(iscsi, spdk_rpc)
