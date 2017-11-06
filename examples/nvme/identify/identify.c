@@ -172,6 +172,7 @@ get_features(struct spdk_nvme_ctrlr *ctrlr)
 		SPDK_NVME_FEAT_POWER_MANAGEMENT,
 		SPDK_NVME_FEAT_TEMPERATURE_THRESHOLD,
 		SPDK_NVME_FEAT_ERROR_RECOVERY,
+		SPDK_NVME_FEAT_NUMBER_OF_QUEUES,
 	};
 
 	/* Submit several GET FEATURES commands and wait for them to complete */
@@ -890,6 +891,16 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 				       health_page.temp_sensor[i] - 273);
 			}
 		}
+		printf("\n");
+	}
+
+	if (features[SPDK_NVME_FEAT_NUMBER_OF_QUEUES].valid) {
+		uint32_t result = features[SPDK_NVME_FEAT_NUMBER_OF_QUEUES].result;
+
+		printf("Number of Queues\n");
+		printf("================\n");
+		printf("Number of I/O Submission Queues:      %u\n", (result & 0xFFFF) + 1);
+		printf("Number of I/O Completion Queues:      %u\n", (result & 0xFFFF0000 >> 16) + 1);
 		printf("\n");
 	}
 
