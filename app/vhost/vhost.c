@@ -44,6 +44,9 @@
 #define SPDK_VHOST_DEFAULT_ENABLE_COREDUMP true
 #define SPDK_VHOST_DEFAULT_MEM_SIZE 1024
 
+static const char *g_socket_path = NULL;
+static const char *g_pid_path = NULL;
+
 static void
 vhost_app_opts_init(struct spdk_app_opts *opts)
 {
@@ -94,54 +97,50 @@ save_pid(const char *pid_path)
 	fclose(pid_file);
 }
 
-int
-main(int argc, char *argv[])
+static void
+vhost_parse_args(int argc, char **argv, struct spdk_app_opts *opts)
 {
-	struct spdk_app_opts opts = {};
-	int ch;
-	int rc;
-	const char *socket_path = NULL;
-	const char *pid_path = NULL;
+	int ch, rc;
 
-	vhost_app_opts_init(&opts);
+	vhost_app_opts_init(opts);
 
 	while ((ch = getopt(argc, argv, "c:de:f:i:m:Np:qs:S:t:h")) != -1) {
 		switch (ch) {
 		case 'c':
-			opts.config_file = optarg;
+			opts->config_file = optarg;
 			break;
 		case 'd':
-			opts.enable_coredump = false;
+			opts->enable_coredump = false;
 			break;
 		case 'e':
-			opts.tpoint_group_mask = optarg;
+			opts->tpoint_group_mask = optarg;
 			break;
 		case 'f':
-			pid_path = optarg;
+			g_pid_path = optarg;
 			break;
 		case 'h':
 			usage(argv[0]);
 			exit(EXIT_SUCCESS);
 		case 'i':
-			opts.shm_id = strtoul(optarg, NULL, 10);
+			opts->shm_id = strtoul(optarg, NULL, 10);
 			break;
 		case 'm':
-			opts.reactor_mask = optarg;
+			opts->reactor_mask = optarg;
 			break;
 		case 'N':
-			opts.no_pci = true;
+			opts->no_pci = true;
 			break;
 		case 'p':
-			opts.master_core = strtoul(optarg, NULL, 10);
+			opts->master_core = strtoul(optarg, NULL, 10);
 			break;
 		case 'q':
-			opts.print_level = SPDK_LOG_WARN;
+			opts->print_level = SPDK_LOG_WARN;
 			break;
 		case 's':
-			opts.mem_size = strtoul(optarg, NULL, 10);
+			opts->mem_size = strtoul(optarg, NULL, 10);
 			break;
 		case 'S':
-			socket_path = optarg;
+			g_socket_path = optarg;
 			break;
 		case 't':
 			rc = spdk_log_set_trace_flag(optarg);
@@ -150,7 +149,7 @@ main(int argc, char *argv[])
 				usage(argv[0]);
 				exit(EXIT_FAILURE);
 			}
-			opts.print_level = SPDK_LOG_DEBUG;
+			opts->print_level = SPDK_LOG_DEBUG;
 #ifndef DEBUG
 			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
 				argv[0]);
@@ -164,15 +163,26 @@ main(int argc, char *argv[])
 			exit(EXIT_FAILURE);
 		}
 	}
+}
 
-	if (pid_path) {
-		save_pid(pid_path);
+int
+main(int argc, char *argv[])
+{
+	struct spdk_app_opts opts = {};
+	int rc;
+
+	vhost_app_opts_init(&opts);
+
+	vhost_parse_args(argc, argv, &opts);
+
+	if (g_pid_path) {
+		save_pid(g_pid_path);
 	}
 
 	opts.shutdown_cb = spdk_vhost_shutdown_cb;
 
 	/* Blocks until the application is exiting */
-	rc = spdk_app_start(&opts, spdk_vhost_startup, (void *)socket_path, NULL);
+	rc = spdk_app_start(&opts, spdk_vhost_startup, (void *)g_socket_path, NULL);
 
 	spdk_app_fini();
 
