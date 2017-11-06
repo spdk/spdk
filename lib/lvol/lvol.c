@@ -138,6 +138,14 @@ spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, 
 	spdk_bs_md_open_blob(lvol->lvol_store->blobstore, lvol->blob_id, _spdk_lvol_open_cb, req);
 }
 
+static void
+_spdk_bs_unload_with_error_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)cb_arg;
+
+	req->cb_fn(req->cb_arg, NULL, req->lvserrno);
+	free(req);
+}
 
 static void
 _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
@@ -164,8 +172,9 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 			free(lvol);
 		}
 		SPDK_ERRLOG("Failed to fetch blobs list\n");
-		req->cb_fn(req->cb_arg, lvs, lvolerrno);
-		free(req);
+		_spdk_lvs_free(lvs);
+		req->lvserrno = lvolerrno;
+		spdk_bs_unload(bs, _spdk_bs_unload_with_error_cb, req);
 		return;
 	}
 
@@ -219,15 +228,6 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "added lvol %s\n", lvol->old_name);
 
 	spdk_bs_md_iter_next(bs, &blob, _spdk_load_next_lvol, req);
-}
-
-static void
-_spdk_bs_unload_with_error_cb(void *cb_arg, int lvolerrno)
-{
-	struct spdk_lvs_with_handle_req *req = (struct spdk_lvs_with_handle_req *)cb_arg;
-
-	req->cb_fn(req->cb_arg, NULL, req->lvserrno);
-	free(req);
 }
 
 static void
