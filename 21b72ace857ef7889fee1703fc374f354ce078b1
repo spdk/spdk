@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "04d783b2_f6d57686",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1932,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-06T08:08:59Z",
+      "side": 1,
+      "message": "This % operation is here for the case, where md_start is in the middle of cluster, so we cannot use this cluster any more and we have to take into account also the free space left on this cluster to count how many clusters have been used. If we don\u0027t do this we can end up in situation like this (all in pages number):\n\npages_per_cluster \u003d 5\nmd_start \u003d 3\nmd_len \u003d 9\n\ndivide_round_up(md_len, pages_per_cluster) \u003d 2 clusters\n\nbut actually we used here 3 cluster:\n|-----|-----|-----|\n    ^         ^\nmd_start    md_finish\n\nmd_used_pages \u003d (md_start % pages_per_cluster) + md_len \u003d 12\ndivide_round_up(md_used_pages ,pages_per_cluster) \u003d 3 clusters - now it\u0027s correct",
+      "parentUuid": "65ba378e_3b227c69",
+      "revId": "21b72ace857ef7889fee1703fc374f354ce078b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1762739_a822ef06",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2017-11-03T19:18:23Z",
       "side": 1,
       "message": "isn\u0027t this already done in _spdk_bs_alloc() which is called earlier in this function?",
+      "revId": "21b72ace857ef7889fee1703fc374f354ce078b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78afe9f2_d5306b73",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2176,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-06T08:08:59Z",
+      "side": 1,
+      "message": "it done for total_clusters, not total_data_clusters",
+      "parentUuid": "a1762739_a822ef06",
       "revId": "21b72ace857ef7889fee1703fc374f354ce078b1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
