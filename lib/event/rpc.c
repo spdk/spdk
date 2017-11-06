@@ -83,14 +83,11 @@ spdk_rpc_subsystem_poll(void *arg)
 	spdk_rpc_accept();
 }
 
-static void
-spdk_rpc_subsystem_setup(void *arg)
+void
+spdk_rpc_initialize(void)
 {
 	const char *listen_addr;
 	int rc;
-
-	/* Unregister the poller */
-	spdk_poller_unregister(&g_rpc_poller, NULL);
 
 	if (!enable_rpc()) {
 		return;
@@ -113,30 +110,15 @@ spdk_rpc_subsystem_setup(void *arg)
 			     RPC_SELECT_INTERVAL);
 }
 
-static void
-spdk_rpc_subsystem_initialize(void)
-{
-	/*
-	 * Defer setup of the RPC service until the reactor has started.  This
-	 *  allows us to detect the RPC listen socket as a suitable proxy for determining
-	 *  when the SPDK application has finished initialization and ready for logins
-	 *  or RPC commands.
-	 */
-	spdk_poller_register(&g_rpc_poller, spdk_rpc_subsystem_setup, NULL, spdk_env_get_current_core(), 0);
-
-	spdk_subsystem_init_next(0);
-}
-
-static void
-spdk_rpc_subsystem_finish(void *arg1, void *arg2)
+void
+spdk_rpc_finish(void)
 {
 	spdk_rpc_close();
 	spdk_poller_unregister(&g_rpc_poller, NULL);
-	spdk_subsystem_fini_next();
 }
 
-static void
-spdk_rpc_subsystem_config_text(FILE *fp)
+void
+spdk_rpc_config_text(FILE *fp)
 {
 	fprintf(fp,
 		"\n"
@@ -151,7 +133,3 @@ spdk_rpc_subsystem_config_text(FILE *fp)
 		"  Listen %s\n",
 		enable_rpc() ? "Yes" : "No", rpc_get_listen_addr());
 }
-
-SPDK_SUBSYSTEM_REGISTER(spdk_rpc, spdk_rpc_subsystem_initialize,
-			spdk_rpc_subsystem_finish,
-			spdk_rpc_subsystem_config_text)

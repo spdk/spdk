@@ -339,6 +339,7 @@ function part_dev_by_gpt () {
 		echo "Process nbd pid: $nbd_pid"
 		waitforlisten $nbd_pid 5260
 		waitfornbd nbd0
+		sleep 1
 
 		if [ "$operation" = create ]; then
 			parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
