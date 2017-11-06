@@ -65,11 +65,67 @@ usage(void)
 	printf(" -d         - disable coredump file enabling\n");
 }
 
+static void
+nvmf_parse_args(int argc, char **argv, struct spdk_app_opts *opts)
+{
+	int ch, rc;
+
+	while ((ch = getopt(argc, argv, "c:de:i:m:n:p:qs:t:DH")) != -1) {
+		switch (ch) {
+		case 'd':
+			opts->enable_coredump = false;
+			break;
+		case 'c':
+			opts->config_file = optarg;
+			break;
+		case 'i':
+			opts->shm_id = atoi(optarg);
+			break;
+		case 't':
+			rc = spdk_log_set_trace_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage();
+				exit(EXIT_FAILURE);
+			}
+			opts->print_level = SPDK_LOG_DEBUG;
+#ifndef DEBUG
+			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
+				argv[0]);
+			usage();
+			exit(EXIT_FAILURE);
+#endif
+			break;
+		case 'm':
+			opts->reactor_mask = optarg;
+			break;
+		case 'n':
+			opts->mem_channel = atoi(optarg);
+			break;
+		case 'p':
+			opts->master_core = atoi(optarg);
+			break;
+		case 's':
+			opts->mem_size = atoi(optarg);
+			break;
+		case 'e':
+			opts->tpoint_group_mask = optarg;
+			break;
+		case 'q':
+			opts->print_level = SPDK_LOG_WARN;
+			break;
+		case 'D':
+		case 'H':
+		default:
+			usage();
+			exit(EXIT_SUCCESS);
+		}
+	}
+}
 
 int
 main(int argc, char **argv)
 {
-	int ch;
 	int rc;
 	struct spdk_app_opts opts = {};
 
@@ -81,57 +137,7 @@ main(int argc, char **argv)
 	}
 	opts.max_delay_us = 1000; /* 1 ms */
 
-	while ((ch = getopt(argc, argv, "c:de:i:m:n:p:qs:t:DH")) != -1) {
-		switch (ch) {
-		case 'd':
-			opts.enable_coredump = false;
-			break;
-		case 'c':
-			opts.config_file = optarg;
-			break;
-		case 'i':
-			opts.shm_id = atoi(optarg);
-			break;
-		case 't':
-			rc = spdk_log_set_trace_flag(optarg);
-			if (rc < 0) {
-				fprintf(stderr, "unknown flag\n");
-				usage();
-				exit(EXIT_FAILURE);
-			}
-			opts.print_level = SPDK_LOG_DEBUG;
-#ifndef DEBUG
-			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
-				argv[0]);
-			usage();
-			exit(EXIT_FAILURE);
-#endif
-			break;
-		case 'm':
-			opts.reactor_mask = optarg;
-			break;
-		case 'n':
-			opts.mem_channel = atoi(optarg);
-			break;
-		case 'p':
-			opts.master_core = atoi(optarg);
-			break;
-		case 's':
-			opts.mem_size = atoi(optarg);
-			break;
-		case 'e':
-			opts.tpoint_group_mask = optarg;
-			break;
-		case 'q':
-			opts.print_level = SPDK_LOG_WARN;
-			break;
-		case 'D':
-		case 'H':
-		default:
-			usage();
-			exit(EXIT_SUCCESS);
-		}
-	}
+	nvmf_parse_args(argc, argv, &opts);
 
 	rc = spdk_nvmf_tgt_start(&opts);
 
