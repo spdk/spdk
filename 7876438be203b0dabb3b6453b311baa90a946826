@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "76e82dcf_7164c71e",
+        "filename": "autotest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-06T14:40:34Z",
+      "side": 1,
+      "message": "First part - yeah, have to work on that. Adding any new test which will not be located at the end of the lsit will be a pain due to re-ordering.\n\nSecond part of comment - delete_bdev_positive was enabled before, but as \"20\". Here I am just changing the tests numbers, I think it\u0027s all right.",
+      "parentUuid": "12e142c6_e2b7fc6e",
+      "range": {
+        "startLine": 132,
+        "startChar": 43,
+        "endLine": 132,
+        "endChar": 100
+      },
+      "revId": "7876438be203b0dabb3b6453b311baa90a946826",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d6e95c7_4ec0cbc0",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-06T10:59:25Z",
       "side": 1,
       "message": "I think this TODO can be removed.",
+      "range": {
+        "startLine": 202,
+        "startChar": 7,
+        "endLine": 202,
+        "endChar": 33
+      },
+      "revId": "7876438be203b0dabb3b6453b311baa90a946826",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ac7280d_1ed7aab0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-06T14:40:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5d6e95c7_4ec0cbc0",
       "range": {
         "startLine": 202,
         "startChar": 7,
