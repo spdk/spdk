@@ -42,7 +42,7 @@ C_SRCS := nbd.c
 
 CFLAGS += -I. $(ENV_CFLAGS)
 
-SPDK_LIB_LIST = event_bdev event_copy event_rpc nbd
+SPDK_LIB_LIST = event_bdev event_copy nbd
 SPDK_LIB_LIST += bdev bdev_rpc copy event trace log log_rpc conf util rpc jsonrpc json
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
