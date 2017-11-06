@@ -473,6 +473,13 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 	TAILQ_INIT(&reactor->timer_pollers);
 
 	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, reactor->socket_id);
+	if (!reactor->events) {
+		SPDK_NOTICELOG("Ring creation failed on preferred socket %d. Try other sockets.\n",
+			       reactor->socket_id);
+
+		reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536,
+						   SPDK_ENV_SOCKET_ID_ANY);
+	}
 	assert(reactor->events != NULL);
 
 	reactor->event_mempool = g_spdk_event_mempool[reactor->socket_id];
@@ -617,7 +624,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 						  SPDK_MEMPOOL_DEFAULT_CACHE_SIZE, i);
 
 			if (g_spdk_event_mempool[i] == NULL) {
-				SPDK_ERRLOG("spdk_event_mempool creation failed on socket %d\n", i);
+				SPDK_NOTICELOG("Event_mempool creation failed on preferred socket %d.\n", i);
 
 				/*
 				 * Instead of failing the operation directly, try to create
