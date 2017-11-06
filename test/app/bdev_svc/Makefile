@@ -42,7 +42,7 @@ CFLAGS += $(ENV_CFLAGS)
 
 C_SRCS := bdev_svc.c
 
-SPDK_LIB_LIST = event_bdev event_copy event_rpc
+SPDK_LIB_LIST = event_bdev event_copy
 SPDK_LIB_LIST += nvmf event log trace conf util bdev copy rpc jsonrpc json
 SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
 
