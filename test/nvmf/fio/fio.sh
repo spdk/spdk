@@ -10,6 +10,16 @@ MALLOC_BLOCK_SIZE=512
 
 rpc_py="python $rootdir/scripts/rpc.py"
 
+function linux_iter_pci {
+	# Argument is the class code
+	# TODO: More specifically match against only class codes in the grep
+	# step.
+	lspci -mm -n -D | grep $1 | tr -d '"' | awk -F " " '{print $1}'
+}
+
+function linux_remove_nvme_devices() {
+	echo 1 > "/sys/bus/pci/devices/$bdf/remove"
+}
 set -e
 
 RDMA_IP_LIST=$(get_available_rdma_ips)
@@ -48,6 +58,41 @@ sync
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+
+if [ -z "$NO_NVME" ]; then
+$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode2 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000001 -n "HotInNvme0n1"
+
+nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode2" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+
+$testdir/nvmf_fio.py 4096 1 read 10 &
+fio_pid=$!
+echo $fio_pid
+
+sleep 3
+set +e
+
+for bdf in $(linux_iter_pci 0108); do
+	linux_remove_nvme_devices "$bdf"
+done
+
+wait $fio_pid
+fio_status=$?
+echo $fio_status
+
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode2" || true
+$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode2
+
+if [ $fio_status -eq 0 ]; then
+	echo "fio successful - expected failure"
+	nvmfcleanup
+	killprocess $nvmfpid
+	exit 1
+else
+	echo "fio failed as expected"
+fi
+fi
+
+set -e
 
 rm -f ./local-job0-0-verify.state
 rm -f ./local-job1-1-verify.state
