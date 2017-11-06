@@ -98,8 +98,7 @@ static bool g_spdk_env_initialized = false;
 
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
-static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
-			      unsigned int max, const struct timespec *t);
+static size_t spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread);
 
 static void
 spdk_fio_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
@@ -219,11 +218,13 @@ spdk_fio_init_thread(struct thread_data *td)
 static int
 spdk_fio_init_env(struct thread_data *td)
 {
+	struct spdk_fio_thread		*fio_thread;
 	struct spdk_fio_options		*eo;
 	bool				done = false;
 	int				rc;
 	struct spdk_conf		*config;
 	struct spdk_env_opts		opts;
+	size_t				count;
 
 	/* Parse the SPDK configuration file */
 	eo = td->eo;
@@ -269,6 +270,8 @@ spdk_fio_init_env(struct thread_data *td)
 		return -1;
 	}
 
+	fio_thread = td->io_ops_data;
+
 	/* Initialize the copy engine */
 	spdk_copy_engine_initialize();
 
@@ -277,9 +280,10 @@ spdk_fio_init_env(struct thread_data *td)
 			     spdk_fio_start_poller,
 			     spdk_fio_stop_poller);
 
-	while (!done) {
-		spdk_fio_getevents(td, 0, 128, NULL);
-	}
+	do {
+		/* Handle init and all cleanup events */
+		count = spdk_fio_poll_thread(fio_thread);
+	} while (!done || count > 0);
 
 	/* Destroy the temporary SPDK thread */
 	spdk_fio_cleanup(td);
@@ -391,14 +395,19 @@ spdk_fio_cleanup(struct thread_data *td)
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct spdk_fio_target *target, *tmp;
 
-	g_thread = NULL;
-
 	TAILQ_FOREACH_SAFE(target, &fio_thread->targets, link, tmp) {
 		TAILQ_REMOVE(&fio_thread->targets, target, link);
 		spdk_put_io_channel(target->ch);
 		spdk_bdev_close(target->desc);
 		free(target);
 	}
+
+	while (spdk_ring_count(fio_thread->ring) > 0) {
+		/* Poll e.g. the asynchronous put_io_channel event */
+		spdk_fio_poll_thread(fio_thread);
+	};
+
+	g_thread = NULL;
 
 	spdk_free_thread();
 	spdk_ring_free(fio_thread->ring);
@@ -665,9 +674,11 @@ spdk_fio_module_finish_done(void *cb_arg)
 static void
 spdk_fio_finish_env(void)
 {
+	struct spdk_fio_thread		*fio_thread;
 	struct thread_data		*td;
 	int				rc;
 	bool				done = false;
+	size_t				count;
 
 	td = calloc(1, sizeof(*td));
 	if (!td) {
@@ -682,18 +693,19 @@ spdk_fio_finish_env(void)
 		return;
 	}
 
+	fio_thread = td->io_ops_data;
 	spdk_bdev_finish(spdk_fio_module_finish_done, &done);
 
-	while (!done) {
-		spdk_fio_getevents(td, 0, 128, NULL);
-	}
-	done = false;
+	do {
+		count = spdk_fio_poll_thread(fio_thread);
+	} while (!done || count > 0);
 
+	done = false;
 	spdk_copy_engine_finish(spdk_fio_module_finish_done, &done);
 
-	while (!done) {
-		spdk_fio_getevents(td, 0, 128, NULL);
-	}
+	do {
+		count = spdk_fio_poll_thread(fio_thread);
+	} while (!done || count > 0);
 
 	/* Destroy the temporary SPDK thread */
 	spdk_fio_cleanup(td);
