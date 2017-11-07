@@ -370,6 +370,25 @@ struct spdk_bdev_io {
 			/* meta data buffer size to transfer */
 			size_t md_len;
 		} nvme_passthru;
+		struct {
+			/** For SG buffer cases, array of iovecs to transfer. */
+			struct iovec *iovs;
+
+			/** For SG buffer cases, number of iovecs in iovec array. */
+			int iovcnt;
+
+			/** Total size of data to be transferred. */
+			uint64_t num_blocks;
+
+			/** Starting offset (in blocks) of the bdev for this I/O. */
+			uint64_t offset_blocks;
+
+			/** Whether the buffer should be populated or committed */
+			bool populate_or_commit;
+
+			/** True if this request is in the 'start' phase of zcopy. False if in 'end'. */
+			bool start;
+		} zcopy;
 	} u;
 
 	/** Member used for linking child I/Os together. */
