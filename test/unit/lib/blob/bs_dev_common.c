@@ -36,10 +36,15 @@
 #define DEV_BUFFER_BLOCKCNT (DEV_BUFFER_SIZE / DEV_BUFFER_BLOCKLEN)
 uint8_t *g_dev_buffer;
 
+/* Define here for UT only. */
+struct spdk_io_channel {
+	struct spdk_thread		*thread;
+} g_io_channel;
+
 static struct spdk_io_channel *
 dev_create_channel(struct spdk_bs_dev *dev)
 {
-	return NULL;
+	return &g_io_channel;
 }
 
 static void
