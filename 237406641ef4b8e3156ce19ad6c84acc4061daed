@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40d65355_46a34ed3",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-07T21:08:55Z",
+      "side": 1,
+      "message": "_spdk_replace_all_with_any\n\nJust change the string inline (no separate malloc).",
+      "revId": "237406641ef4b8e3156ce19ad6c84acc4061daed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "647627ae_9ea79425",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-07T21:08:55Z",
+      "side": 1,
+      "message": "Please use %s instead of %s.",
+      "revId": "237406641ef4b8e3156ce19ad6c84acc4061daed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe67f142_b36c3346",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-07T21:08:55Z",
+      "side": 1,
+      "message": "Replacing %s with %s forcefully.",
+      "revId": "237406641ef4b8e3156ce19ad6c84acc4061daed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
