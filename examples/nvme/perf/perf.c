@@ -218,9 +218,10 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	 */
 	entries = (g_io_size_bytes - 1) / max_xfer_size + 2;
 	if ((g_queue_depth * entries) > opts.io_queue_size) {
-		printf("WARNING: controller IO queue size %u less than required\n",
+		printf("controller IO queue size %u less than required\n",
 		       opts.io_queue_size);
-		printf("You can try with smaller IO size or queue depth\n");
+		printf("configure an IO queue depth and IO size such that "
+		       "the product is less than or equal to %u\n", opts.io_queue_size);
 		g_warn = true;
 		return;
 	}
