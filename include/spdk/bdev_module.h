@@ -364,6 +364,28 @@ struct spdk_bdev_io {
 			/* meta data buffer size to transfer */
 			size_t md_len;
 		} nvme_passthru;
+		struct {
+			/** For SG buffer cases, array of iovecs to transfer. */
+			struct iovec *iovs;
+
+			/** For SG buffer cases, number of iovecs in iovec array. */
+			int iovcnt;
+
+			/** Total size of data to be transferred. */
+			uint64_t num_blocks;
+
+			/** Starting offset (in blocks) of the bdev for this I/O. */
+			uint64_t offset_blocks;
+
+			/** Whether the buffer should be populated with the real data */
+			bool populate;
+
+			/** Whether the buffer should be committed back to disk */
+			bool commit;
+
+			/** True if this request is in the 'start' phase of zcopy. False if in 'end'. */
+			bool start;
+		} zcopy;
 	} u;
 
 	/** It may be used by modules to put the bdev_io into its own list. */
@@ -603,9 +625,9 @@ void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb 
  * \param buf The buffer to set as the active data buffer.
  * \param len The length of the buffer.
  *
- * \return The usable size of the buffer, after adjustments of alignment.
+ * \return 0 on success. Negated errno on failure.
  */
-size_t spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len);
+int spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len);
 
 /**
  * Complete a bdev_io
