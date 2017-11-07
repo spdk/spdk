@@ -62,6 +62,7 @@ extern "C" {
 /* POSIX */
 #include <arpa/inet.h>
 #include <dirent.h>
+#include <dlfcn.h>
 #include <fcntl.h>
 #include <ifaddrs.h>
 #include <netdb.h>
