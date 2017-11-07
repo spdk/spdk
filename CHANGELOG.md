@@ -1,5 +1,12 @@
 # Changelog
 
+## Upcoming Release
+
+### Block Device Abstraction Layer (bdev)
+
+A mechanism for acquiring and releasing data buffers from bdev modules, used
+to perform zero copy operations, was added.
+
 ## v17.10: Logical Volumes
 
 ### New dependencies

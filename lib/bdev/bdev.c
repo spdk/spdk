@@ -1137,6 +1137,74 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 }
 
 int
+spdk_bdev_acquire_buffer(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			 uint64_t offset_blocks, uint64_t num_blocks,
+			 bool populate,
+			 spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	if (!desc->write) {
+		return -EBADF;
+	}
+
+	if (!spdk_bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
+		return -EINVAL;
+	}
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("bdev_io memory allocation failed duing writev\n");
+		return -ENOMEM;
+	}
+
+	bdev_io->ch = channel;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_ACQUIRE_BUFFER;
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->u.bdev.offset_blocks = offset_blocks;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
+}
+
+int spdk_bdev_release_buffer(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			     struct iovec *iov, int iovcnt,
+			     uint64_t offset_blocks, uint64_t num_blocks,
+			     bool commit,
+			     spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	if (!desc->write) {
+		return -EBADF;
+	}
+
+	if (!spdk_bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
+		return -EINVAL;
+	}
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("bdev_io memory allocation failed duing writev\n");
+		return -ENOMEM;
+	}
+
+	bdev_io->ch = channel;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_RELEASE_BUFFER;
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->u.bdev.offset_blocks = offset_blocks;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
+}
+
+int
 spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset, uint64_t len,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
