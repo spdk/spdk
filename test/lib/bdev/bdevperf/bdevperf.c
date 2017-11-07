@@ -456,6 +456,16 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 	 * completes, another will be submitted. */
 	while (target != NULL) {
 		target->ch = spdk_bdev_get_io_channel(target->bdev_desc);
+		if (!target->ch) {
+			printf("Skip this device (%s) as IO channel not setup.\n",
+			       spdk_bdev_get_name(target->bdev));
+			g_target_count--;
+			g_run_failed = true;
+			spdk_bdev_close(target->bdev_desc);
+
+			target = target->next;
+			continue;
+		}
 
 		/* Start a timer to stop this I/O chain when the run is over */
 		spdk_poller_register(&target->run_timer, end_target, target, target->lcore,
