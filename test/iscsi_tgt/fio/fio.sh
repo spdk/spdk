@@ -152,6 +152,7 @@ iscsicleanup
 rm -f $testdir/iscsi.conf
 killprocess $pid
 echo 1 > /sys/bus/pci/rescan
+sleep 2
 $rootdir/scripts/setup.sh
 
 timing_exit fio
