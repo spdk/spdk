@@ -29,6 +29,9 @@ on each call. This allows multiple callers to query I/O statistics without confl
 with each other. Existing users will need to adjust their code to record the previous
 I/O statistics to calculate the delta between calls.
 
+A mechanism for acquiring and releasing data buffers from bdev modules, used
+to perform zero copy operations, was added.
+
 ### Env
 
 The spdk_mem_map_translate() function now takes a size parameter to indicate the size of
