@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1334e75_12a75687",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-07T20:55:52Z",
+      "side": 1,
+      "message": "-EEXIST",
+      "revId": "f18f0782bad8e4e68f3ef6b0758cc5c98db46df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a54239c5_6f181adb",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-07T20:55:52Z",
+      "side": 1,
+      "message": "-ENOENT",
+      "revId": "f18f0782bad8e4e68f3ef6b0758cc5c98db46df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87d768d0_4d659295",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-07T20:55:52Z",
+      "side": 1,
+      "message": "-EEXIST",
+      "revId": "f18f0782bad8e4e68f3ef6b0758cc5c98db46df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8f6b037_7fbd05fd",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-07T20:55:52Z",
+      "side": 1,
+      "message": "-ENOENT",
+      "revId": "f18f0782bad8e4e68f3ef6b0758cc5c98db46df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe4d3e56_2a925129",
+        "filename": "lib/iscsi/init_grp.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-07T20:55:52Z",
+      "side": 1,
+      "message": "I think we can remove this netmasks member now.",
+      "revId": "f18f0782bad8e4e68f3ef6b0758cc5c98db46df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b59e3379_c61554bf",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-07T20:55:52Z",
+      "side": 1,
+      "message": "TAILQ_FOREACH() {\n}",
+      "revId": "f18f0782bad8e4e68f3ef6b0758cc5c98db46df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59afe9f9_8ed6d8bf",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-07T20:55:52Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "f18f0782bad8e4e68f3ef6b0758cc5c98db46df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
