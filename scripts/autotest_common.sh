@@ -2,7 +2,7 @@ set -xe
 PS4=' \t	\$ '
 ulimit -c unlimited
 
-export RUN_NIGHTLY=0
+export RUN_NIGHTLY=1
 
 if [[ ! -z $1 ]]; then
 	if [ -f $1 ]; then

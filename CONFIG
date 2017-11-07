@@ -72,7 +72,7 @@ FIO_SOURCE_DIR?=/usr/src/fio
 
 # Enable RDMA support for the NVMf target.
 # Requires ibverbs development libraries.
-CONFIG_RDMA?=n
+CONFIG_RDMA?=y
 
 # Build Ceph RBD support in bdev modules
 # Requires librbd development libraries
