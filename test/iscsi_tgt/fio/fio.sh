@@ -5,6 +5,30 @@ rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
+if [ -z "$TARGET_IP" ]; then
+	echo "TARGET_IP not defined in environment"
+	exit 1
+fi
+
+if [ -z "$INITIATOR_IP" ]; then
+	echo "INITIATOR_IP not defined in environment"
+	exit 1
+fi
+
+timing_enter fio
+
+# iSCSI target configuration
+PORT=3260
+RPC_PORT=5260
+INITIATOR_TAG=2
+INITIATOR_NAME=ALL
+NETMASK=$INITIATOR_IP/32
+MALLOC_BDEV_SIZE=64
+MALLOC_BLOCK_SIZE=4096
+
+rpc_py="python $rootdir/scripts/rpc.py"
+fio_py="python $rootdir/scripts/fio.py"
+
 function linux_iter_pci {
 	# Argument is the class code
 	# TODO: More specifically match against only class codes in the grep
@@ -43,119 +67,164 @@ function running_config() {
 	$fio_py 4096 1 randrw 5
 }
 
-if [ -z "$TARGET_IP" ]; then
-	echo "TARGET_IP not defined in environment"
-	exit 1
-fi
+function fio_malloc() {
+	timing_enter start_iscsi_tgt
 
-if [ -z "$INITIATOR_IP" ]; then
-	echo "INITIATOR_IP not defined in environment"
-	exit 1
-fi
+	cp $testdir/iscsi.conf.in $testdir/iscsi.conf
+	$ISCSI_APP -c $testdir/iscsi.conf &
+	pid=$!
+	echo "Process pid: $pid"
 
-timing_enter fio
+	trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
-cp $testdir/iscsi.conf.in $testdir/iscsi.conf
+	waitforlisten $pid ${RPC_PORT}
+	echo "iscsi_tgt is listening. Running tests..."
 
-# iSCSI target configuration
-PORT=3260
-RPC_PORT=5260
-INITIATOR_TAG=2
-INITIATOR_NAME=ALL
-NETMASK=$INITIATOR_IP/32
-MALLOC_BDEV_SIZE=64
-MALLOC_BLOCK_SIZE=4096
+	timing_exit start_iscsi_tgt
 
-rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+	$rpc_py add_portal_group 1 $TARGET_IP:$PORT
+	$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+	$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
+	# "Malloc0:0" ==> use Malloc0 blockdev for LUN0
+	# "1:2" ==> map PortalGroup1 to InitiatorGroup2
+	# "64" ==> iSCSI queue depth 64
+	# "1 0 0 0" ==> disable CHAP authentication
+	$rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' '1:2' 64 1 0 0 0
+	sleep 1
 
-timing_enter start_iscsi_tgt
+	iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
+	iscsiadm -m node --login -p $TARGET_IP:$PORT
 
-$ISCSI_APP -c $testdir/iscsi.conf &
-pid=$!
-echo "Process pid: $pid"
+	trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
-trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+	sleep 1
+	$fio_py 4096 1 randrw 1 verify
+	$fio_py 131072 32 randrw 1 verify
 
-waitforlisten $pid ${RPC_PORT}
-echo "iscsi_tgt is listening. Running tests..."
+	if [ $RUN_NIGHTLY -eq 1 ]; then
+		$fio_py 4096 1 write 300 verify
+		$fio_py 262144 64 rw 300 verify
+		$fio_py 262144 64 randrw 300 verify
+		$fio_py 262144 64 randwrite 300 verify
 
-timing_exit start_iscsi_tgt
+		# Run the running_config test which will generate a config file from the
+		#  running iSCSI target, then kill and restart the iSCSI target using the
+		#  generated config file
+		running_config
+	fi
 
-$rpc_py add_portal_group 1 $TARGET_IP:$PORT
-$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
-$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
-# "Malloc0:0" ==> use Malloc0 blockdev for LUN0
-# "1:2" ==> map PortalGroup1 to InitiatorGroup2
-# "64" ==> iSCSI queue depth 64
-# "1 0 0 0" ==> disable CHAP authentication
-$rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' '1:2' 64 1 0 0 0
-sleep 1
+	iscsicleanup
+	$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
 
-iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
-iscsiadm -m node --login -p $TARGET_IP:$PORT
+	# Disable the following hotplug test, since the pci rescan at the end of the
+	#  test is causing rather frequent system hangs with emulated NVMe devices
+	#  in VMs.
 
-trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+	# if [ -z "$NO_NVME" ]; then
+	# 	$rpc_py construct_target_node Target3 Target3_alias HotInNvme0n1:0 1:2 64 1 0 0 0
+	# 	iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
+	# 	iscsiadm -m node --login -p $TARGET_IP:$PORT
+	# 	sleep 1
+	# 	$fio_py 1048576 128 rw 10 &
+	# 	fio_pid=$!
 
-sleep 1
-$fio_py 4096 1 randrw 1 verify
-$fio_py 131072 32 randrw 1 verify
+	# 	sleep 3
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	$fio_py 4096 1 write 300 verify
+	# 	set +e
 
-	# Run the running_config test which will generate a config file from the
-	#  running iSCSI target, then kill and restart the iSCSI target using the
-	#  generated config file
-	running_config
-fi
+	# 	for bdf in $(linux_iter_pci 0108); do
+	# 		linux_remove_nvme_devices "$bdf"
+	# 	done
 
-iscsicleanup
-$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
+	# 	wait $fio_pid
+	# 	fio_status=$?
 
-# Disable the following hotplug test, since the pci rescan at the end of the
-#  test is causing rather frequent system hangs with emulated NVMe devices
-#  in VMs.
+	# 	if [ $fio_status -eq 0 ]; then
+	# 		echo "fio successful - expected failure"
+	# 		iscsicleanup
+	# 		rm -f $testdir/iscsi.conf
+	# 		killprocess $pid
+	# 		exit 1
+	# 	else
+	# 		echo "fio failed as expected"
+	# 	fi
+	# fi
 
-#if [ -z "$NO_NVME" ]; then
-#$rpc_py construct_target_node Target3 Target3_alias HotInNvme0n1:0 1:2 64 1 0 0 0
-#iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
-#iscsiadm -m node --login -p $TARGET_IP:$PORT
-#sleep 1
-#$fio_py 1048576 128 rw 10 &
-#fio_pid=$!
+	# set -e
+	rm -f ./local-job0-0-verify.state
+	iscsicleanup
+	rm -f $testdir/iscsi.conf
+	killprocess $pid
+	# echo 1 > /sys/bus/pci/rescan
+}
 
-#sleep 3
+function get_device() {
+    local device=/dev/$(lsblk | awk 'BEGIN {device = ""}
+        {
+            if ($1 ~ /^sd[a-z].*/) {
+                if(device != "") {
+                    print device
+                }
+                device = $1
+            } else if($0 ~ /.*\[SWAP\]$/) {
+                device = ""
+            }
+        }
+        END {print device}' | head -1)
+    if [ "$device" = "/dev/" ]; then
+		echo 'No device found'
+		exit 1
+	fi
+	echo $device
+}
 
-#set +e
+function fio_aiobackend() {
+	timing_enter start_iscsi_tgt
 
-#for bdf in $(linux_iter_pci 0108); do
-#	linux_remove_nvme_devices "$bdf"
-#done
+	cp $testdir/iscsi.conf.ab $testdir/iscsi.conf
+	$ISCSI_APP -c $testdir/iscsi.conf &
+	pid=$!
+	echo "Process pid: $pid"
 
-#wait $fio_pid
-#fio_status=$?
+	trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
-#if [ $fio_status -eq 0 ]; then
-#	echo "fio successful - expected failure"
-#	iscsicleanup
-#	rm -f $testdir/iscsi.conf
-#	killprocess $pid
-#	exit 1
-#else
-#	echo "fio failed as expected"
-#fi
-#fi
+	waitforlisten $pid ${RPC_PORT}
+	echo "iscsi_tgt is listening. Running tests..."
 
-#set -e
+	timing_exit start_iscsi_tgt
 
-rm -f ./local-job0-0-verify.state
+	$rpc_py add_portal_group 1 $TARGET_IP:$PORT
+	$rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
+	$rpc_py construct_aio_bdev $(get_device) AIO0 512
+	# "Malloc0:0" ==> use Malloc0 blockdev for LUN0
+	# "1:2" ==> map PortalGroup1 to InitiatorGroup2
+	# "128" ==> iSCSI queue depth 64
+	# "1 0 0 0" ==> disable CHAP authentication
+	$rpc_py construct_target_node Target3 Target3_alias 'AIO0:0' '1:2' 128 1 0 0 0
+	sleep 1
+
+	iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
+	iscsiadm -m node --login -p $TARGET_IP:$PORT
+
+	trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+	sleep 1
+
+	if [ $RUN_NIGHTLY -eq 1 ]; then
+		$fio_py 262144 64 rw 300 verify
+		$fio_py 262144 64 randrw 300 verify
+		$fio_py 262144 64 randwrite 300 verify
+	fi
+
+	iscsicleanup
+	rm -f $testdir/iscsi.conf
+	killprocess $pid
+}
+
+fio_malloc
+fio_aiobackend
+
 trap - SIGINT SIGTERM EXIT
-iscsicleanup
-rm -f $testdir/iscsi.conf
-killprocess $pid
-#echo 1 > /sys/bus/pci/rescan
-#sleep 2
 $rootdir/scripts/setup.sh
 
 timing_exit fio
+
