@@ -46,6 +46,9 @@ block except for metadata.
 spdk_vbdev_register() has been deprecated.  spdk_bdev_register() should be used
 instead.
 
+A mechanism for acquiring and releasing data buffers from bdev modules, used
+to perform zero copy operations, was added.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
