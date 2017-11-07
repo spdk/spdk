@@ -7,6 +7,11 @@
 Added new strip_size_kb rpc param on create to replace the more ambiguous
 strip_size. The strip_size rpc param is deprecated.
 
+### bdev
+
+A mechanism for acquiring and releasing data buffers from bdev modules, used
+to perform zero copy operations, was added.
+
 ## v19.01:
 
 ### ocf bdev
@@ -566,7 +571,6 @@ the legacy memory allocation model.  The plan is to enable dynamic memory alloca
 after the DPDK 18.08 release which should fix these issues.
 
 ### Environment Abstraction Layer and Event Framework
-
 The spdk_mem_map_translate() function now takes a size parameter to indicate the size of
 the memory region.  This can be used by environment implementations to validate the
 requested translation.
