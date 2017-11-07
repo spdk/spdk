@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2400ef88_b6f1da3d",
+        "filename": "test/unit/lib/vhost/test_vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-07T16:15:37Z",
+      "side": 1,
+      "message": "any reason not to use a mock macro here?",
+      "revId": "b79870c3e8d061c17ca988ed8ca15171049eb556",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
