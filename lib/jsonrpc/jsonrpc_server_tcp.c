@@ -41,7 +41,6 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 {
 	struct spdk_jsonrpc_server *server;
 	int rc, val, flag;
-	char buf[64];
 
 	server = calloc(1, sizeof(struct spdk_jsonrpc_server));
 	if (server == NULL) {
@@ -65,8 +64,8 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 
 	flag = fcntl(server->sockfd, F_GETFL);
 	if (fcntl(server->sockfd, F_SETFL, flag | O_NONBLOCK) < 0) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n", server->sockfd, buf);
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
+			    server->sockfd, spdk_strerror(errno));
 		close(server->sockfd);
 		free(server);
 		return NULL;
@@ -74,8 +73,7 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 
 	rc = bind(server->sockfd, listen_addr, addrlen);
 	if (rc != 0) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("could not bind JSON-RPC server: %s\n", buf);
+		SPDK_ERRLOG("could not bind JSON-RPC server: %s\n", spdk_strerror(errno));
 		close(server->sockfd);
 		free(server);
 		return NULL;
@@ -137,7 +135,6 @@ spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 {
 	struct spdk_jsonrpc_server_conn *conn;
 	int rc, conn_idx, flag;
-	char buf[64];
 
 	rc = accept(server->sockfd, NULL, NULL);
 	if (rc >= 0) {
@@ -159,8 +156,8 @@ spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 
 		flag = fcntl(conn->sockfd, F_GETFL);
 		if (fcntl(conn->sockfd, F_SETFL, flag | O_NONBLOCK) < 0) {
-			spdk_strerror_r(errno, buf, sizeof(buf));
-			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n", conn->sockfd, buf);
+			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
+				    conn->sockfd, spdk_strerror(errno));
 			close(conn->sockfd);
 			return -1;
 		}
@@ -223,15 +220,13 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 {
 	ssize_t rc;
 	size_t recv_avail = SPDK_JSONRPC_RECV_BUF_SIZE - conn->recv_len;
-	char buf[64];
 
 	rc = recv(conn->sockfd, conn->recv_buf + conn->recv_len, recv_avail, 0);
 	if (rc == -1) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 			return 0;
 		}
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_DEBUGLOG(SPDK_LOG_RPC, "recv() failed: %s\n", buf);
+		SPDK_DEBUGLOG(SPDK_LOG_RPC, "recv() failed: %s\n", spdk_strerror(errno));
 		return -1;
 	}
 
@@ -274,7 +269,6 @@ spdk_jsonrpc_server_conn_send(struct spdk_jsonrpc_server_conn *conn)
 {
 	struct spdk_jsonrpc_request *request;
 	ssize_t rc;
-	char buf[64];
 
 more:
 	if (conn->outstanding_requests == 0) {
@@ -300,8 +294,7 @@ more:
 			return 0;
 		}
 
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_DEBUGLOG(SPDK_LOG_RPC, "send() failed: %s\n", buf);
+		SPDK_DEBUGLOG(SPDK_LOG_RPC, "send() failed: %s\n", spdk_strerror(errno));
 		return -1;
 	}
 

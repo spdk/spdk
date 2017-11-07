@@ -63,7 +63,6 @@ spdk_rpc_construct_pmem_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_pmem req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_bdev *bdev;
-	char buf[64];
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_pmem_decoders,
@@ -97,8 +96,7 @@ spdk_rpc_construct_pmem_bdev(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_strerror_r(rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(rc));
 	free_rpc_construct_pmem_bdev(&req);
 }
 SPDK_RPC_REGISTER("construct_pmem_bdev", spdk_rpc_construct_pmem_bdev)

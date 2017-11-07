@@ -1,7 +1,6 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (C) 2008-2012 Daisuke Aoyama <aoyama@peach.ne.jp>.
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
@@ -32,56 +31,13 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
-
-#include "spdk/env.h"
-#include "spdk/io_channel.h"
-#include "spdk/log.h"
-#include "spdk/net.h"
 #include "spdk/string.h"
-#include "iscsi/acceptor.h"
-#include "iscsi/conn.h"
-#include "iscsi/portal_grp.h"
 
-#define ACCEPT_TIMEOUT_US 1000 /* 1ms */
+static __thread char strerror_message[64];
 
-static void
-spdk_iscsi_portal_accept(void *arg)
+const char *
+spdk_strerror(int errnum)
 {
-	struct spdk_iscsi_portal	*portal = arg;
-	int				rc, sock;
-
-	if (portal->sock < 0) {
-		return;
-	}
-
-	while (1) {
-		rc = spdk_sock_accept(portal->sock);
-		if (rc >= 0) {
-			sock = rc;
-			rc = spdk_iscsi_conn_construct(portal, sock);
-			if (rc < 0) {
-				spdk_sock_close(sock);
-				SPDK_ERRLOG("spdk_iscsi_connection_construct() failed\n");
-				break;
-			}
-		} else {
-			if (errno != EAGAIN && errno != EWOULDBLOCK) {
-				SPDK_ERRLOG("accept error(%d): %s\n", errno, spdk_strerror(errno));
-			}
-			break;
-		}
-	}
-}
-
-void
-spdk_iscsi_acceptor_start(struct spdk_iscsi_portal *p)
-{
-	p->acceptor_poller = spdk_poller_register(spdk_iscsi_portal_accept, p, ACCEPT_TIMEOUT_US);
-}
-
-void
-spdk_iscsi_acceptor_stop(struct spdk_iscsi_portal *p)
-{
-	spdk_poller_unregister(&p->acceptor_poller);
+	spdk_strerror_r(errnum, strerror_message, sizeof(strerror_message));
+	return strerror_message;
 }

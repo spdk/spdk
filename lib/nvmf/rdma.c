@@ -336,7 +336,6 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	struct ibv_qp_init_attr		attr;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
 	struct spdk_nvmf_rdma_request	*rdma_req;
-	char buf[64];
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
@@ -352,9 +351,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 	rc = rdma_create_qp(rqpair->cm_id, NULL, &attr);
 	if (rc) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("rdma_create_qp failed\n");
-		SPDK_ERRLOG("Errno %d: %s\n", errno, buf);
+		SPDK_ERRLOG("rdma_create_qp failed: errno %d: %s\n", errno, spdk_strerror(errno));
 		rdma_destroy_id(rqpair->cm_id);
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
@@ -1122,7 +1119,6 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	struct spdk_nvmf_rdma_device	*device, *tmp;
 	struct ibv_context		**contexts;
 	uint32_t			i;
-	char				buf[64];
 	int				flag;
 
 	rtransport = calloc(1, sizeof(*rtransport));
@@ -1145,17 +1141,15 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 
 	rtransport->event_channel = rdma_create_event_channel();
 	if (rtransport->event_channel == NULL) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("rdma_create_event_channel() failed, %s\n", buf);
+		SPDK_ERRLOG("rdma_create_event_channel() failed, %s\n", spdk_strerror(errno));
 		free(rtransport);
 		return NULL;
 	}
 
 	flag = fcntl(rtransport->event_channel->fd, F_GETFL);
 	if (fcntl(rtransport->event_channel->fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
-			    rtransport->event_channel->fd, buf);
+			    rtransport->event_channel->fd, spdk_strerror(errno));
 		free(rtransport);
 		return NULL;
 	}
@@ -1404,7 +1398,6 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct rdma_cm_event		*event;
 	int				rc;
-	char buf[64];
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
@@ -1445,8 +1438,7 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 			rdma_ack_cm_event(event);
 		} else {
 			if (errno != EAGAIN && errno != EWOULDBLOCK) {
-				spdk_strerror_r(errno, buf, sizeof(buf));
-				SPDK_ERRLOG("Acceptor Event Error: %s\n", buf);
+				SPDK_ERRLOG("Acceptor Event Error: %s\n", spdk_strerror(errno));
 			}
 			break;
 		}
@@ -1759,14 +1751,12 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	int reaped, i;
 	int count = 0;
 	bool error = false;
-	char buf[64];
 
 	/* Poll for completing operations. */
 	reaped = ibv_poll_cq(rpoller->cq, 32, wc);
 	if (reaped < 0) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
-			    errno, buf);
+			    errno, spdk_strerror(errno));
 		return -1;
 	}
 
