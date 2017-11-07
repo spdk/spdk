@@ -43,6 +43,9 @@ to be performed on the thread at given time.
 An new API `spdk_bdev_get_data_block_size` has been added to get size of data
 block except for metadata.
 
+A mechanism for acquiring and releasing data buffers from bdev modules, used
+to perform zero copy operations, was added.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
@@ -633,7 +636,6 @@ the legacy memory allocation model.  The plan is to enable dynamic memory alloca
 after the DPDK 18.08 release which should fix these issues.
 
 ### Environment Abstraction Layer and Event Framework
-
 The spdk_mem_map_translate() function now takes a size parameter to indicate the size of
 the memory region.  This can be used by environment implementations to validate the
 requested translation.
