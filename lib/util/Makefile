@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = bit_array.c crc16.c crc32.c crc32c.c crc32_ieee.c fd.c io_channel.c string.c
+C_SRCS = bit_array.c crc16.c crc32.c crc32c.c crc32_ieee.c fd.c io_channel.c strerror_tls.c string.c
 LIBNAME = util
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

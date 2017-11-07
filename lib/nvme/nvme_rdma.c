@@ -197,13 +197,11 @@ nvme_rdma_get_event(struct rdma_event_channel *channel,
 {
 	struct rdma_cm_event	*event;
 	int			rc;
-	char buf[64];
 
 	rc = rdma_get_cm_event(channel, &event);
 	if (rc < 0) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("Failed to get event from CM event channel. Error %d (%s)\n",
-			    errno, buf);
+			    errno, spdk_strerror(errno));
 		return NULL;
 	}
 
@@ -223,13 +221,10 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 {
 	int			rc;
 	struct ibv_qp_init_attr	attr;
-	char buf[64];
 
 	rqpair->cq = ibv_create_cq(rqpair->cm_id->verbs, rqpair->num_entries * 2, rqpair, NULL, 0);
 	if (!rqpair->cq) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("Unable to create completion queue\n");
-		SPDK_ERRLOG("Errno %d: %s\n", errno, buf);
+		SPDK_ERRLOG("Unable to create completion queue: errno %d: %s\n", errno, spdk_strerror(errno));
 		return -1;
 	}
 
@@ -1410,7 +1405,6 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 	struct spdk_nvme_rdma_req *rdma_req;
 	struct ibv_send_wr *wr, *bad_wr = NULL;
 	int rc;
-	char buf[64];
 
 	rqpair = nvme_rdma_qpair(qpair);
 	assert(rqpair != NULL);
@@ -1437,8 +1431,7 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 
 	rc = ibv_post_send(rqpair->cm_id->qp, wr, &bad_wr);
 	if (rc) {
-		spdk_strerror_r(rc, buf, sizeof(buf));
-		SPDK_ERRLOG("Failure posting rdma send for NVMf completion: %d (%s)\n", rc, buf);
+		SPDK_ERRLOG("Failure posting rdma send for NVMf completion: %d (%s)\n", rc, spdk_strerror(rc));
 	}
 
 	return rc;
@@ -1495,7 +1488,6 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 	int			i, rc, batch_size;
 	uint32_t 		reaped;
 	struct ibv_cq		*cq;
-	char buf[64];
 
 	if (max_completions == 0) {
 		max_completions = rqpair->num_entries;
@@ -1511,9 +1503,8 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				      MAX_COMPLETIONS_PER_POLL);
 		rc = ibv_poll_cq(cq, batch_size, wc);
 		if (rc < 0) {
-			spdk_strerror_r(errno, buf, sizeof(buf));
 			SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
-				    errno, buf);
+				    errno, spdk_strerror(errno));
 			return -1;
 		} else if (rc == 0) {
 			/* Ran out of completions */

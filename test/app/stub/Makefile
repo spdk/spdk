@@ -39,7 +39,7 @@ APP = stub
 
 C_SRCS := stub.c
 
-SPDK_LIB_LIST = event conf nvme util log trace rpc jsonrpc json
+SPDK_LIB_LIST = event conf nvme log trace rpc jsonrpc json util
 
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 LIBS += $(ENV_LINKER_ARGS)

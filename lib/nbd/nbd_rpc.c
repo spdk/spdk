@@ -156,7 +156,6 @@ spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
 	struct spdk_nbd_disk *nbd;
 	pthread_t tid;
 	struct nbd_disconnect_arg *thd_arg = NULL;
-	char buf[64];
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_stop_nbd_disk_decoders,
@@ -188,9 +187,8 @@ spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
 	 */
 	thd_arg = malloc(sizeof(*thd_arg));
 	if (!thd_arg) {
-		spdk_strerror_r(-ENOMEM, buf, sizeof(buf));
-		SPDK_ERRLOG("could not allocate nbd disconnect thread arg: %s\n", buf);
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, buf);
+		SPDK_ERRLOG("could not allocate nbd disconnect thread arg\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "Out of memory");
 		goto out;
 	}
 
@@ -203,17 +201,15 @@ spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
 	 */
 	rc = pthread_create(&tid, NULL, nbd_disconnect_thread, (void *)thd_arg);
 	if (rc != 0) {
-		spdk_strerror_r(rc, buf, sizeof(buf));
-		SPDK_ERRLOG("could not create nbd disconnect thread: %s\n", buf);
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, buf);
+		SPDK_ERRLOG("could not create nbd disconnect thread: %s\n", spdk_strerror(rc));
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(rc));
 		free(thd_arg);
 		goto out;
 	}
 
 	rc = pthread_detach(tid);
 	if (rc != 0) {
-		spdk_strerror_r(rc, buf, sizeof(buf));
-		SPDK_ERRLOG("could not detach nbd disconnect thread: %s\n", buf);
+		SPDK_ERRLOG("could not detach nbd disconnect thread: %s\n", spdk_strerror(rc));
 		goto out;
 	}
 
