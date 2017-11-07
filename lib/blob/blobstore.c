@@ -1305,6 +1305,12 @@ _spdk_bs_channel_create(struct spdk_blob_store *bs, struct spdk_bs_channel *chan
 	channel->dev = dev;
 	channel->dev_channel = dev->create_channel(dev);
 
+	if (!channel->dev_channel) {
+		SPDK_ERRLOG("Failed to create device channel.\n");
+		free(channel->req_mem);
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -1400,6 +1406,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 {
 	struct spdk_blob_store	*bs;
 	uint64_t dev_size;
+	int rc;
 
 	dev_size = dev->blocklen * dev->blockcnt;
 	if (dev_size < opts->cluster_sz) {
@@ -1446,7 +1453,14 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 
 	spdk_io_device_register(&bs->md_target, _spdk_bs_md_channel_create, _spdk_bs_channel_destroy,
 				sizeof(struct spdk_bs_channel));
-	spdk_bs_register_md_thread(bs);
+	rc = spdk_bs_register_md_thread(bs);
+	if (rc == -1) {
+		spdk_io_device_unregister(&bs->md_target, NULL);
+		spdk_bit_array_free(&bs->used_md_pages);
+		spdk_bit_array_free(&bs->used_clusters);
+		free(bs);
+		return NULL;
+	}
 
 	spdk_io_device_register(&bs->io_target, _spdk_bs_io_channel_create, _spdk_bs_channel_destroy,
 				sizeof(struct spdk_bs_channel));
@@ -2407,6 +2421,10 @@ spdk_bs_free_cluster_count(struct spdk_blob_store *bs)
 int spdk_bs_register_md_thread(struct spdk_blob_store *bs)
 {
 	bs->md_target.md_channel = spdk_get_io_channel(&bs->md_target);
+	if (!bs->md_target.md_channel) {
+		SPDK_ERRLOG("Failed to get IO channel.\n");
+		return -1;
+	}
 
 	return 0;
 }
