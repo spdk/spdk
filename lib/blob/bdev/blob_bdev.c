@@ -235,6 +235,8 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 		 * This will always work, since bdev implements write_zeroes on top of write
 		 * if the device doesn't natively support write_zeroes.
 		 */
+		SPDK_NOTICELOG("Bdev %s does not support unmap, write_zeroes will be used instead.\n",
+			       bdev->name);
 		b->bs_dev.unmap = bdev_blob_write_zeroes;
 	}
 
