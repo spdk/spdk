@@ -507,7 +507,6 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
 	struct stat file_stat;
-	char buf[64];
 	uint64_t cpumask;
 
 	assert(vdev);
@@ -596,9 +595,8 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	g_spdk_vhost_devices[ctrlr_num] = vdev;
 
 	if (rte_vhost_driver_start(path) != 0) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n", name, errno,
-			    buf);
+			    spdk_strerror(errno));
 		rte_vhost_driver_unregister(path);
 		return -EIO;
 	}
@@ -1015,7 +1013,6 @@ void
 spdk_vhost_shutdown_cb(void)
 {
 	pthread_t tid;
-	char buf[64];
 	int rc;
 	struct spdk_event *vhost_app_stop;
 
@@ -1023,8 +1020,7 @@ spdk_vhost_shutdown_cb(void)
 
 	rc = pthread_create(&tid, NULL, &session_shutdown, vhost_app_stop);
 	if (rc < 0) {
-		spdk_strerror_r(rc, buf, sizeof(buf));
-		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s\n", rc, buf);
+		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s\n", rc, spdk_strerror(rc));
 		abort();
 	}
 	pthread_detach(tid);

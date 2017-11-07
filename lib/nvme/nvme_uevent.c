@@ -51,7 +51,6 @@ spdk_uevent_connect(void)
 	struct sockaddr_nl addr;
 	int netlink_fd;
 	int size = 64 * 1024;
-	char buf[64];
 	int flag;
 
 	memset(&addr, 0, sizeof(addr));
@@ -68,8 +67,8 @@ spdk_uevent_connect(void)
 
 	flag = fcntl(netlink_fd, F_GETFL);
 	if (fcntl(netlink_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n", netlink_fd, buf);
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n", netlink_fd,
+			    spdk_strerror(errno));
 		close(netlink_fd);
 		return -1;
 	}
@@ -174,7 +173,6 @@ spdk_get_uevent(int fd, struct spdk_uevent *uevent)
 {
 	int ret;
 	char buf[SPDK_UEVENT_MSG_LEN];
-	char errbuf[64];
 
 	memset(uevent, 0, sizeof(struct spdk_uevent));
 	memset(buf, 0, SPDK_UEVENT_MSG_LEN);
@@ -188,8 +186,7 @@ spdk_get_uevent(int fd, struct spdk_uevent *uevent)
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
 		} else {
-			spdk_strerror_r(errno, errbuf, sizeof(errbuf));
-			SPDK_ERRLOG("Socket read error(%d): %s\n", errno, errbuf);
+			SPDK_ERRLOG("Socket read error(%d): %s\n", errno, spdk_strerror(errno));
 			return -1;
 		}
 	}
