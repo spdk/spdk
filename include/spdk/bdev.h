@@ -110,6 +110,7 @@ enum spdk_bdev_io_type {
 	SPDK_BDEV_IO_TYPE_NVME_IO,
 	SPDK_BDEV_IO_TYPE_NVME_IO_MD,
 	SPDK_BDEV_IO_TYPE_WRITE_ZEROES,
+	SPDK_BDEV_IO_TYPE_ZCOPY,
 	SPDK_BDEV_NUM_IO_TYPES /* Keep last */
 };
 
@@ -781,6 +782,47 @@ int spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel 
 			    struct iovec *iov, int iovcnt,
 			    uint64_t offset_blocks, uint64_t num_blocks,
 			    spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+/**
+ * Submit a request to acquire a data buffer that represents the given
+ * range of blocks. The data buffer is placed in the spdk_bdev_io structure
+ * and can be obtained by calling spdk_bdev_io_get_iovec().
+ *
+ * \param desc Block device descriptor
+ * \param ch I/O channel. Obtained by calling spdk_bdev_get_io_channel().
+ * \param offset_blocks The offset, in blocks, from the start of the block device.
+ * \param num_blocks The number of blocks.
+ * \param populate Whether the data buffer should be populated with the
+ *                 data at the given blocks. Populating the data buffer can
+ *                 be skipped if the user writes new data to the entire buffer.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ */
+int spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			  uint64_t offset_blocks, uint64_t num_blocks,
+			  bool populate,
+			  spdk_bdev_io_completion_cb cb, void *cb_arg);
+
+
+/**
+ * Submit a request to release a data buffer representing a range of blocks.
+ *
+ * \param bdev_io I/O request returned in the completion callback of spdk_bdev_zcopy_start().
+ * \param commit Whether to commit the data in the buffers to the blocks before releasing.
+ *               The data does not need to be committed if it was not modified.
+ * \param cb Called when the request is complete.
+ * \param cb_arg Argument passed to cb.
+ *
+ * \return 0 on success. On success, the callback will always
+ * be called (even if the request ultimately failed). Return
+ * negated errno on failure, in which case the callback will not be called.
+ */
+int spdk_bdev_zcopy_end(struct spdk_bdev_io *bdev_io, bool commit,
+			spdk_bdev_io_completion_cb cb, void *cb_arg);
 
 /**
  * Submit a write zeroes request to the bdev on the given channel. This command
