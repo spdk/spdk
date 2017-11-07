@@ -534,6 +534,26 @@ spdk_fio_event(struct thread_data *td, int event)
 	return fio_thread->iocq[event];
 }
 
+static void
+spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread)
+{
+	struct spdk_fio_msg *msg;
+	struct spdk_fio_poller *p, *tmp;
+	size_t count;
+
+	/* Process new events */
+	count = spdk_ring_dequeue(fio_thread->ring, (void **)&msg, 1);
+	if (count > 0) {
+		msg->cb_fn(msg->cb_arg);
+		free(msg);
+	}
+
+	/* Call all pollers */
+	TAILQ_FOREACH_SAFE(p, &fio_thread->pollers, link, tmp) {
+		p->cb_fn(p->cb_arg);
+	}
+}
+
 static int
 spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		   unsigned int max, const struct timespec *t)
@@ -541,9 +561,6 @@ spdk_fio_getevents(struct thread_data *td, unsigned int min,
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct timespec t0, t1;
 	uint64_t timeout = 0;
-	struct spdk_fio_msg *msg;
-	struct spdk_fio_poller *p, *tmp;
-	size_t count;
 
 	if (t) {
 		timeout = t->tv_sec * 1000000000L + t->tv_nsec;
@@ -553,17 +570,7 @@ spdk_fio_getevents(struct thread_data *td, unsigned int min,
 	fio_thread->iocq_count = 0;
 
 	for (;;) {
-		/* Process new events */
-		count = spdk_ring_dequeue(fio_thread->ring, (void **)&msg, 1);
-		if (count > 0) {
-			msg->cb_fn(msg->cb_arg);
-			free(msg);
-		}
-
-		/* Call all pollers */
-		TAILQ_FOREACH_SAFE(p, &fio_thread->pollers, link, tmp) {
-			p->cb_fn(p->cb_arg);
-		}
+		spdk_fio_poll_thread(fio_thread);
 
 		if (fio_thread->iocq_count >= min) {
 			return fio_thread->iocq_count;
