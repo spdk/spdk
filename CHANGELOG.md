@@ -40,6 +40,9 @@ of new bdev modules. This header includes an interface for the spdk_bdev_part an
 spdk_bdev_part_base objects to enable the creation of multiple virtual bdevs on top of a
 single base bdev.
 
+A mechanism for acquiring and releasing data buffers from bdev modules, used
+to perform zero copy operations, was added.
+
 ### Env
 
 The spdk_mem_map_translate() function now takes a size parameter to indicate the size of
