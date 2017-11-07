@@ -78,10 +78,30 @@ $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "64" ==> iSCSI queue depth 64
 # "1 0 0 0" ==> disable CHAP authentication
 $rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' '1:2' 64 1 0 0 0
+# If the /dev/ramo exists, aiobackend tests will be run.
+if [ -b /dev/ram0 ]; then
+	$rpc_py construct_aio_bdev /dev/ram0 AIO0 512
+	$rpc_py construct_target_node Target2 Target2_alias 'AIO0:0' '1:2' 128 1 0 0 0
+fi
 sleep 1
 
+if [ -b /dev/ram0 ]; then
+	iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
+	iscsiadm -m node --login -T 'iqn.2016-06.io.spdk:Target2' -p $TARGET_IP:$PORT
+
+	trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+
+	$fio_py 262144 64 rw 10 verify
+	$fio_py 262144 64 randrw 10 verify
+	$fio_py 262144 64 randwrite 10 verify
+
+	iscsicleanup
+	$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target2'
+	trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+fi
+
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
-iscsiadm -m node --login -p $TARGET_IP:$PORT
+iscsiadm -m node --login -T 'iqn.2016-06.io.spdk:Target3' -p $TARGET_IP:$PORT
 
 trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
@@ -91,6 +111,9 @@ $fio_py 131072 32 randrw 1 verify
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	$fio_py 4096 1 write 300 verify
+	$fio_py 262144 64 rw 10 verify
+	$fio_py 262144 64 randrw 10 verify
+	$fio_py 262144 64 randwrite 10 verify
 
 	# Run the running_config test which will generate a config file from the
 	#  running iSCSI target, then kill and restart the iSCSI target using the
@@ -124,13 +147,48 @@ set -e
 iscsicleanup
 $rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
 
+# Disable the following hotplug test, since the pci rescan at the end of the
+#  test is causing rather frequent system hangs with emulated NVMe devices
+#  in VMs.
+if [ -z "$NO_NVME" ]; then
+	$rpc_py construct_target_node Target3 Target3_alias HotInNvme0n1:0 1:2 64 1 0 0 0
+	iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
+	iscsiadm -m node --login -p $TARGET_IP:$PORT
+	sleep 1
+	$fio_py 1048576 128 rw 10 &
+	fio_pid=$!
+
+	sleep 3
+
+	set +e
+
+	for bdf in $(linux_iter_pci 0108); do
+		linux_remove_nvme_devices "$bdf"
+	done
+
+	wait $fio_pid
+	fio_status=$?
+
+	if [ $fio_status -eq 0 ]; then
+		echo "fio successful - expected failure"
+		iscsicleanup
+		rm -f $testdir/iscsi.conf
+		killprocess $pid
+		exit 1
+	else
+		echo "fio failed as expected"
+	fi
+fi
+
+set -e
+
 rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
 iscsicleanup
 rm -f $testdir/iscsi.conf
 killprocess $pid
-#echo 1 > /sys/bus/pci/rescan
-#sleep 2
+echo 1 > /sys/bus/pci/rescan
+sleep 2
 $rootdir/scripts/setup.sh
 
 timing_exit fio
