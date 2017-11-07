@@ -174,7 +174,6 @@ virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queu
 	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
 	uint64_t max_queues;
-	char err_str[64];
 
 	if (name == NULL) {
 		SPDK_ERRLOG("No name gived for controller: %s\n", path);
@@ -211,8 +210,7 @@ virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queu
 	}
 
 	if (dev->ops->send_request(dev, VHOST_USER_GET_QUEUE_NUM, &max_queues) < 0) {
-		spdk_strerror_r(errno, err_str, sizeof(err_str));
-		SPDK_ERRLOG("get_queue_num fails: %s\n", err_str);
+		SPDK_ERRLOG("get_queue_num fails: %s\n", spdk_get_strerror(errno));
 		goto err;
 	}
 
@@ -225,8 +223,7 @@ virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queu
 	vdev->max_queues = fixed_queue_num + requested_queues;
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
-		spdk_strerror_r(errno, err_str, sizeof(err_str));
-		SPDK_ERRLOG("set_owner fails: %s\n", err_str);
+		SPDK_ERRLOG("set_owner fails: %s\n", spdk_get_strerror(errno));
 		goto err;
 	}
 

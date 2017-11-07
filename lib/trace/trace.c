@@ -153,15 +153,13 @@ spdk_trace_init(const char *shm_name)
 	struct spdk_trace_register_fn *reg_fn;
 	int trace_fd;
 	int i = 0;
-	char buf[64];
 
 	snprintf(g_shm_name, sizeof(g_shm_name), "%s", shm_name);
 
 	trace_fd = shm_open(shm_name, O_RDWR | O_CREAT, 0600);
 	if (trace_fd == -1) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
 		fprintf(stderr, "could not shm_open spdk_trace\n");
-		fprintf(stderr, "errno=%d %s\n", errno, buf);
+		fprintf(stderr, "errno=%d %s\n", errno, spdk_get_strerror(errno));
 		exit(EXIT_FAILURE);
 	}
 

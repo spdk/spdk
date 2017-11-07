@@ -90,12 +90,10 @@ static uint64_t
 virtio_user_get_features(struct virtio_dev *vdev)
 {
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
-	char err_str[64];
 	uint64_t features;
 
 	if (dev->ops->send_request(dev, VHOST_USER_GET_FEATURES, &features) < 0) {
-		spdk_strerror_r(errno, err_str, sizeof(err_str));
-		SPDK_ERRLOG("get_features failed: %s\n", err_str);
+		SPDK_ERRLOG("get_features failed: %s\n", spdk_get_strerror(errno));
 		return 0;
 	}
 
@@ -163,7 +161,6 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
 	uint16_t queue_idx = vq->vq_queue_index;
 	uint64_t desc_addr, avail_addr, used_addr;
-	char err_str[64];
 	int callfd;
 	int kickfd;
 
@@ -178,15 +175,13 @@ virtio_user_setup_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 	 */
 	callfd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
 	if (callfd < 0) {
-		spdk_strerror_r(errno, err_str, sizeof(err_str));
-		SPDK_ERRLOG("callfd error, %s\n", err_str);
+		SPDK_ERRLOG("callfd error, %s\n", spdk_get_strerror(errno));
 		return -1;
 	}
 
 	kickfd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK);
 	if (kickfd < 0) {
-		spdk_strerror_r(errno, err_str, sizeof(err_str));
-		SPDK_ERRLOG("kickfd error, %s\n", err_str);
+		SPDK_ERRLOG("kickfd error, %s\n", spdk_get_strerror(errno));
 		close(callfd);
 		return -1;
 	}
@@ -233,11 +228,9 @@ virtio_user_notify_queue(struct virtio_dev *vdev, struct virtqueue *vq)
 {
 	uint64_t buf = 1;
 	struct virtio_user_dev *dev = virtio_dev_get_user_dev(vdev);
-	char err_str[64];
 
 	if (write(dev->kickfds[vq->vq_queue_index], &buf, sizeof(buf)) < 0) {
-		spdk_strerror_r(errno, err_str, sizeof(err_str));
-		SPDK_ERRLOG("failed to kick backend: %s.\n", err_str);
+		SPDK_ERRLOG("failed to kick backend: %s.\n", spdk_get_strerror(errno));
 	}
 }
 

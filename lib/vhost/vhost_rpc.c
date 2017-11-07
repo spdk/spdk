@@ -68,7 +68,6 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 	struct rpc_vhost_scsi_ctrlr req = {0};
 	struct spdk_json_write_ctx *w;
 	int rc;
-	char buf[64];
 
 	if (spdk_json_decode_object(params, rpc_construct_vhost_ctrlr,
 				    SPDK_COUNTOF(rpc_construct_vhost_ctrlr),
@@ -95,9 +94,9 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_strerror_r(-rc, buf, sizeof(buf));
 	free_rpc_vhost_scsi_ctrlr(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 }
 SPDK_RPC_REGISTER("construct_vhost_scsi_controller", spdk_rpc_construct_vhost_scsi_controller)
 
@@ -130,7 +129,6 @@ spdk_rpc_add_vhost_scsi_lun_cb(struct spdk_vhost_dev *vdev, void *arg)
 	struct spdk_jsonrpc_request *request = rpc->request;
 	struct spdk_json_write_ctx *w;
 	int rc;
-	char buf[64];
 
 	if (vdev == NULL) {
 		rc = -ENODEV;
@@ -155,8 +153,8 @@ spdk_rpc_add_vhost_scsi_lun_cb(struct spdk_vhost_dev *vdev, void *arg)
 
 invalid:
 	free_rpc_add_vhost_scsi_ctrlr_lun(rpc);
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 	return rc;
 }
 
@@ -165,7 +163,6 @@ spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
 	struct rpc_add_vhost_scsi_ctrlr_lun *req;
-	char buf[64];
 	int rc;
 
 	req = calloc(1, sizeof(*req));
@@ -197,8 +194,8 @@ invalid:
 	if (req) {
 		free_rpc_add_vhost_scsi_ctrlr_lun(req);
 	}
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 }
 SPDK_RPC_REGISTER("add_vhost_scsi_lun", spdk_rpc_add_vhost_scsi_lun)
 
@@ -245,7 +242,6 @@ spdk_rpc_remove_vhost_scsi_dev_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct rpc_remove_vhost_scsi_ctrlr_dev *rpc = arg;
 	struct spdk_jsonrpc_request *request = rpc->request;
-	char buf[64];
 	int rc;
 
 	if (vdev == NULL) {
@@ -263,8 +259,8 @@ spdk_rpc_remove_vhost_scsi_dev_cb(struct spdk_vhost_dev *vdev, void *arg)
 
 invalid:
 	free_rpc_remove_vhost_scsi_ctrlr_dev(rpc);
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 	return rc;
 }
 
@@ -274,7 +270,6 @@ spdk_rpc_remove_vhost_scsi_dev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_remove_vhost_scsi_ctrlr_dev *req;
 	int rc;
-	char buf[64];
 
 	req = calloc(1, sizeof(*req));
 	if (req == NULL) {
@@ -299,8 +294,8 @@ invalid:
 	if (req) {
 		free_rpc_remove_vhost_scsi_ctrlr_dev(req);
 	}
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 }
 
 SPDK_RPC_REGISTER("remove_vhost_scsi_dev", spdk_rpc_remove_vhost_scsi_dev)
@@ -334,7 +329,6 @@ spdk_rpc_construct_vhost_blk_controller(struct spdk_jsonrpc_request *request,
 	struct rpc_vhost_blk_ctrlr req = {0};
 	struct spdk_json_write_ctx *w;
 	int rc;
-	char buf[64];
 
 	if (spdk_json_decode_object(params, rpc_construct_vhost_blk_ctrlr,
 				    SPDK_COUNTOF(rpc_construct_vhost_blk_ctrlr),
@@ -361,10 +355,9 @@ spdk_rpc_construct_vhost_blk_controller(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_strerror_r(-rc, buf, sizeof(buf));
 	free_rpc_vhost_blk_ctrlr(&req);
-	spdk_jsonrpc_send_error_response(request,
-					 SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 
 }
 SPDK_RPC_REGISTER("construct_vhost_blk_controller", spdk_rpc_construct_vhost_blk_controller)
@@ -393,7 +386,6 @@ spdk_rpc_remove_vhost_controller_cb(struct spdk_vhost_dev *vdev, void *arg)
 	struct spdk_jsonrpc_request *request = ctx->request;
 	struct spdk_json_write_ctx *w;
 	int rc;
-	char buf[64];
 
 	if (vdev == NULL) {
 		rc = -ENODEV;
@@ -418,9 +410,8 @@ spdk_rpc_remove_vhost_controller_cb(struct spdk_vhost_dev *vdev, void *arg)
 
 invalid:
 	free_rpc_remove_vhost_ctrlr(ctx);
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request,
-					 SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 	return -1;
 }
 
@@ -429,7 +420,6 @@ spdk_rpc_remove_vhost_controller(struct spdk_jsonrpc_request *request,
 				 const struct spdk_json_val *params)
 {
 	struct rpc_remove_vhost_ctrlr *req;
-	char buf[64];
 	int rc;
 
 	req = calloc(1, sizeof(*req));
@@ -453,9 +443,8 @@ invalid:
 	if (req) {
 		free_rpc_remove_vhost_ctrlr(req);
 	}
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request,
-					 SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 
 }
 SPDK_RPC_REGISTER("remove_vhost_controller", spdk_rpc_remove_vhost_controller)
@@ -503,7 +492,6 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_get_vhost_ctrlrs *ctx;
 	struct spdk_json_write_ctx *w;
-	char buf[64];
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -520,8 +508,8 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 
 	ctx = calloc(1, sizeof(*ctx));
 	if (ctx == NULL) {
-		spdk_strerror_r(-ENOMEM, buf, sizeof(buf));
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, buf);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 spdk_get_strerror(-ENOMEM));
 		return;
 	}
 
@@ -561,7 +549,6 @@ spdk_rpc_set_vhost_controller_coalescing_cb(struct spdk_vhost_dev *vdev, void *a
 {
 	struct rpc_vhost_ctrlr_coalescing *req = arg;
 	struct spdk_json_write_ctx *w;
-	char buf[64];
 	int rc;
 
 	if (vdev == NULL) {
@@ -584,8 +571,8 @@ spdk_rpc_set_vhost_controller_coalescing_cb(struct spdk_vhost_dev *vdev, void *a
 	return 0;
 
 invalid:
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 	free_rpc_set_vhost_controllers_event_coalescing(req);
 	return 0;
 }
@@ -595,7 +582,6 @@ spdk_rpc_set_vhost_controller_coalescing(struct spdk_jsonrpc_request *request,
 		const struct spdk_json_val *params)
 {
 	struct rpc_vhost_ctrlr_coalescing *req;
-	char buf[64];
 	int rc;
 
 	req = calloc(1, sizeof(struct rpc_vhost_ctrlr_coalescing));
@@ -616,9 +602,9 @@ spdk_rpc_set_vhost_controller_coalescing(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_strerror_r(-rc, buf, sizeof(buf));
 	free_rpc_set_vhost_controllers_event_coalescing(req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 }
 SPDK_RPC_REGISTER("set_vhost_controller_coalescing", spdk_rpc_set_vhost_controller_coalescing)
 

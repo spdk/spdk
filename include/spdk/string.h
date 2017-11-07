@@ -101,6 +101,16 @@ char *spdk_str_trim(char *s);
 int spdk_strerror_r(int errnum, char *buf, size_t buflen);
 
 /**
+ * Return the string version of an error into the staticly allocated buffer.
+ * This function is threadsafe.
+ *
+ * \param errnum Error code
+ *
+ * \return pointer to buffer upon success, a NULL on error.
+ */
+const char *spdk_get_strerror(int errnum);
+
+/**
  * Remove trailing newlines from the end of a string in place.
  *
  * Any sequence of trailing \r and \n characters is removed from the end of the string.
