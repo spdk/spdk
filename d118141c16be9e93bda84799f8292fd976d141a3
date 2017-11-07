@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4000a32_31973c39",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-07T09:40:31Z",
+      "side": 1,
+      "message": "vm_wait_for_boot 600 $vm_no\nOtherwise you will try to wait for all VMs in work dir instead of just 0",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 100,
+        "endChar": 21
+      },
+      "revId": "d118141c16be9e93bda84799f8292fd976d141a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f88caf3e_a9130e14",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-07T09:40:31Z",
+      "side": 1,
+      "message": "Need some Trap statement. When something goes wrong we need to be sure we will stop vhost and VM",
+      "revId": "d118141c16be9e93bda84799f8292fd976d141a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
