@@ -152,6 +152,7 @@ CXXFLAGS += $(COMMON_CFLAGS) -std=c++0x
 
 SYS_LIBS += -lrt
 SYS_LIBS += -luuid
+SYS_LIBS += -ldl
 
 MAKEFLAGS += --no-print-directory
 
