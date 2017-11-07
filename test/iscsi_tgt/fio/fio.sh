@@ -32,6 +32,21 @@ function running_config() {
 	$fio_py 4096 1 randrw 5
 }
 
+function run_fio_case() {
+	local test_type_array=(write rw randrw randwrite)
+	local io_size_array=(4096 131072 524288)
+	local queue_depth_array=(16 64 256)
+	local second=$1
+
+	for test_type in ${test_type_array[*]}; do
+		for io_size in ${io_size_array[*]}; do
+			for queue_depth in ${queue_depth_array[*]}; do
+				$fio_py $io_size $queue_depth $test_type $second verify
+			done
+		done
+	done
+}
+
 if [ -z "$TARGET_IP" ]; then
 	echo "TARGET_IP not defined in environment"
 	exit 1
@@ -57,6 +72,13 @@ MALLOC_BLOCK_SIZE=4096
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
+bdf_addr_array=($($rootdir/scripts/gen_nvme.sh | grep -e '0000:[0-9a-f]\{2\}:[0-9a-f]\{2\}\.[0-9a-f]\+' -o))
+if [ 0 -eq ${#bdf_addr_array[*]}  ]; then
+	echo "No nvme device found"
+	exit 1
+fi
+bdf_addr=${bdf_addr_array[0]}
+
 timing_enter start_iscsi_tgt
 
 $ISCSI_APP -c $testdir/iscsi.conf &
@@ -72,30 +94,26 @@ timing_exit start_iscsi_tgt
 
 $rpc_py add_portal_group 1 $TARGET_IP:$PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
-$rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
-# "Malloc0:0" ==> use Malloc0 blockdev for LUN0
-# "1:2" ==> map PortalGroup1 to InitiatorGroup2
-# "64" ==> iSCSI queue depth 64
-# "1 0 0 0" ==> disable CHAP authentication
-$rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' '1:2' 64 1 0 0 0
-sleep 1
+
+$rpc_py construct_nvme_bdev -b "HotInNvme0" -t "PCIe" -a $bdf_addr
+ls_guid=$($rpc_py construct_lvol_store "HotInNvme0n1"  "lvs0" -c 1048576)
+lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd0 32)
+$rpc_py construct_target_node Target0 Target0_alias "$lb_name:0" 1:2 64 1 0 0 0
 
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
 iscsiadm -m node --login -p $TARGET_IP:$PORT
 
 trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
-
 sleep 1
-$fio_py 4096 1 randrw 1 verify
-$fio_py 131072 32 randrw 1 verify
+run_fio_case 1
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	$fio_py 4096 1 write 300 verify
+	run_fio_case 10
 
 	# Run the running_config test which will generate a config file from the
 	#  running iSCSI target, then kill and restart the iSCSI target using the
 	#  generated config file
-	running_config
+	# running_config
 fi
 
 # Start hotplug test case.
@@ -104,7 +122,7 @@ fio_pid=$!
 
 sleep 3
 set +e
-$rpc_py delete_bdev 'Malloc0'
+$rpc_py delete_bdev "$lb_name"
 
 wait $fio_pid
 fio_status=$?
@@ -122,7 +140,8 @@ fi
 set -e
 
 iscsicleanup
-$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target3'
+$rpc_py destroy_lvol_store -l lvs0
+$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target0'
 
 rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
