@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS)
-C_SRCS = rpc.c
+C_SRCS = rpc.c jsonrpc_util.c
 LIBNAME = rpc
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

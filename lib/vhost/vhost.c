@@ -595,11 +595,10 @@ int
 spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 {
 	unsigned ctrlr_num;
-	char path[PATH_MAX];
 
 	if (vdev->vid != -1) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
-		return -ENODEV;
+		return -EBUSY;
 	}
 
 	for (ctrlr_num = 0; ctrlr_num < MAX_VHOST_DEVICES; ctrlr_num++) {
@@ -610,18 +609,12 @@ spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 
 	if (ctrlr_num == MAX_VHOST_DEVICES) {
 		SPDK_ERRLOG("Trying to remove invalid controller: %s.\n", vdev->name);
-		return -ENOSPC;
+		return -ENODEV;
 	}
 
-	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, vdev->name) >= (int)sizeof(path)) {
-		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", vdev->name, dev_dirname,
-			    vdev->name);
-		return -EINVAL;
-	}
-
-	if (rte_vhost_driver_unregister(path) != 0) {
+	if (rte_vhost_driver_unregister(vdev->path) != 0) {
 		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
-			    "Check if domain socket %s still exists\n", vdev->name, path);
+			    "Check if domain socket %s still exists\n", vdev->name, vdev->path);
 		return -EIO;
 	}
 
