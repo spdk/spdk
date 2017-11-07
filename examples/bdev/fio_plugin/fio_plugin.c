@@ -101,6 +101,7 @@ static unsigned g_spdk_fio_thread_count = 0;
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_finish_env(void);
 static void spdk_fio_cleanup(struct thread_data *td);
+static size_t spdk_fio_poll_msg(struct thread_data *td);
 static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 			      unsigned int max, const struct timespec *t);
 
@@ -284,6 +285,7 @@ spdk_fio_init_env(struct thread_data *td)
 	while (!done) {
 		spdk_fio_getevents(td, 0, 128, NULL);
 	}
+	while (spdk_fio_poll_msg(td));
 
 	/* Destroy the temporary SPDK thread */
 	spdk_fio_cleanup(td);
@@ -406,6 +408,9 @@ spdk_fio_cleanup(struct thread_data *td)
 		free(target);
 	}
 
+	/* Poll e.g. the asynchronous put_io_channel event */
+	while (spdk_fio_poll_msg(td));
+
 	spdk_free_thread();
 	spdk_ring_free(fio_thread->ring);
 	free(fio_thread->iocq);
@@ -414,6 +419,7 @@ spdk_fio_cleanup(struct thread_data *td)
 	td->io_ops_data = NULL;
 
 	if (g_spdk_call_env_finish == true && g_spdk_fio_thread_count == 0) {
+		SPDK_ERRLOG("SPDK finish called from fio cleanup\n");
 		spdk_fio_finish_env();
 	}
 
@@ -545,6 +551,22 @@ spdk_fio_event(struct thread_data *td, int event)
 	return fio_thread->iocq[event];
 }
 
+static size_t
+spdk_fio_poll_msg(struct thread_data *td)
+{
+	struct spdk_fio_thread *fio_thread = td->io_ops_data;
+	struct spdk_fio_msg *msg;
+	size_t count;
+
+	count = spdk_ring_dequeue(fio_thread->ring, (void **)&msg, 1);
+	if (count > 0) {
+		msg->cb_fn(msg->cb_arg);
+		free(msg);
+	}
+
+	return count;
+}
+
 static int
 spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		   unsigned int max, const struct timespec *t)
@@ -552,9 +574,7 @@ spdk_fio_getevents(struct thread_data *td, unsigned int min,
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct timespec t0, t1;
 	uint64_t timeout = 0;
-	struct spdk_fio_msg *msg;
 	struct spdk_fio_poller *p, *tmp;
-	size_t count;
 
 	if (t) {
 		timeout = t->tv_sec * 1000000000L + t->tv_nsec;
@@ -565,11 +585,7 @@ spdk_fio_getevents(struct thread_data *td, unsigned int min,
 
 	for (;;) {
 		/* Process new events */
-		count = spdk_ring_dequeue(fio_thread->ring, (void **)&msg, 1);
-		if (count > 0) {
-			msg->cb_fn(msg->cb_arg);
-			free(msg);
-		}
+		spdk_fio_poll_msg(td);
 
 		/* Call all pollers */
 		TAILQ_FOREACH_SAFE(p, &fio_thread->pollers, link, tmp) {
@@ -683,19 +699,22 @@ spdk_fio_finish_env(void)
 		free(td);
 		return;
 	}
+	while (spdk_fio_poll_msg(td));
 
 	spdk_bdev_finish(spdk_fio_module_finish_done, &done);
 
 	while (!done) {
 		spdk_fio_getevents(td, 0, 128, NULL);
 	}
-	done = false;
+	while (spdk_fio_poll_msg(td));
 
+	done = false;
 	spdk_copy_engine_finish(spdk_fio_module_finish_done, &done);
 
 	while (!done) {
 		spdk_fio_getevents(td, 0, 128, NULL);
 	}
+	while (spdk_fio_poll_msg(td));
 
 	/* Destroy the temporary SPDK thread */
 	spdk_fio_cleanup(td);
@@ -708,8 +727,10 @@ static void fio_exit spdk_fio_unregister(void)
 	if (g_spdk_env_initialized) {
 		if (g_spdk_fio_thread_count > 0) {
 			/* Set spdk_fio_cleanup to finish SPDK on cleanup of last thread */
+			SPDK_ERRLOG("SPDK finish set to be called on fio_cleanup\n");
 			g_spdk_call_env_finish = true;
 		} else {
+			SPDK_ERRLOG("SPDK finish called from fio_exit\n");
 			spdk_fio_finish_env();
 		}
 	}
