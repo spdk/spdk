@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0771fd7_5a6f1d26",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-07T05:19:20Z",
+      "side": 1,
+      "message": "The question is that: the core mask determines the cpu core to be used. If we allocate the memory on other core, will it still make sense to users? So if possible, could we return error? Though current in our debug mode, we have assert, but could we return error and tell users the memory associated with the sockid is not enough",
+      "range": {
+        "startLine": 476,
+        "startChar": 1,
+        "endLine": 480,
+        "endChar": 33
+      },
+      "revId": "e8bb0e93a47d8df7346457089db79a9f1ca45271",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
