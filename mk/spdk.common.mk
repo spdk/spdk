@@ -61,10 +61,14 @@ endif
 COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
 
 UNAME_P := $(shell uname -p)
+
+# Don't add either a -mcpu=native nor -march=native for AARCH64 platforms
+ifneq ($(UNAME_P),aarch64)
 ifneq ($(filter ppc%,$(UNAME_P)),)
 COMMON_CFLAGS += -mcpu=native
 else
 COMMON_CFLAGS += -march=native
+endif
 endif
 
 COMMON_CFLAGS += -include $(SPDK_ROOT_DIR)/config.h

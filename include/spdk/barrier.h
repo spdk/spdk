@@ -48,10 +48,18 @@ extern "C" {
 #define spdk_compiler_barrier() __asm volatile("" ::: "memory")
 
 /** Write memory barrier */
+#ifdef __aarch64__
+#define spdk_wmb()	__asm volatile("dsb st" ::: "memory")
+#else
 #define spdk_wmb()	__asm volatile("sfence" ::: "memory")
+#endif
 
 /** Full read/write memory barrier */
+#ifdef __aarch64__
+#define spdk_mb()	__asm volatile("dsb sy" ::: "memory")
+#else
 #define spdk_mb()	__asm volatile("mfence" ::: "memory")
+#endif
 
 #ifdef __cplusplus
 }
