@@ -872,7 +872,7 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 
 	bs_dev = spdk_bdev_create_bs_dev(bdev, vbdev_lvs_hotremove_cb, bdev);
 	if (!bs_dev) {
-		SPDK_ERRLOG("Cannot create bs dev\n");
+		SPDK_DEBUGLOG(SPDK_TRACE_VBDEV_LVOL, "Cannot create bs dev\n");
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
 		free(req);
 		return;
