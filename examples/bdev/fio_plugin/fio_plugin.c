@@ -100,6 +100,64 @@ static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
 static int spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread);
 
+static uint32_t g_spdk_master_core = SPDK_ENV_LCORE_ID_ANY;
+
+int (*pthread_create_orig)(pthread_t *, const pthread_attr_t *, void *(*)(void *), void *);
+int (*pthread_detach_orig)(pthread_t);
+
+int
+pthread_create(pthread_t *tid, const pthread_attr_t *attr, void *(*fn)(void *), void *arg)
+{
+	uint32_t lcore;
+	bool lcore_found = false;
+
+	/* Only call our implementation on the master spdk lcore. */
+	if (g_spdk_master_core == SPDK_ENV_LCORE_ID_ANY ||
+	    spdk_env_get_current_core() != g_spdk_master_core) {
+		if (!pthread_create_orig) {
+			pthread_create_orig = dlsym(RTLD_NEXT, "pthread_create");
+			assert(pthread_create_orig);
+		}
+
+		return pthread_create_orig(tid, attr, fn, arg);
+	}
+
+	/* attr is ignored for now */
+
+	SPDK_ENV_FOREACH_CORE(lcore) {
+		if (lcore != g_spdk_master_core && !spdk_env_core_is_pinned(lcore)) {
+			lcore_found = true;
+			break;
+		}
+	}
+
+	if (!lcore_found) {
+		fprintf(stderr, "Couldn't find any available lcore for the new pthread.\n");
+		return EPERM;
+	}
+
+	*tid = (pthread_t)(uintptr_t)lcore;
+
+	return spdk_env_thread_launch_pinned(lcore, (thread_start_fn)fn, arg);
+}
+
+int
+pthread_detach(pthread_t tid)
+{
+	if (g_spdk_master_core != SPDK_ENV_LCORE_ID_ANY &&
+	    spdk_env_get_current_core() == g_spdk_master_core) {
+		return 0;
+	}
+
+	if (!pthread_detach_orig) {
+		pthread_detach_orig = dlsym(RTLD_NEXT, "pthread_detach");
+		assert(pthread_create_orig);
+	}
+
+	return pthread_detach_orig(tid);
+}
+
+
 static void
 spdk_fio_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
@@ -256,6 +314,7 @@ spdk_fio_init_env(struct thread_data *td)
 	/* Initialize the environment library */
 	spdk_env_opts_init(&opts);
 	opts.name = "fio";
+	opts.core_mask = "0x3f";
 
 	if (eo->mem_mb) {
 		opts.mem_size = eo->mem_mb;
@@ -310,6 +369,7 @@ spdk_fio_setup(struct thread_data *td)
 			return -1;
 		}
 
+		g_spdk_master_core = spdk_env_get_current_core();
 		g_spdk_env_initialized = true;
 	}
 
