@@ -41,6 +41,8 @@ $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 $rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' '1:2' 256 1 0 0 0
 sleep 1
 
+iscsiadm -m discovery
+iscsiadm -m node
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
 iscsiadm -m node --login -p $TARGET_IP:$PORT
 
