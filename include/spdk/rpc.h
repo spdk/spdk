@@ -45,7 +45,11 @@ void spdk_rpc_close(void);
 typedef void (*spdk_rpc_method_handler)(struct spdk_jsonrpc_request *request,
 					const struct spdk_json_val *params);
 
+typedef void (*spdk_rpc_method_ctx_handler)(struct spdk_jsonrpc_request *request,
+		const struct spdk_json_val *params, void *ctx);
+
 void spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func);
+void spdk_rpc_register_ctx_method(const char *method, spdk_rpc_method_ctx_handler func, void *ctx);
 
 #define SPDK_RPC_REGISTER(method, func) \
 static void __attribute__((constructor)) rpc_register_##func(void) \

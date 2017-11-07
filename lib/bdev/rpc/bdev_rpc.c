@@ -32,194 +32,105 @@
  */
 
 #include "spdk/log.h"
-#include "spdk/rpc.h"
+#include "spdk/jsonrpc_util.h"
 
 #include "spdk_internal/bdev.h"
 
-static void
-spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
-			struct spdk_bdev *bdev)
-{
-	spdk_json_write_object_begin(w);
-
-	spdk_json_write_name(w, "name");
-	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
-
-	spdk_json_write_name(w, "product_name");
-	spdk_json_write_string(w, spdk_bdev_get_product_name(bdev));
-
-	spdk_json_write_name(w, "block_size");
-	spdk_json_write_uint32(w, spdk_bdev_get_block_size(bdev));
-
-	spdk_json_write_name(w, "num_blocks");
-	spdk_json_write_uint64(w, spdk_bdev_get_num_blocks(bdev));
-
-	spdk_json_write_name(w, "claimed");
-	spdk_json_write_bool(w, (bdev->claim_module != NULL));
-
-	spdk_json_write_name(w, "supported_io_types");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "read");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ));
-	spdk_json_write_name(w, "write");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
-	spdk_json_write_name(w, "unmap");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP));
-	spdk_json_write_name(w, "write_zeroes");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES));
-	spdk_json_write_name(w, "flush");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
-	spdk_json_write_name(w, "reset");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET));
-	spdk_json_write_name(w, "nvme_admin");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN));
-	spdk_json_write_name(w, "nvme_io");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO));
-	spdk_json_write_object_end(w);
-
-	spdk_json_write_name(w, "driver_specific");
-	spdk_json_write_object_begin(w);
-	spdk_bdev_dump_config_json(bdev, w);
-	spdk_json_write_object_end(w);
-
-	spdk_json_write_object_end(w);
-}
-
-struct rpc_get_bdevs {
-	char *name;
+static const struct spdk_jsonrpc_params get_bdevs_params[] = {
+	{"name", SPDK_RPC_PARAM_STRING, true},
+	{NULL}
 };
 
 static void
-free_rpc_get_bdevs(struct rpc_get_bdevs *r)
+spdk_rpc_dump_bdev_info(struct spdk_jsonrpc_util_req *req, struct spdk_bdev *bdev)
 {
-	free(r->name);
+	spdk_jsonrpc_object_begin(req);
+
+	spdk_jsonrpc_string_create(req, "name", "%s", spdk_bdev_get_name(bdev));
+	spdk_jsonrpc_string_create(req, "product_name", "%s", spdk_bdev_get_product_name(bdev));
+	spdk_jsonrpc_uint_create(req, "block_size", spdk_bdev_get_block_size(bdev));
+	spdk_jsonrpc_uint_create(req, "num_blocks", spdk_bdev_get_num_blocks(bdev));
+
+	spdk_jsonrpc_bool_create(req, "claimed", bdev->claim_module != NULL);
+
+	spdk_jsonrpc_object_create(req, "supported_io_types");
+	spdk_jsonrpc_bool_create(req, "read", spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ));
+	spdk_jsonrpc_bool_create(req, "write", spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
+	spdk_jsonrpc_bool_create(req, "unmap", spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP));
+	spdk_jsonrpc_bool_create(req, "write_zeroes", spdk_bdev_io_type_supported(bdev,
+				 SPDK_BDEV_IO_TYPE_WRITE_ZEROES));
+	spdk_jsonrpc_bool_create(req, "flush", spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
+	spdk_jsonrpc_bool_create(req, "reset", spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET));
+	spdk_jsonrpc_bool_create(req, "nvme_admin", spdk_bdev_io_type_supported(bdev,
+				 SPDK_BDEV_IO_TYPE_NVME_ADMIN));
+	spdk_jsonrpc_bool_create(req, "nvme_io", spdk_bdev_io_type_supported(bdev,
+				 SPDK_BDEV_IO_TYPE_NVME_IO));
+	spdk_jsonrpc_object_end(req);
+
+	spdk_jsonrpc_object_create(req, "driver_specific");
+	spdk_bdev_dump_config_json(bdev, spdk_jsonrpc_response_ctx(req));
+	spdk_jsonrpc_object_end(req);
+
+	spdk_jsonrpc_object_end(req);
 }
 
-static const struct spdk_json_object_decoder rpc_get_bdevs_decoders[] = {
-	{"name", offsetof(struct rpc_get_bdevs, name), spdk_json_decode_string},
-};
-
 static void
-spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
-		   const struct spdk_json_val *params)
+get_bdevs(struct spdk_jsonrpc_util_req *req)
 {
-	struct rpc_get_bdevs req = {};
-	struct spdk_json_write_ctx *w;
-	struct spdk_bdev *bdev = NULL;
+	const char *name = spdk_jsonrpc_param_str(req, "name", NULL);
+	struct spdk_bdev *bdev = name ? spdk_bdev_get_by_name(name) : NULL;
 
-	if (params != NULL) {
-		if (spdk_json_decode_object(params, rpc_get_bdevs_decoders,
-					    sizeof(rpc_get_bdevs_decoders) / sizeof(*rpc_get_bdevs_decoders),
-					    &req)) {
-			SPDK_ERRLOG("spdk_json_decode_object failed\n");
-			goto invalid;
-		} else {
-			if (req.name == NULL) {
-				SPDK_ERRLOG("missing name param\n");
-				goto invalid;
-			}
-
-			bdev = spdk_bdev_get_by_name(req.name);
-			if (bdev == NULL) {
-				SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
-				goto invalid;
-			}
-
-			free_rpc_get_bdevs(&req);
-		}
-	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
+	if (name != NULL && bdev == NULL) {
+		SPDK_ERRLOG("bdev '%s' does not exist\n", name);
+		spdk_jsonrpc_send_response(req, false, "bdev '%s' does not exist", name);
 		return;
 	}
 
-	spdk_json_write_array_begin(w);
+	if (!spdk_jsonrpc_response_ctx(req)) {
+		return;
+	}
+
+	spdk_jsonrpc_array_begin(req);
 
 	if (bdev != NULL) {
-		spdk_rpc_dump_bdev_info(w, bdev);
+		spdk_rpc_dump_bdev_info(req, bdev);
 	} else {
 		for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
-			spdk_rpc_dump_bdev_info(w, bdev);
+			spdk_rpc_dump_bdev_info(req, bdev);
 		}
 	}
 
-	spdk_json_write_array_end(w);
-
-	spdk_jsonrpc_end_result(request, w);
-
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-
-	free_rpc_get_bdevs(&req);
+	spdk_jsonrpc_array_end(req);
+	spdk_jsonrpc_end_response(req);
 }
-SPDK_RPC_REGISTER("get_bdevs", spdk_rpc_get_bdevs)
+SPDK_JSONRPC_CMD(get_bdevs, get_bdevs_params)
 
-
-struct rpc_delete_bdev {
-	char *name;
+static const struct spdk_jsonrpc_params delete_bdev_params[] = {
+	{"name", SPDK_RPC_PARAM_STRING, true},
+	{NULL}
 };
 
 static void
-free_rpc_delete_bdev(struct rpc_delete_bdev *r)
+delete_bdev_cb(void *cb_arg, int bdeverrno)
 {
-	free(r->name);
+	struct spdk_jsonrpc_util_req *req = cb_arg;
+
+	spdk_jsonrpc_send_errno_response(req, bdeverrno);
 }
 
-static const struct spdk_json_object_decoder rpc_delete_bdev_decoders[] = {
-	{"name", offsetof(struct rpc_delete_bdev, name), spdk_json_decode_string},
-};
-
 static void
-_spdk_rpc_delete_bdev_cb(void *cb_arg, int bdeverrno)
+delete_bdev(struct spdk_jsonrpc_util_req *req)
 {
-	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev;
+	const char *name = spdk_jsonrpc_param_str(req, "name", "");
 
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
+	bdev = spdk_bdev_get_by_name(name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("bdev '%s' does not exist\n", name);
+		spdk_jsonrpc_send_response(req, false, "bdev '%s' does not exist", name);
 		return;
 	}
 
-	spdk_json_write_bool(w, bdeverrno == 0);
-	spdk_jsonrpc_end_result(request, w);
+	spdk_bdev_unregister(bdev, delete_bdev_cb, req);
 }
-
-static void
-spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
-		     const struct spdk_json_val *params)
-{
-	struct rpc_delete_bdev req = {};
-	struct spdk_bdev *bdev;
-
-	if (spdk_json_decode_object(params, rpc_delete_bdev_decoders,
-				    sizeof(rpc_delete_bdev_decoders) / sizeof(*rpc_delete_bdev_decoders),
-				    &req)) {
-		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
-	}
-
-	if (req.name == NULL) {
-		SPDK_ERRLOG("missing name param\n");
-		goto invalid;
-	}
-
-	bdev = spdk_bdev_get_by_name(req.name);
-	if (bdev == NULL) {
-		SPDK_ERRLOG("bdev '%s' does not exist\n", req.name);
-		goto invalid;
-	}
-
-	spdk_bdev_unregister(bdev, _spdk_rpc_delete_bdev_cb, request);
-
-	free_rpc_delete_bdev(&req);
-
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_delete_bdev(&req);
-}
-SPDK_RPC_REGISTER("delete_bdev", spdk_rpc_delete_bdev)
+SPDK_JSONRPC_CMD(delete_bdev, delete_bdev_params)
