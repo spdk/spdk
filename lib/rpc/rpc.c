@@ -48,6 +48,8 @@ static struct spdk_jsonrpc_server *g_jsonrpc_server = NULL;
 struct spdk_rpc_method {
 	const char *name;
 	spdk_rpc_method_handler func;
+	spdk_rpc_method_ctx_handler ctx_func;
+	void *ctx;
 	SLIST_ENTRY(spdk_rpc_method) slist;
 };
 
@@ -64,7 +66,11 @@ spdk_jsonrpc_handler(struct spdk_jsonrpc_request *request,
 
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
 		if (spdk_json_strequal(method, m->name)) {
-			m->func(request, params);
+			if (m->ctx_func) {
+				m->ctx_func(request, params, m->ctx);
+			} else {
+				m->func(request, params);
+			}
 			return;
 		}
 	}
@@ -164,6 +170,24 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
 	assert(m->name != NULL);
 
 	m->func = func;
+
+	/* TODO: use a hash table or sorted list */
+	SLIST_INSERT_HEAD(&g_rpc_methods, m, slist);
+}
+
+void
+spdk_rpc_register_ctx_method(const char *method, spdk_rpc_method_ctx_handler func, void *ctx)
+{
+	struct spdk_rpc_method *m;
+
+	m = calloc(1, sizeof(struct spdk_rpc_method));
+	assert(m != NULL);
+
+	m->name = strdup(method);
+	assert(m->name != NULL);
+
+	m->ctx_func = func;
+	m->ctx = ctx;
 
 	/* TODO: use a hash table or sorted list */
 	SLIST_INSERT_HEAD(&g_rpc_methods, m, slist);
