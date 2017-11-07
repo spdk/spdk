@@ -143,13 +143,10 @@ spdk_find_iscsi_connection_by_id(int cid)
 static int
 init_idle_conns(void)
 {
-	char buf[64];
-
 	assert(g_poll_fd == 0);
 	g_poll_fd = kqueue();
 	if (g_poll_fd < 0) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("kqueue() failed, errno %d: %s\n", errno, buf);
+		SPDK_ERRLOG("kqueue() failed, errno %d: %s\n", errno, spdk_strerror(errno));
 		return -1;
 	}
 
@@ -179,7 +176,6 @@ del_idle_conn(struct spdk_iscsi_conn *conn)
 {
 	struct kevent event;
 	struct timespec ts = {0};
-	char buf[64];
 	int rc;
 
 	EV_SET(&event, conn->sock, EVFILT_READ, EV_DELETE, 0, 0, NULL);
@@ -190,8 +186,7 @@ del_idle_conn(struct spdk_iscsi_conn *conn)
 		return -1;
 	}
 	if (event.flags & EV_ERROR) {
-		spdk_strerror_r(event.data, buf, sizeof(buf));
-		SPDK_ERRLOG("kevent(EV_DELETE) failed: %s\n", buf);
+		SPDK_ERRLOG("kevent(EV_DELETE) failed: %s\n", spdk_strerror(event.data));
 		return -1;
 	}
 
@@ -248,13 +243,10 @@ check_idle_conns(void)
 static int
 init_idle_conns(void)
 {
-	char buf[64];
-
 	assert(g_poll_fd == 0);
 	g_poll_fd = epoll_create1(0);
 	if (g_poll_fd < 0) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("epoll_create1() failed, errno %d: %s\n", errno, buf);
+		SPDK_ERRLOG("epoll_create1() failed, errno %d: %s\n", errno, spdk_strerror(errno));
 		return -1;
 	}
 
@@ -964,7 +956,6 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 			  void *buf)
 {
 	int ret;
-	char errbuf[64];
 
 	if (bytes == 0) {
 		return 0;
@@ -980,9 +971,8 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 		if (errno == EAGAIN || errno == EWOULDBLOCK) {
 			return 0;
 		} else {
-			spdk_strerror_r(errno, errbuf, sizeof(errbuf));
 			SPDK_ERRLOG("spdk_sock_recv() failed (fd=%d), errno %d: %s\n",
-				    conn->sock, errno, errbuf);
+				    conn->sock, errno, spdk_strerror(errno));
 		}
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
@@ -1190,7 +1180,6 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	uint32_t writev_offset;
 	struct spdk_iscsi_pdu *pdu;
 	int pdu_length;
-	char buf[64];
 
 	pdu = TAILQ_FIRST(&conn->write_pdu_list);
 
@@ -1239,9 +1228,8 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 0;
 		} else {
-			spdk_strerror_r(errno, buf, sizeof(buf));
 			SPDK_ERRLOG("spdk_sock_writev() failed (fd=%d), errno %d: %s\n",
-				    conn->sock, errno, buf);
+				    conn->sock, errno, spdk_strerror(errno));
 			return -1;
 		}
 	}
