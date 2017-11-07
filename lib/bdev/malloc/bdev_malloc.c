@@ -310,6 +310,20 @@ static int _bdev_malloc_submit_request(struct spdk_io_channel *ch, struct spdk_b
 					 bdev_io->u.bdev.offset_blocks * block_size,
 					 bdev_io->u.bdev.num_blocks * block_size);
 
+	case SPDK_BDEV_IO_TYPE_ZCOPY:
+		if (bdev_io->u.bdev.zcopy.start) {
+			void *buf;
+			size_t len;
+
+			buf = ((struct malloc_disk *)bdev_io->bdev->ctxt)->malloc_buf +
+			      bdev_io->u.bdev.offset_blocks * block_size;
+			len = bdev_io->u.bdev.num_blocks * block_size;
+			spdk_bdev_io_set_buf(bdev_io, buf, len);
+
+		}
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bdev_io->driver_ctx),
+				      SPDK_BDEV_IO_STATUS_SUCCESS);
+		return 0;
 	default:
 		return -1;
 	}
@@ -333,6 +347,7 @@ bdev_malloc_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+	case SPDK_BDEV_IO_TYPE_ZCOPY:
 		return true;
 
 	default:
