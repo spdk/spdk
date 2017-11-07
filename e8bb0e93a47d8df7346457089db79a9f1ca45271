@@ -22,6 +22,30 @@
       "revId": "e8bb0e93a47d8df7346457089db79a9f1ca45271",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5464b043_dddee7a9",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-07T05:21:10Z",
+      "side": 1,
+      "message": "The event_mempool will also be allocated on any available socket. Mentioned this in the commit message. Thanks.\n\nBesides, I\u0027ve tested on my local environment with limited resource, it works ok.",
+      "parentUuid": "e0771fd7_5a6f1d26",
+      "range": {
+        "startLine": 476,
+        "startChar": 1,
+        "endLine": 480,
+        "endChar": 33
+      },
+      "revId": "e8bb0e93a47d8df7346457089db79a9f1ca45271",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
