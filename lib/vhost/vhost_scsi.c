@@ -848,7 +848,6 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_scsi_dev *scsi_dev;
 	struct spdk_scsi_dev_vhost_state *scsi_dev_state;
-	int rc = 0;
 
 	if (scsi_dev_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
 		SPDK_ERRLOG("%s: invalid device number %d\n", vdev->name, scsi_dev_num);
@@ -871,10 +870,10 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 		spdk_scsi_dev_destruct(scsi_dev);
 		svdev->scsi_dev[scsi_dev_num] = NULL;
 		if (cb_fn) {
-			rc = cb_fn(vdev, cb_arg);
+			cb_fn(vdev, cb_arg);
 		}
 		SPDK_NOTICELOG("%s: removed device 'Dev %u'\n", vdev->name, scsi_dev_num);
-		return rc;
+		return 0;
 	}
 
 	if (!spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
