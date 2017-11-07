@@ -89,10 +89,30 @@ $rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
 # "64" ==> iSCSI queue depth 64
 # "1 0 0 0" ==> disable CHAP authentication
 $rpc_py construct_target_node Target3 Target3_alias 'Malloc0:0' '1:2' 64 1 0 0 0
+# If the /dev/ramo exists, aiobackend tests will be run.
+if [ -b /dev/ram0 ]; then
+	$rpc_py construct_aio_bdev /dev/ram0 AIO0 512
+	$rpc_py construct_target_node Target2 Target2_alias 'AIO0:0' '1:2' 128 1 0 0 0
+fi
 sleep 1
 
+if [ -b /dev/ram0 ]; then
+	iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
+	iscsiadm -m node --login -T 'iqn.2016-06.io.spdk:Target2' -p $TARGET_IP:$PORT
+
+	trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+
+	$fio_py 262144 64 rw 10 verify
+	$fio_py 262144 64 randrw 10 verify
+	$fio_py 262144 64 randwrite 10 verify
+
+	iscsicleanup
+	$rpc_py delete_target_node 'iqn.2016-06.io.spdk:Target2'
+	trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
+fi
+
 iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$PORT
-iscsiadm -m node --login -p $TARGET_IP:$PORT
+iscsiadm -m node --login -T 'iqn.2016-06.io.spdk:Target3' -p $TARGET_IP:$PORT
 
 trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
@@ -102,6 +122,9 @@ $fio_py 131072 32 randrw 1 verify
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	$fio_py 4096 1 write 300 verify
+	$fio_py 262144 64 rw 10 verify
+	$fio_py 262144 64 randrw 10 verify
+	$fio_py 262144 64 randwrite 10 verify
 
 	# Run the running_config test which will generate a config file from the
 	#  running iSCSI target, then kill and restart the iSCSI target using the
