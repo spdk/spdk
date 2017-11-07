@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56cba191_d9a2387a",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 538,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-07T08:10:34Z",
+      "side": 1,
+      "message": "Shouldn\u0027t footer(23) be called as well ?",
+      "range": {
+        "startLine": 538,
+        "startChar": 12,
+        "endLine": 538,
+        "endChar": 29
+      },
+      "revId": "10014376165bb7342a8089ca5683324958dc6a0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2921018e_c8248f48",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-07T08:10:34Z",
+      "side": 1,
+      "message": "Fail_count is already increased in this section. If you meant to exit the test as previously suggested, I think this could be done outside and after this \u0027for\u0027 loop.\n\nWhen any of above checks failed, let script print what was wrong. Yet on any error there is no point in continuing (lvs might as well not exist at that moment). Along the lines:\n\nif (fail_count \u003e 0)\n  footer(23)\n  return fail_count",
+      "range": {
+        "startLine": 562,
+        "startChar": 0,
+        "endLine": 563,
+        "endChar": 33
+      },
+      "revId": "10014376165bb7342a8089ca5683324958dc6a0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
