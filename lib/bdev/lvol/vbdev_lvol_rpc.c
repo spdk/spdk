@@ -102,7 +102,6 @@ _spdk_rpc_lvol_store_construct_cb(void *cb_arg, struct spdk_lvol_store *lvol_sto
 	struct spdk_json_write_ctx *w;
 	char lvol_store_uuid[UUID_STRING_LEN];
 	struct spdk_jsonrpc_request *request = cb_arg;
-	char buf[64];
 
 	if (lvserrno != 0) {
 		goto invalid;
@@ -122,8 +121,8 @@ _spdk_rpc_lvol_store_construct_cb(void *cb_arg, struct spdk_lvol_store *lvol_sto
 	return;
 
 invalid:
-	spdk_strerror_r(-lvserrno, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-lvserrno));
 }
 
 static void
@@ -133,7 +132,6 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_lvol_store req = {};
 	struct spdk_bdev *bdev;
 	int rc;
-	char buf[64];
 
 	if (spdk_json_decode_object(params, rpc_construct_lvol_store_decoders,
 				    SPDK_COUNTOF(rpc_construct_lvol_store_decoders),
@@ -171,8 +169,8 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 	free_rpc_construct_lvol_store(&req);
 }
 SPDK_RPC_REGISTER("construct_lvol_store", spdk_rpc_construct_lvol_store)
@@ -199,7 +197,6 @@ _spdk_rpc_lvol_store_destroy_cb(void *cb_arg, int lvserrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
-	char buf[64];
 
 	if (lvserrno != 0) {
 		goto invalid;
@@ -215,8 +212,8 @@ _spdk_rpc_lvol_store_destroy_cb(void *cb_arg, int lvserrno)
 	return;
 
 invalid:
-	spdk_strerror_r(-lvserrno, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-lvserrno));
 }
 
 static void
@@ -226,7 +223,6 @@ spdk_rpc_destroy_lvol_store(struct spdk_jsonrpc_request *request,
 	struct rpc_destroy_lvol_store req = {};
 	struct spdk_lvol_store *lvs = NULL;
 	int rc;
-	char buf[64];
 
 	if (spdk_json_decode_object(params, rpc_destroy_lvol_store_decoders,
 				    SPDK_COUNTOF(rpc_destroy_lvol_store_decoders),
@@ -248,8 +244,8 @@ spdk_rpc_destroy_lvol_store(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 	free_rpc_destroy_lvol_store(&req);
 }
 SPDK_RPC_REGISTER("destroy_lvol_store", spdk_rpc_destroy_lvol_store)
@@ -281,7 +277,6 @@ _spdk_rpc_construct_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvole
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
-	char buf[64];
 
 	if (lvolerrno != 0) {
 		goto invalid;
@@ -299,8 +294,8 @@ _spdk_rpc_construct_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvole
 	return;
 
 invalid:
-	spdk_strerror_r(-lvolerrno, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-lvolerrno));
 }
 
 static void
@@ -310,7 +305,6 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_lvol_bdev req = {};
 	size_t sz;
 	int rc;
-	char buf[64];
 	struct spdk_lvol_store *lvs = NULL;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL_RPC, "Creating blob\n");
@@ -345,8 +339,8 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 	free_rpc_construct_lvol_bdev(&req);
 }
 
@@ -373,7 +367,6 @@ _spdk_rpc_resize_lvol_bdev_cb(void *cb_arg, int lvolerrno)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_jsonrpc_request *request = cb_arg;
-	char buf[64];
 
 	if (lvolerrno != 0) {
 		goto invalid;
@@ -389,8 +382,8 @@ _spdk_rpc_resize_lvol_bdev_cb(void *cb_arg, int lvolerrno)
 	return;
 
 invalid:
-	spdk_strerror_r(-lvolerrno, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-lvolerrno));
 }
 
 static void __attribute__((unused))
@@ -399,7 +392,6 @@ spdk_rpc_resize_lvol_bdev(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_resize_lvol_bdev req = {};
 	int rc = 0;
-	char buf[64];
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL_RPC, "Resizing lvol\n");
 
@@ -426,8 +418,8 @@ spdk_rpc_resize_lvol_bdev(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_get_strerror(-rc));
 	free_rpc_resize_lvol_bdev(&req);
 }
 

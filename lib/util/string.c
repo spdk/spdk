@@ -342,3 +342,13 @@ spdk_strerror_r(int errnum, char *buf, size_t buflen)
 	return strerror_r(errnum, buf, buflen);
 #endif
 }
+
+static __thread char strerror_message[64];
+
+const char *
+spdk_get_strerror(int errnum)
+{
+	spdk_strerror_r(errnum, strerror_message, sizeof(strerror_message));
+
+	return strerror_message;
+}
