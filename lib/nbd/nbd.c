@@ -493,14 +493,12 @@ static void
 spdk_nbd_poll(void *arg)
 {
 	struct spdk_nbd_disk *nbd = arg;
-	char buf[64];
 	int rc;
 
 	rc = _spdk_nbd_poll(nbd);
 	if (rc < 0) {
-		spdk_strerror_r(-rc, buf, sizeof(buf));
 		SPDK_INFOLOG(SPDK_LOG_NBD, "spdk_nbd_poll() returned %s (%d); closing connection\n",
-			     buf, rc);
+			     spdk_strerror(-rc), rc);
 		spdk_nbd_stop(nbd);
 	}
 }
@@ -534,7 +532,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	pthread_t		tid;
 	int			rc;
 	int			sp[2];
-	char			buf[64];
 	int			flag;
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
@@ -584,29 +581,25 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 
 	nbd->dev_fd = open(nbd_path, O_RDWR);
 	if (nbd->dev_fd == -1) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("open(\"%s\") failed: %s\n", nbd_path, buf);
+		SPDK_ERRLOG("open(\"%s\") failed: %s\n", nbd_path, spdk_strerror(errno));
 		goto err;
 	}
 
 	rc = ioctl(nbd->dev_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(bdev));
 	if (rc == -1) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", buf);
+		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", spdk_strerror(errno));
 		goto err;
 	}
 
 	rc = ioctl(nbd->dev_fd, NBD_SET_SIZE_BLOCKS, spdk_bdev_get_num_blocks(bdev));
 	if (rc == -1) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("ioctl(NBD_SET_SIZE_BLOCKS) failed: %s\n", buf);
+		SPDK_ERRLOG("ioctl(NBD_SET_SIZE_BLOCKS) failed: %s\n", spdk_strerror(errno));
 		goto err;
 	}
 
 	rc = ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
 	if (rc == -1) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("ioctl(NBD_CLEAR_SOCK) failed: %s\n", buf);
+		SPDK_ERRLOG("ioctl(NBD_CLEAR_SOCK) failed: %s\n", spdk_strerror(errno));
 		goto err;
 	}
 
@@ -615,38 +608,34 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 
 	rc = ioctl(nbd->dev_fd, NBD_SET_SOCK, nbd->kernel_sp_fd);
 	if (rc == -1) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", buf);
+		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", spdk_strerror(errno));
 		goto err;
 	}
 
 #ifdef NBD_FLAG_SEND_TRIM
 	rc = ioctl(nbd->dev_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
 	if (rc == -1) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", buf);
+		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", spdk_strerror(errno));
 		goto err;
 	}
 #endif
 
 	rc = pthread_create(&tid, NULL, nbd_start_kernel, (void *)(intptr_t)nbd->dev_fd);
 	if (rc != 0) {
-		spdk_strerror_r(rc, buf, sizeof(buf));
-		SPDK_ERRLOG("could not create thread: %s\n", buf);
+		SPDK_ERRLOG("could not create thread: %s\n", spdk_strerror(rc));
 		goto err;
 	}
 
 	rc = pthread_detach(tid);
 	if (rc != 0) {
-		spdk_strerror_r(rc, buf, sizeof(buf));
-		SPDK_ERRLOG("could not detach thread for nbd kernel: %s\n", buf);
+		SPDK_ERRLOG("could not detach thread for nbd kernel: %s\n", spdk_strerror(rc));
 		goto err;
 	}
 
 	flag = fcntl(nbd->spdk_sp_fd, F_GETFL);
 	if (fcntl(nbd->spdk_sp_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n", nbd->spdk_sp_fd, buf);
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
+			    nbd->spdk_sp_fd, spdk_strerror(errno));
 		goto err;
 	}
 

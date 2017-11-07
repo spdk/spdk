@@ -73,12 +73,11 @@ rpc_create_virtio_user_scsi_bdev_cb(void *ctx, int result, struct spdk_bdev **bd
 {
 	struct rpc_virtio_user_scsi_dev *req = ctx;
 	struct spdk_json_write_ctx *w;
-	char buf[64];
 	size_t i;
 
 	if (result) {
-		spdk_strerror_r(-result, buf, sizeof(buf));
-		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+		spdk_jsonrpc_send_error_response(req->request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(-result));
 		free_rpc_connect_virtio_user_scsi_dev(req);
 		return;
 	}
@@ -103,7 +102,6 @@ spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 				      const struct spdk_json_val *params)
 {
 	struct rpc_virtio_user_scsi_dev *req;
-	char buf[64];
 	int rc;
 
 	req = calloc(1, sizeof(*req));
@@ -132,8 +130,8 @@ spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
-	spdk_strerror_r(-rc, buf, sizeof(buf));
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
 	free_rpc_connect_virtio_user_scsi_dev(req);
 }
 SPDK_RPC_REGISTER("construct_virtio_user_scsi_bdev", spdk_rpc_create_virtio_user_scsi_bdev);
