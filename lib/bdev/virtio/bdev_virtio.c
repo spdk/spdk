@@ -551,6 +551,8 @@ bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 
 	spdk_bdev_poller_start(&vq->poller, bdev_virtio_poll, ch, 0);
 
+	SPDK_ERRLOG("virtio_create_cb queue_idx %d\n", queue_idx);
+
 	return 0;
 }
 
@@ -561,6 +563,7 @@ bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 	struct virtio_dev *vdev = io_channel->vdev;
 	struct virtqueue *vq = io_channel->vq;
 
+	SPDK_ERRLOG("virtio_destroy_cb queue_idx %d\n", vq->vq_queue_index);
 	spdk_bdev_poller_stop(&vq->poller);
 	virtio_dev_release_queue(vdev, vq->vq_queue_index);
 }
@@ -1207,9 +1210,12 @@ bdev_virtio_finish(void)
 	struct virtqueue *vq;
 	struct spdk_ring *send_ring;
 
+	SPDK_ERRLOG("bdev_virtio_finish start\n");
 	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.attached_ctrlrs, tailq, next) {
 		TAILQ_REMOVE(&g_virtio_driver.attached_ctrlrs, vdev, tailq);
+		SPDK_ERRLOG("Removing vdev %s\n", vdev->name);
 		if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_CONTROLQ)) {
+			SPDK_ERRLOG("virtio dev queue was aquired for vdev %s\n", vdev->name);
 			vq = vdev->vqs[VIRTIO_SCSI_CONTROLQ];
 			spdk_bdev_poller_stop(&vq->poller);
 			send_ring = vq->poller_ctx;
@@ -1218,9 +1224,12 @@ bdev_virtio_finish(void)
 			spdk_ring_free(send_ring);
 			vq->poller_ctx = NULL;
 			virtio_dev_release_queue(vdev, VIRTIO_SCSI_CONTROLQ);
+		} else {
+			SPDK_ERRLOG("virtio dev queue was not aquired for vdev %s\n", vdev->name);
 		}
 		virtio_dev_free(vdev);
 	}
+	SPDK_ERRLOG("bdev_virtio_finish end\n");
 }
 
 int
