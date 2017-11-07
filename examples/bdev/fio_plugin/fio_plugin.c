@@ -95,6 +95,7 @@ struct spdk_fio_thread {
 
 static __thread struct spdk_fio_thread *g_thread;
 static bool g_spdk_env_initialized = false;
+static unsigned g_spdk_fio_thread_count = 0;
 
 static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
@@ -212,6 +213,7 @@ spdk_fio_init_thread(struct thread_data *td)
 
 	/* Cache the thread in a thread-local variable for easy access */
 	g_thread = fio_thread;
+	g_spdk_fio_thread_count++;
 
 	return 0;
 }
@@ -392,6 +394,8 @@ spdk_fio_cleanup(struct thread_data *td)
 	struct spdk_fio_target *target, *tmp;
 
 	g_thread = NULL;
+	assert(g_spdk_fio_thread_count > 0);
+	g_spdk_fio_thread_count--;
 
 	TAILQ_FOREACH_SAFE(target, &fio_thread->targets, link, tmp) {
 		TAILQ_REMOVE(&fio_thread->targets, target, link);
@@ -694,7 +698,12 @@ spdk_fio_finish_env(void)
 static void fio_exit spdk_fio_unregister(void)
 {
 	if (g_spdk_env_initialized) {
-		spdk_fio_finish_env();
+		if (g_spdk_fio_thread_count > 0) {
+			SPDK_ERRLOG("I/O threads haven't been stopped properly. Skipping SPDK finish.\n");
+		} else {
+			spdk_fio_finish_env();
+		}
+
 		g_spdk_env_initialized = false;
 	}
 	unregister_ioengine(&ioengine);
