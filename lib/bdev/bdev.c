@@ -377,13 +377,22 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
-size_t
+int
 spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len)
 {
 	struct iovec *iovs;
 	void *aligned_buf;
 
-	iovs = bdev_io->u.bdev.iovs;
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_ZCOPY) {
+		/* Always use the internal iov array */
+		bdev_io->u.zcopy.iovs = &bdev_io->iov;
+		bdev_io->u.zcopy.iovcnt = 1;
+
+		iovs = bdev_io->u.zcopy.iovs;
+	} else {
+		/* The user must have provided some iovs */
+		iovs = bdev_io->u.bdev.iovs;
+	}
 
 	assert(iovs != NULL);
 
@@ -1875,6 +1884,59 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 }
 
 int
+spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+		      uint64_t offset_blocks, uint64_t num_blocks,
+		      bool populate,
+		      spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	if (!desc->write) {
+		return -EBADF;
+	}
+
+	if (!spdk_bdev_io_valid_blocks(bdev, offset_blocks, num_blocks)) {
+		return -EINVAL;
+	}
+
+	bdev_io = spdk_bdev_get_io(channel);
+	if (!bdev_io) {
+		return -ENOMEM;
+	}
+
+	bdev_io->internal.ch = channel;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_ZCOPY;
+	bdev_io->u.zcopy.num_blocks = num_blocks;
+	bdev_io->u.zcopy.offset_blocks = offset_blocks;
+	bdev_io->u.zcopy.populate = populate;
+	bdev_io->u.zcopy.start = true;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
+}
+
+int
+spdk_bdev_zcopy_end(struct spdk_bdev_io *bdev_io, bool commit,
+		    spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+
+	if (bdev_io->type != SPDK_BDEV_IO_TYPE_ZCOPY) {
+		return -EINVAL;
+	}
+
+	bdev_io->u.zcopy.commit = commit;
+	bdev_io->u.zcopy.start = false;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
+}
+
+int
 spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset, uint64_t len,
 		       spdk_bdev_io_completion_cb cb, void *cb_arg)
@@ -3130,12 +3192,13 @@ spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *i
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		iovs = bdev_io->u.bdev.iovs;
-		iovcnt = bdev_io->u.bdev.iovcnt;
-		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		iovs = bdev_io->u.bdev.iovs;
 		iovcnt = bdev_io->u.bdev.iovcnt;
+		break;
+	case SPDK_BDEV_IO_TYPE_ZCOPY:
+		iovs = bdev_io->u.zcopy.iovs;
+		iovcnt = bdev_io->u.zcopy.iovcnt;
 		break;
 	default:
 		iovs = NULL;
