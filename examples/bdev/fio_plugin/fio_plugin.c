@@ -95,8 +95,11 @@ struct spdk_fio_thread {
 
 static __thread struct spdk_fio_thread *g_thread;
 static bool g_spdk_env_initialized = false;
+static bool g_spdk_call_env_finish = false;
+static unsigned g_spdk_fio_thread_count = 0;
 
 static int spdk_fio_init(struct thread_data *td);
+static void spdk_fio_finish_env(void);
 static void spdk_fio_cleanup(struct thread_data *td);
 static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 			      unsigned int max, const struct timespec *t);
@@ -212,6 +215,7 @@ spdk_fio_init_thread(struct thread_data *td)
 
 	/* Cache the thread in a thread-local variable for easy access */
 	g_thread = fio_thread;
+	g_spdk_fio_thread_count++;
 
 	return 0;
 }
@@ -392,6 +396,8 @@ spdk_fio_cleanup(struct thread_data *td)
 	struct spdk_fio_target *target, *tmp;
 
 	g_thread = NULL;
+	assert(g_spdk_fio_thread_count > 0);
+	g_spdk_fio_thread_count--;
 
 	TAILQ_FOREACH_SAFE(target, &fio_thread->targets, link, tmp) {
 		TAILQ_REMOVE(&fio_thread->targets, target, link);
@@ -406,6 +412,11 @@ spdk_fio_cleanup(struct thread_data *td)
 	free(fio_thread);
 
 	td->io_ops_data = NULL;
+
+	if (g_spdk_call_env_finish == true && g_spdk_fio_thread_count == 0) {
+		spdk_fio_finish_env();
+	}
+
 }
 
 static int
@@ -689,13 +700,18 @@ spdk_fio_finish_env(void)
 	/* Destroy the temporary SPDK thread */
 	spdk_fio_cleanup(td);
 	free(td);
+	g_spdk_env_initialized = false;
 }
 
 static void fio_exit spdk_fio_unregister(void)
 {
 	if (g_spdk_env_initialized) {
-		spdk_fio_finish_env();
-		g_spdk_env_initialized = false;
+		if (g_spdk_fio_thread_count > 0) {
+			/* Set spdk_fio_cleanup to finish SPDK on cleanup of last thread */
+			g_spdk_call_env_finish = true;
+		} else {
+			spdk_fio_finish_env();
+		}
 	}
 	unregister_ioengine(&ioengine);
 }
