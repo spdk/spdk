@@ -153,6 +153,11 @@ CXXFLAGS += $(COMMON_CFLAGS) -std=c++0x
 SYS_LIBS += -lrt
 SYS_LIBS += -luuid
 
+# libdl is integrated into libc on FreeBSD
+ifneq ($(OS), FreeBSD)
+SYS_LIBS += -ldl
+endif
+
 MAKEFLAGS += --no-print-directory
 
 C_SRCS += $(C_SRCS-y)
