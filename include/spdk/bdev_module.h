@@ -453,6 +453,17 @@ struct spdk_bdev_io {
 
 			/** count of outstanding batched split I/Os */
 			uint32_t split_outstanding;
+
+			struct {
+				/** Whether the buffer should be populated with the real data */
+				uint8_t populate : 1;
+
+				/** Whether the buffer should be committed back to disk */
+				uint8_t commit : 1;
+
+				/** True if this request is in the 'start' phase of zcopy. False if in 'end'. */
+				uint8_t start : 1;
+			} zcopy;
 		} bdev;
 		struct {
 			/** Channel reference held while messages for this reset are in progress. */
