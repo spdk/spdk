@@ -220,9 +220,18 @@ uint32_t spdk_env_get_socket_id(uint32_t core);
 typedef int (*thread_start_fn)(void *);
 
 /**
+ * \brief Check if given core has a pinned thread. This can be called only from
+ * the thread that initialized the SPDK env layer.
+ *
+ * See \c spdk_env_thread_launch_pinned for details.
+ */
+bool spdk_env_core_is_pinned(uint32_t core);
+
+/**
  * \brief Launch a thread pinned to the given core. Only a single pinned thread
  * may be launched per core. Subsequent attempts to launch pinned threads on
- * that core will fail.
+ * that core will fail. This can be called only from the thread that initialized
+ * the SPDK env layer.
  *
  * \param core The core to pin the thread to.
  * \param fn Entry point on the new thread.

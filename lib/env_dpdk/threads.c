@@ -82,6 +82,12 @@ spdk_env_thread_launch_pinned(uint32_t core, thread_start_fn fn, void *arg)
 	return rc;
 }
 
+bool
+spdk_env_core_is_pinned(uint32_t core)
+{
+	return rte_eal_get_lcore_state(core) != WAIT;
+}
+
 void
 spdk_env_thread_wait_all(void)
 {
