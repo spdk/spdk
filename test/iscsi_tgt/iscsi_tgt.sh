@@ -31,7 +31,6 @@ run_test ./test/iscsi_tgt/filesystem/filesystem.sh
 run_test ./test/iscsi_tgt/reset/reset.sh
 run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
 run_test ./test/iscsi_tgt/lvol/iscsi_lvol.sh
-run_test ./test/iscsi_tgt/fio/fio.sh
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	if [ $SPDK_TEST_NVML -eq 1 ]; then
@@ -47,6 +46,8 @@ fi
 
 trap - SIGINT SIGTERM EXIT
 kill_stub
+
+run_test ./test/iscsi_tgt/fio/fio.sh
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	# TODO: enable remote NVMe controllers with multi-process so that
