@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "77a357f9_b9cbefd1",
+        "filename": "test/unit/lib/vhost/vhost_blk.c/vhost_blk_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-11-07T14:07:05Z",
+      "side": 1,
+      "message": "Actually vhost_blk_ut and vhost_scsi_ut use different mocks of this function",
+      "parentUuid": "794237e1_d743957d",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 101
+      },
+      "revId": "856ed2cb54533ebc3c1974aff9db65b0c9a4058f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7f3e72ff_88cf3da6",
         "filename": "test/unit/lib/vhost/vhost_blk.c/vhost_blk_ut.c",
         "patchSetId": 1
