@@ -33,6 +33,8 @@
 
 #include "spdk/stdinc.h"
 
+#include <dlfcn.h>
+
 #include "spdk/bdev.h"
 #include "spdk/copy_engine.h"
 #include "spdk/conf.h"
@@ -100,6 +102,72 @@ static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
 static int spdk_fio_getevents(struct thread_data *td, unsigned int min,
 			      unsigned int max, const struct timespec *t);
+
+#define MAX_SPDK_LCORE 128
+static uint32_t g_spdk_master_core = UINT32_MAX;
+static bool g_spdk_lcore_used[MAX_SPDK_LCORE] = {0};
+static pthread_mutex_t g_spdk_pthread_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+int (*pthread_create_orig)(pthread_t *, const pthread_attr_t *, void *(*) (void *), void *);
+int (*pthread_detach_orig)(pthread_t);
+
+int
+pthread_create(pthread_t *tid, const pthread_attr_t *attr, void *(*fn) (void *), void *arg)
+{
+	uint32_t lcore;
+	int rc;
+	bool lcore_found = false;
+
+	if (g_spdk_master_core == UINT32_MAX) {
+		if (!pthread_create_orig) {
+			pthread_create_orig = dlsym(RTLD_NEXT, "pthread_create");
+			assert(pthread_create_orig);
+		}
+		return pthread_create_orig(tid, attr, fn, arg);
+	}
+
+	/* attr is ignored for now */
+
+	pthread_mutex_lock(&g_spdk_pthread_mutex);
+	SPDK_ENV_FOREACH_CORE(lcore) {
+		if (lcore != g_spdk_master_core && lcore < MAX_SPDK_LCORE && !g_spdk_lcore_used[lcore]) {
+			lcore_found = true;
+			break;
+		}
+	}
+
+	if (!lcore_found) {
+		fprintf(stderr, "Couldn't find any available lcore for the new pthread.\n");
+		return EPERM;
+	}
+
+	*tid = (pthread_t)lcore;
+
+	rc = spdk_env_thread_launch_pinned(lcore, (thread_start_fn)fn, arg);
+	if (rc != 0) {
+		return rc;
+	}
+
+	g_spdk_lcore_used[lcore] = true;
+	pthread_mutex_unlock(&g_spdk_pthread_mutex);
+	return rc;
+}
+
+int
+pthread_detach(pthread_t tid)
+{
+	if (g_spdk_master_core != UINT32_MAX) {
+		return 0;
+	}
+
+	if (!pthread_detach_orig) {
+		pthread_detach_orig = dlsym(RTLD_NEXT, "pthread_detach");
+		assert(pthread_create_orig);
+	}
+
+	return pthread_detach_orig(tid);
+}
+
 
 static void
 spdk_fio_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
@@ -254,6 +322,7 @@ spdk_fio_init_env(struct thread_data *td)
 	/* Initialize the environment library */
 	spdk_env_opts_init(&opts);
 	opts.name = "fio";
+	opts.core_mask = "0x3d";
 
 	if (eo->mem_mb) {
 		opts.mem_size = eo->mem_mb;
@@ -280,9 +349,6 @@ spdk_fio_init_env(struct thread_data *td)
 	while (!done) {
 		spdk_fio_getevents(td, 0, 128, NULL);
 	}
-
-	/* Destroy the temporary SPDK thread */
-	spdk_fio_cleanup(td);
 
 	return 0;
 }
@@ -311,6 +377,7 @@ spdk_fio_setup(struct thread_data *td)
 			return -1;
 		}
 
+		g_spdk_master_core = spdk_env_get_current_core();
 		g_spdk_env_initialized = true;
 	}
 
@@ -386,9 +453,8 @@ spdk_fio_init(struct thread_data *td)
 }
 
 static void
-spdk_fio_cleanup(struct thread_data *td)
+spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 {
-	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct spdk_fio_target *target, *tmp;
 
 	g_thread = NULL;
@@ -404,7 +470,14 @@ spdk_fio_cleanup(struct thread_data *td)
 	spdk_ring_free(fio_thread->ring);
 	free(fio_thread->iocq);
 	free(fio_thread);
+}
 
+static void
+spdk_fio_cleanup(struct thread_data *td)
+{
+	struct spdk_fio_thread *fio_thread = td->io_ops_data;
+
+	spdk_fio_cleanup_thread(fio_thread);
 	td->io_ops_data = NULL;
 }
 
@@ -534,6 +607,26 @@ spdk_fio_event(struct thread_data *td, int event)
 	return fio_thread->iocq[event];
 }
 
+static void
+spdk_fio_poll_events(struct spdk_fio_thread *fio_thread)
+{
+	struct spdk_fio_msg *msg;
+	struct spdk_fio_poller *p, *tmp;
+	size_t count;
+
+	/* Process new events */
+	count = spdk_ring_dequeue(fio_thread->ring, (void **)&msg, 1);
+	if (count > 0) {
+		msg->cb_fn(msg->cb_arg);
+		free(msg);
+	}
+
+	/* Call all pollers */
+	TAILQ_FOREACH_SAFE(p, &fio_thread->pollers, link, tmp) {
+		p->cb_fn(p->cb_arg);
+	}
+}
+
 static int
 spdk_fio_getevents(struct thread_data *td, unsigned int min,
 		   unsigned int max, const struct timespec *t)
@@ -541,9 +634,6 @@ spdk_fio_getevents(struct thread_data *td, unsigned int min,
 	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct timespec t0, t1;
 	uint64_t timeout = 0;
-	struct spdk_fio_msg *msg;
-	struct spdk_fio_poller *p, *tmp;
-	size_t count;
 
 	if (t) {
 		timeout = t->tv_sec * 1000000000L + t->tv_nsec;
@@ -553,17 +643,7 @@ spdk_fio_getevents(struct thread_data *td, unsigned int min,
 	fio_thread->iocq_count = 0;
 
 	for (;;) {
-		/* Process new events */
-		count = spdk_ring_dequeue(fio_thread->ring, (void **)&msg, 1);
-		if (count > 0) {
-			msg->cb_fn(msg->cb_arg);
-			free(msg);
-		}
-
-		/* Call all pollers */
-		TAILQ_FOREACH_SAFE(p, &fio_thread->pollers, link, tmp) {
-			p->cb_fn(p->cb_arg);
-		}
+		spdk_fio_poll_events(fio_thread);
 
 		if (fio_thread->iocq_count >= min) {
 			return fio_thread->iocq_count;
@@ -656,39 +736,27 @@ spdk_fio_module_finish_done(void *cb_arg)
 static void
 spdk_fio_finish_env(void)
 {
-	struct thread_data		*td;
-	int				rc;
-	bool				done = false;
+	bool done = false;
 
-	td = calloc(1, sizeof(*td));
-	if (!td) {
-		SPDK_ERRLOG("Unable to allocate thread_data\n");
-		return;
-	}
-	/* Create an SPDK thread temporarily */
-	rc = spdk_fio_init_thread(td);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to create finish thread\n");
-		free(td);
+	if (g_thread == NULL) {
+		SPDK_ERRLOG("FIO finish called from third-party thread.\n");
 		return;
 	}
 
 	spdk_bdev_finish(spdk_fio_module_finish_done, &done);
 
 	while (!done) {
-		spdk_fio_getevents(td, 0, 128, NULL);
+		spdk_fio_poll_events(g_thread);
 	}
 	done = false;
 
 	spdk_copy_engine_finish(spdk_fio_module_finish_done, &done);
 
 	while (!done) {
-		spdk_fio_getevents(td, 0, 128, NULL);
+		spdk_fio_poll_events(g_thread);
 	}
 
-	/* Destroy the temporary SPDK thread */
-	spdk_fio_cleanup(td);
-	free(td);
+	spdk_fio_cleanup_thread(g_thread);
 }
 
 static void fio_exit spdk_fio_unregister(void)
