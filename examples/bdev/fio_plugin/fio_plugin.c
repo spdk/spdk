@@ -280,9 +280,6 @@ spdk_fio_init_env(struct thread_data *td)
 		count = spdk_fio_poll_thread(td->io_ops_data);
 	} while (!done || count > 0);
 
-	/* Destroy the temporary SPDK thread */
-	spdk_fio_cleanup(td);
-
 	return 0;
 }
 
@@ -385,9 +382,8 @@ spdk_fio_init(struct thread_data *td)
 }
 
 static void
-spdk_fio_cleanup(struct thread_data *td)
+spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 {
-	struct spdk_fio_thread *fio_thread = td->io_ops_data;
 	struct spdk_fio_target *target, *tmp;
 
 	TAILQ_FOREACH_SAFE(target, &fio_thread->targets, link, tmp) {
@@ -406,7 +402,14 @@ spdk_fio_cleanup(struct thread_data *td)
 	spdk_ring_free(fio_thread->ring);
 	free(fio_thread->iocq);
 	free(fio_thread);
+}
 
+static void
+spdk_fio_cleanup(struct thread_data *td)
+{
+	struct spdk_fio_thread *fio_thread = td->io_ops_data;
+
+	spdk_fio_cleanup_thread(fio_thread);
 	td->io_ops_data = NULL;
 }
 
@@ -667,39 +670,27 @@ spdk_fio_module_finish_done(void *cb_arg)
 static void
 spdk_fio_finish_env(void)
 {
-	struct thread_data		*td;
-	int				rc, count;
+	int				count;
 	bool				done = false;
+	struct spdk_fio_thread		*fio_thread;
 
-	td = calloc(1, sizeof(*td));
-	if (!td) {
-		SPDK_ERRLOG("Unable to allocate thread_data\n");
-		return;
-	}
-	/* Create an SPDK thread temporarily */
-	rc = spdk_fio_init_thread(td);
-	if (rc < 0) {
-		SPDK_ERRLOG("Failed to create finish thread\n");
-		free(td);
-		return;
-	}
+	/* the same thread that called spdk_fio_init_env */
+	fio_thread = g_thread;
 
 	spdk_bdev_finish(spdk_fio_module_finish_done, &done);
 
 	do {
-		count = spdk_fio_poll_thread(td->io_ops_data);
+		count = spdk_fio_poll_thread(fio_thread);
 	} while (!done || count > 0);
 
 	done = false;
 	spdk_copy_engine_finish(spdk_fio_module_finish_done, &done);
 
 	do {
-		count = spdk_fio_poll_thread(td->io_ops_data);
+		count = spdk_fio_poll_thread(fio_thread);
 	} while (!done || count > 0);
 
-	/* Destroy the temporary SPDK thread */
-	spdk_fio_cleanup(td);
-	free(td);
+	spdk_fio_cleanup_thread(fio_thread);
 }
 
 static void fio_exit spdk_fio_unregister(void)
