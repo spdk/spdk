@@ -21,7 +21,7 @@ echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
 VM_BASE_DIR="$TEST_DIR/vms"
 
 
-INSTALL_DIR="$TEST_DIR/root"
+INSTALL_DIR="$TEST_DIR/root/qemu_blk"
 
 mkdir -p $TEST_DIR
 
@@ -530,8 +530,7 @@ function vm_setup()
 				disk=${disk%%_*}
 				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-blk-pci,num_queues=$cpu_num,chardev=char_$disk,"
-				cmd+="logical_block_size=4096,size=$size ${eol}"
+				cmd+="-device vhost-user-blk-pci,num-queues=$cpu_num,chardev=char_$disk ${eol}"
 				;;
 			kernel_vhost)
 				if [[ -z $disk ]]; then
