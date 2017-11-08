@@ -51,15 +51,21 @@ extern "C" {
 /** Write memory barrier */
 #ifdef __PPC64__
 #define spdk_wmb()	__asm volatile("sync" ::: "memory")
-#else
+#elif defined(__i386__) || defined(__x86_64__)
 #define spdk_wmb()	__asm volatile("sfence" ::: "memory")
+#else
+#define spdk_wmb()
+#error Unknown architecture
 #endif
 
 /** Full read/write memory barrier */
 #ifdef __PPC64__
 #define spdk_mb()	__asm volatile("sync" ::: "memory")
-#else
+#elif defined(__i386__) || defined(__x86_64__)
 #define spdk_mb()	__asm volatile("mfence" ::: "memory")
+#else
+#define spdk_mb()
+#error Unknown architecture
 #endif
 
 #ifdef __cplusplus
