@@ -384,7 +384,7 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 					    req.listen_addresses.addresses,
 					    req.hosts.num_hosts, req.hosts.hosts, req.allow_any_host,
 					    req.serial_number,
-					    req.namespaces.num_ns, req.namespaces.ns_params);
+					    req.namespaces.num_ns, req.namespaces.ns_params, true);
 	if (ret) {
 		goto invalid;
 	}
