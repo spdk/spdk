@@ -14,7 +14,7 @@ else
 fi
 
 function run_fio() {
-        LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=4k --runtime=10 $testdir/bdev.fio "$@" --spdk_mem=1024
+        LD_PRELOAD=$plugindir/fio_plugin $plugindir/fio --ioengine=spdk_bdev --iodepth=128 --bs=4k --runtime=10 $testdir/bdev.fio "$@" --spdk_mem=1024
         fio_status=$?
         if [ $fio_status != 0 ]; then
                 spdk_vhost_kill
@@ -68,6 +68,7 @@ function prepare_fio_job_for_unmap() {
         echo "rw=write" >> $testdir/bdev.fio
 }
 
+cp /usr/src/fio/fio $plugindir/fio
 source $rootdir/test/vhost/common/common.sh
 $rootdir/scripts/gen_nvme.sh
 spdk_vhost_run $testdir
@@ -139,4 +140,6 @@ for bdev in $bdevs; do
         rm -f $testdir/bdev.conf
         timing_exit bdev
 done
+
+rm -f $plugindir/fio
 spdk_vhost_kill
