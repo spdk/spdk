@@ -1,3 +1,4 @@
+set -x
 fio_bdev_conf="$1"
 /root/spdk/scripts/setup.sh
 . /root/spdk/scripts/autotest_common.sh
