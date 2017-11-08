@@ -432,16 +432,10 @@ function vm_shutdown_all()
 			echo "INFO: All VMs successfully shut down"
 			return 0
 		fi
-
+# When the ((timeo-=1)) value equal to zero, the exit status code will equal to one, and return 1.
 		((timeo-=1))
 		sleep 1
 	done
-
-	echo "ERROR: VMs were NOT shutdown properly - sending SIGKILL"
-	for vm in $VM_BASE_DIR/[0-9]*; do
-		/bin/kill -KILL "$(cat $vm/qemu.pid)"
-	done
-	return 1
 }
 
 function vm_setup()
