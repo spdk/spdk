@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cad2d129_1636ad36",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 930,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-08T19:35:43Z",
+      "side": 1,
+      "message": "maybe you can use the new spdk_iscsi_tgt_node_add_maps() function here?",
+      "revId": "97ebf5534a19ee4d682465996b45a1854c741eb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
