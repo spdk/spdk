@@ -200,6 +200,7 @@ struct virtio_net {
 	int                     has_new_mem_table;
 	struct VhostUserMemory  mem_table;
 	int                     mem_table_fds[VHOST_MEMORY_MAX_NREGIONS];
+	int			config_fd;
 } __rte_cache_aligned;
 
 
