@@ -718,6 +718,12 @@ spdk_bdev_io_submit_reset(struct spdk_bdev_io *bdev_io)
 	bdev_io->in_submit_request = true;
 	bdev->fn_table->submit_request(ch, bdev_io);
 	bdev_io->in_submit_request = false;
+
+	if (bdev_ch->io_outstanding > 0) {
+		SPDK_NOTICELOG("Existing %lu outstanding IOs stop responding due to reset.\n",
+			       bdev_ch->io_outstanding);
+		bdev_ch->io_outstanding = 0;
+	}
 }
 
 static void
