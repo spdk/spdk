@@ -107,6 +107,10 @@ struct vhost_device_ops {
 	int (*new_connection)(int vid);
 	void (*destroy_connection)(int vid);
 
+	int (*get_config)(int vid, uint8_t *config, uint32_t config_len);
+	int (*set_config)(int vid, uint8_t *config, uint32_t offset,
+			  uint32_t len);
+
 	void *reserved[2]; /**< Reserved for future extension */
 };
 
@@ -414,6 +418,12 @@ uint16_t rte_vhost_dequeue_burst(int vid, uint16_t queue_id,
  *  0 on success, -1 on failure
  */
 int rte_vhost_get_mem_table(int vid, struct rte_vhost_memory **mem);
+
+/**
+ * Virtio configuration space event notifier for the purpose to
+ * interrupt the Guest when virtio configuration space changed.
+ */
+void rte_vhost_config_notifier(int vid);
 
 /**
  * Get guest vring info, including the vring address, vring size, etc.

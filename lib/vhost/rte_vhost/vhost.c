@@ -501,3 +501,16 @@ rte_vhost_set_vhost_vring_last_idx(int vid, uint16_t vring_idx,
 
 	return 0;
 }
+
+void rte_vhost_config_notifier(int vid)
+{
+	struct virtio_net *dev;
+
+	dev = get_device(vid);
+	if (!dev)
+		return;
+
+	if (dev->config_fd >= 0) {
+		eventfd_write(dev->config_fd, (eventfd_t)1);
+	}
+}
