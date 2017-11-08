@@ -135,6 +135,25 @@ DEFINE_STUB(spdk_vhost_dev_remove_fail, bool, (void), false);
 DEFINE_STUB(spdk_vhost_dev_construct_fail, bool, (void), false);
 
 static struct spdk_vhost_dev *g_spdk_vhost_device;
+
+uint32_t
+spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
+{
+	return 512;
+}
+
+uint64_t
+spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
+{
+	return 0x1;
+}
+
+bool
+spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
+{
+	return false;
+}
+
 int
 spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
 			 enum spdk_vhost_dev_type type, const struct spdk_vhost_dev_backend *backend)
