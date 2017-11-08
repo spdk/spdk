@@ -108,6 +108,10 @@ struct vhost_device_ops {
 	int (*new_connection)(int vid);
 	void (*destroy_connection)(int vid);
 
+	int (*get_config)(int vid, uint8_t *config, uint32_t config_len);
+	int (*set_config)(int vid, uint8_t *config, uint32_t offset,
+			  uint32_t len, uint32_t flags);
+
 	void *reserved[2]; /**< Reserved for future extension */
 };
 
