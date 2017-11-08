@@ -130,6 +130,10 @@ struct spdk_vhost_dev_backend {
 	spdk_vhost_event_fn start_device;
 	spdk_vhost_event_fn stop_device;
 
+	int (*vhost_get_config)(struct spdk_vhost_dev *vdev, uint8_t *config, uint32_t len);
+	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
+				uint32_t offset, uint32_t size, uint32_t flags);
+
 	void (*dump_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 	int (*vhost_remove_controller)(struct spdk_vhost_dev *vdev);
 };
