@@ -136,12 +136,23 @@ _nvmf_tgt_start_subsystem(void *arg1, void *arg2)
 	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, lcore, 0);
 }
 
+static void
+nvmf_tgt_start_subsystem_transition(void *arg1, void *arg2)
+{
+	struct nvmf_tgt_subsystem *app_subsys = arg1;
+	struct spdk_event *event;
+
+	event = spdk_event_allocate(app_subsys->lcore, _nvmf_tgt_start_subsystem,
+				    app_subsys, NULL);
+	spdk_event_call(event);
+}
+
 void
 nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 {
 	struct spdk_event *event;
 
-	event = spdk_event_allocate(app_subsys->lcore, _nvmf_tgt_start_subsystem,
+	event = spdk_event_allocate(spdk_env_get_current_core(), nvmf_tgt_start_subsystem_transition,
 				    app_subsys, NULL);
 	spdk_event_call(event);
 }
