@@ -538,6 +538,8 @@ bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 	struct virtqueue *vq;
 	int32_t queue_idx;
 
+	SPDK_ERRLOG("bdev_virtio_create_cb %p\n", ch);
+
 	queue_idx = virtio_dev_find_and_acquire_queue(vdev, VIRTIO_SCSI_REQUESTQ);
 	if (queue_idx < 0) {
 		SPDK_ERRLOG("Couldn't get an unused queue for the io_channel.\n");
@@ -560,6 +562,8 @@ bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 	struct bdev_virtio_io_channel *io_channel = ctx_buf;
 	struct virtio_dev *vdev = io_channel->vdev;
 	struct virtqueue *vq = io_channel->vq;
+
+	SPDK_ERRLOG("bdev_virtio_destroy_cb %p\n", io_channel);
 
 	spdk_bdev_poller_stop(&vq->poller);
 	virtio_dev_release_queue(vdev, vq->vq_queue_index);
@@ -1206,6 +1210,8 @@ bdev_virtio_finish(void)
 	struct virtio_dev *vdev, *next;
 	struct virtqueue *vq;
 	struct spdk_ring *send_ring;
+
+	SPDK_ERRLOG("bdev_virtio_finish\n");
 
 	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.attached_ctrlrs, tailq, next) {
 		TAILQ_REMOVE(&g_virtio_driver.attached_ctrlrs, vdev, tailq);
