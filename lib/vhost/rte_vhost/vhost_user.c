@@ -37,6 +37,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
@@ -76,6 +77,9 @@ static const char *vhost_message_str[VHOST_USER_MAX] = {
 	[VHOST_USER_SET_VRING_ENABLE]  = "VHOST_USER_SET_VRING_ENABLE",
 	[VHOST_USER_SEND_RARP]  = "VHOST_USER_SEND_RARP",
 	[VHOST_USER_NET_SET_MTU]  = "VHOST_USER_NET_SET_MTU",
+	[VHOST_USER_GET_CONFIG] = "VHOST_USER_GET_CONFIG",
+	[VHOST_USER_SET_CONFIG] = "VHOST_USER_SET_CONFIG",
+	[VHOST_USER_SET_CONFIG_FD] = "VHOST_USER_SET_CONFIG_FD",
 };
 
 static uint64_t
@@ -1061,6 +1065,30 @@ vhost_user_msg_handler(int vid, int fd)
 	}
 
 	switch (msg.request) {
+	case VHOST_USER_GET_CONFIG:
+		msg.size = sizeof(struct VhostUserConfig);
+		if (dev->notify_ops->get_config(dev->vid,
+						msg.payload.config.region,
+						sizeof(msg.payload.config.region)) != 0) {
+			msg.size = sizeof(uint64_t);
+		}
+		send_vhost_message(fd, &msg);
+		break;
+	case VHOST_USER_SET_CONFIG:
+		if ((dev->notify_ops->set_config(dev->vid,
+						msg.payload.config.region,
+						msg.payload.config.offset,
+						msg.payload.config.size)) != 0) {
+			msg.payload.u64 = 1;
+		} else {
+			msg.payload.u64 = 0;
+		}
+		msg.size = sizeof(msg.payload.u64);
+		send_vhost_message(fd, &msg);
+		break;
+	case VHOST_USER_SET_CONFIG_FD:
+		dev->config_fd = msg.fds[0];
+		break;
 	case VHOST_USER_GET_FEATURES:
 		msg.payload.u64 = vhost_user_get_features(dev);
 		msg.size = sizeof(msg.payload.u64);
