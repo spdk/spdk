@@ -34,8 +34,6 @@ function usage() {
     echo "                          NUM - VM number (mandatory)"
     echo "                          OS - VM os disk path (optional)"
     echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
-    echo "                          If test-type=spdk_vhost_blk then each disk can have additional size parameter, e.g."
-    echo "                          --vm=X,os.qcow,DISK_size_35G; unit can be M or G; default - 20G"
     exit 0
 }
 

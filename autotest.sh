@@ -137,7 +137,7 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 
 	if [ $RUN_NIGHTLY -eq 1 ]; then
 		timing_enter integrity_blk
-		run_test ./test/vhost/spdk_vhost.sh --integrity-blk
+#		run_test ./test/vhost/spdk_vhost.sh --integrity-blk
 		timing_exit integrity_blk
 
 		timing_enter integrity
@@ -154,7 +154,7 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_exit integrity_lvol_scsi
 
 	timing_enter integrity_lvol_blk
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
+#	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
 	timing_exit integrity_lvol_blk
 
 	timing_exit vhost
