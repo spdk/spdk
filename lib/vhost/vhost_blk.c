@@ -68,6 +68,7 @@ struct spdk_vhost_blk_dev {
 	struct spdk_io_channel *bdev_io_channel;
 	struct spdk_poller *requestq_poller;
 	bool readonly;
+	struct virtio_blk_config blkcfg;
 };
 
 static void
@@ -605,6 +606,26 @@ spdk_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_wr
 	spdk_json_write_object_end(w);
 }
 
+static int
+spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
+			  uint32_t len)
+{
+	struct spdk_vhost_blk_dev *bvdev;
+
+	bvdev = to_blk_dev(vdev);
+	if (bvdev == NULL) {
+		SPDK_ERRLOG("Trying to get virito_blk configuration failed\n");
+		return -1;
+	}
+
+	if (len < sizeof(bvdev->blkcfg)) {
+		return -1;
+	}
+
+	memcpy(config, &bvdev->blkcfg, sizeof(bvdev->blkcfg));
+	return 0;
+}
+
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.virtio_features = SPDK_VHOST_FEATURES |
 	(1ULL << VIRTIO_BLK_F_SIZE_MAX) | (1ULL << VIRTIO_BLK_F_SEG_MAX) |
@@ -615,9 +636,11 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	(1ULL << VIRTIO_BLK_F_MQ),
 	.disabled_features = SPDK_VHOST_DISABLED_FEATURES | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
 	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) |
-	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
+	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI) |
+	(1ULL << VIRTIO_BLK_F_CONFIG_WCE),
 	.start_device =  spdk_vhost_blk_start,
 	.stop_device = spdk_vhost_blk_stop,
+	.vhost_get_config = spdk_vhost_blk_get_config,
 	.dump_config_json = spdk_vhost_blk_dump_config_json,
 	.vhost_remove_controller = spdk_vhost_blk_destroy,
 };
@@ -665,6 +688,26 @@ spdk_vhost_blk_controller_construct(void)
 	return 0;
 }
 
+static void
+spdk_vhost_blk_init_virtio_config(struct spdk_vhost_blk_dev *bvdev)
+{
+	struct spdk_bdev *bdev = bvdev->bdev;
+	uint32_t blk_size;
+	uint64_t blkcnt;
+
+	if (!bdev) {
+		return;
+	}
+	blk_size = spdk_bdev_get_block_size(bdev);
+	blkcnt = spdk_bdev_get_num_blocks(bdev);
+
+	bvdev->blkcfg.blk_size = 512;
+	bvdev->blkcfg.capacity = (blkcnt * blk_size) / 512;
+	bvdev->blkcfg.wce = spdk_bdev_has_write_cache(bdev);
+	bvdev->blkcfg.size_max = 131072;
+	bvdev->blkcfg.seg_max = 128;
+}
+
 int
 spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name, bool readonly)
 {
@@ -696,6 +739,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	}
 
 	bvdev->bdev = bdev;
+	spdk_vhost_blk_init_virtio_config(bvdev);
 	bvdev->readonly = readonly;
 	ret = spdk_vhost_dev_construct(&bvdev->vdev, name, cpumask, SPDK_VHOST_DEV_T_BLK,
 				       &vhost_blk_device_backend);
