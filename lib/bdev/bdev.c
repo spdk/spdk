@@ -689,6 +689,10 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
 
 	bdev_ch->io_outstanding++;
+	if (bdev->reset_in_progress) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 	bdev_io->in_submit_request = true;
 	if (spdk_likely(bdev_ch->flags == 0)) {
 		if (spdk_likely(TAILQ_EMPTY(&bdev_ch->nomem_io))) {
@@ -1366,7 +1370,7 @@ _spdk_bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 	assert(!TAILQ_EMPTY(&ch->queued_resets));
 
 	pthread_mutex_lock(&bdev->mutex);
-	if (bdev->reset_in_progress == NULL) {
+	if (bdev->reset_in_progress == NULL && (ch->io_outstanding == 0)) {
 		bdev->reset_in_progress = TAILQ_FIRST(&ch->queued_resets);
 		/*
 		 * Take a channel reference for the target bdev for the life of this
@@ -1585,6 +1589,9 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	} else {
 		assert(bdev_ch->io_outstanding > 0);
 		bdev_ch->io_outstanding--;
+		if (!TAILQ_EMPTY(&bdev_ch->queued_resets)) {
+			_spdk_bdev_channel_start_reset(bdev_ch);
+		}
 		if (spdk_likely(status != SPDK_BDEV_IO_STATUS_NOMEM)) {
 			if (spdk_unlikely(!TAILQ_EMPTY(&bdev_ch->nomem_io))) {
 				_spdk_bdev_ch_retry_io(bdev_ch);
