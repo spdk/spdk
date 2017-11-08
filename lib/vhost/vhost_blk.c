@@ -605,6 +605,41 @@ spdk_vhost_blk_dump_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_wr
 	spdk_json_write_object_end(w);
 }
 
+static int
+spdk_vhost_blk_get_config(struct spdk_vhost_dev *vdev, uint8_t *config,
+			  uint32_t len)
+{
+	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_bdev *bdev;
+	uint32_t blk_size;
+	uint64_t blkcnt;
+	struct virtio_blk_config *blkcfg = (struct virtio_blk_config *)config;
+
+	bvdev = to_blk_dev(vdev);
+	if (bvdev == NULL) {
+		SPDK_ERRLOG("Trying to get virito_blk configuration failed\n");
+		return -1;
+	}
+
+	if (len < sizeof(*blkcfg)) {
+		return -1;
+	}
+
+	bdev = bvdev->bdev;
+	blk_size = spdk_bdev_get_block_size(bdev);
+	blkcnt = spdk_bdev_get_num_blocks(bdev);
+
+	memset(blkcfg, 0, sizeof(*blkcfg));
+	blkcfg->blk_size = 512;
+	blkcfg->min_io_size = blk_size / 512;
+	blkcfg->physical_block_exp = spdk_u32log2(blk_size / 512);
+	blkcfg->capacity = (blkcnt * blk_size) / 512;
+	blkcfg->size_max = 131072;
+	blkcfg->seg_max = SPDK_VHOST_IOVS_MAX;
+
+	return 0;
+}
+
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.virtio_features = SPDK_VHOST_FEATURES |
 	(1ULL << VIRTIO_BLK_F_SIZE_MAX) | (1ULL << VIRTIO_BLK_F_SEG_MAX) |
@@ -618,6 +653,7 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
 	.start_device =  spdk_vhost_blk_start,
 	.stop_device = spdk_vhost_blk_stop,
+	.vhost_get_config = spdk_vhost_blk_get_config,
 	.dump_config_json = spdk_vhost_blk_dump_config_json,
 	.vhost_remove_controller = spdk_vhost_blk_destroy,
 };
