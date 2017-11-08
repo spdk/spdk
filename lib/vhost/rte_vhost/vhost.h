@@ -175,6 +175,7 @@ struct virtio_net {
 	/* Frontend (QEMU) memory and memory region information */
 	struct rte_vhost_memory	*mem;
 	uint64_t		features;
+	uint64_t		negotiated_features;
 	uint64_t		protocol_features;
 	int			vid;
 	uint32_t		flags;
@@ -216,7 +217,7 @@ vhost_log_write(struct virtio_net *dev, uint64_t addr, uint64_t len)
 {
 	uint64_t page;
 
-	if (likely(((dev->features & (1ULL << VHOST_F_LOG_ALL)) == 0) ||
+	if (likely(((dev->negotiated_features & (1ULL << VHOST_F_LOG_ALL)) == 0) ||
 		   !dev->log_base || !len))
 		return;
 
@@ -297,7 +298,7 @@ gpa_to_hpa(struct virtio_net *dev, uint64_t gpa, uint64_t size)
 
 struct virtio_net *get_device(int vid);
 
-int vhost_new_device(void);
+int vhost_new_device(uint64_t features);
 void cleanup_device(struct virtio_net *dev, int destroy);
 void reset_device(struct virtio_net *dev);
 void vhost_destroy_device(int);
