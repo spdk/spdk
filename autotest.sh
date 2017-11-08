@@ -174,6 +174,10 @@ if [ $SPDK_TEST_NVML -eq 1 ]; then
 	run_test ./test/pmem/pmem.sh
 fi
 
+if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+	run_test ./test/blobstore/blobstore.sh
+fi
+
 timing_enter cleanup
 if [ $SPDK_TEST_RBD -eq 1 ]; then
 	rbd_cleanup
