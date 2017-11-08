@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7c475b1_fad288dd",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-08T05:15:45Z",
+      "side": 1,
+      "message": "Added the log in this common function instead of spreading elsewhere.",
+      "range": {
+        "startLine": 467,
+        "startChar": 0,
+        "endLine": 467,
+        "endChar": 15
+      },
+      "revId": "3a54ab70e4b79a9d2032a675f135715fa9976647",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
