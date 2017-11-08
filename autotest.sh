@@ -119,6 +119,10 @@ if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
 	run_test ./test/blobfs/rocksdb/rocksdb.sh
 fi
 
+if [ $SPDK_TEST_BLOBCLI -eq 1 ]; then
+	run_test ./test/blobcli/blobcli.sh
+fi
+
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	run_test ./test/nvmf/nvmf.sh
 fi
