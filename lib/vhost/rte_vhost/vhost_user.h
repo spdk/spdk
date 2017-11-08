@@ -43,6 +43,11 @@
 
 #define VHOST_MEMORY_MAX_NREGIONS 8
 
+/*
+ * Maximum size of virtio device config space
+ */
+#define VHOST_USER_MAX_CONFIG_SIZE 256
+
 #define VHOST_USER_PROTOCOL_F_MQ	0
 #define VHOST_USER_PROTOCOL_F_LOG_SHMFD	1
 #define VHOST_USER_PROTOCOL_F_RARP	2
@@ -77,8 +82,17 @@ typedef enum VhostUserRequest {
 	VHOST_USER_SET_VRING_ENABLE = 18,
 	VHOST_USER_SEND_RARP = 19,
 	VHOST_USER_NET_SET_MTU = 20,
+	VHOST_USER_GET_CONFIG = 24,
+	VHOST_USER_SET_CONFIG = 25,
 	VHOST_USER_MAX
 } VhostUserRequest;
+
+typedef enum VhostUserSlaveRequest {
+	VHOST_USER_SLAVE_NONE = 0,
+	VHOST_USER_SLAVE_IOTLB_MSG = 1,
+	VHOST_USER_SLAVE_CONFIG_CHANGE_MSG = 2,
+	VHOST_USER_SLAVE_MAX
+} VhostUserSlaveRequest;
 
 typedef struct VhostUserMemoryRegion {
 	uint64_t guest_phys_addr;
@@ -98,6 +112,13 @@ typedef struct VhostUserLog {
 	uint64_t mmap_offset;
 } VhostUserLog;
 
+typedef struct VhostUserConfig {
+	uint32_t offset;
+	uint32_t size;
+	uint32_t flags;
+	uint8_t region[VHOST_USER_MAX_CONFIG_SIZE];
+} VhostUserConfig;
+
 typedef struct VhostUserMsg {
 	VhostUserRequest request;
 
@@ -114,6 +135,7 @@ typedef struct VhostUserMsg {
 		struct vhost_vring_addr addr;
 		VhostUserMemory memory;
 		VhostUserLog    log;
+		VhostUserConfig config;
 	} payload;
 	int fds[VHOST_MEMORY_MAX_NREGIONS];
 } __attribute((packed)) VhostUserMsg;

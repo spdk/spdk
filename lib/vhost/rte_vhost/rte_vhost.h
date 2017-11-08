@@ -108,6 +108,10 @@ struct vhost_device_ops {
 	int (*new_connection)(int vid);
 	void (*destroy_connection)(int vid);
 
+	int (*get_config)(int vid, uint8_t *config, uint32_t config_len);
+	int (*set_config)(int vid, uint8_t *config, uint32_t offset,
+			  uint32_t len, uint32_t flags);
+
 	void *reserved[2]; /**< Reserved for future extension */
 };
 
@@ -451,5 +455,4 @@ int rte_vhost_get_vhost_vring(int vid, uint16_t vring_idx,
  */
 int rte_vhost_set_vhost_vring_last_idx(int vid, uint16_t vring_idx,
 			      uint16_t last_avail_idx, uint16_t last_used_idx);
-
 #endif /* _RTE_VHOST_H_ */

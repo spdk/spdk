@@ -316,5 +316,4 @@ struct vhost_device_ops const *vhost_driver_callback_get(const char *path);
  * TODO: fix it; we have one backend now
  */
 void vhost_backend_cleanup(struct virtio_net *dev);
-
 #endif /* _VHOST_NET_CDEV_H_ */
