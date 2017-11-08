@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f601c3f6_edbbc09d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1310,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-08T04:20:27Z",
+      "side": 1,
+      "message": "shall we remove the req_mem from this tail list before free them or can we move the create_channel just after we allocate the req_mem array?",
+      "range": {
+        "startLine": 1310,
+        "startChar": 16,
+        "endLine": 1310,
+        "endChar": 23
+      },
+      "revId": "a301a8561666fdb454db1decf6f61df295e369a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
