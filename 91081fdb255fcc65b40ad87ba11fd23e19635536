@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eff7c6c8_7651ad39",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-08T08:38:51Z",
+      "side": 1,
+      "message": "I think those should be called on any fail in this function. Otherwise lvs is freed only on error returned from blobstore.",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 177,
+        "endChar": 57
+      },
+      "revId": "91081fdb255fcc65b40ad87ba11fd23e19635536",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
