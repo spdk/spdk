@@ -196,6 +196,9 @@ uint64_t spdk_bs_get_page_size(struct spdk_blob_store *bs);
 /* Get the number of free clusters. */
 uint64_t spdk_bs_free_cluster_count(struct spdk_blob_store *bs);
 
+/* Get the total number of clusters accessible by user. */
+uint64_t spdk_bs_total_data_cluster_count(struct spdk_blob_store *bs);
+
 /* Register the current thread as the metadata thread. All functions beginning with
  * the prefix "spdk_bs_md" must be called only from this thread.
  */
