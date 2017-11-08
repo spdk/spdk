@@ -164,9 +164,12 @@ spdk_fio_stop_poller(struct spdk_bdev_poller **ppoller)
 	fio_poller = *(struct spdk_fio_poller **)ppoller;
 
 	fio_thread = g_thread;
-	if (fio_thread) {
-		TAILQ_REMOVE(&fio_thread->pollers, fio_poller, link);
+	if (!fio_thread) {
+		SPDK_ERRLOG("Expected local thread to be initialized, but it was not.\n");
+		return;
 	}
+
+	TAILQ_REMOVE(&fio_thread->pollers, fio_poller, link);
 
 	free(fio_poller);
 	*ppoller = NULL;
