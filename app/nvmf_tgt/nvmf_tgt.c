@@ -285,6 +285,7 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 {
 	uint32_t core;
 	int rc;
+	struct nvmf_tgt_subsystem *app_subsys;
 
 	rc = spdk_nvmf_parse_conf();
 	if (rc < 0) {
@@ -324,6 +325,10 @@ spdk_nvmf_startup(void *arg1, void *arg2)
 				     nvmf_tgt_poll_group_poll, app_poll_group,
 				     core, 0);
 		g_active_poll_groups++;
+	}
+
+	TAILQ_FOREACH(app_subsys, &g_subsystems, tailq) {
+		nvmf_tgt_start_subsystem(app_subsys);
 	}
 
 	spdk_poller_register(&g_acceptor_poller, acceptor_poll, g_tgt,
