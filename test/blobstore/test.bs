@@ -1,0 +1,8 @@
+-i
+-l bdevs
+-n 1
+-s bs
+-p $B0
+-d $B0 M.blob
+-x $B0 b0key boval
+-r $B0 b0key

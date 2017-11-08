@@ -172,6 +172,10 @@ if [ $SPDK_TEST_NVML -eq 1 ]; then
 	run_test ./test/pmem/pmem.sh
 fi
 
+if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+	run_test ./test/blobstore/blobstore.sh
+fi
+
 timing_enter cleanup
 rbd_cleanup
 ./scripts/setup.sh reset
