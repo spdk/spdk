@@ -392,6 +392,7 @@ spdk_fio_cleanup(struct thread_data *td)
 	struct spdk_fio_target *target, *tmp;
 
 	g_thread = NULL;
+	SPDK_ERRLOG("spdk_fio_cleanup_thread\n");
 
 	TAILQ_FOREACH_SAFE(target, &fio_thread->targets, link, tmp) {
 		TAILQ_REMOVE(&fio_thread->targets, target, link);
