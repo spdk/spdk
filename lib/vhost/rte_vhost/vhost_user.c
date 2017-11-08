@@ -161,10 +161,7 @@ vhost_user_reset_owner(struct virtio_net *dev)
 static uint64_t
 vhost_user_get_features(struct virtio_net *dev)
 {
-	uint64_t features = 0;
-
-	rte_vhost_driver_get_features(dev->ifname, &features);
-	return features;
+	return dev->features;
 }
 
 /*
@@ -175,7 +172,7 @@ vhost_user_set_features(struct virtio_net *dev, uint64_t features)
 {
 	uint64_t vhost_features = 0;
 
-	rte_vhost_driver_get_features(dev->ifname, &vhost_features);
+	vhost_features = vhost_user_get_features(dev);
 	if (features & ~vhost_features) {
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"(%d) received invalid negotiated features.\n",
@@ -183,13 +180,13 @@ vhost_user_set_features(struct virtio_net *dev, uint64_t features)
 		return -1;
 	}
 
-	if ((dev->flags & VIRTIO_DEV_RUNNING) && dev->features != features) {
+	if ((dev->flags & VIRTIO_DEV_RUNNING) && dev->negotiated_features != features) {
 		if (dev->notify_ops->features_changed)
 			dev->notify_ops->features_changed(dev->vid, features);
 	}
 
-	dev->features = features;
-	if (dev->features &
+	dev->negotiated_features = features;
+	if (dev->negotiated_features &
 		((1 << VIRTIO_NET_F_MRG_RXBUF) | (1ULL << VIRTIO_F_VERSION_1))) {
 		dev->vhost_hlen = sizeof(struct virtio_net_hdr_mrg_rxbuf);
 	} else {
@@ -198,8 +195,8 @@ vhost_user_set_features(struct virtio_net *dev, uint64_t features)
 	VHOST_LOG_DEBUG(VHOST_CONFIG,
 		"(%d) mergeable RX buffers %s, virtio 1 %s\n",
 		dev->vid,
-		(dev->features & (1 << VIRTIO_NET_F_MRG_RXBUF)) ? "on" : "off",
-		(dev->features & (1ULL << VIRTIO_F_VERSION_1)) ? "on" : "off");
+		(dev->negotiated_features & (1 << VIRTIO_NET_F_MRG_RXBUF)) ? "on" : "off",
+		(dev->negotiated_features & (1ULL << VIRTIO_F_VERSION_1)) ? "on" : "off");
 
 	return 0;
 }
