@@ -1,0 +1,21 @@
+-i
+-s bs
+-l bdevs
+-l blobs
+-n 1
+-s bs
+-n 2
+-p $B0
+-s $B0
+-s $B1
+-m $B0 Makefile
+-d $B0 M.blob
+-f $B1 65
+-d $B1 65.blob
+-s bs
+-x $B0 b0key boval
+-x $B1 b1key b1val
+-r $B0 b0key
+-s $B0
+-s $B1
+-s bs
