@@ -204,7 +204,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
 		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
-		return;
+		exit(1);
 	}
 
 	max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
@@ -218,7 +218,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		printf("WARNING: controller IO queue size %u less than required\n",
 		       opts.io_queue_size);
 		printf("You can try with smaller IO size or queue depth\n");
-		return;
+		exit(1);
 	}
 
 	entry = malloc(sizeof(struct ns_entry));
