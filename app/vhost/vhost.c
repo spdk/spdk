@@ -98,7 +98,7 @@ int
 main(int argc, char *argv[])
 {
 	struct spdk_app_opts opts = {};
-	char ch;
+	int ch;
 	int rc;
 	const char *socket_path = NULL;
 	enum spdk_log_level print_level = SPDK_LOG_NOTICE;
