@@ -125,7 +125,6 @@ spdk_add_nvmf_discovery_subsystem(void)
 	}
 
 	spdk_nvmf_subsystem_set_allow_any_host(app_subsys->subsystem, true);
-	nvmf_tgt_start_subsystem(app_subsys);
 
 	return 0;
 }
@@ -333,7 +332,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 					    num_listen_addrs, listen_addrs,
 					    num_hosts, hosts, allow_any_host,
 					    sn,
-					    num_ns, ns_list);
+					    num_ns, ns_list, false);
 
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
 		free(listen_addrs_str[i]);
@@ -385,7 +384,8 @@ int
 spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 			      int num_listen_addresses, struct rpc_listen_address *addresses,
 			      int num_hosts, char *hosts[], bool allow_any_host,
-			      const char *sn, size_t num_ns, struct spdk_nvmf_ns_params *ns_list)
+			      const char *sn, size_t num_ns, struct spdk_nvmf_ns_params *ns_list,
+			      bool is_rpc)
 {
 	struct spdk_nvmf_subsystem *subsystem;
 	struct nvmf_tgt_subsystem *app_subsys;
@@ -506,8 +506,9 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 
 	}
 
-	nvmf_tgt_start_subsystem(app_subsys);
-
+	if (is_rpc) {
+		nvmf_tgt_start_subsystem(app_subsys);
+	}
 	return 0;
 
 error:

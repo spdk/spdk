@@ -294,6 +294,7 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 {
 	enum nvmf_tgt_state prev_state;
 	int rc = -1;
+	struct nvmf_tgt_subsystem *app_subsys;
 
 	do {
 		prev_state = g_tgt.state;
@@ -334,6 +335,11 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 				rc = -EINVAL;
 				break;
 			}
+
+			TAILQ_FOREACH(app_subsys, &g_subsystems, tailq) {
+				nvmf_tgt_start_subsystem(app_subsys);
+			}
+
 			g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUP;
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUP: {
