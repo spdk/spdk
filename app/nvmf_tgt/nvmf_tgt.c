@@ -235,11 +235,16 @@ static void
 spdk_nvmf_startup(void *arg1, void *arg2)
 {
 	int rc;
+	struct nvmf_tgt_subsystem *app_subsys;
 
 	rc = spdk_nvmf_parse_conf();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_nvmf_parse_conf() failed\n");
 		goto initialize_error;
+	}
+
+	TAILQ_FOREACH(app_subsys, &g_subsystems, tailq) {
+		nvmf_tgt_start_subsystem(app_subsys);
 	}
 
 	if (((1ULL << g_spdk_nvmf_tgt_conf.acceptor_lcore) & spdk_app_get_core_mask()) == 0) {
