@@ -117,7 +117,7 @@ Userspace vhost-scsi adds the following command line option for QEMU:
 
 Userspace vhost-blk adds the following command line option for QEMU:
 ~~~
--device vhost-user-blk-pci,logical_block_size=4096,size=512M,chardev=char0[,num_queues=N]
+-device vhost-user-blk-pci,chardev=char0[,num-queues=N]
 ~~~
 
 In order to start qemu with vhost you need to specify following options:
@@ -217,7 +217,7 @@ host: $ sudo ./qemu/build/x86_64-softmmu/qemu-system-x86_64 --enable-kvm -m 1024
   -chardev socket,id=spdk_vhost_scsi0,path=./spdk/vhost_scsi0_socket \
   -device vhost-user-scsi-pci,id=scsi0,chardev=spdk_vhost_scsi0,num_queues=4 \
   -chardev socket,id=spdk_vhost_blk0,path=./spdk/vhost_blk0_socket \
-  -device vhost-user-blk-pci,logical_block_size=512,size=128M,chardev=spdk_vhost_blk0,num_queues=4
+  -device vhost-user-blk-pci,chardev=spdk_vhost_blk0,num-queues=4
 
 << LOGIN TO GUEST OS >>
 guest: ~$ lsblk --output "NAME,KNAME,MODEL,HCTL,SIZE,VENDOR,SUBSYSTEMS"
