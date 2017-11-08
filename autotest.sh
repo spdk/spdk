@@ -123,6 +123,7 @@ fi
 
 if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
 	run_test ./test/blobfs/rocksdb/rocksdb.sh
+	run_test ./test/blobstore/blobstore.sh
 fi
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
