@@ -168,6 +168,7 @@ static uint32_t g_disable_sq_cmb;
 static bool g_no_pci;
 
 static const char *g_core_mask;
+static bool g_warn;
 
 struct trid_entry {
 	struct spdk_nvme_transport_id	trid;
@@ -204,6 +205,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
 		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
+		g_warn = true;
 		return;
 	}
 
@@ -218,6 +220,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		printf("WARNING: controller IO queue size %u less than required\n",
 		       opts.io_queue_size);
 		printf("You can try with smaller IO size or queue depth\n");
+		g_warn = true;
 		return;
 	}
 
@@ -1388,7 +1391,12 @@ int main(int argc, char **argv)
 	}
 
 	if (g_num_namespaces == 0) {
-		fprintf(stderr, "No NVMe controllers or AIO devices found.\n");
+		if (g_warn) {
+			fprintf(stderr, "No valid NVMe controllers found;");
+		} else {
+			fprintf(stderr, "No NVMe controllers found;");
+		}
+		fprintf(stderr, "No AIO devices found\n");
 		return 0;
 	}
 
