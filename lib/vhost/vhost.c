@@ -70,10 +70,15 @@ static int new_connection(int vid);
 static int start_device(int vid);
 static void stop_device(int vid);
 static void destroy_connection(int vid);
+static int get_config(int vid, uint8_t *config, uint32_t len);
+static int set_config(int vid, uint8_t *config, uint32_t offset,
+		      uint32_t size);
 
 const struct vhost_device_ops g_spdk_vhost_ops = {
 	.new_device =  start_device,
 	.destroy_device = stop_device,
+	.get_config = get_config,
+	.set_config = set_config,
 	.new_connection = new_connection,
 	.destroy_connection = destroy_connection,
 };
@@ -930,6 +935,50 @@ start_device(int vid)
 		free(vdev->mem);
 		spdk_vhost_free_reactor(vdev->lcore);
 		vdev->lcore = -1;
+	}
+
+out:
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+	return rc;
+}
+
+static int
+get_config(int vid, uint8_t *config, uint32_t len)
+{
+	struct spdk_vhost_dev *vdev;
+	int rc = -1;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_find_by_vid(vid);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Controller with vid %d doesn't exist.\n", vid);
+		goto out;
+	}
+
+	if (vdev->backend->vhost_get_config) {
+		rc = vdev->backend->vhost_get_config(vdev, config, len);
+	}
+
+out:
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
+	return rc;
+}
+
+static int
+set_config(int vid, uint8_t *config, uint32_t offset, uint32_t size)
+{
+	struct spdk_vhost_dev *vdev;
+	int rc = -1;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vdev = spdk_vhost_dev_find_by_vid(vid);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Controller with vid %d doesn't exist.\n", vid);
+		goto out;
+	}
+
+	if (vdev->backend->vhost_set_config) {
+		rc = vdev->backend->vhost_set_config(vdev, config, offset, size);
 	}
 
 out:
