@@ -65,6 +65,16 @@ typedef void (*spdk_file_stat_op_complete)(void *ctx, struct spdk_file_stat *sta
 typedef void (*fs_request_fn)(void *);
 typedef void (*fs_send_request_fn)(fs_request_fn, void *);
 
+/**
+ * Initialize filesystem.
+ *
+ * This function will initialize a filesystem and allocate I/O channels for it.
+ *
+ * \param dev Blobstore device to be used by this filesystem.
+ * \param send_request_fn The function for sending request.
+ * \param cb_fn Called when the initialization is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
 void spdk_fs_init(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 		  spdk_fs_op_with_handle_complete cb_fn, void *cb_arg);
 void spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
