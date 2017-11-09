@@ -194,6 +194,7 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->reactor_mask = NULL;
 	opts->max_delay_us = 0;
 	opts->print_level = SPDK_LOG_NOTICE;
+	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 }
 
 static int
@@ -256,7 +257,9 @@ spdk_app_setup_signal_handlers(struct spdk_app_opts *opts)
 static void
 start_rpc(void *arg1, void *arg2)
 {
-	spdk_rpc_initialize();
+	const char *rpc_addr = arg1;
+
+	spdk_rpc_initialize(rpc_addr);
 	g_app_start_fn(g_app_start_arg1, g_app_start_arg2);
 }
 
@@ -407,7 +410,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_app_start_fn = start_fn;
 	g_app_start_arg1 = arg1;
 	g_app_start_arg2 = arg2;
-	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, NULL, NULL);
+	app_start_event = spdk_event_allocate(g_init_lcore, start_rpc, (void *)opts->rpc_addr, NULL);
 
 	spdk_subsystem_init(app_start_event);
 
@@ -462,6 +465,7 @@ usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usag
 	printf(" -n channel number of memory channels used for DPDK\n");
 	printf(" -p core    master (primary) core for DPDK\n");
 	printf(" -q         disable notice level logging to stderr\n");
+	printf(" -r         RPC listen address (default %s)\n", SPDK_DEFAULT_RPC_ADDR);
 	printf(" -s size    memory size in MB for DPDK (default: ");
 	if (default_opts->mem_size > 0) {
 		printf("%dMB)\n", default_opts->mem_size);
@@ -517,6 +521,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case 'q':
 			opts->print_level = SPDK_LOG_WARN;
+			break;
+		case 'r':
+			opts->rpc_addr = optarg;
 			break;
 		case 's':
 			opts->mem_size = atoi(optarg);

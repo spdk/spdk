@@ -29,16 +29,6 @@
   # Set to 0xFFFFFFFFFFFFFFFF to enable all tracepoint groups.
   #TpointGroupMask 0x0
 
-[Rpc]
-  # Defines whether SPDK vhost will enable configuration via RPC.
-  # Default is disabled.  Note that the RPC interface is not
-  # authenticated, so users should be careful about enabling
-  # RPC in non-trusted environments.
-  Enable No
-  # Listen address for the RPC service.
-  # May be an IP address or an absolute path to a Unix socket.
-  Listen 127.0.0.1
-
 # Users may not want to use offload even it is available.
 # Users may use the whitelist to initialize specified devices, IDS
 #  uses BUS:DEVICE.FUNCTION to identify each Ioat channel.

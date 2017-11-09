@@ -46,6 +46,8 @@ export SPDK_GPT_GUID=`grep SPDK_GPT_PART_TYPE_GUID $rootdir/lib/bdev/gpt/gpt.h \
 # Override the default HUGEMEM in scripts/setup.sh
 export HUGEMEM=8192
 
+DEFAULT_RPC_ADDR=/var/tmp/spdk.sock
+
 case `uname` in
 	FreeBSD)
 		DPDK_FREEBSD_DIR=/usr/local/share/dpdk/x86_64-native-bsdapp-clang
@@ -179,6 +181,29 @@ function process_core() {
 }
 
 function waitforlisten() {
+	# $1 = process pid
+	if [ -z "$1" ]; then
+		exit 1
+	fi
+
+	echo "Waiting for process to start up and listen on UNIX domain socket $DEFAULT_RPC_ADDR..."
+	# turn off trace for this loop
+	set +x
+	ret=1
+	while [ $ret -ne 0 ]; do
+		# if the process is no longer running, then exit the script
+		#  since it means the application crashed
+		if ! kill -s 0 $1; then
+			exit
+		fi
+		if netstat -an -x | grep -iw LISTENING | grep -q $DEFAULT_RPC_ADDR; then
+			ret=0
+		fi
+	done
+	set -x
+}
+
+function waitforlisten_tcp() {
 	# $1 = process pid
 	# $2 = TCP port number
 	if [ -z "$1" ] || [ -z "$2" ]; then
@@ -353,7 +378,7 @@ function part_dev_by_gpt () {
 		$rootdir/test/lib/bdev/nbd/nbd -c ${conf}.gpt -b $devname -n /dev/nbd0 &
 		nbd_pid=$!
 		echo "Process nbd pid: $nbd_pid"
-		waitforlisten $nbd_pid 5260
+		waitforlisten $nbd_pid
 		waitfornbd nbd0
 
 		if [ "$operation" = create ]; then
