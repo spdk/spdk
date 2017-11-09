@@ -65,20 +65,47 @@ typedef void (*spdk_file_stat_op_complete)(void *ctx, struct spdk_file_stat *sta
 typedef void (*fs_request_fn)(void *);
 typedef void (*fs_send_request_fn)(fs_request_fn, void *);
 
+/**
+ * Initialize filesystem.
+ *
+ * This function will initialize a filesystem and allocate I/O channels for it.
+ *
+ * \param dev Blobstore device to be used by this filesystem.
+ * \param send_request_fn The function for sending request.
+ * \param cb_fn Called when the initialization is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
 void spdk_fs_init(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 		  spdk_fs_op_with_handle_complete cb_fn, void *cb_arg);
+
+/**
+ * Load filesystem.
+ *
+ * This function will load the filesystem from the given device and allocate I/O
+ * channels for it.
+ *
+ * \param dev Blobstore device.
+ * \param send_request_fn The function for sending request.
+ * \param cb_fn Called when the loading is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
 void spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 		  spdk_fs_op_with_handle_complete cb_fn, void *cb_arg);
+
+/**
+ * Unload filesystem.
+ *
+ * This function will unload the filesystem. The I/O channels and registered
+ * blobstore will be freed.
+ *
+ * \param fs The filesystem to unload.
+ * \param cb_fn Called when the unloading is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
 void spdk_fs_unload(struct spdk_filesystem *fs, spdk_fs_op_complete cb_fn, void *cb_arg);
 
 struct spdk_io_channel *spdk_fs_alloc_io_channel(struct spdk_filesystem *fs);
 
-/*
- * Allocates an I/O channel suitable for using the synchronous blobfs API.  These channels do
- *  not allocate an I/O channel for the underlying blobstore, but rather allocate synchronizaiton
- *  primitives used to block until any necessary I/O operations are completed on a separate
- *  polling thread.
- */
 struct spdk_io_channel *spdk_fs_alloc_io_channel_sync(struct spdk_filesystem *fs);
 
 void spdk_fs_free_io_channel(struct spdk_io_channel *channel);
@@ -103,6 +130,7 @@ int spdk_fs_delete_file(struct spdk_filesystem *fs, struct spdk_io_channel *chan
 			const char *name);
 
 spdk_fs_iter spdk_fs_iter_first(struct spdk_filesystem *fs);
+
 spdk_fs_iter spdk_fs_iter_next(spdk_fs_iter iter);
 #define spdk_fs_iter_get_file(iter)	((struct spdk_file *)(iter))
 
@@ -120,6 +148,7 @@ int64_t spdk_file_read(struct spdk_file *file, struct spdk_io_channel *channel,
 		       void *payload, uint64_t offset, uint64_t length);
 
 void spdk_fs_set_cache_size(uint64_t size_in_mb);
+
 uint64_t spdk_fs_get_cache_size(void);
 
 #define SPDK_FILE_PRIORITY_LOW	0 /* default */
