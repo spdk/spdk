@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0b29024_efa91610",
+        "filename": "lib/vhost/rte_vhost/vhost_user.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T23:19:06Z",
+      "side": 0,
+      "message": "Are the intermediate 21-23 numbers unassigned? (I assume this numbering is part of the vhost protocol, just want to make sure this isn\u0027t a typo or something.)",
+      "revId": "5a597c6f164fef6bb979cb76594ebd557feb942c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
