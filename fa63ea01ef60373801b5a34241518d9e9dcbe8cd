@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bf5197ca_e1fa640f",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "Kind of hack here, because vhost-nvme don\u0027t use all the vhost user messages, vhost-nvme messages is not compatible with vhost-blk or vhost-scsi messages. The start/stop device messages is new added.",
+      "parentUuid": "8f22dcaa_c584e21f",
+      "range": {
+        "startLine": 546,
+        "startChar": 0,
+        "endLine": 549,
+        "endChar": 2
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "faac1dcb_e3836b15",
         "filename": "lib/vhost/rte_vhost/vhost_user.c",
         "patchSetId": 1
@@ -59,6 +83,30 @@
       "writtenOn": "2017-11-03T14:27:07Z",
       "side": 1,
       "message": "Why we can\u0027t use vring-\u003ecallfd? QEMU could (should) use those to pass us proper eventfd.",
+      "range": {
+        "startLine": 1037,
+        "startChar": 0,
+        "endLine": 1037,
+        "endChar": 27
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb0461a4_ed7b0e6f",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "Because vhost-nvme don\u0027t use used vring as virtio specification, the I/O logic is in vhost-nvme target, all we need is just an interrupt fd.",
+      "parentUuid": "2758203c_b469540f",
       "range": {
         "startLine": 1037,
         "startChar": 0,
@@ -140,6 +188,30 @@
     },
     {
       "key": {
+        "uuid": "3eb4588d_65380aa8",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "A kind of hack way to reuse vhost codes here.",
+      "parentUuid": "c77822d8_4d520d6f",
+      "range": {
+        "startLine": 1063,
+        "startChar": 0,
+        "endLine": 1067,
+        "endChar": 19
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "95b785b9_aeb3369a",
         "filename": "lib/vhost/rte_vhost/vhost_user.c",
         "patchSetId": 1
@@ -151,6 +223,30 @@
       "writtenOn": "2017-11-03T14:27:07Z",
       "side": 1,
       "message": "Copy-paste code?",
+      "range": {
+        "startLine": 1126,
+        "startChar": 0,
+        "endLine": 1127,
+        "endChar": 23
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19e15a13_b82ee3db",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1127,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "No, this is required.",
+      "parentUuid": "95b785b9_aeb3369a",
       "range": {
         "startLine": 1126,
         "startChar": 0,
@@ -232,6 +328,30 @@
     },
     {
       "key": {
+        "uuid": "60dc8241_92e6e49b",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "I want to use it for the purpose to implement NVMe ABORT command, but yet haven\u0027t finish yet.",
+      "parentUuid": "e2899231_4fd70aa1",
+      "range": {
+        "startLine": 141,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 92
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b4e0ff1_07edba88",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
@@ -243,6 +363,30 @@
       "writtenOn": "2017-11-03T14:27:07Z",
       "side": 1,
       "message": "Is there any requirement in nvme spec that sq-\u003esize must be power of 2 so we can replace division by masking with (sq-\u003esize - 1)?",
+      "range": {
+        "startLine": 165,
+        "startChar": 33,
+        "endLine": 165,
+        "endChar": 43
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11b4410d_79dfd3fc",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "NVMe specification don\u0027t have such limitations.",
+      "parentUuid": "5b4e0ff1_07edba88",
       "range": {
         "startLine": 165,
         "startChar": 33,
@@ -393,6 +537,30 @@
     },
     {
       "key": {
+        "uuid": "bec5b8f9_d0d1bee0",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "Good catch, will fix it.",
+      "parentUuid": "e61f14b7_1819cc23",
+      "range": {
+        "startLine": 454,
+        "startChar": 19,
+        "endLine": 454,
+        "endChar": 21
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ab0c0d4_629f708c",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
@@ -404,6 +572,30 @@
       "writtenOn": "2017-11-03T14:27:07Z",
       "side": 1,
       "message": "Each mfence will slow us down. Do we need that many of those instructions? Also do we need to sync this at all? If we miss some request now we poll for them in while so do we need spdk_mb() at all?",
+      "range": {
+        "startLine": 460,
+        "startChar": 2,
+        "endLine": 460,
+        "endChar": 12
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60ad4a1a_1800c6ea",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "Maybe, Guest will call mb() before updating the doorbell, I\u0027m not sure about here, put mb() just as an insurance.",
+      "parentUuid": "2ab0c0d4_629f708c",
       "range": {
         "startLine": 460,
         "startChar": 2,
@@ -623,6 +815,30 @@
     },
     {
       "key": {
+        "uuid": "122aa744_dfab5829",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "Actually for vhost-nvme, the poller should not start before the doorbell memory, better way should re-design a total new vhost messages to implement this feature.",
+      "parentUuid": "c158b258_1aee5332",
+      "range": {
+        "startLine": 517,
+        "startChar": 1,
+        "endLine": 517,
+        "endChar": 86
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e4374d5_76387752",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
@@ -692,6 +908,30 @@
     },
     {
       "key": {
+        "uuid": "7f61f4d6_d69e4a17",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "No, QEMU driver will not send set_vring_call message if there is no interrupt for the completion queue.",
+      "parentUuid": "1d624701_15de0f6c",
+      "range": {
+        "startLine": 764,
+        "startChar": 2,
+        "endLine": 764,
+        "endChar": 53
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "449329a4_d387a737",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
@@ -738,6 +978,30 @@
     },
     {
       "key": {
+        "uuid": "538e7353_14dbbbf5",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "Currently this is a kind of workaround for introducing memory region here, will remove it in future.",
+      "parentUuid": "3df763a9_50b446ca",
+      "range": {
+        "startLine": 781,
+        "startChar": 1,
+        "endLine": 781,
+        "endChar": 48
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d41cbdbd_045a603c",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
@@ -749,6 +1013,30 @@
       "writtenOn": "2017-11-03T14:49:56Z",
       "side": 1,
       "message": "This is another vote against reinventing the wheel. Stop device callback is for stopping *one* particular device pointed by vdev not whole world.",
+      "range": {
+        "startLine": 798,
+        "startChar": 0,
+        "endLine": 805,
+        "endChar": 2
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41cfc9fb_c1aeecf7",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 805,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "Sure.",
+      "parentUuid": "d41cbdbd_045a603c",
       "range": {
         "startLine": 798,
         "startChar": 0,
@@ -784,6 +1072,30 @@
     },
     {
       "key": {
+        "uuid": "e36200d2_5b615a33",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "Sure.",
+      "parentUuid": "d2c05802_14c9e96b",
+      "range": {
+        "startLine": 841,
+        "startChar": 29,
+        "endLine": 841,
+        "endChar": 33
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9115a787_9d0802b3",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
@@ -795,6 +1107,30 @@
       "writtenOn": "2017-11-03T14:55:26Z",
       "side": 1,
       "message": "Are you sure this is proper VID/SSID?",
+      "range": {
+        "startLine": 842,
+        "startChar": 0,
+        "endLine": 843,
+        "endChar": 23
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a154bfd_12393b85",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 843,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "Yes.",
+      "parentUuid": "9115a787_9d0802b3",
       "range": {
         "startLine": 842,
         "startChar": 0,
@@ -830,6 +1166,30 @@
     },
     {
       "key": {
+        "uuid": "b9c1dc59_af664333",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 909,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "No particular reason.",
+      "parentUuid": "c06a9ce1_3828370b",
+      "range": {
+        "startLine": 909,
+        "startChar": 39,
+        "endLine": 909,
+        "endChar": 45
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18dcf878_3ae894cd",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
@@ -841,6 +1201,30 @@
       "writtenOn": "2017-11-03T14:49:56Z",
       "side": 1,
       "message": "hardcoded",
+      "range": {
+        "startLine": 951,
+        "startChar": 50,
+        "endLine": 951,
+        "endChar": 55
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "034c6385_b5bfddbf",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T17:39:39Z",
+      "side": 1,
+      "message": "Already fixed in my latest patch set.",
+      "parentUuid": "18dcf878_3ae894cd",
       "range": {
         "startLine": 951,
         "startChar": 50,
