@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df7f091f_804ecd8f",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T00:26:43Z",
+      "side": 1,
+      "message": "I just ran into this trying to build on PPC64 as well - good catch. :)\n\nI posted a patch for it here: https://review.gerrithub.io/#/c/386347/",
+      "revId": "e0910e5568aaa81fe71543d8406f3588747923c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a34b6c0_6d65fcf1",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T00:26:43Z",
+      "side": 1,
+      "message": "This should ideally be a separate patch (and we probably need to extend it for PPC64 as well, but that can be another separate patch).\n\nAlso, it would be good if this could use the new $(TARGET_MACHINE) variable defined by mk/spdk.common.mk - $(UNAME_P) has been removed.",
+      "revId": "e0910e5568aaa81fe71543d8406f3588747923c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91704307_32326f91",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T00:26:43Z",
+      "side": 1,
+      "message": "We\u0027ve merged the PPC64 barrier support patch just recently, which conflicts with this part of the patch.  It should be an easy rebase - just add a new #elif defined(__aarch64__) to the chain rather than adding it at the beginning.\n\nI\u0027ve also uploaded a patch to explicitly check for x86 here: https://review.gerrithub.io/#/c/386345/\nThat should clarify the process for adding new architectures.",
+      "revId": "e0910e5568aaa81fe71543d8406f3588747923c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7191d270_ec68b274",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T00:26:43Z",
+      "side": 1,
+      "message": "This part of the Makefiles just got updated to replace $(UNAME_P) with $(TARGET_MACHINE) - I\u0027ve uploaded an alternative patch that should resolve this same issue here: https://review.gerrithub.io/#/c/386348/",
+      "revId": "e0910e5568aaa81fe71543d8406f3588747923c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
