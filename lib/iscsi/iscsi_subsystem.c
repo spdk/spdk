@@ -76,9 +76,6 @@
 "\n" \
 "  ImmediateData %s\n" \
 "  ErrorRecoveryLevel %d\n" \
-"\n" \
-"  # Defines whether iSCSI target will enable configuration via RPC\n" \
-"  # RpcConfiguration Yes\n" \
 "\n"
 
 static void

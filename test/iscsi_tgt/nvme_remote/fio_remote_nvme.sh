@@ -28,7 +28,7 @@ $rootdir/app/nvmf_tgt/nvmf_tgt -c $rootdir/test/nvmf/nvmf.conf -m 0x2 -p 1 -s 38
 nvmfpid=$!
 echo "NVMf target launched. pid: $nvmfpid"
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
-waitforlisten $nvmfpid 5260
+waitforlisten $nvmfpid
 echo "NVMf target has started."
 bdevs=$($rpc_py construct_malloc_bdev 64 512)
 $rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000001 -n "$bdevs"
@@ -48,7 +48,7 @@ iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
 trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 # The configuration file for the iSCSI target told it to use port 5261 for RPC
-waitforlisten $iscsipid 5261
+waitforlisten_tcp $iscsipid 5261
 echo "iSCSI target has started."
 
 timing_exit start_iscsi_tgt

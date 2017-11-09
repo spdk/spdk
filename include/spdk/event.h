@@ -63,12 +63,15 @@ struct spdk_poller;
 typedef void (*spdk_app_shutdown_cb)(void);
 typedef void (*spdk_sighandler_t)(int);
 
+#define SPDK_DEFAULT_RPC_ADDR "/var/tmp/spdk.sock"
+
 /**
  * \brief Event framework initialization options
  */
 struct spdk_app_opts {
 	const char *name;
 	const char *config_file;
+	const char *rpc_addr; /* Can be UNIX domain socket path or IP address + TCP port */
 	const char *reactor_mask;
 	const char *tpoint_group_mask;
 
@@ -152,7 +155,7 @@ int spdk_app_get_core_count(void) __attribute__((deprecated));
  */
 uint32_t spdk_app_get_current_core(void) __attribute__((deprecated));
 
-#define SPDK_APP_GETOPT_STRING "c:de:hi:m:n:p:qs:t:"
+#define SPDK_APP_GETOPT_STRING "c:de:hi:m:n:p:qr:s:t:"
 
 /**
  * \brief Helper function for parsing arguments and printing usage messages.

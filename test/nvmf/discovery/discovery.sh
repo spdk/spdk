@@ -32,7 +32,7 @@ nvmfpid=$!
 
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
 
-waitforlisten $nvmfpid ${RPC_PORT}
+waitforlisten $nvmfpid
 timing_exit start_nvmf_tgt
 
 bdevs="$bdevs $($rpc_py construct_null_bdev Null0 $NULL_BDEV_SIZE $NULL_BLOCK_SIZE)"

@@ -10,9 +10,6 @@
   ImmediateData Yes
   ErrorRecoveryLevel 0
 
-[Rpc]
-  Enable Yes
-
 # Do not specify InitiatorGroup, PortalGroup, Malloc,
 #  or TargetNode entries here - the autotest.sh script
 #  will use RPC to set up this part of the configuration.
