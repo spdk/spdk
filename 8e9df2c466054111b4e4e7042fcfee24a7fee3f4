@@ -16,6 +16,24 @@
       "revId": "8e9df2c466054111b4e4e7042fcfee24a7fee3f4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac3a88d0_82fe9db4",
+        "filename": "lib/vhost/rte_vhost/vhost_user.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T23:31:12Z",
+      "side": 1,
+      "message": "Yes, it\u0027s a typo from me.",
+      "parentUuid": "3570122c_0edb5d0b",
+      "revId": "8e9df2c466054111b4e4e7042fcfee24a7fee3f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

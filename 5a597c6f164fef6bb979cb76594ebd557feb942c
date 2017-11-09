@@ -16,6 +16,24 @@
       "revId": "5a597c6f164fef6bb979cb76594ebd557feb942c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fd59804_d18735cf",
+        "filename": "lib/vhost/rte_vhost/vhost_user.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T23:31:12Z",
+      "side": 0,
+      "message": "21-23 are defined in QEMU, DPDK vhost library didn\u0027t update for a while.",
+      "parentUuid": "e0b29024_efa91610",
+      "revId": "5a597c6f164fef6bb979cb76594ebd557feb942c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
