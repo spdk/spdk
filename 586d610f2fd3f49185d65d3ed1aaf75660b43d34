@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72705757_82520c7d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 705,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T23:49:37Z",
+      "side": 1,
+      "message": "It looks like the wce field is not available in the version of linux/virtio_blk.h on CentOS 6; maybe we can detect it with #ifdef VIRTIO_BLK_F_CONFIG_WCE (I think that was introduced at the same time).",
+      "revId": "586d610f2fd3f49185d65d3ed1aaf75660b43d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
