@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3bf19c50_0856112a",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T17:52:26Z",
+      "side": 1,
+      "message": "Or maybe \"Initialize block device modules\" (plural) to make it clearer while keeping the existing wording.",
+      "parentUuid": "ed1dbe21_cb3f62e8",
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4e33eeb_ad36a0e2",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 13
