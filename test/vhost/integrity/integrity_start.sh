@@ -100,7 +100,7 @@ sed -i "s@<name></name>@<name>$VM_NET_NAME</name>@g" $basedir/vnet_conf.xml
 if [[ "$VHOST_MODE" == "scsi" ]]; then
     sed -i "s@vhost_dev_args@vhost-user-scsi-pci,id=scsi0@g" $basedir/vm_conf.xml
 else
-    sed -i "s@vhost_dev_args@vhost-user-blk-pci,size=30G,logical_block_size=4096@g" $basedir/vm_conf.xml
+    sed -i "s@vhost_dev_args@vhost-user-blk-pci," $basedir/vm_conf.xml
 fi
 
 trap "cleanup_virsh; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
