@@ -10,7 +10,6 @@ test_cases=all
 x=""
 
 rpc_py="$TEST_DIR/scripts/rpc.py "
-RPC_PORT=5260
 
 function usage() {
     [[ ! -z $2 ]] && ( echo "$2"; echo ""; )
@@ -82,7 +81,7 @@ function vhost_start()
     $TEST_DIR/app/vhost/vhost -c $BASE_DIR/vhost.conf.in &
     vhost_pid=$!
     echo $vhost_pid > $BASE_DIR/vhost.pid
-    waitforlisten $vhost_pid $RPC_PORT
+    waitforlisten $vhost_pid
 }
 
 ###  Function stops vhost app
