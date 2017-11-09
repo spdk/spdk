@@ -125,11 +125,27 @@ fi
 
 if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_enter vhost
+
+	timing_enter integrity_blk
 	run_test ./test/vhost/spdk_vhost.sh --integrity-blk
+	timing_exit integrity_blk
+
+	timing_enter integrity
 	run_test ./test/vhost/spdk_vhost.sh --integrity
+	timing_exit integrity
+
+	timing_enter integrity_lvol_scsi
 	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
+	timing_exit integrity_lvol_scsi
+
+	timing_enter integrity_lvol_blk
 	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
+	timing_exit integrity_lvol_blk
+
+	timing_enter lvol
 	run_test ./test/lvol/lvol.sh --test-cases=1,2,3,5,6,7,10,11,12,13,16,17,21,22,23
+	timing_exit lvol
+
 	timing_exit vhost
 fi
 
