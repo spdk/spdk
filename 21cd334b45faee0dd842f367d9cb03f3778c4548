@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eafbb716_b1ce52fb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T23:00:19Z",
+      "side": 1,
+      "message": "It would be good to be more specific - maybe something like:\n\n\"nvme_spec: add NVMe 1.3 Virtualization structures\"",
+      "revId": "21cd334b45faee0dd842f367d9cb03f3778c4548",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1303d19d_93c6249e",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1252,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T23:00:19Z",
+      "side": 1,
+      "message": "reserved should be 6 bits",
+      "revId": "21cd334b45faee0dd842f367d9cb03f3778c4548",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
