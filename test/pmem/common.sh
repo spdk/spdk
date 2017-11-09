@@ -3,7 +3,6 @@
 BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../ && pwd)"
 rpc_py="$TEST_DIR/scripts/rpc.py "
-RPC_PORT=5260
 
 source $TEST_DIR/scripts/autotest_common.sh
 
@@ -76,10 +75,9 @@ function pmem_print_tc_name
 
 function vhost_start()
 {
-	local vhost_conf_template="$TEST_DIR/test/pmem/vhost.conf.in"
 	local vhost_pid
 
-	$TEST_DIR/app/vhost/vhost -c $vhost_conf_template &
+	$TEST_DIR/app/vhost/vhost &
 	if [ $? != 0 ]; then
 		echo -e "ERROR: Failed to launch vhost!"
 		return 1
@@ -87,7 +85,7 @@ function vhost_start()
 
 	vhost_pid=$!
 	echo $vhost_pid > $TEST_DIR/test/pmem/vhost.pid
-	waitforlisten $vhost_pid $RPC_PORT
+	waitforlisten $vhost_pid
 }
 
 function vhost_kill()
