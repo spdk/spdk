@@ -41,8 +41,6 @@ mkdir -p $TEST_DIR
 
 . $COMMON_DIR/autotest.config
 
-RPC_PORT=5260
-
 # Trace flag is optional, if it wasn't set earlier - disable it after sourcing
 # autotest_common.sh
 if [[ $- =~ x ]]; then
@@ -162,7 +160,7 @@ function spdk_vhost_run()
 	echo $vhost_pid > $vhost_pid_file
 
 	echo "INFO: waiting for app to run..."
-	waitforlisten "$vhost_pid" ${RPC_PORT}
+	waitforlisten "$vhost_pid"
 	echo "INFO: vhost started - pid=$vhost_pid"
 
 	rm $vhost_conf_file

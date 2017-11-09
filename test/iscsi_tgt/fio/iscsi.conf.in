@@ -9,9 +9,6 @@
   ImmediateData Yes
   ErrorRecoveryLevel 0
 
-[Rpc]
-  Enable Yes
-
 [Nvme]
   RetryCount 4
   Timeout 0

@@ -3,7 +3,6 @@
 NVMF_PORT=4420
 NVMF_IP_PREFIX="192.168.100"
 NVMF_IP_LEAST_ADDR=8
-RPC_PORT=5260
 
 if [ -z "$NVMF_APP" ]; then
 	NVMF_APP=./app/nvmf_tgt/nvmf_tgt
