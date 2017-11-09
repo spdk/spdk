@@ -152,6 +152,25 @@ int spdk_app_get_core_count(void) __attribute__((deprecated));
  */
 uint32_t spdk_app_get_current_core(void) __attribute__((deprecated));
 
+#define SPDK_APP_GETOPT_STRING "c:de:i:m:n:p:qs:t:H"
+
+/**
+ * \brief Helper function for parsing arguments and printing usage messages.
+ *
+ * \param argc Count of arguments in argv parameter array.
+ * \param argv Array of command line arguments.
+ * \param opts Default options for the application.
+ * \param getopt_str String representing the app-specific command line parameters.
+ *		     Characters in this string must not conflict with characters in
+ *		     SPDK_APP_GETOPT_STRING.
+ * \param parse Function pointer to call if an argument in getopt_str is found.
+ * \param usage Function pointer to print usage messages for app-specific command
+ *		line parameters.
+ */
+int spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
+			const char *getopt_str, void (*parse)(int ch, char *arg),
+			void (*usage)(void));
+
 /**
  * \brief Allocate an event to be passed to \ref spdk_event_call
  */

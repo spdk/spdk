@@ -52,37 +52,13 @@ vhost_app_opts_init(struct spdk_app_opts *opts)
 {
 	spdk_app_opts_init(opts);
 	opts->name = "vhost";
-	if (access(SPDK_VHOST_DEFAULT_CONFIG, F_OK) == 0) {
-		opts->config_file = SPDK_VHOST_DEFAULT_CONFIG;
-	}
+	opts->config_file = SPDK_VHOST_DEFAULT_CONFIG;
 	opts->mem_size = SPDK_VHOST_DEFAULT_MEM_SIZE;
 }
 
 static void
-common_usage(char *executable_name, struct spdk_app_opts *default_opts)
+vhost_usage(void)
 {
-	printf("%s [options]\n", executable_name);
-	printf("options:\n");
-	printf(" -c config  config file (default: %s)\n", default_opts->config_file);
-	printf(" -e mask    tracepoint group mask for spdk trace buffers (default: 0x0)\n");
-	printf(" -i shm_id  shared memory ID (optional)\n");
-	printf(" -m mask    reactor core mask (default: 0x1)\n");
-	printf(" -N         pass --no-pci to DPDK\n");
-	printf(" -p core    master (primary) core for DPDK\n");
-	printf(" -s size    memory size in MB for DPDK (default: %dMB)\n", default_opts->mem_size);
-	spdk_tracelog_usage(stdout, "-t");
-	printf(" -h         show this usage\n");
-	printf(" -d         disable coredump file enabling\n");
-	printf(" -q         disable notice level logging to stderr\n");
-}
-
-static void
-usage(char *executable_name)
-{
-	struct spdk_app_opts defaults;
-
-	vhost_app_opts_init(&defaults);
-	common_usage(executable_name, &defaults);
 	printf(" -f pidfile save pid to file under given path\n");
 	printf(" -S dir     directory where to create vhost sockets (default: pwd)\n");
 }
@@ -103,70 +79,15 @@ save_pid(const char *pid_path)
 }
 
 static void
-vhost_parse_args(int argc, char **argv, struct spdk_app_opts *opts)
+vhost_parse_arg(int ch, char *arg)
 {
-	int ch, rc;
-
-	vhost_app_opts_init(opts);
-
-	while ((ch = getopt(argc, argv, "c:de:f:i:m:Np:qs:S:t:h")) != -1) {
-		switch (ch) {
-		case 'c':
-			opts->config_file = optarg;
-			break;
-		case 'd':
-			opts->enable_coredump = false;
-			break;
-		case 'e':
-			opts->tpoint_group_mask = optarg;
-			break;
-		case 'f':
-			g_pid_path = optarg;
-			break;
-		case 'h':
-			usage(argv[0]);
-			exit(EXIT_SUCCESS);
-		case 'i':
-			opts->shm_id = strtoul(optarg, NULL, 10);
-			break;
-		case 'm':
-			opts->reactor_mask = optarg;
-			break;
-		case 'N':
-			opts->no_pci = true;
-			break;
-		case 'p':
-			opts->master_core = strtoul(optarg, NULL, 10);
-			break;
-		case 'q':
-			opts->print_level = SPDK_LOG_WARN;
-			break;
-		case 's':
-			opts->mem_size = strtoul(optarg, NULL, 10);
-			break;
-		case 'S':
-			g_socket_path = optarg;
-			break;
-		case 't':
-			rc = spdk_log_set_trace_flag(optarg);
-			if (rc < 0) {
-				fprintf(stderr, "unknown flag\n");
-				usage(argv[0]);
-				exit(EXIT_FAILURE);
-			}
-			opts->print_level = SPDK_LOG_DEBUG;
-#ifndef DEBUG
-			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
-				argv[0]);
-			usage(argv[0]);
-			exit(EXIT_FAILURE);
-#endif
-			break;
-		default:
-			fprintf(stderr, "%s Unknown option '-%c'.\n", argv[0], ch);
-			usage(argv[0]);
-			exit(EXIT_FAILURE);
-		}
+	switch (ch) {
+	case 'f':
+		g_pid_path = arg;
+		break;
+	case 'S':
+		g_socket_path = arg;
+		break;
 	}
 }
 
@@ -178,7 +99,7 @@ main(int argc, char *argv[])
 
 	vhost_app_opts_init(&opts);
 
-	vhost_parse_args(argc, argv, &opts);
+	spdk_app_parse_args(argc, argv, &opts, "f:S:", vhost_parse_arg, vhost_usage);
 
 	if (g_pid_path) {
 		save_pid(g_pid_path);
