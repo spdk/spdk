@@ -39,6 +39,7 @@
 #include "spdk/log.h"
 #include "spdk/conf.h"
 #include "spdk/trace.h"
+#include "spdk/string.h"
 
 #define SPDK_APP_DEFAULT_LOG_PRIORITY	SPDK_LOG_INFO
 
@@ -445,4 +446,106 @@ spdk_app_stop(int rc)
 	 * was called.
 	 */
 	spdk_event_call(spdk_event_allocate(g_init_lcore, _spdk_app_stop, NULL, NULL));
+}
+
+static void
+usage(char *executable_name, struct spdk_app_opts *default_opts, void (*app_usage)(void))
+{
+	printf("%s [options]\n", executable_name);
+	printf("options:\n");
+	printf(" -c config  config file (default %s)\n", default_opts->config_file);
+	printf(" -d         disable coredump file enabling\n");
+	printf(" -e mask    tracepoint group mask for spdk trace buffers (default 0x0)\n");
+	printf(" -m mask    core mask for DPDK\n");
+	printf(" -i shared memory ID (optional)\n");
+	printf(" -n channel number of memory channels used for DPDK\n");
+	printf(" -p core    master (primary) core for DPDK\n");
+	printf(" -q         disable notice level logging to stderr\n");
+	printf(" -s size    memory size in MB for DPDK (default: ");
+	if (default_opts->mem_size > 0) {
+		printf("%dMB)\n", default_opts->mem_size);
+	} else {
+		printf("all hugepage memory)\n");
+	}
+	spdk_tracelog_usage(stdout, "-t");
+	printf(" -H         show this usage\n");
+	app_usage();
+}
+
+#define SPDK_APP_GETOPT_STRING "c:de:i:m:n:p:qs:t:H"
+
+int
+spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *default_opts,
+		    const char *app_getopt_str, void (*app_parse)(int ch, char *arg),
+		    void (*app_usage)(void))
+{
+	struct spdk_app_opts opts;
+	int ch, rc;
+	char *getopt_str;
+
+	memcpy(&opts, default_opts, sizeof(opts));
+	if (access(default_opts->config_file, F_OK) != 0) {
+		opts.config_file = NULL;
+	}
+
+	getopt_str = spdk_sprintf_alloc("%s%s", app_getopt_str, SPDK_APP_GETOPT_STRING);
+
+	while ((ch = getopt(argc, argv, getopt_str)) != -1) {
+		switch (ch) {
+		case 'c':
+			opts.config_file = optarg;
+			break;
+		case 'd':
+			opts.enable_coredump = false;
+			break;
+		case 'e':
+			opts.tpoint_group_mask = optarg;
+			break;
+		case 'i':
+			opts.shm_id = atoi(optarg);
+			break;
+		case 'm':
+			opts.reactor_mask = optarg;
+			break;
+		case 'n':
+			opts.mem_channel = atoi(optarg);
+			break;
+		case 'p':
+			opts.master_core = atoi(optarg);
+			break;
+		case 'q':
+			opts.print_level = SPDK_LOG_WARN;
+			break;
+		case 's':
+			opts.mem_size = atoi(optarg);
+			break;
+		case 't':
+			rc = spdk_log_set_trace_flag(optarg);
+			if (rc < 0) {
+				fprintf(stderr, "unknown flag\n");
+				usage(argv[0], default_opts, app_usage);
+				exit(EXIT_FAILURE);
+			}
+			opts.print_level = SPDK_LOG_DEBUG;
+#ifndef DEBUG
+			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -t flag\n",
+				argv[0]);
+			usage(argv[0], default_opts, app_usage);
+			exit(EXIT_FAILURE);
+#endif
+			break;
+		case 'H':
+			usage(argv[0], default_opts, app_usage);
+			exit(EXIT_SUCCESS);
+		case '?':
+			usage(argv[0], default_opts, app_usage);
+			exit(EXIT_FAILURE);
+		default:
+			app_parse(ch, optarg);
+		}
+	}
+
+	free(getopt_str);
+
+	return 0;
 }
