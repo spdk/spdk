@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "411c06f3_5c3a7c88",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-09T08:39:22Z",
+      "side": 1,
+      "message": "I think you could also remove these lines while at it.\n\"return 1\" is sufficient as it will cause the trap in main script to start \"error_exit\" function which already does vm_kill_all\n\nI haven\u0027t noticed this before when adding these lines",
+      "range": {
+        "startLine": 441,
+        "startChar": 0,
+        "endLine": 443,
+        "endChar": 5
+      },
+      "revId": "0cb255828099c5c6a70658f6facb7234b7d0f7a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
