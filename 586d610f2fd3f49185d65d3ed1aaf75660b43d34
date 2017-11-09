@@ -16,6 +16,24 @@
       "revId": "586d610f2fd3f49185d65d3ed1aaf75660b43d34",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4d5e701_574cd151",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 705,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-09T23:55:44Z",
+      "side": 1,
+      "message": "Maybe just remove this configuration parameter, by default the cache policy is \"write through\", also SPDK doesn\u0027t support change it as well.",
+      "parentUuid": "72705757_82520c7d",
+      "revId": "586d610f2fd3f49185d65d3ed1aaf75660b43d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
