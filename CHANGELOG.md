@@ -1,5 +1,14 @@
 # Changelog
 
+## v18.01
+
+### RPC
+
+A JSON RPC listener is now enabled by default using a UNIX domain socket at /var/run/spdk.sock.
+A -r option command line option has been added to enable an alternative UNIX domain socket location,
+or a TCP port in the format ip_addr:tcp_port (i.e. 127.0.0.1:5260).  The Rpc configuration file
+section is now deprecated and will be removed in the v18.04 release.
+
 ## v17.10: Logical Volumes
 
 ### New dependencies

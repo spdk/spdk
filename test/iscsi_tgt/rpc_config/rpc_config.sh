@@ -9,7 +9,6 @@ timing_enter rpc_config
 
 # iSCSI target configuration
 PORT=3260
-RPC_PORT=5260
 INITIATOR_TAG=2
 INITIATOR_NAME=ALL
 NETMASK=$INITIATOR_IP/32
@@ -27,7 +26,7 @@ echo "Process pid: $pid"
 
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
-waitforlisten $pid ${RPC_PORT}
+waitforlisten $pid
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt
