@@ -1,0 +1,198 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed1dbe21_cb3f62e8",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T17:51:32Z",
+      "side": 1,
+      "message": "We call the individual drivers like bdev_nvme, bdev_malloc, etc. \"bdev modules\", so this might be slightly confusing.  I\u0027d write something like \"Initialize the block device system\".",
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4e33eeb_ad36a0e2",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T17:51:32Z",
+      "side": 1,
+      "message": "The start_poller function may be used to start more than one poller, so this should say \"starting a poller\" instead.",
+      "range": {
+        "startLine": 132,
+        "startChar": 61,
+        "endLine": 132,
+        "endChar": 81
+      },
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fdd9ee1_63b51368",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T17:51:32Z",
+      "side": 1,
+      "message": "Same here - \"a\" poller instead of \"the\" poller.",
+      "range": {
+        "startLine": 133,
+        "startChar": 60,
+        "endLine": 133,
+        "endChar": 80
+      },
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "095fa975_7c165780",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T17:51:32Z",
+      "side": 1,
+      "message": "Maybe \"Perform cleanup work to remove the registered bdev modules\"",
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "356ec67a_f2fa2f61",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T17:51:32Z",
+      "side": 1,
+      "message": "We usually have multiple modules registered, so this should be \"modules\" rather than \"module\".",
+      "range": {
+        "startLine": 148,
+        "startChar": 57,
+        "endLine": 148,
+        "endChar": 63
+      },
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0e16143_00e7eecc",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T17:51:32Z",
+      "side": 1,
+      "message": "fp points to a file that we will write the configuration options into, not a file that already contains the configuration options.",
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a57d92a0_04f35438",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T17:51:32Z",
+      "side": 1,
+      "message": "Add \"or NULL if no block device with bdev_name is currently registered\"",
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a55293d_3eed2610",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T17:51:32Z",
+      "side": 1,
+      "message": "Maybe \"Get the first registered block device\" would be clearer.  (The linked list is an implementation detail.)",
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6234c155_a619cf0d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T17:51:32Z",
+      "side": 1,
+      "message": "Same for this function - \"Get the next registered block device\" or something similar.",
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2676cd89_7f30fff8",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T17:51:32Z",
+      "side": 1,
+      "message": "The Doxygen output will already say \"Return\", so you can remove the duplicated \"Return\" here.",
+      "range": {
+        "startLine": 244,
+        "startChar": 11,
+        "endLine": 244,
+        "endChar": 17
+      },
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
