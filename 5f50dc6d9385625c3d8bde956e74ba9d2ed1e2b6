@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bfff1415_33413b59",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T18:32:44Z",
+      "side": 1,
+      "message": "This looks unrelated to RPC - is this left over from some debug/test code?",
+      "revId": "5f50dc6d9385625c3d8bde956e74ba9d2ed1e2b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
