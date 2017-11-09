@@ -65,35 +65,125 @@ typedef void (*spdk_file_stat_op_complete)(void *ctx, struct spdk_file_stat *sta
 typedef void (*fs_request_fn)(void *);
 typedef void (*fs_send_request_fn)(fs_request_fn, void *);
 
+/**
+ * Initialize filesystem.
+ *
+ * This function will initialize a filesystem and allocate I/O channels for it.
+ *
+ * \param dev Blobstore device to be used by this filesystem.
+ * \param send_request_fn The function for sending request.
+ * \param cb_fn Called when the initialization is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
 void spdk_fs_init(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 		  spdk_fs_op_with_handle_complete cb_fn, void *cb_arg);
+
+/**
+ * Load filesystem.
+ *
+ * This function will load the filesystem from the given device and allocate I/O
+ * channels for it.
+ *
+ * \param dev Blobstore device.
+ * \param send_request_fn The function for sending request.
+ * \param cb_fn Called when the loading is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
 void spdk_fs_load(struct spdk_bs_dev *dev, fs_send_request_fn send_request_fn,
 		  spdk_fs_op_with_handle_complete cb_fn, void *cb_arg);
+
+/**
+ * Unload filesystem.
+ *
+ * This function will unload the filesystem. The I/O channels and registered
+ * blobstore will be freed.
+ *
+ * \param fs The filesystem to unload.
+ * \param cb_fn Called when the unloading is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
 void spdk_fs_unload(struct spdk_filesystem *fs, spdk_fs_op_complete cb_fn, void *cb_arg);
 
+/**
+ * Allocate asynchronous I/O channel.
+ *
+ * This function will allocate an asynchronous I/O channel for the given filesystem.
+ *
+ * \param fs The filesystem to use.
+ * \return The allocated I/O channel.
+ */
 struct spdk_io_channel *spdk_fs_alloc_io_channel(struct spdk_filesystem *fs);
 
-/*
- * Allocates an I/O channel suitable for using the synchronous blobfs API.  These channels do
- *  not allocate an I/O channel for the underlying blobstore, but rather allocate synchronizaiton
- *  primitives used to block until any necessary I/O operations are completed on a separate
- *  polling thread.
+/**
+ * Allocate synchronous I/O channel.
+ *
+ * This function will allocate an I/O channel suitable for using the synchronous blobfs API.
+ * These channels do not allocate an I/O channel for the underlying blobstore, but rather allocate
+ * synchronizaiton primitives used to block until any necessary I/O operations are completed on a separate
+ * polling thread.
+ *
+ * \param fs The filesystem to use.
+ * \return The allocated I/O channel.
  */
 struct spdk_io_channel *spdk_fs_alloc_io_channel_sync(struct spdk_filesystem *fs);
 
+/**
+ * Free I/O channel.
+ *
+ * This function will decrease the references of this I/O channel. If the reference is reduced to 0,
+ * the I/O channel will be freed and the context will be removed.
+ *
+ * \param channel The I/O channel to free.
+ */
 void spdk_fs_free_io_channel(struct spdk_io_channel *channel);
 
+/**
+ * Get the information about the file, mainly blob id and file size.
+ *
+ * \param fs Filesystem. The requested file should belong to this filesystem.
+ * \param channel The I/O channel used to allocate file request.
+ * \param name The file name used to look up the matched file in the filesystem.
+ * \param stat The obtained information about this file will be stored in this struct.
+ * \return Return 0 on success, negated errno on failure.
+ */
 int spdk_fs_file_stat(struct spdk_filesystem *fs, struct spdk_io_channel *channel,
 		      const char *name, struct spdk_file_stat *stat);
 
 #define SPDK_BLOBFS_OPEN_CREATE	(1ULL << 0)
 
+/**
+ * Create a new file.
+ *
+ * This function will create a new file in the given filesystem.
+ *
+ * \param fs Filesystem.
+ * \param channel The I/O channel used to allocate file request.
+ * \param name The file name for this new file.
+ * \return Return 0 on success, negated errno on failure.
+ */
 int spdk_fs_create_file(struct spdk_filesystem *fs, struct spdk_io_channel *channel,
 			const char *name);
 
+/**
+ * Open the file.
+ *
+ * \param fs Filesystem. The requested file should belong to this filesystem.
+ * \param channel The I/O channel used to allocate file request.
+ * \param name The file name used to look up the matched file in the filesystem.
+ * \param flags This flags will be used to control the open mode.
+ * \param file It will point to the open file if the opration completes sccessfully. Otherwise, it will point to NULL.
+ * \return Return 0 on success, negated errno on failure.
+ */
 int spdk_fs_open_file(struct spdk_filesystem *fs, struct spdk_io_channel *channel,
 		      const char *name, uint32_t flags, struct spdk_file **file);
 
+/**
+ * Close the file.
+ *
+ * \param file The file to close.
+ * \param channel The I/O channel used to allocate file request.
+ * \return Return 0 on success, negated errno on failure.
+ */
 int spdk_file_close(struct spdk_file *file, struct spdk_io_channel *channel);
 
 int spdk_fs_rename_file(struct spdk_filesystem *fs, struct spdk_io_channel *channel,
@@ -103,6 +193,7 @@ int spdk_fs_delete_file(struct spdk_filesystem *fs, struct spdk_io_channel *chan
 			const char *name);
 
 spdk_fs_iter spdk_fs_iter_first(struct spdk_filesystem *fs);
+
 spdk_fs_iter spdk_fs_iter_next(spdk_fs_iter iter);
 #define spdk_fs_iter_get_file(iter)	((struct spdk_file *)(iter))
 
@@ -120,6 +211,7 @@ int64_t spdk_file_read(struct spdk_file *file, struct spdk_io_channel *channel,
 		       void *payload, uint64_t offset, uint64_t length);
 
 void spdk_fs_set_cache_size(uint64_t size_in_mb);
+
 uint64_t spdk_fs_get_cache_size(void);
 
 #define SPDK_FILE_PRIORITY_LOW	0 /* default */
