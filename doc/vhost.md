@@ -113,7 +113,7 @@ Userspace vhost-scsi adds the following command line option for QEMU:
 
 Userspace vhost-blk adds the following command line option for QEMU:
 ~~~
--device vhost-user-blk-pci,logical_block_size=4096,size=512M,chardev=char0
+-device vhost-user-blk-pci,chardev=char0
 ~~~
 
 In order to start qemu with vhost you need to specify following options:
@@ -154,7 +154,7 @@ Assume that qemu and spdk are in respectively `qemu` and `spdk` directories.
         -chardev socket,id=char0,path=./spdk/vhost.0 \
         -device vhost-user-scsi-pci,id=scsi0,chardev=char0 \
         -chardev socket,id=char1,path=./spdk/vhost.1 \
-        -device vhost-user-blk-pci,logical_block_size=4096,size=512M,chardev=char1 \
+        -device vhost-user-blk-pci,chardev=char1 \
         --enable-kvm
 ~~~
 
