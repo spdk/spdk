@@ -7,7 +7,6 @@ BASE_DIR=$(readlink -f $(dirname $0))
 . $COMMON_DIR/common.sh
 
 rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py "
-rpc_py+="-s 127.0.0.1 "
 
 vm_count=1
 max_disks=""

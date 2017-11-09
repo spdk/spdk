@@ -757,6 +757,7 @@ main(int argc, char **argv)
 	}
 
 	bdevtest_init(config_file, core_mask, &opts);
+	opts.rpc_addr = NULL;
 
 	spdk_app_start(&opts, bdevperf_run, NULL, NULL);
 

@@ -51,7 +51,7 @@ do
 
 	trap "kill_all_iscsi_target; exit 1" SIGINT SIGTERM EXIT
 
-	waitforlisten $pid $port
+	waitforlisten_tcp $pid $port
 	echo "iscsi_tgt is listening. Running tests..."
 
 	timing_exit start_iscsi_tgt_$i
