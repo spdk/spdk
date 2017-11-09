@@ -16,8 +16,8 @@ def print_array(a):
     print " ".join((quote(v) for v in a))
 
 parser = argparse.ArgumentParser(description='SPDK RPC command line interface')
-parser.add_argument('-s', dest='server_addr', help='RPC server address', default='127.0.0.1')
-parser.add_argument('-p', dest='port', help='RPC port number', default=5260, type=int)
+parser.add_argument('-s', dest='server_addr', help='RPC server address', default='/var/tmp/spdk.sock')
+parser.add_argument('-p', dest='port', help='RPC port number (if server_addr is IP address)', default=5260, type=int)
 parser.add_argument('-v', dest='verbose', help='Verbose mode', action='store_true')
 subparsers = parser.add_subparsers(help='RPC methods')
 

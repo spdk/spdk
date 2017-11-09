@@ -10,7 +10,6 @@ MAKE="make -j$(( $(nproc)  * 2 ))"
 
 rpc_py="python $rootdir/scripts/rpc.py "
 rpc_py+="-s 127.0.0.1 "
-RPC_PORT=5260
 HOST_IP=192.200.200.1
 VM_IP=192.200.200.254
 VM_UNAME="root"
@@ -113,7 +112,7 @@ cd /tmp
 $rootdir/app/vhost/vhost -c $basedir/vhost.conf &
 pid=$!
 echo "Process pid: $pid"
-waitforlisten "$pid" "$RPC_PORT"
+waitforlisten "$pid"
 if [[ "$VHOST_MODE" == "scsi" ]]; then
     $rpc_py construct_vhost_scsi_controller naa.0
     $rpc_py add_vhost_scsi_lun naa.0 0 Nvme0n1
