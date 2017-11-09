@@ -32,6 +32,7 @@ run_test ./test/iscsi_tgt/reset/reset.sh
 run_test ./test/iscsi_tgt/rpc_config/rpc_config.sh
 run_test ./test/iscsi_tgt/idle_migration/idle_migration.sh
 run_test ./test/iscsi_tgt/lvol/iscsi_lvol.sh
+run_test ./test/iscsi_tgt/fio/fio.sh
 
 if [ $SPDK_TEST_NVML -eq 1 ]; then
 	run_test ./test/iscsi_tgt/pmem/iscsi_pmem.sh 4096 10
@@ -58,5 +59,4 @@ kill_stub
 run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 0
 #Test configure remote NVMe device from conf file
 run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 1
-run_test ./test/iscsi_tgt/fio/fio.sh
 timing_exit iscsi_tgt
