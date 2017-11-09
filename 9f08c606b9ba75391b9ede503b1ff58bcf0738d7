@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c363c678_b98bec3a",
+        "filename": "test/lib/blobfs/blobfs_async_ut/blobfs_async_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-09T07:33:11Z",
+      "side": 1,
+      "message": "Change to Return NULL",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 48
+      },
+      "revId": "9f08c606b9ba75391b9ede503b1ff58bcf0738d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c62d3693_b73ebfc9",
+        "filename": "test/lib/blobfs/blobfs_async_ut/blobfs_async_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-09T07:33:11Z",
+      "side": 1,
+      "message": "Return -1",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 0
+      },
+      "revId": "9f08c606b9ba75391b9ede503b1ff58bcf0738d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26941e57_5f8443cb",
+        "filename": "test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-09T07:33:11Z",
+      "side": 1,
+      "message": "Change the comments to Return NULL",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 48
+      },
+      "revId": "9f08c606b9ba75391b9ede503b1ff58bcf0738d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ca41543_2fe55a89",
+        "filename": "test/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-09T07:33:11Z",
+      "side": 1,
+      "message": "Change the comments to return -1",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 48
+      },
+      "revId": "9f08c606b9ba75391b9ede503b1ff58bcf0738d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
