@@ -132,7 +132,6 @@ echo "Setting up VM"
 echo ""
 
 rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py "
-rpc_py+="-s 127.0.0.1 "
 
 for vm_conf in ${vms[@]}; do
 	IFS=',' read -ra conf <<< "$vm_conf"

@@ -100,6 +100,7 @@ main(int argc, char **argv)
 	spdk_app_opts_init(&opts);
 
 	opts.name = "stub";
+	opts.rpc_addr = NULL;
 
 	while ((ch = getopt(argc, argv, "i:m:n:p:s:H")) != -1) {
 		switch (ch) {
