@@ -22,6 +22,30 @@
       "revId": "e9282c133d03c25804f06f9b72a9ba176ea2a61f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e685b9f1_564b3eb9",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 538,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-09T12:48:56Z",
+      "side": 1,
+      "message": "Done. Missed that.",
+      "parentUuid": "65bdaedc_06142aaa",
+      "range": {
+        "startLine": 538,
+        "startChar": 12,
+        "endLine": 538,
+        "endChar": 29
+      },
+      "revId": "e9282c133d03c25804f06f9b72a9ba176ea2a61f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
