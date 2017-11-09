@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae798714_506c218e",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T21:37:13Z",
+      "side": 1,
+      "message": "Can this go in spdk_nvmf_tgt_opts like the other global options?",
+      "revId": "1d3c1652acd112d9eb3d5c57272329489457ad0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
