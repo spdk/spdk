@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01b3b57a_f4b5496f",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-09T21:57:02Z",
+      "side": 1,
+      "message": "This still needs to check for $(CURDIR)/dpdk/build, since configure generates a CONFIG.local with CONFIG_DPDK_DIR pointing at the full (absolute) path.\n\nI think we can change CONFIG to point to the absolute path instead of changing this check.",
+      "revId": "d6ed1ad998f74afa18702e80c895f60973be563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
