@@ -93,7 +93,10 @@ spdk_rpc_listen(const char *listen_addr)
 			return -1;
 		}
 
-		unlink(g_rpc_listen_addr_unix.sun_path);
+		if (access(g_rpc_listen_addr_unix.sun_path, F_OK) == 0) {
+			SPDK_ERRLOG("RPC Unix domain socket path already exists.\n");
+			return -1;
+		}
 
 		g_jsonrpc_server = spdk_jsonrpc_server_listen(AF_UNIX, 0,
 				   (struct sockaddr *)&g_rpc_listen_addr_unix,
