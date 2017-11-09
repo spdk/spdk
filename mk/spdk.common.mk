@@ -61,11 +61,14 @@ TARGET_MACHINE := $(firstword $(TARGET_TRIPLET_WORDS))
 
 COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-field-initializers -Wmissing-declarations -fno-strict-aliasing -I$(SPDK_ROOT_DIR)/include
 
+# Don't add either a -mcpu=native nor -march=native for AARCH64 platforms
+ifneq (aarch64,$(TARGET_MACHINE))
 ifneq ($(filter powerpc%,$(TARGET_MACHINE)),)
 COMMON_CFLAGS += -mcpu=native
 endif
 ifeq ($(TARGET_MACHINE),x86_64)
 COMMON_CFLAGS += -march=native
+endif
 endif
 
 COMMON_CFLAGS += -include $(SPDK_ROOT_DIR)/config.h
