@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ce25ee2_7674c307",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-09T07:36:47Z",
+      "side": 1,
+      "message": "Maybe:  NVMe ctrlr % is in failed state.",
+      "range": {
+        "startLine": 477,
+        "startChar": 1,
+        "endLine": 477,
+        "endChar": 54
+      },
+      "revId": "4b9ba30b515c807568540da943933e596b4d7fdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
