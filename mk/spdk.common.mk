@@ -63,7 +63,8 @@ COMMON_CFLAGS = -g $(C_OPT) -Wall -Wextra -Wno-unused-parameter -Wno-missing-fie
 
 ifneq ($(filter powerpc%,$(TARGET_MACHINE)),)
 COMMON_CFLAGS += -mcpu=native
-else
+endif
+ifeq ($(TARGET_MACHINE),x86_64)
 COMMON_CFLAGS += -march=native
 endif
 
