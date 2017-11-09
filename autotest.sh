@@ -42,6 +42,8 @@ fi
 
 # Make sure the disks are clean (no leftover partition tables)
 timing_enter cleanup
+# Remove old domain socket pathname just in case
+rm -f $DEFAULT_RPC_ADDR
 if [ $(uname -s) = Linux ]; then
 	# Load the kernel driver
 	./scripts/setup.sh reset

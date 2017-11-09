@@ -16,13 +16,6 @@
   #  on all cores.
   #ReactorMask 0x1
 
-[Rpc]
-  # Defines whether spdk will enable configuration via RPC.
-  # Default is disabled.  Note that the RPC interface is not
-  # authenticated, so users should be careful about enabling
-  # RPC in non-trusted environments.
-  #Enable No
-
 [Ioat]
   Disable Yes
 

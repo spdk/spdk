@@ -950,6 +950,7 @@ main(int argc, char **argv)
 		config_file = argv[1];
 	}
 	bdevtest_init(config_file, "0x7", &opts);
+	opts.rpc_addr = NULL;
 
 	num_failures = spdk_app_start(&opts, start_timer, NULL, NULL);
 	spdk_app_fini();
