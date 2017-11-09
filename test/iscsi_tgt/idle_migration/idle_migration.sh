@@ -9,7 +9,6 @@ timing_enter idle_migration
 
 # iSCSI target configuration
 PORT=3260
-RPC_PORT=5260
 
 fio_py="python $rootdir/scripts/fio.py"
 
@@ -21,7 +20,7 @@ echo "Process pid: $pid"
 
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
-waitforlisten $pid ${RPC_PORT}
+waitforlisten $pid
 echo "iscsi_tgt is listening. Running tests..."
 
 timing_exit start_iscsi_tgt

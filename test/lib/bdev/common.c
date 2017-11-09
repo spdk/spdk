@@ -47,4 +47,5 @@ bdevtest_init(const char *config_file, const char *cpumask,
 	opts->config_file = config_file;
 	opts->reactor_mask = cpumask;
 	opts->mem_size = 1024;
+	opts->rpc_addr = NULL;
 }

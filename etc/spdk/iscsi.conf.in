@@ -62,16 +62,6 @@
   ImmediateData Yes
   ErrorRecoveryLevel 0
 
-[Rpc]
-  # Defines whether to enable configuration via RPC.
-  # Default is disabled.  Note that the RPC interface is not
-  # authenticated, so users should be careful about enabling
-  # RPC in non-trusted environments.
-  Enable No
-  # Listen address for the RPC service.
-  # May be an IP address or an absolute path to a Unix socket.
-  Listen 127.0.0.1
-
 # Users must change the PortalGroup section(s) to match the IP addresses
 #  for their environment.
 # PortalGroup sections define which TCP ports the iSCSI server will use
