@@ -27,7 +27,7 @@ pid=$!
 
 trap "killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
-waitforlisten $pid ${RPC_PORT}
+waitforlisten $pid
 timing_exit start_nvmf_tgt
 
 # Create 10 subsystems

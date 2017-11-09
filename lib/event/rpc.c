@@ -41,40 +41,20 @@
 #include "spdk_internal/event.h"
 
 #define RPC_SELECT_INTERVAL	4000 /* 4ms */
-#define RPC_DEFAULT_LISTEN_ADDR	"127.0.0.1:5260"
 
 static struct spdk_poller *g_rpc_poller = NULL;
-
-static int
-enable_rpc(void)
-{
-	struct spdk_conf_section	*sp;
-
-	sp = spdk_conf_find_section(NULL, "Rpc");
-	if (sp == NULL) {
-		return 0;
-	}
-
-	return spdk_conf_section_get_boolval(sp, "Enable", false);
-}
 
 static const char *
 rpc_get_listen_addr(void)
 {
 	struct spdk_conf_section *sp;
-	const char *val;
 
 	sp = spdk_conf_find_section(NULL, "Rpc");
 	if (sp == NULL) {
-		return RPC_DEFAULT_LISTEN_ADDR;
+		return NULL;
 	}
 
-	val = spdk_conf_section_get_val(sp, "Listen");
-	if (val == NULL) {
-		val = RPC_DEFAULT_LISTEN_ADDR;
-	}
-
-	return val;
+	return spdk_conf_section_get_val(sp, "Listen");
 }
 
 static void
@@ -84,18 +64,16 @@ spdk_rpc_subsystem_poll(void *arg)
 }
 
 void
-spdk_rpc_initialize(void)
+spdk_rpc_initialize(const char *listen_addr)
 {
-	const char *listen_addr;
 	int rc;
 
-	if (!enable_rpc()) {
-		return;
+	if (rpc_get_listen_addr() != NULL) {
+		listen_addr = rpc_get_listen_addr();
 	}
 
-	listen_addr = rpc_get_listen_addr();
 	if (listen_addr == NULL) {
-		listen_addr = RPC_DEFAULT_LISTEN_ADDR;
+		return;
 	}
 
 	/* Listen on the requested address */
@@ -123,13 +101,7 @@ spdk_rpc_config_text(FILE *fp)
 	fprintf(fp,
 		"\n"
 		"[Rpc]\n"
-		"  # Defines whether to enable configuration via RPC.\n"
-		"  # Default is disabled.  Note that the RPC interface is not\n"
-		"  # authenticated, so users should be careful about enabling\n"
-		"  # RPC in non-trusted environments.\n"
-		"  Enable %s\n"
 		"  # Listen address for the RPC service.\n"
 		"  # May be an IP address or an absolute path to a Unix socket.\n"
-		"  Listen %s\n",
-		enable_rpc() ? "Yes" : "No", rpc_get_listen_addr());
+		"  Listen %s\n", rpc_get_listen_addr());
 }
