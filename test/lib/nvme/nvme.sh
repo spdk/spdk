@@ -25,6 +25,10 @@ function get_nvme_name_from_bdf {
 	done
 }
 
+ISCSI_PORT=3260
+TARGET_IP=127.0.0.1
+rpc_py="python $rootdir/scripts/rpc.py"
+ISCSI_APP=$rootdir/app/iscsi_tgt/iscsi_tgt
 timing_enter nvme
 
 # check that our setup.sh script does not bind NVMe devices to uio/vfio if they
@@ -151,6 +155,36 @@ if [ `uname` = Linux ]; then
 	wait $pid0
 	wait $pid1
 	timing_exit multi_secondary
+fi
+
+if [ `uname` = Linux ]; then
+	timing_enter multi_process_iscsi_and_identify
+	cp $testdir/../../iscsi_tgt/nvme_remote/iscsi.conf $testdir/iscsi.conf.tmp
+	$ISCSI_APP -c $testdir/iscsi.conf.tmp -i 0 &
+	iscsipid=$!
+	echo "iSCSI target launched. pid: $iscsipid"
+	trap "killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
+	waitforlisten $iscsipid 5261
+	echo "iSCSI target has started."
+	echo "Creating an iSCSI target node."
+	$rpc_py  -p 5261 add_portal_group 1 $TARGET_IP:$ISCSI_PORT
+	$rpc_py  -p 5261 add_initiator_group 1 ALL $INITIATOR_IP/32
+	nvme_count=0
+	for bdf in $(linux_iter_pci 0108); do
+		$rpc_py -p 5261 construct_nvme_bdev -b "Nvme${nvme_count}" -t "pcie" -a "${bdf}"
+		let nvme_count+=1
+	done
+	for ((i=0,target_name=1; i<$nvme_count; i++,target_name++)); do
+		$rpc_py -p 5261 construct_target_node Target${target_name} Target${target_name}_alias Nvme${i}n1:0 '1:1' 64 1 0 0 0
+	done
+	sleep 1
+
+	echo "Running identify"
+	$rootdir/examples/nvme/identify/identify -i 0
+
+	killprocess $iscsipid
+	rm -f $testdir/iscsi.conf.tmp
+	timing_exit multi_process_iscsi_and_identify
 fi
 
 if [ `uname` = Linux ]; then
