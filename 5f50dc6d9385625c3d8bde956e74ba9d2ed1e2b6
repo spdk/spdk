@@ -16,6 +16,24 @@
       "revId": "5f50dc6d9385625c3d8bde956e74ba9d2ed1e2b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7aafbb52_ee142e1b",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-09T18:36:15Z",
+      "side": 1,
+      "message": "Yeah - I\u0027m still debugging this.  It seems like this patch exacerbates the ENOSPC error from /dev/nbd0 so I\u0027m trying to get to the bottom of it.",
+      "parentUuid": "bfff1415_33413b59",
+      "revId": "5f50dc6d9385625c3d8bde956e74ba9d2ed1e2b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
