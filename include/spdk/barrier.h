@@ -51,6 +51,8 @@ extern "C" {
 /** Write memory barrier */
 #ifdef __PPC64__
 #define spdk_wmb()	__asm volatile("sync" ::: "memory")
+#elif defined(__aarch64__)
+#define spdk_wmb()	__asm volatile("dsb st" ::: "memory")
 #elif defined(__i386__) || defined(__x86_64__)
 #define spdk_wmb()	__asm volatile("sfence" ::: "memory")
 #else
@@ -61,6 +63,8 @@ extern "C" {
 /** Full read/write memory barrier */
 #ifdef __PPC64__
 #define spdk_mb()	__asm volatile("sync" ::: "memory")
+#elif defined(__aarch64__)
+#define spdk_mb()	__asm volatile("dsb sy" ::: "memory")
 #elif defined(__i386__) || defined(__x86_64__)
 #define spdk_mb()	__asm volatile("mfence" ::: "memory")
 #else
