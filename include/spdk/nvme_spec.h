@@ -1240,6 +1240,76 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_ctrlr_data) == 4096, "Incorrect size");
 
+struct __attribute__((packed)) spdk_nvme_primary_ctrl_capabilities {
+	/**  controller id */
+	uint16_t		cntlid;
+	/**  port identifier */
+	uint16_t		portid;
+	/**  controller resource types */
+	struct {
+		uint8_t vq_supported	: 1;
+		uint8_t vi_supported	: 1;
+		uint8_t reserved	: 5;
+	} crt;
+	uint8_t			reserved[27];
+	/** total number of VQ flexible resources */
+	uint32_t		vqfrt;
+	/** total number of VQ flexible resources assigned to secondary controllers */
+	uint32_t		vqrfa;
+	/** total number of VQ flexible resources allocated to primary controller */
+	uint16_t		vqrfap;
+	/** total number of VQ Private resources for the primary controller */
+	uint16_t		vqprt;
+	/** max number of VQ flexible Resources that may be assigned to a secondary controller */
+	uint16_t		vqfrsm;
+	/**  preferred granularity of assigning and removing VQ Flexible Resources */
+	uint16_t		vqgran;
+	uint8_t			reserved1[16];
+	/** total number of VI flexible resources for the primary and its secondary controllers */
+	uint32_t		vifrt;
+	/** total number of VI flexible resources assigned to the secondary controllers */
+	uint32_t		virfa;
+	/**  total number of VI flexible resources currently allocated to the primary controller */
+	uint16_t		virfap;
+	/**  total number of VI private resources for the primary controller */
+	uint16_t		viprt;
+	/** max number of VI flexible resources that may be assigned to a secondary controller */
+	uint16_t		vifrsm;
+	/**  preferred granularity of assigning and removing VI flexible resources */
+	uint16_t		vigran;
+	uint8_t			reserved2[4016];
+}
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_primary_ctrl_capabilities) == 4096, "Incorrect size");
+
+struct __attribute__((packed)) spdk_nvme_secondary_ctrl_entry {
+	/** controller identifier of the secondary controller */
+	uint16_t		scid;
+	/** controller identifier of the associated primary controller */
+	uint16_t		pcid;
+	/** indicates the state of the secondary controller */
+	struct {
+		uint8_t is_online	: 1;
+		uint8_t reserved	: 7;
+	} scs;
+	uint8_t	reserved[3];
+	/** VF number if the secondary controller is an SR-IOV VF */
+	uint16_t		vfn;
+	/** number of VQ flexible resources assigned to the indicated secondary controller */
+	uint16_t		nvq;
+	/** number of VI flexible resources assigned to the indicated secondary controller */
+	uint16_t		nvi;
+	uint8_t			reserved1[18];
+}
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_secondary_ctrl_entry) == 32, "Incorrect size");
+
+struct __attribute__((packed)) spdk_nvme_secondary_ctrl_list {
+	/** number of Secondary controller entries in the list */
+	uint8_t					number;
+	uint8_t					reserved[31];
+	struct spdk_nvme_secondary_ctrl_entry	entries[127];
+}
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_secondary_ctrl_list) == 4096, "Incorrect size");
+
 struct spdk_nvme_ns_data {
 	/** namespace size */
 	uint64_t		nsze;
