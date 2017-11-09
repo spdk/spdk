@@ -68,6 +68,7 @@ struct spdk_fio_ctrlr {
 static struct spdk_fio_ctrlr *ctrlr_g;
 static int td_count;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static bool g_error;
 
 struct spdk_fio_qpair {
 	struct fio_file		*f;
@@ -168,10 +169,19 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	/* create a new qpair */
 	fio_qpair = calloc(1, sizeof(*fio_qpair));
 	if (!fio_qpair) {
+		g_error = true;
 		SPDK_ERRLOG("Cannot allocate space for fio_qpair\n");
 		return;
 	}
+
 	fio_qpair->qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_ctrlr->ctrlr, NULL, 0);
+	if (!fio_qpair->qpair) {
+		SPDK_ERRLOG("Cannot allocate nvme io_qpair any more\n");
+		g_error = true;
+		free(fio_qpair);
+		return;
+	}
+
 	fio_qpair->ns = ns;
 	fio_qpair->f = f;
 	fio_qpair->fio_ctrlr = fio_ctrlr;
@@ -180,6 +190,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	f->real_file_size = spdk_nvme_ns_get_size(fio_qpair->ns);
 	if (f->real_file_size <= 0) {
+		g_error = true;
 		SPDK_ERRLOG("Cannot get namespace size by ns=%p\n", ns);
 		return;
 	}
@@ -200,7 +211,7 @@ static int spdk_fio_setup(struct thread_data *td)
 	struct spdk_env_opts opts;
 	struct fio_file *f;
 	char *p;
-	int rc;
+	int rc = 0;
 	struct spdk_nvme_transport_id trid;
 	struct spdk_fio_ctrlr *fio_ctrlr;
 	char *trid_info;
@@ -284,13 +295,19 @@ static int spdk_fio_setup(struct thread_data *td)
 				continue;
 			}
 		}
+
+		if (g_error) {
+			log_err("Failed to initialize spdk fio plugin\n");
+			rc = 1;
+			break;
+		}
 	}
 
 	td_count++;
 
 	pthread_mutex_unlock(&mutex);
 
-	return 0;
+	return rc;
 }
 
 static int spdk_fio_open(struct thread_data *td, struct fio_file *f)
