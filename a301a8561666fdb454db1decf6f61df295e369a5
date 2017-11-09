@@ -70,6 +70,23 @@
       "revId": "a301a8561666fdb454db1decf6f61df295e369a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45a1614d_246b7f8d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1458,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-09T04:15:54Z",
+      "side": 1,
+      "message": "You also need to unregister the md_target as an io device.",
+      "revId": "a301a8561666fdb454db1decf6f61df295e369a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
