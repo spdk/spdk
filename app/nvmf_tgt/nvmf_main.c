@@ -42,91 +42,13 @@
 #define SPDK_NVMF_DEFAULT_CONFIG SPDK_NVMF_BUILD_ETC "/nvmf.conf"
 
 static void
-common_usage(const char *executable_name, struct spdk_app_opts *default_opts)
+nvmf_usage(void)
 {
-	printf("%s [options]\n", executable_name);
-	printf("options:\n");
-	printf(" -c config  - config file (default %s)\n", default_opts->config_file);
-	printf(" -e mask    - tracepoint group mask for spdk trace buffers (default 0x0)\n");
-	printf(" -m mask    - core mask for DPDK\n");
-	printf(" -i shared memory ID (optional)\n");
-	printf(" -n channel number of memory channels used for DPDK\n");
-	printf(" -p core    master (primary) core for DPDK\n");
-	printf(" -s size    memory size in MB for DPDK\n");
-
-	spdk_tracelog_usage(stdout, "-t");
-
-	printf(" -v         - verbose (enable warnings)\n");
-	printf(" -H         - show this usage\n");
-	printf(" -d         - disable coredump file enabling\n");
 }
 
 static void
-usage(const char *executable_name)
+nvmf_parse_arg(int ch, char *arg)
 {
-	struct spdk_app_opts default_opts;
-
-	spdk_app_opts_init(&default_opts);
-	default_opts.config_file = SPDK_NVMF_DEFAULT_CONFIG;
-	common_usage(executable_name, &default_opts);
-}
-
-static void
-nvmf_parse_args(int argc, char **argv, struct spdk_app_opts *opts)
-{
-	int ch, rc;
-
-	while ((ch = getopt(argc, argv, "c:de:i:m:n:p:qs:t:DH")) != -1) {
-		switch (ch) {
-		case 'd':
-			opts->enable_coredump = false;
-			break;
-		case 'c':
-			opts->config_file = optarg;
-			break;
-		case 'i':
-			opts->shm_id = atoi(optarg);
-			break;
-		case 't':
-			rc = spdk_log_set_trace_flag(optarg);
-			if (rc < 0) {
-				fprintf(stderr, "unknown flag\n");
-				usage(argv[0]);
-				exit(EXIT_FAILURE);
-			}
-			opts->print_level = SPDK_LOG_DEBUG;
-#ifndef DEBUG
-			fprintf(stderr, "%s must be rebuilt with CONFIG_DEBUG=y for -t flag.\n",
-				argv[0]);
-			usage(argv[0]);
-			exit(EXIT_FAILURE);
-#endif
-			break;
-		case 'm':
-			opts->reactor_mask = optarg;
-			break;
-		case 'n':
-			opts->mem_channel = atoi(optarg);
-			break;
-		case 'p':
-			opts->master_core = atoi(optarg);
-			break;
-		case 's':
-			opts->mem_size = atoi(optarg);
-			break;
-		case 'e':
-			opts->tpoint_group_mask = optarg;
-			break;
-		case 'q':
-			opts->print_level = SPDK_LOG_WARN;
-			break;
-		case 'D':
-		case 'H':
-		default:
-			usage(argv[0]);
-			exit(EXIT_SUCCESS);
-		}
-	}
 }
 
 int
@@ -138,12 +60,9 @@ main(int argc, char **argv)
 	/* default value in opts */
 	spdk_app_opts_init(&opts);
 	opts.name = "nvmf";
-	if (access(SPDK_NVMF_DEFAULT_CONFIG, F_OK) == 0) {
-		opts.config_file = SPDK_NVMF_DEFAULT_CONFIG;
-	}
+	opts.config_file = SPDK_NVMF_DEFAULT_CONFIG;
 	opts.max_delay_us = 1000; /* 1 ms */
-
-	nvmf_parse_args(argc, argv, &opts);
+	spdk_app_parse_args(argc, argv, &opts, "", nvmf_parse_arg, nvmf_usage);
 
 	rc = spdk_nvmf_tgt_start(&opts);
 
