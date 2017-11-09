@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b596d5a_16414109",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-09T11:49:09Z",
+      "side": 1,
+      "message": "Indents should be tabs I think, to keep the file consistent.",
+      "range": {
+        "startLine": 162,
+        "startChar": 0,
+        "endLine": 162,
+        "endChar": 4
+      },
+      "revId": "08582852e115e42925b05886bfefb93181003cb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6564c3a6_deed46ce",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-09T11:49:09Z",
+      "side": 1,
+      "message": "Sorry, but I do not understand what is the purpose of this function.\nI see that is prints the name of first disk found in lsblk and later (in line 198) this disk is used as an AIO backend for FIO tests.\nIn my case get_device() returns my system\u0027s disk.",
+      "range": {
+        "startLine": 162,
+        "startChar": 4,
+        "endLine": 174,
+        "endChar": 36
+      },
+      "revId": "08582852e115e42925b05886bfefb93181003cb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcaf7d5f_44d320b4",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-09T11:49:09Z",
+      "side": 1,
+      "message": "Unnecessary change",
+      "revId": "08582852e115e42925b05886bfefb93181003cb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
