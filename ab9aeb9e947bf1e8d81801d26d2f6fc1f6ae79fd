@@ -22,6 +22,30 @@
       "revId": "ab9aeb9e947bf1e8d81801d26d2f6fc1f6ae79fd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3354916e_e679aca3",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2017-11-10T06:53:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "929d3415_5963242e",
+      "range": {
+        "startLine": 666,
+        "startChar": 10,
+        "endLine": 666,
+        "endChar": 14
+      },
+      "revId": "ab9aeb9e947bf1e8d81801d26d2f6fc1f6ae79fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
