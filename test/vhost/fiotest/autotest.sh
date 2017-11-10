@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -e
 BASE_DIR=$(readlink -f $(dirname $0))
+source "$BASE_DIR/../../../scripts/autotest_common.sh"
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 
