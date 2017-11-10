@@ -211,6 +211,30 @@
       "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a283d36_2c4b416a",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2017-11-10T06:53:54Z",
+      "side": 1,
+      "message": "Ok, thanks so much for your reminding. I will revise all these details.",
+      "parentUuid": "2676cd89_7f30fff8",
+      "range": {
+        "startLine": 244,
+        "startChar": 11,
+        "endLine": 244,
+        "endChar": 17
+      },
+      "revId": "5777179510a5e1597eae2c7c2a055d34d3c81b7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
