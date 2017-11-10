@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9675d365_315183ed",
+        "filename": "lib/event/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-10T07:33:30Z",
+      "side": 1,
+      "message": "the config addr has a higher priority than the app-param addr, shouldn\u0027t it be the other way?",
+      "range": {
+        "startLine": 71,
+        "startChar": 1,
+        "endLine": 73,
+        "endChar": 2
+      },
+      "revId": "8f35fcc59aeb87599fa6ec9d0e732c182c7273b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
