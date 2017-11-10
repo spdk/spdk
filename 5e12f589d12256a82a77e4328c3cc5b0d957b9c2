@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02fdd4c4_73a17608",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-10T21:33:28Z",
+      "side": 1,
+      "message": "If spdk_fio_poll_thread returns the event count, this will be cleaner. I also think you need to write it as two separate loops:\n\nwhile (!done) {\n    spdk_fio_poll_thread(fio_thread);\n}\n\nwhile (spdk_fio_poll_thread(fio_thread) \u003e 0) {}\n\nIt is possible for the number of events to drop to 0 without being done if we\u0027re waiting on I/O.",
+      "revId": "5e12f589d12256a82a77e4328c3cc5b0d957b9c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
