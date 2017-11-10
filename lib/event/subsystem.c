@@ -196,7 +196,6 @@ _spdk_subsystem_fini_next(void *arg1, void *arg2)
 		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
 	}
 
-	g_next_subsystem = NULL;
 	spdk_event_call(g_app_stop_event);
 	return;
 }
