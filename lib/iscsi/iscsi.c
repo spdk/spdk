@@ -4684,13 +4684,6 @@ spdk_append_iscsi_sess(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
-void
-spdk_iscsi_shutdown(void)
-{
-	spdk_iscsi_portal_grp_close_all();
-	spdk_shutdown_iscsi_conns();
-}
-
 bool spdk_iscsi_is_deferred_free_pdu(struct spdk_iscsi_pdu *pdu)
 {
 	if (pdu == NULL)

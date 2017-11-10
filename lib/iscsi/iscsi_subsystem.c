@@ -49,6 +49,9 @@
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
 
+static spdk_iscsi_fini_cb g_fini_cb_fn;
+static void *g_fini_cb_arg;
+
 #define ISCSI_CONFIG_TMPL \
 "[iSCSI]\n" \
 "  # node name (not include optional part)\n" \
@@ -875,7 +878,17 @@ spdk_iscsi_init(void)
 }
 
 void
-spdk_iscsi_fini(void)
+spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg)
+{
+	g_fini_cb_fn = cb_fn;
+	g_fini_cb_arg = cb_arg;
+
+	spdk_iscsi_portal_grp_close_all();
+	spdk_shutdown_iscsi_conns();
+}
+
+void
+spdk_iscsi_fini_done(void)
 {
 	spdk_iscsi_check_pools();
 	spdk_iscsi_free_pools();
@@ -887,6 +900,7 @@ spdk_iscsi_fini(void)
 	free(g_spdk_iscsi.nodebase);
 
 	pthread_mutex_destroy(&g_spdk_iscsi.mutex);
+	g_fini_cb_fn(g_fini_cb_arg);
 }
 
 void
