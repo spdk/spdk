@@ -42,7 +42,6 @@ static TAILQ_HEAD(spdk_subsystem_list, spdk_subsystem) g_subsystems =
 	TAILQ_HEAD_INITIALIZER(g_subsystems);
 static TAILQ_HEAD(subsystem_depend, spdk_subsystem_depend) g_depends =
 	TAILQ_HEAD_INITIALIZER(g_depends);
-static struct spdk_subsystem *g_next_subsystem;
 static struct spdk_event *g_app_start_event;
 static struct spdk_event *g_app_stop_event;
 static uint32_t g_fini_core;
@@ -116,29 +115,33 @@ subsystem_sort(void)
 void
 spdk_subsystem_init_next(int rc)
 {
+	static struct spdk_subsystem *next_subsystem = NULL;
+
 	if (rc) {
 		spdk_app_stop(rc);
-		assert(g_next_subsystem != NULL);
-		SPDK_ERRLOG("Init subsystem %s failed\n", g_next_subsystem->name);
+		assert(next_subsystem != NULL);
+		SPDK_ERRLOG("Init subsystem %s failed\n", next_subsystem->name);
+		next_subsystem = NULL;
 		return;
 	}
 
-	if (!g_next_subsystem) {
-		g_next_subsystem = TAILQ_FIRST(&g_subsystems);
+	if (!next_subsystem) {
+		next_subsystem = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
 	} else {
-		g_next_subsystem = TAILQ_NEXT(g_next_subsystem, tailq);
+		next_subsystem = TAILQ_PREV(next_subsystem, spdk_subsystem_list, tailq);
 	}
 
-	if (!g_next_subsystem) {
-		spdk_event_call(g_app_start_event);
-		return;
+	while (next_subsystem) {
+		if (next_subsystem->init) {
+			next_subsystem->init();
+			return;
+		}
+		next_subsystem = TAILQ_PREV(next_subsystem, spdk_subsystem_list, tailq);
 	}
 
-	if (g_next_subsystem->init) {
-		g_next_subsystem->init();
-	} else {
-		spdk_subsystem_init_next(0);
-	}
+	next_subsystem = NULL;
+	spdk_event_call(g_app_start_event);
+	return;
 }
 
 static void
