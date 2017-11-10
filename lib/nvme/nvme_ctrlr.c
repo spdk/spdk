@@ -504,15 +504,14 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	/*
 	 * The NVMe specification defines RTD3E to be the time between
 	 *  setting SHN = 1 until the controller will set SHST = 10b.
-	 * If the device doesn't report RTD3 entry latency, pick
-	 *  5 seconds as a reasonable amount of time to
+	 * If the device doesn't report RTD3 entry latency, or if it
+	 *  reports RTD3 entry latency less than 10 seconds, pick
+	 *  10 seconds as a reasonable amount of time to
 	 *  wait before proceeding.
 	 */
 	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "RTD3E = %" PRIu32 " us\n", ctrlr->cdata.rtd3e);
 	shutdown_timeout_ms = (ctrlr->cdata.rtd3e + 999) / 1000;
-	if (shutdown_timeout_ms == 0) {
-		shutdown_timeout_ms = 5000;
-	}
+	shutdown_timeout_ms = spdk_max(shutdown_timeout_ms, 10000);
 	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "shutdown timeout = %" PRIu32 " ms\n", shutdown_timeout_ms);
 
 	do {
