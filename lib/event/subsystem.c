@@ -142,7 +142,7 @@ spdk_subsystem_init_next(int rc)
 }
 
 static void
-spdk_subsystem_verify(void *arg1, void *arg2)
+spdk_subsystem_verify(void)
 {
 	struct spdk_subsystem_depend *dep;
 
@@ -162,19 +162,16 @@ spdk_subsystem_verify(void *arg1, void *arg2)
 	}
 
 	subsystem_sort();
-
-	spdk_subsystem_init_next(0);
 }
 
 void
 spdk_subsystem_init(struct spdk_event *app_start_event)
 {
-	struct spdk_event *verify_event;
-
 	g_app_start_event = app_start_event;
 
-	verify_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_verify, NULL, NULL);
-	spdk_event_call(verify_event);
+	spdk_subsystem_verify();
+
+	spdk_subsystem_init_next(0);
 }
 
 static void
