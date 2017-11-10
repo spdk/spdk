@@ -605,14 +605,6 @@ spdk_bdev_module_finish_complete(void)
 	spdk_io_device_unregister(&g_bdev_mgr, spdk_bdev_module_finish_cb);
 }
 
-static void
-_call_next_module_fini(void *arg)
-{
-	struct spdk_bdev_module_if *module = arg;
-
-	module->module_fini();
-}
-
 void
 spdk_bdev_module_finish_done(void)
 {
@@ -632,7 +624,7 @@ spdk_bdev_module_finish_done(void)
 	}
 
 	if (g_bdev_module->module_fini) {
-		spdk_thread_send_msg(g_fini_thread, _call_next_module_fini, g_bdev_module);
+		g_bdev_module->module_fini();
 	}
 
 	if (!g_bdev_module->async_fini) {
