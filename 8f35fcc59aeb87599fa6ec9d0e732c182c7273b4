@@ -22,6 +22,30 @@
       "revId": "8f35fcc59aeb87599fa6ec9d0e732c182c7273b4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b706c143_071afe3c",
+        "filename": "lib/event/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-10T15:11:21Z",
+      "side": 1,
+      "message": "Good point.  I\u0027ll change this.",
+      "parentUuid": "9675d365_315183ed",
+      "range": {
+        "startLine": 71,
+        "startChar": 1,
+        "endLine": 73,
+        "endChar": 2
+      },
+      "revId": "8f35fcc59aeb87599fa6ec9d0e732c182c7273b4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }

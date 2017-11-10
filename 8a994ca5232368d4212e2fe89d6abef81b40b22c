@@ -22,6 +22,30 @@
       "revId": "8a994ca5232368d4212e2fe89d6abef81b40b22c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "368530a1_ee0b6d52",
+        "filename": "test/pmem/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-10T15:11:21Z",
+      "side": 0,
+      "message": "Yes - vhost.conf.in only contained Rpc Enable so that file has been deleted.",
+      "parentUuid": "2688148d_1eeb3a38",
+      "range": {
+        "startLine": 79,
+        "startChar": 1,
+        "endLine": 79,
+        "endChar": 62
+      },
+      "revId": "8a994ca5232368d4212e2fe89d6abef81b40b22c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
