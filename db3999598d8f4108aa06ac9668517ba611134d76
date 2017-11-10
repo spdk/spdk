@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8dc1f1f9_b5a4a85e",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-10T02:39:07Z",
+      "side": 1,
+      "message": "Looks like these spaces are not needed. Thanks.",
+      "range": {
+        "startLine": 159,
+        "startChar": 3,
+        "endLine": 159,
+        "endChar": 17
+      },
+      "revId": "db3999598d8f4108aa06ac9668517ba611134d76",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
