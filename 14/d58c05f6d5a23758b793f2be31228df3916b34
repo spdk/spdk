@@ -1,0 +1,8 @@
+Code-Review+2: Jim Harris <james.r.harris@intel.com>
+Verified+1: SPDK Automated Test System <sys_sgsw@intel.com>
+Code-Review+2: Ben Walker <benjamin.walker@intel.com>
+Submitted-by: Jim Harris <james.r.harris@intel.com>
+Submitted-at: Fri, 10 Nov 2017 17:25:20 -0500
+Reviewed-on: https://review.gerrithub.io/386686
+Project: spdk/spdk
+Branch: refs/heads/v17.10.x
