@@ -45,7 +45,7 @@ static TAILQ_HEAD(subsystem_depend, spdk_subsystem_depend) g_depends =
 static struct spdk_subsystem *g_next_subsystem;
 static struct spdk_event *g_app_start_event;
 static struct spdk_event *g_app_stop_event;
-static int g_fini_core;
+static uint32_t g_fini_core;
 
 void
 spdk_add_subsystem(struct spdk_subsystem *subsystem)
@@ -177,12 +177,10 @@ spdk_subsystem_init(struct spdk_event *app_start_event)
 	spdk_event_call(verify_event);
 }
 
-void
-spdk_subsystem_fini_next(void)
+static void
+_spdk_subsystem_fini_next(void *arg1, void *arg2)
 {
-	struct spdk_event *next_fini_event;
-
-	assert(g_app_stop_event->lcore == spdk_env_get_current_core());
+	assert(g_fini_core == spdk_env_get_current_core());
 
 	if (!g_next_subsystem) {
 		g_next_subsystem = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
@@ -190,25 +188,35 @@ spdk_subsystem_fini_next(void)
 		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
 	}
 
-	if (!g_next_subsystem) {
-		spdk_event_call(g_app_stop_event);
-		return;
+	while (g_next_subsystem) {
+		if (g_next_subsystem->fini) {
+			g_next_subsystem->fini(NULL, NULL);
+			return;
+		}
+		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
 	}
 
-	if (g_next_subsystem->fini) {
-		next_fini_event = spdk_event_allocate(g_fini_core, g_next_subsystem->fini, NULL,
-						      NULL);
-		spdk_event_call(next_fini_event);
+	g_next_subsystem = NULL;
+	spdk_event_call(g_app_stop_event);
+	return;
+}
+
+void
+spdk_subsystem_fini_next(void)
+{
+	if (g_fini_core != spdk_env_get_current_core()) {
+		struct spdk_event *event;
+
+		event = spdk_event_allocate(g_fini_core, _spdk_subsystem_fini_next, NULL, NULL);
+		spdk_event_call(event);
 	} else {
-		spdk_subsystem_fini_next();
+		_spdk_subsystem_fini_next(NULL, NULL);
 	}
 }
 
 void
 spdk_subsystem_fini(struct spdk_event *app_stop_event)
 {
-	assert(g_next_subsystem == NULL);
-
 	g_app_stop_event = app_stop_event;
 	g_fini_core = spdk_env_get_current_core();
 
