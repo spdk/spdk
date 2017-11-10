@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b373f67_761e17d9",
+        "filename": "lib/event/rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-10T16:00:33Z",
+      "side": 1,
+      "message": "For now, I\u0027m making the config file take priority over command line, so that we can defer updating the tests that require multiple SPDK applications to have RPC enabled.\n\nLong-term, we will remove this capability from the config file completely.",
+      "revId": "17b5622199555529568d7ec89286205a4d603286",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
