@@ -34,6 +34,29 @@
       "revId": "8e9df2c466054111b4e4e7042fcfee24a7fee3f4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c7aa47b_71962206",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-10T12:19:40Z",
+      "side": 1,
+      "message": "Which backend would be using this? I can\u0027t imagine how vhost-scsi or vhost-blk could use this. Is there in vhost-nvme something that could/need to be set using vhost_set_config cb?",
+      "range": {
+        "startLine": 967,
+        "startChar": 0,
+        "endLine": 987,
+        "endChar": 1
+      },
+      "revId": "8e9df2c466054111b4e4e7042fcfee24a7fee3f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
