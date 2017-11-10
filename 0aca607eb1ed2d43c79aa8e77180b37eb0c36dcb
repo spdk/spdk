@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc31bd9d_2c10d2e9",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 536,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-10T21:30:23Z",
+      "side": 1,
+      "message": "I think you\u0027ll ultimately need this to return \u0027count\u0027.",
+      "revId": "0aca607eb1ed2d43c79aa8e77180b37eb0c36dcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
