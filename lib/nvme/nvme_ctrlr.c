@@ -521,7 +521,8 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 		}
 
 		if (csts.bits.shst == SPDK_NVME_SHST_COMPLETE) {
-			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "shutdown complete\n");
+			SPDK_DEBUGLOG(SPDK_TRACE_NVME, "shutdown complete in %u milliseconds\n",
+				      ms_waited);
 			return;
 		}
 
