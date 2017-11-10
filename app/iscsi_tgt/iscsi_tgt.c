@@ -102,7 +102,7 @@ main(int argc, char **argv)
 		}
 	}
 
-	opts.shutdown_cb = spdk_iscsi_shutdown;
+	opts.shutdown_cb = NULL;
 	opts.usr1_handler = spdk_sigusr1;
 
 	printf("Using net framework %s\n", spdk_net_framework_get_name());

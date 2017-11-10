@@ -48,10 +48,15 @@ spdk_iscsi_subsystem_init(void)
 }
 
 static void
+spdk_iscsi_subsystem_fini_done(void *arg)
+{
+	spdk_subsystem_fini_next();
+}
+
+static void
 spdk_iscsi_subsystem_fini(void *arg1, void *arg2)
 {
-	spdk_iscsi_fini();
-	spdk_subsystem_fini_next();
+	spdk_iscsi_fini(spdk_iscsi_subsystem_fini_done, NULL);
 }
 
 SPDK_SUBSYSTEM_REGISTER(iscsi, spdk_iscsi_subsystem_init, spdk_iscsi_subsystem_fini,

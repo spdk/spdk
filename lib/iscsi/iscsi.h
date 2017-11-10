@@ -320,7 +320,9 @@ extern struct spdk_iscsi_globals g_spdk_iscsi;
 struct spdk_iscsi_task;
 
 int spdk_iscsi_init(void);
-void spdk_iscsi_fini(void);
+typedef void (*spdk_iscsi_fini_cb)(void *arg);
+void spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg);
+void spdk_iscsi_fini_done(void);
 void spdk_iscsi_config_text(FILE *fp);
 
 int spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
@@ -344,7 +346,6 @@ void spdk_del_connection_queued_task(void *tailq, struct spdk_scsi_lun *lun);
 void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t CmdSN);
 bool  spdk_iscsi_is_deferred_free_pdu(struct spdk_iscsi_pdu *pdu);
 
-void spdk_iscsi_shutdown(void);
 int spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 				struct iscsi_param **params_p, uint8_t *data,
 				int alloc_len, int data_len);
