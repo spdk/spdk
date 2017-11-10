@@ -510,9 +510,7 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	 */
 	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "RTD3E = %" PRIu32 " us\n", ctrlr->cdata.rtd3e);
 	shutdown_timeout_ms = (ctrlr->cdata.rtd3e + 999) / 1000;
-	if (shutdown_timeout_ms == 0) {
-		shutdown_timeout_ms = 5000;
-	}
+	shutdown_timeout_ms = spdk_max(shutdown_timeout_ms, 10000);
 	SPDK_DEBUGLOG(SPDK_TRACE_NVME, "shutdown timeout = %" PRIu32 " ms\n", shutdown_timeout_ms);
 
 	do {
