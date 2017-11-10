@@ -68,27 +68,53 @@ case $1 in
 		;;
 	-i|--integrity)
 		echo 'Running SCSI integrity suite...'
-		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
-		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
-		--test-type=spdk_vhost_scsi \
-		--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
-		--qemu-src=/home/sys_sgsw/vhost/qemu -x
+		if [ $RUN_NIGHTLY -eq 0 ]; then
+			./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+			--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
+			--test-type=spdk_vhost_scsi \
+			--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
+			--qemu-src=/home/sys_sgsw/vhost/qemu -x
+		else
+			./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+			--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
+			--test-type=spdk_vhost_scsi \
+			--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity_nightly.job \
+			--qemu-src=/home/sys_sgsw/vhost/qemu -x
+		fi
 		;;
 	-ib|--integrity-blk)
 		echo 'Running blk integrity suite...'
-		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
-		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
-		--test-type=spdk_vhost_blk \
-		--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
-		--qemu-src=/home/sys_sgsw/vhost/qemu -x
+		if [ $RUN_NIGHTLY -eq 0 ]; then
+			./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+			--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
+			--test-type=spdk_vhost_blk \
+			--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
+			--qemu-src=/home/sys_sgsw/vhost/qemu -x
+		else
+			./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+			--vm=0,/home/sys_sgsw/vhost_vm_image.qcow2,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
+			--test-type=spdk_vhost_blk \
+			--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity_nightly.job \
+			--qemu-src=/home/sys_sgsw/vhost/qemu -x
+		fi
 		;;
 	-fs|--fs-integrity-scsi)
 		echo 'Running filesystem integrity suite...'
-		./integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f ntfs
+		if [ $RUN_NIGHTLY -eq 1 ]; then
+			./integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f ntfs
+			./integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f ext4
+			./integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f xfs
+			./integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f btrfs
+		fi
 		;;
 	-fb|--fs-integrity-blk)
 		echo 'Running filesystem integrity suite...'
-		./integrity/integrity_start.sh -i $VM_IMAGE -m blk -f ntfs
+		if [ $RUN_NIGHTLY -eq 1 ]; then
+			./integrity/integrity_start.sh -i $VM_IMAGE -m blk -f ntfs
+			./integrity/integrity_start.sh -i $VM_IMAGE -m blk -f ext4
+			./integrity/integrity_start.sh -i $VM_IMAGE -m blk -f xfs
+			./integrity/integrity_start.sh -i $VM_IMAGE -m blk -f btrfs
+		fi
 		;;
 	-ils|--integrity-lvol-scsi)
 		echo 'Running lvol integrity suite...'
