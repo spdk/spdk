@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f509b075_8f78b75a",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-10T13:59:50Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "f0b3deef_c2cf9c5c",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 33
+      },
+      "revId": "586d610f2fd3f49185d65d3ed1aaf75660b43d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d1e61854_ae5e3976",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-10T12:14:06Z",
       "side": 1,
       "message": "512? Hmmm... what is the purpose for hardcoding blk_size to default value? What about other fields from struct virtio_blk_config",
+      "range": {
+        "startLine": 703,
+        "startChar": 26,
+        "endLine": 703,
+        "endChar": 29
+      },
+      "revId": "586d610f2fd3f49185d65d3ed1aaf75660b43d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "209d40ab_27b916be",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-10T13:59:50Z",
+      "side": 1,
+      "message": "Good catch, although virtio_blk specification uses 512 as block size, but here we can set to other value, will fix it.",
+      "parentUuid": "d1e61854_ae5e3976",
       "range": {
         "startLine": 703,
         "startChar": 26,
@@ -94,6 +142,30 @@
       "writtenOn": "2017-11-10T12:14:06Z",
       "side": 1,
       "message": "Replace this magic with max iovs in request.",
+      "range": {
+        "startLine": 707,
+        "startChar": 25,
+        "endLine": 707,
+        "endChar": 28
+      },
+      "revId": "586d610f2fd3f49185d65d3ed1aaf75660b43d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2373cca3_3a18c55b",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-10T13:59:50Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "cf868126_0967ecdd",
       "range": {
         "startLine": 707,
         "startChar": 25,
