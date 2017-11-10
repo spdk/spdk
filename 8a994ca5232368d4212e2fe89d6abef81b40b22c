@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70ce0456_639e3c2f",
+        "filename": "lib/event/app.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-10T17:00:09Z",
+      "side": 1,
+      "message": "This needs a NULL check for allocation failure.",
+      "revId": "8a994ca5232368d4212e2fe89d6abef81b40b22c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
