@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce6a70c5_dd30a745",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-10T22:16:26Z",
+      "side": 1,
+      "message": "can this go in the if block at line 630?  not sure I follow why this needs to be done before we call module_fini()",
+      "revId": "2f7245e1c28c7de19881b1892f1486c3ca2a10bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
