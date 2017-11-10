@@ -16,6 +16,24 @@
       "revId": "d6ed1ad998f74afa18702e80c895f60973be563a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1deb0f1_0e998827",
+        "filename": "Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011271
+      },
+      "writtenOn": "2017-11-10T18:01:05Z",
+      "side": 1,
+      "message": "This is the point.  In our environment we can\u0027t/don\u0027t use an absolute path.  We need the make files to use a relative path.",
+      "parentUuid": "01b3b57a_f4b5496f",
+      "revId": "d6ed1ad998f74afa18702e80c895f60973be563a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
