@@ -16,6 +16,24 @@
       "revId": "2f7245e1c28c7de19881b1892f1486c3ca2a10bb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5287697_209b8002",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-10T22:21:10Z",
+      "side": 1,
+      "message": "Because some of the modules are asynchronous only under some conditions. Under other conditions, they\u0027ll call spdk_bdev_module_finish_done from within the module_fini() callback on line 627, resulting in us re-entering this function before the code on line 630 has executed.",
+      "parentUuid": "ce6a70c5_dd30a745",
+      "revId": "2f7245e1c28c7de19881b1892f1486c3ca2a10bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
