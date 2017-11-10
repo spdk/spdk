@@ -36,7 +36,11 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 .PHONY: all clean
 
+ifeq ($(TARGET_MACHINE),aarch64)
+DPDK_CONFIG := arm64-armv8a
+else
 DPDK_CONFIG := spdk
+endif
 
 ifeq ($(OS),Linux)
 DPDK_CONFIG := $(DPDK_CONFIG)-linuxapp
