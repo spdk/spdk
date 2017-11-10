@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f5cfc90_7edf3436",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-10T23:29:37Z",
+      "side": 1,
+      "message": "be -\u003e by (also in the sentence below)",
+      "range": {
+        "startLine": 168,
+        "startChar": 30,
+        "endLine": 168,
+        "endChar": 32
+      },
+      "revId": "bb6c925a40f8602959329af5f643896225be3f86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7862ffd2_268c15a4",
+        "filename": "doc/vhost.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-10T23:29:37Z",
+      "side": 1,
+      "message": "CONFIG_DEBUG doesn\u0027t seem relevant here, since no -t flag is passed to vhost.",
+      "range": {
+        "startLine": 175,
+        "startChar": 16,
+        "endLine": 175,
+        "endChar": 80
+      },
+      "revId": "bb6c925a40f8602959329af5f643896225be3f86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
