@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "f0b3deef_c2cf9c5c",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-10T12:14:06Z",
+      "side": 1,
+      "message": "Don\u0027t think this is needed. You can easily build this during spdk_vhost_blk_get_config().",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 71,
+        "endChar": 33
+      },
+      "revId": "586d610f2fd3f49185d65d3ed1aaf75660b43d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1e61854_ae5e3976",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-10T12:14:06Z",
+      "side": 1,
+      "message": "512? Hmmm... what is the purpose for hardcoding blk_size to default value? What about other fields from struct virtio_blk_config",
+      "range": {
+        "startLine": 703,
+        "startChar": 26,
+        "endLine": 703,
+        "endChar": 29
+      },
+      "revId": "586d610f2fd3f49185d65d3ed1aaf75660b43d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72705757_82520c7d",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 2
@@ -31,6 +77,29 @@
       "side": 1,
       "message": "Maybe just remove this configuration parameter, by default the cache policy is \"write through\", also SPDK doesn\u0027t support change it as well.",
       "parentUuid": "72705757_82520c7d",
+      "revId": "586d610f2fd3f49185d65d3ed1aaf75660b43d34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf868126_0967ecdd",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-10T12:14:06Z",
+      "side": 1,
+      "message": "Replace this magic with max iovs in request.",
+      "range": {
+        "startLine": 707,
+        "startChar": 25,
+        "endLine": 707,
+        "endChar": 28
+      },
       "revId": "586d610f2fd3f49185d65d3ed1aaf75660b43d34",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
