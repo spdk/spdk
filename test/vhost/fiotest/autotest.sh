@@ -53,6 +53,32 @@ function usage()
 	exit 0
 }
 
+function create_nightly_job()
+{
+    local nightly_job="$BASE_DIR/../common/fio_jobs/default_integrity_nightly.job"
+    local rw="$1"
+    (
+    echo "[global]"
+    echo "blocksize=256k"
+    echo "iodepth=64"
+    echo "ioengine=libaio"
+    echo "size=1G"
+    echo "io_size=4G"
+    echo "filename="
+    echo "group_reporting"
+    echo "thread"
+    echo "numjobs=1"
+    echo "direct=1"
+    echo "rw=$rw"
+    echo "do_verify=1"
+    echo "#verify=md5"
+    echo "verify_backlog=1024"
+    echo "[nvme-host]"
+    echo ""
+    ) > $nightly_job
+}
+
+
 #default raw file is NVMe drive
 
 while getopts 'xh-:' optchar; do
@@ -330,6 +356,28 @@ if $dry_run; then
 	exit 0
 fi
 
+echo "INFO: Running fio read job ..."
+create_nightly_job "read"
+$run_fio
+
+echo "INFO: Running fio write job ..."
+create_nightly_job "write"
+$run_fio
+
+echo "INFO: Running fio rw job ..."
+create_nightly_job "rw"
+$run_fio
+
+echo "INFO: Running fio randread job ..."
+create_nightly_job "randread"
+$run_fio
+
+echo "INFO: Running fio randwrite job ..."
+create_nightly_job "randwrite"
+$run_fio
+
+echo "INFO: Running fio randrw job ..."
+create_nightly_job "randrw"
 $run_fio
 
 if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
