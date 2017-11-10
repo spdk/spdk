@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c3e6794_59bda9c8",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1910,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-10T22:44:49Z",
+      "side": 1,
+      "message": "Is this intentionally missing the trailing _? (__PPC64__ vs __PPC64_)\n\n__PPC64_ doesn\u0027t seem to be defined by my test compiler (gcc 7.2.0 on Ubuntu)",
+      "revId": "b5b1f4832380654c8aaf75f9631acf42c360f542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
