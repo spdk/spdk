@@ -206,6 +206,30 @@
       "revId": "6c7a6a37ab18705f22c4760223e55605b98d892a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce0363d4_03e7c87d",
+        "filename": "doc/vhost.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-10T09:19:49Z",
+      "side": 1,
+      "message": "Yes to signal that it is CTRL+C. Or\n\u003c\u003c CTRL + C \u003e\u003e\nWould be better here?",
+      "parentUuid": "469c1a26_a0c6fb82",
+      "range": {
+        "startLine": 239,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 2
+      },
+      "revId": "6c7a6a37ab18705f22c4760223e55605b98d892a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
