@@ -605,39 +605,36 @@ spdk_bdev_module_finish_complete(void)
 	spdk_io_device_unregister(&g_bdev_mgr, spdk_bdev_module_finish_cb);
 }
 
-static void
-_call_next_module_fini(void *arg)
-{
-	struct spdk_bdev_module_if *module = arg;
-
-	module->module_fini();
-}
-
 void
 spdk_bdev_module_finish_done(void)
 {
-	if (spdk_get_thread() != g_fini_thread) {
-		SPDK_ERRLOG("%s changed threads\n", g_bdev_module->name);
-	}
+	struct spdk_bdev_module_if *bdev_module;
 
+	/* Start iterating from the last touched module */
 	if (!g_bdev_module) {
-		g_bdev_module = TAILQ_FIRST(&g_bdev_mgr.bdev_modules);
+		bdev_module = TAILQ_FIRST(&g_bdev_mgr.bdev_modules);
 	} else {
-		g_bdev_module = TAILQ_NEXT(g_bdev_module, tailq);
+		bdev_module = TAILQ_NEXT(g_bdev_module, tailq);
 	}
 
-	if (!g_bdev_module) {
-		spdk_bdev_module_finish_complete();
-		return;
+	while (bdev_module) {
+		if (bdev_module->async_fini) {
+			/* Save our place so we can resume later */
+			g_bdev_module = bdev_module;
+		}
+
+		if (bdev_module->module_fini) {
+			bdev_module->module_fini();
+		}
+
+		if (bdev_module->async_fini) {
+			return;
+		}
+
+		bdev_module = TAILQ_NEXT(bdev_module, tailq);
 	}
 
-	if (g_bdev_module->module_fini) {
-		spdk_thread_send_msg(g_fini_thread, _call_next_module_fini, g_bdev_module);
-	}
-
-	if (!g_bdev_module->async_fini) {
-		spdk_bdev_module_finish_done();
-	}
+	spdk_bdev_module_finish_complete();
 }
 
 void
