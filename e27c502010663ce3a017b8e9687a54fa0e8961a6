@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b2987b9b_51e093c9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-10T08:43:18Z",
+      "side": 1,
+      "message": "This flag is not set in the sync calling and only set in the message async path. So that in this case, coming IOs will go to the above line 697 for the normal operation. bdev-\u003ereset_in_progress is always set for the reset operation and use that check earlier. Maybe we can also remove this line \"else if\".",
+      "range": {
+        "startLine": 704,
+        "startChar": 12,
+        "endLine": 704,
+        "endChar": 54
+      },
+      "revId": "e27c502010663ce3a017b8e9687a54fa0e8961a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
