@@ -352,6 +352,30 @@
     },
     {
       "key": {
+        "uuid": "2c46f6df_442a13cb",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-10T12:38:12Z",
+      "side": 1,
+      "message": "So embedd task list in spdk_vhost_nvme_dev and remove those two globals.",
+      "parentUuid": "60dc8241_92e6e49b",
+      "range": {
+        "startLine": 141,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 92
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b4e0ff1_07edba88",
         "filename": "lib/vhost/vhost_nvme.c",
         "patchSetId": 1
@@ -387,6 +411,30 @@
       "side": 1,
       "message": "NVMe specification don\u0027t have such limitations.",
       "parentUuid": "5b4e0ff1_07edba88",
+      "range": {
+        "startLine": 165,
+        "startChar": 33,
+        "endLine": 165,
+        "endChar": 43
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d72700d7_648b25c0",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-10T12:38:12Z",
+      "side": 1,
+      "message": "So it will be slow.",
+      "parentUuid": "11b4410d_79dfd3fc",
       "range": {
         "startLine": 165,
         "startChar": 33,
@@ -920,6 +968,30 @@
       "side": 1,
       "message": "No, QEMU driver will not send set_vring_call message if there is no interrupt for the completion queue.",
       "parentUuid": "1d624701_15de0f6c",
+      "range": {
+        "startLine": 764,
+        "startChar": 2,
+        "endLine": 764,
+        "endChar": 53
+      },
+      "revId": "fa63ea01ef60373801b5a34241518d9e9dcbe8cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1c0ae76_535700bb",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-10T12:38:12Z",
+      "side": 1,
+      "message": "So assert(fd \u003d\u003d -1) this here.",
+      "parentUuid": "7f61f4d6_d69e4a17",
       "range": {
         "startLine": 764,
         "startChar": 2,
