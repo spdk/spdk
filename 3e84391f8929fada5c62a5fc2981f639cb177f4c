@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9e525c3_e7fceff5",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-10T16:22:55Z",
+      "side": 1,
+      "message": "I think this part of the patch can be dropped - neither of the checks below should match on aarch64, so no change is necessary. (The \u0027ifneq\u0027 for powerpc below is a bit confusing, but it\u0027s comparing the \u0027filter\u0027 return value with the empty string - the contents will only be executed when arch starts with powerpc.)",
+      "revId": "3e84391f8929fada5c62a5fc2981f639cb177f4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
