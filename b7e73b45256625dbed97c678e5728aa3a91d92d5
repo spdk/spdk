@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62dfa0b1_696f9a32",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-11T00:08:43Z",
+      "side": 0,
+      "message": "Do you need to remove this assert?",
+      "revId": "b7e73b45256625dbed97c678e5728aa3a91d92d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
