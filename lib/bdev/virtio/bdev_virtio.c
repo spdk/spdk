@@ -76,6 +76,10 @@ struct virtio_scsi_io_ctx {
 		struct virtio_scsi_cmd_resp resp;
 		struct virtio_scsi_ctrl_tmf_resp tmf_resp;
 	};
+
+	/* saved callback and completion context for internal IOs */
+	spdk_bdev_io_completion_cb cb;
+	void *caller_ctx;
 };
 
 struct virtio_scsi_scan_info {
@@ -341,10 +345,74 @@ static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_b
 	return 0;
 }
 
+static inline bool bdev_virtio_media_access(struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+		case SPDK_BDEV_IO_TYPE_READ:
+		case SPDK_BDEV_IO_TYPE_WRITE:
+		case SPDK_BDEV_IO_TYPE_FLUSH:
+		case SPDK_BDEV_IO_TYPE_NVME_ADMIN:
+		case SPDK_BDEV_IO_TYPE_NVME_IO:
+		case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+			return true;
+			break;
+		case SPDK_BDEV_IO_TYPE_UNMAP:
+		case SPDK_BDEV_IO_TYPE_RESET:
+		default:
+			return false;
+	}
+}
+
+static void _bdev_virtio_TUR_cpl(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+{
+	struct virtio_scsi_io_ctx *io_ctx = (struct virtio_scsi_io_ctx *)bdev_io->driver_ctx;
+	struct spdk_io_channel *ch = (struct spdk_io_channel*)bdev_io->caller_ctx;
+
+	/* restore original IO callback and context */
+	bdev_io->caller_ctx = io_ctx->caller_ctx;
+	bdev_io->cb = io_ctx->cb;
+	io_ctx->caller_ctx = io_ctx->cb = NULL;
+
+	bdev_io->status = 0;
+
+	printf("ENTRY: _bdev_virtio_TUR_cpl\n");
+
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	} else {
+		if (_bdev_virtio_submit_request(ch, bdev_io) < 0) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
+	}
+
+}
+
+static void _bdev_virtio_submit_TUR(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct virtio_req *vreq = bdev_virtio_init_io_vreq(ch, bdev_io);
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct virtio_scsi_io_ctx *io_ctx = (struct virtio_scsi_io_ctx *)bdev_io->driver_ctx;
+
+	printf("ENTRY: _bdev_virtio_submit_TUR\n");
+	memset(req->cdb, 0, VIRTIO_SCSI_CDB_SIZE);
+
+	io_ctx->cb = bdev_io->cb;
+	bdev_io->cb = _bdev_virtio_TUR_cpl;
+	io_ctx->caller_ctx = bdev_io->caller_ctx;
+	bdev_io->caller_ctx = ch;
+	vreq->is_write = false;
+
+	bdev_virtio_send_io(ch, bdev_io);
+}
+
 static void bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	if (_bdev_virtio_submit_request(ch, bdev_io) < 0) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	if (bdev_virtio_media_access(bdev_io)) {
+		_bdev_virtio_submit_TUR(ch, bdev_io);
+	} else {
+		if (_bdev_virtio_submit_request(ch, bdev_io) < 0) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
 	}
 }
 
@@ -434,7 +502,21 @@ bdev_virtio_io_cpl(struct virtio_req *req)
 	int sk, asc, ascq;
 
 	get_scsi_status(&io_ctx->resp, &sk, &asc, &ascq);
-	spdk_bdev_io_complete_scsi_status(bdev_io, io_ctx->resp.status, sk, asc, ascq);
+	if (io_ctx->cb == NULL) {
+		spdk_bdev_io_complete_scsi_status(bdev_io, io_ctx->resp.status, sk, asc, ascq);
+	} else {
+		/* intenrally generated request, do not complete via bdev layer */
+		if (io_ctx->resp.status == SPDK_SCSI_STATUS_GOOD) {
+			bdev_io->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		} else {
+			bdev_io->status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
+			bdev_io->error.scsi.sc = io_ctx->resp.status;
+			bdev_io->error.scsi.sk = sk;
+			bdev_io->error.scsi.asc = asc;
+			bdev_io->error.scsi.ascq = ascq;
+		}
+		bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
+	}
 }
 
 static void

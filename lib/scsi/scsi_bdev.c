@@ -1781,6 +1781,7 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 	int dbd, pc, page, subpage;
 	int cmd_parsed = 0;
 
+	printf("SCSI CDB IS 0x%x\n",cdb[0]);
 
 	switch (cdb[0]) {
 	case SPDK_SPC_INQUIRY:
@@ -1984,11 +1985,13 @@ spdk_bdev_scsi_process_primary(struct spdk_bdev *bdev,
 		break;
 
 	case SPDK_SPC_TEST_UNIT_READY:
+		printf("XXXXXXXXXXXXX TUR\n");
 		SPDK_DEBUGLOG(SPDK_TRACE_SCSI, "TEST_UNIT_READY\n");
 		cmd_parsed = 1;
 	/* FALLTHROUGH */
 	case SPDK_SBC_START_STOP_UNIT:
 		if (!cmd_parsed) {
+			printf("YYYYYYYYYYYYYY SSU\n");
 			SPDK_DEBUGLOG(SPDK_TRACE_SCSI, "START_STOP_UNIT\n");
 		}
 
@@ -2020,6 +2023,8 @@ int
 spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 {
 	int rc;
+
+	printf("ZZZZZZZZZZZZZZZZZZZZZZZZZ\n");
 
 	if ((rc = spdk_bdev_scsi_process_block(bdev, task)) == SPDK_SCSI_TASK_UNKNOWN) {
 		if ((rc = spdk_bdev_scsi_process_primary(bdev, task)) == SPDK_SCSI_TASK_UNKNOWN) {
