@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da01a450_5e3020ad",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-11T22:14:35Z",
+      "side": 1,
+      "message": "in all cases \"linklist\" should be \"linked list\"",
+      "revId": "80510a6d011753ba597edab277d48ffc9f875d27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ae9e8b8_f27b9e0b",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-11T22:14:35Z",
+      "side": 1,
+      "message": "Not sure how I feel about this comment being here as opposed to with the implementation source.  Anyone else think this is odd here? (I\u0027m OK either way, just asking)",
+      "revId": "80510a6d011753ba597edab277d48ffc9f875d27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce4b2c1f_fa14bdf0",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-11T22:14:35Z",
+      "side": 1,
+      "message": "not sure about enumerating the levels here either.  Again, I\u0027m OK either way but would think here we\u0027d just leave it at \"Priority level.\"",
+      "revId": "80510a6d011753ba597edab277d48ffc9f875d27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
