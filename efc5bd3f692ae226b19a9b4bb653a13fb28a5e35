@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "782d670d_d71b8479",
+        "filename": "lib/blobfs/tree.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-12T19:30:00Z",
+      "side": 1,
+      "message": "why not just use the global in the function-macros that are using CACHE_BUFFER_SHIFT instead of having this extra define?",
+      "revId": "efc5bd3f692ae226b19a9b4bb653a13fb28a5e35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
