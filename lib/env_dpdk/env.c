@@ -42,6 +42,42 @@
 #include <rte_memzone.h>
 #include <rte_version.h>
 
+enum DMA_FLAG
+{
+	SPDK_DMA       = 0x00, /* memory allocation that is dma but not sharable */
+	SPDK_DMA_SHARE = 0x01  /* memory allocation that is dma and sharable */
+};
+
+void *
+spdk_malloc(const char *name, size_t size, size_t align, uint64_t *phys_addr, 
+				int socket_id, unsigned flags, uint32_t dma_flg)
+{
+	if (dma_flg == SPDK_DMA)
+	{
+		return spdk_dma_malloc_socket(size, align, phys_addr, socket_id);
+	}
+	else if (dma_flg == SPDK_DMA_SHARE)
+	{
+		/* name could be optional */
+		return spdk_memzone_reserve(name, size, socket_id, flags);
+	}
+	
+	return NULL;
+}
+
+void 
+spdk_free(const char *name, void *buf, uint32_t dma_flg)
+{
+	if (dma_flg == SPDK_DMA)
+	{
+		spdk_dma_free(buf);
+	}
+	else if (dma_flg == SPDK_DMA_SHARE)
+	{
+		spdk_memzone_free(name);
+	}
+}
+
 void *
 spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id)
 {
