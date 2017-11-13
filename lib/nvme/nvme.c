@@ -737,14 +737,23 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 		return cmp;
 	}
 
+	if (trid1->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		struct spdk_pci_addr pci_addr1;
+		struct spdk_pci_addr pci_addr2;
+
+		/* Normalize PCI addresses before comparing */
+		if (spdk_pci_addr_parse(&pci_addr1, trid1->traddr) < 0 ||
+		    spdk_pci_addr_parse(&pci_addr2, trid2->traddr) < 0) {
+			return -1;
+		}
+
+		/* PCIe transport ID only uses trtype and traddr */
+		return spdk_pci_addr_compare(&pci_addr1, &pci_addr2);
+	}
+
 	cmp = strcasecmp(trid1->traddr, trid2->traddr);
 	if (cmp) {
 		return cmp;
-	}
-
-	if (trid1->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		/* PCIe transport ID only uses trtype and traddr */
-		return 0;
 	}
 
 	cmp = cmp_int(trid1->adrfam, trid2->adrfam);
