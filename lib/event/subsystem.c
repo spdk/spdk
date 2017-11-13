@@ -190,7 +190,7 @@ _spdk_subsystem_fini_next(void *arg1, void *arg2)
 
 	while (g_next_subsystem) {
 		if (g_next_subsystem->fini) {
-			g_next_subsystem->fini(NULL, NULL);
+			g_next_subsystem->fini();
 			return;
 		}
 		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
