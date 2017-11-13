@@ -50,6 +50,24 @@
       "revId": "80510a6d011753ba597edab277d48ffc9f875d27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e021a50e_84073f33",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2017-11-13T05:38:15Z",
+      "side": 1,
+      "message": "ok, I think you\u0027ve get a point there. I\u0027m going to delete these extra contents.",
+      "parentUuid": "ce4b2c1f_fa14bdf0",
+      "revId": "80510a6d011753ba597edab277d48ffc9f875d27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
