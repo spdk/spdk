@@ -99,9 +99,9 @@ spdk_iscsi_tgt_node_construct(int target_index,
 			      int no_auth_chap, int auth_chap, int auth_chap_mutual, int auth_group,
 			      int header_digest, int data_digest);
 
-int spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
-			       struct spdk_iscsi_tgt_node *target, const char *iqn,
-			       const char *addr);
+bool spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
+				struct spdk_iscsi_tgt_node *target, const char *iqn,
+				const char *addr);
 struct spdk_iscsi_tgt_node *spdk_iscsi_find_tgt_node(const char *target_name);
 int spdk_iscsi_tgt_node_reset(struct spdk_iscsi_tgt_node *target,
 			      uint64_t lun);
