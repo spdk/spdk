@@ -54,7 +54,7 @@ spdk_iscsi_subsystem_fini_done(void *arg)
 }
 
 static void
-spdk_iscsi_subsystem_fini(void *arg1, void *arg2)
+spdk_iscsi_subsystem_fini(void)
 {
 	spdk_iscsi_fini(spdk_iscsi_subsystem_fini_done, NULL);
 }
