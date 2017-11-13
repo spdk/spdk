@@ -192,7 +192,7 @@ _spdk_subsystem_fini_next(void *arg1, void *arg2)
 	}
 
 	if (g_next_subsystem->fini) {
-		g_next_subsystem->fini(NULL, NULL);
+		g_next_subsystem->fini();
 	} else {
 		_spdk_subsystem_fini_next(NULL, NULL);
 	}
