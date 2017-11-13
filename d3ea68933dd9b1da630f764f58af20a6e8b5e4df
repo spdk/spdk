@@ -16,6 +16,24 @@
       "revId": "d3ea68933dd9b1da630f764f58af20a6e8b5e4df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd511205_1a4174be",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-13T17:57:11Z",
+      "side": 1,
+      "message": "I agree. We should do so for each error in the probe_cb. Will do in a separate patch.",
+      "parentUuid": "1b22755b_511cef0d",
+      "revId": "d3ea68933dd9b1da630f764f58af20a6e8b5e4df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
