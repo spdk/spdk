@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66fca951_61ba9765",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-13T18:07:10Z",
+      "side": 1,
+      "message": "This loop could also just poll while spdk_fio_poll_thread() returns non-zero for consistency - I don\u0027t have a strong opinion on this, though.",
+      "revId": "aa63ab608f12030f184cf3ba00c89b638037bd32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bb9de4e_52b5b53c",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-13T18:07:10Z",
+      "side": 1,
+      "message": "Extraneous semicolon",
+      "range": {
+        "startLine": 408,
+        "startChar": 2,
+        "endLine": 408,
+        "endChar": 3
+      },
+      "revId": "aa63ab608f12030f184cf3ba00c89b638037bd32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
