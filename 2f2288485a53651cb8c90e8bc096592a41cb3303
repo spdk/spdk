@@ -46,6 +46,30 @@
       "revId": "2f2288485a53651cb8c90e8bc096592a41cb3303",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b7e41b5_db83a7ff",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-13T20:06:22Z",
+      "side": 0,
+      "message": "Yup, that was my original attempt to fix this easily. Then I noticed that module_finish_complete from line 630 suffers from the same issue.",
+      "parentUuid": "da3f66f5_71c88dc3",
+      "range": {
+        "startLine": 638,
+        "startChar": 0,
+        "endLine": 640,
+        "endChar": 2
+      },
+      "revId": "2f2288485a53651cb8c90e8bc096592a41cb3303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
