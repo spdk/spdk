@@ -49,17 +49,21 @@ struct bdev_aio_task {
 	TAILQ_ENTRY(bdev_aio_task)	link;
 };
 
-struct bdev_aio_io_channel {
-	io_context_t		io_ctx;
-	struct spdk_bdev_poller	*poller;
-};
-
 struct file_disk {
+	bool			reset_in_progress;
+	struct bdev_aio_task	*reset_task;
+	uint64_t		io_inflight;
 	struct spdk_bdev	disk;
 	char			*filename;
 	int			fd;
 	TAILQ_ENTRY(file_disk)  link;
 	bool			block_size_override;
+};
+
+struct bdev_aio_io_channel {
+	io_context_t            io_ctx;
+	struct spdk_bdev_poller *poller;
+	struct file_disk	*fdisk;
 };
 
 struct spdk_bdev *create_aio_disk(const char *name, const char *filename, uint32_t block_size);
