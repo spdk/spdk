@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b22755b_511cef0d",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 527,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-13T17:07:18Z",
+      "side": 1,
+      "message": "It might be nice to print the PCI address here.",
+      "revId": "d3ea68933dd9b1da630f764f58af20a6e8b5e4df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
