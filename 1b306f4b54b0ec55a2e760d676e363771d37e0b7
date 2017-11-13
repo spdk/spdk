@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a332d7e2_120c2fc3",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-13T10:19:17Z",
+      "side": 0,
+      "message": "This change is already done here:\nhttps://review.gerrithub.io/#/c/386208/7/test/vhost/common/common.sh\n\nWhy duplicate it?",
+      "range": {
+        "startLine": 439,
+        "startChar": 0,
+        "endLine": 444,
+        "endChar": 9
+      },
+      "revId": "1b306f4b54b0ec55a2e760d676e363771d37e0b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
