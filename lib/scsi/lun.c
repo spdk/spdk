@@ -124,6 +124,7 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
 
 	case SPDK_SCSI_TASK_FUNC_LUN_RESET:
 		spdk_bdev_scsi_reset(task->lun->bdev, task);
+		spdk_scsi_lun_complete_mgmt_task(task->lun, task);
 		return 0;
 
 	default:
@@ -136,8 +137,6 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
 		break;
 	}
-
-	spdk_scsi_lun_complete_mgmt_task(task->lun, task);
 
 	return -1;
 }
