@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "586b5950_b414c7e2",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 669,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-13T07:50:39Z",
+      "side": 1,
+      "message": "wrong footer number",
+      "range": {
+        "startLine": 669,
+        "startChar": 12,
+        "endLine": 669,
+        "endChar": 22
+      },
+      "revId": "ea046f5efce9ed963aaa8cf9ecb144c8a6cdb61c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a8e8f6a_3f8af8be",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-13T07:50:39Z",
+      "side": 1,
+      "message": "wrong footer number",
+      "range": {
+        "startLine": 696,
+        "startChar": 12,
+        "endLine": 696,
+        "endChar": 22
+      },
+      "revId": "ea046f5efce9ed963aaa8cf9ecb144c8a6cdb61c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
