@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d256edd6_c9c00da9",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-13T15:22:42Z",
+      "side": 1,
+      "message": "This sentence is to inform and focus the user that each Vhost device will add num_queues for polling. How they are polled (individually, in bursts or what ever) should not concern the user. But I think it should be reworded slightly.",
+      "parentUuid": "34aab3c6_3e0ede22",
+      "range": {
+        "startLine": 159,
+        "startChar": 6,
+        "endLine": 160,
+        "endChar": 37
+      },
+      "revId": "63a1c3559ab9656535b6880147cebce49a0be20a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bbf91a8f_c6d5b7d1",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "e45d1932_b7848396",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-13T15:22:42Z",
+      "side": 1,
+      "message": "I don\u0027t know how many queues is the optimal value so I wrote better (than one).",
+      "parentUuid": "bbf91a8f_c6d5b7d1",
+      "range": {
+        "startLine": 173,
+        "startChar": 4,
+        "endLine": 173,
+        "endChar": 10
+      },
+      "revId": "63a1c3559ab9656535b6880147cebce49a0be20a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ab9b02d0_07eafc1f",
         "filename": "doc/vhost.md",
         "patchSetId": 9
@@ -59,6 +107,30 @@
       "writtenOn": "2017-11-13T15:10:16Z",
       "side": 1,
       "message": "this functionality has been removed long ago, please remove",
+      "range": {
+        "startLine": 178,
+        "startChar": 0,
+        "endLine": 179,
+        "endChar": 22
+      },
+      "revId": "63a1c3559ab9656535b6880147cebce49a0be20a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68e1a8d5_557d2b95",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-13T15:22:42Z",
+      "side": 1,
+      "message": "True :P",
+      "parentUuid": "ab9b02d0_07eafc1f",
       "range": {
         "startLine": 178,
         "startChar": 0,
