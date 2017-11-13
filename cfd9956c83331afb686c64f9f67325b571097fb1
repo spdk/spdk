@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ee537de_56397b1b",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-13T08:42:57Z",
+      "side": 1,
+      "message": "Same question as in previous comment:\nwhy do we grab any first available disk from lsblk?\nLike I said - in my case first available disk contains systems files",
+      "range": {
+        "startLine": 162,
+        "startChar": 0,
+        "endLine": 162,
+        "endChar": 32
+      },
+      "revId": "cfd9956c83331afb686c64f9f67325b571097fb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "264c5331_9fea1a92",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-13T08:42:57Z",
+      "side": 1,
+      "message": "as in previous comment:\ntabs/spaces consistency across file is needed (tabs are preferred)",
+      "range": {
+        "startLine": 164,
+        "startChar": 1,
+        "endLine": 164,
+        "endChar": 8
+      },
+      "revId": "cfd9956c83331afb686c64f9f67325b571097fb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
