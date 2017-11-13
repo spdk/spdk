@@ -128,7 +128,7 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 		SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		return -1;
 	}
-
+	aio_ch->io_inflight++;
 	return nbytes;
 }
 
@@ -158,7 +158,7 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 		SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		return -1;
 	}
-
+	aio_ch->io_inflight++;
 	return len;
 }
 
@@ -228,13 +228,59 @@ bdev_aio_poll(void *arg)
 		}
 
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
+		ch->io_inflight--;
 	}
+}
+
+static int
+_bdev_aio_get_io_inflight(void *io_device, struct spdk_io_channel *ch,
+			  void *ctx)
+{
+	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
+
+	if (aio_ch->io_inflight) {
+		return -1;
+	}
+	return 0;
+}
+
+static void
+bdev_aio_reset_retry_timer(void *arg);
+
+static void
+_bdev_aio_get_io_inflight_done(void *io_device, void *ctx, int status)
+{
+	struct file_disk *fdisk = ctx;
+
+	if (status == -1) {
+		fdisk->reset_retry_timer = spdk_poller_register(bdev_aio_reset_retry_timer, fdisk, 500);
+		return;
+	}
+
+	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(fdisk->reset_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+}
+
+static void
+bdev_aio_reset_retry_timer(void *arg)
+{
+	struct file_disk *fdisk = arg;
+
+	if (fdisk->reset_retry_timer) {
+		spdk_poller_unregister(&fdisk->reset_retry_timer);
+	}
+
+	spdk_for_each_channel(&fdisk->fd,
+			      _bdev_aio_get_io_inflight,
+			      fdisk,
+			      _bdev_aio_get_io_inflight_done);
 }
 
 static void
 bdev_aio_reset(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 {
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+	fdisk->reset_task = aio_task;
+
+	bdev_aio_reset_retry_timer(fdisk);
 }
 
 static void bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
