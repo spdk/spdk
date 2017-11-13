@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "221df608_5a1fdb10",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-13T16:40:08Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "b14b3f96_b537615a",
+      "revId": "e5bc6975b647a8a00754fe6c6006c7c08b7bc49d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3423ffb_e248d3ea",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 3
@@ -30,6 +48,30 @@
       "writtenOn": "2017-11-10T23:52:21Z",
       "side": 1,
       "message": "This will skip the rest of the iterations of the lba_count loop - is that intentional?  Maybe this should just be \"continue\".\n\nAlso, it might be a good idea to just retrieve the pi_type once at the top of the function rather than calling this function repeatedly (probably not a big performance impact, but it seems simpler anyway).",
+      "range": {
+        "startLine": 534,
+        "startChar": 5,
+        "endLine": 534,
+        "endChar": 11
+      },
+      "revId": "e5bc6975b647a8a00754fe6c6006c7c08b7bc49d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15d998c7_11fdc961",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 534,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-13T16:40:08Z",
+      "side": 1,
+      "message": "Both return and continue should be fine here, the flags will not change during the tests.\nYes, move retrieving of pi_type function at the top of the function is better.",
+      "parentUuid": "f3423ffb_e248d3ea",
       "range": {
         "startLine": 534,
         "startChar": 5,
