@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34aab3c6_3e0ede22",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-13T15:10:16Z",
+      "side": 1,
+      "message": "\"performance degradation, as each queue needs to be polled individually.\"\n\ni think that would sound better",
+      "range": {
+        "startLine": 159,
+        "startChar": 6,
+        "endLine": 160,
+        "endChar": 37
+      },
+      "revId": "63a1c3559ab9656535b6880147cebce49a0be20a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bbf91a8f_c6d5b7d1",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-13T15:10:16Z",
+      "side": 1,
+      "message": "optimal?",
+      "range": {
+        "startLine": 173,
+        "startChar": 4,
+        "endLine": 173,
+        "endChar": 10
+      },
+      "revId": "63a1c3559ab9656535b6880147cebce49a0be20a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab9b02d0_07eafc1f",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-13T15:10:16Z",
+      "side": 1,
+      "message": "this functionality has been removed long ago, please remove",
+      "range": {
+        "startLine": 178,
+        "startChar": 0,
+        "endLine": 179,
+        "endChar": 22
+      },
+      "revId": "63a1c3559ab9656535b6880147cebce49a0be20a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
