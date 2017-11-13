@@ -611,6 +611,10 @@ _call_next_module_fini(void *arg)
 	struct spdk_bdev_module_if *module = arg;
 
 	module->module_fini();
+
+	if (!module->async_fini) {
+		spdk_bdev_module_finish_done();
+	}
 }
 
 void
@@ -633,9 +637,7 @@ spdk_bdev_module_finish_done(void)
 
 	if (g_bdev_module->module_fini) {
 		spdk_thread_send_msg(g_fini_thread, _call_next_module_fini, g_bdev_module);
-	}
-
-	if (!g_bdev_module->async_fini) {
+	} else {
 		spdk_bdev_module_finish_done();
 	}
 }
