@@ -293,6 +293,30 @@ spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr)
 	return -1;
 }
 
+int
+spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2)
+{
+	if (a1->domain > a2->domain) {
+		return 1;
+	} else if (a1->domain < a2->domain) {
+		return -1;
+	} else if (a1->bus > a2->bus) {
+		return 1;
+	} else if (a1->bus < a2->bus) {
+		return -1;
+	} else if (a1->dev > a2->dev) {
+		return 1;
+	} else if (a1->dev < a2->dev) {
+		return -1;
+	} else if (a1->func > a2->func) {
+		return 1;
+	} else if (a1->func < a2->func) {
+		return -1;
+	}
+
+	return 0;
+}
+
 uint32_t
 spdk_env_get_core_count(void)
 {
