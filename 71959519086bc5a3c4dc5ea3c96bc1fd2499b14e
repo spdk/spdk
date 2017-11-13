@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a515d141_1edaa4f6",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-13T10:11:32Z",
+      "side": 1,
+      "message": "Where is trap handler?",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 6
+      },
+      "revId": "71959519086bc5a3c4dc5ea3c96bc1fd2499b14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9763286_8b90a642",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-13T10:11:32Z",
+      "side": 1,
+      "message": "if [[ ! -b \"$disk_name\" ]]; then\n...",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 22
+      },
+      "revId": "71959519086bc5a3c4dc5ea3c96bc1fd2499b14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1146e201_e94fb5ff",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-13T10:11:32Z",
+      "side": 1,
+      "message": "Will this ever execute if \u0027set -e\u0027 is used?",
+      "range": {
+        "startLine": 42,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 22
+      },
+      "revId": "71959519086bc5a3c4dc5ea3c96bc1fd2499b14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee668998_2e0060b8",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-13T10:11:32Z",
+      "side": 1,
+      "message": "Can you just \u0027cd $BASE_DIR\u0027 or set test_folder to \u0027$BASE_DIR/readonly_test\u0027 to remove \u0027$BASE_DIR/\u0027 from all commands here?",
+      "range": {
+        "startLine": 46,
+        "startChar": 10,
+        "endLine": 46,
+        "endChar": 37
+      },
+      "revId": "71959519086bc5a3c4dc5ea3c96bc1fd2499b14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a08f6aa_9e1b8cf3",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-13T10:11:32Z",
+      "side": 1,
+      "message": "use \u0027-p\u0027",
+      "revId": "71959519086bc5a3c4dc5ea3c96bc1fd2499b14e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
