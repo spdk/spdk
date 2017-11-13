@@ -22,6 +22,30 @@
       "revId": "24d22bd363c3fbe0a1114a7ea9f0091833591c5d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b2be14e_d99caa83",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-13T18:12:18Z",
+      "side": 1,
+      "message": "It\u0027s set on line 623 - it\u0027s a static variable so it is only initialized to NULL on the first pass through the function. I\u0027m just using a static variable instead of a global because scope-wise we only need it inside this function.",
+      "parentUuid": "84079230_483b1461",
+      "range": {
+        "startLine": 614,
+        "startChar": 5,
+        "endLine": 614,
+        "endChar": 24
+      },
+      "revId": "24d22bd363c3fbe0a1114a7ea9f0091833591c5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
