@@ -569,10 +569,15 @@ bdevperf_run(void *arg1, void *arg2)
 	 *  the min buffer alignment.  Some backends such as AIO have alignment restrictions
 	 *  that must be accounted for.
 	 */
-	task_pool = rte_mempool_create("task_pool", 4096 * spdk_env_get_core_count(),
+	task_pool = rte_mempool_create("task_pool", g_target_count * g_queue_depth,
 				       sizeof(struct bdevperf_task),
 				       64, 0, NULL, NULL, task_ctor, NULL,
 				       SOCKET_ID_ANY, 0);
+	if (!task_pool) {
+		SPDK_ERRLOG("Cannot allocate %d tasks\n", g_target_count * g_queue_depth);
+		spdk_app_stop(1);
+		return;
+	}
 
 	printf("Running I/O for %d seconds...\n", g_time_in_sec);
 	fflush(stdout);
