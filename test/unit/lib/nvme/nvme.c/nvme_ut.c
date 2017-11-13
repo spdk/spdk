@@ -771,6 +771,25 @@ test_trid_parse_and_compare(void)
 	memset_trid(&trid1, &trid2);
 	ret = spdk_nvme_transport_id_compare(&trid1, &trid2);
 	CU_ASSERT(ret == 0);
+
+	/* Compare PCI addresses via spdk_pci_addr_compare (rather than as strings) */
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1, "trtype:PCIe traddr:0000:04:00.0") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2, "trtype:PCIe traddr:04:00.0") == 0);
+	MOCK_SET(spdk_pci_addr_compare, int, 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) == 0);
+
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1, "trtype:PCIe traddr:0000:05:00.0") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2, "trtype:PCIe traddr:04:00.0") == 0);
+	MOCK_SET(spdk_pci_addr_compare, int, 1);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) == 1);
+
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1, "trtype:PCIe traddr:0000:04:00.0") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2, "trtype:PCIe traddr:05:00.0") == 0);
+	MOCK_SET(spdk_pci_addr_compare, int, -1);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) == -1);
 }
 
 static void
