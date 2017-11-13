@@ -118,8 +118,6 @@ spdk_subsystem_init_next(int rc)
 {
 	if (rc) {
 		spdk_app_stop(rc);
-		assert(g_next_subsystem != NULL);
-		SPDK_ERRLOG("Init subsystem %s failed\n", g_next_subsystem->name);
 		return;
 	}
 
@@ -180,9 +178,7 @@ spdk_subsystem_init(struct spdk_event *app_start_event)
 static void
 _spdk_subsystem_fini_next(void *arg1, void *arg2)
 {
-	if (!g_next_subsystem) {
-		g_next_subsystem = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
-	} else {
+	if (g_next_subsystem) {
 		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
 	}
 
@@ -214,8 +210,6 @@ spdk_subsystem_fini_next(void)
 void
 spdk_subsystem_fini(struct spdk_event *app_stop_event)
 {
-	assert(g_next_subsystem == NULL);
-
 	/* There is assumption that whole fini path is done on one core. */
 	assert(app_stop_event->lcore == spdk_env_get_current_core());
 
