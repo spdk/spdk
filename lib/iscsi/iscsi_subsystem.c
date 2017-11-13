@@ -836,6 +836,7 @@ spdk_iscsi_setup(void *arg1, void *arg2)
 	rc = spdk_iscsi_portal_grp_open_all();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_iscsi_portal_grp_open_all() failed\n");
+		spdk_app_stop(rc);
 		return;
 	}
 }
