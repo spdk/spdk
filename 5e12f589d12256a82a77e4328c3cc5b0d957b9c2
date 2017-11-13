@@ -16,6 +16,24 @@
       "revId": "5e12f589d12256a82a77e4328c3cc5b0d957b9c2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "047b5f97_4f52f7f8",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-13T06:47:15Z",
+      "side": 1,
+      "message": "\u003e If spdk_fio_poll_thread returns the event count, this will be cleaner.\n\ndone\n\n\u003e I also think you need to write it as two separate loops:\n\u003e while (!done) {\n\u003e     spdk_fio_poll_thread(fio_thread);\n\u003e }\n\u003e \n\u003e while (spdk_fio_poll_thread(fio_thread) \u003e 0) {}\n\u003e \n\u003e It is possible for the number of events to drop to 0 without being done if we\u0027re waiting on I/O.\n\nWhy is that? (!done || count \u003e 0) will always be true if done\u003d\u003dfalse.\nI\u0027ve changed the loop to *do {} while*. I\u0027m not sure if the code is readable now. \nI can still change split the loop into 2. Please let me know.",
+      "parentUuid": "02fdd4c4_73a17608",
+      "revId": "5e12f589d12256a82a77e4328c3cc5b0d957b9c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
