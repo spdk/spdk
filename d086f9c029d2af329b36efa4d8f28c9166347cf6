@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7ecfd7d_aad084b3",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-13T20:34:38Z",
+      "side": 1,
+      "message": "using a global variable here had a potential to be used for calling subsystem-\u003efini only for subsystems that have been really initialized.\nCurrently if any subsystem-\u003einit fails, it calls spdk_app_stop (subsystem.c:121) , which will call subsystem-\u003efini for all subsystems uncoditionally, but this could be easily changed - https://review.gerrithub.io/c/386892\n\nCould you preserve the global variable here?",
+      "range": {
+        "startLine": 183,
+        "startChar": 1,
+        "endLine": 183,
+        "endChar": 53
+      },
+      "revId": "d086f9c029d2af329b36efa4d8f28c9166347cf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
