@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "395a399b_a059cce5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-13T06:59:13Z",
+      "side": 0,
+      "message": "oh wow, shouldn\u0027t this be a part of _call_next_module_fini?\nthis can be called before the thread_msg had a chance to execute. we could call finish_complete from bdev.c:630 prematurely.",
+      "range": {
+        "startLine": 638,
+        "startChar": 0,
+        "endLine": 640,
+        "endChar": 2
+      },
+      "revId": "2f2288485a53651cb8c90e8bc096592a41cb3303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
