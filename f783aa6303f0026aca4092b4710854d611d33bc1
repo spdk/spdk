@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7ef5e67_0a8ef6f6",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-13T07:26:37Z",
+      "side": 1,
+      "message": "I know this function will probably exit with \"1\" due to failing \"while\" condition and -e flag set, but please add return 1 at the end of the function for better readability. Sorry for nitpicking",
+      "range": {
+        "startLine": 435,
+        "startChar": 85,
+        "endLine": 435,
+        "endChar": 98
+      },
+      "revId": "f783aa6303f0026aca4092b4710854d611d33bc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
