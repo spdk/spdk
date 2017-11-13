@@ -58,5 +58,6 @@ kill_stub
 run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 0
 #Test configure remote NVMe device from conf file
 run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 1
+run_test ./test/iscsi_tgt/nvme_remote/multi_iscsi_identify.sh
 run_test ./test/iscsi_tgt/fio/fio.sh
 timing_exit iscsi_tgt
