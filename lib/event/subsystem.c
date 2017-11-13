@@ -182,6 +182,8 @@ spdk_subsystem_fini_next(void)
 {
 	struct spdk_event *next_fini_event;
 
+	SPDK_ERRLOG("g_app_stop_event->lcore = %d, spdk_env_get_current_core() = %d, g_fini_core = %d\n",
+		    (int) g_app_stop_event->lcore, (int) spdk_env_get_current_core(), (int) g_fini_core);
 	assert(g_app_stop_event->lcore == spdk_env_get_current_core());
 
 	if (!g_next_subsystem) {
@@ -191,6 +193,7 @@ spdk_subsystem_fini_next(void)
 	}
 
 	if (!g_next_subsystem) {
+		SPDK_ERRLOG("calling g_app_stop_event\n");
 		spdk_event_call(g_app_stop_event);
 		return;
 	}
