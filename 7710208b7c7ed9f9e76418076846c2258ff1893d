@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab592536_ec285f73",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-13T07:10:24Z",
+      "side": 1,
+      "message": "This blobstore device unregister work looks like done by the cb_fn set in this function and not this spdk_fs_unload() function\u0027s work. \n\nMaybe just:\nThis function will unload the filesystem and free the allocated I/O channels.",
+      "range": {
+        "startLine": 97,
+        "startChar": 45,
+        "endLine": 98,
+        "endChar": 34
+      },
+      "revId": "7710208b7c7ed9f9e76418076846c2258ff1893d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e9c6ed6_31750c3b",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-13T07:10:24Z",
+      "side": 1,
+      "message": "The allocated I/O channel on success or NULL otherwise.",
+      "range": {
+        "startLine": 112,
+        "startChar": 11,
+        "endLine": 112,
+        "endChar": 36
+      },
+      "revId": "7710208b7c7ed9f9e76418076846c2258ff1893d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "696174c4_8682f9ad",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-13T07:10:24Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 125,
+        "startChar": 11,
+        "endLine": 125,
+        "endChar": 37
+      },
+      "revId": "7710208b7c7ed9f9e76418076846c2258ff1893d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8731bc74_dc9ebe06",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-13T07:10:24Z",
+      "side": 1,
+      "message": "Maybe below to clear descirbe the space of this struct is from caller.\n\nCaller allocated structure to store the obtained information about this file",
+      "range": {
+        "startLine": 145,
+        "startChar": 15,
+        "endLine": 145,
+        "endChar": 30
+      },
+      "revId": "7710208b7c7ed9f9e76418076846c2258ff1893d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
