@@ -211,27 +211,18 @@ spdk_subsystem_fini_next(void)
 	}
 }
 
-static void
-spdk_subsystem_fini_schedule(void *arg1, void *arg2)
-{
-	spdk_subsystem_fini_next();
-}
-
 void
 spdk_subsystem_fini(struct spdk_event *app_stop_event)
 {
-	struct spdk_event *fini_event;
-
 	assert(g_next_subsystem == NULL);
 
-	g_app_stop_event = app_stop_event;
-
 	/* There is assumption that whole fini path is done on one core. */
-	assert(g_app_stop_event->lcore == spdk_env_get_current_core());
+	assert(app_stop_event->lcore == spdk_env_get_current_core());
 
+	g_app_stop_event = app_stop_event;
 	g_fini_core = spdk_env_get_current_core();
-	fini_event = spdk_event_allocate(g_fini_core, spdk_subsystem_fini_schedule, NULL, NULL);
-	spdk_event_call(fini_event);
+
+	spdk_subsystem_fini_next();
 }
 
 void
