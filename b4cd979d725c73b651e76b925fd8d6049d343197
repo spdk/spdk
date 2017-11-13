@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc321d39_a412ceaa",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-13T15:31:12Z",
+      "side": 1,
+      "message": "spdk_scsi_lun_complete_mgmt_task already contains SPDK_SCSI_TASK_FUNC_LUN_RESET check (lun.c:55).\nas i can see, the *func* is always equal to *task-\u003efunction*, so no logic has been changed for  the lun reset.",
+      "range": {
+        "startLine": 127,
+        "startChar": 2,
+        "endLine": 127,
+        "endChar": 52
+      },
+      "revId": "b4cd979d725c73b651e76b925fd8d6049d343197",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b04e055f_033619fe",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-13T15:31:12Z",
+      "side": 1,
+      "message": "aren\u0027t you leaking scsi_task at this point? I think you need to call task-\u003ecpl_fn at least.\nWhat\u0027s the reason for creating this patch?",
+      "revId": "b4cd979d725c73b651e76b925fd8d6049d343197",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
