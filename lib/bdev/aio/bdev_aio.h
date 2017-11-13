@@ -52,9 +52,12 @@ struct bdev_aio_task {
 struct bdev_aio_io_channel {
 	io_context_t		io_ctx;
 	struct spdk_poller	*poller;
+	uint64_t		io_inflight;
 };
 
 struct file_disk {
+	struct bdev_aio_task	*reset_task;
+	struct spdk_poller	*reset_retry_timer;
 	struct spdk_bdev	disk;
 	char			*filename;
 	int			fd;
