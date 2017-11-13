@@ -1235,9 +1235,10 @@ spdk_bdev_scsi_task_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 	int sc, sk, asc, ascq;
 
 	task->bdev_io = bdev_io;
-
 	spdk_bdev_io_get_scsi_status(bdev_io, &sc, &sk, &asc, &ascq);
-	spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
+	if (task->status != SPDK_SCSI_STATUS_CHECK_CONDITION) {
+		spdk_scsi_task_set_status(task, sc, sk, asc, ascq);
+	}
 	spdk_scsi_lun_complete_task(task->lun, task);
 }
 

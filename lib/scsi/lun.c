@@ -89,7 +89,6 @@ spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 					  SPDK_SCSI_SENSE_ABORTED_COMMAND,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
 					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		spdk_scsi_lun_complete_task(lun, task);
 	}
 }
 
