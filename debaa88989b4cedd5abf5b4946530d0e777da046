@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe01eb59_147c3e29",
+        "filename": "include/spdk/stdinc.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-13T18:14:18Z",
+      "side": 1,
+      "message": "aio.h is a POSIX header, not standard C, so this is in the wrong section.\n\nHowever, see my comment in the other file - I don\u0027t think we want to include aio.h at all, since that is the POSIX AIO interface, rather than Linux AIO.",
+      "revId": "debaa88989b4cedd5abf5b4946530d0e777da046",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1090a53d_65806c4b",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-13T18:14:18Z",
+      "side": 1,
+      "message": "Does aio_cancel() actually work in this case? We are using Linux AIO (libaio), not POSIX AIO, so I would have expected  io_cancel() to be the correct call.",
+      "revId": "debaa88989b4cedd5abf5b4946530d0e777da046",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
