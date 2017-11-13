@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f1491567_44a7ad27",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 898,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-13T07:41:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ad0c858d_93065cd7",
+      "revId": "9d6402d2950603fa042d617c4812e6756212b295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9039e04e_2541d87f",
         "filename": "examples/nvme/identify/identify.c",
         "patchSetId": 1
@@ -30,6 +48,30 @@
       "writtenOn": "2017-11-10T17:46:28Z",
       "side": 1,
       "message": "I\u0027d prefer to change \"Number IO Queues\" to \"Number of Queues\" so that it matches the spec wording.",
+      "range": {
+        "startLine": 899,
+        "startChar": 10,
+        "endLine": 899,
+        "endChar": 26
+      },
+      "revId": "9d6402d2950603fa042d617c4812e6756212b295",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aecee6bc_2de3e2a8",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 899,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-13T07:41:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9039e04e_2541d87f",
       "range": {
         "startLine": 899,
         "startChar": 10,
