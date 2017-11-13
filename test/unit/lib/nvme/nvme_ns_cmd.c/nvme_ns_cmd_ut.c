@@ -128,12 +128,6 @@ spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
 	return pci_id;
 }
 
-int
-spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2)
-{
-	return true;
-}
-
 void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {

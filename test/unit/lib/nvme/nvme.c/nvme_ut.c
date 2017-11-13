@@ -71,10 +71,6 @@ DEFINE_STUB(nvme_ctrlr_start, int,
 DEFINE_STUB(spdk_pci_device_get_addr, struct spdk_pci_addr,
 	    (struct spdk_pci_device *pci_dev), {0})
 
-DEFINE_STUB(spdk_pci_addr_compare, int,
-	    (const struct spdk_pci_addr *a1,
-	     const struct spdk_pci_addr *a2), 1)
-
 DEFINE_STUB(nvme_ctrlr_get_ref_count, int,
 	    (struct spdk_nvme_ctrlr *ctrlr), 0)
 
@@ -771,6 +767,22 @@ test_trid_parse_and_compare(void)
 	memset_trid(&trid1, &trid2);
 	ret = spdk_nvme_transport_id_compare(&trid1, &trid2);
 	CU_ASSERT(ret == 0);
+
+	/* Compare PCI addresses via spdk_pci_addr_compare (rather than as strings) */
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1, "trtype:PCIe traddr:0000:04:00.0") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2, "trtype:PCIe traddr:04:00.0") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) == 0);
+
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1, "trtype:PCIe traddr:0000:05:00.0") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2, "trtype:PCIe traddr:04:00.0") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) > 0);
+
+	memset_trid(&trid1, &trid2);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid1, "trtype:PCIe traddr:0000:04:00.0") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_parse(&trid2, "trtype:PCIe traddr:05:00.0") == 0);
+	CU_ASSERT(spdk_nvme_transport_id_compare(&trid1, &trid2) < 0);
 }
 
 static void

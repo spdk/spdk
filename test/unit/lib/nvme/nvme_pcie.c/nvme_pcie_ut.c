@@ -135,12 +135,6 @@ spdk_pci_device_get_addr(struct spdk_pci_device *dev)
 }
 
 int
-spdk_pci_addr_compare(const struct spdk_pci_addr *a1, const struct spdk_pci_addr *a2)
-{
-	abort();
-}
-
-int
 spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset)
 {
 	abort();
