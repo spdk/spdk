@@ -49,6 +49,7 @@ static int bdev_aio_initialize(void);
 static void aio_free_disk(struct file_disk *fdisk);
 static void bdev_aio_get_spdk_running_config(FILE *fp);
 static TAILQ_HEAD(, file_disk) g_aio_disk_head;
+static uint64_t	g_io_inflight;
 
 #define SPDK_AIO_QUEUE_DEPTH 128
 
@@ -128,6 +129,7 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 		SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		return -1;
 	}
+	aio_ch->io_inflight++;
 
 	return nbytes;
 }
@@ -158,6 +160,7 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 		SPDK_ERRLOG("%s: io_submit returned %d\n", __func__, rc);
 		return -1;
 	}
+	aio_ch->io_inflight++;
 
 	return len;
 }
@@ -199,9 +202,40 @@ bdev_aio_initialize_io_channel(struct bdev_aio_io_channel *ch)
 }
 
 static void
+_bdev_aio_get_io_inflight(void *io_device, struct spdk_io_channel *ch,
+			  void *ctx)
+{
+	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
+
+	__sync_fetch_and_add(&g_io_inflight, aio_ch->io_inflight);
+}
+
+static void
+_bdev_aio_get_io_inflight_done(void *io_device, void *ctx)
+{
+	struct file_disk *fdisk = io_device;
+
+	if (g_io_inflight == 0) {
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(fdisk->reset_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+		fdisk->reset_in_progress = false;
+	}
+	g_io_inflight = 0;
+}
+
+static void
+_bdev_process_reset(void *io_device)
+{
+	spdk_for_each_channel(io_device,
+			      _bdev_aio_get_io_inflight,
+			      NULL,
+			      _bdev_aio_get_io_inflight_done);
+}
+
+static void
 bdev_aio_poll(void *arg)
 {
 	struct bdev_aio_io_channel *ch = arg;
+	struct file_disk *fdisk = ch->fdisk;
 	int nr, i;
 	enum spdk_bdev_io_status status;
 	struct bdev_aio_task *aio_task;
@@ -228,13 +262,19 @@ bdev_aio_poll(void *arg)
 		}
 
 		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
+		ch->io_inflight--;
+	}
+
+	if (fdisk->reset_in_progress) {
+		_bdev_process_reset(fdisk);
 	}
 }
 
 static void
 bdev_aio_reset(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 {
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_SUCCESS);
+	fdisk->reset_in_progress = true;
+	fdisk->reset_task = aio_task;
 }
 
 static void bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -311,7 +351,7 @@ bdev_aio_create_cb(void *io_device, void *ctx_buf)
 	if (bdev_aio_initialize_io_channel(ch) != 0) {
 		return -1;
 	}
-
+	ch->fdisk = io_device;
 	spdk_bdev_poller_start(&ch->poller, bdev_aio_poll, ch, 0);
 	return 0;
 }
@@ -330,7 +370,7 @@ bdev_aio_get_io_channel(void *ctx)
 {
 	struct file_disk *fdisk = ctx;
 
-	return spdk_get_io_channel(&fdisk->fd);
+	return spdk_get_io_channel(fdisk);
 }
 
 
@@ -401,6 +441,7 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 
 	fdisk->disk.need_aligned_buffer = 1;
 	fdisk->disk.write_cache = 1;
+	fdisk->reset_in_progress = false;
 
 	detected_block_size = spdk_fd_get_blocklen(fdisk->fd);
 	if (block_size == 0) {
@@ -448,7 +489,7 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 
 	fdisk->disk.fn_table = &aio_fn_table;
 
-	spdk_io_device_register(&fdisk->fd, bdev_aio_create_cb, bdev_aio_destroy_cb,
+	spdk_io_device_register(fdisk, bdev_aio_create_cb, bdev_aio_destroy_cb,
 				sizeof(struct bdev_aio_io_channel));
 	spdk_bdev_register(&fdisk->disk);
 
