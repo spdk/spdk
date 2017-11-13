@@ -45,6 +45,7 @@ extern "C" {
 #endif
 
 /* Standard C */
+#include <aio.h>
 #include <assert.h>
 #include <ctype.h>
 #include <errno.h>
