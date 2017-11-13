@@ -403,18 +403,12 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 					host = p->host;
 					/* wildcard? */
 					if (strcasecmp(host, "[::]") == 0
-					    || strcasecmp(host, "[*]") == 0
-					    || strcasecmp(host, "0.0.0.0") == 0
-					    || strcasecmp(host, "*") == 0) {
-						if ((strcasecmp(host, "[::]") == 0
-						     || strcasecmp(host, "[*]") == 0)
-						    && spdk_sock_is_ipv6(conn->sock)) {
+					    || strcasecmp(host, "0.0.0.0") == 0) {
+						if (spdk_sock_is_ipv6(conn->sock)) {
 							snprintf(buf, sizeof buf, "[%s]",
 								 conn->target_addr);
 							host = buf;
-						} else if ((strcasecmp(host, "0.0.0.0") == 0
-							    || strcasecmp(host, "*") == 0)
-							   && spdk_sock_is_ipv4(conn->sock)) {
+						} else if (spdk_sock_is_ipv4(conn->sock)) {
 							snprintf(buf, sizeof buf, "%s",
 								 conn->target_addr);
 							host = buf;
