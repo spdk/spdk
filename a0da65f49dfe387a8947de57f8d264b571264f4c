@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00821950_b6a1387d",
+        "filename": "lib/bdev/aio/bdev_aio.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-14T23:01:10Z",
+      "side": 0,
+      "message": "For future reference, you can just add:\n\nstruct file_disk;\n\nand then you can add a struct file_disk * to the bdev_aio_io_channel - rather than moving the definitions around.\n\nYou don\u0027t need to modify this patch - just wanted to mention this.",
+      "revId": "a0da65f49dfe387a8947de57f8d264b571264f4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

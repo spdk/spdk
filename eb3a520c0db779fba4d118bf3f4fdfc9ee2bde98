@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "430a0802_d57cc880",
+        "filename": "lib/bdev/aio/bdev_aio.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-14T23:01:10Z",
+      "side": 1,
+      "message": "The \"SPDK\" way to do this is to put the io_inflight in the channel, not the file_disk.  Then you avoid having to do expensive atomic operations in the I/O path.  You use spdk_for_each_channel() to iterate the io_channels to see when you have no more outstanding IO.",
+      "revId": "eb3a520c0db779fba4d118bf3f4fdfc9ee2bde98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
