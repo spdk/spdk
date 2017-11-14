@@ -6,7 +6,9 @@ rootdir=$(readlink -f $(dirname $0))/..
 
 function linux_iter_pci_class_code {
 	# Argument is the class code
-	lspci -mm -n -D | awk -v cc="\"$1\"" -F " " '{if (cc ~ $2) print $1}' | tr -d '"'
+	if [ "$SKIP_PCI" == 0 ]; then
+		lspci -mm -n -D | awk -v cc="\"$1\"" -F " " '{if (cc ~ $2) print $1}' | tr -d '"'
+	fi
 }
 
 function linux_iter_pci_dev_id {
@@ -100,7 +102,6 @@ function configure_linux {
 			echo Active mountpoints on /dev/$blkname, so not binding PCI dev $bdf
 		fi
 	done
-
 
 	# IOAT
 	TMP=`mktemp`
@@ -340,6 +341,7 @@ if [ "$username" = "" ]; then
 fi
 
 : ${HUGEMEM:=2048}
+: ${SKIP_PCI:=0}
 
 if [ `uname` = Linux ]; then
 	HUGEPGSZ=$(( `grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9'` ))
