@@ -2044,6 +2044,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	struct spdk_blob_store	*bs;
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t	*seq;
+	spdk_bs_batch_t		*batch;
+	uint64_t		num_md_lba;
 	uint64_t		num_md_pages;
 	uint64_t		num_md_clusters;
 	uint32_t		i;
@@ -2152,6 +2154,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	ctx->super->md_start = bs->md_start = num_md_pages;
 	ctx->super->md_len = bs->md_len;
 	num_md_pages += bs->md_len;
+	num_md_lba = _spdk_bs_page_to_lba(bs, num_md_pages);
 
 	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 
@@ -2187,8 +2190,14 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
-	/* Zero the entire device */
-	spdk_bs_sequence_write_zeroes(seq, 0, bs->dev->blockcnt, _spdk_bs_init_trim_cpl, ctx);
+	batch = spdk_bs_sequence_to_batch(seq, _spdk_bs_init_trim_cpl, ctx);
+
+	/* Clear metadata space */
+	spdk_bs_batch_write_zeroes(batch, 0, num_md_lba);
+	/* Trim data clusters */
+	spdk_bs_batch_unmap(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
+
+	spdk_bs_batch_close(batch);
 }
 
 /* END spdk_bs_init */
