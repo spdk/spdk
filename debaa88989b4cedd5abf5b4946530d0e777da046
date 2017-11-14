@@ -51,6 +51,29 @@
       "revId": "debaa88989b4cedd5abf5b4946530d0e777da046",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13fc1fa0_0142baa8",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-14T00:53:14Z",
+      "side": 1,
+      "message": "I think Daniel is right and you should use io_cancel().\n\n\nAt first I feedback to your code by code reading.\n\n- If you use io_cancel(), you should invoke io_cancel() per AIO block.\n\n- If aio_cancel() successfully cancels a block, the block will never be placed into the completion queue even if io_getevents() infinitely.\n- Hence fdisk-\u003eio_inflight will never become 0 for some cases.\n\nThen, I feedback to your code by evaluation and investigation.\n\n- As long as I know, io_cancel() is not implemented in block and most file systems yet. (For block devices we confirmed/evaluated it a few months ago.\n\n- If this is still correct, aio_cancel() will be NOP.\nHence this code will not cause any error.\n\n- However, your code may misleading.",
+      "range": {
+        "startLine": 246,
+        "startChar": 0,
+        "endLine": 247,
+        "endChar": 30
+      },
+      "revId": "debaa88989b4cedd5abf5b4946530d0e777da046",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
