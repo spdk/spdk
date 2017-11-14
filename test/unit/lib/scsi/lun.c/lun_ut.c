@@ -66,6 +66,22 @@ spdk_poller_unregister(struct spdk_poller **ppoller,
 {
 }
 
+struct spdk_event *
+spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
+		    void *arg1, void *arg2)
+{
+	return NULL;
+}
+
+/**
+ * \brief Pass the given event to the associated lcore and call the function.
+ */
+void
+spdk_event_call(struct spdk_event *event)
+{
+
+}
+
 uint32_t
 spdk_env_get_current_core(void)
 {
