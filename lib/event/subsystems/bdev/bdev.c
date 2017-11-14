@@ -35,6 +35,7 @@
 
 #include "spdk/bdev.h"
 #include "spdk/env.h"
+#include "spdk/io_channel.h"
 
 #include "spdk_internal/event.h"
 #include "spdk/env.h"
@@ -51,10 +52,7 @@ spdk_bdev_subsystem_start_poller(struct spdk_bdev_poller **ppoller,
 				 void *arg,
 				 uint64_t period_microseconds)
 {
-	spdk_poller_register((struct spdk_poller **)ppoller,
-			     fn,
-			     arg,
-			     period_microseconds);
+	*ppoller = (struct spdk_bdev_poller *)spdk_poller_register(fn, arg, period_microseconds);
 }
 
 static void

@@ -253,7 +253,7 @@ thread_name(void)
 	const char *name;
 
 	/* Create thread with no name */
-	spdk_allocate_thread(_send_msg, NULL, NULL);
+	spdk_allocate_thread(_send_msg, NULL, NULL, NULL, NULL);
 	thread = spdk_get_thread();
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	name = spdk_thread_get_name(thread);
@@ -261,7 +261,7 @@ thread_name(void)
 	spdk_free_thread();
 
 	/* Create thread named "test_thread" */
-	spdk_allocate_thread(_send_msg, NULL, "test_thread");
+	spdk_allocate_thread(_send_msg, NULL, NULL, NULL, "test_thread");
 	thread = spdk_get_thread();
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	name = spdk_thread_get_name(thread);
@@ -326,7 +326,7 @@ channel(void)
 	struct spdk_io_channel *ch1, *ch2;
 	void *ctx;
 
-	spdk_allocate_thread(_send_msg, NULL, "thread0");
+	spdk_allocate_thread(_send_msg, NULL, NULL, NULL, "thread0");
 	spdk_io_device_register(&device1, create_cb_1, destroy_cb_1, sizeof(ctx1));
 	spdk_io_device_register(&device2, create_cb_2, destroy_cb_2, sizeof(ctx2));
 	spdk_io_device_register(&device3, create_cb_null, NULL, 0);

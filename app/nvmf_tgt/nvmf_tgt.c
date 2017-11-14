@@ -37,6 +37,7 @@
 
 #include "spdk/bdev.h"
 #include "spdk/event.h"
+#include "spdk/io_channel.h"
 #include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/util.h"
@@ -126,7 +127,7 @@ _nvmf_tgt_start_subsystem(void *arg1, void *arg2)
 
 	spdk_nvmf_subsystem_start(subsystem);
 
-	spdk_poller_register(&app_subsys->poller, subsystem_poll, app_subsys, 0);
+	app_subsys->poller = spdk_poller_register(subsystem_poll, app_subsys, 0);
 }
 
 void
@@ -275,7 +276,7 @@ nvmf_tgt_create_poll_group(void *arg1, void *arg2)
 		SPDK_ERRLOG("Failed to create poll group for core %u\n", g_tgt.core);
 	}
 
-	spdk_poller_register(&pg->poller, nvmf_tgt_poll_group_poll, pg, 0);
+	pg->poller = spdk_poller_register(nvmf_tgt_poll_group_poll, pg, 0);
 	g_active_poll_groups++;
 
 	spdk_event_call(event);
@@ -342,8 +343,8 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			break;
 		}
 		case NVMF_TGT_INIT_START_ACCEPTOR:
-			spdk_poller_register(&g_acceptor_poller, acceptor_poll, g_tgt.tgt,
-					     g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
+			g_acceptor_poller = spdk_poller_register(acceptor_poll, g_tgt.tgt,
+					    g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
 			SPDK_NOTICELOG("Acceptor running\n");
 			g_tgt.state = NVMF_TGT_RUNNING;
 			break;

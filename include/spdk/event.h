@@ -53,8 +53,6 @@ typedef void (*spdk_event_fn)(void *arg1, void *arg2);
  */
 struct spdk_event;
 
-typedef void (*spdk_poller_fn)(void *arg);
-
 /**
  * \brief A poller is a function that is repeatedly called on an lcore.
  */
@@ -184,19 +182,6 @@ struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
  * \brief Pass the given event to the associated lcore and call the function.
  */
 void spdk_event_call(struct spdk_event *event);
-
-/**
- * \brief Register a poller on the current lcore.
- */
-void spdk_poller_register(struct spdk_poller **ppoller,
-			  spdk_poller_fn fn,
-			  void *arg,
-			  uint64_t period_microseconds);
-
-/**
- * \brief Unregister a poller on the given lcore.
- */
-void spdk_poller_unregister(struct spdk_poller **ppoller);
 
 /**
  * \brief Enable or disable monitoring of context switches.
