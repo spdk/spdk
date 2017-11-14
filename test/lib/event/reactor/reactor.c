@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/event.h"
+#include "spdk/io_channel.h"
 
 static int g_time_in_sec;
 static struct spdk_poller *test_end_poller;
@@ -47,6 +48,12 @@ static void
 test_end(void *arg)
 {
 	printf("test_end\n");
+
+	spdk_poller_unregister(&test_end_poller);
+	spdk_poller_unregister(&poller_100ms);
+	spdk_poller_unregister(&poller_250ms);
+	spdk_poller_unregister(&poller_500ms);
+
 	spdk_app_stop(0);
 }
 
@@ -76,27 +83,15 @@ test_start(void *arg1, void *arg2)
 	printf("test_start\n");
 
 	/* Register a poller that will stop the test after the time has elapsed. */
-	spdk_poller_register(&test_end_poller, test_end, NULL, g_time_in_sec * 1000000ULL);
+	test_end_poller = spdk_poller_register(test_end, NULL, g_time_in_sec * 1000000ULL);
 
-	spdk_poller_register(&poller_100ms, tick, (void *)100, 100000);
-	spdk_poller_register(&poller_250ms, tick, (void *)250, 250000);
-	spdk_poller_register(&poller_500ms, tick, (void *)500, 500000);
-	spdk_poller_register(&poller_oneshot, oneshot, NULL, 0);
+	poller_100ms = spdk_poller_register(tick, (void *)100, 100000);
+	poller_250ms = spdk_poller_register(tick, (void *)250, 250000);
+	poller_500ms = spdk_poller_register(tick, (void *)500, 500000);
+	poller_oneshot = spdk_poller_register(oneshot, NULL, 0);
 
-	spdk_poller_register(&poller_unregister, nop, NULL, 0);
+	poller_unregister = spdk_poller_register(nop, NULL, 0);
 	spdk_poller_unregister(&poller_unregister);
-}
-
-static void
-test_cleanup(void)
-{
-	printf("test_cleanup\n");
-
-	spdk_poller_unregister(&test_end_poller);
-	spdk_poller_unregister(&poller_100ms);
-	spdk_poller_unregister(&poller_250ms);
-	spdk_poller_unregister(&poller_500ms);
-	/* poller_oneshot unregisters itself */
 }
 
 static void
@@ -134,11 +129,7 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	opts.shutdown_cb = test_cleanup;
-
 	spdk_app_start(&opts, test_start, NULL, NULL);
-
-	test_cleanup();
 
 	spdk_app_fini();
 

@@ -397,7 +397,7 @@ _bdev_remove_cb(struct spdk_vhost_dev *vdev, void *arg)
 		     bvdev->vdev.name);
 	if (bvdev->requestq_poller) {
 		spdk_poller_unregister(&bvdev->requestq_poller);
-		spdk_poller_register(&bvdev->requestq_poller, no_bdev_vdev_worker, bvdev, 0);
+		bvdev->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, bvdev, 0);
 	}
 
 	bvdev->bdev = NULL;
@@ -503,8 +503,8 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 		}
 	}
 
-	spdk_poller_register(&bvdev->requestq_poller, bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
-			     bvdev, 0);
+	bvdev->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
+				 bvdev, 0);
 	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
 out:
 	spdk_vhost_dev_backend_event_done(event_ctx, rc);
@@ -569,8 +569,8 @@ spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 	destroy_ctx->event_ctx = event_ctx;
 
 	spdk_poller_unregister(&bvdev->requestq_poller);
-	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx,
-			     1000);
+	destroy_ctx->poller = spdk_poller_register(destroy_device_poller_cb,
+			      destroy_ctx, 1000);
 	return 0;
 
 err:

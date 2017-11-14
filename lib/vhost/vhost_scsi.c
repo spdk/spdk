@@ -36,6 +36,7 @@
 #include <linux/virtio_scsi.h>
 
 #include "spdk/env.h"
+#include "spdk/io_channel.h"
 #include "spdk/scsi.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/conf.h"
@@ -1046,8 +1047,8 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 
 	spdk_vhost_dev_mem_register(vdev);
 
-	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, 0);
-	spdk_poller_register(&svdev->mgmt_poller, vdev_mgmt_worker, svdev,
+	svdev->requestq_poller = spdk_poller_register(vdev_worker, svdev, 0);
+	svdev->mgmt_poller = spdk_poller_register(vdev_mgmt_worker, svdev,
 			     MGMT_POLL_PERIOD_US);
 out:
 	spdk_vhost_dev_backend_event_done(event_ctx, rc);
@@ -1115,8 +1116,8 @@ spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 
 	spdk_poller_unregister(&svdev->requestq_poller);
 	spdk_poller_unregister(&svdev->mgmt_poller);
-	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx,
-			     1000);
+	destroy_ctx->poller = spdk_poller_register(destroy_device_poller_cb, destroy_ctx,
+			      1000);
 
 	return 0;
 

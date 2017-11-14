@@ -35,6 +35,7 @@
 
 #include "CUnit/Basic.h"
 #include "spdk_cunit.h"
+#include "spdk/io_channel.h"
 #include "spdk_internal/mock.h"
 #include "lib/test_env.c"
 
@@ -48,8 +49,8 @@ DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_app_get_core_mask, uint64_t, (void), 0);
 DEFINE_STUB_V(spdk_app_stop, (int rc));
 DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
-DEFINE_STUB_V(spdk_poller_register, (struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
-				     uint64_t period_microseconds));
+DEFINE_STUB(spdk_poller_register, struct spdk_poller *, (spdk_poller_fn fn, void *arg,
+		uint64_t period_microseconds), NULL);
 DEFINE_STUB_V(spdk_poller_unregister, (struct spdk_poller **ppoller));
 DEFINE_STUB(spdk_iommu_mem_unregister, int, (uint64_t addr, uint64_t len), 0);
 DEFINE_STUB(rte_vhost_get_mem_table, int, (int vid, struct rte_vhost_memory **mem), 0);

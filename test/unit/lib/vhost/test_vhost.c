@@ -72,8 +72,6 @@ DEFINE_STUB(spdk_vhost_vq_used_signal, int, (struct spdk_vhost_dev *vdev,
 DEFINE_STUB_V(spdk_vhost_dev_used_signal, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB_V(spdk_vhost_dev_mem_register, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB_P(spdk_vhost_dev_find, struct spdk_vhost_dev, (const char *ctrlr_name), {0});
-DEFINE_STUB_V(spdk_poller_register, (struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
-				     uint64_t period_microseconds));
 DEFINE_STUB_V(spdk_ring_free, (struct spdk_ring *ring));
 DEFINE_STUB_P(spdk_conf_first_section, struct spdk_conf_section, (struct spdk_conf *cp), {0});
 DEFINE_STUB(spdk_conf_section_match_prefix, bool, (const struct spdk_conf_section *sp,
@@ -87,7 +85,6 @@ DEFINE_STUB_P(spdk_conf_section_get_nmval, char, (struct spdk_conf_section *sp, 
 DEFINE_STUB_V(spdk_vhost_dev_mem_unregister, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB(spdk_vhost_event_send, int, (struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 		void *arg, unsigned timeout_sec, const char *errmsg), 0);
-DEFINE_STUB_V(spdk_poller_unregister, (struct spdk_poller **ppoller));
 DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
 DEFINE_STUB_V(spdk_vhost_dev_backend_event_done, (void *event_ctx, int response));
 DEFINE_STUB_V(spdk_vhost_lock, (void));
