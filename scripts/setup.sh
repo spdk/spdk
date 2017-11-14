@@ -6,7 +6,9 @@ rootdir=$(readlink -f $(dirname $0))/..
 
 function linux_iter_pci_class_code {
 	# Argument is the class code
-	lspci -mm -n -D | awk -v cc="\"$1\"" -F " " '{if (cc ~ $2) print $1}' | tr -d '"'
+	if [ "$SKIP_PCI" == 0 ]; then
+		lspci -mm -n -D | awk -v cc="\"$1\"" -F " " '{if (cc ~ $2) print $1}' | tr -d '"'
+	fi
 }
 
 function linux_iter_pci_dev_id {
@@ -100,7 +102,6 @@ function configure_linux {
 			echo Active mountpoints on /dev/$blkname, so not binding PCI dev $bdf
 		fi
 	done
-
 
 	# IOAT
 	TMP=`mktemp`
@@ -287,27 +288,29 @@ function status_linux {
 }
 
 function configure_freebsd {
-	TMP=`mktemp`
+	if [ "$SKIP_PCI" == 0 ]; then
+		TMP=`mktemp`
 
-	# NVMe
-	GREP_STR="class=0x010802"
+		# NVMe
+		GREP_STR="class=0x010802"
 
-	# IOAT
-	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
-	| awk -F"x" '{print $2}' > $TMP
-	for dev_id in `cat $TMP`; do
-		GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
-	done
+		# IOAT
+		grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
+		| awk -F"x" '{print $2}' > $TMP
+		for dev_id in `cat $TMP`; do
+			GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
+		done
 
-	AWK_PROG="{if (count > 0) printf \",\"; printf \"%s:%s:%s\",\$2,\$3,\$4; count++}"
-	echo $AWK_PROG > $TMP
+		AWK_PROG="{if (count > 0) printf \",\"; printf \"%s:%s:%s\",\$2,\$3,\$4; count++}"
+		echo $AWK_PROG > $TMP
 
-	BDFS=`pciconf -l | grep "${GREP_STR}" | awk -F: -f $TMP`
+		BDFS=`pciconf -l | grep "${GREP_STR}" | awk -F: -f $TMP`
 
-	kldunload nic_uio.ko || true
-	kenv hw.nic_uio.bdfs=$BDFS
-	kldload nic_uio.ko
-	rm $TMP
+		kldunload nic_uio.ko || true
+		kenv hw.nic_uio.bdfs=$BDFS
+		kldload nic_uio.ko
+		rm $TMP
+	fi
 
 	kldunload contigmem.ko || true
 	kenv hw.contigmem.num_buffers=$((HUGEMEM / 256))
@@ -317,7 +320,10 @@ function configure_freebsd {
 
 function reset_freebsd {
 	kldunload contigmem.ko || true
-	kldunload nic_uio.ko || true
+
+	if [ "$SKIP_PCI" == 0 ]; then
+		kldunload nic_uio.ko || true
+	fi
 }
 
 username=$1
@@ -340,6 +346,7 @@ if [ "$username" = "" ]; then
 fi
 
 : ${HUGEMEM:=2048}
+: ${SKIP_PCI:=0}
 
 if [ `uname` = Linux ]; then
 	HUGEPGSZ=$(( `grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9'` ))
