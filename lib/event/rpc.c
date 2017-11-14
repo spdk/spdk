@@ -35,6 +35,7 @@
 
 #include "spdk/conf.h"
 #include "spdk/env.h"
+#include "spdk/io_channel.h"
 #include "spdk/log.h"
 #include "spdk/rpc.h"
 
@@ -84,8 +85,7 @@ spdk_rpc_initialize(const char *listen_addr)
 	}
 
 	/* Register a poller to periodically check for RPCs */
-	spdk_poller_register(&g_rpc_poller, spdk_rpc_subsystem_poll, NULL,
-			     RPC_SELECT_INTERVAL);
+	g_rpc_poller = spdk_poller_register(spdk_rpc_subsystem_poll, NULL, RPC_SELECT_INTERVAL);
 }
 
 void
