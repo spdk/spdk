@@ -94,6 +94,8 @@ struct io_target {
 struct io_target *head[RTE_MAX_LCORE];
 uint32_t coremap[RTE_MAX_LCORE];
 static int g_target_count = 0;
+struct rte_mempool *task_pool[RTE_MAX_LCORE];
+uint32_t task_pool_num[RTE_MAX_LCORE];
 
 /*
  * Used to determine how the I/O buffers should be aligned.
@@ -143,6 +145,12 @@ bdevperf_construct_targets(void)
 	struct io_target *target;
 	size_t align;
 	int rc;
+	uint32_t task_num = g_queue_depth;
+
+	/* For reset purpose, we need to add addtional one task number */
+	if (g_reset) {
+		task_num += 1;
+	}
 
 	bdev = spdk_bdev_first_leaf();
 	while (bdev != NULL) {
@@ -198,6 +206,7 @@ bdevperf_construct_targets(void)
 
 		head[index] = target;
 		g_target_count++;
+		task_pool_num[index] += task_num;
 
 		bdev = spdk_bdev_next_leaf(bdev);
 	}
@@ -221,8 +230,6 @@ end_run(void *arg1, void *arg2)
 		}
 	}
 }
-
-struct rte_mempool *task_pool;
 
 static void
 bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
@@ -254,7 +261,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	target->current_queue_depth--;
 	target->io_completed++;
 
-	rte_mempool_put(task_pool, task);
+	rte_mempool_put(task_pool[target->lcore], task);
 
 	spdk_bdev_free_io(bdev_io);
 
@@ -355,7 +362,7 @@ bdevperf_submit_single(struct io_target *target)
 	desc = target->bdev_desc;
 	ch = target->ch;
 
-	if (rte_mempool_get(task_pool, (void **)&task) != 0 || task == NULL) {
+	if (rte_mempool_get(task_pool[target->lcore], (void **)&task) != 0 || task == NULL) {
 		printf("Task pool allocation failed\n");
 		abort();
 	}
@@ -446,7 +453,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		g_run_failed = true;
 	}
 
-	rte_mempool_put(task_pool, task);
+	rte_mempool_put(task_pool[target->lcore], task);
 	spdk_bdev_free_io(bdev_io);
 
 	spdk_poller_register(&target->reset_timer, reset_target, target, target->lcore,
@@ -463,7 +470,7 @@ reset_target(void *arg)
 	spdk_poller_unregister(&target->reset_timer, NULL);
 
 	/* Do reset. */
-	rte_mempool_get(task_pool, (void **)&task);
+	rte_mempool_get(task_pool[target->lcore], (void **)&task);
 	task->target = target;
 	rc = spdk_bdev_reset(target->bdev_desc, target->ch,
 			     reset_cb, task);
@@ -478,6 +485,23 @@ static void
 bdevperf_submit_on_core(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
+	char buf[20];
+
+	/*
+	 * Create the task pool after we have enumerated the targets, so that we know
+	 *  the min buffer alignment.  Some backends such as AIO have alignment restrictions
+	 *  that must be accounted for.
+	 */
+	snprintf(buf, sizeof(buf), "task_pool%d", target->lcore);
+	task_pool[target->lcore] = rte_mempool_create(buf, task_pool_num[target->lcore],
+				   sizeof(struct bdevperf_task),
+				   64, 0, NULL, NULL, task_ctor, NULL,
+				   SOCKET_ID_ANY, 0);
+	if (!task_pool[target->lcore]) {
+		SPDK_ERRLOG("Cannot allocate %d tasks\n", task_pool_num[target->lcore]);
+		spdk_app_stop(1);
+		return;
+	}
 
 	/* Submit initial I/O for each block device. Each time one
 	 * completes, another will be submitted. */
@@ -564,21 +588,6 @@ bdevperf_run(void *arg1, void *arg2)
 	blockdev_heads_init();
 	bdevperf_construct_targets();
 
-	/*
-	 * Create the task pool after we have enumerated the targets, so that we know
-	 *  the min buffer alignment.  Some backends such as AIO have alignment restrictions
-	 *  that must be accounted for.
-	 */
-	task_pool = rte_mempool_create("task_pool", g_target_count * g_queue_depth,
-				       sizeof(struct bdevperf_task),
-				       64, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
-	if (!task_pool) {
-		SPDK_ERRLOG("Cannot allocate %d tasks\n", g_target_count * g_queue_depth);
-		spdk_app_stop(1);
-		return;
-	}
-
 	printf("Running I/O for %d seconds...\n", g_time_in_sec);
 	fflush(stdout);
 
@@ -594,6 +603,7 @@ bdevperf_run(void *arg1, void *arg2)
 		if (target == NULL) {
 			break;
 		}
+
 		event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
 					    target, NULL);
 		spdk_event_call(event);
