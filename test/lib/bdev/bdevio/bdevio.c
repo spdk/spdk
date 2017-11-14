@@ -54,7 +54,6 @@
 
 pthread_mutex_t g_test_mutex;
 pthread_cond_t g_test_cond;
-struct spdk_poller *g_start_timer;
 
 struct io_target {
 	struct spdk_bdev	*bdev;
@@ -913,11 +912,9 @@ __run_ut_thread(void *arg1, void *arg2)
 }
 
 static void
-test_main(void *arg1)
+test_main(void *arg1, void *arg2)
 {
 	struct spdk_event *event;
-
-	spdk_poller_unregister(&g_start_timer, NULL);
 
 	pthread_mutex_init(&g_test_mutex, NULL);
 	pthread_cond_init(&g_test_cond, NULL);
@@ -929,12 +926,6 @@ test_main(void *arg1)
 
 	event = spdk_event_allocate(LCORE_ID_UT, __run_ut_thread, NULL, NULL);
 	spdk_event_call(event);
-}
-
-static void
-start_timer(void *arg1, void *arg2)
-{
-	spdk_poller_register(&g_start_timer, test_main, NULL, LCORE_ID_INIT, 1000 * 1000);
 }
 
 int
@@ -949,10 +940,11 @@ main(int argc, char **argv)
 	} else {
 		config_file = argv[1];
 	}
+
 	bdevtest_init(config_file, "0x7", &opts);
 	opts.rpc_addr = NULL;
 
-	num_failures = spdk_app_start(&opts, start_timer, NULL, NULL);
+	num_failures = spdk_app_start(&opts, test_main, NULL, NULL);
 	spdk_app_fini();
 
 	return num_failures;
