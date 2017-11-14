@@ -77,7 +77,9 @@ struct spdk_io_channel {
 
 struct spdk_thread {
 	pthread_t thread_id;
-	spdk_thread_pass_msg fn;
+	spdk_thread_pass_msg msg_fn;
+	spdk_start_poller start_poller_fn;
+	spdk_stop_poller stop_poller_fn;
 	void *thread_ctx;
 	TAILQ_HEAD(, spdk_io_channel) io_channels;
 	TAILQ_ENTRY(spdk_thread) tailq;
@@ -117,7 +119,10 @@ _set_thread_name(const char *thread_name)
 }
 
 struct spdk_thread *
-spdk_allocate_thread(spdk_thread_pass_msg fn, void *thread_ctx, const char *name)
+spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
+		     spdk_start_poller start_poller_fn,
+		     spdk_stop_poller stop_poller_fn,
+		     void *thread_ctx, const char *name)
 {
 	struct spdk_thread *thread;
 
@@ -138,7 +143,9 @@ spdk_allocate_thread(spdk_thread_pass_msg fn, void *thread_ctx, const char *name
 	}
 
 	thread->thread_id = pthread_self();
-	thread->fn = fn;
+	thread->msg_fn = msg_fn;
+	thread->start_poller_fn = start_poller_fn;
+	thread->stop_poller_fn = stop_poller_fn;
 	thread->thread_ctx = thread_ctx;
 	TAILQ_INIT(&thread->io_channels);
 	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
@@ -199,7 +206,50 @@ spdk_thread_get_name(const struct spdk_thread *thread)
 void
 spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
 {
-	thread->fn(fn, ctx, thread->thread_ctx);
+	thread->msg_fn(fn, ctx, thread->thread_ctx);
+}
+
+
+struct spdk_poller *
+spdk_poller_register(spdk_poller_fn fn,
+		     void *arg,
+		     uint64_t period_microseconds)
+{
+	struct spdk_thread *thread;
+	struct spdk_poller *poller;
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		abort();
+	}
+
+	poller = thread->start_poller_fn(thread->thread_ctx, fn, arg, period_microseconds);
+	if (!poller) {
+		SPDK_ERRLOG("Unable to start requested poller\n");
+		abort();
+	}
+
+	return poller;
+}
+
+void
+spdk_poller_unregister(struct spdk_poller **ppoller)
+{
+	struct spdk_thread *thread;
+	struct spdk_poller *poller;
+
+	poller = *ppoller;
+	if (poller == NULL) {
+		return;
+	}
+
+	*ppoller = NULL;
+
+	thread = spdk_get_thread();
+
+	if (thread) {
+		thread->stop_poller_fn(poller, thread->thread_ctx);
+	}
 }
 
 void

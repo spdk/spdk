@@ -69,8 +69,6 @@ struct spdk_poller {
 	uint64_t			next_run_tick;
 	spdk_poller_fn			fn;
 	void				*arg;
-
-	struct spdk_event		*unregister_complete_event;
 };
 
 enum spdk_reactor_state {
@@ -202,7 +200,28 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 }
 
 static void
-spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poller, uint64_t now)
+_spdk_reactor_msg_passed(void *arg1, void *arg2)
+{
+	spdk_thread_fn fn = arg1;
+
+	fn(arg2);
+}
+
+static void
+_spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+{
+	struct spdk_event *event;
+	struct spdk_reactor *reactor;
+
+	reactor = thread_ctx;
+
+	event = spdk_event_allocate(reactor->lcore, _spdk_reactor_msg_passed, fn, ctx);
+
+	spdk_event_call(event);
+}
+
+static void
+_spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poller, uint64_t now)
 {
 	struct spdk_poller *iter;
 	uint64_t next_run_tick;
@@ -225,25 +244,68 @@ spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *polle
 	TAILQ_INSERT_HEAD(&reactor->timer_pollers, poller, tailq);
 }
 
-static void
-_spdk_reactor_msg_passed(void *arg1, void *arg2)
+static struct spdk_poller *
+_spdk_reactor_start_poller(void *thread_ctx,
+			   spdk_thread_fn fn,
+			   void *arg,
+			   uint64_t period_microseconds)
 {
-	spdk_thread_fn fn = arg1;
+	struct spdk_poller *poller;
+	struct spdk_reactor *reactor;
 
-	fn(arg2);
+	reactor = thread_ctx;
+
+	poller = calloc(1, sizeof(*poller));
+	if (poller == NULL) {
+		SPDK_ERRLOG("Poller memory allocation failed\n");
+		return NULL;
+	}
+
+	poller->lcore = reactor->lcore;
+	poller->state = SPDK_POLLER_STATE_WAITING;
+	poller->fn = fn;
+	poller->arg = arg;
+
+	if (period_microseconds) {
+		poller->period_ticks = (spdk_get_ticks_hz() * period_microseconds) / 1000000ULL;
+	} else {
+		poller->period_ticks = 0;
+	}
+
+	if (poller->period_ticks) {
+		_spdk_poller_insert_timer(reactor, poller, spdk_get_ticks());
+	} else {
+		TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
+	}
+
+	return poller;
 }
 
 static void
-_spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
+_spdk_reactor_stop_poller(struct spdk_poller *poller, void *thread_ctx)
 {
-	uint32_t core;
-	struct spdk_event *event;
+	struct spdk_reactor *reactor;
 
-	core = *(uint32_t *)thread_ctx;
+	reactor = thread_ctx;
 
-	event = spdk_event_allocate(core, _spdk_reactor_msg_passed, fn, ctx);
+	assert(poller->lcore == spdk_env_get_current_core());
 
-	spdk_event_call(event);
+	if (poller->state == SPDK_POLLER_STATE_RUNNING) {
+		/*
+		 * We are being called from the poller_fn, so set the state to unregistered
+		 * and let the reactor loop free the poller.
+		 */
+		poller->state = SPDK_POLLER_STATE_UNREGISTERED;
+	} else {
+		/* Poller is not running currently, so just free it. */
+		if (poller->period_ticks) {
+			TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
+		} else {
+			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
+		}
+
+		free(poller);
+	}
 }
 
 static void
@@ -272,7 +334,7 @@ _spdk_reactor_context_switch_monitor_start(void *arg1, void *arg2)
 
 	if (reactor->rusage_poller == NULL) {
 		getrusage(RUSAGE_THREAD, &reactor->rusage);
-		spdk_poller_register(&reactor->rusage_poller, get_rusage, reactor, 1000000);
+		reactor->rusage_poller = spdk_poller_register(get_rusage, reactor, 1000000);
 	}
 }
 
@@ -347,7 +409,10 @@ _spdk_reactor_run(void *arg)
 	char			thread_name[32];
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
-	if (spdk_allocate_thread(_spdk_reactor_send_msg, &reactor->lcore, thread_name) == NULL) {
+	if (spdk_allocate_thread(_spdk_reactor_send_msg,
+				 _spdk_reactor_start_poller,
+				 _spdk_reactor_stop_poller,
+				 reactor, thread_name) == NULL) {
 		return -1;
 	}
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
@@ -395,7 +460,7 @@ _spdk_reactor_run(void *arg)
 						free(poller);
 					} else {
 						poller->state = SPDK_POLLER_STATE_WAITING;
-						spdk_poller_insert_timer(reactor, poller, now);
+						_spdk_poller_insert_timer(reactor, poller, now);
 					}
 					took_action = true;
 				}
@@ -671,87 +736,6 @@ spdk_reactors_fini(void)
 		if (g_spdk_event_mempool[i] != NULL) {
 			spdk_mempool_free(g_spdk_event_mempool[i]);
 		}
-	}
-}
-
-void
-spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
-		     uint64_t period_microseconds)
-{
-	struct spdk_poller *poller;
-	struct spdk_reactor *reactor;
-
-	poller = calloc(1, sizeof(*poller));
-	if (poller == NULL) {
-		SPDK_ERRLOG("Poller memory allocation failed\n");
-		abort();
-	}
-
-	poller->lcore = spdk_env_get_current_core();
-	poller->state = SPDK_POLLER_STATE_WAITING;
-	poller->fn = fn;
-	poller->arg = arg;
-
-	if (period_microseconds) {
-		poller->period_ticks = (spdk_get_ticks_hz() * period_microseconds) / 1000000ULL;
-	} else {
-		poller->period_ticks = 0;
-	}
-
-	if (*ppoller != NULL) {
-		SPDK_ERRLOG("Attempted reuse of poller pointer\n");
-		abort();
-	}
-
-	if (poller->lcore >= SPDK_MAX_REACTORS) {
-		SPDK_ERRLOG("Attempted to use lcore %u which is larger than max lcore %u\n",
-			    poller->lcore, SPDK_MAX_REACTORS - 1);
-		abort();
-	}
-
-	*ppoller = poller;
-	reactor = spdk_reactor_get(poller->lcore);
-
-	if (poller->period_ticks) {
-		spdk_poller_insert_timer(reactor, poller, spdk_get_ticks());
-	} else {
-		TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
-	}
-}
-
-void
-spdk_poller_unregister(struct spdk_poller **ppoller)
-{
-	struct spdk_poller *poller;
-	struct spdk_reactor *reactor;
-
-	poller = *ppoller;
-
-	*ppoller = NULL;
-
-	if (poller == NULL) {
-		return;
-	}
-
-	assert(poller->lcore == spdk_env_get_current_core());
-
-	reactor = spdk_reactor_get(poller->lcore);
-
-	if (poller->state == SPDK_POLLER_STATE_RUNNING) {
-		/*
-		 * We are being called from the poller_fn, so set the state to unregistered
-		 * and let the reactor loop free the poller.
-		 */
-		poller->state = SPDK_POLLER_STATE_UNREGISTERED;
-	} else {
-		/* Poller is not running currently, so just free it. */
-		if (poller->period_ticks) {
-			TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
-		} else {
-			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
-		}
-
-		free(poller);
 	}
 }
 
