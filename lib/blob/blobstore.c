@@ -2036,6 +2036,17 @@ _spdk_bs_init_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			       _spdk_bs_init_persist_super_cpl, ctx);
 }
 
+static void
+_spdk_bs_init_trim(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_init_ctx *ctx = cb_arg;
+	uint64_t lba_start = _spdk_bs_page_to_lba(ctx->bs, ctx->super->md_start + ctx->super->md_len);
+	uint64_t trim_length = ctx->bs->dev->blockcnt - lba_start;
+
+	/* Write super block */
+	spdk_bs_sequence_unmap(seq, lba_start, trim_length, _spdk_bs_init_trim_cpl, ctx);
+}
+
 void
 spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	     spdk_bs_op_with_handle_complete cb_fn, void *cb_arg)
@@ -2187,8 +2198,9 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
-	/* Zero the entire device */
-	spdk_bs_sequence_write_zeroes(seq, 0, bs->dev->blockcnt, _spdk_bs_init_trim_cpl, ctx);
+	/* Write zeros only to metadata space */
+	spdk_bs_sequence_write_zeroes(seq, 0, _spdk_bs_page_to_lba(bs, num_md_pages),
+				      _spdk_bs_init_trim, ctx);
 }
 
 /* END spdk_bs_init */
