@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9d15e71_c008d688",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-14T22:04:43Z",
+      "side": 1,
+      "message": "This should probably decrement max_sid back to where it was before.",
+      "revId": "1d05b05e4e69034d64d404eae23dddd01356ac6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
