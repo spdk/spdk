@@ -332,13 +332,6 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 				rc = -EINVAL;
 				break;
 			}
-
-			if (((1ULL << g_spdk_nvmf_tgt_conf.acceptor_lcore) & spdk_app_get_core_mask()) == 0) {
-				SPDK_ERRLOG("Invalid AcceptorCore setting\n");
-				g_tgt.state = NVMF_TGT_ERROR;
-				rc = -EINVAL;
-				break;
-			}
 			g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUP;
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUP: {
@@ -363,10 +356,9 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 		}
 		case NVMF_TGT_INIT_START_ACCEPTOR:
 			spdk_poller_register(&g_acceptor_poller, acceptor_poll, g_tgt.tgt,
-					     g_spdk_nvmf_tgt_conf.acceptor_lcore,
+					     spdk_env_get_current_core(),
 					     g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
-			SPDK_NOTICELOG("Acceptor running on core %u on socket %u\n", g_spdk_nvmf_tgt_conf.acceptor_lcore,
-				       spdk_env_get_socket_id(g_spdk_nvmf_tgt_conf.acceptor_lcore));
+			SPDK_NOTICELOG("Acceptor running\n");
 			g_tgt.state = NVMF_TGT_RUNNING;
 			break;
 		case NVMF_TGT_RUNNING:
