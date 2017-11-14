@@ -266,7 +266,7 @@ nvmf_tgt_create_poll_group_done(void *arg1, void *arg2)
 	if (pg->group == NULL) {
 		g_tgt.state = NVMF_TGT_ERROR;
 	} else {
-		g_tgt.state = NVMF_TGT_INIT_START_POLLER;
+		g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUP_DONE;
 	}
 
 	nvmf_tgt_advance_state(NULL, NULL);
@@ -285,6 +285,11 @@ nvmf_tgt_create_poll_group(void *arg1, void *arg2)
 	if (pg->group == NULL) {
 		SPDK_ERRLOG("Failed to create poll group for core %u\n", g_tgt.core);
 	}
+
+	spdk_poller_register(&pg->poller,
+			     nvmf_tgt_poll_group_poll, pg,
+			     spdk_env_get_current_core(), 0);
+	g_active_poll_groups++;
 
 	spdk_event_call(event);
 }
@@ -347,13 +352,7 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			spdk_event_call(event);
 			break;
 		}
-		case NVMF_TGT_INIT_START_POLLER: {
-			struct nvmf_tgt_poll_group *pg = &g_poll_groups[g_tgt.core];
-
-			spdk_poller_register(&pg->poller,
-					     nvmf_tgt_poll_group_poll, pg,
-					     g_tgt.core, 0);
-			g_active_poll_groups++;
+		case NVMF_TGT_INIT_CREATE_POLL_GROUP_DONE: {
 			g_tgt.core = spdk_env_get_next_core(g_tgt.core);
 			if (g_tgt.core != UINT32_MAX) {
 				g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUP;
