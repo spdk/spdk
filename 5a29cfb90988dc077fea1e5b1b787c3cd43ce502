@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a1cec2f_d17870f0",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1241,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-14T23:14:37Z",
+      "side": 1,
+      "message": "I would like to confirm this purpose.\n\nif task-status is equal to CHECK_CONDITION, spdk_scsi_task_set_status(task, CHECK_CONDITION) should be already called. Hence this condition was added to avoid overwrite?",
+      "range": {
+        "startLine": 1239,
+        "startChar": 0,
+        "endLine": 1241,
+        "endChar": 2
+      },
+      "revId": "5a29cfb90988dc077fea1e5b1b787c3cd43ce502",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
