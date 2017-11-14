@@ -39,6 +39,7 @@
 #include "spdk/bdev.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/io_channel.h"
 #include "spdk/log.h"
 #include "spdk/util.h"
 
@@ -88,7 +89,7 @@ nbd_start(void *arg1, void *arg2)
 		return;
 	}
 
-	spdk_poller_register(&g_nbd_poller, nbd_poll, NULL, 0);
+	g_nbd_poller = spdk_poller_register(nbd_poll, NULL, 0);
 }
 
 static void usage(char *program_name)
