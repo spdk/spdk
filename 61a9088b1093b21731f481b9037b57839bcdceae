@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fb99335_75c8ff91",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-14T17:38:46Z",
+      "side": 1,
+      "message": "I think the two flags should be SPDK_MALLOC_DMA and SPDK_MALLOC_SHARE - if the user wants both they can specify SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE.",
+      "revId": "61a9088b1093b21731f481b9037b57839bcdceae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8083fc23_35e4251d",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-14T17:38:46Z",
+      "side": 1,
+      "message": "For spdk_malloc, I think we only want this function to do anonymous allocations - i.e. no \u0027name\u0027 parameter. If the user wants to do a shared memory allocation with a name, they can call spdk_memzone_reserve directly. SPDK currently only needs to do that in one place - everywhere else the shared allocations don\u0027t need a name.\n\nAlso, the physical address is only available if the user specifies DMA-able memory. Since it is only available sometimes, and we have a function to get the physical address from a virtual address (spdk_vtophys), we can just leave off the phys_addr argument from this function. We have spdk_dma_malloc that returns both virtual and physical addresses in a single call if the user wants that.",
+      "revId": "61a9088b1093b21731f481b9037b57839bcdceae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a3ed99c_bc455240",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-14T17:38:46Z",
+      "side": 1,
+      "message": "For our DPDK-based implementation, spdk_malloc can always be implemented, regardless of the flags, as:\n\n{\n    uint64_t phys_addr;\n\n    return spdk_dma_malloc_socket(size, align, \u0026phys_addr, socket_id);\n}\n\nThis also means that the \u0027flags\u0027 argument can be removed from the function signature.",
+      "revId": "61a9088b1093b21731f481b9037b57839bcdceae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a1e872b_a43e691e",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-14T17:38:46Z",
+      "side": 1,
+      "message": "Given the suggested simplifications to spdk_malloc, this can just become:\n\nvoid\nspdk_free(void *buf)\n{\n    rte_free(buf);\n}\n\nThis works at least for our DPDK implementation. I\u0027m assuming other implementations can figure out where the memory was allocated from just from the pointer - if that\u0027s not a valid assumption let me know.",
+      "revId": "61a9088b1093b21731f481b9037b57839bcdceae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
