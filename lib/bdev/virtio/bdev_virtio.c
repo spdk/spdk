@@ -109,6 +109,9 @@ struct virtio_scsi_scan_base {
 
 	/** Scan results for the current target. */
 	struct virtio_scsi_scan_info	info;
+
+	/** Standard INQ data */
+	struct spdk_scsi_cdb_inquiry_data inquiry_data;
 };
 
 struct virtio_scsi_disk {
@@ -716,6 +719,100 @@ send_read_cap_16(struct virtio_scsi_scan_base *base, uint8_t target_id, struct v
 	}
 }
 
+static void
+send_test_unit_ready(struct virtio_scsi_scan_base *base, uint8_t target_id, struct virtio_req *vreq)
+{
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	int rc;
+
+	memset(req, 0, sizeof(*req));
+	req->lun[0] = 1;
+	req->lun[1] = target_id;
+	req->cdb[0] = SPDK_SPC_TEST_UNIT_READY;
+
+	rc = virtio_xmit_pkt(base->vq, vreq);
+	if (rc != 0) {
+		assert(false);
+	}
+}
+
+static void
+send_start_stop_unit(struct virtio_scsi_scan_base *base, uint8_t target_id, struct virtio_req *vreq)
+{
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	int rc;
+
+	memset(req, 0, sizeof(*req));
+	req->lun[0] = 1;
+	req->lun[1] = target_id;
+	req->cdb[0] = SPDK_SBC_START_STOP_UNIT;
+	req->cdb[4] = SPDK_SBC_START_STOP_UNIT_START_BIT;
+
+	rc = virtio_xmit_pkt(base->vq, vreq);
+	if (rc != 0) {
+		assert(false);
+	}
+}
+
+static int
+process_scan_start_stop_unit(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
+{
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
+	uint8_t target_id = req->lun[1];
+	int rc = 0;
+
+	/* check for errors, supported device type */
+	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
+		rc = -1;
+	} else if (base->inquiry_data.peripheral_device_type != SPDK_SPC_PERIPHERAL_DEVICE_TYPE_DISK ||
+		   base->inquiry_data.peripheral_qualifier != SPDK_SPC_PERIPHERAL_QUALIFIER_CONNECTED) {
+		SPDK_WARNLOG("Unsupported peripheral device type 0x%02x (qualifier 0x%02x)\n",
+			     base->inquiry_data.peripheral_device_type,
+			     base->inquiry_data.peripheral_qualifier);
+		rc = -1;
+	} else {
+		send_inquiry_vpd(base, target_id, vreq, SPDK_SPC_VPD_SUPPORTED_VPD_PAGES);
+	}
+
+	return rc;
+}
+
+static int
+process_scan_test_unit_ready(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
+{
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct virtio_scsi_cmd_resp *resp = vreq->iov_resp.iov_base;
+	uint8_t target_id = req->lun[1];
+	int sk, asc, ascq;
+	int rc = 0;
+
+	get_scsi_status(resp, &sk, &asc, &ascq);
+
+	/* check response, get VPD if spun up otherwise send SSU */
+	if (resp->response == VIRTIO_SCSI_S_OK && resp->status == SPDK_SCSI_STATUS_GOOD) {
+		send_inquiry_vpd(base, target_id, vreq, SPDK_SPC_VPD_SUPPORTED_VPD_PAGES);
+	} else if (resp->response == VIRTIO_SCSI_S_OK &&
+		   resp->status == SPDK_SCSI_STATUS_CHECK_CONDITION &&
+		   sk == SPDK_SCSI_SENSE_UNIT_ATTENTION &&
+		   asc == SPDK_SCSI_ASC_LOGICAL_UNIT_NOT_READY) {
+		/* before sending VPD, make sure the dev is appropriate */
+		if (base->inquiry_data.peripheral_device_type != SPDK_SPC_PERIPHERAL_DEVICE_TYPE_DISK ||
+		    base->inquiry_data.peripheral_qualifier != SPDK_SPC_PERIPHERAL_QUALIFIER_CONNECTED) {
+			SPDK_WARNLOG("Unsupported peripheral device type 0x%02x (qualifier 0x%02x)\n",
+				     base->inquiry_data.peripheral_device_type,
+				     base->inquiry_data.peripheral_qualifier);
+			rc = -1;
+		} else {
+			send_start_stop_unit(base, target_id, vreq);
+		}
+	} else if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
+		rc = -1;
+	}
+
+	return rc;
+}
+
 static int
 process_scan_inquiry_standard(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 {
@@ -724,20 +821,16 @@ process_scan_inquiry_standard(struct virtio_scsi_scan_base *base, struct virtio_
 	struct spdk_scsi_cdb_inquiry_data *inquiry_data = vreq->iov[0].iov_base;
 	uint8_t target_id;
 
+	/* not legal to respond with error to a standard INQ */
 	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
 		return -1;
 	}
 
-	if (inquiry_data->peripheral_device_type != SPDK_SPC_PERIPHERAL_DEVICE_TYPE_DISK ||
-	    inquiry_data->peripheral_qualifier != SPDK_SPC_PERIPHERAL_QUALIFIER_CONNECTED) {
-		SPDK_WARNLOG("Unsupported peripheral device type 0x%02x (qualifier 0x%02x)\n",
-			     inquiry_data->peripheral_device_type,
-			     inquiry_data->peripheral_qualifier);
-		return -1;
-	}
+	/* save off the standard INQ data for processing after TUR/SS */
+	memcpy(&base->inquiry_data, inquiry_data, sizeof(struct spdk_scsi_cdb_inquiry_data));
 
 	target_id = req->lun[1];
-	send_inquiry_vpd(base, target_id, vreq, SPDK_SPC_VPD_SUPPORTED_VPD_PAGES);
+	send_test_unit_ready(base, target_id, vreq);
 	return 0;
 }
 
@@ -948,6 +1041,12 @@ process_scan_resp(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	switch (req->cdb[0]) {
 	case SPDK_SPC_INQUIRY:
 		rc = process_scan_inquiry(base, vreq);
+		break;
+	case SPDK_SPC_TEST_UNIT_READY:
+		rc = process_scan_test_unit_ready(base, vreq);
+		break;
+	case SPDK_SBC_START_STOP_UNIT:
+		rc = process_scan_start_stop_unit(base, vreq);
 		break;
 	case SPDK_SBC_READ_CAPACITY_10:
 		rc = process_read_cap_10(base, vreq);
