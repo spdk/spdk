@@ -92,7 +92,7 @@ allocate_threads(int num_threads)
 
 	for (i = 0; i < g_ut_num_threads; i++) {
 		set_thread(i);
-		spdk_allocate_thread(__send_msg, &g_ut_threads[i], NULL);
+		spdk_allocate_thread(__send_msg, NULL, NULL, &g_ut_threads[i], NULL);
 		thread = spdk_get_thread();
 		SPDK_CU_ASSERT_FATAL(thread != NULL);
 		g_ut_threads[i].thread = thread;

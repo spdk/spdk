@@ -126,8 +126,9 @@ spdk_fio_bdev_init_done(void *cb_arg, int rc)
 }
 
 static void
-spdk_fio_start_poller(struct spdk_bdev_poller **ppoller,
-		      spdk_bdev_poller_fn fn,
+spdk_fio_start_poller(struct spdk_poller **ppoller,
+		      void *thread_ctx,
+		      spdk_thread_fn fn,
 		      void *arg,
 		      uint64_t period_microseconds)
 {
@@ -152,11 +153,20 @@ spdk_fio_start_poller(struct spdk_bdev_poller **ppoller,
 
 	TAILQ_INSERT_TAIL(&fio_thread->pollers, fio_poller, link);
 
-	*ppoller = (struct spdk_bdev_poller *)fio_poller;
+	*ppoller = (struct spdk_poller *)fio_poller;
 }
 
 static void
-spdk_fio_stop_poller(struct spdk_bdev_poller **ppoller)
+spdk_fio_bdev_start_poller(struct spdk_bdev_poller **ppoller,
+			   spdk_bdev_poller_fn fn,
+			   void *arg,
+			   uint64_t period_microseconds)
+{
+	spdk_fio_start_poller((struct spdk_poller **)ppoller, NULL, fn, arg, period_microseconds);
+}
+
+static void
+spdk_fio_stop_poller(struct spdk_poller **ppoller, void *thread_ctx)
 {
 	struct spdk_fio_poller *fio_poller;
 	struct spdk_fio_thread *fio_thread;
@@ -173,6 +183,12 @@ spdk_fio_stop_poller(struct spdk_bdev_poller **ppoller)
 
 	free(fio_poller);
 	*ppoller = NULL;
+}
+
+static void
+spdk_fio_bdev_stop_poller(struct spdk_bdev_poller **ppoller)
+{
+	spdk_fio_stop_poller((struct spdk_poller **)ppoller, NULL);
 }
 
 static int
@@ -196,7 +212,11 @@ spdk_fio_init_thread(struct thread_data *td)
 		return -1;
 	}
 
-	fio_thread->thread = spdk_allocate_thread(spdk_fio_send_msg, fio_thread, "fio_thread");
+	fio_thread->thread = spdk_allocate_thread(spdk_fio_send_msg,
+			     spdk_fio_start_poller,
+			     spdk_fio_stop_poller,
+			     fio_thread,
+			     "fio_thread");
 	if (!fio_thread->thread) {
 		spdk_ring_free(fio_thread->ring);
 		free(fio_thread);
@@ -280,8 +300,8 @@ spdk_fio_init_env(struct thread_data *td)
 
 	/* Initialize the bdev layer */
 	spdk_bdev_initialize(spdk_fio_bdev_init_done, &done,
-			     spdk_fio_start_poller,
-			     spdk_fio_stop_poller);
+			     spdk_fio_bdev_start_poller,
+			     spdk_fio_bdev_stop_poller);
 
 	do {
 		/* Handle init and all cleanup events */
