@@ -74,6 +74,30 @@
       "revId": "debaa88989b4cedd5abf5b4946530d0e777da046",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8357d915_2be8d1a7",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-14T00:59:23Z",
+      "side": 1,
+      "message": "thanks shuhei, this make sense, so I just remove the io_cancel() action here, and just leave all pending IO to the poller.",
+      "parentUuid": "13fc1fa0_0142baa8",
+      "range": {
+        "startLine": 246,
+        "startChar": 0,
+        "endLine": 247,
+        "endChar": 30
+      },
+      "revId": "debaa88989b4cedd5abf5b4946530d0e777da046",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
