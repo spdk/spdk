@@ -54,10 +54,12 @@ static bool g_lun_execute_fail = false;
 static int g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
 static uint32_t g_task_count = 0;
 
-void
-spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
+struct spdk_poller *
+spdk_poller_register(spdk_poller_fn fn,
+		     void *arg,
 		     uint64_t period_microseconds)
 {
+	return NULL;
 }
 
 void

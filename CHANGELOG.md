@@ -15,6 +15,13 @@ A -r option command line option has been added to enable an alternative UNIX dom
 or a TCP port in the format ip_addr:tcp_port (i.e. 127.0.0.1:5260).  The Rpc configuration file
 section is now deprecated and will be removed in the v18.04 release.
 
+### I/O Channels
+
+spdk_poller_register() and spdk_poller_unregister() were moved from the event
+framework (include/spdk/event.h) to the I/O channel library
+(include/spdk/io_channel.h). This allows code that doesn't depend on the event
+framework to request registration and unregistration of pollers.
+
 ## v17.10: Logical Volumes
 
 ### New dependencies

@@ -1936,7 +1936,7 @@ int main(int argc, char **argv)
 	}
 
 	g_dev_buffer = calloc(1, DEV_BUFFER_SIZE);
-	spdk_allocate_thread(_bs_send_msg, NULL, "thread0");
+	spdk_allocate_thread(_bs_send_msg, NULL, NULL, NULL, "thread0");
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
