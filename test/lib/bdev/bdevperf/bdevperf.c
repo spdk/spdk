@@ -584,8 +584,7 @@ bdevperf_run(void *arg1, void *arg2)
 
 	/* Start a timer to dump performance numbers */
 	if (g_show_performance_real_time) {
-		spdk_poller_register(&g_perf_timer, performance_statistics_thread, NULL,
-				     1000000);
+		spdk_poller_register(&g_perf_timer, performance_statistics_thread, NULL, 1000000);
 	}
 
 	/* Send events to start all I/O */

@@ -46,6 +46,7 @@
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/io_channel.h"
 #include "spdk/queue.h"
 #include "spdk/trace.h"
 #include "spdk/net.h"
@@ -716,8 +717,7 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 	rc = spdk_iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
 		/* The connection cannot be freed yet. Check back later. */
-		spdk_poller_register(&conn->shutdown_timer, _spdk_iscsi_conn_check_shutdown, conn,
-				     1000);
+		spdk_poller_register(&conn->shutdown_timer, _spdk_iscsi_conn_check_shutdown, conn, 1000);
 	} else {
 		spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_env_get_current_core());
 	}
@@ -1664,8 +1664,7 @@ void
 spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 {
 	conn->state = ISCSI_CONN_STATE_LOGGED_OUT;
-	spdk_poller_register(&conn->logout_timer, logout_timeout, conn,
-			     ISCSI_LOGOUT_TIMEOUT * 1000000);
+	spdk_poller_register(&conn->logout_timer, logout_timeout, conn, ISCSI_LOGOUT_TIMEOUT * 1000000);
 }
 
 SPDK_TRACE_REGISTER_FN(iscsi_conn_trace)

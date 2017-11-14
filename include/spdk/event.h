@@ -186,19 +186,6 @@ struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
 void spdk_event_call(struct spdk_event *event);
 
 /**
- * \brief Register a poller on the current lcore.
- */
-void spdk_poller_register(struct spdk_poller **ppoller,
-			  spdk_poller_fn fn,
-			  void *arg,
-			  uint64_t period_microseconds);
-
-/**
- * \brief Unregister a poller on the given lcore.
- */
-void spdk_poller_unregister(struct spdk_poller **ppoller);
-
-/**
  * \brief Enable or disable monitoring of context switches.
  */
 void spdk_reactor_enable_context_switch_monitor(bool enabled);
