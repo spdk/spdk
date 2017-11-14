@@ -44,10 +44,16 @@
 
 struct spdk_thread;
 struct spdk_io_channel;
+struct spdk_poller;
 
 typedef void (*spdk_thread_fn)(void *ctx);
 typedef void (*spdk_thread_pass_msg)(spdk_thread_fn fn, void *ctx,
 				     void *thread_ctx);
+typedef struct spdk_poller *(*spdk_start_poller)(void *thread_ctx,
+		spdk_thread_fn fn,
+		void *arg,
+		uint64_t period_microseconds);
+typedef void (*spdk_stop_poller)(struct spdk_poller *poller, void *thread_ctx);
 
 typedef int (*spdk_io_channel_create_cb)(void *io_device, void *ctx_buf);
 typedef void (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
@@ -70,7 +76,10 @@ typedef void (*spdk_channel_for_each_cpl)(void *io_device, void *ctx);
  *             The string is copied, so the pointed-to data only needs to be valid during the
  *             spdk_allocate_thread() call.  May be NULL to specify no name.
  */
-struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg fn, void *thread_ctx,
+struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
+		spdk_start_poller start_poller_fn,
+		spdk_stop_poller stop_poller_fn,
+		void *thread_ctx,
 		const char *name);
 
 /**
@@ -104,6 +113,18 @@ const char *spdk_thread_get_name(const struct spdk_thread *thread);
  * @param ctx This context will be passed to fn when called.
  */
 void spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx);
+
+/**
+ * \brief Register a poller on the current thread.
+ */
+struct spdk_poller *spdk_poller_register(spdk_thread_fn fn,
+		void *arg,
+		uint64_t period_microseconds);
+
+/**
+ * \brief Unregister a poller on the current thread.
+ */
+void spdk_poller_unregister(struct spdk_poller **ppoller);
 
 /**
  * \brief Register the opaque io_device context as an I/O device.

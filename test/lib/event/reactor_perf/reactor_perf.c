@@ -35,6 +35,7 @@
 
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/io_channel.h"
 
 static int g_time_in_sec;
 static int g_queue_depth;
@@ -68,8 +69,8 @@ test_start(void *arg1, void *arg2)
 	printf("test_start\n");
 
 	/* Register a poller that will stop the test after the time has elapsed. */
-	spdk_poller_register(&test_end_poller, __test_end, NULL,
-			     g_time_in_sec * 1000000ULL);
+	test_end_poller = spdk_poller_register(__test_end, NULL,
+					       g_time_in_sec * 1000000ULL);
 
 	for (i = 0; i < g_queue_depth; i++) {
 		__submit_next(NULL, NULL);
