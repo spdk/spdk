@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13d244b9_4953c8a9",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-14T13:18:41Z",
+      "side": 1,
+      "message": "\"from a static, thread-local buffer\"\n\nthat would sound better i think.",
+      "range": {
+        "startLine": 104,
+        "startChar": 41,
+        "endLine": 104,
+        "endChar": 76
+      },
+      "revId": "c024f9a8050005f82201f27e7da2a1354455d736",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c261a0b3_c72df4be",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-14T13:18:41Z",
+      "side": 1,
+      "message": "is this valid?\ni don\u0027t think it ever returns NULL. Moreover, this would be really silly. If we\u0027re usually returning a pointer to a static buffer, we should do that *always* to ease the usage of this function.",
+      "range": {
+        "startLine": 109,
+        "startChar": 41,
+        "endLine": 109,
+        "endChar": 59
+      },
+      "revId": "c024f9a8050005f82201f27e7da2a1354455d736",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
