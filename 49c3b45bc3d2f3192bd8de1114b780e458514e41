@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38af56f0_1e67b152",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-14T07:55:47Z",
+      "side": 1,
+      "message": "is this necessary? g_next_subsystem seems to always be NULL at this point",
+      "range": {
+        "startLine": 199,
+        "startChar": 1,
+        "endLine": 199,
+        "endChar": 25
+      },
+      "revId": "49c3b45bc3d2f3192bd8de1114b780e458514e41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
