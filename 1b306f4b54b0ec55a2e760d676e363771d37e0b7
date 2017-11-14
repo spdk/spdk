@@ -22,6 +22,30 @@
       "revId": "1b306f4b54b0ec55a2e760d676e363771d37e0b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7e3b570_5d295cd4",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-14T02:04:39Z",
+      "side": 0,
+      "message": "Removed",
+      "parentUuid": "a332d7e2_120c2fc3",
+      "range": {
+        "startLine": 439,
+        "startChar": 0,
+        "endLine": 444,
+        "endChar": 9
+      },
+      "revId": "1b306f4b54b0ec55a2e760d676e363771d37e0b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

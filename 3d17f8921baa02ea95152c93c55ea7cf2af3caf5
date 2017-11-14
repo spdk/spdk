@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ae6b9d5f_3ff94991",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-14T02:04:39Z",
+      "side": 1,
+      "message": "Need to use RUN_NIGHTLY parameter from autotest_common.sh before, and it can be removed now.",
+      "parentUuid": "a5f7c49d_509bdde3",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 54
+      },
+      "revId": "3d17f8921baa02ea95152c93c55ea7cf2af3caf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "08cea03e_5fe3d838",
         "filename": "test/vhost/fiotest/autotest.sh",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-13T10:19:17Z",
       "side": 1,
       "message": "Please create a \"nightly_integrity.job\" file in  test/vhost/common/fio_jobs and put all rw modes in separate job sections (\"[ ]\" brackets) with stonewall option enabled.",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 1
+      },
+      "revId": "3d17f8921baa02ea95152c93c55ea7cf2af3caf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "397b3a48_4cf5f713",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-14T02:04:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "08cea03e_5fe3d838",
       "range": {
         "startLine": 57,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "e372d419_fcf74eb4",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-14T02:04:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c7c831e4_5f239dc0",
+      "range": {
+        "startLine": 363,
+        "startChar": 0,
+        "endLine": 385,
+        "endChar": 9
+      },
+      "revId": "3d17f8921baa02ea95152c93c55ea7cf2af3caf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56478a60_55cbc6fe",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2017-11-13T10:19:17Z",
       "side": 1,
       "message": "These tests take too much time and we will not fit in 10 minutes test pool timeout if this is tested per-patch.",
+      "range": {
+        "startLine": 70,
+        "startChar": 1,
+        "endLine": 71,
+        "endChar": 87
+      },
+      "revId": "3d17f8921baa02ea95152c93c55ea7cf2af3caf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e13b6d9c_ad958abd",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-14T02:04:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "56478a60_55cbc6fe",
       "range": {
         "startLine": 70,
         "startChar": 1,
