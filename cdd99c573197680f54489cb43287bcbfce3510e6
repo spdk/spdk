@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33ec7816_228ad9b9",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 779,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-14T19:24:13Z",
+      "side": 1,
+      "message": "if we add a \u0027real\u0027 implementation of spdk_pci_addr_compare(), would that be a better test?\n\nit seems like all these unit tests are doing is confirming that spdk_pci_addr_compare() gets called, but doesn\u0027t really confirm that the two trids get converted to identical pci addresses",
+      "revId": "cdd99c573197680f54489cb43287bcbfce3510e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
