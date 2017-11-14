@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4525763_da3b4ff1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1498,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-14T18:34:49Z",
+      "side": 1,
+      "message": "md_buf should be set to NULL here - spdk_bdev_get_io() does not initialize the -\u003eu union to zeroes",
+      "revId": "ebfdccee8d79aee6ec85164ef09150c9b1ed6845",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ef8d279_ad5341c7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1531,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-14T18:34:49Z",
+      "side": 1,
+      "message": "shouldn\u0027t this be SPDK_BDEV_IO_TYPE_NVME_IO_MD?",
+      "revId": "ebfdccee8d79aee6ec85164ef09150c9b1ed6845",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "987b8771_48433cf0",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-14T18:34:49Z",
+      "side": 1,
+      "message": "I don\u0027t think we should alway report IO_MD as supported - it should check the namespace to see if its been formatted to support metadata.",
+      "revId": "ebfdccee8d79aee6ec85164ef09150c9b1ed6845",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
