@@ -235,9 +235,11 @@ spdk_scsi_lun_hotplug(void *arg)
 }
 
 static void
-spdk_scsi_lun_hot_remove(void *remove_ctx)
+_spdk_scsi_lun_hot_remove(void *arg1, void *arg2)
 {
-	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)remove_ctx;
+	struct spdk_scsi_lun *lun = arg1;
+
+	assert(lun->lcore == spdk_env_get_current_core());
 
 	lun->removed = true;
 	if (lun->hotremove_cb) {
@@ -245,6 +247,21 @@ spdk_scsi_lun_hot_remove(void *remove_ctx)
 	}
 
 	spdk_poller_register(&lun->hotplug_poller, spdk_scsi_lun_hotplug, lun, lun->lcore, 0);
+}
+
+static void
+spdk_scsi_lun_hot_remove(void *remove_ctx)
+{
+	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)remove_ctx;
+
+	if (lun->lcore != spdk_env_get_current_core()) {
+		struct spdk_event *event;
+
+		event = spdk_event_allocate(lun->lcore, _spdk_scsi_lun_hot_remove, lun, NULL);
+		spdk_event_call(event);
+	} else {
+		_spdk_scsi_lun_hot_remove(lun, NULL);
+	}
 }
 
 /**

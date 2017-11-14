@@ -392,7 +392,7 @@ int spdk_initialize_iscsi_conns(void)
 	}
 
 	spdk_poller_register(&g_idle_conn_poller, spdk_iscsi_conn_idle_do_work, NULL,
-			     rte_get_master_lcore(), 0);
+			     spdk_env_get_current_core(), 0);
 
 	return 0;
 }
@@ -860,7 +860,7 @@ void spdk_shutdown_iscsi_conns(void)
 
 	pthread_mutex_unlock(&g_conns_mutex);
 	spdk_poller_register(&g_shutdown_timer, spdk_iscsi_conn_check_shutdown, NULL,
-			     rte_get_master_lcore(), 1000);
+			     spdk_env_get_current_core(), 1000);
 }
 
 int
