@@ -232,6 +232,8 @@ enum spdk_sbc_opcode {
 	SPDK_SBC_VL_XPWRITE_32 = 0x0006,
 };
 
+#define SPDK_SBC_START_STOP_UNIT_START_BIT (1 << 0)
+
 enum spdk_mmc_opcode {
 	/* MMC6 */
 	SPDK_MMC_READ_DISC_STRUCTURE = 0xad,
