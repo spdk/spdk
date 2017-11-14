@@ -2188,7 +2188,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	}
 
 	/* Zero the entire device */
-	spdk_bs_sequence_write_zeroes(seq, 0, bs->dev->blockcnt, _spdk_bs_init_trim_cpl, ctx);
+	spdk_bs_sequence_unmap(seq, 0, bs->dev->blockcnt, _spdk_bs_init_trim_cpl, ctx);
 }
 
 /* END spdk_bs_init */
