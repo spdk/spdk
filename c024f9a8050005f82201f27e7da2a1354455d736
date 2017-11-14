@@ -45,6 +45,29 @@
       "revId": "c024f9a8050005f82201f27e7da2a1354455d736",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f9bc446_00de8f6b",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-14T13:20:39Z",
+      "side": 1,
+      "message": "also, could this be called just \"spdk_strerror\"?",
+      "range": {
+        "startLine": 111,
+        "startChar": 12,
+        "endLine": 111,
+        "endChar": 29
+      },
+      "revId": "c024f9a8050005f82201f27e7da2a1354455d736",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
