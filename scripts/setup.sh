@@ -84,49 +84,50 @@ function configure_linux {
 		driver_name=uio_pci_generic
 	fi
 
-	# NVMe
-	modprobe $driver_name || true
-	for bdf in $(linux_iter_pci_class_code 0108); do
-		blkname=''
-		get_nvme_name_from_bdf "$bdf" blkname
-		if [ "$blkname" != "" ]; then
-			mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
-		else
-			mountpoints="0"
-		fi
-		if [ "$mountpoints" = "0" ]; then
-			linux_bind_driver "$bdf" "$driver_name"
-		else
-			echo Active mountpoints on /dev/$blkname, so not binding PCI dev $bdf
-		fi
-	done
-
-
-	# IOAT
-	TMP=`mktemp`
-	#collect all the device_id info of ioat devices.
-	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
-	| awk -F"x" '{print $2}' > $TMP
-
-	for dev_id in `cat $TMP`; do
-		for bdf in $(linux_iter_pci_dev_id 8086 $dev_id); do
-			linux_bind_driver "$bdf" "$driver_name"
+	if [ "$SKIP_PCI" == 0 ]; then
+		# NVMe
+		modprobe $driver_name || true
+		for bdf in $(linux_iter_pci_class_code 0108); do
+			blkname=''
+			get_nvme_name_from_bdf "$bdf" blkname
+			if [ "$blkname" != "" ]; then
+				mountpoints=$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)
+			else
+				mountpoints="0"
+			fi
+			if [ "$mountpoints" = "0" ]; then
+				linux_bind_driver "$bdf" "$driver_name"
+			else
+				echo Active mountpoints on /dev/$blkname, so not binding PCI dev $bdf
+			fi
 		done
-	done
-	rm $TMP
 
-	# virtio-scsi
-	TMP=`mktemp`
-	#collect all the device_id info of virtio-scsi devices.
-	grep "PCI_DEVICE_ID_VIRTIO_SCSI" $rootdir/include/spdk/pci_ids.h \
-	| awk -F"x" '{print $2}' > $TMP
+		# IOAT
+		TMP=`mktemp`
+		#collect all the device_id info of ioat devices.
+		grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
+		| awk -F"x" '{print $2}' > $TMP
 
-	for dev_id in `cat $TMP`; do
-		for bdf in $(linux_iter_pci_dev_id 1af4 $dev_id); do
-			linux_bind_driver "$bdf" "$driver_name"
+		for dev_id in `cat $TMP`; do
+			for bdf in $(linux_iter_pci_dev_id 8086 $dev_id); do
+				linux_bind_driver "$bdf" "$driver_name"
+			done
 		done
-	done
-	rm $TMP
+		rm $TMP
+
+		# virtio-scsi
+		TMP=`mktemp`
+		#collect all the device_id info of virtio-scsi devices.
+		grep "PCI_DEVICE_ID_VIRTIO_SCSI" $rootdir/include/spdk/pci_ids.h \
+		| awk -F"x" '{print $2}' > $TMP
+
+		for dev_id in `cat $TMP`; do
+			for bdf in $(linux_iter_pci_dev_id 1af4 $dev_id); do
+				linux_bind_driver "$bdf" "$driver_name"
+			done
+		done
+		rm $TMP
+	fi
 
 	echo "1" > "/sys/bus/pci/rescan"
 
@@ -287,27 +288,29 @@ function status_linux {
 }
 
 function configure_freebsd {
-	TMP=`mktemp`
+	if [ "$SKIP_PCI" == 0 ]; then
+		TMP=`mktemp`
 
-	# NVMe
-	GREP_STR="class=0x010802"
+		# NVMe
+		GREP_STR="class=0x010802"
 
-	# IOAT
-	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
-	| awk -F"x" '{print $2}' > $TMP
-	for dev_id in `cat $TMP`; do
-		GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
-	done
+		# IOAT
+		grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
+		| awk -F"x" '{print $2}' > $TMP
+		for dev_id in `cat $TMP`; do
+			GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
+		done
 
-	AWK_PROG="{if (count > 0) printf \",\"; printf \"%s:%s:%s\",\$2,\$3,\$4; count++}"
-	echo $AWK_PROG > $TMP
+		AWK_PROG="{if (count > 0) printf \",\"; printf \"%s:%s:%s\",\$2,\$3,\$4; count++}"
+		echo $AWK_PROG > $TMP
 
-	BDFS=`pciconf -l | grep "${GREP_STR}" | awk -F: -f $TMP`
+		BDFS=`pciconf -l | grep "${GREP_STR}" | awk -F: -f $TMP`
 
-	kldunload nic_uio.ko || true
-	kenv hw.nic_uio.bdfs=$BDFS
-	kldload nic_uio.ko
-	rm $TMP
+		kldunload nic_uio.ko || true
+		kenv hw.nic_uio.bdfs=$BDFS
+		kldload nic_uio.ko
+		rm $TMP
+	fi
 
 	kldunload contigmem.ko || true
 	kenv hw.contigmem.num_buffers=$((HUGEMEM / 256))
@@ -317,7 +320,10 @@ function configure_freebsd {
 
 function reset_freebsd {
 	kldunload contigmem.ko || true
-	kldunload nic_uio.ko || true
+
+	if [ "$SKIP_PCI" == 0 ]; then
+		kldunload nic_uio.ko || true
+	fi
 }
 
 username=$1
@@ -340,6 +346,7 @@ if [ "$username" = "" ]; then
 fi
 
 : ${HUGEMEM:=2048}
+: ${SKIP_PCI:=0}
 
 if [ `uname` = Linux ]; then
 	HUGEPGSZ=$(( `grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9'` ))
