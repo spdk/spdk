@@ -77,7 +77,7 @@ function get_nvme_name_from_bdf {
 	done
 }
 
-function configure_linux {
+function configure_linux_pci {
 	driver_name=vfio-pci
 	if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
 		# No IOMMU. Use uio.
@@ -100,7 +100,6 @@ function configure_linux {
 			echo Active mountpoints on /dev/$blkname, so not binding PCI dev $bdf
 		fi
 	done
-
 
 	# IOAT
 	TMP=`mktemp`
@@ -129,6 +128,10 @@ function configure_linux {
 	rm $TMP
 
 	echo "1" > "/sys/bus/pci/rescan"
+}
+
+function configure_linux {
+	configure_linux_pci
 
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
 
@@ -181,7 +184,7 @@ function configure_linux {
 	fi
 }
 
-function reset_linux {
+function reset_linux_pci {
 	# NVMe
 	set +e
 	lsmod | grep nvme > /dev/null
@@ -194,7 +197,6 @@ function reset_linux {
 			linux_unbind_driver "$bdf"
 		fi
 	done
-
 
 	# IOAT
 	TMP=`mktemp`
@@ -236,6 +238,10 @@ function reset_linux {
 	rm $TMP
 
 	echo "1" > "/sys/bus/pci/rescan"
+}
+
+function reset_linux {
+	reset_linux_pci
 
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
 	rm -f "$hugetlbfs_mount"/spdk*map_*
@@ -286,7 +292,7 @@ function status_linux {
 	done
 }
 
-function configure_freebsd {
+function configure_freebsd_pci {
 	TMP=`mktemp`
 
 	# NVMe
@@ -308,6 +314,10 @@ function configure_freebsd {
 	kenv hw.nic_uio.bdfs=$BDFS
 	kldload nic_uio.ko
 	rm $TMP
+}
+
+function configure_freebsd {
+	configure_freebsd_pci
 
 	kldunload contigmem.ko || true
 	kenv hw.contigmem.num_buffers=$((HUGEMEM / 256))
