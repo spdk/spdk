@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2460a570_41734392",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-14T21:46:53Z",
+      "side": 1,
+      "message": "This will now always return false for SPDK_BDEV_IO_TYPE_NVME_IO_MD.\n\nWhat if we check spdk_nvme_ns_get_md_size(nbdev-\u003ens) for SPDK_BDEV_IO_TYPE_NVME_IO_MD.  If it is \u003e0 then return true, otherwise return false.",
+      "revId": "4d98a1c0b3fe925c1b98acf5e499973d536bffcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
