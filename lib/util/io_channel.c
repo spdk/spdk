@@ -400,6 +400,12 @@ spdk_io_channel_get_ctx(struct spdk_io_channel *ch)
 	return (uint8_t *)ch + sizeof(*ch);
 }
 
+struct spdk_io_channel *
+spdk_io_channel_from_ctx(void *ctx)
+{
+	return (struct spdk_io_channel *)((uint8_t *)ctx - sizeof(struct spdk_io_channel));
+}
+
 struct spdk_thread *
 spdk_io_channel_get_thread(struct spdk_io_channel *ch)
 {
