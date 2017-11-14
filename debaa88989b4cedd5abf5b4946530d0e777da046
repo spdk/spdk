@@ -33,6 +33,24 @@
       "revId": "debaa88989b4cedd5abf5b4946530d0e777da046",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e27b2611_50944d91",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-14T00:46:18Z",
+      "side": 1,
+      "message": "thanks Daniel for the detail, actually it make no difference if we add this function here or not, it will resolve the issue anyway, I just suppose we should do the work cancel the pending IO and reset the controller here later.",
+      "parentUuid": "1090a53d_65806c4b",
+      "revId": "debaa88989b4cedd5abf5b4946530d0e777da046",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
