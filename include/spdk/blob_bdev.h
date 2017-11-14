@@ -45,13 +45,31 @@
 extern "C" {
 #endif
 
+/** Blobstore device */
 struct spdk_bs_dev;
+/** Block device */
 struct spdk_bdev;
+/** Block device module */
 struct spdk_bdev_module_if;
 
+/**
+ * Create a blobstore device for the given block device.
+ *
+ * \param bdev Block device.
+ * \param remove_cb Callback function for hot removal the device.
+ * \param remove_ctx Param for hot removal callback function.
+ * \return The created blobstore device on success or NULL otherwise.
+ */
 struct spdk_bs_dev *spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 		void *remove_ctx);
 
+/**
+ * Claim the block device module for the given blobstore device.
+ *
+ * \param bs_dev Blobstore device.
+ * \param module Block device module to claim.
+ * \return 0 on success, negated errno on failure.
+ */
 int spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *module);
 
 #ifdef __cplusplus
