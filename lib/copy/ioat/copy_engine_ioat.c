@@ -203,7 +203,7 @@ ioat_create_cb(void *io_device, void *ctx_buf)
 
 	ch->ioat_dev = ioat_dev;
 	ch->ioat_ch = ioat_dev->ioat;
-	spdk_poller_register(&ch->poller, ioat_poll, ch->ioat_ch, 0);
+	ch->poller = spdk_poller_register(ioat_poll, ch->ioat_ch, 0);
 	return 0;
 }
 

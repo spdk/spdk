@@ -36,6 +36,7 @@
 
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/io_channel.h"
 #include "spdk/log.h"
 #include "spdk/net.h"
 #include "spdk/string.h"
@@ -79,8 +80,7 @@ spdk_iscsi_portal_accept(void *arg)
 void
 spdk_iscsi_acceptor_start(struct spdk_iscsi_portal *p)
 {
-	spdk_poller_register(&p->acceptor_poller, spdk_iscsi_portal_accept, p,
-			     ACCEPT_TIMEOUT_US);
+	p->acceptor_poller = spdk_poller_register(spdk_iscsi_portal_accept, p, ACCEPT_TIMEOUT_US);
 }
 
 void
