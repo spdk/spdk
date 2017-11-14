@@ -328,6 +328,9 @@ struct spdk_bdev_io {
 
 			/* The number of bytes to transfer */
 			size_t nbytes;
+
+			/* The meta data buffer to transfer */
+			void *md_buf;
 		} nvme_passthru;
 	} u;
 

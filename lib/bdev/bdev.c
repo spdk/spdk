@@ -1504,6 +1504,43 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 }
 
 int
+spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+			      const struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf,
+			      spdk_bdev_io_completion_cb cb, void *cb_arg)
+{
+	struct spdk_bdev *bdev = desc->bdev;
+	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
+
+	if (!desc->write) {
+		/*
+		 * Do not try to parse the NVMe command - we could maybe use bits in the opcode
+		 *  to easily determine if the command is a read or write, but for now just
+		 *  do not allow io_passthru with a read-only descriptor.
+		 */
+		return -EBADF;
+	}
+
+	bdev_io = spdk_bdev_get_io();
+	if (!bdev_io) {
+		SPDK_ERRLOG("bdev_io memory allocation failed during nvme_admin_passthru\n");
+		return -ENOMEM;
+	}
+
+	bdev_io->ch = channel;
+	bdev_io->type = SPDK_BDEV_IO_TYPE_NVME_IO;
+	bdev_io->u.nvme_passthru.cmd = *cmd;
+	bdev_io->u.nvme_passthru.buf = buf;
+	bdev_io->u.nvme_passthru.nbytes = nbytes;
+	bdev_io->u.nvme_passthru.md_buf = md_buf;
+
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+
+	spdk_bdev_io_submit(bdev_io);
+	return 0;
+}
+
+int
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
 	if (!bdev_io) {
