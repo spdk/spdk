@@ -571,7 +571,7 @@ bdevperf_run(void *arg1, void *arg2)
 	 */
 	task_pool = rte_mempool_create("task_pool", g_target_count * g_queue_depth,
 				       sizeof(struct bdevperf_task),
-				       64, 0, NULL, NULL, task_ctor, NULL,
+				       0, 0, NULL, NULL, task_ctor, NULL,
 				       SOCKET_ID_ANY, 0);
 	if (!task_pool) {
 		SPDK_ERRLOG("Cannot allocate %d tasks\n", g_target_count * g_queue_depth);
