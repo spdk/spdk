@@ -589,7 +589,7 @@ int	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 					struct nvme_request *req);
 int	nvme_ctrlr_get_cap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap);
 void	nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap);
-void nvme_ctrlr_init_hook(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_hooks *hooks)
+void nvme_ctrlr_init_hook(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_hooks *hooks);
 int	nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
 			struct spdk_nvme_ctrlr *ctrlr,
 			enum spdk_nvme_qprio qprio,

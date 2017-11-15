@@ -197,7 +197,7 @@ nvme_rdma_qpair_init(struct nvme_rdma_qpair *rqpair)
 
 	pd = NULL;
 	struct spdk_nvme_hooks *hooks = rqpair->qpair.ctrlr->ctrlr_hook;
-	if(hooks) {	
+	if(hooks) {
 		pd = hooks.get_ibv_pd(hooks->hook_ctx);
 	}
 
