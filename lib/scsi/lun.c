@@ -74,12 +74,9 @@ spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 	 * ('cleanup' = oldest, 'tasks' = current, and 'pending' = newest)
 	 */
 
-	TAILQ_FOREACH_SAFE(task, &lun->tasks, scsi_link, task_tmp) {
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_ABORTED_COMMAND,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		spdk_scsi_lun_complete_task(lun, task);
+	if(!TAILQ_EMPTY(&lun->tasks)) {
+		SPDK_ERRLOG("lun->tasks should be empty\n");
+		assert(TAILQ_EMPTY(&lun->tasks));
 	}
 
 	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
