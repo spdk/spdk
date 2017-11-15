@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "5a37b57d_453f3069",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-15T09:23:18Z",
+      "side": 1,
+      "message": "I think RUN_NIGHTLY is exported as system env variable, so I think you don\u0027t need to source autotest_common.sh",
+      "parentUuid": "ae6b9d5f_3ff94991",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 54
+      },
+      "revId": "3d17f8921baa02ea95152c93c55ea7cf2af3caf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "08cea03e_5fe3d838",
         "filename": "test/vhost/fiotest/autotest.sh",
         "patchSetId": 3
