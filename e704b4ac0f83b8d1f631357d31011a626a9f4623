@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "ed0194e6_a25f704f",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T22:23:17Z",
+      "side": 1,
+      "message": "I think this whole loop can be removed now.\n\nThis function only gets called after a LUN reset is completed.  If there are outstanding tasks on this lun-\u003etasks list, we cannot complete them here (since backend may complete them later).  But setting status to CHECK_CONDITION is not necessary then.  Later, if the task does complete, we can just use the status from that completion.  If it completed successfully, it is OK to just return that status.\n\nShuhei - what do you think?",
+      "revId": "e704b4ac0f83b8d1f631357d31011a626a9f4623",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c845c2e_157760ff",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 4
@@ -43,6 +60,23 @@
         "endLine": 92,
         "endChar": 2
       },
+      "revId": "e704b4ac0f83b8d1f631357d31011a626a9f4623",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f18ccc37_1b5b4a6b",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1240,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T22:23:17Z",
+      "side": 1,
+      "message": "I\u0027m not sure this is needed - based on comment I made in lun.c.",
       "revId": "e704b4ac0f83b8d1f631357d31011a626a9f4623",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
