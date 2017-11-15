@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7fb30f2e_3c9b5067",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 795,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-15T18:30:51Z",
+      "side": 1,
+      "message": "oops, this check is supposed to be before the send VPD call",
+      "revId": "afb30131a8d4a6443f1ca6dc07868ab0b23777a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
