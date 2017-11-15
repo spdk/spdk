@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d9bfb21c_446a9d86",
+        "filename": "test/nvmf/host/bdevperf_gpt.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-11-15T10:09:00Z",
+      "side": 1,
+      "message": "Yes. For Intel nvme SSD, the Gpt GUID are unique.",
+      "parentUuid": "69526db0_85422891",
+      "range": {
+        "startLine": 15,
+        "startChar": 22,
+        "endLine": 16,
+        "endChar": 58
+      },
+      "revId": "7348bf2d75cad2a6a7c3e2b915938f9dce50c291",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56afaa36_07425546",
         "filename": "test/nvmf/host/bdevperf_gpt.sh",
         "patchSetId": 3
@@ -36,6 +60,24 @@
       "writtenOn": "2017-11-15T09:10:50Z",
       "side": 1,
       "message": "Looking at test/nvmf/host/bdevperf.sh - shouldn\u0027t you start NVMf target somewhere around here?",
+      "revId": "7348bf2d75cad2a6a7c3e2b915938f9dce50c291",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6026e7b_89cfe693",
+        "filename": "test/nvmf/host/bdevperf_gpt.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-11-15T10:09:00Z",
+      "side": 1,
+      "message": "No need, bdevperf can run alone.",
+      "parentUuid": "56afaa36_07425546",
       "revId": "7348bf2d75cad2a6a7c3e2b915938f9dce50c291",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "8a9e3e1b_96a8553d",
+        "filename": "test/nvmf/host/bdevperf_gpt.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-11-15T10:09:00Z",
+      "side": 1,
+      "message": "OK, I can simplify \u003e\u003e lines, thanks. This bdevperf test is local, I think nvmf fio for gpt(https://review.gerrithub.io/#/c/387268/) can test nvmf.",
+      "parentUuid": "270e0971_f83da542",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 49
+      },
+      "revId": "7348bf2d75cad2a6a7c3e2b915938f9dce50c291",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e22844d7_80ab72ad",
         "filename": "test/nvmf/host/bdevperf_gpt.sh",
         "patchSetId": 3
@@ -76,6 +142,30 @@
       "writtenOn": "2017-11-15T09:10:50Z",
       "side": 1,
       "message": "Could this be cut down to 1 second?",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 7
+      },
+      "revId": "7348bf2d75cad2a6a7c3e2b915938f9dce50c291",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f35f38b_8fcaf19a",
+        "filename": "test/nvmf/host/bdevperf_gpt.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-11-15T10:09:00Z",
+      "side": 1,
+      "message": "Yes, sleep 1 is OK. Thanks.",
+      "parentUuid": "e22844d7_80ab72ad",
       "range": {
         "startLine": 50,
         "startChar": 0,
