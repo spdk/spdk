@@ -45,6 +45,40 @@
       "revId": "cfd9956c83331afb686c64f9f67325b571097fb1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17d9a8ce_ab283510",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2017-11-15T05:26:07Z",
+      "side": 1,
+      "message": "this line can be deleted.",
+      "revId": "cfd9956c83331afb686c64f9f67325b571097fb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b2ad9c7_7f587362",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2017-11-15T05:26:07Z",
+      "side": 1,
+      "message": "integrate these lines into the malloc testing. then create target node with two luns.",
+      "revId": "cfd9956c83331afb686c64f9f67325b571097fb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
