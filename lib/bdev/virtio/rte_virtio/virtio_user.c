@@ -47,8 +47,8 @@
 
 #include "spdk/string.h"
 
-#define virtio_dev_get_user_dev(dev) \
-	((struct virtio_user_dev *)((uintptr_t)(dev) - offsetof(struct virtio_user_dev, vdev)))
+#define virtio_dev_get_user_dev(vdev) \
+	((struct virtio_user_dev *)((vdev)->ctx))
 
 static void
 virtio_user_read_dev_config(struct virtio_dev *vdev, size_t offset,
