@@ -12,6 +12,9 @@ function usage()
 	echo ""
 	echo "General:"
 	echo " -h, --help                Display this help and exit"
+	echo ""
+	echo " --prefix=path             Configure installation prefix (default: /usr/local)"
+	echo ""
 	echo " --enable-debug            Configure for debug builds"
 	echo " --enable-werror           Treat compiler warnings as errors"
 	echo " --enable-asan             Enable address sanitizer"
@@ -49,6 +52,9 @@ for i in "$@"; do
 		-h|--help)
 			usage
 			exit 0
+			;;
+		--prefix=*)
+			CONFIG_PREFIX="${i#*=}"
 			;;
 		--enable-debug)
 			CONFIG_DEBUG=y
@@ -199,6 +205,9 @@ echo -n "Creating CONFIG.local..."
 
 # Write the configuration file
 rm -f CONFIG.local
+if [ -n "$CONFIG_PREFIX" ]; then
+	echo "CONFIG_PREFIX?=$CONFIG_PREFIX" >> CONFIG.local
+fi
 if [ -n "$CONFIG_DEBUG" ]; then
 	echo "CONFIG_DEBUG?=$CONFIG_DEBUG" >> CONFIG.local
 fi

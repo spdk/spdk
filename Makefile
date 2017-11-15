@@ -36,7 +36,7 @@ S :=
 SPDK_ROOT_DIR := $(CURDIR)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += lib test examples app
+DIRS-y += lib test examples app include
 
 .PHONY: all clean $(DIRS-y) config.h CONFIG.local mk/cc.mk
 
@@ -49,6 +49,9 @@ all: $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
 	$(Q)rm -f config.h
+
+install: all
+	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
 
 lib: $(DPDKBUILD)
 app: lib
