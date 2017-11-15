@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d259923_9559472e",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 6
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-15T09:23:18Z",
+      "side": 1,
+      "message": "could we maybe use block size range instead, to cover more block sizes in IO? 4k-512k? That way we check all multiples of 4k bs.\nOr 1k-512k to check all multiples of 1k.",
+      "range": {
+        "startLine": 2,
+        "startChar": 10,
+        "endLine": 2,
+        "endChar": 14
+      },
+      "revId": "63e7bb779bb9ea7fa110f32be5f4a19836fdfeec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ec29493_8619534f",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 6
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-15T09:23:18Z",
+      "side": 1,
+      "message": "In per-patch tests we use 512 so I think you could increase this value here as well",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 10
+      },
+      "revId": "63e7bb779bb9ea7fa110f32be5f4a19836fdfeec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49af5a7a_ad32bf21",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 6
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-15T09:23:18Z",
+      "side": 1,
+      "message": "Since we are running nightly here, maybe we could increase the runtime by increasing IO volume size?\nCurrently IO will be run for total of 4GB over 1GB region of bdev space. Maybe we could change it to just size\u003d10GB?\nDecision up to you.",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 10
+      },
+      "revId": "63e7bb779bb9ea7fa110f32be5f4a19836fdfeec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bd42a69_f724c431",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 6
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-15T09:23:18Z",
+      "side": 1,
+      "message": "This is not needed as you already have other job tags below",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 11
+      },
+      "revId": "63e7bb779bb9ea7fa110f32be5f4a19836fdfeec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
