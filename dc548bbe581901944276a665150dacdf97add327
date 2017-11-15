@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b686309_4bd67024",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T18:11:11Z",
+      "side": 1,
+      "message": "Please make this g_sig_received.  The \"g_\" makes it clear that this is a global variable (like the ones just before this line).",
+      "revId": "dc548bbe581901944276a665150dacdf97add327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
