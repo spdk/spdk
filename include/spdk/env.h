@@ -77,6 +77,22 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
  */
 void spdk_env_init(const struct spdk_env_opts *opts);
 
+enum DMA_FLAG
+{
+	SPDK_MALLOC_DMA   = 0x00, /* memory allocation that is dma but not sharable */
+	SPDK_MALLOC_SHARE = 0x01  /* memory allocation that is not dma but sharable */
+};
+
+/**
+ * Allocate dma/sharable memory based on a given dma_flg.
+ */
+void *spdk_malloc(size_t size, size_t align, int socket_id, unsigned flags, uint32_t dma_flg);
+
+/**
+ * Free buffer memory that was previously allocated with spdk_malloc.
+ */
+void spdk_free(void *buf);
+
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment.
