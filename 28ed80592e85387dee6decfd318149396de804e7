@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa545597_5f9f1d56",
+        "filename": "test/vhost/readonly/delete_partition_vm.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-15T10:33:12Z",
+      "side": 1,
+      "message": "These functions are repeated 3 times across files. Make them common?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 1
+      },
+      "revId": "28ed80592e85387dee6decfd318149396de804e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d74fd6c_2594099d",
+        "filename": "test/vhost/readonly/delete_partition_vm.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-15T10:33:12Z",
+      "side": 1,
+      "message": "In delete_partition_vm.sh ?",
+      "range": {
+        "startLine": 31,
+        "startChar": 13,
+        "endLine": 31,
+        "endChar": 39
+      },
+      "revId": "28ed80592e85387dee6decfd318149396de804e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
