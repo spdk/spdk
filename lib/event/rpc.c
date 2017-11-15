@@ -92,7 +92,7 @@ void
 spdk_rpc_finish(void)
 {
 	spdk_rpc_close();
-	spdk_poller_unregister(&g_rpc_poller, NULL);
+	spdk_poller_unregister(&g_rpc_poller);
 }
 
 void

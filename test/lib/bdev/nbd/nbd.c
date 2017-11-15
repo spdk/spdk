@@ -52,7 +52,7 @@ static char *g_nbd_name = "/dev/nbd0";
 static void
 nbd_shutdown(void)
 {
-	spdk_poller_unregister(&g_nbd_poller, NULL);
+	spdk_poller_unregister(&g_nbd_poller);
 
 	spdk_nbd_stop(g_nbd_disk);
 	spdk_app_stop(0);

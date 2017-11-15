@@ -328,7 +328,7 @@ int
 spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
 	spdk_bdev_close(lun->bdev_desc);
-	spdk_poller_unregister(&lun->hotplug_poller, NULL);
+	spdk_poller_unregister(&lun->hotplug_poller);
 	spdk_scsi_lun_db_delete(lun);
 
 	free(lun);
