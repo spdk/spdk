@@ -29,6 +29,7 @@ run_test test/nvmf/discovery/discovery.sh
 run_test test/nvmf/nvme_cli/nvme_cli.sh
 run_test test/nvmf/lvol/nvmf_lvol.sh
 run_test test/nvmf/shutdown/shutdown.sh
+run_test test/nvmf/multi_nvmf/multi_nvme_manage.sh
 
 if [ $SPDK_TEST_NVML -eq 1 ]; then
 	run_test test/nvmf/pmem/nvmf_pmem.sh 10
