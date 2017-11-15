@@ -38,6 +38,7 @@
 
 #include <linux/virtio_ring.h>
 
+#include <rte_config.h>
 #include <rte_memory.h>
 #include <rte_mempool.h>
 

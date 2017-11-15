@@ -44,6 +44,7 @@
 #include <linux/virtio_ring.h>
 #include <sys/eventfd.h>
 
+#include <rte_config.h>
 #include <rte_memory.h>
 #include <rte_mempool.h>
 
