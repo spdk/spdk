@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f0c818b_d8d897d1",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-15T05:46:37Z",
+      "side": 1,
+      "message": "First for a LUN, all related tasks run on the same CPU and is my understanding correct?\nIf correct, if Cunyin\u0027s latest patch (lun_clear_all() is deferred until lun-\u003etasks is made empty.) is applied, lun_clear_all() will surely observe empty lun-\u003etasks.\n\n\nI\u0027ll get back on track.\nI understood that your patch is to assure the following:\n- lun_clear_all() is called first and then spdk_bdev_scsi_task_complete_cmd() is called, CHECK_CONDITION is prioritized.\n- dequeueing any task from lun-\u003etasks is done only in spdk_bdev_scsi_task_complete_cmd() by spdk_scsi_lun_complete_task(). Hence dequeueing always get success.\n\nIs my understanding correct? If so your patch make sense to me.\n\n\nBut in near future if we add timeout into bdev_aio_reset() or bdev_aio_read/write() never return for any reason, we may observe non-empty lun-\u003etasks. For this case we cannot expect the completion of tasks and lun-\u003etasks should be made empty in lun_clear_all() and another feature may be required.\nThis decoupling will improve robustness but increase complexity. I ask this now because enterprise storage support this decoupling.",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 82,
+        "endChar": 2
+      },
+      "revId": "b0d17e3d6e5a12c1cb570ccbe1e22a0545f0b2a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4953fc7f_ebd67267",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-15T05:46:37Z",
+      "side": 1,
+      "message": "First I\u0027m not sure what is the case such that lun-\u003epending_tasks is not empty. I\u0027m glad that if you know it.\n\nAs long as I read the code, any task inserted into lun-\u003epending_tasks is removed from lun-\u003epending_tasks immediately in a context.",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 2
+      },
+      "revId": "b0d17e3d6e5a12c1cb570ccbe1e22a0545f0b2a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
