@@ -74,6 +74,10 @@ if [ "$STAT1" == "$STAT2" ]; then
 	exit 1
 fi
 
+# Test 'make install'
+mkdir -p /tmp/spdk
+$MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk
+ls -lR /tmp/spdk
 
 timing_enter doxygen
 if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then

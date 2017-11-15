@@ -31,6 +31,9 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+# Installation prefix
+CONFIG_PREFIX?=/usr/local
+
 # Build with debug logging. Turn off for performance testing and normal usage
 CONFIG_DEBUG?=n
 
