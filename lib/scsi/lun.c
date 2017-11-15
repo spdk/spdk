@@ -246,7 +246,7 @@ _spdk_scsi_lun_hot_remove(void *arg1, void *arg2)
 		lun->hotremove_cb(lun, lun->hotremove_ctx);
 	}
 
-	spdk_poller_register(&lun->hotplug_poller, spdk_scsi_lun_hotplug, lun, lun->lcore, 0);
+	spdk_poller_register(&lun->hotplug_poller, spdk_scsi_lun_hotplug, lun, 0);
 }
 
 static void

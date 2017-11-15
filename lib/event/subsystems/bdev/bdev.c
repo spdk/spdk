@@ -54,7 +54,6 @@ spdk_bdev_subsystem_start_poller(struct spdk_bdev_poller **ppoller,
 	spdk_poller_register((struct spdk_poller **)ppoller,
 			     fn,
 			     arg,
-			     spdk_env_get_current_core(),
 			     period_microseconds);
 }
 

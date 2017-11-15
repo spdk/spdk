@@ -88,7 +88,7 @@ nbd_start(void *arg1, void *arg2)
 		return;
 	}
 
-	spdk_poller_register(&g_nbd_poller, nbd_poll, NULL, spdk_env_get_current_core(), 0);
+	spdk_poller_register(&g_nbd_poller, nbd_poll, NULL, 0);
 }
 
 static void usage(char *program_name)
