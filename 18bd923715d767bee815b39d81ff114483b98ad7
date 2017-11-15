@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ae8fb6f_2fb7728a",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T22:31:11Z",
+      "side": 1,
+      "message": "assert(false) would be better here - functionally this works, but assert(false) is the more common mechanism to use instead of repeating the condition again",
+      "revId": "18bd923715d767bee815b39d81ff114483b98ad7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
