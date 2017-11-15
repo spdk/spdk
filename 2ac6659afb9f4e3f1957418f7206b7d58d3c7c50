@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7090e951_c38e57dd",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2017-11-15T13:48:37Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "8a080f8b_c26881c3",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 28
+      },
+      "revId": "2ac6659afb9f4e3f1957418f7206b7d58d3c7c50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ffc7bda0_021a34a3",
         "filename": "lib/event/app.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-15T05:59:18Z",
       "side": 1,
       "message": "I do not think the your logic in this function is correct. We may need to change this function:\n\nstatic void\n__shutdown_signal(int signo)\n{\n        if(!sig_received) {\n             sig_received \u003d true;\n\t     spdk_app_start_shutdown();\n        }\n}",
+      "range": {
+        "startLine": 162,
+        "startChar": 1,
+        "endLine": 170,
+        "endChar": 2
+      },
+      "revId": "2ac6659afb9f4e3f1957418f7206b7d58d3c7c50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9b3625d_2b96b445",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2017-11-15T13:48:37Z",
+      "side": 1,
+      "message": "Thanks.Done.",
+      "parentUuid": "ffc7bda0_021a34a3",
       "range": {
         "startLine": 162,
         "startChar": 1,
