@@ -1,4 +1,11 @@
-set -xe
+: ${SPDK_AUTOTEST_X=true}; export SPDK_AUTOTEST_X
+
+if $SPDK_AUTOTEST_X; then
+	set -x
+fi
+
+set -e
+
 PS4=' \t	\$ '
 ulimit -c unlimited
 
@@ -70,7 +77,7 @@ case `uname` in
 			config_params+=' --enable-ubsan'
 		fi
 		if [ $SPDK_RUN_ASAN -eq 1 ]; then
-			if /usr/sbin/ldconfig -p | grep -q asan; then
+			if ldconfig -p | grep -q asan; then
 				config_params+=' --enable-asan'
 			else
 				SPDK_RUN_ASAN=0
@@ -339,6 +346,7 @@ function run_test() {
 }
 
 function print_backtrace() {
+	local shell_options="$-"
 	set +x
 	echo "========== Backtrace start: =========="
 	echo ""
@@ -348,13 +356,13 @@ function print_backtrace() {
 		local src="${BASH_SOURCE[$i]}"
 		echo "in $src:$line_nr -> $func()"
 		echo "     ..."
-		nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^$line_nr" | \
+		nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^$line_nr[^0-9]" | \
 			sed "s/^/   /g" | sed "s/^   $line_nr /=> $line_nr /g"
 		echo "     ..."
 	done
 	echo ""
 	echo "========== Backtrace end =========="
-	set -x
+	[[ "$shell_options" =~ x ]] && set -x
 	return 0
 }
 
