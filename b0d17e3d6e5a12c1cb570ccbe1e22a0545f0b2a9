@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "94184490_c394d16d",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-15T06:12:20Z",
+      "side": 1,
+      "message": "I would like to say if there is no active tasks, we should remove this loop.\nIf there is, it should use my logic. \u0027Those tasks are already sent to the bdev layer, we should not complete here. it should complete by the call backs.",
+      "parentUuid": "2f0c818b_d8d897d1",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 82,
+        "endChar": 2
+      },
+      "revId": "b0d17e3d6e5a12c1cb570ccbe1e22a0545f0b2a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4953fc7f_ebd67267",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-15T05:46:37Z",
       "side": 1,
       "message": "First I\u0027m not sure what is the case such that lun-\u003epending_tasks is not empty. I\u0027m glad that if you know it.\n\nAs long as I read the code, any task inserted into lun-\u003epending_tasks is removed from lun-\u003epending_tasks immediately in a context.",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 2
+      },
+      "revId": "b0d17e3d6e5a12c1cb570ccbe1e22a0545f0b2a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ddfa4df7_f6216fe9",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-15T06:12:20Z",
+      "side": 1,
+      "message": "Pending tasks are those tasks not send to the bdev layer, so we can safely abort it and return those tasks.",
+      "parentUuid": "4953fc7f_ebd67267",
       "range": {
         "startLine": 90,
         "startChar": 0,
