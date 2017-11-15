@@ -54,15 +54,18 @@ spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 {
 	if (task->function == SPDK_SCSI_TASK_FUNC_LUN_RESET &&
 	    task->status == SPDK_SCSI_STATUS_GOOD) {
-		spdk_scsi_lun_clear_all(task->lun);
+		if (spdk_scsi_lun_clear_all(task->lun)) {
+			task->response = SPDK_SCSI_TASK_MGMT_RESP_TARGET_FAILURE;
+		}
 	}
 	task->cpl_fn(task);
 }
 
-void
+int
 spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 {
 	struct spdk_scsi_task *task, *task_tmp;
+	int rc = 0;
 
 	/*
 	 * This function is called from one location, after the backend LUN
@@ -74,23 +77,29 @@ spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 	 * ('cleanup' = oldest, 'tasks' = current, and 'pending' = newest)
 	 */
 
-	TAILQ_FOREACH_SAFE(task, &lun->tasks, scsi_link, task_tmp) {
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_ABORTED_COMMAND,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		spdk_scsi_lun_complete_task(lun, task);
+	if (!TAILQ_EMPTY(&lun->tasks)) {
+		SPDK_ERRLOG("lun->tasks should be empty after reset\n");
+		TAILQ_FOREACH_SAFE(task, &lun->tasks, scsi_link, task_tmp) {
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+						  SPDK_SCSI_SENSE_ABORTED_COMMAND,
+						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		}
+
+		rc = -1;
 	}
 
 	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
 		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
-		TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_ABORTED_COMMAND,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
 					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		spdk_scsi_lun_complete_task(lun, task);
+		spdk_trace_record(TRACE_SCSI_TASK_DONE, lun->dev->id, 0, (uintptr_t)task, 0);
+		task->cpl_fn(task);
 	}
+
+	return rc;
 }
 
 int
