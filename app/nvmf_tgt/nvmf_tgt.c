@@ -77,31 +77,26 @@ subsystem_delete_event(void *arg1, void *arg2)
 }
 
 static void
+subsystem_unregister_poller(void *arg1, void *arg2)
+{
+	struct nvmf_tgt_subsystem *app_subsys = arg1;
+	struct spdk_event *event = arg2;
+
+	spdk_poller_unregister(&app_subsys->poller, NULL);
+
+	spdk_event_call(event);
+}
+
+static void
 nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 {
-	struct spdk_event *event;
+	struct spdk_event *event1, *event2;
 
-	/*
-	 * Unregister the poller - this starts a chain of events that will eventually free
-	 * the subsystem's memory.
-	 */
-	event = spdk_event_allocate(spdk_env_get_current_core(), subsystem_delete_event,
-				    app_subsys, NULL);
-	spdk_poller_unregister(&app_subsys->poller, event);
-}
+	event2 = spdk_event_allocate(spdk_env_get_current_core(), subsystem_delete_event,
+				     app_subsys, NULL);
+	event1 = spdk_event_allocate(app_subsys->lcore, subsystem_unregister_poller, app_subsys, event2);
 
-static void
-nvmf_tgt_poll_group_stopped_event(void *arg1, void *arg2)
-{
-	g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUP;
-	nvmf_tgt_advance_state(NULL, NULL);
-}
-
-static void
-acceptor_poller_unregistered_event(void *arg1, void *arg2)
-{
-	g_tgt.state = NVMF_TGT_FINI_STOP_POLLER;
-	nvmf_tgt_advance_state(NULL, NULL);
+	spdk_event_call(event1);
 }
 
 static void
@@ -226,14 +221,7 @@ nvmf_tgt_poll_group_poll(void *arg)
 static void
 nvmf_tgt_destroy_poll_group_done(void *arg1, void *arg2)
 {
-	g_tgt.core = spdk_env_get_next_core(g_tgt.core);
-	if (g_tgt.core != UINT32_MAX) {
-		g_tgt.state = NVMF_TGT_FINI_STOP_POLLER;
-	} else {
-		assert(g_active_poll_groups == 0);
-		g_tgt.state = NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS;
-	}
-
+	g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUP_DONE;
 	nvmf_tgt_advance_state(NULL, NULL);
 }
 
@@ -247,6 +235,8 @@ nvmf_tgt_destroy_poll_group(void *arg1, void *arg2)
 
 	pg = &g_poll_groups[g_tgt.core];
 	assert(pg != NULL);
+
+	spdk_poller_unregister(&pg->poller, NULL);
 
 	spdk_nvmf_poll_group_destroy(pg->group);
 	pg->group = NULL;
@@ -366,32 +356,17 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 				spdk_memzone_dump(stdout);
 				fflush(stdout);
 			}
-			g_tgt.core = spdk_env_get_first_core();
 			break;
 		case NVMF_TGT_FINI_STOP_ACCEPTOR: {
-			struct spdk_event *event;
-
-			event = spdk_event_allocate(spdk_env_get_current_core(), acceptor_poller_unregistered_event,
-						    NULL, NULL);
-			spdk_poller_unregister(&g_acceptor_poller, event);
-			break;
-		}
-		case NVMF_TGT_FINI_STOP_POLLER: {
-			struct spdk_event *event;
-			struct nvmf_tgt_poll_group *pg;
-
-			pg = &g_poll_groups[g_tgt.core];
-			assert(pg != NULL);
-
-			event = spdk_event_allocate(spdk_env_get_current_core(), nvmf_tgt_poll_group_stopped_event,
-						    NULL, NULL);
-			spdk_poller_unregister(&pg->poller, event);
+			spdk_poller_unregister(&g_acceptor_poller, NULL);
+			g_tgt.core = spdk_env_get_first_core();
+			g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUP;
 			break;
 		}
 		case NVMF_TGT_FINI_DESTROY_POLL_GROUP: {
 			struct spdk_event *event, *return_event;
 
-			/* Send an event to the poller core, create an event, and event back to this core. */
+			/* Send an event to the poller core, destroy the poll group, and event back to this core. */
 			return_event = spdk_event_allocate(spdk_env_get_current_core(), nvmf_tgt_destroy_poll_group_done,
 							   NULL, NULL);
 			event = spdk_event_allocate(g_tgt.core, nvmf_tgt_destroy_poll_group,
@@ -399,6 +374,15 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			spdk_event_call(event);
 			break;
 		}
+		case NVMF_TGT_FINI_DESTROY_POLL_GROUP_DONE:
+			g_tgt.core = spdk_env_get_next_core(g_tgt.core);
+			if (g_tgt.core != UINT32_MAX) {
+				g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUP;
+			} else {
+				assert(g_active_poll_groups == 0);
+				g_tgt.state = NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS;
+			}
+			break;
 		case NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS: {
 			struct nvmf_tgt_subsystem *app_subsys, *tmp;
 
