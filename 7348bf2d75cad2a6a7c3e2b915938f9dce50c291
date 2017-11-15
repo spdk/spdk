@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69526db0_85422891",
+        "filename": "test/nvmf/host/bdevperf_gpt.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-15T09:10:50Z",
+      "side": 1,
+      "message": "Should these partitions have the exact same GUID?",
+      "range": {
+        "startLine": 15,
+        "startChar": 22,
+        "endLine": 16,
+        "endChar": 58
+      },
+      "revId": "7348bf2d75cad2a6a7c3e2b915938f9dce50c291",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56afaa36_07425546",
+        "filename": "test/nvmf/host/bdevperf_gpt.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-15T09:10:50Z",
+      "side": 1,
+      "message": "Looking at test/nvmf/host/bdevperf.sh - shouldn\u0027t you start NVMf target somewhere around here?",
+      "revId": "7348bf2d75cad2a6a7c3e2b915938f9dce50c291",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "270e0971_f83da542",
+        "filename": "test/nvmf/host/bdevperf_gpt.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-15T09:10:50Z",
+      "side": 1,
+      "message": "Could you reduce the number of \u003e\u003e re directions using either:\na) subshell( e.g. ( ) \u003e file)\nb) cat + EOL \n?\n\nAlso, shouldn\u0027t trtype be \"RDMA\" instead of PCIe since we\u0027re testing NVMf?",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 49
+      },
+      "revId": "7348bf2d75cad2a6a7c3e2b915938f9dce50c291",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e22844d7_80ab72ad",
+        "filename": "test/nvmf/host/bdevperf_gpt.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-15T09:10:50Z",
+      "side": 1,
+      "message": "Could this be cut down to 1 second?",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 7
+      },
+      "revId": "7348bf2d75cad2a6a7c3e2b915938f9dce50c291",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
