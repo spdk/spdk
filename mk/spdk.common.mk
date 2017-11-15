@@ -201,5 +201,5 @@ CLEAN_C=\
 %.d: ;
 
 define spdk_lib_list_to_files
-	$(1:%=$(SPDK_ROOT_DIR)/build/lib/libspdk_%.a)
+$(1:%=$(SPDK_ROOT_DIR)/build/lib/libspdk_%.a)
 endef
