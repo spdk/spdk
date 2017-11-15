@@ -82,7 +82,7 @@ subsystem_unregister_poller(void *arg1, void *arg2)
 	struct nvmf_tgt_subsystem *app_subsys = arg1;
 	struct spdk_event *event = arg2;
 
-	spdk_poller_unregister(&app_subsys->poller, NULL);
+	spdk_poller_unregister(&app_subsys->poller);
 
 	spdk_event_call(event);
 }
@@ -235,7 +235,7 @@ nvmf_tgt_destroy_poll_group(void *arg1, void *arg2)
 	pg = &g_poll_groups[g_tgt.core];
 	assert(pg != NULL);
 
-	spdk_poller_unregister(&pg->poller, NULL);
+	spdk_poller_unregister(&pg->poller);
 
 	spdk_nvmf_poll_group_destroy(pg->group);
 	pg->group = NULL;
@@ -354,7 +354,7 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			}
 			break;
 		case NVMF_TGT_FINI_STOP_ACCEPTOR: {
-			spdk_poller_unregister(&g_acceptor_poller, NULL);
+			spdk_poller_unregister(&g_acceptor_poller);
 			g_tgt.core = spdk_env_get_first_core();
 			g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUP;
 			break;

@@ -396,7 +396,7 @@ _bdev_remove_cb(struct spdk_vhost_dev *vdev, void *arg)
 	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
 		     bvdev->vdev.name);
 	if (bvdev->requestq_poller) {
-		spdk_poller_unregister(&bvdev->requestq_poller, NULL);
+		spdk_poller_unregister(&bvdev->requestq_poller);
 		spdk_poller_register(&bvdev->requestq_poller, no_bdev_vdev_worker, bvdev, 0);
 	}
 
@@ -547,7 +547,7 @@ destroy_device_poller_cb(void *arg)
 	free_task_pool(bvdev);
 	spdk_vhost_dev_mem_unregister(&bvdev->vdev);
 
-	spdk_poller_unregister(&ctx->poller, NULL);
+	spdk_poller_unregister(&ctx->poller);
 	spdk_vhost_dev_backend_event_done(ctx->event_ctx, 0);
 }
 
@@ -572,7 +572,7 @@ spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 	destroy_ctx->bvdev = bvdev;
 	destroy_ctx->event_ctx = event_ctx;
 
-	spdk_poller_unregister(&bvdev->requestq_poller, NULL);
+	spdk_poller_unregister(&bvdev->requestq_poller);
 	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx,
 			     1000);
 	return 0;

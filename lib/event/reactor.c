@@ -226,16 +226,6 @@ spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *polle
 }
 
 static void
-_spdk_poller_unregister_complete(struct spdk_poller *poller)
-{
-	if (poller->unregister_complete_event) {
-		spdk_event_call(poller->unregister_complete_event);
-	}
-
-	free(poller);
-}
-
-static void
 _spdk_reactor_msg_passed(void *arg1, void *arg2)
 {
 	spdk_thread_fn fn = arg1;
@@ -292,7 +282,7 @@ _spdk_reactor_context_switch_monitor_stop(void *arg1, void *arg2)
 	struct spdk_reactor *reactor = arg1;
 
 	if (reactor->rusage_poller != NULL) {
-		spdk_poller_unregister(&reactor->rusage_poller, NULL);
+		spdk_poller_unregister(&reactor->rusage_poller);
 	}
 }
 
@@ -384,7 +374,7 @@ _spdk_reactor_run(void *arg)
 			poller->state = SPDK_POLLER_STATE_RUNNING;
 			poller->fn(poller->arg);
 			if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
-				_spdk_poller_unregister_complete(poller);
+				free(poller);
 			} else {
 				poller->state = SPDK_POLLER_STATE_WAITING;
 				TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
@@ -402,7 +392,7 @@ _spdk_reactor_run(void *arg)
 					poller->state = SPDK_POLLER_STATE_RUNNING;
 					poller->fn(poller->arg);
 					if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
-						_spdk_poller_unregister_complete(poller);
+						free(poller);
 					} else {
 						poller->state = SPDK_POLLER_STATE_WAITING;
 						spdk_poller_insert_timer(reactor, poller, now);
@@ -729,14 +719,23 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 	}
 }
 
-static void
-_spdk_poller_unregister(struct spdk_reactor *reactor, struct spdk_poller *poller,
-			struct spdk_event *next)
+void
+spdk_poller_unregister(struct spdk_poller **ppoller)
 {
-	assert(poller->lcore == reactor->lcore);
+	struct spdk_poller *poller;
+	struct spdk_reactor *reactor;
+
+	poller = *ppoller;
+
+	*ppoller = NULL;
+
+	if (poller == NULL) {
+		return;
+	}
+
 	assert(poller->lcore == spdk_env_get_current_core());
 
-	poller->unregister_complete_event = next;
+	reactor = spdk_reactor_get(poller->lcore);
 
 	if (poller->state == SPDK_POLLER_STATE_RUNNING) {
 		/*
@@ -752,52 +751,7 @@ _spdk_poller_unregister(struct spdk_reactor *reactor, struct spdk_poller *poller
 			TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
 		}
 
-		_spdk_poller_unregister_complete(poller);
-	}
-}
-
-static void
-_spdk_event_remove_poller(void *arg1, void *arg2)
-{
-	struct spdk_poller *poller = arg1;
-	struct spdk_reactor *reactor = spdk_reactor_get(poller->lcore);
-	struct spdk_event *next = arg2;
-
-	_spdk_poller_unregister(reactor, poller, next);
-}
-
-void
-spdk_poller_unregister(struct spdk_poller **ppoller,
-		       struct spdk_event *complete)
-{
-	struct spdk_poller *poller;
-	uint32_t lcore;
-
-	poller = *ppoller;
-
-	*ppoller = NULL;
-
-	if (poller == NULL) {
-		if (complete) {
-			spdk_event_call(complete);
-		}
-		return;
-	}
-
-	lcore = poller->lcore;
-
-	if (lcore == spdk_env_get_current_core()) {
-		/*
-		 * The poller is registered on the current core, so call the remove function
-		 * directly.
-		 */
-		_spdk_poller_unregister(spdk_reactor_get(lcore), poller, complete);
-	} else {
-		/*
-		 * The poller is registered on a different core.
-		 * Schedule an event to run on the poller's core that will remove the poller.
-		 */
-		spdk_event_call(spdk_event_allocate(lcore, _spdk_event_remove_poller, poller, complete));
+		free(poller);
 	}
 }
 

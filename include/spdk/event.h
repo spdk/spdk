@@ -196,8 +196,7 @@ void spdk_poller_register(struct spdk_poller **ppoller,
 /**
  * \brief Unregister a poller on the given lcore.
  */
-void spdk_poller_unregister(struct spdk_poller **ppoller,
-			    struct spdk_event *complete);
+void spdk_poller_unregister(struct spdk_poller **ppoller);
 
 /**
  * \brief Enable or disable monitoring of context switches.

@@ -62,7 +62,7 @@ static void
 oneshot(void *arg)
 {
 	printf("oneshot\n");
-	spdk_poller_unregister(&poller_oneshot, NULL);
+	spdk_poller_unregister(&poller_oneshot);
 }
 
 static void
@@ -84,7 +84,7 @@ test_start(void *arg1, void *arg2)
 	spdk_poller_register(&poller_oneshot, oneshot, NULL, 0);
 
 	spdk_poller_register(&poller_unregister, nop, NULL, 0);
-	spdk_poller_unregister(&poller_unregister, NULL);
+	spdk_poller_unregister(&poller_unregister);
 }
 
 static void
@@ -92,10 +92,10 @@ test_cleanup(void)
 {
 	printf("test_cleanup\n");
 
-	spdk_poller_unregister(&test_end_poller, NULL);
-	spdk_poller_unregister(&poller_100ms, NULL);
-	spdk_poller_unregister(&poller_250ms, NULL);
-	spdk_poller_unregister(&poller_500ms, NULL);
+	spdk_poller_unregister(&test_end_poller);
+	spdk_poller_unregister(&poller_100ms);
+	spdk_poller_unregister(&poller_250ms);
+	spdk_poller_unregister(&poller_500ms);
 	/* poller_oneshot unregisters itself */
 }
 
