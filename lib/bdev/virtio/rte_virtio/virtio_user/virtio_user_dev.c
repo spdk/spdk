@@ -41,7 +41,7 @@
 #include "spdk/util.h"
 
 #define virtio_dev_get_user_dev(dev) \
-	((struct virtio_user_dev *)((uintptr_t)(dev) - offsetof(struct virtio_user_dev, vdev)))
+	((struct virtio_user_dev *)((dev)->ctx))
 
 static int
 virtio_user_create_queue(struct virtio_dev *vdev, uint32_t queue_sel)
@@ -198,16 +198,17 @@ virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queu
 		return NULL;
 	}
 
-	vdev = &dev->vdev;
+	vdev = virtio_dev_construct(&virtio_user_ops, dev);
+	if (vdev == NULL) {
+		SPDK_ERRLOG("Failed to init device: %s\n", path);
+		free(dev);
+		return NULL;
+	}
+
 	vdev->is_hw = 0;
 	vdev->name = strdup(name);
 	if (!vdev->name) {
 		SPDK_ERRLOG("Failed to reserve memory for controller name: %s\n", path);
-		goto err;
-	}
-
-	if (vtpci_init(vdev, &virtio_user_ops) != 0) {
-		SPDK_ERRLOG("Failed to init device: %s\n", path);
 		goto err;
 	}
 
@@ -243,7 +244,6 @@ virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queu
 	return vdev;
 
 err:
-	free(vdev->name);
-	free(dev);
+	virtio_dev_free(vdev);
 	return NULL;
 }

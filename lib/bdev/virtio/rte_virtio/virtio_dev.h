@@ -72,6 +72,8 @@
  */
 #define SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED (UINT32_MAX - 1)
 
+struct virtio_pci_ops;
+
 struct virtio_dev {
 	struct virtqueue **vqs;
 
@@ -95,6 +97,9 @@ struct virtio_dev {
 
 	/** Mutex for asynchronous virtqueue-changing operations. */
 	pthread_mutex_t	mutex;
+
+	/** Context for the backend ops */
+	void		*ctx;
 
 	TAILQ_ENTRY(virtio_dev) tailq;
 };
@@ -180,6 +185,15 @@ uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
  * device owning the virtqueue is not started -EIO is returned.
  */
 int virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req);
+
+/**
+ * Construct virtio device.  This will set vdev->id field.
+ * The device has to be freed with \c virtio_dev_free.
+ *
+ * \param ops backend callbacks
+ * \param ctx argument for the backend callbacks
+ */
+struct virtio_dev *virtio_dev_construct(const struct virtio_pci_ops *ops, void *ctx);
 
 int virtio_dev_init(struct virtio_dev *hw, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);

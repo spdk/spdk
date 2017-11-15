@@ -54,8 +54,8 @@ struct virtio_driver g_virtio_driver = {
 #define PCI_CAP_ID_VNDR		0x09
 #define PCI_CAP_ID_MSIX		0x11
 
-#define virtio_dev_get_hw(hw) \
-	((struct virtio_hw *)((uintptr_t)(hw) - offsetof(struct virtio_hw, vdev)))
+#define virtio_dev_get_hw(vdev) \
+	((struct virtio_hw *)((vdev)->ctx))
 
 static inline int
 check_vq_phys_addr_ok(struct virtqueue *vq)
@@ -74,9 +74,8 @@ check_vq_phys_addr_ok(struct virtqueue *vq)
 }
 
 static void
-free_virtio_hw(struct virtio_dev *dev)
+free_virtio_hw(struct virtio_hw *hw)
 {
-	struct virtio_hw *hw = virtio_dev_get_hw(dev);
 	unsigned i;
 
 	for (i = 0; i < 6; ++i) {
@@ -87,7 +86,6 @@ free_virtio_hw(struct virtio_dev *dev)
 		spdk_pci_device_unmap_bar(hw->pci_dev, i, hw->pci_bar[i].vaddr);
 	}
 
-	free(dev->name);
 	free(hw);
 }
 
@@ -183,6 +181,15 @@ modern_set_features(struct virtio_dev *dev, uint64_t features)
 	dev->negotiated_features = features;
 
 	return 0;
+}
+
+static void
+modern_free_vdev(struct virtio_dev *vdev)
+{
+	struct virtio_hw *hw = virtio_dev_get_hw(vdev);
+
+	free_virtio_hw(hw);
+	free(vdev->name);
 }
 
 static uint8_t
@@ -281,7 +288,7 @@ const struct virtio_pci_ops modern_ops = {
 	.set_status	= modern_set_status,
 	.get_features	= modern_get_features,
 	.set_features	= modern_set_features,
-	.free_vdev	= free_virtio_hw,
+	.free_vdev	= modern_free_vdev,
 	.get_queue_num	= modern_get_queue_num,
 	.setup_queue	= modern_setup_queue,
 	.del_queue	= modern_del_queue,
@@ -462,8 +469,6 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		return -1;
 	}
 
-	vdev = &hw->vdev;
-	vdev->is_hw = 1;
 	hw->pci_dev = pci_dev;
 
 	for (i = 0; i < 6; ++i) {
@@ -471,7 +476,8 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 					     &bar_len);
 		if (rc != 0) {
 			SPDK_ERRLOG("failed to memmap PCI BAR %u\n", i);
-			goto err;
+			free_virtio_hw(hw);
+			return -1;
 		}
 
 		hw->pci_bar[i].vaddr = bar_vaddr;
@@ -483,31 +489,34 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	 */
 	if (virtio_read_caps(hw) != 0) {
 		SPDK_NOTICELOG("Ignoring legacy PCI device.\n");
-		goto err;
+		free_virtio_hw(hw);
+		return -1;
 	}
 
-	rc = vtpci_init(vdev, &modern_ops);
-	if (rc != 0) {
-		goto err;
+	vdev = virtio_dev_construct(&modern_ops, hw);
+	if (vdev == NULL) {
+		free_virtio_hw(hw);
+		return -1;
 	}
+	vdev->is_hw = 1;
 	vdev->modern = 1;
 
 	rc = virtio_dev_pci_init(vdev);
 	if (rc != 0) {
-		vtpci_deinit(vdev->id);
 		goto err;
 	}
 
 	return 0;
 
 err:
-	free_virtio_hw(vdev);
+	virtio_dev_free(vdev);
 	return -1;
 }
 
-int
-vtpci_init(struct virtio_dev *vdev, const struct virtio_pci_ops *ops)
+struct virtio_dev *
+	virtio_dev_construct(const struct virtio_pci_ops *ops, void *ctx)
 {
+	struct virtio_dev *vdev;
 	unsigned vdev_num;
 
 	for (vdev_num = 0; vdev_num < VIRTIO_MAX_DEVICES; vdev_num++) {
@@ -518,14 +527,21 @@ vtpci_init(struct virtio_dev *vdev, const struct virtio_pci_ops *ops)
 
 	if (vdev_num == VIRTIO_MAX_DEVICES) {
 		SPDK_ERRLOG("Max vhost device limit reached (%u).\n", VIRTIO_MAX_DEVICES);
-		return -ENOSPC;
+		return NULL;
+	}
+
+	vdev = calloc(1, sizeof(*vdev));
+	if (vdev == NULL) {
+		SPDK_ERRLOG("virtio device calloc failed\n");
+		return NULL;
 	}
 
 	vdev->id = vdev_num;
 	pthread_mutex_init(&vdev->mutex, NULL);
+	vdev->ctx = ctx;
 	g_virtio_driver.internal[vdev_num].vtpci_ops = ops;
 
-	return 0;
+	return vdev;
 }
 
 int
