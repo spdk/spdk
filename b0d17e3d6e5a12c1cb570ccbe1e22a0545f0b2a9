@@ -165,6 +165,30 @@
       "revId": "b0d17e3d6e5a12c1cb570ccbe1e22a0545f0b2a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74811955_4fa30ff5",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-15T06:47:07Z",
+      "side": 1,
+      "message": "Question 1:\n\nThe following function can run parallel among multiple CPUs?\n\nvoid\nspdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev,\n\t\t\t struct spdk_scsi_task *task)\n{\n\tassert(task !\u003d NULL);\n\n\tif (spdk_scsi_lun_append_task(task-\u003elun, task) \u003d\u003d 0) {\n\t\t/* ready to execute, disk is valid for LUN access */\n\t\tspdk_scsi_lun_execute_tasks(task-\u003elun);\n\t}\n}\n\nQuestion 2:\n\nIf the answer to Q1 is NO,\n\n- spdk_scsi_lun_append_task() always insert a task into lun-\u003ependings and returns 0\n- spdk_scsi_lun_execute_tasks() always dequeues all tasks from lun-\u003ependings unconditionally.\n- I have not found any other place to insert a task into lun-\u003ependings.\n\nHence we will never observe not-empty lun-\u003ependings in any other places.\n\n\nThat\u0027s all what I want to know now.\nThank you.",
+      "parentUuid": "23bb08c3_3fb6a9dd",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 2
+      },
+      "revId": "b0d17e3d6e5a12c1cb570ccbe1e22a0545f0b2a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
