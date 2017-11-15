@@ -76,6 +76,16 @@ ifneq ($(wildcard $(DPDK_ABS_DIR)/lib/librte_malloc.*),)
 DPDK_LIB_LIST += rte_malloc
 endif
 
+# librte_pci and librte_bus_pci were added in DPDK 17.11. Link these libraries conditionally
+# based on their existence to maintain backward compatibility.
+ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_pci.*))
+DPDK_LIB_LIST += rte_pci
+endif
+
+ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_bus_pci.*))
+DPDK_LIB_LIST += rte_bus_pci
+endif
+
 DPDK_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
 
 ENV_CFLAGS = $(DPDK_INC)
