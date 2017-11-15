@@ -37,8 +37,8 @@
 
 #include <linux/virtio_scsi.h>
 
+#include <rte_config.h>
 #include <rte_malloc.h>
-#include <rte_vdev.h>
 #include <rte_alarm.h>
 
 #include "virtio_dev.h"

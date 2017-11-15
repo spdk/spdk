@@ -35,6 +35,7 @@
 
 #include <linux/virtio_scsi.h>
 
+#include <rte_config.h>
 #include <rte_memcpy.h>
 #include <rte_string_fns.h>
 #include <rte_memzone.h>
