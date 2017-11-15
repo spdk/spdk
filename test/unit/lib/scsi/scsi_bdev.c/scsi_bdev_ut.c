@@ -115,11 +115,6 @@ spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
 }
 
 void
-spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
-{
-}
-
-void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 }
