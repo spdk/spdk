@@ -463,9 +463,9 @@ vbdev_lvol_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
-		return true;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		return true;
 	default:
 		return false;
 	}
@@ -484,6 +484,42 @@ lvol_op_comp(void *cb_arg, int bserrno)
 	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Vbdev processing callback on device %s with type %d\n",
 		     bdev_io->bdev->name, bdev_io->type);
 	spdk_bdev_io_complete(bdev_io, task->status);
+}
+
+static void
+lvol_unmap(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	uint64_t start_page, num_pages;
+	struct spdk_blob *blob = lvol->blob;
+	struct lvol_task *task = (struct lvol_task *)bdev_io->driver_ctx;
+
+	start_page = bdev_io->u.bdev.offset_blocks;
+	num_pages = bdev_io->u.bdev.num_blocks;
+
+	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL,
+		     "Vbdev doing unmap at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
+		     num_pages, bdev_io->bdev->name);
+	spdk_bs_io_unmap_blob(blob, ch, start_page, num_pages, lvol_op_comp, task);
+}
+
+static void
+lvol_write_zeroes(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	uint64_t start_page, num_pages;
+	struct spdk_blob *blob = lvol->blob;
+	struct lvol_task *task = (struct lvol_task *)bdev_io->driver_ctx;
+
+	start_page = bdev_io->u.bdev.offset_blocks;
+	num_pages = bdev_io->u.bdev.num_blocks;
+
+	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL,
+		     "Vbdev doing write zeros at offset %" PRIu64 " using %" PRIu64 " pages on device %s\n", start_page,
+		     num_pages, bdev_io->bdev->name);
+	spdk_bs_io_write_zeroes_blob(blob, ch, start_page, num_pages, lvol_op_comp, task);
 }
 
 static void
@@ -566,7 +602,11 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		lvol_flush(ch, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+		lvol_unmap(lvol, ch, bdev_io);
+		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		lvol_write_zeroes(lvol, ch, bdev_io);
+		break;
 	default:
 		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "lvol: unsupported I/O type %d\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);

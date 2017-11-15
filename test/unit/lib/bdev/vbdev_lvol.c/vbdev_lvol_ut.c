@@ -340,6 +340,26 @@ spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 }
 
 void
+spdk_bs_io_unmap_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+		      uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	CU_ASSERT(blob == NULL);
+	CU_ASSERT(channel == g_ch);
+	CU_ASSERT(offset == g_io->u.bdev.offset_blocks);
+	CU_ASSERT(length == g_io->u.bdev.num_blocks);
+}
+
+void
+spdk_bs_io_write_zeroes_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			     uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	CU_ASSERT(blob == NULL);
+	CU_ASSERT(channel == g_ch);
+	CU_ASSERT(offset == g_io->u.bdev.offset_blocks);
+	CU_ASSERT(length == g_io->u.bdev.num_blocks);
+}
+
+void
 spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 		       struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
 		       spdk_blob_op_complete cb_fn, void *cb_arg)
@@ -840,10 +860,12 @@ ut_vbdev_lvol_io_type_supported(void)
 	CU_ASSERT(ret == true);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_RESET);
 	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_UNMAP);
+	CU_ASSERT(ret == true);
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_WRITE_ZEROES);
+	CU_ASSERT(ret == true);
 
 	/* Unsupported types */
-	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_UNMAP);
-	CU_ASSERT(ret == false);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_ADMIN);
 	CU_ASSERT(ret == false);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_IO);
