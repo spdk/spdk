@@ -45,8 +45,6 @@
 #define VIRTIO_MAX_VIRTQUEUES 0x100
 
 struct virtio_user_dev {
-	struct virtio_dev vdev;
-
 	/* for vhost_user backend */
 	int		vhostfd;
 

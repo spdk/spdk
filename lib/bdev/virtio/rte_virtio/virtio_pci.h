@@ -86,7 +86,6 @@ struct virtio_pci_ops {
 };
 
 struct virtio_hw {
-	struct virtio_dev vdev;
 	uint8_t	    use_msix;
 	uint32_t    notify_off_multiplier;
 	uint8_t     *isr;
@@ -132,12 +131,6 @@ vtpci_with_feature(struct virtio_dev *dev, uint64_t bit)
  * Init all compatible Virtio PCI devices.
  */
 int vtpci_enumerate_pci(void);
-
-/**
- * Init virtual PCI layer for given device.  This
- * will set vdev->id field.
- */
-int vtpci_init(struct virtio_dev *vdev, const struct virtio_pci_ops *ops);
 
 void vtpci_reset(struct virtio_dev *);
 
