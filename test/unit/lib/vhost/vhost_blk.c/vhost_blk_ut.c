@@ -92,7 +92,7 @@ DEFINE_STUB(spdk_event_allocate, struct spdk_event *, (uint32_t lcore, spdk_even
 		void *arg1, void *arg2), NULL);
 DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
 DEFINE_STUB_V(spdk_poller_register, (struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
-				     uint32_t lcore, uint64_t period_microseconds));
+				     uint64_t period_microseconds));
 DEFINE_STUB_V(spdk_vhost_dev_mem_unregister, (struct spdk_vhost_dev *vdev));
 DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 DEFINE_STUB(spdk_vhost_event_send, int, (struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,

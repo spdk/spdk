@@ -56,7 +56,7 @@ static uint32_t g_task_count = 0;
 
 void
 spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
-		     uint32_t lcore, uint64_t period_microseconds)
+		     uint64_t period_microseconds)
 {
 }
 

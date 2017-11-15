@@ -1023,9 +1023,9 @@ spdk_vhost_scsi_start_pollers(void *arg1, void *arg2)
 	struct spdk_vhost_scsi_dev *svdev = arg1;
 
 	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev,
-			     spdk_env_get_current_core(), 0);
+			     0);
 	spdk_poller_register(&svdev->mgmt_poller, vdev_mgmt_worker, svdev,
-			     spdk_env_get_current_core(), MGMT_POLL_PERIOD_US);
+			     MGMT_POLL_PERIOD_US);
 }
 
 /*
@@ -1117,7 +1117,7 @@ spdk_vhost_scsi_stop_pollers(void *arg1, void *arg2)
 	spdk_poller_unregister(&svdev->requestq_poller, NULL);
 	spdk_poller_unregister(&svdev->mgmt_poller, NULL);
 	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx,
-			     spdk_env_get_current_core(), 1000);
+			     1000);
 }
 
 static int
