@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f42e6a5f_6dd3f0e9",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-15T22:43:34Z",
+      "side": 1,
+      "message": "I agree with you - I should add asserts for every state transition. For this patch I think we\u0027ll go ahead and merge since it has already passed the tests and been reviewed, but asserts should be added in the future.",
+      "parentUuid": "4ca785bb_8a4f95af",
+      "range": {
+        "startLine": 114,
+        "startChar": 1,
+        "endLine": 114,
+        "endChar": 43
+      },
+      "revId": "fb8c88fee45ea59ca1a37381ea8f19268db72e51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13eed4f5_159144ea",
         "filename": "app/nvmf_tgt/nvmf_tgt.h",
         "patchSetId": 8
