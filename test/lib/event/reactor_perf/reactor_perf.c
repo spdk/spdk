@@ -69,7 +69,6 @@ test_start(void *arg1, void *arg2)
 
 	/* Register a poller that will stop the test after the time has elapsed. */
 	spdk_poller_register(&test_end_poller, __test_end, NULL,
-			     spdk_env_get_current_core(),
 			     g_time_in_sec * 1000000ULL);
 
 	for (i = 0; i < g_queue_depth; i++) {

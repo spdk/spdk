@@ -84,7 +84,7 @@ spdk_rpc_initialize(const char *listen_addr)
 	}
 
 	/* Register a poller to periodically check for RPCs */
-	spdk_poller_register(&g_rpc_poller, spdk_rpc_subsystem_poll, NULL, spdk_env_get_current_core(),
+	spdk_poller_register(&g_rpc_poller, spdk_rpc_subsystem_poll, NULL,
 			     RPC_SELECT_INTERVAL);
 }
 

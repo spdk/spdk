@@ -79,7 +79,7 @@ spdk_iscsi_portal_accept(void *arg)
 void
 spdk_iscsi_acceptor_start(struct spdk_iscsi_portal *p)
 {
-	spdk_poller_register(&p->acceptor_poller, spdk_iscsi_portal_accept, p, spdk_env_get_current_core(),
+	spdk_poller_register(&p->acceptor_poller, spdk_iscsi_portal_accept, p,
 			     ACCEPT_TIMEOUT_US);
 }
 
