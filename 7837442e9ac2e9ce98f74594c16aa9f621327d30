@@ -25,6 +25,47 @@
     },
     {
       "key": {
+        "uuid": "11ad01fc_aae7c138",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T21:31:34Z",
+      "side": 1,
+      "message": "agreed - we cannot use a global variable - what happens if you have two aio bdevs that do resets at the same time?",
+      "parentUuid": "317eb847_527a8b67",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 30
+      },
+      "revId": "7837442e9ac2e9ce98f74594c16aa9f621327d30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b76d833_3f51f2b6",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T21:31:34Z",
+      "side": 1,
+      "message": "this does not need to be an atomic operation - spdk_for_each_channel() will execute this function serially on all channels, not in parallel",
+      "revId": "7837442e9ac2e9ce98f74594c16aa9f621327d30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e3f1f39_6261322e",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 13
@@ -42,6 +83,47 @@
         "endLine": 231,
         "endChar": 41
       },
+      "revId": "7837442e9ac2e9ce98f74594c16aa9f621327d30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f40703d_ef3b7f50",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T21:31:34Z",
+      "side": 1,
+      "message": "io channel is per thread per device - in most cases the bdev is probably only accessed from one thread (meaning only one io channel exists) but it can be more\n\nit usually is more for nvme bdevs, since we could have many logical volumes on the nvme namespace, and each logical volume may be accessed from a different thread\n\nand you taught me something new about GerritHub today - I did not know you could highlight several lines of code like this - thanks!",
+      "parentUuid": "2e3f1f39_6261322e",
+      "range": {
+        "startLine": 228,
+        "startChar": 0,
+        "endLine": 231,
+        "endChar": 41
+      },
+      "revId": "7837442e9ac2e9ce98f74594c16aa9f621327d30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f3c842f_7f44698d",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T21:31:34Z",
+      "side": 1,
+      "message": "I\u0027d suggest adding \u0026\u0026 ch-\u003eio_inflight \u003d\u003d 0 here - then you avoid doing an unnecessary iteration through all of the channels if you know that at least this one has outstanding I/O still",
       "revId": "7837442e9ac2e9ce98f74594c16aa9f621327d30",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
