@@ -177,6 +177,14 @@ struct spdk_bs_channel {
 	struct spdk_io_channel		*dev_channel;
 };
 
+/** operation type */
+enum spdk_blob_operation_type {
+	SPDK_BLOB_WRITE,
+	SPDK_BLOB_READ,
+	SPDK_BLOB_UNMAP,
+	SPDK_BLOB_WRITE_ZEROS,
+};
+
 /* On-Disk Data Structures
  *
  * The following data structures exist on disk.
