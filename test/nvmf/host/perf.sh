@@ -49,6 +49,12 @@ if [ -n "$local_nvme_trid" ]; then
 fi
 
 $rootdir/examples/nvme/perf/perf -q 32 -s 4096 -w randrw -M 50 -t 1 -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420"
+
+#Run perf host stress test with larger io_size and larger qd_depth
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	$rootdir/examples/nvme/perf/perf -q 2048 -s 131072 -w randrw -M 50 -t 1 -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420"
+fi
+
 sync
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
