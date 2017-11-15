@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c69e91d_e6a7f170",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-15T23:27:04Z",
+      "side": 1,
+      "message": "This is called on all requested cores, so it isn\u0027t thread safe to be looking at a global variable.",
+      "revId": "cfab9d1742caf4f1b424769dd4406e43b3a73bff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
