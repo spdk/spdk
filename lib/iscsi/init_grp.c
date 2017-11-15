@@ -157,7 +157,6 @@ spdk_iscsi_init_grp_delete_all_netmasks(struct spdk_iscsi_init_grp *ig)
 	free(ig->netmasks);
 }
 
-
 /* Read spdk iscsi target's config file and create initiator group */
 int
 spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
@@ -184,12 +183,12 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 	}
 	if (i == 0) {
 		SPDK_ERRLOG("num_initiator_names = 0\n");
-		goto cleanup;
+		return -EINVAL;
 	}
 	num_initiator_names = i;
 	if (num_initiator_names > MAX_INITIATOR) {
 		SPDK_ERRLOG("%d > MAX_INITIATOR\n", num_initiator_names);
-		return -1;
+		return -E2BIG;
 	}
 	for (i = 0; ; i++) {
 		val = spdk_conf_section_get_nval(sp, "Netmask", i);
@@ -198,18 +197,18 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 	}
 	if (i == 0) {
 		SPDK_ERRLOG("num_initiator_mask = 0\n");
-		goto cleanup;
+		return -EINVAL;
 	}
 	num_initiator_masks = i;
 	if (num_initiator_masks > MAX_NETMASK) {
 		SPDK_ERRLOG("%d > MAX_NETMASK\n", num_initiator_masks);
-		return -1;
+		return -E2BIG;
 	}
 
 	initiators = calloc(num_initiator_names, sizeof(char *));
 	if (!initiators) {
 		perror("initiators");
-		return -1;
+		return -ENOMEM;
 	}
 	for (i = 0; i < num_initiator_names; i++) {
 		val = spdk_conf_section_get_nval(sp, "InitiatorName", i);
