@@ -84,6 +84,7 @@ static int
 spdk_iscsi_init_grp_add_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 {
 	struct spdk_iscsi_initiator_name *iname;
+	char *p;
 
 	if (ig->ninitiators >= MAX_INITIATOR) {
 		SPDK_ERRLOG("> MAX_INITIATOR(=%d) is not allowed\n", MAX_INITIATOR);
@@ -104,6 +105,14 @@ spdk_iscsi_init_grp_add_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 	if (iname->name == NULL) {
 		free(iname);
 		return -ENOMEM;
+	}
+
+	/* Replace "ALL" by "ANY" if set */
+	p = strstr(iname->name, "ALL");
+	if (p != NULL) {
+		SPDK_WARNLOG("Please use \"%s\" instead of \"%s\"", "ANY", "ALL");
+		SPDK_WARNLOG("Convert \"%s\" to \"%s\" automatically", "ALL", "ANY");
+		strncpy(p, "ANY", 3);
 	}
 
 	TAILQ_INSERT_TAIL(&ig->initiator_head, iname, tailq);
@@ -181,6 +190,7 @@ static int
 spdk_iscsi_init_grp_add_netmask(struct spdk_iscsi_init_grp *ig, char *mask)
 {
 	struct spdk_iscsi_initiator_netmask *imask;
+	char *p;
 
 	if (ig->nnetmasks >= MAX_NETMASK) {
 		SPDK_ERRLOG("> MAX_NETMASK(=%d) is not allowed\n", MAX_NETMASK);
@@ -201,6 +211,14 @@ spdk_iscsi_init_grp_add_netmask(struct spdk_iscsi_init_grp *ig, char *mask)
 	if (imask->mask == NULL) {
 		free(imask);
 		return -ENOMEM;
+	}
+
+	/* Replace "ALL" by "ANY" if set */
+	p = strstr(imask->mask, "ALL");
+	if (p != NULL) {
+		SPDK_WARNLOG("Please use \"%s\" instead of \"%s\"", "ANY", "ALL");
+		SPDK_WARNLOG("Convert \"%s\" to \"%s\" automatically", "ALL", "ANY");
+		strncpy(p, "ANY", 3);
 	}
 
 	TAILQ_INSERT_TAIL(&ig->netmask_head, imask, tailq);
