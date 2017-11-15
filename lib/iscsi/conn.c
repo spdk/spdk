@@ -77,6 +77,7 @@ static char g_shm_name[64];
 static pthread_mutex_t g_conns_mutex;
 
 static struct spdk_poller *g_shutdown_timer = NULL;
+static uint32_t g_shutdown_timer_core = 0;
 
 static uint32_t spdk_iscsi_conn_allocate_reactor(uint64_t cpumask);
 static void __add_idle_conn(void *arg1, void *arg2);
@@ -763,9 +764,10 @@ spdk_iscsi_conn_check_shutdown(void *arg)
 	struct spdk_event *event;
 
 	if (spdk_iscsi_get_active_conns() == 0) {
+		spdk_poller_unregister(&g_shutdown_timer, NULL);
 		event = spdk_event_allocate(spdk_env_get_current_core(), spdk_iscsi_conn_check_shutdown_cb, NULL,
 					    NULL);
-		spdk_poller_unregister(&g_shutdown_timer, event);
+		spdk_event_call(event);
 	}
 }
 
@@ -808,6 +810,17 @@ spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn, int *_lcore)
 	return event;
 }
 
+static void
+_spdk_iscsi_conn_stop_poller(void *arg1, void *arg2)
+{
+	struct spdk_iscsi_conn *conn = arg1;
+	struct spdk_event *event = arg2;
+
+	spdk_poller_unregister(&conn->poller, NULL);
+
+	spdk_event_call(event);
+}
+
 /**
  *  This function will stop the poller for the specified connection, and then call function
  *  fn_after_stop() on the specified lcore.
@@ -815,7 +828,7 @@ spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn, int *_lcore)
 static void
 spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after_stop, int lcore)
 {
-	struct spdk_event *event;
+	struct spdk_event *event1, *event2;
 	struct spdk_iscsi_tgt_node *target;
 
 	if (conn->sess != NULL && conn->sess->session_type == SESSION_TYPE_NORMAL &&
@@ -830,8 +843,9 @@ spdk_iscsi_conn_stop_poller(struct spdk_iscsi_conn *conn, spdk_event_fn fn_after
 	}
 	__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
 	spdk_net_framework_clear_socket_association(conn->sock);
-	event = spdk_event_allocate(lcore, fn_after_stop, conn, NULL);
-	spdk_poller_unregister(&conn->poller, event);
+	event2 = spdk_event_allocate(lcore, fn_after_stop, conn, NULL);
+	event1 = spdk_event_allocate(conn->lcore, _spdk_iscsi_conn_stop_poller, conn, event2);
+	spdk_event_call(event1);
 }
 
 void spdk_shutdown_iscsi_conns(void)
@@ -859,6 +873,7 @@ void spdk_shutdown_iscsi_conns(void)
 	}
 
 	pthread_mutex_unlock(&g_conns_mutex);
+	g_shutdown_timer_core = spdk_env_get_current_core();
 	spdk_poller_register(&g_shutdown_timer, spdk_iscsi_conn_check_shutdown, NULL,
 			     spdk_env_get_current_core(), 1000);
 }
@@ -1448,7 +1463,8 @@ spdk_iscsi_conn_login_do_work(void *arg)
 		__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
 		__sync_fetch_and_add(&g_num_connections[lcore], 1);
 		spdk_net_framework_clear_socket_association(conn->sock);
-		spdk_poller_unregister(&conn->poller, event);
+		spdk_poller_unregister(&conn->poller, NULL);
+		spdk_event_call(event);
 	}
 }
 
