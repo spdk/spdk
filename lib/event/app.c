@@ -58,6 +58,7 @@ struct spdk_app {
 static struct spdk_app g_spdk_app;
 static struct spdk_event *g_shutdown_event = NULL;
 static int g_init_lcore;
+static int sig_received = 0;
 
 static spdk_event_fn g_app_start_fn;
 static void *g_app_start_arg1;
@@ -159,10 +160,13 @@ void
 spdk_app_start_shutdown(void)
 {
 	if (g_shutdown_event != NULL) {
+		sig_received = 1;
 		spdk_event_call(g_shutdown_event);
 		g_shutdown_event = NULL;
-	} else {
+	} else if (!sig_received) {
 		spdk_app_stop(0);
+	} else {
+		return;
 	}
 }
 
