@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7dde089e_a5401f0d",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1394,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-15T23:23:05Z",
+      "side": 1,
+      "message": "Maybe just say \"WARNING: Some requested NVMe devices were skipped.\"",
+      "revId": "ae7d88d280debaadae6f5eb4a63b9dc960861b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
