@@ -86,7 +86,7 @@ enum DMA_FLAG
 /**
  * Allocate dma/sharable memory based on a given dma_flg.
  */
-void *spdk_malloc(size_t size, size_t align, int socket_id, unsigned flags, uint32_t dma_flg);
+void *spdk_malloc(size_t size, size_t align, int socket_id, uint32_t dma_flg);
 
 /**
  * Free buffer memory that was previously allocated with spdk_malloc.
