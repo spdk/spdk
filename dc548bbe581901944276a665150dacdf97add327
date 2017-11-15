@@ -16,6 +16,24 @@
       "revId": "dc548bbe581901944276a665150dacdf97add327",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7025bf0b_e6021b78",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-15T18:23:00Z",
+      "side": 1,
+      "message": "Since we are renaming this anyway, can we also add \"shutdown\" to the name? (There are other signal types that don\u0027t cause a shutdown.)",
+      "parentUuid": "0b686309_4bd67024",
+      "revId": "dc548bbe581901944276a665150dacdf97add327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
