@@ -311,7 +311,12 @@ spdk_mobj_ctor(struct rte_mempool *mp, __attribute__((unused)) void *arg,
 	 * right before the 512B aligned buffer area.
 	 */
 	phys_addr = (uint64_t *)m->buf - 1;
+
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+	*phys_addr = rte_mempool_virt2iova(m) + off;
+#else
 	*phys_addr = rte_mempool_virt2phy(mp, m) + off;
+#endif
 }
 
 #define PDU_POOL_SIZE(iscsi)	(iscsi->MaxConnections * NUM_PDU_PER_CONNECTION)
