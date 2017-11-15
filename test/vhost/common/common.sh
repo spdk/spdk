@@ -8,7 +8,6 @@ BASE_DIR=$(readlink -f $(dirname $0))
 COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 TEST_DIR="$(mkdir -p $TEST_DIR && cd $TEST_DIR && echo $PWD)"
 SPDK_BUILD_DIR=$BASE_DIR/../../../
-VHOST_APP=$SPDK_BUILD_DIR/app/vhost/vhost
 
 SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
 
@@ -60,8 +59,8 @@ function spdk_vhost_run()
 	[[ -d $SPDK_VHOST_SCSI_TEST_DIR ]] && rm -f $SPDK_VHOST_SCSI_TEST_DIR/*
 	mkdir -p $SPDK_VHOST_SCSI_TEST_DIR
 
-	if [[ ! -x $VHOST_APP ]]; then
-		error "application not found: $VHOST_APP"
+	if [[ ! -x $vhost_app ]]; then
+		error "application not found: $vhost_app"
 		return 1
 	fi
 
@@ -73,7 +72,7 @@ function spdk_vhost_run()
 	cp $vhost_conf_template $vhost_conf_file
 	$BASE_DIR/../../../scripts/gen_nvme.sh >> $vhost_conf_file
 
-	local cmd="$VHOST_APP -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
+	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
 
 	echo "INFO: Loging to:   $vhost_log_file"
 	echo "INFO: Config file: $vhost_conf_file"

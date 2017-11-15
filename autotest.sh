@@ -127,6 +127,9 @@ fi
 
 if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_enter vhost
+	timing_enter negative
+	run_test ./test/vhost/spdk_vhost.sh --negative
+	timing_enter negative
 
 	timing_enter integrity_blk
 	run_test ./test/vhost/spdk_vhost.sh --integrity-blk
