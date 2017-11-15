@@ -2,25 +2,15 @@ set -e
 
 BASE_DIR=$(readlink -f $(dirname $0))
 
-MAKE="make -j$(( $(nproc)  * 2 ))"
-
 # Default running dir -> spdk/..
 [[ -z "$TEST_DIR" ]] && TEST_DIR=$BASE_DIR/../../../../
 
 COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 TEST_DIR="$(mkdir -p $TEST_DIR && cd $TEST_DIR && echo $PWD)"
-SPDK_SRC_DIR=$TEST_DIR/spdk
 SPDK_BUILD_DIR=$BASE_DIR/../../../
 VHOST_APP=$SPDK_BUILD_DIR/app/vhost/vhost
 
 SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
-
-# QEMU source and build folders
-[[ -z "$QEMU_SRC_DIR" ]] && QEMU_SRC_DIR="$TEST_DIR/qemu"
-QEMU_BUILD_DIR="$QEMU_SRC_DIR/build"
-
-# DPDK source and build folders
-[[ -z "$DPDK_SRC_DIR" ]] && DPDK_SRC_DIR="$TEST_DIR/dpdk"
 
 # SSH key file
 [[ -z "$SPDK_VHOST_SSH_KEY_FILE" ]] && SPDK_VHOST_SSH_KEY_FILE="$HOME/.ssh/spdk_vhost_id_rsa"
@@ -29,8 +19,6 @@ if [[ ! -e "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
 	exit 1
 fi
 echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
-
-VM_CNT=0
 
 VM_BASE_DIR="$TEST_DIR/vms"
 
@@ -56,69 +44,6 @@ function error()
 	echo -e "ERROR: $@"
 	echo "==========="
 	return 1
-}
-
-# Build QEMU from $QEMU_SRC_DIR directory in $QEMU_BUILD_DIR and install in $INSTALL_DIR
-#
-# NOTE: It will use CCACHE if detected.
-# FIXME: quiet configuration an build
-#
-function qemu_build_and_install()
-{
-	mkdir -p $QEMU_BUILD_DIR
-
-        cd $QEMU_SRC_DIR
-        make clean
-        cd $QEMU_BUILD_DIR
-
-	echo "INFO: Configuring QEMU from source in $QEMU_SRC_DIR"
-	if type ccache > /dev/null 2>&1; then
-		echo "INFO: CCACHE detected"
-		export CC="ccache cc"
-		export CXX="ccache c++"
-		export CPP="ccache cpp"
-	else
-		echo "INFO: CCACHE NOT detected - consider installing."
-	fi
-
-	$QEMU_SRC_DIR/configure --prefix=$INSTALL_DIR \
-		--target-list="x86_64-softmmu" \
-		--enable-kvm --enable-linux-aio --enable-numa
-
-	echo "INFO: Compiling and installing QEMU in $INSTALL_DIR"
-	$MAKE install
-	echo "INFO: DONE"
-}
-
-# Build SPDK using $SPDK_SRC as source directory.
-function spdk_build_and_install()
-{
-	echo "INFO: Building SPDK"
-	echo "checking dependencies..."
-	case `uname` in
-		FreeBSD)
-			local dpdk_target=x86_64-native-bsdapp-clang
-			;;
-		Linux)
-			local dpdk_target=x86_64-native-linuxapp-gcc
-			;;
-		*)
-			echo "Unknown OS in $0"
-			exit 1
-			;;
-	esac
-
-	if [[ ! -x $DPDK_SRC_DIR/$dpdk_target ]]; then
-		echo "ERROR: can't find $DPDK_SRC_DIR/$dpdk_target"
-		exit 1
-	fi
-
-	cd $SPDK_BUILD_DIR
-
-	$MAKE clean
-	$MAKE DPDK_DIR=$DPDK_SRC_DIR
-
-	echo "INFO: DONE"
 }
 
 function spdk_vhost_run()
