@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "4ca785bb_8a4f95af",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-15T02:36:20Z",
+      "side": 1,
+      "message": "Should not we have to insert any explicit check code for the current state before changing it? \n\nFor example, g_tgt.state should be RUNNING here\nor when acceptor_poller_unregistered_event() is called g_tgt.state should be FINI_STOP_ACCEPTOR.\n\nIt may be helpful if I can know any idea to support development/validation of the state machine based on callback functions.",
+      "range": {
+        "startLine": 114,
+        "startChar": 1,
+        "endLine": 114,
+        "endChar": 43
+      },
+      "revId": "fb8c88fee45ea59ca1a37381ea8f19268db72e51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13eed4f5_159144ea",
         "filename": "app/nvmf_tgt/nvmf_tgt.h",
         "patchSetId": 8
