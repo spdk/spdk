@@ -22,6 +22,30 @@
       "revId": "e704b4ac0f83b8d1f631357d31011a626a9f4623",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d38978a_e8dd48a9",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-15T06:12:20Z",
+      "side": 1,
+      "message": "bdev.c only handles tasks in lun-\u003etasks. For those tasks, it should let scsi_bdev\u0027s function: spdk_bdev_scsi_task_complete_cmd to complete the call back.\nSince spdk_scsi_lun_clear_all only set the task status, we do not need the status from the bdev layer anymore.\n\nAll the assumption is that: there are active lun tasks (lun-\u003etasks is not empty).",
+      "parentUuid": "4c845c2e_157760ff",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 2
+      },
+      "revId": "e704b4ac0f83b8d1f631357d31011a626a9f4623",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
