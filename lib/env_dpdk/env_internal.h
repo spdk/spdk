@@ -48,6 +48,9 @@
 extern struct rte_pci_bus rte_pci_bus;
 #endif
 #include <rte_pci.h>
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 1)
+#include <rte_bus_pci.h>
+#endif
 #include <rte_dev.h>
 
 /* x86-64 userspace virtual addresses use only the low 47 bits [0..46],
