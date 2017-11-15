@@ -1,6 +1,12 @@
 # Changelog
 
-## v18.01
+## v18.01: (Upcoming Release)
+
+### Build System
+
+The build system now includes a `make install` rule, including support for the common
+`DESTDIR` and `prefix` variables as used in other build systems.  Additionally, the prefix
+may be set via the configure `--prefix` option.  Example: `make install prefix=/usr`.
 
 ### RPC
 

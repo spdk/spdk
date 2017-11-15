@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-.PHONY: all clean
+.PHONY: all clean install
 
 ifeq ($(TARGET_MACHINE),aarch64)
 DPDK_CONFIG := arm64-armv8a
@@ -80,3 +80,5 @@ all: $(SPDK_ROOT_DIR)/dpdk/build
 
 clean:
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build
+
+install: all

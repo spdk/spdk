@@ -57,3 +57,5 @@ SPDK_LIB_LINKER_ARGS = \
 	$(SPDK_WHOLE_ARCHIVE_LIB_LIST:%=-lspdk_%) \
 	-Wl,--no-whole-archive \
 	$(SPDK_REMAINING_LIB_LIST:%=-lspdk_%)
+
+install: all

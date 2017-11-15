@@ -45,6 +45,9 @@ clean: $(DIRS-y)
 $(LIB): $(OBJS)
 	$(LIB_C)
 
+install: all
+	$(INSTALL_LIB)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

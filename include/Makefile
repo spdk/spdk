@@ -31,61 +31,19 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-# Installation prefix
-CONFIG_PREFIX?=/usr/local
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-# Build with debug logging. Turn off for performance testing and normal usage
-CONFIG_DEBUG?=n
+HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
+INSTALLED_HEADERS := $(patsubst $(SPDK_ROOT_DIR)/include%,$(DESTDIR)$(includedir)%,$(HEADERS))
 
-# Treat warnings as errors (fail the build on any warning).
-CONFIG_WERROR?=n
+$(DESTDIR)$(includedir)%.h:
+	$(INSTALL_HEADER)
 
-# Build with link-time optimization.
-CONFIG_LTO?=n
+all:
 
-# Build with code coverage instrumentation.
-CONFIG_COVERAGE?=n
+clean:
 
-# Build with Address Sanitizer enabled
-CONFIG_ASAN?=n
+install: $(INSTALLED_HEADERS)
 
-# Build with Undefined Behavior Sanitizer enabled
-CONFIG_UBSAN?=n
-
-# Build with Thread Sanitizer enabled
-CONFIG_TSAN?=n
-
-# Directory that contains the desired SPDK environment library.
-# By default, this is implemented using DPDK.
-CONFIG_ENV?=$(SPDK_ROOT_DIR)/lib/env_dpdk
-
-# This directory should contain 'include' and 'lib' directories for your DPDK
-# installation. Alternatively you can specify this on the command line
-# with 'make DPDK_DIR=/path/to/dpdk'. This is only a valid entry
-# when using the default SPDK environment library.
-CONFIG_DPDK_DIR?=$(SPDK_ROOT_DIR)/dpdk/build
-
-# Build SPDK FIO plugin. Requires FIO_SOURCE_DIR set to a valid
-# fio source code directory.
-CONFIG_FIO_PLUGIN?=n
-
-# This directory should contain the source code directory for fio
-# which is required for building the SPDK FIO plugin.
-FIO_SOURCE_DIR?=/usr/src/fio
-
-# Enable RDMA support for the NVMf target.
-# Requires ibverbs development libraries.
-CONFIG_RDMA?=n
-
-# Build Ceph RBD support in bdev modules
-# Requires librbd development libraries
-CONFIG_RBD?=n
-
-# Build vhost library.
-CONFIG_VHOST?=y
-
-# Build vhost initiator (Virtio) driver.
-CONFIG_VIRTIO?=y
-
-# Build with NVML backends
-CONFIG_NVML?=n
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

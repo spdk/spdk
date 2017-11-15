@@ -43,6 +43,15 @@ Q ?= @
 endif
 S ?= $(notdir $(CURDIR))
 
+DESTDIR?=
+
+ifneq ($(prefix),)
+CONFIG_PREFIX=$(prefix)
+endif
+
+libdir?=$(CONFIG_PREFIX)/lib
+includedir?=$(CONFIG_PREFIX)/include
+
 ifeq ($(MAKECMDGOALS),)
 MAKECMDGOALS=$(.DEFAULT_GOAL)
 endif
@@ -191,6 +200,18 @@ LIB_C=\
 # Clean up generated files listed as arguments plus a default list
 CLEAN_C=\
 	$(Q)rm -f *.a *.o *.d *.d.tmp *.gcno *.gcda
+
+# Install a library
+INSTALL_LIB=\
+	$(Q)echo "  INSTALL $(DESTDIR)$(libdir)/$(notdir $(LIB))"; \
+	install -d -m 755 "$(DESTDIR)$(libdir)"; \
+	install -m 644 "$(LIB)" "$(DESTDIR)$(libdir)/"
+
+# Install a header
+INSTALL_HEADER=\
+	$(Q)echo "  INSTALL $@"; \
+	install -d -m 755 "$(DESTDIR)$(includedir)/$(dir $(patsubst $(DESTDIR)$(includedir)/%,%,$@))"; \
+	install -m 644 "$(patsubst $(DESTDIR)$(includedir)/%,%,$@)" "$(DESTDIR)$(includedir)/$(dir $(patsubst $(DESTDIR)$(includedir)/%,%,$@))/"
 
 %.o: %.c %.d $(MAKEFILE_LIST)
 	$(COMPILE_C)
