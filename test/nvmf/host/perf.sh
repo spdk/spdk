@@ -49,8 +49,45 @@ if [ -n "$local_nvme_trid" ]; then
 fi
 
 $rootdir/examples/nvme/perf/perf -q 32 -s 4096 -w randrw -M 50 -t 1 -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420"
+
 sync
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+
+#Configure nvme devices with nvmf lvol_bdev backend
+if [ -n "$local_nvme_trid" ]; then
+	ls_guid=$($rpc_py construct_lvol_store Nvme0n1 lvs_0)
+	get_lvs_free_mb $ls_guid
+	lb_guid=$($rpc_py construct_lvol_bdev -u $ls_guid  lbd_0 $free_mb)
+	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000001 -n "$lb_guid"
+	#Create lvol bdev for nested lvol stores
+	ls_nested_guid=$($rpc_py construct_lvol_store $lb_guid lvs_n_0)
+	get_lvs_free_mb $ls_nested_guid
+	lb_nested_guid=$($rpc_py construct_lvol_bdev -u $ls_nested_guid lbd_nest_0 $free_mb)
+	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode2 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000002 -n "$lb_nested_guid"
+fi
+$rootdir/examples/nvme/perf/perf -q 32 -s 4096 -w randrw -M 50 -t 1 -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420"
+
+#Test perf as host with differnet io_size and qd_depth in nightly
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	qd_depth=("1" "128")
+	io_size=("512" "131072")
+	for qd in ${qd_depth[@]}; do
+		for s in ${io_size[@]}; do
+			$rootdir/examples/nvme/perf/perf -q $qd -s $s -w randrw -M 50 -t 60 -r "trtype:RDMA adrfam:IPv4 traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420"
+		done
+	done
+fi
+
+#Delete subsystems,lvol_bdev and destory lvol_store.
+if [ -n "$local_nvme_trid" ]; then
+	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+	$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode2
+	$rpc_py delete_bdev  "$lb_nested_guid"
+	$rpc_py destroy_lvol_store -l lvs_n_0
+	$rpc_py delete_bdev  "$lb_guid"
+	$rpc_py destroy_lvol_store -l lvs_0
+	$rpc_py delete_bdev "Nvme0n1"
+fi
 
 trap - SIGINT SIGTERM EXIT
 
