@@ -16,6 +16,24 @@
       "revId": "18bd923715d767bee815b39d81ff114483b98ad7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f773287f_49c71155",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T22:36:59Z",
+      "side": 1,
+      "message": "actually, thinking about this more, maybe we should not have an assert, but just keep the error message\n\nit is possible this condition could happen - probably we do not want to abort the application, we just want to notify the user\n\nthe tasks will leak, and may never get cleaned up, but it allows the iscsi target to keep running",
+      "parentUuid": "0ae8fb6f_2fb7728a",
+      "revId": "18bd923715d767bee815b39d81ff114483b98ad7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
