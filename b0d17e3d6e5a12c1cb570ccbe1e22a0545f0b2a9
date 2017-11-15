@@ -141,6 +141,30 @@
       "revId": "b0d17e3d6e5a12c1cb570ccbe1e22a0545f0b2a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23bb08c3_3fb6a9dd",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-15T06:37:12Z",
+      "side": 1,
+      "message": "All the tasks executed in the lun, will firstly be the pending tasks (put in lun-\u003epending_tasks), then execute in (lun-\u003etasks.)",
+      "parentUuid": "b86826e2_057f336d",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 2
+      },
+      "revId": "b0d17e3d6e5a12c1cb570ccbe1e22a0545f0b2a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
