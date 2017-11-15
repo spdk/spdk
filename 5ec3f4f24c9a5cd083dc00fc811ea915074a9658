@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17192eb1_4b7e3b94",
+        "filename": "TEST_ENV_SETUP_README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T23:20:07Z",
+      "side": 1,
+      "message": "I\u0027d suggest spdk \u003d\u003e SPDK thoughout this doc.",
+      "revId": "5ec3f4f24c9a5cd083dc00fc811ea915074a9658",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "636c5b00_fb2cbf15",
+        "filename": "TEST_ENV_SETUP_README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T23:20:07Z",
+      "side": 1,
+      "message": "th \u003d\u003e the",
+      "revId": "5ec3f4f24c9a5cd083dc00fc811ea915074a9658",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b1f1fe5_5a85d6d0",
+        "filename": "TEST_ENV_SETUP_README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T23:20:07Z",
+      "side": 1,
+      "message": "VM",
+      "revId": "5ec3f4f24c9a5cd083dc00fc811ea915074a9658",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1df32e35_f8020ede",
+        "filename": "TEST_ENV_SETUP_README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T23:20:07Z",
+      "side": 1,
+      "message": "machine duplicated",
+      "revId": "5ec3f4f24c9a5cd083dc00fc811ea915074a9658",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f867fd7b_d5f6be63",
+        "filename": "TEST_ENV_SETUP_README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T23:20:07Z",
+      "side": 1,
+      "message": "I\u0027d suggest going through this in some more detail specifically looking for inconsistencies (i.e. capitalization of first word, periods at end of bullet items, etc.)",
+      "revId": "5ec3f4f24c9a5cd083dc00fc811ea915074a9658",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5abda20_e481b329",
+        "filename": "TEST_ENV_SETUP_README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-15T23:20:07Z",
+      "side": 1,
+      "message": "maybe these dashed bullets should be indented?",
+      "revId": "5ec3f4f24c9a5cd083dc00fc811ea915074a9658",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
