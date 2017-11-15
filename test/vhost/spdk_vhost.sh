@@ -50,6 +50,10 @@ WORKDIR=$(dirname $0)
 cd $WORKDIR
 
 case $1 in
+	-n|--negative)
+		echo 'Negative tests suite...'
+		./other/negative.sh
+	;;
 	-p|--performance)
 		echo 'Running performance suite...'
 		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
