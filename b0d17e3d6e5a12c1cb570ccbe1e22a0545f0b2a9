@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "708ab184_197b3bfe",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-15T06:26:28Z",
+      "side": 1,
+      "message": "It will be better to validate if there is no active tasks when this function is called.\n\nI think that SCSI is not new and hence ideally any code based only on the assumption should be avoided.",
+      "parentUuid": "94184490_c394d16d",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 82,
+        "endChar": 2
+      },
+      "revId": "b0d17e3d6e5a12c1cb570ccbe1e22a0545f0b2a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4953fc7f_ebd67267",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 3
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "Pending tasks are those tasks not send to the bdev layer, so we can safely abort it and return those tasks.",
       "parentUuid": "4953fc7f_ebd67267",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 2
+      },
+      "revId": "b0d17e3d6e5a12c1cb570ccbe1e22a0545f0b2a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b86826e2_057f336d",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-15T06:26:28Z",
+      "side": 1,
+      "message": "If pending tasks means tasks inserted into the lun-\u003epending_tasks, I cannot find any actual code sequence which produce pending tasks.\n\nMy lack of understanding may cause this question but if you know that I\u0027m happy to know.",
+      "parentUuid": "ddfa4df7_f6216fe9",
       "range": {
         "startLine": 90,
         "startChar": 0,
