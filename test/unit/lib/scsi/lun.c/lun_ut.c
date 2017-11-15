@@ -61,8 +61,7 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 }
 
 void
-spdk_poller_unregister(struct spdk_poller **ppoller,
-		       struct spdk_event *complete)
+spdk_poller_unregister(struct spdk_poller **ppoller)
 {
 }
 

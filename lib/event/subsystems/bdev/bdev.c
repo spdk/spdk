@@ -60,7 +60,7 @@ spdk_bdev_subsystem_start_poller(struct spdk_bdev_poller **ppoller,
 static void
 spdk_bdev_subsystem_stop_poller(struct spdk_bdev_poller **ppoller)
 {
-	spdk_poller_unregister((struct spdk_poller **)ppoller, NULL);
+	spdk_poller_unregister((struct spdk_poller **)ppoller);
 }
 
 static void
