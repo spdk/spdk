@@ -1599,6 +1599,13 @@ nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_reg
 	ctrlr->opts.io_queue_requests = spdk_max(ctrlr->opts.io_queue_requests, ctrlr->opts.io_queue_size);
 }
 
+/* Initializing ctrlr_hook */
+void
+nvme_ctrlr_init_hook(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_hooks *hooks)
+{
+	ctrlr->ctrlr_hook = hooks;
+}
+
 void
 nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr)
 {

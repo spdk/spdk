@@ -365,6 +365,23 @@ struct spdk_nvme_ctrlr_process {
 	TAILQ_HEAD(, spdk_nvme_qpair)			allocated_io_qpairs;
 };
 
+struct ibv_pd;
+
+/*
+ * Hook functions.
+ */
+struct spdk_nvme_hooks {
+
+	/* Include user provided protection domain and memory region */
+	void *hook_ctx;
+
+	/* Get a InfiniBand Verbs protection domain when connecting to an RDMA NVMe-oF target */
+	struct ibv_pd *(*get_ibv_pd)(void *hook_ctx);
+
+	/* Get a rkey for a buffer */
+	uint64_t (*get_rkey)(void *hook_ctx, void *buf, size_t size);
+};
+
 /*
  * One of these per allocated PCI device.
  */
@@ -461,6 +478,11 @@ struct spdk_nvme_ctrlr {
 
 	STAILQ_HEAD(, nvme_request)	queued_aborts;
 	uint32_t			outstanding_aborts;
+
+	/**
+	 * pre-registered InfiniBand Verbs protection domain and memory region
+	 */
+	struct spdk_nvme_hooks *ctrlr_hook;
 };
 
 struct nvme_driver {
