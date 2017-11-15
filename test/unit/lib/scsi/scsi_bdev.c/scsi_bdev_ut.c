@@ -554,6 +554,8 @@ task_complete_test(void)
 	spdk_bdev_scsi_task_complete_cmd(&bdev_io, bdev_io.status, &task);
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_GOOD);
 
+	/* clean task */
+	memset(&task, 0, sizeof(task));
 	bdev_io.status = SPDK_BDEV_IO_STATUS_SCSI_ERROR;
 	bdev_io.error.scsi.sc = SPDK_SCSI_STATUS_CHECK_CONDITION;
 	bdev_io.error.scsi.sk = SPDK_SCSI_SENSE_HARDWARE_ERROR;
@@ -565,6 +567,8 @@ task_complete_test(void)
 	CU_ASSERT_EQUAL(task.sense_data[12], SPDK_SCSI_ASC_WARNING);
 	CU_ASSERT_EQUAL(task.sense_data[13], SPDK_SCSI_ASCQ_POWER_LOSS_EXPECTED);
 
+	/* clean task */
+	memset(&task, 0, sizeof(task));
 	bdev_io.status = SPDK_BDEV_IO_STATUS_FAILED;
 	spdk_bdev_scsi_task_complete_cmd(&bdev_io, bdev_io.status, &task);
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
