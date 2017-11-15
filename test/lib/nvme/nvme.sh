@@ -154,6 +154,16 @@ if [ `uname` = Linux ]; then
 fi
 
 if [ `uname` = Linux ]; then
+	timing_enter multi_process_perf_and_arbitration
+	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -s 4096 -t 5 &
+	while((`ps -aux|grep -v grep|grep perf|awk '{print $2}'`))
+   	do
+		$rootdir/examples/nvme/arbitration/arbitration -t 1 -i 0
+	done
+	timing_exit multi_process_perf_and_arbitration
+fi
+
+if [ `uname` = Linux ]; then
 	trap - SIGINT SIGTERM EXIT
 	kill_stub
 fi
