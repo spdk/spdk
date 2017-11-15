@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "e284c0e5_b69c5b28",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 691,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-15T23:15:54Z",
+      "side": 1,
+      "message": "You can\u0027t touch this data member without holding bdev-\u003emutex. You\u0027re right that there is a race between when a user requests a reset and I/O submitted on other threads - it may be that the reset request is received first but only starts blocking I/O on another thread after an I/O slips through. However, I don\u0027t think that\u0027s a problem or a bug. That\u0027s exactly how it is intended to work. As part of the reset, any I/O pending at the device will ultimately get aborted.",
+      "revId": "e27c502010663ce3a017b8e9687a54fa0e8961a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b2987b9b_51e093c9",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 4
