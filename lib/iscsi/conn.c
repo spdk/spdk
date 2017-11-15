@@ -690,7 +690,7 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 		return;
 	}
 
-	spdk_poller_unregister(&conn->shutdown_timer, NULL);
+	spdk_poller_unregister(&conn->shutdown_timer);
 
 	spdk_iscsi_conn_stop_poller(conn, _spdk_iscsi_conn_free, spdk_env_get_current_core());
 }
@@ -711,7 +711,7 @@ void spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 
 	spdk_clear_all_transfer_task(conn, NULL);
 	spdk_sock_close(conn->sock);
-	spdk_poller_unregister(&conn->logout_timer, NULL);
+	spdk_poller_unregister(&conn->logout_timer);
 
 	rc = spdk_iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
@@ -761,7 +761,7 @@ spdk_iscsi_shutdown_stop_poller(void *arg1, void *arg2)
 {
 	struct spdk_event *event = arg1;
 
-	spdk_poller_unregister(&g_shutdown_timer, NULL);
+	spdk_poller_unregister(&g_shutdown_timer);
 
 	spdk_event_call(event);
 }
@@ -824,7 +824,7 @@ _spdk_iscsi_conn_stop_poller(void *arg1, void *arg2)
 	struct spdk_iscsi_conn *conn = arg1;
 	struct spdk_event *event = arg2;
 
-	spdk_poller_unregister(&conn->poller, NULL);
+	spdk_poller_unregister(&conn->poller);
 
 	spdk_event_call(event);
 }
@@ -1471,7 +1471,7 @@ spdk_iscsi_conn_login_do_work(void *arg)
 		__sync_fetch_and_sub(&g_num_connections[spdk_env_get_current_core()], 1);
 		__sync_fetch_and_add(&g_num_connections[lcore], 1);
 		spdk_net_framework_clear_socket_association(conn->sock);
-		spdk_poller_unregister(&conn->poller, NULL);
+		spdk_poller_unregister(&conn->poller);
 		spdk_event_call(event);
 	}
 }

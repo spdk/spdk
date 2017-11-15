@@ -212,7 +212,7 @@ end_run(void *arg1, void *arg2)
 	spdk_bdev_close(target->bdev_desc);
 	if (--g_target_count == 0) {
 		if (g_show_performance_real_time) {
-			spdk_poller_unregister(&g_perf_timer, NULL);
+			spdk_poller_unregister(&g_perf_timer);
 		}
 		if (g_run_failed) {
 			spdk_app_stop(1);
@@ -424,9 +424,9 @@ end_target(void *arg)
 {
 	struct io_target *target = arg;
 
-	spdk_poller_unregister(&target->run_timer, NULL);
+	spdk_poller_unregister(&target->run_timer);
 	if (g_reset) {
-		spdk_poller_unregister(&target->reset_timer, NULL);
+		spdk_poller_unregister(&target->reset_timer);
 	}
 
 	target->is_draining = true;
@@ -460,7 +460,7 @@ reset_target(void *arg)
 	struct bdevperf_task	*task = NULL;
 	int rc;
 
-	spdk_poller_unregister(&target->reset_timer, NULL);
+	spdk_poller_unregister(&target->reset_timer);
 
 	/* Do reset. */
 	rte_mempool_get(task_pool, (void **)&task);

@@ -1104,7 +1104,7 @@ destroy_device_poller_cb(void *arg)
 
 	free_task_pool(svdev);
 
-	spdk_poller_unregister(&ctx->poller, NULL);
+	spdk_poller_unregister(&ctx->poller);
 	spdk_vhost_dev_backend_event_done(ctx->event_ctx, 0);
 }
 
@@ -1114,8 +1114,8 @@ spdk_vhost_scsi_stop_pollers(void *arg1, void *arg2)
 	struct spdk_vhost_scsi_dev *svdev = arg1;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx = arg2;
 
-	spdk_poller_unregister(&svdev->requestq_poller, NULL);
-	spdk_poller_unregister(&svdev->mgmt_poller, NULL);
+	spdk_poller_unregister(&svdev->requestq_poller);
+	spdk_poller_unregister(&svdev->mgmt_poller);
 	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx,
 			     1000);
 }

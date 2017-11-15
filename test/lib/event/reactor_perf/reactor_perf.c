@@ -81,7 +81,7 @@ test_cleanup(void)
 {
 	printf("test_abort\n");
 
-	spdk_poller_unregister(&test_end_poller, NULL);
+	spdk_poller_unregister(&test_end_poller);
 	spdk_app_stop(0);
 }
 
