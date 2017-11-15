@@ -52,6 +52,9 @@ run_test test/nvmf/host/identify.sh
 run_test test/nvmf/host/perf.sh
 run_test test/nvmf/host/identify_kernel_nvmf.sh
 run_test test/nvmf/host/fio.sh
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	run_test test/nvmf/fio_gpt/fio_gpt.sh
+fi
 
 timing_exit host
 trap - SIGINT SIGTERM EXIT
