@@ -1054,9 +1054,9 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob *blob,
 }
 
 static void
-_spdk_blob_request_submit_rw(struct spdk_blob *blob, struct spdk_io_channel *_channel,
+_spdk_blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_channel,
 			     void *payload, uint64_t offset, uint64_t length,
-			     spdk_blob_op_complete cb_fn, void *cb_arg, bool read)
+			     spdk_blob_op_complete cb_fn, void *cb_arg, enum spdk_blob_op_type op_type)
 {
 	spdk_bs_batch_t			*batch;
 	struct spdk_bs_cpl		cpl;
@@ -1091,15 +1091,26 @@ _spdk_blob_request_submit_rw(struct spdk_blob *blob, struct spdk_io_channel *_ch
 				     _spdk_bs_page_to_lba(blob->bs,
 						     _spdk_bs_num_pages_to_cluster_boundary(blob, page)));
 
-		if (read) {
+		switch (op_type) {
+		case SPDK_BLOB_READ:
 			spdk_bs_batch_read(batch, buf, lba, lba_count);
-		} else {
+			break;
+		case SPDK_BLOB_WRITE:
 			spdk_bs_batch_write(batch, buf, lba, lba_count);
+			break;
+		case SPDK_BLOB_UNMAP:
+			spdk_bs_batch_unmap(batch, lba, lba_count);
+			break;
+		case SPDK_BLOB_WRITE_ZEROES:
+			spdk_bs_batch_write_zeroes(batch, lba, lba_count);
+			break;
 		}
 
 		length -= lba_count;
-		buf += _spdk_bs_lba_to_byte(blob->bs, lba_count);
 		page += _spdk_bs_lba_to_page(blob->bs, lba_count);
+		if (op_type == SPDK_BLOB_WRITE || op_type == SPDK_BLOB_READ) {
+			buf += _spdk_bs_lba_to_byte(blob->bs, lba_count);
+		}
 	}
 
 	spdk_bs_batch_close(batch);
@@ -2799,18 +2810,34 @@ void spdk_bs_io_flush_channel(struct spdk_io_channel *channel,
 	cb_fn(cb_arg, 0);
 }
 
+void spdk_bs_io_unmap_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			   uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	_spdk_blob_request_submit_op(blob, channel, NULL, offset, length, cb_fn, cb_arg,
+				     SPDK_BLOB_UNMAP);
+}
+
+void spdk_bs_io_write_zeroes_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+				  uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	_spdk_blob_request_submit_op(blob, channel, NULL, offset, length, cb_fn, cb_arg,
+				     SPDK_BLOB_WRITE_ZEROES);
+}
+
 void spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 			   void *payload, uint64_t offset, uint64_t length,
 			   spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	_spdk_blob_request_submit_rw(blob, channel, payload, offset, length, cb_fn, cb_arg, false);
+	_spdk_blob_request_submit_op(blob, channel, payload, offset, length, cb_fn, cb_arg,
+				     SPDK_BLOB_WRITE);
 }
 
 void spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 			  void *payload, uint64_t offset, uint64_t length,
 			  spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	_spdk_blob_request_submit_rw(blob, channel, payload, offset, length, cb_fn, cb_arg, true);
+	_spdk_blob_request_submit_op(blob, channel, payload, offset, length, cb_fn, cb_arg,
+				     SPDK_BLOB_READ);
 }
 
 void spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,

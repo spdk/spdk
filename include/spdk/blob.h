@@ -278,6 +278,14 @@ void spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *chann
 			   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
 			   spdk_blob_op_complete cb_fn, void *cb_arg);
 
+/* Unmap area of a blob. Offset is in pages from the beginning of the blob. */
+void spdk_bs_io_unmap_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+			   uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg);
+
+/* Write zeros into area of a blob. Offset is in pages from the beginning of the blob. */
+void spdk_bs_io_write_zeroes_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
+				  uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg);
+
 /* Iterate through all blobs */
 void spdk_bs_md_iter_first(struct spdk_blob_store *bs,
 			   spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
