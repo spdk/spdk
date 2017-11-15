@@ -194,39 +194,32 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 		/* skip excluding self portal group tag */
 		if (pg != target->map[i].pg)
 			continue;
-		/* iqn is initiator group? */
 		igp = target->map[i].ig;
 		TAILQ_FOREACH(iname, &igp->initiator_head, tailq) {
-			/* deny initiators */
+			/* denied if iqn is matched */
 			if ((iname->name[0] == '!')
 			    && (strcasecmp(&iname->name[1], "ALL") == 0
 				|| strcasecmp(&iname->name[1], iqn) == 0)) {
-				/* NG */
-				SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
-					      "access denied from %s (%s) to %s (%s:%s,%d)\n",
-					      iqn, addr, target->name, conn->portal->host,
-					      conn->portal->port, conn->portal->group->tag);
-				return false;
+				goto denied;
 			}
-			/* allow initiators */
+			/* allowed if iqn is matched */
 			if (strcasecmp(iname->name, "ALL") == 0
 			    || strcasecmp(iname->name, iqn) == 0) {
-				/* OK iqn, check netmask */
+				/* iqn is allowed, then check netmask */
 				TAILQ_FOREACH(imask, &igp->netmask_head, tailq) {
 					SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
 						      "netmask=%s, addr=%s\n",
 						      imask->mask, addr);
 					if (spdk_iscsi_tgt_node_allow_netmask(imask->mask, addr)) {
-						/* OK netmask */
 						return true;
 					}
 				}
-				/* NG netmask in this group */
+				/* netmask is denied in this initiator group */
 			}
 		}
 	}
 
-	/* NG */
+denied:
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "access denied from %s (%s) to %s (%s:%s,%d)\n",
 		      iqn, addr, target->name, conn->portal->host,
 		      conn->portal->port, conn->portal->group->tag);
@@ -244,24 +237,20 @@ spdk_iscsi_tgt_node_visible(struct spdk_iscsi_tgt_node *target, const char *iqn)
 		return false;
 
 	for (i = 0; i < target->maxmap; i++) {
-		/* iqn is initiator group? */
 		igp = target->map[i].ig;
 		TAILQ_FOREACH(iname, &igp->initiator_head, tailq) {
 			if ((iname->name[0] == '!')
 			    && (strcasecmp(&iname->name[1], "ALL") == 0
 				|| strcasecmp(&iname->name[1], iqn) == 0)) {
-				/* NG */
 				return false;
 			}
 			if (strcasecmp(iname->name, "ALL") == 0
 			    || strcasecmp(iname->name, iqn) == 0) {
-				/* OK iqn, no check addr */
 				return true;
 			}
 		}
 	}
 
-	/* NG */
 	return false;
 }
 
