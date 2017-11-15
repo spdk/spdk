@@ -280,7 +280,11 @@ _bdev_nvme_reset_create_qpair(void *io_device, struct spdk_io_channel *ch,
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 
 	nvme_ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
-	assert(nvme_ch->qpair != NULL); /* Currently, no good way to handle this error */
+	if (!nvme_ch->qpair) {
+		SPDK_ERRLOG("Cannot create I/O qpair\n");
+		/* Currently, no good way to handle this error */
+		exit(-1);
+	}
 }
 
 static void
