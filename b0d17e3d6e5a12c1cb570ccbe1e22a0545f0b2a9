@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "87ab1815_d828a415",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-15T07:00:10Z",
+      "side": 1,
+      "message": "For AIO backend case is that since AIO is asynchronous, our current code(without cunyin\u0027s patch) does not address the outstanding I/O well. Definitely, all active I/Os should be handled. \nSo removing this loop should be a solution and add assert or judge should be a good solution. My code will not do any side effect for our codes, but if it is triggered, which means the backend bdev is not handling the reset in a good way.",
+      "parentUuid": "708ab184_197b3bfe",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 82,
+        "endChar": 2
+      },
+      "revId": "b0d17e3d6e5a12c1cb570ccbe1e22a0545f0b2a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4953fc7f_ebd67267",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 3
