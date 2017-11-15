@@ -972,15 +972,11 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 	int op;
 	int cmd_chosen = 0;
 	char resp;
-	bool cfg_specified = false;
-	bool bdev_specified = false;
 
 	while ((op = getopt(argc, argv, "b:c:d:f:hil:m:n:p:r:s:ST:Xx:")) != -1) {
 		switch (op) {
 		case 'b':
 			if (strcmp(cli_context->bdev_name, "") == 0) {
-				cmd_chosen++;
-				bdev_specified = true;
 				snprintf(cli_context->bdev_name, BUFSIZE, "%s", optarg);
 			} else {
 				printf("Current setting for -b is: %s\n", cli_context->bdev_name);
@@ -989,8 +985,6 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			break;
 		case 'c':
 			if (cli_context->app_started == false) {
-				cmd_chosen++;
-				cfg_specified = true;
 				cli_context->config_file = optarg;
 			} else {
 				usage(cli_context, "ERROR: -c option not valid during shell mode.\n");
@@ -1132,8 +1126,8 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 		default:
 			usage(cli_context, "ERROR: invalid option\n");
 		}
-		/* only a few options can be combined */
-		if ((!cfg_specified && !bdev_specified)  && cmd_chosen > 1) {
+		/* only one actual command can be done at a time */
+		if (cmd_chosen > 1) {
 			usage(cli_context, "Error: Please choose only one command\n");
 		}
 	}
@@ -1153,7 +1147,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 
 	/* in shell mode we'll call getopt multiple times so need to reset its index */
 	optind = 0;
-	return (cmd_chosen > 0);
+	return (cmd_chosen == 1);
 }
 
 /*
