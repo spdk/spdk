@@ -1051,8 +1051,8 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 
 	spdk_vhost_dev_mem_register(vdev);
 
-	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
-	spdk_poller_register(&svdev->mgmt_poller, vdev_mgmt_worker, svdev, vdev->lcore,
+	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, 0);
+	spdk_poller_register(&svdev->mgmt_poller, vdev_mgmt_worker, svdev,
 			     MGMT_POLL_PERIOD_US);
 out:
 	spdk_vhost_dev_backend_event_done(event_ctx, rc);
@@ -1120,7 +1120,7 @@ spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 
 	spdk_poller_unregister(&svdev->requestq_poller, NULL);
 	spdk_poller_unregister(&svdev->mgmt_poller, NULL);
-	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx, vdev->lcore,
+	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx,
 			     1000);
 
 	return 0;
