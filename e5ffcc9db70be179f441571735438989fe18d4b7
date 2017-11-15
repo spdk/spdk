@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fb1f567_16b13d7a",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 839,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-15T08:38:44Z",
+      "side": 1,
+      "message": "spdk_app_start_shutdown() instead of spdk_app_stop() is better?",
+      "range": {
+        "startLine": 839,
+        "startChar": 2,
+        "endLine": 839,
+        "endChar": 20
+      },
+      "revId": "e5ffcc9db70be179f441571735438989fe18d4b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
