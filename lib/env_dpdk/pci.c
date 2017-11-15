@@ -78,23 +78,29 @@ spdk_pci_device_fini(struct rte_pci_device *device)
 void
 spdk_pci_device_detach(struct spdk_pci_device *device)
 {
-	struct rte_pci_addr	addr;
-
-	addr.domain = device->addr.domain;
-	addr.bus = device->addr.bus;
-	addr.devid = device->addr.devid;
-	addr.function = device->addr.function;
-
 #if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
 #if RTE_VERSION < RTE_VERSION_NUM(17, 05, 0, 0)
 	rte_eal_device_remove(&device->device);
 #endif
 #endif
 
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-	rte_pci_detach(&addr);
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+	struct spdk_pci_addr	addr;
+	char			bdf[32];
+
+	addr.domain = device->addr.domain;
+	addr.bus = device->addr.bus;
+	addr.dev = device->addr.devid;
+	addr.func = device->addr.function;
+
+	spdk_pci_addr_fmt(bdf, sizeof(bdf), &addr);
+	if (rte_eal_dev_detach(&device->device) < 0) {
+		fprintf(stderr, "Failed to detach PCI device %s (device already removed?).\n", bdf);
+	}
+#elif RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+	rte_pci_detach(&device->addr);
 #else
-	rte_eal_pci_detach(&addr);
+	rte_eal_pci_detach(&device->addr);
 #endif
 }
 
@@ -103,12 +109,18 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 		       spdk_pci_enum_cb enum_cb,
 		       void *enum_ctx, struct spdk_pci_addr *pci_address)
 {
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+	char				bdf[32];
+
+	spdk_pci_addr_fmt(bdf, sizeof(bdf), pci_address);
+#else
 	struct rte_pci_addr		addr;
 
 	addr.domain = pci_address->domain;
 	addr.bus = pci_address->bus;
 	addr.devid = pci_address->dev;
 	addr.function = pci_address->func;
+#endif
 
 	pthread_mutex_lock(&ctx->mtx);
 
@@ -124,7 +136,9 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 	ctx->cb_fn = enum_cb;
 	ctx->cb_arg = enum_ctx;
 
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+	if (rte_eal_dev_attach(bdf, "") != 0) {
+#elif RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
 	if (rte_pci_probe_one(&addr) != 0) {
 #else
 	if (rte_eal_pci_probe_one(&addr) != 0) {
@@ -165,8 +179,9 @@ spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 	ctx->cb_fn = enum_cb;
 	ctx->cb_arg = enum_ctx;
 
-
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+	if (rte_bus_probe() != 0) {
+#elif RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
 	if (rte_pci_probe() != 0) {
 #else
 	if (rte_eal_pci_probe() != 0) {
