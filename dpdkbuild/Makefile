@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-.PHONY: all clean
+.PHONY: all clean install
 
 DPDK_CONFIG := spdk
 
@@ -76,3 +76,5 @@ all: $(SPDK_ROOT_DIR)/dpdk/build
 
 clean:
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build
+
+install: all
