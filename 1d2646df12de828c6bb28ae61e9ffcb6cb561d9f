@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d5a3e49_ad4a77c5",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-15T23:40:18Z",
+      "side": 1,
+      "message": "This looks backwards (SPDK_BLOB_WRITE -\u003e spdk_bs_batch_read()).",
+      "revId": "1d2646df12de828c6bb28ae61e9ffcb6cb561d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
