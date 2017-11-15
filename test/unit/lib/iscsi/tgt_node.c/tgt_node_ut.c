@@ -184,8 +184,8 @@ node_access_allowed(void)
 	struct spdk_iscsi_init_grp ig;
 	struct spdk_iscsi_conn conn;
 	struct spdk_iscsi_portal portal;
-	char *initiators[] = {"iqn.2017-10.spdk.io:0001"};
-	char *netmasks[] = {"192.168.2.0/24"};
+	struct spdk_iscsi_initiator_name iname;
+	struct spdk_iscsi_initiator_netmask imask;
 	char *iqn, *addr;
 	bool result;
 
@@ -198,10 +198,14 @@ node_access_allowed(void)
 	ig.tag = 1;
 
 	ig.ninitiators = 1;
-	ig.initiators = &initiators[0];
+	iname.name = "iqn.2017-10.spdk.io:0001";
+	TAILQ_INIT(&ig.initiator_head);
+	TAILQ_INSERT_TAIL(&ig.initiator_head, &iname, tailq);
 
 	ig.nnetmasks = 1;
-	ig.netmasks = &netmasks[0];
+	imask.mask = "192.168.2.0/24";
+	TAILQ_INIT(&ig.netmask_head);
+	TAILQ_INSERT_TAIL(&ig.netmask_head, &imask, tailq);
 
 	/* target initialization */
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
@@ -235,7 +239,7 @@ node_access_denied_by_empty_netmask(void)
 	struct spdk_iscsi_init_grp ig;
 	struct spdk_iscsi_conn conn;
 	struct spdk_iscsi_portal portal;
-	char *initiators[] = {"iqn.2017-10.spdk.io:0001"};
+	struct spdk_iscsi_initiator_name iname;
 	char *iqn, *addr;
 	bool result;
 
@@ -248,10 +252,12 @@ node_access_denied_by_empty_netmask(void)
 	ig.tag = 1;
 
 	ig.ninitiators = 1;
-	ig.initiators = &initiators[0];
+	iname.name = "iqn.2017-10.spdk.io:0001";
+	TAILQ_INIT(&ig.initiator_head);
+	TAILQ_INSERT_TAIL(&ig.initiator_head, &iname, tailq);
 
 	ig.nnetmasks = 0;
-	ig.netmasks = NULL;
+	TAILQ_INIT(&ig.netmask_head);
 
 	/* target initialization */
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
