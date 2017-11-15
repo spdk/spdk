@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "317eb847_527a8b67",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-15T13:40:36Z",
+      "side": 1,
+      "message": "In the previous version you aggregated and stored inflight count into the data structure per bdev_aio. In the latest version, you aggregated and stored it into the global data. I\u0027m afraid that this may cause misleading. I worried too much?",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 30
+      },
+      "revId": "7837442e9ac2e9ce98f74594c16aa9f621327d30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e3f1f39_6261322e",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-15T13:40:36Z",
+      "side": 1,
+      "message": "I\u0027m afraid that I do not understand correctly yet but I would like to know that io_channel : bdev_aio is 1:1 or n:1? \n\nin the for loop for io_channel, it looks that each spdk_thread has a io_channel per io_device at maximum?",
+      "range": {
+        "startLine": 228,
+        "startChar": 0,
+        "endLine": 231,
+        "endChar": 41
+      },
+      "revId": "7837442e9ac2e9ce98f74594c16aa9f621327d30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
