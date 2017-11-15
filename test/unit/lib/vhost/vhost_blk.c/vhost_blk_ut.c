@@ -88,6 +88,9 @@ DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct spdk_vhost_virtqueue
 		uint16_t *reqs,
 		uint16_t reqs_len), 0);
 DEFINE_STUB_V(spdk_vhost_dev_mem_register, (struct spdk_vhost_dev *vdev));
+DEFINE_STUB(spdk_event_allocate, struct spdk_event *, (uint32_t lcore, spdk_event_fn fn,
+		void *arg1, void *arg2), NULL);
+DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
 DEFINE_STUB_V(spdk_poller_register, (struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 				     uint32_t lcore, uint64_t period_microseconds));
 DEFINE_STUB_V(spdk_vhost_dev_mem_unregister, (struct spdk_vhost_dev *vdev));

@@ -1017,6 +1017,17 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 	return 0;
 }
 
+static void
+spdk_vhost_scsi_start_pollers(void *arg1, void *arg2)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg1;
+
+	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev,
+			     spdk_env_get_current_core(), 0);
+	spdk_poller_register(&svdev->mgmt_poller, vdev_mgmt_worker, svdev,
+			     spdk_env_get_current_core(), MGMT_POLL_PERIOD_US);
+}
+
 /*
  * A new device is added to a data core. First the device is added to the main linked list
  * and then allocated to a specific data core.
@@ -1025,6 +1036,7 @@ static int
 spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_event *event;
 	uint32_t i;
 	int rc;
 
@@ -1051,9 +1063,8 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 
 	spdk_vhost_dev_mem_register(vdev);
 
-	spdk_poller_register(&svdev->requestq_poller, vdev_worker, svdev, vdev->lcore, 0);
-	spdk_poller_register(&svdev->mgmt_poller, vdev_mgmt_worker, svdev, vdev->lcore,
-			     MGMT_POLL_PERIOD_US);
+	event = spdk_event_allocate(vdev->lcore, spdk_vhost_scsi_start_pollers, svdev, NULL);
+	spdk_event_call(event);
 out:
 	spdk_vhost_dev_backend_event_done(event_ctx, rc);
 	return rc;
@@ -1097,10 +1108,23 @@ destroy_device_poller_cb(void *arg)
 	spdk_vhost_dev_backend_event_done(ctx->event_ctx, 0);
 }
 
+static void
+spdk_vhost_scsi_stop_pollers(void *arg1, void *arg2)
+{
+	struct spdk_vhost_scsi_dev *svdev = arg1;
+	struct spdk_vhost_dev_destroy_ctx *destroy_ctx = arg2;
+
+	spdk_poller_unregister(&svdev->requestq_poller, NULL);
+	spdk_poller_unregister(&svdev->mgmt_poller, NULL);
+	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx,
+			     spdk_env_get_current_core(), 1000);
+}
+
 static int
 spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_event *event;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
 
 	svdev = to_scsi_dev(vdev);
@@ -1118,10 +1142,8 @@ spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 	destroy_ctx->svdev = svdev;
 	destroy_ctx->event_ctx = event_ctx;
 
-	spdk_poller_unregister(&svdev->requestq_poller, NULL);
-	spdk_poller_unregister(&svdev->mgmt_poller, NULL);
-	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx, vdev->lcore,
-			     1000);
+	event = spdk_event_allocate(vdev->lcore, spdk_vhost_scsi_stop_pollers, svdev, destroy_ctx);
+	spdk_event_call(event);
 
 	return 0;
 

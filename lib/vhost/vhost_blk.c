@@ -468,6 +468,15 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
 	return 0;
 }
 
+static void
+_spdk_vhost_start_requestq_poller(void *arg1, void *arg2)
+{
+	struct spdk_vhost_blk_dev *bvdev = arg1;
+
+	spdk_poller_register(&bvdev->requestq_poller, bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
+			     bvdev, spdk_env_get_current_core(), 0);
+}
+
 /*
  * A new device is added to a data core. First the device is added to the main linked list
  * and then allocated to a specific data core.
@@ -477,6 +486,7 @@ static int
 spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_event *event;
 	int rc = 0;
 
 	bvdev = to_blk_dev(vdev);
@@ -507,8 +517,9 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 		}
 	}
 
-	spdk_poller_register(&bvdev->requestq_poller, bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
-			     bvdev, vdev->lcore, 0);
+	event = spdk_event_allocate(vdev->lcore, _spdk_vhost_start_requestq_poller, bvdev, NULL);
+	spdk_event_call(event);
+
 	SPDK_NOTICELOG("Started poller for vhost controller %s on lcore %d\n", vdev->name, vdev->lcore);
 out:
 	spdk_vhost_dev_backend_event_done(event_ctx, rc);
@@ -551,11 +562,21 @@ destroy_device_poller_cb(void *arg)
 	spdk_vhost_dev_backend_event_done(ctx->event_ctx, 0);
 }
 
+static void
+destroy_device_start_poller(void *arg1, void *arg2)
+{
+	struct spdk_vhost_dev_destroy_ctx *destroy_ctx = arg1;
+
+	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx,
+			     spdk_env_get_current_core(), 1000);
+}
+
 static int
 spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_vhost_dev_destroy_ctx *destroy_ctx;
+	struct spdk_event *event;
 
 	bvdev = to_blk_dev(vdev);
 	if (bvdev == NULL) {
@@ -573,8 +594,9 @@ spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 	destroy_ctx->event_ctx = event_ctx;
 
 	spdk_poller_unregister(&bvdev->requestq_poller, NULL);
-	spdk_poller_register(&destroy_ctx->poller, destroy_device_poller_cb, destroy_ctx, vdev->lcore,
-			     1000);
+	event = spdk_event_allocate(vdev->lcore, destroy_device_start_poller, destroy_ctx, NULL);
+	spdk_event_call(event);
+
 	return 0;
 
 err:
