@@ -2,12 +2,6 @@
 
 BASE_DIR=$(readlink -f $(dirname $0))
 
-if [[ $RUN_NIGHTLY -eq 1 ]]; then
-        fio_rw=("write" "randwrite" "rw" "randrw")
-else
-        fio_rw=("randwrite")
-fi
-
 function run_host_fio() {
         local fio_bdev_conf=$1
         LD_PRELOAD=$PLUGIN_DIR/fio_plugin $fio_bin --ioengine=spdk_bdev \

@@ -19,7 +19,6 @@ function usage() {
         echo "-h, --help         Print help and exit"
         echo "    --os=PATH      Path to VM image used in these tests"
         echo "    --fiobin=PATH  Path to fio binary on host"
-        exit 0
 }
 
 while getopts 'h-:' optchar; do
@@ -33,7 +32,7 @@ while getopts 'h-:' optchar; do
 		esac
 		;;
 		h) usage $0 ;;
-		*) usage $0 "Invalid argument '$optchar'" ;;
+		*) usage $0 "Invalid argument '$optchar'" exit 1;;
 	esac
 done
 
@@ -43,28 +42,36 @@ trap 'on_error_exit ${FUNCNAME} - ${LINENO}' ERR
 
 source $BASE_DIR/common.sh
 
-if [ ! -e $fio_bin ]; then
+if [ ! -x $fio_bin ]; then
 	error "Invalid path of fio binary"
 fi
 
 if [[ $RUN_NIGHTLY -eq 1 ]]; then
-        fio_rw=("write" "randwrite" "rw" "randrw")
+	fio_rw=("write" "randwrite" "rw" "randrw")
 else
-        fio_rw=("randwrite")
+	fio_rw=("randwrite")
 fi
 
 function create_bdev_config()
 {
-	$RPC_PY construct_malloc_bdev 128 512
-	$RPC_PY construct_malloc_bdev 128 4096
-	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 0 Nvme0n1
-	$RPC_PY add_vhost_scsi_lun naa.Malloc0.1 0 Malloc0
-	$RPC_PY add_vhost_scsi_lun naa.Malloc1.2 0 Malloc1
-	$RPC_PY get_bdevs
+	local malloc_name
+	
+	if ! $RPC_PY get_bdevs | jq -r '.[] .name' | grep -qi "Nvme0n1"$; then
+		error "Nvme0n1 bdev not found!"
+	fi
+	
 	cp $BASE_DIR/bdev.conf.in $BASE_DIR/bdev.conf
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 0 Nvme0n1
 	sed -i "s|/tmp/vhost.0|$ROOT_DIR/../vhost/naa.Nvme0n1.0|g" $BASE_DIR/bdev.conf
-	sed -i "s|/tmp/vhost.1|$ROOT_DIR/../vhost/naa.Malloc0.1|g" $BASE_DIR/bdev.conf
-	sed -i "s|/tmp/vhost.2|$ROOT_DIR/../vhost/naa.Malloc1.2|g" $BASE_DIR/bdev.conf
+
+	malloc_name=$($RPC_PY construct_malloc_bdev 128 512)
+	$RPC_PY add_vhost_scsi_lun naa."$malloc_name".1 0 $malloc_name
+	sed -i "s|/tmp/vhost.1|$ROOT_DIR/../vhost/naa."$malloc_name".1|g" $BASE_DIR/bdev.conf
+	
+	malloc_name=$($RPC_PY construct_malloc_bdev 128 4096)
+	$RPC_PY add_vhost_scsi_lun naa."$malloc_name" 0 $malloc_name
+	sed -i "s|/tmp/vhost.1|$ROOT_DIR/../vhost/naa."$malloc_name".1|g" $BASE_DIR/bdev.conf
+
 	cat $BASE_DIR/bdev.conf
 }
 
