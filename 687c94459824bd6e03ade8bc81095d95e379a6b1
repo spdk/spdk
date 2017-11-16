@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2820944_5852fb60",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-16T09:46:08Z",
+      "side": 1,
+      "message": "nvme_manage: retry the input command instead of just quitting.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 67
+      },
+      "revId": "687c94459824bd6e03ade8bc81095d95e379a6b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecdb8e50_b01df6df",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 913,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-16T09:46:08Z",
+      "side": 1,
+      "message": "must be number",
+      "range": {
+        "startLine": 913,
+        "startChar": 36,
+        "endLine": 913,
+        "endChar": 47
+      },
+      "revId": "687c94459824bd6e03ade8bc81095d95e379a6b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "519968d7_3eee208f",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-16T09:46:08Z",
+      "side": 1,
+      "message": "maybe just call \"usage()\" here, instead of \"goto\".",
+      "range": {
+        "startLine": 915,
+        "startChar": 3,
+        "endLine": 915,
+        "endChar": 16
+      },
+      "revId": "687c94459824bd6e03ade8bc81095d95e379a6b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
