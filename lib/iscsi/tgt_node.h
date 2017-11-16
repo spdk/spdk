@@ -41,7 +41,7 @@
 
 struct spdk_iscsi_conn;
 
-#define SPDK_ISCSI_MAX_QUEUE_DEPTH	64
+#define SPDK_ISCSI_MAX_QUEUE_DEPTH	256
 #define MAX_TARGET_MAP			256
 #define SPDK_TN_TAG_MAX 0x0000ffff
 
