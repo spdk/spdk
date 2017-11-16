@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d457b73f_0f9e3915",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 805,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-16T17:49:56Z",
+      "side": 1,
+      "message": "I think this comment is confusing.  It is legal to respond with error to a standard INQ if there is no device in the targeted slot.  If either of these conditions are true, we return -1 which just tells the calling function to move on to the next slot.",
+      "revId": "8cca1e8c67e517e260fbbf19ac2116250656bb59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfb236aa_11784b7f",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-16T17:49:56Z",
+      "side": 1,
+      "message": "supproted \u003d\u003e supported",
+      "revId": "8cca1e8c67e517e260fbbf19ac2116250656bb59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
