@@ -250,8 +250,9 @@ unload_bs(struct cli_context_t *cli_context, char *msg, int bserrno)
 			cli_context->channel = NULL;
 		}
 		spdk_bs_unload(cli_context->bs, unload_complete, cli_context);
-	} else {
+	} else if (cli_context->cli_mode != CLI_MODE_SCRIPT) {
 		spdk_app_stop(bserrno);
+
 	}
 }
 
