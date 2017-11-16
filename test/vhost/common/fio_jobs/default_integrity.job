@@ -4,7 +4,7 @@ iodepth=512
 iodepth_batch=128
 iodepth_low=256
 ioengine=libaio
-size=1G
+size=128M
 io_size=4G
 filename=
 group_reporting

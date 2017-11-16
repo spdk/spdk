@@ -12,11 +12,14 @@ fio_bin = "fio"
 
 def show_help():
     print("""Usage: python run_fio.py [options] [args]
+    Description:
+        Run FIO job file 'fio.job' on remote machines.
+        NOTE: The job file must exist on remote machines on '/root/' directory.
     Args:
           [VMs] (ex. vm1_IP:vm1_port:vm1_disk1:vm_disk2,vm2_IP:vm2_port:vm2_disk1,etc...)
     Options:
         -h, --help        Show this message.
-        -j, --job-files   Paths to files with custom FIO jobs configuration.
+        -j, --job-file    Paths to file with FIO job configuration on remote host.
         -f, --fio-bin     Location of FIO binary (Default "fio")
         -o, --out         Directory used to save generated job files and
                           files with test results (Default: same dir where
@@ -110,7 +113,7 @@ def main():
     os.chdir(os.path.join(dname, "../../.."))
 
     vms = []
-    fio_cfgs = []
+    fio_cfg = None
     perf_vmex = False
     out_dir = os.path.join(os.getcwd(), "fio_results")
 
@@ -124,7 +127,7 @@ def main():
 
     for o, a in opts:
         if o in ("-j", "--job-file"):
-            fio_cfgs = a.split(",")
+            fio_cfg = a
         elif o in ("-h", "--help"):
             show_help()
             sys.exit(1)
@@ -135,7 +138,7 @@ def main():
         elif o in ("-f", "--fio-bin"):
             fio_bin = a
 
-    if len(fio_cfgs) < 1:
+    if fio_cfg is None:
         print("ERROR! No FIO jobs provided!")
         sys.exit(1)
 
@@ -152,30 +155,8 @@ def main():
     if not os.path.exists(out_dir):
         os.mkdir(out_dir)
 
-    for fio_cfg in fio_cfgs:
-        fio_cfg_fname = os.path.basename(fio_cfg)
-        print("Running job file: {0}".format(fio_cfg_fname))
-
-        for i, vm in enumerate(vms):
-            # VM - tuple of IP / Port / Filename for VM to run test
-            print("Preparing VM {0} - {1} for FIO job".format(i, vm[0]))
-
-            exec_cmd("./test/vhost/common/vm_ssh.sh {vm_num} sh -c 'rm {cfg}'"
-                     .format(vm_num=i, cfg=fio_cfg_fname), blocking=True)
-
-            # Copy FIO config to VM
-            with open(fio_cfg, "r") as fio_cfg_fh:
-                for line in fio_cfg_fh.readlines():
-                    if "filename" in line:
-                        line = "filename=" + vm[2]
-                    out = exec_cmd("./test/vhost/common/vm_ssh.sh {vm_num} sh -c 'echo {line} >> {cfg}'"
-                                   .format(vm_num=i, line=line.strip(), cfg=fio_cfg_fname), blocking=True)
-                    if out[0] != 0:
-                        print("ERROR! While copying FIO job config file to VM {vm_num} - {vm_ip}\n"
-                              .format(vm_num=1, vm_ip=vm[0]))
-                        sys.exit(1)
-
-        run_fio(vms, fio_cfg_fname, out_dir, perf_vmex)
+    print("Running job file: {0}".format(fio_cfg))
+    run_fio(vms, fio_cfg, out_dir, perf_vmex)
 
 if __name__ == "__main__":
     sys.exit(main())

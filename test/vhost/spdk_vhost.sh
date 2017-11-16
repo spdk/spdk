@@ -1,8 +1,10 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 set -e
+set -x
 
 DEFAULT_VM_IMAGE="/home/sys_sgsw/vhost_vm_image.qcow2"
+DEFAULT_FIO_BIN="/home/sys_sgsw/fio_ubuntu"
 
 case $1 in
 	-h|--help)
@@ -36,51 +38,47 @@ if [[ $(uname -s) != Linux ]]; then
 	exit 0
 fi
 
-
 : ${VM_IMAGE="$DEFAULT_VM_IMAGE"}
+: ${FIO_BIN="$DEFAULT_FIO_BIN"}
 
 if [[ ! -r "${VM_IMAGE}" ]]; then
 	echo ""
-	echo "ERROR: VM image '${VM_IMAGE}' does not exist."
+	echo "WARNING: VM image '${VM_IMAGE}' does not exist."
 	echo ""
-	exit 1
 fi
 
-WORKDIR=$(dirname $0)
+WORKDIR=$(readlink -m $(dirname $0))
 cd $WORKDIR
 
 case $1 in
 	-n|--negative)
 		echo 'Negative tests suite...'
 		./other/negative.sh
-	;;
+		;;
 	-p|--performance)
 		echo 'Running performance suite...'
-		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		./fiotest/autotest.sh --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_scsi \
 		--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job \
-		--qemu-src=/home/sys_sgsw/vhost/qemu
-	;;
+		;;
 	-pb|--performance-blk)
 		echo 'Running blk performance suite...'
-		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		./fiotest/autotest.sh --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_blk \
-		--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job \
-		--qemu-src=/home/sys_sgsw/vhost/qemu
+		--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job
 		;;
 	-i|--integrity)
 		echo 'Running SCSI integrity suite...'
-		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		./fiotest/autotest.sh -x --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 		--test-type=spdk_vhost_scsi \
-		--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
-		--qemu-src=/home/sys_sgsw/vhost/qemu -x
+		--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job
 		;;
 	-ib|--integrity-blk)
 		echo 'Running blk integrity suite...'
-		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		./fiotest/autotest.sh --fio-bin=$FIO_BIN \
 		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 		--test-type=spdk_vhost_blk \
 		--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
@@ -96,16 +94,16 @@ case $1 in
 		;;
 	-ils|--integrity-lvol-scsi)
 		echo 'Running lvol integrity suite...'
-		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		./lvol/lvol_test.sh --fio-bin=$FIO_BIN \
 		--ctrl-type=vhost_scsi
 		;;
 	-ilb|--integrity-lvol-blk)
 		echo 'Running lvol integrity suite...'
-		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu -ctrl-type=vhost_blk
+		./lvol/lvol_test.sh --fio-bin=$FIO_BIN -ctrl-type=vhost_blk
 		;;
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
-		./hotplug/scsi_hotplug.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		./hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
 			--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
 			--vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
 			--vm=2,$VM_IMAGE,Nvme0n1p4:Nvme0n1p5 \

@@ -6,7 +6,7 @@ fi
 
 set -e
 
-PS4=' \t	\$ '
+PS4=' \t - $LINENO - \$ '
 ulimit -c unlimited
 
 export RUN_NIGHTLY=0
@@ -196,6 +196,7 @@ function waitforlisten() {
 
 	echo "Waiting for process to start up and listen on UNIX domain socket $DEFAULT_RPC_ADDR..."
 	# turn off trace for this loop
+	local shell_options="$-"
 	set +x
 	ret=1
 	while [ $ret -ne 0 ]; do
@@ -208,7 +209,10 @@ function waitforlisten() {
 			ret=0
 		fi
 	done
-	set -x
+
+	if [[ "$shell_options" =~ x ]]; then
+		set -x
+	fi
 }
 
 function waitforlisten_tcp() {
@@ -220,6 +224,7 @@ function waitforlisten_tcp() {
 
 	echo "Waiting for process to start up and listen on TCP port $2..."
 	# turn off trace for this loop
+	local shell_options="$-"
 	set +x
 	ret=1
 	while [ $ret -ne 0 ]; do
@@ -232,7 +237,7 @@ function waitforlisten_tcp() {
 			ret=0
 		fi
 	done
-	set -x
+	[[ "$shell_options" =~ x ]] && set -x
 }
 
 function waitfornbd() {
@@ -345,17 +350,19 @@ function run_test() {
 
 function print_backtrace() {
 	local shell_options="$-"
+	# unset this in case of dirty environment
+	unset IFS
 	set +x
 	echo "========== Backtrace start: =========="
 	echo ""
-	for i in $(seq 1 $((${#FUNCNAME[@]} - 1))); do
+	for i in $(seq $i $((${#FUNCNAME[@]} - 1))); do
 		local func="${FUNCNAME[$i]}"
 		local line_nr="${BASH_LINENO[$((i - 1))]}"
 		local src="${BASH_SOURCE[$i]}"
 		echo "in $src:$line_nr -> $func()"
 		echo "     ..."
-		nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^$line_nr[^0-9]" | \
-			sed "s/^/   /g" | sed "s/^   $line_nr /=> $line_nr /g"
+		nl -w 1 -ba -nrn $src -s ': ' | grep -B 5 -A 5 "^${line_nr}: " | \
+			sed "s/^/   /g" | sed "s/^   ${line_nr}: /=> ${line_nr}: /g"
 		echo "     ..."
 	done
 	echo ""
