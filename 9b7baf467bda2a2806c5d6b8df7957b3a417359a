@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f03f9805_6d53bb83",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-16T11:19:50Z",
+      "side": 1,
+      "message": "lun-\u003elcore might not be set yet (probably 0 by default). it\u0027s assigned at the time of creating the first io_channel, which might not happen before we remove the bdev.\n\nThis bug wasn\u0027t introduced with this patch though, so +1.",
+      "range": {
+        "startLine": 260,
+        "startChar": 30,
+        "endLine": 260,
+        "endChar": 40
+      },
+      "revId": "9b7baf467bda2a2806c5d6b8df7957b3a417359a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
