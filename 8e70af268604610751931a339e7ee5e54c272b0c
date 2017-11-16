@@ -16,6 +16,29 @@
       "revId": "8e70af268604610751931a339e7ee5e54c272b0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3416a3a4_5e14953e",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 281,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-16T13:31:39Z",
+      "side": 1,
+      "message": "RTE_MAX_LCORE is also 128. \nImagine max number of lcore from spdk_max_reactors may be a little difficult.\n\nWhy this check is deferred to this point is that reactors more than max_lcore is OK if they are not used?",
+      "range": {
+        "startLine": 281,
+        "startChar": 23,
+        "endLine": 281,
+        "endChar": 40
+      },
+      "revId": "8e70af268604610751931a339e7ee5e54c272b0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
