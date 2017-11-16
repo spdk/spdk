@@ -1,4 +1,5 @@
 [Global]
+	NoPci Yes
 
 [Ioat]
   Disable Yes
@@ -10,14 +11,3 @@
 
 [Split]
   Split Nvme0n1 4
-
-[VhostScsi0]
-  Name vhost.0
-  Dev 0 Malloc0
-  Cpumask 0x1
-
-[VhostBlk0]
-  Name vhost.1
-  Dev Malloc1
-  ReadOnly yes
-  Cpumask 0x1
