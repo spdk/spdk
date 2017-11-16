@@ -80,19 +80,11 @@ is lower than number of requested disks for test ($max_disks)"
 fi
 
 if $distribute_cores; then
-    cp $COMMON_DIR/autotest.config $COMMON_DIR/autotest.config.bak
-    cp $BASE_DIR/autotest.config $COMMON_DIR/autotest.config
-    . $COMMON_DIR/common.sh
+	# FIXME: this need to be handled entirely in common.sh
+    source $BASE_DIR/autotest.config
 fi
 
-function restore_acfg()
-{
-    if $distribute_cores; then
-        mv $COMMON_DIR/autotest.config.bak $COMMON_DIR/autotest.config
-    fi
-}
-
-trap 'restore_acfg; error_exit "${FUNCNAME}" "${LINENO}"' ERR
+trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
 vm_kill_all
 
@@ -288,4 +280,3 @@ $rpc_py get_luns
 
 echo "INFO: Shutting down SPDK vhost app..."
 spdk_vhost_kill
-restore_acfg
