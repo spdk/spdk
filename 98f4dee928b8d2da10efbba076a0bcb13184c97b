@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6df5fa3b_383307c1",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-16T17:16:54Z",
+      "side": 1,
+      "message": "this should probably be spdk_bs_io_write_zeroes_blob - we need the \"blob\" at the end\n\nwe use \"zeroes\" instead of \"zeros\" in the bdev layer, so we should also use that spelling here, even though looking online the proper spelling for plural zero is \"zeroes\" - I think consistency is key here and we do not want to break the bdev API for this",
+      "revId": "98f4dee928b8d2da10efbba076a0bcb13184c97b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db67cb74_137b7aa2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1057,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-16T17:16:54Z",
+      "side": 1,
+      "message": "I think _op if OK here instead of _operation.  This matches other areas of the blobstore code such as bs_op_complete.",
+      "revId": "98f4dee928b8d2da10efbba076a0bcb13184c97b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed741249_e01d6d21",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-16T17:16:54Z",
+      "side": 1,
+      "message": "let\u0027s do spdk_blob_op_type instead (similar to spdk_bs_op_complete).",
+      "revId": "98f4dee928b8d2da10efbba076a0bcb13184c97b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e3e24d9_82eabec7",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-16T17:16:54Z",
+      "side": 1,
+      "message": "ZEROES",
+      "revId": "98f4dee928b8d2da10efbba076a0bcb13184c97b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
