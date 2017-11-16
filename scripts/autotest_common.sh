@@ -196,6 +196,7 @@ function waitforlisten() {
 
 	echo "Waiting for process to start up and listen on UNIX domain socket $DEFAULT_RPC_ADDR..."
 	# turn off trace for this loop
+	local shell_options="$-"
 	set +x
 	ret=1
 	while [ $ret -ne 0 ]; do
@@ -208,7 +209,10 @@ function waitforlisten() {
 			ret=0
 		fi
 	done
-	set -x
+
+	if [[ "$shell_options" =~ x ]]; then
+		set -x
+	fi
 }
 
 function waitforlisten_tcp() {
@@ -220,6 +224,7 @@ function waitforlisten_tcp() {
 
 	echo "Waiting for process to start up and listen on TCP port $2..."
 	# turn off trace for this loop
+	local shell_options="$-"
 	set +x
 	ret=1
 	while [ $ret -ne 0 ]; do
@@ -232,7 +237,7 @@ function waitforlisten_tcp() {
 			ret=0
 		fi
 	done
-	set -x
+	[[ "$shell_options" =~ x ]] && set -x
 }
 
 function waitfornbd() {
@@ -345,6 +350,8 @@ function run_test() {
 
 function print_backtrace() {
 	local shell_options="$-"
+	# unset this in case of dirty environment
+	unset IFS
 	set +x
 	echo "========== Backtrace start: =========="
 	echo ""
