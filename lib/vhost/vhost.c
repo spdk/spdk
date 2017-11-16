@@ -538,10 +538,14 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	/* Register vhost driver to handle vhost messages. */
 	if (stat(path, &file_stat) != -1) {
 		if (!S_ISSOCK(file_stat.st_mode)) {
-			SPDK_ERRLOG("Cannot remove %s: not a socket.\n", path);
+			SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": "
+				    "The file already exists and is not a socket.\n",
+				    path);
 			return -EIO;
 		} else if (unlink(path) != 0) {
-			SPDK_ERRLOG("Cannot remove %s.\n", path);
+			SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": "
+				    "The socket already exists and failed to unlink.\n",
+				    path);
 			return -EIO;
 		}
 	}
