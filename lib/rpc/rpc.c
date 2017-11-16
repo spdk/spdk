@@ -77,6 +77,7 @@ spdk_rpc_listen(const char *listen_addr)
 {
 	struct addrinfo		hints;
 	struct addrinfo		*res;
+	struct stat		file_stat;
 
 	memset(&g_rpc_listen_addr_unix, 0, sizeof(g_rpc_listen_addr_unix));
 
@@ -93,9 +94,16 @@ spdk_rpc_listen(const char *listen_addr)
 			return -1;
 		}
 
-		if (access(g_rpc_listen_addr_unix.sun_path, F_OK) == 0) {
-			SPDK_ERRLOG("RPC Unix domain socket path already exists.\n");
-			return -1;
+		if (stat(g_rpc_listen_addr_unix.sun_path, &file_stat) != -1) {
+			if (!S_ISSOCK(file_stat.st_mode)) {
+				SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": The file already exists and is not a socket.\n",
+					    g_rpc_listen_addr_unix.sun_path);
+				return -EIO;
+			} else if (unlink(g_rpc_listen_addr_unix.sun_path) != 0) {
+				SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": The socket already exists and failed to unlink.\n",
+					    g_rpc_listen_addr_unix.sun_path);
+				return -EIO;
+			}
 		}
 
 		g_jsonrpc_server = spdk_jsonrpc_server_listen(AF_UNIX, 0,
