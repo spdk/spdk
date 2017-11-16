@@ -34,6 +34,24 @@
       "revId": "18bd923715d767bee815b39d81ff114483b98ad7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "025589a4_8462350c",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-16T00:54:48Z",
+      "side": 1,
+      "message": "How about the SPDK policy is? assert() when detecting logical contradiction is recommended?\n\nPersonally I agree with Jim and additionally responding failure of LUN RESET to the initiator may be safer.",
+      "parentUuid": "f773287f_49c71155",
+      "revId": "18bd923715d767bee815b39d81ff114483b98ad7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
