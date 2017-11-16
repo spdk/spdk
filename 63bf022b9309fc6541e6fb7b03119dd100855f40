@@ -22,6 +22,30 @@
       "revId": "63bf022b9309fc6541e6fb7b03119dd100855f40",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cb3d745_ee393817",
+        "filename": "lib/iscsi/tgt_node.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-16T09:52:00Z",
+      "side": 0,
+      "message": "We have other places changed to 256 if I remember correctly for the P4500. For P3700, 128 is ok.",
+      "parentUuid": "5cedae07_130fb11a",
+      "range": {
+        "startLine": 44,
+        "startChar": 8,
+        "endLine": 44,
+        "endChar": 34
+      },
+      "revId": "63bf022b9309fc6541e6fb7b03119dd100855f40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
