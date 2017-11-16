@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79eb36dd_8f6454b8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-16T23:24:07Z",
+      "side": 1,
+      "message": "when not finding",
+      "revId": "d1ef470ba978ed0c14bbcbac416f6442f1cd2230",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "712a6615_9785cb95",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1394,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-16T23:24:07Z",
+      "side": 1,
+      "message": "I don\u0027t think this is right.  If there are 4 controllers, and 1 is skipped, this error message will not be printed out.\n\nMaybe instead change the message to \"no valid NVMe controllers or AIO devices found\".\n\nProbably the error messages above should be changed to say that the device is being skipped.\n\nI think passing the trid to register_ctrlr() and register_ns() would help too - then you can add this information to the messages.",
+      "revId": "d1ef470ba978ed0c14bbcbac416f6442f1cd2230",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
