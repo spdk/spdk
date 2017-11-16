@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e581177d_ceeea3d3",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-16T18:41:14Z",
+      "side": 1,
+      "message": "Can you add an extra new line, seems that too many words in the same line.",
+      "revId": "943c756811d9f20b189991dccef08d49bf8d36bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
