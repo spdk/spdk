@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "104168de_3049cfa7",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-16T11:33:03Z",
+      "side": 1,
+      "message": "nitpick: could you update the doc?",
+      "revId": "8e70af268604610751931a339e7ee5e54c272b0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
