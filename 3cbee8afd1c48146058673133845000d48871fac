@@ -16,6 +16,24 @@
       "revId": "3cbee8afd1c48146058673133845000d48871fac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "145a1aa3_fc977ba1",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-16T03:57:54Z",
+      "side": 1,
+      "message": "Thanks for the suggestion. Made the change accordingly. I\u0027ve changed to \"equal to %u\", opts.io_queue_size). Looks like we may not just show \"opts.io_queue_size\" in the log. Is this correct? Thanks.",
+      "parentUuid": "60cab423_cf82fb7c",
+      "revId": "3cbee8afd1c48146058673133845000d48871fac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
