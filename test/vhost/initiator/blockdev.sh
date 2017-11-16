@@ -14,7 +14,8 @@ else
 fi
 
 function run_fio() {
-        LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=4k --runtime=10 $testdir/bdev.fio "$@" --spdk_mem=1024
+        LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=4k \
+                --runtime=10 $testdir/bdev.fio --spdk_mem=1024 --spdk_core_mask=0xff "$@"
         fio_status=$?
         if [ $fio_status != 0 ]; then
                 spdk_vhost_kill

@@ -50,6 +50,8 @@ struct spdk_fio_options {
 	void *pad;
 	char *conf;
 	unsigned mem_mb;
+	unsigned master_core;
+	char *core_mask;
 };
 
 /* Used to pass messages between fio threads */
@@ -316,7 +318,14 @@ spdk_fio_init_env(struct thread_data *td)
 	/* Initialize the environment library */
 	spdk_env_opts_init(&opts);
 	opts.name = "fio";
-	opts.core_mask = "0xffff";
+
+	if (eo->master_core) {
+		opts.master_core = eo->master_core;
+	}
+
+	if (eo->core_mask) {
+		opts.core_mask = eo->core_mask;
+	}
 
 	if (eo->mem_mb) {
 		opts.mem_size = eo->mem_mb;
@@ -686,6 +695,24 @@ static struct fio_option options[] = {
 		.type		= FIO_OPT_INT,
 		.off1		= offsetof(struct spdk_fio_options, mem_mb),
 		.help 		= "Amount of memory in MB to allocate for SPDK",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "spdk_master_core",
+		.lname		= "Logical core ID for the master thread",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, master_core),
+		.help 		= "The master thread does FIO & SPDK management work. It's lcore must be within the core mask",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "spdk_core_mask",
+		.lname		= "Logical core mask for FIO threads",
+		.type		= FIO_OPT_STR_STORE,
+		.off1		= offsetof(struct spdk_fio_options, core_mask),
+		.help 		= "Logical core mask in hex (with an optional 0x prefix). Note that the master core requires one exclusive core.",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
