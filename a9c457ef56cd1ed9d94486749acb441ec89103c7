@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0cfd2727_2fa087d6",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-16T23:03:20Z",
+      "side": 1,
+      "message": "Since this can potentially fail, all call sites should probably be checking the return value (that can be deferred to another patch, though).",
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "419be2f3_992f7921",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-16T23:03:20Z",
+      "side": 1,
+      "message": "It might be a good idea to keep a separate typedef for poller functions instead of reusing spdk_thread_fn (since we\u0027re not actually starting a thread here).",
+      "range": {
+        "startLine": 53,
+        "startChar": 2,
+        "endLine": 53,
+        "endChar": 16
+      },
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d146cadf_8745243d",
+        "filename": "include/spdk/io_channel.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-16T23:03:20Z",
+      "side": 1,
+      "message": "This should document the parameters (especially behavior when period_microseconds \u003d\u003d 0).\n\nAlso mention that pollers may be unregistered using spdk_poller_unregister() so that it gets auto-linked in the docs.",
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32b46c12_1cca5817",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-16T23:03:20Z",
+      "side": 1,
+      "message": "This check can probably just be removed - we already have a valid reactor pointer here, and we aren\u0027t using lcore to access the array anymore.",
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "564daac8_d51148fe",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-16T23:03:20Z",
+      "side": 1,
+      "message": "spdk_get_thread() can return NULL, so we should probably do something like:\n\n    if (!thread) {\n        return NULL;\n    }",
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
