@@ -45,7 +45,7 @@ echo "INFO: Testing vhost command line arguments"
 $VHOST_APP -c /path/to/non_existing_file/conf -S $BASE_DIR -e 0x0 -s 1024 -d -q -h
 
 # Testing vhost create pid file option. Vhost will exit with error as invalid config path is given
-if $VHOST_APP -c /path/to/non_existing_file/conf -f $SPDK_VHOST_SCSI_TEST_DIR/vhost.pid; then
+if $VHOST_APP -c /path/to/non_existing_file/conf -f $VHOST_DIR/vhost.pid; then
 	echo "vhost started when specifying invalid config file"
 	exit 1
 fi
