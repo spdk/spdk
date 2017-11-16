@@ -19,6 +19,47 @@
     },
     {
       "key": {
+        "uuid": "cf3c2708_96198bfa",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-16T00:30:49Z",
+      "side": 1,
+      "message": "SPDK cannot decouple LUN reset with asynchronous IO yet and hence the whole loop can be removed and Ziye\u0027s another patch will be better.\n\n\nIf SPDK can decouple LUN reset with asynchronous IO and can reply LUN reset without waiting outstanding tasks, \n\nAs long as I read specification and talked with colleagues, I think the following rule will be required:\n- for any IO request received prior to the LUN RESET request, normal response must be sent to the intiator prior to the LUN RESET response.\n- Hence CHECK_CONDITION when the above condition is detected is safer solution.\n\nBut this whole loop will be better to proceed together with decoupling function.",
+      "parentUuid": "ed0194e6_a25f704f",
+      "revId": "e704b4ac0f83b8d1f631357d31011a626a9f4623",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61640adb_f875e581",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-16T00:30:49Z",
+      "side": 1,
+      "message": "It looks that current SCSI implementation will always keep lun-\u003epending_tasks empty. Hence I think this whole loop can be removed too or further lun-\u003epending_tasks itself and related code can be removed too in another patch.",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 85,
+        "endChar": 53
+      },
+      "revId": "e704b4ac0f83b8d1f631357d31011a626a9f4623",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c845c2e_157760ff",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 4
