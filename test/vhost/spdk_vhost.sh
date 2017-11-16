@@ -53,7 +53,7 @@ case $1 in
 	-n|--negative)
 		echo 'Negative tests suite...'
 		./other/negative.sh
-	;;
+		;;
 	-p|--performance)
 		echo 'Running performance suite...'
 		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
@@ -61,7 +61,7 @@ case $1 in
 		--test-type=spdk_vhost_scsi \
 		--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job \
 		--qemu-src=/home/sys_sgsw/vhost/qemu
-	;;
+		;;
 	-pb|--performance-blk)
 		echo 'Running blk performance suite...'
 		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
