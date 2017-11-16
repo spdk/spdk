@@ -416,6 +416,7 @@ struct call_channel {
 	void *io_device;
 	struct io_device *dev;
 	spdk_channel_msg fn;
+	int status;
 	void *ctx;
 
 	struct spdk_thread *cur_thread;
@@ -430,7 +431,7 @@ _call_completion(void *ctx)
 	struct call_channel *ch_ctx = ctx;
 
 	if (ch_ctx->cpl != NULL) {
-		ch_ctx->cpl(ch_ctx->io_device, ch_ctx->ctx);
+		ch_ctx->cpl(ch_ctx->io_device, ch_ctx->ctx, ch_ctx->status);
 	}
 	free(ch_ctx);
 }
@@ -457,10 +458,13 @@ _call_channel(void *ctx)
 	 *  the fn() on this thread.
 	 */
 	if (ch != NULL) {
-		ch_ctx->fn(ch_ctx->io_device, ch, ch_ctx->ctx);
+		ch_ctx->status = ch_ctx->fn(ch_ctx->io_device, ch, ch_ctx->ctx);
 	}
 
 	pthread_mutex_lock(&g_devlist_mutex);
+	if (ch_ctx->status) {
+		goto end;
+	}
 	thread = TAILQ_NEXT(thread, tailq);
 	while (thread) {
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
@@ -474,6 +478,7 @@ _call_channel(void *ctx)
 		thread = TAILQ_NEXT(thread, tailq);
 	}
 
+end:
 	ch_ctx->dev->for_each_count--;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
@@ -519,5 +524,5 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	cpl(io_device, ctx);
+	cpl(io_device, ctx, 0);
 }

@@ -267,12 +267,16 @@ bdev_nvme_flush(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
 }
 
 static void
-_bdev_nvme_reset_done(void *io_device, void *ctx)
+_bdev_nvme_reset_done(void *io_device, void *ctx, int status)
 {
-	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(ctx), SPDK_BDEV_IO_STATUS_SUCCESS);
+	int rc = SPDK_BDEV_IO_STATUS_SUCCESS;
+	if (status) {
+		rc = SPDK_BDEV_IO_STATUS_FAILED;
+	}
+	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(ctx), rc);
 }
 
-static void
+static int
 _bdev_nvme_reset_create_qpair(void *io_device, struct spdk_io_channel *ch,
 			      void *ctx)
 {
@@ -280,15 +284,24 @@ _bdev_nvme_reset_create_qpair(void *io_device, struct spdk_io_channel *ch,
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 
 	nvme_ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
-	assert(nvme_ch->qpair != NULL); /* Currently, no good way to handle this error */
+	if (!nvme_ch->qpair) {
+		return -1;
+	}
+
+	return 0;
 }
 
 static void
-_bdev_nvme_reset(void *io_device, void *ctx)
+_bdev_nvme_reset(void *io_device, void *ctx, int status)
 {
 	struct spdk_nvme_ctrlr *ctrlr = io_device;
 	struct nvme_bdev_io *bio = ctx;
 	int rc;
+
+	if (status) {
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(bio), SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 
 	rc = spdk_nvme_ctrlr_reset(ctrlr);
 	if (rc != 0) {
@@ -305,14 +318,19 @@ _bdev_nvme_reset(void *io_device, void *ctx)
 
 }
 
-static void
+static int
 _bdev_nvme_reset_destroy_qpair(void *io_device, struct spdk_io_channel *ch,
 			       void *ctx)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	int rc;
 
-	spdk_nvme_ctrlr_free_io_qpair(nvme_ch->qpair);
-	nvme_ch->qpair = NULL;
+	rc = spdk_nvme_ctrlr_free_io_qpair(nvme_ch->qpair);
+	if (!rc) {
+		nvme_ch->qpair = NULL;
+	}
+
+	return rc;
 }
 
 static int

@@ -108,16 +108,18 @@ channel_destroy(void *io_device, void *ctx_buf)
 {
 }
 
-static void
+static int
 channel_msg(void *io_device, struct spdk_io_channel *ch, void *ctx)
 {
 	int *count = spdk_io_channel_get_ctx(ch);
 
 	(*count)++;
+
+	return 0;
 }
 
 static void
-channel_cpl(void *io_device, void *ctx)
+channel_cpl(void *io_device, void *ctx, int status)
 {
 }
 
@@ -175,16 +177,18 @@ struct unreg_ctx {
 	bool	foreach_done;
 };
 
-static void
+static int
 unreg_ch_done(void *io_device, struct spdk_io_channel *_ch, void *_ctx)
 {
 	struct unreg_ctx *ctx = _ctx;
 
 	ctx->ch_done = true;
+
+	return 0;
 }
 
 static void
-unreg_foreach_done(void *io_device, void *_ctx)
+unreg_foreach_done(void *io_device, void *_ctx, int status)
 {
 	struct unreg_ctx *ctx = _ctx;
 

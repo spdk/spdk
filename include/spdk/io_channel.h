@@ -54,9 +54,9 @@ typedef void (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
 
 typedef void (*spdk_io_device_unregister_cb)(void *io_device);
 
-typedef void (*spdk_channel_msg)(void *io_device, struct spdk_io_channel *ch,
-				 void *ctx);
-typedef void (*spdk_channel_for_each_cpl)(void *io_device, void *ctx);
+typedef int (*spdk_channel_msg)(void *io_device, struct spdk_io_channel *ch,
+				void *ctx);
+typedef void (*spdk_channel_for_each_cpl)(void *io_device, void *ctx, int status);
 
 /**
  * \brief Initializes the calling thread for I/O channel allocation.
