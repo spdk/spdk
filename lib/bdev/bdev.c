@@ -1336,7 +1336,7 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 }
 
 static void
-_spdk_bdev_reset_dev(void *io_device, void *ctx)
+_spdk_bdev_reset_dev(void *io_device, void *ctx, int status)
 {
 	struct spdk_bdev_channel *ch = ctx;
 	struct spdk_bdev_io *bdev_io;
@@ -1346,7 +1346,7 @@ _spdk_bdev_reset_dev(void *io_device, void *ctx)
 	spdk_bdev_io_submit_reset(bdev_io);
 }
 
-static void
+static int
 _spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
 			       void *ctx)
 {
@@ -1361,6 +1361,8 @@ _spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
 	_spdk_bdev_abort_queued_io(&channel->nomem_io, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
+
+	return 0;
 }
 
 static void
@@ -1395,7 +1397,7 @@ _spdk_bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 	pthread_mutex_unlock(&bdev->mutex);
 }
 
-static void
+static int
 _spdk_bdev_complete_reset_channel(void *io_device, struct spdk_io_channel *_ch, void *ctx)
 {
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
@@ -1404,6 +1406,8 @@ _spdk_bdev_complete_reset_channel(void *io_device, struct spdk_io_channel *_ch, 
 	if (!TAILQ_EMPTY(&ch->queued_resets)) {
 		_spdk_bdev_channel_start_reset(ch);
 	}
+
+	return 0;
 }
 
 int
