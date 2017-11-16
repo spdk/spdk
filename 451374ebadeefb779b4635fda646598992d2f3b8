@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b51ac7eb_f03af266",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-16T15:16:58Z",
+      "side": 1,
+      "message": "actually we dont need this anymore based on your other comment",
+      "parentUuid": "47747486_0c251b6a",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 114,
+        "endChar": 48
+      },
+      "revId": "451374ebadeefb779b4635fda646598992d2f3b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b8d0d95c_cce07807",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-16T12:37:42Z",
       "side": 1,
       "message": "why is that?\ncan\u0027t we check inquiry data now to fail the lun scan early?",
+      "range": {
+        "startLine": 829,
+        "startChar": 1,
+        "endLine": 829,
+        "endChar": 65
+      },
+      "revId": "451374ebadeefb779b4635fda646598992d2f3b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e03a548d_ba731929",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 829,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-16T15:16:58Z",
+      "side": 1,
+      "message": "oh yes, I was thinking we were using this to decide whether to get VPD ext data as opposed to whether we support the device or not, duh.... thanks",
+      "parentUuid": "b8d0d95c_cce07807",
       "range": {
         "startLine": 829,
         "startChar": 1,
