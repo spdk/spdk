@@ -910,9 +910,10 @@ int main(int argc, char **argv)
 		bool exit_flag = false;
 
 		if (!scanf("%d", &cmd)) {
-			printf("Invalid Command\n");
+			printf("Invalid Command: command must be number 1-8\n");
 			while (getchar() != '\n');
-			return 0;
+			usage();
+			continue;
 		}
 		switch (cmd) {
 		case 1:
