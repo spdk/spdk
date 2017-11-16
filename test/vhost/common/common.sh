@@ -12,7 +12,7 @@ SPDK_BUILD_DIR=$BASE_DIR/../../../
 SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
 
 # SSH key file
-[[ -z "$SPDK_VHOST_SSH_KEY_FILE" ]] && SPDK_VHOST_SSH_KEY_FILE="$HOME/.ssh/spdk_vhost_id_rsa"
+: ${SPDK_VHOST_SSH_KEY_FILE="$HOME/.ssh/spdk_vhost_id_rsa"}
 if [[ ! -e "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
 	echo "Could not find SSH key file $SPDK_VHOST_SSH_KEY_FILE"
 	exit 1
@@ -42,7 +42,8 @@ function error()
 	echo "==========="
 	echo -e "ERROR: $@"
 	echo "==========="
-	return 1
+	# Don't 'return 1' since the stack trace will be incomplete (why?) missing upper command.
+	false
 }
 
 function spdk_vhost_run()
@@ -145,7 +146,7 @@ function assert_number()
 #
 function vm_num_is_valid()
 {
-	[[ "$1" =~ [0-9]+ ]] && return 0
+	[[ "$1" =~ ^[0-9]+$ ]] && return 0
 
 	echo "${FUNCNAME[1]}() - ${BASH_LINENO[1]}: ERROR Invalid or missing paramter: vm number '$1'" > /dev/stderr
 	return 1;
@@ -317,7 +318,7 @@ function vm_kill()
 		echo "INFO: process $vm_pid killed"
 		rm $vm_dir/qemu.pid
 	elif vm_is_running $1; then
-		erorr "Process $vm_pid NOT killed"
+		error "Process $vm_pid NOT killed"
 		return 1
 	fi
 }
