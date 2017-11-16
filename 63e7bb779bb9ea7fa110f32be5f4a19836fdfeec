@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f4993ed7_7440c695",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 6
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-16T06:35:53Z",
+      "side": 1,
+      "message": "yes, I think 1k-512k will cover more.",
+      "parentUuid": "5d259923_9559472e",
+      "range": {
+        "startLine": 2,
+        "startChar": 10,
+        "endLine": 2,
+        "endChar": 14
+      },
+      "revId": "63e7bb779bb9ea7fa110f32be5f4a19836fdfeec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6ec29493_8619534f",
         "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-15T09:23:18Z",
       "side": 1,
       "message": "In per-patch tests we use 512 so I think you could increase this value here as well",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 10
+      },
+      "revId": "63e7bb779bb9ea7fa110f32be5f4a19836fdfeec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8f442a4_ed2d6ee0",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 6
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-16T06:35:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6ec29493_8619534f",
       "range": {
         "startLine": 3,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "246b344a_d0669156",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 6
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-16T06:35:53Z",
+      "side": 1,
+      "message": "Thanks, I changed the size\u003d10GB, and did you think whether we need to change io_size\u003d20GB or delete it.",
+      "parentUuid": "49af5a7a_ad32bf21",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 10
+      },
+      "revId": "63e7bb779bb9ea7fa110f32be5f4a19836fdfeec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0bd42a69_f724c431",
         "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
         "patchSetId": 6
@@ -82,6 +154,30 @@
       "writtenOn": "2017-11-15T09:23:18Z",
       "side": 1,
       "message": "This is not needed as you already have other job tags below",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 11
+      },
+      "revId": "63e7bb779bb9ea7fa110f32be5f4a19836fdfeec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "160d3bef_65d5f623",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 6
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-16T06:35:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0bd42a69_f724c431",
       "range": {
         "startLine": 15,
         "startChar": 0,
