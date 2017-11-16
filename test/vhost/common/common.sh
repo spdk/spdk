@@ -1,12 +1,58 @@
 set -e
 
-BASE_DIR=$(readlink -f $(dirname $0))
+SPDK_AUTOTEST_X=false
+SPDK_VHOST_AUTOTEST_X=false
 
+BASE_DIR=$(readlink -f $(dirname $0))
 # Default running dir -> spdk/..
-[[ -z "$TEST_DIR" ]] && TEST_DIR=$BASE_DIR/../../../../
+
+SPDK_VHOST_DEFAULT_TEST_DIR=$(readlink -f $BASE_DIR/../../../../)
+SPDK_DEFAULT_BUILD_DIR=$BASE_DIR/../../../
+
+# TODO: Change this to SPDK_VHOST_TEST_DIR
+: ${TEST_DIR="$SPDK_VHOST_DEFAULT_TEST_DIR"}
+: ${SPDK_BUILD_DIR=$SPDK_DEFAULT_BUILD_DIR}
+
+spdk_vhost_usage_common()
+{
+	echo "\
+  COMMON ARGUMENTS:
+    --work-dir=WORK_DIR   Directory where test will be execured. TEST_DIR will be set to WORK_DIR.
+    --autotest-x          Turn on script debug only for autotest_common.sh.
+    -x                    Turn on script debug for all files (set -x).
+    -h, --help            Print this help and exit.
+
+  ENVIRONMENT:
+    After sourcing common.sh the environment will be set as follows.
+    SPDK_VHOST_TEST_ARGS  Program arguments without COMMON ARGUMENTS
+    TEST_DIR              Any test data (VMs, configs etc) will be created here.
+                          Default is: $SPDK_VHOST_DEFAULT_TEST_DIR.
+    SPDK_BUILD_DIR        Where find SPDK to test with.
+                          Default is: $SPDK_DEFAULT_BUILD_DIR
+    Any of those environment variables might be changed.
+"
+}
+
+declare -a SPDK_VHOST_TEST_ARGS
+for arg in "$@"; do
+	case "$arg" in
+		--work-dir=*)
+			TEST_DIR="$(readlink -f ${arg#*=})/"
+			;;
+		--autotest-x)
+			SPDK_AUTOTEST_X=true
+			;;
+		-x)
+			SPDK_VHOST_AUTOTEST_X=true
+			set -x
+			;;
+		*)
+			SPDK_VHOST_TEST_ARGS+=( "$arg" )
+			;;
+	esac
+done
 
 TEST_DIR="$(mkdir -p $TEST_DIR && cd $TEST_DIR && echo $PWD)"
-SPDK_BUILD_DIR=$BASE_DIR/../../../
 
 SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
 
@@ -26,18 +72,15 @@ INSTALL_DIR="$TEST_DIR/root"
 mkdir -p $TEST_DIR
 
 #
-# Source config describing QEMU and VHOST cores and NUMA
+# Include config describing QEMU and VHOST cores and NUMA
 #
 source $BASE_DIR/autotest.config
 
-# Trace flag is optional, if it wasn't set earlier - disable it after sourcing
-# autotest_common.sh
-if [[ $- =~ x ]]; then
-	source $SPDK_BUILD_DIR/scripts/autotest_common.sh
-else
-	source $SPDK_BUILD_DIR/scripts/autotest_common.sh
-	set +x
-fi
+source $SPDK_BUILD_DIR/scripts/autotest_common.sh
+#
+# If autotest_common.sh turn on debug flag and we don't want this turn off after including it
+#
+$SPDK_VHOST_AUTOTEST_X || set +x;
 
 function error()
 {
@@ -369,68 +412,100 @@ function vm_shutdown_all()
 	return 1
 }
 
+function vm_setup_usage()
+{
+	echo -e "\
+Usage: vm_setup [OPTIONS]\
+	OPTIONS:
+    --force-vm=VM_NUM       OPTIONAL: Force VM_NUM reconfiguration if already exist. If not provided,
+                            next free VM number will be used.
+    --disk-type=DISK        Configure for specified TYPE:
+                                virtio - virtio-scsi-pci using DISKS as images
+                                kernel_vhost - use kernel driver vhost-scsi
+                                spdk_vhost_scsi - use spdk vhost scsi
+                                spdk_vhost_blk - use spdk vhost block
+    ---virtio-cache=TYPE    OPTIONAL: Use cache TYPE for virtio test. Valid values are: 
+                            writethrough, writeback, none, unsafe or directsyns. See QEMU doc for more details
+    --disks=DISKS           Disk to use in test. test specific meaning:
+                                virtio - disk path (file or block device ex: /dev/nvme0n1)
+                                kernel_vhost - the WWN number to be used
+                                spdk_vhost - the socket path. Default is WORK_DIR/vhost/usvhost
+    --os=OS_QCOW2           OS image file in qcow2 format
+    --os-mode=MODE          OPTIONAL: MODE how to use provided OS_QCOW2 image: default: backing
+                                snapshot - use '-snapshot', default.
+                                backing - create new image but use provided backing file
+                                copy - copy provided image and use a copy
+                                orginal - use file directly. Will modify the provided file
+    --qemu-args=ARGS        OPTIONAL: Custom QEMU args.
+"
+	spdk_vhost_usage_common
+}
+
 function vm_setup()
 {
-	local OPTIND optchar a
-
-	local os=""
+	local os_img=""
 	local qemu_args=""
-	local disk_type=NOT_DEFINED
-	local disks=""
-	local raw_cache=""
-	local force_vm=""
-	while getopts ':-:' optchar; do
-		case "$optchar" in
-			-)
-			case "$OPTARG" in
-				os=*) local os="${OPTARG#*=}" ;;
-				os-mode=*) local os_mode="${OPTARG#*=}" ;;
-				qemu-args=*) local qemu_args="${qemu_args} ${OPTARG#*=}" ;;
-				disk-type=*) local disk_type="${OPTARG#*=}" ;;
-				disks=*) local disks="${OPTARG#*=}" ;;
-				raw-cache=*) local raw_cache=",cache${OPTARG#*=}" ;;
-				force=*) local force_vm=${OPTARG#*=} ;;
-				*)
-					error "unknown argument $OPTARG"
-					return 1
-			esac
-			;;
+	local disk_type=""
+	local disks=()
+	local virtio_cache=""
+	local args=( $@ )
+	local os_mode="snapshot"
+	for (( i = 0; i < ${#args[@]}; i++ )); do
+		local arg="${args[i]}"
+		case "$arg" in
+			--os=*) local os_img="${arg#*=}" ;;
+			--os-mode=*) local os_mode="${arg#*=}" ;;
+			--qemu-args=*) local qemu_args="${arg#=*};;
+			--disk-type=*) local disk_type="${arg#*=}" ;;
+			--disks=*) disks+=( "${arg#*=}" ) ;;
+			--virtio-cache=*) local virtio_cache=",cache${arg#*=}" ;;
+			--force-vm=*) local vm_num="${arg#*=}" ;;
+			-h|--help)
+				vm_setup_usage
+				return 0
 			*)
-				error "vm_create Unknown param $OPTARG"
+				error "vm_setup: Invalid parameter: $arg"
 				return 1
 			;;
 		esac
 	done
+	unset args
+	unset arg;
+	
+	if [[ -z "$os_img" || -z "$disk_type" || -z "${disks[@]}" ]]; then
+		error "vm_setup: Missing mandatory parameter"
+		return 1
+	elif [[ ! -r $os_img ]]; then
+		error "vm_setup: can't read OS image file '$os_img'"
+		return 1
+	fi
 
 	# Find next directory we can use
-	if [[ ! -z $force_vm ]]; then
-		vm_num=$force_vm
-
-		vm_num_is_valid $vm_num || return 1
+	if [[ ! -z "$vm_num" ]]; then
+		if ! vm_num_is_valid $vm_num; then
+			error "'$vm_num' is invalid VM number"  
+			return 1
+		fi
+					
 		local vm_dir="$VM_BASE_DIR/$vm_num"
 		[[ -d $vm_dir ]] && echo "WARNING: removing existing VM in '$vm_dir'"
-		echo "rm -rf $vm_dir"
+		rm -rf $vm_dir
 	else
-		local vm_dir=""
-		for (( i=0; i<=256; i++)); do
-			local vm_dir="$VM_BASE_DIR/$i"
-			[[ ! -d $vm_dir ]] && break
+		for (( i=0; i<256; i++)); do
+			[[ ! -d $VM_BASE_DIR/$i ]] && break
 		done
-
-		vm_num=$i
+		if [[ $i -eq 256 ]]; then
+			error "no free VM found. do some cleanup (256 VMs created, are you insane?)"
+			return 1
+		fi
+		
+		local vm_num=$i
+		unset i
 	fi
-
-	if [[ $i -eq 256 ]]; then
-		error "no free VM found. do some cleanup (256 VMs created, are you insane?)"
-		return 1
-	fi
-
+		
+	
 	echo "INFO: Creating new VM in $vm_dir"
 	mkdir -p $vm_dir
-	if [[ ! -r $os ]]; then
-		error "file not found: $os"
-		return 1
-	fi
 
 	# WARNING:
 	# each cmd+= must contain ' ${eol}' at the end
@@ -452,36 +527,35 @@ function vm_setup()
 
 	local ssh_socket=$(( vm_socket_offset + 0 ))
 	local fio_socket=$(( vm_socket_offset + 1 ))
-	local http_socket=$(( vm_socket_offset + 2 ))
-	local https_socket=$(( vm_socket_offset + 3 ))
 	local gdbserver_socket=$(( vm_socket_offset + 4 ))
 	local vnc_socket=$(( 100 + vm_num ))
 	local qemu_pid_file="$vm_dir/qemu.pid"
 	local cpu_num=0
 
-	for ((cpu=0; cpu<$(nproc --all); cpu++))
-	do
+	for (( cpu = 0; cpu < $(nproc --all); cpu++ )); do
 		(($task_mask&1<<$cpu)) && ((cpu_num++)) || :
 	done
 
 	#-cpu host
 	local node_num=${!qemu_numa_node_param}
 	echo "INFO: NUMA NODE: $node_num"
-	cmd+="-m 1024 --enable-kvm -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize -snapshot ${eol}"
+	cmd+="-m 1024 --enable-kvm -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize ${eol}"
+	
+	if [[ $os_mode == "snapshot" ]]; then
+		cmd+="-snapshot ${eol}"
+	fi
+	
 	cmd+="-object memory-backend-file,id=mem,size=1G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
 	cmd+="-numa node,memdev=mem ${eol}"
 	cmd+="-pidfile $qemu_pid_file ${eol}"
 	cmd+="-serial file:$vm_dir/serial.log ${eol}"
 	cmd+="-D $vm_dir/qemu.log ${eol}"
-	cmd+="-net user,hostfwd=tcp::$ssh_socket-:22,hostfwd=tcp::$fio_socket-:8765,hostfwd=tcp::$https_socket-:443,hostfwd=tcp::$http_socket-:80 ${eol}"
-	cmd+="-net nic ${eol}"
+	cmd+="-net user,hostfwd=tcp::$ssh_socket-:22,hostfwd=tcp::$fio_socket-:8765 -net nic ${eol}"
 
 	cmd+="-drive file=$os,if=none,id=os_disk ${eol}"
 	cmd+="-device ide-hd,drive=os_disk,bootindex=0 ${eol}"
 
-	IFS=':'
-
-	if ( [[ $disks == '' ]] && [[ $disk_type == virtio* ]] ); then
+	IFS=':' if ( [[ $disks == '' ]] && [[ $disk_type == virtio* ]] ); then
 		disks=1
 	fi
 
@@ -514,7 +588,7 @@ function vm_setup()
 
 				cmd+="-device virtio-scsi-pci ${eol}"
 				cmd+="-device scsi-hd,drive=hd$i,vendor=$raw_name ${eol}"
-				cmd+="-drive if=none,id=hd$i,file=$raw_disk,format=raw$raw_cache ${eol}"
+				cmd+="-drive if=none,id=hd$i,file=$raw_disk,format=raw$virtio_cache ${eol}"
 				;;
 			spdk_vhost_scsi)
 				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
@@ -584,53 +658,67 @@ function vm_setup()
 	# Save generated sockets redirection
 	echo $ssh_socket > $vm_dir/ssh_socket
 	echo $fio_socket > $vm_dir/fio_socket
-	echo $http_socket > $vm_dir/http_socket
-	echo $https_socket > $vm_dir/https_socket
 	echo $gdbserver_socket > $vm_dir/gdbserver_socket
 	echo $vnc_socket >> $vm_dir/vnc_socket
 }
 
+function vm_run_usage()
+{
+	echo -e "\
+Usage: vm_run [OPTIONS] VM_LIST...
+    OPTIONS:
+    -a                    Run all VMs in WORK_DIR - VM_LIST must be empty
+"
+	spdk_vhost_usage_common
+}
+
 function vm_run()
 {
-	local OPTIND optchar a
-	local run_all=false
-	while getopts 'a-:' optchar; do
-		case "$optchar" in
-			a) run_all=true ;;
+	local vms_to_run=()
+	local args=( $@ )
+	for (( i = 0; i < ${#args[@]}; i++ )); do
+		case "${args[i]}" in
+			-a)
+				if (( i == ${#args[@]} - 1 )); then
+					error "No arguments allowed after '-a'"
+					return 1
+				fi 
+				vms_to_run+=( $VM_BASE_DIR/[0-9]* )
+				break
+				;;
+			-h|--help)
+				vm_run_usage
+				return 0
+				;;
 			*)
-				echo "vm_run Unknown param $OPTARG"
-				return 1
-			;;
+				vms_to_run+=( $(printf "$VM_BASE_DIR/%s" "${args[@]:i}") )
+				break
+				;;
 		esac
 	done
+	unset args
 
-	local vms_to_run=""
-
-	if $run_all; then
-		shopt -s nullglob
-		vms_to_run=$VM_BASE_DIR/[0-9]*
-	else
-		shift $((OPTIND-1))
-		for vm in $@; do
-			vm_num_is_valid $1 || return 1
-			if [[ ! -x $VM_BASE_DIR/$vm/run.sh ]]; then
-				error "VM$vm not defined - setup it first"
-				return 1
-			fi
-			vms_to_run+=" $VM_BASE_DIR/$vm"
-		done
+	if [[ $EUID -ne 0 ]]; then
+		error "vm_run: Go away user come back as root"
+		return 1
 	fi
 
-	for vm in $vms_to_run; do
-		if vm_is_running $(basename $vm); then
-			echo "WARNING: VM$(basename $vm) ($vm) already running"
-			continue
-		fi
-
-		echo "INFO: running $vm/run.sh"
-		if ! $vm/run.sh; then
-			error "FAILED to run vm $vm"
+	for vm in ${vms_to_run[@]}; do
+		local vm_num="$(basename $vm)"
+		vm_num_is_valid "$vm_num"
+		if [[ ! -x "$vm/run.sh" ]]; then
+			error "VM '$vm' not defined - setup it first"
 			return 1
+		fi
+		
+		if vm_is_running $vm_num; then
+			echo "WARNING: VM $vm already running"
+		else		
+			echo "INFO: running $vm/run.sh"
+			if ! $vm/run.sh; then
+				error "FAILED to run vm $vm"
+				return 1
+			fi
 		fi
 	done
 }
