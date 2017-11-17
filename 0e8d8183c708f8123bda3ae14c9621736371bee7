@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "e8ec87a0_f7467f5a",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-17T08:37:14Z",
+      "side": 1,
+      "message": "Actually, could you change this back to 4k-512k?\nMy bad here.\nWe don\u0027t know what is the LBA format of the NVMe device we\u0027re working with. If LBA\u003d512b then it\u0027s ok, but if it\u0027s 4096b then the test will fail because the block size is less then device\u0027s LBA.\n\nbsrange\u003d4k-512k will work with both LBA\u0027s - 512 and 4096, so I think it\u0027s a safer option.",
+      "range": {
+        "startLine": 2,
+        "startChar": 8,
+        "endLine": 2,
+        "endChar": 15
+      },
+      "revId": "0e8d8183c708f8123bda3ae14c9621736371bee7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fca121f3_7f71998c",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 9
