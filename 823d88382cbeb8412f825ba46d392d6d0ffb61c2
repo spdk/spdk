@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1a15a30_42867fdf",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T18:20:19Z",
+      "side": 1,
+      "message": "This will return multiple results for things like \u0027perf\u0027 (we have examples/nvme/perf, examples/ioat/perf, etc.) or for binaries that match the name of a directory.\n\nCan you link to an example of a build where this failed? Maybe we can solve this some other way.",
+      "revId": "823d88382cbeb8412f825ba46d392d6d0ffb61c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
