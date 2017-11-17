@@ -312,7 +312,7 @@ bdev_aio_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	spdk_bdev_poller_start(&ch->poller, bdev_aio_poll, ch, 0);
+	ch->poller = spdk_poller_register(bdev_aio_poll, ch, 0);
 	return 0;
 }
 
@@ -322,7 +322,7 @@ bdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 	struct bdev_aio_io_channel *io_channel = ctx_buf;
 
 	io_destroy(io_channel->io_ctx);
-	spdk_bdev_poller_stop(&io_channel->poller);
+	spdk_poller_unregister(&io_channel->poller);
 }
 
 static struct spdk_io_channel *
