@@ -549,7 +549,7 @@ bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 	ch->vdev = vdev;
 	ch->vq = vq;
 
-	spdk_bdev_poller_start(&vq->poller, bdev_virtio_poll, ch, 0);
+	vq->poller = spdk_poller_register(bdev_virtio_poll, ch, 0);
 
 	return 0;
 }
@@ -561,7 +561,7 @@ bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
 	struct virtio_dev *vdev = io_channel->vdev;
 	struct virtqueue *vq = io_channel->vq;
 
-	spdk_bdev_poller_stop(&vq->poller);
+	spdk_poller_unregister(&vq->poller);
 	virtio_dev_release_queue(vdev, vq->vq_queue_index);
 }
 
@@ -605,7 +605,7 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 		return;
 	}
 
-	spdk_bdev_poller_stop(&base->vq->poller);
+	spdk_poller_unregister(&base->vq->poller);
 	base->vq->poller_ctx = NULL;
 	virtio_dev_release_queue(base->vdev, base->vq->vq_queue_index);
 
@@ -628,7 +628,7 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 
 	ctrlq = base->vdev->vqs[VIRTIO_SCSI_CONTROLQ];
 	ctrlq->poller_ctx = ctrlq_ring;
-	spdk_bdev_poller_start(&ctrlq->poller, bdev_virtio_ctrlq_poll, base->vdev, CTRLQ_POLL_PERIOD_US);
+	ctrlq->poller = spdk_poller_register(bdev_virtio_ctrlq_poll, base->vdev, CTRLQ_POLL_PERIOD_US);
 
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
 		TAILQ_REMOVE(&base->found_disks, disk, link);
@@ -1094,7 +1094,7 @@ bdev_virtio_scsi_free(struct virtio_dev *vdev)
 
 	if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_REQUESTQ)) {
 		vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
-		spdk_bdev_poller_stop(&vq->poller);
+		spdk_poller_unregister(&vq->poller);
 		spdk_dma_free(vq->poller_ctx);
 		vq->poller_ctx = NULL;
 		virtio_dev_release_queue(vdev, VIRTIO_SCSI_REQUESTQ);
@@ -1144,7 +1144,7 @@ bdev_virtio_scsi_scan(struct virtio_dev *vdev, virtio_create_device_cb cb_fn, vo
 	vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
 	base->vq = vq;
 	vq->poller_ctx = base;
-	spdk_bdev_poller_start(&vq->poller, bdev_scan_poll, base, 0);
+	vq->poller = spdk_poller_register(bdev_scan_poll, base, 0);
 	rc = scan_target(base);
 	if (rc) {
 		SPDK_ERRLOG("Failed to start target scan.\n");
@@ -1211,7 +1211,7 @@ bdev_virtio_finish(void)
 		TAILQ_REMOVE(&g_virtio_driver.attached_ctrlrs, vdev, tailq);
 		if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_CONTROLQ)) {
 			vq = vdev->vqs[VIRTIO_SCSI_CONTROLQ];
-			spdk_bdev_poller_stop(&vq->poller);
+			spdk_poller_unregister(&vq->poller);
 			send_ring = vq->poller_ctx;
 			/* bdevs built on top of this vdev mustn't be destroyed with outstanding I/O. */
 			assert(spdk_ring_count(send_ring) == 0);

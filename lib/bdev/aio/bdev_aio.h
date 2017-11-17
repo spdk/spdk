@@ -51,7 +51,7 @@ struct bdev_aio_task {
 
 struct bdev_aio_io_channel {
 	io_context_t		io_ctx;
-	struct spdk_bdev_poller	*poller;
+	struct spdk_poller	*poller;
 };
 
 struct file_disk {

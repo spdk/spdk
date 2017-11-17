@@ -143,7 +143,7 @@ struct virtqueue {
 	uint32_t owner_lcore;
 
 	/** Response poller. */
-	struct spdk_bdev_poller	*poller;
+	struct spdk_poller	*poller;
 
 	/** Context for response poller. */
 	void *poller_ctx;

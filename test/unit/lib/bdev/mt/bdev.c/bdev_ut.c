@@ -202,7 +202,7 @@ setup_test(void)
 	bool done = false;
 
 	allocate_threads(BDEV_UT_NUM_THREADS);
-	spdk_bdev_initialize(bdev_init_cb, &done, NULL, NULL);
+	spdk_bdev_initialize(bdev_init_cb, &done);
 	register_bdev();
 	spdk_bdev_open(&g_bdev.bdev, true, NULL, NULL, &g_desc);
 }
