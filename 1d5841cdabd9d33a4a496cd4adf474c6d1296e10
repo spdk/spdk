@@ -65,6 +65,24 @@
     },
     {
       "key": {
+        "uuid": "12b0917b_0529d48d",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-17T20:38:56Z",
+      "side": 1,
+      "message": "ok, will add a unit test here.",
+      "parentUuid": "8397f408_4587847a",
+      "revId": "1d5841cdabd9d33a4a496cd4adf474c6d1296e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "760fd981_034ffafd",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 4
@@ -99,6 +117,24 @@
     },
     {
       "key": {
+        "uuid": "7f0e10aa_ec22c3e4",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1038,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-17T20:38:56Z",
+      "side": 1,
+      "message": "Linux kernel driver didn\u0027t apply for Admin queue, I should add more clear comments here",
+      "parentUuid": "74471e9d_473b2576",
+      "revId": "1d5841cdabd9d33a4a496cd4adf474c6d1296e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f242800e_19c30877",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 4
@@ -110,6 +146,24 @@
       "writtenOn": "2017-11-17T20:26:11Z",
       "side": 1,
       "message": "I think we can simplify this check - if the doorbell buffer isn\u0027t supported, shadow_doorbell and eventidx will be NULL, so this could just be:\n\n    if (ctrlr-\u003eshadow_doorbell \u0026\u0026 ctrlr-\u003eeventidx)\n\n(Or maybe even just check shadow_doorbell, since if one is set, they both should be.)",
+      "revId": "1d5841cdabd9d33a4a496cd4adf474c6d1296e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c825d0eb_ed40f729",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1445,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-17T20:38:56Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "f242800e_19c30877",
       "revId": "1d5841cdabd9d33a4a496cd4adf474c6d1296e10",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
