@@ -104,6 +104,24 @@
     },
     {
       "key": {
+        "uuid": "aed95990_b0c33b54",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "sounds good",
+      "parentUuid": "61d81dec_f7b53aec",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "053bdf44_3b0d8cb5",
         "filename": "doc/blob_pg.md",
         "patchSetId": 1
@@ -115,6 +133,24 @@
       "writtenOn": "2017-11-17T21:06:44Z",
       "side": 1,
       "message": "Atrocity",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75c6aa5f_c553bd08",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "dang it",
+      "parentUuid": "053bdf44_3b0d8cb5",
       "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -156,6 +192,24 @@
     },
     {
       "key": {
+        "uuid": "51f6afb7_e0db7e69",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "I think it fits in well - the audience may be someone who is interested in SPDK because of blobstore so we shouldn\u0027t assume too much",
+      "parentUuid": "94033678_d42eb0fb",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b96d4920_c38f4512",
         "filename": "doc/template_pg.md",
         "patchSetId": 1
@@ -167,6 +221,24 @@
       "writtenOn": "2017-11-17T21:06:44Z",
       "side": 1,
       "message": "It is intended as a supplement to the API documentation, providing both context and architectural insights.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73d1f951_d7cf94e8",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "yeah, that sounds good!",
+      "parentUuid": "b96d4920_c38f4512",
       "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -190,6 +262,24 @@
     },
     {
       "key": {
+        "uuid": "665d7115_19b48e07",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "LOL, I probably took a break between those sentences!",
+      "parentUuid": "c6c96c48_f2d10e42",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d97f0f90_dbb29914",
         "filename": "doc/template_pg.md",
         "patchSetId": 1
@@ -201,6 +291,24 @@
       "writtenOn": "2017-11-17T21:06:44Z",
       "side": 1,
       "message": "I think this whole paragraph is trying to say that the intended audience is software developers writing code that consumes this SPDK component. It is not intended for SPDK contributors modifying this component and will likely not contain enough details for efforts of that nature.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "228c5277_8f9cd6d4",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "yup, will reword a bit thanks",
+      "parentUuid": "d97f0f90_dbb29914",
       "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -224,6 +332,24 @@
     },
     {
       "key": {
+        "uuid": "b232a792_690535ca",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "good input, thanks",
+      "parentUuid": "ff493b55_e57caca5",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "68f4f375_6f26c225",
         "filename": "doc/template_pg.md",
         "patchSetId": 1
@@ -235,6 +361,24 @@
       "writtenOn": "2017-11-17T21:06:44Z",
       "side": 1,
       "message": "Let\u0027s not waffle on requirements with \"maybe\" - this section should indeed contain a justification for why this component exists.\n\nFor the rest of the paragraph starting at \"This shouldn\u0027t be...\" - I think you can just say instead:\n\nIt is safe to assume that the reader of this guide is already familiar with the basic principles behind SPDK (kernel bypass, polling, message passing, etc.).",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e635cae_8d955a16",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "So on the first part about justifying the module\u0027s existence in the programmer\u0027s guide, we talk talk about problems solved if that\u0027s what you mean but we do not want a bunch of rambling on about how great our stuff is. That\u0027 the point I\u0027m trying to make here",
+      "parentUuid": "68f4f375_6f26c225",
       "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -258,6 +402,24 @@
     },
     {
       "key": {
+        "uuid": "bd343e10_41e137f1",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "that works too",
+      "parentUuid": "d564c506_9cea8b71",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3cee5778_053fc71b",
         "filename": "doc/template_pg.md",
         "patchSetId": 1
@@ -269,6 +431,24 @@
       "writtenOn": "2017-11-17T21:06:44Z",
       "side": 1,
       "message": "A programmer\u0027s guide is for programmer\u0027s writing software that consumes an SPDK component. That means all of the \"configuration\" is done by calling functions in the public API and should have already been covered in the Theory of Operation section. I think this section should be removed - it is a much better fit for a user guide.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67d8d2b3_f87cdf72",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "yeah I wanted to say something about config but wasn\u0027t sure the best way to fit it in.  Maybe in the theory of operation as you say works the best.  Let see what others say",
+      "parentUuid": "3cee5778_053fc71b",
       "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -292,6 +472,24 @@
     },
     {
       "key": {
+        "uuid": "25f258f3_78c59851",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "that\u0027s certainly an opinion - I personally try not to hate anything :) I don\u0027t think they go in theory of operation though and maybe we don\u0027t need them at all, I haven\u0027t gotten around to putting any together but since the interaction with the app and this competent at least is pretty basic they may all come put looking silly.",
+      "parentUuid": "ba0af9e2_714acb27",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1fde8c51_b54d1f6f",
         "filename": "doc/template_pg.md",
         "patchSetId": 1
@@ -303,6 +501,24 @@
       "writtenOn": "2017-11-17T21:06:44Z",
       "side": 1,
       "message": "Maybe a better name for this is \"Implementation Details\". This section should definitely be optional.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cac422a9_05a9038f",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T22:49:09Z",
+      "side": 1,
+      "message": "Yup",
+      "parentUuid": "1fde8c51_b54d1f6f",
       "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
