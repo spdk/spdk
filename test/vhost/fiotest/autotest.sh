@@ -228,7 +228,7 @@ for vm_conf in ${vms[@]}; do
 			fi
 
 			echo "INFO: Trying to remove nonexistent block controller"
-			if $rpc_py remove_vhost_block_dev vhost.nonexistent.name 0; then
+			if $rpc_py remove_vhost_controller vhost.nonexistent.name; then
 				echo "ERROR: Removing nonexistent block controller succeeded, but it shouldn't"
 				false
 			fi
