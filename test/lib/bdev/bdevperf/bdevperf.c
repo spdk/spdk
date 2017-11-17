@@ -53,6 +53,7 @@ struct bdevperf_task {
 	struct io_target		*target;
 	void				*buf;
 	uint64_t			offset_blocks;
+	TAILQ_ENTRY(bdevperf_task)	link;
 };
 
 static int g_io_size = 0;
@@ -75,20 +76,21 @@ static void bdevperf_submit_single(struct io_target *target);
 #include "../common.c"
 
 struct io_target {
-	char			*name;
-	struct spdk_bdev	*bdev;
-	struct spdk_bdev_desc	*bdev_desc;
-	struct spdk_io_channel	*ch;
-	struct io_target	*next;
-	unsigned		lcore;
-	int			io_completed;
-	int			current_queue_depth;
-	uint64_t		size_in_ios;
-	uint64_t		offset_in_ios;
-	uint64_t		io_size_blocks;
-	bool			is_draining;
-	struct spdk_poller	*run_timer;
-	struct spdk_poller	*reset_timer;
+	char				*name;
+	struct spdk_bdev		*bdev;
+	struct spdk_bdev_desc		*bdev_desc;
+	struct spdk_io_channel		*ch;
+	struct io_target		*next;
+	unsigned			lcore;
+	int				io_completed;
+	int				current_queue_depth;
+	uint64_t			size_in_ios;
+	uint64_t			offset_in_ios;
+	uint64_t			io_size_blocks;
+	bool				is_draining;
+	struct spdk_poller		*run_timer;
+	struct spdk_poller		*reset_timer;
+	TAILQ_HEAD(, bdevperf_task)	task_list;
 };
 
 struct io_target *head[RTE_MAX_LCORE];
@@ -195,6 +197,7 @@ bdevperf_construct_targets(void)
 		target->is_draining = false;
 		target->run_timer = NULL;
 		target->reset_timer = NULL;
+		TAILQ_INIT(&target->task_list);
 
 		head[index] = target;
 		g_target_count++;
@@ -254,7 +257,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	target->current_queue_depth--;
 	target->io_completed++;
 
-	rte_mempool_put(task_pool, task);
+	TAILQ_INSERT_TAIL(&target->task_list, task, link);
 
 	spdk_bdev_free_io(bdev_io);
 
@@ -355,12 +358,12 @@ bdevperf_submit_single(struct io_target *target)
 	desc = target->bdev_desc;
 	ch = target->ch;
 
-	if (rte_mempool_get(task_pool, (void **)&task) != 0 || task == NULL) {
-		printf("Task pool allocation failed\n");
+	task = TAILQ_FIRST(&target->task_list);
+	if (!task) {
+		printf("Task allocation failed\n");
 		abort();
 	}
-
-	task->target = target;
+	TAILQ_REMOVE(&target->task_list, task, link);
 
 	if (g_is_random) {
 		offset_in_ios = rand_r(&seed) % target->size_in_ios;
@@ -558,8 +561,10 @@ static void
 bdevperf_run(void *arg1, void *arg2)
 {
 	uint32_t i;
+	int j;
 	struct io_target *target;
 	struct spdk_event *event;
+	struct bdevperf_task *task;
 
 	blockdev_heads_init();
 	bdevperf_construct_targets();
@@ -577,6 +582,25 @@ bdevperf_run(void *arg1, void *arg2)
 		SPDK_ERRLOG("Cannot allocate %d tasks\n", g_target_count * g_queue_depth);
 		spdk_app_stop(1);
 		return;
+	}
+
+
+	for (i = 0; i < spdk_env_get_core_count(); i++) {
+		target = head[i];
+		if (!target) {
+			break;
+		}
+		while (target != NULL) {
+			for (j = 0; j < g_queue_depth; j++) {
+				if (rte_mempool_get(task_pool, (void **)&task) != 0) {
+					fprintf(stderr, "task_pool rte_mempool_get failed\n");
+					spdk_app_stop(1);
+				}
+				task->target = target;
+				TAILQ_INSERT_TAIL(&target->task_list, task, link);
+			}
+			target = target->next;
+		}
 	}
 
 	printf("Running I/O for %d seconds...\n", g_time_in_sec);
