@@ -75,9 +75,6 @@ struct spdk_bdev_mgr {
 
 	TAILQ_HEAD(, spdk_bdev) bdevs;
 
-	spdk_bdev_poller_start_cb start_poller_fn;
-	spdk_bdev_poller_stop_cb stop_poller_fn;
-
 	bool init_complete;
 	bool module_init_complete;
 
@@ -89,8 +86,6 @@ struct spdk_bdev_mgr {
 static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdev_modules),
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
-	.start_poller_fn = NULL,
-	.stop_poller_fn = NULL,
 	.init_complete = false,
 	.module_init_complete = false,
 };
@@ -456,26 +451,8 @@ spdk_bdev_modules_init(void)
 	g_bdev_mgr.module_init_complete = true;
 	return rc;
 }
-
 void
-spdk_bdev_poller_start(struct spdk_bdev_poller **ppoller,
-		       spdk_bdev_poller_fn fn,
-		       void *arg,
-		       uint64_t period_microseconds)
-{
-	g_bdev_mgr.start_poller_fn(ppoller, fn, arg, period_microseconds);
-}
-
-void
-spdk_bdev_poller_stop(struct spdk_bdev_poller **ppoller)
-{
-	g_bdev_mgr.stop_poller_fn(ppoller);
-}
-
-void
-spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
-		     spdk_bdev_poller_start_cb start_poller_fn,
-		     spdk_bdev_poller_stop_cb stop_poller_fn)
+spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 {
 	int cache_size;
 	int rc = 0;
@@ -485,9 +462,6 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
 
 	g_init_cb_fn = cb_fn;
 	g_init_cb_arg = cb_arg;
-
-	g_bdev_mgr.start_poller_fn = start_poller_fn;
-	g_bdev_mgr.stop_poller_fn = stop_poller_fn;
 
 	snprintf(mempool_name, sizeof(mempool_name), "bdev_io_%d", getpid());
 

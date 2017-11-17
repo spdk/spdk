@@ -113,29 +113,16 @@ struct spdk_bdev_io_stat {
 	uint64_t num_write_ops;
 };
 
-struct spdk_bdev_poller;
-
 typedef void (*spdk_bdev_init_cb)(void *cb_arg, int rc);
 typedef void (*spdk_bdev_fini_cb)(void *cb_arg);
-
-typedef void (*spdk_bdev_poller_fn)(void *arg);
-typedef void (*spdk_bdev_poller_start_cb)(struct spdk_bdev_poller **ppoller,
-		spdk_bdev_poller_fn fn,
-		void *arg,
-		uint64_t period_microseconds);
-typedef void (*spdk_bdev_poller_stop_cb)(struct spdk_bdev_poller **ppoller);
 
 /**
  * Initialize block device modules.
  *
  * \param cb_fn Called when the initialization is complete.
  * \param cb_arg Argument passed to function cb_fn.
- * \param start_poller_fn This function is called to request starting a poller.
- * \param stop_poller_fn This function is called to request stopping a poller.
  */
-void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg,
-			  spdk_bdev_poller_start_cb start_poller_fn,
-			  spdk_bdev_poller_stop_cb stop_poller_fn);
+void spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg);
 
 /**
  * Perform cleanup work to remove the registered block device modules.

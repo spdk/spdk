@@ -15,6 +15,11 @@ An API for registering pollers was moved from the event framework (include/spdk/
 the IO channel library (include/spdk/io_channels.h). This allows code that doesn't depend
 on the event framework to request registration and unregistration of pollers.
 
+### Block Device Abstraction Layer (bdev)
+
+The poller abstract was removed from the bdev layer. There is now a general purpose
+abstraction for pollers available in include/spdk/io_channels.h
+
 ## v17.10: Logical Volumes
 
 ### New dependencies

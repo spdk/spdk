@@ -68,7 +68,7 @@ struct bdev_rbd_io_channel {
 	struct pollfd pfd;
 	rbd_image_t image;
 	struct bdev_rbd *disk;
-	struct spdk_bdev_poller *poller;
+	struct spdk_poller *poller;
 };
 
 static void
@@ -417,7 +417,7 @@ bdev_rbd_create_cb(void *io_device, void *ctx_buf)
 		goto err;
 	}
 
-	spdk_bdev_poller_start(&ch->poller, bdev_rbd_io_poll, ch, 0);
+	ch->poller = spdk_poller_register(bdev_rbd_io_poll, ch, 0);
 
 	return 0;
 
@@ -433,7 +433,7 @@ bdev_rbd_destroy_cb(void *io_device, void *ctx_buf)
 
 	bdev_rbd_free_channel(io_channel);
 
-	spdk_bdev_poller_stop(&io_channel->poller);
+	spdk_poller_unregister(&io_channel->poller);
 }
 
 static struct spdk_io_channel *
