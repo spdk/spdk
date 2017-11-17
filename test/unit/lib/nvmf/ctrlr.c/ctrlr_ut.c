@@ -81,12 +81,6 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 	return 0;
 }
 
-int
-spdk_nvmf_poll_group_poll(struct spdk_nvmf_poll_group *group)
-{
-	return 0;
-}
-
 const char *
 spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 {
