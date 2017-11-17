@@ -61,6 +61,38 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
 }
 
+static int
+spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_tgt *tgt = io_device;
+	struct spdk_nvmf_poll_group *group = ctx_buf;
+	struct spdk_nvmf_transport *transport;
+
+	TAILQ_INIT(&group->tgroups);
+
+	TAILQ_FOREACH(transport, &tgt->transports, link) {
+		spdk_nvmf_poll_group_add_transport(group, transport);
+	}
+
+	group->poller = spdk_poller_register(spdk_nvmf_poll_group_poll, group, 0);
+
+	return 0;
+}
+
+static void
+spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
+{
+	struct spdk_nvmf_poll_group *group = ctx_buf;
+	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
+
+	spdk_poller_unregister(&group->poller);
+
+	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
+		TAILQ_REMOVE(&group->tgroups, tgroup, link);
+		spdk_nvmf_transport_poll_group_destroy(tgroup);
+	}
+}
+
 struct spdk_nvmf_tgt *
 spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 {
@@ -90,6 +122,11 @@ spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts)
 	tgt->subsystems = NULL;
 	tgt->max_sid = 0;
 	TAILQ_INIT(&tgt->transports);
+
+	spdk_io_device_register(tgt,
+				spdk_nvmf_tgt_create_poll_group,
+				spdk_nvmf_tgt_destroy_poll_group,
+				sizeof(struct spdk_nvmf_poll_group));
 
 	SPDK_DEBUGLOG(SPDK_TRACE_NVMF, "Max Queue Pairs Per Controller: %d\n",
 		      tgt->opts.max_qpairs_per_ctrlr);
@@ -122,12 +159,57 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 	free(tgt);
 }
 
+struct spdk_nvmf_tgt_listen_ctx {
+	struct spdk_nvmf_transport *transport;
+	struct spdk_nvme_transport_id *trid;
+};
+
+static void
+spdk_nvmf_tgt_listen_done(void *io_device, void *c, int status)
+{
+	struct spdk_nvmf_tgt *tgt = io_device;
+	struct spdk_nvmf_tgt_listen_ctx *ctx = c;
+	int rc;
+
+	if (status == 0) {
+		rc = spdk_nvmf_transport_listen(ctx->transport, ctx->trid);
+		if (rc < 0) {
+			SPDK_ERRLOG("Unable to listen on address '%s'\n", ctx->trid->traddr);
+			return;
+		}
+
+		tgt->discovery_genctr++;
+	}
+
+	free(ctx);
+}
+
+static int
+spdk_nvmf_tgt_listen_add_transport(void *io_device,
+				   struct spdk_io_channel *ch,
+				   void *c)
+{
+	struct spdk_nvmf_tgt_listen_ctx *ctx = c;
+	struct spdk_nvmf_poll_group *group;
+
+	group = spdk_io_channel_get_ctx(ch);
+
+	return spdk_nvmf_poll_group_add_transport(group, ctx->transport);
+}
+
 int
 spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 		     struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_transport *transport;
-	int rc;
+	struct spdk_nvmf_tgt_listen_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+
+	ctx->trid = trid;
 
 	transport = spdk_nvmf_tgt_get_transport(tgt, trid->trtype);
 	if (!transport) {
@@ -137,16 +219,23 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 			return -EINVAL;
 		}
 		TAILQ_INSERT_TAIL(&tgt->transports, transport, link);
+
+		ctx->transport = transport;
+
+		/* Send a message to each poll group to notify it that a new transport
+		 * is available.
+		 * TODO: This call does not currently allow the user to wait for these
+		 * messages to propagate. It also does not protect against two calls
+		 * to this function overlapping
+		 */
+		spdk_for_each_channel(tgt,
+				      spdk_nvmf_tgt_listen_add_transport,
+				      ctx,
+				      spdk_nvmf_tgt_listen_done);
+	} else {
+		ctx->transport = transport;
+		spdk_nvmf_tgt_listen_done(tgt, ctx, 0);
 	}
-
-
-	rc = spdk_nvmf_transport_listen(transport, trid);
-	if (rc < 0) {
-		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
-		return -EINVAL;
-	}
-
-	tgt->discovery_genctr++;
 
 	return 0;
 }
@@ -218,45 +307,24 @@ spdk_nvmf_poll_group_poll(void *ctx)
 struct spdk_nvmf_poll_group *
 spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
 {
-	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_transport *transport;
-	struct spdk_nvmf_transport_poll_group *tgroup;
+	struct spdk_io_channel *ch;
 
-	group = calloc(1, sizeof(*group));
-	if (!group) {
+	ch = spdk_get_io_channel(tgt);
+	if (!ch) {
+		SPDK_ERRLOG("Unable to get I/O channel for target\n");
 		return NULL;
 	}
 
-	TAILQ_INIT(&group->tgroups);
-
-	TAILQ_FOREACH(transport, &tgt->transports, link) {
-		tgroup = spdk_nvmf_transport_poll_group_create(transport);
-		if (!tgroup) {
-			SPDK_ERRLOG("Unable to create poll group for transport\n");
-			continue;
-		}
-
-		TAILQ_INSERT_TAIL(&group->tgroups, tgroup, link);
-	}
-
-	group->poller = spdk_poller_register(spdk_nvmf_poll_group_poll, group, 0);
-
-	return group;
+	return spdk_io_channel_get_ctx(ch);
 }
 
 void
 spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group)
 {
-	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
+	struct spdk_io_channel *ch;
 
-	spdk_poller_unregister(&group->poller);
-
-	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
-		TAILQ_REMOVE(&group->tgroups, tgroup, link);
-		spdk_nvmf_transport_poll_group_destroy(tgroup);
-	}
-
-	free(group);
+	ch = spdk_io_channel_from_ctx(group);
+	spdk_put_io_channel(ch);
 }
 
 int
@@ -291,6 +359,23 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 	}
 
 	return rc;
+}
+
+int
+spdk_nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
+				   struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	tgroup = spdk_nvmf_transport_poll_group_create(transport);
+	if (!tgroup) {
+		SPDK_ERRLOG("Unable to create poll group for transport\n");
+		return -1;
+	}
+
+	TAILQ_INSERT_TAIL(&group->tgroups, tgroup, link);
+
+	return 0;
 }
 
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
