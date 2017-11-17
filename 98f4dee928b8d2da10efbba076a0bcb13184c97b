@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a97f5596_850c906f",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-17T09:08:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6df5fa3b_383307c1",
+      "revId": "98f4dee928b8d2da10efbba076a0bcb13184c97b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db67cb74_137b7aa2",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2017-11-16T17:16:54Z",
       "side": 1,
       "message": "I think _op if OK here instead of _operation.  This matches other areas of the blobstore code such as bs_op_complete.",
+      "revId": "98f4dee928b8d2da10efbba076a0bcb13184c97b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "958bc953_4192c163",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1057,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-17T09:08:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "db67cb74_137b7aa2",
       "revId": "98f4dee928b8d2da10efbba076a0bcb13184c97b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7182b37a_01089bde",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-17T09:08:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ed741249_e01d6d21",
+      "revId": "98f4dee928b8d2da10efbba076a0bcb13184c97b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e3e24d9_82eabec7",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 4
@@ -64,6 +118,24 @@
       "writtenOn": "2017-11-16T17:16:54Z",
       "side": 1,
       "message": "ZEROES",
+      "revId": "98f4dee928b8d2da10efbba076a0bcb13184c97b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37d60b42_f4b28a13",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-17T09:08:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e3e24d9_82eabec7",
       "revId": "98f4dee928b8d2da10efbba076a0bcb13184c97b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
