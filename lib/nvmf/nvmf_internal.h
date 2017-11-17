@@ -205,6 +205,8 @@ int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 			     struct spdk_nvmf_qpair *qpair);
 int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 				struct spdk_nvmf_qpair *qpair);
+int spdk_nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
+				       struct spdk_nvmf_transport *transport);
 
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
