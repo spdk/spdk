@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d98ee1ba_a8f7aa73",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T18:10:01Z",
+      "side": 1,
+      "message": "The previous line dereferenced g_next_subsystem already, so we\u0027ll never trigger this assert.",
+      "revId": "fe0d7a1723f8a62ebbb7b333c94924b42174cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
