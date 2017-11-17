@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "21352d3e_1f49cc58",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 805,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T17:28:40Z",
+      "side": 1,
+      "message": "no device would be a selection timeout if memory serves - also from the spec \"The INQUIRY data should be returned even though the device server is not ready for other commands. The\nstandard INQUIRY data should be available without incurring any media access delays.\" and IIRC the only valid check condition on an INQ is if the cmd is malformed (EVPD and PAGE CODE conflict). I was looking back through the last LSI SCSI driver I did forever ago and it got even more confusing since there were so many variances in how real devices behaved.  I\u0027l just remove the comment and make it simple :)",
+      "parentUuid": "d457b73f_0f9e3915",
+      "revId": "8cca1e8c67e517e260fbbf19ac2116250656bb59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cfb236aa_11784b7f",
         "filename": "lib/bdev/virtio/bdev_virtio.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2017-11-16T17:49:56Z",
       "side": 1,
       "message": "supproted \u003d\u003e supported",
+      "revId": "8cca1e8c67e517e260fbbf19ac2116250656bb59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa2a2a1c_67e7699d",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-17T17:28:40Z",
+      "side": 1,
+      "message": "stupid keyboard",
+      "parentUuid": "cfb236aa_11784b7f",
       "revId": "8cca1e8c67e517e260fbbf19ac2116250656bb59",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
