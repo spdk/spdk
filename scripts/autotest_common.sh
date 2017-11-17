@@ -166,6 +166,7 @@ function process_core() {
 	ret=0
 	for core in $(find . -type f \( -name 'core*' -o -name '*.core' \)); do
 		exe=$(eu-readelf -n "$core" | grep psargs | sed "s/.*psargs: \([^ \'\" ]*\).*/\1/")
+		exe=$(find . -name `basename $exe`)
 		echo "exe for $core is $exe"
 		if [[ ! -z "$exe" ]]; then
 			if hash gdb; then
@@ -174,7 +175,7 @@ function process_core() {
 			cp $exe $output_dir
 		fi
 		mv $core $output_dir
-		chmod a+r $output_dir/$core
+		chmod a+r $output_dir/`basename $core`
 		ret=1
 	done
 	return $ret
