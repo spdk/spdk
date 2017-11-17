@@ -1,0 +1,118 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8353307_580aadd6",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T20:26:11Z",
+      "side": 1,
+      "message": "These should be aligned to ctrlr-\u003epage_size rather than hard-coded 0x1000.",
+      "range": {
+        "startLine": 648,
+        "startChar": 61,
+        "endLine": 648,
+        "endChar": 67
+      },
+      "revId": "1d5841cdabd9d33a4a496cd4adf474c6d1296e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59fc8038_7e241189",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T20:26:11Z",
+      "side": 1,
+      "message": "Same here",
+      "range": {
+        "startLine": 653,
+        "startChar": 54,
+        "endLine": 653,
+        "endChar": 60
+      },
+      "revId": "1d5841cdabd9d33a4a496cd4adf474c6d1296e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8397f408_4587847a",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T20:26:11Z",
+      "side": 1,
+      "message": "This looks like it\u0027s probably correct, but it would be good to have a unit test for the boundary cases to make sure the math works out.",
+      "revId": "1d5841cdabd9d33a4a496cd4adf474c6d1296e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "760fd981_034ffafd",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T20:26:11Z",
+      "side": 1,
+      "message": "It might be simpler to just check if shadow_db is NULL, since we were going to check that below anyway - if you just move that check up to the top, that will simplify things:\n\n   if (spdk_likely(shadow_db \u003d\u003d NULL)) {\n       return true;\n   }\n\n(And then delete the shadow_db check below)\n\nAlso, it looks like this prediction is conflicting with the likely prediction on the call to this function - if most controllers don\u0027t support doorbell config, then the conditions on lines 1078 and 1974 should probably also be spdk_unlikely() instead (or just drop the likely/unlikely annotation entirely - we should only use the annotations when it makes a significant difference in code generation quality).",
+      "revId": "1d5841cdabd9d33a4a496cd4adf474c6d1296e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74471e9d_473b2576",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1038,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T20:26:11Z",
+      "side": 1,
+      "message": "I don\u0027t see anything in the spec to say that this doesn\u0027t apply to the admin queue - can you clarify where this requirement comes from?",
+      "revId": "1d5841cdabd9d33a4a496cd4adf474c6d1296e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f242800e_19c30877",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1445,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T20:26:11Z",
+      "side": 1,
+      "message": "I think we can simplify this check - if the doorbell buffer isn\u0027t supported, shadow_doorbell and eventidx will be NULL, so this could just be:\n\n    if (ctrlr-\u003eshadow_doorbell \u0026\u0026 ctrlr-\u003eeventidx)\n\n(Or maybe even just check shadow_doorbell, since if one is set, they both should be.)",
+      "revId": "1d5841cdabd9d33a4a496cd4adf474c6d1296e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
