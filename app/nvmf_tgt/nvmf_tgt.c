@@ -200,21 +200,18 @@ acceptor_poll(void *arg)
 }
 
 static void
-nvmf_tgt_destroy_poll_group_done(void *arg1, void *arg2)
+nvmf_tgt_destroy_poll_group_done(void *ctx)
 {
-	g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUP_DONE;
+	g_tgt.state = NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS;
 	nvmf_tgt_advance_state(NULL, NULL);
 }
 
 static void
-nvmf_tgt_destroy_poll_group(void *arg1, void *arg2)
+nvmf_tgt_destroy_poll_group(void *ctx)
 {
 	struct nvmf_tgt_poll_group *pg;
-	struct spdk_event *event = arg1;
 
-	assert(g_tgt.core == spdk_env_get_current_core());
-
-	pg = &g_poll_groups[g_tgt.core];
+	pg = &g_poll_groups[spdk_env_get_current_core()];
 	assert(pg != NULL);
 
 	spdk_nvmf_poll_group_destroy(pg->group);
@@ -222,42 +219,29 @@ nvmf_tgt_destroy_poll_group(void *arg1, void *arg2)
 
 	assert(g_active_poll_groups > 0);
 	g_active_poll_groups--;
-
-	spdk_event_call(event);
 }
 
 static void
-nvmf_tgt_create_poll_group_done(void *arg1, void *arg2)
+nvmf_tgt_create_poll_group_done(void *ctx)
 {
-	struct nvmf_tgt_poll_group *pg;
-
-	pg = &g_poll_groups[g_tgt.core];
-	if (pg->group == NULL) {
-		g_tgt.state = NVMF_TGT_ERROR;
-	} else {
-		g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUP_DONE;
-	}
-
+	g_tgt.state = NVMF_TGT_INIT_START_ACCEPTOR;
 	nvmf_tgt_advance_state(NULL, NULL);
 }
 
 static void
-nvmf_tgt_create_poll_group(void *arg1, void *arg2)
+nvmf_tgt_create_poll_group(void *ctx)
 {
 	struct nvmf_tgt_poll_group *pg;
-	struct spdk_event *event = arg1;
 
-	assert(g_tgt.core == spdk_env_get_current_core());
+	pg = &g_poll_groups[spdk_env_get_current_core()];
+	assert(pg != NULL);
 
-	pg = &g_poll_groups[g_tgt.core];
 	pg->group = spdk_nvmf_poll_group_create(g_tgt.tgt);
 	if (pg->group == NULL) {
-		SPDK_ERRLOG("Failed to create poll group for core %u\n", g_tgt.core);
+		SPDK_ERRLOG("Failed to create poll group for core %u\n", spdk_env_get_current_core());
 	}
 
 	g_active_poll_groups++;
-
-	spdk_event_call(event);
 }
 
 static void
@@ -274,7 +258,6 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			uint32_t core;
 
 			g_tgt.state = NVMF_TGT_INIT_PARSE_CONFIG;
-			g_tgt.core = spdk_env_get_first_core();
 
 			/* Find the maximum core number */
 			SPDK_ENV_FOREACH_CORE(core) {
@@ -298,28 +281,14 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 				rc = -EINVAL;
 				break;
 			}
-			g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUP;
+			g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUPS;
 			break;
-		case NVMF_TGT_INIT_CREATE_POLL_GROUP: {
-			struct spdk_event *event, *return_event;
-
-			/* Send an event to the poller core, create an event, and event back to this core. */
-			return_event = spdk_event_allocate(spdk_env_get_current_core(), nvmf_tgt_create_poll_group_done,
-							   NULL, NULL);
-			event = spdk_event_allocate(g_tgt.core, nvmf_tgt_create_poll_group,
-						    return_event, NULL);
-			spdk_event_call(event);
+		case NVMF_TGT_INIT_CREATE_POLL_GROUPS:
+			/* Send a message to each thread and create a poll group */
+			spdk_for_each_thread(nvmf_tgt_create_poll_group,
+					     NULL,
+					     nvmf_tgt_create_poll_group_done);
 			break;
-		}
-		case NVMF_TGT_INIT_CREATE_POLL_GROUP_DONE: {
-			g_tgt.core = spdk_env_get_next_core(g_tgt.core);
-			if (g_tgt.core != UINT32_MAX) {
-				g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUP;
-			} else {
-				g_tgt.state = NVMF_TGT_INIT_START_ACCEPTOR;
-			}
-			break;
-		}
 		case NVMF_TGT_INIT_START_ACCEPTOR:
 			g_acceptor_poller = spdk_poller_register(acceptor_poll, g_tgt.tgt,
 					    g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
@@ -332,31 +301,15 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 				fflush(stdout);
 			}
 			break;
-		case NVMF_TGT_FINI_STOP_ACCEPTOR: {
+		case NVMF_TGT_FINI_STOP_ACCEPTOR:
 			spdk_poller_unregister(&g_acceptor_poller);
-			g_tgt.core = spdk_env_get_first_core();
-			g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUP;
+			g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
 			break;
-		}
-		case NVMF_TGT_FINI_DESTROY_POLL_GROUP: {
-			struct spdk_event *event, *return_event;
-
-			/* Send an event to the poller core, destroy the poll group, and event back to this core. */
-			return_event = spdk_event_allocate(spdk_env_get_current_core(), nvmf_tgt_destroy_poll_group_done,
-							   NULL, NULL);
-			event = spdk_event_allocate(g_tgt.core, nvmf_tgt_destroy_poll_group,
-						    return_event, NULL);
-			spdk_event_call(event);
-			break;
-		}
-		case NVMF_TGT_FINI_DESTROY_POLL_GROUP_DONE:
-			g_tgt.core = spdk_env_get_next_core(g_tgt.core);
-			if (g_tgt.core != UINT32_MAX) {
-				g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUP;
-			} else {
-				assert(g_active_poll_groups == 0);
-				g_tgt.state = NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS;
-			}
+		case NVMF_TGT_FINI_DESTROY_POLL_GROUPS:
+			/* Send a message to each thread and destroy the poll group */
+			spdk_for_each_thread(nvmf_tgt_destroy_poll_group,
+					     NULL,
+					     nvmf_tgt_destroy_poll_group_done);
 			break;
 		case NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS: {
 			struct nvmf_tgt_subsystem *app_subsys, *tmp;
