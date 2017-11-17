@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7885c14a_4924d3df",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-17T09:32:28Z",
+      "side": 1,
+      "message": "Just overwriting task-\u003eresponse should work to send FAILURE of RESET LUN to the initiator.\nHence the amount of change is minimum but I need to do enough test and it will not complete immediately.\n\nif (!TAILQ_EMPTY(\u0026lun-\u003etasks)) {\n  SPDK_ERRLOG(\"lun-\u003etasks should be empty after reset\\n\");\n+  task-\u003eresponse \u003d SPDK_SCSI_TASK_MGMT_RESP_TARGET_FAILURE;\n}",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 78,
+        "endChar": 58
+      },
+      "revId": "0c07a40e794516404bfc96d3567947861b03eb23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
