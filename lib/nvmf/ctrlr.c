@@ -589,12 +589,6 @@ spdk_nvmf_property_set(struct spdk_nvmf_request *req)
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
-int
-spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
-{
-	return spdk_nvmf_poll_group_poll(ctrlr->group);
-}
-
 static int
 spdk_nvmf_ctrlr_set_features_host_identifier(struct spdk_nvmf_request *req)
 {

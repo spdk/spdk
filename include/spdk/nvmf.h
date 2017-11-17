@@ -111,11 +111,6 @@ struct spdk_nvmf_poll_group *spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *t
  */
 void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group);
 
-/**
- * Check a poll group for work completions.
- */
-int spdk_nvmf_poll_group_poll(struct spdk_nvmf_poll_group *group);
-
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
  * of controllers.  Any individual controller has
@@ -253,9 +248,6 @@ struct spdk_nvmf_listener *spdk_nvmf_subsystem_get_next_listener(
  */
 const struct spdk_nvme_transport_id *spdk_nvmf_listener_get_trid(
 	struct spdk_nvmf_listener *listener);
-
-
-void spdk_nvmf_subsystem_poll(struct spdk_nvmf_subsystem *subsystem);
 
 /**
  * Add a namespace to a subsytem.
