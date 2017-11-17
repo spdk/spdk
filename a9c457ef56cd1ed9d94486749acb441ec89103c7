@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "22b81bd1_956d81cb",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T20:33:41Z",
+      "side": 1,
+      "message": "I thought about doing that - but it could really have failed previously and wasn\u0027t being checked. I went ahead and put back in the abort calls in spdk_poller_register like it was before.",
+      "parentUuid": "0cfd2727_2fa087d6",
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "419be2f3_992f7921",
         "filename": "include/spdk/io_channel.h",
         "patchSetId": 5
@@ -192,6 +210,24 @@
       "side": 1,
       "message": "If struct spdk_reactor have a pointer to struct spdk_thread,\n  if thread is NULL, How about the following code (not validated yet)?\n\nThe following code may be helpful to find the root cause.\nThis may be another patch and if allowed I would like to propose after your patch.\n\n  uint32_t current_core, i;\n  struct spdk_reactor *reactor;\n  struct spdk_thread *thread;\n\n  current_core \u003d spdk_env_get_current_core();\n  bool found \u003d false;\n\n  SPDK_ENV_FOREACH_CORE(i) {\n    if (i \u003d\u003d current_core) {\n      found \u003d true;\n      break;\n    }\n  }\n\n  assert(found);\n\n  reactor \u003d spdk_reactor_get(current_core);\n  assert(reactor !\u003d NULL);\n\n  thread \u003d reactor-\u003ethread;\n  assert(thread !\u003d NULL);",
       "parentUuid": "564daac8_d51148fe",
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53ffe03f_0680ad3c",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T20:33:41Z",
+      "side": 1,
+      "message": "The reactors are part of lib/event, but here we\u0027re in lib/util. This is lower level code support code.",
+      "parentUuid": "6c20e9d7_c35c51ee",
       "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
