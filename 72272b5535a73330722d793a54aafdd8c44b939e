@@ -1,0 +1,249 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80b0733b_f23ddf84",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "Since this is Markdown, we can (and should) use the Markdown section headers, etc. for formatting.\n\nYou can make a GitHub Gist (https://gist.github.com/) to see how it will be formatting when viewed in the GitHub repository view - example: https://gist.github.com/dverkamp-intel/56ce202e0299e6c257cbd7f0273e3987\n\nAlternatively, we can make it part of the Doxygen docs that end up at spdk.io/doc - whatever makes the most sense to you (they have slightly different Markdown variants, so we should decide where it should go and then tweak the formatting).",
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4bb6f2a_440ac903",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "fedora -\u003e Fedora",
+      "range": {
+        "startLine": 4,
+        "startChar": 59,
+        "endLine": 4,
+        "endChar": 65
+      },
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3eb7144_14b82de7",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "We usually don\u0027t write docs in first person; it would be good to keep a consistent voice throughout the document.",
+      "range": {
+        "startLine": 6,
+        "startChar": 71,
+        "endLine": 6,
+        "endChar": 81
+      },
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49bcc641_e724d1fa",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "Markdown will interpret this as a numbered list, but only if you remove the indentation, I think.",
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ddabe57e_00cd52a3",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "These paragraphs can also be un-indented once you switch the section headers to Markdown format.  Otherwise they\u0027ll be interpreted as code blocks.",
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f511687_c4927f7f",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "We should fix the script to skip this part - we shouldn\u0027t need rpcbind at all (it was removed when we switched to JSON-RPC).",
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb9c4a63_e048ea65",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "There\u0027s some kind of bullet point character here that looks like it was copied in by accident.",
+      "range": {
+        "startLine": 58,
+        "startChar": 68,
+        "endLine": 58,
+        "endChar": 69
+      },
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "731683e1_24a559ef",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "Another extraneous character here.",
+      "range": {
+        "startLine": 61,
+        "startChar": 80,
+        "endLine": 61,
+        "endChar": 82
+      },
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "badbfe54_f741a3a7",
+        "filename": "test/configuration/test_vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "This should use #!/usr/bin/env bash just to be safe (it should always be here on Fedora, but we should be consistent anyway).",
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fb84baa_6372fc04",
+        "filename": "test/configuration/test_vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "This probably needs \u0027sudo\u0027 since /usr/src is normally owned by root and is not writable by normal users.  We should probably also do the \u0027git checkout\u0027 step before moving it into place.",
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0f67519_47b7f123",
+        "filename": "test/configuration/test_vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "Same here - some of these steps probably need to be done as root.",
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e12e4940_ee2fe577",
+        "filename": "test/configuration/test_vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "This could use a comment mentioning why it\u0027s checking out a specific review instead of the spdk branch so we remember to fix it later.",
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc13164c_65b2c185",
+        "filename": "test/configuration/test_vm_setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-17T21:07:22Z",
+      "side": 1,
+      "message": "This shouldn\u0027t be necessary anymore - can you test a system that doesn\u0027t have rpcbind enabled and see if anything breaks?",
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
