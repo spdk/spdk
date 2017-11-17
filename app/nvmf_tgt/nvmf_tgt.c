@@ -44,7 +44,6 @@
 
 struct nvmf_tgt_poll_group {
 	struct spdk_nvmf_poll_group *group;
-	struct spdk_poller *poller;
 };
 
 struct nvmf_tgt g_tgt = {};
@@ -112,22 +111,12 @@ spdk_nvmf_shutdown_cb(void)
 }
 
 static void
-subsystem_poll(void *arg)
-{
-	struct nvmf_tgt_subsystem *app_subsys = arg;
-
-	spdk_nvmf_subsystem_poll(app_subsys->subsystem);
-}
-
-static void
 _nvmf_tgt_start_subsystem(void *arg1, void *arg2)
 {
 	struct nvmf_tgt_subsystem *app_subsys = arg1;
 	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
 
 	spdk_nvmf_subsystem_start(subsystem);
-
-	app_subsys->poller = spdk_poller_register(subsystem_poll, app_subsys, 0);
 }
 
 void
@@ -211,14 +200,6 @@ acceptor_poll(void *arg)
 }
 
 static void
-nvmf_tgt_poll_group_poll(void *arg)
-{
-	struct nvmf_tgt_poll_group *app_poll_group = arg;
-
-	spdk_nvmf_poll_group_poll(app_poll_group->group);
-}
-
-static void
 nvmf_tgt_destroy_poll_group_done(void *arg1, void *arg2)
 {
 	g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUP_DONE;
@@ -235,8 +216,6 @@ nvmf_tgt_destroy_poll_group(void *arg1, void *arg2)
 
 	pg = &g_poll_groups[g_tgt.core];
 	assert(pg != NULL);
-
-	spdk_poller_unregister(&pg->poller);
 
 	spdk_nvmf_poll_group_destroy(pg->group);
 	pg->group = NULL;
@@ -276,7 +255,6 @@ nvmf_tgt_create_poll_group(void *arg1, void *arg2)
 		SPDK_ERRLOG("Failed to create poll group for core %u\n", g_tgt.core);
 	}
 
-	pg->poller = spdk_poller_register(nvmf_tgt_poll_group_poll, pg, 0);
 	g_active_poll_groups++;
 
 	spdk_event_call(event);

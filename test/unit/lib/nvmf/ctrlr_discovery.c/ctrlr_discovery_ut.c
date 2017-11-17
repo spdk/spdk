@@ -123,12 +123,6 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 int
-spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr)
-{
-	return -1;
-}
-
-int
 spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
 {
 	return -1;

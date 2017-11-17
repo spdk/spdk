@@ -78,9 +78,11 @@ struct spdk_nvmf_transport_poll_group {
 };
 
 struct spdk_nvmf_poll_group {
-	TAILQ_HEAD(, spdk_nvmf_transport_poll_group) tgroups;
+	struct spdk_poller				*poller;
 
-	TAILQ_ENTRY(spdk_nvmf_poll_group)	link;
+	TAILQ_HEAD(, spdk_nvmf_transport_poll_group)	tgroups;
+
+	TAILQ_ENTRY(spdk_nvmf_poll_group)		link;
 };
 
 typedef enum _spdk_nvmf_request_exec_status {
@@ -216,7 +218,6 @@ void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt,
 				      uint32_t length);
 
 struct spdk_nvmf_qpair *spdk_nvmf_ctrlr_get_qpair(struct spdk_nvmf_ctrlr *ctrlr, uint16_t qid);
-int spdk_nvmf_ctrlr_poll(struct spdk_nvmf_ctrlr *ctrlr);
 void spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
 int spdk_nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req);
 int spdk_nvmf_ctrlr_process_admin_cmd(struct spdk_nvmf_request *req);
