@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2250255_7e14de6c",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T16:21:25Z",
+      "side": 1,
+      "message": "What you did will work, but I think it would be a lot clearer if you just put if [ \"$SKIP_PCI\" \u003d\u003d 0 ]; blocks around this NVMe section, the IOAT one, and the virtio-scsi one. That\u0027s a lot more obvious than shorting out linux_iter_pci_dev_id - I\u0027d leave that function alone.",
+      "revId": "716eeeb242f626b10f11aad23fc3b478e09751ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
