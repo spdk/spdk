@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "6ca28c06_8069cb3c",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "The majority of this text originates from the blobstore design document here: http://www.spdk.io/doc/blob.html. I\u0027d prefer, for this exercise, to take the text from that verbatim and only make formatting changes to fit it into the programmers guide. Newly written sections can be added too.\n\nOnce it\u0027s reformatted the way we want it, then we can discuss changes to the current text that\u0027s published.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b2cec09_cfa95c3f",
         "filename": "doc/blob_pg.md",
         "patchSetId": 1
@@ -87,6 +104,23 @@
     },
     {
       "key": {
+        "uuid": "053bdf44_3b0d8cb5",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "Atrocity",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d1080792_7fd13e5a",
         "filename": "doc/blob_pg.md",
         "patchSetId": 1
@@ -98,6 +132,177 @@
       "writtenOn": "2017-10-27T17:32:00Z",
       "side": 1,
       "message": "Split this up too.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94033678_d42eb0fb",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "I think this section is assumed knowledge for someone using SPDK.",
+      "parentUuid": "d1080792_7fd13e5a",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b96d4920_c38f4512",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "It is intended as a supplement to the API documentation, providing both context and architectural insights.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6c96c48_f2d10e42",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "This sentence doesn\u0027t make sense. The first half is saying what the guide will not contain, but the second half is saying what it will contain, all joined together with \u0027and\u0027. Break the sentence up into two separate thoughts.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d97f0f90_dbb29914",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "I think this whole paragraph is trying to say that the intended audience is software developers writing code that consumes this SPDK component. It is not intended for SPDK contributors modifying this component and will likely not contain enough details for efforts of that nature.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff493b55_e57caca5",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "The first paragraph was written as a template where a guide writer would go in and change a few words but otherwise keep the text the same. This paragraph, however, is written as a note to the guide author. I think you should pick one style and go with it throughout the document.\n\nI prefer the style in the introduction paragraph where you are explaining to the guide author what to put in this section. That way we won\u0027t end up with lots of cookie cutter programmer\u0027s guides.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68f4f375_6f26c225",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "Let\u0027s not waffle on requirements with \"maybe\" - this section should indeed contain a justification for why this component exists.\n\nFor the rest of the paragraph starting at \"This shouldn\u0027t be...\" - I think you can just say instead:\n\nIt is safe to assume that the reader of this guide is already familiar with the basic principles behind SPDK (kernel bypass, polling, message passing, etc.).",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d564c506_9cea8b71",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "A better way to say this is that this section must explain all of the concepts presented in the public API for this component. If an implementation detail doesn\u0027t have a material impact on the use of the component, don\u0027t describe it.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cee5778_053fc71b",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "A programmer\u0027s guide is for programmer\u0027s writing software that consumes an SPDK component. That means all of the \"configuration\" is done by calling functions in the public API and should have already been covered in the Theory of Operation section. I think this section should be removed - it is a much better fit for a user guide.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba0af9e2_714acb27",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "I personally hate sequence diagrams, or really code diagrams in general. They never capture anywhere remotely close to the \"truth\" of the code. Where necessary, it makes a lot more sense to include the diagrams in the Theory of Operation section instead.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fde8c51_b54d1f6f",
+        "filename": "doc/template_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-17T21:06:44Z",
+      "side": 1,
+      "message": "Maybe a better name for this is \"Implementation Details\". This section should definitely be optional.",
       "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
