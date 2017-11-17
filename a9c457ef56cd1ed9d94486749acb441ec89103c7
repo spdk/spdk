@@ -59,6 +59,29 @@
     },
     {
       "key": {
+        "uuid": "30febd95_70e2bc66",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-17T02:59:48Z",
+      "side": 1,
+      "message": "adding \n struct spdk_thread *thread;\ninto the struct spdk_reactor may be helpful.\n\nThis may be another patch and if allowed, I would like to propose after your patch..",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 21
+      },
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "32b46c12_1cca5817",
         "filename": "lib/event/reactor.c",
         "patchSetId": 5
@@ -76,6 +99,70 @@
     },
     {
       "key": {
+        "uuid": "73239e36_99f2e548",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-17T02:59:48Z",
+      "side": 1,
+      "message": "I think that if this check is necessary, this may be done in any of the following (Line 719-721):\n\n\tSPDK_ENV_FOREACH_CORE(i) {\n\t\treactor \u003d spdk_reactor_get(i);\n\t\tspdk_reactor_construct(reactor, i, max_delay_us);\n\t}\n\nOr it may be helpful to extract a function from the above code",
+      "parentUuid": "32b46c12_1cca5817",
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0433c85e_1013b1cb",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-17T02:59:48Z",
+      "side": 1,
+      "message": "Currently just check if the return value is NULL.\n\nstruct spdk_reactor hold the return value of spdk_allocate_thread() may be helpful for validation.\n\nThis may be also another patch and if allowed I would like to propose after your patch.",
+      "range": {
+        "startLine": 419,
+        "startChar": 0,
+        "endLine": 422,
+        "endChar": 37
+      },
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1c66137_a2d3144c",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-17T02:59:48Z",
+      "side": 1,
+      "message": "This may be another patch but keeping  the return value of spdk_env_get_current_core() by\nstruct  spdk_thread {\n  uint32_t cpu_core_idx;\n};\n\nmay be helpful to grasp the relationship core\u003c-\u003ethread\u003c-\u003ereactor\u003c-\u003epoller.\n\n\nThis will be helpful for validation.",
+      "range": {
+        "startLine": 78,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 20
+      },
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "564daac8_d51148fe",
         "filename": "lib/util/io_channel.c",
         "patchSetId": 5
@@ -87,6 +174,24 @@
       "writtenOn": "2017-11-16T23:03:20Z",
       "side": 1,
       "message": "spdk_get_thread() can return NULL, so we should probably do something like:\n\n    if (!thread) {\n        return NULL;\n    }",
+      "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c20e9d7_c35c51ee",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-17T02:59:48Z",
+      "side": 1,
+      "message": "If struct spdk_reactor have a pointer to struct spdk_thread,\n  if thread is NULL, How about the following code (not validated yet)?\n\nThe following code may be helpful to find the root cause.\nThis may be another patch and if allowed I would like to propose after your patch.\n\n  uint32_t current_core, i;\n  struct spdk_reactor *reactor;\n  struct spdk_thread *thread;\n\n  current_core \u003d spdk_env_get_current_core();\n  bool found \u003d false;\n\n  SPDK_ENV_FOREACH_CORE(i) {\n    if (i \u003d\u003d current_core) {\n      found \u003d true;\n      break;\n    }\n  }\n\n  assert(found);\n\n  reactor \u003d spdk_reactor_get(current_core);\n  assert(reactor !\u003d NULL);\n\n  thread \u003d reactor-\u003ethread;\n  assert(thread !\u003d NULL);",
+      "parentUuid": "564daac8_d51148fe",
       "revId": "a9c457ef56cd1ed9d94486749acb441ec89103c7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
