@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fca121f3_7f71998c",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-17T08:26:35Z",
+      "side": 1,
+      "message": "What if we want to run the test independently, not as part of autotest.sh? FOr example by calling just: test/vhost/spdk_vhost.sh -i ?\n\nThen RUN_NIGHTLY is undefined and you will have if [ -eq 0] condition which will produce a \"unary operator expected\" error and  go to \"else\" branch and run nightly test instead (take a look at failed Jenkins builds in this commit - they run nightly test instead of per-patch version).\n\nI suggest one of these solutions:\na) change to: if RUN_NIGHTLY -eq 1 and run nightly only when RUN_NIGHTLY exists and it\u0027s set to 1.\nb) change [] to [[ ]] brackets",
+      "range": {
+        "startLine": 71,
+        "startChar": 2,
+        "endLine": 71,
+        "endChar": 33
+      },
+      "revId": "0e8d8183c708f8123bda3ae14c9621736371bee7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "341c3238_f424374e",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-17T08:26:35Z",
+      "side": 1,
+      "message": "This produces a lot of extra lines.\nCould we change to have a job variable which is set by \"if\" conditional and then run a single command?\nExample:\nif RUN_NIGHTLY -eq 1:\n    job\u003ddefault_integrity_nightly.job\nelse\n    job\u003ddefault_integrity.job",
+      "range": {
+        "startLine": 87,
+        "startChar": 2,
+        "endLine": 99,
+        "endChar": 4
+      },
+      "revId": "0e8d8183c708f8123bda3ae14c9621736371bee7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
