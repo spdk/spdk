@@ -199,6 +199,21 @@ spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt)
 	}
 }
 
+static void
+spdk_nvmf_poll_group_poll(void *ctx)
+{
+	struct spdk_nvmf_poll_group *group = ctx;
+	int rc;
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		rc = spdk_nvmf_transport_poll_group_poll(tgroup);
+		if (rc < 0) {
+			return;
+		}
+	}
+}
+
 struct spdk_nvmf_poll_group *
 spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
 {
@@ -223,6 +238,8 @@ spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
 		TAILQ_INSERT_TAIL(&group->tgroups, tgroup, link);
 	}
 
+	group->poller = spdk_poller_register(spdk_nvmf_poll_group_poll, group, 0);
+
 	return group;
 }
 
@@ -230,6 +247,8 @@ void
 spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group)
 {
 	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
+
+	spdk_poller_unregister(&group->poller);
 
 	TAILQ_FOREACH_SAFE(tgroup, &group->tgroups, link, tmp) {
 		TAILQ_REMOVE(&group->tgroups, tgroup, link);
@@ -271,25 +290,6 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 	}
 
 	return rc;
-}
-
-int
-spdk_nvmf_poll_group_poll(struct spdk_nvmf_poll_group *group)
-{
-	int rc;
-	int count = 0;
-	struct spdk_nvmf_transport_poll_group *tgroup;
-
-	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
-		rc = spdk_nvmf_transport_poll_group_poll(tgroup);
-		if (rc < 0) {
-			return rc;
-		}
-		count += rc;
-		break;
-	}
-
-	return count;
 }
 
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
