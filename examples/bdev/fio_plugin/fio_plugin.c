@@ -60,7 +60,7 @@ struct spdk_fio_msg {
 
 /* A polling function */
 struct spdk_fio_poller {
-	spdk_bdev_poller_fn	cb_fn;
+	spdk_poller_fn		cb_fn;
 	void			*cb_arg;
 	uint64_t		period_microseconds;
 
@@ -93,7 +93,7 @@ struct spdk_fio_thread {
 	unsigned int		iocq_size;	// number of iocq entries allocated
 };
 
-static __thread struct spdk_fio_thread *g_thread;
+static struct spdk_fio_thread *g_init_thread = NULL;
 static bool g_spdk_env_initialized = false;
 
 static int spdk_fio_init(struct thread_data *td);
@@ -131,14 +131,8 @@ spdk_fio_start_poller(void *thread_ctx,
 		      void *arg,
 		      uint64_t period_microseconds)
 {
-	struct spdk_fio_thread *fio_thread;
+	struct spdk_fio_thread *fio_thread = thread_ctx;
 	struct spdk_fio_poller *fio_poller;
-
-	fio_thread = g_thread;
-	if (!fio_thread) {
-		SPDK_ERRLOG("Expected local thread to be initialized, but it was not.\n");
-		return NULL;
-	}
 
 	fio_poller = calloc(1, sizeof(*fio_poller));
 	if (!fio_poller) {
@@ -156,37 +150,16 @@ spdk_fio_start_poller(void *thread_ctx,
 }
 
 static void
-spdk_fio_bdev_start_poller(struct spdk_bdev_poller **ppoller,
-			   spdk_bdev_poller_fn fn,
-			   void *arg,
-			   uint64_t period_microseconds)
-{
-	*ppoller = (struct spdk_bdev_poller *)spdk_poller_register(fn, arg, period_microseconds);
-}
-
-static void
 spdk_fio_stop_poller(struct spdk_poller *poller, void *thread_ctx)
 {
 	struct spdk_fio_poller *fio_poller;
-	struct spdk_fio_thread *fio_thread;
+	struct spdk_fio_thread *fio_thread = thread_ctx;
 
 	fio_poller = (struct spdk_fio_poller *)poller;
-
-	fio_thread = g_thread;
-	if (!fio_thread) {
-		SPDK_ERRLOG("Expected local thread to be initialized, but it was not.\n");
-		return;
-	}
 
 	TAILQ_REMOVE(&fio_thread->pollers, fio_poller, link);
 
 	free(fio_poller);
-}
-
-static void
-spdk_fio_bdev_stop_poller(struct spdk_bdev_poller **ppoller)
-{
-	spdk_poller_unregister((struct spdk_poller **)ppoller);
 }
 
 static int
@@ -229,9 +202,6 @@ spdk_fio_init_thread(struct thread_data *td)
 	assert(fio_thread->iocq != NULL);
 
 	TAILQ_INIT(&fio_thread->targets);
-
-	/* Cache the thread in a thread-local variable for easy access */
-	g_thread = fio_thread;
 
 	return 0;
 }
@@ -291,15 +261,13 @@ spdk_fio_init_env(struct thread_data *td)
 		return -1;
 	}
 
-	fio_thread = td->io_ops_data;
+	g_init_thread = fio_thread = td->io_ops_data;
 
 	/* Initialize the copy engine */
 	spdk_copy_engine_initialize();
 
 	/* Initialize the bdev layer */
-	spdk_bdev_initialize(spdk_fio_bdev_init_done, &done,
-			     spdk_fio_bdev_start_poller,
-			     spdk_fio_bdev_stop_poller);
+	spdk_bdev_initialize(spdk_fio_bdev_init_done, &done);
 
 	do {
 		/* Handle init and all cleanup events */
@@ -420,8 +388,6 @@ spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 	}
 
 	while (spdk_fio_poll_thread(fio_thread) > 0) {}
-
-	g_thread = NULL;
 
 	spdk_free_thread();
 	spdk_ring_free(fio_thread->ring);
@@ -700,7 +666,7 @@ spdk_fio_finish_env(void)
 	size_t				count;
 
 	/* the same thread that called spdk_fio_init_env */
-	fio_thread = g_thread;
+	fio_thread = g_init_thread;
 
 	spdk_bdev_finish(spdk_fio_module_finish_done, &done);
 
