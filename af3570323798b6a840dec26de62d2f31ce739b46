@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3c46f146_0a5ce754",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-17T09:10:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a5ae7aa_e238ed14",
+      "revId": "af3570323798b6a840dec26de62d2f31ce739b46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "785b5750_e699bb82",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2017-11-16T17:18:35Z",
       "side": 1,
       "message": "spdk_bs_io_write_zeroes_blob",
+      "revId": "af3570323798b6a840dec26de62d2f31ce739b46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db8247e1_e2ce5ed2",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-17T09:10:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "785b5750_e699bb82",
       "revId": "af3570323798b6a840dec26de62d2f31ce739b46",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
