@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e709416f_bd7ff7c8",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-18T00:06:58Z",
+      "side": 1,
+      "message": "I don\u0027t think we need nvmf/common.sh here - this is not a NVMe-oF test.",
+      "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5032386a_a282cdac",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-18T00:06:58Z",
+      "side": 1,
+      "message": "This looks like leftover copy-paste stuff from the blobfs tests - I think the whole block can be deleted.",
+      "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8df40c78_0c1d38b2",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-18T00:06:58Z",
+      "side": 1,
+      "message": "Please use scripts/gen_nvme.sh instead - it has the same functionality as the loop below, and it already supports FreeBSD as well as Linux.",
+      "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "956dd046_97eb148a",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-18T00:06:58Z",
+      "side": 1,
+      "message": "I don\u0027t understand what this is trying to do - why can\u0027t we run blobcli from its build location?",
+      "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92309b44_e197a960",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-18T00:06:58Z",
+      "side": 1,
+      "message": "Since there\u0027s nothing to clean up, we don\u0027t really need this trap - if blobcli exits with a non-0 return code, the test will fail due to \u0027set -e\u0027.",
+      "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
