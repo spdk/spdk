@@ -123,6 +123,20 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 }
 
 int
+spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
+				   struct spdk_nvmf_subsystem *subsystem)
+{
+	return 0;
+}
+
+int
+spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
+				      struct spdk_nvmf_subsystem *subsystem)
+{
+	return 0;
+}
+
+int
 spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
 {
 	return -1;
