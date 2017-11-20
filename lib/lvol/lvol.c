@@ -365,6 +365,21 @@ _spdk_lvs_load_cb(void *cb_arg, struct spdk_blob_store *bs, int lvolerrno)
 	spdk_bs_get_super(bs, _spdk_lvs_open_super, req);
 }
 
+/*
+
+int lvol_get_bs_dev(struct spdk_bs_dev **bs_dev, const char *name)
+{
+  // if name does not start with "lvol:", fail immediately
+
+  // otherwise create a bs_dev based on the lvol uuid specified
+
+  // todo: determine if blobstore should allocate the spdk_bs_dev memory, or have
+  //  this function allocate it
+  // for spdk_bs_init/load, the caller allocates it, so that's probably what we
+  //  we should do here too
+}
+
+ */
 void
 spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
@@ -392,6 +407,10 @@ spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn
 
 	spdk_bs_opts_init(&opts);
 	strncpy(opts.bstype.bstype, "LVOLSTORE", SPDK_BLOBSTORE_TYPE_LENGTH);
+
+/*
+	opts.get_bs_dev = lvol_get_bs_dev;
+ */
 
 	spdk_bs_load(bs_dev, &opts, _spdk_lvs_load_cb, req);
 }

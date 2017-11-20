@@ -158,6 +158,12 @@ struct spdk_blob_store {
 	uint64_t			num_free_clusters;
 	uint32_t			pages_per_cluster;
 
+	/*
+	 * Used to get spdk_bs_dev for thin provisioned blobs with
+	 *  backing stores.
+	 */
+	spdk_blob_get_bs_dev		get_bs_dev;
+
 	spdk_blob_id			super_blob;
 	struct spdk_bs_type 		bstype;
 
@@ -206,6 +212,8 @@ struct spdk_bs_md_mask {
 #define SPDK_MD_DESCRIPTOR_TYPE_PADDING 0
 #define SPDK_MD_DESCRIPTOR_TYPE_EXTENT 1
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR 2
+#define SPDK_MD_DESCRIPTOR_TYPE_FLAGS 3
+#define SPDK_MD_DESCRIPTOR_TYPE_THIN_PROVISION_BASE 4
 
 struct spdk_blob_md_descriptor_xattr {
 	uint8_t		type;
@@ -226,6 +234,50 @@ struct spdk_blob_md_descriptor_extent {
 		uint32_t        cluster_idx;
 		uint32_t        length; /* In units of clusters */
 	} extents[0];
+};
+
+/*
+ * Do not open a blob that has the thin provision flag set if the application
+ *  does not understand it.  This ensures cluster idx 0 is properly interpreted as
+ *  a valid but non-allocated cluster index.
+ */
+#define SPDK_BLOB_MD_OPEN_FLAG_THIN_PROVISION	(1ULL << 0)
+
+/*
+ * Mark a blob as read-only.  This can be used as part of creating a snapshot to
+ *  ensure the backing blob cannot be modified.
+ */
+#define SPDK_BLOB_MD_RO_FLAG_READ_ONLY		(1ULL << 0)
+
+struct spdk_blob_md_descriptor_flags {
+	uint8_t		type;
+	uint32_t	length;
+
+	/*
+	 * If a flag in open_flags is set that the application is not aware of, it will
+	 *  not allow the blob to be opened.
+	 */
+	uint64_t	open_flags;
+
+	/*
+	 * If a flag in ro_flags is set that the application is not aware of, it will only
+	 *  allow the blob to be opened in read-only mode.
+	 */
+	uint64_t	ro_flags;
+
+	/*
+	 * If a flag in ro_md_flags is set that the application is not aware of, it will
+	 *  the blob's data may be read/written, but no changes to the blob's metadata is
+	 *  allowed (resize, set_xattr, etc.).
+	 */
+	uint64_t	ro_md_flags;
+};
+
+struct spdk_blob_md_descriptor_thin_provision_base {
+	uint8_t		type;
+	uint32_t	length;
+
+	char		name[0];
 };
 
 struct spdk_blob_md_descriptor {

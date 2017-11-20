@@ -40,6 +40,17 @@
 
 SPDK_LOG_REGISTER_TRACE_FLAG("lvolrpc", SPDK_TRACE_LVOL_RPC)
 
+/*
+ * New RPCs for logical volumes:
+ *
+ * construct_lvol_snapshot
+ *	creates a read-only snapshot of an existing lvol in the same
+ *	lvolstore - this operation can be done at runtime
+ *
+ * construct_lvol_clone
+ *	create a new lvol that is a thin-provisioned clone of another
+ *	lvol - the base lvol can be in the same or a different lvolstore
+ */
 struct rpc_construct_lvol_store {
 	char *lvs_name;
 	char *bdev_name;
