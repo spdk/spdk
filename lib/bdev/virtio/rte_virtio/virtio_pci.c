@@ -198,7 +198,7 @@ modern_set_features(struct virtio_dev *dev, uint64_t features)
 }
 
 static void
-modern_free_vdev(struct virtio_dev *vdev)
+modern_destruct_dev(struct virtio_dev *vdev)
 {
 	struct virtio_hw *hw = vdev->ctx;
 
@@ -301,7 +301,7 @@ static const struct virtio_dev_ops modern_ops = {
 	.set_status	= modern_set_status,
 	.get_features	= modern_get_features,
 	.set_features	= modern_set_features,
-	.free_vdev	= modern_free_vdev,
+	.destruct_dev	= modern_destruct_dev,
 	.get_queue_num	= modern_get_queue_num,
 	.setup_queue	= modern_setup_queue,
 	.del_queue	= modern_del_queue,
@@ -470,8 +470,16 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		return -1;
 	}
 
-	vdev = virtio_dev_construct(&modern_ops, hw);
+	vdev = calloc(1, sizeof(*vdev));
 	if (vdev == NULL) {
+		SPDK_ERRLOG("calloc failed\n");
+		free_virtio_hw(hw);
+		return -1;
+	}
+
+	rc = virtio_dev_construct(vdev, &modern_ops, hw);
+	if (rc != 0) {
+		free(vdev);
 		free_virtio_hw(hw);
 		return -1;
 	}
@@ -486,7 +494,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	return 0;
 
 err:
-	virtio_dev_free(vdev);
+	virtio_dev_destruct(vdev);
 	return -1;
 }
 
