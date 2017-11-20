@@ -382,11 +382,11 @@ struct spdk_bdev_io {
 	/* No members may be added after driver_ctx! */
 };
 
-void spdk_bdev_register(struct spdk_bdev *bdev);
+int spdk_bdev_register(struct spdk_bdev *bdev);
 void spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 void spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno);
-void spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
-			 int base_bdev_count);
+int spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
+			int base_bdev_count);
 void spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg);
 
 void spdk_bdev_module_examine_done(struct spdk_bdev_module_if *module);

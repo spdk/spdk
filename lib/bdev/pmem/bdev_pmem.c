@@ -295,6 +295,7 @@ spdk_create_pmem_disk(const char *pmem_file, char *name, struct spdk_bdev **bdev
 	uint64_t num_blocks;
 	uint32_t block_size;
 	struct pmem_disk *pdisk;
+	int rc;
 
 	if (pmemblk_check(pmem_file, 0) != 1) {
 		SPDK_ERRLOG("Pool '%s' check failed: %s\n", pmem_file, pmemblk_errormsg());
@@ -353,7 +354,13 @@ spdk_create_pmem_disk(const char *pmem_file, char *name, struct spdk_bdev **bdev
 	pdisk->disk.fn_table = &pmem_fn_table;
 	pdisk->disk.module = SPDK_GET_BDEV_MODULE(pmem);
 
-	spdk_bdev_register(&pdisk->disk);
+	rc = spdk_bdev_register(&pdisk->disk);
+	if (rc) {
+		pmemblk_close(pdisk->pool);
+		free(pdisk->disk.name);
+		free(pdisk);
+		return rc;
+	}
 
 	TAILQ_INSERT_TAIL(&g_pmem_disks, pdisk, tailq);
 

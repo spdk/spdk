@@ -634,7 +634,14 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
 		TAILQ_REMOVE(&base->found_disks, disk, link);
-		spdk_bdev_register(&disk->bdev);
+		rc = spdk_bdev_register(&disk->bdev);
+		if (rc) {
+			spdk_io_device_unregister(base->vdev, NULL);
+			SPDK_ERRLOG("Failed to register bdev name=%s\n", disk->bdev.name);
+			spdk_ring_free(ctrlq_ring);
+			scan_target_abort(base, rc);
+			return;
+		}
 		bdevs[bdevs_cnt] = &disk->bdev;
 		bdevs_cnt++;
 	}

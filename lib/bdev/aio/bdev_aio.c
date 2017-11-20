@@ -373,6 +373,7 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
 	uint64_t disk_size;
+	int rc;
 
 	fdisk = calloc(sizeof(*fdisk), 1);
 	if (!fdisk) {
@@ -450,7 +451,11 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 
 	spdk_io_device_register(&fdisk->fd, bdev_aio_create_cb, bdev_aio_destroy_cb,
 				sizeof(struct bdev_aio_io_channel));
-	spdk_bdev_register(&fdisk->disk);
+	rc = spdk_bdev_register(&fdisk->disk);
+	if (rc) {
+		spdk_io_device_unregister(&fdisk->fd, NULL);
+		goto error_return;
+	}
 
 	TAILQ_INSERT_TAIL(&g_aio_disk_head, fdisk, link);
 	return &fdisk->disk;
