@@ -314,17 +314,10 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 	return 0;
 }
 
-struct virtio_dev *
-	virtio_dev_construct(const struct virtio_dev_ops *ops, void *ctx)
+int
+virtio_dev_init(struct virtio_dev *vdev, const struct virtio_dev_ops *ops, void *ctx)
 {
-	struct virtio_dev *vdev;
 	unsigned vdev_num;
-
-	vdev = calloc(1, sizeof(*vdev));
-	if (vdev == NULL) {
-		SPDK_ERRLOG("virtio device calloc failed\n");
-		return NULL;
-	}
 
 	vdev_num = __sync_add_and_fetch(&g_virtio_driver.ctrlr_counter, 1);
 	vdev->id = vdev_num;
@@ -332,11 +325,11 @@ struct virtio_dev *
 	vdev->backend_ops = ops;
 	vdev->ctx = ctx;
 
-	return vdev;
+	return 0;
 }
 
 int
-virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
+virtio_dev_restart(struct virtio_dev *dev, uint64_t req_features)
 {
 	int ret;
 
@@ -365,7 +358,6 @@ virtio_dev_free(struct virtio_dev *dev)
 	virtio_free_queues(dev);
 	virtio_dev_backend_ops(dev)->free_vdev(dev);
 	pthread_mutex_destroy(&dev->mutex);
-	free(dev);
 }
 
 static void
