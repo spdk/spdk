@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4760bc0f_63def0fe",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-20T04:41:14Z",
+      "side": 1,
+      "message": "rebase this patch, this function return type is changed.",
+      "range": {
+        "startLine": 204,
+        "startChar": 1,
+        "endLine": 204,
+        "endChar": 25
+      },
+      "revId": "09c45852b150538e89ce434634ea77689411fd90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0047064b_d710067b",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-20T04:41:14Z",
+      "side": 1,
+      "message": "The parameter for this function is changed.",
+      "range": {
+        "startLine": 213,
+        "startChar": 0,
+        "endLine": 214,
+        "endChar": 30
+      },
+      "revId": "09c45852b150538e89ce434634ea77689411fd90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
