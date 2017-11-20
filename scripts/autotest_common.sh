@@ -403,7 +403,7 @@ function discover_bdevs()
 {
 	local rootdir=$1
 	local config_file=$2
-	local rpc_port=$3
+	local rpc_server=$3
 
 	if [ ! -e $config_file ]; then
 		echo "Invalid Configuration File: $config_file"
@@ -419,10 +419,10 @@ function discover_bdevs()
 	done
 
 	# Get all of the bdevs
-	if [ -z "$rpc_port" ]; then
+	if [ -z "$rpc_server" ]; then
 		$rootdir/scripts/rpc.py get_bdevs
 	else
-		$rootdir/scripts/rpc.py -p $rpc_port get_bdevs
+		$rootdir/scripts/rpc.py -s "$rpc_server" get_bdevs
 	fi
 
 	# Shut down the bdev service
