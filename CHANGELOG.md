@@ -39,6 +39,11 @@ vfio-pci driver should trigger one "remove" uevent at the very beginning of the 
 of pci driver, this will make sure the SPDK could detect the event and release the vfio-attached
 device Fd and related resource when the device removed.
 
+### NVMe-oF Target
+
+Subsystems are no longer tied explicitly to CPU cores. Instead, connections are handed out to the available
+cores round-robin. The "Core" option in the configuration file has been removed.
+
 ### Blobstore
 
 A number of functions have been renamed:

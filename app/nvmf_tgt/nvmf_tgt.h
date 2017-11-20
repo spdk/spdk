@@ -51,14 +51,6 @@ struct spdk_nvmf_tgt_conf {
 	uint32_t acceptor_poll_rate;
 };
 
-struct nvmf_tgt_subsystem {
-	struct spdk_nvmf_subsystem *subsystem;
-
-	TAILQ_ENTRY(nvmf_tgt_subsystem) tailq;
-
-	uint32_t lcore;
-};
-
 enum nvmf_tgt_state {
 	NVMF_TGT_INIT_NONE = 0,
 	NVMF_TGT_INIT_PARSE_CONFIG,
@@ -67,7 +59,6 @@ enum nvmf_tgt_state {
 	NVMF_TGT_RUNNING,
 	NVMF_TGT_FINI_STOP_ACCEPTOR,
 	NVMF_TGT_FINI_DESTROY_POLL_GROUPS,
-	NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS,
 	NVMF_TGT_FINI_FREE_RESOURCES,
 	NVMF_TGT_STOPPED,
 	NVMF_TGT_ERROR,
@@ -85,17 +76,10 @@ extern struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
 
 extern struct nvmf_tgt g_tgt;
 
-struct nvmf_tgt_subsystem *
-nvmf_tgt_subsystem_first(void);
-
-struct nvmf_tgt_subsystem *
-nvmf_tgt_subsystem_next(struct nvmf_tgt_subsystem *subsystem);
-
 int spdk_nvmf_parse_conf(void);
 
-struct nvmf_tgt_subsystem *nvmf_tgt_create_subsystem(const char *name,
-		enum spdk_nvmf_subtype subtype, uint32_t num_ns,
-		uint32_t lcore);
+struct spdk_nvmf_subsystem *nvmf_tgt_create_subsystem(const char *name,
+		enum spdk_nvmf_subtype subtype, uint32_t num_ns);
 
 struct spdk_nvmf_ns_params {
 	char *bdev_name;
@@ -104,7 +88,6 @@ struct spdk_nvmf_ns_params {
 
 int
 spdk_nvmf_construct_subsystem(const char *name,
-			      int32_t lcore,
 			      int num_listen_addresses, struct rpc_listen_address *addresses,
 			      int num_hosts, char *hosts[], bool allow_any_host,
 			      const char *sn, size_t num_ns, struct spdk_nvmf_ns_params *ns_list);
