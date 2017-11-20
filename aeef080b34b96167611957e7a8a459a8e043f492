@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d213376_2dfacc0e",
+        "filename": "include/spdk/virtio.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-20T15:18:38Z",
+      "side": 1,
+      "message": "Does this need to be a public header, or can it be in spdk_internal instead?\n\nIf it is intended to be public, we should try to minimize it as much as possible - only expose the necessary declarations for external users (for example, we should not expose the contents of struct virtio_dev outside the virtio library unless strictly necessary).\n\nAlso, all names declared in public headers should have a spdk_/SPDK_ prefix.",
+      "revId": "aeef080b34b96167611957e7a8a459a8e043f492",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d04fb8b4_87f0c564",
+        "filename": "include/spdk/virtio.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-20T15:18:38Z",
+      "side": 1,
+      "message": "Public headers shouldn\u0027t include spdk_internal headers.",
+      "revId": "aeef080b34b96167611957e7a8a459a8e043f492",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
