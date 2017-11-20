@@ -148,6 +148,16 @@ struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt
 struct spdk_nvmf_subsystem *spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt,
 		const char *subnqn);
 
+/**
+ * Begin iterating over all known subsystems. If no subsystems are present, return NULL.
+ */
+struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_first(struct spdk_nvmf_tgt *tgt);
+
+/**
+ * Continue iterating over all known subsystems. If no additional subsystems, return NULL.
+ */
+struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsystem *subsystem);
+
 void spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
 
 /**
