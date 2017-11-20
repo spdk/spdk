@@ -348,7 +348,7 @@ spdk_bs_free_cluster_count(struct spdk_blob_store *bs)
 }
 
 void
-spdk_bs_md_create_blob(struct spdk_blob_store *bs,
+spdk_bs_md_create_blob(struct spdk_blob_store *bs, struct spdk_blob_opts *o,
 		       spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob *b;
