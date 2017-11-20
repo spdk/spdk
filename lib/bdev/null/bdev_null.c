@@ -129,6 +129,7 @@ struct spdk_bdev *
 create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
 {
 	struct null_bdev *bdev;
+	int rc;
 
 	if (block_size % 512 != 0) {
 		SPDK_ERRLOG("Block size %u is not a multiple of 512.\n", block_size);
@@ -161,7 +162,12 @@ create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
 	bdev->bdev.fn_table = &null_fn_table;
 	bdev->bdev.module = SPDK_GET_BDEV_MODULE(null);
 
-	spdk_bdev_register(&bdev->bdev);
+	rc = spdk_bdev_register(&bdev->bdev);
+	if (rc) {
+		free(bdev->bdev.name);
+		spdk_dma_free(bdev);
+		return NULL;
+	}
 
 	TAILQ_INSERT_TAIL(&g_null_bdev_head, bdev, tailq);
 

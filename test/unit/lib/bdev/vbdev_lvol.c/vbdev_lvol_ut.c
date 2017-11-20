@@ -421,10 +421,11 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 	return "test";
 }
 
-void
+int
 spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int base_bdev_count)
 {
 	g_registered_bdevs++;
+	return 0;
 }
 
 void
