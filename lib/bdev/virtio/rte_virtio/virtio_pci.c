@@ -69,8 +69,6 @@ struct virtio_hw {
 #define PCI_CAP_ID_VNDR		0x09
 #define PCI_CAP_ID_MSIX		0x11
 
-static int g_dev_counter = 0;
-
 static inline int
 check_vq_phys_addr_ok(struct virtqueue *vq)
 {
@@ -417,10 +415,9 @@ static int
 pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 {
 	struct virtio_hw *hw;
-	struct virtio_dev *vdev;
 	uint8_t *bar_vaddr;
 	uint64_t bar_paddr, bar_len;
-	char *tmp;
+	pci_enum_virtio_ctx enum_cb = ctx;
 	int rc;
 	unsigned i;
 
@@ -454,41 +451,23 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		return -1;
 	}
 
-	tmp = spdk_sprintf_alloc("VirtioScsi%"PRIu32, ++g_dev_counter);
-	if (tmp == NULL) {
-		SPDK_ERRLOG("couldn't alloc memory for virtio device name\n");
-		return -1;
-	}
-
-	vdev = calloc(1, sizeof(*vdev));
-	if (vdev == NULL) {
-		SPDK_ERRLOG("calloc failed\n");
-		free(tmp);
-		free_virtio_hw(hw);
-		return -1;
-	}
-
-	rc = virtio_pci_dev_init(vdev, tmp, hw, SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
-	free(tmp);
-
+	rc = enum_cb(hw);
 	if (rc != 0) {
-		free(vdev);
 		free_virtio_hw(hw);
-		return -1;
 	}
 
-	return 0;
+	return rc;
 }
 
 int
-virtio_enumerate_pci(void)
+virtio_enumerate_pci(pci_enum_virtio_ctx enum_cb)
 {
 	if (!spdk_process_is_primary()) {
 		SPDK_WARNLOG("virtio_pci secondary process support is not implemented yet.\n");
 		return 0;
 	}
 
-	return spdk_pci_virtio_enumerate(pci_enum_virtio_probe_cb, NULL);
+	return spdk_pci_virtio_enumerate(pci_enum_virtio_probe_cb, enum_cb);
 }
 
 int
