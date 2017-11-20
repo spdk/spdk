@@ -148,12 +148,15 @@ struct spdk_bs_type {
 	char bstype[SPDK_BLOBSTORE_TYPE_LENGTH];
 };
 
+typedef int (*spdk_blob_get_bs_dev)(struct spdk_bs_dev *bs_dev, const char *name);
+
 struct spdk_bs_opts {
 	uint32_t cluster_sz; /* In bytes. Must be multiple of page size. */
 	uint32_t num_md_pages; /* Count of the number of pages reserved for metadata */
 	uint32_t max_md_ops; /* Maximum simultaneous metadata operations */
 	uint32_t max_channel_ops; /* Maximum simultaneous operations per channel */
 	struct spdk_bs_type bstype; /* Blobstore type */
+	spdk_blob_get_bs_dev get_bs_dev;
 };
 
 /* Initialize an spdk_bs_opts structure to the default blobstore option values. */
@@ -221,6 +224,21 @@ uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 /* Create a new blob with initial size of 'sz' clusters. */
 void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
 			    spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+
+/*
+ * Create a thin provisioned blob.  "base" refers to a name for the base or backing block
+ *  device for this blob.  If "base" == NULL, then the backing block device will emulate a
+ *  device that contains all zeroes.  If "base" != NULL, then bs->opts.get_bs_dev() will be
+ *  called to allow the user to translate the string to an spdk_bs_dev structure.
+ *
+ * The "base" string will be stored in the blob's metadata, so that get_bs_dev() can be
+ *  called when opening the blob again in the future.
+ *
+ * If "base" != NULL, then "sz" must be less than or equal to the size of the block device
+ *  returned by bs->opts.get_bs_dev().
+ */
+void spdk_bs_md_create_thinprov_blob(struct spdk_blob_store *bs, size_t sz, const char *base,
+				     spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
 /* Delete an existing blob. */
 void spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
