@@ -534,12 +534,18 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 	rbd->disk.module = SPDK_GET_BDEV_MODULE(rbd);
 
 	SPDK_NOTICELOG("Add %s rbd disk to lun\n", rbd->disk.name);
-	TAILQ_INSERT_TAIL(&g_rbds, rbd, tailq);
 
 	spdk_io_device_register(&rbd->info, bdev_rbd_create_cb,
 				bdev_rbd_destroy_cb,
 				sizeof(struct bdev_rbd_io_channel));
-	spdk_bdev_register(&rbd->disk);
+	ret = spdk_bdev_register(&rbd->disk);
+	if (ret) {
+		spdk_io_device_unregister(&rbd->info, NULL);
+		bdev_rbd_free(rbd);
+		return NULL;
+	}
+
+	TAILQ_INSERT_TAIL(&g_rbds, rbd, tailq);
 	return &rbd->disk;
 }
 

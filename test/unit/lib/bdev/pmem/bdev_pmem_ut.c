@@ -259,11 +259,13 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	bdev_io->status = status;
 }
 
-void
+int
 spdk_bdev_register(struct spdk_bdev *bdev)
 {
 	CU_ASSERT_PTR_NULL(g_bdev);
 	g_bdev = bdev;
+
+	return 0;
 }
 
 void
