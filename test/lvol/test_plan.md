@@ -280,9 +280,21 @@ Expected result:
 - no other operation fails
 - get_lvol_stores: response should be of no value after destroyed lvol store
 
+#### TEST CASE 13 - Name: delete_lvol_store_persistent_positive
+Positive test for removing lvol store persistently
+Steps:
+- construct_lvol_store on nvme bdev
+- delete lvol store
+- restart vhost
+- check if deleted lvol store does not exist in vhost
+
+Expected result:
+- get_lvol_stores: response should be of no value after destroyed lvol store
+- no other operation fails
+
 ### construct_lvol_store - negative tests
 
-#### TEST CASE 13 - Name: construct_lvs_nonexistent_bdev
+#### TEST CASE 14 - Name: construct_lvs_nonexistent_bdev
 Negative test for constructing a new lvol store.
 Call construct_lvol_store with base bdev name which does not
 exist in configuration.
@@ -293,7 +305,7 @@ Expected result:
 - return code != 0
 - Error code: ENODEV ("No such device") response printed to stdout
 
-#### TEST CASE 14 - Name: construct_lvs_on_bdev_twice
+#### TEST CASE 15 - Name: construct_lvs_on_bdev_twice
 Negative test for constructing a new lvol store.
 Call construct_lvol_store with base bdev name twice.
 Steps:
@@ -311,7 +323,7 @@ Expected result:
 - EEXIST response printed to stdout
 - no other operation fails
 
-#### TEST CASE 15 - Name: construct_lvs_name_twice
+#### TEST CASE 16 - Name: construct_lvs_name_twice
 Negative test for constructing a new lvol store using the same
 friendly name twice.
 Steps:
@@ -332,7 +344,7 @@ not be possible
 
 ### construct_lvol_bdev - negative tests
 
-#### TEST CASE 16 - Name: construct_logical_volume_nonexistent_lvs_uuid
+#### TEST CASE 17 - Name: construct_logical_volume_nonexistent_lvs_uuid
 Negative test for constructing a new logical_volume.
 Call construct_lvol_bdev with lvs_uuid which does not
 exist in configuration.
@@ -343,7 +355,7 @@ Expected result:
 - return code != 0
 - ENODEV response printed to stdout
 
-#### TEST CASE 17 - Name: construct_lvol_bdev_on_full_lvol_store
+#### TEST CASE 18 - Name: construct_lvol_bdev_on_full_lvol_store
 Negative test for constructing a new lvol bdev.
 Call construct_lvol_bdev on a full lvol store.
 Steps:
@@ -363,7 +375,7 @@ Expected result:
 - EEXIST response printed to stdout
 - no other operation fails
 
-#### TEST CASE 18 - Name: construct_lvol_bdev_name_twice
+#### TEST CASE 19 - Name: construct_lvol_bdev_name_twice
 Negative test for constructing lvol bdev using the same
 friendly name twice on the same logical volume store.
 Steps:
@@ -385,7 +397,7 @@ Expected results:
 
 ### resize_lvol_store - negative tests
 
-#### TEST CASE 19 - Name: resize_logical_volume_nonexistent_logical_volume
+#### TEST CASE 20 - Name: resize_logical_volume_nonexistent_logical_volume
 Negative test for resizing a logical_volume.
 Call resize_lvol_bdev with logical volume which does not
 exist in configuration.
@@ -396,7 +408,7 @@ Expected result:
 - return code != 0
 - Error code: ENODEV ("No such device") response printed to stdout
 
-#### TEST CASE 20 - Name: resize_logical_volume_with_size_out_of_range
+#### TEST CASE 21 - Name: resize_logical_volume_with_size_out_of_range
 Negative test for resizing a logical volume.
 Call resize_lvol_store with size argument bigger than size of base bdev.
 Steps:
@@ -419,7 +431,7 @@ Expected result:
 
 ### destroy_lvol_store - negative tests
 
-#### TEST CASE 21 - Name: destroy_lvol_store_nonexistent_lvs_uuid
+#### TEST CASE 22 - Name: destroy_lvol_store_nonexistent_lvs_uuid
 Call destroy_lvol_store with nonexistent logical_volumes name
 exist in configuration.
 Steps:
@@ -429,7 +441,7 @@ Expected result:
 - return code != 0
 - Error code response printed to stdout
 
-#### TEST CASE 22 - Name: delete_lvol_store_underlying_bdev
+#### TEST CASE 23 - Name: delete_lvol_store_underlying_bdev
 Call destroy_lvol_store after deleting it's base bdev.
 Lvol store should be automatically removed on deleting underlying bdev.
 Steps:
@@ -447,7 +459,7 @@ Expected result:
 
 ### nested construct_lvol_bdev - test negative
 
-#### TEST CASE 23 - Name: nested_construct_lvol_bdev_on_full_lvol_store
+#### TEST CASE 24 - Name: nested_construct_lvol_bdev_on_full_lvol_store
 Negative test for constructing a new nested lvol bdev.
 Call construct_lvol_bdev on a full lvol store.
 Steps:
@@ -475,7 +487,7 @@ Expected result:
 
 ### destroy_lvol_store - negative tests
 
-#### TEST CASE 24 - Name: nested_destroy_logical_volume_negative
+#### TEST CASE 25 - Name: nested_destroy_logical_volume_negative
 Negative test for destroying a nested first lvol store.
 Call destroy_lvol_store with correct base bdev name.
 Steps:
@@ -497,7 +509,7 @@ Expected result:
 
 ### delete_bdev - positive tests
 
-#### TEST CASE 25 - Name: delete_bdev_positive
+#### TEST CASE 26 - Name: delete_bdev_positive
 Positive test for deleting malloc bdev.
 Call construct_lvol_store with correct base bdev name.
 Steps:
@@ -513,7 +525,7 @@ Expected result:
 
 ### construct_lvol_store_with_cluster_size  - negative tests
 
-#### TEST CASE 26 - Name: construct_lvol_store_with_cluster_size_max
+#### TEST CASE 27 - Name: construct_lvol_store_with_cluster_size_max
 Negative test for constructing a new lvol store.
 Call construct_lvol_store with cluster size is equal malloc bdev size + 1B.
 Steps:
@@ -525,7 +537,7 @@ Expected result:
 - return code != 0
 - Error code response printed to stdout
 
-#### TEST CASE 27 - Name: construct_lvol_store_with_cluster_size_min
+#### TEST CASE 28 - Name: construct_lvol_store_with_cluster_size_min
 Negative test for constructing a new lvol store.
 Call construct_lvol_store with cluster size = 0.
 Steps:
@@ -538,7 +550,7 @@ Expected result:
 
 ### logical volume tasting tests
 
-#### TEST CASE 28 - Name: tasting_positive
+#### TEST CASE 29 - Name: tasting_positive
 Positive test for tasting a multi lvol bdev configuration.
 Create a lvol store with some lvol bdevs on NVMe drive and restart vhost app.
 After restarting configuration should be automatically loaded and should be exactly
@@ -579,9 +591,10 @@ Expected results:
   loading existing configuration
 - all RPC configuration calls successful, return code = 0
 - no other operation fails
+
 ### SIGTERM
 
-#### TEST CASE 29 - Name: SIGTERM
+#### TEST CASE 30 - Name: SIGTERM
 Call CTRL+C (SIGTERM) occurs after creating lvol store
 Steps:
 - create a malloc bdev
