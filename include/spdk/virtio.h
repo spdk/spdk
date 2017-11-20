@@ -374,6 +374,20 @@ int virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *
 			 uint16_t requested_queues, uint32_t queue_size,
 			 uint16_t fixed_queue_num);
 
+/**
+ * Initialize a virtio_dev for a given PCI device.
+ *
+ * \param vdev preallocated vhost device struct to operate on
+ * \param name name of this virtio device
+ * \param pci_ctx opaque context of the PCI device
+ * \param fixed_queue_num number of queues preceeding the first
+ * request queue. For Virtio-SCSI this is equal to 2, as there are
+ * additional event and control queues.
+ * \return 0 on success, -1 on error.
+ */
+int virtio_pci_dev_init(struct virtio_dev *vdev, const char *name, void *pci_ctx,
+			uint16_t fixed_queue_num);
+
 extern const struct virtio_dev_ops virtio_user_ops;
 
 #endif /* SPDK_VIRTIO_H */
