@@ -651,7 +651,6 @@ def construct_nvmf_subsystem(args):
     listen_addresses = [dict(u.split(":") for u in a.split(" ")) for a in args.listen.split(",")]
 
     params = {
-        'core': args.core,
         'nqn': args.nqn,
         'listen_addresses': listen_addresses,
         'serial_number': args.serial_number,
@@ -686,7 +685,6 @@ def construct_nvmf_subsystem(args):
     jsonrpc_call('construct_nvmf_subsystem', params)
 
 p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
-p.add_argument("-c", "--core", help='The core Nvmf target run on', type=int, default=-1)
 p.add_argument('nqn', help='Target nqn(ASCII)')
 p.add_argument('listen', help="""comma-separated list of Listen <trtype:transport_name traddr:address trsvcid:port_id> pairs enclosed
 in quotes.  Format:  'trtype:transport0 traddr:traddr0 trsvcid:trsvcid0,trtype:transport1 traddr:traddr1 trsvcid:trsvcid1' etc

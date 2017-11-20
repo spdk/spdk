@@ -52,7 +52,7 @@
 #define ACCEPT_TIMEOUT_US		10000 /* 10ms */
 
 struct spdk_nvmf_probe_ctx {
-	struct nvmf_tgt_subsystem	*app_subsystem;
+	struct spdk_nvmf_subsystem	*subsystem;
 	bool				any;
 	bool				found;
 	struct spdk_nvme_transport_id	trid;
@@ -61,71 +61,19 @@ struct spdk_nvmf_probe_ctx {
 #define MAX_STRING_LEN 255
 
 struct spdk_nvmf_tgt_conf g_spdk_nvmf_tgt_conf;
-static int32_t g_last_core = -1;
-
-static int
-spdk_get_numa_node_value(const char *path)
-{
-	FILE *fd;
-	int numa_node = -1;
-	char buf[MAX_STRING_LEN];
-
-	fd = fopen(path, "r");
-	if (!fd) {
-		return -1;
-	}
-
-	if (fgets(buf, sizeof(buf), fd) != NULL) {
-		numa_node = strtoul(buf, NULL, 10);
-	}
-	fclose(fd);
-
-	return numa_node;
-}
-
-static int
-spdk_get_ifaddr_numa_node(const char *if_addr)
-{
-	int ret;
-	struct ifaddrs *ifaddrs, *ifa;
-	struct sockaddr_in addr, addr_in;
-	char path[MAX_STRING_LEN];
-	int numa_node = -1;
-
-	addr_in.sin_addr.s_addr = inet_addr(if_addr);
-
-	ret = getifaddrs(&ifaddrs);
-	if (ret < 0) {
-		return -1;
-	}
-
-	for (ifa = ifaddrs; ifa != NULL; ifa = ifa->ifa_next) {
-		addr = *(struct sockaddr_in *)ifa->ifa_addr;
-		if ((uint32_t)addr_in.sin_addr.s_addr != (uint32_t)addr.sin_addr.s_addr) {
-			continue;
-		}
-		snprintf(path, MAX_STRING_LEN, "/sys/class/net/%s/device/numa_node", ifa->ifa_name);
-		numa_node = spdk_get_numa_node_value(path);
-		break;
-	}
-	freeifaddrs(ifaddrs);
-
-	return numa_node;
-}
 
 static int
 spdk_add_nvmf_discovery_subsystem(void)
 {
-	struct nvmf_tgt_subsystem *app_subsys;
+	struct spdk_nvmf_subsystem *subsystem;
 
-	app_subsys = nvmf_tgt_create_subsystem(SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY, 0,
-					       spdk_env_get_current_core());
-	if (app_subsys == NULL) {
+	subsystem = nvmf_tgt_create_subsystem(SPDK_NVMF_DISCOVERY_NQN, SPDK_NVMF_SUBTYPE_DISCOVERY, 0);
+	if (subsystem == NULL) {
 		SPDK_ERRLOG("Failed creating discovery nvmf library subsystem\n");
 		return -1;
 	}
 
-	spdk_nvmf_subsystem_set_allow_any_host(app_subsys->subsystem, true);
+	spdk_nvmf_subsystem_set_allow_any_host(subsystem, true);
 
 	return 0;
 }
@@ -197,27 +145,6 @@ spdk_nvmf_parse_nvmf_tgt(void)
 }
 
 static int
-spdk_nvmf_allocate_lcore(uint64_t mask, uint32_t lcore)
-{
-	uint32_t end;
-
-	if (lcore == 0) {
-		end = 0;
-	} else {
-		end = lcore - 1;
-	}
-
-	do {
-		if (((mask >> lcore) & 1U) == 1U) {
-			break;
-		}
-		lcore = (lcore + 1) % 64;
-	} while (lcore != end);
-
-	return lcore;
-}
-
-static int
 spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 {
 	const char *nqn, *mode;
@@ -251,6 +178,15 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 			SPDK_NOTICELOG("Please remove Mode from your configuration file.\n");
 			return -1;
 		}
+	}
+
+	/* Core is no longer a valid parameter, but print out a nice
+	 * message if it exists to inform users.
+	 */
+	if (lcore >= 0) {
+		SPDK_NOTICELOG("Core present in the [Subsystem] section of the config file.\n"
+			       "Core was removed as an option. Subsystems can now run on all available cores.\n");
+		SPDK_NOTICELOG("Please remove Core from your configuration file. Ignoring it and continuing.\n");
 	}
 
 	/* Parse Listen sections */
@@ -322,7 +258,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		num_ns++;
 	}
 
-	ret = spdk_nvmf_construct_subsystem(nqn, lcore,
+	ret = spdk_nvmf_construct_subsystem(nqn,
 					    num_listen_addrs, listen_addrs,
 					    num_hosts, hosts, allow_any_host,
 					    sn,
@@ -375,16 +311,14 @@ spdk_nvmf_parse_conf(void)
 }
 
 int
-spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
+spdk_nvmf_construct_subsystem(const char *name,
 			      int num_listen_addresses, struct rpc_listen_address *addresses,
 			      int num_hosts, char *hosts[], bool allow_any_host,
 			      const char *sn, size_t num_ns, struct spdk_nvmf_ns_params *ns_list)
 {
 	struct spdk_nvmf_subsystem *subsystem;
-	struct nvmf_tgt_subsystem *app_subsys;
 	int i, rc;
 	size_t j;
-	uint64_t mask;
 	struct spdk_bdev *bdev;
 
 	if (name == NULL) {
@@ -402,39 +336,15 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 		return -1;
 	}
 
-	if (lcore < 0) {
-		lcore = ++g_last_core;
-	}
-
-	/* Determine which core to assign to the subsystem */
-	mask = spdk_app_get_core_mask();
-	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
-	g_last_core = lcore;
-
-	app_subsys = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME, num_ns, lcore);
-	if (app_subsys == NULL) {
+	subsystem = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME, num_ns);
+	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
 		return -1;
 	}
-	subsystem = app_subsys->subsystem;
 
 	/* Parse Listen sections */
 	for (i = 0; i < num_listen_addresses; i++) {
-		int nic_numa_node = spdk_get_ifaddr_numa_node(addresses[i].traddr);
-		unsigned subsys_numa_node = spdk_env_get_socket_id(app_subsys->lcore);
 		struct spdk_nvme_transport_id trid = {};
-
-		if (nic_numa_node >= 0) {
-			if (subsys_numa_node != (unsigned)nic_numa_node) {
-				SPDK_WARNLOG("Subsystem %s is configured to run on a CPU core %d belonging "
-					     "to a different NUMA node than the associated NIC. "
-					     "This may result in reduced performance.\n",
-					     name, lcore);
-				SPDK_WARNLOG("The NIC is on socket %d\n", nic_numa_node);
-				SPDK_WARNLOG("The Subsystem is on socket %u\n",
-					     subsys_numa_node);
-			}
-		}
 
 		if (spdk_nvme_transport_id_parse_trtype(&trid.trtype, addresses[i].transport)) {
 			SPDK_ERRLOG("Missing listen address transport type\n");
@@ -502,7 +412,6 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 	return 0;
 
 error:
-	spdk_nvmf_delete_subsystem(app_subsys->subsystem);
-	app_subsys->subsystem = NULL;
+	spdk_nvmf_delete_subsystem(subsystem);
 	return -1;
 }
