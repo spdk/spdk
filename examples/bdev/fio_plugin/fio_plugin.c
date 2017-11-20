@@ -146,6 +146,8 @@ spdk_fio_start_poller(void *thread_ctx,
 
 	TAILQ_INSERT_TAIL(&fio_thread->pollers, fio_poller, link);
 
+	SPDK_WARNLOG("Registered poller %p to thread %p\n", fio_poller, fio_thread);
+
 	return (struct spdk_poller *)fio_poller;
 }
 
@@ -156,6 +158,8 @@ spdk_fio_stop_poller(struct spdk_poller *poller, void *thread_ctx)
 	struct spdk_fio_thread *fio_thread = thread_ctx;
 
 	fio_poller = (struct spdk_fio_poller *)poller;
+
+	SPDK_WARNLOG("Unregistered poller %p from thread %p\n", fio_poller, fio_thread);
 
 	TAILQ_REMOVE(&fio_thread->pollers, fio_poller, link);
 
@@ -359,6 +363,8 @@ spdk_fio_init(struct thread_data *td)
 			return -1;
 		}
 
+		SPDK_WARNLOG("Getting bdev I/O channel for bdev %s\n", f->file_name);
+
 		target->ch = spdk_bdev_get_io_channel(target->desc);
 		if (!target->ch) {
 			SPDK_ERRLOG("Unable to get I/O channel for bdev.\n");
@@ -382,6 +388,7 @@ spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 
 	TAILQ_FOREACH_SAFE(target, &fio_thread->targets, link, tmp) {
 		TAILQ_REMOVE(&fio_thread->targets, target, link);
+		SPDK_WARNLOG("Putting bdev I/O channel for bdev %s\n", spdk_bdev_get_name(target->bdev));
 		spdk_put_io_channel(target->ch);
 		spdk_bdev_close(target->desc);
 		free(target);
