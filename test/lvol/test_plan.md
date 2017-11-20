@@ -593,3 +593,18 @@ Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
 - no other operation fails
+
+### destroy_lvol_store - positive tests
+
+#### TEST CASE 30 - Name: delete_lvol_store_persistently_positive
+Positive test for removing lvol store persistently
+Steps:
+- create a malloc bdev
+- construct_lvol_store on created malloc bdev
+- delete lvol store
+- restart vhost
+- check if deleted lvol store does not exist in vhost
+
+Expected result:
+- get_lvol_stores: response should be of no value after destroyed lvol store
+- no other operation fails
