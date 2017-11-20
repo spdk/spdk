@@ -75,6 +75,7 @@ struct spdk_iscsi_tgt_node {
 
 	int maxmap;
 	struct spdk_iscsi_tgt_node_map map[MAX_TARGET_MAP];
+	TAILQ_ENTRY(spdk_iscsi_tgt_node) tailq;
 };
 
 int spdk_iscsi_init_tgt_nodes(void);
