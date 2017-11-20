@@ -31,11 +31,12 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS)
-C_SRCS = bdev_virtio.c bdev_virtio_rpc.c
-LIBNAME = bdev_virtio
+C_SRCS = virtio.c virtio_user.c virtio_pci.c
+C_SRCS += virtio_user/vhost_user.c
+LIBNAME = virtio
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

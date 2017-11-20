@@ -41,7 +41,7 @@ BLOCKDEV_MODULES_DEPS += -libverbs -lrdmacm
 endif
 
 ifeq ($(OS),Linux)
-BLOCKDEV_MODULES_LIST += bdev_aio bdev_virtio
+BLOCKDEV_MODULES_LIST += bdev_aio bdev_virtio virtio
 BLOCKDEV_MODULES_DEPS += -laio
 endif
 

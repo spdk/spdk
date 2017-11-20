@@ -39,8 +39,7 @@
 #include <linux/vhost.h>
 
 #include "spdk_internal/log.h"
-
-#include "../virtio.h"
+#include "spdk_internal/virtio.h"
 
 enum vhost_user_request {
 	VHOST_USER_NONE = 0,
