@@ -911,7 +911,7 @@ spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 	args->arg = cb_arg;
 
 	file->name = strdup(name);
-	spdk_bs_md_create_blob(fs->bs, fs_create_blob_create_cb, args);
+	spdk_bs_md_create_blob(fs->bs, NULL, fs_create_blob_create_cb, args);
 }
 
 static void
