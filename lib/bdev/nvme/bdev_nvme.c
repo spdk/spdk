@@ -1115,7 +1115,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 	struct spdk_nvme_ctrlr	*ctrlr = nvme_ctrlr->ctrlr;
 	struct spdk_nvme_ns	*ns;
 	const struct spdk_nvme_ctrlr_data *cdata;
-	int			ns_id, num_ns;
+	int			ns_id, num_ns, rc;
 	int			bdev_created = 0;
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
@@ -1160,7 +1160,11 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		bdev->disk.ctxt = bdev;
 		bdev->disk.fn_table = &nvmelib_fn_table;
 		bdev->disk.module = SPDK_GET_BDEV_MODULE(nvme);
-		spdk_bdev_register(&bdev->disk);
+		rc = spdk_bdev_register(&bdev->disk);
+		if (rc) {
+			free(bdev);
+			break;
+		}
 
 		TAILQ_INSERT_TAIL(&g_nvme_bdevs, bdev, link);
 
