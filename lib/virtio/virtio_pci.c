@@ -68,8 +68,6 @@ struct virtio_hw {
 #define PCI_CAP_ID_VNDR		0x09
 #define PCI_CAP_ID_MSIX		0x11
 
-static int g_dev_counter = 0;
-
 static inline int
 check_vq_phys_addr_ok(struct virtqueue *vq)
 {
@@ -423,7 +421,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	unsigned i;
 	char bdf[32];
 	struct spdk_pci_addr addr;
-	char *tmp;
+	pci_enum_virtio_ctx enum_cb = ctx;
 
 	addr = spdk_pci_device_get_addr(pci_dev);
 	rc = spdk_pci_addr_fmt(bdf, sizeof(bdf), &addr);
@@ -462,24 +460,8 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		return -1;
 	}
 
-	tmp = spdk_sprintf_alloc("VirtioScsi%"PRIu32, ++g_dev_counter);
-	if (tmp == NULL) {
-		SPDK_ERRLOG("couldn't alloc memory for virtio device name\n");
-		return -1;
-	}
-
-	vdev = calloc(1, sizeof(*vdev));
+	vdev = enum_cb(hw);
 	if (vdev == NULL) {
-		SPDK_ERRLOG("%s: calloc failed\n", bdf);
-		free(tmp);
-		goto err_out;
-	}
-
-	rc = virtio_pci_dev_init(vdev, tmp, hw, SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
-	free(tmp);
-
-	if (rc != 0) {
-		free_virtio_hw(hw);
 		goto err_out;
 	}
 
@@ -491,14 +473,14 @@ err_out:
 }
 
 int
-virtio_enumerate_pci(void)
+virtio_enumerate_pci(pci_enum_virtio_ctx enum_cb)
 {
 	if (!spdk_process_is_primary()) {
 		SPDK_WARNLOG("virtio_pci secondary process support is not implemented yet.\n");
 		return 0;
 	}
 
-	return spdk_pci_virtio_enumerate(pci_enum_virtio_probe_cb, NULL);
+	return spdk_pci_virtio_enumerate(pci_enum_virtio_probe_cb, enum_cb);
 }
 
 int
@@ -509,17 +491,20 @@ virtio_pci_dev_init(struct virtio_dev *vdev, const char *name, void *pci_ctx,
 
 	rc = virtio_dev_init(vdev, &modern_ops, pci_ctx);
 	if (rc != 0) {
-		return -1;
+		return rc;
 	}
 
 	vdev->modern = 1;
-	vdev->name = name;
+	vdev->name = strdup(name);
+	if (vdev->name == NULL) {
+		SPDK_ERRLOG("strdup failed\n");
+		return -1;
+	}
 
 	virtio_dev_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
 				   &vdev->max_queues, sizeof(vdev->max_queues));
 	vdev->max_queues += fixed_queue_num;
 
-	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
 	return 0;
 }
 
