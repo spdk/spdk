@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "097dac1a_4153a0d0",
+        "filename": "test/iscsi_tgt/ip_migration/ip_migration.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-11-20T21:15:00Z",
+      "side": 1,
+      "message": "I think that this should say \"/var/tmp/spdk/${i}.sock\"",
+      "revId": "1134a3cce4190b96a315ad9b6246690717d46f7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
