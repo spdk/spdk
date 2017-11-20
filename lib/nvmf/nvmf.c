@@ -468,6 +468,41 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	return 0;
 }
 
+int
+spdk_nvmf_poll_group_add_ns(struct spdk_nvmf_poll_group *group,
+			    struct spdk_nvmf_subsystem *subsystem,
+			    struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	uint32_t ns_idx;
+
+	sgroup = &group->sgroups[subsystem->id];
+
+	/* The index into the channels array is (nsid - 1) */
+	ns_idx = ns->id - 1;
+
+	if (ns_idx >= sgroup->num_channels) {
+		void *buf;
+
+		sgroup->num_channels = ns_idx + 1;
+		buf = realloc(sgroup->channels,
+			      sgroup->num_channels * sizeof(struct spdk_io_channel *));
+		if (!buf) {
+			return -ENOMEM;
+		}
+		sgroup->channels = buf;
+	}
+
+	if (sgroup->channels[ns_idx] == NULL) {
+		sgroup->channels[ns_idx] = spdk_bdev_get_io_channel(ns->desc);
+	}
+	if (sgroup->channels[ns_idx] == NULL) {
+		return -1;
+	}
+
+	return 0;
+}
+
 SPDK_TRACE_REGISTER_FN(nvmf_trace)
 {
 	spdk_trace_register_object(OBJECT_NVMF_IO, 'r');
