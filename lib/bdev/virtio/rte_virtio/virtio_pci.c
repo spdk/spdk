@@ -69,6 +69,8 @@ struct virtio_hw {
 #define PCI_CAP_ID_VNDR		0x09
 #define PCI_CAP_ID_MSIX		0x11
 
+static int g_dev_counter = 0;
+
 static inline int
 check_vq_phys_addr_ok(struct virtqueue *vq)
 {
@@ -414,7 +416,9 @@ next:
 static int
 virtio_dev_pci_init(struct virtio_dev *vdev)
 {
-	vdev->name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, vdev->id);
+	int vdev_id = ++g_dev_counter;
+
+	vdev->name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, vdev_id);
 	if (!vdev->name) {
 		return -1;
 	}
