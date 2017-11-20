@@ -34,14 +34,8 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib/bdev/ -Irte_virtio
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/vhost/linux
-
+CFLAGS += $(ENV_CFLAGS)
 C_SRCS = bdev_virtio.c bdev_virtio_rpc.c
-C_SRCS += rte_virtio/virtio.c rte_virtio/virtio_pci.c
-C_SRCS += rte_virtio/virtio_user.c
-C_SRCS += rte_virtio/virtio_user/vhost_user.c
-
 LIBNAME = bdev_virtio
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
