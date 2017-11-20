@@ -39,6 +39,7 @@ def header(num):
         252: 'destroy_lvol_store_with_lvol_bdev_positive',
         253: 'destroy_multi_logical_volumes_positive',
         254: 'destroy_after_resize_lvol_bdev_positive',
+        255: 'delete_lvol_store_persistent_positive',
         300: 'destroy_lvol_store_nonexistent_lvs_uuid',
         301: 'delete_lvol_store_underlying_bdev',
         350: 'nested_destroy_logical_volume_negative',
@@ -151,7 +152,8 @@ class TestCases(object):
                                                   self.cluster_size)
         self.c.destroy_lvol_store(uuid_store)
         self.c.delete_bdev(base_name)
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         footer(1)
         return fail_count
 
@@ -397,7 +399,8 @@ class TestCases(object):
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         self.c.destroy_lvol_store(uuid_store)
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         self.c.delete_bdev(base_name)
         footer(250)
         return fail_count
@@ -412,7 +415,8 @@ class TestCases(object):
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         fail_count += self.c.destroy_lvol_store(self.lvs_name)
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         fail_count += self.c.delete_bdev(base_name)
         footer(251)
         return fail_count
@@ -434,7 +438,8 @@ class TestCases(object):
         if self.c.destroy_lvol_store(uuid_store) != 0:
             fail_count += 1
 
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         self.c.delete_bdev(base_name)
         footer(252)
         return fail_count
@@ -457,7 +462,8 @@ class TestCases(object):
             fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
 
         self.c.destroy_lvol_store(uuid_store)
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         self.c.delete_bdev(base_name)
         footer(253)
         return fail_count
@@ -487,9 +493,38 @@ class TestCases(object):
         fail_count += self.c.resize_lvol_bdev(uuid_bdev, 0)
 
         self.c.destroy_lvol_store(uuid_store)
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         self.c.delete_bdev(base_name)
         footer(254)
+        return fail_count
+
+    def test_case255(self):
+        header(255)
+        base_path = path.dirname(sys.argv[0])
+        vhost_path = path.join(self.app_path, 'vhost')
+        config_path = path.join(base_path, 'vhost.conf')
+        pid_path = path.join(base_path, 'vhost.pid')
+        base_name = "Nvme0n1"
+        self.c.destroy_lvol_store(self.lvs_name)
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        if self.c.destroy_lvol_store(self.lvs_name) != 0:
+            fail_count += 1
+        fail_count += self._stop_vhost(pid_path)
+        remove(pid_path)
+        if self._start_vhost(vhost_path, config_path, pid_path) != 0:
+            fail_count += 1
+            footer(255)
+            return fail_count
+        ret_value = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                 self.cluster_size)
+        if ret_value == 0:
+            fail_count += 1
+        footer(255)
         return fail_count
 
     def test_case300(self):
