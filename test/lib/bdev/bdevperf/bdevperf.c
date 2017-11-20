@@ -34,10 +34,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-#include <rte_lcore.h>
-
 #include "spdk/bdev.h"
 #include "spdk/copy_engine.h"
 #include "spdk/endian.h"
@@ -53,6 +49,7 @@ struct bdevperf_task {
 	struct io_target		*target;
 	void				*buf;
 	uint64_t			offset_blocks;
+	TAILQ_ENTRY(bdevperf_task)	link;
 };
 
 static int g_io_size = 0;
@@ -67,6 +64,10 @@ static int g_time_in_sec;
 static int g_show_performance_real_time = 0;
 static bool g_run_failed = false;
 static bool g_zcopy = true;
+static struct spdk_mempool *task_pool;
+static int g_mem_size = 0;
+static int g_task_num;
+static unsigned g_master_core;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -75,24 +76,26 @@ static void bdevperf_submit_single(struct io_target *target);
 #include "../common.c"
 
 struct io_target {
-	char			*name;
-	struct spdk_bdev	*bdev;
-	struct spdk_bdev_desc	*bdev_desc;
-	struct spdk_io_channel	*ch;
-	struct io_target	*next;
-	unsigned		lcore;
-	int			io_completed;
-	int			current_queue_depth;
-	uint64_t		size_in_ios;
-	uint64_t		offset_in_ios;
-	uint64_t		io_size_blocks;
-	bool			is_draining;
-	struct spdk_poller	*run_timer;
-	struct spdk_poller	*reset_timer;
+	char				*name;
+	struct spdk_bdev		*bdev;
+	struct spdk_bdev_desc		*bdev_desc;
+	struct spdk_io_channel		*ch;
+	struct io_target		*next;
+	unsigned			lcore;
+	int				io_completed;
+	int				current_queue_depth;
+	uint64_t			size_in_ios;
+	uint64_t			offset_in_ios;
+	uint64_t			io_size_blocks;
+	bool				is_draining;
+	struct spdk_poller		*run_timer;
+	struct spdk_poller		*reset_timer;
+	TAILQ_HEAD(, bdevperf_task)	task_list;
 };
 
-struct io_target *head[RTE_MAX_LCORE];
-uint32_t coremap[RTE_MAX_LCORE];
+#define SPDK_MAX_LCORE  128
+struct io_target *head[SPDK_MAX_LCORE];
+uint32_t coremap[SPDK_MAX_LCORE];
 static int g_target_count = 0;
 
 /*
@@ -108,7 +111,7 @@ blockdev_heads_init(void)
 {
 	uint32_t i, idx;
 
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
+	for (i = 0; i < SPDK_MAX_LCORE; i++) {
 		head[i] = NULL;
 	}
 
@@ -119,19 +122,41 @@ blockdev_heads_init(void)
 }
 
 static void
+bdevperf_free_target(struct io_target *target)
+{
+	struct bdevperf_task *task, *tmp;
+
+	TAILQ_FOREACH_SAFE(task, &target->task_list, link, tmp) {
+		TAILQ_REMOVE(&target->task_list, task, link);
+		spdk_dma_free(task->buf);
+		spdk_mempool_put(task_pool, task);
+	}
+
+	free(target->name);
+	free(target);
+}
+
+static void
 blockdev_heads_destroy(void)
 {
 	uint32_t i;
 	struct io_target *target, *next_target;
 
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
+	for (i = 0; i < SPDK_MAX_LCORE; i++) {
 		target = head[i];
 		while (target != NULL) {
 			next_target = target->next;
-			free(target->name);
-			free(target);
+			bdevperf_free_target(target);
 			target = next_target;
 		}
+	}
+
+	if (!task_pool) {
+		if (spdk_mempool_count(task_pool) != (size_t)g_task_num) {
+			SPDK_ERRLOG("task_pool count is %zu but should be %d\n",
+				    spdk_mempool_count(task_pool), g_task_num);
+		}
+		spdk_mempool_free(task_pool);
 	}
 }
 
@@ -195,6 +220,7 @@ bdevperf_construct_targets(void)
 		target->is_draining = false;
 		target->run_timer = NULL;
 		target->reset_timer = NULL;
+		TAILQ_INIT(&target->task_list);
 
 		head[index] = target;
 		g_target_count++;
@@ -221,8 +247,6 @@ end_run(void *arg1, void *arg2)
 		}
 	}
 }
-
-struct rte_mempool *task_pool;
 
 static void
 bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
@@ -254,7 +278,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	target->current_queue_depth--;
 	target->io_completed++;
 
-	rte_mempool_put(task_pool, task);
+	TAILQ_INSERT_TAIL(&target->task_list, task, link);
 
 	spdk_bdev_free_io(bdev_io);
 
@@ -267,7 +291,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	if (!target->is_draining) {
 		bdevperf_submit_single(target);
 	} else if (target->current_queue_depth == 0) {
-		complete = spdk_event_allocate(rte_get_master_lcore(), end_run, target, NULL);
+		complete = spdk_event_allocate(g_master_core, end_run, target, NULL);
 		spdk_event_call(complete);
 	}
 }
@@ -332,14 +356,6 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 	spdk_bdev_free_io(bdev_io);
 }
 
-static void
-task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
-{
-	struct bdevperf_task *task = __task;
-
-	task->buf = spdk_dma_zmalloc(g_io_size, g_min_alignment, NULL);
-}
-
 static __thread unsigned int seed = 0;
 
 static void
@@ -355,12 +371,13 @@ bdevperf_submit_single(struct io_target *target)
 	desc = target->bdev_desc;
 	ch = target->ch;
 
-	if (rte_mempool_get(task_pool, (void **)&task) != 0 || task == NULL) {
-		printf("Task pool allocation failed\n");
+	task = TAILQ_FIRST(&target->task_list);
+	if (!task) {
+		printf("Task allocation failed\n");
 		abort();
 	}
 
-	task->target = target;
+	TAILQ_REMOVE(&target->task_list, task, link);
 
 	if (g_is_random) {
 		offset_in_ios = rand_r(&seed) % target->size_in_ios;
@@ -446,7 +463,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		g_run_failed = true;
 	}
 
-	rte_mempool_put(task_pool, task);
+	TAILQ_INSERT_TAIL(&target->task_list, task, link);
 	spdk_bdev_free_io(bdev_io);
 
 	spdk_poller_register(&target->reset_timer, reset_target, target,
@@ -463,8 +480,13 @@ reset_target(void *arg)
 	spdk_poller_unregister(&target->reset_timer);
 
 	/* Do reset. */
-	rte_mempool_get(task_pool, (void **)&task);
-	task->target = target;
+	task = TAILQ_FIRST(&target->task_list);
+	if (!task) {
+		printf("Task allocation failed\n");
+		abort();
+	}
+	TAILQ_REMOVE(&target->task_list, task, link);
+
 	rc = spdk_bdev_reset(target->bdev_desc, target->ch,
 			     reset_cb, task);
 	if (rc) {
@@ -500,6 +522,7 @@ static void usage(char *program_name)
 {
 	printf("%s options\n", program_name);
 	printf("\t[-c configuration file]\n");
+	printf("\t[-d memory size in MB]\n");
 	printf("\t[-m core mask for distributing I/O submission/completion work\n");
 	printf("\t\t(default: 0x1 - use core 0 only)]\n");
 	printf("\t[-q io depth]\n");
@@ -554,27 +577,79 @@ performance_statistics_thread(void *arg)
 	performance_dump(1);
 }
 
-static void
-bdevperf_run(void *arg1, void *arg2)
+static int
+bdevperf_construct_targets_tasks(void)
 {
 	uint32_t i;
 	struct io_target *target;
-	struct spdk_event *event;
-
-	blockdev_heads_init();
-	bdevperf_construct_targets();
+	struct bdevperf_task *task;
+	int j, task_num = g_queue_depth;
 
 	/*
 	 * Create the task pool after we have enumerated the targets, so that we know
 	 *  the min buffer alignment.  Some backends such as AIO have alignment restrictions
 	 *  that must be accounted for.
 	 */
-	task_pool = rte_mempool_create("task_pool", g_target_count * g_queue_depth,
-				       sizeof(struct bdevperf_task),
-				       64, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
+	if (g_reset) {
+		task_num += 1;
+	}
+	g_task_num = g_target_count * task_num;
+	task_pool = spdk_mempool_create("task_pool", g_task_num, sizeof(struct bdevperf_task),
+					64, SPDK_ENV_SOCKET_ID_ANY);
 	if (!task_pool) {
-		SPDK_ERRLOG("Cannot allocate %d tasks\n", g_target_count * g_queue_depth);
+		SPDK_ERRLOG("Cannot allocate %d tasks\n", g_task_num);
+		goto ret;
+	}
+
+	/* Initialize task list for each target */
+	for (i = 0; i < spdk_env_get_core_count(); i++) {
+		target = head[i];
+		if (!target) {
+			break;
+		}
+		while (target != NULL) {
+			for (j = 0; j < task_num; j++) {
+				task = spdk_mempool_get(task_pool);
+				if (!task) {
+					fprintf(stderr, "Get task from task_pool failed\n");
+					goto ret;
+				}
+
+				task->buf = spdk_dma_zmalloc(g_io_size, g_min_alignment, NULL);
+				if (!task->buf) {
+					fprintf(stderr, "Cannot allocate task->buf\n");
+					spdk_mempool_put(task_pool, task);
+					goto ret;
+				}
+
+				task->target = target;
+				TAILQ_INSERT_TAIL(&target->task_list, task, link);
+			}
+			target = target->next;
+		}
+	}
+
+	return 0;
+
+ret:
+	fprintf(stderr, "Bdevperf program exits due to memory allocation issue\n");
+	fprintf(stderr, "Use -d XXX to allocate more huge pages, e.g., -d 4096\n");
+	return -1;
+}
+
+static void
+bdevperf_run(void *arg1, void *arg2)
+{
+	uint32_t i;
+	struct io_target *target;
+	struct spdk_event *event;
+	int rc;
+
+	blockdev_heads_init();
+	bdevperf_construct_targets();
+
+	rc = bdevperf_construct_targets_tasks();
+	if (rc) {
 		spdk_app_stop(1);
 		return;
 	}
@@ -588,6 +663,7 @@ bdevperf_run(void *arg1, void *arg2)
 				     1000000);
 	}
 
+	g_master_core = spdk_env_get_current_core();
 	/* Send events to start all I/O */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
 		target = head[i];
@@ -619,10 +695,13 @@ main(int argc, char **argv)
 	mix_specified = false;
 	core_mask = NULL;
 
-	while ((op = getopt(argc, argv, "c:m:q:s:t:w:M:S")) != -1) {
+	while ((op = getopt(argc, argv, "c:d:m:q:s:t:w:M:S")) != -1) {
 		switch (op) {
 		case 'c':
 			config_file = optarg;
+			break;
+		case 'd':
+			g_mem_size = atoi(optarg);
 			break;
 		case 'm':
 			core_mask = optarg;
@@ -763,6 +842,9 @@ main(int argc, char **argv)
 
 	bdevtest_init(config_file, core_mask, &opts);
 	opts.rpc_addr = NULL;
+	if (g_mem_size) {
+		opts.mem_size = g_mem_size;
+	}
 
 	spdk_app_start(&opts, bdevperf_run, NULL, NULL);
 
