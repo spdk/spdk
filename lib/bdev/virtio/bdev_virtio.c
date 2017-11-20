@@ -574,8 +574,9 @@ scan_target_abort(struct virtio_scsi_scan_base *base, int error)
 	}
 
 	TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, base->vdev, tailq);
-	virtio_dev_reset(base->vdev);
-	virtio_dev_free(base->vdev);
+	virtio_dev_stop(base->vdev);
+	virtio_dev_destruct(base->vdev);
+	free(base->vdev);
 
 
 	if (base->cb_fn) {
@@ -1147,19 +1148,26 @@ bdev_virtio_process_config(void)
 			num_queues = 1;
 		}
 
+		vdev = calloc(1, sizeof(*vdev));
+		if (vdev == NULL) {
+			SPDK_ERRLOG("virtio device calloc failed\n");
+			goto out;
+		}
+
 		name = spdk_conf_section_get_val(sp, "Name");
 		if (name == NULL) {
 			default_name = spdk_sprintf_alloc("VirtioScsi%u", vdev_num);
 			name = default_name;
 		}
 
-		vdev = virtio_user_dev_init(name, path, num_queues, 512, SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
+		rc = virtio_user_dev_init(vdev, name, path, num_queues, 512,
+					  SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
 
 		free(default_name);
 		default_name = NULL;
 
-		if (vdev == NULL) {
-			rc = -1;
+		if (rc != 0) {
+			free(vdev);
 			goto out;
 		}
 	}
@@ -1191,8 +1199,9 @@ bdev_virtio_scsi_free(struct virtio_dev *vdev)
 		virtio_dev_release_queue(vdev, VIRTIO_SCSI_REQUESTQ);
 	}
 
-	virtio_dev_reset(vdev);
-	virtio_dev_free(vdev);
+	virtio_dev_stop(vdev);
+	virtio_dev_destruct(vdev);
+	free(vdev);
 }
 
 static int
@@ -1211,7 +1220,7 @@ bdev_virtio_scsi_scan(struct virtio_dev *vdev, virtio_create_device_cb cb_fn, vo
 	base->cb_fn = cb_fn;
 	base->cb_arg = cb_arg;
 
-	rc = virtio_dev_init(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
+	rc = virtio_dev_restart(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
 	if (rc != 0) {
 		spdk_dma_free(base);
 		return rc;
@@ -1312,8 +1321,9 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 		virtio_dev_release_queue(vdev, VIRTIO_SCSI_CONTROLQ);
 	}
 
-	virtio_dev_reset(vdev);
-	virtio_dev_free(vdev);
+	virtio_dev_stop(vdev);
+	virtio_dev_destruct(vdev);
+	free(vdev);
 
 	TAILQ_REMOVE(&g_virtio_driver.attached_ctrlrs, vdev, tailq);
 	finish_module = TAILQ_EMPTY(&g_virtio_driver.attached_ctrlrs);
@@ -1345,10 +1355,17 @@ create_virtio_user_scsi_device(const char *base_name, const char *path, unsigned
 	struct virtio_dev *vdev;
 	int rc;
 
-	vdev = virtio_user_dev_init(base_name, path, num_queues, queue_size,
-				    SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
-	if (!vdev) {
+	vdev = calloc(1, sizeof(*vdev));
+	if (vdev == NULL) {
+		SPDK_ERRLOG("calloc failed for virtio device %s: %s\n", base_name, path);
+		return -ENOMEM;
+	}
+
+	rc = virtio_user_dev_init(vdev, base_name, path, num_queues, queue_size,
+				  SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
+	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create virito device %s: %s\n", base_name, path);
+		free(vdev);
 		return -EINVAL;
 	}
 
