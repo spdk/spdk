@@ -175,12 +175,12 @@ spdk_rpc_register_method(const char *method, spdk_rpc_method_handler func)
 void
 spdk_rpc_close(void)
 {
-	if (g_rpc_listen_addr_unix.sun_path[0]) {
-		/* Delete the Unix socket file */
-		unlink(g_rpc_listen_addr_unix.sun_path);
-	}
-
 	if (g_jsonrpc_server) {
+		if (g_rpc_listen_addr_unix.sun_path[0]) {
+			/* Delete the Unix socket file */
+			unlink(g_rpc_listen_addr_unix.sun_path);
+		}
+
 		spdk_jsonrpc_server_shutdown(g_jsonrpc_server);
 	}
 }
