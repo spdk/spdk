@@ -317,8 +317,11 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rdma_qpair)
 	if (rdma_qpair->cq) {
 		ibv_destroy_cq(rdma_qpair->cq);
 	}
+	
+	if (rdma_qpair->mgmt_channel) {
+		spdk_put_io_channel(rdma_qpair->mgmt_channel);
+	}
 
-	spdk_put_io_channel(rdma_qpair->mgmt_channel);
 	/* Free all memory */
 	spdk_dma_free(rdma_qpair->cmds);
 	spdk_dma_free(rdma_qpair->cpls);
