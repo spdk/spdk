@@ -1,0 +1,135 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc03a06c_c4cdf353",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-20T10:21:26Z",
+      "side": 1,
+      "message": "shouldn\u0027t you also unregister \u0026fdisk-\u003efd io_device? (registered in line #452)",
+      "range": {
+        "startLine": 456,
+        "startChar": 7,
+        "endLine": 456,
+        "endChar": 19
+      },
+      "revId": "f16083e43088a5f6518ed6764da9c1e047906b61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e207674_b009b509",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-20T10:21:26Z",
+      "side": 1,
+      "message": "shouldn\u0027t you free bdev-\u003ename as well? (line #610)",
+      "revId": "f16083e43088a5f6518ed6764da9c1e047906b61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5205713_aec6edaa",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-20T10:21:26Z",
+      "side": 1,
+      "message": "shouldn\u0027t you free bdev-\u003ebdev.name as well? (#150)",
+      "revId": "f16083e43088a5f6518ed6764da9c1e047906b61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a797ab44_93ccb227",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-20T10:21:26Z",
+      "side": 1,
+      "message": "free bdev-\u003edisk.name",
+      "revId": "f16083e43088a5f6518ed6764da9c1e047906b61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64b88fae_0233acf1",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-20T10:21:26Z",
+      "side": 1,
+      "message": "free pdisk-\u003edisk.name",
+      "revId": "f16083e43088a5f6518ed6764da9c1e047906b61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e357006_46ad4e21",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-20T10:21:26Z",
+      "side": 1,
+      "message": "unregister io_device (line #635)",
+      "revId": "f16083e43088a5f6518ed6764da9c1e047906b61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a319707_77e3a6d6",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-20T10:21:26Z",
+      "side": 1,
+      "message": "shouldn\u0027t this mention just that we failed to register the bdev?",
+      "range": {
+        "startLine": 639,
+        "startChar": 16,
+        "endLine": 639,
+        "endChar": 42
+      },
+      "revId": "f16083e43088a5f6518ed6764da9c1e047906b61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
