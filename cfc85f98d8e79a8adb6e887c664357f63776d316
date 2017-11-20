@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "782bc8f0_e7abf974",
+        "filename": "test/unit/lib/iscsi/init_grp.c/init_grp_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-20T18:25:38Z",
+      "side": 1,
+      "message": "I added this to fix the CONFIG_DEBUG\u003dy build - the trace flag is registered in iscsi_subsystem.c, so the unit tests for other files need to provide their own definitions.",
+      "revId": "cfc85f98d8e79a8adb6e887c664357f63776d316",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
