@@ -35,23 +35,24 @@ def header(num):
         10: 'destroy_multi_logical_volumes_positive',
         11: 'nested_construct_logical_volume_positive',
         12: 'destroy_after_resize_lvol_bdev_positive',
-        13: 'construct_lvs_nonexistent_bdev',
-        14: 'construct_lvs_on_bdev_twice',
-        15: 'construct_lvs_name_twice',
-        16: 'construct_logical_volume_nonexistent_lvs_uuid',
-        17: 'construct_lvol_bdev_on_full_lvol_store',
-        18: 'construct_lvol_bdev_name_twice',
-        19: 'resize_logical_volume_nonexistent_logical_volume',
-        20: 'resize_logical_volume_with_size_out_of_range',
-        21: 'destroy_lvol_store_nonexistent_lvs_uuid',
-        22: 'delete_lvol_store_underlying_bdev',
-        23: 'nested_construct_lvol_bdev_on_full_lvol_store',
-        24: 'nested_destroy_logical_volume_negative',
-        25: 'delete_bdev_positive',
-        26: 'construct_lvol_store_with_cluster_size_max',
-        27: 'construct_lvol_store_with_cluster_size_min',
-        28: 'tasting_positive',
-        29: 'SIGTERM',
+        13: 'delete_lvol_store_persistent_positive',
+        14: 'construct_lvs_nonexistent_bdev',
+        15: 'construct_lvs_on_bdev_twice',
+        16: 'construct_lvs_name_twice',
+        17: 'construct_logical_volume_nonexistent_lvs_uuid',
+        18: 'construct_lvol_bdev_on_full_lvol_store',
+        19: 'construct_lvol_bdev_name_twice',
+        20: 'resize_logical_volume_nonexistent_logical_volume',
+        21: 'resize_logical_volume_with_size_out_of_range',
+        22: 'destroy_lvol_store_nonexistent_lvs_uuid',
+        23: 'delete_lvol_store_underlying_bdev',
+        24: 'nested_construct_lvol_bdev_on_full_lvol_store',
+        25: 'nested_destroy_logical_volume_negative',
+        26: 'delete_bdev_positive',
+        27: 'construct_lvol_store_with_cluster_size_max',
+        28: 'construct_lvol_store_with_cluster_size_min',
+        29: 'tasting_positive',
+        30: 'SIGTERM',
     }
     print("========================================================")
     print("Test Case {num}: Start".format(num=num))
@@ -151,7 +152,8 @@ class TestCases(object):
                                                   self.cluster_size)
         self.c.destroy_lvol_store(uuid_store)
         self.c.delete_bdev(base_name)
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         footer(1)
         return fail_count
 
@@ -305,7 +307,8 @@ class TestCases(object):
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         self.c.destroy_lvol_store(uuid_store)
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         self.c.delete_bdev(base_name)
         footer(7)
         return fail_count
@@ -320,7 +323,8 @@ class TestCases(object):
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         fail_count += self.c.destroy_lvol_store(self.lvs_name)
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         fail_count += self.c.delete_bdev(base_name)
         footer(8)
         return fail_count
@@ -342,7 +346,8 @@ class TestCases(object):
         if self.c.destroy_lvol_store(uuid_store) != 0:
             fail_count += 1
 
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         self.c.delete_bdev(base_name)
         footer(9)
         return fail_count
@@ -365,7 +370,8 @@ class TestCases(object):
             fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
 
         self.c.destroy_lvol_store(uuid_store)
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         self.c.delete_bdev(base_name)
         footer(10)
         return fail_count
@@ -400,25 +406,55 @@ class TestCases(object):
         fail_count += self.c.resize_lvol_bdev(uuid_bdev, 0)
 
         self.c.destroy_lvol_store(uuid_store)
-        fail_count += self.c.check_get_lvol_stores("", "", "")
+        if self.c.check_get_lvol_stores("", "", "") == 1:
+            fail_count += 1
         self.c.delete_bdev(base_name)
         footer(12)
         return fail_count
 
-    # negative tests
     def test_case13(self):
         header(13)
+        base_path = path.dirname(sys.argv[0])
+        vhost_path = path.join(self.app_path, 'vhost')
+        config_path = path.join(base_path, 'vhost.conf')
+        pid_path = path.join(base_path, 'vhost.pid')
+        base_name = "Nvme0n1"
+        #self.c.check_get_bdevs_methods("asdas", "qwe")
+        self.c.destroy_lvol_store(self.lvs_name)
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        fail_count += self._stop_vhost(pid_path)
+        remove(pid_path)
+        if self._start_vhost(vhost_path, config_path, pid_path) != 0:
+            fail_count += 1
+            footer(13)
+            return fail_count
+        ret_value = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                 self.cluster_size)
+        if ret_value != 0:
+            fail_count += 1
+        if self.c.destroy_lvol_store(uuid_store) != 0:
+            fail_count += 1
+        footer(13)
+        return fail_count
+
+    # negative tests
+    def test_case14(self):
+        header(14)
         fail_count = 0
         bad_bdev_id = random.randrange(999999999)
         if self.c.construct_lvol_store(bad_bdev_id,
                                        self.lvs_name,
                                        self.cluster_size) == 0:
             fail_count += 1
-        footer(13)
+        footer(14)
         return fail_count
 
-    def test_case14(self):
-        header(14)
+    def test_case15(self):
+        header(15)
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -432,11 +468,11 @@ class TestCases(object):
             fail_count += 1
         self.c.destroy_lvol_store(uuid_store)
         self.c.delete_bdev(base_name)
-        footer(14)
+        footer(15)
         return fail_count
 
-    def test_case15(self):
-        header(15)
+    def test_case16(self):
+        header(16)
         fail_count = 0
         base_name_1 = self.c.construct_malloc_bdev(self.total_size,
                                                    self.block_size)
@@ -457,21 +493,21 @@ class TestCases(object):
         fail_count += self.c.delete_bdev(base_name_1)
         fail_count += self.c.delete_bdev(base_name_2)
 
-        footer(15)
-        return fail_count
-
-    def test_case16(self):
-        header(16)
-        fail_count = 0
-        if self.c.construct_lvol_bdev(self._gen_lvs_uudi(),
-                                      self.lbd_name,
-                                      32) == 0:
-            fail_count += 1
         footer(16)
         return fail_count
 
     def test_case17(self):
         header(17)
+        fail_count = 0
+        if self.c.construct_lvol_bdev(self._gen_lvs_uudi(),
+                                      self.lbd_name,
+                                      32) == 0:
+            fail_count += 1
+        footer(17)
+        return fail_count
+
+    def test_case18(self):
+        header(18)
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -492,11 +528,11 @@ class TestCases(object):
         self.c.delete_bdev(uuid_bdev)
         self.c.destroy_lvol_store(uuid_store)
         self.c.delete_bdev(base_name)
-        footer(17)
+        footer(18)
         return fail_count
 
-    def test_case18(self):
-        header(18)
+    def test_case19(self):
+        header(19)
         size = (self.total_size / 2) - 1
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
@@ -518,19 +554,19 @@ class TestCases(object):
         self.c.delete_bdev(uuid_bdev)
         self.c.destroy_lvol_store(uuid_store)
         self.c.delete_bdev(base_name)
-        footer(18)
-        return fail_count
-
-    def test_case19(self):
-        header(19)
-        fail_count = 0
-        if self.c.resize_lvol_bdev(self._gen_lvb_uudi(), 16) == 0:
-            fail_count += 1
         footer(19)
         return fail_count
 
     def test_case20(self):
         header(20)
+        fail_count = 0
+        if self.c.resize_lvol_bdev(self._gen_lvb_uudi(), 16) == 0:
+            fail_count += 1
+        footer(20)
+        return fail_count
+
+    def test_case21(self):
+        header(21)
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -549,19 +585,19 @@ class TestCases(object):
         self.c.delete_bdev(uuid_bdev)
         self.c.destroy_lvol_store(uuid_store)
         self.c.delete_bdev(base_name)
-        footer(20)
-        return fail_count
-
-    def test_case21(self):
-        header(21)
-        fail_count = 0
-        if self.c.destroy_lvol_store(self._gen_lvs_uudi()) == 0:
-            fail_count += 1
         footer(21)
         return fail_count
 
     def test_case22(self):
         header(22)
+        fail_count = 0
+        if self.c.destroy_lvol_store(self._gen_lvs_uudi()) == 0:
+            fail_count += 1
+        footer(22)
+        return fail_count
+
+    def test_case23(self):
+        header(23)
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -576,13 +612,8 @@ class TestCases(object):
         if self.c.destroy_lvol_store(uuid_store) == 0:
             fail_count += 1
 
-        footer(22)
+        footer(23)
         return fail_count
-
-    def test_case23(self):
-        print("Test of this feature not yet implemented.")
-        pass
-        return 0
 
     def test_case24(self):
         print("Test of this feature not yet implemented.")
@@ -590,7 +621,12 @@ class TestCases(object):
         return 0
 
     def test_case25(self):
-        header(25)
+        print("Test of this feature not yet implemented.")
+        pass
+        return 0
+
+    def test_case26(self):
+        header(26)
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         uuid_store = self.c.construct_lvol_store(base_name,
@@ -599,18 +635,7 @@ class TestCases(object):
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
         self.c.delete_bdev(base_name)
-        fail_count += self.c.check_get_lvol_stores("", "", "")
-        footer(25)
-        return fail_count
-
-    def test_case26(self):
-        header(26)
-        fail_count = 0
-        base_name = self.c.construct_malloc_bdev(self.total_size,
-                                                 self.block_size)
-        if self.c.construct_lvol_store(base_name,
-                                       self.lvs_name,
-                                       (self.total_size * 1024 * 1024) + 1) == 0:
+        if self.c.check_get_lvol_stores("", "", "") == 1:
             fail_count += 1
         footer(26)
         return fail_count
@@ -621,13 +646,25 @@ class TestCases(object):
         base_name = self.c.construct_malloc_bdev(self.total_size,
                                                  self.block_size)
         if self.c.construct_lvol_store(base_name,
-                                       self.lvs_name, 0) == 0:
+                                       self.lvs_name,
+                                       (self.total_size * 1024 * 1024) + 1) == 0:
             fail_count += 1
         footer(27)
         return fail_count
 
     def test_case28(self):
         header(28)
+        fail_count = 0
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        if self.c.construct_lvol_store(base_name,
+                                       self.lvs_name, 0) == 0:
+            fail_count += 1
+        footer(28)
+        return fail_count
+
+    def test_case29(self):
+        header(29)
         fail_count = 0
         uuid_bdevs = []
         base_name = "Nvme0n1"
@@ -666,7 +703,7 @@ class TestCases(object):
         remove(pid_path)
         if self._start_vhost(vhost_path, config_path, pid_path) != 0:
             fail_count += 1
-            footer(28)
+            footer(29)
             return fail_count
 
         # Check if configuration was properly loaded after tasting
@@ -693,7 +730,7 @@ class TestCases(object):
                 pprint.pprint([o, n])
 
         if fail_count != 0:
-            footer(28)
+            footer(29)
             return fail_count
 
         # Try modifying loaded configuration
@@ -731,11 +768,11 @@ class TestCases(object):
         if self.c.destroy_lvol_store(uuid_store) != 0:
             fail_count += 1
 
-        footer(28)
+        footer(29)
         return fail_count
 
-    def test_case29(self):
-        header(29)
+    def test_case30(self):
+        header(30)
         pid_path = path.join(self.path, 'vhost.pid')
 
         base_name = self.c.construct_malloc_bdev(self.total_size,
@@ -747,5 +784,5 @@ class TestCases(object):
                                                   self.cluster_size)
 
         fail_count += self._stop_vhost(pid_path)
-        footer(29)
+        footer(30)
         return fail_count
