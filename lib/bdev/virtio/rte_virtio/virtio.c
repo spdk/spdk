@@ -427,12 +427,7 @@ virtqueue_dequeue_burst_rx(struct virtqueue *vq, struct virtio_req **rx_pkts,
 static inline void
 virtqueue_iov_to_desc(struct virtqueue *vq, uint16_t desc_idx, struct iovec *iov)
 {
-	if (!vq->vdev->is_hw) {
-		vq->vq_ring.desc[desc_idx].addr  = (uintptr_t)iov->iov_base;
-	} else {
-		vq->vq_ring.desc[desc_idx].addr = spdk_vtophys(iov->iov_base);
-	}
-
+	vq->vq_ring.desc[desc_idx].addr = spdk_vtophys(iov->iov_base);
 	vq->vq_ring.desc[desc_idx].len = iov->iov_len;
 }
 
