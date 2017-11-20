@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3382bafd_2d791ad4",
+        "filename": "examples/nvme/arbitration/arbitration.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-20T16:00:49Z",
+      "side": 1,
+      "message": "This is calling spdk_mempool_get() and spdk_dma_zmalloc() on every I/O - can we just allocate the tasks and buffers at startup instead?",
+      "revId": "2af65b2c51a9d0a005221be4263ada505be9bacb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
