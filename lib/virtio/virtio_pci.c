@@ -38,7 +38,7 @@
 #include "spdk/env.h"
 #include "spdk/pci_ids.h"
 
-#include "virtio.h"
+#include "spdk_internal/virtio.h"
 
 struct virtio_hw {
 	uint8_t	    use_msix;
