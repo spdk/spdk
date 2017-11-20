@@ -416,11 +416,18 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 	if (subsystem->id >= group->num_sgroups) {
 		void *buf;
 
-		group->num_sgroups = subsystem->id + 1;
-		buf = realloc(group->sgroups, group->num_sgroups * sizeof(*sgroup));
+
+		buf = realloc(group->sgroups, (subsystem->id + 1) * sizeof(*sgroup));
 		if (!buf) {
 			return -ENOMEM;
 		}
+
+		/* Zero out the newly allocated memory */
+		memset(&group->sgroups[group->num_sgroups],
+		       0,
+		       (subsystem->id + 1 - group->num_sgroups) * sizeof(struct spdk_io_channel *));
+
+		group->num_sgroups = subsystem->id + 1;
 		group->sgroups = buf;
 	}
 
@@ -464,6 +471,50 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	sgroup->num_channels = 0;
 	free(sgroup->channels);
 	sgroup->channels = NULL;
+
+	return 0;
+}
+
+int
+spdk_nvmf_poll_group_add_ns(struct spdk_nvmf_poll_group *group,
+			    struct spdk_nvmf_subsystem *subsystem,
+			    struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	uint32_t ns_idx;
+
+	sgroup = &group->sgroups[subsystem->id];
+
+	/* The index into the channels array is (nsid - 1) */
+	ns_idx = ns->id - 1;
+
+	if (ns_idx >= sgroup->num_channels) {
+		void *buf;
+
+		buf = realloc(sgroup->channels,
+			      ns->id * sizeof(struct spdk_io_channel *));
+		if (!buf) {
+			return -ENOMEM;
+		}
+
+		/* Zero out the newly allocated memory */
+		memset(&sgroup->channels[sgroup->num_channels],
+		       0,
+		       (ns->id - sgroup->num_channels) * sizeof(struct spdk_io_channel *));
+
+		sgroup->num_channels = ns->id;
+		sgroup->channels = buf;
+	}
+
+	/* The channel could have been created in response to a subsystem creation
+	 * event already propagating through the system */
+	if (sgroup->channels[ns_idx] == NULL) {
+		sgroup->channels[ns_idx] = spdk_bdev_get_io_channel(ns->desc);
+	}
+
+	if (sgroup->channels[ns_idx] == NULL) {
+		return -1;
+	}
 
 	return 0;
 }
