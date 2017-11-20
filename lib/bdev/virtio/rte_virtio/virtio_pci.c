@@ -470,8 +470,16 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		return -1;
 	}
 
-	vdev = virtio_dev_construct(&modern_ops, hw);
+	vdev = calloc(1, sizeof(*vdev));
 	if (vdev == NULL) {
+		SPDK_ERRLOG("calloc failed\n");
+		free_virtio_hw(hw);
+		return -1;
+	}
+
+	rc = virtio_dev_init(vdev, &modern_ops, hw);
+	if (rc != 0) {
+		free(vdev);
 		free_virtio_hw(hw);
 		return -1;
 	}

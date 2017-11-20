@@ -381,34 +381,33 @@ static const struct virtio_dev_ops virtio_user_ops = {
 	.dump_json_config = virtio_user_dump_json_config,
 };
 
-struct virtio_dev *
-virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queues,
-		     uint32_t queue_size,
-		     uint16_t fixed_queue_num)
+int
+virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path,
+		     uint16_t requested_queues, uint32_t queue_size, uint16_t fixed_queue_num)
 {
-	struct virtio_dev *vdev;
 	struct virtio_user_dev *dev;
 	uint64_t max_queues;
 	char err_str[64];
+	int rc;
 
 	if (name == NULL) {
 		SPDK_ERRLOG("No name gived for controller: %s\n", path);
-		return NULL;
+		return -1;
 	} else if (requested_queues == 0) {
 		SPDK_ERRLOG("Can't create controller with no queues: %s\n", path);
-		return NULL;
+		return -1;
 	}
 
 	dev = calloc(1, sizeof(*dev));
 	if (dev == NULL) {
-		return NULL;
+		return -1;
 	}
 
-	vdev = virtio_dev_construct(&virtio_user_ops, dev);
-	if (vdev == NULL) {
+	rc = virtio_dev_init(vdev, &virtio_user_ops, dev);
+	if (rc != 0) {
 		SPDK_ERRLOG("Failed to init device: %s\n", path);
 		free(dev);
-		return NULL;
+		return -1;
 	}
 
 	vdev->is_hw = 0;
@@ -447,9 +446,9 @@ virtio_user_dev_init(const char *name, const char *path, uint16_t requested_queu
 	}
 
 	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
-	return vdev;
+	return 0;
 
 err:
 	virtio_dev_free(vdev);
-	return NULL;
+	return -1;
 }

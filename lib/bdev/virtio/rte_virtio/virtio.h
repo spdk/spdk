@@ -210,21 +210,21 @@ uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 int virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req);
 
 /**
- * Construct virtio device.  This will set vdev->id field.
+ * Init a virtio device.  This will set vdev->id field.
  * The device has to be freed with \c virtio_dev_free.
  *
  * \param ops backend callbacks
  * \param ctx argument for the backend callbacks
  */
-struct virtio_dev *virtio_dev_construct(const struct virtio_dev_ops *ops, void *ctx);
+int virtio_dev_init(struct virtio_dev *vdev, const struct virtio_dev_ops *ops, void *ctx);
 
 /**
- * Reset and reinit a virtio device.  This will also renegotiate feature flags.
+ * Reset and start a virtio device.  This will also renegotiate feature flags.
  *
  * \param vdev vhost device
  * \param req_features features this driver supports
  */
-int virtio_dev_init(struct virtio_dev *vdev, uint64_t req_features);
+int virtio_dev_restart(struct virtio_dev *vdev, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);
 
 /**
@@ -288,7 +288,7 @@ void virtio_dev_release_queue(struct virtio_dev *vdev, uint16_t index);
 
 /**
  * Reset given virtio device.  This will leave the device in unusable state.
- * To reuse the device, call \c virtio_dev_init.
+ * To reuse the device, call \c virtio_dev_start.
  *
  * \param vdev virtio device
  */
@@ -367,8 +367,10 @@ void virtio_dev_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write
 int virtio_enumerate_pci(void);
 
 /**
- * Connect to a vhost-user device and create corresponding virtio_dev.
+ * Connect to a vhost-user device and init corresponding virtio_dev struct.
+ * The virtio_dev will have to be freed with \c virtio_dev_free.
  *
+ * \param vdev preallocated vhost device struct to operate on
  * \param name name of this virtio device
  * \param path path to the Unix domain socket of the vhost-user device
  * \param requested_queues maximum number of request queues that this
@@ -379,8 +381,8 @@ int virtio_enumerate_pci(void);
  * additional event and control queues.
  * \return virtio device
  */
-struct virtio_dev *virtio_user_dev_init(const char *name, const char *path,
-					uint16_t requested_queues,
-					uint32_t queue_size, uint16_t fixed_queue_num);
+int virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path,
+			 uint16_t requested_queues, uint32_t queue_size,
+			 uint16_t fixed_queue_num);
 
 #endif /* SPDK_VIRTIO_H */
