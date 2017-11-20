@@ -79,6 +79,12 @@ _spdk_bs_release_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 	bs->num_free_clusters++;
 }
 
+void
+spdk_blob_opts_init(struct spdk_blob_opts *opts)
+{
+	opts->thin_provisioned = false;
+}
+
 static struct spdk_blob *
 _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 {
@@ -2479,14 +2485,22 @@ _spdk_bs_md_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
-void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
+void spdk_bs_md_create_blob(struct spdk_blob_store *bs, struct spdk_blob_opts *o,
 			    spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob	*blob;
 	uint32_t		page_idx;
 	struct spdk_bs_cpl 	cpl;
+	struct spdk_blob_opts opts;
 	spdk_bs_sequence_t	*seq;
 	spdk_blob_id		id;
+	int					rc;
+
+	if (o) {
+		opts = *o;
+	} else {
+		spdk_blob_opts_init(&opts);
+	}
 
 	page_idx = spdk_bit_array_find_first_clear(bs->used_md_pages, 0);
 	if (page_idx >= spdk_bit_array_capacity(bs->used_md_pages)) {
@@ -2504,6 +2518,15 @@ void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
 		cb_fn(cb_arg, 0, -ENOMEM);
 		return;
 	}
+
+	rc = spdk_blob_md_set_xattr(blob, "provisioning", opts.thin_provisioned, sizeof(bool));
+	if (rc < 0) {
+		_spdk_blob_free(blob);
+		cb_fn(cb_arg, 0, rc);
+		return;
+	}
+
+	blob->thin_provisioned = opts.thin_provisioned;
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
