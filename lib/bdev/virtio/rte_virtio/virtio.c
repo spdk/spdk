@@ -68,7 +68,6 @@
 struct virtio_driver g_virtio_driver = {
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.init_ctrlrs),
 	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.attached_ctrlrs),
-	.ctrlr_counter = 0,
 };
 
 /* Chain all the descriptors in the ring with an END */
@@ -316,7 +315,6 @@ struct virtio_dev *
 	virtio_dev_construct(const struct virtio_dev_ops *ops, void *ctx)
 {
 	struct virtio_dev *vdev;
-	unsigned vdev_num;
 
 	vdev = calloc(1, sizeof(*vdev));
 	if (vdev == NULL) {
@@ -324,8 +322,6 @@ struct virtio_dev *
 		return NULL;
 	}
 
-	vdev_num = __sync_add_and_fetch(&g_virtio_driver.ctrlr_counter, 1);
-	vdev->id = vdev_num;
 	pthread_mutex_init(&vdev->mutex, NULL);
 	vdev->backend_ops = ops;
 	vdev->ctx = ctx;

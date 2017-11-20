@@ -72,9 +72,6 @@ struct virtio_dev {
 	/** Max number of queues the host supports. */
 	uint16_t	max_queues;
 
-	/** Device index. */
-	uint32_t	id;
-
 	/** Common device & guest features. */
 	uint64_t	negotiated_features;
 
@@ -189,9 +186,6 @@ struct virtio_req {
 struct virtio_driver {
 	TAILQ_HEAD(, virtio_dev) init_ctrlrs;
 	TAILQ_HEAD(, virtio_dev) attached_ctrlrs;
-
-	/* Increment-only virtio_dev counter */
-	unsigned ctrlr_counter;
 };
 
 extern struct virtio_driver g_virtio_driver;
