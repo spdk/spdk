@@ -422,7 +422,7 @@ function discover_bdevs()
 	if [ -z "$rpc_port" ]; then
 		$rootdir/scripts/rpc.py get_bdevs
 	else
-		$rootdir/scripts/rpc.py -p $rpc_port get_bdevs
+		$rootdir/scripts/rpc.py -s 127.0.0.1 -p $rpc_port get_bdevs
 	fi
 
 	# Shut down the bdev service

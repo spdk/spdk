@@ -85,81 +85,81 @@ if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 	timing_exit unittest
 fi
 
-timing_enter lib
-
-if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
-	run_test test/lib/bdev/blockdev.sh
-fi
-
-if [ $SPDK_TEST_EVENT -eq 1 ]; then
-	run_test test/lib/event/event.sh
-fi
-
-if [ $SPDK_TEST_NVME -eq 1 ]; then
-	run_test test/lib/nvme/nvme.sh
-	# Only test hotplug without ASAN enabled. Since if it is
-	# enabled, it catches SEGV earlier than our handler which
-	# breaks the hotplug logic
-	if [ $SPDK_RUN_ASAN -eq 0 ]; then
-		run_test test/lib/nvme/hotplug.sh intel
-	fi
-fi
-
-run_test test/lib/env/env.sh
-
-if [ $SPDK_TEST_IOAT -eq 1 ]; then
-	run_test test/lib/ioat/ioat.sh
-fi
-
-timing_exit lib
-
-if [ $SPDK_TEST_ISCSI -eq 1 ]; then
-	run_test ./test/iscsi_tgt/iscsi_tgt.sh
-fi
-
-if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
-	run_test ./test/blobfs/rocksdb/rocksdb.sh
-fi
-
-if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	run_test ./test/nvmf/nvmf.sh
-fi
-
-if [ $SPDK_TEST_VHOST -eq 1 ]; then
-	timing_enter vhost
-
-	timing_enter integrity_blk
-	run_test ./test/vhost/spdk_vhost.sh --integrity-blk
-	timing_exit integrity_blk
-
-	timing_enter integrity
-	run_test ./test/vhost/spdk_vhost.sh --integrity
-	timing_exit integrity
-
-	timing_enter integrity_lvol_scsi
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
-	timing_exit integrity_lvol_scsi
-
-	timing_enter integrity_lvol_blk
-	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
-	timing_exit integrity_lvol_blk
-
-	timing_exit vhost
-fi
-
-if [ $SPDK_TEST_LVOL -eq 1 ]; then
-	timing_enter lvol
-	run_test ./test/lvol/lvol.sh --test-cases=1,2,3,4,5,7,8,9,10,13,14,15,16,17,18,21,22,25,26,27,28,29
-	timing_exit lvol
-fi
+#timing_enter lib
+#
+#if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
+#	run_test test/lib/bdev/blockdev.sh
+#fi
+#
+#if [ $SPDK_TEST_EVENT -eq 1 ]; then
+#	run_test test/lib/event/event.sh
+#fi
+#
+#if [ $SPDK_TEST_NVME -eq 1 ]; then
+#	run_test test/lib/nvme/nvme.sh
+#	# Only test hotplug without ASAN enabled. Since if it is
+#	# enabled, it catches SEGV earlier than our handler which
+#	# breaks the hotplug logic
+#	if [ $SPDK_RUN_ASAN -eq 0 ]; then
+#		run_test test/lib/nvme/hotplug.sh intel
+#	fi
+#fi
+#
+#run_test test/lib/env/env.sh
+#
+#if [ $SPDK_TEST_IOAT -eq 1 ]; then
+#	run_test test/lib/ioat/ioat.sh
+#fi
+#
+#timing_exit lib
+#
+#if [ $SPDK_TEST_ISCSI -eq 1 ]; then
+#	run_test ./test/iscsi_tgt/iscsi_tgt.sh
+#fi
+#
+#if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+#	run_test ./test/blobfs/rocksdb/rocksdb.sh
+#fi
+#
+#if [ $SPDK_TEST_NVMF -eq 1 ]; then
+#	run_test ./test/nvmf/nvmf.sh
+#fi
+#
+#if [ $SPDK_TEST_VHOST -eq 1 ]; then
+#	timing_enter vhost
+#
+#	timing_enter integrity_blk
+#	run_test ./test/vhost/spdk_vhost.sh --integrity-blk
+#	timing_exit integrity_blk
+#
+#	timing_enter integrity
+#	run_test ./test/vhost/spdk_vhost.sh --integrity
+#	timing_exit integrity
+#
+#	timing_enter integrity_lvol_scsi
+#	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
+#	timing_exit integrity_lvol_scsi
+#
+#	timing_enter integrity_lvol_blk
+#	run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
+#	timing_exit integrity_lvol_blk
+#
+#	timing_exit vhost
+#fi
+#
+#if [ $SPDK_TEST_LVOL -eq 1 ]; then
+#	timing_enter lvol
+#	run_test ./test/lvol/lvol.sh --test-cases=1,2,3,4,5,7,8,9,10,13,14,15,16,17,18,21,22,25,26,27,28,29
+#	timing_exit lvol
+#fi
 
 if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
 	run_test ./test/vhost/initiator/blockdev.sh
 fi
 
-if [ $SPDK_TEST_NVML -eq 1 ]; then
-	run_test ./test/pmem/pmem.sh
-fi
+#if [ $SPDK_TEST_NVML -eq 1 ]; then
+#	run_test ./test/pmem/pmem.sh
+#fi
 
 timing_enter cleanup
 rbd_cleanup
