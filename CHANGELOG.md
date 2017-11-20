@@ -27,6 +27,11 @@ framework to request registration and unregistration of pollers.
 The poller abstraction was removed from the bdev layer. There is now a general purpose
 abstraction for pollers available in include/spdk/io_channel.h
 
+### NVMe-oF Target
+
+Subsystems are no longer tied explicitly to CPU cores. Instead, connections are handed out to the available
+cores round-robin. The "Core" option in the configuration file has been removed.
+
 ## v17.10: Logical Volumes
 
 ### New dependencies
