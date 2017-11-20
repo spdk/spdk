@@ -589,6 +589,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	struct spdk_bdev *bdev;
 	struct lvol_store_bdev *lvs_bdev;
 	uint64_t total_size;
+	int rc;
 
 	if (!lvol->old_name) {
 		return NULL;
@@ -623,7 +624,12 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	bdev->fn_table = &vbdev_lvol_fn_table;
 	bdev->module = SPDK_GET_BDEV_MODULE(lvol);
 
-	spdk_vbdev_register(bdev, &lvs_bdev->bdev, 1);
+	rc = spdk_vbdev_register(bdev, &lvs_bdev->bdev, 1);
+	if (rc) {
+		free(bdev->name);
+		free(bdev);
+		return NULL;
+	}
 
 	return bdev;
 }

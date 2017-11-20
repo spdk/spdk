@@ -1757,12 +1757,17 @@ spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io)
 	return spdk_io_channel_get_thread(bdev_io->ch->channel);
 }
 
-static void
+static int
 _spdk_bdev_register(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_module_if *module;
 
 	assert(bdev->module != NULL);
+
+	if (spdk_bdev_get_by_name(bdev->name)) {
+		SPDK_ERRLOG("Duplicated bdev name:%s provided\n", bdev->name);
+		return -1;
+	}
 
 	bdev->status = SPDK_BDEV_STATUS_READY;
 
@@ -1786,25 +1791,33 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 			module->examine(bdev);
 		}
 	}
+
+	return 0;
 }
 
-void
+int
 spdk_bdev_register(struct spdk_bdev *bdev)
 {
-	_spdk_bdev_register(bdev);
+	return _spdk_bdev_register(bdev);
 }
 
-void
+int
 spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int base_bdev_count)
 {
-	int i;
+	int i, rc;
 
-	_spdk_bdev_register(vbdev);
+	rc = _spdk_bdev_register(vbdev);
+	if (rc) {
+		return rc;
+	}
+
 	for (i = 0; i < base_bdev_count; i++) {
 		assert(base_bdevs[i] != NULL);
 		TAILQ_INSERT_TAIL(&vbdev->base_bdevs, base_bdevs[i], base_bdev_link);
 		TAILQ_INSERT_TAIL(&base_bdevs[i]->vbdevs, vbdev, vbdev_link);
 	}
+
+	return 0;
 }
 
 void
