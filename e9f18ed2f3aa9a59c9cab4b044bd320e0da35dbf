@@ -16,6 +16,24 @@
       "revId": "e9f18ed2f3aa9a59c9cab4b044bd320e0da35dbf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ac43552_0fadf7b6",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2017-11-20T10:49:38Z",
+      "side": 1,
+      "message": "Thanks for your comment:)\nI have change the nvmf configure file and set MaxQueueDepth to 4096,this case sometimes can pass.\nIn DTS-based test suite we test perf as host with many differnets qd and io_size, but max qd is 128 and max io_size is 131072.",
+      "parentUuid": "7aea4f7a_863f64a8",
+      "revId": "e9f18ed2f3aa9a59c9cab4b044bd320e0da35dbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
