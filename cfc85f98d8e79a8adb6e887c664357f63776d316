@@ -16,6 +16,24 @@
       "revId": "cfc85f98d8e79a8adb6e887c664357f63776d316",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac36a83e_43bd021e",
+        "filename": "test/unit/lib/iscsi/init_grp.c/init_grp_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-20T23:13:05Z",
+      "side": 1,
+      "message": "Thank you Daniel, \n\nI read information about debug option like CONFIG_DEBUG\u003dy in the SPDK mailing list but I have not tried yet and did not notice the issue you pointed out.\n\nI will build with CONFIG_DEBUG\u003dy from now too.",
+      "parentUuid": "782bc8f0_e7abf974",
+      "revId": "cfc85f98d8e79a8adb6e887c664357f63776d316",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
