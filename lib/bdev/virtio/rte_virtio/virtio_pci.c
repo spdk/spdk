@@ -483,7 +483,6 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		free_virtio_hw(hw);
 		return -1;
 	}
-	vdev->is_hw = 1;
 	vdev->modern = 1;
 
 	rc = virtio_dev_pci_init(vdev);
