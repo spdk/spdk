@@ -517,7 +517,7 @@ _spdk_lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol store initialized\n");
 
 	/* create super blob */
-	spdk_bs_md_create_blob(lvs->blobstore, _spdk_super_blob_create_cb, lvs_req);
+	spdk_bs_md_create_blob(lvs->blobstore, NULL, _spdk_super_blob_create_cb, lvs_req);
 }
 
 void
@@ -985,7 +985,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
 	req->lvol = lvol;
 
-	spdk_bs_md_create_blob(lvs->blobstore, _spdk_lvol_create_cb, req);
+	spdk_bs_md_create_blob(lvs->blobstore, NULL, _spdk_lvol_create_cb, req);
 
 	return 0;
 }

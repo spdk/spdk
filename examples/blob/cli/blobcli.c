@@ -830,7 +830,7 @@ load_bs_cb(void *arg1, struct spdk_blob_store *bs, int bserrno)
 		spdk_bs_get_super(cli_context->bs, show_bs_cb, cli_context);
 		break;
 	case CLI_CREATE_BLOB:
-		spdk_bs_md_create_blob(cli_context->bs, blob_create_cb,
+		spdk_bs_md_create_blob(cli_context->bs, NULL, blob_create_cb,
 				       cli_context);
 		break;
 	case CLI_SET_XATTR:
