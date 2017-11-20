@@ -2866,6 +2866,19 @@ _spdk_bs_iter_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		return;
 	}
 
+	/*
+	 * We will need an internal version of spdk_bs_md_open_blob(), that only allows
+	 *  reading of metadata (no reads/writes).  This will guard against cases where
+	 *  lvol library iterates through lvols in lvolstore A, and one of those lvols refers
+	 *  to an lvol in lvolstore B which has not yet been iterated through.  If the
+	 *  the iteration does just a "partial" open, where only metadata is read, then
+	 *  it will not need to get a bs_dev for the base image and we will avoid this problem.
+	 *
+	 * So probably something like:
+	 *  _spdk_bs_md_open_blob(bs, id, cb_fn, cb_arg, md_only)
+	 *  spdk_bs_md_open_blob(...) calls _spdk_bs_md_open_blob(md_only = false)
+	 *  and here we call _spdk_bs_md_open_blob(bs, id, cb_fn, cb_arg, md_only = true)
+	 */
 	spdk_bs_md_open_blob(bs, id, _spdk_bs_iter_cpl, ctx);
 }
 

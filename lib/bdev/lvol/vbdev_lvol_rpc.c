@@ -40,6 +40,25 @@
 
 SPDK_LOG_REGISTER_TRACE_FLAG("lvolrpc", SPDK_TRACE_LVOL_RPC)
 
+/*
+ * New RPCs for logical volumes:
+ *
+ * prepare_lvol_snapshot <lvol name or UUID>
+ *	marks underlying blob as read-only
+ *
+ * construct_lvol_bdev [-t/--thin]
+ *	spdk_bs_md_creaet_blob()
+ *	spdk_bs_md_open_blob()
+ *	spdk_bs_md_set_thin_provision(blob, NULL, cb_fn, cb_arg)
+ *		- NULL parameter means there is no backing blob - use zeroes instead
+ *	spdk_bs_md_resize_blob(blob, sz)
+ *	spdk_bs_md_sync_blob(blob, cb_fn, cb_arg)
+ *
+ * construct_lvol_bdev [-c/--clone] <lvol name for snapshot base image>
+ *	Same as above, except:
+ *		spdk_bs_md_set_thin_provision(blob, "lvol:uuid", cb_fn, cb_arg)
+ *		For resize, set size same a size of base image
+ */
 struct rpc_construct_lvol_store {
 	char *lvs_name;
 	char *bdev_name;
