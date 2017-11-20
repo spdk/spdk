@@ -352,7 +352,7 @@ static void
 create_blob(struct hello_context_t *hello_context)
 {
 	SPDK_NOTICELOG("entry\n");
-	spdk_bs_md_create_blob(hello_context->bs, blob_create_complete,
+	spdk_bs_md_create_blob(hello_context->bs, NULL, blob_create_complete,
 			       hello_context);
 }
 
