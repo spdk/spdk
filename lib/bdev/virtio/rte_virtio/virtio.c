@@ -263,6 +263,10 @@ virtio_alloc_queues(struct virtio_dev *dev)
 	uint16_t i;
 	int ret;
 
+	if (dev->vqs != NULL) {
+		return 0;
+	}
+
 	dev->vqs = rte_zmalloc(NULL, sizeof(struct virtqueue *) * nr_vq, 0);
 	if (!dev->vqs) {
 		SPDK_ERRLOG("failed to allocate %"PRIu16" vqs\n", nr_vq);
@@ -329,7 +333,6 @@ struct virtio_dev *
 	return vdev;
 }
 
-/* reset device and renegotiate features if needed */
 int
 virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 {
