@@ -77,10 +77,20 @@ struct spdk_nvmf_transport_poll_group {
 	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)	link;
 };
 
+struct spdk_nvmf_subsystem_poll_group {
+	/* Array of channels for each namespace indexed by nsid - 1 */
+	struct spdk_io_channel	**channels;
+	uint32_t		num_channels;
+};
+
 struct spdk_nvmf_poll_group {
 	struct spdk_poller				*poller;
 
 	TAILQ_HEAD(, spdk_nvmf_transport_poll_group)	tgroups;
+
+	/* Array of poll groups indexed by subsystem id (sid) */
+	struct spdk_nvmf_subsystem_poll_group		*sgroups;
+	uint32_t					num_sgroups;
 
 	TAILQ_ENTRY(spdk_nvmf_poll_group)		link;
 };
@@ -211,6 +221,8 @@ int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 void spdk_nvmf_poll_group_poll(void *ctx);
 int spdk_nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 				       struct spdk_nvmf_transport *transport);
+int spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
+				       struct spdk_nvmf_subsystem *subsystem);
 
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
