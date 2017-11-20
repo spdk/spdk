@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "77139aea_30f7ffbd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1781,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-20T16:26:35Z",
+      "side": 1,
+      "message": "Please use spdk_bdev_get_by_name() instead.",
+      "revId": "f16083e43088a5f6518ed6764da9c1e047906b61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e207674_b009b509",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 1
