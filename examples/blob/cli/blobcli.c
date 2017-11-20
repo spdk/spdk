@@ -68,8 +68,8 @@ enum cli_mode_type {
 
 enum cli_action_type {
 	CLI_NONE,
-	CLI_IMPORT,
-	CLI_DUMP,
+	CLI_IMPORT_BLOB,
+	CLI_DUMP_BLOB,
 	CLI_FILL,
 	CLI_REM_XATTR,
 	CLI_SET_XATTR,
@@ -694,7 +694,7 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	printf("Working");
 	cli_context->blob_pages = spdk_blob_get_num_pages(cli_context->blob);
 	cli_context->page_count = 0;
-	if (cli_context->action == CLI_DUMP) {
+	if (cli_context->action == CLI_DUMP_BLOB) {
 		cli_context->fp = fopen(cli_context->file, "w");
 		if (cli_context->fp == NULL) {
 			printf("Error in opening file\n");
@@ -843,8 +843,8 @@ load_bs_cb(void *arg1, struct spdk_blob_store *bs, int bserrno)
 		spdk_bs_md_iter_first(cli_context->bs, blob_iter_cb, cli_context);
 
 		break;
-	case CLI_DUMP:
-	case CLI_IMPORT:
+	case CLI_DUMP_BLOB:
+	case CLI_IMPORT_BLOB:
 		spdk_bs_md_open_blob(cli_context->bs, cli_context->blobid,
 				     dump_imp_open_cb, cli_context);
 		break;
@@ -994,7 +994,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 		case 'd':
 			if (argv[optind] != NULL) {
 				cmd_chosen++;
-				cli_context->action = CLI_DUMP;
+				cli_context->action = CLI_DUMP_BLOB;
 				cli_context->blobid = atoll(optarg);
 				snprintf(cli_context->file, BUFSIZE, "%s", argv[optind]);
 			} else {
@@ -1058,7 +1058,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 		case 'm':
 			if (argv[optind] != NULL) {
 				cmd_chosen++;
-				cli_context->action = CLI_IMPORT;
+				cli_context->action = CLI_IMPORT_BLOB;
 				cli_context->blobid = atoll(optarg);
 				snprintf(cli_context->file, BUFSIZE, "%s", argv[optind]);
 			} else {
@@ -1372,8 +1372,8 @@ cli_start(void *arg1, void *arg2)
 	case CLI_REM_XATTR:
 	case CLI_SHOW_BLOB:
 	case CLI_LIST_BLOBS:
-	case CLI_DUMP:
-	case CLI_IMPORT:
+	case CLI_DUMP_BLOB:
+	case CLI_IMPORT_BLOB:
 	case CLI_FILL:
 		load_bs(cli_context);
 		break;
