@@ -33,11 +33,10 @@
 
 #include "spdk/stdinc.h"
 
-#include <linux/virtio_scsi.h>
-
 #include "spdk/mmio.h"
 #include "spdk/string.h"
 #include "spdk/env.h"
+#include "spdk/pci_ids.h"
 
 #include "virtio.h"
 
@@ -57,7 +56,9 @@ struct virtio_hw {
 
 	struct virtio_pci_common_cfg *common_cfg;
 	struct spdk_pci_device *pci_dev;
-	struct virtio_scsi_config *dev_cfg;
+
+	/** Device-specific PCI config space */
+	void *dev_cfg;
 };
 
 /*
@@ -68,8 +69,6 @@ struct virtio_hw {
 #define PCI_CAPABILITY_LIST	0x34
 #define PCI_CAP_ID_VNDR		0x09
 #define PCI_CAP_ID_MSIX		0x11
-
-static int g_dev_counter = 0;
 
 static inline int
 check_vq_phys_addr_ok(struct virtqueue *vq)
@@ -414,27 +413,9 @@ next:
 }
 
 static int
-virtio_dev_pci_init(struct virtio_dev *vdev)
-{
-	int vdev_id = ++g_dev_counter;
-
-	vdev->name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, vdev_id);
-	if (!vdev->name) {
-		return -1;
-	}
-
-	virtio_dev_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
-				   &vdev->max_queues, sizeof(vdev->max_queues));
-	vdev->max_queues += SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED;
-	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
-	return 0;
-}
-
-static int
-pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
+virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, virtio_pci_create_cb enum_cb)
 {
 	struct virtio_hw *hw;
-	struct virtio_dev *vdev;
 	uint8_t *bar_vaddr;
 	uint64_t bar_paddr, bar_len;
 	int rc;
@@ -470,43 +451,63 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		return -1;
 	}
 
-	vdev = calloc(1, sizeof(*vdev));
-	if (vdev == NULL) {
-		SPDK_ERRLOG("calloc failed\n");
-		free_virtio_hw(hw);
-		return -1;
-	}
-
-	rc = virtio_dev_construct(vdev, &modern_ops, hw);
+	rc = enum_cb((struct virtio_pci_ctx *)hw);
 	if (rc != 0) {
-		free(vdev);
 		free_virtio_hw(hw);
-		return -1;
-	}
-	vdev->is_hw = 1;
-	vdev->modern = 1;
-
-	rc = virtio_dev_pci_init(vdev);
-	if (rc != 0) {
-		goto err;
 	}
 
-	return 0;
+	return rc;
+}
 
-err:
-	virtio_dev_destruct(vdev);
-	return -1;
+static int
+virtio_pci_scsi_dev_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
+{
+	virtio_pci_create_cb enum_cb = ctx;
+	uint16_t pci_device_id = spdk_pci_device_get_device_id(pci_dev);
+
+	if (pci_device_id != PCI_DEVICE_ID_VIRTIO_SCSI_MODERN) {
+		return 1;
+	}
+
+	return virtio_pci_dev_probe(pci_dev, enum_cb);
 }
 
 int
-virtio_enumerate_pci(void)
+virtio_pci_scsi_dev_enumerate(virtio_pci_create_cb enum_cb)
 {
 	if (!spdk_process_is_primary()) {
 		SPDK_WARNLOG("virtio_pci secondary process support is not implemented yet.\n");
 		return 0;
 	}
 
-	return spdk_pci_virtio_enumerate(pci_enum_virtio_probe_cb, NULL);
+	return spdk_pci_virtio_enumerate(virtio_pci_scsi_dev_probe_cb, enum_cb);
+}
+
+int
+virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
+		    struct virtio_pci_ctx *pci_ctx)
+{
+	int rc;
+	char *name_dup;
+
+	name_dup = strdup(name);
+	if (name_dup == NULL) {
+		return -1;
+	}
+
+	rc = virtio_dev_construct(vdev, &modern_ops, pci_ctx);
+	if (rc != 0) {
+		free(name_dup);
+		return -1;
+	}
+
+	vdev->name = name_dup;
+	vdev->is_hw = 1;
+	vdev->modern = 1;
+	vdev->max_queues = SPDK_VIRTIO_MAX_VIRTQUEUES;
+
+	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+	return 0;
 }
 
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio_pci", SPDK_TRACE_VIRTIO_PCI)
