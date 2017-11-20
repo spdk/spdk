@@ -52,6 +52,7 @@ def header(num):
         27: 'construct_lvol_store_with_cluster_size_min',
         28: 'tasting_positive',
         29: 'SIGTERM',
+        30: 'delete_lvol_store_persistently_positive',
     }
     print("========================================================")
     print("Test Case {num}: Start".format(num=num))
@@ -748,4 +749,30 @@ class TestCases(object):
 
         fail_count += self._stop_vhost(pid_path)
         footer(29)
+        return fail_count
+
+    def test_case30(self):
+        header(30)
+        base_path = path.dirname(sys.argv[0])
+        vhost_path = path.join(self.app_path, 'vhost')
+        config_path = path.join(base_path, 'vhost.conf')
+        pid_path = path.join(base_path, 'vhost.pid')
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        fail_count += self._stop_vhost(pid_path)
+        remove(pid_path)
+        if self._start_vhost(vhost_path, config_path, pid_path) != 0:
+            fail_count += 1
+            footer(30)
+            return fail_count
+        ret_value = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        if ret_value != 2:
+            fail_count += 1
+        footer(30)
         return fail_count
