@@ -9,26 +9,25 @@ rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
 
 PORT=3260
-RPC_PORT=5260
 NETMASK=127.0.0.0/24
 MIGRATION_ADDRESS=127.0.0.2
 
 function kill_all_iscsi_target() {
 	for ((i=0; i<2; i++))
 	do
-		port=$(($RPC_PORT + $i))
-		$rpc_py -p $port kill_instance SIGTERM
+		rpc_addr="/var/tmp/spdk${i}.sock"
+		$rpc_py -s $rpc_addr kill_instance SIGTERM
 	done
 }
 
 function rpc_config() {
-	# $1 = instanceID
+	# $1 = RPC server address
 	# $2 = Netmask
-	$rpc_py -p $1 add_initiator_group 1 ALL $2
-	$rpc_py -p $1 construct_malloc_bdev 64 512
+	$rpc_py -s $1 add_initiator_group 1 ALL $2
+	$rpc_py -s $1 construct_malloc_bdev 64 512
 }
 function rpc_add_ip() {
-	$rpc_py -p $1  add_ip_address 1 $2
+	$rpc_py -s $1  add_ip_address 1 $2
 }
 
 timing_enter ip_migration
@@ -39,8 +38,8 @@ echo "Running ip migration tests"
 for ((i=0; i<2; i++))
 do
 	cp $testdir/iscsi.conf $testdir/iscsi.conf.$i
-	port=$(($RPC_PORT + $i))
-	echo "Listen 127.0.0.1:$port" >> $testdir/iscsi.conf.$i
+	rpc_addr="/var/tmp/sock${i}.sock"
+	echo "Listen $rpc_addr" >> $testdir/iscsi.conf.$i
 
 	timing_enter start_iscsi_tgt_$i
 
@@ -51,22 +50,22 @@ do
 
 	trap "kill_all_iscsi_target; exit 1" SIGINT SIGTERM EXIT
 
-	waitforlisten_tcp $pid $port
+	waitforlisten $pid $rpc_addr
 	echo "iscsi_tgt is listening. Running tests..."
 
 	timing_exit start_iscsi_tgt_$i
 
-	rpc_config $port $NETMASK
+	rpc_config $rpc_addr $NETMASK
 	trap "kill_all_iscsi_target; exit 1" \
 		SIGINT SIGTERM EXIT
 
 	rm -f $testdir/iscsi.conf.$i
 done
 
-rpc_first_port=$(($RPC_PORT + 0))
-rpc_add_ip $rpc_first_port $MIGRATION_ADDRESS
-$rpc_py -p $rpc_first_port add_portal_group 1 $MIGRATION_ADDRESS:$PORT
-$rpc_py -p $rpc_first_port construct_target_node target1 target1_alias 'Malloc0:0' '1:1' 64 1 0 0 0
+rpc_first_addr="/var/tmp/spdk0.sock"
+rpc_add_ip $rpc_first_addr $MIGRATION_ADDRESS
+$rpc_py -s $rpc_first_addr add_portal_group 1 $MIGRATION_ADDRESS:$PORT
+$rpc_py -s $rpc_first_addr construct_target_node target1 target1_alias 'Malloc0:0' '1:1' 64 1 0 0 0
 
 sleep 1
 iscsiadm -m discovery -t sendtargets -p $MIGRATION_ADDRESS:$PORT
@@ -79,12 +78,12 @@ $fio_py 4096 32 randrw 10 &
 fiopid=$!
 sleep 5
 
-$rpc_py -p $rpc_first_port kill_instance SIGTERM
+$rpc_py -s $rpc_first_addr kill_instance SIGTERM
 
-rpc_second_port=$(($RPC_PORT + 1))
-rpc_add_ip $rpc_second_port $MIGRATION_ADDRESS
-$rpc_py -p $rpc_second_port add_portal_group 1 $MIGRATION_ADDRESS:$PORT
-$rpc_py -p $rpc_second_port construct_target_node target1 target1_alias 'Malloc0:0' '1:1' 64 1 0 0 0
+rpc_second_addr="/var/tmp/spdk1.sock"
+rpc_add_ip $rpc_second_addr $MIGRATION_ADDRESS
+$rpc_py -s $rpc_second_addr add_portal_group 1 $MIGRATION_ADDRESS:$PORT
+$rpc_py -s $rpc_second_addr construct_target_node target1 target1_alias 'Malloc0:0' '1:1' 64 1 0 0 0
 
 wait $fiopid
 
@@ -92,5 +91,5 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 
-$rpc_py -p $rpc_second_port kill_instance SIGTERM
+$rpc_py -s $rpc_second_addr kill_instance SIGTERM
 timing_exit ip_migration
