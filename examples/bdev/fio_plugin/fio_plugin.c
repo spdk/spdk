@@ -153,6 +153,8 @@ spdk_fio_start_poller(struct spdk_bdev_poller **ppoller,
 	TAILQ_INSERT_TAIL(&fio_thread->pollers, fio_poller, link);
 
 	*ppoller = (struct spdk_bdev_poller *)fio_poller;
+
+	SPDK_WARNLOG("Registered poller %p to thread %p\n", fio_poller, fio_thread);
 }
 
 static void
@@ -168,6 +170,8 @@ spdk_fio_stop_poller(struct spdk_bdev_poller **ppoller)
 		SPDK_ERRLOG("Expected local thread to be initialized, but it was not.\n");
 		return;
 	}
+
+	SPDK_WARNLOG("Unregistered poller %p from thread %p\n", fio_poller, fio_thread);
 
 	TAILQ_REMOVE(&fio_thread->pollers, fio_poller, link);
 
