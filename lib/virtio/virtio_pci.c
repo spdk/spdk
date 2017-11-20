@@ -434,11 +434,20 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	uint64_t bar_paddr, bar_len;
 	int rc;
 	unsigned i;
+	char bdf[32];
+	struct spdk_pci_addr addr;
+
+	addr = spdk_pci_device_get_addr(pci_dev);
+	rc = spdk_pci_addr_fmt(bdf, sizeof(bdf), &addr);
+	if (rc != 0) {
+		SPDK_ERRLOG("Ignoring a device with non-parsable PCI address\n");
+		return -1;
+	}
 
 	hw = calloc(1, sizeof(*hw));
 	if (hw == NULL) {
-		SPDK_ERRLOG("calloc failed\n");
-		return -1;
+		SPDK_ERRLOG("%s: calloc failed\n", bdf);
+		goto err_out;
 	}
 
 	hw->pci_dev = pci_dev;
@@ -447,9 +456,9 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 		rc = spdk_pci_device_map_bar(pci_dev, i, (void *) &bar_vaddr, &bar_paddr,
 					     &bar_len);
 		if (rc != 0) {
-			SPDK_ERRLOG("failed to memmap PCI BAR %u\n", i);
+			SPDK_ERRLOG("%s: failed to memmap PCI BAR %u\n", bdf, i);
 			free_virtio_hw(hw);
-			return -1;
+			goto err_out;
 		}
 
 		hw->pci_bar[i].vaddr = bar_vaddr;
@@ -460,7 +469,7 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	 * Legacy devices are not supported.
 	 */
 	if (virtio_read_caps(hw) != 0) {
-		SPDK_NOTICELOG("Ignoring legacy PCI device.\n");
+		SPDK_NOTICELOG("Ignoring legacy PCI device at %s\n", bdf);
 		free_virtio_hw(hw);
 		return -1;
 	}
@@ -468,20 +477,22 @@ pci_enum_virtio_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	vdev = virtio_dev_construct(&modern_ops, hw);
 	if (vdev == NULL) {
 		free_virtio_hw(hw);
-		return -1;
+		goto err_out;
 	}
 	vdev->is_hw = 1;
 	vdev->modern = 1;
 
 	rc = virtio_dev_pci_init(vdev);
 	if (rc != 0) {
-		goto err;
+		goto err_vdev;
 	}
 
 	return 0;
 
-err:
+err_vdev:
 	virtio_dev_free(vdev);
+err_out:
+	SPDK_ERRLOG("Failed to init virtio-pci device at %s\n", bdf);
 	return -1;
 }
 
