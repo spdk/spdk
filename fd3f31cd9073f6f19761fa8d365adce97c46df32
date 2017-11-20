@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f2de4e4_9d19a91b",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-20T08:50:31Z",
+      "side": 1,
+      "message": "Can you just remove this comment. It is not clear what it say. also don\u0027t think we need to comment each line of code.\n\nBeside that rest look ok.",
+      "revId": "fd3f31cd9073f6f19761fa8d365adce97c46df32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
