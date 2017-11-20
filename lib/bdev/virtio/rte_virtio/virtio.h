@@ -74,8 +74,6 @@ struct virtio_dev {
 	/** Common device & guest features. */
 	uint64_t	negotiated_features;
 
-	int		is_hw;
-
 	/** Modern/legacy virtio device flag. */
 	uint8_t		modern;
 

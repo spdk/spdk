@@ -410,7 +410,6 @@ virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path
 		return -1;
 	}
 
-	vdev->is_hw = 0;
 	vdev->name = strdup(name);
 	if (!vdev->name) {
 		SPDK_ERRLOG("Failed to reserve memory for controller name: %s\n", path);

@@ -36,6 +36,7 @@
 #include "vhost.h"
 
 #include "spdk/string.h"
+#include "spdk/env.h"
 
 /* The version of the protocol we support */
 #define VHOST_USER_VERSION    0x1
@@ -248,7 +249,8 @@ prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 
 	for (i = 0; i < num; ++i) {
 		/* the memory regions are unaligned */
-		msg->payload.memory.regions[i].guest_phys_addr = huges[i].addr; /* use vaddr! */
+		msg->payload.memory.regions[i].guest_phys_addr =
+			spdk_vtophys((void *)(uintptr_t)huges[i].addr);
 		msg->payload.memory.regions[i].userspace_addr = huges[i].addr;
 		msg->payload.memory.regions[i].memory_size = huges[i].size;
 		msg->payload.memory.regions[i].flags_padding = 0;
