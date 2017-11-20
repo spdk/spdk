@@ -40,6 +40,7 @@ DIRS-y += bdev blob blobfs conf copy cunit event json jsonrpc \
 ifeq ($(OS),Linux)
 DIRS-y += nbd
 DIRS-$(CONFIG_VHOST) += vhost
+DIRS-$(CONFIG_VIRTIO) += virtio
 endif
 
 

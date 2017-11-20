@@ -42,13 +42,13 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/json.h"
+#include "spdk/virtio.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
 #include <linux/virtio_scsi.h>
 
-#include "rte_virtio/virtio.h"
 #include "bdev_virtio.h"
 
 #define BDEV_VIRTIO_MAX_TARGET 64
