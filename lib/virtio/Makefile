@@ -31,31 +31,12 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = nbd
+CFLAGS += $(ENV_CFLAGS)
+C_SRCS = virtio.c virtio_user.c virtio_pci.c
+C_SRCS += virtio_user/vhost_user.c
+LIBNAME = virtio
 
-C_SRCS := nbd.c
-
-CFLAGS += -I. $(ENV_CFLAGS)
-
-SPDK_LIB_LIST = event_bdev event_copy event_nbd
-SPDK_LIB_LIST += bdev bdev_rpc copy event trace log log_rpc conf util rpc jsonrpc json nbd virtio
-
-LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
-	$(COPY_MODULES_LINKER_ARGS)
-
-LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
-
-all : $(APP)
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(BLOCKDEV_MODULES_FILES) $(LINKER_MODULES) $(ENV_LIBS)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

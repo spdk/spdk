@@ -55,6 +55,8 @@
 #include "spdk/env.h"
 #include "spdk/barrier.h"
 
+#include "spdk_internal/virtio.h"
+
 /* We use SMP memory barrier variants as all virtio_pci devices
  * are purely virtual. All MMIO is executed on a CPU core, so
  * there's no need to do full MMIO synchronization.
@@ -62,8 +64,6 @@
 #define virtio_mb()	spdk_smp_mb()
 #define virtio_rmb()	spdk_smp_rmb()
 #define virtio_wmb()	spdk_smp_wmb()
-
-#include "virtio.h"
 
 struct virtio_driver g_virtio_driver = {
 	.scsi_devs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.scsi_devs),

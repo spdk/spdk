@@ -42,9 +42,9 @@
 #include <rte_alarm.h>
 
 #include "virtio_user/vhost.h"
-#include "virtio.h"
-
 #include "spdk/string.h"
+
+#include "spdk_internal/virtio.h"
 
 static int
 virtio_user_create_queue(struct virtio_dev *vdev, uint32_t queue_sel)
