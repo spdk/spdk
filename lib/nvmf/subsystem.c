@@ -242,6 +242,38 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 			      spdk_nvmf_subsystem_delete_done);
 }
 
+struct spdk_nvmf_subsystem *
+spdk_nvmf_subsystem_get_first(struct spdk_nvmf_tgt *tgt)
+{
+	struct spdk_nvmf_subsystem	*subsystem;
+	uint32_t sid;
+
+
+	for (sid = 0; sid < tgt->max_sid; sid++) {
+		subsystem = tgt->subsystems[sid];
+		if (subsystem) {
+			return subsystem;
+		}
+	}
+
+	return NULL;
+}
+
+struct spdk_nvmf_subsystem *
+spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsystem *subsystem)
+{
+	uint32_t sid;
+
+
+	for (sid = subsystem->id + 1; sid < subsystem->tgt->max_sid; sid++) {
+		subsystem = subsystem->tgt->subsystems[sid];
+		if (subsystem) {
+			return subsystem;
+		}
+	}
+
+	return NULL;
+}
 
 int
 spdk_nvmf_subsystem_add_host(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
