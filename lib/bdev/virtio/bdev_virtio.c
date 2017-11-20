@@ -57,6 +57,9 @@
 #define CTRLQ_RING_SIZE 16
 #define SCAN_REQUEST_RETRIES 5
 
+/* Number of non-request queues - eventq and controlq */
+#define SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED 2
+
 #define VIRTIO_SCSI_CONTROLQ	0
 #define VIRTIO_SCSI_EVENTQ	1
 #define VIRTIO_SCSI_REQUESTQ	2
@@ -122,6 +125,42 @@ struct bdev_virtio_io_channel {
 	/** Virtqueue exclusively assigned to this channel. */
 	struct virtqueue	*vq;
 };
+
+static int
+virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx)
+{
+	static int pci_dev_counter = 0;
+	struct virtio_dev *vdev;
+	char *name;
+	uint32_t num_queues;
+	int rc;
+
+	vdev = calloc(1, sizeof(*vdev));
+	if (vdev == NULL) {
+		SPDK_ERRLOG("virtio device calloc failed\n");
+		return -1;
+	}
+
+	name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, ++pci_dev_counter);
+	if (name == NULL) {
+		free(vdev);
+		return -1;
+	}
+
+	rc = virtio_pci_dev_init(vdev, name, pci_ctx);
+	free(name);
+
+	if (rc != 0) {
+		free(vdev);
+		return -1;
+	}
+
+	virtio_dev_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
+				   &num_queues, sizeof(num_queues));
+	vdev->max_queues = SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED + num_queues;
+
+	return 0;
+}
 
 static int scan_target(struct virtio_scsi_scan_base *base);
 
@@ -1179,7 +1218,7 @@ bdev_virtio_process_config(void)
 
 	enable_pci = spdk_conf_section_get_boolval(sp, "Enable", false);
 	if (enable_pci) {
-		rc = virtio_enumerate_pci();
+		rc = virtio_pci_scsi_dev_enumerate(virtio_pci_scsi_dev_create_cb);
 	}
 
 out:
