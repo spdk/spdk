@@ -46,8 +46,6 @@
 #include "spdk/json.h"
 #include "spdk/io_channel.h"
 
-#define VIRTQUEUE_MAX_NAME_SZ 32
-
 /**
  * The maximum virtqueue size is 2^15. Use that value as the end of
  * descriptor chain terminator since it will never be a valid index

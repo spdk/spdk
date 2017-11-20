@@ -153,7 +153,6 @@ virtio_init_vring(struct virtqueue *vq)
 static int
 virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 {
-	char vq_name[VIRTQUEUE_MAX_NAME_SZ];
 	void *queue_mem;
 	unsigned int vq_size, size;
 	uint64_t queue_mem_phys_addr;
@@ -179,15 +178,11 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 		return -EINVAL;
 	}
 
-	snprintf(vq_name, sizeof(vq_name), "dev%d_vq%d",
-		 dev->id, vtpci_queue_idx);
-
 	size = RTE_ALIGN_CEIL(sizeof(*vq) +
 			      vq_size * sizeof(struct vq_desc_extra),
 			      RTE_CACHE_LINE_SIZE);
 
-	vq = rte_zmalloc_socket(vq_name, size, RTE_CACHE_LINE_SIZE,
-				SOCKET_ID_ANY);
+	vq = spdk_dma_zmalloc(size, RTE_CACHE_LINE_SIZE, NULL);
 	if (vq == NULL) {
 		SPDK_ERRLOG("can not allocate vq\n");
 		return -ENOMEM;
