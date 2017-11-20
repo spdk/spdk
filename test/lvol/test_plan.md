@@ -336,6 +336,18 @@ Expected result:
 - no other operation fails
 - get_lvol_stores: response should be of no value after destroyed lvol store
 
+#### TEST CASE 255 - Name: delete_lvol_store_persistent_positive
+Positive test for removing lvol store persistently
+Steps:
+- construct_lvol_store on nvme bdev
+- delete lvol store
+- restart vhost
+- check if deleted lvol store does not exist in vhost
+
+Expected result:
+- get_lvol_stores: response should be of no value after destroyed lvol store
+- no other operation fails
+
 ### destroy_lvol_store - negative tests
 
 #### TEST CASE 300 - Name: destroy_lvol_store_nonexistent_lvs_uuid
