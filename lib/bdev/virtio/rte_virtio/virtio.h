@@ -54,9 +54,6 @@
  */
 #define VQ_RING_DESC_CHAIN_END 32768
 
-/* Number of non-request queues - eventq and controlq */
-#define SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED 2
-
 /* Extra status define for readability */
 #define VIRTIO_CONFIG_S_RESET 0
 
@@ -186,6 +183,8 @@ struct virtio_driver {
 };
 
 extern struct virtio_driver g_virtio_driver;
+
+typedef int (*pci_enum_virtio_ctx)(void *pci_ctx);
 
 /* Features desired/implemented by this driver. */
 #define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
@@ -369,9 +368,15 @@ virtio_dev_has_feature(struct virtio_dev *vdev, uint64_t bit)
 void virtio_dev_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write_ctx *w);
 
 /**
- * Init all compatible Virtio PCI devices.
+ * Enumerate all PCI Virtio devices on the system.
+ *
+ * \param enum_cb a function to be called for each valid PCI device.
+ * The first param is the PCI context required to create a PCI virtio_dev.
+ * If a virtio_dev is has been created, the callback should return 0.
+ * Returning any other value will cause the PCI context to be freed,
+ * making it unusable.
  */
-int virtio_enumerate_pci(void);
+int virtio_enumerate_pci(pci_enum_virtio_ctx enum_cb);
 
 /**
  * Connect to a vhost-user device and init corresponding virtio_dev struct.
