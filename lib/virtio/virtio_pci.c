@@ -38,8 +38,7 @@
 #include "spdk/mmio.h"
 #include "spdk/string.h"
 #include "spdk/env.h"
-
-#include "virtio.h"
+#include "spdk/virtio.h"
 
 struct virtio_hw {
 	uint8_t	    use_msix;
