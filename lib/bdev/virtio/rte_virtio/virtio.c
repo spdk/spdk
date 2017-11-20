@@ -363,33 +363,6 @@ virtio_dev_free(struct virtio_dev *dev)
 	free(dev);
 }
 
-int
-virtio_dev_start(struct virtio_dev *vdev)
-{
-	/* Enable uio/vfio intr/eventfd mapping: althrough we already did that
-	 * in device configure, but it could be unmapped  when device is
-	 * stopped.
-	 */
-	/** TODO: interrupt handling for virtio_scsi */
-#if 0
-	if (dev->data->dev_conf.intr_conf.lsc ||
-	    dev->data->dev_conf.intr_conf.rxq) {
-		rte_intr_disable(dev->intr_handle);
-
-		if (rte_intr_enable(dev->intr_handle) < 0) {
-			PMD_DRV_LOG(ERR, "interrupt enable failed");
-			return -EIO;
-		}
-	}
-#endif
-
-	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "Notified backend at initialization\n");
-
-	vdev->started = 1;
-
-	return 0;
-}
-
 static void
 vq_ring_free_chain(struct virtqueue *vq, uint16_t desc_idx)
 {
@@ -536,17 +509,15 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 uint16_t
 virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkts)
 {
-	struct virtio_dev *vdev = vq->vdev;
 	struct virtio_req *rxm;
 	uint16_t nb_used, num, nb_rx;
 	uint32_t len[VIRTIO_MBUF_BURST_SZ];
 	struct virtio_req *rcv_pkts[VIRTIO_MBUF_BURST_SZ];
 	uint32_t i;
 
-	nb_rx = 0;
-	if (spdk_unlikely(vdev->started == 0))
-		return nb_rx;
+	assert(virtio_dev_get_status(vq->vdev) & VIRTIO_CONFIG_S_DRIVER_OK);
 
+	nb_rx = 0;
 	nb_used = VIRTQUEUE_NUSED(vq);
 
 	virtio_rmb();
@@ -578,9 +549,7 @@ virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req)
 	struct virtio_dev *vdev = vq->vdev;
 	int rc;
 
-	if (spdk_unlikely(vdev->started == 0))
-		return -EIO;
-
+	assert(virtio_dev_get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK);
 	virtio_rmb();
 
 	rc = virtqueue_enqueue_xmit(vq, req);
