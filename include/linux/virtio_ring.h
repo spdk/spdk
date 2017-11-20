@@ -142,10 +142,10 @@ static __inline__ void vring_init(struct vring *vr, unsigned int num, void *p,
 				  unsigned long align)
 {
 	vr->num = num;
-	vr->desc = p;
-	vr->avail = p + num * sizeof(struct vring_desc);
-	vr->used = (void *)(((uintptr_t)&vr->avail->ring[num] + sizeof(__virtio16)
-			     + align - 1) & ~(align - 1));
+	vr->desc = (struct vring_desc *)p;
+	vr->avail = (struct vring_avail *)((uintptr_t)p + num * sizeof(struct vring_desc));
+	vr->used = (struct vring_used *)(((uintptr_t)&vr->avail->ring[num] + sizeof(__virtio16)
+					  + align - 1) & ~(align - 1));
 }
 
 static __inline__ unsigned vring_size(unsigned int num, unsigned long align)
