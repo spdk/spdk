@@ -96,6 +96,20 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_
 }
 
 int
+spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
+				   struct spdk_nvmf_subsystem *subsystem)
+{
+	return 0;
+}
+
+int
+spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
+				      struct spdk_nvmf_subsystem *subsystem)
+{
+	return 0;
+}
+
+int
 spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const char *str)
 {
 	if (trtype == NULL || str == NULL) {
