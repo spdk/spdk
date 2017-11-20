@@ -218,7 +218,13 @@ int virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req);
  */
 struct virtio_dev *virtio_dev_construct(const struct virtio_dev_ops *ops, void *ctx);
 
-int virtio_dev_init(struct virtio_dev *hw, uint64_t req_features);
+/**
+ * Reset and reinit a virtio device.  This will also renegotiate feature flags.
+ *
+ * \param vdev vhost device
+ * \param req_features features this driver supports
+ */
+int virtio_dev_init(struct virtio_dev *vdev, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);
 
 /**
