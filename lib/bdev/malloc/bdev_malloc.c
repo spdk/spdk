@@ -370,6 +370,7 @@ static const struct spdk_bdev_fn_table malloc_fn_table = {
 struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint32_t block_size)
 {
 	struct malloc_disk	*mdisk;
+	int			rc;
 
 	if (block_size % 512 != 0) {
 		SPDK_ERRLOG("Block size %u is not a multiple of 512.\n", block_size);
@@ -421,7 +422,11 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 	mdisk->disk.fn_table = &malloc_fn_table;
 	mdisk->disk.module = SPDK_GET_BDEV_MODULE(malloc);
 
-	spdk_bdev_register(&mdisk->disk);
+	rc = spdk_bdev_register(&mdisk->disk);
+	if (rc) {
+		malloc_disk_free(mdisk);
+		return NULL;
+	}
 
 	mdisk->next = g_malloc_disk_head;
 	g_malloc_disk_head = mdisk;
