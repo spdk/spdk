@@ -54,19 +54,7 @@ static size_t g_active_poll_groups = 0;
 
 static struct spdk_poller *g_acceptor_poller = NULL;
 
-static TAILQ_HEAD(, nvmf_tgt_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
-
 static void nvmf_tgt_advance_state(void *arg1, void *arg2);
-
-static void
-nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
-{
-	TAILQ_REMOVE(&g_subsystems, app_subsys, tailq);
-
-	spdk_nvmf_delete_subsystem(app_subsys->subsystem);
-
-	free(app_subsys);
-}
 
 static void
 spdk_nvmf_shutdown_cb(void)
@@ -79,66 +67,40 @@ spdk_nvmf_shutdown_cb(void)
 	nvmf_tgt_advance_state(NULL, NULL);
 }
 
-struct nvmf_tgt_subsystem *
-nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype, uint32_t num_ns,
-			  uint32_t lcore)
+struct spdk_nvmf_subsystem *
+nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype, uint32_t num_ns)
 {
 	struct spdk_nvmf_subsystem *subsystem;
-	struct nvmf_tgt_subsystem *app_subsys;
 
 	if (spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, name)) {
 		SPDK_ERRLOG("Subsystem already exist\n");
 		return NULL;
 	}
 
-	app_subsys = calloc(1, sizeof(*app_subsys));
-	if (app_subsys == NULL) {
-		SPDK_ERRLOG("Subsystem allocation failed\n");
-		return NULL;
-	}
-
 	subsystem = spdk_nvmf_create_subsystem(g_tgt.tgt, name, subtype, num_ns);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
-		free(app_subsys);
 		return NULL;
 	}
 
-	app_subsys->subsystem = subsystem;
-	app_subsys->lcore = lcore;
+	SPDK_NOTICELOG("allocated subsystem %s\n", name);
 
-	SPDK_NOTICELOG("allocated subsystem %s on lcore %u on socket %u\n", name, lcore,
-		       spdk_env_get_socket_id(lcore));
-
-	TAILQ_INSERT_TAIL(&g_subsystems, app_subsys, tailq);
-
-	return app_subsys;
-}
-
-struct nvmf_tgt_subsystem *
-nvmf_tgt_subsystem_first(void)
-{
-	return TAILQ_FIRST(&g_subsystems);
-}
-
-struct nvmf_tgt_subsystem *
-nvmf_tgt_subsystem_next(struct nvmf_tgt_subsystem *subsystem)
-{
-	return TAILQ_NEXT(subsystem, tailq);
+	return subsystem;
 }
 
 int
 nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 {
-	struct nvmf_tgt_subsystem *tgt_subsystem, *subsys_tmp;
+	struct spdk_nvmf_subsystem *subsystem;
 
-	TAILQ_FOREACH_SAFE(tgt_subsystem, &g_subsystems, tailq, subsys_tmp) {
-		if (strcmp(spdk_nvmf_subsystem_get_nqn(tgt_subsystem->subsystem), nqn) == 0) {
-			nvmf_tgt_delete_subsystem(tgt_subsystem);
-			return 0;
-		}
+	subsystem = spdk_nvmf_tgt_find_subsystem(g_tgt.tgt, nqn);
+	if (!subsystem) {
+		return -EINVAL;
 	}
-	return -1;
+
+	spdk_nvmf_delete_subsystem(subsystem);
+
+	return 0;
 }
 
 static void
@@ -181,7 +143,7 @@ acceptor_poll(void *arg)
 static void
 nvmf_tgt_destroy_poll_group_done(void *ctx)
 {
-	g_tgt.state = NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS;
+	g_tgt.state = NVMF_TGT_FINI_FREE_RESOURCES;
 	nvmf_tgt_advance_state(NULL, NULL);
 }
 
@@ -292,15 +254,6 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 					     NULL,
 					     nvmf_tgt_destroy_poll_group_done);
 			break;
-		case NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS: {
-			struct nvmf_tgt_subsystem *app_subsys, *tmp;
-
-			TAILQ_FOREACH_SAFE(app_subsys, &g_subsystems, tailq, tmp) {
-				nvmf_tgt_delete_subsystem(app_subsys);
-			}
-			g_tgt.state = NVMF_TGT_FINI_FREE_RESOURCES;
-			break;
-		}
 		case NVMF_TGT_FINI_FREE_RESOURCES:
 			spdk_nvmf_tgt_destroy(g_tgt.tgt);
 			g_tgt.state = NVMF_TGT_STOPPED;
