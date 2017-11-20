@@ -64,11 +64,11 @@ CONFIG_DPDK_DIR?=/path/to/dpdk
 
 # Build SPDK FIO plugin. Requires FIO_SOURCE_DIR set to a valid
 # fio source code directory.
-CONFIG_FIO_PLUGIN?=n
+CONFIG_FIO_PLUGIN?=y
 
 # This directory should contain the source code directory for fio
 # which is required for building the SPDK FIO plugin.
-FIO_SOURCE_DIR?=/usr/src/fio
+FIO_SOURCE_DIR?=/root/fio-master/
 
 # Enable RDMA support for the NVMf target.
 # Requires ibverbs development libraries.

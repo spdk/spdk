@@ -1,15 +1,36 @@
-[global]
-ioengine=spdk
-thread=1
-group_reporting=1
-direct=1
-verify=0
-time_based=1
-ramp_time=0
-runtime=2
-iodepth=128
-rw=randrw
-bs=4k
 
-[test]
-numjobs=1
+[global]
+ioengine=/root/workspace/spdk1102/examples/nvme/fio_plugin/fio_plugin
+ loops = 1
+ group_reporting=1
+ direct=1
+ invalidate=1
+ fsync_on_close=1
+ randrepeat=1
+ norandommap=1
+ verify=0
+ time_based=1
+ ramp_time=5
+ runtime=300
+ numjobs=1
+ thread=2
+ iodepth=4
+ rw=randread
+ bs=4k
+
+[file_1]
+ filename=trtype=PCIe traddr=0000.84.00.0 ns=1
+ cpus_allowed=12-23
+
+#[file_2]
+# filename=trtype=PCIe traddr=0000.84.00.0 ns=1
+# cpus_allowed=12-23,23,25
+
+#[file_3]
+# filename=trtype=PCIe traddr=0000.86.00.0 ns=3
+# cpus_allowed=12-23,36-47
+
+#[file_4]
+# filename=trtype=PCIe traddr=0000.86.00.0 ns=4
+# cpus_allowed=12-23,36-47
+
