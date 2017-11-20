@@ -337,6 +337,7 @@ part_test(void)
 	base = calloc(1, sizeof(*base));
 	SPDK_CU_ASSERT_FATAL(base != NULL);
 
+	bdev_base.name = "base";
 	bdev_base.fn_table = &base_fn_table;
 	bdev_base.module = SPDK_GET_BDEV_MODULE(bdev_ut);
 	spdk_bdev_register(&bdev_base);
