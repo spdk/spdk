@@ -148,12 +148,15 @@ struct spdk_bs_type {
 	char bstype[SPDK_BLOBSTORE_TYPE_LENGTH];
 };
 
+typedef int (*spdk_blob_get_bs_dev)(struct spdk_bs_dev *bs_dev, const char *name);
+
 struct spdk_bs_opts {
 	uint32_t cluster_sz; /* In bytes. Must be multiple of page size. */
 	uint32_t num_md_pages; /* Count of the number of pages reserved for metadata */
 	uint32_t max_md_ops; /* Maximum simultaneous metadata operations */
 	uint32_t max_channel_ops; /* Maximum simultaneous operations per channel */
 	struct spdk_bs_type bstype; /* Blobstore type */
+	spdk_blob_get_bs_dev get_bs_dev;
 };
 
 /* Initialize an spdk_bs_opts structure to the default blobstore option values. */
@@ -222,6 +225,38 @@ uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
 			    spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
+/* Sets a newly created blob as thin provisioned.  Must be called when blob size == 0.
+ *
+ * "base" refers to the name for the base/backing block device for this blob.  If
+ * "base" == NULL, the backing block device will emulate a device that contains all zeroes.
+ * If "base" != NULL, then bs->opts.get_bs_dev() will be called to allow the user to
+ * translate the string to an spdk_bs_dev structure.
+ *
+ * The "base" string will be stored in the blob's metadata, so that get_bs_dev() can be
+ * called when opening the blob again in the future.
+ *
+ * If "Base" != NULL, then "sz" must be less than or equal to the size of the block device
+ * returned by bs->opts.get_bs_dev().
+ *
+ * The idea here is that we want to support the backing blob being something besides an
+ * lvol within the same lvolstore - maybe it's an lvol in another lvolstore, maybe it's
+ * even some NVMe-oF namespace or iSCSI LUN in the future.
+ *
+ * Example:
+ * We want to create an lvol clone of an existing lvol with uuid XYZ.
+ *
+ * Function call sequence (waiting for completion callbacks between each):
+ * spdk_bs_init/load() = opts->get_bs_dev = lvol_get_bs_dev
+ * App: spdk_bs_md_create_blob(bs, cb_fn, cb_arg);
+ * App: spdk_bs_md_open_blob(bs, blobid, cb_fn, cb_arg);
+ * App: spdk_bs_md_set_thin_provision(blob, "lvol:XYZ", cb_fn, cb_arg);
+ * Blobstore: lvol_get_bs_dev("lvol:xyz") => lvol returns an spdk_bs_dev for lvol xyz
+ * App: spdk_bs_md_resize_blob(blob, sz) => sz equals size of lvol:XYZ
+ * App: spdk_bs_md_sync_blob(blob, cb_fn, cb_arg)
+ */
+void spdk_bs_md_set_thin_provision(struct spdk_blob *blob, const char *base,
+				   spdk_blob_op_complete cb_fn, void *cb_arg);
+
 /* Delete an existing blob. */
 void spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 			    spdk_blob_op_complete cb_fn, void *cb_arg);
@@ -259,11 +294,29 @@ void spdk_bs_io_flush_channel(struct spdk_io_channel *channel,
 			      spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Write data to a blob. Offset is in pages from the beginning of the blob. */
+/* For thin provisioned blobs, if cluster is not allocated, do the following:
+ *  1) allocate buffer of cluster size
+ *  2) read cluster from backing bs_dev
+ *  3) overwrite with data specified by user
+ *  4) allocate cluster
+ *  5) write data
+ *  6) sync blob (which persists the cluster allocation to disk)
+ *
+ * Notes: step 2 and 3 can be skipped if the data size is exactly same as cluster, but
+ *  this will be very infrequent so we do not need to code for this case to start.
+ * Notes: the buffer allocation at #1 could be tricky - need to handle case where
+ *  buffer is not available - possibly we need some number of buffers allocated for the
+ *  blobstore per thread - maybe one at a time with a queue of outstanding
+ *  buffer/cluster allocations that need to happen.
+ */
 void spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 			   void *payload, uint64_t offset, uint64_t length,
 			   spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Read data from a blob. Offset is in pages from the beginning of the blob. */
+/* For thin provisioned blobs, if cluster is not allocated, perform the read to the
+ *  backing bs_dev instead.
+ */
 void spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 			  void *payload, uint64_t offset, uint64_t length,
 			  spdk_blob_op_complete cb_fn, void *cb_arg);
