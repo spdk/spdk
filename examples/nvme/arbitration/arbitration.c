@@ -33,10 +33,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-#include <rte_lcore.h>
-
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/string.h"
@@ -108,7 +104,7 @@ struct feature {
 	bool					valid;
 };
 
-static struct rte_mempool *task_pool		= NULL;
+static struct spdk_mempool *task_pool		= NULL;
 
 static struct ctrlr_entry *g_controllers	= NULL;
 static struct ns_entry *g_namespaces		= NULL;
@@ -293,17 +289,6 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 	}
 }
 
-static void
-task_ctor(struct rte_mempool *mp, void *arg, void *__task, unsigned id)
-{
-	struct arb_task *task = __task;
-	task->buf = spdk_dma_zmalloc(g_arbitration.io_size_bytes, 0x200, NULL);
-	if (task->buf == NULL) {
-		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
-		exit(1);
-	}
-}
-
 static __thread unsigned int seed = 0;
 
 static void
@@ -314,8 +299,16 @@ submit_single_io(struct ns_worker_ctx *ns_ctx)
 	int			rc;
 	struct ns_entry		*entry = ns_ctx->entry;
 
-	if (rte_mempool_get(task_pool, (void **)&task) != 0) {
-		fprintf(stderr, "task_pool rte_mempool_get failed\n");
+	task = spdk_mempool_get(task_pool);
+	if (!task) {
+		fprintf(stderr, "Failed to get task from task_pool\n");
+		exit(1);
+	}
+
+	task->buf = spdk_dma_zmalloc(g_arbitration.io_size_bytes, 0x200, NULL);
+	if (!task->buf) {
+		spdk_mempool_put(task_pool, task);
+		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
 		exit(1);
 	}
 
@@ -358,7 +351,8 @@ task_complete(struct arb_task *task)
 	ns_ctx->current_queue_depth--;
 	ns_ctx->io_completed++;
 
-	rte_mempool_put(task_pool, task);
+	spdk_dma_free(task->buf);
+	spdk_mempool_put(task_pool, task);
 
 	/*
 	 * is_draining indicates when time has expired for the test run
@@ -425,13 +419,12 @@ cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 }
 
 static void
-cleanup(void)
+cleanup(uint32_t task_count)
 {
 	struct ns_entry *entry			= g_namespaces;
 	struct ns_entry *next_entry		= NULL;
 	struct worker_thread *worker		= g_workers;
 	struct worker_thread *next_worker	= NULL;
-	struct arb_task *task			= NULL;
 
 	while (entry) {
 		next_entry = entry->next;
@@ -446,10 +439,11 @@ cleanup(void)
 		worker = next_worker;
 	};
 
-	if (rte_mempool_get(task_pool, (void **)&task) == 0) {
-		spdk_dma_free(task->buf);
+	if (spdk_mempool_count(task_pool) != (size_t)task_count) {
+		fprintf(stderr, "task_pool count is %zu but should be %u\n",
+			spdk_mempool_count(task_pool), task_count);
 	}
-
+	spdk_mempool_free(task_pool);
 }
 
 static int
@@ -1125,10 +1119,8 @@ main(int argc, char **argv)
 		     g_arbitration.num_namespaces : g_arbitration.num_workers;
 	task_count *= g_arbitration.queue_depth;
 
-	task_pool = rte_mempool_create(task_pool_name, task_count,
-				       sizeof(struct arb_task),
-				       0, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
+	task_pool = spdk_mempool_create(task_pool_name, task_count,
+					sizeof(struct arb_task), 0, SPDK_ENV_SOCKET_ID_ANY);
 	if (task_pool == NULL) {
 		fprintf(stderr, "could not initialize task pool\n");
 		return 1;
@@ -1139,12 +1131,12 @@ main(int argc, char **argv)
 	printf("Initialization complete. Launching workers.\n");
 
 	/* Launch all of the slave workers */
-	master_core = rte_get_master_lcore();
+	master_core = spdk_env_get_current_core();
 	master_worker = NULL;
 	worker = g_workers;
 	while (worker != NULL) {
 		if (worker->lcore != master_core) {
-			rte_eal_remote_launch(work_fn, worker, worker->lcore);
+			spdk_env_thread_launch_pinned(worker->lcore, work_fn, worker);
 		} else {
 			assert(master_worker == NULL);
 			master_worker = worker;
@@ -1155,13 +1147,13 @@ main(int argc, char **argv)
 	assert(master_worker != NULL);
 	rc = work_fn(master_worker);
 
-	rte_eal_mp_wait_lcore();
+	spdk_env_thread_wait_all();
 
 	print_stats();
 
 	unregister_controllers();
 
-	cleanup();
+	cleanup(task_count);
 
 	if (rc != 0) {
 		fprintf(stderr, "%s: errors occured\n", argv[0]);
