@@ -187,7 +187,9 @@ function waitforlisten() {
 		exit 1
 	fi
 
-	echo "Waiting for process to start up and listen on UNIX domain socket $DEFAULT_RPC_ADDR..."
+	rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
+
+	echo "Waiting for process to start up and listen on UNIX domain socket $rpc_addr..."
 	# turn off trace for this loop
 	set +x
 	ret=1
@@ -197,7 +199,7 @@ function waitforlisten() {
 		if ! kill -s 0 $1; then
 			exit
 		fi
-		if netstat -an -x | grep -iw LISTENING | grep -q $DEFAULT_RPC_ADDR; then
+		if netstat -an -x | grep -iw LISTENING | grep -q $rpc_addr; then
 			ret=0
 		fi
 	done
