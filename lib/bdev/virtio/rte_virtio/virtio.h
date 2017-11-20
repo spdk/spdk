@@ -67,7 +67,6 @@ struct virtio_dev {
 
 	/** Name of this virtio dev set by backend */
 	char		*name;
-	uint16_t	started;
 
 	/** Max number of queues the host supports. */
 	uint16_t	max_queues;
@@ -205,9 +204,8 @@ uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
  *
  * \param vq virtio queue
  * \param req virtio request
- * \return 0 on success, negative errno on error. In case the ring is full
- * or no free descriptors are available -ENOMEM is returned. If virtio
- * device owning the virtqueue is not started -EIO is returned.
+ * \return 0 on success. In case the ring is full or no free descriptors
+ * are available -ENOMEM is returned.
  */
 int virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req);
 
@@ -222,7 +220,6 @@ struct virtio_dev *virtio_dev_construct(const struct virtio_dev_ops *ops, void *
 
 int virtio_dev_init(struct virtio_dev *hw, uint64_t req_features);
 void virtio_dev_free(struct virtio_dev *dev);
-int virtio_dev_start(struct virtio_dev *hw);
 
 /**
  * Bind a virtqueue with given index to the current thread;
