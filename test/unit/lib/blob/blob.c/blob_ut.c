@@ -185,7 +185,7 @@ blob_super(void)
 	CU_ASSERT(g_blobid == SPDK_BLOBID_INVALID);
 
 	/* Create a blob */
-	spdk_bs_md_create_blob(bs,
+	spdk_bs_md_create_blob(bs, NULL,
 			       blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid !=  SPDK_BLOBID_INVALID);
@@ -220,7 +220,7 @@ blob_open(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
@@ -282,7 +282,7 @@ blob_delete(void)
 	bs = g_bs;
 
 	/* Create a blob and then delete it. */
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid > 0);
 	blobid = g_blobid;
@@ -317,7 +317,7 @@ blob_resize(void)
 	bs = g_bs;
 	free_clusters = spdk_bs_free_cluster_count(bs);
 
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(bs));
@@ -410,7 +410,7 @@ blob_write(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
@@ -476,7 +476,7 @@ blob_read(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
@@ -540,7 +540,7 @@ blob_rw_verify(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
@@ -598,7 +598,7 @@ blob_rw_verify_iov(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
@@ -700,7 +700,7 @@ blob_rw_verify_iov_nomem(void)
 	channel = spdk_bs_alloc_io_channel(bs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
@@ -759,7 +759,7 @@ blob_iter(void)
 	CU_ASSERT(g_blob == NULL);
 	CU_ASSERT(g_bserrno == -ENOENT);
 
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
@@ -800,7 +800,7 @@ blob_xattr(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
@@ -836,10 +836,10 @@ blob_xattr(void)
 	rc = spdk_bs_md_get_xattr_names(blob, &names);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(names != NULL);
-	CU_ASSERT(spdk_xattr_names_get_count(names) == 2);
+	CU_ASSERT(spdk_xattr_names_get_count(names) == 3);
 	name1 = spdk_xattr_names_get_name(names, 0);
 	SPDK_CU_ASSERT_FATAL(name1 != NULL);
-	CU_ASSERT(!strcmp(name1, "name") || !strcmp(name1, "length"));
+	CU_ASSERT(!strcmp(name1, "name") || !strcmp(name1, "length") || !strcmp(name1, "provisioning"));
 	name2 = spdk_xattr_names_get_name(names, 1);
 	SPDK_CU_ASSERT_FATAL(name2 != NULL);
 	CU_ASSERT(!strcmp(name2, "name") || !strcmp(name2, "length"));
@@ -889,7 +889,7 @@ bs_load(void)
 	CU_ASSERT(g_blob == NULL);
 
 	/* Create a blob */
-	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(g_bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
@@ -1125,7 +1125,7 @@ bs_unload(void)
 
 	/* Create a blob and open it. */
 	g_bserrno = -1;
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid > 0);
 	blobid = g_blobid;
@@ -1273,7 +1273,7 @@ bs_usable_clusters(void)
 	for (i = 0; i < 4; i++) {
 		g_bserrno = -1;
 		g_blobid = SPDK_BLOBID_INVALID;
-		spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+		spdk_bs_md_create_blob(g_bs, NULL, blob_op_with_id_complete, NULL);
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blobid !=  SPDK_BLOBID_INVALID);
 
@@ -1343,7 +1343,7 @@ bs_resize_md(void)
 	for (i = 0; i < NUM_BLOBS; i++) {
 		g_bserrno = -1;
 		g_blobid = SPDK_BLOBID_INVALID;
-		spdk_bs_md_create_blob(g_bs,
+		spdk_bs_md_create_blob(g_bs, NULL,
 				       blob_op_with_id_complete, NULL);
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blobid !=  SPDK_BLOBID_INVALID);
@@ -1444,7 +1444,7 @@ blob_serialize(void)
 
 	/* Create and open two blobs */
 	for (i = 0; i < 2; i++) {
-		spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+		spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 		blobid[i] = g_blobid;
@@ -1538,7 +1538,7 @@ blob_crc(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 	bs = g_bs;
 
-	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid = g_blobid;
@@ -1640,7 +1640,7 @@ blob_dirty_shutdown(void)
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
 
 	/* Create first blob */
-	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(g_bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid1 = g_blobid;
@@ -1723,7 +1723,7 @@ blob_dirty_shutdown(void)
 	g_blobid = SPDK_BLOBID_INVALID;
 
 	/* Create second blob */
-	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(g_bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid2 = g_blobid;
@@ -1807,13 +1807,13 @@ blob_dirty_shutdown(void)
 	CU_ASSERT(g_bserrno == 0);
 
 	/* Create second blob */
-	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(g_bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid2 = g_blobid;
 
 	/* Create third blob */
-	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	spdk_bs_md_create_blob(g_bs, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 	blobid3 = g_blobid;
