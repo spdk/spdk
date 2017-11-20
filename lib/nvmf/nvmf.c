@@ -432,7 +432,7 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 	/* This is actually (nsid - 1) for convenience */
 	for (nsid = 0; nsid < sgroup->num_channels; nsid++) {
 		ns = &subsystem->ns[nsid];
-		if (ns->allocated) {
+		if (ns->allocated && sgroup->channels[nsid] == NULL) {
 			sgroup->channels[nsid] = spdk_bdev_get_io_channel(ns->desc);
 			if (sgroup->channels[nsid] == NULL) {
 				return -1;
@@ -462,6 +462,38 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	sgroup->num_channels = 0;
 	free(sgroup->channels);
 	sgroup->channels = NULL;
+
+	return 0;
+}
+
+int
+spdk_nvmf_poll_group_add_ns(struct spdk_nvmf_poll_group *group,
+			    struct spdk_nvmf_subsystem *subsystem,
+			    struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	uint32_t ns_idx;
+
+	sgroup = &group->sgroups[subsystem->id];
+
+	/* The index into the channels array is (nsid - 1) */
+	ns_idx = ns->id - 1;
+
+	if (ns_idx >= sgroup->num_channels) {
+		sgroup->num_channels = ns_idx + 1;
+		sgroup->channels = realloc(sgroup->channels,
+					   sgroup->num_channels * sizeof(struct spdk_io_channel *));
+		if (!sgroup->channels) {
+			return -1;
+		}
+	}
+
+	if (sgroup->channels[ns_idx] == NULL) {
+		sgroup->channels[ns_idx] = spdk_bdev_get_io_channel(ns->desc);
+	}
+	if (sgroup->channels[ns_idx] == NULL) {
+		return -1;
+	}
 
 	return 0;
 }

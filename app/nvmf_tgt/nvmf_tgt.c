@@ -82,7 +82,7 @@ subsystem_unregister_poller(void *arg1, void *arg2)
 	struct nvmf_tgt_subsystem *app_subsys = arg1;
 	struct spdk_event *event = arg2;
 
-	spdk_poller_unregister(&app_subsys->poller);
+	spdk_nvmf_subsystem_stop(app_subsys->subsystem);
 
 	spdk_event_call(event);
 }

@@ -50,6 +50,12 @@ spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 	return spdk_nvmf_subsystem_bdev_attach(subsystem);
 }
 
+void
+spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem)
+{
+	spdk_nvmf_subsystem_bdev_detach(subsystem);
+}
+
 static bool
 spdk_nvmf_valid_nqn(const char *nqn)
 {
@@ -177,8 +183,6 @@ spdk_nvmf_subsystem_delete_done(void *io_device, void *ctx, int status)
 {
 	struct spdk_nvmf_tgt *tgt = io_device;
 	struct spdk_nvmf_subsystem *subsystem = ctx;
-
-	spdk_nvmf_subsystem_bdev_detach(subsystem);
 
 	free(subsystem->ns);
 
@@ -391,11 +395,36 @@ spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener *listener)
 	return &listener->trid;
 }
 
+struct spdk_nvmf_subsystem_add_ns_ctx {
+	struct spdk_nvmf_subsystem	*subsystem;
+	struct spdk_nvmf_ns		*ns;
+};
+
+static void
+spdk_nvmf_subsystem_add_ns_done(void *io_device, void *ctx, int status)
+{
+	free(ctx);
+}
+
+static int
+spdk_nvmf_subsystem_ns_update_poll_group(void *io_device,
+		struct spdk_io_channel *ch,
+		void *c)
+{
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_subsystem_add_ns_ctx *ctx = c;
+
+	group = spdk_io_channel_get_ctx(ch);
+
+	return spdk_nvmf_poll_group_add_ns(group, ctx->subsystem, ctx->ns);
+}
+
 uint32_t
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
 			   uint32_t nsid)
 {
 	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_subsystem_add_ns_ctx *ctx;
 	uint32_t i;
 	int rc;
 
@@ -471,6 +500,25 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 	subsystem->max_nsid = spdk_max(subsystem->max_nsid, nsid);
 	subsystem->num_allocated_nsid++;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+	ctx->subsystem = subsystem;
+	ctx->ns = ns;
+
+	/* Send a message to each poll group to notify it that a new namespace
+	 * is available.
+	 * TODO: This call does not currently allow the user to wait for these
+	 * messages to propagate. It also does not protect against two calls
+	 * to this function overlapping
+	 */
+	spdk_for_each_channel(subsystem->tgt,
+			      spdk_nvmf_subsystem_ns_update_poll_group,
+			      ctx,
+			      spdk_nvmf_subsystem_add_ns_done);
+
 	return nsid;
 }
 

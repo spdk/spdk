@@ -53,7 +53,6 @@ struct spdk_nvmf_tgt_conf {
 
 struct nvmf_tgt_subsystem {
 	struct spdk_nvmf_subsystem *subsystem;
-	struct spdk_poller *poller;
 
 	TAILQ_ENTRY(nvmf_tgt_subsystem) tailq;
 
