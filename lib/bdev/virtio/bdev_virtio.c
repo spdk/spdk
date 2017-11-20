@@ -1133,12 +1133,6 @@ bdev_virtio_scsi_scan(struct virtio_dev *vdev, virtio_create_device_cb cb_fn, vo
 		return rc;
 	}
 
-	rc = virtio_dev_start(vdev);
-	if (rc != 0) {
-		spdk_dma_free(base);
-		return rc;
-	}
-
 	base->vdev = vdev;
 	TAILQ_INIT(&base->found_disks);
 
