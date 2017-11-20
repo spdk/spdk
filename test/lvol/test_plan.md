@@ -378,6 +378,18 @@ Expected result:
 - Error code: ENODEV ("the device is busy") response printed to stdout
 - no other operation fails
 
+#### TEST CASE 158 - Name: delete_lvol_store_persistent_positive
+Positive test for removing lvol store persistently
+Steps:
+- construct_lvol_store on nvme bdev
+- delete lvol store
+- restart vhost
+- check if deleted lvol store does not exist in vhost
+
+Expected result:
+- get_lvol_stores: response should be of no value after destroyed lvol store
+- no other operation fails
+
 ### nested_construct_logical_volume - positive tests
 
 #### TEST CASE 200 - Name: nested_construct_logical_volume_positive

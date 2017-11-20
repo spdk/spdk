@@ -80,6 +80,7 @@ class Commands_Rpc(object):
             return 1
         else:
             print("INFO: Lvol store not exist")
+            return 2
         return 0
 
     def construct_malloc_bdev(self, total_size, block_size):
