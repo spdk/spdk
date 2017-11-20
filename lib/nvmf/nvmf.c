@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/bdev.h"
 #include "spdk/conf.h"
 #include "spdk/io_channel.h"
 #include "spdk/nvmf.h"
@@ -82,11 +83,29 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	struct spdk_nvmf_tgt *tgt = io_device;
 	struct spdk_nvmf_poll_group *group = ctx_buf;
 	struct spdk_nvmf_transport *transport;
+	uint32_t sid;
 
 	TAILQ_INIT(&group->tgroups);
 
 	TAILQ_FOREACH(transport, &tgt->transports, link) {
 		spdk_nvmf_poll_group_add_transport(group, transport);
+	}
+
+	group->num_sgroups = tgt->max_sid;
+	group->sgroups = calloc(group->num_sgroups, sizeof(struct spdk_nvmf_subsystem_poll_group));
+	if (!group->sgroups) {
+		return -1;
+	}
+
+	for (sid = 0; sid < group->num_sgroups; sid++) {
+		struct spdk_nvmf_subsystem *subsystem;
+
+		subsystem = tgt->subsystems[sid];
+		if (!subsystem) {
+			continue;
+		}
+
+		spdk_nvmf_poll_group_add_subsystem(group, subsystem);
 	}
 
 	group->poller = spdk_poller_register(spdk_nvmf_poll_group_poll, group, 0);
@@ -99,6 +118,8 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 {
 	struct spdk_nvmf_poll_group *group = ctx_buf;
 	struct spdk_nvmf_transport_poll_group *tgroup, *tmp;
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	uint32_t sid, nsid;
 
 	spdk_poller_unregister(&group->poller);
 
@@ -106,6 +127,21 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 		TAILQ_REMOVE(&group->tgroups, tgroup, link);
 		spdk_nvmf_transport_poll_group_destroy(tgroup);
 	}
+
+	for (sid = 0; sid < group->num_sgroups; sid++) {
+		sgroup = &group->sgroups[sid];
+
+		for (nsid = 0; nsid < sgroup->num_channels; nsid++) {
+			if (sgroup->channels[nsid]) {
+				spdk_put_io_channel(sgroup->channels[nsid]);
+				sgroup->channels[nsid] = NULL;
+			}
+		}
+
+		free(sgroup->channels);
+	}
+
+	free(group->sgroups);
 }
 
 struct spdk_nvmf_tgt *
@@ -365,6 +401,69 @@ spdk_nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 	}
 
 	TAILQ_INSERT_TAIL(&group->tgroups, tgroup, link);
+
+	return 0;
+}
+
+int
+spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
+				   struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	struct spdk_nvmf_ns *ns;
+	uint32_t i;
+
+	if (subsystem->id >= group->num_sgroups) {
+		void *buf;
+
+		group->num_sgroups = subsystem->id + 1;
+		buf = realloc(group->sgroups, group->num_sgroups * sizeof(*sgroup));
+		if (!buf) {
+			return -ENOMEM;
+		}
+		group->sgroups = buf;
+	}
+
+	sgroup = &group->sgroups[subsystem->id];
+
+	sgroup->num_channels = subsystem->max_nsid;
+	sgroup->channels = calloc(sgroup->num_channels, sizeof(struct spdk_io_channel *));
+	if (!sgroup->channels) {
+		return -1;
+	}
+
+	for (i = 0; i < sgroup->num_channels; i++) {
+		ns = &subsystem->ns[i];
+		if (ns->allocated && sgroup->channels[i] == NULL) {
+			sgroup->channels[i] = spdk_bdev_get_io_channel(ns->desc);
+			if (sgroup->channels[i] == NULL) {
+				return -1;
+			}
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
+				      struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	uint32_t nsid;
+
+	sgroup = &group->sgroups[subsystem->id];
+
+	for (nsid = 0; nsid < sgroup->num_channels; nsid++) {
+		if (sgroup->channels[nsid]) {
+			spdk_put_io_channel(sgroup->channels[nsid]);
+			sgroup->channels[nsid] = NULL;
+		}
+	}
+
+	sgroup->num_channels = 0;
+	free(sgroup->channels);
+	sgroup->channels = NULL;
 
 	return 0;
 }

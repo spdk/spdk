@@ -82,6 +82,24 @@ spdk_nvmf_valid_nqn(const char *nqn)
 	return true;
 }
 
+static void
+spdk_nvmf_subsystem_create_done(void *io_device, void *ctx, int status)
+{
+}
+
+static int
+spdk_nvmf_subsystem_add_to_poll_group(void *io_device,
+				      struct spdk_io_channel *ch,
+				      void *ctx)
+{
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_subsystem *subsystem = ctx;
+
+	group = spdk_io_channel_get_ctx(ch);
+
+	return spdk_nvmf_poll_group_add_subsystem(group, subsystem);
+}
+
 struct spdk_nvmf_subsystem *
 spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 			   const char *nqn,
@@ -146,7 +164,45 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 	tgt->subsystems[sid] = subsystem;
 	tgt->discovery_genctr++;
 
+	/* Send a message to each poll group to notify it that a new subsystem
+	 * is available.
+	 * TODO: This call does not currently allow the user to wait for these
+	 * messages to propagate. It also does not protect against two calls
+	 * to this function overlapping
+	 */
+	spdk_for_each_channel(tgt,
+			      spdk_nvmf_subsystem_add_to_poll_group,
+			      subsystem,
+			      spdk_nvmf_subsystem_create_done);
+
 	return subsystem;
+}
+
+static void
+spdk_nvmf_subsystem_delete_done(void *io_device, void *ctx, int status)
+{
+	struct spdk_nvmf_tgt *tgt = io_device;
+	struct spdk_nvmf_subsystem *subsystem = ctx;
+
+	free(subsystem->ns);
+
+	tgt->subsystems[subsystem->id] = NULL;
+	tgt->discovery_genctr++;
+
+	free(subsystem);
+}
+
+static int
+spdk_nvmf_subsystem_remove_from_poll_group(void *io_device,
+		struct spdk_io_channel *ch,
+		void *ctx)
+{
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_subsystem *subsystem = ctx;
+
+	group = spdk_io_channel_get_ctx(ch);
+
+	return spdk_nvmf_poll_group_remove_subsystem(group, subsystem);
 }
 
 void
@@ -177,12 +233,16 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		spdk_nvmf_ctrlr_destruct(ctrlr);
 	}
 
-	free(subsystem->ns);
-
-	subsystem->tgt->subsystems[subsystem->id] = NULL;
-	subsystem->tgt->discovery_genctr++;
-
-	free(subsystem);
+	/* Send a message to each poll group to notify it that a subsystem
+	 * is no longer available.
+	 * TODO: This call does not currently allow the user to wait for these
+	 * messages to propagate. It also does not protect against two calls
+	 * to this function overlapping
+	 */
+	spdk_for_each_channel(subsystem->tgt,
+			      spdk_nvmf_subsystem_remove_from_poll_group,
+			      subsystem,
+			      spdk_nvmf_subsystem_delete_done);
 }
 
 
