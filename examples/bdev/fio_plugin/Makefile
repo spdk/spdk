@@ -45,6 +45,10 @@ LDFLAGS += -shared -rdynamic
 
 SPDK_LIB_LIST +=  util bdev conf copy rpc jsonrpc json log
 
+ifeq ($(OS),Linux)
+SPDK_LIB_LIST += virtio
+endif
+
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 

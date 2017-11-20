@@ -47,7 +47,7 @@ SPDK_LIB_LIST += nvmf event log trace conf util bdev copy rpc jsonrpc json
 SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
 
 ifeq ($(OS),Linux)
-SPDK_LIB_LIST += event_nbd nbd
+SPDK_LIB_LIST += event_nbd nbd virtio
 endif
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
