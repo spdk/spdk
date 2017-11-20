@@ -129,7 +129,6 @@
 # Namespaces backed by physical NVMe devices
 [Subsystem1]
   NQN nqn.2016-06.io.spdk:cnode1
-  Core 0
   Listen RDMA 15.15.15.2:4420
   AllowAnyHost No
   Host nqn.2016-06.io.spdk:init
@@ -141,7 +140,6 @@
 # Namespaces backed by non-NVMe devices
 [Subsystem2]
   NQN nqn.2016-06.io.spdk:cnode2
-  Core 0
   Listen RDMA 192.168.2.21:4420
   AllowAnyHost No
   Host nqn.2016-06.io.spdk:init
