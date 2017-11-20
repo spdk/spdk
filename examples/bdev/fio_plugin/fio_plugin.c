@@ -146,6 +146,8 @@ spdk_fio_start_poller(void *thread_ctx,
 
 	TAILQ_INSERT_TAIL(&fio_thread->pollers, fio_poller, link);
 
+	SPDK_WARNLOG("Registered poller %p to thread %p\n", fio_poller, fio_thread);
+
 	return (struct spdk_poller *)fio_poller;
 }
 
@@ -156,6 +158,8 @@ spdk_fio_stop_poller(struct spdk_poller *poller, void *thread_ctx)
 	struct spdk_fio_thread *fio_thread = thread_ctx;
 
 	fio_poller = (struct spdk_fio_poller *)poller;
+
+	SPDK_WARNLOG("Unregistered poller %p from thread %p\n", fio_poller, fio_thread);
 
 	TAILQ_REMOVE(&fio_thread->pollers, fio_poller, link);
 
