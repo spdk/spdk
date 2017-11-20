@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "acd0db0a_12fcd733",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-11-20T09:30:10Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "e709416f_bd7ff7c8",
+      "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5032386a_a282cdac",
         "filename": "test/blobstore/blobstore.sh",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2017-11-18T00:06:58Z",
       "side": 1,
       "message": "This looks like leftover copy-paste stuff from the blobfs tests - I think the whole block can be deleted.",
+      "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2290d9f0_1dfe68e4",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-11-20T09:30:10Z",
+      "side": 1,
+      "message": "Deleted.",
+      "parentUuid": "5032386a_a282cdac",
       "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "f0518dbe_ef533b30",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-11-20T09:30:10Z",
+      "side": 1,
+      "message": "Fixed,thanks.I will tell other team members.",
+      "parentUuid": "8df40c78_0c1d38b2",
+      "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "956dd046_97eb148a",
         "filename": "test/blobstore/blobstore.sh",
         "patchSetId": 7
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "2a9a5acd_1e2cf1bc",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-11-20T09:30:10Z",
+      "side": 1,
+      "message": "Fixed.",
+      "parentUuid": "956dd046_97eb148a",
+      "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92309b44_e197a960",
         "filename": "test/blobstore/blobstore.sh",
         "patchSetId": 7
@@ -81,6 +153,24 @@
       "writtenOn": "2017-11-18T00:06:58Z",
       "side": 1,
       "message": "Since there\u0027s nothing to clean up, we don\u0027t really need this trap - if blobcli exits with a non-0 return code, the test will fail due to \u0027set -e\u0027.",
+      "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eabcf0f7_7bbb83b5",
+        "filename": "test/blobstore/blobstore.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-11-20T09:30:10Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "92309b44_e197a960",
       "revId": "06bba1ab020584046a03eb2e91656b0faf6125a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
