@@ -117,7 +117,9 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 		sgroup = &group->sgroups[sid];
 
 		for (nsid = 0; nsid < sgroup->num_channels; nsid++) {
-			spdk_put_io_channel(sgroup->channels[nsid]);
+			if (sgroup->channels[nsid]) {
+				spdk_put_io_channel(sgroup->channels[nsid]);
+			}
 		}
 
 		free(sgroup->channels);
@@ -434,6 +436,32 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 		if (sgroup->channels[nsid] == NULL) {
 			return -1;
 		}
+	}
+
+	return 0;
+}
+
+int
+spdk_nvmf_poll_group_add_ns(struct spdk_nvmf_poll_group *group,
+			    struct spdk_nvmf_subsystem *subsystem,
+			    struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+
+	sgroup = &group->sgroups[subsystem->id];
+
+	if (ns->id >= sgroup->num_channels) {
+		sgroup->num_channels = ns->id + 1;
+		sgroup->channels = realloc(sgroup->channels,
+					   sgroup->num_channels * sizeof(struct spdk_io_channel *));
+		if (!sgroup->channels) {
+			return -1;
+		}
+	}
+
+	sgroup->channels[ns->id - 1] = spdk_bdev_get_io_channel(ns->desc);
+	if (sgroup->channels[ns->id - 1] == NULL) {
+		return -1;
 	}
 
 	return 0;
