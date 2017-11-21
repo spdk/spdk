@@ -794,26 +794,6 @@ vbdev_lvs_init(void)
 	return 0;
 }
 
-static void
-vbdev_lvs_fini_next(void *cb_arg, int lvserrno)
-{
-	struct lvol_store_bdev *lvs_bdev;
-
-	lvs_bdev = TAILQ_FIRST(&g_spdk_lvol_pairs);
-	if (lvs_bdev == NULL) {
-		spdk_bdev_module_finish_done();
-		return;
-	}
-
-	vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_fini_next, cb_arg);
-}
-
-static void
-vbdev_lvs_fini(void)
-{
-	vbdev_lvs_fini_next(NULL, 0);
-}
-
 static int
 vbdev_lvs_get_ctx_size(void)
 {
@@ -942,7 +922,6 @@ vbdev_lvs_examine(struct spdk_bdev *bdev)
 
 	spdk_lvs_load(bs_dev, _vbdev_lvs_examine_cb, req);
 }
-SPDK_BDEV_MODULE_REGISTER(lvol, vbdev_lvs_init, vbdev_lvs_fini, NULL, vbdev_lvs_get_ctx_size,
+SPDK_BDEV_MODULE_REGISTER(lvol, vbdev_lvs_init, NULL, NULL, vbdev_lvs_get_ctx_size,
 			  vbdev_lvs_examine)
-SPDK_BDEV_MODULE_ASYNC_FINI(lvol);
 SPDK_LOG_REGISTER_COMPONENT("vbdev_lvol", SPDK_LOG_VBDEV_LVOL);
