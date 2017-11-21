@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1675b42c_34f3d3b8",
+        "filename": "test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T00:23:00Z",
+      "side": 1,
+      "message": "delete the comment on line 50, move this line before starting iscsi_tgt, then just specify -r $iscsi_rpc_addr when starting iscsi_tgt",
+      "revId": "0f14632c58e895648eaa6cca4327386b095aa1f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56cb63d9_cc68f88d",
+        "filename": "test/iscsi_tgt/nvme_remote/iscsi.conf",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T00:23:00Z",
+      "side": 1,
+      "message": "I\u0027d just specify -r /var/tmp/spdk-iscsi.sock in the script, then you can delete this Rpc section altogether",
+      "revId": "0f14632c58e895648eaa6cca4327386b095aa1f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
