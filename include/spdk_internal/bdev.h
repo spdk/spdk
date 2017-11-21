@@ -187,7 +187,7 @@ struct spdk_bdev {
 	void *ctxt;
 
 	/** Unique name for this block device. */
-	char *name;
+	TAILQ_ENTRY(spdk_bdev) names;
 
 	/** Unique product name for this kind of block device. */
 	char *product_name;

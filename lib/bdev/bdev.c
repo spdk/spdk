@@ -167,7 +167,7 @@ spdk_bdev_first(void)
 
 	bdev = TAILQ_FIRST(&g_bdev_mgr.bdevs);
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Starting bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(SPDKh _TRACE_BDEV, "Starting bdev iteration at %s\n", spdk_bdev_get_name(bdev));
 	}
 
 	return bdev;
@@ -180,7 +180,7 @@ spdk_bdev_next(struct spdk_bdev *prev)
 
 	bdev = TAILQ_NEXT(prev, link);
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Continuing bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Continuing bdev iteration at %s\n", spdk_bdev_get_name(bdev));
 	}
 
 	return bdev;
@@ -208,7 +208,7 @@ spdk_bdev_first_leaf(void)
 	bdev = _bdev_next_leaf(TAILQ_FIRST(&g_bdev_mgr.bdevs));
 
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Starting bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Starting bdev iteration at %s\n", spdk_bdev_get_name(bdev));
 	}
 
 	return bdev;
@@ -222,7 +222,7 @@ spdk_bdev_next_leaf(struct spdk_bdev *prev)
 	bdev = _bdev_next_leaf(TAILQ_NEXT(prev, link));
 
 	if (bdev) {
-		SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Continuing bdev iteration at %s\n", bdev->name);
+		SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Continuing bdev iteration at %s\n", spdk_bdev_get_name(bdev));
 	}
 
 	return bdev;
@@ -234,8 +234,10 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	struct spdk_bdev *bdev = spdk_bdev_first();
 
 	while (bdev != NULL) {
-		if (strcmp(bdev_name, bdev->name) == 0) {
-			return bdev;
+		TAILQ_FOREACH_SAFE((name, bdev->names, link, tmp) {
+			if (strcmp(bdev_name, name) == 0) {
+				return bdev;
+			}
 		}
 		bdev = spdk_bdev_next(bdev);
 	}
@@ -791,7 +793,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	{
 		char *name;
 		__itt_init_ittlib(NULL, 0);
-		name = spdk_sprintf_alloc("spdk_bdev_%s_%p", ch->bdev->name, ch);
+		name = spdk_sprintf_alloc("spdk_bdev_%s_%p", spdk_bdev_get_name(ch->bdev), ch);
 		if (!name) {
 			spdk_put_io_channel(ch->channel);
 			spdk_put_io_channel(ch->mgmt_channel);
@@ -877,7 +879,7 @@ spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
-	return bdev->name;
+	return TAILQ_FIRST(bdev->names);
 }
 
 const char *
@@ -1819,7 +1821,7 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 				sizeof(struct spdk_bdev_channel));
 
 	pthread_mutex_init(&bdev->mutex, NULL);
-	SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Inserting bdev %s into list\n", bdev->name);
+	SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Inserting bdev %s into list\n", spdk_bdev_get_name(bdev));
 	TAILQ_INSERT_TAIL(&g_bdev_mgr.bdevs, bdev, link);
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, tailq) {
@@ -1864,7 +1866,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 	int			rc;
 	bool			do_destruct = true;
 
-	SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Removing bdev %s from list\n", bdev->name);
+	SPDK_DEBUGLOG(SPDK_TRACE_BDEV, "Removing bdev %s from list\n", spdk_bdev_get_name(bdev));
 
 	pthread_mutex_lock(&bdev->mutex);
 
@@ -1929,7 +1931,7 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	pthread_mutex_lock(&bdev->mutex);
 
 	if (write && bdev->claim_module) {
-		SPDK_INFOLOG(SPDK_TRACE_BDEV, "Could not open %s - already claimed\n", bdev->name);
+		SPDK_INFOLOG(SPDK_TRACE_BDEV, "Could not open %s - already claimed\n", spdk_bdev_get_name(bdev));
 		free(desc);
 		pthread_mutex_unlock(&bdev->mutex);
 		return -EPERM;
@@ -1974,7 +1976,7 @@ spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			    struct spdk_bdev_module_if *module)
 {
 	if (bdev->claim_module != NULL) {
-		SPDK_ERRLOG("bdev %s already claimed by module %s\n", bdev->name,
+		SPDK_ERRLOG("bdev %s already claimed by module %s\n", spdk_bdev_get_name(bdev),
 			    bdev->claim_module->name);
 		return -EPERM;
 	}
