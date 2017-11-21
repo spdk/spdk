@@ -188,6 +188,35 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 				/* If padding and length are 0, this terminates the page */
 				break;
 			}
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_FLAGS) {
+			struct spdk_blob_md_descriptor_flags	*desc_flags;
+
+			desc_flags = (struct spdk_blob_md_descriptor_flags *)desc;
+
+			if (desc_flags->length != sizeof(*desc_flags) - sizeof(*desc)) {
+				return -EINVAL;
+			}
+
+			if ((desc_flags->invalid_flags | SPDK_BLOB_INVALID_FLAGS_MASK) !=
+			    SPDK_BLOB_INVALID_FLAGS_MASK) {
+				return -EINVAL;
+			}
+
+			if ((desc_flags->data_ro_flags | SPDK_BLOB_DATA_RO_FLAGS_MASK) !=
+			    SPDK_BLOB_DATA_RO_FLAGS_MASK) {
+				blob->data_ro = true;
+				blob->md_ro = true;
+			}
+
+			if ((desc_flags->md_ro_flags | SPDK_BLOB_MD_RO_FLAGS_MASK) !=
+			    SPDK_BLOB_MD_RO_FLAGS_MASK) {
+				blob->md_ro = true;
+			}
+
+			blob->invalid_flags = desc_flags->invalid_flags;
+			blob->data_ro_flags = desc_flags->data_ro_flags;
+			blob->md_ro_flags = desc_flags->md_ro_flags;
+
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
 			struct spdk_blob_md_descriptor_extent	*desc_extent;
 			unsigned int				i, j;
@@ -265,8 +294,12 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 
 			TAILQ_INSERT_TAIL(&blob->xattrs, xattr, link);
 		} else {
-			/* Error */
-			return -EINVAL;
+			/* Unrecognized descriptor type.  Do not fail - just continue to the
+			 *  next descriptor.  If this descriptor is associated with some feature
+			 *  defined in a newer version of blobstore, that version of blobstore
+			 *  should create and set an associated feature flag to specify if this
+			 *  blob can be loaded or not.
+			 */
 		}
 
 		/* Advance to the next descriptor */
@@ -455,6 +488,28 @@ _spdk_blob_serialize_extent(const struct spdk_blob *blob,
 	return;
 }
 
+static void
+_spdk_blob_serialize_flags(const struct spdk_blob *blob,
+			   uint8_t *buf, size_t *buf_sz)
+{
+	struct spdk_blob_md_descriptor_flags *desc;
+
+	/*
+	 * Flags get serialized first, so we should always have room for the flags
+	 *  descriptor.
+	 */
+	assert(*buf_sz >= sizeof(*desc));
+
+	desc = (struct spdk_blob_md_descriptor_flags *)buf;
+	desc->type = SPDK_MD_DESCRIPTOR_TYPE_FLAGS;
+	desc->length = sizeof(*desc) - sizeof(struct spdk_blob_md_descriptor);
+	desc->invalid_flags = blob->invalid_flags;
+	desc->data_ro_flags = blob->data_ro_flags;
+	desc->md_ro_flags = blob->md_ro_flags;
+
+	*buf_sz -= sizeof(*desc);
+}
+
 static int
 _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pages,
 		     uint32_t *page_count)
@@ -482,6 +537,9 @@ _spdk_blob_serialize(const struct spdk_blob *blob, struct spdk_blob_md_page **pa
 
 	buf = (uint8_t *)cur_page->descriptors;
 	remaining_sz = sizeof(cur_page->descriptors);
+
+	/* Serialize flags */
+	_spdk_blob_serialize_flags(blob, buf, &remaining_sz);
 
 	/* Serialize xattrs */
 	TAILQ_FOREACH(xattr, &blob->xattrs, link) {
