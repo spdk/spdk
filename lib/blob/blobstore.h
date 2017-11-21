@@ -125,6 +125,9 @@ struct spdk_blob {
 	struct spdk_blob_mut_data	clean;
 	struct spdk_blob_mut_data	active;
 
+	bool		data_ro;
+	bool		md_ro;
+
 	/* TODO: The xattrs are mutable, but we don't want to be
 	 * copying them unecessarily. Figure this out.
 	 */

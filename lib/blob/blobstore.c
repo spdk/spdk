@@ -1067,6 +1067,11 @@ _spdk_blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_ch
 
 	assert(blob != NULL);
 
+	if (blob->data_ro && op_type != SPDK_BLOB_READ) {
+		cb_fn(cb_arg, -EPERM);
+		return;
+	}
+
 	if (offset + length > blob->active.num_clusters * blob->bs->pages_per_cluster) {
 		cb_fn(cb_arg, -EINVAL);
 		return;
@@ -2552,6 +2557,10 @@ spdk_bs_md_resize_blob(struct spdk_blob *blob, uint64_t sz)
 
 	SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Resizing blob %lu to %lu clusters\n", blob->id, sz);
 
+	if (blob->md_ro) {
+		return -EPERM;
+	}
+
 	if (sz == blob->active.num_clusters) {
 		return 0;
 	}
@@ -2721,6 +2730,11 @@ void spdk_bs_md_sync_blob(struct spdk_blob *blob,
 	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
 	       blob->state != SPDK_BLOB_STATE_SYNCING);
 
+	if (blob->md_ro) {
+		assert(blob->state == SPDK_BLOB_STATE_CLEAN);
+		return;
+	}
+
 	if (blob->state == SPDK_BLOB_STATE_CLEAN) {
 		cb_fn(cb_arg, 0);
 		return;
@@ -2853,6 +2867,10 @@ void spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *chan
 			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
 			    spdk_blob_op_complete cb_fn, void *cb_arg)
 {
+	if (blob->data_ro) {
+		cb_fn(cb_arg, -EPERM);
+		return;
+	}
 	_spdk_blob_request_submit_rw_iov(blob, channel, iov, iovcnt, offset, length, cb_fn, cb_arg, false);
 }
 
@@ -2970,6 +2988,10 @@ spdk_blob_md_set_xattr(struct spdk_blob *blob, const char *name, const void *val
 	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
 	       blob->state != SPDK_BLOB_STATE_SYNCING);
 
+	if (blob->md_ro) {
+		return -EPERM;
+	}
+
 	TAILQ_FOREACH(xattr, &blob->xattrs, link) {
 		if (!strcmp(name, xattr->name)) {
 			free(xattr->value);
@@ -3007,6 +3029,10 @@ spdk_blob_md_remove_xattr(struct spdk_blob *blob, const char *name)
 
 	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
 	       blob->state != SPDK_BLOB_STATE_SYNCING);
+
+	if (blob->md_ro) {
+		return -EPERM;
+	}
 
 	TAILQ_FOREACH(xattr, &blob->xattrs, link) {
 		if (!strcmp(name, xattr->name)) {
