@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "733be7b6_d3f912c1",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 9
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-21T05:54:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e8ec87a0_f7467f5a",
+      "range": {
+        "startLine": 2,
+        "startChar": 8,
+        "endLine": 2,
+        "endChar": 15
+      },
+      "revId": "0e8d8183c708f8123bda3ae14c9621736371bee7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fca121f3_7f71998c",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 9
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "464db4a7_9a9d80b4",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-21T05:54:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fca121f3_7f71998c",
+      "range": {
+        "startLine": 71,
+        "startChar": 2,
+        "endLine": 71,
+        "endChar": 33
+      },
+      "revId": "0e8d8183c708f8123bda3ae14c9621736371bee7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "341c3238_f424374e",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 9
@@ -59,6 +107,30 @@
       "writtenOn": "2017-11-17T08:26:35Z",
       "side": 1,
       "message": "This produces a lot of extra lines.\nCould we change to have a job variable which is set by \"if\" conditional and then run a single command?\nExample:\nif RUN_NIGHTLY -eq 1:\n    job\u003ddefault_integrity_nightly.job\nelse\n    job\u003ddefault_integrity.job",
+      "range": {
+        "startLine": 87,
+        "startChar": 2,
+        "endLine": 99,
+        "endChar": 4
+      },
+      "revId": "0e8d8183c708f8123bda3ae14c9621736371bee7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5f084ac_8fb59814",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-11-21T05:54:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "341c3238_f424374e",
       "range": {
         "startLine": 87,
         "startChar": 2,
