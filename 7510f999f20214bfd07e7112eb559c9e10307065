@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1a3e546_8508b117",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1768,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-21T08:20:18Z",
+      "side": 1,
+      "message": "other parts of bdev.c already use SPDK_ERRLOG (e.g. line #1954), so could it be used here as well?",
+      "range": {
+        "startLine": 1768,
+        "startChar": 2,
+        "endLine": 1768,
+        "endChar": 15
+      },
+      "revId": "7510f999f20214bfd07e7112eb559c9e10307065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60aa43b0_b8492639",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1773,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-21T08:20:18Z",
+      "side": 1,
+      "message": "Could this say something like:\n\"Bdev with name %s already exists.\"?\nI find the current error message unclear.",
+      "range": {
+        "startLine": 1773,
+        "startChar": 34,
+        "endLine": 1773,
+        "endChar": 66
+      },
+      "revId": "7510f999f20214bfd07e7112eb559c9e10307065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19e13692_3dc3b2f7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1773,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-21T08:20:18Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 1773,
+        "startChar": 2,
+        "endLine": 1773,
+        "endChar": 32
+      },
+      "revId": "7510f999f20214bfd07e7112eb559c9e10307065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3a63853_ca54829b",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-21T08:20:18Z",
+      "side": 1,
+      "message": "free disk",
+      "revId": "7510f999f20214bfd07e7112eb559c9e10307065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d753063d_ace08da7",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-21T08:20:18Z",
+      "side": 1,
+      "message": "why is this debuglog? this seems to be an error message that user would probably like to see.",
+      "range": {
+        "startLine": 640,
+        "startChar": 3,
+        "endLine": 640,
+        "endChar": 16
+      },
+      "revId": "7510f999f20214bfd07e7112eb559c9e10307065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3767345_1e82a8fb",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-21T08:20:18Z",
+      "side": 1,
+      "message": "it should probably fail the scan, but the error-handling path is quite difficult at this point... I\u0027ll probably fix this later as a part of some cleanup. This is fine for now.",
+      "range": {
+        "startLine": 642,
+        "startChar": 3,
+        "endLine": 642,
+        "endChar": 12
+      },
+      "revId": "7510f999f20214bfd07e7112eb559c9e10307065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14d194d5_724d7313",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-21T08:20:18Z",
+      "side": 1,
+      "message": "no need for this assert.\nthe string \"base\" will be compiled into the final SPDK executable (probably in a read-only data section), so it will always get a valid address.",
+      "range": {
+        "startLine": 341,
+        "startChar": 0,
+        "endLine": 341,
+        "endChar": 35
+      },
+      "revId": "7510f999f20214bfd07e7112eb559c9e10307065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
