@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d58e3f8_a818d9d6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2200,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-21T15:40:38Z",
+      "side": 1,
+      "message": "Use a batch instead of a sequence. That way the two commands can run in parallel.",
+      "revId": "a39224342033684260a03b8f137b8418ab4b1a55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
