@@ -134,6 +134,30 @@
     },
     {
       "key": {
+        "uuid": "9cbcbb7a_2ea9b722",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-21T10:55:11Z",
+      "side": 1,
+      "message": "I will use continue now. Since this function does not provide any exceptional return path. In my mind, for exceptional case, we have to handle the disk free related statements. I think that you can refactor it later.",
+      "parentUuid": "d3767345_1e82a8fb",
+      "range": {
+        "startLine": 642,
+        "startChar": 3,
+        "endLine": 642,
+        "endChar": 12
+      },
+      "revId": "7510f999f20214bfd07e7112eb559c9e10307065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "14d194d5_724d7313",
         "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
         "patchSetId": 11
