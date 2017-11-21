@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "302871f1_f1a53e14",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-21T15:19:06Z",
+      "side": 1,
+      "message": "Using bdev-\u003ename on device that had bs_dev created on it should work great for all cases with exception of those that do not present as bdev (such as iscsi target). +1",
+      "range": {
+        "startLine": 257,
+        "startChar": 59,
+        "endLine": 257,
+        "endChar": 75
+      },
+      "revId": "cffab5ba103421a6c4f10f329a9ee81d98ef2f93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af21e36b_c6b7b3b7",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-21T15:19:06Z",
+      "side": 1,
+      "message": "I think we should separate thin provisioning from snapshots to separate calls. Thin provisioning might be better as spdk_bs_md_create_blob() parameter. Meanwhile making snapshot or setting a blob as clone of snapshot would need separate function.",
+      "range": {
+        "startLine": 257,
+        "startChar": 0,
+        "endLine": 258,
+        "endChar": 50
+      },
+      "revId": "cffab5ba103421a6c4f10f329a9ee81d98ef2f93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
