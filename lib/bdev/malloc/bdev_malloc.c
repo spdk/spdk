@@ -93,7 +93,6 @@ static TAILQ_HEAD(, malloc_disk) g_malloc_disks = TAILQ_HEAD_INITIALIZER(g_mallo
 int malloc_disk_count = 0;
 
 static int bdev_malloc_initialize(void);
-static void bdev_malloc_finish(void);
 static void bdev_malloc_get_spdk_running_config(FILE *fp);
 
 static int
@@ -102,7 +101,7 @@ bdev_malloc_get_ctx_size(void)
 	return sizeof(struct malloc_task) + spdk_copy_task_size();
 }
 
-SPDK_BDEV_MODULE_REGISTER(malloc, bdev_malloc_initialize, bdev_malloc_finish,
+SPDK_BDEV_MODULE_REGISTER(malloc, bdev_malloc_initialize, NULL,
 			  bdev_malloc_get_spdk_running_config, bdev_malloc_get_ctx_size, NULL)
 
 static void
@@ -446,15 +445,6 @@ static int bdev_malloc_initialize(void)
 
 end:
 	return rc;
-}
-
-static void bdev_malloc_finish(void)
-{
-	struct malloc_disk *mdisk, *tmp;
-
-	TAILQ_FOREACH_SAFE(mdisk, &g_malloc_disks, link, tmp) {
-		spdk_bdev_unregister(&mdisk->disk, NULL, NULL);
-	}
 }
 
 static void
