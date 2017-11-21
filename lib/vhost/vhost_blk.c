@@ -169,7 +169,8 @@ blk_request_finish(bool success, struct spdk_vhost_blk_task *task)
 }
 
 static void
-blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg,
+			uint32_t seq_num)
 {
 	struct spdk_vhost_blk_task *task = cb_arg;
 
@@ -236,11 +237,11 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 		if (type == VIRTIO_BLK_T_IN) {
 			rc = spdk_bdev_readv(bvdev->bdev_desc, bvdev->bdev_io_channel,
 					     &task->iovs[1], task->iovcnt, req->sector * 512,
-					     task->length, blk_request_complete_cb, task);
+					     task->length, blk_request_complete_cb, task, 0);
 		} else if (!bvdev->readonly) {
 			rc = spdk_bdev_writev(bvdev->bdev_desc, bvdev->bdev_io_channel,
 					      &task->iovs[1], task->iovcnt, req->sector * 512,
-					      task->length, blk_request_complete_cb, task);
+					      task->length, blk_request_complete_cb, task, 0);
 		} else {
 			SPDK_DEBUGLOG(SPDK_TRACE_VHOST_BLK, "Device is in read-only mode!\n");
 			rc = -1;

@@ -273,7 +273,7 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 }
 
 static void
-spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
+spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg, uint32_t seq_num)
 {
 	struct gpt_base *gpt_base = (struct gpt_base *)arg;
 	struct spdk_bdev *bdev = gpt_base->part_base.bdev;

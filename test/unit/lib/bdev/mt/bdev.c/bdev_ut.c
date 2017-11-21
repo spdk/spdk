@@ -241,7 +241,7 @@ basic(void)
 }
 
 static void
-reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg, uint32_t seq_num)
 {
 	bool *done = cb_arg;
 
@@ -276,7 +276,7 @@ put_channel_during_reset(void)
 }
 
 static void
-aborted_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+aborted_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg, uint32_t seq_num)
 {
 	enum spdk_bdev_io_status *status = cb_arg;
 
@@ -340,7 +340,7 @@ aborted_reset(void)
 }
 
 static void
-io_during_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+io_during_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg, uint32_t seq_num)
 {
 	enum spdk_bdev_io_status *status = cb_arg;
 
@@ -437,7 +437,7 @@ io_during_reset(void)
 }
 
 static void
-enomem_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+enomem_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg, uint32_t seq_num)
 {
 	enum spdk_bdev_io_status *status = cb_arg;
 

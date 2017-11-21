@@ -298,6 +298,9 @@ struct spdk_bdev_io {
 	 */
 	bool in_submit_request;
 
+	/** Sequence number for object reuse (SCSI only) */
+	uint32_t seq_num;
+
 	union {
 		struct {
 			/** For basic IO case, use our own iovec element. */

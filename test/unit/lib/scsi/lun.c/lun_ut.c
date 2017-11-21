@@ -184,7 +184,7 @@ spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 }
 
 int
-spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
+spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task, uint32_t seq_num)
 {
 	if (g_lun_execute_fail)
 		return -EINVAL;

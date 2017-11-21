@@ -216,7 +216,8 @@ apply_firmware_cleanup(void *cb_arg)
 }
 
 static void
-apply_firmware_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+apply_firmware_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg,
+			      uint32_t seq_num)
 {
 	int					rc;
 	struct spdk_json_write_ctx		*w;

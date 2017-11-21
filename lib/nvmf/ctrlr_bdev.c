@@ -88,7 +88,7 @@ spdk_nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr)
 
 static void
 nvmf_bdev_ctrlr_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
-			     void *cb_arg)
+			     void *cb_arg, uint32_t seq_num)
 {
 	struct spdk_nvmf_request 	*req = cb_arg;
 	struct spdk_nvme_cpl 		*response = &req->rsp->nvme_cpl;

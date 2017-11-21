@@ -72,6 +72,9 @@ struct spdk_scsi_dev {
 };
 
 struct spdk_scsi_lun {
+	/** Sequence number for spdk_scsi_task reuse */
+	uint32_t task_seq_num;
+
 	/** LUN id for this logical unit. */
 	int id;
 
@@ -141,8 +144,10 @@ void spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task, enum spdk_scsi_task_func func);
-void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
-void spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
+void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task,
+				 uint32_t seq_num);
+void spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task,
+				      uint32_t seq_num);
 int spdk_scsi_lun_claim(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_unclaim(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_delete(const char *lun_name);
@@ -161,7 +166,7 @@ int spdk_scsi_port_construct(struct spdk_scsi_port *port, uint64_t id,
 			     uint16_t index, const char *name);
 void spdk_scsi_port_destruct(struct spdk_scsi_port *port);
 
-int spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task);
+int spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task, uint32_t seq_num);
 int spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task);
 
 struct spdk_scsi_globals {

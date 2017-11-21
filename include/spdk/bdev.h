@@ -103,7 +103,8 @@ enum spdk_bdev_io_type {
  */
 typedef void (*spdk_bdev_io_completion_cb)(struct spdk_bdev_io *bdev_io,
 		bool success,
-		void *cb_arg);
+		void *cb_arg,
+		uint32_t seq_num);
 
 struct spdk_bdev_io_stat {
 	uint64_t bytes_read;
@@ -373,6 +374,7 @@ int spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
  * \param nbytes The number of bytes to read.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
+ * \param seq_num Sequence number to reuse caller context (SCSI only)
  *
  * \return 0 on success. On success, the callback will always
  * be called (even if the request ultimately failed). Return
@@ -381,7 +383,8 @@ int spdk_bdev_read_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *c
 int spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    struct iovec *iov, int iovcnt,
 		    uint64_t offset, uint64_t nbytes,
-		    spdk_bdev_io_completion_cb cb, void *cb_arg);
+		    spdk_bdev_io_completion_cb cb, void *cb_arg,
+		    uint32_t seq_num);
 
 /**
  * Submit a read request to the bdev on the given channel. This differs from
@@ -398,6 +401,7 @@ int spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * \param num_blocks The number of blocks to read.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
+ * \param seq_num Sequence number to reuse caller context (SCSI only)
  *
  * \return 0 on success. On success, the callback will always
  * be called (even if the request ultimately failed). Return
@@ -406,7 +410,8 @@ int spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			   struct iovec *iov, int iovcnt,
 			   uint64_t offset_blocks, uint64_t num_blocks,
-			   spdk_bdev_io_completion_cb cb, void *cb_arg);
+			   spdk_bdev_io_completion_cb cb, void *cb_arg,
+			   uint32_t seq_num);
 
 /**
  * Submit a write request to the bdev on the given channel.
@@ -461,6 +466,7 @@ int spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  * \param len The size of data to write.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
+ * \param seq_num Sequence number to reuse caller context (SCSI only)
  *
  * \return 0 on success. On success, the callback will always
  * be called (even if the request ultimately failed). Return
@@ -469,7 +475,8 @@ int spdk_bdev_write_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		     struct iovec *iov, int iovcnt,
 		     uint64_t offset, uint64_t len,
-		     spdk_bdev_io_completion_cb cb, void *cb_arg);
+		     spdk_bdev_io_completion_cb cb, void *cb_arg,
+		     uint32_t seq_num);
 
 /**
  * Submit a write request to the bdev on the given channel. This differs from
@@ -486,6 +493,7 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * \param num_blocks The number of blocks to write.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
+ * \param seq_num Sequence number to reuse caller context (SCSI only)
  *
  * \return 0 on success. On success, the callback will always
  * be called (even if the request ultimately failed). Return
@@ -494,7 +502,8 @@ int spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 int spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			    struct iovec *iov, int iovcnt,
 			    uint64_t offset_blocks, uint64_t num_blocks,
-			    spdk_bdev_io_completion_cb cb, void *cb_arg);
+			    spdk_bdev_io_completion_cb cb, void *cb_arg,
+			    uint32_t seq_num);
 
 /**
  * Submit a write zeroes request to the bdev on the given channel. This command
@@ -545,6 +554,7 @@ int spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_ch
  * \param nbytes The number of bytes to unmap. Must be a multiple of the block size.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
+ * \param seq_num Sequence number to reuse caller context (SCSI only)
  *
  * \return 0 on success. On success, the callback will always
  * be called (even if the request ultimately failed). Return
@@ -552,7 +562,8 @@ int spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_ch
  */
 int spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    uint64_t offset, uint64_t nbytes,
-		    spdk_bdev_io_completion_cb cb, void *cb_arg);
+		    spdk_bdev_io_completion_cb cb, void *cb_arg,
+		    uint32_t seq_num);
 
 /**
  * Submit an unmap request to the block device. Unmap is sometimes also called trim or
@@ -565,6 +576,7 @@ int spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * \param num_blocks The number of blocks to unmap.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
+ * \param seq_num Sequence number to reuse caller context (SCSI only)
  *
  * \return 0 on success. On success, the callback will always
  * be called (even if the request ultimately failed). Return
@@ -572,7 +584,8 @@ int spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  */
 int spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			   uint64_t offset_blocks, uint64_t num_blocks,
-			   spdk_bdev_io_completion_cb cb, void *cb_arg);
+			   spdk_bdev_io_completion_cb cb, void *cb_arg,
+			   uint32_t seq_num);
 
 /**
  * Submit a flush request to the bdev on the given channel. For devices with volatile
@@ -585,6 +598,7 @@ int spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  * \param length The number of bytes.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
+ * \param seq_num Sequence number to reuse caller context (SCSI only)
  *
  * \return 0 on success. On success, the callback will always
  * be called (even if the request ultimately failed). Return
@@ -592,7 +606,8 @@ int spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
  */
 int spdk_bdev_flush(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		    uint64_t offset, uint64_t length,
-		    spdk_bdev_io_completion_cb cb, void *cb_arg);
+		    spdk_bdev_io_completion_cb cb, void *cb_arg,
+		    uint32_t seq_num);
 
 /**
  * Submit a flush request to the bdev on the given channel. For devices with volatile
@@ -605,6 +620,7 @@ int spdk_bdev_flush(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  * \param num_blocks The number of blocks.
  * \param cb Called when the request is complete.
  * \param cb_arg Argument passed to cb.
+ * \param seq_num Sequence number to reuse caller context (SCSI only)
  *
  * \return 0 on success. On success, the callback will always
  * be called (even if the request ultimately failed). Return
@@ -612,7 +628,8 @@ int spdk_bdev_flush(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
  */
 int spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			   uint64_t offset_blocks, uint64_t num_blocks,
-			   spdk_bdev_io_completion_cb cb, void *cb_arg);
+			   spdk_bdev_io_completion_cb cb, void *cb_arg,
+			   uint32_t seq_num);
 
 /**
  * Submit a reset request to the bdev on the given channel.

@@ -166,7 +166,7 @@ write_to_socket(int fd, void *buf, size_t length)
 }
 
 static void
-nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg, uint32_t seq_num)
 {
 	struct nbd_io	*io = cb_arg;
 
@@ -205,11 +205,11 @@ nbd_submit_bdev_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		rc = spdk_bdev_unmap(desc, ch, from_be64(&io->req.from),
-				     io->payload_size, nbd_io_done, io);
+				     io->payload_size, nbd_io_done, io, 0);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		rc = spdk_bdev_flush(desc, ch, 0, spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev),
-				     nbd_io_done, io);
+				     nbd_io_done, io, 0);
 		break;
 	default:
 		rc = -1;

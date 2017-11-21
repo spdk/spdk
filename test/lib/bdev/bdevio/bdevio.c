@@ -180,7 +180,7 @@ initialize_buffer(char **buf, int pattern, int size)
 }
 
 static void
-quick_test_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+quick_test_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg, uint32_t seq_num)
 {
 	g_completion_success = success;
 	spdk_bdev_free_io(bdev_io);

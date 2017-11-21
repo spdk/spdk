@@ -54,7 +54,8 @@ __get_desc(struct spdk_bs_dev *dev)
 }
 
 static void
-bdev_blob_io_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+bdev_blob_io_complete(struct spdk_bdev_io *bdev_io, bool success, void *arg,
+		      uint32_t seq_num)
 {
 	struct spdk_bs_dev_cb_args *cb_args = arg;
 	int bserrno;
@@ -103,7 +104,7 @@ bdev_blob_readv(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	int rc;
 
 	rc = spdk_bdev_readv_blocks(__get_desc(dev), channel, iov, iovcnt, lba,
-				    lba_count, bdev_blob_io_complete, cb_args);
+				    lba_count, bdev_blob_io_complete, cb_args, 0);
 	if (rc) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
 	}
@@ -117,7 +118,7 @@ bdev_blob_writev(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
 	int rc;
 
 	rc = spdk_bdev_writev_blocks(__get_desc(dev), channel, iov, iovcnt, lba,
-				     lba_count, bdev_blob_io_complete, cb_args);
+				     lba_count, bdev_blob_io_complete, cb_args, 0);
 	if (rc) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
 	}
@@ -143,7 +144,7 @@ bdev_blob_unmap(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, uint64
 	int rc;
 
 	rc = spdk_bdev_unmap_blocks(__get_desc(dev), channel, lba, lba_count,
-				    bdev_blob_io_complete, cb_args);
+				    bdev_blob_io_complete, cb_args, 0);
 	if (rc) {
 		cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, rc);
 	}

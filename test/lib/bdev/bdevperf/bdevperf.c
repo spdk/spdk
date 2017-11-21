@@ -225,7 +225,7 @@ end_run(void *arg1, void *arg2)
 struct rte_mempool *task_pool;
 
 static void
-bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg, uint32_t seq_num)
 {
 	struct io_target	*target;
 	struct bdevperf_task	*task = cb_arg;
@@ -273,7 +273,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 }
 
 static void
-bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg, uint32_t seq_num)
 {
 	struct io_target	*target;
 	struct bdevperf_task	*task = cb_arg;
@@ -310,7 +310,7 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 
 	if (g_unmap) {
 		rc = spdk_bdev_unmap_blocks(target->bdev_desc, target->ch, task->offset_blocks,
-					    target->io_size_blocks, bdevperf_unmap_complete, task);
+					    target->io_size_blocks, bdevperf_unmap_complete, task, 0);
 		if (rc) {
 			printf("Failed to submit unmap: %d\n", rc);
 			target->is_draining = true;
@@ -377,7 +377,7 @@ bdevperf_submit_single(struct io_target *target)
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
 		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
-					     target->io_size_blocks, bdevperf_verify_write_complete, task);
+					     target->io_size_blocks, bdevperf_verify_write_complete, task, 0);
 		if (rc) {
 			printf("Failed to submit writev: %d\n", rc);
 			target->is_draining = true;
@@ -399,7 +399,7 @@ bdevperf_submit_single(struct io_target *target)
 		task->iov.iov_base = task->buf;
 		task->iov.iov_len = g_io_size;
 		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
-					     target->io_size_blocks, bdevperf_complete, task);
+					     target->io_size_blocks, bdevperf_complete, task, 0);
 		if (rc) {
 			printf("Failed to submit writev: %d\n", rc);
 			target->is_draining = true;

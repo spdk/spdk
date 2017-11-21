@@ -158,7 +158,8 @@ struct spdk_bdev_channel {
 
 };
 
-static void spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+static void spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg,
+		uint32_t seq_num);
 
 struct spdk_bdev *
 spdk_bdev_first(void)
@@ -1006,7 +1007,8 @@ int
 spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		struct iovec *iov, int iovcnt,
 		uint64_t offset, uint64_t nbytes,
-		spdk_bdev_io_completion_cb cb, void *cb_arg)
+		spdk_bdev_io_completion_cb cb, void *cb_arg,
+		uint32_t seq_num)
 {
 	uint64_t offset_blocks, num_blocks;
 
@@ -1014,13 +1016,15 @@ spdk_bdev_readv(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	return spdk_bdev_readv_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb, cb_arg);
+	return spdk_bdev_readv_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb, cb_arg,
+				      seq_num);
 }
 
 int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			   struct iovec *iov, int iovcnt,
 			   uint64_t offset_blocks, uint64_t num_blocks,
-			   spdk_bdev_io_completion_cb cb, void *cb_arg)
+			   spdk_bdev_io_completion_cb cb, void *cb_arg,
+			   uint32_t seq_num)
 {
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
@@ -1042,6 +1046,7 @@ int spdk_bdev_readv_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *
 	bdev_io->u.bdev.iovcnt = iovcnt;
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
+	bdev_io->seq_num = seq_num;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	spdk_bdev_io_submit(bdev_io);
@@ -1103,7 +1108,7 @@ int
 spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		 struct iovec *iov, int iovcnt,
 		 uint64_t offset, uint64_t len,
-		 spdk_bdev_io_completion_cb cb, void *cb_arg)
+		 spdk_bdev_io_completion_cb cb, void *cb_arg, uint32_t seq_num)
 {
 	uint64_t offset_blocks, num_blocks;
 
@@ -1111,14 +1116,15 @@ spdk_bdev_writev(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	return spdk_bdev_writev_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb, cb_arg);
+	return spdk_bdev_writev_blocks(desc, ch, iov, iovcnt, offset_blocks, num_blocks, cb, cb_arg,
+				       seq_num);
 }
 
 int
 spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			struct iovec *iov, int iovcnt,
 			uint64_t offset_blocks, uint64_t num_blocks,
-			spdk_bdev_io_completion_cb cb, void *cb_arg)
+			spdk_bdev_io_completion_cb cb, void *cb_arg, uint32_t seq_num)
 {
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
@@ -1144,6 +1150,7 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.iovcnt = iovcnt;
 	bdev_io->u.bdev.num_blocks = num_blocks;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
+	bdev_io->seq_num = seq_num;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	spdk_bdev_io_submit(bdev_io);
@@ -1233,7 +1240,7 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 int
 spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		uint64_t offset, uint64_t nbytes,
-		spdk_bdev_io_completion_cb cb, void *cb_arg)
+		spdk_bdev_io_completion_cb cb, void *cb_arg, uint32_t seq_num)
 {
 	uint64_t offset_blocks, num_blocks;
 
@@ -1241,13 +1248,13 @@ spdk_bdev_unmap(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	return spdk_bdev_unmap_blocks(desc, ch, offset_blocks, num_blocks, cb, cb_arg);
+	return spdk_bdev_unmap_blocks(desc, ch, offset_blocks, num_blocks, cb, cb_arg, seq_num);
 }
 
 int
 spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
-		       spdk_bdev_io_completion_cb cb, void *cb_arg)
+		       spdk_bdev_io_completion_cb cb, void *cb_arg, uint32_t seq_num)
 {
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
@@ -1280,6 +1287,7 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.iovcnt = 1;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->seq_num = seq_num;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	spdk_bdev_io_submit(bdev_io);
@@ -1289,7 +1297,7 @@ spdk_bdev_unmap_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 int
 spdk_bdev_flush(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		uint64_t offset, uint64_t length,
-		spdk_bdev_io_completion_cb cb, void *cb_arg)
+		spdk_bdev_io_completion_cb cb, void *cb_arg, uint32_t seq_num)
 {
 	uint64_t offset_blocks, num_blocks;
 
@@ -1297,13 +1305,13 @@ spdk_bdev_flush(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		return -EINVAL;
 	}
 
-	return spdk_bdev_flush_blocks(desc, ch, offset_blocks, num_blocks, cb, cb_arg);
+	return spdk_bdev_flush_blocks(desc, ch, offset_blocks, num_blocks, cb, cb_arg, seq_num);
 }
 
 int
 spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		       uint64_t offset_blocks, uint64_t num_blocks,
-		       spdk_bdev_io_completion_cb cb, void *cb_arg)
+		       spdk_bdev_io_completion_cb cb, void *cb_arg, uint32_t seq_num)
 {
 	struct spdk_bdev *bdev = desc->bdev;
 	struct spdk_bdev_io *bdev_io;
@@ -1329,6 +1337,7 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.iovcnt = 0;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
 	bdev_io->u.bdev.num_blocks = num_blocks;
+	bdev_io->seq_num = seq_num;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
 	spdk_bdev_io_submit(bdev_io);
@@ -1576,7 +1585,8 @@ _spdk_bdev_io_complete(void *ctx)
 	struct spdk_bdev_io *bdev_io = ctx;
 
 	assert(bdev_io->cb != NULL);
-	bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
+	bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx,
+		    bdev_io->seq_num);
 }
 
 void
@@ -2075,7 +2085,8 @@ spdk_bdev_part_get_io_channel(void *_part)
 }
 
 static void
-spdk_bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+spdk_bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg,
+			   uint32_t seq_num)
 {
 	struct spdk_bdev_io *part_io = cb_arg;
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
@@ -2085,7 +2096,8 @@ spdk_bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_
 }
 
 static void
-spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg,
+			     uint32_t seq_num)
 {
 	uint64_t len;
 
@@ -2130,14 +2142,14 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 		rc = spdk_bdev_readv_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
 					    bdev_io->u.bdev.iovcnt, offset,
 					    bdev_io->u.bdev.num_blocks, spdk_bdev_part_complete_io,
-					    bdev_io);
+					    bdev_io, 0);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		offset = bdev_io->u.bdev.offset_blocks + part->offset_blocks;
 		rc = spdk_bdev_writev_blocks(base_desc, base_ch, bdev_io->u.bdev.iovs,
 					     bdev_io->u.bdev.iovcnt, offset,
 					     bdev_io->u.bdev.num_blocks, spdk_bdev_part_complete_io,
-					     bdev_io);
+					     bdev_io, 0);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		offset = bdev_io->u.bdev.offset_blocks + part->offset_blocks;
@@ -2147,12 +2159,12 @@ spdk_bdev_part_submit_request(struct spdk_bdev_part_channel *ch, struct spdk_bde
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		offset = bdev_io->u.bdev.offset_blocks + part->offset_blocks;
 		rc = spdk_bdev_unmap_blocks(base_desc, base_ch, offset, bdev_io->u.bdev.num_blocks,
-					    spdk_bdev_part_complete_io, bdev_io);
+					    spdk_bdev_part_complete_io, bdev_io, 0);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		offset = bdev_io->u.bdev.offset_blocks + part->offset_blocks;
 		rc = spdk_bdev_flush_blocks(base_desc, base_ch, offset, bdev_io->u.bdev.num_blocks,
-					    spdk_bdev_part_complete_io, bdev_io);
+					    spdk_bdev_part_complete_io, bdev_io, 0);
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		rc = spdk_bdev_reset(base_desc, base_ch,

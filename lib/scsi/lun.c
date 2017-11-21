@@ -40,17 +40,25 @@
 #include "spdk/util.h"
 
 void
-spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task,
+			    uint32_t seq_num)
 {
+	if (lun && (seq_num != task->seq_num)) {
+		SPDK_ERRLOG("this scsi task was already aborted\n");
+		return;
+	}
+
 	if (lun) {
 		TAILQ_REMOVE(&lun->tasks, task, scsi_link);
+		task->seq_num = 0;
 		spdk_trace_record(TRACE_SCSI_TASK_DONE, lun->dev->id, 0, (uintptr_t)task, 0);
 	}
 	task->cpl_fn(task);
 }
 
 void
-spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task,
+				 uint32_t seq_num)
 {
 	if (task->function == SPDK_SCSI_TASK_FUNC_LUN_RESET &&
 	    task->status == SPDK_SCSI_STATUS_GOOD) {
@@ -79,7 +87,7 @@ spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 					  SPDK_SCSI_SENSE_ABORTED_COMMAND,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
 					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		spdk_scsi_lun_complete_task(lun, task);
+		spdk_scsi_lun_complete_task(lun, task, 0);
 	}
 
 	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
@@ -89,7 +97,7 @@ spdk_scsi_lun_clear_all(struct spdk_scsi_lun *lun)
 					  SPDK_SCSI_SENSE_ABORTED_COMMAND,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
 					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
-		spdk_scsi_lun_complete_task(lun, task);
+		spdk_scsi_lun_complete_task(lun, task, 0);
 	}
 }
 
@@ -104,7 +112,7 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
 	if (!task->lun) {
 		/* LUN does not exist */
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
-		spdk_scsi_lun_complete_mgmt_task(NULL, task);
+		spdk_scsi_lun_complete_mgmt_task(NULL, task, 0);
 		return -1;
 	}
 
@@ -137,7 +145,7 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
 		break;
 	}
 
-	spdk_scsi_lun_complete_mgmt_task(task->lun, task);
+	spdk_scsi_lun_complete_mgmt_task(task->lun, task, 0);
 
 	return -1;
 }
@@ -191,6 +199,7 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 {
 	struct spdk_scsi_task *task, *task_tmp;
 	int rc;
+	uint32_t seq_num;
 
 	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
 		task->status = SPDK_SCSI_STATUS_GOOD;
@@ -199,8 +208,15 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 		spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
 		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
 		TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
+
+		seq_num = ++lun->task_seq_num;
+		if (seq_num == 0) {
+			seq_num = 1;
+		}
+		task->seq_num = seq_num;
+
 		if (!lun->removed) {
-			rc = spdk_bdev_scsi_execute(lun->bdev, task);
+			rc = spdk_bdev_scsi_execute(lun->bdev, task, seq_num);
 		} else {
 			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 						  SPDK_SCSI_SENSE_ABORTED_COMMAND,
@@ -214,7 +230,7 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 			break;
 
 		case SPDK_SCSI_TASK_COMPLETE:
-			spdk_scsi_lun_complete_task(lun, task);
+			spdk_scsi_lun_complete_task(lun, task, seq_num);
 			break;
 
 		default:

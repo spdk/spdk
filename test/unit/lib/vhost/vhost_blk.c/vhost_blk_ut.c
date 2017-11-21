@@ -78,11 +78,13 @@ DEFINE_STUB(spdk_bdev_free_io, int, (struct spdk_bdev_io *bdev_io), 0);
 DEFINE_STUB(spdk_bdev_readv, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				   struct iovec *iov, int iovcnt,
 				   uint64_t offset, uint64_t nbytes,
-				   spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+				   spdk_bdev_io_completion_cb cb, void *cb_arg,
+				   uint32_t seq_num), 0);
 DEFINE_STUB(spdk_bdev_writev, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				    struct iovec *iov, int iovcnt,
 				    uint64_t offset, uint64_t len,
-				    spdk_bdev_io_completion_cb cb, void *cb_arg), 0);
+				    spdk_bdev_io_completion_cb cb, void *cb_arg,
+				    uint32_t seq_num), 0);
 DEFINE_STUB_P(spdk_bdev_get_product_name, const char, (const struct spdk_bdev *bdev), {0});
 DEFINE_STUB(spdk_vhost_vq_avail_ring_get, uint16_t, (struct spdk_vhost_virtqueue *vq,
 		uint16_t *reqs,
