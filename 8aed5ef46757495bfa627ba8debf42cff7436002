@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6932773_991c894f",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-21T07:17:32Z",
+      "side": 1,
+      "message": "Remove this unused variable",
+      "range": {
+        "startLine": 207,
+        "startChar": 1,
+        "endLine": 207,
+        "endChar": 37
+      },
+      "revId": "8aed5ef46757495bfa627ba8debf42cff7436002",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
