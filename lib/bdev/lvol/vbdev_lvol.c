@@ -888,9 +888,14 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 
 	lvol_store->lvols_opened = 0;
 
-	/* Open all lvols */
-	TAILQ_FOREACH_SAFE(lvol, &lvol_store->lvols, link, tmp) {
-		spdk_lvol_open(lvol, _vbdev_lvs_examine_finish, lvol_store);
+	if (TAILQ_EMPTY(&lvol_store->lvols)) {
+		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Lvol store examination done\n");
+		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+	} else {
+		/* Open all lvols */
+		TAILQ_FOREACH_SAFE(lvol, &lvol_store->lvols, link, tmp) {
+			spdk_lvol_open(lvol, _vbdev_lvs_examine_finish, lvol_store);
+		}
 	}
 
 end:
