@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b27ab376_e50bda8b",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T22:41:31Z",
+      "side": 1,
+      "message": "Does this mean that only CC.MPS \u003d\u003d 1 is supported?  I think the comment is not clear what \"1\" means.",
+      "revId": "0605aba90bcd7951844c8f60fcbfb846c97bf956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef8a0fbd_b619db5a",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T22:41:31Z",
+      "side": 1,
+      "message": "Maybe \"is invalid during reset\" would be more clear?",
+      "revId": "0605aba90bcd7951844c8f60fcbfb846c97bf956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d9cc206_73a333c9",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T22:41:31Z",
+      "side": 1,
+      "message": "unrelated whitespace change",
+      "revId": "0605aba90bcd7951844c8f60fcbfb846c97bf956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c066c73a_7a5f3590",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T22:41:31Z",
+      "side": 1,
+      "message": "does astyle want this indentation?  because I think these should be aligned with the first parameter for consistency",
+      "revId": "0605aba90bcd7951844c8f60fcbfb846c97bf956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
