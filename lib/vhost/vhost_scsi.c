@@ -816,7 +816,7 @@ spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
 	/*
 	 * At this stage only one LUN per device
 	 */
-	snprintf(dev_name, sizeof(dev_name), "Dev %u", scsi_dev_num);
+	snprintf(dev_name, sizeof(dev_name), "Target %u", scsi_dev_num);
 	lun_id_list[0] = 0;
 	lun_names_list[0] = (char *)lun_name;
 
@@ -873,7 +873,7 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 		if (cb_fn) {
 			rc = cb_fn(vdev, cb_arg);
 		}
-		SPDK_NOTICELOG("%s: removed device 'Dev %u'\n", vdev->name, scsi_dev_num);
+		SPDK_NOTICELOG("%s: removed device 'Target %u'\n", vdev->name, scsi_dev_num);
 		return rc;
 	}
 
@@ -952,8 +952,32 @@ spdk_vhost_scsi_controller_construct(void)
 			if (spdk_vhost_scsi_dev_add_dev(vdev, dev_num, lun_name) < 0) {
 				return -1;
 			}
+
+			SPDK_NOTICELOG("Dev mnemonic is deprecated, and will be removed shortly.\n"
+				       "Please, use Target instead");
 		}
 
+		for (i = 0; spdk_conf_section_get_nval(sp, "Target", i) != NULL; i++) {
+			dev_num_str = spdk_conf_section_get_nmval(sp, "Target", i, 0);
+			if (dev_num_str == NULL) {
+				SPDK_ERRLOG("%s: Invalid or missing Target number\n", name);
+				return -1;
+			}
+
+			dev_num = (int)strtol(dev_num_str, NULL, 10);
+			lun_name = spdk_conf_section_get_nmval(sp, "Target", i, 1);
+			if (lun_name == NULL) {
+				SPDK_ERRLOG("%s: Invalid or missing LUN name for dev %d\n", name, dev_num);
+				return -1;
+			} else if (spdk_conf_section_get_nmval(sp, "Target", i, 2)) {
+				SPDK_ERRLOG("%s: Only one LUN per vhost SCSI device supported\n", name);
+				return -1;
+			}
+
+			if (spdk_vhost_scsi_dev_add_dev(vdev, dev_num, lun_name) < 0) {
+				return -1;
+			}
+		}
 		sp = spdk_conf_next_section(sp);
 
 	}
