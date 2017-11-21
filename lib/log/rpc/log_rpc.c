@@ -36,8 +36,22 @@
 
 #include "spdk_internal/log.h"
 
+enum rpc_log_type {
+	SPDK_LOG_PRINT,
+	SPDK_LOG_SYSLOG,
+};
+
 struct rpc_trace_flag {
 	char *flag;
+};
+
+struct rpc_get_log_level {
+	char *type;
+};
+
+struct rpc_set_log_level {
+	char *type;
+	char *level;
 };
 
 static void
@@ -46,9 +60,157 @@ free_rpc_trace_flag(struct rpc_trace_flag *p)
 	free(p->flag);
 }
 
+static void
+free_rpc_set_log_level(struct rpc_set_log_level *p)
+{
+	free(p->type);
+	free(p->level);
+}
+
+static void
+free_rpc_get_log_level(struct rpc_get_log_level *p)
+{
+	free(p->type);
+}
+
 static const struct spdk_json_object_decoder rpc_trace_flag_decoders[] = {
 	{"flag", offsetof(struct rpc_trace_flag, flag), spdk_json_decode_string},
 };
+
+static const struct spdk_json_object_decoder rpc_get_log_level_decoders[] = {
+	{"type", offsetof(struct rpc_get_log_level, type), spdk_json_decode_string},
+};
+
+static const struct spdk_json_object_decoder rpc_set_log_level_decoders[] = {
+	{"type", offsetof(struct rpc_set_log_level, type), spdk_json_decode_string},
+	{"level", offsetof(struct rpc_set_log_level, level), spdk_json_decode_string},
+};
+
+static int
+_parse_log_level(char *level)
+{
+	if (!strcmp(level, "SPDK_LOG_ERROR")) {
+		return SPDK_LOG_ERROR;
+	} else if (!strcmp(level, "SPDK_LOG_WARN")) {
+		return SPDK_LOG_WARN;
+	} else if (!strcmp(level, "SPDK_LOG_NOTICE")) {
+		return SPDK_LOG_NOTICE;
+	} else if (!strcmp(level, "SPDK_LOG_INFO")) {
+		return SPDK_LOG_INFO;
+	} else if (!strcmp(level, "SPDK_LOG_DEBUG")) {
+		return SPDK_LOG_DEBUG;
+	}
+	return -1;
+}
+
+static int
+_parse_log_type(char *type)
+{
+	if (!strcmp(type, "print")) {
+		return SPDK_LOG_PRINT;
+	} else if (!strcmp(type, "syslog")) {
+		return SPDK_LOG_SYSLOG;
+	}
+	return -1;
+}
+
+static void
+spdk_rpc_set_log_level(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
+{
+	struct rpc_set_log_level req = {};
+	int type, level;
+	struct spdk_json_write_ctx *w;
+
+	if (spdk_json_decode_object(params, rpc_set_log_level_decoders,
+				    SPDK_COUNTOF(rpc_set_log_level_decoders), &req)) {
+		SPDK_DEBUGLOG(SPDK_TRACE_LOG, "spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	type = _parse_log_type(req.type);
+	if (type == -1) {
+		SPDK_DEBUGLOG(SPDK_TRACE_LOG, "try to set invalid log type\n");
+		goto invalid;
+	}
+
+	level = _parse_log_level(req.level);
+	if (level == -1) {
+		SPDK_DEBUGLOG(SPDK_TRACE_LOG, "try to set invalid log level\n");
+		goto invalid;
+	}
+
+	if (type == SPDK_LOG_PRINT) {
+		spdk_log_set_print_level(level);
+	} else {
+		spdk_log_set_level(level);
+	}
+	free_rpc_set_log_level(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_set_log_level(&req);
+}
+SPDK_RPC_REGISTER("set_log_level", spdk_rpc_set_log_level)
+
+static void
+spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	int type, level;
+	struct rpc_get_log_level req = {};
+
+	if (spdk_json_decode_object(params, rpc_get_log_level_decoders,
+				    SPDK_COUNTOF(rpc_get_log_level_decoders), &req)) {
+		SPDK_DEBUGLOG(SPDK_TRACE_LOG, "spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	type = _parse_log_type(req.type);
+	if (type == -1) {
+		SPDK_DEBUGLOG(SPDK_TRACE_LOG, "invalid log type\n");
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	if (type == SPDK_LOG_PRINT) {
+		level = spdk_log_get_print_level();
+	} else {
+		level = spdk_log_get_level();
+	}
+	if (level == SPDK_LOG_ERROR)
+		spdk_json_write_string(w, "SPDK_LOG_ERROR");
+	if (level == SPDK_LOG_WARN)
+		spdk_json_write_string(w, "SPDK_LOG_WARN");
+	if (level == SPDK_LOG_NOTICE)
+		spdk_json_write_string(w, "SPDK_LOG_NOTICE");
+	if (level == SPDK_LOG_INFO)
+		spdk_json_write_string(w, "SPDK_LOG_INFO");
+	if (level == SPDK_LOG_DEBUG)
+		spdk_json_write_string(w, "SPDK_LOG_DEBUG");
+
+	spdk_jsonrpc_end_result(request, w);
+	return;
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+	free_rpc_get_log_level(&req);
+
+}
+SPDK_RPC_REGISTER("get_log_level", spdk_rpc_get_log_level)
 
 static void
 spdk_rpc_set_trace_flag(struct spdk_jsonrpc_request *request,

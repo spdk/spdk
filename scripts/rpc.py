@@ -387,6 +387,22 @@ def get_trace_flags(args):
 p = subparsers.add_parser('get_trace_flags', help='get trace flags')
 p.set_defaults(func=get_trace_flags)
 
+def set_log_level(args):
+    params = {'type': args.type, 'level': args.level}
+    jsonrpc_call('set_log_level', params)
+
+p = subparsers.add_parser('set_log_level', help='set log level')
+p.add_argument('type', help='log type we want to set. (for example "print" "syslog").')
+p.add_argument('level', help='log level we want to set. (for example "SPDK_LOG_DEBUG").')
+p.set_defaults(func=set_log_level)
+
+def get_log_level(args):
+    params = {'type': args.type}
+    print_dict(jsonrpc_call('get_log_level', params))
+
+p = subparsers.add_parser('get_log_level', help='get log level')
+p.add_argument('type', help='log type we want to get. (for example "print" "syslog").')
+p.set_defaults(func=get_log_level)
 
 def add_portal_group(args):
     # parse out portal list host1:port1 host2:port2
