@@ -350,19 +350,20 @@ spdk_nbd_poll(struct spdk_nbd_disk *nbd)
 	return 0;
 }
 
-static void
-nbd_start_kernel(struct spdk_nbd_disk *nbd)
+static void *
+nbd_start_kernel(void *arg)
 {
+	struct spdk_nbd_disk *nbd = arg;
 	int rc;
 	char buf[64];
 
-	close(nbd->spdk_sp_fd);
+	spdk_unaffinitize_thread();
 
 	rc = ioctl(nbd->dev_fd, NBD_SET_SOCK, nbd->kernel_sp_fd);
 	if (rc == -1) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", buf);
-		exit(-1);
+		pthread_exit(NULL);
 	}
 
 #ifdef NBD_FLAG_SEND_TRIM
@@ -370,23 +371,22 @@ nbd_start_kernel(struct spdk_nbd_disk *nbd)
 	if (rc == -1) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", buf);
-		exit(-1);
+		pthread_exit(NULL);
 	}
 #endif
 
-	/* This will block in the kernel until the client disconnects. */
+	/* This will block in the kernel until we close the spdk_sp_fd. */
 	ioctl(nbd->dev_fd, NBD_DO_IT);
-
 	ioctl(nbd->dev_fd, NBD_CLEAR_QUE);
 	ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
-
-	exit(0);
+	pthread_exit(NULL);
 }
 
 struct spdk_nbd_disk *
 spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 {
 	struct spdk_nbd_disk	*nbd;
+	pthread_t		tid;
 	int			rc;
 	int			sp[2];
 	char			buf[64];
@@ -448,22 +448,12 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 
 	printf("Enabling kernel access to bdev %s via %s\n", spdk_bdev_get_name(bdev), nbd_path);
 
-	rc = fork();
-
-	switch (rc) {
-	case 0:
-		nbd_start_kernel(nbd);
-		break;
-	case -1:
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("could not fork: %s\n", buf);
+	rc = pthread_create(&tid, NULL, &nbd_start_kernel, nbd);
+	if (rc != 0) {
+		spdk_strerror_r(rc, buf, sizeof(buf));
+		SPDK_ERRLOG("could not create thread: %s\n", buf);
 		goto err;
-	default:
-		close(nbd->dev_fd);
-		break;
 	}
-
-	close(nbd->kernel_sp_fd);
 
 	fcntl(nbd->spdk_sp_fd, F_SETFL, O_NONBLOCK);
 
