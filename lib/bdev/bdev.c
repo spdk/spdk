@@ -100,7 +100,7 @@ static void			*g_init_cb_arg = NULL;
 
 static spdk_bdev_fini_cb	g_fini_cb_fn = NULL;
 static void			*g_fini_cb_arg = NULL;
-struct spdk_thread		*g_fini_thread = NULL;
+static struct spdk_thread	*g_fini_thread = NULL;
 
 
 struct spdk_bdev_mgmt_channel {
