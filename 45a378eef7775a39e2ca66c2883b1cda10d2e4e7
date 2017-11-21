@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82ebb911_9ab6fef3",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-21T09:19:17Z",
+      "side": 1,
+      "message": "return 1 is fine, let\u0027s keep it the same in all places",
+      "range": {
+        "startLine": 83,
+        "startChar": 12,
+        "endLine": 83,
+        "endChar": 20
+      },
+      "revId": "45a378eef7775a39e2ca66c2883b1cda10d2e4e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38e807ae_a94b3a1f",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-21T09:19:17Z",
+      "side": 1,
+      "message": "Need to use NVMe",
+      "range": {
+        "startLine": 760,
+        "startChar": 7,
+        "endLine": 760,
+        "endChar": 65
+      },
+      "revId": "45a378eef7775a39e2ca66c2883b1cda10d2e4e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66fbcfe6_f36bbfcc",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-21T09:19:17Z",
+      "side": 1,
+      "message": "After restarting vhost there will be no Malloc bdev, so there will be also no lvol stores",
+      "range": {
+        "startLine": 773,
+        "startChar": 8,
+        "endLine": 774,
+        "endChar": 68
+      },
+      "revId": "45a378eef7775a39e2ca66c2883b1cda10d2e4e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d1aa067_99cd6ffb",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 775,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-21T09:19:17Z",
+      "side": 1,
+      "message": "could we skip ret_value and just issue if like this?\nif self.c.check_get_lvol_stores() !\u003d 1",
+      "range": {
+        "startLine": 775,
+        "startChar": 8,
+        "endLine": 775,
+        "endChar": 26
+      },
+      "revId": "45a378eef7775a39e2ca66c2883b1cda10d2e4e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "665dbeb9_252b359d",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 597,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-21T09:19:17Z",
+      "side": 1,
+      "message": "destroy lvol store positive tests are at line 150, please move it there and update test number accordingly",
+      "range": {
+        "startLine": 597,
+        "startChar": 4,
+        "endLine": 597,
+        "endChar": 39
+      },
+      "revId": "45a378eef7775a39e2ca66c2883b1cda10d2e4e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e99eb3a1_7ad1366b",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-21T09:19:17Z",
+      "side": 1,
+      "message": "destroy_lvol_store_persistent_positive?",
+      "range": {
+        "startLine": 599,
+        "startChar": 26,
+        "endLine": 599,
+        "endChar": 65
+      },
+      "revId": "45a378eef7775a39e2ca66c2883b1cda10d2e4e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1315ecd_ee215567",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-21T09:19:17Z",
+      "side": 1,
+      "message": "You cannot use a malloc bdev for checking persistent configuration. NVMe has to be used.",
+      "range": {
+        "startLine": 602,
+        "startChar": 2,
+        "endLine": 602,
+        "endChar": 22
+      },
+      "revId": "45a378eef7775a39e2ca66c2883b1cda10d2e4e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
