@@ -16,6 +16,24 @@
       "revId": "a39224342033684260a03b8f137b8418ab4b1a55",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2bf7c52d_2b3e3bc1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2200,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T16:06:02Z",
+      "side": 1,
+      "message": "See _spdk_blob_request_submit_rw() for an example of how to use a batch.",
+      "parentUuid": "1d58e3f8_a818d9d6",
+      "revId": "a39224342033684260a03b8f137b8418ab4b1a55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
