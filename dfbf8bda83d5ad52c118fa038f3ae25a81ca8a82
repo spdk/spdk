@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "e720995d_39b4decb",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T22:55:59Z",
+      "side": 1,
+      "message": "I think while you are here, you can make this static, since it is only called from this file.",
+      "revId": "dfbf8bda83d5ad52c118fa038f3ae25a81ca8a82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e12b9f5e_3425fc86",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T22:55:59Z",
+      "side": 1,
+      "message": "Is this required?\n\nI am not sure we need to mark these tasks as aborted.  Later, if backend completes them successfully, after the failed reset, I do not see a problem.  Then you also do not need to make the extra check in I/O completion path.\n\nShuhei, what do you think?",
+      "revId": "dfbf8bda83d5ad52c118fa038f3ae25a81ca8a82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8fed2bb1_0daf4058",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 6
@@ -19,6 +53,40 @@
         "endLine": 99,
         "endChar": 21
       },
+      "revId": "dfbf8bda83d5ad52c118fa038f3ae25a81ca8a82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9707417_6f80c4f7",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1240,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T22:55:59Z",
+      "side": 1,
+      "message": "See comment in lun.c.",
+      "revId": "dfbf8bda83d5ad52c118fa038f3ae25a81ca8a82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d468ae4c_ef0ce286",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T22:55:59Z",
+      "side": 1,
+      "message": "I think you can remove this declaration from the header file - just make it static in lun.c.",
       "revId": "dfbf8bda83d5ad52c118fa038f3ae25a81ca8a82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
