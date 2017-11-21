@@ -188,6 +188,26 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 				/* If padding and length are 0, this terminates the page */
 				break;
 			}
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_FLAGS) {
+			struct spdk_blob_md_descriptor_flags	*desc_flags;
+
+			desc_flags = (struct spdk_blob_md_descriptor_flags *)desc;
+
+			if ((desc_flags->invalid_flags | SPDK_BLOB_INVALID_FLAGS_MASK) !=
+			    SPDK_BLOB_INVALID_FLAGS_MASK) {
+				return -EINVAL;
+			}
+
+			if ((desc_flags->data_ro_flags | SPDK_BLOB_DATA_RO_FLAGS_MASK) !=
+			    SPDK_BLOB_DATA_RO_FLAGS_MASK) {
+				blob->data_ro = true;
+				blob->md_ro = true;
+			}
+
+			if ((desc_flags->md_ro_flags | SPDK_BLOB_MD_RO_FLAGS_MASK) !=
+			    SPDK_BLOB_MD_RO_FLAGS_MASK) {
+				blob->md_ro = true;
+			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
 			struct spdk_blob_md_descriptor_extent	*desc_extent;
 			unsigned int				i, j;
@@ -265,8 +285,12 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 
 			TAILQ_INSERT_TAIL(&blob->xattrs, xattr, link);
 		} else {
-			/* Error */
-			return -EINVAL;
+			/* Unrecognized descriptor type.  Do not fail - just continue to the
+			 *  next descriptor.  If this descriptor is associated with some feature
+			 *  defined in a newer version of blobstore, that version of blobstore
+			 *  should create and set an associated feature flag to specify if this
+			 *  blob can be loaded or not.
+			 */
 		}
 
 		/* Advance to the next descriptor */
