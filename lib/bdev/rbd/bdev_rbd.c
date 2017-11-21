@@ -51,7 +51,6 @@
 
 #define SPDK_RBD_QUEUE_DEPTH 128
 
-static TAILQ_HEAD(, bdev_rbd) g_rbds = TAILQ_HEAD_INITIALIZER(g_rbds);
 static int bdev_rbd_count = 0;
 
 struct bdev_rbd {
@@ -199,7 +198,6 @@ bdev_rbd_start_aio(rbd_image_t image, struct spdk_bdev_io *bdev_io,
 }
 
 static int bdev_rbd_library_init(void);
-static void bdev_rbd_library_fini(void);
 
 static int
 bdev_rbd_get_ctx_size(void)
@@ -207,7 +205,7 @@ bdev_rbd_get_ctx_size(void)
 	return 0;
 }
 
-SPDK_BDEV_MODULE_REGISTER(rbd, bdev_rbd_library_init, bdev_rbd_library_fini, NULL,
+SPDK_BDEV_MODULE_REGISTER(rbd, bdev_rbd_library_init, NULL, NULL,
 			  bdev_rbd_get_ctx_size, NULL)
 
 static int64_t
@@ -471,18 +469,6 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 	.dump_config_json	= bdev_rbd_dump_config_json,
 };
 
-static void
-bdev_rbd_library_fini(void)
-{
-	struct bdev_rbd *rbd;
-
-	while (!TAILQ_EMPTY(&g_rbds)) {
-		rbd = TAILQ_FIRST(&g_rbds);
-		TAILQ_REMOVE(&g_rbds, rbd, tailq);
-		bdev_rbd_free(rbd);
-	}
-}
-
 struct spdk_bdev *
 spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block_size)
 {
@@ -545,7 +531,6 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 		return NULL;
 	}
 
-	TAILQ_INSERT_TAIL(&g_rbds, rbd, tailq);
 	return &rbd->disk;
 }
 

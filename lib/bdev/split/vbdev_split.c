@@ -264,18 +264,12 @@ vbdev_split_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(split));
 }
 
-static void
-vbdev_split_fini(void)
-{
-	spdk_bdev_part_tailq_fini(&g_split_disks);
-}
-
 static int
 vbdev_split_get_ctx_size(void)
 {
 	return 0;
 }
 
-SPDK_BDEV_MODULE_REGISTER(split, vbdev_split_init, vbdev_split_fini, NULL,
+SPDK_BDEV_MODULE_REGISTER(split, vbdev_split_init, NULL, NULL,
 			  vbdev_split_get_ctx_size, vbdev_split_examine)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_split", SPDK_TRACE_VBDEV_SPLIT)
