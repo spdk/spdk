@@ -97,7 +97,8 @@ case $1 in
 		;;
 	-ilb|--integrity-lvol-blk)
 		echo 'Running lvol integrity suite...'
-		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu -ctrl-type=vhost_blk
+		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		--ctrl-type=vhost_blk
 		;;
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
