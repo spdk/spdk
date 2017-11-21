@@ -371,7 +371,7 @@ bdev_virtio_get_io_channel(void *ctx)
 {
 	struct virtio_scsi_disk *disk = ctx;
 
-	return spdk_get_io_channel(&disk->vdev);
+	return spdk_get_io_channel(disk->vdev);
 }
 
 static int
@@ -530,8 +530,7 @@ bdev_virtio_ctrlq_poll(void *arg)
 static int
 bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 {
-	struct virtio_dev **vdev_ptr = io_device;
-	struct virtio_dev *vdev = *vdev_ptr;
+	struct virtio_dev *vdev = io_device;
 	struct bdev_virtio_io_channel *ch = ctx_buf;
 	struct virtqueue *vq;
 	int32_t queue_idx;
@@ -629,10 +628,11 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 	ctrlq->poller_ctx = ctrlq_ring;
 	spdk_bdev_poller_start(&ctrlq->poller, bdev_virtio_ctrlq_poll, base->vdev, CTRLQ_POLL_PERIOD_US);
 
+	spdk_io_device_register(base->vdev, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
+				sizeof(struct bdev_virtio_io_channel));
+
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
 		TAILQ_REMOVE(&base->found_disks, disk, link);
-		spdk_io_device_register(&disk->vdev, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
-					sizeof(struct bdev_virtio_io_channel));
 		spdk_bdev_register(&disk->bdev);
 		bdevs[bdevs_cnt] = &disk->bdev;
 		bdevs_cnt++;
@@ -1201,26 +1201,35 @@ out:
 }
 
 static void
-bdev_virtio_finish(void)
+virtio_scsi_dev_unregister_cb(void *io_device)
 {
-	struct virtio_dev *vdev, *next;
+	struct virtio_dev *vdev = io_device;
 	struct virtqueue *vq;
 	struct spdk_ring *send_ring;
 
+	if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_CONTROLQ)) {
+		vq = vdev->vqs[VIRTIO_SCSI_CONTROLQ];
+		spdk_bdev_poller_stop(&vq->poller);
+		send_ring = vq->poller_ctx;
+		/* bdevs built on top of this vdev mustn't be destroyed with outstanding I/O. */
+		assert(spdk_ring_count(send_ring) == 0);
+		spdk_ring_free(send_ring);
+		vq->poller_ctx = NULL;
+		virtio_dev_release_queue(vdev, VIRTIO_SCSI_CONTROLQ);
+	}
+
+	virtio_dev_reset(vdev);
+	virtio_dev_free(vdev);
+}
+
+static void
+bdev_virtio_finish(void)
+{
+	struct virtio_dev *vdev, *next;
+
 	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.attached_ctrlrs, tailq, next) {
 		TAILQ_REMOVE(&g_virtio_driver.attached_ctrlrs, vdev, tailq);
-		if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_CONTROLQ)) {
-			vq = vdev->vqs[VIRTIO_SCSI_CONTROLQ];
-			spdk_bdev_poller_stop(&vq->poller);
-			send_ring = vq->poller_ctx;
-			/* bdevs built on top of this vdev mustn't be destroyed with outstanding I/O. */
-			assert(spdk_ring_count(send_ring) == 0);
-			spdk_ring_free(send_ring);
-			vq->poller_ctx = NULL;
-			virtio_dev_release_queue(vdev, VIRTIO_SCSI_CONTROLQ);
-		}
-		virtio_dev_reset(vdev);
-		virtio_dev_free(vdev);
+		spdk_io_device_unregister(vdev, virtio_scsi_dev_unregister_cb);
 	}
 }
 
