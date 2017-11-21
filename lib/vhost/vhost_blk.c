@@ -484,10 +484,6 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 		SPDK_ERRLOG("Trying to start non-blk controller as a blk one.\n");
 		rc = -1;
 		goto out;
-	} else if (bvdev == NULL) {
-		SPDK_ERRLOG("Trying to start non-blk controller as blk one.\n");
-		rc = -1;
-		goto out;
 	}
 
 	rc = alloc_task_pool(bvdev);
