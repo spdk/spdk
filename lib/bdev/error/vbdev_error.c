@@ -309,11 +309,5 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(error));
 }
 
-static void
-vbdev_error_fini(void)
-{
-	spdk_bdev_part_tailq_fini(&g_error_disks);
-}
-
-SPDK_BDEV_MODULE_REGISTER(error, vbdev_error_init, vbdev_error_fini, NULL, NULL,
+SPDK_BDEV_MODULE_REGISTER(error, vbdev_error_init, NULL, NULL, NULL,
 			  vbdev_error_examine)
