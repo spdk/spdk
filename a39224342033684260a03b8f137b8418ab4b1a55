@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "8a3819dd_251108f3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2046,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-21T17:11:20Z",
+      "side": 1,
+      "message": "I think this is unmapping the data clusters, not the super block.",
+      "range": {
+        "startLine": 2046,
+        "startChar": 10,
+        "endLine": 2046,
+        "endChar": 21
+      },
+      "revId": "a39224342033684260a03b8f137b8418ab4b1a55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1d58e3f8_a818d9d6",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
