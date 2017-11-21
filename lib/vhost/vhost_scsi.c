@@ -798,11 +798,6 @@ spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
 		return -1;
 	}
 
-	svdev = to_scsi_dev(vdev);
-	if (svdev == NULL) {
-		return -EINVAL;
-	}
-
 	if (vdev->lcore != -1 && !spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
 		SPDK_ERRLOG("Controller %s is in use and hotplug is not supported\n", vdev->name);
 		return -ENOTSUP;
