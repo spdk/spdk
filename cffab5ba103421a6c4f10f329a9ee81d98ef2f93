@@ -45,6 +45,30 @@
       "revId": "cffab5ba103421a6c4f10f329a9ee81d98ef2f93",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a49ce0f8_9b009586",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2017-11-21T18:46:05Z",
+      "side": 1,
+      "message": "I agree with Tomek that we can provide two features with little effort. \n-Thin provisioned blobs\n-Cloned blobs\nFor both cases we allocate clusters only on writes. \nFor clones, on write we additionally perform copy-on-write.\nFor thin provisioned blobs, when we read from unallocated cluster we provide zeroed buffer, while on cloned blob we pass that IO to snapshot device.\n\nFrom io path point of view I think that snapshot device could be any bdev. Of course we need to solve problems with consistent naming and persistence of marking such bdev as read only snapshot.",
+      "parentUuid": "af21e36b_c6b7b3b7",
+      "range": {
+        "startLine": 257,
+        "startChar": 0,
+        "endLine": 258,
+        "endChar": 50
+      },
+      "revId": "cffab5ba103421a6c4f10f329a9ee81d98ef2f93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
