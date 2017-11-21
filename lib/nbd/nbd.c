@@ -71,7 +71,9 @@ struct spdk_nbd_disk {
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*bdev_desc;
 	struct spdk_io_channel	*ch;
-	int			fd;
+	int			dev_fd;
+	int			kernel_sp_fd;
+	int			spdk_sp_fd;
 	struct nbd_io		io;
 	uint32_t		buf_align;
 };
@@ -109,8 +111,16 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 		spdk_bdev_close(nbd->bdev_desc);
 	}
 
-	if (nbd->fd >= 0) {
-		close(nbd->fd);
+	if (nbd->dev_fd >= 0) {
+		close(nbd->dev_fd);
+	}
+
+	if (nbd->spdk_sp_fd >= 0) {
+		close(nbd->spdk_sp_fd);
+	}
+
+	if (nbd->kernel_sp_fd >= 0) {
+		close(nbd->kernel_sp_fd);
 	}
 
 	free(nbd);
@@ -275,7 +285,7 @@ int
 spdk_nbd_poll(struct spdk_nbd_disk *nbd)
 {
 	struct nbd_io	*io = &nbd->io;
-	int		fd = nbd->fd;
+	int		fd = nbd->spdk_sp_fd;
 	int64_t		ret;
 	int		rc;
 
@@ -341,14 +351,14 @@ spdk_nbd_poll(struct spdk_nbd_disk *nbd)
 }
 
 static void
-nbd_start_kernel(int nbd_fd, int *sp)
+nbd_start_kernel(struct spdk_nbd_disk *nbd)
 {
 	int rc;
 	char buf[64];
 
-	close(sp[0]);
+	close(nbd->spdk_sp_fd);
 
-	rc = ioctl(nbd_fd, NBD_SET_SOCK, sp[1]);
+	rc = ioctl(nbd->dev_fd, NBD_SET_SOCK, nbd->kernel_sp_fd);
 	if (rc == -1) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", buf);
@@ -356,7 +366,7 @@ nbd_start_kernel(int nbd_fd, int *sp)
 	}
 
 #ifdef NBD_FLAG_SEND_TRIM
-	rc = ioctl(nbd_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
+	rc = ioctl(nbd->dev_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
 	if (rc == -1) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", buf);
@@ -365,10 +375,10 @@ nbd_start_kernel(int nbd_fd, int *sp)
 #endif
 
 	/* This will block in the kernel until the client disconnects. */
-	ioctl(nbd_fd, NBD_DO_IT);
+	ioctl(nbd->dev_fd, NBD_DO_IT);
 
-	ioctl(nbd_fd, NBD_CLEAR_QUE);
-	ioctl(nbd_fd, NBD_CLEAR_SOCK);
+	ioctl(nbd->dev_fd, NBD_CLEAR_QUE);
+	ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
 
 	exit(0);
 }
@@ -378,14 +388,16 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 {
 	struct spdk_nbd_disk	*nbd;
 	int			rc;
-	int			sp[2] = { -1, -1 }, nbd_fd = -1;
-	char buf[64];
+	int			sp[2];
+	char			buf[64];
 
 	nbd = calloc(1, sizeof(*nbd));
 	if (nbd == NULL) {
 		return NULL;
 	}
-	nbd->fd = -1;
+	nbd->dev_fd = -1;
+	nbd->spdk_sp_fd = -1;
+	nbd->kernel_sp_fd = -1;
 
 	rc = spdk_bdev_open(bdev, true, NULL, NULL, &nbd->bdev_desc);
 	if (rc != 0) {
@@ -404,28 +416,30 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 		goto err;
 	}
 
-	nbd_fd = open(nbd_path, O_RDWR);
-	if (nbd_fd == -1) {
+	nbd->spdk_sp_fd = sp[0];
+	nbd->kernel_sp_fd = sp[1];
+	nbd->dev_fd = open(nbd_path, O_RDWR);
+	if (nbd->dev_fd == -1) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("open(\"%s\") failed: %s\n", nbd_path, buf);
 		goto err;
 	}
 
-	rc = ioctl(nbd_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(bdev));
+	rc = ioctl(nbd->dev_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(bdev));
 	if (rc == -1) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", buf);
 		goto err;
 	}
 
-	rc = ioctl(nbd_fd, NBD_SET_SIZE_BLOCKS, spdk_bdev_get_num_blocks(bdev));
+	rc = ioctl(nbd->dev_fd, NBD_SET_SIZE_BLOCKS, spdk_bdev_get_num_blocks(bdev));
 	if (rc == -1) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("ioctl(NBD_SET_SIZE_BLOCKS) failed: %s\n", buf);
 		goto err;
 	}
 
-	rc = ioctl(nbd_fd, NBD_CLEAR_SOCK);
+	rc = ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
 	if (rc == -1) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("ioctl(NBD_CLEAR_SOCK) failed: %s\n", buf);
@@ -438,21 +452,20 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 
 	switch (rc) {
 	case 0:
-		nbd_start_kernel(nbd_fd, sp);
+		nbd_start_kernel(nbd);
 		break;
 	case -1:
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("could not fork: %s\n", buf);
 		goto err;
 	default:
-		close(nbd_fd);
+		close(nbd->dev_fd);
 		break;
 	}
 
-	close(sp[1]);
+	close(nbd->kernel_sp_fd);
 
-	nbd->fd = sp[0];
-	fcntl(nbd->fd, F_SETFL, O_NONBLOCK);
+	fcntl(nbd->spdk_sp_fd, F_SETFL, O_NONBLOCK);
 
 	to_be32(&nbd->io.resp.magic, NBD_REPLY_MAGIC);
 	nbd->io.req_in_progress = true;
@@ -460,18 +473,6 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 	return nbd;
 
 err:
-	if (sp[0] >= 0) {
-		close(sp[0]);
-	}
-
-	if (sp[1] >= 0) {
-		close(sp[1]);
-	}
-
-	if (nbd_fd >= 0) {
-		close(nbd_fd);
-	}
-
 	spdk_nbd_stop(nbd);
 
 	return NULL;
