@@ -1001,6 +1001,9 @@ bs_type(void)
 	dev = init_dev();
 	strncpy(opts.bstype.bstype, "NONEXISTING", SPDK_BLOBSTORE_TYPE_LENGTH);
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+
+	_bs_flush_scheduler();
+	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
 	CU_ASSERT(g_bserrno != 0);
 
 	/* Load with empty blobstore type */
@@ -1028,6 +1031,9 @@ bs_type(void)
 	dev = init_dev();
 	strncpy(opts.bstype.bstype, "NONEXISTING", SPDK_BLOBSTORE_TYPE_LENGTH);
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+
+	_bs_flush_scheduler();
+	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
 	CU_ASSERT(g_bserrno != 0);
 
 	/* Load with empty blobstore type */
@@ -1075,6 +1081,9 @@ bs_super_block(void)
 	dev = init_dev();
 	strncpy(opts.bstype.bstype, "", SPDK_BLOBSTORE_TYPE_LENGTH);
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+
+	_bs_flush_scheduler();
+	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
 	CU_ASSERT(g_bserrno != 0);
 
 	/* Create a new blob store with super block version 1 */
@@ -1596,9 +1605,9 @@ super_block_crc(void)
 	/* Load an existing blob store */
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 
-	CU_ASSERT(g_bserrno == -EILSEQ);
 	_bs_flush_scheduler();
 	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
+	CU_ASSERT(g_bserrno == -EILSEQ);
 
 	g_scheduler_delay = false;
 }
