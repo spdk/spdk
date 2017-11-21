@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b71500a4_433a2e8a",
+        "filename": "test/iscsi_tgt/ip_migration/ip_migration.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-21T00:21:16Z",
+      "side": 1,
+      "message": "you could just add -r $rpc_addr here\n\nthen you can eliminate lines 40-42 and 62, and change this line to use -c $testdir/iscsi.conf instead",
+      "revId": "017b9e34d07fdb9b719a5d9a631843286083e22f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
