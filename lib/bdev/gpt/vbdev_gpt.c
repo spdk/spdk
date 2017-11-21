@@ -359,12 +359,6 @@ vbdev_gpt_init(void)
 }
 
 static void
-vbdev_gpt_fini(void)
-{
-	spdk_bdev_part_tailq_fini(&g_gpt_disks);
-}
-
-static void
 vbdev_gpt_examine(struct spdk_bdev *bdev)
 {
 	int rc;
@@ -381,6 +375,6 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 	}
 }
 
-SPDK_BDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, vbdev_gpt_fini, NULL,
+SPDK_BDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, NULL, NULL,
 			  NULL, vbdev_gpt_examine)
 SPDK_LOG_REGISTER_COMPONENT("vbdev_gpt", SPDK_LOG_VBDEV_GPT)
