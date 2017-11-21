@@ -1112,15 +1112,8 @@ end:
 static void
 bdev_nvme_library_fini(void)
 {
-	struct nvme_bdev *nvme_bdev, *btmp;
-
 	if (g_nvme_hotplug_enabled) {
 		spdk_poller_unregister(&g_hotplug_poller);
-	}
-
-	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
-		TAILQ_REMOVE(&g_nvme_bdevs, nvme_bdev, link);
-		bdev_nvme_destruct(&nvme_bdev->disk);
 	}
 }
 

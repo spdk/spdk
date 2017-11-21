@@ -359,12 +359,6 @@ vbdev_gpt_init(void)
 }
 
 static void
-vbdev_gpt_fini(void)
-{
-	spdk_bdev_part_tailq_fini(&g_gpt_disks);
-}
-
-static void
 vbdev_gpt_examine(struct spdk_bdev *bdev)
 {
 	int rc;
@@ -387,6 +381,6 @@ vbdev_gpt_get_ctx_size(void)
 	return 0;
 }
 
-SPDK_BDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, vbdev_gpt_fini, NULL,
+SPDK_BDEV_MODULE_REGISTER(gpt, vbdev_gpt_init, NULL, NULL,
 			  vbdev_gpt_get_ctx_size, vbdev_gpt_examine)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_gpt", SPDK_TRACE_VBDEV_GPT)

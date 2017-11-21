@@ -92,7 +92,6 @@ static struct malloc_disk *g_malloc_disk_head = NULL;
 int malloc_disk_count = 0;
 
 static int bdev_malloc_initialize(void);
-static void bdev_malloc_finish(void);
 static void bdev_malloc_get_spdk_running_config(FILE *fp);
 
 static int
@@ -101,7 +100,7 @@ bdev_malloc_get_ctx_size(void)
 	return sizeof(struct malloc_task) + spdk_copy_task_size();
 }
 
-SPDK_BDEV_MODULE_REGISTER(malloc, bdev_malloc_initialize, bdev_malloc_finish,
+SPDK_BDEV_MODULE_REGISTER(malloc, bdev_malloc_initialize, NULL,
 			  bdev_malloc_get_spdk_running_config, bdev_malloc_get_ctx_size, NULL)
 
 static void
@@ -434,13 +433,6 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 	return &mdisk->disk;
 }
 
-static void free_malloc_disk(struct malloc_disk *mdisk)
-{
-	free(mdisk->disk.name);
-	spdk_dma_free(mdisk->malloc_buf);
-	spdk_dma_free(mdisk);
-}
-
 static int bdev_malloc_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Malloc");
@@ -474,17 +466,6 @@ static int bdev_malloc_initialize(void)
 
 end:
 	return rc;
-}
-
-static void bdev_malloc_finish(void)
-{
-	struct malloc_disk *mdisk;
-
-	while (g_malloc_disk_head != NULL) {
-		mdisk = g_malloc_disk_head;
-		g_malloc_disk_head = mdisk->next;
-		free_malloc_disk(mdisk);
-	}
 }
 
 static void
