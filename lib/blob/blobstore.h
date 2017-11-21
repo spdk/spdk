@@ -129,6 +129,10 @@ struct spdk_blob {
 	bool		data_ro;
 	bool		md_ro;
 
+	uint64_t	invalid_flags;
+	uint64_t	data_ro_flags;
+	uint64_t	md_ro_flags;
+
 	/* TODO: The xattrs are mutable, but we don't want to be
 	 * copying them unecessarily. Figure this out.
 	 */
@@ -194,7 +198,7 @@ enum spdk_blob_op_type {
  * The following data structures exist on disk.
  */
 #define SPDK_BS_INITIAL_VERSION 1
-#define SPDK_BS_VERSION 2 /* current version */
+#define SPDK_BS_VERSION 3 /* current version */
 
 #pragma pack(push, 1)
 
@@ -210,6 +214,7 @@ struct spdk_bs_md_mask {
 #define SPDK_MD_DESCRIPTOR_TYPE_PADDING 0
 #define SPDK_MD_DESCRIPTOR_TYPE_EXTENT 1
 #define SPDK_MD_DESCRIPTOR_TYPE_XATTR 2
+#define SPDK_MD_DESCRIPTOR_TYPE_FLAGS 3
 
 struct spdk_blob_md_descriptor_xattr {
 	uint8_t		type;
@@ -230,6 +235,37 @@ struct spdk_blob_md_descriptor_extent {
 		uint32_t        cluster_idx;
 		uint32_t        length; /* In units of clusters */
 	} extents[0];
+};
+
+/*
+ * As new flags are defined, these values will be updated to reflect the
+ *  mask of all flag values understood by this application.
+ */
+#define SPDK_BLOB_INVALID_FLAGS_MASK	0
+#define SPDK_BLOB_DATA_RO_FLAGS_MASK	0
+#define SPDK_BLOB_MD_RO_FLAGS_MASK	0
+
+struct spdk_blob_md_descriptor_flags {
+	uint8_t		type;
+	uint32_t	length;
+
+	/*
+	 * If a flag in invalid_flags is set that the application is not aware of,
+	 *  it will not allow the blob to be opened.
+	 */
+	uint64_t	invalid_flags;
+
+	/*
+	 * If a flag in data_ro_flags is set that the application is not aware of,
+	 *  allow the blob to be opened in data_read_only and md_read_only mode.
+	 */
+	uint64_t	data_ro_flags;
+
+	/*
+	 * If a flag in md_ro_flags is set the the application is not aware of,
+	 *  allow the blob to be opened in md_read_only mode.
+	 */
+	uint64_t	md_ro_flags;
 };
 
 struct spdk_blob_md_descriptor {
