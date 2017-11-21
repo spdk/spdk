@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "8f443da7_abdaa112",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-21T23:47:13Z",
+      "side": 1,
+      "message": "Hi Jim, Ziye, I\u0027m still learning storage in parallel with SPDK activity. I talked with our enterprise storage team.\n\nIn principle, the abort/reset function must return success by all means. If LUN RESET fails, the initiator will promote to stronger one but if all abort functions fail the initiator will not be able to know what to do.\n\nAll types of BDEV must ensure success like Cunyin\u0027s patch (https://review.gerrithub.io/#/c/386837/). \n\nFor example about AIO+SCSI, the linux kernel SCSI layer have timeout function, and if BDEV wait AIO completion, BDEV will be able to detect AIO failure or success eventually. Hence we will be able to keep the principle for AIO+SCSI.\n\nWe should do for other types of AIO next if they are not validated yet.\n\n\nHence\n if (!TAILQ_EMPTY(\u0026lun-\u003etasks)) \nmust not be occurred and is meaningful as defensive programming.\n\nThis is exceptional case and Ziye\u0027s solution looks safer one for me.\n\n\nBesides, current BDEV do not support abort function per task and I may get some request from our teams.\n\nI hope these make sense to you.",
+      "parentUuid": "e12b9f5e_3425fc86",
+      "revId": "dfbf8bda83d5ad52c118fa038f3ae25a81ca8a82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8fed2bb1_0daf4058",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 6
