@@ -645,6 +645,50 @@ spdk_bdev_module_finish_done(void)
 	}
 }
 
+static void
+_spdk_bdev_finish_unregister_bdevs_iter(void *cb_arg, int bdeverrno)
+{
+	struct spdk_bdev *bdev = cb_arg;
+
+	if (bdeverrno && bdev) {
+		SPDK_WARNLOG("Unable to unregister bdev '%s' during spdk_bdev_finish()\n",
+			     bdev->name);
+
+		/*
+		 * Since the call to spdk_bdev_unregister() failed, we have no way to free this
+		 *  bdev; try to continue by manually removing this bdev from the list and continue
+		 *  with the next bdev in the list.
+		 */
+		TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, link);
+	}
+
+	if (TAILQ_EMPTY(&g_bdev_mgr.bdevs)) {
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Done unregistering bdevs\n");
+		spdk_bdev_module_finish_iter(NULL);
+		return;
+	}
+
+	/*
+	 * Unregister the first bdev in the list.
+	 *
+	 * spdk_bdev_unregister() will handle the case where the bdev has open descriptors by
+	 *  calling the remove_cb of the descriptors first.
+	 *
+	 * Once this bdev and all of its open descriptors have been cleaned up, this function
+	 *  will be called again via the unregister completion callback to continue the cleanup
+	 *  process with the next bdev.
+	 */
+	bdev = TAILQ_FIRST(&g_bdev_mgr.bdevs);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Unregistering bdev '%s'\n", bdev->name);
+	spdk_bdev_unregister(bdev, _spdk_bdev_finish_unregister_bdevs_iter, bdev);
+}
+
+static void
+_spdk_bdev_finish_unregister_bdevs(void)
+{
+	_spdk_bdev_finish_unregister_bdevs_iter(NULL, 0);
+}
+
 void
 spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 {
@@ -655,7 +699,7 @@ spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 	g_fini_cb_fn = cb_fn;
 	g_fini_cb_arg = cb_arg;
 
-	spdk_bdev_module_finish_iter(NULL);
+	_spdk_bdev_finish_unregister_bdevs();
 }
 
 static struct spdk_bdev_io *
@@ -2104,16 +2148,6 @@ spdk_bdev_part_free(struct spdk_bdev_part *part)
 	if (__sync_sub_and_fetch(&base->ref, 1) == 0) {
 		spdk_bdev_module_release_bdev(base->bdev);
 		spdk_bdev_part_base_free(base);
-	}
-}
-
-void
-spdk_bdev_part_tailq_fini(struct bdev_part_tailq *tailq)
-{
-	struct spdk_bdev_part *part, *tmp;
-
-	TAILQ_FOREACH_SAFE(part, tailq, tailq, tmp) {
-		spdk_bdev_part_free(part);
 	}
 }
 
