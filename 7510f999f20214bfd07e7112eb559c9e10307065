@@ -178,6 +178,30 @@
       "revId": "7510f999f20214bfd07e7112eb559c9e10307065",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e56c9868_40fe8071",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-21T11:02:36Z",
+      "side": 1,
+      "message": "Actually, this is a missing statement (forgot to delete). Previously, I used strdup",
+      "parentUuid": "14d194d5_724d7313",
+      "range": {
+        "startLine": 341,
+        "startChar": 0,
+        "endLine": 341,
+        "endChar": 35
+      },
+      "revId": "7510f999f20214bfd07e7112eb559c9e10307065",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
