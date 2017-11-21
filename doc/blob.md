@@ -216,7 +216,7 @@ Each page is defined as:
     <blob-descriptor> ::= <blob-descriptor-type> <blob-descriptor-length>
                             <blob-descriptor-data>
     <blob-descriptor-type> ::= u8 # 0 means padding, 1 means "extent", 2 means
-                                  # xattr. The type
+                                  # xattr, 3 means flags. The type
                                   # describes how to interpret the descriptor data.
     <blob-descriptor-length> ::= u32 # Length of the entire descriptor
 
@@ -232,6 +232,12 @@ Each page is defined as:
     <xattr-value-length> ::= u16
     <xattr-name> ::= u8*
     <xattr-value> ::= u8*
+
+    <blob-descriptor-data-flags> ::= <flags-invalid> <flags-data-ro> <flags-md-ro>
+
+    <flags-invalid> ::= u64
+    <flags-data-ro> ::= u64
+    <flags-md-ro> ::= u64
 
     <blob-next> ::= u32 # The offset into the metadata region that contains the
                         # next page of metadata. 0 means no next page.

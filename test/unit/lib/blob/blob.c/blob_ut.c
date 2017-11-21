@@ -1983,6 +1983,131 @@ blob_dirty_shutdown(void)
 	g_bs = NULL;
 }
 
+static void
+blob_flags(void)
+{
+	struct spdk_bs_dev *dev;
+	spdk_blob_id blobid_invalid, blobid_data_ro, blobid_md_ro;
+	struct spdk_blob *blob_invalid, *blob_data_ro, *blob_md_ro;
+	struct spdk_bs_opts opts;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Create three blobs - one each for testing invalid, data_ro and md_ro flags. */
+	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid_invalid = g_blobid;
+
+	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid_data_ro = g_blobid;
+
+	spdk_bs_md_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid_md_ro = g_blobid;
+
+	spdk_bs_md_open_blob(g_bs, blobid_invalid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob_invalid = g_blob;
+
+	spdk_bs_md_open_blob(g_bs, blobid_data_ro, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob_data_ro = g_blob;
+
+	spdk_bs_md_open_blob(g_bs, blobid_md_ro, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+	blob_md_ro = g_blob;
+
+	blob_invalid->invalid_flags = (1ULL << 63);
+	blob_invalid->state = SPDK_BLOB_STATE_DIRTY;
+	blob_data_ro->data_ro_flags = (1ULL << 62);
+	blob_data_ro->state = SPDK_BLOB_STATE_DIRTY;
+	blob_md_ro->md_ro_flags = (1ULL << 61);
+	blob_md_ro->state = SPDK_BLOB_STATE_DIRTY;
+
+	g_bserrno = -1;
+	spdk_bs_md_sync_blob(blob_invalid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bserrno = -1;
+	spdk_bs_md_sync_blob(blob_data_ro, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bserrno = -1;
+	spdk_bs_md_sync_blob(blob_md_ro, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	g_bserrno = -1;
+	spdk_bs_md_close_blob(&blob_invalid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob_invalid = NULL;
+	g_bserrno = -1;
+	spdk_bs_md_close_blob(&blob_data_ro, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob_data_ro = NULL;
+	g_bserrno = -1;
+	spdk_bs_md_close_blob(&blob_md_ro, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob_md_ro = NULL;
+
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	/* Load an existing blob store */
+	dev = init_dev();
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	g_blob = NULL;
+	g_bserrno = 0;
+	spdk_bs_md_open_blob(g_bs, blobid_invalid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+	CU_ASSERT(g_blob == NULL);
+
+	g_blob = NULL;
+	g_bserrno = -1;
+	spdk_bs_md_open_blob(g_bs, blobid_data_ro, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob_data_ro = g_blob;
+	/* If an unknown data_ro flag was found, the blob should be marked both data and md read-only. */
+	CU_ASSERT(blob_data_ro->data_ro == true);
+	CU_ASSERT(blob_data_ro->md_ro == true);
+
+	g_blob = NULL;
+	g_bserrno = -1;
+	spdk_bs_md_open_blob(g_bs, blobid_md_ro, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob_md_ro = g_blob;
+	CU_ASSERT(blob_md_ro->data_ro == false);
+	CU_ASSERT(blob_md_ro->md_ro == true);
+
+	spdk_bs_md_close_blob(&blob_data_ro, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	spdk_bs_md_close_blob(&blob_md_ro, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2024,7 +2149,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_serialize", blob_serialize) == NULL ||
 		CU_add_test(suite, "blob_crc", blob_crc) == NULL ||
 		CU_add_test(suite, "super_block_crc", super_block_crc) == NULL ||
-		CU_add_test(suite, "blob_dirty_shutdown", blob_dirty_shutdown) == NULL
+		CU_add_test(suite, "blob_dirty_shutdown", blob_dirty_shutdown) == NULL ||
+		CU_add_test(suite, "blob_flags", blob_flags) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
