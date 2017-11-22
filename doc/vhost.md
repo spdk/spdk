@@ -61,8 +61,13 @@ is specified in the configuration file as:
 ~~~
 [VhostBlkX]
   Name vhost.X          # Name of vhost socket
-  Dev BackendX          # "BackendX" is block device name from previous
+  Target BackendX       # "BackendX" is block device name from previous
                         # sections in config file
+
+  #Dev BackendX		   # "Dev" is deprecated and soon will be removed
+  						   # Instead of it, please use "Target".
+  						   # Still, "Dev" is usable
+
   #Cpumask 0x1          # Optional parameter defining which core controller uses
 ~~~
 
@@ -76,11 +81,16 @@ are specified in the configuration file as:
 ~~~
 [VhostScsiX]
   Name vhost.X          # Name of vhost socket
-  Dev 0 BackendX        # "BackendX" is block device name from previous
+  Target 0 BackendX        # "BackendX" is block device name from previous
                         # sections in config file
-  Dev 1 BackendY
+  Target 1 BackendY
   ...
-  Dev n BackendN
+  Target n BackendN
+  ...
+  #Dev o BackendO		   # "Dev" is deprecated and soon will be removed
+  						   # Instead of it, please use "Target".
+  						   # Still, "Dev" is usable
+
   #Cpumask 0x1          # Optional parameter defining which core controller uses
 ~~~
 
