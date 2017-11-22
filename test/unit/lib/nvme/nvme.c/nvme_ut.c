@@ -165,8 +165,8 @@ test_spdk_nvme_probe(void)
 	memset(&ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
 	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
 	CU_ASSERT(pthread_mutex_init(&dummy.lock, &attr) == 0);
-	TAILQ_INIT(&dummy.attached_ctrlrs);
-	TAILQ_INSERT_TAIL(&dummy.attached_ctrlrs, &ctrlr, tailq);
+	TAILQ_INIT(&dummy.shared_attached_ctrlrs);
+	TAILQ_INSERT_TAIL(&dummy.shared_attached_ctrlrs, &ctrlr, tailq);
 	MOCK_SET(attach_cb_called, bool, false);
 	/* setup nvme_transport_ctrlr_scan() stub to also check the trype */
 	MOCK_SET(check_trtype, bool, true);
@@ -201,11 +201,12 @@ test_nvme_init_controllers(void)
 
 	g_spdk_nvme_driver = &test_driver;
 	memset(&ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
 	CU_ASSERT(pthread_mutex_init(&test_driver.lock, &attr) == 0);
 	TAILQ_INIT(&g_nvme_init_ctrlrs);
 	TAILQ_INSERT_TAIL(&g_nvme_init_ctrlrs, &ctrlr, tailq);
-	TAILQ_INIT(&test_driver.attached_ctrlrs);
+	TAILQ_INIT(&test_driver.shared_attached_ctrlrs);
 
 	/*
 	 * Try to initialize, but nvme_ctrlr_process_init will fail.
@@ -223,7 +224,7 @@ test_nvme_init_controllers(void)
 	/*
 	 * Controller init OK, need to move the controller state machine
 	 * forward by setting the ctrl state so that it can be moved
-	 * the attached_ctrlrs list.
+	 * the shared_attached_ctrlrs list.
 	 */
 	TAILQ_INSERT_TAIL(&g_nvme_init_ctrlrs, &ctrlr, tailq);
 	ctrlr.state = NVME_CTRLR_STATE_READY;
@@ -232,7 +233,25 @@ test_nvme_init_controllers(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ut_attach_cb_called == true);
 	CU_ASSERT(TAILQ_EMPTY(&g_nvme_init_ctrlrs));
-	CU_ASSERT(TAILQ_FIRST(&g_spdk_nvme_driver->attached_ctrlrs) == &ctrlr);
+	CU_ASSERT(TAILQ_EMPTY(&g_nvme_attached_ctrlrs));
+	CU_ASSERT(TAILQ_FIRST(&g_spdk_nvme_driver->shared_attached_ctrlrs) == &ctrlr);
+	TAILQ_REMOVE(&g_spdk_nvme_driver->shared_attached_ctrlrs, &ctrlr, tailq);
+
+	/*
+	 * Non-PCIe controllers should be added to the per-process list, not the shared list.
+	 */
+	memset(&ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	TAILQ_INSERT_TAIL(&g_nvme_init_ctrlrs, &ctrlr, tailq);
+	ctrlr.state = NVME_CTRLR_STATE_READY;
+	MOCK_SET(nvme_ctrlr_process_init, int, 0);
+	rc = nvme_init_controllers(cb_ctx, attach_cb);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ut_attach_cb_called == true);
+	CU_ASSERT(TAILQ_EMPTY(&g_nvme_init_ctrlrs));
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->shared_attached_ctrlrs));
+	CU_ASSERT(TAILQ_FIRST(&g_nvme_attached_ctrlrs) == &ctrlr);
+	TAILQ_REMOVE(&g_nvme_attached_ctrlrs, &ctrlr, tailq);
 
 	g_spdk_nvme_driver = NULL;
 	pthread_mutexattr_destroy(&attr);
@@ -308,7 +327,7 @@ test_nvme_driver_init(void)
 	rc = nvme_driver_init();
 	CU_ASSERT(g_spdk_nvme_driver->initialized == false);
 	CU_ASSERT(TAILQ_EMPTY(&g_nvme_init_ctrlrs));
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->attached_ctrlrs));
+	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->shared_attached_ctrlrs));
 	CU_ASSERT(rc == 0);
 
 	g_spdk_nvme_driver = NULL;
@@ -324,9 +343,12 @@ test_spdk_nvme_detach(void)
 	struct spdk_nvme_ctrlr *ret_ctrlr;
 	struct nvme_driver test_driver;
 
+	memset(&ctrlr, 0, sizeof(ctrlr));
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+
 	g_spdk_nvme_driver = &test_driver;
-	TAILQ_INIT(&test_driver.attached_ctrlrs);
-	TAILQ_INSERT_TAIL(&test_driver.attached_ctrlrs, &ctrlr, tailq);
+	TAILQ_INIT(&test_driver.shared_attached_ctrlrs);
+	TAILQ_INSERT_TAIL(&test_driver.shared_attached_ctrlrs, &ctrlr, tailq);
 	CU_ASSERT_FATAL(pthread_mutex_init(&test_driver.lock, NULL) == 0);
 
 	/*
@@ -338,7 +360,7 @@ test_spdk_nvme_detach(void)
 	 */
 	MOCK_SET(nvme_ctrlr_get_ref_count, int, 0);
 	rc = spdk_nvme_detach(&ctrlr);
-	ret_ctrlr = TAILQ_FIRST(&test_driver.attached_ctrlrs);
+	ret_ctrlr = TAILQ_FIRST(&test_driver.shared_attached_ctrlrs);
 	CU_ASSERT(ret_ctrlr == NULL);
 	CU_ASSERT(ut_destruct_called == true);
 	CU_ASSERT(rc == 0);
@@ -349,12 +371,27 @@ test_spdk_nvme_detach(void)
 	 * not empty.
 	 */
 	MOCK_SET(nvme_ctrlr_get_ref_count, int, 1);
-	TAILQ_INSERT_TAIL(&test_driver.attached_ctrlrs, &ctrlr, tailq);
+	TAILQ_INSERT_TAIL(&test_driver.shared_attached_ctrlrs, &ctrlr, tailq);
 	ut_destruct_called = false;
 	rc = spdk_nvme_detach(&ctrlr);
-	ret_ctrlr = TAILQ_FIRST(&test_driver.attached_ctrlrs);
+	ret_ctrlr = TAILQ_FIRST(&test_driver.shared_attached_ctrlrs);
 	CU_ASSERT(ret_ctrlr != NULL);
 	CU_ASSERT(ut_destruct_called == false);
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * Non-PCIe controllers should be on the per-process attached_ctrlrs list, not the
+	 * shared_attached_ctrlrs list.  Test an RDMA controller and ensure it is removed
+	 * from the correct list.
+	 */
+	memset(&ctrlr, 0, sizeof(ctrlr));
+	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	TAILQ_INIT(&g_nvme_attached_ctrlrs);
+	TAILQ_INSERT_TAIL(&g_nvme_attached_ctrlrs, &ctrlr, tailq);
+	MOCK_SET(nvme_ctrlr_get_ref_count, int, 0);
+	rc = spdk_nvme_detach(&ctrlr);
+	CU_ASSERT(TAILQ_EMPTY(&g_nvme_attached_ctrlrs));
+	CU_ASSERT(ut_destruct_called == true);
 	CU_ASSERT(rc == 0);
 
 	g_spdk_nvme_driver = NULL;
