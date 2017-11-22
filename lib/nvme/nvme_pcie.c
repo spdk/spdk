@@ -238,15 +238,14 @@ _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 					}
 				}
 			} else if (event.action == SPDK_NVME_UEVENT_REMOVE) {
-				bool in_list = false;
+				struct spdk_nvme_transport_id trid;
 
-				TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
-					if (strcmp(event.traddr, ctrlr->trid.traddr) == 0) {
-						in_list = true;
-						break;
-					}
-				}
-				if (in_list == false) {
+				memset(&trid, 0, sizeof(trid));
+				trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+				snprintf(trid.traddr, sizeof(trid.traddr), "%s", event.traddr);
+
+				ctrlr = spdk_nvme_get_ctrlr_by_trid_unsafe(&trid);
+				if (ctrlr == NULL) {
 					return 0;
 				}
 				SPDK_DEBUGLOG(SPDK_TRACE_NVME, "remove nvme address: %s\n",
@@ -578,7 +577,6 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	struct spdk_nvme_transport_id trid = {};
 	struct nvme_pcie_enum_ctx *enum_ctx = ctx;
 	struct spdk_nvme_ctrlr *ctrlr;
-	int rc = 0;
 	struct spdk_pci_addr pci_addr;
 
 	pci_addr = spdk_pci_device_get_addr(pci_dev);
@@ -587,16 +585,13 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
 
 	/* Verify that this controller is not already attached */
-	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
-		/* NOTE: In the case like multi-process environment where the device handle is
-		 * different per each process, we compare by BDF to determine whether it is the
-		 * same controller.
-		 */
-		if (strcmp(trid.traddr, ctrlr->trid.traddr) == 0) {
-			if (!spdk_process_is_primary()) {
-				rc = nvme_ctrlr_add_process(ctrlr, pci_dev);
-			}
-			return rc;
+	ctrlr = spdk_nvme_get_ctrlr_by_trid_unsafe(&trid);
+	if (ctrlr) {
+		if (spdk_process_is_primary()) {
+			/* Already attached */
+			return 0;
+		} else {
+			return nvme_ctrlr_add_process(ctrlr, pci_dev);
 		}
 	}
 

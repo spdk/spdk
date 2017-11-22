@@ -268,6 +268,12 @@ nvme_qpair_enable(struct spdk_nvme_qpair *qpair)
 	abort();
 }
 
+struct spdk_nvme_ctrlr *
+spdk_nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
+{
+	return NULL;
+}
+
 
 #if 0 /* TODO: update PCIe-specific unit test */
 static void
