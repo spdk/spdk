@@ -22,6 +22,30 @@
       "revId": "4ce6785d403fc24846f4df50fdbbb13d67f41c01",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ce832f9_666d100b",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-22T16:00:09Z",
+      "side": 1,
+      "message": "Apparently it\u0027s fine.",
+      "parentUuid": "1c92957c_27611eec",
+      "range": {
+        "startLine": 15,
+        "startChar": 27,
+        "endLine": 15,
+        "endChar": 28
+      },
+      "revId": "4ce6785d403fc24846f4df50fdbbb13d67f41c01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
