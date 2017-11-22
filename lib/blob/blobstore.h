@@ -117,6 +117,8 @@ struct spdk_blob {
 
 	enum spdk_blob_state		state;
 
+	bool thin_provisioned;
+
 	/* Two copies of the mutable data. One is a version
 	 * that matches the last known data on disk (clean).
 	 * The other (active) is the current data. Syncing
