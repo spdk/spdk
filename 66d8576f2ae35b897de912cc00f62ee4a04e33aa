@@ -45,6 +45,30 @@
       "revId": "66d8576f2ae35b897de912cc00f62ee4a04e33aa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abc14236_3b5d37eb",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-22T07:25:09Z",
+      "side": 1,
+      "message": "Jim thinks that if lun reset fails, we should not abort those active scsi tasks since reset fails, we just need to let those tasks return as usual.",
+      "parentUuid": "3b18e332_ea44eed7",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 10
+      },
+      "revId": "66d8576f2ae35b897de912cc00f62ee4a04e33aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
