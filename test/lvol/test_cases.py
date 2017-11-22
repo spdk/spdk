@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import io
+import os
 import sys
 import random
 import signal
@@ -139,6 +140,27 @@ class TestCases(object):
             if not pid:
                 return 1
         return 0
+
+    def _find_traddress_for_nvme(self, nvme_name):
+        with open("./test/lvol/vhost.conf") as file:
+            for line in file:
+                if nvme_name in line and "TransportID" in line:
+                    address = line.split(" ")
+                    for word in address:
+                        if word.startswith("traddr"):
+                            return word.split(":", 1)[1].replace("\"", "")
+
+        return -1
+
+    def _remove_nvme(self, nvme_name):
+        print "INFO: Delete bdev %s" % nvme_name
+        self.c.rpc.delete_bdev(nvme_name)
+
+    def _add_nvme(self, nvme_name):
+        print "INFO: Add bdev %s" % nvme_name
+        traddr = self._find_traddress_for_nvme(nvme_name)
+        if traddr != -1:
+            self.c.rpc.construct_nvme_bdev("-b", nvme_name, "-t", "PCIe", "-a", traddr)
 
     # positive tests
     def test_case1(self):
@@ -419,19 +441,14 @@ class TestCases(object):
         config_path = path.join(base_path, 'vhost.conf')
         pid_path = path.join(base_path, 'vhost.pid')
         base_name = "Nvme0n1"
-        #self.c.check_get_bdevs_methods("asdas", "qwe")
         self.c.destroy_lvol_store(self.lvs_name)
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
-        fail_count += self._stop_vhost(pid_path)
-        remove(pid_path)
-        if self._start_vhost(vhost_path, config_path, pid_path) != 0:
-            fail_count += 1
-            footer(13)
-            return fail_count
+        self._remove_nvme("Nvme0n1")
+        self._add_nvme("Nvme0")
         ret_value = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                  self.cluster_size)
         if ret_value != 0:
