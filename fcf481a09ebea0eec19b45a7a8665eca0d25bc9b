@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9ceb125_13930724",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T22:18:08Z",
+      "side": 1,
+      "message": "These messages need a \\n terminator.",
+      "revId": "fcf481a09ebea0eec19b45a7a8665eca0d25bc9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "519d0d27_fbc0d2ff",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T22:18:08Z",
+      "side": 1,
+      "message": "Convert -\u003e Converting",
+      "range": {
+        "startLine": 114,
+        "startChar": 16,
+        "endLine": 114,
+        "endChar": 23
+      },
+      "revId": "fcf481a09ebea0eec19b45a7a8665eca0d25bc9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3891acb5_e6ec1c39",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T22:18:08Z",
+      "side": 1,
+      "message": "Same as above.",
+      "revId": "fcf481a09ebea0eec19b45a7a8665eca0d25bc9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
