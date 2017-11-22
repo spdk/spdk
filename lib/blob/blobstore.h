@@ -125,6 +125,7 @@ struct spdk_blob {
 	struct spdk_blob_mut_data	clean;
 	struct spdk_blob_mut_data	active;
 
+	bool		invalid;
 	bool		data_ro;
 	bool		md_ro;
 
