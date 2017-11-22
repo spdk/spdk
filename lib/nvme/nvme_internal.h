@@ -465,7 +465,10 @@ struct spdk_nvme_ctrlr {
 
 struct nvme_driver {
 	pthread_mutex_t			lock;
-	TAILQ_HEAD(, spdk_nvme_ctrlr)	attached_ctrlrs;
+
+	/** Multi-process shared attached controller list */
+	TAILQ_HEAD(, spdk_nvme_ctrlr)	shared_attached_ctrlrs;
+
 	bool				initialized;
 	uint8_t				default_extended_host_id[16];
 };
