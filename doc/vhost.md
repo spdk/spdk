@@ -60,29 +60,33 @@ is specified in the configuration file as:
 
 ~~~
 [VhostBlkX]
-  Name vhost.X          # Name of vhost socket
-  Dev BackendX          # "BackendX" is block device name from previous
-                        # sections in config file
-  #Cpumask 0x1          # Optional parameter defining which core controller uses
+  Name vhost.X       	   	# Name of vhost socket
+  Dev BackendX			# "BackendX" is block device name from previous
+                     		# sections in config file
+
+  #Cpumask 0x1          	# Optional parameter defining which core controller uses
 ~~~
 
 ### Mappings Between SCSI Controllers and Storage Backends
 
-The vhost target exposes SCSI controllers to the virtual machines.
-Each device in the vhost controller is associated with an SPDK block device and
-configuration file defines those associations.  The block device to Dev mappings
-are specified in the configuration file as:
+The vhost target exposes SCSI controllers to the virtual machine application(s).
+Each SPDK vhost SCSI controller can expose up to eight targets (0..7). LUN 0 of each target
+is associated with an SPDK block device and configuration file defines those associations.
+The block device to Target mappings are specified in the configuration file as:
 
 ~~~
 [VhostScsiX]
-  Name vhost.X          # Name of vhost socket
-  Dev 0 BackendX        # "BackendX" is block device name from previous
-                        # sections in config file
-  Dev 1 BackendY
+  Name vhost.X			# Name of vhost socket
+  Target 0 BackendX		# "BackendX" is block device name from previous
+                        	# sections in config file
+  Target 1 BackendY
   ...
-  Dev n BackendN
-  #Cpumask 0x1          # Optional parameter defining which core controller uses
+  Target n BackendN
+
+  #Cpumask 0x1          	# Optional parameter defining which core controller uses
 ~~~
+
+Users should update configuration with 'Target' keyword.
 
 ### Vhost Sockets
 
@@ -197,8 +201,8 @@ EAL: VFIO support initialized
 << REMOVED CONSOLE LOG >>
 VHOST_CONFIG: bind to vhost_scsi0_socket
 vhost.c: 592:spdk_vhost_dev_construct: *NOTICE*: Controller vhost_scsi0_socket: new controller added
-vhost_scsi.c: 840:spdk_vhost_scsi_dev_add_dev: *NOTICE*: Controller vhost_scsi0_socket: defined device 'Dev 1' using lun 'Malloc0'
-vhost_scsi.c: 840:spdk_vhost_scsi_dev_add_dev: *NOTICE*: Controller vhost_scsi0_socket: defined device 'Dev 5' using lun 'Malloc1'
+vhost_scsi.c: 840:spdk_vhost_scsi_dev_add_tgt: *NOTICE*: Controller vhost_scsi0_socket: defined target 'Target 1' using lun 'Malloc0'
+vhost_scsi.c: 840:spdk_vhost_scsi_dev_add_tgt: *NOTICE*: Controller vhost_scsi0_socket: defined target 'Target 5' using lun 'Malloc1'
 VHOST_CONFIG: vhost-user server: socket created, fd: 65
 VHOST_CONFIG: bind to vhost_blk0_socket
 vhost.c: 592:spdk_vhost_dev_construct: *NOTICE*: Controller vhost_blk0_socket: new controller added

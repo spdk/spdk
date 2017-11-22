@@ -67,9 +67,9 @@ void spdk_vhost_shutdown_cb(void);
  * SPDK vhost device (vdev).  An equivalent of Virtio device.
  * Both virtio-blk and virtio-scsi devices are represented by this
  * struct. For virtio-scsi a single vhost device (also called SCSI
- * controller) may contain multiple devices (SCSI targets), each of
+ * controller) may contain multiple SCSI targets (devices), each of
  * which may contain multiple logical units (SCSI LUNs). For now
- * only one LUN per device is available.
+ * only one LUN per target is available.
  *
  * All vdev-changing functions operate directly on this object.
  * Note that \c spdk_vhost_dev cannot be acquired. This object is
@@ -140,7 +140,7 @@ int spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_u
  * starts after receiving proper message on the created socket.
  * See QEMU's vhost-user documentation for details.
  * All physical devices have to be separately attached to this
- * vdev via \c spdk_vhost_scsi_dev_add_dev().
+ * vdev via \c spdk_vhost_scsi_dev_add_tgt().
  *
  * This function is thread-safe.
  *
@@ -164,7 +164,7 @@ int spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask);
 int spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
 
 /**
- * Construct and attach new SCSI device to the vhost SCSI device
+ * Construct and attach new SCSI target to the vhost SCSI device
  * on given (unoccupied) slot.  The device will be created with a single
  * LUN0 associated with given SPDK bdev. Currently only one LUN per
  * device is supported.
@@ -174,15 +174,15 @@ int spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
  * flag. Otherwise an -ENOTSUP error code is returned.
  *
  * \param vdev vhost SCSI device
- * \param scsi_dev_num slot to attach to
+ * \param scsi_tgt_num slot to attach to
  * \param lun_name name of the SPDK bdev to associate with SCSI LUN0
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
+int spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 				const char *lun_name);
 
 /**
- * Get SCSI device from vhost SCSI device on given slot.  Max
+ * Get SCSI target from vhost SCSI device on given slot. Max
  * number of available slots is defined by
  * \c SPDK_VHOST_SCSI_CTRLR_MAX_DEVS.
  *
@@ -190,10 +190,10 @@ int spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_n
  * \param num slot id
  * \return SCSI device on given slot or NULL
  */
-struct spdk_scsi_dev *spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_dev *vdev, uint8_t num);
+struct spdk_scsi_dev *spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, uint8_t num);
 
 /**
- * Detach and destruct SCSI device from a vhost SCSI device.
+ * Detach and destruct SCSI target from a vhost SCSI device.
  *
  * If vhost SCSI device has an active socket connection, it is
  * required that it has negotiated \c VIRTIO_SCSI_F_HOTPLUG feature
@@ -202,18 +202,18 @@ struct spdk_scsi_dev *spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_dev *vdev, u
  * deletion is deferred until after all pending I/O to this device
  * has finished.
  *
- * Once the device has been deleted (whether or not vhost SCSI
+ * Once the target has been deleted (whether or not vhost SCSI
  * device is in use) given callback will be called.
  *
  * \param vdev vhost SCSI device
- * \param scsi_dev_num slot id to delete device from
- * \param cb_fn callback to be fired once device has been successfully
+ * \param scsi_tgt_num slot id to delete target from
+ * \param cb_fn callback to be fired once target has been successfully
  * deleted. The first parameter of callback function is the vhost SCSI
  * device, the second is user provided argument *cb_arg*.
  * \param cb_arg parameter to be passed to *cb_fn*.
  * \return 0 on success, negative errno on error.
  */
-int spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
+int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 				   spdk_vhost_event_fn cb_fn, void *cb_arg);
 
 /**
@@ -244,7 +244,7 @@ int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *
 			     bool readonly);
 
 /**
- * Remove a vhost blk device.  The device must not have any
+ * Remove a vhost blk device. The device must not have any
  * open connections on it's socket.
  *
  * \param vdev vhost blk device
