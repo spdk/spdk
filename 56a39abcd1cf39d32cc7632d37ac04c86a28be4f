@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d39f304_17531c98",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T20:29:19Z",
+      "side": 1,
+      "message": "It would be good to add a DEBUGLOG here to note that the doorbell buffer has been configured successfully.",
+      "revId": "56a39abcd1cf39d32cc7632d37ac04c86a28be4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba63d878_378f77e8",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T20:29:19Z",
+      "side": 1,
+      "message": "This flag isn\u0027t used anymore and can be removed.",
+      "revId": "56a39abcd1cf39d32cc7632d37ac04c86a28be4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45387d14_9ca1da6b",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1042,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T20:29:19Z",
+      "side": 1,
+      "message": "I think this would be clearer if tweaked slightly to match the wording in the spec (\"Example Algorithm for Controller Doorbell Register Updates\"):\n\n    return (uint16_t)(new_idx - event_idx) \u003c\u003d (uint16_t)(new_idx - old);",
+      "revId": "56a39abcd1cf39d32cc7632d37ac04c86a28be4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5833a044_304c1a30",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1054,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T20:29:19Z",
+      "side": 1,
+      "message": "I think this will already return true for the admin queue,  since you only fill in the shadow doorbell pointers during create_io_qpair - therefore, the !shadow_db check is sufficient to ignore admin queues already.\n\nWe should be able to drop the !qpair-\u003eid check due to the assumptions mentioned above.  Then we don\u0027t really need the comment at all.",
+      "revId": "56a39abcd1cf39d32cc7632d37ac04c86a28be4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
