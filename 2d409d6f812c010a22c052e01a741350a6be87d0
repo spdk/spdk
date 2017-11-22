@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "33a02304_3e7291cb",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 812,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-22T14:32:10Z",
+      "side": 1,
+      "message": "Should all these be renamed as well?\n\"one LUN per target\"\n\n---\nThe vhost device hierarchy is defined in SPDK as following:\nstruct spdk_vhost_scsi_dev -\u003e multiple spdk_scsi_dev -\u003e (possibly) multiple spdk_scsi_lun\n\nThere are 2 points of view for this hierarchy outside of SPDK:\n(We support only one LUN per spdk_scsi_dev right now so the entire LUN layer can be skipped for now)\n1. vhost controller -\u003e multiple devices -\u003e LUN\n2. vhost device (a.k.a SCSI adapter?) - \u003e multiple targets -\u003e LUN\n\nI think any of those two are good, but they are currently being mixed.\nIf we decide on changing the nomenclature to #2, we should also update vhost docs, the rpc and the getting started guide (vhost.h, vhost_rpc.c and vhost.md respectively).",
+      "range": {
+        "startLine": 812,
+        "startChar": 35,
+        "endLine": 812,
+        "endChar": 41
+      },
+      "revId": "2d409d6f812c010a22c052e01a741350a6be87d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36690ad7_697ed948",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 823,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-22T14:32:10Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 823,
+        "startChar": 41,
+        "endLine": 823,
+        "endChar": 48
+      },
+      "revId": "2d409d6f812c010a22c052e01a741350a6be87d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4cf2c08b_6c91b9f8",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-22T14:32:10Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 834,
+        "startChar": 40,
+        "endLine": 834,
+        "endChar": 47
+      },
+      "revId": "2d409d6f812c010a22c052e01a741350a6be87d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8a509690_cfba6ca0",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 952,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-22T14:32:10Z",
+      "side": 1,
+      "message": "missing newline",
+      "range": {
+        "startLine": 952,
+        "startChar": 38,
+        "endLine": 952,
+        "endChar": 39
+      },
+      "revId": "2d409d6f812c010a22c052e01a741350a6be87d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
