@@ -911,7 +911,14 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 			}
 
 			SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "CID=%u\n", xconn->cid);
-			xconn->state = ISCSI_CONN_STATE_EXITING;
+			/*
+			 * If some errors lead the connection to exited status previously and the related tasks still
+			 * not finished now, we just keep the connection in exited status, the shutdown timer will try to
+			 * check the tasks releted with the connection, if all tasks done, the connection will be deleted.
+			 */
+			if (xconn->state != ISCSI_CONN_STATE_EXITED) {
+				xconn->state = ISCSI_CONN_STATE_EXITING;
+			}
 			num++;
 		}
 	}
