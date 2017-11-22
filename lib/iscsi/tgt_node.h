@@ -41,9 +41,8 @@
 
 struct spdk_iscsi_conn;
 
-#define SPDK_ISCSI_MAX_QUEUE_DEPTH	64
 #define MAX_TARGET_MAP			256
-#define SPDK_TN_TAG_MAX 0x0000ffff
+#define SPDK_TN_TAG_MAX 		0x0000ffff
 
 struct spdk_iscsi_tgt_node_map {
 	struct spdk_iscsi_portal_grp	*pg;
