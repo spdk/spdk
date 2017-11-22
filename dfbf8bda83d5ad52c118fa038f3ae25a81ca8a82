@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0e07f99a_aaa8d7d6",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-22T01:32:04Z",
+      "side": 1,
+      "message": "Making this function static (and remove declaration from scsi_internal.h and definition from scsi_bdev_ut.c) looks good for me too.",
+      "parentUuid": "e720995d_39b4decb",
+      "revId": "dfbf8bda83d5ad52c118fa038f3ae25a81ca8a82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e12b9f5e_3425fc86",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 6
