@@ -103,7 +103,7 @@ SPDK_RPC_REGISTER("construct_vhost_scsi_controller", spdk_rpc_construct_vhost_sc
 
 struct rpc_add_vhost_scsi_ctrlr_lun {
 	char *ctrlr;
-	uint32_t scsi_dev_num;
+	uint32_t scsi_target_num;
 	char *lun_name;
 
 	struct spdk_jsonrpc_request *request;
@@ -119,7 +119,7 @@ free_rpc_add_vhost_scsi_ctrlr_lun(struct rpc_add_vhost_scsi_ctrlr_lun *req)
 
 static const struct spdk_json_object_decoder rpc_vhost_add_lun[] = {
 	{"ctrlr", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, ctrlr), spdk_json_decode_string },
-	{"scsi_dev_num", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, scsi_dev_num), spdk_json_decode_uint32},
+	{"scsi_dev_num", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, scsi_target_num), spdk_json_decode_uint32},
 	{"lun_name", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, lun_name), spdk_json_decode_string },
 };
 
@@ -137,7 +137,7 @@ spdk_rpc_add_vhost_scsi_lun_cb(struct spdk_vhost_dev *vdev, void *arg)
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_dev_add_dev(vdev, rpc->scsi_dev_num, rpc->lun_name);
+	rc = spdk_vhost_scsi_dev_add_target(vdev, rpc->scsi_target_num, rpc->lun_name);
 	if (rc < 0) {
 		goto invalid;
 	}
@@ -253,7 +253,7 @@ spdk_rpc_remove_vhost_scsi_dev_cb(struct spdk_vhost_dev *vdev, void *arg)
 		goto invalid;
 	}
 
-	rc = spdk_vhost_scsi_dev_remove_dev(vdev, rpc->scsi_dev_num,
+	rc = spdk_vhost_scsi_dev_remove_target(vdev, rpc->scsi_dev_num,
 					    spdk_rpc_remove_vhost_scsi_dev_finish_cb, rpc);
 	if (rc < 0) {
 		goto invalid;
