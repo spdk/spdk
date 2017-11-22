@@ -416,21 +416,28 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 static struct spdk_nvme_ctrlr *
 spdk_nvme_get_ctrlr_by_trid(const struct spdk_nvme_transport_id *trid)
 {
-	struct spdk_nvme_ctrlr *ctrlr = NULL;
-	bool found = false;
+	struct spdk_nvme_ctrlr *ctrlr;
 
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+	ctrlr = spdk_nvme_get_ctrlr_by_trid_unsafe(trid);
+	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+
+	return ctrlr;
+}
+
+/* This function must be called while holding g_spdk_nvme_driver->lock */
+struct spdk_nvme_ctrlr *
+spdk_nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
 
 	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
 		if (spdk_nvme_transport_id_compare(&ctrlr->trid, trid) == 0) {
-			found = true;
-			break;
+			return ctrlr;
 		}
 	}
 
-	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-
-	return (found == true) ? ctrlr : NULL;
+	return NULL;
 }
 
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
