@@ -612,6 +612,11 @@ vhost_setup_mem_table(struct virtio_net *dev)
 			goto err_mmap;
 		}
 
+		if (madvise(mmap_addr, mmap_size, MADV_DONTDUMP) != 0) {
+			RTE_LOG(INFO, VHOST_CONFIG,
+				"MADV_DONTDUMP advice setting failed.\n");
+		}
+
 		reg->mmap_addr = mmap_addr;
 		reg->mmap_size = mmap_size;
 		reg->host_user_addr = (uint64_t)(uintptr_t)mmap_addr +
