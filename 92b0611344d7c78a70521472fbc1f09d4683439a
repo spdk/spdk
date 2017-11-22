@@ -1,0 +1,170 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff5b4523_3ebee5b8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T22:10:32Z",
+      "side": 1,
+      "message": "The bdev layer intentionally does not depend on the SPDK event library - we should only use the io_channel.h abstractions.",
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f807e045_2a91bc34",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T22:10:32Z",
+      "side": 1,
+      "message": "I\u0027m not sure we want to abort I/Os just because they\u0027ve been in the queue for a while, and 10 milliseconds seems quite short.\n\nCan we remove the timeout code for now and add it as a separate patch if it turns out to be necessary?",
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d15739f6_0336470e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T22:10:32Z",
+      "side": 1,
+      "message": "I think this would be clearer as something like BDEV_CH_QOS_ENABLED to be consistent with the function to turn this on (spdk_bdev_enable_qos).",
+      "range": {
+        "startLine": 122,
+        "startChar": 8,
+        "endLine": 122,
+        "endChar": 38
+      },
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed826be4_019d3506",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T22:10:32Z",
+      "side": 1,
+      "message": "Periodical -\u003e Periodic",
+      "range": {
+        "startLine": 175,
+        "startChar": 4,
+        "endLine": 175,
+        "endChar": 14
+      },
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ceb38a0d_e7ad4254",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T22:10:32Z",
+      "side": 1,
+      "message": "It would be good to name this something more specific than just \"poller\" - maybe \"qos_poller\"?",
+      "range": {
+        "startLine": 177,
+        "startChar": 21,
+        "endLine": 177,
+        "endChar": 27
+      },
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db14717d_f951d952",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T22:10:32Z",
+      "side": 1,
+      "message": "The logic in this block looks quite complicated.\n\nI think it would be simpler to have a separate case just for QoS, something like:\n\n    if (flags \u003d\u003d 0) {\n        [normal handling]\n    } else if (flags \u0026 RESET_IN_PROGRESS) {\n        [fail I/O]\n    } else if (flags \u0026 QOS) {\n        [insert I/O into qos_io list]\n        [call qos processing function]\n    } else {\n        [flag error handling]\n    }\n\nIn other words, if QoS is enabled, we should just unconditionally insert all I/O into the qos_io list, then have a function that implements the QoS policy and submits I/O from the front of the qos_io list (if the limits haven\u0027t been hit yet).  Making the QoS processing into a separate function will help simplify the QoS poller, since it will be able to call the same QoS processing function.",
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1d974d8_9ee2fe43",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T22:10:32Z",
+      "side": 1,
+      "message": "Maybe name this spdk_bdev_channel_poll_qos()?",
+      "range": {
+        "startLine": 809,
+        "startChar": 0,
+        "endLine": 809,
+        "endChar": 27
+      },
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1835389_af1ce39d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T22:10:32Z",
+      "side": 1,
+      "message": "bdev_io will be NULL here - you probably want to get the head of the list.\n\nAlso, we should only submit I/O if it is allowed by the rate limits - this looks like it will submit the entire qos_io list, even if that is more than one millisecond worth of I/O.",
+      "range": {
+        "startLine": 819,
+        "startChar": 28,
+        "endLine": 819,
+        "endChar": 35
+      },
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
