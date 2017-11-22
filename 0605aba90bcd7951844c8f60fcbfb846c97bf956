@@ -67,6 +67,24 @@
       "revId": "0605aba90bcd7951844c8f60fcbfb846c97bf956",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11b109a3_d4bb7e1d",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-22T00:52:12Z",
+      "side": 1,
+      "message": "Yes, it\u0027s formatted by check_format.sh script",
+      "parentUuid": "c066c73a_7a5f3590",
+      "revId": "0605aba90bcd7951844c8f60fcbfb846c97bf956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
