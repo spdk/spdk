@@ -97,6 +97,7 @@
 enum spdk_vhost_dev_type {
 	SPDK_VHOST_DEV_T_SCSI,//!< SPDK_VHOST_DEV_T_SCSI
 	SPDK_VHOST_DEV_T_BLK, //!< SPDK_VHOST_DEV_T_BLK
+	SPDK_VHOST_DEV_T_NVME
 };
 
 struct spdk_vhost_virtqueue {
@@ -247,5 +248,9 @@ void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);
 int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
+int spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf);
+int spdk_vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd);
+int spdk_vhost_nvme_get_cap(int vid, uint64_t *cap);
+int spdk_vhost_nvme_controller_construct(void);
 
 #endif /* SPDK_VHOST_INTERNAL_H */
