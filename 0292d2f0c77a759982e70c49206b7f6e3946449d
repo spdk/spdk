@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65789a2a_1d350066",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-22T14:17:54Z",
+      "side": 1,
+      "message": "I\u0027m still of the opinion that there should be two separate calls spdk_bs_md_set_thin_provision(blob) and spdk_bs_md_mark_as_clone(blob, lvol:XYZ). Deliberately missing cb_fn and cb_arg similar to resize_blob, as sync is required after those operations.\n\nReason for two separate calls is in part because there is no inherent requirement for thin provisioning of blob size \u003d\u003d 0. Thin provisioning basically changes behavior when resizing the blob (and accessing \"new\" clusters). If blob with some size already set is marked as thin provision, next resize would not allocate new clusters. This equivalent of having part of thin blob with part of it being set to 0\u0027s and remaining clusters unallocated.\n\nAnother is clarity of the API, it seems more clear to expose marking as clone as separate function than parameter for seemingly unrelated feature.\n\nspdk_bs_md_mark_as_clone() needs to keep its required blob size \u003d\u003d 0, as it mimics the original backing blob and having data on clone before marking it as such is pointless. Due to implementation marking as clone would require thin provisioning being set on such device as well.",
+      "revId": "0292d2f0c77a759982e70c49206b7f6e3946449d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "453ddf10_6f02787a",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-22T14:17:54Z",
+      "side": 1,
+      "message": "resize_blob should not be possible on blob that was marked as clone. Its size is defined by snapshot.",
+      "range": {
+        "startLine": 254,
+        "startChar": 8,
+        "endLine": 254,
+        "endChar": 30
+      },
+      "revId": "0292d2f0c77a759982e70c49206b7f6e3946449d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81e99766_ee28533e",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-22T14:17:54Z",
+      "side": 1,
+      "message": "That\u0027s fine argument to keep thin provision out of create blob.",
+      "range": {
+        "startLine": 257,
+        "startChar": 3,
+        "endLine": 257,
+        "endChar": 76
+      },
+      "revId": "0292d2f0c77a759982e70c49206b7f6e3946449d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
