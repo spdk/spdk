@@ -33,6 +33,80 @@
       "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e066a227_efbc30af",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 518,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T17:09:07Z",
+      "side": 1,
+      "message": "The metadata could either be the first or last 8 bytes of metadata, depending on the Identify Namespace DPS field, bit 3.",
+      "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ace54ff_d0094c40",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T17:09:07Z",
+      "side": 1,
+      "message": "This doesn\u0027t need to be in the lba_count loop.",
+      "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "785d1a9d_2ae8b1c6",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T17:09:07Z",
+      "side": 1,
+      "message": "Type 1 and Type 2 are the only types we are supporting here, I think, so this comment doesn\u0027t really help. (We return early above for Type 3.)",
+      "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6067469e_f855277c",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-22T17:09:07Z",
+      "side": 1,
+      "message": "This should probably only be called in submit_io() (which is called once per task at startup) instead of on every submit_single_io() call.",
+      "range": {
+        "startLine": 580,
+        "startChar": 3,
+        "endLine": 580,
+        "endChar": 29
+      },
+      "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
