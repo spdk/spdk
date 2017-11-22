@@ -48,6 +48,17 @@ static int g_nvme_driver_timeout_ms = 3 * 60 * 1000;
 static TAILQ_HEAD(, spdk_nvme_ctrlr) g_nvme_init_ctrlrs =
 	TAILQ_HEAD_INITIALIZER(g_nvme_init_ctrlrs);
 
+/* Per-process attached controller list */
+static TAILQ_HEAD(, spdk_nvme_ctrlr) g_nvme_attached_ctrlrs =
+	TAILQ_HEAD_INITIALIZER(g_nvme_attached_ctrlrs);
+
+/* Returns true if ctrlr should be stored on the multi-process shared_attached_ctrlrs list */
+static bool
+nvme_ctrlr_shared(const struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE;
+}
+
 /* Caller must hold g_spdk_nvme_driver->lock */
 void
 nvme_ctrlr_connected(struct spdk_nvme_ctrlr *ctrlr)
@@ -63,7 +74,11 @@ spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 	nvme_ctrlr_proc_put_ref(ctrlr);
 
 	if (nvme_ctrlr_get_ref_count(ctrlr) == 0) {
-		TAILQ_REMOVE(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
+		if (nvme_ctrlr_shared(ctrlr)) {
+			TAILQ_REMOVE(&g_spdk_nvme_driver->shared_attached_ctrlrs, ctrlr, tailq);
+		} else {
+			TAILQ_REMOVE(&g_nvme_attached_ctrlrs, ctrlr, tailq);
+		}
 		nvme_ctrlr_destruct(ctrlr);
 	}
 
@@ -310,7 +325,7 @@ nvme_driver_init(void)
 
 	g_spdk_nvme_driver->initialized = false;
 
-	TAILQ_INIT(&g_spdk_nvme_driver->attached_ctrlrs);
+	TAILQ_INIT(&g_spdk_nvme_driver->shared_attached_ctrlrs);
 
 	SPDK_STATIC_ASSERT(sizeof(host_id) == sizeof(g_spdk_nvme_driver->default_extended_host_id),
 			   "host ID size mismatch");
@@ -383,7 +398,11 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 				 *  Move it to the attached_ctrlrs list.
 				 */
 				TAILQ_REMOVE(&g_nvme_init_ctrlrs, ctrlr, tailq);
-				TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
+				if (nvme_ctrlr_shared(ctrlr)) {
+					TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->shared_attached_ctrlrs, ctrlr, tailq);
+				} else {
+					TAILQ_INSERT_TAIL(&g_nvme_attached_ctrlrs, ctrlr, tailq);
+				}
 
 				/*
 				 * Increase the ref count before calling attach_cb() as the user may
@@ -431,7 +450,15 @@ spdk_nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvme_ctrlr *ctrlr;
 
-	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
+	/* Search per-process list */
+	TAILQ_FOREACH(ctrlr, &g_nvme_attached_ctrlrs, tailq) {
+		if (spdk_nvme_transport_id_compare(&ctrlr->trid, trid) == 0) {
+			return ctrlr;
+		}
+	}
+
+	/* Search multi-process shared list */
+	TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->shared_attached_ctrlrs, tailq) {
 		if (spdk_nvme_transport_id_compare(&ctrlr->trid, trid) == 0) {
 			return ctrlr;
 		}
@@ -460,11 +487,10 @@ spdk_nvme_probe_internal(const struct spdk_nvme_transport_id *trid, void *cb_ctx
 	nvme_transport_ctrlr_scan(trid, cb_ctx, probe_cb, remove_cb, direct_connect);
 
 	/*
-	 * The RDMA trtype will always construct the ctrlr and go through the
-	 *  normal process.
+	 * Probe controllers on the shared_attached_ctrlrs list
 	 */
 	if (!spdk_process_is_primary() && (trid->trtype == SPDK_NVME_TRANSPORT_PCIE)) {
-		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->attached_ctrlrs, tailq) {
+		TAILQ_FOREACH(ctrlr, &g_spdk_nvme_driver->shared_attached_ctrlrs, tailq) {
 			/* Do not attach other ctrlrs if user specify a valid trid */
 			if ((strlen(trid->traddr) != 0) &&
 			    (spdk_nvme_transport_id_compare(trid, &ctrlr->trid))) {
