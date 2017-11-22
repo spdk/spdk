@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b60c75ef_6390f5a7",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-22T07:13:15Z",
+      "side": 1,
+      "message": "This comment is out of date and should be updated concurrently or after the code is fixed.",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 4
+      },
+      "revId": "66d8576f2ae35b897de912cc00f62ee4a04e33aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b18e332_ea44eed7",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-22T07:13:15Z",
+      "side": 1,
+      "message": "Sorry, why you removed the code to make each active task failure?\n\nIn principle if lun-\u003etasks is not empty, scsi should try stronger abort function, and LUN RESET should succeed by all means.\n\nYour previous code was nearer to principle than the latest.\n\nHi Jim, please look into my not-short feedback.\nI would like to make the SPDK BDEV error handling  hierarchical one like others as long as we keep performance and it looks that the possibility of returning success goes away from the goal.",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 10
+      },
+      "revId": "66d8576f2ae35b897de912cc00f62ee4a04e33aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
