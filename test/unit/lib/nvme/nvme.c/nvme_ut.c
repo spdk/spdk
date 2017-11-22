@@ -176,7 +176,7 @@ test_spdk_nvme_probe(void)
 
 	/* driver init passes, transport available, we are primary */
 	MOCK_SET(spdk_process_is_primary, bool, true);
-	TAILQ_INIT(&dummy.init_ctrlrs);
+	TAILQ_INIT(&g_nvme_init_ctrlrs);
 	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
 	CU_ASSERT(rc == 0);
 
@@ -203,8 +203,8 @@ test_nvme_init_controllers(void)
 	memset(&ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
 	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
 	CU_ASSERT(pthread_mutex_init(&test_driver.lock, &attr) == 0);
-	TAILQ_INIT(&test_driver.init_ctrlrs);
-	TAILQ_INSERT_TAIL(&test_driver.init_ctrlrs, &ctrlr, tailq);
+	TAILQ_INIT(&g_nvme_init_ctrlrs);
+	TAILQ_INSERT_TAIL(&g_nvme_init_ctrlrs, &ctrlr, tailq);
 	TAILQ_INIT(&test_driver.attached_ctrlrs);
 
 	/*
@@ -217,7 +217,7 @@ test_nvme_init_controllers(void)
 	rc = nvme_init_controllers(cb_ctx, attach_cb);
 	CU_ASSERT(rc == -1);
 	CU_ASSERT(g_spdk_nvme_driver->initialized == true);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs));
+	CU_ASSERT(TAILQ_EMPTY(&g_nvme_init_ctrlrs));
 	CU_ASSERT(ut_destruct_called == true);
 
 	/*
@@ -225,13 +225,13 @@ test_nvme_init_controllers(void)
 	 * forward by setting the ctrl state so that it can be moved
 	 * the attached_ctrlrs list.
 	 */
-	TAILQ_INSERT_TAIL(&test_driver.init_ctrlrs, &ctrlr, tailq);
+	TAILQ_INSERT_TAIL(&g_nvme_init_ctrlrs, &ctrlr, tailq);
 	ctrlr.state = NVME_CTRLR_STATE_READY;
 	MOCK_SET(nvme_ctrlr_process_init, int, 0);
 	rc = nvme_init_controllers(cb_ctx, attach_cb);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ut_attach_cb_called == true);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs));
+	CU_ASSERT(TAILQ_EMPTY(&g_nvme_init_ctrlrs));
 	CU_ASSERT(TAILQ_FIRST(&g_spdk_nvme_driver->attached_ctrlrs) == &ctrlr);
 
 	g_spdk_nvme_driver = NULL;
@@ -307,7 +307,7 @@ test_nvme_driver_init(void)
 	g_spdk_nvme_driver = NULL;
 	rc = nvme_driver_init();
 	CU_ASSERT(g_spdk_nvme_driver->initialized == false);
-	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs));
+	CU_ASSERT(TAILQ_EMPTY(&g_nvme_init_ctrlrs));
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->attached_ctrlrs));
 	CU_ASSERT(rc == 0);
 
@@ -622,10 +622,10 @@ test_nvme_ctrlr_probe(void)
 	MOCK_SET(dummy_probe_cb, bool, true);
 	MOCK_SET_P(nvme_transport_ctrlr_construct,
 		   struct spdk_nvme_ctrlr *, &ut_nvme_transport_ctrlr_construct);
-	TAILQ_INIT(&g_spdk_nvme_driver->init_ctrlrs);
+	TAILQ_INIT(&g_nvme_init_ctrlrs);
 	rc = nvme_ctrlr_probe(trid, devhandle, dummy_probe_cb, cb_ctx);
 	CU_ASSERT(rc == 0);
-	dummy = TAILQ_FIRST(&g_spdk_nvme_driver->init_ctrlrs);
+	dummy = TAILQ_FIRST(&g_nvme_init_ctrlrs);
 	CU_ASSERT(dummy == &ut_nvme_transport_ctrlr_construct);
 
 	free(g_spdk_nvme_driver);
