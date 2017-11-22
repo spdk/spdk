@@ -729,7 +729,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 }
 
 struct spdk_scsi_dev *
-spdk_vhost_scsi_dev_get_dev(struct spdk_vhost_dev *vdev, uint8_t num)
+spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, uint8_t num)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 
@@ -768,15 +768,15 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	}
 
 	/* remove entire device */
-	spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, scsi_dev_num, NULL, NULL);
+	spdk_vhost_scsi_dev_remove_tgt(&svdev->vdev, scsi_dev_num, NULL, NULL);
 }
 
 int
-spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
+spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 			    const char *lun_name)
 {
 	struct spdk_vhost_scsi_dev *svdev;
-	char dev_name[SPDK_SCSI_DEV_MAX_NAME];
+	char target_name[SPDK_SCSI_DEV_MAX_NAME];
 	int lun_id_list[1];
 	char *lun_names_list[1];
 
@@ -785,8 +785,8 @@ spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
 		return -EINVAL;
 	}
 
-	if (scsi_dev_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
-		SPDK_ERRLOG("Controller %d device number too big (max %d)\n", scsi_dev_num,
+	if (scsi_tgt_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+		SPDK_ERRLOG("Controller %d target number too big (max %d)\n", scsi_tgt_num,
 			    SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
 		return -EINVAL;
 	}
@@ -804,41 +804,42 @@ spdk_vhost_scsi_dev_add_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
 		return -ENOTSUP;
 	}
 
-	if (svdev->scsi_dev[scsi_dev_num] != NULL) {
-		SPDK_ERRLOG("Controller %s dev %u already occupied\n", vdev->name, scsi_dev_num);
+	if (svdev->scsi_dev[scsi_tgt_num] != NULL) {
+		SPDK_ERRLOG("Controller %s target %u already occupied\n", vdev->name, scsi_tgt_num);
 		return -EEXIST;
 	}
 
 	/*
-	 * At this stage only one LUN per device
+	 * At this stage only one LUN per target
 	 */
-	snprintf(dev_name, sizeof(dev_name), "Dev %u", scsi_dev_num);
+	snprintf(target_name, sizeof(target_name), "Target %u", scsi_tgt_num);
 	lun_id_list[0] = 0;
 	lun_names_list[0] = (char *)lun_name;
 
-	svdev->scsi_dev_state[scsi_dev_num].removed = false;
-	svdev->scsi_dev[scsi_dev_num] = spdk_scsi_dev_construct(dev_name, lun_names_list, lun_id_list, 1,
+	svdev->scsi_dev_state[scsi_tgt_num].removed = false;
+	svdev->scsi_dev[scsi_tgt_num] = spdk_scsi_dev_construct(target_name, lun_names_list, lun_id_list,
+					1,
 					SPDK_SPC_PROTOCOL_IDENTIFIER_SAS, spdk_vhost_scsi_lun_hotremove, svdev);
 
-	if (svdev->scsi_dev[scsi_dev_num] == NULL) {
-		SPDK_ERRLOG("Couldn't create spdk SCSI device '%s' using lun device '%s' in controller: %s\n",
-			    dev_name, lun_name, vdev->name);
+	if (svdev->scsi_dev[scsi_tgt_num] == NULL) {
+		SPDK_ERRLOG("Couldn't create spdk SCSI target '%s' using lun device '%s' in controller: %s\n",
+			    target_name, lun_name, vdev->name);
 		return -EINVAL;
 	}
-	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_dev_num], 0, "vhost");
+	spdk_scsi_dev_add_port(svdev->scsi_dev[scsi_tgt_num], 0, "vhost");
 
 	if (vdev->lcore != -1) {
-		spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[scsi_dev_num]);
-		eventq_enqueue(svdev, scsi_dev_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_RESCAN);
+		spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[scsi_tgt_num]);
+		eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_RESCAN);
 	}
 
-	SPDK_NOTICELOG("Controller %s: defined device '%s' using lun '%s'\n",
-		       vdev->name, dev_name, lun_name);
+	SPDK_NOTICELOG("Controller %s: defined target '%s' using lun '%s'\n",
+		       vdev->name, target_name, lun_name);
 	return 0;
 }
 
 int
-spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_num,
+spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 			       spdk_vhost_event_fn cb_fn, void *cb_arg)
 {
 	struct spdk_vhost_scsi_dev *svdev;
@@ -846,8 +847,8 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 	struct spdk_scsi_dev_vhost_state *scsi_dev_state;
 	int rc = 0;
 
-	if (scsi_dev_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
-		SPDK_ERRLOG("%s: invalid device number %d\n", vdev->name, scsi_dev_num);
+	if (scsi_tgt_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+		SPDK_ERRLOG("%s: invalid target number %d\n", vdev->name, scsi_tgt_num);
 		return -EINVAL;
 	}
 
@@ -856,42 +857,42 @@ spdk_vhost_scsi_dev_remove_dev(struct spdk_vhost_dev *vdev, unsigned scsi_dev_nu
 		return -ENODEV;
 	}
 
-	scsi_dev = svdev->scsi_dev[scsi_dev_num];
+	scsi_dev = svdev->scsi_dev[scsi_tgt_num];
 	if (scsi_dev == NULL) {
-		SPDK_ERRLOG("Controller %s dev %u is not occupied\n", vdev->name, scsi_dev_num);
+		SPDK_ERRLOG("Controller %s target %u is not occupied\n", vdev->name, scsi_tgt_num);
 		return -ENODEV;
 	}
 
 	if (svdev->vdev.lcore == -1) {
 		/* controller is not in use, remove dev and exit */
 		spdk_scsi_dev_destruct(scsi_dev);
-		svdev->scsi_dev[scsi_dev_num] = NULL;
+		svdev->scsi_dev[scsi_tgt_num] = NULL;
 		if (cb_fn) {
 			rc = cb_fn(vdev, cb_arg);
 		}
-		SPDK_NOTICELOG("%s: removed device 'Dev %u'\n", vdev->name, scsi_dev_num);
+		SPDK_NOTICELOG("%s: removed target 'Target %u'\n", vdev->name, scsi_tgt_num);
 		return rc;
 	}
 
 	if (!spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
-		SPDK_WARNLOG("%s: 'Dev %u' is in use and hot-detach is not enabled for this controller.\n",
-			     svdev->vdev.name, scsi_dev_num);
+		SPDK_WARNLOG("%s: 'Target %u' is in use and hot-detach is not enabled for this controller.\n",
+			     svdev->vdev.name, scsi_tgt_num);
 		return -ENOTSUP;
 	}
 
-	scsi_dev_state = &svdev->scsi_dev_state[scsi_dev_num];
+	scsi_dev_state = &svdev->scsi_dev_state[scsi_tgt_num];
 	if (scsi_dev_state->removed) {
-		SPDK_WARNLOG("%s: 'Dev %u' has been already marked to hotremove.\n", svdev->vdev.name,
-			     scsi_dev_num);
+		SPDK_WARNLOG("%s: 'Target %u' has been already marked to hotremove.\n", svdev->vdev.name,
+			     scsi_tgt_num);
 		return -EBUSY;
 	}
 
 	scsi_dev_state->remove_cb = cb_fn;
 	scsi_dev_state->remove_ctx = cb_arg;
 	scsi_dev_state->removed = true;
-	eventq_enqueue(svdev, scsi_dev_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
+	eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
 
-	SPDK_NOTICELOG("%s: queued 'Dev %u' for hot-detach.\n", vdev->name, scsi_dev_num);
+	SPDK_NOTICELOG("%s: queued 'Target %u' for hot-detach.\n", vdev->name, scsi_tgt_num);
 	return 0;
 }
 
@@ -902,9 +903,11 @@ spdk_vhost_scsi_controller_construct(void)
 	struct spdk_vhost_dev *vdev;
 	int i, dev_num;
 	unsigned ctrlr_num = 0;
-	char *lun_name, *dev_num_str;
+	char *lun_name, *tgt_num_str;
 	char *cpumask;
 	char *name;
+	char *keyword;
+	char *dev = NULL, *tgt = NULL;
 
 	while (sp != NULL) {
 		if (!spdk_conf_section_match_prefix(sp, "VhostScsi")) {
@@ -928,30 +931,50 @@ spdk_vhost_scsi_controller_construct(void)
 		vdev = spdk_vhost_dev_find(name);
 		assert(vdev);
 
-		for (i = 0; spdk_conf_section_get_nval(sp, "Dev", i) != NULL; i++) {
-			dev_num_str = spdk_conf_section_get_nmval(sp, "Dev", i, 0);
-			if (dev_num_str == NULL) {
-				SPDK_ERRLOG("%s: Invalid or missing Dev number\n", name);
+		dev = spdk_conf_section_get_nval(sp, "Dev", 0);
+		tgt = spdk_conf_section_get_nval(sp, "Target", 0);
+
+		if (dev && tgt) {
+			SPDK_ERRLOG("Used both 'Dev' and 'Target' keywords in section [VhostScsi%u]\n"
+				    "Please use one.\n", ctrlr_num);
+			return -1;
+		} else if (dev) {
+			SPDK_NOTICELOG("'Dev' mnemonic is deprecated, and will be removed shortly.\n"
+				       "Please, use 'Target' instead\n");
+			keyword = "Dev";
+		} else {
+			keyword = "Target";
+		}
+
+		for (i = 0; ; i++) {
+
+			tgt = spdk_conf_section_get_nval(sp, keyword, i);
+			if (tgt == NULL) {
+				break;
+			}
+
+			tgt_num_str = spdk_conf_section_get_nmval(sp, keyword, i, 0);
+			if (tgt_num_str == NULL) {
+				SPDK_ERRLOG("%s: Invalid or missing target number\n", name);
 				return -1;
 			}
 
-			dev_num = (int)strtol(dev_num_str, NULL, 10);
-			lun_name = spdk_conf_section_get_nmval(sp, "Dev", i, 1);
+			dev_num = (int)strtol(tgt_num_str, NULL, 10);
+			lun_name = spdk_conf_section_get_nmval(sp, keyword, i, 1);
 			if (lun_name == NULL) {
-				SPDK_ERRLOG("%s: Invalid or missing LUN name for dev %d\n", name, dev_num);
+				SPDK_ERRLOG("%s: Invalid or missing LUN name for target %d\n", name, dev_num);
 				return -1;
-			} else if (spdk_conf_section_get_nmval(sp, "Dev", i, 2)) {
+			} else if (spdk_conf_section_get_nmval(sp, keyword, i, 2)) {
 				SPDK_ERRLOG("%s: Only one LUN per vhost SCSI device supported\n", name);
 				return -1;
 			}
 
-			if (spdk_vhost_scsi_dev_add_dev(vdev, dev_num, lun_name) < 0) {
+			if (spdk_vhost_scsi_dev_add_tgt(vdev, dev_num, lun_name) < 0) {
 				return -1;
 			}
 		}
 
 		sp = spdk_conf_next_section(sp);
-
 	}
 
 	return 0;
@@ -1139,7 +1162,7 @@ spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_
 	spdk_json_write_name(w, "scsi");
 	spdk_json_write_object_begin(w);
 	for (dev_idx = 0; dev_idx < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; dev_idx++) {
-		sdev = spdk_vhost_scsi_dev_get_dev(vdev, dev_idx);
+		sdev = spdk_vhost_scsi_dev_get_tgt(vdev, dev_idx);
 		if (!sdev) {
 			continue;
 		}
@@ -1150,7 +1173,7 @@ spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_
 		spdk_json_write_name(w, "id");
 		spdk_json_write_int32(w, spdk_scsi_dev_get_id(sdev));
 
-		spdk_json_write_name(w, "device_name");
+		spdk_json_write_name(w, "target_name");
 		spdk_json_write_string(w, spdk_scsi_dev_get_name(sdev));
 
 		spdk_json_write_name(w, "luns");
