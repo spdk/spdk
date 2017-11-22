@@ -104,6 +104,9 @@ struct vhost_device_ops {
 	 * is used to inform the application on such change.
 	 */
 	int (*features_changed)(int vid, uint64_t features);
+	int (*vhost_nvme_admin_passthrough)(int vid, void *cmd, void *cqe, void *buf);
+	int (*vhost_nvme_set_cq_call)(int vid, uint16_t qid, int fd);
+	int (*vhost_nvme_get_cap)(int vid, uint64_t *cap);
 
 	int (*new_connection)(int vid);
 	void (*destroy_connection)(int vid);
