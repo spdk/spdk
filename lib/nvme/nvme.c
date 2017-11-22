@@ -45,6 +45,16 @@ int32_t			spdk_nvme_retry_count;
 /* gross timeout of 180 seconds in milliseconds */
 static int g_nvme_driver_timeout_ms = 3 * 60 * 1000;
 
+static TAILQ_HEAD(, spdk_nvme_ctrlr) g_nvme_init_ctrlrs =
+	TAILQ_HEAD_INITIALIZER(g_nvme_init_ctrlrs);
+
+/* Caller must hold g_spdk_nvme_driver->lock */
+void
+nvme_ctrlr_connected(struct spdk_nvme_ctrlr *ctrlr)
+{
+	TAILQ_INSERT_TAIL(&g_nvme_init_ctrlrs, ctrlr, tailq);
+}
+
 int
 spdk_nvme_detach(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -300,7 +310,6 @@ nvme_driver_init(void)
 
 	g_spdk_nvme_driver->initialized = false;
 
-	TAILQ_INIT(&g_spdk_nvme_driver->init_ctrlrs);
 	TAILQ_INIT(&g_spdk_nvme_driver->attached_ctrlrs);
 
 	SPDK_STATIC_ASSERT(sizeof(host_id) == sizeof(g_spdk_nvme_driver->default_extended_host_id),
@@ -329,7 +338,7 @@ nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
 			return -1;
 		}
 
-		TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->init_ctrlrs, ctrlr, tailq);
+		TAILQ_INSERT_TAIL(&g_nvme_init_ctrlrs, ctrlr, tailq);
 		return 0;
 	}
 
@@ -345,9 +354,9 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 
 	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 
-	/* Initialize all new controllers in the init_ctrlrs list in parallel. */
-	while (!TAILQ_EMPTY(&g_spdk_nvme_driver->init_ctrlrs)) {
-		TAILQ_FOREACH_SAFE(ctrlr, &g_spdk_nvme_driver->init_ctrlrs, tailq, ctrlr_tmp) {
+	/* Initialize all new controllers in the g_nvme_init_ctrlrs list in parallel. */
+	while (!TAILQ_EMPTY(&g_nvme_init_ctrlrs)) {
+		TAILQ_FOREACH_SAFE(ctrlr, &g_nvme_init_ctrlrs, tailq, ctrlr_tmp) {
 			/* Drop the driver lock while calling nvme_ctrlr_process_init()
 			 *  since it needs to acquire the driver lock internally when calling
 			 *  nvme_ctrlr_start().
@@ -362,7 +371,7 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 
 			if (start_rc) {
 				/* Controller failed to initialize. */
-				TAILQ_REMOVE(&g_spdk_nvme_driver->init_ctrlrs, ctrlr, tailq);
+				TAILQ_REMOVE(&g_nvme_init_ctrlrs, ctrlr, tailq);
 				nvme_ctrlr_destruct(ctrlr);
 				rc = -1;
 				break;
@@ -373,7 +382,7 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 				 * Controller has been initialized.
 				 *  Move it to the attached_ctrlrs list.
 				 */
-				TAILQ_REMOVE(&g_spdk_nvme_driver->init_ctrlrs, ctrlr, tailq);
+				TAILQ_REMOVE(&g_nvme_init_ctrlrs, ctrlr, tailq);
 				TAILQ_INSERT_TAIL(&g_spdk_nvme_driver->attached_ctrlrs, ctrlr, tailq);
 
 				/*
