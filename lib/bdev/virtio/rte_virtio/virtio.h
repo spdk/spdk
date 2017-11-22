@@ -70,11 +70,6 @@
  */
 #define VQ_RING_DESC_CHAIN_END 32768
 
-/* This is a work-around for fio-plugin bug, where each
- * fio job thread returns local lcore id = -1
- */
-#define SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED (UINT32_MAX - 1)
-
 /* Number of non-request queues - eventq and controlq */
 #define SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED 2
 
@@ -188,8 +183,8 @@ struct virtqueue {
 	uint16_t  vq_queue_index;   /**< PCI queue index */
 	uint16_t  *notify_addr;
 
-	/** Logical CPU ID that's polling this queue. */
-	uint32_t owner_lcore;
+	/** Whether this virtqueue is in use or not. */
+	bool acquired;
 
 	/** Response poller. */
 	struct spdk_poller	*poller;
