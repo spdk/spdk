@@ -194,11 +194,12 @@ vhost_scsi_dev_remove_dev_test(void)
 	svdev->vdev.name = strdup("vhost.0");
 
 	/* Invalid device number */
-	rc = spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, SPDK_VHOST_SCSI_CTRLR_MAX_DEVS + 1, NULL, NULL);
+	rc = spdk_vhost_scsi_dev_remove_tgt(&svdev->vdev, SPDK_VHOST_SCSI_CTRLR_MAX_DEVS + 1, NULL,
+					    NULL);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Try to remove nonexistent device */
-	rc = spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, 0, NULL, NULL);
+	rc = spdk_vhost_scsi_dev_remove_tgt(&svdev->vdev, 0, NULL, NULL);
 	CU_ASSERT(rc == -ENODEV);
 
 	/* Try to remove device when controller is in use */
@@ -206,7 +207,7 @@ vhost_scsi_dev_remove_dev_test(void)
 	scsi_dev = alloc_scsi_dev();
 	svdev->scsi_dev[0] = scsi_dev;
 	MOCK_SET(spdk_vhost_dev_has_feature, bool, false);
-	rc = spdk_vhost_scsi_dev_remove_dev(&svdev->vdev, 0, NULL, NULL);
+	rc = spdk_vhost_scsi_dev_remove_tgt(&svdev->vdev, 0, NULL, NULL);
 	CU_ASSERT(rc == -ENOTSUP);
 	free(scsi_dev);
 	free(svdev->vdev.name);
@@ -223,7 +224,7 @@ vhost_scsi_dev_add_dev_test(void)
 	struct spdk_scsi_dev *scsi_dev;
 
 	/* Add device to controller without name */
-	rc = spdk_vhost_scsi_dev_add_dev(NULL, 0, "Malloc0");
+	rc = spdk_vhost_scsi_dev_add_tgt(NULL, 0, "Malloc0");
 	CU_ASSERT(rc == -EINVAL);
 
 	svdev = alloc_svdev();
@@ -231,37 +232,37 @@ vhost_scsi_dev_add_dev_test(void)
 	MOCK_SET(spdk_vhost_dev_has_feature, bool, false);
 
 	/* Add device when max devices is reached */
-	rc = spdk_vhost_scsi_dev_add_dev(vdev,
+	rc = spdk_vhost_scsi_dev_add_tgt(vdev,
 					 SPDK_VHOST_SCSI_CTRLR_MAX_DEVS + 1, "Malloc0");
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Add device but lun has no name */
-	rc = spdk_vhost_scsi_dev_add_dev(vdev, 0, NULL);
+	rc = spdk_vhost_scsi_dev_add_tgt(vdev, 0, NULL);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Add device but lun has too long name */
 	memset(long_name, 'x', sizeof(long_name));
 	long_name[SPDK_SCSI_DEV_MAX_NAME] = 0;
-	rc = spdk_vhost_scsi_dev_add_dev(vdev, 0, long_name);
+	rc = spdk_vhost_scsi_dev_add_tgt(vdev, 0, long_name);
 	CU_ASSERT(rc != 0);
 
 	/* Add device to a controller which is in use */
 	svdev->vdev.lcore = 0;
-	rc = spdk_vhost_scsi_dev_add_dev(vdev, 0, "Malloc0");
+	rc = spdk_vhost_scsi_dev_add_tgt(vdev, 0, "Malloc0");
 	CU_ASSERT(rc == -ENOTSUP);
 
 	/* Add device to controller with already occupied device */
 	vdev->lcore = -1;
 	scsi_dev = alloc_scsi_dev();
 	svdev->scsi_dev[0] = scsi_dev;
-	rc = spdk_vhost_scsi_dev_add_dev(vdev, 0, "Malloc0");
+	rc = spdk_vhost_scsi_dev_add_tgt(vdev, 0, "Malloc0");
 	CU_ASSERT(rc == -EEXIST);
 	free(scsi_dev);
 	svdev->scsi_dev[0] = NULL;
 
 	/* Failed to create device */
 	MOCK_SET_P(spdk_scsi_dev_construct, struct spdk_scsi_dev *, NULL);
-	rc = spdk_vhost_scsi_dev_add_dev(vdev, 0, "Malloc0");
+	rc = spdk_vhost_scsi_dev_add_tgt(vdev, 0, "Malloc0");
 	CU_ASSERT(rc == -EINVAL);
 
 	free(svdev);
