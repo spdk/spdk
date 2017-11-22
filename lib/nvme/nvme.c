@@ -413,7 +413,7 @@ nvme_init_controllers(void *cb_ctx, spdk_nvme_attach_cb attach_cb)
 }
 
 /* This function must not be called while holding g_spdk_nvme_driver->lock */
-static struct spdk_nvme_ctrlr *
+struct spdk_nvme_ctrlr *
 spdk_nvme_get_ctrlr_by_trid(const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvme_ctrlr *ctrlr = NULL;
