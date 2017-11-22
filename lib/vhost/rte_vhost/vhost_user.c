@@ -35,6 +35,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 #include <unistd.h>
 #include <sys/mman.h>
 #include <sys/types.h>
@@ -76,6 +77,11 @@ static const char *vhost_message_str[VHOST_USER_MAX] = {
 	[VHOST_USER_SET_VRING_ENABLE]  = "VHOST_USER_SET_VRING_ENABLE",
 	[VHOST_USER_SEND_RARP]  = "VHOST_USER_SEND_RARP",
 	[VHOST_USER_NET_SET_MTU]  = "VHOST_USER_NET_SET_MTU",
+	[VHOST_USER_NVME_ADMIN] = "VHOST_USER_NVME_ADMIN",
+	[VHOST_USER_NVME_SET_CQ_CALL] = "VHOST_USER_NVME_SET_CQ_CALL",
+	[VHOST_USER_NVME_GET_CAP] = "VHOST_USER_NVME_GET_CAP",
+	[VHOST_USER_NVME_START_STOP] = "VHOST_USER_NVME_START_STOP",
+	[VHOST_USER_NVME_IO_CMD] = "VHOST_USER_NVME_IO_CMD"
 };
 
 static uint64_t
@@ -536,6 +542,10 @@ vhost_user_set_mem_table(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 	memcpy(&dev->mem_table, &pmsg->payload.memory, sizeof(dev->mem_table));
 	memcpy(dev->mem_table_fds, pmsg->fds, sizeof(dev->mem_table_fds));
 	dev->has_new_mem_table = 1;
+	if (dev->has_new_mem_table) {
+		vhost_setup_mem_table(dev);
+		dev->has_new_mem_table = 0;
+	}
 
 	return 0;
 }
@@ -1016,12 +1026,59 @@ vhost_user_check_and_alloc_queue_pair(struct virtio_net *dev, VhostUserMsg *msg)
 	return alloc_vring_queue(dev, vring_idx);
 }
 
+static int
+vhost_user_nvme_io_request_passthrough(struct virtio_net *dev,
+				       uint16_t qid, uint16_t tail_head,
+				       bool is_submission_queue)
+{
+	return -1;
+}
+
+static int
+vhost_user_nvme_admin_passthrough(struct virtio_net *dev,
+				  void *cmd, void *cqe, void *buf)
+{
+	if (dev->notify_ops->vhost_nvme_admin_passthrough) {
+		return dev->notify_ops->vhost_nvme_admin_passthrough(dev->vid, cmd, cqe, buf);
+	}
+
+	return -1;
+}
+
+static int
+vhost_user_nvme_set_cq_call(struct virtio_net *dev, uint16_t qid, int fd)
+{
+	if (dev->notify_ops->vhost_nvme_set_cq_call) {
+		return dev->notify_ops->vhost_nvme_set_cq_call(dev->vid, qid, fd);
+	}
+
+	return -1;
+}
+
+static int
+vhost_user_nvme_get_cap(struct virtio_net *dev, uint64_t *cap)
+{
+	if (dev->notify_ops->vhost_nvme_get_cap) {
+		return dev->notify_ops->vhost_nvme_get_cap(dev->vid, cap);
+	}
+
+	return -1;
+}
+
 int
 vhost_user_msg_handler(int vid, int fd)
 {
 	struct virtio_net *dev;
 	struct VhostUserMsg msg;
+	struct vhost_vring_file file;
 	int ret;
+	uint64_t cap;
+	uint64_t enable;
+	uint8_t cqe[16];
+	uint8_t cmd[64];
+	uint8_t buf[4096];
+	uint16_t qid, tail_head;
+	bool is_submission_queue;
 
 	dev = get_device(vid);
 	if (dev == NULL)
@@ -1063,6 +1120,57 @@ vhost_user_msg_handler(int vid, int fd)
 	}
 
 	switch (msg.request) {
+	case VHOST_USER_NVME_ADMIN:
+		memcpy(cmd, &msg.payload.nvme.cmd, 64);
+		ret = vhost_user_nvme_admin_passthrough(dev, cmd, cqe, buf);
+		memcpy(&msg.payload.nvme.cmd, &cqe, 16);
+		msg.size = 16;
+		/* NVMe Identify Command */
+		if (cmd[0] == 0x06) {
+			memcpy(msg.payload.nvme.buf, &buf, 4096);
+			msg.size += 4096;
+		} else if (cmd[0] == 0x09 || cmd[0] == 0x0a) {
+			memcpy(&msg.payload.nvme.buf, &buf, 4);
+			msg.size += 4096;
+
+		}
+		send_vhost_message(fd, &msg);
+		break;
+	case VHOST_USER_NVME_SET_CQ_CALL:
+		file.index = msg.payload.u64 & VHOST_USER_VRING_IDX_MASK;
+		file.fd = msg.fds[0];
+		ret = vhost_user_nvme_set_cq_call(dev, file.index, file.fd);
+		break;
+	case VHOST_USER_NVME_GET_CAP:
+		ret = vhost_user_nvme_get_cap(dev, &cap);
+		if (!ret)
+			msg.payload.u64 = cap;
+		else
+			msg.payload.u64 = 0;
+		msg.size = sizeof(msg.payload.u64);
+		send_vhost_message(fd, &msg);
+		break;
+	case VHOST_USER_NVME_START_STOP:
+		enable = msg.payload.u64;
+		/* device must be started before set cq call */
+		if (enable) {
+			if (!(dev->flags & VIRTIO_DEV_RUNNING)) {
+				if (dev->notify_ops->new_device(dev->vid) == 0)
+					dev->flags |= VIRTIO_DEV_RUNNING;
+			}
+		} else {
+			if (dev->flags & VIRTIO_DEV_RUNNING) {
+				dev->flags &= ~VIRTIO_DEV_RUNNING;
+				dev->notify_ops->destroy_device(dev->vid);
+			}
+		}
+		break;
+	case VHOST_USER_NVME_IO_CMD:
+		qid = msg.payload.nvme_io.qid;
+		tail_head = msg.payload.nvme_io.tail_head;
+		is_submission_queue = (msg.payload.nvme_io.queue_type == VHOST_USER_NVME_SUBMISSION_QUEUE) ? true : false;
+		vhost_user_nvme_io_request_passthrough(dev, qid, tail_head, is_submission_queue);
+		break;
 	case VHOST_USER_GET_FEATURES:
 		msg.payload.u64 = vhost_user_get_features(dev);
 		msg.size = sizeof(msg.payload.u64);

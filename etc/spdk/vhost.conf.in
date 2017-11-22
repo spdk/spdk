@@ -132,3 +132,17 @@
   #  this cpumask.  By default, it not specified, will use any core in the
   #  SPDK process.
   #Cpumask 0x1
+
+#[VhostNvme0]
+  # Define name for controller
+  #Name vhost.0
+  #NumberOfQueues 2
+  # Use first partition from the first NVMe device
+  #Namespace Nvme0n1p0
+  # Use first partition from the first NVMe device
+  #Namespace Nvme0n1p1
+
+  # Start the poller for this vhost controller on one of the cores in
+  #  this cpumask.  By default, it not specified, will use any core in the
+  #  SPDK process.
+  #Cpumask 0x1

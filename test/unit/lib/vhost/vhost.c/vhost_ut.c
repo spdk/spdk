@@ -74,6 +74,27 @@ DEFINE_STUB(rte_vhost_set_vhost_vring_last_idx, int,
 	    (int vid, uint16_t vring_idx, uint16_t last_avail_idx, uint16_t last_used_idx), 0);
 DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 
+int spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf)
+{
+	return 0;
+}
+
+int spdk_vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd)
+{
+	return 0;
+}
+
+int spdk_vhost_nvme_get_cap(int vid, uint64_t *cap)
+{
+	return 0;
+}
+
+int
+spdk_vhost_nvme_controller_construct(void)
+{
+	return 0;
+}
+
 static int
 test_setup(void)
 {
