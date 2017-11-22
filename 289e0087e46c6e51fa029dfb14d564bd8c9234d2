@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "007ff654_f7381685",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-22T06:49:46Z",
+      "side": 1,
+      "message": "we need one default queue depth to set up the target-\u003equeue_depth if the configuration is not valid.",
+      "range": {
+        "startLine": 663,
+        "startChar": 2,
+        "endLine": 663,
+        "endChar": 13
+      },
+      "revId": "289e0087e46c6e51fa029dfb14d564bd8c9234d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
