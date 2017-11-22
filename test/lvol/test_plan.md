@@ -341,11 +341,13 @@ Positive test for removing lvol store persistently
 Steps:
 - construct_lvol_store on NVMe bdev
 - destroy lvol store
-- restart vhost
+- delete NVMe bdev
+- add NVMe bdev
 - check if destroyed lvol store does not exist on NVMe bdev
 
 Expected result:
-- get_lvol_stores should not report any existsing lvol stores in configuration after restarting Vhost instance
+- get_lvol_stores should not report any existsing lvol stores in configuration
+  after deleting and adding NVMe bdev
 - no other operation fails
 
 ### destroy_lvol_store - negative tests
@@ -595,8 +597,8 @@ Positive test for tasting lvol store.
 Steps:
 - run vhost app with NVMe bdev
 - construct lvol store on NVMe bdev
-- stop vhost
-- start vhost
+- delete NVMe bdev
+- add NVMe bdev
 - check if lvol store still exists in vhost configuration
 - destroy lvol store from NVMe bdev
 

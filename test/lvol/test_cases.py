@@ -75,6 +75,7 @@ class TestCases(object):
         self.app_path = app_path
         self.lvs_name = "lvs_test"
         self.lbd_name = "lbd_test"
+        self.vhost_config_path = path.join(path.dirname(sys.argv[0]), 'vhost.conf')
 
     def _gen_lvs_uudi(self):
         return str(uuid4())
@@ -140,6 +141,17 @@ class TestCases(object):
             if not pid:
                 return 1
         return 0
+
+    def _find_traddress_for_nvme(self, nvme_name):
+        with open(self.vhost_config_path) as file:
+            for line in file:
+                if nvme_name in line and "TransportID" in line:
+                    for word in line.split(" "):
+                        if word.startswith("traddr"):
+                            return word.split(":", 1)[1].replace("\"", "")
+
+        print("INFO: Traddr not found for Nvme {nvme}".format(nvme=nvme_name))
+        return -1
 
     # positive tests
     def test_case1(self):
@@ -503,11 +515,7 @@ class TestCases(object):
     def test_case255(self):
         header(255)
         base_path = path.dirname(sys.argv[0])
-        vhost_path = path.join(self.app_path, 'vhost')
-        config_path = path.join(base_path, 'vhost.conf')
-        pid_path = path.join(base_path, 'vhost.pid')
         base_name = "Nvme0n1"
-        self.c.destroy_lvol_store(self.lvs_name)
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
@@ -515,12 +523,12 @@ class TestCases(object):
                                                   self.cluster_size)
         if self.c.destroy_lvol_store(self.lvs_name) != 0:
             fail_count += 1
-        fail_count += self._stop_vhost(pid_path)
-        remove(pid_path)
-        if self._start_vhost(vhost_path, config_path, pid_path) != 0:
+        traddr = self._find_traddress_for_nvme("Nvme0")
+        if traddr != -1:
+            self.c.delete_bdev(base_name)
+            self.c.construct_nvme_bdev("Nvme0", "PCIe", traddr)
+        else:
             fail_count += 1
-            footer(255)
-            return fail_count
         ret_value = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                  self.cluster_size)
         if ret_value == 0:
@@ -773,22 +781,18 @@ class TestCases(object):
 
     def test_case651(self):
         header(651)
-        base_path = path.dirname(sys.argv[0])
-        vhost_path = path.join(self.app_path, 'vhost')
-        config_path = path.join(base_path, 'vhost.conf')
-        pid_path = path.join(base_path, 'vhost.pid')
         base_name = "Nvme0n1"
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
-        fail_count += self._stop_vhost(pid_path)
-        remove(pid_path)
-        if self._start_vhost(vhost_path, config_path, pid_path) != 0:
+        traddr = self._find_traddress_for_nvme("Nvme0")
+        if traddr != -1:
+            self.c.delete_bdev(base_name)
+            self.c.construct_nvme_bdev("Nvme0", "PCIe", traddr)
+        else:
             fail_count += 1
-            footer(651)
-            return fail_count
         if self.c.check_get_lvol_stores(base_name, uuid_store,
                                         self.cluster_size) != 0:
             fail_count += 1
