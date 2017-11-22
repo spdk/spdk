@@ -66,7 +66,6 @@ static bool g_run_failed = false;
 static bool g_zcopy = true;
 static struct spdk_mempool *task_pool;
 static int g_mem_size = 0;
-static int g_task_num;
 static unsigned g_master_core;
 
 static struct spdk_poller *g_perf_timer = NULL;
@@ -129,7 +128,7 @@ bdevperf_free_target(struct io_target *target)
 	TAILQ_FOREACH_SAFE(task, &target->task_list, link, tmp) {
 		TAILQ_REMOVE(&target->task_list, task, link);
 		spdk_dma_free(task->buf);
-		spdk_mempool_put(task_pool, task);
+		free(task);
 	}
 
 	free(target->name);
@@ -149,14 +148,6 @@ blockdev_heads_destroy(void)
 			bdevperf_free_target(target);
 			target = next_target;
 		}
-	}
-
-	if (!task_pool) {
-		if (spdk_mempool_count(task_pool) != (size_t)g_task_num) {
-			SPDK_ERRLOG("task_pool count is %zu but should be %d\n",
-				    spdk_mempool_count(task_pool), g_task_num);
-		}
-		spdk_mempool_free(task_pool);
 	}
 }
 
@@ -593,13 +584,6 @@ bdevperf_construct_targets_tasks(void)
 	if (g_reset) {
 		task_num += 1;
 	}
-	g_task_num = g_target_count * task_num;
-	task_pool = spdk_mempool_create("task_pool", g_task_num, sizeof(struct bdevperf_task),
-					64, SPDK_ENV_SOCKET_ID_ANY);
-	if (!task_pool) {
-		SPDK_ERRLOG("Cannot allocate %d tasks\n", g_task_num);
-		goto ret;
-	}
 
 	/* Initialize task list for each target */
 	for (i = 0; i < spdk_env_get_core_count(); i++) {
@@ -609,9 +593,9 @@ bdevperf_construct_targets_tasks(void)
 		}
 		while (target != NULL) {
 			for (j = 0; j < task_num; j++) {
-				task = spdk_mempool_get(task_pool);
+				task = calloc(1, sizeof(struct bdevperf_task));
 				if (!task) {
-					fprintf(stderr, "Get task from task_pool failed\n");
+					fprintf(stderr, "Failed to allocate task from memory\n");
 					goto ret;
 				}
 
