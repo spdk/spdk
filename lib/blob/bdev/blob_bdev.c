@@ -210,7 +210,6 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 
 	rc = spdk_bdev_open(bdev, true, remove_cb, remove_ctx, &desc);
 	if (rc != 0) {
-		SPDK_ERRLOG("could not open bdev, error=%d\n", rc);
 		free(b);
 		return NULL;
 	}

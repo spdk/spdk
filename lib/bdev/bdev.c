@@ -1862,13 +1862,14 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 
 	desc = calloc(1, sizeof(*desc));
 	if (desc == NULL) {
+		SPDK_ERRLOG("Failed to allocate memory for bdev descriptor\n");
 		return -ENOMEM;
 	}
 
 	pthread_mutex_lock(&bdev->mutex);
 
 	if (write && bdev->claim_module) {
-		SPDK_ERRLOG("failed, %s already claimed\n", bdev->name);
+		SPDK_INFOLOG(SPDK_TRACE_BDEV, "Could not open %s - already claimed\n", bdev->name);
 		free(desc);
 		pthread_mutex_unlock(&bdev->mutex);
 		return -EPERM;
