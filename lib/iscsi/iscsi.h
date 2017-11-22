@@ -107,7 +107,11 @@
  */
 #define MAX_LARGE_DATAIN_PER_CONNECTION 64
 
-#define NUM_PDU_PER_CONNECTION	(2 * (SPDK_ISCSI_MAX_QUEUE_DEPTH + MAX_LARGE_DATAIN_PER_CONNECTION + 8))
+/*
+ * Defines default maximum queue depth per connection and this can be
+ * changed by configuration file.
+ */
+#define DEFAULT_MAX_QUEUE_DEPTH	64
 
 #define SPDK_ISCSI_MAX_BURST_LENGTH	\
 		(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH * MAX_DATA_OUT_PER_CONNECTION)
@@ -276,6 +280,7 @@ struct spdk_iscsi_globals {
 	uint32_t MaxSessions;
 	uint32_t MaxConnectionsPerSession;
 	uint32_t MaxConnections;
+	uint32_t MaxQueueDepth;
 	uint32_t DefaultTime2Wait;
 	uint32_t DefaultTime2Retain;
 	uint32_t ImmediateData;

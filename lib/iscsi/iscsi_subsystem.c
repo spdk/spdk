@@ -71,6 +71,7 @@ static void *g_fini_cb_arg;
 "  MaxSessions %d\n" \
 "  MaxConnectionsPerSession %d\n" \
 "  MaxConnections %d\n" \
+"  MaxQueueDepth %d\n" \
 "\n" \
 "  # iSCSI initial parameters negotiate with initiators\n" \
 "  # NOTE: incorrect values might crash\n" \
@@ -105,6 +106,7 @@ spdk_iscsi_config_dump_section(FILE *fp)
 		g_spdk_iscsi.timeout, authmethod, authgroup,
 		g_spdk_iscsi.MaxSessions, g_spdk_iscsi.MaxConnectionsPerSession,
 		g_spdk_iscsi.MaxConnections,
+		g_spdk_iscsi.MaxQueueDepth,
 		g_spdk_iscsi.DefaultTime2Wait, g_spdk_iscsi.DefaultTime2Retain,
 		(g_spdk_iscsi.ImmediateData == 1) ? "Yes" : "No",
 		g_spdk_iscsi.ErrorRecoveryLevel);
@@ -320,7 +322,8 @@ spdk_mobj_ctor(struct rte_mempool *mp, __attribute__((unused)) void *arg,
 #endif
 }
 
-#define PDU_POOL_SIZE(iscsi)	(iscsi->MaxConnections * NUM_PDU_PER_CONNECTION)
+#define NUM_PDU_PER_CONNECTION(iscsi)	(2 * (iscsi->MaxQueueDepth + MAX_LARGE_DATAIN_PER_CONNECTION + 8))
+#define PDU_POOL_SIZE(iscsi)	(iscsi->MaxConnections * NUM_PDU_PER_CONNECTION(iscsi))
 #define IMMEDIATE_DATA_POOL_SIZE(iscsi)	(iscsi->MaxConnections * 128)
 #define DATA_OUT_POOL_SIZE(iscsi)	(iscsi->MaxConnections * MAX_DATA_OUT_PER_CONNECTION)
 
@@ -533,6 +536,7 @@ spdk_iscsi_log_globals(void)
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxSessions %d\n", g_spdk_iscsi.MaxSessions);
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxConnectionsPerSession %d\n",
 		      g_spdk_iscsi.MaxConnectionsPerSession);
+	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "MaxQueueDepth %d\n", g_spdk_iscsi.MaxQueueDepth);
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DefaultTime2Wait %d\n",
 		      g_spdk_iscsi.DefaultTime2Wait);
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "DefaultTime2Retain %d\n",
@@ -577,6 +581,7 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 	char *authfile, *nodebase;
 	int MaxSessions;
 	int MaxConnectionsPerSession;
+	int MaxQueueDepth;
 	int DefaultTime2Wait;
 	int DefaultTime2Retain;
 	int ErrorRecoveryLevel;
@@ -639,6 +644,18 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 			g_spdk_iscsi.MaxConnectionsPerSession = MaxConnectionsPerSession;
 		}
 	}
+
+	MaxQueueDepth = spdk_conf_section_get_intval(sp, "MaxQueueDepth");
+	if (MaxQueueDepth >= 0) {
+		if (MaxQueueDepth == 0) {
+			SPDK_ERRLOG("MaxQueueDepth == 0 invalid, ignoring\n");
+		} else if (MaxQueueDepth > 256) {
+			SPDK_ERRLOG("MaxQueueDepth == %d invalid, ignoring\n", MaxQueueDepth);
+		} else {
+			g_spdk_iscsi.MaxQueueDepth = MaxQueueDepth;
+		}
+	}
+
 	DefaultTime2Wait = spdk_conf_section_get_intval(sp, "DefaultTime2Wait");
 	if (DefaultTime2Wait >= 0) {
 		if (DefaultTime2Wait > 3600) {
@@ -745,6 +762,7 @@ spdk_iscsi_app_read_parameters(void)
 
 	g_spdk_iscsi.MaxSessions = DEFAULT_MAX_SESSIONS;
 	g_spdk_iscsi.MaxConnectionsPerSession = DEFAULT_MAX_CONNECTIONS_PER_SESSION;
+	g_spdk_iscsi.MaxQueueDepth = DEFAULT_MAX_QUEUE_DEPTH;
 	g_spdk_iscsi.DefaultTime2Wait = DEFAULT_DEFAULTTIME2WAIT;
 	g_spdk_iscsi.DefaultTime2Retain = DEFAULT_DEFAULTTIME2RETAIN;
 	g_spdk_iscsi.ImmediateData = DEFAULT_IMMEDIATEDATA;
