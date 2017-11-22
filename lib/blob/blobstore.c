@@ -174,7 +174,7 @@ _spdk_blob_mark_clean(struct spdk_blob *blob)
 	return 0;
 }
 
-static void
+static int
 _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *blob)
 {
 	struct spdk_blob_md_descriptor *desc;
@@ -195,19 +195,28 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 
 			desc_extent = (struct spdk_blob_md_descriptor_extent *)desc;
 
-			assert(desc_extent->length > 0);
-			assert(desc_extent->length % sizeof(desc_extent->extents[0]) == 0);
+			if (desc_extent->length == 0 ||
+			    (desc_extent->length % sizeof(desc_extent->extents[0]) != 0)) {
+				return -EINVAL;
+			}
 
 			for (i = 0; i < desc_extent->length / sizeof(desc_extent->extents[0]); i++) {
 				for (j = 0; j < desc_extent->extents[i].length; j++) {
-					assert(spdk_bit_array_get(blob->bs->used_clusters, desc_extent->extents[i].cluster_idx + j));
+					if (!spdk_bit_array_get(blob->bs->used_clusters,
+								desc_extent->extents[i].cluster_idx + j)) {
+						return -EINVAL;
+					}
 					cluster_count++;
 				}
 			}
 
-			assert(cluster_count > 0);
+			if (cluster_count == 0) {
+				return -EINVAL;
+			}
 			tmp = realloc(blob->active.clusters, cluster_count * sizeof(uint64_t));
-			assert(tmp != NULL);
+			if (tmp == NULL) {
+				return -ENOMEM;
+			}
 			blob->active.clusters = tmp;
 			blob->active.cluster_array_size = cluster_count;
 
@@ -224,20 +233,31 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 
 			desc_xattr = (struct spdk_blob_md_descriptor_xattr *)desc;
 
-			assert(desc_xattr->length == sizeof(desc_xattr->name_length) +
-			       sizeof(desc_xattr->value_length) +
-			       desc_xattr->name_length + desc_xattr->value_length);
+			if (desc_xattr->length != sizeof(desc_xattr->name_length) +
+			    sizeof(desc_xattr->value_length) +
+			    desc_xattr->name_length + desc_xattr->value_length) {
+				return -EINVAL;
+			}
 
 			xattr = calloc(1, sizeof(*xattr));
-			assert(xattr != NULL);
+			if (xattr == NULL) {
+				return -ENOMEM;
+			}
 
 			xattr->name = malloc(desc_xattr->name_length + 1);
-			assert(xattr->name);
+			if (xattr->name == NULL) {
+				free(xattr);
+				return -ENOMEM;
+			}
 			strncpy(xattr->name, desc_xattr->name, desc_xattr->name_length);
 			xattr->name[desc_xattr->name_length] = '\0';
 
 			xattr->value = malloc(desc_xattr->value_length);
-			assert(xattr->value != NULL);
+			if (xattr->value == NULL) {
+				free(xattr->name);
+				free(xattr);
+				return -ENOMEM;
+			}
 			xattr->value_len = desc_xattr->value_length;
 			memcpy(xattr->value,
 			       (void *)((uintptr_t)desc_xattr->name + desc_xattr->name_length),
@@ -246,7 +266,7 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			TAILQ_INSERT_TAIL(&blob->xattrs, xattr, link);
 		} else {
 			/* Error */
-			break;
+			return -EINVAL;
 		}
 
 		/* Advance to the next descriptor */
@@ -256,6 +276,8 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 		}
 		desc = (struct spdk_blob_md_descriptor *)((uintptr_t)page->descriptors + cur_desc);
 	}
+
+	return 0;
 }
 
 static int
@@ -264,6 +286,7 @@ _spdk_blob_parse(const struct spdk_blob_md_page *pages, uint32_t page_count,
 {
 	const struct spdk_blob_md_page *page;
 	uint32_t i;
+	int rc;
 
 	assert(page_count > 0);
 	assert(pages[0].sequence_num == 0);
@@ -287,7 +310,10 @@ _spdk_blob_parse(const struct spdk_blob_md_page *pages, uint32_t page_count,
 		assert(page->id == blob->id);
 		assert(page->sequence_num == i);
 
-		_spdk_blob_parse_page(page, blob);
+		rc = _spdk_blob_parse_page(page, blob);
+		if (rc != 0) {
+			return rc;
+		}
 	}
 
 	return 0;
