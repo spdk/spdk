@@ -57,6 +57,8 @@
 
 #include "virtio.h"
 
+#define CTRLQ_RING_SIZE 16
+
 struct virtio_driver g_virtio_driver = {
 	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.init_ctrlrs),
 	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.attached_ctrlrs),
@@ -305,8 +307,16 @@ virtio_dev_init(struct virtio_dev *dev, uint64_t req_features)
 		return -1;
 
 	ret = virtio_alloc_queues(dev);
-	if (ret < 0)
+	if (ret < 0) {
 		return ret;
+	}
+
+	dev->ctrlq_ring = spdk_ring_create(SPDK_RING_TYPE_MP_SC, CTRLQ_RING_SIZE,
+					   SPDK_ENV_SOCKET_ID_ANY);
+	if (dev->ctrlq_ring == NULL) {
+		SPDK_ERRLOG("Failed to allocate send ring for the controlq.\n");
+		return -ENOMEM;
+	}
 
 	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_DRIVER_OK);
 	return 0;
@@ -317,6 +327,7 @@ virtio_dev_free(struct virtio_dev *dev)
 {
 	virtio_free_queues(dev);
 	virtio_dev_backend_ops(dev)->free_vdev(dev);
+	spdk_ring_free(dev->ctrlq_ring);
 	pthread_mutex_destroy(&dev->mutex);
 	free(dev);
 }

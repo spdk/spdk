@@ -96,6 +96,9 @@ struct virtio_dev {
 
 	int		is_hw;
 
+	/** Ring for passing messages to the controller */
+	struct spdk_ring *ctrlq_ring;
+
 	/** Modern/legacy virtio device flag. */
 	uint8_t		modern;
 
@@ -188,9 +191,6 @@ struct virtqueue {
 
 	/** Response poller. */
 	struct spdk_poller	*poller;
-
-	/** Context for response poller. */
-	void *poller_ctx;
 
 	struct vq_desc_extra vq_descx[0];
 };
