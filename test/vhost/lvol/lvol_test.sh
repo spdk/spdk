@@ -16,7 +16,6 @@ nested_lvol=false
 distribute_cores=false
 base_bdev_size=10000
 nest_bdev_size=""
-
 function usage()
 {
     [[ ! -z $2 ]] && ( echo "$2"; echo ""; )
@@ -233,7 +232,7 @@ if [[ "$ctrl_type" == "vhost_scsi" ]]; then
     for (( i=0; i<$vm_count; i++)); do
         echo "INFO: Removing devices from vhost SCSI controller naa.0.$i"
         for (( j=0; j<${#bdevs[@]}; j++)); do
-            $rpc_py remove_vhost_scsi_dev naa.0.$i $j
+            $rpc_py remove_vhost_scsi_target naa.0.$i $j
             echo -e "\tINFO: Removed device $j"
         done
         echo "Removing vhost SCSI controller naa.0.$i"
