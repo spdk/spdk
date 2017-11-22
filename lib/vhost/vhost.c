@@ -81,6 +81,9 @@ const struct vhost_device_ops g_spdk_vhost_ops = {
 	.set_config = set_config,
 	.new_connection = new_connection,
 	.destroy_connection = destroy_connection,
+	.vhost_nvme_admin_passthrough = spdk_vhost_nvme_admin_passthrough,
+	.vhost_nvme_set_cq_call = spdk_vhost_nvme_set_cq_call,
+	.vhost_nvme_get_cap = spdk_vhost_nvme_get_cap,
 };
 
 static struct spdk_vhost_dev *g_spdk_vhost_devices[MAX_VHOST_DEVICES];
@@ -1055,6 +1058,12 @@ spdk_vhost_startup(void *arg1, void *arg2)
 	if (ret != 0) {
 		SPDK_ERRLOG("Cannot construct vhost block controllers\n");
 		goto out;
+	}
+
+	ret = spdk_vhost_nvme_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost nvme controllers\n");
+		abort();
 	}
 
 	return;
