@@ -139,3 +139,7 @@ class Commands_Rpc(object):
             if bdev["product_name"] == "Logical Volume":
                 output.append(bdev)
         return output
+
+    def construct_nvme_bdev(self, nvme_name, trtype, traddr):
+        print("INFO: Add NVMe bdev {nvme}".format(nvme=nvme_name))
+        self.rpc.construct_nvme_bdev("-b", nvme_name, "-t", trtype, "-a", traddr)
