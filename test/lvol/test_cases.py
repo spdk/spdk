@@ -140,6 +140,30 @@ class TestCases(object):
                 return 1
         return 0
 
+    def _hot_plug(self, nvme_name):
+        nvme_name_to_pci = subprocess.Popen(["bash", "-c",  "[[ $(  grep %s %s ) =~ ([0-9a-fA-F]{4}(:[0-9a-fA-F]{2}){2}.[0-9a-fA-F]) ]] && echo ${BASH_REMATCH[1]}"
+                                            % (nvme_name, "./vhost.conf")], stdout=subprocess.PIPE).stdout.read().strip()
+        print ("INFO: Hotplug nvme %s" % nvme_name_to_pci)
+        process = subprocess.Popen("sudo bash -c \"echo '%s' > /sys/bus/pci/drivers/vfio-pci/bind\"" % (nvme_name_to_pci), shell=True)
+        try:
+            process.poll()
+            process.kill()
+        except Exception as e:
+            process.kill()
+            stdout, stderr = process.communicate()
+
+    def _hot_remove(self, nvme_name):
+        nvme_name_to_pci = subprocess.Popen(["bash", "-c", "[[ $(  grep %s %s ) =~ ([0-9a-fA-F]{4}(:[0-9a-fA-F]{2}){2}.[0-9a-fA-F]) ]] && echo ${BASH_REMATCH[1]}"
+                                            % (nvme_name, "./vhost.conf")], stdout=subprocess.PIPE).stdout.read().strip()
+        print ("INFO: Hotremove nvme %s" % nvme_name_to_pci)
+        process = subprocess.Popen("sudo bash -c \"echo '%s' > /sys/bus/pci/devices/%s/driver/unbind\"" % (nvme_name_to_pci, nvme_name_to_pci), shell=True)
+        try:
+            process.poll()
+            process.kill()
+        except Exception as e:
+            process.kill()
+            stdout, stderr = process.communicate()
+
     # positive tests
     def test_case1(self):
         header(1)
@@ -426,12 +450,8 @@ class TestCases(object):
                                                  self.cluster_size)
         fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                   self.cluster_size)
-        fail_count += self._stop_vhost(pid_path)
-        remove(pid_path)
-        if self._start_vhost(vhost_path, config_path, pid_path) != 0:
-            fail_count += 1
-            footer(13)
-            return fail_count
+        self._hot_remove("Nvme0")
+        self._hot_plug("Nvme0")
         ret_value = self.c.check_get_lvol_stores(base_name, uuid_store,
                                                  self.cluster_size)
         if ret_value != 0:
