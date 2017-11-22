@@ -22,6 +22,30 @@
       "revId": "289e0087e46c6e51fa029dfb14d564bd8c9234d2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7a8e6e6_f975840e",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-22T07:28:20Z",
+      "side": 1,
+      "message": "Hi Cunyin, thank you for pointing out my bug.\n\nqueue_depth is an argument and this code is no meaning.",
+      "parentUuid": "007ff654_f7381685",
+      "range": {
+        "startLine": 663,
+        "startChar": 2,
+        "endLine": 663,
+        "endChar": 13
+      },
+      "revId": "289e0087e46c6e51fa029dfb14d564bd8c9234d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
