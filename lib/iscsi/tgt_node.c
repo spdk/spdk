@@ -655,13 +655,13 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	target->header_digest = header_digest;
 	target->data_digest = data_digest;
 
-	if (queue_depth > SPDK_ISCSI_MAX_QUEUE_DEPTH) {
-		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "QueueDepth %d > Max %d.  Using %d instead.\n",
-			      queue_depth, SPDK_ISCSI_MAX_QUEUE_DEPTH,
-			      SPDK_ISCSI_MAX_QUEUE_DEPTH);
-		queue_depth = SPDK_ISCSI_MAX_QUEUE_DEPTH;
+	if (queue_depth > 0 && ((uint32_t)queue_depth <= g_spdk_iscsi.MaxQueueDepth)) {
+		target->queue_depth = queue_depth;
+	} else {
+		SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "QueueDepth %d is invalid and %d is used instead.\n",
+			      queue_depth, g_spdk_iscsi.MaxQueueDepth);
+		queue_depth = g_spdk_iscsi.MaxQueueDepth;
 	}
-	target->queue_depth = queue_depth;
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	g_spdk_iscsi.ntargets++;
@@ -843,7 +843,7 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 
 	val = spdk_conf_section_get_val(sp, "QueueDepth");
 	if (val == NULL) {
-		queue_depth = SPDK_ISCSI_MAX_QUEUE_DEPTH;
+		queue_depth = g_spdk_iscsi.MaxQueueDepth;
 	} else {
 		queue_depth = (int) strtol(val, NULL, 10);
 	}
