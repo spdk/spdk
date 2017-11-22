@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c92957c_27611eec",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-22T15:19:02Z",
+      "side": 1,
+      "message": "shouldn\u0027t this use :\u003d ?\n\nRight now it will set SPDK_VHOST_SSH_KEY_FILE regardless of it\u0027s previous value.",
+      "range": {
+        "startLine": 15,
+        "startChar": 27,
+        "endLine": 15,
+        "endChar": 28
+      },
+      "revId": "4ce6785d403fc24846f4df50fdbbb13d67f41c01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
