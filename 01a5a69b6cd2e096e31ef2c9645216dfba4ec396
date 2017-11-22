@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9dd72ab6_e43d2850",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-22T13:50:08Z",
+      "side": 1,
+      "message": "If possible would you add any comment that describes why the state is not changed to EXITING?",
+      "range": {
+        "startLine": 914,
+        "startChar": 0,
+        "endLine": 916,
+        "endChar": 4
+      },
+      "revId": "01a5a69b6cd2e096e31ef2c9645216dfba4ec396",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
