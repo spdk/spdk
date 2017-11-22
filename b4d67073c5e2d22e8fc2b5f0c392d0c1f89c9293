@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42ca6f74_fcfaf973",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-22T16:56:05Z",
+      "side": 1,
+      "message": "The arguments to calloc are (num elements, size of one element) - you have the arguments reversed. Now, they\u0027re just multiplied together so the allocation works out the same either way, but it\u0027s best to do them according to the docs.",
+      "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3eb7c9f_64bcdfd1",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 484,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-22T16:56:05Z",
+      "side": 1,
+      "message": "For function definitions, we put the return type on its own line.",
+      "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
