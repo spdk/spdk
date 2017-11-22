@@ -22,6 +22,30 @@
       "revId": "c835c98a7ba02987f4369e315a1f73a96567bb5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a3dd79b_64e8d544",
+        "filename": "test/vhost/common/README",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-22T07:44:51Z",
+      "side": 0,
+      "message": "I rather move toward \u0027--help\u0027 for each command. This will make easier to maintain. See WIP https://review.gerrithub.io/#/c/387800/",
+      "parentUuid": "05f1969c_7c8ace32",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 8
+      },
+      "revId": "c835c98a7ba02987f4369e315a1f73a96567bb5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
