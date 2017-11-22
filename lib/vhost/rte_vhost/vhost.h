@@ -178,6 +178,7 @@ struct virtio_net {
 	uint64_t		negotiated_features;
 	uint64_t		protocol_features;
 	int			vid;
+	uint32_t		is_nvme;
 	uint32_t		flags;
 	uint16_t		vhost_hlen;
 	/* to tell if we need broadcast rarp packet */
