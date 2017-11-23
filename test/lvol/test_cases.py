@@ -52,6 +52,7 @@ def header(num):
         600: 'construct_lvol_store_with_cluster_size_max',
         601: 'construct_lvol_store_with_cluster_size_min',
         650: 'tasting_positive',
+        651: 'tasting_lvol_store_positive',
         700: 'SIGTERM',
     }
     print("========================================================")
@@ -768,6 +769,32 @@ class TestCases(object):
             fail_count += 1
 
         footer(650)
+        return fail_count
+
+    def test_case651(self):
+        header(651)
+        base_path = path.dirname(sys.argv[0])
+        vhost_path = path.join(self.app_path, 'vhost')
+        config_path = path.join(base_path, 'vhost.conf')
+        pid_path = path.join(base_path, 'vhost.pid')
+        base_name = "Nvme0n1"
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        fail_count += self._stop_vhost(pid_path)
+        remove(pid_path)
+        if self._start_vhost(vhost_path, config_path, pid_path) != 0:
+            fail_count += 1
+            footer(651)
+            return fail_count
+        if self.c.check_get_lvol_stores(base_name, uuid_store,
+                                        self.cluster_size) != 0:
+            fail_count += 1
+        if self.c.destroy_lvol_store(uuid_store) != 0:
+            fail_count += 1
+        footer(651)
         return fail_count
 
     def test_case700(self):
