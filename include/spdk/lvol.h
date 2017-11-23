@@ -55,6 +55,7 @@ struct spdk_lvol;
 struct spdk_lvs_opts {
 	uint32_t	cluster_sz;
 	char		name[SPDK_LVS_NAME_MAX];
+	bool		disable_trim_on_init;
 };
 
 /**

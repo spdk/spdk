@@ -44,6 +44,7 @@ struct rpc_construct_lvol_store {
 	char *lvs_name;
 	char *bdev_name;
 	uint32_t cluster_sz;
+	char *disable_trim;
 };
 
 static int
@@ -88,11 +89,13 @@ free_rpc_construct_lvol_store(struct rpc_construct_lvol_store *req)
 {
 	free(req->bdev_name);
 	free(req->lvs_name);
+	free(req->disable_trim);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_lvol_store_decoders[] = {
 	{"bdev_name", offsetof(struct rpc_construct_lvol_store, bdev_name), spdk_json_decode_string},
 	{"cluster_sz", offsetof(struct rpc_construct_lvol_store, cluster_sz), spdk_json_decode_uint32, true},
+	{"disable_trim", offsetof(struct rpc_construct_lvol_store, disable_trim), spdk_json_decode_string, true},
 	{"lvs_name", offsetof(struct rpc_construct_lvol_store, lvs_name), spdk_json_decode_string},
 };
 
@@ -133,6 +136,7 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_lvol_store req = {};
 	struct spdk_bdev *bdev;
 	int rc;
+	bool disable_trim = false;
 	char buf[64];
 
 	if (spdk_json_decode_object(params, rpc_construct_lvol_store_decoders,
@@ -161,8 +165,18 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = vbdev_lvs_create(bdev, req.lvs_name, req.cluster_sz, _spdk_rpc_lvol_store_construct_cb,
-			      request);
+	if (req.disable_trim != NULL &&
+	    (strlen(req.disable_trim) != 1 ||
+	     (strncmp(req.disable_trim, "n", 1) &&  strncmp(req.disable_trim, "y", 1)))) {
+		SPDK_ERRLOG("disable_trim parameter accepts only 'y' or 'n'\n");
+		rc = -EINVAL;
+		goto invalid;
+	} else if (req.disable_trim != NULL && !strncmp(req.disable_trim, "y", 1)) {
+		disable_trim = true;
+	}
+
+	rc = vbdev_lvs_create(bdev, req.lvs_name, req.cluster_sz, disable_trim,
+			      _spdk_rpc_lvol_store_construct_cb, request);
 	if (rc < 0) {
 		goto invalid;
 	}

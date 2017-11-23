@@ -1398,6 +1398,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
 	memset(&opts->bstype, 0, sizeof(opts->bstype));
+	opts->disable_trim_on_init = false;
 }
 
 static int
@@ -2219,8 +2220,11 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 	/* Clear metadata space */
 	spdk_bs_batch_write_zeroes(batch, 0, num_md_lba);
+
 	/* Trim data clusters */
-	spdk_bs_batch_unmap(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
+	if (opts.disable_trim_on_init == false) {
+		spdk_bs_batch_unmap(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
+	}
 
 	spdk_bs_batch_close(batch);
 }
