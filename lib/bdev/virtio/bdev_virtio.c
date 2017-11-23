@@ -135,6 +135,7 @@ SPDK_BDEV_MODULE_REGISTER(virtio_scsi, bdev_virtio_initialize, bdev_virtio_finis
 			  NULL, bdev_virtio_get_ctx_size, NULL)
 
 SPDK_BDEV_MODULE_ASYNC_INIT(virtio_scsi)
+SPDK_BDEV_MODULE_ASYNC_FINI(virtio_scsi);
 
 static struct virtio_req *
 bdev_virtio_init_io_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -1206,6 +1207,14 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 	struct virtio_dev *vdev = io_device;
 	struct virtqueue *vq;
 	struct spdk_ring *send_ring;
+	struct spdk_thread *thread;
+	bool finish_module;
+
+	thread = virtio_dev_queue_get_thread(vdev, VIRTIO_SCSI_CONTROLQ);
+	if (thread != spdk_get_thread()) {
+		spdk_thread_send_msg(thread, virtio_scsi_dev_unregister_cb, io_device);
+		return;
+	}
 
 	if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_CONTROLQ)) {
 		vq = vdev->vqs[VIRTIO_SCSI_CONTROLQ];
@@ -1220,6 +1229,13 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 
 	virtio_dev_reset(vdev);
 	virtio_dev_free(vdev);
+
+	TAILQ_REMOVE(&g_virtio_driver.attached_ctrlrs, vdev, tailq);
+	finish_module = TAILQ_EMPTY(&g_virtio_driver.attached_ctrlrs);
+
+	if (finish_module) {
+		spdk_bdev_module_finish_done();
+	}
 }
 
 static void
@@ -1227,8 +1243,12 @@ bdev_virtio_finish(void)
 {
 	struct virtio_dev *vdev, *next;
 
+	if (TAILQ_EMPTY(&g_virtio_driver.attached_ctrlrs)) {
+		spdk_bdev_module_finish_done();
+		return;
+	}
+
 	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.attached_ctrlrs, tailq, next) {
-		TAILQ_REMOVE(&g_virtio_driver.attached_ctrlrs, vdev, tailq);
 		spdk_io_device_unregister(vdev, virtio_scsi_dev_unregister_cb);
 	}
 }
