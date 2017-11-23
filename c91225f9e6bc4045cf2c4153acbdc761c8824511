@@ -1,0 +1,429 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "062c876b_73fe7568",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "If there is not blk sidkd in /sys/block you will get  \n  disk_name\u003d\u0027vd*\u0027\nThen check line 37. Is this if [] ever false then?\n\nIf there will be more than one disk you will get\n  disk_name\u003d\"vda vdb vdc\"",
+      "range": {
+        "startLine": 6,
+        "startChar": 10,
+        "endLine": 6,
+        "endChar": 36
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48d7f367_3ee158f4",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "Environment must be clean. If $test_folder_name is mounted environment is not clean so this must be test exception here not try to clean up undefined state.",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 35,
+        "endChar": 18
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0f5ec69_15dc3674",
+        "filename": "test/vhost/readonly/disabled_readonly_vm.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "can you use bash [[ ]] not [ ]?",
+      "range": {
+        "startLine": 37,
+        "startChar": 3,
+        "endLine": 37,
+        "endChar": 4
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4cb8969_59758f4b",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "The same comments as for disabled_readonly_vm.sh",
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d918e3a6_763fe698",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "You can merge those two lines.\n\nif ! rm $BASE_DIR/$test_file_name; then",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 22
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "40d33c78_0211c2ed",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "If you don\u0027t use copied file just copy it to /dev/null so you don\u0027t need to remove it later.",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 2
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9194fa4e_e9b1a35b",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "File system must be mounted. If it is not mounted it is an error but line 11 will cover this.",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 18
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33bded64_b82409de",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "You can merge those lines.",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 85,
+        "endChar": 22
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a803a770_8a51f05b",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "You can merge those lines.",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 22
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d4635c5_c9257655",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "Can you move this to line 78? This will remove malloc_disk variable.",
+      "range": {
+        "startLine": 55,
+        "startChar": 3,
+        "endLine": 55,
+        "endChar": 28
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9225a52_b00c750a",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "Yes, I can see the next line :D What does the script do? Can this be just \"Trying to DO SOMETHING on VM\" Or something like that to describe what this is really doing? If this can\u0027t be shortly elaborated you can skip this at all.",
+      "range": {
+        "startLine": 105,
+        "startChar": 13,
+        "endLine": 105,
+        "endChar": 41
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36b87c0a_fb0f547b",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "why sleep?",
+      "range": {
+        "startLine": 107,
+        "startChar": 1,
+        "endLine": 107,
+        "endChar": 8
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "598700cc_de99f2e7",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "Why setting up second time?",
+      "range": {
+        "startLine": 114,
+        "startChar": 2,
+        "endLine": 114,
+        "endChar": 11
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "439face5_8e85a8c3",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 119,
+        "startChar": 1,
+        "endLine": 119,
+        "endChar": 42
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d35a5705_a385e54d",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "and third time?",
+      "range": {
+        "startLine": 128,
+        "startChar": 2,
+        "endLine": 128,
+        "endChar": 11
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9493cff9_32026873",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "Simmilar message is printed during VM start. No need to duplicate.",
+      "range": {
+        "startLine": 130,
+        "startChar": 1,
+        "endLine": 130,
+        "endChar": 31
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79fd2d96_800aa354",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 133,
+        "startChar": 23,
+        "endLine": 133,
+        "endChar": 29
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c44b301_0251edac",
+        "filename": "test/vhost/readonly/test_plan.md",
+        "patchSetId": 32
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "I am not sure but I think this will never be sent to vhost and just failed bu guest kernel if it see that request is sent to RO device. Just checking if previously created files are visible should be sufficient I think.",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 23
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95e78573_046b5c68",
+        "filename": "test/vhost/readonly/vhost.conf.in",
+        "patchSetId": 32
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T14:25:54Z",
+      "side": 1,
+      "message": "Is this file needed?",
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
