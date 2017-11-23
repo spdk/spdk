@@ -279,7 +279,6 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 	struct spdk_bdev *bdev = gpt_base->part_base.bdev;
 	int rc;
 
-	spdk_bdev_free_io(bdev_io);
 	spdk_put_io_channel(gpt_base->ch);
 	gpt_base->ch = NULL;
 

@@ -141,13 +141,6 @@ spdk_dma_free(void *buf)
 }
 
 int
-spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
-{
-	CU_ASSERT(0);
-	return -1;
-}
-
-int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 	       void *remove_ctx, struct spdk_bdev_desc **desc)
 {
