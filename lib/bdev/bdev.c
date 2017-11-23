@@ -1563,7 +1563,7 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	return 0;
 }
 
-int
+static int
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
 	if (!bdev_io) {
@@ -1619,6 +1619,10 @@ _spdk_bdev_io_complete(void *ctx)
 
 	assert(bdev_io->cb != NULL);
 	bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
+	if ((bdev_io->stored_user_cb != NULL) && (bdev_io->cb != bdev_io->stored_user_cb)) {
+		return;
+	}
+	spdk_bdev_free_io(bdev_io);
 }
 
 void
@@ -2123,7 +2127,6 @@ spdk_bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 
 	spdk_bdev_io_complete(part_io, status);
-	spdk_bdev_free_io(bdev_io);
 }
 
 static void
