@@ -222,8 +222,6 @@ apply_firmware_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *
 	struct spdk_json_write_ctx		*w;
 	struct firmware_update_info *firm_ctx = cb_arg;
 
-	spdk_bdev_free_io(bdev_io);
-
 	if (!success) {
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "firmware commit failed.");
@@ -261,7 +259,6 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	if (!success) {
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "firmware download failed .");
-		spdk_bdev_free_io(bdev_io);
 		apply_firmware_cleanup(firm_ctx);
 		return;
 	}
@@ -274,7 +271,6 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	if (!cmd) {
 		spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "malloc failed.");
-		spdk_bdev_free_io(bdev_io);
 		apply_firmware_cleanup(firm_ctx);
 		return;
 	}
@@ -294,7 +290,6 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		if (rc) {
 			spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "firmware commit failed.");
-			spdk_bdev_free_io(bdev_io);
 			apply_firmware_cleanup(firm_ctx);
 			return;
 		}
@@ -310,7 +305,6 @@ apply_firmware_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		if (rc) {
 			spdk_jsonrpc_send_error_response(firm_ctx->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 							 "firmware download failed.");
-			spdk_bdev_free_io(bdev_io);
 			apply_firmware_cleanup(firm_ctx);
 			return;
 		}

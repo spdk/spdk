@@ -186,10 +186,6 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		to_be32(&io->resp.error, EIO);
 	}
 	io->resp_in_progress = true;
-	if (bdev_io != NULL) {
-		spdk_bdev_free_io(bdev_io);
-	}
-
 	io->ref--;
 	if (io->ref == 0) {
 		_nbd_stop(SPDK_CONTAINEROF(io, struct spdk_nbd_disk, io));
