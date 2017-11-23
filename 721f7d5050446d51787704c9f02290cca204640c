@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19bfb20b_9ef61239",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 730,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-23T13:24:05Z",
+      "side": 1,
+      "message": "enqueued_bdev_io or limited_bdev_io may describe the meaning but I\u0027m not  negative to qos_bdev_io.",
+      "range": {
+        "startLine": 730,
+        "startChar": 22,
+        "endLine": 730,
+        "endChar": 33
+      },
+      "revId": "721f7d5050446d51787704c9f02290cca204640c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eeaa7750_f1899c78",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-23T13:24:05Z",
+      "side": 1,
+      "message": "It looks that this part includes the case that QoS is disabled when the qos_io queue is to empty.\n\nIs it possible for you to clear the qos_io queue before completing the change of QoS from enabled to disabled?\n\nIf you can do this, the code structure will become easier to understand.",
+      "range": {
+        "startLine": 748,
+        "startChar": 0,
+        "endLine": 752,
+        "endChar": 56
+      },
+      "revId": "721f7d5050446d51787704c9f02290cca204640c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9611b18e_d624d756",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-23T13:24:05Z",
+      "side": 1,
+      "message": "I think you should know the exact interval of this poller.\nthe poller can expect each interval will be approximately one second but the poller will always observe some error.\nThe poller must compensate observed error to achieve exact QoS.",
+      "range": {
+        "startLine": 809,
+        "startChar": 0,
+        "endLine": 809,
+        "endChar": 37
+      },
+      "revId": "721f7d5050446d51787704c9f02290cca204640c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5d80b1c_4bc6b778",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 816,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-23T13:24:05Z",
+      "side": 1,
+      "message": "This reset should be done after the following while loop.",
+      "range": {
+        "startLine": 816,
+        "startChar": 1,
+        "endLine": 816,
+        "endChar": 29
+      },
+      "revId": "721f7d5050446d51787704c9f02290cca204640c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "343c1821_debadab1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-23T13:24:05Z",
+      "side": 1,
+      "message": "I understood that this poller runs once per second.\nThe reason why the poller dequeues all limited Ios is to prevent IOs from starving?\nBut I think unconditional dequeueing ruins rate limiting.\n\nYou should limit dequeue within io_completed_per_ms \u003c qos_max_ios_per_ms.",
+      "range": {
+        "startLine": 819,
+        "startChar": 0,
+        "endLine": 820,
+        "endChar": 43
+      },
+      "revId": "721f7d5050446d51787704c9f02290cca204640c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7c2f140_b57068c9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 2418,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-23T13:24:05Z",
+      "side": 1,
+      "message": "Sorry I cannot find disable_qos function yet. If possible please ensure emptiness of the qos_io queue when the setting is changed from enabled to disabled.",
+      "range": {
+        "startLine": 2418,
+        "startChar": 0,
+        "endLine": 2418,
+        "endChar": 20
+      },
+      "revId": "721f7d5050446d51787704c9f02290cca204640c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
