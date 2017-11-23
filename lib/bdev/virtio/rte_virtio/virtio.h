@@ -48,6 +48,7 @@
 #include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/json.h"
+#include "spdk/io_channel.h"
 
 /*
  * Per virtio_config.h in Linux.
@@ -188,8 +189,8 @@ struct virtqueue {
 	uint16_t  vq_queue_index;   /**< PCI queue index */
 	uint16_t  *notify_addr;
 
-	/** Logical CPU ID that's polling this queue. */
-	uint32_t owner_lcore;
+	/** Thread that's polling this queue. */
+	struct spdk_thread *owner_thread;
 
 	/** Response poller. */
 	struct spdk_bdev_poller	*poller;
@@ -312,7 +313,7 @@ virtqueue_kick_prepare(struct virtqueue *vq)
 }
 
 /**
- * Bind a virtqueue with given index to the current CPU core.
+ * Bind a virtqueue with given index to the current thread;
  *
  * This function is thread-safe.
  *
@@ -324,7 +325,7 @@ virtqueue_kick_prepare(struct virtqueue *vq)
 int virtio_dev_acquire_queue(struct virtio_dev *vdev, uint16_t index);
 
 /**
- * Look for unused queue and bind it to the current CPU core.  This will
+ * Look for unused queue and bind it to the current thread.  This will
  * scan the queues in range from *start_index* (inclusive) up to
  * vdev->max_queues (exclusive).
  *
