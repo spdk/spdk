@@ -170,7 +170,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	vq->mz = mz;
 
-	vq->owner_lcore = SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED;
+	vq->owner_thread = NULL;
 	vq->poller = NULL;
 
 	if (virtio_dev_backend_ops(dev)->setup_queue(dev, vq) < 0) {
@@ -570,13 +570,13 @@ virtio_dev_acquire_queue(struct virtio_dev *vdev, uint16_t index)
 
 	pthread_mutex_lock(&vdev->mutex);
 	vq = vdev->vqs[index];
-	if (vq == NULL || vq->owner_lcore != SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED) {
+	if (vq == NULL || vq->owner_thread != NULL) {
 		pthread_mutex_unlock(&vdev->mutex);
 		return -1;
 	}
 
 	assert(vq->poller == NULL);
-	vq->owner_lcore = spdk_env_get_current_core();
+	vq->owner_thread = spdk_get_thread();
 	pthread_mutex_unlock(&vdev->mutex);
 	return 0;
 }
@@ -590,7 +590,7 @@ virtio_dev_find_and_acquire_queue(struct virtio_dev *vdev, uint16_t start_index)
 	pthread_mutex_lock(&vdev->mutex);
 	for (i = start_index; i < vdev->max_queues; ++i) {
 		vq = vdev->vqs[i];
-		if (vq != NULL && vq->owner_lcore == SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED) {
+		if (vq != NULL && vq->owner_thread == NULL) {
 			break;
 		}
 	}
@@ -602,7 +602,7 @@ virtio_dev_find_and_acquire_queue(struct virtio_dev *vdev, uint16_t start_index)
 	}
 
 	assert(vq->poller == NULL);
-	vq->owner_lcore = spdk_env_get_current_core();
+	vq->owner_thread = spdk_get_thread();
 	pthread_mutex_unlock(&vdev->mutex);
 	return i;
 }
@@ -627,7 +627,7 @@ virtio_dev_queue_is_acquired(struct virtio_dev *vdev, uint16_t index)
 		return false;
 	}
 
-	rc = (vq->owner_lcore != SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED);
+	rc = (vq->owner_thread != NULL);
 	pthread_mutex_unlock(&vdev->mutex);
 
 	return rc;
@@ -653,8 +653,8 @@ virtio_dev_release_queue(struct virtio_dev *vdev, uint16_t index)
 	}
 
 	assert(vq->poller == NULL);
-	assert(vq->owner_lcore == spdk_env_get_current_core());
-	vq->owner_lcore = SPDK_VIRTIO_QUEUE_LCORE_ID_UNUSED;
+	assert(vq->owner_thread == spdk_get_thread());
+	vq->owner_thread = NULL;
 	pthread_mutex_unlock(&vdev->mutex);
 }
 
