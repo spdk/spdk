@@ -295,6 +295,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_MAX_CHANNEL_OPS;
 	memset(&opts->bstype, 0, sizeof(opts->bstype));
+	opts->no_init_trim = false;
 }
 
 uint64_t

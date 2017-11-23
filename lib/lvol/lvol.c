@@ -525,6 +525,7 @@ spdk_lvs_opts_init(struct spdk_lvs_opts *o)
 {
 	o->cluster_sz = SPDK_LVS_OPTS_CLUSTER_SZ;
 	memset(o->name, 0, sizeof(o->name));
+	o->no_init_trim = false;
 }
 
 static void
@@ -533,6 +534,7 @@ _spdk_setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o)
 	assert(o != NULL);
 	spdk_bs_opts_init(bs_opts);
 	bs_opts->cluster_sz = o->cluster_sz;
+	bs_opts->no_init_trim = o->no_init_trim;
 }
 
 int

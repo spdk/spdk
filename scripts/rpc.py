@@ -300,11 +300,15 @@ def construct_lvol_store(args):
     if args.cluster_sz:
         params['cluster_sz'] = args.cluster_sz
 
+    if args.no_init_trim:
+        params['no_init_trim'] = args.no_init_trim
+
     print_array(jsonrpc_call('construct_lvol_store', params))
 p = subparsers.add_parser('construct_lvol_store', help='Add logical volume store on base bdev')
 p.add_argument('bdev_name', help='base bdev name')
 p.add_argument('lvs_name', help='name for lvol store')
 p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int, required=False)
+p.add_argument('-n', '--no_init_trim', action='store_true', help='disable data clusters trimming')
 p.set_defaults(func=construct_lvol_store)
 
 

@@ -44,6 +44,7 @@ struct rpc_construct_lvol_store {
 	char *lvs_name;
 	char *bdev_name;
 	uint32_t cluster_sz;
+	bool no_init_trim;
 };
 
 static int
@@ -86,6 +87,7 @@ free_rpc_construct_lvol_store(struct rpc_construct_lvol_store *req)
 static const struct spdk_json_object_decoder rpc_construct_lvol_store_decoders[] = {
 	{"bdev_name", offsetof(struct rpc_construct_lvol_store, bdev_name), spdk_json_decode_string},
 	{"cluster_sz", offsetof(struct rpc_construct_lvol_store, cluster_sz), spdk_json_decode_uint32, true},
+	{"no_init_trim", offsetof(struct rpc_construct_lvol_store, no_init_trim), spdk_json_decode_bool, true},
 	{"lvs_name", offsetof(struct rpc_construct_lvol_store, lvs_name), spdk_json_decode_string},
 };
 
@@ -154,8 +156,8 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = vbdev_lvs_create(bdev, req.lvs_name, req.cluster_sz, _spdk_rpc_lvol_store_construct_cb,
-			      request);
+	rc = vbdev_lvs_create(bdev, req.lvs_name, req.cluster_sz, req.no_init_trim,
+			      _spdk_rpc_lvol_store_construct_cb, request);
 	if (rc < 0) {
 		goto invalid;
 	}

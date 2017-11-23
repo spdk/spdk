@@ -124,7 +124,7 @@ end:
 
 int
 vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster_sz,
-		 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+		 bool no_init_trim, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *lvs_req;
@@ -141,6 +141,7 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster
 	if (cluster_sz != 0) {
 		opts.cluster_sz = cluster_sz;
 	}
+	opts.no_init_trim = no_init_trim;
 
 	if (name == NULL) {
 		SPDK_ERRLOG("missing name param\n");

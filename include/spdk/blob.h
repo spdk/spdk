@@ -154,6 +154,7 @@ struct spdk_bs_opts {
 	uint32_t max_md_ops; /* Maximum simultaneous metadata operations */
 	uint32_t max_channel_ops; /* Maximum simultaneous operations per channel */
 	struct spdk_bs_type bstype; /* Blobstore type */
+	bool no_init_trim; /* Disable data clusters trim on init */
 };
 
 /* Initialize an spdk_bs_opts structure to the default blobstore option values. */
