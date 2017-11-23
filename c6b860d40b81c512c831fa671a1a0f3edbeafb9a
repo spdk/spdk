@@ -22,6 +22,30 @@
       "revId": "c6b860d40b81c512c831fa671a1a0f3edbeafb9a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0aea98ad_40964a0e",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T10:05:07Z",
+      "side": 1,
+      "message": "Yes, and this is going to be changed but let do one thing at a time.\n\nBTW: EACH file sourcing vhost/common/common.sh is free to source my_very_own.config overwriting those default ones.",
+      "parentUuid": "8f07083e_6ba0d7af",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 66
+      },
+      "revId": "c6b860d40b81c512c831fa671a1a0f3edbeafb9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
