@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a9d1897_3616d601",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-23T18:07:22Z",
+      "side": 1,
+      "message": "isn\u0027t it io_channel.h?",
+      "range": {
+        "startLine": 21,
+        "startChar": 60,
+        "endLine": 21,
+        "endChar": 61
+      },
+      "revId": "2ec2763e9b94a54c2afcbc020e50563054f9ac51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
