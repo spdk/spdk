@@ -51,10 +51,9 @@ vbdev_lvs_hotremove_cb(void *ctx)
 	struct lvol_store_bdev *lvs_bdev, *tmp;
 
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
-		if (lvs_bdev) {
-			if (lvs_bdev->bdev == bdev) {
-				vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
-			}
+		if (lvs_bdev && lvs_bdev->removing_in_progress == false && lvs_bdev->bdev == bdev) {
+			lvs_bdev->removing_in_progress = true;
+			vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
 		}
 	}
 }
@@ -795,7 +794,10 @@ vbdev_lvs_fini(void)
 	}
 
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
-		vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_finished, NULL);
+		if (lvs_bdev->removing_in_progress == false) {
+			lvs_bdev->removing_in_progress = true;
+			vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_finished, NULL);
+		}
 	}
 }
 
