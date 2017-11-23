@@ -147,11 +147,6 @@ spdk_bdev_nvme_io_passthru(struct spdk_bdev_desc *desc,
 	return 0;
 }
 
-int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
-{
-	return -1;
-}
-
 void spdk_bdev_close(struct spdk_bdev_desc *desc)
 {
 }
