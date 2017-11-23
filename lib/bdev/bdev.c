@@ -1563,7 +1563,7 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	return 0;
 }
 
-int
+static int
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
 	if (!bdev_io) {
