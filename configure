@@ -21,6 +21,7 @@ function usage()
 	echo " --enable-ubsan            Enable undefined behavior sanitizer"
 	echo " --enable-coverage         Enable code coverage tracking"
 	echo " --enable-lto              Enable link-time optimization"
+	echo " --enable-rdma-histogram   Enable rdma histogram statistics"
 	echo " --with-env=path           Use an alternate environment implementation"
 	echo ""
 	echo "Specifying Dependencies:"
@@ -89,6 +90,9 @@ for i in "$@"; do
 		--enable-lto)
 			CONFIG_LTO=y
 			;;
+                --enable-rdma-histogram)
+                        CONFIG_HISTOGRAM_RDMA=y
+                        ;;
 		--disable-lto)
 			CONFIG_LTO=n
 			;;
@@ -261,6 +265,9 @@ if [ -n "$CONFIG_VTUNE" ]; then
 fi
 if [ -n "$VTUNE_SOURCE_DIR" ]; then
 	echo "VTUNE_SOURCE_DIR?=$VTUNE_SOURCE_DIR" >> CONFIG.local
+fi
+if [ -n "$CONFIG_HISTOGRAM_RDMA" ]; then
+        echo "CONFIG_HISTOGRAM_RDMA?=$CONFIG_HISTOGRAM_RDMA" >> CONFIG.local
 fi
 
 python_command=
