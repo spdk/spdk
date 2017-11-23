@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "eea260e6_7f970332",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1394,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-23T13:58:35Z",
+      "side": 1,
+      "message": "It\u0027s used in some other places as well.\n_spdk_bs_free_seq provides an easy way to free a bs from within a sequence.\nBut you might also want to free a bs before the sequence is created. e.g. in spdk_bs_init.\n\nBefore a sequence is created there are probably no io_channels created yet, so the io_device_unregister won\u0027t defer anything.\nThe previous spdk_bs_init error handling should be fine, but I find it more clear to use bs-\u003eunload_cpl in all cases.",
+      "parentUuid": "e6a223ca_22d349ec",
+      "range": {
+        "startLine": 1394,
+        "startChar": 2,
+        "endLine": 1394,
+        "endChar": 47
+      },
+      "revId": "ace83a0e4baee6ee720daf42cbd4d99d97ac62b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ad9dcb8b_c3ea7798",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-23T13:17:22Z",
       "side": 1,
       "message": "This should be bserrno",
+      "range": {
+        "startLine": 1397,
+        "startChar": 31,
+        "endLine": 1397,
+        "endChar": 32
+      },
+      "revId": "ace83a0e4baee6ee720daf42cbd4d99d97ac62b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "815214f0_a9d7b6d9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1397,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-23T13:58:35Z",
+      "side": 1,
+      "message": "Ack. This value is actually ignored, but I\u0027ll change it to bserrno for clarity.",
+      "parentUuid": "ad9dcb8b_c3ea7798",
       "range": {
         "startLine": 1397,
         "startChar": 31,
