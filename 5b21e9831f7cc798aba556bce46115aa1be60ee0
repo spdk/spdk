@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "866f9b98_4a3be98e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 11
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T09:54:48Z",
+      "side": 1,
+      "message": "max 71 characters I think.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 143
+      },
+      "revId": "5b21e9831f7cc798aba556bce46115aa1be60ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f95e3ba8_85e0f1f6",
+        "filename": "dpdk",
+        "patchSetId": 11
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T09:54:48Z",
+      "side": 1,
+      "message": "why changed?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 58
+      },
+      "revId": "5b21e9831f7cc798aba556bce46115aa1be60ee0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
