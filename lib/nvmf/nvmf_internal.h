@@ -43,7 +43,9 @@
 #include "spdk/queue.h"
 #include "spdk/util.h"
 
+#define SPDK_NUM_HIST_TRACK_REQUEST 6
 #define SPDK_NVMF_DEFAULT_NUM_CTRLRS_PER_LCORE 1
+#define SPDK_NUM_HIST_TRACK_REQUEST 6
 
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
@@ -132,6 +134,9 @@ struct spdk_nvmf_request {
 	void				*data;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
+#ifdef SPDK_CONFIG_HISTOGRAM_RDMA
+	uint64_t time[SPDK_NUM_HIST_TRACK_REQUEST];
+#endif
 };
 
 struct spdk_nvmf_ns {

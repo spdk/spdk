@@ -41,8 +41,8 @@ APP = nvmf_tgt
 C_SRCS := nvmf_main.c
 
 SPDK_LIB_LIST = event_bdev event_copy event_nvmf
-SPDK_LIB_LIST += nvmf event log trace conf util bdev copy rpc jsonrpc json
-SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc
+SPDK_LIB_LIST += nvmf event log trace conf util histogram bdev copy rpc jsonrpc json
+SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc histogram_rpc
 
 ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd
