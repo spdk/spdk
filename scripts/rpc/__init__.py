@@ -1,6 +1,7 @@
 import app
 import bdev
 from client import print_dict
+import hist
 import iscsi
 import log
 import lvol
