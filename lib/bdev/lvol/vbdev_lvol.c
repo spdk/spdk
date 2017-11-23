@@ -777,26 +777,23 @@ vbdev_lvs_init(void)
 }
 
 static void
-vbdev_lvs_finished(void *cb_arg, int lvserrno)
+vbdev_lvs_fini_next(void *cb_arg, int lvserrno)
 {
-	if (TAILQ_EMPTY(&g_spdk_lvol_pairs)) {
+	struct lvol_store_bdev *lvs_bdev;
+
+	lvs_bdev = TAILQ_FIRST(&g_spdk_lvol_pairs);
+	if (lvs_bdev == NULL) {
 		spdk_bdev_module_finish_done();
+		return;
 	}
+
+	vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_fini_next, cb_arg);
 }
 
 static void
 vbdev_lvs_fini(void)
 {
-	struct lvol_store_bdev *lvs_bdev, *tmp;
-
-	if (TAILQ_EMPTY(&g_spdk_lvol_pairs)) {
-		spdk_bdev_module_finish_done();
-		return;
-	}
-
-	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
-		vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_finished, NULL);
-	}
+	vbdev_lvs_fini_next(NULL, 0);
 }
 
 static int
