@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e2bef34_c0477460",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-23T17:37:55Z",
+      "side": 0,
+      "message": "The original idea for those was to be able to use the same virtqueue for multiple io_channels.\nOnce an io_channel wants to acquire a virtqueue and there aren\u0027t any unused ones available, it could choose the least occupied one and switch it\u0027s poller into a multi-thread mode. The poller_ctx would then keep the MP-SC spdk_ring for all the requests to be sent. The virtqueue poller in a multi-thread mode would poll this ring and send the requests to the real virtqueue.\nWe deferred implementing that idea, but it\u0027s still a nice-to-have feature that can be implemented in future with not so much effort.",
+      "range": {
+        "startLine": 193,
+        "startChar": 1,
+        "endLine": 193,
+        "endChar": 18
+      },
+      "revId": "bd44f6121c3b2e1db2c1e32337af99df143c3918",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

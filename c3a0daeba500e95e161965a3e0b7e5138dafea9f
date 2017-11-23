@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8be1e724_fd6f4f9f",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-23T17:37:55Z",
+      "side": 1,
+      "message": "this is very Virtio-SCSI specific and we will probably want to keep all backend-specific logic out of rte_virtio.\nVirtio-SCSI provides 3 types of virtqueues:\n1. eventq - for sending events from the device to the driver (e.g. hotplug)\n2. controlq - for sending events from the driver to the device (e.g. reset)\n3. requestq - for I/O\n\nVirtio-BLK device consists of only a single queue - an I/O one - and won\u0027t need this ring.",
+      "range": {
+        "startLine": 100,
+        "startChar": 1,
+        "endLine": 100,
+        "endChar": 30
+      },
+      "revId": "c3a0daeba500e95e161965a3e0b7e5138dafea9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
