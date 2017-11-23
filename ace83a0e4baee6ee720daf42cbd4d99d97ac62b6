@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6a223ca_22d349ec",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1394,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-23T13:17:22Z",
+      "side": 1,
+      "message": "Do we need new function for only 2 lines?",
+      "range": {
+        "startLine": 1394,
+        "startChar": 2,
+        "endLine": 1394,
+        "endChar": 47
+      },
+      "revId": "ace83a0e4baee6ee720daf42cbd4d99d97ac62b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad9dcb8b_c3ea7798",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1397,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-23T13:17:22Z",
+      "side": 1,
+      "message": "This should be bserrno",
+      "range": {
+        "startLine": 1397,
+        "startChar": 31,
+        "endLine": 1397,
+        "endChar": 32
+      },
+      "revId": "ace83a0e4baee6ee720daf42cbd4d99d97ac62b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
