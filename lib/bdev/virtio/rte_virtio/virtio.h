@@ -334,6 +334,18 @@ int virtio_dev_acquire_queue(struct virtio_dev *vdev, uint16_t index);
 int32_t virtio_dev_find_and_acquire_queue(struct virtio_dev *vdev, uint16_t start_index);
 
 /**
+ * Get thread that acquired given virtqueue.
+ *
+ * This function is thread-safe.
+ *
+ * \param vdev vhost device
+ * \param index index of virtqueue
+ * \return thread that acquired given virtqueue. If the queue is unused
+ * or doesn't exist a NULL is returned.
+ */
+struct spdk_thread *virtio_dev_queue_get_thread(struct virtio_dev *vdev, uint16_t index);
+
+/**
  * Check if virtqueue with given index is acquired.
  *
  * This function is thread-safe.
