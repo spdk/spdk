@@ -173,7 +173,6 @@ blk_request_complete_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 {
 	struct spdk_vhost_blk_task *task = cb_arg;
 
-	spdk_bdev_free_io(bdev_io);
 	blk_request_finish(success, task);
 }
 

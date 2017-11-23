@@ -362,9 +362,6 @@ struct spdk_bdev_io {
 	/** User function that will be called when this completes */
 	spdk_bdev_io_completion_cb cb;
 
-	/** stored user callback in case we split the I/O and use a temporary callback */
-	spdk_bdev_io_completion_cb stored_user_cb;
-
 	/** Context that will be passed to the completion callback */
 	void *caller_ctx;
 

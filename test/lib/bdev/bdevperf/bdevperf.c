@@ -271,8 +271,6 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	TAILQ_INSERT_TAIL(&target->task_list, task, link);
 
-	spdk_bdev_free_io(bdev_io);
-
 	/*
 	 * is_draining indicates when time has expired for the test run
 	 * and we are just waiting for the previously submitted I/O
@@ -309,8 +307,6 @@ bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 		return;
 	}
 
-	spdk_bdev_free_io(bdev_io);
-
 }
 
 static void
@@ -343,8 +339,6 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 			return;
 		}
 	}
-
-	spdk_bdev_free_io(bdev_io);
 }
 
 static __thread unsigned int seed = 0;
@@ -455,7 +449,6 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	TAILQ_INSERT_TAIL(&target->task_list, task, link);
-	spdk_bdev_free_io(bdev_io);
 
 	spdk_poller_register(&target->reset_timer, reset_target, target,
 			     10 * 1000000);
