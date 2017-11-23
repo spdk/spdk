@@ -44,6 +44,7 @@ struct rpc_construct_lvol_store {
 	char *lvs_name;
 	char *bdev_name;
 	uint32_t cluster_sz;
+	char *trim;
 };
 
 static int
@@ -88,11 +89,13 @@ free_rpc_construct_lvol_store(struct rpc_construct_lvol_store *req)
 {
 	free(req->bdev_name);
 	free(req->lvs_name);
+	free(req->trim);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_lvol_store_decoders[] = {
 	{"bdev_name", offsetof(struct rpc_construct_lvol_store, bdev_name), spdk_json_decode_string},
 	{"cluster_sz", offsetof(struct rpc_construct_lvol_store, cluster_sz), spdk_json_decode_uint32, true},
+	{"trim", offsetof(struct rpc_construct_lvol_store, trim), spdk_json_decode_string, true},
 	{"lvs_name", offsetof(struct rpc_construct_lvol_store, lvs_name), spdk_json_decode_string},
 };
 
@@ -133,6 +136,7 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_lvol_store req = {};
 	struct spdk_bdev *bdev;
 	int rc;
+	bool trim = true;
 	char buf[64];
 
 	if (spdk_json_decode_object(params, rpc_construct_lvol_store_decoders,
@@ -161,7 +165,16 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = vbdev_lvs_create(bdev, req.lvs_name, req.cluster_sz, _spdk_rpc_lvol_store_construct_cb,
+	if (req.trim != NULL &&
+	    (strlen(req.trim) != 1 || (strncmp(req.trim, "n", 1) && strncmp(req.trim, "y", 1)))) {
+		SPDK_ERRLOG("trim parameter accepts only 'y' or 'n'\n");
+		rc = -EINVAL;
+		goto invalid;
+	} else if (req.trim != NULL && !strncmp(req.trim, "n", 1)) {
+		trim = false;
+	}
+
+	rc = vbdev_lvs_create(bdev, req.lvs_name, req.cluster_sz, trim, _spdk_rpc_lvol_store_construct_cb,
 			      request);
 	if (rc < 0) {
 		goto invalid;

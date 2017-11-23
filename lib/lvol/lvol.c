@@ -533,6 +533,7 @@ _spdk_setup_lvs_opts(struct spdk_bs_opts *bs_opts, struct spdk_lvs_opts *o)
 	assert(o != NULL);
 	spdk_bs_opts_init(bs_opts);
 	bs_opts->cluster_sz = o->cluster_sz;
+	bs_opts->trim_on_init = o->trim_on_init;
 }
 
 int
