@@ -284,6 +284,296 @@ node_access_denied_by_empty_netmask(void)
 
 }
 
+#define IQN1	"iqn.2017-11.spdk.io:0001"
+#define NO_IQN1	"!iqn.2017-11.spdk.io:0001"
+#define IQN2	"iqn.2017-11.spdk.io:0002"
+#define IP1	"192.168.2.0"
+#define	IP2	"192.168.2.1"
+
+static void
+node_access_multi_initiator_groups_cases(void)
+{
+	struct spdk_iscsi_tgt_node tgtnode;
+	struct spdk_iscsi_conn conn;
+	struct spdk_iscsi_portal_grp pg;
+	struct spdk_iscsi_portal portal;
+	struct spdk_iscsi_init_grp ig1, ig2;
+	struct spdk_iscsi_initiator_name iname1, iname2;
+	struct spdk_iscsi_initiator_netmask imask1, imask2;
+	char *iqn, *addr;
+	bool result;
+
+	/* target initialization */
+	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
+	tgtnode.maxmap = 2;
+	tgtnode.name = IQN1;
+
+	tgtnode.map[0].pg = &pg;
+	tgtnode.map[0].ig = &ig1;
+	tgtnode.map[1].pg = &pg;
+	tgtnode.map[1].ig = &ig2;
+
+	/* portal group initialization */
+	memset(&pg, 0, sizeof(struct spdk_iscsi_portal_grp));
+	pg.tag = 1;
+
+	/* portal initialization */
+	memset(&portal, 0, sizeof(struct spdk_iscsi_portal));
+	portal.group = &pg;
+	portal.host = IP1;
+	portal.port = "3260";
+
+	/* connection initialization */
+	memset(&conn, 0, sizeof(struct spdk_iscsi_conn));
+	conn.portal = &portal;
+
+	/* initiator group initialization */
+	memset(&ig1, 0, sizeof(struct spdk_iscsi_init_grp));
+	ig1.tag = 1;
+	TAILQ_INIT(&ig1.initiator_head);
+	TAILQ_INIT(&ig1.netmask_head);
+
+	ig1.ninitiators = 1;
+	iname1.name = NULL;
+	TAILQ_INSERT_TAIL(&ig1.initiator_head, &iname1, tailq);
+
+	ig1.nnetmasks = 1;
+	imask1.mask = NULL;
+	TAILQ_INSERT_TAIL(&ig1.netmask_head, &imask1, tailq);
+
+	memset(&ig2, 0, sizeof(struct spdk_iscsi_init_grp));
+	ig2.tag = 2;
+	TAILQ_INIT(&ig2.initiator_head);
+	TAILQ_INIT(&ig2.netmask_head);
+
+	ig2.ninitiators = 1;
+	iname2.name = NULL;
+	TAILQ_INSERT_TAIL(&ig2.initiator_head, &iname2, tailq);
+
+	ig2.nnetmasks = 1;
+	imask2.mask = NULL;
+	TAILQ_INSERT_TAIL(&ig2.netmask_head, &imask2, tailq);
+
+	iqn = IQN1;
+	addr = IP1;
+
+	/*
+	 * case 1:
+	 * +-------------------------------------------+---------+
+	 * | IG1                 | IG2                 |         |
+	 * +-------------------------------------------+         |
+	 * | name      | addr    | name      | addr    | result  |
+	 * +-------------------------------------------+---------+
+	 * +-------------------------------------------+---------+
+	 * | denied    | -       | -         | -       | denied  |
+	 * +-------------------------------------------+---------+
+	 */
+	iname1.name = NO_IQN1;
+
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == false);
+
+	/*
+	 * case 2:
+	 * +-------------------------------------------+---------+
+	 * | IG1                 | IG2                 |         |
+	 * +-------------------------------------------+         |
+	 * | name      | addr    | name      | addr    | result  |
+	 * +-------------------------------------------+---------+
+	 * +-------------------------------------------+---------+
+	 * | allowed   | allowed | -         | -       | allowed |
+	 * +-------------------------------------------+---------+
+	 */
+	iname1.name = IQN1;
+	imask1.mask = IP1;
+
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == true);
+
+	/*
+	 * case 3:
+	 * +-------------------------------------------+---------+
+	 * | IG1                 | IG2                 |         |
+	 * +-------------------------------------------+         |
+	 * | name      | addr    | name     | addr     | result  |
+	 * +-------------------------------------------+---------+
+	 * +-------------------------------------------+---------+
+	 * | allowed   | denied  | denied   | -        | denied  |
+	 * +-------------------------------------------+---------+
+	 */
+	iname1.name = IQN1;
+	imask1.mask = IP2;
+	iname2.name = NO_IQN1;
+
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == false);
+
+	/*
+	 * case 4:
+	 * +-------------------------------------------+---------+
+	 * | IG1                 | IG2                 |         |
+	 * +-------------------------------------------+         |
+	 * | name      | addr    | name      | addr    | result  |
+	 * +-------------------------------------------+---------+
+	 * +-------------------------------------------+---------+
+	 * | allowed   | denied  | allowed   | allowed | allowed |
+	 * +-------------------------------------------+---------+
+	 */
+	iname1.name = IQN1;
+	imask1.mask = IP2;
+	iname2.name = IQN1;
+	imask2.mask = IP1;
+
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == true);
+
+	/*
+	 * case 5:
+	 * +---------------------------------------------+---------+
+	 * | IG1                 | IG2                   |         |
+	 * +---------------------------------------------+         |
+	 * | name      | addr    | name        | addr    | result  |
+	 * +---------------------------------------------+---------+
+	 * +---------------------------------------------+---------+
+	 * | allowed   | denied  | allowed     | denied  | denied  |
+	 * +---------------------------------------------+---------+
+	 */
+	iname1.name = IQN1;
+	imask1.mask = IP2;
+	iname2.name = IQN1;
+	imask2.mask = IP2;
+
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == false);
+
+	/*
+	 * case 6:
+	 * +---------------------------------------------+---------+
+	 * | IG1                 | IG2                   |         |
+	 * +---------------------------------------------+         |
+	 * | name      | addr    | name        | addr    | result  |
+	 * +---------------------------------------------+---------+
+	 * +---------------------------------------------+---------+
+	 * | allowed   | denied  | not found   | -       | denied  |
+	 * +---------------------------------------------+---------+
+	 */
+	iname1.name = IQN1;
+	imask1.mask = IP2;
+	iname2.name = IQN2;
+
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == false);
+
+	/*
+	 * case 7:
+	 * +---------------------------------------------+---------+
+	 * | IG1                   | IG2                 |         |
+	 * +---------------------------------------------+         |
+	 * | name        | addr    | name      | addr    | result  |
+	 * +---------------------------------------------+---------+
+	 * +---------------------------------------------+---------+
+	 * | not found   | -       | denied    | -       | denied  |
+	 * +---------------------------------------------+---------+
+	 */
+	iname1.name = IQN2;
+	iname2.name = NO_IQN1;
+
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == false);
+
+	/*
+	 * case 8:
+	 * +---------------------------------------------+---------+
+	 * | IG1                   | IG2                 |         |
+	 * +---------------------------------------------+         |
+	 * | name        | addr    | name      | addr    | result  |
+	 * +---------------------------------------------+---------+
+	 * +---------------------------------------------+---------+
+	 * | not found   | -       | allowed   | allowed | allowed |
+	 * +---------------------------------------------+---------+
+	 */
+	iname1.name = IQN2;
+	iname2.name = IQN1;
+	imask2.mask = IP1;
+
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == true);
+
+	/*
+	 * case 9:
+	 * +---------------------------------------------+---------+
+	 * | IG1                   | IG2                 |         |
+	 * +---------------------------------------------+         |
+	 * | name        | addr    | name      | addr    | result  |
+	 * +---------------------------------------------+---------+
+	 * +---------------------------------------------+---------+
+	 * | not found   | -       | allowed   | denied  | denied  |
+	 * +---------------------------------------------+---------+
+	 */
+	iname1.name = IQN2;
+	iname2.name = IQN1;
+	imask2.mask = IP2;
+
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == false);
+
+	/*
+	 * case 10:
+	 * +---------------------------------------------+---------+
+	 * | IG1                   | IG2                 |         |
+	 * +---------------------------------------------+         |
+	 * | name        | addr    | name      | addr    | result  |
+	 * +---------------------------------------------+---------+
+	 * +---------------------------------------------+---------+
+	 * | not found   | -       | not found | -       | denied  |
+	 * +---------------------------------------------+---------+
+	 */
+	iname1.name = IQN2;
+	iname2.name = IQN2;
+
+	result = spdk_iscsi_tgt_node_access(&conn, &tgtnode, iqn, addr);
+	CU_ASSERT(result == false);
+}
+
+static void
+allow_iscsi_name_multi_maps_case(void)
+{
+	struct spdk_iscsi_tgt_node tgtnode;
+	struct spdk_iscsi_init_grp ig;
+	struct spdk_iscsi_initiator_name iname;
+	char *iqn;
+	bool result;
+
+	/* target initialization */
+	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
+	tgtnode.maxmap = 2;
+
+	tgtnode.map[0].ig = &ig;
+	tgtnode.map[1].ig = &ig;
+
+	/* initiator group initialization */
+	memset(&ig, 0, sizeof(struct spdk_iscsi_init_grp));
+	TAILQ_INIT(&ig.initiator_head);
+
+	ig.ninitiators = 1;
+	iname.name = NULL;
+	TAILQ_INSERT_TAIL(&ig.initiator_head, &iname, tailq);
+
+	/* test for IG1 <-> PG1, PG2 case */
+	iqn = IQN1;
+
+	iname.name = IQN1;
+
+	result = spdk_iscsi_tgt_node_allow_iscsi_name(&tgtnode, iqn);
+	CU_ASSERT(result == true);
+
+	iname.name = IQN2;
+
+	result = spdk_iscsi_tgt_node_allow_iscsi_name(&tgtnode, iqn);
+	CU_ASSERT(result == false);
+}
+
+
 int
 main(int argc, char **argv)
 {
@@ -316,6 +606,10 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "node access allowed case", node_access_allowed) == NULL
 		|| CU_add_test(suite, "node access denied case (empty netmask)",
 			       node_access_denied_by_empty_netmask) == NULL
+		|| CU_add_test(suite, "node access multiple initiator groups cases",
+			       node_access_multi_initiator_groups_cases) == NULL
+		|| CU_add_test(suite, "allow iscsi name case",
+			       allow_iscsi_name_multi_maps_case) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
