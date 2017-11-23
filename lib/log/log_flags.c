@@ -51,7 +51,8 @@ spdk_log_set_level(enum spdk_log_level level)
 }
 
 enum spdk_log_level
-spdk_log_get_level(void) {
+spdk_log_get_level(void)
+{
 	return g_spdk_log_level;
 }
 
@@ -62,7 +63,8 @@ spdk_log_set_print_level(enum spdk_log_level level)
 }
 
 enum spdk_log_level
-spdk_log_get_print_level(void) {
+spdk_log_get_print_level(void)
+{
 	return g_spdk_log_print_level;
 }
 

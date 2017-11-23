@@ -268,7 +268,7 @@ virtio_negotiate_features(struct virtio_dev *dev, uint64_t req_features)
 }
 
 struct virtio_dev *
-	virtio_dev_construct(const struct virtio_dev_ops *ops, void *ctx)
+virtio_dev_construct(const struct virtio_dev_ops *ops, void *ctx)
 {
 	struct virtio_dev *vdev;
 	unsigned vdev_num;
