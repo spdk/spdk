@@ -1119,6 +1119,9 @@ bdev_nvme_library_fini(void)
 	}
 
 	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
+		if(strlen(nvme_bdev->disk.name) == 0){
+			continue;
+		}
 		TAILQ_REMOVE(&g_nvme_bdevs, nvme_bdev, link);
 		bdev_nvme_destruct(&nvme_bdev->disk);
 	}
