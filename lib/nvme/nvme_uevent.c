@@ -52,7 +52,6 @@ spdk_uevent_connect(void)
 	int ret;
 	int netlink_fd;
 	int size = 64 * 1024;
-	int nonblock = 1;
 
 	memset(&addr, 0, sizeof(addr));
 	addr.nl_family = AF_NETLINK;
@@ -65,9 +64,9 @@ spdk_uevent_connect(void)
 
 	setsockopt(netlink_fd, SOL_SOCKET, SO_RCVBUFFORCE, &size, sizeof(size));
 
-	ret = ioctl(netlink_fd, FIONBIO, &nonblock);
+	ret = fcntl(netlink_fd, F_SETFL, O_NONBLOCK);
 	if (ret != 0) {
-		SPDK_ERRLOG("ioctl(FIONBIO) failed\n");
+		SPDK_ERRLOG("fcntl(O_NONBLOCK) failed\n");
 		close(netlink_fd);
 		return -1;
 	}

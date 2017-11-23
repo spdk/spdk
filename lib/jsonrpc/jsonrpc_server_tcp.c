@@ -63,10 +63,9 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 		setsockopt(server->sockfd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
 	}
 
-	val = 1;
-	rc = ioctl(server->sockfd, FIONBIO, &val);
+	rc = fcntl(server->sockfd, F_SETFL, O_NONBLOCK);
 	if (rc != 0) {
-		SPDK_ERRLOG("ioctl(FIONBIO) failed\n");
+		SPDK_ERRLOG("fcntl(O_NONBLOCK) failed\n");
 		close(server->sockfd);
 		free(server);
 		return NULL;
@@ -136,7 +135,7 @@ static int
 spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 {
 	struct spdk_jsonrpc_server_conn *conn;
-	int rc, conn_idx, nonblock;
+	int rc, conn_idx;
 
 	rc = accept(server->sockfd, NULL, NULL);
 	if (rc >= 0) {
@@ -156,10 +155,9 @@ spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 			return -1;
 		}
 
-		nonblock = 1;
-		rc = ioctl(conn->sockfd, FIONBIO, &nonblock);
+		rc = fcntl(conn->sockfd, F_SETFL, O_NONBLOCK);
 		if (rc != 0) {
-			SPDK_ERRLOG("ioctl(FIONBIO) failed\n");
+			SPDK_ERRLOG("fcntl(O_NONBLOCK) failed\n");
 			close(conn->sockfd);
 			return -1;
 		}

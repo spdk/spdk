@@ -128,7 +128,7 @@ spdk_sock_create(const char *ip, int port, enum spdk_sock_create_type type)
 	char portnum[PORTNUMLEN];
 	char *p;
 	struct addrinfo hints, *res, *res0;
-	int sock, nonblock;
+	int sock;
 	int val = 1;
 	int rc;
 
@@ -218,10 +218,9 @@ retry:
 			}
 		}
 
-		nonblock = 1;
-		rc = ioctl(sock, FIONBIO, &nonblock);
+		rc = fcntl(sock, F_SETFL, O_NONBLOCK);
 		if (rc != 0) {
-			SPDK_ERRLOG("ioctl(FIONBIO) failed\n");
+			SPDK_ERRLOG("fcntl(O_NONBLOCK) failed\n");
 			close(sock);
 			sock = -1;
 			break;
