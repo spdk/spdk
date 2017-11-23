@@ -1164,13 +1164,43 @@ spdk_bdev_write_zeroes(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return spdk_bdev_write_zeroes_blocks(desc, ch, offset_blocks, num_blocks, cb, cb_arg);
 }
 
+static struct spdk_bdev_io *
+spdk_bdev_write_zeroes_bdev_io_get(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev_io *bdev_io_split;
+	uint64_t len;
+
+	assert(bdev_io != NULL);
+
+	/* no need to perform the error checking from write_zeroes_blocks because this request already passed those checks. */
+	len = spdk_min(spdk_bdev_get_block_size(bdev_io->bdev) * bdev_io->split_remaining_num_blocks,
+		       ZERO_BUFFER_SIZE);
+	bdev_io_split = spdk_bdev_get_io();
+	if (!bdev_io_split) {
+		SPDK_ERRLOG("bdev_io memory allocation failed duing write_zeroes_blocks\n");
+		return NULL;
+	}
+
+	bdev_io_split->ch = bdev_io->ch;
+	bdev_io_split->type = SPDK_BDEV_IO_TYPE_WRITE;
+	bdev_io_split->u.bdev.offset_blocks = bdev_io->split_current_offset_blocks;
+	bdev_io_split->u.bdev.num_blocks = len / spdk_bdev_get_block_size(bdev_io->bdev);
+	bdev_io_split->u.bdev.iov.iov_base = g_bdev_mgr.zero_buffer;
+	bdev_io_split->u.bdev.iov.iov_len = len;
+	bdev_io_split->u.bdev.iovs = &bdev_io_split->u.bdev.iov;
+	bdev_io_split->u.bdev.iovcnt = 1;
+
+	spdk_bdev_io_init(bdev_io_split, bdev_io->bdev, bdev_io, spdk_bdev_write_zeroes_split);
+	return bdev_io_split;
+}
+
 int
 spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 			      uint64_t offset_blocks, uint64_t num_blocks,
 			      spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
 	struct spdk_bdev *bdev = desc->bdev;
-	struct spdk_bdev_io *bdev_io;
+	struct spdk_bdev_io *bdev_io, *bdev_io_split;
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 	uint64_t len;
 	bool split_request = false;
@@ -1193,40 +1223,41 @@ spdk_bdev_write_zeroes_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channe
 
 	bdev_io->ch = channel;
 	bdev_io->u.bdev.offset_blocks = offset_blocks;
-
+	bdev_io->u.bdev.num_blocks = num_blocks;
+	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES)) {
 		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE_ZEROES;
-		bdev_io->u.bdev.num_blocks = num_blocks;
 		bdev_io->u.bdev.iovs = NULL;
 		bdev_io->u.bdev.iovcnt = 0;
 
 	} else {
 		assert(spdk_bdev_get_block_size(bdev) <= ZERO_BUFFER_SIZE);
-
 		len = spdk_bdev_get_block_size(bdev) * num_blocks;
+		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 
 		if (len > ZERO_BUFFER_SIZE) {
 			split_request = true;
-			len = ZERO_BUFFER_SIZE;
+			bdev_io->split_remaining_num_blocks = num_blocks;
+			bdev_io->split_current_offset_blocks = offset_blocks;
+			bdev_io_split = spdk_bdev_write_zeroes_bdev_io_get(bdev_io);
+			if (!bdev_io_split) {
+				free(bdev_io);
+				SPDK_ERRLOG("bdev_io memory allocation failed duing write_zeroes_blocks\n");
+				return -ENOMEM;
+			}
+		} else {
+			bdev_io->u.bdev.iov.iov_base = g_bdev_mgr.zero_buffer;
+			bdev_io->u.bdev.iov.iov_len = len;
+			bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
+			bdev_io->u.bdev.iovcnt = 1;
 		}
-
-		bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
-		bdev_io->u.bdev.iov.iov_base = g_bdev_mgr.zero_buffer;
-		bdev_io->u.bdev.iov.iov_len = len;
-		bdev_io->u.bdev.iovs = &bdev_io->u.bdev.iov;
-		bdev_io->u.bdev.iovcnt = 1;
-		bdev_io->u.bdev.num_blocks = len / spdk_bdev_get_block_size(bdev);
-		bdev_io->split_remaining_num_blocks = num_blocks - bdev_io->u.bdev.num_blocks;
-		bdev_io->split_current_offset_blocks = offset_blocks + bdev_io->u.bdev.num_blocks;
 	}
 
 	if (split_request) {
-		bdev_io->stored_user_cb = cb;
-		spdk_bdev_io_init(bdev_io, bdev, cb_arg, spdk_bdev_write_zeroes_split);
+		spdk_bdev_io_submit(bdev_io_split);
 	} else {
-		spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
+		spdk_bdev_io_submit(bdev_io);
 	}
-	spdk_bdev_io_submit(bdev_io);
 	return 0;
 }
 
@@ -1563,7 +1594,7 @@ spdk_bdev_nvme_io_passthru_md(struct spdk_bdev_desc *desc, struct spdk_io_channe
 	return 0;
 }
 
-int
+static int
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
 	if (!bdev_io) {
@@ -1619,6 +1650,7 @@ _spdk_bdev_io_complete(void *ctx)
 
 	assert(bdev_io->cb != NULL);
 	bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
+	spdk_bdev_free_io(bdev_io);
 }
 
 void
@@ -2123,37 +2155,37 @@ spdk_bdev_part_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 
 	spdk_bdev_io_complete(part_io, status);
-	spdk_bdev_free_io(bdev_io);
 }
 
 static void
 spdk_bdev_write_zeroes_split(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
-	uint64_t len;
+	struct spdk_bdev_io *bdev_io_original, *bdev_io_split;
 
+	bdev_io_original = (struct spdk_bdev_io *)cb_arg;
+	bdev_io_original->status = bdev_io->status;
 	if (!success) {
-		bdev_io->cb = bdev_io->stored_user_cb;
-		_spdk_bdev_io_complete(bdev_io);
+		_spdk_bdev_io_complete(bdev_io_original);
 		return;
 	}
 
-	/* no need to perform the error checking from write_zeroes_blocks because this request already passed those checks. */
-	len = spdk_min(spdk_bdev_get_block_size(bdev_io->bdev) * bdev_io->split_remaining_num_blocks,
-		       ZERO_BUFFER_SIZE);
-
-	bdev_io->u.bdev.offset_blocks = bdev_io->split_current_offset_blocks;
-	bdev_io->u.bdev.iov.iov_len = len;
-	bdev_io->u.bdev.num_blocks = len / spdk_bdev_get_block_size(bdev_io->bdev);
-	bdev_io->split_remaining_num_blocks -= bdev_io->u.bdev.num_blocks;
-	bdev_io->split_current_offset_blocks += bdev_io->u.bdev.num_blocks;
-
+	bdev_io_original->split_remaining_num_blocks -= bdev_io->u.bdev.num_blocks;
+	bdev_io_original->split_current_offset_blocks += bdev_io->u.bdev.num_blocks;
 	/* if this round completes the i/o, change the callback to be the original user callback */
-	if (bdev_io->split_remaining_num_blocks == 0) {
-		spdk_bdev_io_init(bdev_io, bdev_io->bdev, cb_arg, bdev_io->stored_user_cb);
-	} else {
-		spdk_bdev_io_init(bdev_io, bdev_io->bdev, cb_arg, spdk_bdev_write_zeroes_split);
+	if (bdev_io_original->split_remaining_num_blocks == 0) {
+		_spdk_bdev_io_complete(bdev_io_original);
+		return;
 	}
-	spdk_bdev_io_submit(bdev_io);
+
+	bdev_io_split = spdk_bdev_write_zeroes_bdev_io_get(bdev_io_original);
+	if (!bdev_io_split) {
+		SPDK_ERRLOG("bdev_io memory allocation failed duing write_zeroes_blocks\n");
+		bdev_io_original->status = SPDK_BDEV_IO_STATUS_FAILED;
+		_spdk_bdev_io_complete(bdev_io_original);
+		return;
+	}
+
+	spdk_bdev_io_submit(bdev_io_split);
 }
 
 void

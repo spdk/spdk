@@ -486,8 +486,6 @@ spdk_fio_completion_cb(struct spdk_bdev_io *bdev_io,
 
 	assert(fio_thread->iocq_count < fio_thread->iocq_size);
 	fio_thread->iocq[fio_thread->iocq_count++] = fio_req->io;
-
-	spdk_bdev_free_io(bdev_io);
 }
 
 static int

@@ -140,8 +140,6 @@ struct spdk_scsi_task {
 	uint8_t sense_data[32];
 	size_t sense_data_len;
 
-	void *bdev_io;
-
 	TAILQ_ENTRY(spdk_scsi_task) scsi_link;
 
 	uint32_t abort_id;
