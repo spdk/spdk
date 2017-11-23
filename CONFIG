@@ -95,3 +95,6 @@ CONFIG_NVML?=n
 
 # Build with VPP
 CONFIG_VPP?=n
+
+# Build with Histogram utility
+CONFIG_HISTOGRAM_RDMA?=y
