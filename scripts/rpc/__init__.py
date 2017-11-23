@@ -1,6 +1,7 @@
 import app
 import bdev
 import client
+import hist
 import iscsi
 import log
 import lvol
