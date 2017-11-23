@@ -98,3 +98,6 @@ CONFIG_VPP?=n
 
 # Requires libiscsi development libraries.
 CONFIG_ISCSI_INITIATOR?=n
+
+# Build with Histogram utility
+CONFIG_HISTOGRAM_RDMA?=y
