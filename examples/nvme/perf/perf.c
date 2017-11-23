@@ -177,7 +177,6 @@ static int g_dpdk_mem;
 static int g_shm_id = -1;
 static uint32_t g_disable_sq_cmb;
 static bool g_no_pci;
-static bool g_warn;
 
 static const char *g_core_mask;
 
@@ -207,7 +206,6 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		printf("Controller %-20.20s (%-20.20s): Skipping inactive NS %u\n",
 		       cdata->mn, cdata->sn,
 		       spdk_nvme_ns_get_id(ns));
-		g_warn = true;
 		return;
 	}
 
@@ -217,7 +215,6 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
 		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
-		g_warn = true;
 		return;
 	}
 
@@ -1550,12 +1547,8 @@ int main(int argc, char **argv)
 		goto cleanup;
 	}
 
-	if (g_warn) {
-		printf("WARNING: Some requested NVMe devices were skipped\n");
-	}
-
 	if (g_num_namespaces == 0) {
-		fprintf(stderr, "No valid NVMe controllers or AIO devices found\n");
+		fprintf(stderr, "No NVMe controllers or AIO devices found.\n");
 		return 0;
 	}
 
