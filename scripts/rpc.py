@@ -106,6 +106,29 @@ if __name__ == "__main__":
     p.add_argument('bdev_name', help='name of the NVMe device')
     p.set_defaults(func=rpc.bdev.apply_firmware)
 
+    # hist
+    p = subparsers.add_parser('hist_enable', help='histogram enable')
+    p.add_argument('hist_id', help='Histogram ID', type=int)
+    p.set_defaults(func=rpc.hist.hist_enable)
+
+    p = subparsers.add_parser('hist_get_stats', help='histogram get_stats')
+    p.add_argument('hist_id', help='Histogram ID', type=int)
+    p.set_defaults(func=rpc.hist.hist_get_stats)
+
+    p = subparsers.add_parser('hist_list_ids', help='show details of all existing histogram')
+    p.set_defaults(func=rpc.hist.hist_list_ids)
+
+    p = subparsers.add_parser('hist_disable', help='histogram disable')
+    p.add_argument('hist_id', help='Histogram ID', type=int)
+    p.set_defaults(func=rpc.hist.hist_disable)
+
+    p = subparsers.add_parser('hist_clear', help='clear histogram')
+    p.add_argument('hist_id', help='Histogram ID', type=int)
+    p.set_defaults(func=rpc.hist.hist_clear)
+
+    p = subparsers.add_parser('hist_clear_all', help='clear all the existing histogram')
+    p.set_defaults(func=rpc.hist.hist_clear_all)
+
     # iSCSI
     p = subparsers.add_parser(
         'get_portal_groups', help='Display current portal group configuration')
