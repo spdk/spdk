@@ -45,16 +45,29 @@ static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 			g_spdk_lvol_pairs);
 
 static void
+vbdev_lvs_hotremove_continue(void *cb_arg, int lvserrno)
+{
+	struct spdk_bdev *bdev = cb_arg;
+	struct lvol_store_bdev *lvs_bdev, *tmp;;
+
+	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
+		if (lvs_bdev && lvs_bdev->bdev == bdev) {
+			vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_hotremove_continue, NULL);
+			return;
+		}
+	}
+}
+
+static void
 vbdev_lvs_hotremove_cb(void *ctx)
 {
 	struct spdk_bdev *bdev = ctx;
 	struct lvol_store_bdev *lvs_bdev, *tmp;
 
 	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
-		if (lvs_bdev) {
-			if (lvs_bdev->bdev == bdev) {
-				vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
-			}
+		if (lvs_bdev && lvs_bdev->bdev == bdev) {
+			vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_hotremove_continue, bdev);
+			return;
 		}
 	}
 }
@@ -777,26 +790,31 @@ vbdev_lvs_init(void)
 }
 
 static void
-vbdev_lvs_finished(void *cb_arg, int lvserrno)
+vbdev_lvs_fini_cb(void *cb_arg, int lvserrno)
 {
-	if (TAILQ_EMPTY(&g_spdk_lvol_pairs)) {
-		spdk_bdev_module_finish_done();
-	}
-}
-
-static void
-vbdev_lvs_fini(void)
-{
-	struct lvol_store_bdev *lvs_bdev, *tmp;
+	struct lvol_store_bdev *lvs_bdev;
 
 	if (TAILQ_EMPTY(&g_spdk_lvol_pairs)) {
 		spdk_bdev_module_finish_done();
 		return;
 	}
 
-	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
-		vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_finished, NULL);
+	lvs_bdev = TAILQ_FIRST(&g_spdk_lvol_pairs);
+	vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_fini_cb, NULL);
+}
+
+static void
+vbdev_lvs_fini(void)
+{
+	struct lvol_store_bdev *lvs_bdev;
+
+	if (TAILQ_EMPTY(&g_spdk_lvol_pairs)) {
+		spdk_bdev_module_finish_done();
+		return;
 	}
+
+	lvs_bdev = TAILQ_FIRST(&g_spdk_lvol_pairs);
+	vbdev_lvs_unload(lvs_bdev->lvs, vbdev_lvs_fini_cb, NULL);
 }
 
 static int
