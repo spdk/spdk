@@ -247,7 +247,6 @@ reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	CU_ASSERT(success == true);
 	*done = true;
-	spdk_bdev_free_io(bdev_io);
 }
 
 static void
@@ -281,7 +280,6 @@ aborted_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	enum spdk_bdev_io_status *status = cb_arg;
 
 	*status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-	spdk_bdev_free_io(bdev_io);
 }
 
 static void
@@ -345,7 +343,6 @@ io_during_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	enum spdk_bdev_io_status *status = cb_arg;
 
 	*status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-	spdk_bdev_free_io(bdev_io);
 }
 
 static void
@@ -442,7 +439,6 @@ enomem_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	enum spdk_bdev_io_status *status = cb_arg;
 
 	*status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-	spdk_bdev_free_io(bdev_io);
 }
 
 static uint32_t
