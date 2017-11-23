@@ -590,6 +590,20 @@ Expected results:
 - all RPC configuration calls successful, return code = 0
 - no other operation fails
 
+#### TEST CASE 651 - Name: tasting_lvol_store_positive
+Positive test for tasting lvol store.
+Steps:
+- run vhost app with NVMe bdev
+- construct lvol store on NVMe bdev
+- stop vhost
+- start vhost
+- check if lvol store still exists in vhost configuration
+- destroy lvol store from NVMe bdev
+
+Expected result:
+- calls successful (lvol store should be tasted correctly), return code = 0
+- no other operation fails
+
 ### SIGTERM
 
 #### TEST CASE 700 - Name: SIGTERM
