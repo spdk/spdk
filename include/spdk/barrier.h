@@ -72,6 +72,36 @@ extern "C" {
 #error Unknown architecture
 #endif
 
+/**
+ * SMP memory barriers provide memory synchronization just between CPU cores.
+ * For architectures with strong memory ordering, this is likely just a compiler
+ * memory barrier.
+ */
+
+/** Write memory barrier. */
+#ifdef __PPC64__
+#define spdk_smp_wmb()	spdk_wmb()
+#elif defined(__aarch64__)
+#define spdk_smp_wmb()	spdk_wmb()
+#elif defined(__i386__) || defined(__x86_64__)
+#define spdk_smp_wmb()	spdk_compiler_barrier()
+#else
+#define spdk_wmb()
+#error Unknown architecture
+#endif
+
+/** Full read/write memory barrier. */
+#ifdef __PPC64__
+#define spdk_smp_mb()	spdk_mb()
+#elif defined(__aarch64__)
+#define spdk_smp_mb()	spdk_mb()
+#elif defined(__i386__) || defined(__x86_64__)
+#define spdk_smp_mb()	spdk_compiler_barrier()
+#else
+#define spdk_wmb()
+#error Unknown architecture
+#endif
+
 #ifdef __cplusplus
 }
 #endif
