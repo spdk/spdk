@@ -455,6 +455,13 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 		goto err;
 	}
 
+	rc = pthread_detach(tid);
+	if (rc != 0) {
+		spdk_strerror_r(rc, buf, sizeof(buf));
+		SPDK_ERRLOG("could not detach thread for nbd kernel: %s\n", buf);
+		goto err;
+	}
+
 	fcntl(nbd->spdk_sp_fd, F_SETFL, O_NONBLOCK);
 
 	to_be32(&nbd->io.resp.magic, NBD_REPLY_MAGIC);
