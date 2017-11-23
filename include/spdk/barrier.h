@@ -72,6 +72,42 @@ extern "C" {
 #error Unknown architecture
 #endif
 
+/** SMP read memory barrier. */
+#ifdef __PPC64__
+#define spdk_smp_rmb()	__asm volatile("lwsync" ::: "memory")
+#elif defined(__aarch64__)
+#define spdk_smp_rmb()	__asm volatile("dmb ishld" ::: "memory")
+#elif defined(__i386__) || defined(__x86_64__)
+#define spdk_smp_rmb()	spdk_compiler_barrier()
+#else
+#define spdk_smp_rmb()
+#error Unknown architecture
+#endif
+
+/** SMP write memory barrier. */
+#ifdef __PPC64__
+#define spdk_smp_wmb()	__asm volatile("lwsync" ::: "memory")
+#elif defined(__aarch64__)
+#define spdk_smp_wmb()	__asm volatile("dmb ishst" ::: "memory")
+#elif defined(__i386__) || defined(__x86_64__)
+#define spdk_smp_wmb()	spdk_compiler_barrier()
+#else
+#define spdk_smp_wmb()
+#error Unknown architecture
+#endif
+
+/** SMP read/write memory barrier. */
+#ifdef __PPC64__
+#define spdk_smp_mb()	spdk_mb()
+#elif defined(__aarch64__)
+#define spdk_smp_mb()	__asm volatile("dmb ish" ::: "memory")
+#elif defined(__i386__) || defined(__x86_64__)
+#define spdk_smp_mb()	spdk_mb()
+#else
+#define spdk_smp_mb()
+#error Unknown architecture
+#endif
+
 #ifdef __cplusplus
 }
 #endif
