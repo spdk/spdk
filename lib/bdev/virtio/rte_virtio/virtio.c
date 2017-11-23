@@ -48,7 +48,6 @@
 #include <rte_common.h>
 #include <rte_errno.h>
 
-#include <rte_memory.h>
 #include <rte_eal.h>
 #include <rte_dev.h>
 #include <rte_prefetch.h>
@@ -56,16 +55,13 @@
 #include "spdk/env.h"
 #include "spdk/barrier.h"
 
-/*
- * Per virtio_config.h in Linux.
- *     For virtio_pci on SMP, we don't need to order with respect to MMIO
- *     accesses through relaxed memory I/O windows, so smp_mb() et al are
- *     sufficient.
- *
+/* We use SMP memory barrier variants as all virtio_pci devices
+ * are purely virtual. All MMIO is executed on a CPU core, so
+ * there's no need to do full MMIO synchronization.
  */
-#define virtio_mb()	rte_smp_mb()
-#define virtio_rmb()	rte_smp_rmb()
-#define virtio_wmb()	rte_smp_wmb()
+#define virtio_mb()	spdk_smp_mb()
+#define virtio_rmb()	spdk_smp_rmb()
+#define virtio_wmb()	spdk_smp_wmb()
 
 #include "virtio.h"
 
