@@ -89,3 +89,6 @@ CONFIG_VIRTIO?=y
 
 # Build with NVML backends
 CONFIG_NVML?=n
+
+# Build histogram probe points for rdma layer
+CONFIG_HISTOGRAM_RDMA?=n
