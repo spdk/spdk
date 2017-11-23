@@ -79,8 +79,6 @@ struct spdk_nvmf_transport_poll_group {
 
 struct spdk_nvmf_poll_group {
 	TAILQ_HEAD(, spdk_nvmf_transport_poll_group) tgroups;
-
-	TAILQ_ENTRY(spdk_nvmf_poll_group)	link;
 };
 
 typedef enum _spdk_nvmf_request_exec_status {
