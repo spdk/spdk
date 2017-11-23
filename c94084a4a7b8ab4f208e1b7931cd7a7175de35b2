@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b33ebc9_bfb7047e",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-23T15:28:30Z",
+      "side": 1,
+      "message": "Just do:\n\nkeyword \u003d \"Target\"\ndev \u003d spdk_conf_section_get_nval(sp, \"Dev\", i)\ntarget \u003d spdk_conf_section_get_nval(sp, \"Target\", i)\n\nif (dev \u0026\u0026 target) { error }\nelse if (dev) { warning; keyword \u003d \"Dev\" }\nelse if (!target) { break; }\n\nor something like that.",
+      "range": {
+        "startLine": 936,
+        "startChar": 0,
+        "endLine": 940,
+        "endChar": 47
+      },
+      "revId": "c94084a4a7b8ab4f208e1b7931cd7a7175de35b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
