@@ -1040,6 +1040,20 @@ spdk_iscsi_tgt_node_delete_and_shrink_pg_ig_maps(struct spdk_iscsi_tgt_node *tar
 	target->maxmap -= 1;
 }
 
+static bool
+spdk_iscsi_tgt_node_pg_is_mapped(struct spdk_iscsi_tgt_node *target,
+				 struct spdk_iscsi_portal_grp *pg)
+{
+	int i;
+
+	for (i = 0; i < target->maxmap; i++) {
+		if (target->map[i].pg == pg) {
+			return true;
+		}
+	}
+	return false;
+}
+
 static void
 spdk_iscsi_tgt_node_delete_pg_ig_maps_for_pg(struct spdk_iscsi_tgt_node *target,
 		struct spdk_iscsi_portal_grp *pg)
@@ -1049,6 +1063,9 @@ loop:
 	for (i = 0; i < target->maxmap; i++) {
 		if (target->map[i].pg->tag == pg->tag) {
 			spdk_iscsi_tgt_node_delete_and_shrink_pg_ig_maps(target, i);
+			if (!spdk_iscsi_tgt_node_pg_is_mapped(target, pg)) {
+				spdk_scsi_dev_delete_port(target->dev, pg->tag);
+			}
 			goto loop;
 		}
 	}
@@ -1059,10 +1076,15 @@ spdk_iscsi_tgt_node_delete_pg_ig_maps_for_ig(struct spdk_iscsi_tgt_node *target,
 		struct spdk_iscsi_init_grp *ig)
 {
 	int i;
+	struct spdk_iscsi_portal_grp *pg;
 loop:
 	for (i = 0; i < target->maxmap; i++) {
 		if (target->map[i].ig->tag == ig->tag) {
+			pg = target->map[i].pg;
 			spdk_iscsi_tgt_node_delete_and_shrink_pg_ig_maps(target, i);
+			if (!spdk_iscsi_tgt_node_pg_is_mapped(target, pg)) {
+				spdk_scsi_dev_delete_port(target->dev, pg->tag);
+			}
 			goto loop;
 		}
 	}
