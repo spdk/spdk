@@ -268,6 +268,11 @@ vbdev_lvol_store_next(struct lvol_store_bdev *prev)
 {
 	struct lvol_store_bdev *lvs_bdev;
 
+	if (prev == NULL) {
+		SPDK_ERRLOG("prev argument cannot be NULL\n");
+		return NULL;
+	}
+
 	lvs_bdev = TAILQ_NEXT(prev, lvol_stores);
 	if (lvs_bdev) {
 		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "Continuing lvolstore iteration at %p\n", lvs_bdev->lvs);
