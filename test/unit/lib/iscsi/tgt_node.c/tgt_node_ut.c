@@ -573,6 +573,40 @@ allow_iscsi_name_multi_maps_case(void)
 	CU_ASSERT(result == false);
 }
 
+static void
+add_scsi_ports_success(void)
+{
+	struct spdk_iscsi_tgt_node tgtnode;
+	struct spdk_iscsi_portal_grp pg[2];
+	struct spdk_iscsi_init_grp ig[4];
+	int i;
+	int rc;
+	char *name = IQN1;
+
+	for (i = 0; i < 2; i++) {
+		pg[i].tag = i + 1;
+	}
+	for (i = 0; i < 4; i++) {
+		ig[i].tag = i + 1;
+	}
+
+	for (i = 0; i < 4; i++) {
+		tgtnode.map[i].pg = &pg[0];
+		tgtnode.map[i].ig = &ig[i];
+	}
+	for (i = 4; i < 8; i++) {
+		tgtnode.map[i].pg = &pg[1];
+		tgtnode.map[i].ig = &ig[i - 4];
+	}
+
+	tgtnode.maxmap = 8;
+
+	chk_num_unique_pgs = 0;
+
+	rc = spdk_iscsi_tgt_node_add_scsi_ports(&tgtnode, name);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(chk_num_unique_pgs == 2);
+}
 
 int
 main(int argc, char **argv)
@@ -610,6 +644,8 @@ main(int argc, char **argv)
 			       node_access_multi_initiator_groups_cases) == NULL
 		|| CU_add_test(suite, "allow iscsi name case",
 			       allow_iscsi_name_multi_maps_case) == NULL
+		|| CU_add_test(suite, "add scsi ports at target creation case",
+			       add_scsi_ports_success) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

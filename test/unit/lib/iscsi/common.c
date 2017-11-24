@@ -115,9 +115,12 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 {
 }
 
+int chk_num_unique_pgs = 0;
+
 int
 spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 {
+	chk_num_unique_pgs++;
 	return 0;
 }
 

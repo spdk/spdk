@@ -494,11 +494,28 @@ spdk_iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
 }
 
 static struct spdk_iscsi_tgt_node_map *
-spdk_iscsi_tgt_node_add_map(struct spdk_iscsi_tgt_node *target,
-			    int pg_tag, int ig_tag)
+_spdk_iscsi_tgt_node_add_pg_ig_map(struct spdk_iscsi_tgt_node *target,
+				   struct spdk_iscsi_portal_grp *pg,
+				   struct spdk_iscsi_init_grp *ig)
+{
+	struct spdk_iscsi_tgt_node_map *map;
+
+	pg->ref++;
+	ig->ref++;
+	map = &target->map[target->maxmap];
+	map->pg = pg;
+	map->ig = ig;
+	target->maxmap++;
+
+	return map;
+}
+
+static struct spdk_iscsi_tgt_node_map *
+spdk_iscsi_tgt_node_add_pg_ig_map(struct spdk_iscsi_tgt_node *target,
+				  int pg_tag, int ig_tag)
 {
 	struct spdk_iscsi_tgt_node_map	*map;
-	struct spdk_iscsi_portal_grp		*pg;
+	struct spdk_iscsi_portal_grp	*pg;
 	struct spdk_iscsi_init_grp	*ig;
 
 	if (target->maxmap >= MAX_TARGET_MAP) {
@@ -529,15 +546,60 @@ spdk_iscsi_tgt_node_add_map(struct spdk_iscsi_tgt_node *target,
 		SPDK_ERRLOG("%s: InitiatorGroup%d not active\n", target->name, ig_tag);
 		return NULL;
 	}
-	pg->ref++;
-	ig->ref++;
+	map = _spdk_iscsi_tgt_node_add_pg_ig_map(target, pg, ig);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-	map = &target->map[target->maxmap];
-	map->pg = pg;
-	map->ig = ig;
-	target->maxmap++;
 
 	return map;
+}
+
+static int
+spdk_iscsi_tgt_node_add_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
+				   int *pg_tag_list, int *ig_tag_list, uint16_t num_maps)
+{
+	int i;
+	struct spdk_iscsi_tgt_node_map *map;
+
+	for (i = 0; i < num_maps; i++) {
+		map = spdk_iscsi_tgt_node_add_pg_ig_map(target, pg_tag_list[i],
+							ig_tag_list[i]);
+		if (map == NULL) {
+			SPDK_ERRLOG("could not add map to target\n");
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static int
+spdk_iscsi_tgt_node_add_scsi_ports(struct spdk_iscsi_tgt_node *target,
+				   const char *name)
+{
+	char port_name[MAX_TMPBUF];
+	struct spdk_iscsi_portal_grp *unique_pgs[SPDK_SCSI_DEV_MAX_PORTS] = {0};
+	struct spdk_iscsi_portal_grp *pg;
+	int num_unique_pgs = 0;
+	int i, j;
+
+	for (i = 0; i < target->maxmap; i++) {
+		for (j = 0; j < num_unique_pgs; j++) {
+			if (unique_pgs[j] == target->map[i].pg) {
+				break;
+			}
+		}
+		if (j == SPDK_SCSI_DEV_MAX_PORTS) {
+			SPDK_ERRLOG("too many unique portal groups\n");
+			return -ENOSPC;
+		}
+		if (j == num_unique_pgs) {
+			pg = target->map[i].pg;
+			snprintf(port_name, sizeof(port_name), "%s,t,0x%4.4x",
+				 name, pg->tag);
+			spdk_scsi_dev_add_port(target->dev, pg->tag, port_name);
+			unique_pgs[j] = pg;
+			num_unique_pgs++;
+		}
+	}
+	return 0;
 }
 
 _spdk_iscsi_tgt_node *
@@ -549,13 +611,9 @@ spdk_iscsi_tgt_node_construct(int target_index,
 			      int auth_chap_disabled, int auth_chap_required, int auth_chap_mutual, int auth_group,
 			      int header_digest, int data_digest)
 {
-	char				fullname[MAX_TMPBUF], port_name[MAX_TMPBUF];
+	char				fullname[MAX_TMPBUF];
 	struct spdk_iscsi_tgt_node	*target;
-	struct spdk_iscsi_tgt_node_map *map;
-	struct spdk_iscsi_portal_grp	*unique_portal_groups[SPDK_SCSI_DEV_MAX_PORTS];
-	struct spdk_iscsi_portal_grp	*pg;
-	int				num_unique_portal_groups;
-	int				i, j, rc;
+	int				rc;
 
 	if (auth_chap_disabled && auth_chap_required) {
 		SPDK_ERRLOG("auth_chap_disabled and auth_chap_required are mutually exclusive\n");
@@ -629,37 +687,16 @@ spdk_iscsi_tgt_node_construct(int target_index,
 		return NULL;
 	}
 
-	num_unique_portal_groups = 0;
-	for (i = 0; i < num_maps; i++) {
-		map = spdk_iscsi_tgt_node_add_map(target, pg_tag_list[i],
-						  ig_tag_list[i]);
+	rc = spdk_iscsi_tgt_node_add_pg_ig_maps(target, pg_tag_list, ig_tag_list, num_maps);
+	if (rc != 0) {
+		spdk_iscsi_tgt_node_destruct(target);
+		return NULL;
+	}
 
-		if (map == NULL) {
-			SPDK_ERRLOG("could not add map to target\n");
-			spdk_iscsi_tgt_node_destruct(target);
-			return NULL;
-		}
-
-		for (j = 0; j < num_unique_portal_groups; j++) {
-			if (unique_portal_groups[j] == map->pg) {
-				break;
-			}
-		}
-
-		if (j == SPDK_SCSI_DEV_MAX_PORTS) {
-			SPDK_ERRLOG("too many unique portal groups\n");
-			spdk_iscsi_tgt_node_destruct(target);
-			return NULL;
-		}
-
-		if (j == num_unique_portal_groups) {
-			pg = map->pg;
-			snprintf(port_name, sizeof(port_name), "%s,t,0x%4.4x",
-				 name, pg->tag);
-			spdk_scsi_dev_add_port(target->dev, pg->tag, port_name);
-			unique_portal_groups[j] = pg;
-			num_unique_portal_groups++;
-		}
+	rc = spdk_iscsi_tgt_node_add_scsi_ports(target, name);
+	if (rc != 0) {
+		spdk_iscsi_tgt_node_destruct(target);
+		return NULL;
 	}
 
 	target->auth_chap_disabled = auth_chap_disabled;
@@ -996,41 +1033,67 @@ spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
-void spdk_iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
-				    struct spdk_iscsi_init_grp *initiator_group)
+static void
+spdk_iscsi_tgt_node_delete_and_shrink_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
+		int delete_idx)
+{
+	int i;
+
+	target->map[delete_idx].pg->ref--;
+	target->map[delete_idx].ig->ref--;
+	for (i = delete_idx; i < target->maxmap - 1; i++) {
+		target->map[i].pg = target->map[i + 1].pg;
+		target->map[i].ig = target->map[i + 1].ig;
+	}
+	target->map[target->maxmap - 1].pg = NULL;
+	target->map[target->maxmap - 1].ig = NULL;
+	target->maxmap -= 1;
+}
+
+static void
+spdk_iscsi_tgt_node_delete_pg_ig_maps_for_pg(struct spdk_iscsi_tgt_node *target,
+		struct spdk_iscsi_portal_grp *pg)
+{
+	int i;
+loop:
+	for (i = 0; i < target->maxmap; i++) {
+		if (target->map[i].pg->tag == pg->tag) {
+			spdk_iscsi_tgt_node_delete_and_shrink_pg_ig_maps(target, i);
+			goto loop;
+		}
+	}
+}
+
+static void
+spdk_iscsi_tgt_node_delete_pg_ig_maps_for_ig(struct spdk_iscsi_tgt_node *target,
+		struct spdk_iscsi_init_grp *ig)
+{
+	int i;
+loop:
+	for (i = 0; i < target->maxmap; i++) {
+		if (target->map[i].ig->tag == ig->tag) {
+			spdk_iscsi_tgt_node_delete_and_shrink_pg_ig_maps(target, i);
+			goto loop;
+		}
+	}
+}
+
+void
+spdk_iscsi_delete_tgt_node_pg_maps(struct spdk_iscsi_portal_grp *pg)
 {
 	struct spdk_iscsi_tgt_node *target;
-	int i = 0;
-	int j = 0;
-	int flag = 0;
 
 	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
-loop:
-		flag = 0;
-		for (i = 0; i < target->maxmap; i++) {
-			if (portal_group) {
-				if (target->map[i].pg->tag == portal_group->tag) {
-					flag = 1;
-				}
-			}
-			if (initiator_group) {
-				if (target->map[i].ig->tag == initiator_group->tag) {
-					flag = 1;
-				}
-			}
+		spdk_iscsi_tgt_node_delete_pg_ig_maps_for_pg(target, pg);
+	}
+}
 
-			if (flag == 1) {
-				target->map[i].pg->ref--;
-				target->map[i].ig->ref--;
-				for (j = i; j < target->maxmap - 1; j++) {
-					target->map[j].pg = target->map[j + 1].pg;
-					target->map[j].ig = target->map[j + 1].ig;
-				}
-				target->map[target->maxmap - 1].pg = NULL;
-				target->map[target->maxmap - 1].ig = NULL;
-				target->maxmap -= 1;
-				goto loop;
-			}
-		}
+void
+spdk_iscsi_delete_tgt_node_ig_maps(struct spdk_iscsi_init_grp *ig)
+{
+	struct spdk_iscsi_tgt_node *target;
+
+	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
+		spdk_iscsi_tgt_node_delete_pg_ig_maps_for_ig(target, ig);
 	}
 }
