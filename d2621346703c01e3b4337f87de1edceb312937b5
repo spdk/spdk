@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0e3efea_634eda89",
+        "filename": "autotest.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-24T10:51:49Z",
+      "side": 1,
+      "message": "I\u0027d prefer this was done in a separate (preceding) commit",
+      "range": {
+        "startLine": 157,
+        "startChar": 45,
+        "endLine": 157,
+        "endChar": 125
+      },
+      "revId": "d2621346703c01e3b4337f87de1edceb312937b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56d4e71b_a076db1c",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-24T10:51:49Z",
+      "side": 1,
+      "message": "In case of fail return 1\nAlso, this is not related to the commit message, so I think you should mention that you fix something while adding the tests",
+      "range": {
+        "startLine": 83,
+        "startChar": 12,
+        "endLine": 83,
+        "endChar": 20
+      },
+      "revId": "d2621346703c01e3b4337f87de1edceb312937b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07b3cebb_70818793",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-24T10:51:49Z",
+      "side": 1,
+      "message": "This looks like an unrelated change - renaming or re-ordering?\nYou should probably do that in a separate commit",
+      "range": {
+        "startLine": 31,
+        "startChar": 12,
+        "endLine": 31,
+        "endChar": 60
+      },
+      "revId": "d2621346703c01e3b4337f87de1edceb312937b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bff54ddb_8b15fbb9",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-24T10:51:49Z",
+      "side": 1,
+      "message": "unrelated?",
+      "range": {
+        "startLine": 48,
+        "startChar": 14,
+        "endLine": 48,
+        "endChar": 42
+      },
+      "revId": "d2621346703c01e3b4337f87de1edceb312937b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
