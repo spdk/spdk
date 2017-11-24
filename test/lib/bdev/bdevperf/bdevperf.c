@@ -64,7 +64,6 @@ static int g_time_in_sec;
 static int g_show_performance_real_time = 0;
 static bool g_run_failed = false;
 static bool g_zcopy = true;
-static struct spdk_mempool *task_pool;
 static int g_mem_size = 0;
 static unsigned g_master_core;
 
@@ -601,8 +600,8 @@ bdevperf_construct_targets_tasks(void)
 
 				task->buf = spdk_dma_zmalloc(g_io_size, g_min_alignment, NULL);
 				if (!task->buf) {
-					fprintf(stderr, "Cannot allocate task->buf\n");
-					spdk_mempool_put(task_pool, task);
+					fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
+					free(task);
 					goto ret;
 				}
 
