@@ -140,6 +140,7 @@ struct spdk_vhost_dev {
 	char *path;
 
 	int vid;
+	uint32_t uniqid;
 	int task_cnt;
 	int32_t lcore;
 	uint64_t cpumask;

@@ -42,6 +42,7 @@
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
 
+static uint32_t uniqid_counter = 0;
 static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
 
 /* Path to folder where character device will be created. Can be set by user. */
@@ -572,6 +573,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
 	vdev->vid = -1;
+	vdev->uniqid = ++uniqid_counter;
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
 	vdev->type = type;
