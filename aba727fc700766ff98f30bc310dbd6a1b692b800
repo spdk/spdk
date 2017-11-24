@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bfd5b669_956a4d02",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-24T14:03:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "71062875_504e71bb",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 28
+      },
+      "revId": "aba727fc700766ff98f30bc310dbd6a1b692b800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1343bddd_88ab9315",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-24T12:58:04Z",
       "side": 1,
       "message": "I think that if we already have vbdev_get_lvs_bdev_by_lvs(), it would make sense to have vbdev_get_lvs_bdev_by_bdev().\nThis foreach would be basically it, but would include check if lvs is already being destroyed (same as vbdev_get_lvs_bdev_by_lvs() has).\n\nSuch change could be made as separate patch.",
+      "range": {
+        "startLine": 67,
+        "startChar": 1,
+        "endLine": 68,
+        "endChar": 43
+      },
+      "revId": "aba727fc700766ff98f30bc310dbd6a1b692b800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed91cf71_501da7c8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-24T14:03:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1343bddd_88ab9315",
       "range": {
         "startLine": 67,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "4e912db0_6e51ea9d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-24T14:03:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1afa6028_e0886c10",
+      "range": {
+        "startLine": 69,
+        "startChar": 35,
+        "endLine": 69,
+        "endChar": 69
+      },
+      "revId": "aba727fc700766ff98f30bc310dbd6a1b692b800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "03a14d63_b795f6bc",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 2
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "32283019_a0679034",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 807,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-24T14:03:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "03a14d63_b795f6bc",
+      "range": {
+        "startLine": 807,
+        "startChar": 0,
+        "endLine": 807,
+        "endChar": 14
+      },
+      "revId": "aba727fc700766ff98f30bc310dbd6a1b692b800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67d1bf63_2f8e91be",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 2
@@ -105,6 +201,30 @@
       "writtenOn": "2017-11-24T12:58:04Z",
       "side": 1,
       "message": "This could be simplified by assigning lvs_bdev using TAILQ_FIRST (Or even vbdev_lvol_store_first()). Replacing this if statement with lvs_bdev \u003d\u003d NULL. else would follow with vbdev_lvs_unload().",
+      "range": {
+        "startLine": 811,
+        "startChar": 1,
+        "endLine": 811,
+        "endChar": 39
+      },
+      "revId": "aba727fc700766ff98f30bc310dbd6a1b692b800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc3cec9a_9118562b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 811,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-24T14:03:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "67d1bf63_2f8e91be",
       "range": {
         "startLine": 811,
         "startChar": 1,
