@@ -62,6 +62,22 @@ vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
 		}
 		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
 	}
+
+	return NULL;
+}
+
+static struct lvol_store_bdev *
+vbdev_get_lvs_bdev_by_bdev(struct spdk_bdev *bdev_orig)
+{
+	struct lvol_store_bdev *lvs_bdev = vbdev_lvol_store_first();
+
+	while (lvs_bdev != NULL) {
+		if (lvs_bdev->bdev == bdev_orig) {
+			return lvs_bdev;
+		}
+		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
+	}
+
 	return NULL;
 }
 
@@ -69,14 +85,11 @@ static void
 vbdev_lvs_hotremove_cb(void *ctx)
 {
 	struct spdk_bdev *bdev = ctx;
-	struct lvol_store_bdev *lvs_bdev, *tmp;
+	struct lvol_store_bdev *lvs_bdev;
 
-	TAILQ_FOREACH_SAFE(lvs_bdev, &g_spdk_lvol_pairs, lvol_stores, tmp) {
-		if (lvs_bdev) {
-			if (lvs_bdev->bdev == bdev) {
-				vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
-			}
-		}
+	lvs_bdev = vbdev_get_lvs_bdev_by_bdev(bdev);
+	if (lvs_bdev != NULL) {
+		vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
 	}
 }
 
