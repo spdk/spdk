@@ -40,6 +40,7 @@
 
 #include "spdk/queue.h"
 #include "spdk/blob.h"
+#include "spdk_internal/bdev.h"
 #include <uuid/uuid.h>
 
 struct spdk_lvol_store;
@@ -178,6 +179,13 @@ struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol);
  * \return Handle to lvol_store_bdev or NULL if not found.
  */
 struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig);
+
+/**
+ * \brief Search for handle to lvolstore bdev
+ * \param bdev_orig Handle to spdk_bdev
+ * \return Handle to lvol_store_bdev or NULL if not found.
+ */
+struct lvol_store_bdev *vbdev_get_lvs_bdev_by_bdev(struct spdk_bdev *bdev_orig);
 
 /**
  * \brief Search for handle to lvol
