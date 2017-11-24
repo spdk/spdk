@@ -37,12 +37,6 @@
 
 #include "spdk/conf.h"
 
-enum group_state {
-	GROUP_INIT = 0x0,
-	GROUP_READY = 0x1,
-	GROUP_DESTROY = 0x2,
-};
-
 struct spdk_iscsi_initiator_name {
 	char *name;
 	TAILQ_ENTRY(spdk_iscsi_initiator_name) tailq;
@@ -60,7 +54,6 @@ struct spdk_iscsi_init_grp {
 	TAILQ_HEAD(, spdk_iscsi_initiator_netmask) netmask_head;
 	int ref;
 	int tag;
-	enum group_state state;
 	TAILQ_ENTRY(spdk_iscsi_init_grp)	tailq;
 };
 

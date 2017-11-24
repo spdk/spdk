@@ -51,7 +51,6 @@ struct spdk_iscsi_portal {
 struct spdk_iscsi_portal_grp {
 	int ref;
 	int tag;
-	enum group_state state;
 	TAILQ_ENTRY(spdk_iscsi_portal_grp)	tailq;
 	TAILQ_HEAD(, spdk_iscsi_portal)		head;
 };
