@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4692868d_3dd27f35",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-24T04:00:16Z",
+      "side": 1,
+      "message": "Hi Lu, thanks for test this case, but I think the patch still not the safe way to fix this issue, the nvme_bdev will be freed when we unregister the bdev, it is not safe the go through the list here, so when you test the hotplug, could you please hotremove the device from nvme device level?",
+      "range": {
+        "startLine": 1122,
+        "startChar": 29,
+        "endLine": 1122,
+        "endChar": 33
+      },
+      "revId": "c8756cc33f7702b3d46da2710cb8148c6ce11d21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
