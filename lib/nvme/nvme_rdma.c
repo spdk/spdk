@@ -119,6 +119,25 @@ struct spdk_nvme_rdma_req {
 	STAILQ_ENTRY(spdk_nvme_rdma_req)	link;
 };
 
+static const char *rdma_cm_event_str[] = {
+	"RDMA_CM_EVENT_ADDR_RESOLVED",
+	"RDMA_CM_EVENT_ADDR_ERROR",
+	"RDMA_CM_EVENT_ROUTE_RESOLVED",
+	"RDMA_CM_EVENT_ROUTE_ERROR",
+	"RDMA_CM_EVENT_CONNECT_REQUEST",
+	"RDMA_CM_EVENT_CONNECT_RESPONSE",
+	"RDMA_CM_EVENT_CONNECT_ERROR",
+	"RDMA_CM_EVENT_UNREACHABLE",
+	"RDMA_CM_EVENT_REJECTED",
+	"RDMA_CM_EVENT_ESTABLISHED",
+	"RDMA_CM_EVENT_DISCONNECTED",
+	"RDMA_CM_EVENT_DEVICE_REMOVAL",
+	"RDMA_CM_EVENT_MULTICAST_JOIN",
+	"RDMA_CM_EVENT_MULTICAST_ERROR",
+	"RDMA_CM_EVENT_ADDR_CHANGE",
+	"RDMA_CM_EVENT_TIMEWAIT_EXIT"
+};
+
 static int nvme_rdma_qpair_destroy(struct spdk_nvme_qpair *qpair);
 
 static inline struct nvme_rdma_qpair *
@@ -162,6 +181,16 @@ nvme_rdma_req_complete(struct nvme_request *req,
 	nvme_free_request(req);
 }
 
+static const char *
+nvme_rdma_cm_event_str_get(uint32_t event)
+{
+	if (event < SPDK_COUNTOF(rdma_cm_event_str)) {
+		return rdma_cm_event_str[event];
+	} else {
+		return "Undefined";
+	}
+}
+
 static struct rdma_cm_event *
 nvme_rdma_get_event(struct rdma_event_channel *channel,
 		    enum rdma_cm_event_type evt)
@@ -179,8 +208,9 @@ nvme_rdma_get_event(struct rdma_event_channel *channel,
 	}
 
 	if (event->event != evt) {
-		SPDK_ERRLOG("Received event %d from CM event channel, but expected event %d\n",
-			    event->event, evt);
+		SPDK_ERRLOG("Received event: %d(%s) from CM event channel, but expected event: (%s)\n",
+			    event->event, nvme_rdma_cm_event_str_get(event->event),
+			    nvme_rdma_cm_event_str_get(evt));
 		rdma_ack_cm_event(event);
 		return NULL;
 	}
