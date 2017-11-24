@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f40957f_5f5d0ca0",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-24T13:43:36Z",
+      "side": 1,
+      "message": "Might be nitpicking, but I think this option will be very rarely used. Only in cases where devices do not support both, unmap and write_zeroes - resulting in much longer blobstore creation time.\nMight be better to name it as \"disable_trim_on_init\" or \"skip_trim_on_init\". Giving a hint that by default trimming is enabled.",
+      "range": {
+        "startLine": 157,
+        "startChar": 6,
+        "endLine": 157,
+        "endChar": 18
+      },
+      "revId": "fadff8ec528224a6f643543b7e1e1e2bb1d810b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
