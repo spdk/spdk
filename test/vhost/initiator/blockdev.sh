@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-set -e
 BASE_DIR=$(readlink -f $(dirname $0))
 ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 
+set -e
 bdevperf_time=10
 RPC_PY="$ROOT_DIR/scripts/rpc.py"
 
