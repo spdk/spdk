@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7aae96c_25a1b619",
+        "filename": "dpdk",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-24T10:44:54Z",
+      "side": 1,
+      "message": "Unrelated change",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 58
+      },
+      "revId": "dcbf70a7fe4f208ff3accbe721a3c72063c9d9bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5343098b_6faa4463",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 10
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-24T10:44:54Z",
+      "side": 1,
+      "message": "Looking at the commit message - you should probably move this change to a separate commit",
+      "revId": "dcbf70a7fe4f208ff3accbe721a3c72063c9d9bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
