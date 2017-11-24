@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85b547d5_46e03d18",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-24T04:06:42Z",
+      "side": 1,
+      "message": "remove \"try to\" and simply \"will check\" is OK?",
+      "range": {
+        "startLine": 916,
+        "startChar": 94,
+        "endLine": 916,
+        "endChar": 100
+      },
+      "revId": "cbebde202d49c4259f0d61cf16c9c31ea777c12e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8904299d_0d86a9ef",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-24T04:06:42Z",
+      "side": 1,
+      "message": "tasks have not finished yet?",
+      "range": {
+        "startLine": 915,
+        "startChar": 85,
+        "endLine": 916,
+        "endChar": 22
+      },
+      "revId": "cbebde202d49c4259f0d61cf16c9c31ea777c12e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a967f29f_1aa41671",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 917,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-24T04:06:42Z",
+      "side": 1,
+      "message": "and if they finish",
+      "range": {
+        "startLine": 917,
+        "startChar": 51,
+        "endLine": 917,
+        "endChar": 68
+      },
+      "revId": "cbebde202d49c4259f0d61cf16c9c31ea777c12e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db80db6b_ed6cdcf2",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 917,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-24T04:06:42Z",
+      "side": 1,
+      "message": "all tasks related",
+      "range": {
+        "startLine": 917,
+        "startChar": 12,
+        "endLine": 917,
+        "endChar": 29
+      },
+      "revId": "cbebde202d49c4259f0d61cf16c9c31ea777c12e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
