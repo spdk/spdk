@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d27dd93_5c4dcbad",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-24T11:27:17Z",
+      "side": 1,
+      "message": "Do we want to block md writes on data_ro flag? I think it would be more reasonable to set both flags if we want have RO device. This way we can still have device with only data RO in case of some future implementations/ideas that may require this.",
+      "range": {
+        "startLine": 204,
+        "startChar": 4,
+        "endLine": 204,
+        "endChar": 23
+      },
+      "revId": "f8adb3c179319f7f607b5065bdcdc4359a01dec7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
