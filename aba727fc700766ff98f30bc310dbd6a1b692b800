@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71062875_504e71bb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-24T12:58:04Z",
+      "side": 1,
+      "message": "I don\u0027t think this function is needed, as bdev passed here in cb_arg will be the same as in hotremove_cb. This bdev already should not be present on g_spdk_lvol_pairs list.",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 28
+      },
+      "revId": "aba727fc700766ff98f30bc310dbd6a1b692b800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1343bddd_88ab9315",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-24T12:58:04Z",
+      "side": 1,
+      "message": "I think that if we already have vbdev_get_lvs_bdev_by_lvs(), it would make sense to have vbdev_get_lvs_bdev_by_bdev().\nThis foreach would be basically it, but would include check if lvs is already being destroyed (same as vbdev_get_lvs_bdev_by_lvs() has).\n\nSuch change could be made as separate patch.",
+      "range": {
+        "startLine": 67,
+        "startChar": 1,
+        "endLine": 68,
+        "endChar": 43
+      },
+      "revId": "aba727fc700766ff98f30bc310dbd6a1b692b800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1afa6028_e0886c10",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-24T12:58:04Z",
+      "side": 1,
+      "message": "No callback should be needed here.",
+      "range": {
+        "startLine": 69,
+        "startChar": 35,
+        "endLine": 69,
+        "endChar": 69
+      },
+      "revId": "aba727fc700766ff98f30bc310dbd6a1b692b800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03a14d63_b795f6bc",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 807,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-24T12:58:04Z",
+      "side": 1,
+      "message": "Body of this function is the same as in vbdev_lvs_fini_cb(). Maybe rename vbdev_lvs_fini_cb() to vbdev_lvs_fini_next() and call it directly in vbdev_lvs_fini() ?",
+      "range": {
+        "startLine": 807,
+        "startChar": 0,
+        "endLine": 807,
+        "endChar": 14
+      },
+      "revId": "aba727fc700766ff98f30bc310dbd6a1b692b800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67d1bf63_2f8e91be",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 811,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-11-24T12:58:04Z",
+      "side": 1,
+      "message": "This could be simplified by assigning lvs_bdev using TAILQ_FIRST (Or even vbdev_lvol_store_first()). Replacing this if statement with lvs_bdev \u003d\u003d NULL. else would follow with vbdev_lvs_unload().",
+      "range": {
+        "startLine": 811,
+        "startChar": 1,
+        "endLine": 811,
+        "endChar": 39
+      },
+      "revId": "aba727fc700766ff98f30bc310dbd6a1b692b800",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
