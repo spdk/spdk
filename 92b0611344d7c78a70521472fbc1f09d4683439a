@@ -59,6 +59,30 @@
     },
     {
       "key": {
+        "uuid": "9466cea6_6ac27b32",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-25T08:11:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d15739f6_0336470e",
+      "range": {
+        "startLine": 122,
+        "startChar": 8,
+        "endLine": 122,
+        "endChar": 38
+      },
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed826be4_019d3506",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 21
@@ -82,6 +106,30 @@
     },
     {
       "key": {
+        "uuid": "8522ce24_a82510b0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-25T08:11:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ed826be4_019d3506",
+      "range": {
+        "startLine": 175,
+        "startChar": 4,
+        "endLine": 175,
+        "endChar": 14
+      },
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ceb38a0d_e7ad4254",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 21
@@ -93,6 +141,30 @@
       "writtenOn": "2017-11-22T22:10:32Z",
       "side": 1,
       "message": "It would be good to name this something more specific than just \"poller\" - maybe \"qos_poller\"?",
+      "range": {
+        "startLine": 177,
+        "startChar": 21,
+        "endLine": 177,
+        "endChar": 27
+      },
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5c47e1b_f3119148",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-25T08:11:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ceb38a0d_e7ad4254",
       "range": {
         "startLine": 177,
         "startChar": 21,
@@ -145,6 +217,30 @@
     },
     {
       "key": {
+        "uuid": "f4ea88e5_360f9712",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-25T08:11:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e1d974d8_9ee2fe43",
+      "range": {
+        "startLine": 809,
+        "startChar": 0,
+        "endLine": 809,
+        "endChar": 27
+      },
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c1835389_af1ce39d",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 21
@@ -156,6 +252,30 @@
       "writtenOn": "2017-11-22T22:10:32Z",
       "side": 1,
       "message": "bdev_io will be NULL here - you probably want to get the head of the list.\n\nAlso, we should only submit I/O if it is allowed by the rate limits - this looks like it will submit the entire qos_io list, even if that is more than one millisecond worth of I/O.",
+      "range": {
+        "startLine": 819,
+        "startChar": 28,
+        "endLine": 819,
+        "endChar": 35
+      },
+      "revId": "92b0611344d7c78a70521472fbc1f09d4683439a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "438d63b7_7e8022d7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-25T08:11:34Z",
+      "side": 1,
+      "message": "Yes. Miss the call to get the bdev_io first.\n\nHere the basic logic is to get one IO allowed by the rate limiting and break out. For those already timed out IO due to the rate limiting, just complete it with BUSY status.\n\nMaybe the BUSY status return can be tracked in another patch. Or I can just change the TIMEOUT value to a large one.",
+      "parentUuid": "c1835389_af1ce39d",
       "range": {
         "startLine": 819,
         "startChar": 28,
