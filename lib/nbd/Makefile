@@ -34,6 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+CFLAGS += $(ENV_CFLAGS) -I$(SPDK_ROOT_DIR)/lib
 LIBNAME = nbd
 C_SRCS = nbd.c
 
