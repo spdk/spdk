@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ffd35a2c_b2b43b03",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-25T08:11:34Z",
+      "side": 1,
+      "message": "tag an arrival time here before inserting on the qos_io. Check the duration to return BUSY immediately if exceeding 10ms when starting handling this IO.",
+      "range": {
+        "startLine": 673,
+        "startChar": 4,
+        "endLine": 673,
+        "endChar": 55
+      },
+      "revId": "8cf1c3023e24314d89c206669bea022871007592",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
