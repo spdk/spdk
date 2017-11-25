@@ -117,6 +117,30 @@
     },
     {
       "key": {
+        "uuid": "a622fd8e_18b0496f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-25T08:11:34Z",
+      "side": 1,
+      "message": "When this function is called from the poller, it will go through from the head and complete those already queued long enough IO (can have a larger value at this moment to disable this logic) and send those IOs down which are allowed for this time slot.\n\nThanks for the comments.",
+      "parentUuid": "343c1821_debadab1",
+      "range": {
+        "startLine": 819,
+        "startChar": 0,
+        "endLine": 820,
+        "endChar": 43
+      },
+      "revId": "721f7d5050446d51787704c9f02290cca204640c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7c2f140_b57068c9",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 24
