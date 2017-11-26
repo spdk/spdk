@@ -1,6 +1,7 @@
 [Malloc]
   NumberOfLuns 3
   LunSizeInMB 64
+  IOsInSec 10000
 
 [Split]
   # Split Malloc1 into two auto-sized halves
