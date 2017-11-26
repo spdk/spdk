@@ -46,6 +46,8 @@
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
+#define MALLOC_BDEV_DEFAULT_QOS_IN_SEC	10000
+
 struct malloc_disk {
 	struct spdk_bdev	disk;
 	void 			*malloc_buf;
@@ -367,7 +369,8 @@ static const struct spdk_bdev_fn_table malloc_fn_table = {
 	.get_io_channel		= bdev_malloc_get_io_channel,
 };
 
-struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint32_t block_size)
+struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks,
+				     uint32_t block_size, uint64_t ios_per_sec)
 {
 	struct malloc_disk	*mdisk;
 
@@ -416,6 +419,8 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 	mdisk->disk.write_cache = 1;
 	mdisk->disk.blocklen = block_size;
 	mdisk->disk.blockcnt = num_blocks;
+	//mdisk->disk.ios_per_sec = ios_per_sec;
+	mdisk->disk.ios_per_sec = 10000;
 
 	mdisk->disk.ctxt = mdisk;
 	mdisk->disk.fn_table = &malloc_fn_table;
@@ -439,7 +444,7 @@ static void free_malloc_disk(struct malloc_disk *mdisk)
 static int bdev_malloc_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Malloc");
-	int NumberOfLuns, LunSizeInMB, BlockSize, i, rc = 0;
+	int NumberOfLuns, LunSizeInMB, BlockSize, i, IOsInSec, rc = 0;
 	uint64_t size;
 	struct spdk_bdev *bdev;
 
@@ -447,6 +452,7 @@ static int bdev_malloc_initialize(void)
 		NumberOfLuns = spdk_conf_section_get_intval(sp, "NumberOfLuns");
 		LunSizeInMB = spdk_conf_section_get_intval(sp, "LunSizeInMB");
 		BlockSize = spdk_conf_section_get_intval(sp, "BlockSize");
+		IOsInSec = spdk_conf_section_get_intval(sp, "IOsInSecond");
 		if ((NumberOfLuns < 1) || (LunSizeInMB < 1)) {
 			SPDK_ERRLOG("Malloc section present, but no devices specified\n");
 			rc = EINVAL;
@@ -456,9 +462,15 @@ static int bdev_malloc_initialize(void)
 			/* Default is 512 bytes */
 			BlockSize = 512;
 		}
+		if (IOsInSec < 1) {
+			IOsInSec = 0;
+		} else if (IOsInSec < 1000) {
+			/* Default is 10K IOPS */
+			IOsInSec = MALLOC_BDEV_DEFAULT_QOS_IN_SEC;
+		}
 		size = (uint64_t)LunSizeInMB * 1024 * 1024;
 		for (i = 0; i < NumberOfLuns; i++) {
-			bdev = create_malloc_disk(NULL, size / BlockSize, BlockSize);
+			bdev = create_malloc_disk(NULL, size / BlockSize, BlockSize, IOsInSec);
 			if (bdev == NULL) {
 				SPDK_ERRLOG("Could not create malloc disk\n");
 				rc = EINVAL;
