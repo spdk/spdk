@@ -174,6 +174,7 @@ p = subparsers.add_parser('construct_malloc_bdev', help='Add a bdev with malloc 
 p.add_argument('-b', '--name', help="Name of the bdev")
 p.add_argument('total_size', help='Size of malloc bdev in MB (int > 0)', type=int)
 p.add_argument('block_size', help='Block size for this bdev', type=int)
+p.add_argument('-i', '--ios_in_sec', help="Limited IOPS for this bdev", type=int, required=False)
 p.set_defaults(func=construct_malloc_bdev)
 
 
