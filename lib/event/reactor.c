@@ -681,6 +681,11 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 	struct spdk_poller *poller;
 	struct spdk_reactor *reactor;
 
+	if (g_reactor_state == SPDK_REACTOR_STATE_INVALID) {
+		SPDK_ERRLOG("Reactor not started on this core %u\n", spdk_env_get_current_core());
+		return;
+	}
+
 	poller = calloc(1, sizeof(*poller));
 	if (poller == NULL) {
 		SPDK_ERRLOG("Poller memory allocation failed\n");
