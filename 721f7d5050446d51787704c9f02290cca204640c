@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "28e80f5d_6ef38ecf",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-26T02:24:41Z",
+      "side": 1,
+      "message": "Thanks for the comments. I\u0027ve re-organized the code to be more clear. Here it is just to have one queued IO from qos_io queue to run and make the new incoming IO on the qos_io list.",
+      "parentUuid": "eeaa7750_f1899c78",
+      "range": {
+        "startLine": 748,
+        "startChar": 0,
+        "endLine": 752,
+        "endChar": 56
+      },
+      "revId": "721f7d5050446d51787704c9f02290cca204640c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9611b18e_d624d756",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 24
@@ -59,6 +83,30 @@
       "writtenOn": "2017-11-23T13:24:05Z",
       "side": 1,
       "message": "I think you should know the exact interval of this poller.\nthe poller can expect each interval will be approximately one second but the poller will always observe some error.\nThe poller must compensate observed error to achieve exact QoS.",
+      "range": {
+        "startLine": 809,
+        "startChar": 0,
+        "endLine": 809,
+        "endChar": 37
+      },
+      "revId": "721f7d5050446d51787704c9f02290cca204640c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "636be0d6_6ee7300a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-26T02:24:41Z",
+      "side": 1,
+      "message": "Good point here. The one second interval is not that exactly constant and with some rough variation. Will think about this later. Thanks to point this out.",
+      "parentUuid": "9611b18e_d624d756",
       "range": {
         "startLine": 809,
         "startChar": 0,
