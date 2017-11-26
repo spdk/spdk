@@ -61,7 +61,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define BUF_LARGE_POOL_SIZE			1024
 #define NOMEM_THRESHOLD_COUNT			8
 #define ZERO_BUFFER_SIZE			0x100000
-#define BDEV_QOS_DEFAULT_MAX_IO_COUNT_IN_MS	10
+#define BDEV_QOS_DEFAULT_MAX_IO_COUNT_IN_SEC	10000
 
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
 
@@ -899,10 +899,10 @@ spdk_bdev_channel_poll_qos(void *arg)
 
 	/* Max IO has been sent in the past one ms */
 	if (completed_ios_in_last_ms >= ch->qos_max_ios_per_ms) {
-		ch->qos_max_ios_per_ms = BDEV_QOS_DEFAULT_MAX_IO_COUNT_IN_MS;
+		ch->qos_max_ios_per_ms = bdev->ios_per_sec / 1000;
 	} else {
 		/* Increase the max IOS for next ms */
-		ch->qos_max_ios_per_ms = BDEV_QOS_DEFAULT_MAX_IO_COUNT_IN_MS +
+		ch->qos_max_ios_per_ms = bdev->ios_per_sec / 1000 +
 					 ch->qos_max_ios_per_ms - completed_ios_in_last_ms;
 	}
 
@@ -940,7 +940,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->queued_resets);
 	TAILQ_INIT(&ch->nomem_io);
 	TAILQ_INIT(&ch->qos_io);
-	ch->qos_max_ios_per_ms = 0;
+	ch->qos_max_ios_per_ms = bdev->ios_per_sec / 1000;
 	ch->io_completed_per_ms = 0;
 	ch->nomem_threshold = 0;
 	ch->flags = 0;
@@ -2534,7 +2534,13 @@ spdk_bdev_enable_qos(struct spdk_bdev_desc *desc)
 
 	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
 
-	bdev_ch->qos_max_ios_per_ms = BDEV_QOS_DEFAULT_MAX_IO_COUNT_IN_MS;
+	struct spdk_bdev *bdev = bdev_ch->bdev;
+
+	if (bdev->ios_per_sec == 0) {
+		bdev->ios_per_sec = BDEV_QOS_DEFAULT_MAX_IO_COUNT_IN_SEC;
+	}
+
+	bdev_ch->qos_max_ios_per_ms = bdev->ios_per_sec / 1000;
 
 	/* Rate limiting on this channel enabled */
 	if (bdev_ch->qos_max_ios_per_ms > 0) {
