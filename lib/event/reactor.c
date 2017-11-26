@@ -712,6 +712,13 @@ spdk_poller_register(struct spdk_poller **ppoller, spdk_poller_fn fn, void *arg,
 	*ppoller = poller;
 	reactor = spdk_reactor_get(poller->lcore);
 
+	if (!reactor) {
+		SPDK_ERRLOG("Reactor not started on this core\n");
+		*ppoller = NULL;
+		free(poller);
+		return;
+	}
+
 	if (poller->period_ticks) {
 		spdk_poller_insert_timer(reactor, poller, spdk_get_ticks());
 	} else {
