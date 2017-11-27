@@ -213,8 +213,12 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 
 			for (i = 0; i < desc_extent->length / sizeof(desc_extent->extents[0]); i++) {
 				for (j = 0; j < desc_extent->extents[i].length; j++) {
-					blob->active.clusters[blob->active.num_clusters++] = _spdk_bs_cluster_to_lba(blob->bs,
-							desc_extent->extents[i].cluster_idx + j);
+					if (desc_extent->extents[i].cluster_idx != 0) {
+						blob->active.clusters[blob->active.num_clusters++] = _spdk_bs_cluster_to_lba(blob->bs,
+								desc_extent->extents[i].cluster_idx + j);
+					} else {
+						blob->active.clusters[blob->active.num_clusters++] = 0;
+					}
 				}
 			}
 
@@ -549,6 +553,9 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_blob_md_page	*page;
 	int				rc;
 	uint32_t			crc;
+	const void 			*value;
+	size_t 				value_len;
+
 
 	page = &ctx->pages[ctx->num_pages - 1];
 	crc = _spdk_blob_md_page_calc_crc(page);
@@ -597,7 +604,14 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	_spdk_blob_mark_clean(blob);
 
-	ctx->cb_fn(seq, ctx->cb_arg, rc);
+	rc = spdk_bs_md_get_xattr_value(blob, "provisioning", &value, &value_len);
+	if (rc < 0) {
+		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Blob %lu does not have provisioning attribute\n", blob->id);
+	} else {
+		blob->thin_provisioned = *(bool *)value;
+	}
+
+	ctx->cb_fn(seq, ctx->cb_arg, 0);
 
 	/* Free the memory */
 	spdk_dma_free(ctx->pages);
@@ -918,15 +932,17 @@ _spdk_resize_blob(struct spdk_blob *blob, uint64_t sz)
 	 * and another to actually claim them.
 	 */
 
-	lfc = 0;
-	for (i = blob->active.num_clusters; i < sz; i++) {
-		lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
-		if (lfc >= bs->total_clusters) {
-			/* No more free clusters. Cannot satisfy the request */
-			assert(false);
-			return -1;
+	if (blob->thin_provisioned == false) {
+		lfc = 0;
+		for (i = blob->active.num_clusters; i < sz; i++) {
+			lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
+			if (lfc >= bs->total_clusters) {
+				/* No more free clusters. Cannot satisfy the request */
+				assert(false);
+				return -1;
+			}
+			lfc++;
 		}
-		lfc++;
 	}
 
 	if (sz > blob->active.num_clusters) {
@@ -942,13 +958,15 @@ _spdk_resize_blob(struct spdk_blob *blob, uint64_t sz)
 		blob->active.cluster_array_size = sz;
 	}
 
-	lfc = 0;
-	for (i = blob->active.num_clusters; i < sz; i++) {
-		lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
-		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Claiming cluster %lu for blob %lu\n", lfc, blob->id);
-		_spdk_bs_claim_cluster(bs, lfc);
-		blob->active.clusters[i] = _spdk_bs_cluster_to_lba(bs, lfc);
-		lfc++;
+	if (blob->thin_provisioned == false) {
+		lfc = 0;
+		for (i = blob->active.num_clusters; i < sz; i++) {
+			lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
+			SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Claiming cluster %lu for blob %lu\n", lfc, blob->id);
+			_spdk_bs_claim_cluster(bs, lfc);
+			blob->active.clusters[i] = _spdk_bs_cluster_to_lba(bs, lfc);
+			lfc++;
+		}
 	}
 
 	blob->active.num_clusters = sz;
@@ -2699,6 +2717,19 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	}
 
 	_spdk_blob_load(seq, blob, _spdk_bs_md_open_blob_cpl, blob);
+}
+
+void
+spdk_bs_md_set_thin_provision(struct spdk_blob *blob, const char *base,
+			      spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	int rc;
+
+	blob->thin_provisioned = true;
+
+	rc = spdk_blob_md_set_xattr(blob, "provisioning", &blob->thin_provisioned, sizeof(bool));
+
+	cb_fn(cb_arg, rc);
 }
 
 /* START spdk_bs_md_sync_blob */
