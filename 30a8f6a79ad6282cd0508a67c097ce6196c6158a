@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07d1deb8_a2e6394c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1769,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T19:32:41Z",
+      "side": 1,
+      "message": "let\u0027s change this to -EINVAL",
+      "revId": "30a8f6a79ad6282cd0508a67c097ce6196c6158a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38d5d194_d15c704e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1774,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T19:32:41Z",
+      "side": 1,
+      "message": "-EEXIST\n\nthis allows the caller to know more about why the call failed",
+      "revId": "30a8f6a79ad6282cd0508a67c097ce6196c6158a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5523eff5_e916f341",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T19:32:41Z",
+      "side": 1,
+      "message": "would EEXIST be a better errno to return here?\n\nor even better - have spdk_bdev_register return an errno - and then just return rc here",
+      "revId": "30a8f6a79ad6282cd0508a67c097ce6196c6158a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3885d03e_da06e86d",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T19:32:41Z",
+      "side": 1,
+      "message": "we should probably do spdk_io_device_unregister() here - but we don\u0027t call it anywhere else so that can be a different patch",
+      "revId": "30a8f6a79ad6282cd0508a67c097ce6196c6158a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
