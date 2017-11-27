@@ -50,6 +50,47 @@
       "revId": "351a427aa26983a9269f19cd8c607bf7d85bd003",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f52bf20_c96ea89d",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-27T17:27:40Z",
+      "side": 1,
+      "message": "oh, you\u0027re right. let me study why.",
+      "parentUuid": "efdc1c76_f0db456a",
+      "revId": "351a427aa26983a9269f19cd8c607bf7d85bd003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b001821c_c0514f34",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-27T17:27:40Z",
+      "side": 1,
+      "message": "shall be spdk_mb",
+      "range": {
+        "startLine": 101,
+        "startChar": 8,
+        "endLine": 101,
+        "endChar": 16
+      },
+      "revId": "351a427aa26983a9269f19cd8c607bf7d85bd003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
