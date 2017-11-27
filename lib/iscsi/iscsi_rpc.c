@@ -255,6 +255,8 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_iscsi_tgt_node *tgtnode;
+	struct spdk_iscsi_pg_map *pg_map;
+	struct spdk_iscsi_ig_map *ig_map;
 	int i;
 
 	if (params != NULL) {
@@ -283,13 +285,15 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 
 		spdk_json_write_name(w, "pg_ig_maps");
 		spdk_json_write_array_begin(w);
-		for (i = 0; i < tgtnode->maxmap; i++) {
-			spdk_json_write_object_begin(w);
-			spdk_json_write_name(w, "pg_tag");
-			spdk_json_write_int32(w, tgtnode->map[i].pg->tag);
-			spdk_json_write_name(w, "ig_tag");
-			spdk_json_write_int32(w, tgtnode->map[i].ig->tag);
-			spdk_json_write_object_end(w);
+		TAILQ_FOREACH(pg_map, &tgtnode->pg_map_head, tailq) {
+			TAILQ_FOREACH(ig_map, &pg_map->ig_map_head, tailq) {
+				spdk_json_write_object_begin(w);
+				spdk_json_write_name(w, "pg_tag");
+				spdk_json_write_int32(w, pg_map->pg->tag);
+				spdk_json_write_name(w, "ig_tag");
+				spdk_json_write_int32(w, ig_map->ig->tag);
+				spdk_json_write_object_end(w);
+			}
 		}
 		spdk_json_write_array_end(w);
 
