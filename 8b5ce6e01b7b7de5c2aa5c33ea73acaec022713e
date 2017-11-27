@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d4df2a7_77caa06f",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T18:56:29Z",
+      "side": 1,
+      "message": "can we just change this to spdk_rmb()?  that\u0027s is similar to what DPDK does, and matches the spdk_smp_mb() \u003d\u003e spdk_mb() definition below",
+      "revId": "8b5ce6e01b7b7de5c2aa5c33ea73acaec022713e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9e87ff5_0ba48bbe",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T18:56:29Z",
+      "side": 1,
+      "message": "can we just change this to spdk_wmb()?  that\u0027s is similar to what DPDK does, and matches the spdk_smp_mb() \u003d\u003e spdk_mb() definition below",
+      "revId": "8b5ce6e01b7b7de5c2aa5c33ea73acaec022713e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13d1f5e4_435749bd",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T18:56:29Z",
+      "side": 1,
+      "message": "should be spdk_smp_wmb",
+      "revId": "8b5ce6e01b7b7de5c2aa5c33ea73acaec022713e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
