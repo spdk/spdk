@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b1e55dd_621fedd7",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-27T21:00:56Z",
+      "side": 1,
+      "message": "I don\u0027t think a type is the right way to represent this. There are just two separate log levels - the \"print\" level and the main level. Just represent those by having two levels in the set struct, where they can optionally be NULL if the user doesn\u0027t want to change their value.",
+      "revId": "03a69ddd0155499949009e39524c620c93ae2a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ec71273_bfc0ed8a",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-27T21:00:56Z",
+      "side": 1,
+      "message": "The user is specifying strings here, and there is no issue with name collisions. I think we should just have the user write \"ERROR\", \"WARN\", etc.\n\nAlso, these should be case insensitive.",
+      "revId": "03a69ddd0155499949009e39524c620c93ae2a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
