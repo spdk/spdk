@@ -549,6 +549,9 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_blob_md_page	*page;
 	int				rc;
 	uint32_t			crc;
+	const void 			*value;
+	size_t 				value_len;
+
 
 	page = &ctx->pages[ctx->num_pages - 1];
 	crc = _spdk_blob_md_page_calc_crc(page);
@@ -597,7 +600,14 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	_spdk_blob_mark_clean(blob);
 
-	ctx->cb_fn(seq, ctx->cb_arg, rc);
+	rc = spdk_bs_md_get_xattr_value(blob, "provisioning", &value, &value_len);
+	if (rc < 0) {
+		SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Blob %lu does not have provisioning attribute\n", blob->id);
+	} else {
+		blob->thin_provisioned = *(bool *)value;
+	}
+
+	ctx->cb_fn(seq, ctx->cb_arg, 0);
 
 	/* Free the memory */
 	spdk_dma_free(ctx->pages);
@@ -2699,6 +2709,19 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	}
 
 	_spdk_blob_load(seq, blob, _spdk_bs_md_open_blob_cpl, blob);
+}
+
+void
+spdk_bs_md_set_thin_provision(struct spdk_blob *blob, const char *base,
+			      spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	int rc;
+
+	blob->thin_provisioned = true;
+
+	rc = spdk_blob_md_set_xattr(blob, "provisioning", &blob->thin_provisioned, sizeof(bool));
+
+	cb_fn(cb_arg, rc);
 }
 
 /* START spdk_bs_md_sync_blob */
