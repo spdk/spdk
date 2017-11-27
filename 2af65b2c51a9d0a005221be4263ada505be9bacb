@@ -34,6 +34,24 @@
       "revId": "2af65b2c51a9d0a005221be4263ada505be9bacb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5c47d9c_ba793fa0",
+        "filename": "examples/nvme/arbitration/arbitration.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T20:53:29Z",
+      "side": 1,
+      "message": "The performance is not a big deal, but allocating the task per I/O is adding potential failure cases that could be avoided by doing all of the allocation up front.\n\nThis is fine for now, since it at least removes the DPDK dependency, but it would be good to simplify this later to remove the mempool entirely.",
+      "parentUuid": "e51ef8a7_0a6f28e6",
+      "revId": "2af65b2c51a9d0a005221be4263ada505be9bacb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
