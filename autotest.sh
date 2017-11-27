@@ -156,6 +156,14 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 		timing_enter fs_integrity_blk
 		run_test ./test/vhost/spdk_vhost.sh --fs-integrity-blk
 		timing_exit fs_integrity_blk
+
+		timing_enter integrity_lvol_scsi_nightly
+		run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi-nightly
+		timing_exit integrity_lvol_scsi_nightly
+
+		timing_enter integrity_lvol_blk_nightly
+		run_test ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
+		timing_exit integrity_lvol_blk_nightly
 	fi
 
 	timing_enter integrity_lvol_scsi
