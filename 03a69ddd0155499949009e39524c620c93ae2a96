@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "34d160f6_105527c3",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T21:23:52Z",
+      "side": 1,
+      "message": "I would go even farther and say that there should just be two separate RPC methods, \"set_log_level\" and \"set_log_print_level\", to match the log.h APIs (and two corresponding \"get_\" methods).",
+      "parentUuid": "0b1e55dd_621fedd7",
+      "revId": "03a69ddd0155499949009e39524c620c93ae2a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ec71273_bfc0ed8a",
         "filename": "lib/log/rpc/log_rpc.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2017-11-27T21:00:56Z",
       "side": 1,
       "message": "The user is specifying strings here, and there is no issue with name collisions. I think we should just have the user write \"ERROR\", \"WARN\", etc.\n\nAlso, these should be case insensitive.",
+      "revId": "03a69ddd0155499949009e39524c620c93ae2a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74359ad4_e14b9214",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T21:23:52Z",
+      "side": 1,
+      "message": "I agree that these should be just the single words; it would be ideal if they matched the names in spdk_level_names - e.g. \"WARNING\" instead of \"WARN\".",
+      "parentUuid": "5ec71273_bfc0ed8a",
       "revId": "03a69ddd0155499949009e39524c620c93ae2a96",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
