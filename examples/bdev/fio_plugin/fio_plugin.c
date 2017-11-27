@@ -125,7 +125,7 @@ spdk_fio_bdev_init_done(void *cb_arg, int rc)
 	*(bool *)cb_arg = true;
 }
 
-static struct spdk_poller *
+static struct spdk_poller_impl *
 spdk_fio_start_poller(void *thread_ctx,
 		      spdk_thread_fn fn,
 		      void *arg,
@@ -146,11 +146,11 @@ spdk_fio_start_poller(void *thread_ctx,
 
 	TAILQ_INSERT_TAIL(&fio_thread->pollers, fio_poller, link);
 
-	return (struct spdk_poller *)fio_poller;
+	return (struct spdk_poller_impl *)fio_poller;
 }
 
 static void
-spdk_fio_stop_poller(struct spdk_poller *poller, void *thread_ctx)
+spdk_fio_stop_poller(struct spdk_poller_impl *poller, void *thread_ctx)
 {
 	struct spdk_fio_poller *fio_poller;
 	struct spdk_fio_thread *fio_thread = thread_ctx;
