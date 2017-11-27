@@ -208,6 +208,10 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			    SPDK_BLOB_MD_RO_FLAGS_MASK) {
 				blob->md_ro = true;
 			}
+
+			if ((desc_flags->invalid_flags & SPDK_BLOB_THIN_PROV) == SPDK_BLOB_THIN_PROV) {
+				blob->thin_provisioned = true;
+			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
 			struct spdk_blob_md_descriptor_extent	*desc_extent;
 			unsigned int				i, j;
@@ -2758,6 +2762,32 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	}
 
 	_spdk_blob_load(seq, blob, _spdk_bs_md_open_blob_cpl, blob);
+}
+
+int
+spdk_bs_md_set_thin_provision(struct spdk_blob *blob, const char *base)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bs_dev *bs_dev;
+
+	assert(blob != NULL);
+	assert(blob->state != SPDK_BLOB_STATE_LOADING &&
+	       blob->state != SPDK_BLOB_STATE_SYNCING);
+
+	if (base != NULL) {
+		bdev = spdk_bdev_get_by_name(base);
+		if (bdev != NULL) {
+			bs_dev = spdk_bdev_create_bs_dev(bdev, NULL, NULL);
+			if (!bs_dev) {
+				SPDK_ERRLOG("Cannot create bs_dev\n");
+				return -ENODEV;
+			}
+		}
+	}
+
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+	blob->thin_provisioned = true;
+	blob->back_bs_dev = bs_dev;
 }
 
 /* START spdk_bs_md_sync_blob */

@@ -117,6 +117,8 @@ struct spdk_blob {
 
 	enum spdk_blob_state		state;
 
+	bool thin_provisioned;
+
 	/* Two copies of the mutable data. One is a version
 	 * that matches the last known data on disk (clean).
 	 * The other (active) is the current data. Syncing
@@ -128,6 +130,8 @@ struct spdk_blob {
 	bool		invalid;
 	bool		data_ro;
 	bool		md_ro;
+
+	struct spdk_bs_dev *back_bs_dev;
 
 	/* TODO: The xattrs are mutable, but we don't want to be
 	 * copying them unecessarily. Figure this out.
@@ -237,7 +241,8 @@ struct spdk_blob_md_descriptor_extent {
  * As new flags are defined, these values will be updated to reflect the
  *  mask of all flag values understood by this application.
  */
-#define SPDK_BLOB_INVALID_FLAGS_MASK	0
+#define SPDK_BLOB_THIN_PROV (1ULL << 0)
+#define SPDK_BLOB_INVALID_FLAGS_MASK	SPDK_BLOB_THIN_PROV
 #define SPDK_BLOB_DATA_RO_FLAGS_MASK	0
 #define SPDK_BLOB_MD_RO_FLAGS_MASK	0
 
