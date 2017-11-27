@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae9024a9_e72fe702",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2560,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-27T21:24:49Z",
+      "side": 1,
+      "message": "I think this should return -EPERM",
+      "revId": "7c3f4d8aeb7c1d366e45cb12e98c1665f86c7901",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9fbeb5a_805c8fe2",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-27T21:24:49Z",
+      "side": 1,
+      "message": "This should assert that it returns -EPERM",
+      "revId": "7c3f4d8aeb7c1d366e45cb12e98c1665f86c7901",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af47529b_77ab9ec0",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 894,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-27T21:24:49Z",
+      "side": 1,
+      "message": "This should also be -EPERM",
+      "revId": "7c3f4d8aeb7c1d366e45cb12e98c1665f86c7901",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
