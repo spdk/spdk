@@ -640,7 +640,14 @@ bdev_virtio_disk_destruct(void *ctx)
 	free(disk);
 
 	if (svdev->removed && TAILQ_EMPTY(&svdev->luns)) {
-		spdk_io_device_unregister(svdev, virtio_scsi_dev_unregister_cb);
+		struct spdk_thread *thread;
+
+		thread = virtio_dev_queue_get_thread(&svdev->vdev, VIRTIO_SCSI_CONTROLQ);
+		if (thread != spdk_get_thread()) {
+			spdk_thread_send_msg(thread, virtio_scsi_dev_unregister_cb, svdev);
+		} else {
+			virtio_scsi_dev_unregister_cb(svdev);
+		}
 	}
 
 	return 0;
@@ -1668,14 +1675,9 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 {
 	struct virtio_scsi_dev *svdev = io_device;
 	struct virtio_dev *vdev = &svdev->vdev;
-	struct spdk_thread *thread;
 	bool finish_module;
 
-	thread = virtio_dev_queue_get_thread(vdev, VIRTIO_SCSI_CONTROLQ);
-	if (thread != spdk_get_thread()) {
-		spdk_thread_send_msg(thread, virtio_scsi_dev_unregister_cb, io_device);
-		return;
-	}
+	spdk_io_device_unregister(svdev);
 
 	/* bdevs built on top of this vdev mustn't be destroyed with outstanding I/O. */
 	assert(spdk_ring_count(svdev->ctrlq_ring) == 0);
@@ -1722,7 +1724,14 @@ virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev)
 	}
 
 	if (do_remove) {
-		spdk_io_device_unregister(svdev, virtio_scsi_dev_unregister_cb);
+		struct spdk_thread *thread;
+
+		thread = virtio_dev_queue_get_thread(&svdev->vdev, VIRTIO_SCSI_CONTROLQ);
+		if (thread != spdk_get_thread()) {
+			spdk_thread_send_msg(thread, virtio_scsi_dev_unregister_cb, svdev);
+		} else {
+			virtio_scsi_dev_unregister_cb(svdev);
+		}
 	}
 }
 

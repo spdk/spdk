@@ -1246,7 +1246,7 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 	}
 
 	spdk_mempool_free(rtransport->data_buf_pool);
-	spdk_io_device_unregister(rtransport, NULL);
+	spdk_io_device_unregister(rtransport);
 	free(rtransport);
 
 	return 0;

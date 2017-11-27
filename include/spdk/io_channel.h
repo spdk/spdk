@@ -65,8 +65,6 @@ typedef void (*spdk_stop_poller)(struct spdk_poller_impl *poller, void *thread_c
 typedef int (*spdk_io_channel_create_cb)(void *io_device, void *ctx_buf);
 typedef void (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
 
-typedef void (*spdk_io_device_unregister_cb)(void *io_device);
-
 typedef void (*spdk_channel_msg)(struct spdk_io_channel_iter *i);
 typedef void (*spdk_channel_for_each_cpl)(struct spdk_io_channel_iter *i, int status);
 
@@ -190,12 +188,8 @@ void spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_c
 
 /**
  * \brief Unregister the opaque io_device context as an I/O device.
- *
- * The actual unregistration might be deferred until all active I/O channels are destroyed.
- *  unregister_cb is an optional callback function invoked to release any references to
- *  this I/O device.
  */
-void spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregister_cb);
+void spdk_io_device_unregister(void *io_device);
 
 /**
  * \brief Gets an I/O channel for the specified io_device to be used by the calling thread.

@@ -48,10 +48,18 @@ struct ut_msg {
 	TAILQ_ENTRY(ut_msg)	link;
 };
 
+struct ut_poller {
+	spdk_poller_fn		fn;
+	void			*arg;
+	uint64_t		period_microseconds;
+	TAILQ_ENTRY(ut_poller)	link;
+};
+
 struct ut_thread {
 	struct spdk_thread	*thread;
 	struct spdk_io_channel	*ch;
 	TAILQ_HEAD(, ut_msg)	msgs;
+	TAILQ_HEAD(, ut_poller) pollers;
 };
 
 struct ut_thread *g_ut_threads;
@@ -68,6 +76,34 @@ __send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	msg->fn = fn;
 	msg->ctx = ctx;
 	TAILQ_INSERT_TAIL(&thread->msgs, msg, link);
+}
+
+static struct spdk_poller_impl *
+__start_poller(void *thread_ctx, spdk_poller_fn fn, void *arg, uint64_t period_microseconds)
+{
+	struct ut_thread *thread = thread_ctx;
+	struct ut_poller *poller;
+
+	poller = calloc(1, sizeof(*poller));
+	SPDK_CU_ASSERT_FATAL(poller != NULL);
+
+	poller->fn = fn;
+	poller->arg = arg;
+	poller->period_microseconds = period_microseconds;
+	TAILQ_INSERT_HEAD(&thread->pollers, poller, link);
+
+	return (struct spdk_poller_impl *)poller;
+}
+
+static void
+__stop_poller(struct spdk_poller_impl *_poller, void *thread_ctx)
+{
+	struct ut_poller *poller = (struct ut_poller *)_poller;
+	struct ut_thread *thread = thread_ctx;
+
+	TAILQ_REMOVE(&thread->pollers, poller, link);
+
+	free(poller);
 }
 
 static uintptr_t g_thread_id = MOCK_PASS_THRU;
@@ -92,7 +128,7 @@ allocate_threads(int num_threads)
 
 	for (i = 0; i < g_ut_num_threads; i++) {
 		set_thread(i);
-		spdk_allocate_thread(__send_msg, NULL, NULL, &g_ut_threads[i], NULL);
+		spdk_allocate_thread(__send_msg, __start_poller, __stop_poller, &g_ut_threads[i], NULL);
 		thread = spdk_get_thread();
 		SPDK_CU_ASSERT_FATAL(thread != NULL);
 		g_ut_threads[i].thread = thread;
@@ -124,6 +160,7 @@ poll_thread(uintptr_t thread_id)
 	int count = 0;
 	struct ut_thread *thread = &g_ut_threads[thread_id];
 	struct ut_msg *msg;
+	struct ut_poller *poller, *tmp;
 	uintptr_t original_thread_id;
 
 	CU_ASSERT(thread_id != (uintptr_t)MOCK_PASS_THRU);
@@ -139,6 +176,10 @@ poll_thread(uintptr_t thread_id)
 		msg->fn(msg->ctx);
 		count++;
 		free(msg);
+	}
+
+	TAILQ_FOREACH_SAFE(poller, &thread->pollers, link, tmp) {
+		poller->fn(poller->arg);
 	}
 
 	set_thread(original_thread_id);

@@ -50,9 +50,8 @@ struct io_device {
 	void			*io_device;
 	spdk_io_channel_create_cb create_cb;
 	spdk_io_channel_destroy_cb destroy_cb;
-	spdk_io_device_unregister_cb unregister_cb;
 	uint32_t		ctx_size;
-	uint32_t		for_each_count;
+	uint32_t		io_channel_count;
 	TAILQ_ENTRY(io_device)	tailq;
 
 	bool			unregistered;
@@ -67,6 +66,7 @@ struct spdk_thread {
 	spdk_stop_poller stop_poller_fn;
 	void *thread_ctx;
 	TAILQ_HEAD(, spdk_io_channel) io_channels;
+	TAILQ_HEAD(, spdk_io_channel) destroyed_io_channels;
 	TAILQ_ENTRY(spdk_thread) tailq;
 	char *name;
 	bool in_poller;
@@ -143,6 +143,7 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 	thread->stop_poller_fn = stop_poller_fn;
 	thread->thread_ctx = thread_ctx;
 	TAILQ_INIT(&thread->io_channels);
+	TAILQ_INIT(&thread->destroyed_io_channels);
 	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
 	if (name) {
 		_set_thread_name(name);
@@ -205,10 +206,49 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *
 }
 
 static void
+_spdk_io_device_unregister(struct io_device *dev)
+{
+	if (dev->io_channel_count > 0) {
+		SPDK_ERRLOG("io_device %p has %u io channels upon deletion\n", dev->io_device,
+			    dev->io_channel_count);
+		return;
+	}
+
+	free(dev);
+}
+
+static void
+_spdk_put_io_channel(struct spdk_io_channel *ch)
+{
+	ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	ch->dev->io_channel_count--;
+
+	if (ch->dev->unregistered) {
+		/**
+		 * If the device is marked as unregistered here, that means it was
+		 * destroyed from within a poller and the resources haven't been
+		 * freed yet. The only possible channel remaining would be a
+		 * channel whose destruction was also deferred on this thread.
+		 * Therefore, after the decrement above, io_channel_count must
+		 * be zero.
+		 */
+		assert(ch->dev->io_channel_count == 0);
+		_spdk_io_device_unregister(ch->dev);
+	}
+
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	free(ch);
+}
+
+static void
 spdk_poller_wrapper_fn(void *arg)
 {
 	struct spdk_poller	*poller = arg;
 	struct spdk_thread	*thread;
+	struct spdk_io_channel	*ch, *tmp;
 
 	/*
 	 * The poller could be destroyed from within its own
@@ -221,6 +261,11 @@ spdk_poller_wrapper_fn(void *arg)
 	thread->in_poller = true;
 	poller->user_fn(poller->user_arg);
 	thread->in_poller = false;
+
+	TAILQ_FOREACH_SAFE(ch, &thread->destroyed_io_channels, tailq, tmp) {
+		TAILQ_REMOVE(&thread->destroyed_io_channels, ch, tailq);
+		_spdk_put_io_channel(ch);
+	}
 }
 
 struct spdk_poller *
@@ -343,9 +388,8 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	dev->io_device = io_device;
 	dev->create_cb = create_cb;
 	dev->destroy_cb = destroy_cb;
-	dev->unregister_cb = NULL;
 	dev->ctx_size = ctx_size;
-	dev->for_each_count = 0;
+	dev->io_channel_count = 0;
 	dev->unregistered = false;
 
 	pthread_mutex_lock(&g_devlist_mutex);
@@ -361,38 +405,11 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	pthread_mutex_unlock(&g_devlist_mutex);
 }
 
-static void
-_spdk_io_device_attempt_free(struct io_device *dev)
-{
-	struct spdk_thread *thread;
-	struct spdk_io_channel *ch;
-
-	pthread_mutex_lock(&g_devlist_mutex);
-	TAILQ_FOREACH(thread, &g_threads, tailq) {
-		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-			if (ch->dev == dev) {
-				/* A channel that references this I/O
-				 * device still exists. Defer deletion
-				 * until it is removed.
-				 */
-				pthread_mutex_unlock(&g_devlist_mutex);
-				return;
-			}
-		}
-	}
-	pthread_mutex_unlock(&g_devlist_mutex);
-
-	if (dev->unregister_cb) {
-		dev->unregister_cb(dev->io_device);
-	}
-
-	free(dev);
-}
-
 void
-spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregister_cb)
+spdk_io_device_unregister(void *io_device)
 {
 	struct io_device *dev;
+	struct spdk_thread *thread;
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
@@ -407,17 +424,73 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 		return;
 	}
 
-	if (dev->for_each_count > 0) {
-		SPDK_ERRLOG("io_device %p has %u for_each calls outstanding\n", io_device, dev->for_each_count);
+	if (dev->io_channel_count > 1) {
+		pthread_mutex_unlock(&g_devlist_mutex);
+		/*
+		 * The only valid values for number of channels at
+		 * this point are 0 or 1. There may be one channel
+		 * whose destruction was deferred while in the context
+		 * of a poller. We'll check for that next.
+		 */
+		SPDK_ERRLOG("io_device %p has %u channels. Can't unregister.\n", io_device, dev->io_channel_count);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return;
 	}
 
-	dev->unregister_cb = unregister_cb;
+	thread = _get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("Unregistering an io_device from a non-SPDK thread.\n");
+		pthread_mutex_unlock(&g_devlist_mutex);
+		return;
+	}
+
+	if (dev->io_channel_count == 1) {
+		struct spdk_io_channel *ch;
+
+		if (!thread->in_poller) {
+			/* If we're not in a poller and there is an I/O channel, this unregister
+			 * request is invalid.
+			 */
+			SPDK_ERRLOG("io_device %p has %u channels. Can't unregister.\n", io_device, dev->io_channel_count);
+			pthread_mutex_unlock(&g_devlist_mutex);
+			return;
+		}
+
+		/*
+		 * If we're in a poller and the number of channels is 1, that
+		 * channel may be pending destruction. Search for it to confirm.
+		 */
+		TAILQ_FOREACH(ch, &thread->destroyed_io_channels, tailq) {
+			if (ch->dev == dev) {
+				break;
+			}
+		}
+
+		if (!ch) {
+			/*
+			 * If we didn't find the channel, then this unregister
+			 * request is invalid.
+			 */
+			SPDK_ERRLOG("io_device %p has %u channels. Can't unregister.\n", io_device, dev->io_channel_count);
+			pthread_mutex_unlock(&g_devlist_mutex);
+			return;
+		}
+	}
+
 	dev->unregistered = true;
 	TAILQ_REMOVE(&g_io_devices, dev, tailq);
+
+	if (dev->io_channel_count == 0 || !thread->in_poller) {
+		pthread_mutex_unlock(&g_devlist_mutex);
+		/*
+		 * If we're not in the context of a poller, unregister
+		 * the device immediately.
+		 */
+		_spdk_io_device_unregister(dev);
+		return;
+	}
+
 	pthread_mutex_unlock(&g_devlist_mutex);
-	_spdk_io_device_attempt_free(dev);
 }
 
 struct spdk_io_channel *
@@ -472,52 +545,41 @@ spdk_get_io_channel(void *io_device)
 	ch->ref = 1;
 	TAILQ_INSERT_TAIL(&thread->io_channels, ch, tailq);
 
+	dev->io_channel_count++;
+
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	rc = dev->create_cb(io_device, (uint8_t *)ch + sizeof(*ch));
 	if (rc == -1) {
-		pthread_mutex_lock(&g_devlist_mutex);
 		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
+		dev->io_channel_count--;
 		free(ch);
-		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
 
 	return ch;
 }
 
-static void
-_spdk_put_io_channel(void *arg)
+void
+spdk_put_io_channel(struct spdk_io_channel *ch)
 {
-	struct spdk_io_channel *ch = arg;
-
 	if (ch->ref == 0) {
 		SPDK_ERRLOG("ref already zero\n");
 		return;
 	}
 
 	ch->ref--;
-
 	if (ch->ref > 0) {
 		return;
 	}
 
-	ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
-
-	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
-	pthread_mutex_unlock(&g_devlist_mutex);
 
-	if (ch->dev->unregistered) {
-		_spdk_io_device_attempt_free(ch->dev);
+	if (ch->thread->in_poller) {
+		TAILQ_INSERT_TAIL(&ch->thread->destroyed_io_channels, ch, tailq);
+	} else {
+		_spdk_put_io_channel(ch);
 	}
-	free(ch);
-}
-
-void
-spdk_put_io_channel(struct spdk_io_channel *ch)
-{
-	spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
 }
 
 struct spdk_io_channel *
@@ -534,7 +596,6 @@ spdk_io_channel_get_thread(struct spdk_io_channel *ch)
 
 struct spdk_io_channel_iter {
 	void *io_device;
-	struct io_device *dev;
 	spdk_channel_msg fn;
 	int status;
 	void *ctx;
@@ -626,12 +687,12 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 			if (ch->dev->io_device == io_device) {
-				ch->dev->for_each_count++;
-				i->dev = ch->dev;
 				i->cur_thread = thread;
 				i->ch = ch;
 				pthread_mutex_unlock(&g_devlist_mutex);
-				spdk_thread_send_msg(thread, _call_channel, i);
+				if (thread) {
+					spdk_thread_send_msg(thread, _call_channel, i);
+				}
 				return;
 			}
 		}
@@ -673,7 +734,6 @@ spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
 	}
 
 end:
-	i->dev->for_each_count--;
 	i->ch = NULL;
 	pthread_mutex_unlock(&g_devlist_mutex);
 

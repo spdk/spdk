@@ -56,8 +56,6 @@ static void bdev_pmem_finish(void);
 
 SPDK_BDEV_MODULE_REGISTER(pmem, bdev_pmem_initialize, bdev_pmem_finish,
 			  NULL, NULL, NULL)
-SPDK_BDEV_MODULE_ASYNC_FINI(pmem);
-
 
 typedef int(*spdk_bdev_pmem_io_request)(PMEMblkpool *pbp, void *buf, long long blockno);
 
@@ -380,15 +378,9 @@ bdev_pmem_initialize(void)
 }
 
 static void
-bdev_pmem_finish_done(void *io_device)
-{
-	spdk_bdev_module_finish_done();
-}
-
-static void
 bdev_pmem_finish(void)
 {
-	spdk_io_device_unregister(&g_pmem_disks, bdev_pmem_finish_done);
+	spdk_io_device_unregister(&g_pmem_disks);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_pmem", SPDK_LOG_BDEV_PMEM)

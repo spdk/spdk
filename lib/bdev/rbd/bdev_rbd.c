@@ -524,7 +524,7 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 				sizeof(struct bdev_rbd_io_channel));
 	ret = spdk_bdev_register(&rbd->disk);
 	if (ret) {
-		spdk_io_device_unregister(&rbd->info, NULL);
+		spdk_io_device_unregister(&rbd->info);
 		bdev_rbd_free(rbd);
 		return NULL;
 	}

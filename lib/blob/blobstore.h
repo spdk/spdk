@@ -166,9 +166,6 @@ struct spdk_blob_store {
 	spdk_blob_id			super_blob;
 	struct spdk_bs_type 		bstype;
 
-	struct spdk_bs_cpl		unload_cpl;
-	int				unload_err;
-
 	TAILQ_HEAD(, spdk_blob_data) 	blobs;
 };
 

@@ -505,7 +505,7 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 				sizeof(struct bdev_aio_io_channel));
 	rc = spdk_bdev_register(&fdisk->disk);
 	if (rc) {
-		spdk_io_device_unregister(&fdisk->fd, NULL);
+		spdk_io_device_unregister(&fdisk->fd);
 		goto error_return;
 	}
 
