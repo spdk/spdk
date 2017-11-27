@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f39b3c78_5eca6bee",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-27T21:10:37Z",
+      "side": 1,
+      "message": "What about calling this spdk_nvme_get_ctrlr_by_trid_unsafe? I\u0027ve seen that convention in a number of places and I think it is a bit clearer about whether you hold the lock or not.",
+      "revId": "5648ca36cbef9736b9d7a40c2abab0ad0583803d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
