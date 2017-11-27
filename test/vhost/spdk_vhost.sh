@@ -95,11 +95,43 @@ case $1 in
 		./integrity/integrity_start.sh -i $VM_IMAGE -m blk -f ntfs
 		;;
 	-ils|--integrity-lvol-scsi)
+
+		if [ $RUN_NIGHTLY -eq 1 ]; then
+			echo 'Running lvol integrity nightly suite with one core and one controller'
+			./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+			--ctrl-type=vhost_scsi --max-disks=1
+
+			echo 'Running lvol integrity nightly suite with one core and two controllers'
+			./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+			--ctrl-type=vhost_scsi --max-disks=2
+
+			echo 'Running lvol integrity nightly suite with two cores and two controllers'
+			./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+			--ctrl-type=vhost_scsi --max-disks=2 --distribute-cores
+
+		fi
+
 		echo 'Running lvol integrity suite...'
 		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--ctrl-type=vhost_scsi
 		;;
 	-ilb|--integrity-lvol-blk)
+
+		if [ $RUN_NIGHTLY -eq 1 ]; then
+			echo 'Running lvol integrity nightly suite with one core and one controller'
+			./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+			--ctrl-type=vhost_blk --max-disks=1
+
+			echo 'Running lvol integrity nightly suite with one core and two controllers'
+			./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+			--ctrl-type=vhost_blk --max-disks=2
+
+			echo 'Running lvol integrity nightly suite with two cores and two controllers'
+			./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+			--ctrl-type=vhost_blk --max-disks=2 --distribute-cores
+
+		fi
+
 		echo 'Running lvol integrity suite...'
 		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--ctrl-type=vhost_blk
