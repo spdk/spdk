@@ -114,7 +114,11 @@ vm_kill_all
 
 echo "INFO: running SPDK"
 echo ""
-$COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
+if $distribute_cores; then
+    $COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR --reactor-mask=$vhost_reactor_mask --master-core=$vhost_master_core
+else
+    $COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
+fi
 echo ""
 
 trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
@@ -222,8 +226,6 @@ $COMMON_DIR/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
 vm_wait_for_boot 600 $used_vms
 
 # Get disk names from VMs and run FIO traffic
-
-fio_disks=""
 for vm_num in $used_vms; do
     vm_dir=$VM_BASE_DIR/$vm_num
     qemu_mask_param="VM_${vm_num}_qemu_mask"
@@ -241,8 +243,13 @@ for vm_num in $used_vms; do
     fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' $SCSI_DISK)"
 done
 
+if [[ $RUN_NIGHTLY -eq 1 ]]; then
+    job_file="default_integrity_nightly.job"
+else
+    job_file="default_integrity.job"
+fi
 # Run FIO traffic
-run_fio $fio_bin --job-file=$COMMON_DIR/fio_jobs/default_integrity.job --out="$TEST_DIR/fio_results" $fio_disks
+run_fio $fio_bin --job-file=$COMMON_DIR/fio_jobs/$job_file --out="$TEST_DIR/fio_results" $fio_disks
 
 echo "INFO: Shutting down virtual machines..."
 vm_shutdown_all
