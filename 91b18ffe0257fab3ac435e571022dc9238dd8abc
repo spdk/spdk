@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1d95480_4d0b221e",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-27T21:12:23Z",
+      "side": 1,
+      "message": "Ultimately this should probably be asking the transport, but this is fine for now.",
+      "revId": "91b18ffe0257fab3ac435e571022dc9238dd8abc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
