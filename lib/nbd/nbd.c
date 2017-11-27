@@ -390,6 +390,7 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 	int			rc;
 	int			sp[2];
 	char			buf[64];
+	int			flag;
 
 	nbd = calloc(1, sizeof(*nbd));
 	if (nbd == NULL) {
@@ -462,7 +463,12 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 		goto err;
 	}
 
-	fcntl(nbd->spdk_sp_fd, F_SETFL, O_NONBLOCK);
+	flag = fcntl(nbd->spdk_sp_fd, F_GETFL);
+	if (fcntl(nbd->spdk_sp_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n", nbd->spdk_sp_fd, buf);
+		goto err;
+	}
 
 	to_be32(&nbd->io.resp.magic, NBD_REPLY_MAGIC);
 	nbd->io.req_in_progress = true;
