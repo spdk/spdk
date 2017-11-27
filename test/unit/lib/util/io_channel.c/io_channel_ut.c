@@ -205,81 +205,96 @@ for_each_channel_remove(void)
 	spdk_put_io_channel(ch1);
 	set_thread(2);
 	spdk_put_io_channel(ch2);
-	spdk_io_device_unregister(&io_target, NULL);
+	spdk_io_device_unregister(&io_target);
 	poll_threads();
 
 	free_threads();
 }
 
-struct unreg_ctx {
-	bool	ch_done;
-	bool	foreach_done;
-};
-
 static void
-unreg_ch_done(struct spdk_io_channel_iter *i)
+unreg_poller(void *ctx)
 {
-	struct unreg_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-
-	ctx->ch_done = true;
-
-	spdk_for_each_channel_continue(i, 0);
-}
-
-static void
-unreg_foreach_done(struct spdk_io_channel_iter *i, int status)
-{
-	struct unreg_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
-
-	ctx->foreach_done = true;
-}
-
-static void
-for_each_channel_unreg(void)
-{
-	struct spdk_io_channel *ch0;
+	struct spdk_poller *poller = *(struct spdk_poller **)ctx;
+	struct spdk_io_channel *ch;
 	struct io_device *dev;
-	struct unreg_ctx ctx = {};
-	int io_target;
 
-	allocate_threads(1);
 	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
-	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+
+	spdk_io_device_register(ctx, channel_create, channel_destroy, sizeof(int));
 	CU_ASSERT(!TAILQ_EMPTY(&g_io_devices));
+
 	dev = TAILQ_FIRST(&g_io_devices);
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
 	CU_ASSERT(TAILQ_NEXT(dev, tailq) == NULL);
-	set_thread(0);
-	ch0 = spdk_get_io_channel(&io_target);
-	spdk_for_each_channel(&io_target, unreg_ch_done, &ctx, unreg_foreach_done);
 
-	spdk_io_device_unregister(&io_target, NULL);
-	/*
-	 * There is an outstanding foreach call on the io_device, so the unregister should not
-	 *  have removed the device.
-	 */
-	CU_ASSERT(dev == TAILQ_FIRST(&g_io_devices));
-	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
-	/*
-	 * There is already a device registered at &io_target, so a new io_device should not
-	 *  have been added to g_io_devices.
-	 */
-	CU_ASSERT(dev == TAILQ_FIRST(&g_io_devices));
-	CU_ASSERT(TAILQ_NEXT(dev, tailq) == NULL);
+	ch = spdk_get_io_channel(ctx);
 
-	poll_thread(0);
-	CU_ASSERT(ctx.ch_done == true);
-	CU_ASSERT(ctx.foreach_done == true);
 	/*
-	 * There are no more foreach operations outstanding, so we can unregister the device,
-	 *  even though a channel still exists for the device.
+	 * There is an I/O channel for this device, so this call should fail
 	 */
-	spdk_io_device_unregister(&io_target, NULL);
+	spdk_io_device_unregister(ctx);
+	CU_ASSERT(dev == TAILQ_FIRST(&g_io_devices));
+
+	/*
+	 * Put the I/O channel. Since we're in a poller, this should defer the destruction
+	 * of this channel. Test this by dereferencing it.
+	 */
+	spdk_put_io_channel(ch);
+	CU_ASSERT(ch->dev == dev);
+
+	/*
+	 * The I/O channel has been removed (but not freed), so this call should succeed.
+	 */
+	spdk_io_device_unregister(ctx);
 	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
 
-	set_thread(0);
-	spdk_put_io_channel(ch0);
+	/*
+	 * The device memory should not have been released yet. Dereference it to test.
+	 */
+	CU_ASSERT(dev->ctx_size == sizeof(int));
 
+	spdk_poller_unregister(&poller);
+}
+
+static void
+unreg_put_channel(void)
+{
+	struct spdk_poller *poller;
+	struct spdk_io_channel *ch;
+	struct io_device *dev;
+	int io_target;
+
+	allocate_threads(1);
+	set_thread(0);
+	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int));
+	CU_ASSERT(!TAILQ_EMPTY(&g_io_devices));
+
+	dev = TAILQ_FIRST(&g_io_devices);
+	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	CU_ASSERT(TAILQ_NEXT(dev, tailq) == NULL);
+
+	ch = spdk_get_io_channel(&io_target);
+
+	/*
+	 * There is an I/O channel for this device, so this call should fail
+	 */
+	spdk_io_device_unregister(&io_target);
+	CU_ASSERT(dev == TAILQ_FIRST(&g_io_devices));
+
+	spdk_put_io_channel(ch);
+
+	/*
+	 * Now that the I/O channel has been removed, this call should succeed.
+	 */
+	spdk_io_device_unregister(&io_target);
+	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
+
+	/*
+	 * Start a poller and perform the same test
+	 */
+	poller = spdk_poller_register(unreg_poller, &poller, 0);
 	poll_threads();
 
 	free_threads();
@@ -405,9 +420,9 @@ channel(void)
 	ch1 = spdk_get_io_channel(&device3);
 	CU_ASSERT(ch1 == NULL);
 
-	spdk_io_device_unregister(&device1, NULL);
-	spdk_io_device_unregister(&device2, NULL);
-	spdk_io_device_unregister(&device3, NULL);
+	spdk_io_device_unregister(&device1);
+	spdk_io_device_unregister(&device2);
+	spdk_io_device_unregister(&device3);
 	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
 	spdk_free_thread();
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
@@ -434,7 +449,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "thread_send_msg", thread_send_msg) == NULL ||
 		CU_add_test(suite, "thread_for_each", thread_for_each) == NULL ||
 		CU_add_test(suite, "for_each_channel_remove", for_each_channel_remove) == NULL ||
-		CU_add_test(suite, "for_each_channel_unreg", for_each_channel_unreg) == NULL ||
+		CU_add_test(suite, "unreg_put_channel", unreg_put_channel) == NULL ||
 		CU_add_test(suite, "thread_name", thread_name) == NULL ||
 		CU_add_test(suite, "channel", channel) == NULL
 	) {

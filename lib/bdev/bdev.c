@@ -538,16 +538,6 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 }
 
 static void
-spdk_bdev_module_finish_cb(void *io_device)
-{
-	spdk_bdev_fini_cb cb_fn = g_fini_cb_fn;
-
-	cb_fn(g_fini_cb_arg);
-	g_fini_cb_fn = NULL;
-	g_fini_cb_arg = NULL;
-}
-
-static void
 spdk_bdev_module_finish_complete(void)
 {
 	if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != SPDK_BDEV_IO_POOL_SIZE) {
@@ -575,7 +565,11 @@ spdk_bdev_module_finish_complete(void)
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
 	spdk_dma_free(g_bdev_mgr.zero_buffer);
 
-	spdk_io_device_unregister(&g_bdev_mgr, spdk_bdev_module_finish_cb);
+	spdk_io_device_unregister(&g_bdev_mgr);
+
+	g_fini_cb_fn(g_fini_cb_arg);
+	g_fini_cb_fn = NULL;
+	g_fini_cb_arg = NULL;
 }
 
 static void
@@ -621,11 +615,14 @@ spdk_bdev_module_finish_iter(void *arg)
 void
 spdk_bdev_module_finish_done(void)
 {
-	if (spdk_get_thread() != g_fini_thread) {
-		spdk_thread_send_msg(g_fini_thread, spdk_bdev_module_finish_iter, NULL);
-	} else {
-		spdk_bdev_module_finish_iter(NULL);
-	}
+	/* The user may have called this from within the completion callback of
+	 * a bdev_io. If this is the last bdev module, spdk_bdev_module_finish_iter
+	 * will free the memory pool of bdev_io's, but as the stack unwinds
+	 * back to the completion callback it will attempt to put the I/O into
+	 * the now free memory pool. To address this, always defer
+	 * the call to spdk_bdev_module_finish_iter.
+	 */
+	spdk_thread_send_msg(g_fini_thread, spdk_bdev_module_finish_iter, NULL);
 }
 
 void
@@ -1874,6 +1871,8 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 {
 	struct spdk_bdev_desc	*desc, *tmp;
 	int			rc;
+	const struct spdk_bdev_fn_table	*fn_table;
+	void			*ctxt;
 	bool			do_destruct = true;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
@@ -1903,9 +1902,12 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 
 	pthread_mutex_destroy(&bdev->mutex);
 
-	spdk_io_device_unregister(bdev, NULL);
+	fn_table = bdev->fn_table;
+	ctxt = bdev->ctxt;
 
-	rc = bdev->fn_table->destruct(bdev->ctxt);
+	spdk_io_device_unregister(bdev);
+
+	rc = fn_table->destruct(ctxt);
 	if (rc < 0) {
 		SPDK_ERRLOG("destruct failed\n");
 	}
@@ -2079,7 +2081,7 @@ spdk_bdev_part_free(struct spdk_bdev_part *part)
 	assert(part->base);
 
 	base = part->base;
-	spdk_io_device_unregister(&part->base, NULL);
+	spdk_io_device_unregister(&part->base);
 	TAILQ_REMOVE(base->tailq, part, tailq);
 	free(part->bdev.name);
 	free(part);

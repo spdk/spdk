@@ -1454,12 +1454,14 @@ _spdk_bs_channel_destroy(void *io_device, void *ctx_buf)
 }
 
 static void
-_spdk_bs_dev_destroy(void *io_device)
+_spdk_bs_free(struct spdk_blob_store *bs)
 {
-	struct spdk_blob_store *bs;
 	struct spdk_blob_data	*blob, *blob_tmp;
 
-	bs = SPDK_CONTAINEROF(io_device, struct spdk_blob_store, md_target);
+	spdk_bs_unregister_md_thread(bs);
+	spdk_io_device_unregister(&bs->io_target);
+	spdk_io_device_unregister(&bs->md_target);
+
 	bs->dev->destroy(bs->dev);
 
 	TAILQ_FOREACH_SAFE(blob, &bs->blobs, link, blob_tmp) {
@@ -1469,21 +1471,8 @@ _spdk_bs_dev_destroy(void *io_device)
 
 	spdk_bit_array_free(&bs->used_md_pages);
 	spdk_bit_array_free(&bs->used_clusters);
-	/*
-	 * If this function is called for any reason except a successful unload,
-	 * the unload_cpl type will be NONE and this will be a nop.
-	 */
-	spdk_bs_call_cpl(&bs->unload_cpl, bs->unload_err);
 
 	free(bs);
-}
-
-static void
-_spdk_bs_free(struct spdk_blob_store *bs)
-{
-	spdk_bs_unregister_md_thread(bs);
-	spdk_io_device_unregister(&bs->io_target, NULL);
-	spdk_io_device_unregister(&bs->md_target, _spdk_bs_dev_destroy);
 }
 
 void
@@ -1562,7 +1551,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 				sizeof(struct spdk_bs_channel));
 	rc = spdk_bs_register_md_thread(bs);
 	if (rc == -1) {
-		spdk_io_device_unregister(&bs->md_target, NULL);
+		spdk_io_device_unregister(&bs->md_target);
 		spdk_bit_array_free(&bs->used_md_pages);
 		spdk_bit_array_free(&bs->used_clusters);
 		free(bs);
@@ -2002,27 +1991,27 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	if (ctx->super->version > SPDK_BS_VERSION ||
 	    ctx->super->version < SPDK_BS_INITIAL_VERSION) {
 		spdk_dma_free(ctx->super);
+		spdk_bs_sequence_finish(seq, -EILSEQ);
 		_spdk_bs_free(ctx->bs);
 		free(ctx);
-		spdk_bs_sequence_finish(seq, -EILSEQ);
 		return;
 	}
 
 	if (memcmp(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
 		   sizeof(ctx->super->signature)) != 0) {
 		spdk_dma_free(ctx->super);
+		spdk_bs_sequence_finish(seq, -EILSEQ);
 		_spdk_bs_free(ctx->bs);
 		free(ctx);
-		spdk_bs_sequence_finish(seq, -EILSEQ);
 		return;
 	}
 
 	crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	if (crc != ctx->super->crc) {
 		spdk_dma_free(ctx->super);
+		spdk_bs_sequence_finish(seq, -EILSEQ);
 		_spdk_bs_free(ctx->bs);
 		free(ctx);
-		spdk_bs_sequence_finish(seq, -EILSEQ);
 		return;
 	}
 
@@ -2035,9 +2024,9 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		SPDK_TRACEDUMP(SPDK_LOG_BLOB, "Expected:", ctx->bs->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
 		SPDK_TRACEDUMP(SPDK_LOG_BLOB, "Found:", ctx->super->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
 		spdk_dma_free(ctx->super);
+		spdk_bs_sequence_finish(seq, -ENXIO);
 		_spdk_bs_free(ctx->bs);
 		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENXIO);
 		return;
 	}
 
@@ -2329,20 +2318,28 @@ static void
 _spdk_bs_destroy_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_init_ctx *ctx = cb_arg;
-	struct spdk_blob_store *bs = ctx->bs;
+	struct spdk_bs_cpl	unload_cpl;
 
 	/*
 	 * We need to defer calling spdk_bs_call_cpl() until after
-	 * dev destruction, so tuck these away for later use.
+	 * dev destuction, so tuck these away for later use.
 	 */
-	bs->unload_err = bserrno;
-	memcpy(&bs->unload_cpl, &seq->cpl, sizeof(struct spdk_bs_cpl));
-	seq->cpl.type = SPDK_BS_CPL_TYPE_NONE;
+	unload_cpl = seq->cpl;
 
+	/*
+	 * By setting the type to NONE, spdk_bs_sequence_finish will
+	 * not call the user callback.
+	 */
+	seq->cpl.type = SPDK_BS_CPL_TYPE_NONE;
 	spdk_bs_sequence_finish(seq, bserrno);
 
-	_spdk_bs_free(bs);
+	_spdk_bs_free(ctx->bs);
 	free(ctx);
+
+	/*
+	 * This call is safe to make after the blobstore is entirely freed from memory
+	 */
+	spdk_bs_call_cpl(&unload_cpl, bserrno);
 }
 
 void
@@ -2395,6 +2392,7 @@ static void
 _spdk_bs_unload_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx	*ctx = cb_arg;
+	struct spdk_bs_cpl	unload_cpl;
 
 	spdk_dma_free(ctx->super);
 
@@ -2402,14 +2400,22 @@ _spdk_bs_unload_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 	 * We need to defer calling spdk_bs_call_cpl() until after
 	 * dev destuction, so tuck these away for later use.
 	 */
-	ctx->bs->unload_err = bserrno;
-	memcpy(&ctx->bs->unload_cpl, &seq->cpl, sizeof(struct spdk_bs_cpl));
-	seq->cpl.type = SPDK_BS_CPL_TYPE_NONE;
+	unload_cpl = seq->cpl;
 
+	/*
+	 * By setting the type to NONE, spdk_bs_sequence_finish will
+	 * not call the user callback.
+	 */
+	seq->cpl.type = SPDK_BS_CPL_TYPE_NONE;
 	spdk_bs_sequence_finish(seq, bserrno);
 
 	_spdk_bs_free(ctx->bs);
 	free(ctx);
+
+	/*
+	 * This call is safe to make after the blobstore is entirely freed from memory
+	 */
+	spdk_bs_call_cpl(&unload_cpl, bserrno);
 }
 
 static void
