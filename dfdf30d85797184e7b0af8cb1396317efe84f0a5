@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "843e4428_743f6acf",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T07:56:54Z",
+      "side": 1,
+      "message": "I\u0027m not sure, throttle maybe better for user\u0027s input, e.g: 100MB/s ? the driver level can convert to IOPS based on different block size.",
+      "revId": "dfdf30d85797184e7b0af8cb1396317efe84f0a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79206728_2df3594e",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T07:56:54Z",
+      "side": 1,
+      "message": "hardcoded value, macro definition is better.",
+      "revId": "dfdf30d85797184e7b0af8cb1396317efe84f0a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
