@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6d19b9b2_d785b7c8",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T04:05:49Z",
+      "side": 1,
+      "message": "Good idea.",
+      "parentUuid": "8d39f304_17531c98",
+      "revId": "56a39abcd1cf39d32cc7632d37ac04c86a28be4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ba63d878_378f77e8",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 8
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "820d224e_268844df",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1042,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T04:05:49Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "45387d14_9ca1da6b",
+      "revId": "56a39abcd1cf39d32cc7632d37ac04c86a28be4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5833a044_304c1a30",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 8
@@ -64,6 +100,24 @@
       "writtenOn": "2017-11-22T20:29:19Z",
       "side": 1,
       "message": "I think this will already return true for the admin queue,  since you only fill in the shadow doorbell pointers during create_io_qpair - therefore, the !shadow_db check is sufficient to ignore admin queues already.\n\nWe should be able to drop the !qpair-\u003eid check due to the assumptions mentioned above.  Then we don\u0027t really need the comment at all.",
+      "revId": "56a39abcd1cf39d32cc7632d37ac04c86a28be4f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a030afa8_9dfcd1d4",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1054,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T04:05:49Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "5833a044_304c1a30",
       "revId": "56a39abcd1cf39d32cc7632d37ac04c86a28be4f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
