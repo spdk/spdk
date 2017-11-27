@@ -40,7 +40,7 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 			   spdk_jsonrpc_handle_request_fn handle_request)
 {
 	struct spdk_jsonrpc_server *server;
-	int rc, val;
+	int rc, val, flag;
 	char buf[64];
 
 	server = calloc(1, sizeof(struct spdk_jsonrpc_server));
@@ -63,10 +63,10 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 		setsockopt(server->sockfd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
 	}
 
-	val = 1;
-	rc = ioctl(server->sockfd, FIONBIO, &val);
-	if (rc != 0) {
-		SPDK_ERRLOG("ioctl(FIONBIO) failed\n");
+	flag = fcntl(server->sockfd, F_GETFL);
+	if (fcntl(server->sockfd, F_SETFL, flag | O_NONBLOCK) < 0) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n", server->sockfd, buf);
 		close(server->sockfd);
 		free(server);
 		return NULL;
@@ -136,7 +136,8 @@ static int
 spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 {
 	struct spdk_jsonrpc_server_conn *conn;
-	int rc, conn_idx, nonblock;
+	int rc, conn_idx, flag;
+	char buf[64];
 
 	rc = accept(server->sockfd, NULL, NULL);
 	if (rc >= 0) {
@@ -156,10 +157,10 @@ spdk_jsonrpc_server_accept(struct spdk_jsonrpc_server *server)
 			return -1;
 		}
 
-		nonblock = 1;
-		rc = ioctl(conn->sockfd, FIONBIO, &nonblock);
-		if (rc != 0) {
-			SPDK_ERRLOG("ioctl(FIONBIO) failed\n");
+		flag = fcntl(conn->sockfd, F_GETFL);
+		if (fcntl(conn->sockfd, F_SETFL, flag | O_NONBLOCK) < 0) {
+			spdk_strerror_r(errno, buf, sizeof(buf));
+			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n", conn->sockfd, buf);
 			close(conn->sockfd);
 			return -1;
 		}

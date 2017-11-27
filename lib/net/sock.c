@@ -128,7 +128,7 @@ spdk_sock_create(const char *ip, int port, enum spdk_sock_create_type type)
 	char portnum[PORTNUMLEN];
 	char *p;
 	struct addrinfo hints, *res, *res0;
-	int sock, nonblock;
+	int sock, flag;
 	int val = 1;
 	int rc;
 
@@ -218,10 +218,9 @@ retry:
 			}
 		}
 
-		nonblock = 1;
-		rc = ioctl(sock, FIONBIO, &nonblock);
-		if (rc != 0) {
-			SPDK_ERRLOG("ioctl(FIONBIO) failed\n");
+		flag = fcntl(sock, F_GETFL);
+		if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) < 0) {
+			SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%d)\n", sock, errno);
 			close(sock);
 			sock = -1;
 			break;
