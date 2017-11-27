@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "495dd4dd_40fb65d4",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T05:12:53Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "42ca6f74_fcfaf973",
+      "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c3eb7c9f_64bcdfd1",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 4
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "029293cb_f957e0d6",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 518,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T05:12:53Z",
+      "side": 1,
+      "message": "Yes, Intel SSDs can only support last 8 bytes of metadata.",
+      "parentUuid": "e066a227_efbc30af",
+      "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8ace54ff_d0094c40",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 4
@@ -64,6 +100,24 @@
       "writtenOn": "2017-11-22T17:09:07Z",
       "side": 1,
       "message": "This doesn\u0027t need to be in the lba_count loop.",
+      "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd8ba935_90186efc",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T05:12:53Z",
+      "side": 1,
+      "message": "correct",
+      "parentUuid": "8ace54ff_d0094c40",
       "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "55d7cb3c_723bbdbe",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T05:12:53Z",
+      "side": 1,
+      "message": "will remove it.",
+      "parentUuid": "785d1a9d_2ae8b1c6",
+      "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6067469e_f855277c",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 4
@@ -98,6 +170,30 @@
       "writtenOn": "2017-11-22T17:09:07Z",
       "side": 1,
       "message": "This should probably only be called in submit_io() (which is called once per task at startup) instead of on every submit_single_io() call.",
+      "range": {
+        "startLine": 580,
+        "startChar": 3,
+        "endLine": 580,
+        "endChar": 29
+      },
+      "revId": "b4d67073c5e2d22e8fc2b5f0c392d0c1f89c9293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "875e36db_61779500",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T05:12:53Z",
+      "side": 1,
+      "message": "No, I need the parameter \"lba\" to setup the PI fields, so the function can\u0027t put in submit_io().",
+      "parentUuid": "6067469e_f855277c",
       "range": {
         "startLine": 580,
         "startChar": 3,
