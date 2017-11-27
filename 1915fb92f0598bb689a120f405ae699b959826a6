@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "3db22003_bc9c3156",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-27T05:46:26Z",
+      "side": 1,
+      "message": "Please align space by using tab.",
+      "range": {
+        "startLine": 107,
+        "startChar": 1,
+        "endLine": 108,
+        "endChar": 35
+      },
+      "revId": "1915fb92f0598bb689a120f405ae699b959826a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ed03afc_0f218257",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 1
@@ -18,6 +41,29 @@
         "startChar": 0,
         "endLine": 573,
         "endChar": 23
+      },
+      "revId": "1915fb92f0598bb689a120f405ae699b959826a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3e2ed02_301db9f6",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-27T05:46:26Z",
+      "side": 1,
+      "message": "create\u0026construct looks duplicated name. spdk_nbd_create_disk() or just spdk_nbd_create() may be better.\nPlease consider.",
+      "range": {
+        "startLine": 621,
+        "startChar": 6,
+        "endLine": 621,
+        "endChar": 35
       },
       "revId": "1915fb92f0598bb689a120f405ae699b959826a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
