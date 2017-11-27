@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd69bfbc_eab6635f",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T17:58:23Z",
+      "side": 1,
+      "message": "I think this function can be static now (and its declaration can be removed from the header).",
+      "revId": "60b3d404d26fba9e2fa8af7924568ebf73cf58ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ebfec5b_23d0ca44",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T17:58:23Z",
+      "side": 1,
+      "message": "Why break here? This seems like it will only poll the first transport poll group.",
+      "revId": "60b3d404d26fba9e2fa8af7924568ebf73cf58ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
