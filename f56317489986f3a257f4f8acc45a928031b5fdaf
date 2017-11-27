@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6fb6c1d8_f03b9ba4",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-27T14:51:33Z",
+      "side": 1,
+      "message": "This is an unrelated change. You have to justify in commit message what and why you\u0027re doing here, because it\u0027s not what the commit message says (it\u0027s not checking if destroy lvs works correctly)",
+      "range": {
+        "startLine": 402,
+        "startChar": 8,
+        "endLine": 403,
+        "endChar": 27
+      },
+      "revId": "f56317489986f3a257f4f8acc45a928031b5fdaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e149671_0e2567d1",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-27T14:51:33Z",
+      "side": 1,
+      "message": "Keep in mind that we might want to change that to just:\n- delete bdev\n- construct_nvme_bdev\ninstead of restarting vhost. It should be enough for this test and less time consuming.",
+      "range": {
+        "startLine": 549,
+        "startChar": 8,
+        "endLine": 551,
+        "endChar": 69
+      },
+      "revId": "f56317489986f3a257f4f8acc45a928031b5fdaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d369b841_865b92c0",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-27T14:51:33Z",
+      "side": 1,
+      "message": "NVMe",
+      "range": {
+        "startLine": 384,
+        "startChar": 26,
+        "endLine": 384,
+        "endChar": 30
+      },
+      "revId": "f56317489986f3a257f4f8acc45a928031b5fdaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06fc4891_95e56847",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-27T14:51:33Z",
+      "side": 1,
+      "message": "actually the correct command term is \"destroy\" for lvol stores (i.e. rpc calls)",
+      "range": {
+        "startLine": 385,
+        "startChar": 2,
+        "endLine": 385,
+        "endChar": 8
+      },
+      "revId": "f56317489986f3a257f4f8acc45a928031b5fdaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ea7cfb6_5e87dfab",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-27T14:51:33Z",
+      "side": 1,
+      "message": "on NVMe bdev",
+      "range": {
+        "startLine": 387,
+        "startChar": 45,
+        "endLine": 387,
+        "endChar": 53
+      },
+      "revId": "f56317489986f3a257f4f8acc45a928031b5fdaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a8ac883_df7e05db",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-27T14:51:33Z",
+      "side": 1,
+      "message": "Rephrase.\n\"get_lvol_stores should not report any existing lvol stores in configuration after restarting Vhost instance\"",
+      "range": {
+        "startLine": 390,
+        "startChar": 2,
+        "endLine": 390,
+        "endChar": 76
+      },
+      "revId": "f56317489986f3a257f4f8acc45a928031b5fdaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
