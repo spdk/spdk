@@ -46,6 +46,7 @@
 #include "blobstore.h"
 
 #define BLOB_CRC32C_INITIAL    0xffffffffUL
+#define spdk_blob_is_thin_provisioned(blob) (blob->invalid_flags & SPDK_BLOB_THIN_PROV)
 
 static inline size_t
 divide_round_up(size_t num, size_t divisor)
@@ -222,7 +223,6 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			blob->invalid_flags = desc_flags->invalid_flags;
 			blob->data_ro_flags = desc_flags->data_ro_flags;
 			blob->md_ro_flags = desc_flags->md_ro_flags;
-
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
 			struct spdk_blob_md_descriptor_extent	*desc_extent;
 			unsigned int				i, j;
