@@ -15,7 +15,6 @@ function usage()
 	echo "    --gdbserver      Run app under gdb-server"
 	echo "    --work-dir=PATH  Where to find source/project. [default=$TEST_DIR]"
 	echo "    --conf-dir=PATH  Path to directory with configuration for vhost"
-
 	exit 0
 }
 
