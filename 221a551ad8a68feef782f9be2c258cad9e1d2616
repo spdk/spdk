@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45a4506d_4b149d43",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-27T18:54:38Z",
+      "side": 1,
+      "message": "If the user is issuing a reset, they do not want to wait for the inflight I/O count to drop to zero. They want to do the reset immediately (probably to abort hung I/O). What reset should do is immediately call spdk_for_each_channel, and for each channel call io_destroy on the aio_context_t object in the channel. If the result of the call to io_destroy is ENOSYS (i.e. not implemented), then you must fail the reset request to notify the user that I/O is not really all aborted.\n\nWe could consider adding in a way to wait for the outstanding I/O count to go to 0, but we\u0027d need to also add in some time out mechanism so that it doesn\u0027t wait forever. I think that\u0027s best done in another a patch after some design discussion.",
+      "revId": "221a551ad8a68feef782f9be2c258cad9e1d2616",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
