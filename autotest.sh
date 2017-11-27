@@ -154,7 +154,9 @@ fi
 
 if [ $SPDK_TEST_LVOL -eq 1 ]; then
 	timing_enter lvol
-	run_test ./test/lvol/lvol.sh --test-cases=1,2,3,4,5,7,8,9,10,13,14,15,16,17,18,21,22,25,26,27,28,29
+	test_cases="1,50,51,52,53,100,101,102,250,251,252,253,"
+	test_cases+="300,301,450,451,452,550,600,601,650,700"
+	run_test ./test/lvol/lvol.sh --test-cases=$test_cases
 	timing_exit lvol
 fi
 
