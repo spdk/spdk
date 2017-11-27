@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17a83e53_36436ff2",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T19:39:35Z",
+      "side": 1,
+      "message": "I\u0027d rather see this broken into two patches:\n\nPatch #1: move all of this PCI related code into a configure_linux_pci() function\nPatch #2: only call this configure_linux_pci() function is SKIP_PCI \u003d\u003d 0\n\nThen we avoid having to indent so much code.",
+      "revId": "4de1935ced950d169cc8d47f6ac09dfb207b0b90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00c04d2a_1360d89b",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T19:39:35Z",
+      "side": 1,
+      "message": "this should not be done if SKIP_PCI \u003d 1",
+      "revId": "4de1935ced950d169cc8d47f6ac09dfb207b0b90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ba03355_28842954",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T19:39:35Z",
+      "side": 1,
+      "message": "similar to above - let\u0027s create a configure_freebsd_pci function",
+      "revId": "4de1935ced950d169cc8d47f6ac09dfb207b0b90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
