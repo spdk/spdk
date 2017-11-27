@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "daf50852_37779fa5",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T20:33:21Z",
+      "side": 1,
+      "message": "This is an internal function that should never be called with either of these being NULL, so I think the check can just be removed, or at least turned into assert() calls.",
+      "revId": "e1f9d105570716ac375f2f70c551fe3d1cc9015f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58259162_b049cae2",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T20:33:21Z",
+      "side": 1,
+      "message": "The poller may either be on the reactor-\u003etimer_pollers list (if it previously had a non-zero period) or on the active_pollers list (if it previously did not have a period configured).  This should use the same logic as spdk_poller_unregister() above to determine which list it should be removed from.",
+      "revId": "e1f9d105570716ac375f2f70c551fe3d1cc9015f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
