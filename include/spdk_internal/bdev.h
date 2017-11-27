@@ -207,6 +207,15 @@ struct spdk_bdev {
 	/** QoS in second */
 	uint64_t ios_per_sec;
 
+	/** Number of outstanding channels on this bdev */
+	uint32_t channel_count;
+
+	/** QoS channel for this bdev */
+	struct spdk_io_channel *qos_channel;
+
+	/** QoS lcore for this bdev */
+	int qos_lcore;
+
 	/** write cache enabled, not used at the moment */
 	int write_cache;
 

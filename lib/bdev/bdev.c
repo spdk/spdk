@@ -859,6 +859,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev		*bdev = io_device;
 	struct spdk_bdev_channel	*ch = ctx_buf;
+	struct spdk_bdev_channel	*qos_bdev_ch = NULL;
 
 	ch->bdev = io_device;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
@@ -877,16 +878,26 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->queued_resets);
 	TAILQ_INIT(&ch->nomem_io);
 	TAILQ_INIT(&ch->qos_io);
-	ch->qos_max_ios_per_ms = bdev->ios_per_sec / 1000;
+	ch->qos_max_ios_per_ms = 0;
 	ch->io_completed_per_ms = 0;
 	ch->nomem_threshold = 0;
 	ch->flags = 0;
 	ch->qos_poller = NULL;
 
-	/* Rate limiting on this channel enabled */
-	if (ch->qos_max_ios_per_ms > 0) {
-		ch->flags |= BDEV_CH_QOS_ENABLED;
-		spdk_poller_register(&ch->qos_poller, spdk_bdev_channel_poll_qos, ch, 1000);
+	/* Rate limiting on this bdev enabled */
+	if (bdev->ios_per_sec > 0) {
+		pthread_mutex_lock(&bdev->mutex);
+		bdev->channel_count++;
+		if (bdev->channel_count == 1) {
+			bdev->qos_lcore = spdk_env_get_current_core();
+			bdev->qos_channel = spdk_get_io_channel(bdev);
+			qos_bdev_ch = spdk_io_channel_get_ctx(bdev->qos_channel);
+			qos_bdev_ch->flags |= BDEV_CH_QOS_ENABLED;
+			qos_bdev_ch->qos_max_ios_per_ms = bdev->ios_per_sec / 1000;
+			spdk_poller_register(&qos_bdev_ch->qos_poller,
+					     spdk_bdev_channel_poll_qos, ch, 1000);
+		}
+		pthread_mutex_unlock(&bdev->mutex);
 	}
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -956,7 +967,9 @@ static void
 spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_channel	*ch = ctx_buf;
+	struct spdk_bdev		*bdev = ch->bdev;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
+	struct spdk_bdev_channel	*qos_bdev_ch = NULL;
 
 	mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
 
@@ -970,9 +983,17 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	spdk_put_io_channel(ch->mgmt_channel);
 	assert(ch->io_outstanding == 0);
 
-	if (ch->qos_poller) {
-		spdk_poller_unregister(&ch->qos_poller);
+	pthread_mutex_lock(&bdev->mutex);
+	bdev->channel_count--;
+	if (bdev->channel_count == 0) {
+		qos_bdev_ch = spdk_io_channel_get_ctx(bdev->qos_channel);
+		qos_bdev_ch->flags &= ~BDEV_CH_QOS_ENABLED;
+		spdk_poller_unregister(&qos_bdev_ch->qos_poller);
+		bdev->qos_channel = NULL;
+		spdk_put_io_channel(bdev->qos_channel);
+		bdev->qos_lcore = -1;
 	}
+	pthread_mutex_unlock(&bdev->mutex);
 }
 
 struct spdk_io_channel *
