@@ -223,6 +223,9 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			blob->data_ro_flags = desc_flags->data_ro_flags;
 			blob->md_ro_flags = desc_flags->md_ro_flags;
 
+			if ((desc_flags->invalid_flags & SPDK_BLOB_THIN_PROV) == SPDK_BLOB_THIN_PROV) {
+				blob->thin_provisioned = true;
+			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
 			struct spdk_blob_md_descriptor_extent	*desc_extent;
 			unsigned int				i, j;
