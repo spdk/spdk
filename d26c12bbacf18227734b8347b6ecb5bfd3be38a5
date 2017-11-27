@@ -34,6 +34,24 @@
       "revId": "d26c12bbacf18227734b8347b6ecb5bfd3be38a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "097601c6_b44b5aa2",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-27T18:10:44Z",
+      "side": 1,
+      "message": "ah wait, we do not have smp_rmb defined yet. I guess now that smp_mb is apparently not just a compiler barrier on x86 we should introduce rmb variants in barrier.h as well.",
+      "parentUuid": "afd60af2_c61cfd28",
+      "revId": "d26c12bbacf18227734b8347b6ecb5bfd3be38a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
