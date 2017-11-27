@@ -44,5 +44,7 @@ int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
 			  const char **names, size_t *count);
 struct spdk_nvme_ctrlr *spdk_bdev_nvme_get_ctrlr(void *bdev);
+int spdk_bdev_modify_poller_timer(struct spdk_nvme_ctrlr *ctrlr, uint64_t period_us,
+				  uint64_t *old_period_us);
 
 #endif // SPDK_BDEV_NVME_H

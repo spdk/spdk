@@ -187,8 +187,10 @@ struct firmware_update_info {
 	struct spdk_jsonrpc_request	*request;
 	struct spdk_nvme_ctrlr		*ctrlr;
 	open_descriptors_t		desc_head;
-	struct rpc_apply_firmware	*req;
+	uint64_t 			old_period_us;
+	bool				poller_tick_period_modified;
 };
+struct rpc_apply_firmware	req = {};
 
 static void
 apply_firmware_cleanup(void *cb_arg)
@@ -204,13 +206,15 @@ apply_firmware_cleanup(void *cb_arg)
 		spdk_dma_free(firm_ctx->fw_image);
 	}
 
-	if (firm_ctx->req) {
-		free_rpc_apply_firmware(firm_ctx->req);
-		free(firm_ctx->req);
-	}
+	free_rpc_apply_firmware(&req);
+
 	TAILQ_FOREACH(opt, &firm_ctx->desc_head, tqlst) {
 		spdk_bdev_close(opt->desc);
 		free(opt);
+	}
+
+	if (firm_ctx->poller_tick_period_modified) {
+		spdk_bdev_modify_poller_timer(firm_ctx->ctrlr, firm_ctx->old_period_us, NULL);
 	}
 	free(firm_ctx);
 }
@@ -333,6 +337,7 @@ spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
 	struct spdk_bdev_desc			*desc;
 	struct spdk_nvme_cmd			*cmd;
 	struct firmware_update_info		*firm_ctx;
+	const uint32_t				period_us = 1000;
 
 	firm_ctx = malloc(sizeof(struct firmware_update_info));
 	if (!firm_ctx) {
@@ -343,34 +348,25 @@ spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
 	firm_ctx->fw_image = NULL;
 	TAILQ_INIT(&firm_ctx->desc_head);
 	firm_ctx->request = request;
-
-	firm_ctx->req = malloc(sizeof(struct rpc_apply_firmware));
-	if (!firm_ctx->req) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Memory allocation error.");
-		free(firm_ctx);
-		return;
-	}
+	firm_ctx->poller_tick_period_modified = false;
 
 	if (spdk_json_decode_object(params, rpc_apply_firmware_decoders,
-				    SPDK_COUNTOF(rpc_apply_firmware_decoders), firm_ctx->req)) {
+				    SPDK_COUNTOF(rpc_apply_firmware_decoders), &req)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						 "spdk_json_decode_object failed.");
-		free(firm_ctx->req);
 		free(firm_ctx);
 		return;
 	}
 
-	if ((bdev = spdk_bdev_get_by_name(firm_ctx->req->bdev_name)) == NULL) {
-		snprintf(msg, sizeof(msg), "bdev %s were not found", firm_ctx->req->bdev_name);
+	if ((bdev = spdk_bdev_get_by_name(req.bdev_name)) == NULL) {
+		snprintf(msg, sizeof(msg), "bdev %s were not found", req.bdev_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
 		apply_firmware_cleanup(firm_ctx);
 		return;
 	}
 
 	if ((ctrlr = spdk_bdev_nvme_get_ctrlr(bdev)) == NULL) {
-		snprintf(msg, sizeof(msg), "Controller information for %s were not found.",
-			 firm_ctx->req->bdev_name);
+		snprintf(msg, sizeof(msg), "Controller information for %s were not found.", req.bdev_name);
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
 		apply_firmware_cleanup(firm_ctx);
 		return;
@@ -384,7 +380,7 @@ spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
 		}
 
 		if ((rc = spdk_bdev_open(bdev2, true, NULL, NULL, &desc)) != 0) {
-			snprintf(msg, sizeof(msg), "Device %s is in use.", firm_ctx->req->bdev_name);
+			snprintf(msg, sizeof(msg), "Device %s is in use.", req.bdev_name);
 			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, msg);
 			apply_firmware_cleanup(firm_ctx);
 			return;
@@ -427,7 +423,7 @@ spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	fd = open(firm_ctx->req->filename, O_RDONLY);
+	fd = open(req.filename, O_RDONLY);
 	if (fd < 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, "open file failed.");
 		apply_firmware_cleanup(firm_ctx);
@@ -486,6 +482,9 @@ spdk_rpc_apply_nvme_firmware(struct spdk_jsonrpc_request *request,
 
 	cmd->cdw10 = (firm_ctx->transfer >> 2) - 1;
 	cmd->cdw11 = firm_ctx->offset >> 2;
+
+	spdk_bdev_modify_poller_timer(firm_ctx->ctrlr, period_us, &firm_ctx->old_period_us);
+	firm_ctx->poller_tick_period_modified = true;
 
 	rc = spdk_bdev_nvme_admin_passthru(firm_ctx->desc, firm_ctx->ch, cmd, firm_ctx->p,
 					   firm_ctx->transfer, apply_firmware_complete, firm_ctx);
