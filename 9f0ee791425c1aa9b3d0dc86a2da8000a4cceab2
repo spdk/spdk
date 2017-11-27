@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7eaf1c66_8ee96dd9",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-27T08:05:33Z",
+      "side": 1,
+      "message": "I think the following will be necessary:\n\nstruct spdk_bdev_channel {\n  uint64_t qos_max_ios_per_ms;\n  uint64_t qos_ticks_hz;\n  uint64_t qos_stride;\n  uint64_t qos_last_update;\n  uint64_t qos_vtime;\n  uint64_t qos_limit_tag;\n}\n\nThese are used mainly in spdk_bdev_iosubmit() and spdk_bdev_enable_qos() first.",
+      "range": {
+        "startLine": 152,
+        "startChar": 0,
+        "endLine": 176,
+        "endChar": 32
+      },
+      "revId": "9f0ee791425c1aa9b3d0dc86a2da8000a4cceab2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d11c814_cefddfcc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 768,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-27T08:05:33Z",
+      "side": 1,
+      "message": "static void\nspdk_bdev_update_virtual_time(void)\n{\n  uint64_t now, elapsed;\n\n  now \u003d spdk_get_ticks();\n  elapsed \u003d now - bdev_ch-\u003eqos_last_update;\n  bdev_ch-\u003eqos_last_update \u003d now;\n  bdev_ch-\u003eqos_virtual_time +\u003d elapsed;\n}\n\nby using the above function\n\n  spdk_bdev_update_virtual_time();\n  if (bdev_ch-\u003eqos_limit_tag \u003e bdev_ch-\u003eqos_vtime) {\n    TAILQ_INSERT_TAIL(\u0026bdev_ch-\u003eqos_io, bdev_io, link);\n  } else {\n    bdev_ch-\u003eqos_limit_tag +\u003d bdev_ch-\u003eqos_stride;\n    bdev-\u003efn_table-\u003esubmit_request(ch, bdev_io);\n  }",
+      "range": {
+        "startLine": 745,
+        "startChar": 0,
+        "endLine": 768,
+        "endChar": 3
+      },
+      "revId": "9f0ee791425c1aa9b3d0dc86a2da8000a4cceab2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "178bf643_794a2639",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 853,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-27T08:05:33Z",
+      "side": 1,
+      "message": "If proportional fair share scheduling is used, this mechanism will not be necessary basically.",
+      "range": {
+        "startLine": 830,
+        "startChar": 0,
+        "endLine": 853,
+        "endChar": 2
+      },
+      "revId": "9f0ee791425c1aa9b3d0dc86a2da8000a4cceab2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "715aa33a_3e3f6e30",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 2453,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-27T08:05:33Z",
+      "side": 1,
+      "message": "Added data will be set like the following:\n\nbdev_ch-\u003eqos_max_ios_per_ms \u003d any value specified by user.\nbdev_ch-\u003eqos_ticks_hz \u003d spdk_get_ticks_hz();\nbdev_ch-\u003eqos_stride \u003d bdev_ch-\u003eqos_ticks_hz / bdev_ch-\u003eqos_max_ios_per_ms;\nbdev_ch-\u003eqos_last_update \u003d spdk_get_ticks();\nbdev_ch-\u003eqos_vtime \u003d 0;\nbdev_ch-\u003eqos_limit_tag\u003d 0;",
+      "range": {
+        "startLine": 2453,
+        "startChar": 0,
+        "endLine": 2453,
+        "endChar": 67
+      },
+      "revId": "9f0ee791425c1aa9b3d0dc86a2da8000a4cceab2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
