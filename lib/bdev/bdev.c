@@ -47,6 +47,7 @@
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
+#include "spdk_internal/event.h"
 #include "spdk/string.h"
 
 #ifdef SPDK_CONFIG_VTUNE
