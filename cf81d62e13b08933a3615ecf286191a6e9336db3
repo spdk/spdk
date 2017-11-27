@@ -16,6 +16,24 @@
       "revId": "cf81d62e13b08933a3615ecf286191a6e9336db3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c73f29a_385da7f0",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1241,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T20:08:00Z",
+      "side": 1,
+      "message": "The only path that this can get called is spdk_nvme_probe_internal() -\u003e nvme_transport_ctrlr_scan() -\u003e nvme_rdma_ctrlr_scan(), and spdk_nvme_probe_internal() takes the driver lock right before calling it.",
+      "parentUuid": "2f5e30a8_c39faa05",
+      "revId": "cf81d62e13b08933a3615ecf286191a6e9336db3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
