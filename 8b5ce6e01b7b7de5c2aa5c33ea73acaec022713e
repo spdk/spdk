@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d6d7f3ed_d4c62d50",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-27T20:41:09Z",
+      "side": 1,
+      "message": "but why?\nlwsync stands for \"lighweight sync\", and seems to be just the SMP barrier by definition [1].  \"sync\" seems to synchronize the MMIO as well. Is there any reason we\u0027d need that extra overhead?\n\n[1] https://www.ibm.com/developerworks/systems/articles/powerpc.html",
+      "parentUuid": "7d4df2a7_77caa06f",
+      "revId": "8b5ce6e01b7b7de5c2aa5c33ea73acaec022713e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9e87ff5_0ba48bbe",
         "filename": "include/spdk/barrier.h",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "704ccdb4_ae390e4b",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-27T20:41:09Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "c9e87ff5_0ba48bbe",
+      "revId": "8b5ce6e01b7b7de5c2aa5c33ea73acaec022713e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13d1f5e4_435749bd",
         "filename": "include/spdk/barrier.h",
         "patchSetId": 3
@@ -47,6 +83,24 @@
       "writtenOn": "2017-11-27T18:56:29Z",
       "side": 1,
       "message": "should be spdk_smp_wmb",
+      "revId": "8b5ce6e01b7b7de5c2aa5c33ea73acaec022713e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f4f537c_37d22979",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-27T20:41:09Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "13d1f5e4_435749bd",
       "revId": "8b5ce6e01b7b7de5c2aa5c33ea73acaec022713e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
