@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ed03afc_0f218257",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-27T05:35:52Z",
+      "side": 1,
+      "message": "I\u0027m still reading and considering your patches and hence this is my first impression.\n\nIs it difficult to use 4 pollers for each of the following?\n- if io-\u003ereq_in_progress\n- if io-\u003epayload_in_progress \u0026\u0026 is_write(io-\u003etype)\n- if io-\u003eresp_in_progress\n- if io-\u003epayload_in_progress \u0026\u0026 is_read(io-\u003etype)\n\nThis may be easier for me to understand than a poller for each nbd_io but I\u0027m afraid I have not understood fully yet.\n\nThank you.",
+      "range": {
+        "startLine": 539,
+        "startChar": 0,
+        "endLine": 573,
+        "endChar": 23
+      },
+      "revId": "1915fb92f0598bb689a120f405ae699b959826a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
