@@ -1,5 +1,21 @@
 # Changelog
 
+## v17.10.1: Maintenance Release
+
+SPDK v17.10.1 is a bug fix and maintenance release with several critical fixes.
+
+Several issues found after the v17.10 release in the new Logical Volumes feature have
+been fixed.
+
+The NVMe driver has been updated to recognize the RTD3 Entry timeout reported by the
+device when performing controller shutdown.  In particular, this fixes timeouts on NVMe
+devices with long shutdown times, such as the Intel® SSD DC P4500 Series SSDs.
+
+A potential issue when running the NVMe over Fabrics target with multiple cores has
+been fixed.
+
+The `env_dpdk` environment layer has been updated to work with DPDK 17.11.
+
 ## v17.10: Logical Volumes
 
 ### New dependencies
