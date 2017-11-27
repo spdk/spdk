@@ -151,6 +151,9 @@ static int bdev_nvme_io_passthru(struct nvme_bdev *nbdev, struct spdk_io_channel
 static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
+struct spdk_poller;
+extern int spdk_modify_poller_period_ticks(struct spdk_poller **ppoller,
+		uint64_t period_microseconds, uint64_t *old_period_microseconds);
 
 static int
 bdev_nvme_get_ctx_size(void)
@@ -1436,4 +1439,32 @@ spdk_bdev_nvme_get_ctrlr(void *bdev_)
 	return NULL;
 }
 
+int
+spdk_bdev_modify_poller_timer(struct spdk_nvme_ctrlr *ctrlr, uint64_t period_us,
+			      uint64_t *old_period_us)
+{
+	int                     rc;
+	struct nvme_bdev        *nvme_bdev_tmp;
+
+	if (!ctrlr || period_us < 1) {
+		SPDK_ERRLOG("spdk_bdev_admin_polltimer_modify() failed. ctrlr = NULL\n");
+		return -1;
+	}
+
+	TAILQ_FOREACH(nvme_bdev_tmp, &g_nvme_bdevs, link) {
+
+		if (nvme_bdev_tmp->nvme_ctrlr && (nvme_bdev_tmp->nvme_ctrlr->ctrlr == ctrlr)) {
+
+			rc = spdk_modify_poller_period_ticks((struct spdk_poller **)
+							     &nvme_bdev_tmp->nvme_ctrlr->adminq_timer_poller, period_us, old_period_us);
+			if (rc) {
+				SPDK_ERRLOG("spdk_modify_poller_period_ticks(..) failed\n");
+				return -1;
+			}
+
+			return 0;
+		}
+	}
+	return -1;
+}
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_nvme", SPDK_TRACE_BDEV_NVME)
