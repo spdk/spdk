@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "9fce5130_32bd63b8",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T06:00:54Z",
+      "side": 1,
+      "message": "Please use spdk wrapper env library instead using DPDK library directly.",
+      "revId": "1915fb92f0598bb689a120f405ae699b959826a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3db22003_bc9c3156",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 1
