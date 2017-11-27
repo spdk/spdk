@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd124a4e_a209d29d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-27T14:44:27Z",
+      "side": 1,
+      "message": "Shorten the title of commit message.\n\"Reordering existing test cases\" is just fine.\nYou can put more justification in message body",
+      "range": {
+        "startLine": 7,
+        "startChar": 10,
+        "endLine": 8,
+        "endChar": 40
+      },
+      "revId": "7910d271e8fd3ba558426bfa21e0006950996a6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cd070f0_5f96d462",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-27T14:44:27Z",
+      "side": 1,
+      "message": "This section mentions \"positive tests\" but for example tests 54,55 are negative. Please correct the title here.\nSame for resize, destroy lvs, etc...",
+      "range": {
+        "startLine": 39,
+        "startChar": 3,
+        "endLine": 39,
+        "endChar": 40
+      },
+      "revId": "7910d271e8fd3ba558426bfa21e0006950996a6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
