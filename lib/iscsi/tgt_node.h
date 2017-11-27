@@ -126,4 +126,6 @@ int spdk_iscsi_tgt_node_delete_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
 		uint16_t num_maps);
 void spdk_iscsi_delete_tgt_node_pg_maps(struct spdk_iscsi_portal_grp *pg);
 void spdk_iscsi_delete_tgt_node_ig_maps(struct spdk_iscsi_init_grp *ig);
+int spdk_iscsi_tgt_node_add_lun(struct spdk_iscsi_tgt_node *target,
+				char *lun_name, int lun_id);
 #endif /* SPDK_ISCSI_TGT_NODE_H_ */
