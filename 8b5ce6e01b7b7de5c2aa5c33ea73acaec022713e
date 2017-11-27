@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f0ff1f9f_2abe24ba",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T21:27:52Z",
+      "side": 1,
+      "message": "I guess this is OK as-is.  The DPDK analogy isn\u0027t 100% accurate, since it accounts for 32-bit and 64-bit.  32-bit does sync, 64-bit does lwsync (like the code here does).\n\nPlus there is no spdk_rmb yet.  :)",
+      "parentUuid": "d6d7f3ed_d4c62d50",
+      "revId": "8b5ce6e01b7b7de5c2aa5c33ea73acaec022713e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9e87ff5_0ba48bbe",
         "filename": "include/spdk/barrier.h",
         "patchSetId": 3
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "^",
       "parentUuid": "c9e87ff5_0ba48bbe",
+      "revId": "8b5ce6e01b7b7de5c2aa5c33ea73acaec022713e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf8f3d28_c2ed4b72",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T21:27:52Z",
+      "side": 1,
+      "message": "I\u0027m OK reverting this part of the change (same as above).",
+      "parentUuid": "704ccdb4_ae390e4b",
       "revId": "8b5ce6e01b7b7de5c2aa5c33ea73acaec022713e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
