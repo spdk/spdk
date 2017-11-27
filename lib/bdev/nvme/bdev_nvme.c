@@ -227,14 +227,6 @@ bdev_nvme_poll_adminq(void *arg)
 	spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 }
 
-static void
-bdev_nvme_unregister_cb(void *io_device)
-{
-	struct spdk_nvme_ctrlr *ctrlr = io_device;
-
-	spdk_nvme_detach(ctrlr);
-}
-
 static int
 bdev_nvme_destruct(void *ctx)
 {
@@ -249,8 +241,9 @@ bdev_nvme_destruct(void *ctx)
 	if (nvme_ctrlr->ref == 0) {
 		TAILQ_REMOVE(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
-		spdk_io_device_unregister(nvme_ctrlr->ctrlr, bdev_nvme_unregister_cb);
 		spdk_poller_unregister(&nvme_ctrlr->adminq_timer_poller);
+		spdk_io_device_unregister(nvme_ctrlr->ctrlr);
+		spdk_nvme_detach(nvme_ctrlr->ctrlr);
 		free(nvme_ctrlr->name);
 		free(nvme_ctrlr);
 		return 0;
@@ -869,7 +862,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 				sizeof(struct nvme_io_channel));
 
 	if (nvme_ctrlr_create_bdevs(nvme_ctrlr) != 0) {
-		spdk_io_device_unregister(ctrlr, NULL);
+		spdk_io_device_unregister(ctrlr);
 		free(nvme_ctrlr->name);
 		free(nvme_ctrlr);
 		return;
