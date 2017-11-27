@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "849bfcbf_9d6e1f47",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T17:55:02Z",
+      "side": 1,
+      "message": "This shouldn\u0027t be all caps (and we should write \"I/O\" consistently).",
+      "revId": "96633793f8dea4e65e3376786152825d162b0bb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae42f2aa_96a27464",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T17:55:02Z",
+      "side": 1,
+      "message": "Maybe \"An\" -\u003e \"The\" (there is only one poller registration API function).\n\nOr even better, just mention the old and new functions by name.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 2
+      },
+      "revId": "96633793f8dea4e65e3376786152825d162b0bb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6793dff_7c0fa7d3",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T17:55:02Z",
+      "side": 1,
+      "message": "I think this should still be spdk_poller_fn.",
+      "revId": "96633793f8dea4e65e3376786152825d162b0bb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2a5b035_2428d389",
+        "filename": "test/unit/lib/scsi/lun.c/lun_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-27T17:55:02Z",
+      "side": 1,
+      "message": "spdk_poller_fn",
+      "range": {
+        "startLine": 58,
+        "startChar": 21,
+        "endLine": 58,
+        "endChar": 35
+      },
+      "revId": "96633793f8dea4e65e3376786152825d162b0bb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
