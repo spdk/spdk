@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f5e30a8_c39faa05",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1241,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-27T19:07:38Z",
+      "side": 1,
+      "message": "do you need to take the driver lock around this call?\n\nor maybe just put driver lock/unlock in nvme_ctrlr_connected() - although I\u0027m guessing you didn\u0027t put it there in case you want to call nvme_ctrlr_connected() while already holding the driver lock?",
+      "revId": "cf81d62e13b08933a3615ecf286191a6e9336db3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
