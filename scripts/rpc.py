@@ -163,6 +163,56 @@ p.add_argument('chap_auth_group', help="""Authentication group ID for this targe
 p.set_defaults(func=construct_target_node)
 
 
+def add_pg_ig_maps(args):
+    pg_tags = []
+    ig_tags = []
+    for u in args.pg_ig_mappings.strip().split(" "):
+        pg, ig = u.split(":")
+        pg_tags.append(int(pg))
+        ig_tags.append(int(ig))
+
+    params = {
+        'name': args.name,
+        'pg_tags': pg_tags,
+        'ig_tags': ig_tags,
+    }
+    jsonrpc_call('add_pg_ig_maps', params)
+
+p = subparsers.add_parser('add_pg_ig_maps', help='Add PG-IG maps to the target node')
+p.add_argument('name', help='Target node name (ASCII)')
+p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
+Whitespace separated, quoted, mapping defined with colon
+separated list of "tags" (int > 0)
+Example: '1:1 2:2 2:1'
+*** The Portal/Initiator Groups must be precreated ***""")
+p.set_defaults(func=add_pg_ig_maps)
+
+
+def delete_pg_ig_maps(args):
+    pg_tags = []
+    ig_tags = []
+    for u in args.pg_ig_mappings.strip().split(" "):
+        pg, ig = u.split(":")
+        pg_tags.append(int(pg))
+        ig_tags.append(int(ig))
+
+    params = {
+        'name': args.name,
+        'pg_tags': pg_tags,
+        'ig_tags': ig_tags,
+    }
+    jsonrpc_call('delete_pg_ig_maps', params)
+
+p = subparsers.add_parser('delete_pg_ig_maps', help='Delete PG-IG maps from the target node')
+p.add_argument('name', help='Target node name (ASCII)')
+p.add_argument('pg_ig_mappings', help="""List of (Portal_Group_Tag:Initiator_Group_Tag) mappings
+Whitespace separated, quoted, mapping defined with colon
+separated list of "tags" (int > 0)
+Example: '1:1 2:2 2:1'
+*** The Portal/Initiator Groups must be precreated ***""")
+p.set_defaults(func=delete_pg_ig_maps)
+
+
 def construct_malloc_bdev(args):
     num_blocks = (args.total_size * 1024 * 1024) / args.block_size
     params = {'num_blocks': num_blocks, 'block_size': args.block_size}
