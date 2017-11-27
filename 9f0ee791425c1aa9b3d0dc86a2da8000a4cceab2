@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "1f750ec6_91f4bc4a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 767,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-27T12:07:11Z",
+      "side": 1,
+      "message": "Looks much better than previous but I think the following may be more natural (I referred SPDK iSCSI and SCSI):\n\nspdk_bdev_io_submit:\n  TAILQ_INSERT_TAIL(\u0026bdev_ch-\u003epos_io, dev_io, link);\n\n  while (!TAILQ_EMPTY(\u0026bdev_ch-\u003epos_io) \u0026\u0026 rate is not limited yet) {\n    qos_bdev_io \u003d TAILQ_FIRST(\u0026bdev_ch-\u003epos_io);\n    TAILQ_REMOVE(\u0026bdev_ch-\u003epos_io, qos_bdev_io, link);\n    submit_request(ch, pos_bdev_io);\n  }\n\n\npoller:\n  while (!TAILQ_EMPTY(\u0026bdev_ch-\u003epos_io) \u0026\u0026 rate is not limited yet) {\n    qos_bdev_io \u003d TAILQ_FIRST(\u0026bdev_ch-\u003epos_io);\n    TAILQ_REMOVE(\u0026bdev_ch-\u003epos_io, qos_bdev_io, link);\n    submit_request(ch, pos_bdev_io);\n  }",
+      "range": {
+        "startLine": 745,
+        "startChar": 0,
+        "endLine": 767,
+        "endChar": 56
+      },
+      "revId": "9f0ee791425c1aa9b3d0dc86a2da8000a4cceab2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9d11c814_cefddfcc",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 33
