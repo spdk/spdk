@@ -697,7 +697,7 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 		TAILQ_REMOVE(&base->found_disks, disk, link);
 		rc = spdk_bdev_register(&disk->bdev);
 		if (rc) {
-			spdk_io_device_unregister(base->svdev, NULL);
+			spdk_io_device_unregister(base->svdev);
 			SPDK_ERRLOG("Failed to register bdev name=%s\n", disk->bdev.name);
 			spdk_ring_free(ctrlq_ring);
 			scan_target_abort(base, rc);
@@ -1370,20 +1370,15 @@ out:
 }
 
 static void
-virtio_scsi_dev_unregister_cb(void *io_device)
+virtio_scsi_dev_unregister(void *arg)
 {
-	struct virtio_scsi_dev *svdev = io_device;
-	struct virtio_dev *vdev = &svdev->vdev;
+	struct virtio_dev *vdev = arg;
+	struct virtio_scsi_dev *svdev = virtio_dev_to_scsi(vdev);
 	struct virtqueue *vq;
 	struct spdk_ring *send_ring;
-	struct spdk_thread *thread;
 	bool finish_module;
 
-	thread = virtio_dev_queue_get_thread(vdev, VIRTIO_SCSI_CONTROLQ);
-	if (thread != spdk_get_thread()) {
-		spdk_thread_send_msg(thread, virtio_scsi_dev_unregister_cb, io_device);
-		return;
-	}
+	spdk_io_device_unregister(svdev);
 
 	if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_CONTROLQ)) {
 		vq = vdev->vqs[VIRTIO_SCSI_CONTROLQ];
@@ -1412,6 +1407,7 @@ static void
 bdev_virtio_finish(void)
 {
 	struct virtio_dev *vdev, *next;
+	struct spdk_thread *thread;
 
 	if (TAILQ_EMPTY(&g_virtio_driver.scsi_devs)) {
 		spdk_bdev_module_finish_done();
@@ -1419,8 +1415,12 @@ bdev_virtio_finish(void)
 	}
 
 	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.scsi_devs, tailq, next) {
-		spdk_io_device_unregister(virtio_dev_to_scsi(vdev),
-					  virtio_scsi_dev_unregister_cb);
+		thread = virtio_dev_queue_get_thread(vdev, VIRTIO_SCSI_CONTROLQ);
+		if (thread != spdk_get_thread()) {
+			spdk_thread_send_msg(thread, virtio_scsi_dev_unregister, vdev);
+		} else {
+			virtio_scsi_dev_unregister(vdev);
+		}
 	}
 }
 

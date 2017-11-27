@@ -538,16 +538,6 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 }
 
 static void
-spdk_bdev_module_finish_cb(void *io_device)
-{
-	spdk_bdev_fini_cb cb_fn = g_fini_cb_fn;
-
-	cb_fn(g_fini_cb_arg);
-	g_fini_cb_fn = NULL;
-	g_fini_cb_arg = NULL;
-}
-
-static void
 spdk_bdev_module_finish_complete(void)
 {
 	if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != SPDK_BDEV_IO_POOL_SIZE) {
@@ -575,7 +565,11 @@ spdk_bdev_module_finish_complete(void)
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
 	spdk_dma_free(g_bdev_mgr.zero_buffer);
 
-	spdk_io_device_unregister(&g_bdev_mgr, spdk_bdev_module_finish_cb);
+	spdk_io_device_unregister(&g_bdev_mgr);
+
+	g_fini_cb_fn(g_fini_cb_arg);
+	g_fini_cb_fn = NULL;
+	g_fini_cb_arg = NULL;
 }
 
 static void
@@ -1901,7 +1895,7 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 
 	pthread_mutex_destroy(&bdev->mutex);
 
-	spdk_io_device_unregister(bdev, NULL);
+	spdk_io_device_unregister(bdev);
 
 	rc = bdev->fn_table->destruct(bdev->ctxt);
 	if (rc < 0) {
@@ -2077,7 +2071,7 @@ spdk_bdev_part_free(struct spdk_bdev_part *part)
 	assert(part->base);
 
 	base = part->base;
-	spdk_io_device_unregister(&part->base, NULL);
+	spdk_io_device_unregister(&part->base);
 	TAILQ_REMOVE(base->tailq, part, tailq);
 	free(part->bdev.name);
 	free(part);
