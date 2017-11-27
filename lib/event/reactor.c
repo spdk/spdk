@@ -58,9 +58,9 @@ enum spdk_poller_state {
 	SPDK_POLLER_STATE_UNREGISTERED,
 };
 
-struct spdk_poller {
-	TAILQ_ENTRY(spdk_poller)	tailq;
-	uint32_t			lcore;
+struct spdk_reactor_poller {
+	TAILQ_ENTRY(spdk_reactor_poller)	tailq;
+	uint32_t				lcore;
 
 	/* Current state of the poller; should only be accessed from the poller's thread. */
 	enum spdk_poller_state		state;
@@ -98,12 +98,12 @@ struct spdk_reactor {
 	 *  of the ring, executes it, then puts it back at the tail of
 	 *  the ring.
 	 */
-	TAILQ_HEAD(, spdk_poller)			active_pollers;
+	TAILQ_HEAD(, spdk_reactor_poller)		active_pollers;
 
 	/**
 	 * Contains pollers running on this reactor with a periodic timer.
 	 */
-	TAILQ_HEAD(timer_pollers_head, spdk_poller)	timer_pollers;
+	TAILQ_HEAD(timer_pollers_head, spdk_reactor_poller)	timer_pollers;
 
 	struct spdk_ring				*events;
 
@@ -221,9 +221,10 @@ _spdk_reactor_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 }
 
 static void
-_spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poller, uint64_t now)
+_spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_reactor_poller *poller,
+			  uint64_t now)
 {
-	struct spdk_poller *iter;
+	struct spdk_reactor_poller *iter;
 	uint64_t next_run_tick;
 
 	next_run_tick = now + poller->period_ticks;
@@ -244,13 +245,13 @@ _spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poll
 	TAILQ_INSERT_HEAD(&reactor->timer_pollers, poller, tailq);
 }
 
-static struct spdk_poller *
+static struct spdk_poller_impl *
 _spdk_reactor_start_poller(void *thread_ctx,
-			   spdk_thread_fn fn,
+			   spdk_poller_fn fn,
 			   void *arg,
 			   uint64_t period_microseconds)
 {
-	struct spdk_poller *poller;
+	struct spdk_reactor_poller *poller;
 	struct spdk_reactor *reactor;
 	uint64_t quotient, remainder, ticks;
 
@@ -283,13 +284,14 @@ _spdk_reactor_start_poller(void *thread_ctx,
 		TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
 	}
 
-	return poller;
+	return (struct spdk_poller_impl *)poller;
 }
 
 static void
-_spdk_reactor_stop_poller(struct spdk_poller *poller, void *thread_ctx)
+_spdk_reactor_stop_poller(struct spdk_poller_impl *pimpl, void *thread_ctx)
 {
 	struct spdk_reactor *reactor;
+	struct spdk_reactor_poller *poller = (struct spdk_reactor_poller *)pimpl;
 
 	reactor = thread_ctx;
 
@@ -405,7 +407,7 @@ static int
 _spdk_reactor_run(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
-	struct spdk_poller	*poller;
+	struct spdk_reactor_poller *poller;
 	uint32_t		event_count;
 	uint64_t		idle_started, now;
 	uint64_t		spin_cycles, sleep_cycles;

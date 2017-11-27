@@ -49,17 +49,18 @@ extern "C" {
 struct spdk_thread;
 struct spdk_io_channel_iter;
 struct spdk_poller;
+struct spdk_poller_impl;
 
 typedef void (*spdk_thread_fn)(void *ctx);
 typedef void (*spdk_thread_pass_msg)(spdk_thread_fn fn, void *ctx,
 				     void *thread_ctx);
 
 typedef void (*spdk_poller_fn)(void *ctx);
-typedef struct spdk_poller *(*spdk_start_poller)(void *thread_ctx,
+typedef struct spdk_poller_impl *(*spdk_start_poller)(void *thread_ctx,
 		spdk_poller_fn fn,
 		void *arg,
 		uint64_t period_microseconds);
-typedef void (*spdk_stop_poller)(struct spdk_poller *poller, void *thread_ctx);
+typedef void (*spdk_stop_poller)(struct spdk_poller_impl *poller, void *thread_ctx);
 
 typedef int (*spdk_io_channel_create_cb)(void *io_device, void *ctx_buf);
 typedef void (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
