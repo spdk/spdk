@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0719f0fc_eaf8d6e3",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-27T07:43:14Z",
+      "side": 1,
+      "message": "good improvement, maybe definition like:[RDMA_CM_EVENT_ADDR_RESOLVED]\u003d \"RDMA_CM_EVENT_ADDR_RESOLVED\", is more clear.",
+      "revId": "9ee1f6f2bf7e7f679ac07ed4df89210b35dbcbe1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
