@@ -117,6 +117,8 @@ struct spdk_blob {
 
 	enum spdk_blob_state		state;
 
+	bool thin_provisioned;
+
 	/* Two copies of the mutable data. One is a version
 	 * that matches the last known data on disk (clean).
 	 * The other (active) is the current data. Syncing
@@ -241,6 +243,9 @@ struct spdk_blob_md_descriptor_extent {
 #define SPDK_BLOB_DATA_RO_FLAGS_MASK	0
 #define SPDK_BLOB_MD_RO_FLAGS_MASK	0
 
+#define SPDK_BLOB_FEATURE_FLAGS_MASK	1
+#define SPDK_BLOB_FEATURE_THIN_PROVISIONING (1ULL << 0)
+
 struct spdk_blob_md_descriptor_flags {
 	uint8_t		type;
 	uint32_t	length;
@@ -262,6 +267,9 @@ struct spdk_blob_md_descriptor_flags {
 	 *  allow the blob to be opened in md_read_only mode.
 	 */
 	uint64_t	md_ro_flags;
+
+	/* Blob features mask */
+	uint64_t	feature_flags;
 };
 
 struct spdk_blob_md_descriptor {

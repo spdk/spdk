@@ -236,6 +236,10 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
  * spdk_bs_md_sync_blob() is called. */
 int spdk_bs_md_resize_blob(struct spdk_blob *blob, size_t sz);
 
+/* Set blob as thin provisioned. */
+void spdk_bs_md_set_thin_provision(struct spdk_blob *blob, const char *base,
+				   spdk_blob_op_complete cb_fn, void *cb_arg);
+
 /* Sync a blob */
 /* Make a blob persistent. This applies to open, resize, set xattr,
  * and remove xattr. These operations will not be persistent until

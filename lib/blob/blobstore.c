@@ -208,6 +208,17 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob *bl
 			    SPDK_BLOB_MD_RO_FLAGS_MASK) {
 				blob->md_ro = true;
 			}
+
+			if ((desc_flags->feature_flags | SPDK_BLOB_FEATURE_FLAGS_MASK) !=
+			    SPDK_BLOB_FEATURE_FLAGS_MASK) {
+				SPDK_DEBUGLOG(SPDK_TRACE_BLOB, "Found unsupported features: %lu\n",
+					      desc_flags->feature_flags & ~SPDK_BLOB_FEATURE_FLAGS_MASK);
+			}
+
+			if ((desc_flags->feature_flags & SPDK_BLOB_FEATURE_THIN_PROVISIONING) ==
+			    SPDK_BLOB_FEATURE_THIN_PROVISIONING) {
+				blob->thin_provisioned = true;
+			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_EXTENT) {
 			struct spdk_blob_md_descriptor_extent	*desc_extent;
 			unsigned int				i, j;
@@ -2758,6 +2769,14 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	}
 
 	_spdk_blob_load(seq, blob, _spdk_bs_md_open_blob_cpl, blob);
+}
+
+void
+spdk_bs_md_set_thin_provision(struct spdk_blob *blob, const char *base,
+			      spdk_blob_op_complete cb_fn, void *cb_arg)
+{
+	blob->thin_provisioned = true;
+	cb_fn(cb_arg, 0);
 }
 
 /* START spdk_bs_md_sync_blob */
