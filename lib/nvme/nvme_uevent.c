@@ -49,10 +49,10 @@ int
 spdk_uevent_connect(void)
 {
 	struct sockaddr_nl addr;
-	int ret;
 	int netlink_fd;
 	int size = 64 * 1024;
-	int nonblock = 1;
+	char buf[64];
+	int flag;
 
 	memset(&addr, 0, sizeof(addr));
 	addr.nl_family = AF_NETLINK;
@@ -65,9 +65,10 @@ spdk_uevent_connect(void)
 
 	setsockopt(netlink_fd, SOL_SOCKET, SO_RCVBUFFORCE, &size, sizeof(size));
 
-	ret = ioctl(netlink_fd, FIONBIO, &nonblock);
-	if (ret != 0) {
-		SPDK_ERRLOG("ioctl(FIONBIO) failed\n");
+	flag = fcntl(netlink_fd, F_GETFL);
+	if (fcntl(netlink_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n", netlink_fd, buf);
 		close(netlink_fd);
 		return -1;
 	}

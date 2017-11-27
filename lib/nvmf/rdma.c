@@ -1145,6 +1145,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 	struct ibv_context		**contexts;
 	uint32_t			i;
 	char				buf[64];
+	int				flag;
 
 	rtransport = calloc(1, sizeof(*rtransport));
 	if (!rtransport) {
@@ -1172,9 +1173,11 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		return NULL;
 	}
 
-	rc = fcntl(rtransport->event_channel->fd, F_SETFL, O_NONBLOCK);
-	if (rc < 0) {
-		SPDK_ERRLOG("fcntl to set fd to non-blocking failed\n");
+	flag = fcntl(rtransport->event_channel->fd, F_GETFL);
+	if (fcntl(rtransport->event_channel->fd, F_SETFL, flag | O_NONBLOCK) < 0) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
+			    rtransport->event_channel->fd, buf);
 		free(rtransport);
 		return NULL;
 	}
