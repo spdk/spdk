@@ -9,12 +9,14 @@ function usage()
 	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
 	echo "Shortcut script for running vhost app."
 	echo "Usage: $(basename $1) [-x] [-h|--help] [--clean-build] [--work-dir=PATH]"
-	echo "-h, --help           print help and exit"
-	echo "-x                   Set -x for script debug"
-	echo "    --gdb            Run app under gdb"
-	echo "    --gdbserver      Run app under gdb-server"
-	echo "    --work-dir=PATH  Where to find source/project. [default=$TEST_DIR]"
-	echo "    --conf-dir=PATH  Path to directory with configuration for vhost"
+	echo "-h, --help              Print help and exit"
+	echo "-x                      Set -x for script debug"
+	echo "    --gdb               Run app under gdb"
+	echo "    --gdbserver         Run app under gdb-server"
+	echo "    --work-dir=PATH     Where to find source/project. [default=$TEST_DIR]"
+	echo "    --conf-dir=PATH     Path to directory with configuration for vhost"
+	echo "    --reactor-mask=INT  Core mask for DPDK"
+	echo "    --master-core=INT   Master (primary) core for DPDK"
 
 	exit 0
 }
@@ -30,6 +32,8 @@ while getopts 'xh-:' optchar; do
 				;;
 			work-dir=*) TEST_DIR="${OPTARG#*=}" ;;
 			conf-dir=*) CONF_DIR="${OPTARG#*=}" ;;
+			reactor-mask=*) REACTOR_MASK="${OPTARG#*=}" ;;
+			master-core=*) MASTER_CORE="${OPTARG#*=}" ;;
 			*) usage $0 echo "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
@@ -48,6 +52,9 @@ echo "INFO: $0"
 echo
 
 . $COMMON_DIR/common.sh
-
+if [[ -n $REACTOR_MASK ]] && [[ -n $MASTER_CORE ]]; then
+    vhost_reactor_mask=$REACTOR_MASK
+    vhost_master_core=$MASTER_CORE
+fi
 # Starting vhost with valid options
 spdk_vhost_run $CONF_DIR
