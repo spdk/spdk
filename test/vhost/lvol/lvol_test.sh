@@ -99,7 +99,11 @@ fi
 
 echo "INFO: running SPDK"
 echo ""
-$COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
+if $distribute_cores; then
+    $COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR --reactor-mask=$vhost_reactor_mask --master-core=$vhost_master_core
+else
+    $COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
+fi
 echo ""
 
 lvol_stores=()
@@ -194,7 +198,13 @@ vm_wait_for_boot 600 $used_vms
 
 # Get disk names from VMs and run FIO traffic
 run_fio="python $COMMON_DIR/run_fio.py --fio-bin=$fio_bin"
-run_fio+=" --job-file=$COMMON_DIR/fio_jobs/default_integrity.job"
+
+if [[ $RUN_NIGHTLY -eq 1 ]]; then
+    run_fio+=" --job-file=$COMMON_DIR/fio_jobs/default_integrity_nightly.job"
+else
+    run_fio+=" --job-file=$COMMON_DIR/fio_jobs/default_integrity.job"
+fi
+
 run_fio+=" --out=$TEST_DIR "
 
 for vm_num in $used_vms; do
