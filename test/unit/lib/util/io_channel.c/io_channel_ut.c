@@ -204,7 +204,7 @@ for_each_channel_remove(void)
 	spdk_put_io_channel(ch1);
 	set_thread(2);
 	spdk_put_io_channel(ch2);
-	spdk_io_device_unregister(&io_target, NULL);
+	spdk_io_device_unregister(&io_target);
 	poll_threads();
 
 	free_threads();
@@ -252,7 +252,7 @@ for_each_channel_unreg(void)
 	ch0 = spdk_get_io_channel(&io_target);
 	spdk_for_each_channel(&io_target, unreg_ch_done, &ctx, unreg_foreach_done);
 
-	spdk_io_device_unregister(&io_target, NULL);
+	spdk_io_device_unregister(&io_target);
 	/*
 	 * There is an outstanding foreach call on the io_device, so the unregister should not
 	 *  have removed the device.
@@ -273,7 +273,7 @@ for_each_channel_unreg(void)
 	 * There are no more foreach operations outstanding, so we can unregister the device,
 	 *  even though a channel still exists for the device.
 	 */
-	spdk_io_device_unregister(&io_target, NULL);
+	spdk_io_device_unregister(&io_target);
 	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
 
 	set_thread(0);
@@ -404,9 +404,9 @@ channel(void)
 	ch1 = spdk_get_io_channel(&device3);
 	CU_ASSERT(ch1 == NULL);
 
-	spdk_io_device_unregister(&device1, NULL);
-	spdk_io_device_unregister(&device2, NULL);
-	spdk_io_device_unregister(&device3, NULL);
+	spdk_io_device_unregister(&device1);
+	spdk_io_device_unregister(&device2);
+	spdk_io_device_unregister(&device3);
 	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
 	spdk_free_thread();
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
