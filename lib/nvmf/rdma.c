@@ -914,12 +914,13 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		rdma_req->req.length = sgl->keyed.length;
-		rdma_req->req.data = spdk_mempool_get(rtransport->data_buf_pool);
-		if (!rdma_req->req.data) {
+		rdma_req->req.buf = spdk_mempool_get(rtransport->data_buf_pool);
+		if (!rdma_req->req.buf) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
 			return 0;
 		}
+		rdma_req->req.data = (void *)((unsigned long)((char *)rdma_req->req.buf + 4096) & ~4095);
 
 		rdma_req->data_from_pool = true;
 		rdma_req->data.sgl[0].addr = (uintptr_t)rdma_req->req.data;
@@ -1116,7 +1117,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 			if (rdma_req->data_from_pool) {
 				/* Put the buffer back in the pool */
-				spdk_mempool_put(rtransport->data_buf_pool, rdma_req->req.data);
+				spdk_mempool_put(rtransport->data_buf_pool, rdma_req->req.buf);
 				rdma_req->data_from_pool = false;
 			}
 			rdma_req->req.length = 0;
@@ -1181,7 +1182,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 
 	rtransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_rdma",
 				    rtransport->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
-				    rtransport->max_io_size,
+				    rtransport->max_io_size + 4096,
 				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!rtransport->data_buf_pool) {
