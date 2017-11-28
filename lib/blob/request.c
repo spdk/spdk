@@ -177,6 +177,23 @@ spdk_bs_sequence_readv(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
 }
 
 void
+spdk_bs_sequence_readv_back_dev(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
+				uint64_t lba, uint32_t lba_count,
+				spdk_bs_sequence_cpl cb_fn, void *cb_arg, struct spdk_bs_dev *back_dev)
+{
+	struct spdk_bs_request_set   *set = (struct spdk_bs_request_set *)seq;
+	struct spdk_bs_channel       *channel = set->channel;
+
+	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
+
+	set->u.sequence.cb_fn = cb_fn;
+	set->u.sequence.cb_arg = cb_arg;
+
+	back_dev->readv(back_dev, channel->dev_channel, iov, iovcnt, lba, lba_count,
+			&set->cb_args);
+}
+
+void
 spdk_bs_sequence_writev(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
 			uint64_t lba, uint32_t lba_count,
 			spdk_bs_sequence_cpl cb_fn, void *cb_arg)
@@ -316,6 +333,20 @@ spdk_bs_batch_read(spdk_bs_batch_t *batch, void *payload,
 	set->u.batch.outstanding_ops++;
 	channel->dev->read(channel->dev, channel->dev_channel, payload, lba, lba_count,
 			   &set->cb_args);
+}
+
+void
+spdk_bs_batch_read_back_dev(spdk_bs_batch_t *batch, void *payload,
+			    uint64_t lba, uint32_t lba_count, struct spdk_bs_dev *back_dev)
+{
+	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
+	struct spdk_bs_channel		*channel = set->channel;
+
+	SPDK_DEBUGLOG(SPDK_TRACE_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
+
+	set->u.batch.outstanding_ops++;
+	back_dev->read(back_dev, channel->dev_channel, payload, lba, lba_count,
+		       &set->cb_args);
 }
 
 void
