@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8f94ed83_9023fc40",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-28T19:30:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b6045969_52993e10",
+      "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77063191_7d98d88c",
         "filename": "include/spdk/barrier.h",
         "patchSetId": 7
@@ -54,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "41381138_edb71965",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-28T19:30:29Z",
+      "side": 1,
+      "message": "\"lwsync [...] provides the same ordering function as the sync instruction, except that a load caused by an instruction following the lwsync may be performed before a store caused by an instruction that precedes the lwsync,\"\n\nLinux also uses full sync for smp_mb. [2]\n\n[1] https://www.ibm.com/developerworks/community/wikis/home?lang\u003den#!/wiki/W51a7ffcf4dfd_4b40_9d82_446ebc23c550/page/Device%20Driver%20Porting%20Guide%20for%20Linux%20on%20Power\n[2] http://elixir.free-electrons.com/linux/latest/source/arch/powerpc/include/asm/barrier.h",
+      "parentUuid": "77063191_7d98d88c",
+      "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "441c2424_512c9c5d",
         "filename": "include/spdk/barrier.h",
         "patchSetId": 7
@@ -82,6 +118,24 @@
       "writtenOn": "2017-11-28T19:03:49Z",
       "side": 1,
       "message": "This also matches DPDK.  lib/librte_eal/common/include/arch/x86/rte_atomic.h",
+      "parentUuid": "441c2424_512c9c5d",
+      "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38a24ddb_2efea1a5",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-28T19:30:29Z",
+      "side": 1,
+      "message": "Nope, as Intel x86_64 memory model makes an exception here:\n\"Reads may be reordered with older writes to different locations but not with older writes to the same location\" (Intel 64 Architectures Software Developer\u0027s Manual, September 2016, section 8.2.2)\nor in a simpler document I found on google: \"Loads may be reordered with older stores to different locations\" [1]\n\nThis seems to be the same case as with PowerPC.\n\n[1]: section 2.3 http://www.cs.cmu.edu/~410-f10/doc/Intel_Reordering_318147.pdf",
       "parentUuid": "441c2424_512c9c5d",
       "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
