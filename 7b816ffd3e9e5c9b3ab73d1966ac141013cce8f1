@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "377aacb9_0087b4d0",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-28T21:52:38Z",
+      "side": 1,
+      "message": "So defining what wmb, rmb, and mb mean (from the Linux kernel):\n\nmb() prevents loads and stores being reordered across this point.\nrmb() prevents loads being reordered across this point.\nwmb() prevents stores being reordered across this point.\n\nSo the game they\u0027re seemingly playing here is that lwsync guarantees that stores aren\u0027t reordered with other stores across the barrier, and loads aren\u0027t reordered with other loads across the barrier, so lwsync can be used for rmb and wmb. Stores can be reordered with respect to loads, though, so you need a full sync for mb.",
+      "parentUuid": "41381138_edb71965",
+      "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "441c2424_512c9c5d",
         "filename": "include/spdk/barrier.h",
         "patchSetId": 7
@@ -137,6 +155,24 @@
       "side": 1,
       "message": "Nope, as Intel x86_64 memory model makes an exception here:\n\"Reads may be reordered with older writes to different locations but not with older writes to the same location\" (Intel 64 Architectures Software Developer\u0027s Manual, September 2016, section 8.2.2)\nor in a simpler document I found on google: \"Loads may be reordered with older stores to different locations\" [1]\n\nThis seems to be the same case as with PowerPC.\n\n[1]: section 2.3 http://www.cs.cmu.edu/~410-f10/doc/Intel_Reordering_318147.pdf",
       "parentUuid": "441c2424_512c9c5d",
+      "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfb7731b_fe840e1c",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-28T21:52:38Z",
+      "side": 1,
+      "message": "I see - because loads can be reordered with some stores, even if they\u0027re only ones that shouldn\u0027t impact them, then it violates the guarantee that spdk_smp_mb is supposed to provide. Implementing this as an mfence is the right choice.",
+      "parentUuid": "38a24ddb_2efea1a5",
       "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
