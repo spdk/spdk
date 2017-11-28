@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "368312f2_98e1a0b9",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T17:41:26Z",
+      "side": 1,
+      "message": "I\u0027m annoying but it would be good to write here that  \u0027vdev\u0027 must be zeroed memory because in definition you don\u0027t memset this memory.",
+      "range": {
+        "startLine": 213,
+        "startChar": 3,
+        "endLine": 213,
+        "endChar": 60
+      },
+      "revId": "219a245e89bf55bc69cf44b8211b53c92f607c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b3150d4_1ee091fe",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T17:41:26Z",
+      "side": 1,
+      "message": "virtio_dev_destruct?",
+      "range": {
+        "startLine": 214,
+        "startChar": 42,
+        "endLine": 214,
+        "endChar": 59
+      },
+      "revId": "219a245e89bf55bc69cf44b8211b53c92f607c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
