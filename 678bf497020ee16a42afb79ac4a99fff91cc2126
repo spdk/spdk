@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "73ab935f_6d73898b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-28T20:14:51Z",
+      "side": 1,
+      "message": "Hi Sebastian,\n\nJust making a few comments on the commit message so you\u0027re up to date on our protocol.\n\nHere on the first line, please preface the line with the component it is touching.  Usually something like:\n\nvhost: add support for new keyword\n\nBut probably you should also mention what the new keyword is - then users can just read the commit message to get this information instead of reading the code.\n\n-Jim",
+      "revId": "678bf497020ee16a42afb79ac4a99fff91cc2126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d098840_ff24bf72",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-28T20:14:51Z",
+      "side": 1,
+      "message": "These lines should not be added.  When the patch is committed it will get rebased to the latest patch on master.",
+      "revId": "678bf497020ee16a42afb79ac4a99fff91cc2126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c4d2bf0_5584d1b1",
         "filename": "doc/vhost.md",
         "patchSetId": 5
