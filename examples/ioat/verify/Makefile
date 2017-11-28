@@ -39,8 +39,6 @@ APP = verify
 
 C_SRCS := verify.c
 
-CFLAGS += -I. $(ENV_CFLAGS)
-
 SPDK_LIB_LIST = ioat util log
 
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
