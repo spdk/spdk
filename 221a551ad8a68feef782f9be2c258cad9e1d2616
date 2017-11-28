@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fc4cdafb_99b9b3d4",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-28T18:51:26Z",
+      "side": 1,
+      "message": "I agree there are race conditions that need to be handled here to ensure against double completions of the reset task.\n\nBut I don\u0027t agree with just doing the spdk_for_each_channel() over and over again.  Events always get run before pollers.  I think this will at best severely hamper other work being done on this core while we\u0027re waiting for I/O to complete.  At worst, we hit an immediate deadlock because the poller can never run to complete the I/O.\n\nAlso - can we do the timeout as a separate patch?",
+      "parentUuid": "84c5c220_bea64e04",
+      "revId": "221a551ad8a68feef782f9be2c258cad9e1d2616",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "45a4506d_4b149d43",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 18
