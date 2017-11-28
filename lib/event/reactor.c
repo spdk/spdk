@@ -69,6 +69,7 @@ struct spdk_poller {
 	uint64_t			next_run_tick;
 	spdk_poller_fn			fn;
 	void				*arg;
+	uint64_t			period_microseconds;
 };
 
 enum spdk_reactor_state {
@@ -244,6 +245,17 @@ _spdk_poller_insert_timer(struct spdk_reactor *reactor, struct spdk_poller *poll
 	TAILQ_INSERT_HEAD(&reactor->timer_pollers, poller, tailq);
 }
 
+static void
+_set_poller_period_ticks(struct spdk_poller *poller, uint64_t period_microseconds)
+{
+	poller->period_microseconds = period_microseconds;
+	if (period_microseconds) {
+		poller->period_ticks = (spdk_get_ticks_hz() * period_microseconds) / 1000000ULL;
+	} else {
+		poller->period_ticks = 0;
+	}
+}
+
 static struct spdk_poller *
 _spdk_reactor_start_poller(void *thread_ctx,
 			   spdk_thread_fn fn,
@@ -266,11 +278,7 @@ _spdk_reactor_start_poller(void *thread_ctx,
 	poller->fn = fn;
 	poller->arg = arg;
 
-	if (period_microseconds) {
-		poller->period_ticks = (spdk_get_ticks_hz() * period_microseconds) / 1000000ULL;
-	} else {
-		poller->period_ticks = 0;
-	}
+	_set_poller_period_ticks(poller, period_microseconds);
 
 	if (poller->period_ticks) {
 		_spdk_poller_insert_timer(reactor, poller, spdk_get_ticks());
@@ -739,4 +747,65 @@ spdk_reactors_fini(void)
 	}
 }
 
+static void
+_spdk_event_modify_poller(void *arg1, void *arg2)
+{
+	uint64_t *period_microsecond_ptr = arg1;
+	struct spdk_poller *poller = arg2;
+	struct spdk_reactor *reactor;
+	uint64_t period_microseconds;
+
+	assert(period_microsecond_ptr != NULL);
+	assert(poller != NULL);
+	reactor = spdk_reactor_get(poller->lcore);
+	period_microseconds = *period_microsecond_ptr;
+
+	if (poller->period_ticks) {
+		TAILQ_REMOVE(&reactor->timer_pollers, poller, tailq);
+	} else {
+		TAILQ_REMOVE(&reactor->active_pollers, poller, tailq);
+	}
+
+	_set_poller_period_ticks(poller, period_microseconds);
+
+	if (poller->period_ticks) {
+		_spdk_poller_insert_timer(reactor, poller, spdk_get_ticks());
+	} else {
+		TAILQ_INSERT_TAIL(&reactor->active_pollers, poller, tailq);
+	}
+	free(period_microsecond_ptr);
+}
+
+int
+spdk_modify_poller_period_ticks(struct spdk_poller **ppoller, uint64_t period_microseconds,
+				uint64_t *old_period_microseconds)
+{
+	struct spdk_poller *poller;
+	uint64_t *period_us_pt;
+
+	if (!ppoller || !(*ppoller)) {
+		SPDK_ERRLOG("ppoller is NULL or has NULL value.\n");
+		return -1;
+	}
+
+	poller = *ppoller;
+	if (old_period_microseconds) {
+		*old_period_microseconds = poller->period_microseconds;
+	}
+
+	period_us_pt = malloc(sizeof(uint64_t));
+	if (!period_us_pt) {
+		SPDK_ERRLOG("malloc() failed.\n");
+		return -1;
+	}
+	*period_us_pt = period_microseconds;
+
+	/*
+	 * Schedule an event to run on the poller's core that will modify the poller.
+	 */
+
+	spdk_event_call(spdk_event_allocate(poller->lcore, _spdk_event_modify_poller, period_us_pt,
+					    poller));
+	return 0;
+}
 SPDK_LOG_REGISTER_TRACE_FLAG("reactor", SPDK_TRACE_REACTOR)

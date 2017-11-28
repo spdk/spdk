@@ -193,4 +193,9 @@ void spdk_reactor_enable_context_switch_monitor(bool enabled);
  */
 bool spdk_reactor_context_switch_monitor_enabled(void);
 
+/**
+ * \brief Modifiy poller tick period.
+ */
+int spdk_modify_poller_period_ticks(struct spdk_poller **ppoller, uint64_t period_microseconds,
+				    uint64_t *old_period_microseconds);
 #endif
