@@ -92,7 +92,7 @@ struct virtio_scsi_scan_base {
 	/** Virtqueue used for the scan I/O. */
 	struct virtqueue		*vq;
 
-	virtio_create_device_cb		cb_fn;
+	bdev_virtio_create_cb		cb_fn;
 	void				*cb_arg;
 
 	/* Currently queried target */
@@ -532,7 +532,7 @@ bdev_virtio_ctrlq_poll(void *arg)
 }
 
 static int
-bdev_virtio_create_cb(void *io_device, void *ctx_buf)
+bdev_virtio_scsi_dev_ch_create_cb(void *io_device, void *ctx_buf)
 {
 	struct virtio_dev *vdev = io_device;
 	struct bdev_virtio_io_channel *ch = ctx_buf;
@@ -556,7 +556,7 @@ bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 }
 
 static void
-bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
+bdev_virtio_scsi_dev_ch_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_virtio_io_channel *io_channel = ctx_buf;
 	struct virtio_dev *vdev = io_channel->vdev;
@@ -633,7 +633,8 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 	ctrlq->poller_ctx = ctrlq_ring;
 	spdk_bdev_poller_start(&ctrlq->poller, bdev_virtio_ctrlq_poll, base->vdev, CTRLQ_POLL_PERIOD_US);
 
-	spdk_io_device_register(base->vdev, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
+	spdk_io_device_register(base->vdev, bdev_virtio_scsi_dev_ch_create_cb,
+				bdev_virtio_scsi_dev_ch_destroy_cb,
 				sizeof(struct bdev_virtio_io_channel));
 
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
@@ -1124,10 +1125,12 @@ out:
 	return rc;
 }
 
-static void
-bdev_virtio_scsi_free(struct virtio_dev *vdev)
+void
+bdev_virtio_scsi_dev_remove(struct virtio_dev *vdev)
 {
 	struct virtqueue *vq;
+
+	TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, vdev, tailq);
 
 	if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_REQUESTQ)) {
 		vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
@@ -1142,8 +1145,8 @@ bdev_virtio_scsi_free(struct virtio_dev *vdev)
 	free(vdev);
 }
 
-static int
-bdev_virtio_scsi_scan(struct virtio_dev *vdev, virtio_create_device_cb cb_fn, void *cb_arg)
+int
+bdev_virtio_scsi_dev_scan(struct virtio_dev *vdev, bdev_virtio_create_cb cb_fn, void *cb_arg)
 {
 	struct virtio_scsi_scan_base *base = spdk_dma_zmalloc(sizeof(struct virtio_scsi_scan_base), 64,
 					     NULL);
@@ -1214,7 +1217,7 @@ bdev_virtio_initialize(void)
 
 	/* Initialize all created devices and scan available targets */
 	TAILQ_FOREACH(vdev, &g_virtio_driver.init_ctrlrs, tailq) {
-		rc = bdev_virtio_scsi_scan(vdev, bdev_virtio_initial_scan_complete, NULL);
+		rc = bdev_virtio_scsi_dev_scan(vdev, bdev_virtio_initial_scan_complete, NULL);
 		if (rc != 0) {
 			goto out;
 		}
@@ -1225,8 +1228,7 @@ bdev_virtio_initialize(void)
 out:
 	/* Remove any created devices */
 	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.init_ctrlrs, tailq, next_vdev) {
-		TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, vdev, tailq);
-		bdev_virtio_scsi_free(vdev);
+		bdev_virtio_scsi_dev_remove(vdev);
 	}
 
 	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
@@ -1286,9 +1288,9 @@ bdev_virtio_finish(void)
 	}
 }
 
-int
-create_virtio_user_scsi_device(const char *base_name, const char *path, unsigned num_queues,
-			       unsigned queue_size, virtio_create_device_cb cb_fn, void *cb_arg)
+struct virtio_dev *
+bdev_virtio_scsi_dev_create(const char *base_name, const char *path, unsigned num_queues,
+			    unsigned queue_size)
 {
 	struct virtio_dev *vdev;
 	int rc;
@@ -1296,7 +1298,7 @@ create_virtio_user_scsi_device(const char *base_name, const char *path, unsigned
 	vdev = calloc(1, sizeof(*vdev));
 	if (vdev == NULL) {
 		SPDK_ERRLOG("calloc failed for virtio device %s: %s\n", base_name, path);
-		return -ENOMEM;
+		return NULL;
 	}
 
 	rc = virtio_user_dev_init(vdev, base_name, path, num_queues, queue_size,
@@ -1304,17 +1306,10 @@ create_virtio_user_scsi_device(const char *base_name, const char *path, unsigned
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create virito device %s: %s\n", base_name, path);
 		free(vdev);
-		return -EINVAL;
+		return NULL;
 	}
 
-	rc = bdev_virtio_scsi_scan(vdev, cb_fn, cb_arg);
-	if (rc) {
-		TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, vdev, tailq);
-		bdev_virtio_scsi_free(vdev);
-	}
-
-	return rc;
+	return vdev;
 }
-
 
 SPDK_LOG_REGISTER_TRACE_FLAG("virtio", SPDK_TRACE_VIRTIO)

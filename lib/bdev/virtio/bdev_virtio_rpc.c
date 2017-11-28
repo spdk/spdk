@@ -104,6 +104,7 @@ spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 				      const struct spdk_json_val *params)
 {
 	struct rpc_virtio_user_scsi_dev *req;
+	struct virtio_dev *vdev;
 	char buf[64];
 	int rc;
 
@@ -124,9 +125,15 @@ spdk_rpc_create_virtio_user_scsi_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	req->request = request;
-	rc = create_virtio_user_scsi_device(req->name, req->path, req->vq_count, req->vq_size,
-					    rpc_create_virtio_user_scsi_bdev_cb, req);
-	if (rc < 0) {
+	vdev = bdev_virtio_scsi_dev_create(req->name, req->path, req->vq_count, req->vq_size);
+	if (vdev == NULL) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = bdev_virtio_scsi_dev_scan(vdev, rpc_create_virtio_user_scsi_bdev_cb, req);
+	if (rc != 0) {
+		bdev_virtio_scsi_dev_remove(vdev);
 		goto invalid;
 	}
 

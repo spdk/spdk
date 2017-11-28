@@ -36,31 +36,59 @@
 
 #include "spdk/bdev.h"
 
-typedef void (*virtio_create_device_cb)(void *, int, struct spdk_bdev **, size_t size);
+/**
+ * Virtio-SCSI device.  This structure describes a SCSI controller used by
+ * the bdev_virtio module.
+ */
+struct spdk_virtio_scsi_dev;
 
 /**
- * Add new Virtio SCSI device and scan it. When LUN is found bdev is automaticly
- * added to point this LUN.
+ * Callback for creating virtio bdevs.
  *
- * \param path
- *   Path to socket.
- * \param base_name
- *   Name to used for all bdevs created from this device.
- * \param vq_size
- *   Max queue size.
- * \param cb_fn
- *   An optional callback to be called after scanning all targets on the controller.
- *   First parameter is \c cb_arg
- *   Second parameter is error code. Zero on succes or negative error code.
- *   Third parameter is bdevs array found on created device. NULL in case of error.
- *   Fourth is number of bdevs in array. Zero in case of error.
- * \param cb_arg1
- *   First argument of \c cb_fn
- * \return
- *   Zero on success (device scan is started) or negative error code.
- *   In case of error \c done_cb is not called.
+ * \param ctx opaque context set by the user
+ * \param errnum error code. 0 on success, negative errno on error.
+ * \param bdevs contiguous array of created bdevs
+ * \param bdev_cnt number of bdevs in the `bdevs` array
  */
-int create_virtio_user_scsi_device(const char *base_name, const char *path, unsigned num_queues,
-				   unsigned queue_size, virtio_create_device_cb cb_fn, void *cb_arg);
+typedef void (*bdev_virtio_create_cb)(void *ctx, int errnum,
+				      struct spdk_bdev **bdevs, size_t bdev_cnt);
+
+/**
+ * Connect to a vhost-user Unix domain socket and create a Virtio SCSI device.
+ * Note that this function does not create any bdevs. See \c bdev_virtio_scsi_dev_scan.
+ *
+ * \param name name for the virtio device. It will be later inherited by all
+ * bdevs exposed by this virtio device.
+ * \param path path to the socket
+ * \param num_queues max number of request virtqueues (I/O queues) to use.
+ * If given value exceeds a hard limit of the physical (host) device, this
+ * call will return with error.
+ * \param queue_size depth of all queues
+ * \return virtio device or NULL
+ */
+struct virtio_dev *bdev_virtio_scsi_dev_create(const char *name, const char *path,
+		unsigned num_queues, unsigned queue_size);
+
+/**
+ * Scan a Virtio SCSI device.  This might multiple Virtio SCSI bdevs - one
+ * for each detected LUN on each target.
+ *
+ * \param vdev virtio device
+ * \param cb_fn function to be called after scanning all targets on the
+ * virtio device. Optional, can be NULL. See \c bdev_virtio_create_cb.
+ * \param cb_arg argument for the `cb_fn`
+ * \return 0 on success (device scan is started) or negative error code.
+ * In case of error the \c cb_fn is not called.
+ */
+int bdev_virtio_scsi_dev_scan(struct virtio_dev *vdev, bdev_virtio_create_cb cb_fn,
+			      void *cb_arg);
+
+/**
+ * Remove a Virtio SCSI device.  The device must not have been scanned yet.
+ * This function must be called from the same thread that created the device.
+ *
+ * \param vdev virtio device
+ */
+void bdev_virtio_scsi_dev_remove(struct virtio_dev *vdev);
 
 #endif /* SPDK_BDEV_VIRTIO_H */
