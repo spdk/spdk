@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "84c5c220_bea64e04",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-28T18:32:37Z",
+      "side": 1,
+      "message": "This is full of race conditions and will get stuck in a number of scenarios.\n\nRight now the algorithm is to start the process of sending a message to each thread from each poller if a reset is in progress as soon as the io_inflight count drops to 0. These message chains, however, are all racing one another. Further, the poller just continues to run so it will constantly kick off new chains of messages on each iteration while no I/O is outstanding. Further, reading reset_in_progress here is racing against setting it after a chain completes, so you may end up double-completing the reset.\n\nThe easier way to implement this is inside bdev_aio_reset call your _bdev_process_reset function (or move the code from there into bdev_aio_reset). That spdk_for_each_channel will fail if I/O are outstanding on any channel and succeed if there are no I/O remaining. Then, in _bdev_aio_get_io_inflight_done if it passed, complete the bdev_io. If it failed, call spdk_for_each_channel again and start over.\n\nI\u0027d also like to see a timeout implemented so that it will just fail the bdev_io reset call if it takes too long. The timeout can be very long - 2 minutes maybe - but that at least provides some way to break out of the loop if the kernel is just not responding.",
+      "revId": "221a551ad8a68feef782f9be2c258cad9e1d2616",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "45a4506d_4b149d43",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 18
