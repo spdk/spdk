@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f8e489a5_cabc223d",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:36:08Z",
+      "side": 1,
+      "message": "Maybe spdk_vhost_ctrlr_id?",
+      "range": {
+        "startLine": 45,
+        "startChar": 16,
+        "endLine": 45,
+        "endChar": 22
+      },
+      "revId": "60d86d0d3b85db08711d909456667afd1cba98a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e0ce293_a2fdbecd",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:36:08Z",
+      "side": 1,
+      "message": "Also globals are 0 by default.",
+      "range": {
+        "startLine": 45,
+        "startChar": 22,
+        "endLine": 45,
+        "endChar": 26
+      },
+      "revId": "60d86d0d3b85db08711d909456667afd1cba98a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aaddb3c7_25c0e98e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:36:08Z",
+      "side": 1,
+      "message": "Having ctx-\u003eid in message would be good for debuging.",
+      "range": {
+        "startLine": 735,
+        "startChar": 15,
+        "endLine": 735,
+        "endChar": 36
+      },
+      "revId": "60d86d0d3b85db08711d909456667afd1cba98a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b6d9349_ba8c00db",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:36:08Z",
+      "side": 1,
+      "message": "-\u003e !\u003d ?",
+      "range": {
+        "startLine": 755,
+        "startChar": 14,
+        "endLine": 755,
+        "endChar": 16
+      },
+      "revId": "60d86d0d3b85db08711d909456667afd1cba98a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2467668d_b412c093",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 848,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:36:08Z",
+      "side": 1,
+      "message": "I think this is NOP. Old code is ok.",
+      "range": {
+        "startLine": 844,
+        "startChar": 0,
+        "endLine": 848,
+        "endChar": 2
+      },
+      "revId": "60d86d0d3b85db08711d909456667afd1cba98a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6baaa8a_f918b3f2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1137,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:36:08Z",
+      "side": 1,
+      "message": "This need to be renamed to \u0027idx\u0027 or something to avoid confusion.",
+      "range": {
+        "startLine": 1137,
+        "startChar": 31,
+        "endLine": 1137,
+        "endChar": 33
+      },
+      "revId": "60d86d0d3b85db08711d909456667afd1cba98a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
