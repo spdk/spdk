@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9391eaa_2bac4241",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-28T15:57:18Z",
+      "side": 1,
+      "message": "I think this 4096 should be 4095 - otherwise, if the buffer was already 4K aligned, this will push the address to the next page instead of rounding down.",
+      "range": {
+        "startLine": 926,
+        "startChar": 76,
+        "endLine": 926,
+        "endChar": 80
+      },
+      "revId": "20a62fac56edb6a5ed7122b3cf85ce1506779839",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a692c2a_2a6b1e13",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-28T15:57:18Z",
+      "side": 1,
+      "message": "It would be good to use uintptr_t instead of unsigned long here to be safe for platforms where sizeof(long) !\u003d sizeof(void *).",
+      "range": {
+        "startLine": 926,
+        "startChar": 33,
+        "endLine": 926,
+        "endChar": 46
+      },
+      "revId": "20a62fac56edb6a5ed7122b3cf85ce1506779839",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6293bc1_869d7a27",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1188,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-28T15:57:18Z",
+      "side": 1,
+      "message": "This should probably be a #define, or at least add a comment.",
+      "range": {
+        "startLine": 1188,
+        "startChar": 34,
+        "endLine": 1188,
+        "endChar": 38
+      },
+      "revId": "20a62fac56edb6a5ed7122b3cf85ce1506779839",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
