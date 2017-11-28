@@ -33,9 +33,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 #include "spdk/ioat.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
@@ -73,6 +70,7 @@ struct thread_entry {
 	uint64_t current_queue_depth;
 	unsigned lcore_id;
 	bool is_draining;
+	bool init_failed;
 	struct spdk_mempool *data_pool;
 	struct spdk_mempool *task_pool;
 };
@@ -328,10 +326,10 @@ work_fn(void *arg)
 		return 0;
 	}
 
-	t->lcore_id = rte_lcore_id();
+	t->lcore_id = spdk_env_get_current_core();
 
-	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", rte_lcore_id());
-	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", rte_lcore_id());
+	snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%u", t->lcore_id);
+	snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%u", t->lcore_id);
 	t->data_pool = spdk_mempool_create(buf_pool_name, g_user_config.queue_depth, SRC_BUFFER_SIZE,
 					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					   SPDK_ENV_SOCKET_ID_ANY);
@@ -341,6 +339,7 @@ work_fn(void *arg)
 					   SPDK_ENV_SOCKET_ID_ANY);
 	if (!t->data_pool || !t->task_pool) {
 		fprintf(stderr, "Could not allocate buffer pool.\n");
+		t->init_failed = true;
 		return 1;
 	}
 
@@ -398,14 +397,24 @@ init(void)
 }
 
 static int
-dump_result(struct thread_entry *threads, int len)
+dump_result(struct thread_entry *threads, uint32_t num_threads)
 {
-	int i;
+	uint32_t i;
 	uint64_t total_completed = 0;
 	uint64_t total_failed = 0;
 
-	for (i = 0; i < len; i++) {
+	for (i = 0; i < num_threads; i++) {
 		struct thread_entry *t = &threads[i];
+
+		if (!t->chan) {
+			continue;
+		}
+
+		if (t->init_failed) {
+			total_failed++;
+			continue;
+		}
+
 		total_completed += t->xfer_completed;
 		total_completed += t->fill_completed;
 		total_failed += t->xfer_failed;
@@ -434,11 +443,27 @@ get_next_chan(void)
 	return chan;
 }
 
+static uint32_t
+get_max_core(void)
+{
+	uint32_t i;
+	uint32_t max_core = 0;
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		if (i > max_core) {
+			max_core = i;
+		}
+	}
+
+	return max_core;
+}
+
 int
 main(int argc, char **argv)
 {
 	uint32_t i, current_core;
-	struct thread_entry threads[RTE_MAX_LCORE] = {};
+	struct thread_entry *threads;
+	uint32_t num_threads;
 	int rc;
 
 	if (parse_args(argc, argv) != 0) {
@@ -453,34 +478,32 @@ main(int argc, char **argv)
 
 	g_next_device = TAILQ_FIRST(&g_devices);
 
-	current_core = spdk_env_get_current_core();
-	SPDK_ENV_FOREACH_CORE(i) {
-		if (i != current_core) {
-			threads[i].chan = get_next_chan();
-			rte_eal_remote_launch(work_fn, &threads[i], i);
-		}
-	}
-
-	threads[current_core].chan = get_next_chan();
-	if (work_fn(&threads[current_core]) != 0) {
+	num_threads = get_max_core() + 1;
+	threads = calloc(num_threads, sizeof(*threads));
+	if (!threads) {
+		fprintf(stderr, "Thread memory allocation failed\n");
 		rc = 1;
 		goto cleanup;
 	}
 
+	current_core = spdk_env_get_current_core();
 	SPDK_ENV_FOREACH_CORE(i) {
 		if (i != current_core) {
-			if (rte_eal_wait_lcore(i) != 0) {
-				rc = 1;
-				goto cleanup;
-			}
+			threads[i].chan = get_next_chan();
+			spdk_env_thread_launch_pinned(i, work_fn, &threads[i]);
 		}
 	}
 
-	rc = dump_result(threads, RTE_MAX_LCORE);
+	threads[current_core].chan = get_next_chan();
+	work_fn(&threads[current_core]);
+
+	spdk_env_thread_wait_all();
+	rc = dump_result(threads, num_threads);
 
 cleanup:
 	spdk_dma_free(g_src);
 	ioat_exit();
+	free(threads);
 
 	return rc;
 }
