@@ -22,6 +22,30 @@
       "revId": "07a521db1c63266173bbfb44014365edf5515c14",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c7ec573_f9d72d2c",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-28T16:04:21Z",
+      "side": 0,
+      "message": "shall we rename the function as well?\nthen, what about rpc? we still have the \"remove_vhost_scsi_dev\" RPC call.",
+      "parentUuid": "c0ba1914_d1233a07",
+      "range": {
+        "startLine": 212,
+        "startChar": 73,
+        "endLine": 212,
+        "endChar": 85
+      },
+      "revId": "07a521db1c63266173bbfb44014365edf5515c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
