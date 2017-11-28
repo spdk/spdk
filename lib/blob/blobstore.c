@@ -47,6 +47,66 @@
 
 #define BLOB_CRC32C_INITIAL    0xffffffffUL
 
+static inline void
+bdev_blob_read_dummy(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payload,
+		     uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
+{
+	memset(payload, 0, dev->blocklen * lba_count);
+}
+
+static inline void
+bdev_blob_readv_dummy(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		      struct iovec *iov, int iovcnt,
+		      uint64_t lba, uint32_t lba_count, struct spdk_bs_dev_cb_args *cb_args)
+{
+	int i;
+
+	for (i = 0; i < iovcnt; i++) {
+		memset(iov[i].iov_base, 0, iov[i].iov_len);
+	}
+
+	cb_args->cb_fn(cb_args->channel, cb_args->cb_arg, 0);
+}
+
+static inline void
+bdev_blob_ivalid_dummy(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		       uint64_t lba, uint32_t lba_count,
+		       struct spdk_bs_dev_cb_args *cb_args)
+{
+	assert(false);
+}
+
+static inline void
+bdev_blob_write_dummy(struct spdk_bs_dev *dev, struct spdk_io_channel *channel, void *payload,
+		      uint64_t lba, uint32_t lba_count,
+		      struct spdk_bs_dev_cb_args *cb_args)
+{
+	assert(false);
+}
+
+static inline void
+bdev_blob_writev_dummy(struct spdk_bs_dev *dev, struct spdk_io_channel *channel,
+		       struct iovec *iov, int iovcnt,
+		       uint64_t lba, uint32_t lba_count,
+		       struct spdk_bs_dev_cb_args *cb_args)
+{
+	assert(false);
+}
+
+struct spdk_bs_dev dummy_bs_dev = {
+	.blockcnt = 1,
+	.blocklen = 1,
+	.create_channel = NULL,
+	.destroy_channel = NULL,
+	.destroy = NULL,
+	.read = bdev_blob_read_dummy,
+	.write = bdev_blob_write_dummy,
+	.readv = bdev_blob_readv_dummy,
+	.writev = bdev_blob_writev_dummy,
+	.write_zeroes = bdev_blob_ivalid_dummy,
+	.unmap = bdev_blob_ivalid_dummy,
+};
+
 static inline size_t
 divide_round_up(size_t num, size_t divisor)
 {
@@ -690,6 +750,10 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
+	if (spdk_blob_is_thin_provisioned(blob) == true) {
+		blob->back_bs_dev = &dummy_bs_dev;
+	}
+
 	_spdk_blob_mark_clean(blob);
 
 	ctx->cb_fn(seq, ctx->cb_arg, rc);
@@ -1198,20 +1262,22 @@ _spdk_blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_ch
 	length = _spdk_bs_page_to_lba(blob->bs, length);
 	page = offset;
 	buf = payload;
+
 	while (length > 0) {
 		if (spdk_blob_is_thin_provisioned(blob) == true &&
 		    _spdk_bs_blob_is_page_from_allocated_cluster(blob, page) == false) {
 			unallocated = true;
+			assert(blob->back_bs_dev != NULL);
+			lba = page * SPDK_BS_PAGE_SIZE / blob->back_bs_dev->blocklen;
+		} else {
+			lba = _spdk_bs_blob_page_to_lba(blob, page);
 		}
-
-		lba = _spdk_bs_blob_page_to_lba(blob, page);
-		lba_count = spdk_min(length,
-				     _spdk_bs_page_to_lba(blob->bs,
-						     _spdk_bs_num_pages_to_cluster_boundary(blob, page)));
+		lba_count = spdk_min(length, _spdk_bs_page_to_lba(blob->bs,
+				     _spdk_bs_num_pages_to_cluster_boundary(blob, page)));
 
 		switch (op_type) {
 		case SPDK_BLOB_READ:
-			spdk_bs_batch_read(batch, buf, lba, lba_count);
+			spdk_bs_batch_read(batch, buf, lba, lba_count, blob->back_bs_dev);
 			break;
 		case SPDK_BLOB_WRITE:
 			spdk_bs_batch_write(batch, buf, lba, lba_count);
@@ -1276,8 +1342,16 @@ _spdk_rw_iov_split_next(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	pages_to_boundary = _spdk_bs_num_pages_to_cluster_boundary(ctx->blob, ctx->page_offset);
 	page_count = spdk_min(ctx->pages_remaining, pages_to_boundary);
-	lba = _spdk_bs_blob_page_to_lba(ctx->blob, ctx->page_offset);
-	lba_count = _spdk_bs_page_to_lba(ctx->blob->bs, page_count);
+
+	if (spdk_blob_is_thin_provisioned(ctx->blob) &&
+	    _spdk_bs_blob_is_page_from_allocated_cluster(ctx->blob, ctx->page_offset) == false) {
+		assert(ctx->blob->back_bs_dev != NULL);
+		lba = ctx->page_offset / ctx->blob->back_bs_dev->blocklen;
+		lba_count = page_count / ctx->blob->back_bs_dev->blocklen;
+	} else {
+		lba = _spdk_bs_blob_page_to_lba(ctx->blob, ctx->page_offset);
+		lba_count = _spdk_bs_page_to_lba(ctx->blob->bs, page_count);
+	}
 
 	/*
 	 * Get index and offset into the original iov array for our current position in the I/O sequence.
@@ -1320,7 +1394,8 @@ _spdk_rw_iov_split_next(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	iov = &ctx->iov[0];
 
 	if (ctx->read) {
-		spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
+		spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx,
+				       ctx->blob->back_bs_dev);
 	} else {
 		spdk_bs_sequence_writev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
 	}
@@ -1371,11 +1446,22 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 	}
 
 	if (spdk_likely(length <= _spdk_bs_num_pages_to_cluster_boundary(blob, offset))) {
-		uint64_t lba = _spdk_bs_blob_page_to_lba(blob, offset);
-		uint32_t lba_count = _spdk_bs_page_to_lba(blob->bs, length);
+		uint32_t lba_count;
+		uint64_t lba;
+
+		if (spdk_blob_is_thin_provisioned(blob) == true &&
+		    _spdk_bs_blob_is_page_from_allocated_cluster(blob, offset) == false) {
+			assert(blob->back_bs_dev != NULL);
+			lba = offset / blob->back_bs_dev->blocklen;
+			lba_count = length / blob->back_bs_dev->blocklen;
+		} else {
+			lba = _spdk_bs_blob_page_to_lba(blob, offset);
+			lba_count = _spdk_bs_page_to_lba(blob->bs, length);
+		}
 
 		if (read) {
-			spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
+			spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL,
+					       blob->back_bs_dev);
 		} else {
 			spdk_bs_sequence_writev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
 		}
