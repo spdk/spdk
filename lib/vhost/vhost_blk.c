@@ -545,6 +545,7 @@ destroy_device_poller_cb(void *arg)
 
 	spdk_poller_unregister(&ctx->poller);
 	spdk_vhost_dev_backend_event_done(ctx->event_ctx, 0);
+	spdk_dma_free(ctx);
 }
 
 static int
