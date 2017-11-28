@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce37975b_573364ea",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-28T19:15:12Z",
+      "side": 1,
+      "message": "don\u0027t you need a shopt -u nullglob here, since you are returning?",
+      "revId": "36eaceb8c68f48774e9a3e76a713b671c5b2214c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
