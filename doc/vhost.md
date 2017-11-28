@@ -1,10 +1,40 @@
 # vhost {#vhost}
 
-# vhost Users Guide {#vhost_users_guide}
+# Introduction {#vhost_intro}
 
-The Storage Performance Development Kit vhost application is named `vhost`.
-This application extends SPDK to present virtio storage controllers to QEMU-based
-VMs and process I/O submitted to devices attached to those controllers.
+vhost is a shortcut for "virtual host". It is an application exposing virtual
+devices that can be accessed by external applications (further called initiators).
+One of such applications is QEMU hypervisor that allows its VMs to directly
+communicate with vhost devices.
+
+vhost follows Virtio virtualization standard that is widely adopted in the
+virtualization field. vhost applications are already offered by e.g. Linux kernel
+and QEMU itself. SPDK vhost stands out in the crowd by running entirely in poll-mode.
+Its initiators are told not to send any interrupts on I/O submission, meaning that
+they will have less responsibility and lower CPU usage on heavy I/O workloads.
+
+The following diagram presents how QEMU-based VM communicates with an SPDK vhost device.
+
+    +-------QEMU-VM--------+             +---------------SPDK-vhost-------------+
+    |                      |             |                                      |
+    |  +----------------+  |             |  +--------------------------------+  |
+    |  |                |  |             |  |                                |  |
+    |  |  Virtio-SCSI   |  |  eventfd    |  |               +-------------+  |  |
+    |  |  Linux driver  |  |  interrupt  |  |  Virtio-SCSI  |             |  |  |
+    |  |                |  <----------------+  device       |  NVMe disk  |  |  |
+    |  +--------^-------+  |             |  |               |             |  |  |
+    |           |          |             |  |               +-------^-----+  |  |
+    +----------------------+             |  |                       |        |  |
+                |                        |  +----------^---------------------+  |
+                |                        |             |            |           |
+                |                        +--------------------------------------+
+                |                                      |            |
+                | DMA                         polling  |            | DMA
+                |                                      |            |
+    +-----------v---------------------------------------------------v-----------+
+    |                           Shared hugepage memory                          |
+    +---------------------------------------------------------------------------+
+
 
 # Prerequisites {#vhost_prereqs}
 
@@ -21,7 +51,13 @@ installed separately.  The SPDK vhost target has been tested with Ubuntu 16.04, 
 
 ## QEMU
 
-Userspace vhost-scsi target support was added to upstream QEMU in v2.10.0.
+Userspace vhost-scsi target support was added to upstream QEMU in v2.10.0.  Run
+the following command to confirm your QEMU supports userspace vhost-scsi.
+
+~~~{.sh}
+qemu-system-x86_64 -device vhost-user-scsi-pci,help
+~~~
+
 Userspace vhost-blk target support is not yet upstream in QEMU, but patches
 are available in SPDK's QEMU repository:
 
@@ -34,117 +70,233 @@ cd build
 make
 ~~~
 
-# Configuration {#vhost_config}
+# Starting SPDK vhost target {#vhost_start}
 
-## SPDK
+First, run the SPDK setup.sh script to setup some hugepages for the SPDK vhost target
+application.  This will allocate 4096MiB (4GiB) of hugepages, enough for the SPDK
+vhost target and the virtual machine.
 
-A vhost-specific configuration file is used to configure the SPDK vhost
-target.  A fully documented example configuration file is located at
-`etc/spdk/vhost.conf.in`.  This file defines the following:
+~~~{.sh}
+HUGEMEM=4096 scripts/setup.sh
+~~~
 
-### Storage Backends
+Next, start the SPDK vhost target application.  The following command will start vhost
+on CPU cores 0 and 1 (cpumask 0x3) with all future socket files placed in /var/tmp.
+Vhost will fully occupy given CPU cores for I/O polling. Particular vhost devices can
+be yet restricted to run on a subset of these CPU cores. See @ref vhost_dev_create for
+details.
 
-Storage backends are devices which will be exposed to the guest OS.
-Vhost-blk backends are exposed as block devices in the guest OS, and vhost-scsi backends are
-exposed as SCSI LUNs on devices attached to the vhost-scsi controller in the guest OS.
+~~~{.sh}
+app/vhost/vhost -S /var/tmp -m 0x3
+~~~
+
+# SPDK Configuration {#vhost_config}
+
+## Create bdev (block device) {#vhost_bdev_create}
+
+SPDK bdevs are block devices which will be exposed to the guest OS.
+For vhost-scsi, bdevs are exposed as as SCSI LUNs on SCSI devices attached to the
+vhost-scsi controller in the guest OS.
+For vhost-blk, bdevs are exposed directly as block devices in the guest OS and are
+not associated at all with SCSI.
+
 SPDK supports several different types of storage backends, including NVMe,
 Linux AIO, malloc ramdisk and Ceph RBD.  Refer to @ref bdev_getting_started for
-additional information on specifying storage backends in the configuration file.
+additional information on configuring SPDK storage backends.
 
-### Mappings Between Block Controllers and Storage Backends
+This guide will base on a malloc (ramdisk) bdev named Malloc0. The following RPC
+will create a 64MB malloc bdev with 512-byte block size.
 
-The vhost target exposes block devices to the virtual machines.
-The device in the vhost controller is associated with an SPDK block device, and the
-configuration file defines those associations.  The block device to Dev mapping
-is specified in the configuration file as:
-
-~~~
-[VhostBlkX]
-  Name vhost.X       	   	# Name of vhost socket
-  Dev BackendX			# "BackendX" is block device name from previous
-                     		# sections in config file
-
-  #Cpumask 0x1          	# Optional parameter defining which core controller uses
+~~~{.sh}
+scripts/rpc.py construct_malloc_bdev 64 512 -b Malloc0
 ~~~
 
-### Mappings Between SCSI Controllers and Storage Backends
+## Create a virtio device {#vhost_vdev_create}
 
-The vhost target exposes SCSI controllers to the virtual machine application(s).
-Each SPDK vhost SCSI controller can expose up to eight targets (0..7). LUN 0 of each target
-is associated with an SPDK block device and configuration file defines those associations.
-The block device to Target mappings are specified in the configuration file as:
+### Vhost-SCSI
 
-~~~
-[VhostScsiX]
-  Name vhost.X			# Name of vhost socket
-  Target 0 BackendX		# "BackendX" is block device name from previous
-                        	# sections in config file
-  Target 1 BackendY
-  ...
-  Target n BackendN
+The following RPC will create a vhost-scsi controller which can be accessed
+by QEMU via /var/tmp/vhost.0. All the I/O polling will be pinned to the least
+occupied CPU core within given cpumask - in this case always CPU 0. For NUMA
+systems, the cpumask should specify cores on the same CPU socket as its
+associated VM.
 
-  #Cpumask 0x1          	# Optional parameter defining which core controller uses
+~~~{.sh}
+scripts/rpc.py construct_vhost_scsi_controller --cpumask 0x1 vhost.0
 ~~~
 
-Users should update configuration with 'Target' keyword.
+The following RPC will attach the Malloc0 bdev to the vhost.0 vhost-scsi
+controller.  Malloc0 will appear as a single LUN on a SCSI device with
+target ID 0. SPDK Vhost-SCSI device currently supports only one LUN per SCSI target.
 
-### Vhost Sockets
-
-Userspace vhost uses UNIX domain sockets for communication between QEMU
-and the vhost target.  Each vhost controller is associated with a UNIX domain
-socket file with filename equal to the Name argument in configuration file.
-Sockets are created at current working directory when starting the SPDK vhost
-target.
-
-### Core Affinity Configuration
-
-Vhost target can be restricted to run on certain cores by specifying a `ReactorMask`.
-Default is to allow vhost target work on core 0. For NUMA systems, it is essential
-to run vhost with cores on each socket to achieve optimal performance.
-
-Each controller may be assigned a set of cores using the optional
-`Cpumask` parameter in configuration file.  For NUMA systems, the Cpumask should
-specify cores on the same CPU socket as its associated VM. The `vhost` application will
-pick one core from `ReactorMask` masked by `Cpumask`. `Cpumask` must be a subset of
-`ReactorMask`.
-
-## QEMU
-
-Userspace vhost-scsi adds the following command line option for QEMU:
-~~~
--device vhost-user-scsi-pci,id=scsi0,chardev=char0[,num_queues=N]
+~~~{.sh}
+scripts/rpc.py add_vhost_scsi_lun vhost.0 0 Malloc0
 ~~~
 
-Userspace vhost-blk adds the following command line option for QEMU:
-~~~
--device vhost-user-blk-pci,logical_block_size=4096,size=512M,chardev=char0[,num_queues=N]
+To remove a bdev from a vhost-scsi controller use the following RPC:
+
+~~~{.sh}
+scripts/rpc.py remove_vhost_scsi_dev vhost.0 0
 ~~~
 
-In order to start qemu with vhost you need to specify following options:
+### Vhost-BLK
 
- - Socket, which QEMU will use for vhost communication with SPDK:
-~~~
--chardev socket,id=char0,path=/path/to/vhost/socket
+The following RPC will create a vhost-blk device exposing Malloc0 bdev.
+The device will be accessible to QEMU via /var/tmp/vhost.1. All the I/O polling
+will be pinned to the least occupied CPU core within given cpumask - in this case
+always CPU 0. For NUMA systems, the cpumask should specify cores on the same CPU
+socket as its associated VM.
+
+~~~{.sh}
+scripts/rpc.py construct_vhost_blk_controller --cpumask 0x1 vhost.1 Malloc0
 ~~~
 
- - Hugepages to share memory between vm and vhost target
+It is also possible to construct a read-only vhost-blk device by specifying an
+extra `-r` or `--readonly` parameter.
+
+~~~{.sh}
+scripts/rpc.py construct_vhost_blk_controller --cpumask 0x1 -r vhost.1 Malloc0
 ~~~
+
+## QEMU {#vhost_qemu_config}
+
+Now the virtual machine can be started with QEMU.  The following command-line
+parameters must be added to connect the virtual machine to its vhost controller.
+
+First, specify the memory backend for the virtual machine.  Since QEMU must
+share the virtual machine's memory with the SPDK vhost target, the memory
+must be specified in this format with share=on.
+
+~~~{.sh}
 -object memory-backend-file,id=mem,size=1G,mem-path=/dev/hugepages,share=on
 ~~~
 
-# Running Vhost Target
+Second, ensure QEMU boots from the virtual machine image and not the
+SPDK malloc block device by specifying bootindex=0 for the boot image.
 
-To get started, the following example is usually sufficient:
-~~~
-app/vhost/vhost -c /path/to/vhost.conf
-~~~
-
-A full list of command line arguments to vhost can be obtained by:
-~~~
-app/vhost/vhost -h
+~~~{.sh}
+-drive file=guest_os_image.qcow2,if=none,id=disk
+-device ide-hd,drive=disk,bootindex=0
 ~~~
 
-## Multi-Queue Block Layer (blk-mq)
+Finally, specify the SPDK vhost devices:
+
+### Vhost-SCSI
+
+~~~{.sh}
+-chardev socket,id=char0,path=/var/tmp/vhost.0
+-device vhost-user-scsi-pci,id=scsi0,chardev=char0
+~~~
+
+### Vhost-BLK
+
+~~~{.sh}
+-chardev socket,id=char1,path=/var/tmp/vhost.1
+-device vhost-user-blk-pci,id=blk0,chardev=char1,logical_block_size=512,size=64M
+~~~
+
+## Example output {#vhost_example}
+
+This example uses an NVMe bdev alongside Mallocs.
+
+~~~{.sh}
+host:~# HUGENODE=0 HUGEMEM=2048 ./scripts/setup.sh
+0000:01:00.0 (8086 0953): nvme -> vfio-pci
+~~~
+
+~~~{.sh}
+host:~# ./app/vhost/vhost -s 1024 -m 0x3 &
+Starting DPDK 17.11.0 initialization...
+[ DPDK EAL parameters: vhost -c 3 -m 1024 --master-lcore=1 --file-prefix=spdk_pid156014 ]
+EAL: Detected 48 lcore(s)
+EAL: Probing VFIO support...
+EAL: VFIO support initialized
+app.c: 369:spdk_app_start: *NOTICE*: Total cores available: 2
+reactor.c: 668:spdk_reactors_init: *NOTICE*: Occupied cpu socket mask is 0x1
+reactor.c: 424:_spdk_reactor_run: *NOTICE*: Reactor started on core 1 on socket 0
+reactor.c: 424:_spdk_reactor_run: *NOTICE*: Reactor started on core 0 on socket 0
+~~~
+
+~~~{.sh}
+host:~# ./scripts/rpc.py construct_nvme_bdev -b Nvme0 -t pcie -a 0000:01:00.0
+EAL: PCI device 0000:01:00.0 on NUMA socket 0
+EAL:   probe driver: 8086:953 spdk_nvme
+EAL:   using IOMMU type 1 (Type 1)
+~~~
+
+~~~{.sh}
+host:~# ./scripts/rpc.py construct_malloc_bdev 128 4096 Malloc0
+Malloc0
+~~~
+
+~~~{.sh}
+host:~# ./scripts/rpc.py construct_vhost_scsi_controller --cpumask 0x1 vhost.0
+VHOST_CONFIG: vhost-user server: socket created, fd: 21
+VHOST_CONFIG: bind to /var/tmp/vhost.0
+vhost.c: 596:spdk_vhost_dev_construct: *NOTICE*: Controller vhost.0: new controller added
+~~~
+
+~~~{.sh}
+host:~# ./scripts/rpc.py add_vhost_scsi_lun vhost.0 0 Nvme0
+vhost_scsi.c: 840:spdk_vhost_scsi_dev_add_tgt: *NOTICE*: Controller vhost.0: defined target 'Target 0' using lun 'Nvme0'
+
+~~~
+
+~~~{.sh}
+host:~# ./scripts/rpc.py add_vhost_scsi_lun vhost.0 1 Malloc0
+vhost_scsi.c: 840:spdk_vhost_scsi_dev_add_tgt: *NOTICE*: Controller vhost.0: defined target 'Target 1' using lun 'Malloc0'
+~~~
+
+~~~{.sh}
+host:~# ./scripts/rpc.py construct_malloc_bdev 64 512 -b Malloc1
+Malloc1
+~~~
+
+~~~{.sh}
+host:~# ./scripts/rpc.py construct_vhost_blk_controller --cpumask 0x2 vhost.1 Malloc1
+vhost_blk.c: 719:spdk_vhost_blk_construct: *NOTICE*: Controller vhost.1: using bdev 'Malloc1'
+~~~
+
+~~~{.sh}
+host:~# taskset -c 3,4 qemu-system-x86_64 \
+  --enable-kvm \
+  -cpu host -smp 2 \
+  -m 1G -object memory-backend-file,id=mem0,size=1G,mem-path=/dev/hugepages,share=on -numa node,memdev=mem0 \
+  -drive file=guest_os_image.qcow2,if=none,id=disk \
+  -device ide-hd,drive=disk,bootindex=0 \
+  -chardev socket,id=spdk_vhost_scsi0,path=/var/tmp/vhost.0 \
+  -device vhost-user-scsi-pci,id=scsi0,chardev=spdk_vhost_scsi0,num_queues=4 \
+  -chardev socket,id=spdk_vhost_blk0,path=/var/tmp/vhost.1 \
+  -device vhost-user-blk-pci,logical_block_size=512,size=64M,chardev=spdk_vhost_blk0,num_queues=4
+~~~
+
+~~~{.sh}
+guest:~# lsblk --output "NAME,KNAME,MODEL,HCTL,SIZE,VENDOR,SUBSYSTEMS"
+NAME   KNAME MODEL            HCTL         SIZE VENDOR   SUBSYSTEMS
+sda    sda   QEMU HARDDISK    1:0:0:0       80G ATA      block:scsi:pci
+  sda1 sda1                                 80G          block:scsi:pci
+sdb    sdb   NVMe disk        2:0:0:0    372,6G INTEL    block:scsi:virtio:pci
+sdc    sdc   Malloc disk      2:0:1:0      128M INTEL    block:scsi:virtio:pci
+vda    vda                                 128M 0x1af4   block:virtio:pci
+~~~
+
+~~~{.sh}
+guest:~# poweroff
+~~~
+
+~~~{.sh}
+host:~# fg
+<< CTRL + C >>
+vhost.c:1006:session_shutdown: *NOTICE*: Exiting
+~~~
+
+We can see that `sdb` and `sdc` are SPDK vhost-scsi LUNs, and `vda` is SPDK a
+vhost-blk disk.
+
+
+# Advanced Topics
+
+## Multi-Queue Block Layer (blk-mq) {#vhost_multiqueue}
 
 For best performance use the Linux kernel block multi-queue feature with vhost.
 To enable it on Linux, it is required to modify kernel options inside the
@@ -163,79 +315,42 @@ to set `num_queues=4` to saturate physical device. Adding too many queues might 
 vhost performance degradation if many vhost devices are used because each device will require
 additional `num_queues` to be polled.
 
-# Example {#vhost_example}
+## Hot-attach/hot-detach {#vhost_hotattach}
 
-Run SPDK vhost with two controllers: Virtio SCSI and Virtio block.
+Hotplug/hotremove within a vhost controller is called hot-attach/detach. This is to
+distinguish it from SPDK bdev hotplug/hotremove. E.g. if an NVMe bdev is attached
+to a vhost-scsi controller, physically hotremoving the NVMe will trigger a vhost-scsi
+hot-detach. It is also possible to hot-detach a bdev manually via RPC - for example
+when the bdev is about to be attached to another controller. See the details below.
 
-Virtio SCSI controller with two LUNs:
+Please also note that hot-attach/detach is Vhost-SCSI-specific. There are no RPCs
+to hot-attach/detach the bdev from a Vhost-BLK device. If a Vhost-BLK device exposes
+an NVMe bdev that is hotremoved, all the I/O traffic on that Vhost-BLK device will
+be aborted - possibly flooding a VM with syslog warnings and errors.
 
-- SCSI target 1, LUN 0 backed by Malloc0 bdev
-- SCSI target 5, LUN 0 backed by Malloc1 bdev
+### Hot-attach
 
-Virtio block device backed by Malloc2 bdev
+Hot-attach is is done by simply attaching a bdev to a vhost controller with a QEMU VM
+already started. No other extra action is necessary.
 
-For better performance use 4 VCPU (`-smp 4`) and 4 queues for each controller
-(`num_queues=4`). Assume that QEMU and SPDK are in respectively `qemu` and `spdk` directories.
-~~~
-host: $ cd spdk
-host: $ cat vhost.conf
-[Malloc]
-  NumberOfLuns 3
-  LunSizeInMb 128
-  BlockSize 512
-
-[VhostScsi0]
-  Name vhost_scsi0_socket
-  Dev 1 Malloc0
-  Dev 5 Malloc1
-
-[VhostBlk0]
-  Name vhost_blk0_socket
-  Dev Malloc2
-
-host: $ sudo ./app/vhost/vhost -c vhost.conf -s 1024 -m 1 &
-[ DPDK EAL parameters: vhost -c 1 -m 1024 --file-prefix=spdk_pid191213 ]
-EAL: Detected 48 lcore(s)
-EAL: Probing VFIO support...
-EAL: VFIO support initialized
-<< REMOVED CONSOLE LOG >>
-VHOST_CONFIG: bind to vhost_scsi0_socket
-vhost.c: 592:spdk_vhost_dev_construct: *NOTICE*: Controller vhost_scsi0_socket: new controller added
-vhost_scsi.c: 840:spdk_vhost_scsi_dev_add_tgt: *NOTICE*: Controller vhost_scsi0_socket: defined target 'Target 1' using lun 'Malloc0'
-vhost_scsi.c: 840:spdk_vhost_scsi_dev_add_tgt: *NOTICE*: Controller vhost_scsi0_socket: defined target 'Target 5' using lun 'Malloc1'
-VHOST_CONFIG: vhost-user server: socket created, fd: 65
-VHOST_CONFIG: bind to vhost_blk0_socket
-vhost.c: 592:spdk_vhost_dev_construct: *NOTICE*: Controller vhost_blk0_socket: new controller added
-vhost_blk.c: 720:spdk_vhost_blk_construct: *NOTICE*: Controller vhost_blk0_socket: using bdev 'Malloc2'
-
-host: $ cd ..
-host: $ sudo ./qemu/build/x86_64-softmmu/qemu-system-x86_64 --enable-kvm -m 1024 \
-  -cpu host -smp 4 -nographic \
-  -object memory-backend-file,id=mem,size=1G,mem-path=/dev/hugepages,share=on -numa node,memdev=mem \
-  -drive file=guest_os_image.qcow2,if=none,id=disk \
-  -device ide-hd,drive=disk,bootindex=0 \
-  -chardev socket,id=spdk_vhost_scsi0,path=./spdk/vhost_scsi0_socket \
-  -device vhost-user-scsi-pci,id=scsi0,chardev=spdk_vhost_scsi0,num_queues=4 \
-  -chardev socket,id=spdk_vhost_blk0,path=./spdk/vhost_blk0_socket \
-  -device vhost-user-blk-pci,logical_block_size=512,size=128M,chardev=spdk_vhost_blk0,num_queues=4
-
-<< LOGIN TO GUEST OS >>
-guest: ~$ lsblk --output "NAME,KNAME,MODEL,HCTL,SIZE,VENDOR,SUBSYSTEMS"
-NAME   KNAME MODEL            HCTL        SIZE VENDOR   SUBSYSTEMS
-fd0    fd0                                  4K          block:platform
-sda    sda   QEMU HARDDISK    1:0:0:0      80G ATA      block:scsi:pci
-  sda1 sda1                                80G          block:scsi:pci
-sdb    sdb   Malloc disk      2:0:1:0     128M INTEL    block:scsi:virtio:pci
-sdc    sdc   Malloc disk      2:0:5:0     128M INTEL    block:scsi:virtio:pci
-vda    vda                                128M 0x1af4   block:virtio:pci
-
-guest: $ sudo poweroff
-host: $ fg
-<< CTRL + C >>
-vhost.c:1006:session_shutdown: *NOTICE*: Exiting
+~~~{.sh}
+scripts/rpc.py add_vhost_scsi_lun vhost.0 0 Malloc0
 ~~~
 
-We can see that `sdb` and `sdc` are SPDK vhost-scsi LUNs, and `vda` is SPDK vhost-blk disk.
+### Hot-detach
+
+Just like hot-attach, the hot-detach is done by simply removing a bdev from a controller
+when a QEMU VM is already started.
+
+~~~{.sh}
+scripts/rpc.py remove_vhost_scsi_dev vhost.0 0
+~~~
+
+Removing an entire bdev will hot-detach it from a controller as well.
+
+~~~{.sh}
+scripts/rpc.py delete_bdev Malloc0
+~~~
 
 # Known bugs and limitations {#vhost_bugs}
 
