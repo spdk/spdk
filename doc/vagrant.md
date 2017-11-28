@@ -21,6 +21,8 @@ export https_proxy=...
 vagrant plugin install vagrant-proxyconf
 ~~~
 
+In case you want use kvm/libvirt you should also install `vagrant-libvirt`
+
 # VM Configuration {#vagrant_config}
 
 This vagrant environment creates a VM based on environment variables found in `env.sh`.
@@ -55,7 +57,16 @@ By default, the VM created is configured with:
 
 # Providers {#vagrant_providers}
 
-Currently only the VirtualBox provider is supported.
+Currently VirtualBox & libvirt provider are supported.
+
+For libvirt currently there is only centos 7 image avaiable.
+
+To run with libvirt:
+
+~~~{.sh}
+    ./create_nvme_img.sh
+    vagrant up --provider=libvirt
+~~~
 
 # Running An Example {#vagrant_example}
 
