@@ -14,7 +14,7 @@ netmask = ('127.0.0.1', '127.0.0.0')
 rpc_param = {
     'target_ip': '127.0.0.1',
     'port': 3260,
-    'initiator_name': 'ALL',
+    'initiator_name': 'ANY',
     'netmask': netmask,
     'lun_total': 3,
     'malloc_bdev_size': 64,
