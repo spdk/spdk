@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a65d9ae_9bc5a4e5",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-28T18:57:24Z",
+      "side": 1,
+      "message": "could you just return ctrlr here?  then you don\u0027t need the found variable",
+      "revId": "dd4d6cff0f1dfabca8c5188e0a9e7d88a78d398e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28d29739_ca23063a",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-28T18:57:24Z",
+      "side": 1,
+      "message": "return ctrlr here?",
+      "revId": "dd4d6cff0f1dfabca8c5188e0a9e7d88a78d398e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0595c38_e6cd4fae",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-28T18:57:24Z",
+      "side": 1,
+      "message": "then this can just return NULL",
+      "revId": "dd4d6cff0f1dfabca8c5188e0a9e7d88a78d398e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
