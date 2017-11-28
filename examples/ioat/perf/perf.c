@@ -33,9 +33,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_launch.h>
-
 #include "spdk/ioat.h"
 #include "spdk/env.h"
 #include "spdk/queue.h"
@@ -550,7 +547,7 @@ main(int argc, char **argv)
 	worker = g_workers;
 	while (worker != NULL) {
 		if (worker->core != master_core) {
-			rte_eal_remote_launch(work_fn, worker, worker->core);
+			spdk_env_thread_launch_pinned(worker->core, work_fn, worker);
 		} else {
 			assert(master_worker == NULL);
 			master_worker = worker;
@@ -564,7 +561,7 @@ main(int argc, char **argv)
 		goto cleanup;
 	}
 
-	rte_eal_mp_wait_lcore();
+	spdk_env_thread_wait_all();
 
 	rc = dump_result();
 
