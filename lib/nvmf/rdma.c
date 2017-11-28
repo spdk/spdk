@@ -56,6 +56,13 @@
 #define NVMF_DEFAULT_TX_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
 
+/* AIO backend requires block size aligned data buffers,
+ * extra 4KiB aligned data buffer should work for most devices.
+ */
+#define SHIFT_4KB			12
+#define NVMF_DATA_BUFFER_ALIGNMENT	(1 << SHIFT_4KB)
+#define NVMF_DATA_BUFFER_MASK		(NVMF_DATA_BUFFER_ALIGNMENT - 1)
+
 enum spdk_nvmf_rdma_request_state {
 	/* The request is not currently in use */
 	RDMA_REQUEST_STATE_FREE = 0,
@@ -117,7 +124,7 @@ struct spdk_nvmf_rdma_recv {
 
 struct spdk_nvmf_rdma_request {
 	struct spdk_nvmf_request		req;
-	bool					data_from_pool;
+	void					*data_from_pool;
 
 	enum spdk_nvmf_rdma_request_state	state;
 
@@ -914,14 +921,17 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		rdma_req->req.length = sgl->keyed.length;
-		rdma_req->req.data = spdk_mempool_get(rtransport->data_buf_pool);
-		if (!rdma_req->req.data) {
+		rdma_req->data_from_pool = spdk_mempool_get(rtransport->data_buf_pool);
+		if (!rdma_req->data_from_pool) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
 			return 0;
 		}
-
-		rdma_req->data_from_pool = true;
+		/* AIO backend requires block size aligned data buffers,
+		 * 4KiB aligned data buffer should work for most devices.
+		 */
+		rdma_req->req.data = (void *)((uintptr_t)(rdma_req->data_from_pool + NVMF_DATA_BUFFER_MASK)
+					      & ~NVMF_DATA_BUFFER_MASK);
 		rdma_req->data.sgl[0].addr = (uintptr_t)rdma_req->req.data;
 		rdma_req->data.sgl[0].length = sgl->keyed.length;
 		rdma_req->data.sgl[0].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
@@ -956,7 +966,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		rdma_req->req.data = rdma_req->recv->buf + offset;
-		rdma_req->data_from_pool = false;
+		rdma_req->data_from_pool = NULL;
 		rdma_req->req.length = sgl->unkeyed.length;
 		return 0;
 	}
@@ -1045,7 +1055,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			/* If data is transferring from host to controller and the data didn't
 			 * arrive using in capsule data, we need to do a transfer from the host.
 			 */
-			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER && rdma_req->data_from_pool) {
+			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER && rdma_req->data_from_pool != NULL) {
 				rdma_req->state = RDMA_REQUEST_STATE_TRANSFER_PENDING_HOST_TO_CONTROLLER;
 				TAILQ_INSERT_TAIL(&rqpair->pending_rdma_rw_queue, rdma_req, link);
 				break;
@@ -1116,8 +1126,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 			if (rdma_req->data_from_pool) {
 				/* Put the buffer back in the pool */
-				spdk_mempool_put(rtransport->data_buf_pool, rdma_req->req.data);
-				rdma_req->data_from_pool = false;
+				spdk_mempool_put(rtransport->data_buf_pool, rdma_req->data_from_pool);
+				rdma_req->data_from_pool = NULL;
 			}
 			rdma_req->req.length = 0;
 			rdma_req->req.data = NULL;
@@ -1184,7 +1194,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 
 	rtransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_rdma",
 				    rtransport->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
-				    rtransport->max_io_size,
+				    rtransport->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
 				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!rtransport->data_buf_pool) {
