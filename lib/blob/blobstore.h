@@ -133,6 +133,8 @@ struct spdk_blob {
 	uint64_t	data_ro_flags;
 	uint64_t	md_ro_flags;
 
+	struct spdk_bs_dev *back_bs_dev;
+
 	/* TODO: The xattrs are mutable, but we don't want to be
 	 * copying them unecessarily. Figure this out.
 	 */
@@ -445,6 +447,22 @@ _spdk_bs_num_pages_to_cluster_boundary(struct spdk_blob *blob, uint32_t page)
 	pages_per_cluster = blob->bs->pages_per_cluster;
 
 	return pages_per_cluster - (page % pages_per_cluster);
+}
+
+/* Given a page offset into a blob, look up if it is from allocated cluster. */
+static inline bool
+_spdk_bs_blob_is_page_from_allocated_cluster(struct spdk_blob *blob, uint32_t page)
+{
+	uint64_t	lba;
+	uint32_t	pages_per_cluster;
+
+	pages_per_cluster = blob->bs->pages_per_cluster;
+
+	assert(page < blob->active.num_clusters * pages_per_cluster);
+
+	lba = blob->active.clusters[page / pages_per_cluster];
+
+	return (bool)(lba != 0);
 }
 
 #endif
