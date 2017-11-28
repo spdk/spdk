@@ -182,6 +182,7 @@ spdk_rpc_close(void)
 		}
 
 		spdk_jsonrpc_server_shutdown(g_jsonrpc_server);
+		g_jsonrpc_server = NULL;
 	}
 }
 
