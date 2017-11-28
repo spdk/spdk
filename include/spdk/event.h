@@ -193,4 +193,13 @@ void spdk_reactor_enable_context_switch_monitor(bool enabled);
  */
 bool spdk_reactor_context_switch_monitor_enabled(void);
 
+/**
+ * \brief Modify poller tick period.
+ *
+ * \param ppoller A pointer to the address of the poller pointer.
+ * \param period_microseconds time to be used to calculate the new tick period.
+ * \param old_period_microseconds Returns the old time used to calculate current tick period.
+ */
+int spdk_modify_poller_period_ticks(struct spdk_poller **ppoller, uint64_t period_microseconds,
+				    uint64_t *old_period_microseconds);
 #endif
