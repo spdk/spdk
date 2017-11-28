@@ -146,7 +146,7 @@ function assert_number()
 #
 function vm_num_is_valid()
 {
-	[[ "$1" =~ ^[0-9]+$ ]] && return 0
+	[[ "$1" =~ [0-9]+ ]] && return 0
 
 	echo "${FUNCNAME[1]}() - ${BASH_LINENO[1]}: ERROR Invalid or missing paramter: vm number '$1'" > /dev/stderr
 	return 1;
