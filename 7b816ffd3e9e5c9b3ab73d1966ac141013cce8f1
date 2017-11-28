@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77063191_7d98d88c",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-28T16:27:27Z",
+      "side": 1,
+      "message": "Why isn\u0027t this one lwsync?",
+      "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "441c2424_512c9c5d",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-28T16:27:27Z",
+      "side": 1,
+      "message": "Can\u0027t this one just be a compiler barrier?",
+      "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
