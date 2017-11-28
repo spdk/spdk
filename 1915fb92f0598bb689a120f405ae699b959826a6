@@ -65,6 +65,30 @@
     },
     {
       "key": {
+        "uuid": "7ac2d1c3_aa4b2c07",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-11-28T02:27:42Z",
+      "side": 1,
+      "message": "Thanks for you comments, Shuhei. Using 4 poller is not practicable since one request payload is immediately following its request, so do response payload. From NBD protocol, using 2 pollers (1 for reading req, 1 for writing resp) is practicable.Just thought 1 poller is enough for both reading req and writing resp.",
+      "parentUuid": "5ed03afc_0f218257",
+      "range": {
+        "startLine": 539,
+        "startChar": 0,
+        "endLine": 573,
+        "endChar": 23
+      },
+      "revId": "1915fb92f0598bb689a120f405ae699b959826a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3e2ed02_301db9f6",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 1
