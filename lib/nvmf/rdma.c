@@ -56,6 +56,10 @@
 #define NVMF_DEFAULT_TX_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
 
+#define SHIFT_4KB			12
+#define NVMF_DATA_BUFFER_ALIGNED	(1 << SHIFT_4KB)
+#define NVMF_DATA_BUFFER_MASK		((1ULL << SHIFT_4KB) - 1)
+
 enum spdk_nvmf_rdma_request_state {
 	/* The request is not currently in use */
 	RDMA_REQUEST_STATE_FREE = 0,
@@ -914,12 +918,17 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		rdma_req->req.length = sgl->keyed.length;
-		rdma_req->req.data = spdk_mempool_get(rtransport->data_buf_pool);
-		if (!rdma_req->req.data) {
+		rdma_req->req.buf = spdk_mempool_get(rtransport->data_buf_pool);
+		if (!rdma_req->req.buf) {
 			/* No available buffers. Queue this request up. */
 			SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
 			return 0;
 		}
+		/* AIO backend requires block size aligned data buffers,
+		 * 4KiB aligned data buffer should work for most devices.
+		 */
+		rdma_req->req.data = (void *)((uintptr_t)(rdma_req->req.buf + NVMF_DATA_BUFFER_MASK)
+					      & ~NVMF_DATA_BUFFER_MASK);
 
 		rdma_req->data_from_pool = true;
 		rdma_req->data.sgl[0].addr = (uintptr_t)rdma_req->req.data;
@@ -1116,7 +1125,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 			if (rdma_req->data_from_pool) {
 				/* Put the buffer back in the pool */
-				spdk_mempool_put(rtransport->data_buf_pool, rdma_req->req.data);
+				spdk_mempool_put(rtransport->data_buf_pool, rdma_req->req.buf);
 				rdma_req->data_from_pool = false;
 			}
 			rdma_req->req.length = 0;
@@ -1179,9 +1188,12 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_tgt *tgt)
 		return NULL;
 	}
 
+	/* AIO backend requires block size aligned data buffers,
+	 * extra 4KiB aligned data buffer should work for most devices.
+	 */
 	rtransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_rdma",
 				    rtransport->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
-				    rtransport->max_io_size,
+				    rtransport->max_io_size + NVMF_DATA_BUFFER_ALIGNED,
 				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!rtransport->data_buf_pool) {
