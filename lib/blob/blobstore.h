@@ -135,6 +135,8 @@ struct spdk_blob {
 	uint64_t	data_ro_flags;
 	uint64_t	md_ro_flags;
 
+	struct spdk_bs_dev *back_bs_dev;
+
 	/* TODO: The xattrs are mutable, but we don't want to be
 	 * copying them unecessarily. Figure this out.
 	 */
