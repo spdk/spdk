@@ -704,7 +704,10 @@ _spdk_blob_persist_unmap_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 	for (i = blob->active.num_clusters; i < blob->active.cluster_array_size; i++) {
 		uint32_t cluster_num = _spdk_bs_lba_to_cluster(bs, blob->active.clusters[i]);
 
-		_spdk_bs_release_cluster(bs, cluster_num);
+		/* Nothing to release if it was not allocated */
+		if (blob->active.clusters[i] != 0) {
+			_spdk_bs_release_cluster(bs, cluster_num);
+		}
 	}
 
 	if (blob->active.num_clusters == 0) {
@@ -745,19 +748,22 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 		uint64_t next_lba = blob->active.clusters[i];
 		uint32_t next_lba_count = _spdk_bs_cluster_to_lba(bs, 1);
 
-		if ((lba + lba_count) == next_lba) {
-			/* This cluster is contiguous with the previous one. */
-			lba_count += next_lba_count;
-			continue;
-		}
+		/* Skip if cluster is not allocated */
+		if (blob->active.clusters[i] != 0) {
+			if ((lba + lba_count) == next_lba) {
+				/* This cluster is contiguous with the previous one. */
+				lba_count += next_lba_count;
+				continue;
+			}
 
-		/* This cluster is not contiguous with the previous one. */
+			/* This cluster is not contiguous with the previous one. */
 
-		/* If a run of LBAs previously existing, send them
-		 * as an unmap.
-		 */
-		if (lba_count > 0) {
-			spdk_bs_batch_unmap(batch, lba, lba_count);
+			/* If a run of LBAs previously existing, send them
+			 * as an unmap.
+			 */
+			if (lba_count > 0) {
+				spdk_bs_batch_unmap(batch, lba, lba_count);
+			}
 		}
 
 		/* Start building the next batch */
@@ -765,8 +771,8 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 		lba_count = next_lba_count;
 	}
 
-	/* If we ended with a contiguous set of LBAs, send the unmap now */
-	if (lba_count > 0) {
+	/* If we ended with a contiguous set of LBAs, send the unmap now if they are allocated */
+	if (lba_count > 0 && blob->active.clusters[i] != 0) {
 		spdk_bs_batch_unmap(batch, lba, lba_count);
 	}
 
@@ -1078,10 +1084,11 @@ _spdk_blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_ch
 {
 	spdk_bs_batch_t			*batch;
 	struct spdk_bs_cpl		cpl;
-	uint64_t			lba;
+	uint64_t			lba = 0;
 	uint32_t			lba_count;
 	uint8_t				*buf;
 	uint64_t			page;
+	bool				unallocated = false;
 
 	assert(blob != NULL);
 
@@ -1103,21 +1110,34 @@ _spdk_blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_ch
 	length = _spdk_bs_page_to_lba(blob->bs, length);
 	page = offset;
 	buf = payload;
+
 	while (length > 0) {
-		lba = _spdk_bs_blob_page_to_lba(blob, page);
 		lba_count = spdk_min(length,
 				     _spdk_bs_page_to_lba(blob->bs,
 						     _spdk_bs_num_pages_to_cluster_boundary(blob, page)));
 
+		if (blob->thin_provisioned == true &&
+		    _spdk_bs_blob_is_page_from_allocated_cluster(blob, page) == false) {
+			unallocated = true;
+		} else {
+			lba = _spdk_bs_blob_page_to_lba(blob, page);
+		}
+
 		switch (op_type) {
 		case SPDK_BLOB_READ:
-			spdk_bs_batch_read(batch, buf, lba, lba_count);
+			if (unallocated) {
+				memset(buf, 0, _spdk_bs_lba_to_byte(blob->bs, lba_count));
+			} else {
+				spdk_bs_batch_read(batch, buf, lba, lba_count);
+			}
 			break;
 		case SPDK_BLOB_WRITE:
 			spdk_bs_batch_write(batch, buf, lba, lba_count);
 			break;
 		case SPDK_BLOB_UNMAP:
-			spdk_bs_batch_unmap(batch, lba, lba_count);
+			if (unallocated == false) {
+				spdk_bs_batch_unmap(batch, lba, lba_count);
+			}
 			break;
 		case SPDK_BLOB_WRITE_ZEROES:
 			spdk_bs_batch_write_zeroes(batch, lba, lba_count);
@@ -1129,6 +1149,8 @@ _spdk_blob_request_submit_op(struct spdk_blob *blob, struct spdk_io_channel *_ch
 		if (op_type == SPDK_BLOB_WRITE || op_type == SPDK_BLOB_READ) {
 			buf += _spdk_bs_lba_to_byte(blob->bs, lba_count);
 		}
+
+		unallocated = false;
 	}
 
 	spdk_bs_batch_close(batch);
@@ -1159,10 +1181,11 @@ _spdk_rw_iov_split_next(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct iovec *iov, *orig_iov;
 	int iovcnt;
 	size_t orig_iovoff;
-	uint64_t lba;
+	uint64_t lba = 0;
 	uint64_t page_count, pages_to_boundary;
 	uint32_t lba_count;
 	uint64_t byte_count;
+	bool unallocated = false;
 
 	if (bserrno != 0 || ctx->pages_remaining == 0) {
 		free(ctx);
@@ -1170,9 +1193,15 @@ _spdk_rw_iov_split_next(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
+	if (ctx->blob->thin_provisioned == true &&
+	    _spdk_bs_blob_is_page_from_allocated_cluster(ctx->blob, ctx->page_offset) == false) {
+		unallocated = true;
+	} else {
+		lba = _spdk_bs_blob_page_to_lba(ctx->blob, ctx->page_offset);
+	}
+
 	pages_to_boundary = _spdk_bs_num_pages_to_cluster_boundary(ctx->blob, ctx->page_offset);
 	page_count = spdk_min(ctx->pages_remaining, pages_to_boundary);
-	lba = _spdk_bs_blob_page_to_lba(ctx->blob, ctx->page_offset);
 	lba_count = _spdk_bs_page_to_lba(ctx->blob->bs, page_count);
 
 	/*
@@ -1216,7 +1245,12 @@ _spdk_rw_iov_split_next(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	iov = &ctx->iov[0];
 
 	if (ctx->read) {
-		spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
+		if (unallocated) {
+			memset(iov->iov_base, 0, iov->iov_len);
+			_spdk_rw_iov_split_next(seq, ctx, 0);
+		} else {
+			spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
+		}
 	} else {
 		spdk_bs_sequence_writev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_split_next, ctx);
 	}
@@ -1229,6 +1263,7 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 {
 	spdk_bs_sequence_t		*seq;
 	struct spdk_bs_cpl		cpl;
+	bool 				unallocated = false;
 
 	assert(blob != NULL);
 
@@ -1267,11 +1302,23 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 	}
 
 	if (spdk_likely(length <= _spdk_bs_num_pages_to_cluster_boundary(blob, offset))) {
-		uint64_t lba = _spdk_bs_blob_page_to_lba(blob, offset);
 		uint32_t lba_count = _spdk_bs_page_to_lba(blob->bs, length);
+		uint64_t lba = 0;
+
+		if (blob->thin_provisioned == true &&
+		    _spdk_bs_blob_is_page_from_allocated_cluster(blob, offset) == false) {
+			unallocated = true;
+		} else {
+			lba = _spdk_bs_blob_page_to_lba(blob, offset);
+		}
 
 		if (read) {
-			spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
+			if (unallocated) {
+				memset(iov->iov_base, 0, iov->iov_len);
+				_spdk_rw_iov_done(seq, NULL, 0);
+			} else {
+				spdk_bs_sequence_readv(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
+			}
 		} else {
 			spdk_bs_sequence_writev(seq, iov, iovcnt, lba, lba_count, _spdk_rw_iov_done, NULL);
 		}
