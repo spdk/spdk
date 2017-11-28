@@ -329,15 +329,18 @@ function vm_kill()
 #
 function vm_kill_all()
 {
+	shopt -s nullglob
 	for vm in $VM_BASE_DIR/[0-9]*; do
 		vm_kill $(basename $vm)
 	done
+	shopt -u nullglob
 }
 
 # Shutdown all VM in $VM_BASE_DIR
 #
 function vm_shutdown_all()
 {
+	shopt -s nullglob
 	for vm in $VM_BASE_DIR/[0-9]*; do
 		vm_shutdown $(basename $vm)
 	done
@@ -355,12 +358,14 @@ function vm_shutdown_all()
 
 		if [[ $all_vms_down == 1 ]]; then
 			echo "INFO: All VMs successfully shut down"
+			shopt -u nullglob
 			return 0
 		fi
 
 		((timeo-=1))
 		sleep 1
 	done
+	shopt -u nullglob
 	return 1
 }
 
