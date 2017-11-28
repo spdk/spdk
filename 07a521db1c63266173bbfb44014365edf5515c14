@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0ba1914_d1233a07",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:56:38Z",
+      "side": 0,
+      "message": "Can we rename this to scsi_target?",
+      "range": {
+        "startLine": 212,
+        "startChar": 73,
+        "endLine": 212,
+        "endChar": 85
+      },
+      "revId": "07a521db1c63266173bbfb44014365edf5515c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

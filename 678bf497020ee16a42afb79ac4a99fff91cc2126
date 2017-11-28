@@ -1,0 +1,199 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c4d2bf0_5584d1b1",
+        "filename": "doc/vhost.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:56:38Z",
+      "side": 1,
+      "message": "This section is for VhostBlk not VhostSCSI so Dev is ok here.",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 35
+      },
+      "revId": "678bf497020ee16a42afb79ac4a99fff91cc2126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "172e0d5e_39d456b3",
+        "filename": "doc/vhost.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:56:38Z",
+      "side": 1,
+      "message": "To avoid confusion add something like \"application/library\"",
+      "revId": "678bf497020ee16a42afb79ac4a99fff91cc2126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6af017e_b822c5ac",
+        "filename": "doc/vhost.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:56:38Z",
+      "side": 1,
+      "message": "I think this need some rewording. Something like:\n\"Each SPDK vhost SCSI controller exposes up to eight targets (0 to 7). LUN 0 of each target is associated with SPDK block device and ...\"",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 54
+      },
+      "revId": "678bf497020ee16a42afb79ac4a99fff91cc2126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa61a596_374ce1e2",
+        "filename": "doc/vhost.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:56:38Z",
+      "side": 1,
+      "message": "Target",
+      "range": {
+        "startLine": 78,
+        "startChar": 68,
+        "endLine": 78,
+        "endChar": 71
+      },
+      "revId": "678bf497020ee16a42afb79ac4a99fff91cc2126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9bee5e4_653fd99e",
+        "filename": "doc/vhost.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:56:38Z",
+      "side": 1,
+      "message": "incorrect alignment",
+      "range": {
+        "startLine": 84,
+        "startChar": 19,
+        "endLine": 84,
+        "endChar": 27
+      },
+      "revId": "678bf497020ee16a42afb79ac4a99fff91cc2126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da445c93_b942c1f5",
+        "filename": "doc/vhost.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:56:38Z",
+      "side": 1,
+      "message": "Not needed. Here.",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 35
+      },
+      "revId": "678bf497020ee16a42afb79ac4a99fff91cc2126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5565551_bf4530e7",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 938,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:56:38Z",
+      "side": 1,
+      "message": "Put ctrlr name here so there we can identify which section is incorrect.",
+      "revId": "678bf497020ee16a42afb79ac4a99fff91cc2126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a490d7f3_51a3502e",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 949,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:56:38Z",
+      "side": 1,
+      "message": "target_num_str",
+      "range": {
+        "startLine": 949,
+        "startChar": 3,
+        "endLine": 949,
+        "endChar": 14
+      },
+      "revId": "678bf497020ee16a42afb79ac4a99fff91cc2126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e653ea55_f5f099d3",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 968,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-28T14:56:38Z",
+      "side": 1,
+      "message": "artifact",
+      "range": {
+        "startLine": 968,
+        "startChar": 3,
+        "endLine": 968,
+        "endChar": 4
+      },
+      "revId": "678bf497020ee16a42afb79ac4a99fff91cc2126",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
