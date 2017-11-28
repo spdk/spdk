@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "031f97d0_57cefff4",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-28T19:03:49Z",
+      "side": 1,
+      "message": "Our definition here matches DPDK (lib/librte_eal/common/include/arch/ppc_64/rte_atomic.h).\n\nI think we should stick with the same as DPDK unless we are sure we know better.",
+      "parentUuid": "77063191_7d98d88c",
+      "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "441c2424_512c9c5d",
         "filename": "include/spdk/barrier.h",
         "patchSetId": 7
@@ -47,6 +65,24 @@
       "writtenOn": "2017-11-28T16:27:27Z",
       "side": 1,
       "message": "Can\u0027t this one just be a compiler barrier?",
+      "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13ad660c_7f332959",
+        "filename": "include/spdk/barrier.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-28T19:03:49Z",
+      "side": 1,
+      "message": "This also matches DPDK.  lib/librte_eal/common/include/arch/x86/rte_atomic.h",
+      "parentUuid": "441c2424_512c9c5d",
       "revId": "7b816ffd3e9e5c9b3ab73d1966ac141013cce8f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
