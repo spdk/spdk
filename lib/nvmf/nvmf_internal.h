@@ -108,6 +108,7 @@ struct spdk_nvmf_request {
 	uint32_t			length;
 	enum spdk_nvme_data_transfer	xfer;
 	void				*data;
+	void				*buf;
 	union nvmf_h2c_msg		*cmd;
 	union nvmf_c2h_msg		*rsp;
 };
