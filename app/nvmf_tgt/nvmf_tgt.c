@@ -302,6 +302,11 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			}
 			break;
 		case NVMF_TGT_FINI_STOP_ACCEPTOR:
+			if (!g_acceptor_poller) {
+				SPDK_ERRLOG("g_acceptor_poller is not initialized\n");
+				g_tgt.state = NVMF_TGT_ERROR;
+				break;
+			}
 			spdk_poller_unregister(&g_acceptor_poller);
 			g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
 			break;
