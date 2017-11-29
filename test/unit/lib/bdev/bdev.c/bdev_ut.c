@@ -87,6 +87,8 @@ allocate_bdev(char *name)
 	bdev = calloc(1, sizeof(*bdev));
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
+	TAILQ_INIT(&bdev->aliases);
+
 	bdev->name = name;
 	bdev->fn_table = &fn_table;
 	bdev->module = SPDK_GET_BDEV_MODULE(bdev_ut);
@@ -106,6 +108,8 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 
 	bdev = calloc(1, sizeof(*bdev));
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
+
+	TAILQ_INIT(&bdev->aliases);
 
 	bdev->name = name;
 	bdev->fn_table = &fn_table;
@@ -359,6 +363,61 @@ part_test(void)
 	spdk_bdev_unregister(&bdev_base, NULL, NULL);
 }
 
+static void
+alias_add_del(void)
+{
+	struct spdk_bdev *bdev;
+	int rc;
+
+	bdev = allocate_bdev("bdev0");
+	SPDK_CU_ASSERT_FATAL(bdev != 0);
+
+	/*
+	 * Trying to add dev->name as alias,
+	 * for now it should pass
+	 */
+	rc = spdk_bdev_alias_add(bdev, bdev->name);
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * Trying to add empty alias,
+	 * this one should fail
+	 */
+	rc = spdk_bdev_alias_add(bdev, NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/*
+	 * Trying to add alias with proper name,
+	 * this one should pass
+	 */
+	rc = spdk_bdev_alias_add(bdev, "proper alias");
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * Trying to remove not existing alias,
+	 * this one should return error
+	 */
+	rc = spdk_bdev_alias_del(bdev, "not existing");
+	CU_ASSERT(rc == -ENOENT);
+
+	/*
+	 * Trying to remove proper alias,
+	 * this one should pass
+	 */
+	rc = spdk_bdev_alias_del(bdev, "proper alias");
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * Trying to remove proper alias,
+	 * this one should pass
+	 */
+	rc = spdk_bdev_alias_del(bdev, bdev->name);
+	CU_ASSERT(rc == 0);
+
+	spdk_bdev_unregister(bdev, NULL, NULL);
+	free(bdev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -379,7 +438,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bytes_to_blocks_test", bytes_to_blocks_test) == NULL ||
 		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
 		CU_add_test(suite, "open_write", open_write_test) == NULL ||
-		CU_add_test(suite, "part", part_test) == NULL
+		CU_add_test(suite, "part", part_test) == NULL ||
+		CU_add_test(suite, "alias_add_del", alias_add_del) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
