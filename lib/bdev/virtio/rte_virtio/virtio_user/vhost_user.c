@@ -261,8 +261,6 @@ prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 	return 0;
 }
 
-static struct vhost_user_msg m;
-
 const char *const vhost_msg_strings[] = {
 	[VHOST_USER_SET_OWNER] = "VHOST_SET_OWNER",
 	[VHOST_USER_RESET_OWNER] = "VHOST_RESET_OWNER",
@@ -308,7 +306,7 @@ vhost_user_sock(struct virtio_user_dev *dev,
 	case VHOST_USER_SET_FEATURES:
 	case VHOST_USER_SET_LOG_BASE:
 		msg.payload.u64 = *((__u64 *)arg);
-		msg.size = sizeof(m.payload.u64);
+		msg.size = sizeof(msg.payload.u64);
 		break;
 
 	case VHOST_USER_SET_OWNER:
@@ -319,8 +317,8 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		if (prepare_vhost_memory_user(&msg, fds) < 0)
 			return -1;
 		fd_num = msg.payload.memory.nregions;
-		msg.size = sizeof(m.payload.memory.nregions);
-		msg.size += sizeof(m.payload.memory.padding);
+		msg.size = sizeof(msg.payload.memory.nregions);
+		msg.size += sizeof(msg.payload.memory.padding);
 		msg.size += fd_num * sizeof(struct vhost_memory_region);
 		break;
 
@@ -332,18 +330,18 @@ vhost_user_sock(struct virtio_user_dev *dev,
 	case VHOST_USER_SET_VRING_BASE:
 	case VHOST_USER_SET_VRING_ENABLE:
 		memcpy(&msg.payload.state, arg, sizeof(msg.payload.state));
-		msg.size = sizeof(m.payload.state);
+		msg.size = sizeof(msg.payload.state);
 		break;
 
 	case VHOST_USER_GET_VRING_BASE:
 		memcpy(&msg.payload.state, arg, sizeof(msg.payload.state));
-		msg.size = sizeof(m.payload.state);
+		msg.size = sizeof(msg.payload.state);
 		need_reply = 1;
 		break;
 
 	case VHOST_USER_SET_VRING_ADDR:
 		memcpy(&msg.payload.addr, arg, sizeof(msg.payload.addr));
-		msg.size = sizeof(m.payload.addr);
+		msg.size = sizeof(msg.payload.addr);
 		break;
 
 	case VHOST_USER_SET_VRING_KICK:
@@ -351,7 +349,7 @@ vhost_user_sock(struct virtio_user_dev *dev,
 	case VHOST_USER_SET_VRING_ERR:
 		file = arg;
 		msg.payload.u64 = file->index & VHOST_USER_VRING_IDX_MASK;
-		msg.size = sizeof(m.payload.u64);
+		msg.size = sizeof(msg.payload.u64);
 		if (file->fd > 0)
 			fds[fd_num++] = file->fd;
 		else
@@ -390,14 +388,14 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		switch (req) {
 		case VHOST_USER_GET_FEATURES:
 		case VHOST_USER_GET_QUEUE_NUM:
-			if (msg.size != sizeof(m.payload.u64)) {
+			if (msg.size != sizeof(msg.payload.u64)) {
 				SPDK_WARNLOG("Received bad msg size\n");
 				return -1;
 			}
 			*((__u64 *)arg) = msg.payload.u64;
 			break;
 		case VHOST_USER_GET_VRING_BASE:
-			if (msg.size != sizeof(m.payload.state)) {
+			if (msg.size != sizeof(msg.payload.state)) {
 				SPDK_WARNLOG("Received bad msg size\n");
 				return -1;
 			}
