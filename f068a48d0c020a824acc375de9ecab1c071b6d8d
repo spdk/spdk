@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1162bd0_58b43351",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T23:34:04Z",
+      "side": 1,
+      "message": "This \u0027if\u0027 chain should probably be factored into a helper function like _parse_log_level, since it\u0027s duplicated below, but that can be a separate cleanup patch if you prefer.",
+      "revId": "f068a48d0c020a824acc375de9ecab1c071b6d8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
