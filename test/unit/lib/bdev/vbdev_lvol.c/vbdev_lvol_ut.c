@@ -415,6 +415,18 @@ spdk_json_write_object_end(struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+int
+spdk_bdev_alias_add(struct spdk_bdev *bdev, char *name)
+{
+	return 0;
+}
+
+int
+spdk_bdev_alias_del(struct spdk_bdev *bdev, char *name)
+{
+	return 0;
+}
+
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
