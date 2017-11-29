@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "849f38aa_747cd0fc",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 418,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T21:11:36Z",
+      "side": 1,
+      "message": "This is a memory leak: x \u003d realloc(x, ...) will overwrite x with NULL and not free the original.\n\nIf the realloc fails, we should leave sgroups and num_sgroups at their original state and return -ENOMEM.",
+      "revId": "0d3366df1eff07fe7d28719a3b2530474f90f086",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "191dab50_dc437a8c",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T21:11:36Z",
+      "side": 1,
+      "message": "Please don\u0027t use nsid for the name if it\u0027s not actually nsid - just \u0027i\u0027 would be better in this case.",
+      "revId": "0d3366df1eff07fe7d28719a3b2530474f90f086",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb266129_93337dc8",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T21:11:36Z",
+      "side": 1,
+      "message": "I would prefer to keep the bdev-related stuff isolated to ctrlr_bdev.c, but we can refactor this later.",
+      "range": {
+        "startLine": 436,
+        "startChar": 28,
+        "endLine": 436,
+        "endChar": 52
+      },
+      "revId": "0d3366df1eff07fe7d28719a3b2530474f90f086",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
