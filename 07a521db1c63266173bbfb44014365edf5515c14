@@ -46,6 +46,30 @@
       "revId": "07a521db1c63266173bbfb44014365edf5515c14",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e41348f_6d437ea7",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-29T08:16:28Z",
+      "side": 0,
+      "message": "Yeah, good catch. But for RPC case I would vote having two interfaces: now one, and deprecated one up to next release, then remove old one.",
+      "parentUuid": "3c7ec573_f9d72d2c",
+      "range": {
+        "startLine": 212,
+        "startChar": 73,
+        "endLine": 212,
+        "endChar": 85
+      },
+      "revId": "07a521db1c63266173bbfb44014365edf5515c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
