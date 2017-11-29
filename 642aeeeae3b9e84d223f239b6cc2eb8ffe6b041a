@@ -70,6 +70,30 @@
       "revId": "642aeeeae3b9e84d223f239b6cc2eb8ffe6b041a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c78ca86_d99c520a",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T16:31:39Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to limit malloc to just these sizes - what breaks if we configure it to a different size?",
+      "parentUuid": "b9e5069f_e64cb409",
+      "range": {
+        "startLine": 380,
+        "startChar": 4,
+        "endLine": 380,
+        "endChar": 91
+      },
+      "revId": "642aeeeae3b9e84d223f239b6cc2eb8ffe6b041a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
