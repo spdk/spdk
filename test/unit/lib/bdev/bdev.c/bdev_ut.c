@@ -83,6 +83,7 @@ static struct spdk_bdev *
 allocate_bdev(char *name)
 {
 	struct spdk_bdev *bdev;
+	int rc;
 
 	bdev = calloc(1, sizeof(*bdev));
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
@@ -91,7 +92,8 @@ allocate_bdev(char *name)
 	bdev->fn_table = &fn_table;
 	bdev->module = SPDK_GET_BDEV_MODULE(bdev_ut);
 
-	spdk_bdev_register(bdev);
+	rc = spdk_bdev_register(bdev);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_EMPTY(&bdev->base_bdevs));
 	CU_ASSERT(TAILQ_EMPTY(&bdev->vbdevs));
 
@@ -103,6 +105,7 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev *array[2];
+	int rc;
 
 	bdev = calloc(1, sizeof(*bdev));
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
@@ -117,7 +120,8 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 	array[0] = base1;
 	array[1] = base2;
 
-	spdk_vbdev_register(bdev, array, base2 == NULL ? 1 : 2);
+	rc = spdk_vbdev_register(bdev, array, base2 == NULL ? 1 : 2);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(!TAILQ_EMPTY(&bdev->base_bdevs));
 	CU_ASSERT(TAILQ_EMPTY(&bdev->vbdevs));
 
@@ -333,6 +337,7 @@ part_test(void)
 	struct spdk_bdev_part		part1, part2;
 	struct spdk_bdev		bdev_base = {};
 	SPDK_BDEV_PART_TAILQ		tailq = TAILQ_HEAD_INITIALIZER(tailq);
+	int rc;
 
 	base = calloc(1, sizeof(*base));
 	SPDK_CU_ASSERT_FATAL(base != NULL);
@@ -340,7 +345,8 @@ part_test(void)
 	bdev_base.name = "base";
 	bdev_base.fn_table = &base_fn_table;
 	bdev_base.module = SPDK_GET_BDEV_MODULE(bdev_ut);
-	spdk_bdev_register(&bdev_base);
+	rc = spdk_bdev_register(&bdev_base);
+	CU_ASSERT(rc == 0);
 	spdk_bdev_part_base_construct(base, &bdev_base, NULL, SPDK_GET_BDEV_MODULE(vbdev_ut),
 				      &part_fn_table, &tailq, __base_free, 0, NULL, NULL);
 
@@ -372,7 +378,7 @@ alias_add_del(void)
 	TAILQ_INIT(&bdev->aliases);
 
 	rc = spdk_bdev_alias_add(bdev, bdev->name);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc == -EEXIST);
 
 	rc = spdk_bdev_alias_add(bdev, "proper alias");
 	CU_ASSERT(rc == 0);
@@ -384,7 +390,7 @@ alias_add_del(void)
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_bdev_alias_del(bdev, bdev->name);
-	CU_ASSERT(rc == 0);
+	CU_ASSERT(rc != 0);
 
 	spdk_bdev_unregister(bdev, NULL, NULL);
 	free(bdev);
