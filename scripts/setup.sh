@@ -131,7 +131,9 @@ function configure_linux_pci {
 }
 
 function configure_linux {
-	configure_linux_pci
+	if [ "$SKIP_PCI" == 0 ]; then
+		configure_linux_pci
+	fi
 
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
 
@@ -241,7 +243,9 @@ function reset_linux_pci {
 }
 
 function reset_linux {
-	reset_linux_pci
+	if [ "$SKIP_PCI" == 0 ]; then
+		reset_linux_pci
+	fi
 
 	hugetlbfs_mount=$(linux_hugetlbfs_mount)
 	rm -f "$hugetlbfs_mount"/spdk*map_*
@@ -317,7 +321,9 @@ function configure_freebsd_pci {
 }
 
 function configure_freebsd {
-	configure_freebsd_pci
+	if [ "$SKIP_PCI" == 0 ]; then
+		configure_freebsd_pci
+	fi
 
 	kldunload contigmem.ko || true
 	kenv hw.contigmem.num_buffers=$((HUGEMEM / 256))
@@ -327,7 +333,10 @@ function configure_freebsd {
 
 function reset_freebsd {
 	kldunload contigmem.ko || true
-	kldunload nic_uio.ko || true
+
+	if [ "$SKIP_PCI" == 0 ]; then
+		kldunload nic_uio.ko || true
+	fi
 }
 
 username=$1
@@ -350,6 +359,7 @@ if [ "$username" = "" ]; then
 fi
 
 : ${HUGEMEM:=2048}
+: ${SKIP_PCI:=0}
 
 if [ `uname` = Linux ]; then
 	HUGEPGSZ=$(( `grep Hugepagesize /proc/meminfo | cut -d : -f 2 | tr -dc '0-9'` ))
