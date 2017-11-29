@@ -338,110 +338,89 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	free(rqpair);
 }
 
-static struct spdk_nvmf_rdma_qpair *
-spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
-			    struct spdk_nvmf_rdma_port *port,
-			    struct rdma_cm_id *id,
-			    uint16_t max_queue_depth, uint16_t max_rw_depth, uint32_t subsystem_id)
+static int
+spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
-	struct spdk_nvmf_qpair		*qpair;
 	int				rc, i;
 	struct ibv_qp_init_attr		attr;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	char buf[64];
 
-	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 
-	rqpair = calloc(1, sizeof(struct spdk_nvmf_rdma_qpair));
-	if (rqpair == NULL) {
-		SPDK_ERRLOG("Could not allocate new connection.\n");
-		return NULL;
-	}
-
-	rqpair->port = port;
-	rqpair->max_queue_depth = max_queue_depth;
-	rqpair->max_rw_depth = max_rw_depth;
-	TAILQ_INIT(&rqpair->incoming_queue);
-	TAILQ_INIT(&rqpair->free_queue);
-	TAILQ_INIT(&rqpair->pending_rdma_rw_queue);
-
-	rqpair->cq = ibv_create_cq(id->verbs, max_queue_depth * 3, rqpair, NULL, 0);
+	rqpair->cq = ibv_create_cq(rqpair->cm_id->verbs, rqpair->max_queue_depth * 3, rqpair, NULL, 0);
 	if (!rqpair->cq) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("Unable to create completion queue\n");
 		SPDK_ERRLOG("Errno %d: %s\n", errno, buf);
-		rdma_destroy_id(id);
+		rdma_destroy_id(rqpair->cm_id);
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return NULL;
+		return -1;
 	}
 
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
 	attr.qp_type		= IBV_QPT_RC;
 	attr.send_cq		= rqpair->cq;
 	attr.recv_cq		= rqpair->cq;
-	attr.cap.max_send_wr	= max_queue_depth * 2; /* SEND, READ, and WRITE operations */
-	attr.cap.max_recv_wr	= max_queue_depth; /* RECV operations */
+	attr.cap.max_send_wr	= rqpair->max_queue_depth * 2; /* SEND, READ, and WRITE operations */
+	attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
 	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
 
-	rc = rdma_create_qp(id, NULL, &attr);
+	rc = rdma_create_qp(rqpair->cm_id, NULL, &attr);
 	if (rc) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("rdma_create_qp failed\n");
 		SPDK_ERRLOG("Errno %d: %s\n", errno, buf);
-		rdma_destroy_id(id);
+		rdma_destroy_id(rqpair->cm_id);
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return NULL;
+		return -1;
 	}
-
-	qpair = &rqpair->qpair;
-	qpair->transport = transport;
-	id->context = qpair;
-	rqpair->cm_id = id;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "New RDMA Connection: %p\n", qpair);
 
-	rqpair->reqs = calloc(max_queue_depth, sizeof(*rqpair->reqs));
-	rqpair->recvs = calloc(max_queue_depth, sizeof(*rqpair->recvs));
-	rqpair->cmds = spdk_dma_zmalloc(max_queue_depth * sizeof(*rqpair->cmds),
+	rqpair->reqs = calloc(rqpair->max_queue_depth, sizeof(*rqpair->reqs));
+	rqpair->recvs = calloc(rqpair->max_queue_depth, sizeof(*rqpair->recvs));
+	rqpair->cmds = spdk_dma_zmalloc(rqpair->max_queue_depth * sizeof(*rqpair->cmds),
 					0x1000, NULL);
-	rqpair->cpls = spdk_dma_zmalloc(max_queue_depth * sizeof(*rqpair->cpls),
+	rqpair->cpls = spdk_dma_zmalloc(rqpair->max_queue_depth * sizeof(*rqpair->cpls),
 					0x1000, NULL);
-	rqpair->bufs = spdk_dma_zmalloc(max_queue_depth * rtransport->in_capsule_data_size,
+	rqpair->bufs = spdk_dma_zmalloc(rqpair->max_queue_depth * rtransport->in_capsule_data_size,
 					0x1000, NULL);
 	if (!rqpair->reqs || !rqpair->recvs || !rqpair->cmds ||
 	    !rqpair->cpls || !rqpair->bufs) {
 		SPDK_ERRLOG("Unable to allocate sufficient memory for RDMA queue.\n");
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return NULL;
+		return -1;
 	}
 
-	rqpair->cmds_mr = ibv_reg_mr(id->pd, rqpair->cmds,
-				     max_queue_depth * sizeof(*rqpair->cmds),
+	rqpair->cmds_mr = ibv_reg_mr(rqpair->cm_id->pd, rqpair->cmds,
+				     rqpair->max_queue_depth * sizeof(*rqpair->cmds),
 				     IBV_ACCESS_LOCAL_WRITE);
-	rqpair->cpls_mr = ibv_reg_mr(id->pd, rqpair->cpls,
-				     max_queue_depth * sizeof(*rqpair->cpls),
+	rqpair->cpls_mr = ibv_reg_mr(rqpair->cm_id->pd, rqpair->cpls,
+				     rqpair->max_queue_depth * sizeof(*rqpair->cpls),
 				     0);
-	rqpair->bufs_mr = ibv_reg_mr(id->pd, rqpair->bufs,
-				     max_queue_depth * rtransport->in_capsule_data_size,
+	rqpair->bufs_mr = ibv_reg_mr(rqpair->cm_id->pd, rqpair->bufs,
+				     rqpair->max_queue_depth * rtransport->in_capsule_data_size,
 				     IBV_ACCESS_LOCAL_WRITE |
 				     IBV_ACCESS_REMOTE_WRITE);
 	if (!rqpair->cmds_mr || !rqpair->cpls_mr || !rqpair->bufs_mr) {
 		SPDK_ERRLOG("Unable to register required memory for RDMA queue.\n");
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return NULL;
+		return -1;
 	}
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Command Array: %p Length: %lx LKey: %x\n",
-		      rqpair->cmds, max_queue_depth * sizeof(*rqpair->cmds), rqpair->cmds_mr->lkey);
+		      rqpair->cmds, rqpair->max_queue_depth * sizeof(*rqpair->cmds), rqpair->cmds_mr->lkey);
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Completion Array: %p Length: %lx LKey: %x\n",
-		      rqpair->cpls, max_queue_depth * sizeof(*rqpair->cpls), rqpair->cpls_mr->lkey);
+		      rqpair->cpls, rqpair->max_queue_depth * sizeof(*rqpair->cpls), rqpair->cpls_mr->lkey);
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "In Capsule Data Array: %p Length: %x LKey: %x\n",
-		      rqpair->bufs, max_queue_depth * rtransport->in_capsule_data_size, rqpair->bufs_mr->lkey);
+		      rqpair->bufs, rqpair->max_queue_depth * rtransport->in_capsule_data_size, rqpair->bufs_mr->lkey);
 
-	for (i = 0; i < max_queue_depth; i++) {
+	for (i = 0; i < rqpair->max_queue_depth; i++) {
 		struct ibv_recv_wr *bad_wr = NULL;
 
 		rdma_recv = &rqpair->recvs[i];
@@ -465,11 +444,11 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 		if (rc) {
 			SPDK_ERRLOG("Unable to post capsule for RDMA RECV\n");
 			spdk_nvmf_rdma_qpair_destroy(rqpair);
-			return NULL;
+			return -1;
 		}
 	}
 
-	for (i = 0; i < max_queue_depth; i++) {
+	for (i = 0; i < rqpair->max_queue_depth; i++) {
 		rdma_req = &rqpair->reqs[i];
 
 		rdma_req->req.qpair = &rqpair->qpair;
@@ -499,7 +478,7 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 		TAILQ_INSERT_TAIL(&rqpair->free_queue, rdma_req, link);
 	}
 
-	return rqpair;
+	return 0;
 }
 
 static int
@@ -611,7 +590,6 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	uint16_t			sts = 0;
 	uint16_t			max_queue_depth;
 	uint16_t			max_rw_depth;
-	uint32_t			subsystem_id = 0;
 	int 				rc;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
@@ -680,13 +658,24 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Final Negotiated Queue Depth: %d R/W Depth: %d\n",
 		      max_queue_depth, max_rw_depth);
 
-	/* Init the NVMf rdma transport connection */
-	rqpair = spdk_nvmf_rdma_qpair_create(transport, port, event->id, max_queue_depth,
-					     max_rw_depth, subsystem_id);
+	rqpair = calloc(1, sizeof(struct spdk_nvmf_rdma_qpair));
 	if (rqpair == NULL) {
-		SPDK_ERRLOG("Error on nvmf connection creation\n");
+		SPDK_ERRLOG("Could not allocate new connection.\n");
 		goto err1;
 	}
+
+	rqpair->port = port;
+	rqpair->max_queue_depth = max_queue_depth;
+	rqpair->max_rw_depth = max_rw_depth;
+	rqpair->cm_id = event->id;
+	rqpair->qpair.transport = transport;
+	TAILQ_INIT(&rqpair->incoming_queue);
+	TAILQ_INIT(&rqpair->free_queue);
+	TAILQ_INIT(&rqpair->pending_rdma_rw_queue);
+
+	event->id->context = &rqpair->qpair;
+
+	spdk_nvmf_rdma_qpair_initialize(&rqpair->qpair);
 
 	accept_data.recfmt = 0;
 	accept_data.crqsize = max_queue_depth;
@@ -719,7 +708,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 err2:
 	spdk_nvmf_rdma_qpair_destroy(rqpair);
 
-err1: {
+err1:	{
 		struct spdk_nvmf_rdma_reject_private_data rej_data;
 
 		rej_data.status.sc = sts;
