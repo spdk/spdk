@@ -118,10 +118,10 @@ allow_ipv6_allowed(void)
 	netmask = "[2001:ad6:1234::]/48";
 	addr = "2001:ad6:1234:5678:9abc::";
 
-	result = spdk_iscsi_tgt_node_allow_ipv6(netmask, addr);
+	result = spdk_iscsi_ipv6_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == true);
 
-	result = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	result = spdk_iscsi_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == true);
 }
 
@@ -135,10 +135,10 @@ allow_ipv6_denied(void)
 	netmask = "[2001:ad6:1234::]/56";
 	addr = "2001:ad6:1234:5678:9abc::";
 
-	result = spdk_iscsi_tgt_node_allow_ipv6(netmask, addr);
+	result = spdk_iscsi_ipv6_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == false);
 
-	result = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	result = spdk_iscsi_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == false);
 }
 
@@ -152,10 +152,10 @@ allow_ipv4_allowed(void)
 	netmask = "192.168.2.0/24";
 	addr = "192.168.2.1";
 
-	result = spdk_iscsi_tgt_node_allow_ipv4(netmask, addr);
+	result = spdk_iscsi_ipv4_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == true);
 
-	result = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	result = spdk_iscsi_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == true);
 }
 
@@ -169,10 +169,10 @@ allow_ipv4_denied(void)
 	netmask = "192.168.2.0";
 	addr  = "192.168.2.1";
 
-	result = spdk_iscsi_tgt_node_allow_ipv4(netmask, addr);
+	result = spdk_iscsi_ipv4_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == false);
 
-	result = spdk_iscsi_tgt_node_allow_netmask(netmask, addr);
+	result = spdk_iscsi_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == false);
 }
 
