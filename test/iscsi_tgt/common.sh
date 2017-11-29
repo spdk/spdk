@@ -8,6 +8,11 @@ if [ -z $INITIATOR_IP ]; then
 	echo "INITIATOR_IP not defined in environment; defaulting to $INITIATOR_IP"
 fi
 
+if [ -z $ISCSI_PORT ]; then
+	ISCSI_PORT=3260
+	echo "ISCSI_PORT not defined in environment; defaulting to $ISCSI_PORT"
+fi
+
 if [ -z "$ISCSI_APP" ]; then
 	ISCSI_APP=./app/iscsi_tgt/iscsi_tgt
 fi
