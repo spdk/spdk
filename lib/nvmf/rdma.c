@@ -744,6 +744,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	struct spdk_nvmf_ctrlr		*ctrlr;
 	struct spdk_nvmf_rdma_qpair 	*rdma_qpair;
 	struct spdk_nvmf_rdma_qpair	*r, *t;
+	struct spdk_io_channel		*ch;
 
 	if (evt->id == NULL) {
 		SPDK_ERRLOG("disconnect request: missing cm_id\n");
@@ -781,7 +782,8 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 		return 0;
 	}
 
-	spdk_thread_send_msg(qpair->thread, nvmf_rdma_handle_disconnect, qpair);
+	ch = spdk_io_channel_from_ctx(qpair->group);
+	spdk_thread_send_msg(spdk_io_channel_get_thread(ch), nvmf_rdma_handle_disconnect, qpair);
 
 	return 0;
 }
