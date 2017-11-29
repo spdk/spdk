@@ -10,7 +10,10 @@ function gen_config() {
     cp $BASE_DIR/vhost.conf.base $BASE_DIR/vhost.conf.in
     cat << END_OF_CONFIG >> $BASE_DIR/vhost.conf.in
 [Split]
-  Split Nvme0n1 16
+  Split Nvme0n1 20
+  Split HotInNvme0n1 2
+  Split HotInNvme1n1 2
+  Split HotInNvme2n1 2
 END_OF_CONFIG
 }
 
@@ -30,6 +33,10 @@ function pre_test_case() {
     $SPDK_BUILD_DIR/scripts/rpc.py construct_vhost_scsi_controller naa.Nvme0n1p5.2
     $SPDK_BUILD_DIR/scripts/rpc.py construct_vhost_scsi_controller naa.Nvme0n1p6.3
     $SPDK_BUILD_DIR/scripts/rpc.py construct_vhost_scsi_controller naa.Nvme0n1p7.3
+    $SPDK_BUILD_DIR/scripts/rpc.py construct_vhost_scsi_controller naa.Nvme0n1p8.4
+    $SPDK_BUILD_DIR/scripts/rpc.py construct_vhost_scsi_controller naa.Nvme0n1p9.4
+    $SPDK_BUILD_DIR/scripts/rpc.py construct_vhost_scsi_controller naa.Nvme0n1p10.4
+    $SPDK_BUILD_DIR/scripts/rpc.py construct_vhost_scsi_controller naa.Nvme0n1p11.4
     $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
     $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 1 Nvme0n1p9
     $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p5.2 0 Nvme0n1p10
@@ -38,13 +45,13 @@ function pre_test_case() {
     $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p6.3 1 Nvme0n1p13
     $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p7.3 0 Nvme0n1p14
     $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p7.3 1 Nvme0n1p15
-    vms_setup_and_run "0 1 2 3"
-    vms_prepare "0 1 2 3"
-}
-
-function reboot_all_and_prepare() {
-    vms_reboot_all $1
-    vms_prepare $1
+    $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p8.4 0 Nvme0n1p16
+    $SPDK_BUILD_DIR/scripts/rpc.py construct_malloc_bdev -b Malloc0 128 512
+    $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p9.4 0 Nvme0n1p17
+    $SPDK_BUILD_DIR/scripts/rpc.py construct_malloc_bdev -b Malloc1 128 512
+    $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p10.4 0 Malloc1
+    vms_setup_and_run "0 1 2 3 4"
+    vms_prepare "0 1 2 3 4"
 }
 
 function post_test_case() {
@@ -52,12 +59,15 @@ function post_test_case() {
     spdk_vhost_kill
 }
 
+trap 'on_error_exit "${FUNCNAME}" "${LINENO}"' ERR
 gen_config
 pre_test_case
-$BASE_DIR/scsi_hotattach.sh --fio-bin=$fio_bin &
-first_script=$!
-$BASE_DIR/scsi_hotdetach.sh --fio-bin=$fio_bin &
-second_script=$!
-wait $first_script
-wait $second_script
+#$BASE_DIR/scsi_hotattach.sh --fio-bin=$fio_bin &
+#first_script=$!
+#$BASE_DIR/scsi_hotdetach.sh --fio-bin=$fio_bin &
+#second_script=$!
+#wait $first_script
+#wait $second_script
+#$BASE_DIR/scsi_hotremove.sh --fio-bin=$fio_bin
+$BASE_DIR/blk_hotremove.sh --fio-bin=$fio_bin
 post_test_case

@@ -64,9 +64,9 @@ shift $(( OPTIND - 1 ))
 fio_job=$BASE_DIR/fio_jobs/default_integrity.job
 tmp_attach_job=$BASE_DIR/fio_jobs/fio_attach.job.tmp
 tmp_detach_job=$BASE_DIR/fio_jobs/fio_detach.job.tmp
-. $BASE_DIR/../common/common.sh
+source $BASE_DIR/../common/common.sh
 
-rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s 127.0.0.1 "
+rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py "
 
 function print_test_fio_header() {
     echo "==============="
@@ -121,6 +121,13 @@ function vms_setup_and_run() {
     vm_wait_for_boot 600 $used_vms
 }
 
+function vms_setup_and_run_with_arg() {
+    vms_setup
+    # Run everything
+    $BASE_DIR/../common/vm_run.sh $x --work-dir=$TEST_DIR $1
+    vm_wait_for_boot 600 $1
+}
+
 function vms_prepare() {
     for vm_num in $1; do
         vm_dir=$VM_BASE_DIR/$vm_num
@@ -141,6 +148,11 @@ function vms_reboot_all() {
     done
 
     vm_wait_for_boot 600 $1
+}
+
+function reboot_all_and_prepare() {
+    vms_reboot_all $1
+    vms_prepare $1
 }
 
 function check_fio_retcode() {
@@ -171,4 +183,52 @@ function check_fio_retcode() {
 function reboot_all_and_prepare() {
     vms_reboot_all $1
     vms_prepare $1
+}
+
+function get_disks() {
+    vm_check_scsi_location $1
+    eval $2='"$SCSI_DISK"'
+}
+
+function check_disks() {
+    if [ "$1" == "$2" ]; then
+        echo "Disk has not been deleted"
+        exit 1
+    fi
+}
+
+function get_traddr() {
+    nvme_name=$1
+    nvme="$( $BASE_DIR/../../../scripts/gen_nvme.sh )"
+    echo $nvme
+    while read -r line; do
+        if [[ $line == *"TransportID"* ]] && [[ $line == *$nvme_name* ]]; then
+            word_array=($line)
+            for word in "${word_array[@]}"; do
+                if [[ $word == *"traddr"* ]]; then
+                    traddr=$( echo $word | sed 's/traddr://' | sed 's/"//' )
+                    eval $2=$traddr
+                fi
+            done
+        fi
+    done <<< "$nvme"
+}
+
+function unbind_nvme() {
+    echo "$1" > "/sys/bus/pci/devices/$1/driver/unbind"
+}
+
+function bind_nvme() {
+    echo "$1" > "/sys/bus/pci/drivers/uio_pci_generic/bind"
+}
+
+function on_error_exit() {
+    set +e
+    echo "Error on $1 - $2"
+    post_test_case
+    traddr=""
+    get_traddr "Nvme0" traddr
+    bind_nvme "$traddr"
+    print_backtrace
+    exit 1
 }
