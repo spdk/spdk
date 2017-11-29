@@ -336,7 +336,7 @@ spdk_iscsi_portal_grp_create(int tag)
 	return pg;
 }
 
-void
+static void
 spdk_iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg)
 {
 	struct spdk_iscsi_portal	*p;

@@ -440,7 +440,7 @@ cleanup:
 	return rc;
 }
 
-void
+static void
 spdk_iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig)
 {
 	if (!ig) {
