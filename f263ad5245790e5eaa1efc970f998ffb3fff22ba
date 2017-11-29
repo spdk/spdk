@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "daea4fb7_fe439790",
+        "filename": "test/config/vm_setup.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T20:07:13Z",
+      "side": 1,
+      "message": "We should put \u0027set -e\u0027 in all of our scripts to make sure no errors slip through silently.",
+      "revId": "f263ad5245790e5eaa1efc970f998ffb3fff22ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c13d288_354133ee",
         "filename": "test/config/vm_setup.sh",
         "patchSetId": 6
