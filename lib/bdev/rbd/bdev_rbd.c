@@ -523,6 +523,7 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 		bdev_rbd_free(rbd);
 		return NULL;
 	}
+
 	rbd->disk.product_name = "Ceph Rbd Disk";
 	bdev_rbd_count++;
 
