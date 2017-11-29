@@ -91,8 +91,6 @@ nvmf_tgt_subsystem_next(struct nvmf_tgt_subsystem *subsystem);
 
 int spdk_nvmf_parse_conf(void);
 
-void nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *subsystem);
-
 struct nvmf_tgt_subsystem *nvmf_tgt_create_subsystem(const char *name,
 		enum spdk_nvmf_subtype subtype, uint32_t num_ns,
 		uint32_t lcore);

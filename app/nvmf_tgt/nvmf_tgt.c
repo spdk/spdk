@@ -55,48 +55,17 @@ static size_t g_active_poll_groups = 0;
 static struct spdk_poller *g_acceptor_poller = NULL;
 
 static TAILQ_HEAD(, nvmf_tgt_subsystem) g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
-static bool g_subsystems_shutdown;
 
 static void nvmf_tgt_advance_state(void *arg1, void *arg2);
 
 static void
-subsystem_delete_event(void *arg1, void *arg2)
-{
-	struct nvmf_tgt_subsystem *app_subsys = arg1;
-	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
-
-	TAILQ_REMOVE(&g_subsystems, app_subsys, tailq);
-	free(app_subsys);
-
-	spdk_nvmf_delete_subsystem(subsystem);
-
-	if (g_subsystems_shutdown && TAILQ_EMPTY(&g_subsystems)) {
-		g_tgt.state = NVMF_TGT_FINI_FREE_RESOURCES;
-		nvmf_tgt_advance_state(NULL, NULL);
-	}
-}
-
-static void
-subsystem_stop(void *arg1, void *arg2)
-{
-	struct nvmf_tgt_subsystem *app_subsys = arg1;
-	struct spdk_event *event = arg2;
-
-	spdk_nvmf_subsystem_stop(app_subsys->subsystem);
-
-	spdk_event_call(event);
-}
-
-static void
 nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 {
-	struct spdk_event *event1, *event2;
+	TAILQ_REMOVE(&g_subsystems, app_subsys, tailq);
 
-	event2 = spdk_event_allocate(spdk_env_get_current_core(), subsystem_delete_event,
-				     app_subsys, NULL);
-	event1 = spdk_event_allocate(app_subsys->lcore, subsystem_stop, app_subsys, event2);
+	spdk_nvmf_delete_subsystem(app_subsys->subsystem);
 
-	spdk_event_call(event1);
+	free(app_subsys);
 }
 
 static void
@@ -108,25 +77,6 @@ spdk_nvmf_shutdown_cb(void)
 
 	g_tgt.state = NVMF_TGT_FINI_STOP_ACCEPTOR;
 	nvmf_tgt_advance_state(NULL, NULL);
-}
-
-static void
-_nvmf_tgt_start_subsystem(void *arg1, void *arg2)
-{
-	struct nvmf_tgt_subsystem *app_subsys = arg1;
-	struct spdk_nvmf_subsystem *subsystem = app_subsys->subsystem;
-
-	spdk_nvmf_subsystem_start(subsystem);
-}
-
-void
-nvmf_tgt_start_subsystem(struct nvmf_tgt_subsystem *app_subsys)
-{
-	struct spdk_event *event;
-
-	event = spdk_event_allocate(app_subsys->lcore, _nvmf_tgt_start_subsystem,
-				    app_subsys, NULL);
-	spdk_event_call(event);
 }
 
 struct nvmf_tgt_subsystem *
@@ -314,10 +264,10 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 		case NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS: {
 			struct nvmf_tgt_subsystem *app_subsys, *tmp;
 
-			g_subsystems_shutdown = true;
 			TAILQ_FOREACH_SAFE(app_subsys, &g_subsystems, tailq, tmp) {
 				nvmf_tgt_delete_subsystem(app_subsys);
 			}
+			g_tgt.state = NVMF_TGT_FINI_FREE_RESOURCES;
 			break;
 		}
 		case NVMF_TGT_FINI_FREE_RESOURCES:
