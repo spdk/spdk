@@ -53,6 +53,52 @@
     },
     {
       "key": {
+        "uuid": "0581c82d_5f79c72b",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T08:11:33Z",
+      "side": 1,
+      "message": "Thanks for your feedback, I could understand better than before.\n\nI think this part is for reading request\u0026payload, issuing bdev IO, and handle completion of bdev IO.\n\nThe following may make your code better \n- create a loop to do batch process and\n- if the poller do not get any data from socket or loop count exceeds any limit, the poller should exit from loop.\n\nLooking into spdk_iscsi_conn_handle_incominng_pdus() in lib/iscsi may be helpful for you.",
+      "range": {
+        "startLine": 541,
+        "startChar": 0,
+        "endLine": 555,
+        "endChar": 2
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53050d2f_6ea6d091",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T08:11:33Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 557,
+        "startChar": 0,
+        "endLine": 570,
+        "endChar": 23
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2db1db05_b85ea017",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 3
