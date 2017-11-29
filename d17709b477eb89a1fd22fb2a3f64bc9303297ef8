@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d932f0f_387329e6",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-29T13:04:21Z",
+      "side": 1,
+      "message": "Please look at comments from previous PS",
+      "range": {
+        "startLine": 402,
+        "startChar": 8,
+        "endLine": 403,
+        "endChar": 27
+      },
+      "revId": "d17709b477eb89a1fd22fb2a3f64bc9303297ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4bcf81a2_b9f348e7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-29T13:04:21Z",
+      "side": 1,
+      "message": "Please look at comments from previous PS",
+      "range": {
+        "startLine": 339,
+        "startChar": 5,
+        "endLine": 339,
+        "endChar": 64
+      },
+      "revId": "d17709b477eb89a1fd22fb2a3f64bc9303297ef8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
