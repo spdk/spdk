@@ -287,55 +287,55 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 }
 
 static int
-spdk_nvmf_rdma_qpair_allocate_channel(struct spdk_nvmf_rdma_qpair *rdma_qpair,
+spdk_nvmf_rdma_qpair_allocate_channel(struct spdk_nvmf_rdma_qpair *rqpair,
 				      struct spdk_nvmf_rdma_transport *rtransport)
 {
-	rdma_qpair->mgmt_channel = spdk_get_io_channel(rtransport);
-	if (!rdma_qpair->mgmt_channel) {
+	rqpair->mgmt_channel = spdk_get_io_channel(rtransport);
+	if (!rqpair->mgmt_channel) {
 		return -1;
 	}
 
-	rdma_qpair->thread = spdk_get_thread();
-	rdma_qpair->ch = spdk_io_channel_get_ctx(rdma_qpair->mgmt_channel);
-	assert(rdma_qpair->ch != NULL);
+	rqpair->thread = spdk_get_thread();
+	rqpair->ch = spdk_io_channel_get_ctx(rqpair->mgmt_channel);
+	assert(rqpair->ch != NULL);
 	return 0;
 }
 
 static void
-spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rdma_qpair)
+spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	if (rdma_qpair->cmds_mr) {
-		ibv_dereg_mr(rdma_qpair->cmds_mr);
+	if (rqpair->cmds_mr) {
+		ibv_dereg_mr(rqpair->cmds_mr);
 	}
 
-	if (rdma_qpair->cpls_mr) {
-		ibv_dereg_mr(rdma_qpair->cpls_mr);
+	if (rqpair->cpls_mr) {
+		ibv_dereg_mr(rqpair->cpls_mr);
 	}
 
-	if (rdma_qpair->bufs_mr) {
-		ibv_dereg_mr(rdma_qpair->bufs_mr);
+	if (rqpair->bufs_mr) {
+		ibv_dereg_mr(rqpair->bufs_mr);
 	}
 
-	if (rdma_qpair->cm_id) {
-		rdma_destroy_qp(rdma_qpair->cm_id);
-		rdma_destroy_id(rdma_qpair->cm_id);
+	if (rqpair->cm_id) {
+		rdma_destroy_qp(rqpair->cm_id);
+		rdma_destroy_id(rqpair->cm_id);
 	}
 
-	if (rdma_qpair->cq) {
-		ibv_destroy_cq(rdma_qpair->cq);
+	if (rqpair->cq) {
+		ibv_destroy_cq(rqpair->cq);
 	}
 
-	if (rdma_qpair->mgmt_channel) {
-		spdk_put_io_channel(rdma_qpair->mgmt_channel);
+	if (rqpair->mgmt_channel) {
+		spdk_put_io_channel(rqpair->mgmt_channel);
 	}
 
 	/* Free all memory */
-	spdk_dma_free(rdma_qpair->cmds);
-	spdk_dma_free(rdma_qpair->cpls);
-	spdk_dma_free(rdma_qpair->bufs);
-	free(rdma_qpair->reqs);
-	free(rdma_qpair->recvs);
-	free(rdma_qpair);
+	spdk_dma_free(rqpair->cmds);
+	spdk_dma_free(rqpair->cpls);
+	spdk_dma_free(rqpair->bufs);
+	free(rqpair->reqs);
+	free(rqpair->recvs);
+	free(rqpair);
 }
 
 static struct spdk_nvmf_rdma_qpair *
@@ -345,7 +345,7 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 			    uint16_t max_queue_depth, uint16_t max_rw_depth, uint32_t subsystem_id)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
-	struct spdk_nvmf_rdma_qpair	*rdma_qpair;
+	struct spdk_nvmf_rdma_qpair	*rqpair;
 	struct spdk_nvmf_qpair		*qpair;
 	int				rc, i;
 	struct ibv_qp_init_attr		attr;
@@ -355,33 +355,33 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
-	rdma_qpair = calloc(1, sizeof(struct spdk_nvmf_rdma_qpair));
-	if (rdma_qpair == NULL) {
+	rqpair = calloc(1, sizeof(struct spdk_nvmf_rdma_qpair));
+	if (rqpair == NULL) {
 		SPDK_ERRLOG("Could not allocate new connection.\n");
 		return NULL;
 	}
 
-	rdma_qpair->port = port;
-	rdma_qpair->max_queue_depth = max_queue_depth;
-	rdma_qpair->max_rw_depth = max_rw_depth;
-	TAILQ_INIT(&rdma_qpair->incoming_queue);
-	TAILQ_INIT(&rdma_qpair->free_queue);
-	TAILQ_INIT(&rdma_qpair->pending_rdma_rw_queue);
+	rqpair->port = port;
+	rqpair->max_queue_depth = max_queue_depth;
+	rqpair->max_rw_depth = max_rw_depth;
+	TAILQ_INIT(&rqpair->incoming_queue);
+	TAILQ_INIT(&rqpair->free_queue);
+	TAILQ_INIT(&rqpair->pending_rdma_rw_queue);
 
-	rdma_qpair->cq = ibv_create_cq(id->verbs, max_queue_depth * 3, rdma_qpair, NULL, 0);
-	if (!rdma_qpair->cq) {
+	rqpair->cq = ibv_create_cq(id->verbs, max_queue_depth * 3, rqpair, NULL, 0);
+	if (!rqpair->cq) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("Unable to create completion queue\n");
 		SPDK_ERRLOG("Errno %d: %s\n", errno, buf);
 		rdma_destroy_id(id);
-		spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return NULL;
 	}
 
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
 	attr.qp_type		= IBV_QPT_RC;
-	attr.send_cq		= rdma_qpair->cq;
-	attr.recv_cq		= rdma_qpair->cq;
+	attr.send_cq		= rqpair->cq;
+	attr.recv_cq		= rqpair->cq;
 	attr.cap.max_send_wr	= max_queue_depth * 2; /* SEND, READ, and WRITE operations */
 	attr.cap.max_recv_wr	= max_queue_depth; /* RECV operations */
 	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
@@ -393,94 +393,94 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 		SPDK_ERRLOG("rdma_create_qp failed\n");
 		SPDK_ERRLOG("Errno %d: %s\n", errno, buf);
 		rdma_destroy_id(id);
-		spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return NULL;
 	}
 
-	qpair = &rdma_qpair->qpair;
+	qpair = &rqpair->qpair;
 	qpair->transport = transport;
 	id->context = qpair;
-	rdma_qpair->cm_id = id;
+	rqpair->cm_id = id;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "New RDMA Connection: %p\n", qpair);
 
-	rdma_qpair->reqs = calloc(max_queue_depth, sizeof(*rdma_qpair->reqs));
-	rdma_qpair->recvs = calloc(max_queue_depth, sizeof(*rdma_qpair->recvs));
-	rdma_qpair->cmds = spdk_dma_zmalloc(max_queue_depth * sizeof(*rdma_qpair->cmds),
-					    0x1000, NULL);
-	rdma_qpair->cpls = spdk_dma_zmalloc(max_queue_depth * sizeof(*rdma_qpair->cpls),
-					    0x1000, NULL);
-	rdma_qpair->bufs = spdk_dma_zmalloc(max_queue_depth * rtransport->in_capsule_data_size,
-					    0x1000, NULL);
-	if (!rdma_qpair->reqs || !rdma_qpair->recvs || !rdma_qpair->cmds ||
-	    !rdma_qpair->cpls || !rdma_qpair->bufs) {
+	rqpair->reqs = calloc(max_queue_depth, sizeof(*rqpair->reqs));
+	rqpair->recvs = calloc(max_queue_depth, sizeof(*rqpair->recvs));
+	rqpair->cmds = spdk_dma_zmalloc(max_queue_depth * sizeof(*rqpair->cmds),
+					0x1000, NULL);
+	rqpair->cpls = spdk_dma_zmalloc(max_queue_depth * sizeof(*rqpair->cpls),
+					0x1000, NULL);
+	rqpair->bufs = spdk_dma_zmalloc(max_queue_depth * rtransport->in_capsule_data_size,
+					0x1000, NULL);
+	if (!rqpair->reqs || !rqpair->recvs || !rqpair->cmds ||
+	    !rqpair->cpls || !rqpair->bufs) {
 		SPDK_ERRLOG("Unable to allocate sufficient memory for RDMA queue.\n");
-		spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return NULL;
 	}
 
-	rdma_qpair->cmds_mr = ibv_reg_mr(id->pd, rdma_qpair->cmds,
-					 max_queue_depth * sizeof(*rdma_qpair->cmds),
-					 IBV_ACCESS_LOCAL_WRITE);
-	rdma_qpair->cpls_mr = ibv_reg_mr(id->pd, rdma_qpair->cpls,
-					 max_queue_depth * sizeof(*rdma_qpair->cpls),
-					 0);
-	rdma_qpair->bufs_mr = ibv_reg_mr(id->pd, rdma_qpair->bufs,
-					 max_queue_depth * rtransport->in_capsule_data_size,
-					 IBV_ACCESS_LOCAL_WRITE |
-					 IBV_ACCESS_REMOTE_WRITE);
-	if (!rdma_qpair->cmds_mr || !rdma_qpair->cpls_mr || !rdma_qpair->bufs_mr) {
+	rqpair->cmds_mr = ibv_reg_mr(id->pd, rqpair->cmds,
+				     max_queue_depth * sizeof(*rqpair->cmds),
+				     IBV_ACCESS_LOCAL_WRITE);
+	rqpair->cpls_mr = ibv_reg_mr(id->pd, rqpair->cpls,
+				     max_queue_depth * sizeof(*rqpair->cpls),
+				     0);
+	rqpair->bufs_mr = ibv_reg_mr(id->pd, rqpair->bufs,
+				     max_queue_depth * rtransport->in_capsule_data_size,
+				     IBV_ACCESS_LOCAL_WRITE |
+				     IBV_ACCESS_REMOTE_WRITE);
+	if (!rqpair->cmds_mr || !rqpair->cpls_mr || !rqpair->bufs_mr) {
 		SPDK_ERRLOG("Unable to register required memory for RDMA queue.\n");
-		spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return NULL;
 	}
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Command Array: %p Length: %lx LKey: %x\n",
-		      rdma_qpair->cmds, max_queue_depth * sizeof(*rdma_qpair->cmds), rdma_qpair->cmds_mr->lkey);
+		      rqpair->cmds, max_queue_depth * sizeof(*rqpair->cmds), rqpair->cmds_mr->lkey);
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Completion Array: %p Length: %lx LKey: %x\n",
-		      rdma_qpair->cpls, max_queue_depth * sizeof(*rdma_qpair->cpls), rdma_qpair->cpls_mr->lkey);
+		      rqpair->cpls, max_queue_depth * sizeof(*rqpair->cpls), rqpair->cpls_mr->lkey);
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "In Capsule Data Array: %p Length: %x LKey: %x\n",
-		      rdma_qpair->bufs, max_queue_depth * rtransport->in_capsule_data_size, rdma_qpair->bufs_mr->lkey);
+		      rqpair->bufs, max_queue_depth * rtransport->in_capsule_data_size, rqpair->bufs_mr->lkey);
 
 	for (i = 0; i < max_queue_depth; i++) {
 		struct ibv_recv_wr *bad_wr = NULL;
 
-		rdma_recv = &rdma_qpair->recvs[i];
+		rdma_recv = &rqpair->recvs[i];
 
 		/* Set up memory to receive commands */
-		rdma_recv->buf = (void *)((uintptr_t)rdma_qpair->bufs + (i * rtransport->in_capsule_data_size));
+		rdma_recv->buf = (void *)((uintptr_t)rqpair->bufs + (i * rtransport->in_capsule_data_size));
 
-		rdma_recv->sgl[0].addr = (uintptr_t)&rdma_qpair->cmds[i];
-		rdma_recv->sgl[0].length = sizeof(rdma_qpair->cmds[i]);
-		rdma_recv->sgl[0].lkey = rdma_qpair->cmds_mr->lkey;
+		rdma_recv->sgl[0].addr = (uintptr_t)&rqpair->cmds[i];
+		rdma_recv->sgl[0].length = sizeof(rqpair->cmds[i]);
+		rdma_recv->sgl[0].lkey = rqpair->cmds_mr->lkey;
 
 		rdma_recv->sgl[1].addr = (uintptr_t)rdma_recv->buf;
 		rdma_recv->sgl[1].length = rtransport->in_capsule_data_size;
-		rdma_recv->sgl[1].lkey = rdma_qpair->bufs_mr->lkey;
+		rdma_recv->sgl[1].lkey = rqpair->bufs_mr->lkey;
 
 		rdma_recv->wr.wr_id = (uintptr_t)rdma_recv;
 		rdma_recv->wr.sg_list = rdma_recv->sgl;
 		rdma_recv->wr.num_sge = SPDK_COUNTOF(rdma_recv->sgl);
 
-		rc = ibv_post_recv(rdma_qpair->cm_id->qp, &rdma_recv->wr, &bad_wr);
+		rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_recv->wr, &bad_wr);
 		if (rc) {
 			SPDK_ERRLOG("Unable to post capsule for RDMA RECV\n");
-			spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
+			spdk_nvmf_rdma_qpair_destroy(rqpair);
 			return NULL;
 		}
 	}
 
 	for (i = 0; i < max_queue_depth; i++) {
-		rdma_req = &rdma_qpair->reqs[i];
+		rdma_req = &rqpair->reqs[i];
 
-		rdma_req->req.qpair = &rdma_qpair->qpair;
+		rdma_req->req.qpair = &rqpair->qpair;
 		rdma_req->req.cmd = NULL;
 
 		/* Set up memory to send responses */
-		rdma_req->req.rsp = &rdma_qpair->cpls[i];
+		rdma_req->req.rsp = &rqpair->cpls[i];
 
-		rdma_req->rsp.sgl[0].addr = (uintptr_t)&rdma_qpair->cpls[i];
-		rdma_req->rsp.sgl[0].length = sizeof(rdma_qpair->cpls[i]);
-		rdma_req->rsp.sgl[0].lkey = rdma_qpair->cpls_mr->lkey;
+		rdma_req->rsp.sgl[0].addr = (uintptr_t)&rqpair->cpls[i];
+		rdma_req->rsp.sgl[0].length = sizeof(rqpair->cpls[i]);
+		rdma_req->rsp.sgl[0].lkey = rqpair->cpls_mr->lkey;
 
 		rdma_req->rsp.wr.wr_id = (uintptr_t)rdma_req;
 		rdma_req->rsp.wr.next = NULL;
@@ -496,10 +496,10 @@ spdk_nvmf_rdma_qpair_create(struct spdk_nvmf_transport *transport,
 		rdma_req->data.wr.sg_list = rdma_req->data.sgl;
 		rdma_req->data.wr.num_sge = SPDK_COUNTOF(rdma_req->data.sgl);
 
-		TAILQ_INSERT_TAIL(&rdma_qpair->free_queue, rdma_req, link);
+		TAILQ_INSERT_TAIL(&rqpair->free_queue, rdma_req, link);
 	}
 
-	return rdma_qpair;
+	return rqpair;
 }
 
 static int
@@ -508,23 +508,23 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	int				rc;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair 		*qpair;
-	struct spdk_nvmf_rdma_qpair 	*rdma_qpair;
+	struct spdk_nvmf_rdma_qpair 	*rqpair;
 	struct ibv_send_wr		*bad_wr = NULL;
 
 	qpair = req->qpair;
 	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
-	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	assert(req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
 
-	rdma_qpair->cur_rdma_rw_depth++;
+	rqpair->cur_rdma_rw_depth++;
 
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, qpair);
 	spdk_trace_record(TRACE_RDMA_READ_START, 0, 0, (uintptr_t)req, 0);
 
 	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
 	rdma_req->data.wr.next = NULL;
-	rc = ibv_post_send(rdma_qpair->cm_id->qp, &rdma_req->data.wr, &bad_wr);
+	rc = ibv_post_send(rqpair->cm_id->qp, &rdma_req->data.wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to transfer data from host to target\n");
 		return -1;
@@ -539,7 +539,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	int 				rc;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair		*qpair;
-	struct spdk_nvmf_rdma_qpair 	*rdma_qpair;
+	struct spdk_nvmf_rdma_qpair 	*rqpair;
 	struct spdk_nvme_cpl		*rsp;
 	struct ibv_recv_wr		*bad_recv_wr = NULL;
 	struct ibv_send_wr		*send_wr, *bad_send_wr = NULL;
@@ -547,7 +547,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	qpair = req->qpair;
 	rsp = &req->rsp->nvme_cpl;
 	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
-	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	/* Advance our sq_head pointer */
 	if (qpair->sq_head == qpair->sq_head_max) {
@@ -560,8 +560,8 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	/* Post the capsule to the recv buffer */
 	assert(rdma_req->recv != NULL);
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "RDMA RECV POSTED. Recv: %p Connection: %p\n", rdma_req->recv,
-		      rdma_qpair);
-	rc = ibv_post_recv(rdma_qpair->cm_id->qp, &rdma_req->recv->wr, &bad_recv_wr);
+		      rqpair);
+	rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_req->recv->wr, &bad_recv_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return rc;
@@ -579,7 +579,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 		SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, qpair);
 		spdk_trace_record(TRACE_RDMA_WRITE_START, 0, 0, (uintptr_t)req, 0);
 
-		rdma_qpair->cur_rdma_rw_depth++;
+		rqpair->cur_rdma_rw_depth++;
 		rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
 
 		rdma_req->data.wr.next = send_wr;
@@ -590,7 +590,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 	spdk_trace_record(TRACE_NVMF_IO_COMPLETE, 0, 0, (uintptr_t)req, 0);
 
 	/* Send the completion */
-	rc = ibv_post_send(rdma_qpair->cm_id->qp, send_wr, &bad_send_wr);
+	rc = ibv_post_send(rqpair->cm_id->qp, send_wr, &bad_send_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to send response capsule\n");
 	}
@@ -602,7 +602,7 @@ static int
 nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *event)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
-	struct spdk_nvmf_rdma_qpair	*rdma_qpair = NULL;
+	struct spdk_nvmf_rdma_qpair	*rqpair = NULL;
 	struct spdk_nvmf_rdma_port 	*port;
 	struct rdma_conn_param		*rdma_param = NULL;
 	struct rdma_conn_param		ctrlr_event_data;
@@ -681,9 +681,9 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 		      max_queue_depth, max_rw_depth);
 
 	/* Init the NVMf rdma transport connection */
-	rdma_qpair = spdk_nvmf_rdma_qpair_create(transport, port, event->id, max_queue_depth,
-			max_rw_depth, subsystem_id);
-	if (rdma_qpair == NULL) {
+	rqpair = spdk_nvmf_rdma_qpair_create(transport, port, event->id, max_queue_depth,
+					     max_rw_depth, subsystem_id);
+	if (rqpair == NULL) {
 		SPDK_ERRLOG("Error on nvmf connection creation\n");
 		goto err1;
 	}
@@ -707,9 +707,9 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	/* Add this RDMA connection to the global list until a CONNECT capsule
 	 * is received. */
-	TAILQ_INSERT_TAIL(&g_pending_conns, rdma_qpair, pending_link);
+	TAILQ_INSERT_TAIL(&g_pending_conns, rqpair, pending_link);
 
-	rc = spdk_nvmf_rdma_qpair_allocate_channel(rdma_qpair, rtransport);
+	rc = spdk_nvmf_rdma_qpair_allocate_channel(rqpair, rtransport);
 	if (rc) {
 		goto err2;
 	}
@@ -717,7 +717,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	return 0;
 
 err2:
-	spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
+	spdk_nvmf_rdma_qpair_destroy(rqpair);
 
 err1: {
 		struct spdk_nvmf_rdma_reject_private_data rej_data;
@@ -742,7 +742,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 {
 	struct spdk_nvmf_qpair		*qpair;
 	struct spdk_nvmf_ctrlr		*ctrlr;
-	struct spdk_nvmf_rdma_qpair 	*rdma_qpair;
+	struct spdk_nvmf_rdma_qpair 	*rqpair;
 	struct spdk_nvmf_rdma_qpair	*r, *t;
 	struct spdk_io_channel		*ch;
 
@@ -759,16 +759,16 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	/* ack the disconnect event before rdma_destroy_id */
 	rdma_ack_cm_event(evt);
 
-	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	/* The connection may still be in this pending list when a disconnect
 	 * event arrives. Search for it and remove it if it is found.
 	 */
 	TAILQ_FOREACH_SAFE(r, &g_pending_conns, pending_link, t) {
-		if (r == rdma_qpair) {
+		if (r == rqpair) {
 			SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Received disconnect for qpair %p before first SEND ack\n",
-				      rdma_qpair);
-			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, pending_link);
+				      rqpair);
+			TAILQ_REMOVE(&g_pending_conns, rqpair, pending_link);
 			break;
 		}
 	}
@@ -778,7 +778,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 		/* No ctrlr has been established yet, so destroy
 		 * the connection immediately.
 		 */
-		spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return 0;
 	}
 
@@ -1442,7 +1442,7 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct rdma_cm_event		*event;
 	int				rc;
-	struct spdk_nvmf_rdma_qpair	*rdma_qpair, *tmp;
+	struct spdk_nvmf_rdma_qpair	*rqpair, *tmp;
 	char buf[64];
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
@@ -1453,17 +1453,17 @@ spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport)
 
 	/* Process pending connections for incoming capsules. The only capsule
 	 * this should ever find is a CONNECT request. */
-	TAILQ_FOREACH_SAFE(rdma_qpair, &g_pending_conns, pending_link, tmp) {
-		rc = spdk_nvmf_rdma_qpair_poll(rtransport, rdma_qpair);
+	TAILQ_FOREACH_SAFE(rqpair, &g_pending_conns, pending_link, tmp) {
+		rc = spdk_nvmf_rdma_qpair_poll(rtransport, rqpair);
 		if (rc < 0) {
-			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, pending_link);
-			spdk_nvmf_rdma_qpair_destroy(rdma_qpair);
+			TAILQ_REMOVE(&g_pending_conns, rqpair, pending_link);
+			spdk_nvmf_rdma_qpair_destroy(rqpair);
 		} else if (rc > 0) {
-			spdk_put_io_channel(rdma_qpair->mgmt_channel);
-			rdma_qpair->mgmt_channel = NULL;
+			spdk_put_io_channel(rqpair->mgmt_channel);
+			rqpair->mgmt_channel = NULL;
 			/* At least one request was processed which is assumed to be
 			 * a CONNECT. Remove this connection from our list. */
-			TAILQ_REMOVE(&g_pending_conns, rdma_qpair, pending_link);
+			TAILQ_REMOVE(&g_pending_conns, rqpair, pending_link);
 		}
 	}
 
@@ -1727,21 +1727,21 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 }
 
 static struct spdk_nvmf_rdma_request *
-get_rdma_req_from_wc(struct spdk_nvmf_rdma_qpair *rdma_qpair,
+get_rdma_req_from_wc(struct spdk_nvmf_rdma_qpair *rqpair,
 		     struct ibv_wc *wc)
 {
 	struct spdk_nvmf_rdma_request *rdma_req;
 
 	rdma_req = (struct spdk_nvmf_rdma_request *)wc->wr_id;
 	assert(rdma_req != NULL);
-	assert(rdma_req - rdma_qpair->reqs >= 0);
-	assert(rdma_req - rdma_qpair->reqs < (ptrdiff_t)rdma_qpair->max_queue_depth);
+	assert(rdma_req - rqpair->reqs >= 0);
+	assert(rdma_req - rqpair->reqs < (ptrdiff_t)rqpair->max_queue_depth);
 
 	return rdma_req;
 }
 
 static struct spdk_nvmf_rdma_recv *
-get_rdma_recv_from_wc(struct spdk_nvmf_rdma_qpair *rdma_qpair,
+get_rdma_recv_from_wc(struct spdk_nvmf_rdma_qpair *rqpair,
 		      struct ibv_wc *wc)
 {
 	struct spdk_nvmf_rdma_recv *rdma_recv;
@@ -1750,8 +1750,8 @@ get_rdma_recv_from_wc(struct spdk_nvmf_rdma_qpair *rdma_qpair,
 
 	rdma_recv = (struct spdk_nvmf_rdma_recv *)wc->wr_id;
 	assert(rdma_recv != NULL);
-	assert(rdma_recv - rdma_qpair->recvs >= 0);
-	assert(rdma_recv - rdma_qpair->recvs < (ptrdiff_t)rdma_qpair->max_queue_depth);
+	assert(rdma_recv - rqpair->recvs >= 0);
+	assert(rdma_recv - rqpair->recvs < (ptrdiff_t)rqpair->max_queue_depth);
 
 	return rdma_recv;
 }
@@ -1880,11 +1880,11 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 static bool
 spdk_nvmf_rdma_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
 {
-	struct spdk_nvmf_rdma_qpair *rdma_qpair;
+	struct spdk_nvmf_rdma_qpair *rqpair;
 
-	rdma_qpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
-	if (rdma_qpair->cur_queue_depth == 0 && rdma_qpair->cur_rdma_rw_depth == 0) {
+	if (rqpair->cur_queue_depth == 0 && rqpair->cur_rdma_rw_depth == 0) {
 		return true;
 	}
 	return false;
