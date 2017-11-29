@@ -140,9 +140,8 @@ enum spdk_nvmf_qpair_type {
 struct spdk_nvmf_qpair {
 	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_ctrlr			*ctrlr;
+	struct spdk_nvmf_poll_group		*group;
 	enum spdk_nvmf_qpair_type		type;
-
-	struct spdk_thread			*thread;
 
 	uint16_t				qid;
 	uint16_t				sq_head;
