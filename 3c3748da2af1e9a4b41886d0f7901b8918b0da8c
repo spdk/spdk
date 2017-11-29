@@ -22,6 +22,30 @@
       "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c87a0746_d84fa7b5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 930,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-29T06:53:42Z",
+      "side": 1,
+      "message": "4KiB is big enough to meet almost all the block devices, although it may waste some memory for 512Bytes aligned data buffer, but that\u0027s okay, because SPDK allocated maximum block size memory pool at the beginning.",
+      "parentUuid": "9bdd16c9_b751571b",
+      "range": {
+        "startLine": 930,
+        "startChar": 64,
+        "endLine": 930,
+        "endChar": 86
+      },
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
