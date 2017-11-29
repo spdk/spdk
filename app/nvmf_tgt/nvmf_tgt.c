@@ -77,12 +77,12 @@ subsystem_delete_event(void *arg1, void *arg2)
 }
 
 static void
-subsystem_unregister_poller(void *arg1, void *arg2)
+subsystem_stop(void *arg1, void *arg2)
 {
 	struct nvmf_tgt_subsystem *app_subsys = arg1;
 	struct spdk_event *event = arg2;
 
-	spdk_poller_unregister(&app_subsys->poller);
+	spdk_nvmf_subsystem_stop(app_subsys->subsystem);
 
 	spdk_event_call(event);
 }
@@ -94,7 +94,7 @@ nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 
 	event2 = spdk_event_allocate(spdk_env_get_current_core(), subsystem_delete_event,
 				     app_subsys, NULL);
-	event1 = spdk_event_allocate(app_subsys->lcore, subsystem_unregister_poller, app_subsys, event2);
+	event1 = spdk_event_allocate(app_subsys->lcore, subsystem_stop, app_subsys, event2);
 
 	spdk_event_call(event1);
 }
