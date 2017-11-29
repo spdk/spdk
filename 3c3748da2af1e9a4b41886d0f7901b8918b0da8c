@@ -2,6 +2,69 @@
   "comments": [
     {
       "key": {
+        "uuid": "733f65a2_a6dcfca9",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T18:16:18Z",
+      "side": 1,
+      "message": "This should go in spdk_nvmf_rdma_request, since it\u0027s not needed in generic code.",
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b6937de_2d5d1ef3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T18:16:18Z",
+      "side": 1,
+      "message": "ALIGNED -\u003e ALIGNMENT might be clearer",
+      "range": {
+        "startLine": 60,
+        "startChar": 25,
+        "endLine": 60,
+        "endChar": 32
+      },
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d26904aa_bd3ab9eb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T18:16:18Z",
+      "side": 1,
+      "message": "It would be good to use the value of the previous #define in this one so the alignment value isn\u0027t repeated (to make it easier to update in one place).",
+      "range": {
+        "startLine": 61,
+        "startChar": 32,
+        "endLine": 61,
+        "endChar": 51
+      },
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bdd16c9_b751571b",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -43,6 +106,23 @@
         "endLine": 930,
         "endChar": 86
       },
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7794dcf8_af197fc7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1193,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T18:16:18Z",
+      "side": 1,
+      "message": "I think this comment should be added to the #define above rather than here.",
       "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
