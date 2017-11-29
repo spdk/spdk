@@ -40,17 +40,6 @@
 SPDK_LOG_REGISTER_TRACE_FLAG("nvmf", SPDK_TRACE_NVMF)
 
 int
-spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
-{
-	return -1;
-}
-
-void
-spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem)
-{
-}
-
-int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 			   const struct spdk_nvme_transport_id *trid)
 {
