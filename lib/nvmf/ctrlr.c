@@ -324,9 +324,6 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 		}
 	}
 
-	assert(qpair->thread == NULL);
-	qpair->thread = spdk_get_thread();
-
 	ctrlr->num_qpairs++;
 	TAILQ_INSERT_HEAD(&ctrlr->qpairs, qpair, link);
 	qpair->ctrlr = ctrlr;
