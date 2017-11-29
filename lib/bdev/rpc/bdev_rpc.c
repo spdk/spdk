@@ -212,6 +212,11 @@ spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	if (!TAILQ_EMPTY(&bdev->open_descs)) {
+		SPDK_ERRLOG("bdev '%s' is still in use\n", req.name);
+		goto invalid;
+	}
+
 	spdk_bdev_unregister(bdev, _spdk_rpc_delete_bdev_cb, request);
 
 	free_rpc_delete_bdev(&req);
