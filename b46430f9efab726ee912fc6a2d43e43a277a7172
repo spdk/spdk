@@ -76,6 +76,30 @@
     },
     {
       "key": {
+        "uuid": "0702f093_c7db7bf1",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-11-29T09:37:37Z",
+      "side": 1,
+      "message": "yes, adding batch process is more efficient.",
+      "parentUuid": "0581c82d_5f79c72b",
+      "range": {
+        "startLine": 541,
+        "startChar": 0,
+        "endLine": 555,
+        "endChar": 2
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "53050d2f_6ea6d091",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 3
@@ -110,6 +134,24 @@
       "writtenOn": "2017-11-29T05:12:10Z",
       "side": 1,
       "message": "Need error check here for NULL pointer, maybe spdk_nbd_alloc is better, and change _nbd_stop to spdk_nbd_free?",
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c68e043d_ea646bed",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-11-29T09:37:37Z",
+      "side": 1,
+      "message": "_nbd-stop needs to close iochannel, bdev and kinds of fd. In order to stay the same with spdk_nbd_alloc, extracting mempool free and free(nbd) to be spdk_nbd_free is practicable.",
+      "parentUuid": "2db1db05_b85ea017",
       "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
