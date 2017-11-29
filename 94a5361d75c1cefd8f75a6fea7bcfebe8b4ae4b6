@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40c69ffa_aa8df0b0",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-29T23:37:09Z",
+      "side": 1,
+      "message": "I don\u0027t think this is possible. The only way to get here is to advance previously through the state NVMF_TGT_INIT_START_ACCEPTOR, and if spdk_poller_register fails it calls an abort() internally. If you\u0027ve found a way to get here when g_acceptor_poller is NULL, I think we need to fix that path instead of handling it here.",
+      "revId": "94a5361d75c1cefd8f75a6fea7bcfebe8b4ae4b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
