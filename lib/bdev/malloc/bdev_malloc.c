@@ -377,6 +377,12 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 		return NULL;
 	}
 
+	if (block_size != 512 && block_size != 1024 && block_size != 2048 && block_size != 4096) {
+		SPDK_ERRLOG("Unsupported sector size %u, support block_size options[512, 1024, 2048, 4096].\n",
+			    block_size);
+		return NULL;
+	}
+
 	if (num_blocks == 0) {
 		SPDK_ERRLOG("Disk must be more than 0 blocks\n");
 		return NULL;
