@@ -106,7 +106,7 @@ spdk_nvmf_shutdown_cb(void)
 	fprintf(stdout, "   NVMF shutdown signal\n");
 	fprintf(stdout, "=========================\n");
 
-	g_tgt.state = NVMF_TGT_FINI_STOP_ACCEPTOR;
+	g_tgt.state = NVMF_TGT_FINI_SHUTDOWN;
 	nvmf_tgt_advance_state(NULL, NULL);
 }
 
@@ -300,6 +300,13 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 				spdk_memzone_dump(stdout);
 				fflush(stdout);
 			}
+			break;
+		case NVMF_TGT_FINI_SHUTDOWN:
+			if (!g_acceptor_poller) {
+				g_tgt.state = NVMF_TGT_STOPPED;
+				break;
+			}
+			g_tgt.state = NVMF_TGT_FINI_STOP_ACCEPTOR;
 			break;
 		case NVMF_TGT_FINI_STOP_ACCEPTOR:
 			spdk_poller_unregister(&g_acceptor_poller);
