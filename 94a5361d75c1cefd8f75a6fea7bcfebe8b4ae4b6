@@ -16,6 +16,24 @@
       "revId": "94a5361d75c1cefd8f75a6fea7bcfebe8b4ae4b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af19282a_3fc9e1c5",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T23:44:07Z",
+      "side": 1,
+      "message": "spdk_nvmf_shutdown_cb() sets g_tgt.state \u003d NVMF_TGT_FINI_STOP_ACCEPTOR without checking for the current state, so presumably, this state can be entered before we are done initializing.",
+      "parentUuid": "40c69ffa_aa8df0b0",
+      "revId": "94a5361d75c1cefd8f75a6fea7bcfebe8b4ae4b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
