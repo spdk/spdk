@@ -53,7 +53,7 @@
 #define MAX_MASKBUF 128
 
 static bool
-spdk_iscsi_tgt_node_allow_ipv6(const char *netmask, const char *addr)
+spdk_iscsi_ipv6_netmask_allow_addr(const char *netmask, const char *addr)
 {
 	struct in6_addr in6_mask;
 	struct in6_addr in6_addr;
@@ -111,7 +111,7 @@ spdk_iscsi_tgt_node_allow_ipv6(const char *netmask, const char *addr)
 }
 
 static bool
-spdk_iscsi_tgt_node_allow_ipv4(const char *netmask, const char *addr)
+spdk_iscsi_ipv4_netmask_allow_addr(const char *netmask, const char *addr)
 {
 	struct in_addr in4_mask;
 	struct in_addr in4_addr;
@@ -156,7 +156,7 @@ spdk_iscsi_tgt_node_allow_ipv4(const char *netmask, const char *addr)
 }
 
 static bool
-spdk_iscsi_tgt_node_allow_netmask(const char *netmask, const char *addr)
+spdk_iscsi_netmask_allow_addr(const char *netmask, const char *addr)
 {
 	if (netmask == NULL || addr == NULL)
 		return false;
@@ -164,11 +164,11 @@ spdk_iscsi_tgt_node_allow_netmask(const char *netmask, const char *addr)
 		return true;
 	if (netmask[0] == '[') {
 		/* IPv6 */
-		if (spdk_iscsi_tgt_node_allow_ipv6(netmask, addr))
+		if (spdk_iscsi_ipv6_netmask_allow_addr(netmask, addr))
 			return true;
 	} else {
 		/* IPv4 */
-		if (spdk_iscsi_tgt_node_allow_ipv4(netmask, addr))
+		if (spdk_iscsi_ipv4_netmask_allow_addr(netmask, addr))
 			return true;
 	}
 	return false;
@@ -210,7 +210,7 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 					SPDK_DEBUGLOG(SPDK_TRACE_ISCSI,
 						      "netmask=%s, addr=%s\n",
 						      imask->mask, addr);
-					if (spdk_iscsi_tgt_node_allow_netmask(imask->mask, addr)) {
+					if (spdk_iscsi_netmask_allow_addr(imask->mask, addr)) {
 						return true;
 					}
 				}
@@ -227,7 +227,7 @@ denied:
 }
 
 static bool
-spdk_iscsi_tgt_node_visible(struct spdk_iscsi_tgt_node *target, const char *iqn)
+spdk_iscsi_tgt_node_allow_iscsi_name(struct spdk_iscsi_tgt_node *target, const char *iqn)
 {
 	struct spdk_iscsi_init_grp *igp;
 	struct spdk_iscsi_initiator_name *iname;
@@ -297,7 +297,7 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 		    && strcasecmp(tiqn, target->name) != 0) {
 			continue;
 		}
-		rc = spdk_iscsi_tgt_node_visible(target, iiqn);
+		rc = spdk_iscsi_tgt_node_allow_iscsi_name(target, iiqn);
 		if (rc == 0) {
 			continue;
 		}
