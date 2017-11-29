@@ -110,6 +110,19 @@ struct spdk_nvmf_poll_group *spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *t
  */
 void spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group);
 
+/**
+ * Add the given qpair to the poll group.
+ */
+int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
+			     struct spdk_nvmf_qpair *qpair);
+
+/**
+ * Remove the given qpair from the poll group.
+ */
+int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
+				struct spdk_nvmf_qpair *qpair);
+
+
 /*
  * The NVMf subsystem, as indicated in the specification, is a collection
  * of controllers.  Any individual controller has
