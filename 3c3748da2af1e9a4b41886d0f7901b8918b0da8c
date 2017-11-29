@@ -65,6 +65,23 @@
     },
     {
       "key": {
+        "uuid": "e7ea23a3_a17bf40e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T18:18:35Z",
+      "side": 1,
+      "message": "It should be possible to replace data_from_pool with the buffer pointer - if the pointer is non-NULL, it is the original buffer from the pool, and if it is NULL, the data is not from the pool.",
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bdd16c9_b751571b",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
