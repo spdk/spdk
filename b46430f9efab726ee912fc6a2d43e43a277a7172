@@ -76,6 +76,30 @@
     },
     {
       "key": {
+        "uuid": "f8fb38cc_cb2fe0c3",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-11-29T14:00:54Z",
+      "side": 1,
+      "message": "at start, I was also thinking to aggregate these code into inline functions to make it looks more standard. But this would generate several simple and short functions which might be tedious. so just chose to use these code directly with some annotation",
+      "parentUuid": "94aae911_56a610b3",
+      "range": {
+        "startLine": 345,
+        "startChar": 3,
+        "endLine": 347,
+        "endChar": 52
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "146d4bb6_89619677",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 3
@@ -168,6 +192,30 @@
     },
     {
       "key": {
+        "uuid": "5686df93_f214650d",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-11-29T14:00:54Z",
+      "side": 1,
+      "message": "it is reasonable. thanks for this suggestion.",
+      "parentUuid": "e81c801f_a3c14534",
+      "range": {
+        "startLine": 505,
+        "startChar": 0,
+        "endLine": 505,
+        "endChar": 15
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4f1119d_590cfd5b",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 3
@@ -179,6 +227,30 @@
       "writtenOn": "2017-11-29T12:12:21Z",
       "side": 1,
       "message": "I think this means that submission of a  bdev IO was done and receiving the next request will start. You should indicate this more clearly.",
+      "range": {
+        "startLine": 553,
+        "startChar": 2,
+        "endLine": 554,
+        "endChar": 23
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4800d2e5_37074922",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-11-29T14:00:54Z",
+      "side": 1,
+      "message": "Yes, I should add some annotation to indicate it more clearly",
+      "parentUuid": "c4f1119d_590cfd5b",
       "range": {
         "startLine": 553,
         "startChar": 2,
