@@ -229,9 +229,11 @@ function hotdetach_tc4() {
     prepare_fio_cmd_tc2_iter2 "2 3"
     $run_fio
     check_fio_retcode "Hotdetach test case 4: Iteration 3." 0 $?
+    $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
 }
 
 hotdetach_tc1
 hotdetach_tc2
 hotdetach_tc3
 hotdetach_tc4
+cleanup_after_tests
