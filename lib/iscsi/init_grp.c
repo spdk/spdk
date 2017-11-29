@@ -61,7 +61,6 @@ spdk_iscsi_init_grp_create(int tag)
 	}
 
 	ig->tag = tag;
-	ig->state = GROUP_INIT;
 	TAILQ_INIT(&ig->initiator_head);
 	TAILQ_INIT(&ig->netmask_head);
 	return ig;
@@ -473,7 +472,6 @@ spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
 	assert(ig != NULL);
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	ig->state = GROUP_READY;
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.ig_head, ig, tailq);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
@@ -511,7 +509,6 @@ spdk_iscsi_init_grp_array_destroy(void)
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_init_grp_array_destroy\n");
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH_SAFE(ig, &g_spdk_iscsi.ig_head, tailq, tmp) {
-		ig->state = GROUP_DESTROY;
 		TAILQ_REMOVE(&g_spdk_iscsi.ig_head, ig, tailq);
 		spdk_iscsi_init_grp_destroy(ig);
 	}

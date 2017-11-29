@@ -529,20 +529,10 @@ spdk_iscsi_tgt_node_add_map(struct spdk_iscsi_tgt_node *target,
 		SPDK_ERRLOG("%s: PortalGroup%d not found\n", target->name, pg_tag);
 		return NULL;
 	}
-	if (pg->state != GROUP_READY) {
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-		SPDK_ERRLOG("%s: PortalGroup%d not active\n", target->name, pg_tag);
-		return NULL;
-	}
 	ig = spdk_iscsi_init_grp_find_by_tag(ig_tag);
 	if (ig == NULL) {
 		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 		SPDK_ERRLOG("%s: InitiatorGroup%d not found\n", target->name, ig_tag);
-		return NULL;
-	}
-	if (ig->state != GROUP_READY) {
-		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
-		SPDK_ERRLOG("%s: InitiatorGroup%d not active\n", target->name, ig_tag);
 		return NULL;
 	}
 	pg->ref++;
