@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1083636_c2f6603e",
+        "filename": "doc/vhost.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-29T08:39:22Z",
+      "side": 1,
+      "message": "I would rather not mix this with vhost guide. Lets put a link for Malloc bdev or some general RPC guide that describe this in more details.",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 3
+      },
+      "revId": "04c1aed1eeaf47299e537fd3d1a34e0268ac968c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd0bfa50_8738eae1",
+        "filename": "doc/vhost.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-29T08:39:22Z",
+      "side": 1,
+      "message": "And here i would like to see also creation of \"Malloc0\"\nscripts/rpc.py construct_malloc_bdev 64 512 Malloc0",
+      "revId": "04c1aed1eeaf47299e537fd3d1a34e0268ac968c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5a911ed_684a7732",
+        "filename": "doc/vhost.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-29T08:39:22Z",
+      "side": 1,
+      "message": "As we are here lets add some missing parameters\nI think that \"prealloc\u003dyes\" is mimium that we need to add.\n\nAlso I\u0027m not sure about \"host-nodes\u003dN\" and \"policy\u003dbind\".",
+      "range": {
+        "startLine": 109,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 75
+      },
+      "revId": "04c1aed1eeaf47299e537fd3d1a34e0268ac968c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
