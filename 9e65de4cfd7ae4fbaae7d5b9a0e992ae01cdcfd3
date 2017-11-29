@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27197dc0_4de44310",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T16:53:45Z",
+      "side": 1,
+      "message": "It would be good to add this information to doc/vagrant.md.",
+      "revId": "9e65de4cfd7ae4fbaae7d5b9a0e992ae01cdcfd3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41e4dc2d_8184c7fc",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T16:53:45Z",
+      "side": 1,
+      "message": "This seems to be handled by the \u0027unless File.exist\u0027 block below - does the user still have to create it manually?",
+      "revId": "9e65de4cfd7ae4fbaae7d5b9a0e992ae01cdcfd3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17158bba_610e0dc1",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T16:53:45Z",
+      "side": 1,
+      "message": "This should use spaces instead of tab for consistency.",
+      "revId": "9e65de4cfd7ae4fbaae7d5b9a0e992ae01cdcfd3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
