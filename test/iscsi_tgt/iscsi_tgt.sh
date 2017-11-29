@@ -50,6 +50,8 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	run_test ./test/iscsi_tgt/rbd/rbd.sh
 fi
 
+run_test ./test/iscsi_tgt/multiconnection/multiconnection.sh
+
 trap - SIGINT SIGTERM EXIT
 kill_stub
 
