@@ -328,7 +328,6 @@ spdk_iscsi_portal_grp_create(int tag)
 		return NULL;
 	}
 
-	pg->state = GROUP_INIT;
 	pg->ref = 0;
 	pg->tag = tag;
 
@@ -360,7 +359,6 @@ spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 	assert(!TAILQ_EMPTY(&pg->head));
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	pg->state = GROUP_READY;
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.pg_head, pg, tailq);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
@@ -562,7 +560,6 @@ spdk_iscsi_portal_grp_array_destroy(void)
 	SPDK_DEBUGLOG(SPDK_TRACE_ISCSI, "spdk_iscsi_portal_grp_array_destroy\n");
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH_SAFE(pg, &g_spdk_iscsi.pg_head, tailq, tmp) {
-		pg->state = GROUP_DESTROY;
 		TAILQ_REMOVE(&g_spdk_iscsi.pg_head, pg, tailq);
 		spdk_iscsi_portal_grp_destroy(pg);
 	}

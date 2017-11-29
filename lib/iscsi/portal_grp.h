@@ -35,7 +35,7 @@
 #ifndef SPDK_PORTAL_GRP_H
 #define SPDK_PORTAL_GRP_H
 
-#include "iscsi/init_grp.h"
+#include "spdk/conf.h"
 
 struct spdk_iscsi_portal {
 	struct spdk_iscsi_portal_grp	*group;
@@ -51,7 +51,6 @@ struct spdk_iscsi_portal {
 struct spdk_iscsi_portal_grp {
 	int ref;
 	int tag;
-	enum group_state state;
 	TAILQ_ENTRY(spdk_iscsi_portal_grp)	tailq;
 	TAILQ_HEAD(, spdk_iscsi_portal)		head;
 };
