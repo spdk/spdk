@@ -100,6 +100,30 @@
     },
     {
       "key": {
+        "uuid": "72683772_3993be37",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T23:45:04Z",
+      "side": 1,
+      "message": "Your comment makes sense to me. But please improve this patch gradually to make easier to understand.\n\nFor example this function receives not only request but also payload. However this function is named as nbd_io_recv_req.",
+      "parentUuid": "f8fb38cc_cb2fe0c3",
+      "range": {
+        "startLine": 345,
+        "startChar": 3,
+        "endLine": 347,
+        "endChar": 52
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "146d4bb6_89619677",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 3
