@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "631f3aea_1858c0fc",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-11-29T17:19:27Z",
+      "side": 1,
+      "message": "Thanks Daniel. I believe that I have put it into the proper format. I created a gist for it. https://gist.github.com/Seth5141/9b8ab59611004bb51e4b7aabc6924d53",
+      "parentUuid": "80b0733b_f23ddf84",
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f4bb6f2a_440ac903",
         "filename": "test/configuration/TEST_ENV_SETUP_README.md",
         "patchSetId": 3
@@ -30,6 +48,30 @@
       "writtenOn": "2017-11-17T21:07:22Z",
       "side": 1,
       "message": "fedora -\u003e Fedora",
+      "range": {
+        "startLine": 4,
+        "startChar": 59,
+        "endLine": 4,
+        "endChar": 65
+      },
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eade2027_97e5b7f9",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-11-29T17:19:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f4bb6f2a_440ac903",
       "range": {
         "startLine": 4,
         "startChar": 59,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "07f1622c_e3ca0dc5",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-11-29T17:19:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f3eb7144_14b82de7",
+      "range": {
+        "startLine": 6,
+        "startChar": 71,
+        "endLine": 6,
+        "endChar": 81
+      },
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49bcc641_e724d1fa",
         "filename": "test/configuration/TEST_ENV_SETUP_README.md",
         "patchSetId": 3
@@ -76,6 +142,24 @@
       "writtenOn": "2017-11-17T21:07:22Z",
       "side": 1,
       "message": "Markdown will interpret this as a numbered list, but only if you remove the indentation, I think.",
+      "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebb5f9b3_e2fdc6b9",
+        "filename": "test/configuration/TEST_ENV_SETUP_README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-11-29T17:19:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "49bcc641_e724d1fa",
       "revId": "72272b5535a73330722d793a54aafdd8c44b939e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
