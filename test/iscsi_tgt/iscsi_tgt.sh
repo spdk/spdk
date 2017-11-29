@@ -57,4 +57,8 @@ if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 1
 fi
 
+#if [ $RUN_NIGHTLY -eq 1 ]; then
+	run_test ./test/iscsi_tgt/multiconnection/multiconnection.sh
+#fi
+
 timing_exit iscsi_tgt
