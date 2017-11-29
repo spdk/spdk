@@ -17,7 +17,7 @@ $rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
 # iSCSI target configuration
 PORT=3260
 INITIATOR_TAG=2
-INITIATOR_NAME=ALL
+INITIATOR_NAME=ANY
 NETMASK=$INITIATOR_IP/32
 
 rpc_py="python $rootdir/scripts/rpc.py"

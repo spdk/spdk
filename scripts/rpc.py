@@ -447,7 +447,7 @@ def add_initiator_group(args):
 p = subparsers.add_parser('add_initiator_group', help='Add an initiator group')
 p.add_argument('tag', help='Initiator group tag (unique, integer > 0)', type=int)
 p.add_argument('initiator_list', help="""Whitespace-separated list of initiator hostnames or IP addresses,
-enclosed in quotes.  Example: 'ALL' or '127.0.0.1 192.168.200.100'""")
+enclosed in quotes.  Example: 'ANY' or '127.0.0.1 192.168.200.100'""")
 p.add_argument('netmask_list', help="""Whitespace-separated list of initiator netmasks enclosed in quotes.
 Example: '255.255.0.0 255.248.0.0' etc""")
 p.set_defaults(func=add_initiator_group)
