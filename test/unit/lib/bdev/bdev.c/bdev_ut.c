@@ -359,6 +359,37 @@ part_test(void)
 	spdk_bdev_unregister(&bdev_base, NULL, NULL);
 }
 
+static void
+alias_add_del(void)
+{
+	struct spdk_bdev *bdev;
+	int rc;
+
+	bdev = allocate_bdev("bdev0");
+	rc = spdk_bdev_module_claim_bdev(bdev, NULL, SPDK_GET_BDEV_MODULE(bdev_ut));
+	CU_ASSERT(rc == 0);
+
+	TAILQ_INIT(&bdev->aliases);
+
+	rc = spdk_bdev_alias_add(bdev, bdev->name);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_bdev_alias_add(bdev, "proper alias");
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_bdev_alias_del(bdev, "not existing");
+	CU_ASSERT(rc == -ENOENT);
+
+	rc = spdk_bdev_alias_del(bdev, "proper alias");
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_bdev_alias_del(bdev, bdev->name);
+	CU_ASSERT(rc == 0);
+
+	spdk_bdev_unregister(bdev, NULL, NULL);
+	free(bdev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -379,7 +410,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bytes_to_blocks_test", bytes_to_blocks_test) == NULL ||
 		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
 		CU_add_test(suite, "open_write", open_write_test) == NULL ||
-		CU_add_test(suite, "part", part_test) == NULL
+		CU_add_test(suite, "part", part_test) == NULL ||
+		CU_add_test(suite, "alias_add_del", alias_add_del) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
