@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "631e940b_bdec817c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T17:21:03Z",
+      "side": 1,
+      "message": "We need to check desc-\u003elength before dereferencing this.",
+      "revId": "b989eb6bed9cb3f19e37770c5d2218282ca214aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5ef959f2_fc1d4d3d",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 4
