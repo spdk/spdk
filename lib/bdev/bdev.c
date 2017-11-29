@@ -842,6 +842,43 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	assert(ch->io_outstanding == 0);
 }
 
+int
+spdk_bdev_alias_add(struct spdk_bdev *bdev, char *alias)
+{
+	struct spdk_bdev *tmp;
+
+	tmp = calloc(1, sizeof(*tmp));
+	if (!tmp) {
+		SPDK_ERRLOG("Unable to allocate alias\n");
+		free(tmp);
+		return -1;
+	}
+
+	tmp->name = alias;
+
+	TAILQ_INSERT_TAIL(&bdev->aliases, tmp, aliases_link);
+
+	return 0;
+}
+
+int
+spdk_bdev_alias_del(struct spdk_bdev *bdev, char *alias)
+{
+	struct spdk_bdev *target, *tmp;
+
+	TAILQ_FOREACH_SAFE(target, &bdev->aliases, aliases_link, tmp) {
+		if (strcmp(alias, target->name) == 0) {
+			TAILQ_REMOVE(&bdev->aliases, target, aliases_link);
+			free(target);
+			return 0;
+		}
+	}
+
+	SPDK_INFOLOG(SPDK_TRACE_BDEV, "Alias %s does not exists\n", alias);
+
+	return -1;
+}
+
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
@@ -1796,6 +1833,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	TAILQ_INIT(&bdev->vbdevs);
 	TAILQ_INIT(&bdev->base_bdevs);
+
+	TAILQ_INIT(&bdev->aliases);
 
 	bdev->reset_in_progress = NULL;
 
