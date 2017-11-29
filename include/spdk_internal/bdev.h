@@ -182,12 +182,20 @@ enum spdk_bdev_io_status {
 	SPDK_BDEV_IO_STATUS_SUCCESS = 1,
 };
 
+struct spdk_bdev_alias {
+	char *alias;
+	TAILQ_ENTRY(spdk_bdev_alias) tailq;
+};
+
 struct spdk_bdev {
 	/** User context passed in by the backend */
 	void *ctxt;
 
 	/** Unique name for this block device. */
 	char *name;
+
+	/** Unique aliases for this block device. */
+	TAILQ_HEAD(spdk_bdev_aliases_list, spdk_bdev_alias) aliases;
 
 	/** Unique product name for this kind of block device. */
 	char *product_name;
@@ -395,6 +403,31 @@ void spdk_bdev_module_finish_done(void);
 int spdk_bdev_module_claim_bdev(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 				struct spdk_bdev_module_if *module);
 void spdk_bdev_module_release_bdev(struct spdk_bdev *bdev);
+
+/**
+ * Add alias to block device names list.
+ * Aliases can be add only to registered bdev.
+ *
+ * \param bdev Block device to query.
+ * \param alias Alias to be added to list.
+ *
+ * Return codes
+ * \return 0 on success
+ * \return -EEXIST if alias already exists as name or alias on any bdev
+ * \return -ENOMEM if memory cannot be allocated to store alias
+ * \return -EINVAL if passed alias is empty
+ */
+int spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias);
+
+/**
+ * Removes name from block device names list.
+ *
+ * \param bdev Block device to query.
+ * \param alias Alias to be deleted from list.
+ * \return 0 on success
+ * \return -ENOENT if alias does not exists
+ */
+int spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias);
 
 /**
  * Allocate a buffer for given bdev_io.  Allocation will happen

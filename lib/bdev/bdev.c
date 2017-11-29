@@ -237,12 +237,20 @@ spdk_bdev_next_leaf(struct spdk_bdev *prev)
 struct spdk_bdev *
 spdk_bdev_get_by_name(const char *bdev_name)
 {
+	struct spdk_bdev_alias *tmp;
 	struct spdk_bdev *bdev = spdk_bdev_first();
 
 	while (bdev != NULL) {
 		if (strcmp(bdev_name, bdev->name) == 0) {
 			return bdev;
 		}
+
+		TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
+			if (strcmp(bdev_name, tmp->alias) == 0) {
+				return bdev;
+			}
+		}
+
 		bdev = spdk_bdev_next(bdev);
 	}
 
@@ -940,6 +948,58 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	spdk_put_io_channel(ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
 	assert(ch->io_outstanding == 0);
+}
+
+int
+spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
+{
+	struct spdk_bdev_alias *tmp;
+
+	if (alias == NULL) {
+		SPDK_ERRLOG("Empty alias passed\n");
+		return -EINVAL;
+	}
+
+	if (spdk_bdev_get_by_name(alias)) {
+		SPDK_ERRLOG("Bdev name/alias: %s already exists\n", alias);
+		return -EEXIST;
+	}
+
+	tmp = calloc(1, sizeof(*tmp));
+	if (tmp == NULL) {
+		SPDK_ERRLOG("Unable to allocate alias\n");
+		return -ENOMEM;
+	}
+
+	tmp->alias = strdup(alias);
+	if (tmp->alias == NULL) {
+		free(tmp);
+		SPDK_ERRLOG("Unable to allocate alias\n");
+		return -ENOMEM;
+	}
+
+	TAILQ_INSERT_TAIL(&bdev->aliases, tmp, tailq);
+
+	return 0;
+}
+
+int
+spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
+{
+	struct spdk_bdev_alias *tmp;
+
+	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
+		if (strcmp(alias, tmp->alias) == 0) {
+			TAILQ_REMOVE(&bdev->aliases, tmp, tailq);
+			free(tmp->alias);
+			free(tmp);
+			return 0;
+		}
+	}
+
+	SPDK_INFOLOG(SPDK_LOG_BDEV, "Alias %s does not exists\n", alias);
+
+	return -ENOENT;
 }
 
 struct spdk_io_channel *
@@ -1916,6 +1976,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 
 	TAILQ_INIT(&bdev->vbdevs);
 	TAILQ_INIT(&bdev->base_bdevs);
+
+	TAILQ_INIT(&bdev->aliases);
 
 	bdev->reset_in_progress = NULL;
 
