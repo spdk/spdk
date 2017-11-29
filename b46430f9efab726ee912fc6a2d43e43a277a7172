@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1422389b_99111f3c",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-29T05:12:10Z",
+      "side": 1,
+      "message": "should move the macro definition on top of the source file.",
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6933e1b4_9cdd270d",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-29T05:12:10Z",
+      "side": 1,
+      "message": "rename to task_pool maybe better.",
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dd91e29_967d5b84",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-29T05:12:10Z",
+      "side": 1,
+      "message": "same here.",
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2db1db05_b85ea017",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-29T05:12:10Z",
+      "side": 1,
+      "message": "Need error check here for NULL pointer, maybe spdk_nbd_alloc is better, and change _nbd_stop to spdk_nbd_free?",
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
