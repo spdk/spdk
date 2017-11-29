@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "765902a0_9e389f96",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T20:59:53Z",
+      "side": 1,
+      "message": "This is a variable, so its name should be lower case.",
+      "range": {
+        "startLine": 122,
+        "startChar": 19,
+        "endLine": 122,
+        "endChar": 36
+      },
+      "revId": "50a1cae07a2074225d0124bce1d4cd357b99226a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "768b72ec_90af884f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T20:59:53Z",
+      "side": 1,
+      "message": "I think we can just print the string (%s) in both cases here - no need for the number.",
+      "range": {
+        "startLine": 201,
+        "startChar": 31,
+        "endLine": 201,
+        "endChar": 37
+      },
+      "revId": "50a1cae07a2074225d0124bce1d4cd357b99226a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "271caa8d_e315c5fd",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T20:59:53Z",
+      "side": 1,
+      "message": "This should probably have an array bounds check in case new events are introduced later.  (It would be nice to wrap this in a little helper function so it doesn\u0027t need to be repeated.)",
+      "range": {
+        "startLine": 202,
+        "startChar": 21,
+        "endLine": 202,
+        "endChar": 52
+      },
+      "revId": "50a1cae07a2074225d0124bce1d4cd357b99226a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
