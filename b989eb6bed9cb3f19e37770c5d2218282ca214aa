@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54f8aadc_423d04d6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T17:20:01Z",
+      "side": 1,
+      "message": "SPDK_BS_VERSION is still 2 after this patch - is this part of the commit message still valid?",
+      "revId": "b989eb6bed9cb3f19e37770c5d2218282ca214aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ef959f2_fc1d4d3d",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T17:20:01Z",
+      "side": 1,
+      "message": "The new descriptor type needs to be added to the disk format description in doc/blob.md.",
+      "revId": "b989eb6bed9cb3f19e37770c5d2218282ca214aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
