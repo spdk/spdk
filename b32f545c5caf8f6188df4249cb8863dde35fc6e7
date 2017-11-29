@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55a50b4e_a24fcef7",
+        "filename": "lib/util/string.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-29T17:03:44Z",
+      "side": 1,
+      "message": "I generally agree that this is a nicer API, but it requires a thread-local variable, which we have been trying to remove wherever possible (some platforms don\u0027t have support for __thread).",
+      "revId": "b32f545c5caf8f6188df4249cb8863dde35fc6e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
