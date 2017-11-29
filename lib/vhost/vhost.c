@@ -1166,4 +1166,15 @@ spdk_vhost_unlock(void)
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
+int
+spdk_vhost_init(void)
+{
+	return 0;
+}
+
+void
+spdk_vhost_fini(void)
+{
+}
+
 SPDK_LOG_REGISTER_TRACE_FLAG("vhost_ring", SPDK_TRACE_VHOST_RING)
