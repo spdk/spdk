@@ -83,6 +83,7 @@ static struct spdk_bdev *
 allocate_bdev(char *name)
 {
 	struct spdk_bdev *bdev;
+	int rc;
 
 	bdev = calloc(1, sizeof(*bdev));
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
@@ -91,7 +92,8 @@ allocate_bdev(char *name)
 	bdev->fn_table = &fn_table;
 	bdev->module = SPDK_GET_BDEV_MODULE(bdev_ut);
 
-	spdk_bdev_register(bdev);
+	rc = spdk_bdev_register(bdev);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(TAILQ_EMPTY(&bdev->base_bdevs));
 	CU_ASSERT(TAILQ_EMPTY(&bdev->vbdevs));
 
@@ -103,6 +105,7 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev *array[2];
+	int rc;
 
 	bdev = calloc(1, sizeof(*bdev));
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
@@ -117,7 +120,8 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 	array[0] = base1;
 	array[1] = base2;
 
-	spdk_vbdev_register(bdev, array, base2 == NULL ? 1 : 2);
+	rc = spdk_vbdev_register(bdev, array, base2 == NULL ? 1 : 2);
+	CU_ASSERT(rc == 0);
 	CU_ASSERT(!TAILQ_EMPTY(&bdev->base_bdevs));
 	CU_ASSERT(TAILQ_EMPTY(&bdev->vbdevs));
 
@@ -333,6 +337,7 @@ part_test(void)
 	struct spdk_bdev_part		part1, part2;
 	struct spdk_bdev		bdev_base = {};
 	SPDK_BDEV_PART_TAILQ		tailq = TAILQ_HEAD_INITIALIZER(tailq);
+	int rc;
 
 	base = calloc(1, sizeof(*base));
 	SPDK_CU_ASSERT_FATAL(base != NULL);
@@ -340,7 +345,8 @@ part_test(void)
 	bdev_base.name = "base";
 	bdev_base.fn_table = &base_fn_table;
 	bdev_base.module = SPDK_GET_BDEV_MODULE(bdev_ut);
-	spdk_bdev_register(&bdev_base);
+	rc = spdk_bdev_register(&bdev_base);
+	CU_ASSERT(rc == 0);
 	spdk_bdev_part_base_construct(base, &bdev_base, NULL, SPDK_GET_BDEV_MODULE(vbdev_ut),
 				      &part_fn_table, &tailq, __base_free, 0, NULL, NULL);
 
@@ -357,6 +363,73 @@ part_test(void)
 
 	spdk_bdev_part_base_free(base);
 	spdk_bdev_unregister(&bdev_base, NULL, NULL);
+}
+
+static void
+alias_add_del_test(void)
+{
+	struct spdk_bdev *bdev[2];
+	int rc;
+
+	/* Creating and registering bdevs */
+	bdev[0] = allocate_bdev("bdev0");
+	SPDK_CU_ASSERT_FATAL(bdev[0] != 0);
+
+	bdev[1] = allocate_bdev("bdev1");
+	SPDK_CU_ASSERT_FATAL(bdev[1] != 0);
+
+	/*
+	 * Trying adding an alias identical to name.
+	 * Alias is identical to name, so it can not be added to aliases list
+	 */
+	rc = spdk_bdev_alias_add(bdev[0], bdev[0]->name);
+	CU_ASSERT(rc == -EEXIST);
+
+	/*
+	 * Trying to add empty alias,
+	 * this one should fail
+	 */
+	rc = spdk_bdev_alias_add(bdev[0], NULL);
+	CU_ASSERT(rc == -EINVAL);
+
+	/* Trying adding same alias to two different registered bdevs */
+
+	/* Alias is used first time, so this one should pass */
+	rc = spdk_bdev_alias_add(bdev[0], "proper alias 0");
+	CU_ASSERT(rc == 0);
+
+	/* Alias was added to another bdev, so this one should fail */
+	rc = spdk_bdev_alias_add(bdev[1], "proper alias 0");
+	CU_ASSERT(rc == -EEXIST);
+
+	/* Alias is used first time, so this one should pass */
+	rc = spdk_bdev_alias_add(bdev[1], "proper alias 1");
+	CU_ASSERT(rc == 0);
+
+	/* Trying removing an alias from registered bdevs */
+
+	/* Alias is not on a bdev aliases list, so this one should fail */
+	rc = spdk_bdev_alias_del(bdev[0], "not existing");
+	CU_ASSERT(rc == -ENOENT);
+
+	/* Alias is present on a bdev aliases list, so this one should pass */
+	rc = spdk_bdev_alias_del(bdev[0], "proper alias 0");
+	CU_ASSERT(rc == 0);
+
+	/* Alias is present on a bdev aliases list, so this one should pass */
+	rc = spdk_bdev_alias_del(bdev[1], "proper alias 1");
+	CU_ASSERT(rc == 0);
+
+	/* Trying to remove name instead of alias, so this one should fail, name cannot be changed or removed */
+	rc = spdk_bdev_alias_del(bdev[0], bdev[0]->name);
+	CU_ASSERT(rc != 0);
+
+	/* Unregister and free bdevs */
+	spdk_bdev_unregister(bdev[0], NULL, NULL);
+	spdk_bdev_unregister(bdev[1], NULL, NULL);
+
+	free(bdev[0]);
+	free(bdev[1]);
 }
 
 int
@@ -379,7 +452,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bytes_to_blocks_test", bytes_to_blocks_test) == NULL ||
 		CU_add_test(suite, "io_valid", io_valid_test) == NULL ||
 		CU_add_test(suite, "open_write", open_write_test) == NULL ||
-		CU_add_test(suite, "part", part_test) == NULL
+		CU_add_test(suite, "part", part_test) == NULL ||
+		CU_add_test(suite, "alias_add_del", alias_add_del_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
