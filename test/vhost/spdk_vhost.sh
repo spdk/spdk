@@ -107,12 +107,12 @@ case $1 in
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
 		./hotplug/scsi_hotplug.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
-			--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
-			--vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
-			--vm=2,$VM_IMAGE,Nvme0n1p4:Nvme0n1p5 \
-			--vm=3,$VM_IMAGE,Nvme0n1p6:Nvme0n1p7 \
-			--test-type=spdk_vhost_scsi \
-			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
+		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
+		--vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
+		--vm=2,$VM_IMAGE,Nvme0n1p4:Nvme0n1p5 \
+		--vm=3,$VM_IMAGE,Nvme0n1p6:Nvme0n1p7 \
+		--test-type=spdk_vhost_scsi \
+		--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job
 		;;
 	*)
 		echo "unknown test type: $1"
