@@ -47,10 +47,6 @@ config_params='--enable-debug --enable-werror'
 
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
 
-export SPDK_GPT_GUID=`grep SPDK_GPT_PART_TYPE_GUID $rootdir/lib/bdev/gpt/gpt.h \
-			| awk -F "(" '{ print $2}' | sed 's/)//g' \
-			| awk -F ", " '{ print $1 "-" $2 "-" $3 "-" $4 "-" $5}' | sed 's/0x//g'`
-
 # Override the default HUGEMEM in scripts/setup.sh
 export HUGEMEM=8192
 
@@ -394,7 +390,11 @@ function part_dev_by_gpt () {
 
 		if [ "$operation" = create ]; then
 			parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
+
 			# change the GUID to SPDK GUID value
+			SPDK_GPT_GUID=`grep SPDK_GPT_PART_TYPE_GUID $rootdir/lib/bdev/gpt/gpt.h \
+				| awk -F "(" '{ print $2}' | sed 's/)//g' \
+				| awk -F ", " '{ print $1 "-" $2 "-" $3 "-" $4 "-" $5}' | sed 's/0x//g'`
 			sgdisk -t 1:$SPDK_GPT_GUID /dev/nbd0
 			sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0
 		elif [ "$operation" = reset ]; then
