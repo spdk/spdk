@@ -227,10 +227,19 @@ struct spdk_bdev *
 spdk_bdev_get_by_name(const char *bdev_name)
 {
 	struct spdk_bdev *bdev = spdk_bdev_first();
+	struct spdk_bdev_aliases *target, *tmp;
 
 	while (bdev != NULL) {
+		/* compare bdev name with bdev_name */
 		if (strcmp(bdev_name, bdev->name) == 0) {
 			return bdev;
+		}
+
+		/* compare bdev name with bdev aliases */
+		TAILQ_FOREACH_SAFE(target, &bdev->aliases, tailq, tmp) {
+			if (strcmp(bdev_name, target->alias) == 0) {
+				return bdev;
+			}
 		}
 		bdev = spdk_bdev_next(bdev);
 	}
@@ -846,6 +855,11 @@ int
 spdk_bdev_alias_add(struct spdk_bdev *bdev, char *alias)
 {
 	struct spdk_bdev_aliases *tmp;
+
+	if (spdk_bdev_get_by_name(alias)) {
+		SPDK_ERRLOG("Bdev name/alias :%s already exists\n", alias);
+		return -EEXIST;
+	}
 
 	tmp = calloc(1, sizeof(*tmp));
 	if (!tmp) {
@@ -1823,7 +1837,7 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	}
 
 	if (spdk_bdev_get_by_name(bdev->name)) {
-		SPDK_ERRLOG("Bdev name:%s already exists\n", bdev->name);
+		SPDK_ERRLOG("Bdev name/alias: %s already exists\n", bdev->name);
 		return -EEXIST;
 	}
 
