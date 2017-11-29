@@ -361,6 +361,8 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 	int rc = -1;
 	struct spdk_nvmf_transport_poll_group *tgroup;
 
+	qpair->group = group;
+
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
 			rc = spdk_nvmf_transport_poll_group_add(tgroup, qpair);
@@ -377,6 +379,8 @@ spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 {
 	int rc = -1;
 	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	qpair->group = NULL;
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
