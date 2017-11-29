@@ -5,7 +5,7 @@ rootdir=$(readlink -f $(dirname $0))/../../..
 
 rpc_py=$rootdir/scripts/rpc.py
 
-"$rpc_py" add_initiator_group 1 "ALL" "127.0.0.1/32"
+"$rpc_py" add_initiator_group 1 "ANY" "127.0.0.1/32"
 "$rpc_py" add_portal_group 1 '127.0.0.1:3260'
 
 for i in $(seq 0 15); do

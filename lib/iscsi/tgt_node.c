@@ -198,12 +198,12 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 		TAILQ_FOREACH(iname, &igp->initiator_head, tailq) {
 			/* denied if iqn is matched */
 			if ((iname->name[0] == '!')
-			    && (strcasecmp(&iname->name[1], "ALL") == 0
+			    && (strcasecmp(&iname->name[1], "ANY") == 0
 				|| strcasecmp(&iname->name[1], iqn) == 0)) {
 				goto denied;
 			}
 			/* allowed if iqn is matched */
-			if (strcasecmp(iname->name, "ALL") == 0
+			if (strcasecmp(iname->name, "ANY") == 0
 			    || strcasecmp(iname->name, iqn) == 0) {
 				/* iqn is allowed, then check netmask */
 				TAILQ_FOREACH(imask, &igp->netmask_head, tailq) {
@@ -240,11 +240,11 @@ spdk_iscsi_tgt_node_visible(struct spdk_iscsi_tgt_node *target, const char *iqn)
 		igp = target->map[i].ig;
 		TAILQ_FOREACH(iname, &igp->initiator_head, tailq) {
 			if ((iname->name[0] == '!')
-			    && (strcasecmp(&iname->name[1], "ALL") == 0
+			    && (strcasecmp(&iname->name[1], "ANY") == 0
 				|| strcasecmp(&iname->name[1], iqn) == 0)) {
 				return false;
 			}
-			if (strcasecmp(iname->name, "ALL") == 0
+			if (strcasecmp(iname->name, "ANY") == 0
 			    || strcasecmp(iname->name, iqn) == 0) {
 				return true;
 			}
