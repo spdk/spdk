@@ -144,17 +144,6 @@ spdk_nvmf_poll_group_add_ns(struct spdk_nvmf_poll_group *group,
 	return 0;
 }
 
-int
-spdk_nvmf_subsystem_bdev_attach(struct spdk_nvmf_subsystem *subsystem)
-{
-	return -1;
-}
-
-void
-spdk_nvmf_subsystem_bdev_detach(struct spdk_nvmf_subsystem *subsystem)
-{
-}
-
 static bool
 all_zero(const void *buf, size_t size)
 {
