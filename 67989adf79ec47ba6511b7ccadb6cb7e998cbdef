@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be6d495c_290c0067",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-29T17:29:39Z",
+      "side": 1,
+      "message": "I\u0027m not sure we should have a separate function for this.  I think we should just enable it though the new create_opts() function.  But maybe this is OK for now for testing purposes until the create_opts() code is ready.\n\nFor metadata operations like this, we typically do not have cb_fn/cb_arg.  For example, see spdk_bs_md_resize_blob() above.  The user calls spdk_bs_md_set_thin_provision() and it immediately returns.  User must later call spdk_bs_md_sync_blob() to sync the changes to disk.",
+      "revId": "67989adf79ec47ba6511b7ccadb6cb7e998cbdef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6092d0df_cc7c7e71",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-29T17:29:39Z",
+      "side": 1,
+      "message": "see earlier comment on blobstore.h",
+      "revId": "67989adf79ec47ba6511b7ccadb6cb7e998cbdef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63f8a5ee_b8d8ad02",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2779,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-29T17:29:39Z",
+      "side": 1,
+      "message": "see _spdk_resize_blob() for an example of how we handle metadata updates to a blob\n\nmain points are:\n\n1) add assert() that we are not currently in LOADING or SYNCING state\n2) set blob-\u003estate to SPDK_BLOB_STATE_DIRTY - this makes sure that when user calls spdk_bs_md_sync_blob() that it will persist the updated metadata to disk",
+      "revId": "67989adf79ec47ba6511b7ccadb6cb7e998cbdef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "272f24f3_467534ae",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-29T17:29:39Z",
+      "side": 1,
+      "message": "We should use a bit in one of the flag masks above.  Probably invalid_flags.\n\nThe idea here is that invalid_flags, data_ro_flags and md_ro_flags are the feature flag masks.  Then let\u0027s say we add a new blob feature in the future.  A blobstore may have 100 blobs in it, but only 1 of them use this new feature.  We want an old blobstore application to still be able to read the 99 \"normal\" blobs, but when we define the feature, we can choose how this old application should treat this blob with the new feature.\n\nIf we put the feature flag in invalid_flags, then when the old application sees a bit set in invalid_flags that it does not know about, it will not allow this blob to be opened.\n\nFor data_ro_flags, it will allow the blob to be opened, but in read-only mode (data and metadata).\n\nFor md_ro_flags, it will allow the blob to be opened but in metadata read-only mode.  So it cannot be resized or have xattrs modified, but will allow data reads and writes.\n\nSo we should do something like:\n\n#define SPDK_BLOB_THIN_PROV (1ULL \u003c\u003c 0)\n#define SPDK_BLOB_INVALID_FLAGS_MASK SPDK_BLOB_THIN_PROV",
+      "revId": "67989adf79ec47ba6511b7ccadb6cb7e998cbdef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
