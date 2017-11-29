@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a44d0f7_06c8eb43",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-29T07:28:39Z",
+      "side": 1,
+      "message": "There is multiple of 512 check at above, looks like here we can just add a check \"block_size \u003c\u003d 4096\"",
+      "range": {
+        "startLine": 380,
+        "startChar": 4,
+        "endLine": 380,
+        "endChar": 91
+      },
+      "revId": "642aeeeae3b9e84d223f239b6cc2eb8ffe6b041a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
