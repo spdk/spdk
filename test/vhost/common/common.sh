@@ -330,7 +330,9 @@ function vm_kill()
 function vm_kill_all()
 {
 	for vm in $VM_BASE_DIR/[0-9]*; do
-		vm_kill $(basename $vm)
+		if [ -d "$vm" ]; then
+			vm_kill $(basename $vm)
+		fi
 	done
 }
 
@@ -339,7 +341,9 @@ function vm_kill_all()
 function vm_shutdown_all()
 {
 	for vm in $VM_BASE_DIR/[0-9]*; do
-		vm_shutdown $(basename $vm)
+		if [ -d "$vm" ]; then
+			vm_shutdown $(basename $vm)
+		fi
 	done
 
 	echo "INFO: Waiting for VMs to shutdown..."
@@ -347,9 +351,11 @@ function vm_shutdown_all()
 	while [[ $timeo -gt 0 ]]; do
 		all_vms_down=1
 		for vm in $VM_BASE_DIR/[0-9]*; do
-			if /bin/kill -0 "$(cat $vm/qemu.pid)"; then
-				all_vms_down=0
-				break
+			if [ -f "$vm/qemu.pid" ]; then
+				if /bin/kill -0 "$(cat $vm/qemu.pid)"; then
+					all_vms_down=0
+					break
+				fi
 			fi
 		done
 
@@ -617,15 +623,17 @@ function vm_run()
 	fi
 
 	for vm in $vms_to_run; do
-		if vm_is_running $(basename $vm); then
-			echo "WARNING: VM$(basename $vm) ($vm) already running"
-			continue
-		fi
+		if [ -d "$vm" ]; then
+			if vm_is_running $(basename $vm); then
+				echo "WARNING: VM$(basename $vm) ($vm) already running"
+				continue
+			fi
 
-		echo "INFO: running $vm/run.sh"
-		if ! $vm/run.sh; then
-			error "FAILED to run vm $vm"
-			return 1
+			echo "INFO: running $vm/run.sh"
+			if ! $vm/run.sh; then
+				error "FAILED to run vm $vm"
+				return 1
+			fi
 		fi
 	done
 }
@@ -653,44 +661,46 @@ function vm_wait_for_boot()
 	fi
 
 	for vm in $vms_to_check; do
-		local vm_num=$(basename $vm)
-		local i=0
-		echo "INFO: waiting for VM$vm_num ($vm)"
-		while ! vm_os_booted $vm_num; do
-			if ! vm_is_running $vm_num; then
-				echo
-				echo "ERROR: VM $vm_num is not running"
-				echo "================"
-				echo "QEMU LOG:"
-				if [[ -r $vm/qemu.log ]]; then
-					cat $vm/qemu.log
-				else
-					echo "LOG not found"
+		if [ -d "$vm" ]; then
+			local vm_num=$(basename $vm)
+			local i=0
+			echo "INFO: waiting for VM$vm_num ($vm)"
+			while ! vm_os_booted $vm_num; do
+				if ! vm_is_running $vm_num; then
+					echo
+					echo "ERROR: VM $vm_num is not running"
+					echo "================"
+					echo "QEMU LOG:"
+					if [[ -r $vm/qemu.log ]]; then
+						cat $vm/qemu.log
+					else
+						echo "LOG not found"
+					fi
+
+					echo "VM LOG:"
+					if [[ -r $vm/serial.log ]]; then
+						cat $vm/serial.log
+					else
+						echo "LOG not found"
+					fi
+					echo "================"
+					return 1
 				fi
 
-				echo "VM LOG:"
-				if [[ -r $vm/serial.log ]]; then
-					cat $vm/serial.log
-				else
-					echo "LOG not found"
+				if [[ $(date +%s) -gt $timeout_time ]]; then
+					error "timeout waiting for machines to boot"
+					return 1
 				fi
-				echo "================"
-				return 1
-			fi
-
-			if [[ $(date +%s) -gt $timeout_time ]]; then
-				error "timeout waiting for machines to boot"
-				return 1
-			fi
-			if (( i > 30 )); then
-				local i=0
-				echo
-			fi
-			echo -n "."
-			sleep 1
-		done
-		echo ""
-		echo "INFO: VM$vm_num ready"
+				if (( i > 30 )); then
+					local i=0
+					echo
+				fi
+				echo -n "."
+				sleep 1
+			done
+			echo ""
+			echo "INFO: VM$vm_num ready"
+		fi
 	done
 
 	echo "INFO: all VMs ready"
