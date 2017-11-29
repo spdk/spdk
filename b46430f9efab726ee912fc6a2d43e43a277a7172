@@ -53,6 +53,144 @@
     },
     {
       "key": {
+        "uuid": "94aae911_56a610b3",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T12:12:21Z",
+      "side": 1,
+      "message": "Aggregating these code into a function and place it beside  nbd_io_idle_obtain, nbd_io_done_obtain, and nbd_io_put_back will be good.",
+      "range": {
+        "startLine": 345,
+        "startChar": 3,
+        "endLine": 347,
+        "endChar": 52
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "146d4bb6_89619677",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T12:12:21Z",
+      "side": 1,
+      "message": "Same as above",
+      "range": {
+        "startLine": 374,
+        "startChar": 0,
+        "endLine": 376,
+        "endChar": 51
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70ed9771_dc1cc7c9",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T12:12:21Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 458,
+        "startChar": 0,
+        "endLine": 460,
+        "endChar": 51
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2ebda70_0ced8aa9",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T12:12:21Z",
+      "side": 1,
+      "message": "change to _nbd_submit_bdev_io or merging to the following may be better.",
+      "range": {
+        "startLine": 472,
+        "startChar": 0,
+        "endLine": 472,
+        "endChar": 18
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e81c801f_a3c14534",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T12:12:21Z",
+      "side": 1,
+      "message": "Previously this function prepared for submission (allocated the buffer for payload) but now just set  io-\u003etype based on io-\u003ereq.type. Hence the following change may be reasonable:\n process_request -\u003e nbd_bdev_submit_io\n nbd_bdev_submit_io -\u003e _nbd_bdev_submit_io\n\nOr aggregate two functions into one nbd_bdev_submit_io",
+      "range": {
+        "startLine": 505,
+        "startChar": 0,
+        "endLine": 505,
+        "endChar": 15
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4f1119d_590cfd5b",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T12:12:21Z",
+      "side": 1,
+      "message": "I think this means that submission of a  bdev IO was done and receiving the next request will start. You should indicate this more clearly.",
+      "range": {
+        "startLine": 553,
+        "startChar": 2,
+        "endLine": 554,
+        "endChar": 23
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0581c82d_5f79c72b",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 3
@@ -114,6 +252,29 @@
       "range": {
         "startLine": 557,
         "startChar": 0,
+        "endLine": 570,
+        "endChar": 23
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb2cda0f_4f60718f",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 570,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T12:12:21Z",
+      "side": 1,
+      "message": "As same as the above, this means that reply of a IO was done and checking if next reply is coming. You should indicate this more clearly.\n\nIf my understanding is not correct, please revise that.",
+      "range": {
+        "startLine": 569,
+        "startChar": 2,
         "endLine": 570,
         "endChar": 23
       },
