@@ -331,6 +331,9 @@ function vm_kill_all()
 {
 	shopt -s nullglob
 	for vm in $VM_BASE_DIR/[0-9]*; do
+		if [[ ! -d "$vm" ]]; then;
+			continue
+		fi
 		vm_kill $(basename $vm)
 	done
 	shopt -u nullglob
@@ -342,6 +345,9 @@ function vm_shutdown_all()
 {
 	shopt -s nullglob
 	for vm in $VM_BASE_DIR/[0-9]*; do
+		if [[ ! -d "$vm" ]]; then;
+			continue
+		fi
 		vm_shutdown $(basename $vm)
 	done
 
@@ -350,6 +356,9 @@ function vm_shutdown_all()
 	while [[ $timeo -gt 0 ]]; do
 		all_vms_down=1
 		for vm in $VM_BASE_DIR/[0-9]*; do
+			if [[ ! -f "$vm/qemu.pid" ]]; then;
+				continue
+			fi
 			if /bin/kill -0 "$(cat $vm/qemu.pid)"; then
 				all_vms_down=0
 				break
@@ -622,6 +631,9 @@ function vm_run()
 	fi
 
 	for vm in $vms_to_run; do
+		if [[ ! -d "$vm" ]]; then;
+			continue
+		fi
 		if vm_is_running $(basename $vm); then
 			echo "WARNING: VM$(basename $vm) ($vm) already running"
 			continue
@@ -658,6 +670,9 @@ function vm_wait_for_boot()
 	fi
 
 	for vm in $vms_to_check; do
+		if [[ ! -d "$vm" ]]; then;
+			continue
+		fi
 		local vm_num=$(basename $vm)
 		local i=0
 		echo "INFO: waiting for VM$vm_num ($vm)"
