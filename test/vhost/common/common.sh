@@ -330,7 +330,9 @@ function vm_kill()
 function vm_kill_all()
 {
 	for vm in $VM_BASE_DIR/[0-9]*; do
-		vm_kill $(basename $vm)
+		if [ -d "$vm" ]; then
+			vm_kill $(basename $vm)
+		fi
 	done
 }
 
