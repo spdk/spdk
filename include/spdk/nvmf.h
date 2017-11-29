@@ -46,6 +46,15 @@
 #include "spdk/queue.h"
 
 struct spdk_nvmf_tgt;
+struct spdk_nvmf_subsystem;
+struct spdk_nvmf_ctrlr;
+struct spdk_nvmf_qpair;
+struct spdk_nvmf_request;
+struct spdk_bdev;
+struct spdk_nvmf_request;
+struct spdk_nvmf_host;
+struct spdk_nvmf_listener;
+struct spdk_nvmf_poll_group;
 
 struct spdk_nvmf_tgt_opts {
 	uint16_t max_queue_depth;
@@ -90,16 +99,6 @@ int spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
  * Poll the target for incoming connections.
  */
 void spdk_nvmf_tgt_accept(struct spdk_nvmf_tgt *tgt);
-
-struct spdk_nvmf_subsystem;
-struct spdk_nvmf_ctrlr;
-struct spdk_nvmf_qpair;
-struct spdk_nvmf_request;
-struct spdk_bdev;
-struct spdk_nvmf_request;
-struct spdk_nvmf_host;
-struct spdk_nvmf_listener;
-struct spdk_nvmf_poll_group;
 
 /**
  * Create a poll group.
