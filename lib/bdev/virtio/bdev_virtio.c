@@ -151,7 +151,7 @@ virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx)
 	}
 
 	vdev = &svdev->vdev;
-	name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, ++pci_dev_counter);
+	name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, pci_dev_counter++);
 	if (name == NULL) {
 		free(vdev);
 		return -1;
