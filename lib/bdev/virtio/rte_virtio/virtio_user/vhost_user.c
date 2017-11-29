@@ -261,7 +261,7 @@ prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 	return 0;
 }
 
-const char *const vhost_msg_strings[] = {
+static const char *const vhost_msg_strings[VHOST_USER_MAX] = {
 	[VHOST_USER_SET_OWNER] = "VHOST_SET_OWNER",
 	[VHOST_USER_RESET_OWNER] = "VHOST_RESET_OWNER",
 	[VHOST_USER_SET_FEATURES] = "VHOST_SET_FEATURES",
