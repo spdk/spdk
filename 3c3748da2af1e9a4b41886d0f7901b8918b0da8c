@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bdd16c9_b751571b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 930,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-29T06:36:44Z",
+      "side": 1,
+      "message": "I am afraid that this could not solve this issue in any case. bdev layer has such a function: spdk_bdev_get_buf_align(const struct spdk_bdev *bdev), which returns bdev-\u003eblocklen if there is alignment requirement. So I am afraid this may still cause the issue.\n\nMaybe the possible solution is that: we add some functions in bdev layer, which returns the alignment requirements, means we iterate all bdev\u0027s and return the maximal alignment(since we currently only support virtual mode), this may solve this issue",
+      "range": {
+        "startLine": 930,
+        "startChar": 64,
+        "endLine": 930,
+        "endChar": 86
+      },
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
