@@ -22,6 +22,30 @@
       "revId": "642aeeeae3b9e84d223f239b6cc2eb8ffe6b041a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4385ee7b_8da48d1f",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011235
+      },
+      "writtenOn": "2017-11-29T07:54:48Z",
+      "side": 1,
+      "message": "hi, Gang\nI passed the test found that if it is a multiple of 512, and it is less than 4096, does not support. example: block_size \u003d 1536.",
+      "parentUuid": "5a44d0f7_06c8eb43",
+      "range": {
+        "startLine": 380,
+        "startChar": 4,
+        "endLine": 380,
+        "endChar": 91
+      },
+      "revId": "642aeeeae3b9e84d223f239b6cc2eb8ffe6b041a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
