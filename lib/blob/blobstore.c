@@ -1233,6 +1233,10 @@ _spdk_blob_request_submit_op_split(struct spdk_io_channel *ch, struct spdk_blob 
 		case SPDK_BLOB_WRITE_ZEROES:
 			spdk_bs_batch_write_zeroes_blob(batch, _blob, offset, op_length);
 			break;
+		case SPDK_BLOB_READV:
+		case SPDK_BLOB_WRITEV:
+			SPDK_ERRLOG("readv/write not valid for %s\n", __func__);
+			break;
 		}
 
 		length -= op_length;
@@ -1283,6 +1287,10 @@ _spdk_blob_request_submit_op_single(struct spdk_io_channel *_ch, struct spdk_blo
 		break;
 	case SPDK_BLOB_WRITE_ZEROES:
 		spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
+		break;
+	case SPDK_BLOB_READV:
+	case SPDK_BLOB_WRITEV:
+		SPDK_ERRLOG("readv/write not valid for %s\n", __func__);
 		break;
 	}
 

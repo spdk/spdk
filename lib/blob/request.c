@@ -470,4 +470,89 @@ spdk_bs_sequence_to_batch(spdk_bs_sequence_t *seq, spdk_bs_sequence_cpl cb_fn, v
 	return set;
 }
 
+spdk_bs_user_op_t *
+spdk_bs_user_op_alloc(struct spdk_io_channel *_channel, struct spdk_bs_cpl *cpl,
+		      enum spdk_blob_op_type op_type, struct spdk_blob *blob,
+		      void *payload, int iovcnt, uint64_t offset, uint64_t length)
+{
+	struct spdk_bs_channel		*channel;
+	struct spdk_bs_request_set	*set;
+	struct spdk_bs_user_op_args	*args;
+
+	channel = spdk_io_channel_get_ctx(_channel);
+
+	set = TAILQ_FIRST(&channel->reqs);
+	if (!set) {
+		return NULL;
+	}
+	TAILQ_REMOVE(&channel->reqs, set, link);
+
+	set->cpl = *cpl;
+	set->channel = channel;
+
+	args = &set->u.user_op;
+
+	args->type = op_type;
+	args->iovcnt = 0;
+	args->blob = blob;
+	args->offset = offset;
+	args->length = length;
+	args->payload = payload;
+
+	return (spdk_bs_user_op_t *)set;
+}
+
+void
+spdk_bs_user_op_execute(spdk_bs_user_op_t *op)
+{
+	struct spdk_bs_request_set	*set;
+	struct spdk_bs_user_op_args	*args;
+	struct spdk_io_channel		*ch;
+
+	set = (struct spdk_bs_request_set *)op;
+	args = &set->u.user_op;
+	ch = spdk_io_channel_from_ctx(set->channel);
+
+	switch (args->type) {
+	case SPDK_BLOB_READ:
+		spdk_bs_io_read_blob(args->blob, ch, args->payload, args->offset, args->length,
+				     set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		break;
+	case SPDK_BLOB_WRITE:
+		spdk_bs_io_write_blob(args->blob, ch, args->payload, args->offset, args->length,
+				      set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		break;
+	case SPDK_BLOB_UNMAP:
+		spdk_bs_io_unmap_blob(args->blob, ch, args->offset, args->length,
+				      set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		break;
+	case SPDK_BLOB_WRITE_ZEROES:
+		spdk_bs_io_write_zeroes_blob(args->blob, ch, args->offset, args->length,
+					     set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		break;
+	case SPDK_BLOB_READV:
+		spdk_bs_io_readv_blob(args->blob, ch, args->payload, args->iovcnt,
+				      args->offset, args->length,
+				      set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		break;
+	case SPDK_BLOB_WRITEV:
+		spdk_bs_io_writev_blob(args->blob, ch, args->payload, args->iovcnt,
+				       args->offset, args->length,
+				       set->cpl.u.blob_basic.cb_fn, set->cpl.u.blob_basic.cb_arg);
+		break;
+	}
+	TAILQ_INSERT_TAIL(&set->channel->reqs, set, link);
+}
+
+void
+spdk_bs_user_op_abort(spdk_bs_user_op_t *op)
+{
+	struct spdk_bs_request_set	*set;
+
+	set = (struct spdk_bs_request_set *)op;
+
+	set->cpl.u.blob_basic.cb_fn(set->cpl.u.blob_basic.cb_arg, -EIO);
+	TAILQ_INSERT_TAIL(&set->channel->reqs, set, link);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("blob_rw", SPDK_LOG_BLOB_RW)

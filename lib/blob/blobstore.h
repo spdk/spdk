@@ -188,6 +188,8 @@ enum spdk_blob_op_type {
 	SPDK_BLOB_READ,
 	SPDK_BLOB_UNMAP,
 	SPDK_BLOB_WRITE_ZEROES,
+	SPDK_BLOB_WRITEV,
+	SPDK_BLOB_READV,
 };
 
 /* On-Disk Data Structures
