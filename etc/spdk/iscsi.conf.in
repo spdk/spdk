@@ -76,7 +76,7 @@
 #  Netmask 192.168.1.20   <== single IP address
 #  Netmask 192.168.1.0/24 <== IP range 192.168.1.*
 [InitiatorGroup1]
-  InitiatorName ALL
+  InitiatorName ANY
   Netmask 192.168.2.0/24
 
 # NVMe configuration options
