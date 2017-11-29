@@ -139,15 +139,6 @@ struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt
 struct spdk_nvmf_subsystem *spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt,
 		const char *subnqn);
 
-/**
- * Initialize the subsystem on the thread that will be used to poll it.
- *
- * \param subsystem Subsystem that will be polled on this core.
- */
-int spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem);
-
-void spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem);
-
 void spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
 
 /**
