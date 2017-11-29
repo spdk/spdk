@@ -1127,17 +1127,6 @@ err:
 	return -1;
 }
 
-int
-spdk_vhost_init(void)
-{
-	return 0;
-}
-
-void
-spdk_vhost_fini(void)
-{
-}
-
 static void
 spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
