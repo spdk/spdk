@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+source $rootdir/scripts/autotest_common.sh
+source $rootdir/test/iscsi_tgt/common.sh
+
+rpc_py="python $rootdir/scripts/rpc.py"
+fio_py="python $rootdir/scripts/fio.py"
+
+CONNECTION_NUMBER=30
+
+# Remove lvol bdevs and stores
+function remove_backends()
+{
+	echo "INFO: Removing lvol bdevs"
+	for i in `seq 1 $CONNECTION_NUMBER`; do
+		lun="lvs$i/lbd_$i"
+		$rpc_py delete_bdev $lun
+		echo -e "\tINFO: lvol bdev $lun removed"
+	done
+	sleep 1
+
+	echo "INFO: Removing lvol stores"
+	for i in `seq 1 $CONNECTION_NUMBER`; do
+		$rpc_py destroy_lvol_store -l lvs$i
+		echo -e "\tINFO: lvol store lvs$i removed"
+	done
+	return 0
+}
+
+set -e
+
+# Create conf file for iscsi multiconnection
+cat > $testdir/iscsi.conf << EOL
+[iSCSI]
+  NodeBase "iqn.2016-06.io.spdk"
+  AuthFile /usr/local/etc/spdk/auth.conf
+  Timeout 30
+  DiscoveryAuthMethod Auto
+  MaxSessions 160
+  ImmediateData Yes
+  ErrorRecoveryLevel 0
+[Split]
+  Split Nvme0n1 40 128
+EOL
+
+# Get nvme info through filtering gen_nvme.sh's result.
+$rootdir/scripts/gen_nvme.sh >> $testdir/iscsi.conf
+
+timing_enter multiconnection
+timing_enter start_iscsi_tgt
+
+# Start the iSCSI target without using stub
+$rootdir/app/iscsi_tgt/iscsi_tgt -c $testdir/iscsi.conf &
+iscsipid=$!
+echo "iSCSI target launched. pid: $iscsipid"
+trap "remove_backends; iscsicleanup; killprocess $iscsipid; exit 1" SIGINT SIGTERM EXIT
+
+waitforlisten $iscsipid
+timing_exit start_iscsi_tgt
+
+$rpc_py add_portal_group 1 $TARGET_IP:$ISCSI_PORT
+$rpc_py add_initiator_group 1 ANY $INITIATOR_IP/32
+
+echo "Creating an iSCSI target node."
+# 1 construct_target_node per nvme bdev / 30 lvol store / 30 lvol bdevs
+# Create lvol bdevs on each lvol store
+for i in `seq 1 $CONNECTION_NUMBER`; do
+	ls_guid=$($rpc_py construct_lvol_store "Nvme0n1p$i" "lvs$i" -c 1048576)
+	get_lvs_free_mb $ls_guid
+	$rpc_py construct_lvol_bdev -u $ls_guid lbd_$i $free_mb
+done
+for i in `seq 1 $CONNECTION_NUMBER`; do
+	lun="lvs$i/lbd_$i:0"
+	$rpc_py construct_target_node Target$i Target${i}_alias "$lun" "1:1" 256 1 0 0 0
+done
+sleep 1
+
+echo "Logging in to iSCSI target."
+iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
+iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
+sleep 1
+
+echo "Running FIO"
+$fio_py 131072 64 randrw 5
+$fio_py 262144 16 randwrite 10
+sync
+
+trap - SIGINT SIGTERM EXIT
+remove_backends
+
+rm -f $testdir/iscsi.conf
+rm -f ./local-job*
+iscsicleanup
+killprocess $iscsipid
+timing_exit multiconnection
