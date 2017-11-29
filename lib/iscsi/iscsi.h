@@ -61,7 +61,6 @@
 #define MAX_NETMASK 256
 #define MAX_PORTAL_GROUP 4096
 #define MAX_INITIATOR_GROUP 4096
-#define MAX_ISCSI_TARGET_NODE 4096
 #define MAX_SESSIONS 1024
 #define MAX_ISCSI_CONNECTIONS MAX_SESSIONS
 #define MAX_FIRSTBURSTLENGTH	16777215
@@ -264,7 +263,7 @@ struct spdk_iscsi_globals {
 	TAILQ_HEAD(, spdk_iscsi_portal_grp)	pg_head;
 	TAILQ_HEAD(, spdk_iscsi_init_grp)	ig_head;
 	int ntargets;
-	struct spdk_iscsi_tgt_node *target[MAX_ISCSI_TARGET_NODE];
+	TAILQ_HEAD(, spdk_iscsi_tgt_node)	target_head;
 
 	int timeout;
 	int nopininterval;

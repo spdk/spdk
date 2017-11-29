@@ -253,9 +253,8 @@ static void
 spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 			  const struct spdk_json_val *params)
 {
-	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 	struct spdk_json_write_ctx *w;
-	size_t tgt_idx;
+	struct spdk_iscsi_tgt_node *tgtnode;
 	int i;
 
 	if (params != NULL) {
@@ -271,13 +270,7 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_array_begin(w);
 
-	for (tgt_idx = 0 ; tgt_idx < MAX_ISCSI_TARGET_NODE; tgt_idx++) {
-		struct spdk_iscsi_tgt_node *tgtnode = iscsi->target[tgt_idx];
-
-		if (tgtnode == NULL) {
-			continue;
-		}
-
+	TAILQ_FOREACH(tgtnode, &g_spdk_iscsi.target_head, tailq) {
 		spdk_json_write_object_begin(w);
 
 		spdk_json_write_name(w, "name");
