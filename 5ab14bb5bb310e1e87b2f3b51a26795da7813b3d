@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27b1375e_0b4fbf49",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T13:29:54Z",
+      "side": 1,
+      "message": "This blank line may be deleted.",
+      "range": {
+        "startLine": 273,
+        "startChar": 0,
+        "endLine": 273,
+        "endChar": 0
+      },
+      "revId": "5ab14bb5bb310e1e87b2f3b51a26795da7813b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "123dbe6f_c1794161",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T13:29:54Z",
+      "side": 1,
+      "message": "retry_with_delay may be meaningful?",
+      "range": {
+        "startLine": 276,
+        "startChar": 15,
+        "endLine": 276,
+        "endChar": 20
+      },
+      "revId": "5ab14bb5bb310e1e87b2f3b51a26795da7813b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb4e2262_7bc6c0cf",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-11-29T13:29:54Z",
+      "side": 1,
+      "message": "This blank line may be deleted.",
+      "range": {
+        "startLine": 296,
+        "startChar": 0,
+        "endLine": 296,
+        "endChar": 0
+      },
+      "revId": "5ab14bb5bb310e1e87b2f3b51a26795da7813b3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
