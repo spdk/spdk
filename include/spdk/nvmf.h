@@ -134,6 +134,8 @@ struct spdk_nvmf_subsystem *spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *t
  */
 int spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem);
 
+void spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem);
+
 void spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
 
 /**

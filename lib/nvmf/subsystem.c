@@ -50,6 +50,12 @@ spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem)
 	return spdk_nvmf_subsystem_bdev_attach(subsystem);
 }
 
+void
+spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem)
+{
+	spdk_nvmf_subsystem_bdev_detach(subsystem);
+}
+
 static bool
 spdk_nvmf_valid_nqn(const char *nqn)
 {
@@ -170,8 +176,6 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
 		spdk_nvmf_ctrlr_destruct(ctrlr);
 	}
-
-	spdk_nvmf_subsystem_bdev_detach(subsystem);
 
 	free(subsystem->ns);
 
