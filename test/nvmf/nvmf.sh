@@ -45,7 +45,9 @@ fi
 timing_enter host
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_test test/nvmf/host/aer.sh
+	# TODO: temporarily disabled - temperature AER doesn't fire on emulated controllers
+	#run_test test/nvmf/host/aer.sh
+	true
 fi
 run_test test/nvmf/host/bdevperf.sh
 run_test test/nvmf/host/identify.sh
