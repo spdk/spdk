@@ -267,8 +267,7 @@ bdev_null_finish(void)
 	struct null_bdev *bdev, *tmp;
 
 	TAILQ_FOREACH_SAFE(bdev, &g_null_bdev_head, tailq, tmp) {
-		TAILQ_REMOVE(&g_null_bdev_head, bdev, tailq);
-		spdk_dma_free(bdev);
+		bdev_null_destruct(bdev);
 	}
 }
 
