@@ -31,22 +31,69 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_NBD_INTERNAL_H
-#define SPDK_NBD_INTERNAL_H
+#include "spdk/rpc.h"
+#include "spdk/util.h"
 
-#include "spdk/stdinc.h"
-#include "spdk/nbd.h"
+#include <linux/nbd.h>
 
-struct spdk_nbd_disk *spdk_nbd_disk_find_by_nbd_path(const char *nbd_path);
+#include "nbd_internal.h"
+#include "spdk_internal/log.h"
 
-struct spdk_nbd_disk *spdk_nbd_disk_first(void);
+struct rpc_stop_nbd_disk {
+	char *nbd_device;
+};
 
-struct spdk_nbd_disk *spdk_nbd_disk_next(struct spdk_nbd_disk *prev);
+static void
+free_rpc_stop_nbd_disk(struct rpc_stop_nbd_disk *req)
+{
+	free(req->nbd_device);
+}
 
-const char *spdk_nbd_disk_get_nbd_path(struct spdk_nbd_disk *nbd);
+static const struct spdk_json_object_decoder rpc_stop_nbd_disk_decoders[] = {
+	{"nbd_device", offsetof(struct rpc_stop_nbd_disk, nbd_device), spdk_json_decode_string},
+};
 
-const char *spdk_nbd_disk_get_bdev_name(struct spdk_nbd_disk *nbd);
+static void
+spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
+{
+	struct rpc_stop_nbd_disk req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_nbd_disk *nbd;
 
-void nbd_disconnect(struct spdk_nbd_disk *nbd);
+	if (spdk_json_decode_object(params, rpc_stop_nbd_disk_decoders,
+				    SPDK_COUNTOF(rpc_stop_nbd_disk_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
 
-#endif /* SPDK_NBD_INTERNAL_H */
+	if (req.nbd_device == NULL) {
+		goto invalid;
+	}
+
+	/* make sure nbd_device is registered */
+	nbd = spdk_nbd_disk_find_by_nbd_path(req.nbd_device);
+	if (!nbd) {
+		goto invalid;
+	}
+
+	nbd_disconnect(nbd);
+
+	free_rpc_stop_nbd_disk(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	free_rpc_stop_nbd_disk(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+}
+
+SPDK_RPC_REGISTER("stop_nbd_disk", spdk_rpc_stop_nbd_disk)

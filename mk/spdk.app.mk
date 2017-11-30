@@ -43,6 +43,7 @@ SPDK_FILTER_LIB_LIST += $(filter %_rpc,$(SPDK_LIB_LIST))
 #  rather than breaking them out into separate libraries.  So we must also include
 #  these directories in the RPC library list.
 SPDK_FILTER_LIB_LIST += $(filter iscsi,$(SPDK_LIB_LIST))
+SPDK_FILTER_LIB_LIST += $(filter nbd,$(SPDK_LIB_LIST))
 SPDK_FILTER_LIB_LIST += $(filter net,$(SPDK_LIB_LIST))
 SPDK_FILTER_LIB_LIST += $(filter scsi,$(SPDK_LIB_LIST))
 SPDK_FILTER_LIB_LIST += $(filter vhost,$(SPDK_LIB_LIST))
