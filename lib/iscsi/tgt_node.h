@@ -110,6 +110,13 @@ spdk_iscsi_tgt_node_construct(int target_index,
 			      int no_auth_chap, int auth_chap, int auth_chap_mutual, int auth_group,
 			      int header_digest, int data_digest);
 
+int spdk_iscsi_tgt_node_add_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
+				       int *pg_tag_list, int *ig_tag_list,
+				       uint16_t num_maps);
+int spdk_iscsi_tgt_node_delete_pg_ig_maps(struct spdk_iscsi_tgt_node *target,
+		int *pg_tag_list, int *ig_tag_list,
+		uint16_t num_maps);
+
 bool spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 				struct spdk_iscsi_tgt_node *target, const char *iqn,
 				const char *addr);
@@ -118,6 +125,6 @@ int spdk_iscsi_tgt_node_reset(struct spdk_iscsi_tgt_node *target,
 			      uint64_t lun);
 int spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 				     struct spdk_iscsi_tgt_node *target);
-void spdk_iscsi_tgt_node_delete_map(struct spdk_iscsi_portal_grp *portal_group,
-				    struct spdk_iscsi_init_grp *initiator_group);
+void spdk_iscsi_delete_tgt_node_pg_maps(struct spdk_iscsi_portal_grp *pg);
+void spdk_iscsi_delete_tgt_node_ig_maps(struct spdk_iscsi_init_grp *ig);
 #endif /* SPDK_ISCSI_TGT_NODE_H_ */

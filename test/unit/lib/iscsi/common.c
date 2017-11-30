@@ -128,6 +128,12 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 	return 0;
 }
 
+int
+spdk_scsi_dev_delete_port(struct spdk_scsi_dev *dev, uint64_t id)
+{
+	return 0;
+}
+
 void
 spdk_shutdown_iscsi_conns(void)
 {
