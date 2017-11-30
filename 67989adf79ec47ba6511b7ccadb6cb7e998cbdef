@@ -103,6 +103,24 @@
       "revId": "67989adf79ec47ba6511b7ccadb6cb7e998cbdef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f651566_a59ab5a9",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-30T14:53:52Z",
+      "side": 1,
+      "message": "invalid_flags, data_ro_flags, and md_ro_flags are all feature flags.  We may have some features in the future which would use a bit in md_ro_flags for example.  This would signify to older versions of blobstore software that it is OK for them to still open the blob and perform data writes to it, but should not modify the metadata.",
+      "parentUuid": "2b3483a4_75c16139",
+      "revId": "67989adf79ec47ba6511b7ccadb6cb7e998cbdef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
