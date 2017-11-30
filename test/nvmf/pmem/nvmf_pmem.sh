@@ -60,7 +60,7 @@ for i in `seq 1 $SUBSYS_NR`; do
 	bdevs=""
 	for c in `seq 1 $PMEM_PER_SUBSYS`; do
 		$rpc_py create_pmem_pool /tmp/pool_file${i}_${c} 32 512
-		bdevs+="$($rpc_py construct_pmem_bdev /tmp/pool_file${i}_${c}) "
+		bdevs+="$($rpc_py construct_pmem_bdev -n pmem${i}_${c} /tmp/pool_file${i}_${c}) "
 	done
 	$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode$i "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:$NVMF_PORT" '' -a -s SPDK$i -n "$bdevs"
 	PMEM_BDEVS+=$bdevs
