@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c1c1a3d_498fe677",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 60
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T14:41:43Z",
+      "side": 1,
+      "message": "Should be tabs here I think",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 33,
+        "endChar": 8
+      },
+      "revId": "3e8870b3c69981b7523eb5eee436a9a9883bfd41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59988576_eb2d62c7",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 60
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T14:41:43Z",
+      "side": 1,
+      "message": "I think you can use $COMMON_DIR for that",
+      "range": {
+        "startLine": 56,
+        "startChar": 7,
+        "endLine": 56,
+        "endChar": 44
+      },
+      "revId": "3e8870b3c69981b7523eb5eee436a9a9883bfd41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc9ad68b_4510a84e",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 60
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T14:41:43Z",
+      "side": 1,
+      "message": "Can we move it just before trap if possible so we have \"source\"s in the same place?",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 26
+      },
+      "revId": "3e8870b3c69981b7523eb5eee436a9a9883bfd41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
