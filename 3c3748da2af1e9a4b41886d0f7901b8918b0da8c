@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a86f13b8_9cae54d3",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-30T01:39:16Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "733f65a2_a6dcfca9",
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b6937de_2d5d1ef3",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -30,6 +48,30 @@
       "writtenOn": "2017-11-29T18:16:18Z",
       "side": 1,
       "message": "ALIGNED -\u003e ALIGNMENT might be clearer",
+      "range": {
+        "startLine": 60,
+        "startChar": 25,
+        "endLine": 60,
+        "endChar": 32
+      },
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17450b4a_0b171d88",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-30T01:39:16Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "9b6937de_2d5d1ef3",
       "range": {
         "startLine": 60,
         "startChar": 25,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "4ee20e6a_b64f9326",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-30T01:39:16Z",
+      "side": 1,
+      "message": "Agreed.",
+      "parentUuid": "d26904aa_bd3ab9eb",
+      "range": {
+        "startLine": 61,
+        "startChar": 32,
+        "endLine": 61,
+        "endChar": 51
+      },
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7ea23a3_a17bf40e",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -76,6 +142,24 @@
       "writtenOn": "2017-11-29T18:18:35Z",
       "side": 1,
       "message": "It should be possible to replace data_from_pool with the buffer pointer - if the pointer is non-NULL, it is the original buffer from the pool, and if it is NULL, the data is not from the pool.",
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f112990_d8e9c478",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-30T01:39:16Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "e7ea23a3_a17bf40e",
       "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -140,6 +224,24 @@
       "writtenOn": "2017-11-29T18:16:18Z",
       "side": 1,
       "message": "I think this comment should be added to the #define above rather than here.",
+      "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7eac0e46_ba297188",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1193,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-30T01:39:16Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "7794dcf8_af197fc7",
       "revId": "3c3748da2af1e9a4b41886d0f7901b8918b0da8c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
