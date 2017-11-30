@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "31f08138_0aaa9919",
+        "filename": "examples/bdev/fio_plugin/Makefile",
+        "patchSetId": 26
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-30T18:20:09Z",
+      "side": 1,
+      "message": "we should not add event - see bdev_aio.c comments for how to remove this",
+      "revId": "b7c75197818c72280249cdc05379c2fd8047145a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "029d9f82_e9dddc1f",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 26
@@ -115,6 +132,23 @@
       "writtenOn": "2017-11-30T18:10:05Z",
       "side": 1,
       "message": "why change this?",
+      "revId": "b7c75197818c72280249cdc05379c2fd8047145a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7981d41_d912a6af",
+        "filename": "lib/bdev/aio/bdev_aio.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-30T18:20:09Z",
+      "side": 1,
+      "message": "traditionally we\u0027ve always kept the spdk_bdev field first - does this need to be changed?",
       "revId": "b7c75197818c72280249cdc05379c2fd8047145a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
