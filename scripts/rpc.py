@@ -213,6 +213,24 @@ Example: '1:1 2:2 2:1'
 p.set_defaults(func=delete_pg_ig_maps)
 
 
+ef add_lun(args):
+    params = {
+        'name': args.name,
+        'lun_name': args.lun_name,
+    }
+    if args.lun_id:
+        params['lun_id'] = args.lun_id
+    jsonrpc_call('add_lun', params)
+
+p = subparsers.add_parser('add_lun', help='Add LUN to the target node')
+p.add_argument('name', help='Target node name (ASCII)')
+p.add_argument('lun_name', help="""LUN name enclosed in quotes.
+*** LUN name cannot contain space or colon characters ***""")
+p.add_argument('-i', dest='lun_id', help="""LUN id (integer >= 0)
+*** If LUN_ID is omitted or -1, the lowest free one is assigned ***""", type=int)
+p.set_defaults(func=add_lun)
+
+
 def construct_malloc_bdev(args):
     num_blocks = (args.total_size * 1024 * 1024) / args.block_size
     params = {'num_blocks': num_blocks, 'block_size': args.block_size}
