@@ -35,6 +35,6 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 LIBNAME = nbd
-C_SRCS = nbd.c
+C_SRCS = nbd.c nbd_rpc.c
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
