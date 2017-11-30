@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d16c7fe_2f2372b4",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-30T17:32:09Z",
+      "side": 1,
+      "message": "This global fdisk-\u003ereset_in_progress flag isn\u0027t necessary and introduces race conditions. Remove it.\n\nThe generic bdev layer will only send a single reset at a time, so you don\u0027t have to guard against that here. In bdev_aio_reset, just call spdk_for_each_channel. In the completion callback for the iteration, if it succeeded complete the I/O. If it failed, start a poller for 1ms and then call spdk_for_each_channel again.",
+      "revId": "b7c75197818c72280249cdc05379c2fd8047145a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5fd47f5_ac900197",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-11-30T17:32:09Z",
+      "side": 1,
+      "message": "It is safe to unregister a poller from within the poller context. We wrote the poller code carefully just so this would be supported. You don\u0027t need the event.",
+      "revId": "b7c75197818c72280249cdc05379c2fd8047145a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
