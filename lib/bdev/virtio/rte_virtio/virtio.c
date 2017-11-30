@@ -66,8 +66,7 @@
 #include "virtio.h"
 
 struct virtio_driver g_virtio_driver = {
-	.init_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.init_ctrlrs),
-	.attached_ctrlrs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.attached_ctrlrs),
+	.scsi_devs = TAILQ_HEAD_INITIALIZER(g_virtio_driver.scsi_devs),
 };
 
 /* Chain all the descriptors in the ring with an END */

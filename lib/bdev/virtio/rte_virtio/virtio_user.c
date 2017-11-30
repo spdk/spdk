@@ -445,7 +445,7 @@ virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path
 		goto err;
 	}
 
-	TAILQ_INSERT_TAIL(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+	TAILQ_INSERT_TAIL(&g_virtio_driver.scsi_devs, vdev, tailq);
 	return 0;
 
 err:

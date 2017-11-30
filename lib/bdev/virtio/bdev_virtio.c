@@ -70,6 +70,9 @@ static void bdev_virtio_finish(void);
 struct virtio_scsi_dev {
 	/* Generic virtio device data. */
 	struct virtio_dev		vdev;
+
+	/** Context for the SCSI target scan. */
+	struct virtio_scsi_scan_base	*scan_ctx;
 };
 
 struct virtio_scsi_io_ctx {
@@ -629,7 +632,7 @@ scan_target_abort(struct virtio_scsi_scan_base *base, int error)
 		free(disk);
 	}
 
-	TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+	TAILQ_REMOVE(&g_virtio_driver.scsi_devs, vdev, tailq);
 	virtio_dev_stop(vdev);
 	virtio_dev_destruct(vdev);
 	free(vdev);
@@ -704,8 +707,7 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 		bdevs_cnt++;
 	}
 
-	TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, vdev, tailq);
-	TAILQ_INSERT_TAIL(&g_virtio_driver.attached_ctrlrs, vdev, tailq);
+	base->svdev->scan_ctx = NULL;
 
 	if (base->cb_fn) {
 		base->cb_fn(base->cb_arg, 0, bdevs, bdevs_cnt);
@@ -1297,6 +1299,9 @@ bdev_virtio_scsi_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn
 
 	vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
 	base->vq = vq;
+
+	svdev->scan_ctx = base;
+
 	vq->poller_ctx = base;
 	vq->poller = spdk_poller_register(bdev_scan_poll, base, 0);
 	rc = scan_target(base);
@@ -1312,9 +1317,16 @@ bdev_virtio_initial_scan_complete(void *ctx __attribute__((unused)),
 				  int result  __attribute__((unused)),
 				  struct spdk_bdev **bdevs __attribute__((unused)), size_t bdevs_cnt __attribute__((unused)))
 {
-	if (TAILQ_EMPTY(&g_virtio_driver.init_ctrlrs)) {
-		spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
+	struct virtio_dev *vdev;
+
+	TAILQ_FOREACH(vdev, &g_virtio_driver.scsi_devs, tailq) {
+		if (virtio_dev_to_scsi(vdev)->scan_ctx) {
+			/* another device is still being scanned */
+			return;
+		}
 	}
+
+	spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 }
 
 static int
@@ -1329,13 +1341,13 @@ bdev_virtio_initialize(void)
 		goto out;
 	}
 
-	if (TAILQ_EMPTY(&g_virtio_driver.init_ctrlrs)) {
+	if (TAILQ_EMPTY(&g_virtio_driver.scsi_devs)) {
 		spdk_bdev_module_init_done(SPDK_GET_BDEV_MODULE(virtio_scsi));
 		return 0;
 	}
 
 	/* Initialize all created devices and scan available targets */
-	TAILQ_FOREACH(vdev, &g_virtio_driver.init_ctrlrs, tailq) {
+	TAILQ_FOREACH(vdev, &g_virtio_driver.scsi_devs, tailq) {
 		svdev = virtio_dev_to_scsi(vdev);
 		rc = bdev_virtio_scsi_scan(svdev, bdev_virtio_initial_scan_complete, NULL);
 		if (rc != 0) {
@@ -1347,9 +1359,9 @@ bdev_virtio_initialize(void)
 
 out:
 	/* Remove any created devices */
-	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.init_ctrlrs, tailq, next_vdev) {
+	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.scsi_devs, tailq, next_vdev) {
 		svdev = virtio_dev_to_scsi(vdev);
-		TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, vdev, tailq);
+		TAILQ_REMOVE(&g_virtio_driver.scsi_devs, vdev, tailq);
 		bdev_virtio_scsi_dev_free(svdev);
 	}
 
@@ -1388,8 +1400,8 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 	virtio_dev_destruct(vdev);
 	free(svdev);
 
-	TAILQ_REMOVE(&g_virtio_driver.attached_ctrlrs, vdev, tailq);
-	finish_module = TAILQ_EMPTY(&g_virtio_driver.attached_ctrlrs);
+	TAILQ_REMOVE(&g_virtio_driver.scsi_devs, vdev, tailq);
+	finish_module = TAILQ_EMPTY(&g_virtio_driver.scsi_devs);
 
 	if (finish_module) {
 		spdk_bdev_module_finish_done();
@@ -1401,12 +1413,12 @@ bdev_virtio_finish(void)
 {
 	struct virtio_dev *vdev, *next;
 
-	if (TAILQ_EMPTY(&g_virtio_driver.attached_ctrlrs)) {
+	if (TAILQ_EMPTY(&g_virtio_driver.scsi_devs)) {
 		spdk_bdev_module_finish_done();
 		return;
 	}
 
-	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.attached_ctrlrs, tailq, next) {
+	TAILQ_FOREACH_SAFE(vdev, &g_virtio_driver.scsi_devs, tailq, next) {
 		spdk_io_device_unregister(virtio_dev_to_scsi(vdev),
 					  virtio_scsi_dev_unregister_cb);
 	}
@@ -1435,7 +1447,7 @@ bdev_virtio_scsi_dev_create(const char *base_name, const char *path, unsigned nu
 
 	rc = bdev_virtio_scsi_scan(svdev, cb_fn, cb_arg);
 	if (rc) {
-		TAILQ_REMOVE(&g_virtio_driver.init_ctrlrs, &svdev->vdev, tailq);
+		TAILQ_REMOVE(&g_virtio_driver.scsi_devs, &svdev->vdev, tailq);
 		bdev_virtio_scsi_dev_free(svdev);
 	}
 
