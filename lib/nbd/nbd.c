@@ -93,6 +93,28 @@ out:
 	return ret;
 }
 
+struct spdk_nbd_disk *
+spdk_nbd_disk_find_by_nbd_path(char *nbd_path)
+{
+	struct spdk_nbd_disk *nbd = NULL;
+	struct spdk_nbd_disk *nbd_idx;
+	struct spdk_nbd_disk *nbd_tmp;
+
+	pthread_mutex_lock(&g_spdk_nbd.mutex);
+	/*
+	 * check whether nbd has already been registered by nbd path.
+	 */
+	TAILQ_FOREACH_SAFE(nbd_idx, &g_spdk_nbd.disk_head, tailq, nbd_tmp) {
+		if (!strcmp(nbd_idx->nbd_path, nbd_path)) {
+			nbd = nbd_idx;
+			break;
+		}
+	}
+
+	pthread_mutex_unlock(&g_spdk_nbd.mutex);
+	return nbd;
+}
+
 static void
 spdk_nbd_disk_unregister(struct spdk_nbd_disk *nbd)
 {

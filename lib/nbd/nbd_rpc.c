@@ -31,59 +31,74 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_NBD_INTERNAL_H
-#define SPDK_NBD_INTERNAL_H
+#include "spdk/rpc.h"
+#include "spdk/util.h"
 
-#include "spdk/stdinc.h"
+#include <linux/nbd.h>
 
-#include "spdk/queue.h"
-#include "spdk/bdev.h"
-#include "spdk/nbd.h"
+#include "nbd_internal.h"
+#include "spdk_internal/log.h"
 
-struct nbd_io {
-	enum spdk_bdev_io_type	type;
-	int			ref;
-	void			*payload;
+struct rpc_stop_nbd_disk {
+	char *nbd_device;
+};
 
-	/* NOTE: for TRIM, this represents number of bytes to trim. */
-	uint32_t		payload_size;
+static void
+free_rpc_stop_nbd_disk(struct rpc_stop_nbd_disk *req)
+{
+	free(req->nbd_device);
+}
 
-	bool			payload_in_progress;
+static const struct spdk_json_object_decoder rpc_stop_nbd_disk_decoders[] = {
+	{"nbd_device", offsetof(struct rpc_stop_nbd_disk, nbd_device), spdk_json_decode_string},
+};
 
-	struct nbd_request	req;
-	bool			req_in_progress;
+static void
+spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
+{
+	struct rpc_stop_nbd_disk req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_nbd_disk *nbd;
 
-	struct nbd_reply	resp;
-	bool			resp_in_progress;
+	if (spdk_json_decode_object(params, rpc_stop_nbd_disk_decoders,
+				    SPDK_COUNTOF(rpc_stop_nbd_disk_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto invalid;
+	}
+
+	if (req.nbd_device == NULL) {
+		goto invalid;
+	}
+
+	/* make sure nbd_device is registered */
+	nbd = spdk_nbd_disk_find_by_nbd_path(req.nbd_device);
+	if (!nbd) {
+		goto invalid;
+	}
 
 	/*
-	 * Tracks current progress on reading/writing a request,
-	 * response, or payload from the nbd socket.
+	 * nbd soft-disconnection to terminate transmission phase.
+	 * After receiving this ioctl command, nbd kernel module will send
+	 * a NBD_CMD_DISC type io to nbd server in order to inform server.
 	 */
-	uint32_t		offset;
-};
+	ioctl(nbd->dev_fd, NBD_DISCONNECT);
 
-struct spdk_nbd_disk {
-	struct spdk_bdev	*bdev;
-	struct spdk_bdev_desc	*bdev_desc;
-	struct spdk_io_channel	*ch;
-	int			dev_fd;
-	char			*nbd_path;
-	int			kernel_sp_fd;
-	int			spdk_sp_fd;
-	struct nbd_io		io;
-	struct spdk_poller	*nbd_poller;
-	uint32_t		buf_align;
+	free_rpc_stop_nbd_disk(&req);
 
-	TAILQ_ENTRY(spdk_nbd_disk)	tailq;
-};
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
 
-struct spdk_nbd_disk_globals {
-	pthread_mutex_t		mutex;
-	TAILQ_HEAD(, spdk_nbd_disk)	disk_head;
-};
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
 
-struct spdk_nbd_disk *
-spdk_nbd_disk_find_by_nbd_path(char *nbd_path);
+invalid:
+	free_rpc_stop_nbd_disk(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+}
 
-#endif /* SPDK_NBD_INTERNAL_H */
+SPDK_RPC_REGISTER("stop_nbd_disk", spdk_rpc_stop_nbd_disk)
