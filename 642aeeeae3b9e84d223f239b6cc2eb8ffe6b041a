@@ -94,6 +94,30 @@
       "revId": "642aeeeae3b9e84d223f239b6cc2eb8ffe6b041a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50b48b41_da000945",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-11-30T08:18:51Z",
+      "side": 1,
+      "message": "Talked with Lu that if the blocksize is improper, the LUN will not show up at the client side.\n\nConsidering its a kernel limitation, here maybe we can have a warning message and not just exit.\n\nMaybe change to SPDK_WARNLOG() so that we can trace back on the iSCSI target side when the client has some issues.",
+      "parentUuid": "6c78ca86_d99c520a",
+      "range": {
+        "startLine": 380,
+        "startChar": 4,
+        "endLine": 380,
+        "endChar": 91
+      },
+      "revId": "642aeeeae3b9e84d223f239b6cc2eb8ffe6b041a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
