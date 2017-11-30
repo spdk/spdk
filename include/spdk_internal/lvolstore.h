@@ -34,6 +34,7 @@
 #ifndef SPDK_INTERNAL_LVOLSTORE_H
 #define SPDK_INTERNAL_LVOLSTORE_H
 
+#include "spdk/blob.h"
 #include "spdk/lvol.h"
 #include "spdk_internal/bdev.h"
 
