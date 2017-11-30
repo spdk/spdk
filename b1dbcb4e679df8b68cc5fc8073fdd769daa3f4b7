@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c029f478_5daa93f5",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 932,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-11-30T11:40:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "00b837ec_a6c58b86",
+      "range": {
+        "startLine": 932,
+        "startChar": 2,
+        "endLine": 932,
+        "endChar": 6
+      },
+      "revId": "b1dbcb4e679df8b68cc5fc8073fdd769daa3f4b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f9bff8c2_32833d6e",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-24T09:16:15Z",
       "side": 1,
       "message": "I think break would be better :)\n\nAlso  { } is needed always.",
+      "range": {
+        "startLine": 946,
+        "startChar": 4,
+        "endLine": 946,
+        "endChar": 13
+      },
+      "revId": "b1dbcb4e679df8b68cc5fc8073fdd769daa3f4b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74c67f23_1ff50620",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-11-30T11:40:50Z",
+      "side": 1,
+      "message": "\u003e I think break would be better :)\nright\n\n \u003e \n \u003e Also  { } is needed always.\nI removed it because of DPDK habits.\nNow it\u0027s added.",
+      "parentUuid": "f9bff8c2_32833d6e",
       "range": {
         "startLine": 946,
         "startChar": 4,
