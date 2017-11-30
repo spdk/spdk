@@ -54,12 +54,6 @@ static TAILQ_HEAD(, null_bdev) g_null_bdev_head;
 static void *g_null_read_buf;
 
 static int
-bdev_null_get_ctx_size(void)
-{
-	return 0;
-}
-
-static int
 bdev_null_destruct(void *ctx)
 {
 	struct null_bdev *bdev = ctx;
@@ -295,6 +289,6 @@ bdev_null_get_spdk_running_config(FILE *fp)
 }
 
 SPDK_BDEV_MODULE_REGISTER(null, bdev_null_initialize, bdev_null_finish,
-			  bdev_null_get_spdk_running_config, bdev_null_get_ctx_size, NULL)
+			  bdev_null_get_spdk_running_config, NULL, NULL)
 
 SPDK_LOG_REGISTER_TRACE_FLAG("bdev_null", SPDK_TRACE_BDEV_NULL)
