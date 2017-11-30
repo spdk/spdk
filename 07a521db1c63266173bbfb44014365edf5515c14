@@ -70,6 +70,30 @@
       "revId": "07a521db1c63266173bbfb44014365edf5515c14",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e13545c_3644fb1f",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-11-30T11:40:50Z",
+      "side": 0,
+      "message": "Like in a config file, user can use \u0027Dev\u0027 or \u0027Target\u0027. So i will add new rpc calls and leave the old ones as they are. For now.",
+      "parentUuid": "3e41348f_6d437ea7",
+      "range": {
+        "startLine": 212,
+        "startChar": 73,
+        "endLine": 212,
+        "endChar": 85
+      },
+      "revId": "07a521db1c63266173bbfb44014365edf5515c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
