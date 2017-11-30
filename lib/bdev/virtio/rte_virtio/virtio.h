@@ -182,8 +182,7 @@ struct virtio_req {
 };
 
 struct virtio_driver {
-	TAILQ_HEAD(, virtio_dev) init_ctrlrs;
-	TAILQ_HEAD(, virtio_dev) attached_ctrlrs;
+	TAILQ_HEAD(, virtio_dev) scsi_devs;
 };
 
 extern struct virtio_driver g_virtio_driver;
