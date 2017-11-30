@@ -44,6 +44,14 @@ struct rpc_log_level {
 	char *level;
 };
 
+char *log_level_names[] = {
+	"ERROR",
+	"WARNNING",
+	"NOTICE",
+	"INFO",
+	"DEBUG",
+};
+
 static void
 free_rpc_trace_flag(struct rpc_trace_flag *p)
 {
@@ -79,6 +87,12 @@ _parse_log_level(char *level)
 		return SPDK_LOG_DEBUG;
 	}
 	return -1;
+}
+
+static char *
+_get_log_level_name(int level)
+{
+	return log_level_names[level];
 }
 
 static void
@@ -125,6 +139,7 @@ spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_json_write_ctx *w;
 	int level;
+	char *name;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -138,17 +153,9 @@ spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
 	}
 
 	level = spdk_log_get_print_level();
+	name = _get_log_level_name(level);
+	spdk_json_write_string(w, name);
 
-	if (level == SPDK_LOG_ERROR)
-		spdk_json_write_string(w, "ERROR");
-	if (level == SPDK_LOG_WARN)
-		spdk_json_write_string(w, "WARNING");
-	if (level == SPDK_LOG_NOTICE)
-		spdk_json_write_string(w, "NOTICE");
-	if (level == SPDK_LOG_INFO)
-		spdk_json_write_string(w, "INFO");
-	if (level == SPDK_LOG_DEBUG)
-		spdk_json_write_string(w, "DEBUG");
 
 	spdk_jsonrpc_end_result(request, w);
 }
@@ -199,6 +206,7 @@ spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
 {
 	struct spdk_json_write_ctx *w;
 	int level;
+	char *name;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
@@ -212,17 +220,8 @@ spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
 	}
 
 	level = spdk_log_get_level();
-
-	if (level == SPDK_LOG_ERROR)
-		spdk_json_write_string(w, "ERROR");
-	if (level == SPDK_LOG_WARN)
-		spdk_json_write_string(w, "WARNING");
-	if (level == SPDK_LOG_NOTICE)
-		spdk_json_write_string(w, "NOTICE");
-	if (level == SPDK_LOG_INFO)
-		spdk_json_write_string(w, "INFO");
-	if (level == SPDK_LOG_DEBUG)
-		spdk_json_write_string(w, "DEBUG");
+	name = _get_log_level_name(level);
+	spdk_json_write_string(w, name);
 
 	spdk_jsonrpc_end_result(request, w);
 }
