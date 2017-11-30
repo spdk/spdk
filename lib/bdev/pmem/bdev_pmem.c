@@ -51,8 +51,6 @@ struct pmem_disk {
 
 static TAILQ_HEAD(, pmem_disk) g_pmem_disks = TAILQ_HEAD_INITIALIZER(g_pmem_disks);
 
-static int pmem_disk_count = 0;
-
 static int bdev_pmem_initialize(void);
 static void bdev_pmem_finish(void);
 
@@ -284,12 +282,19 @@ static const struct spdk_bdev_fn_table pmem_fn_table = {
 };
 
 int
-spdk_create_pmem_disk(const char *pmem_file, char *name, struct spdk_bdev **bdev)
+spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev **bdev)
 {
 	uint64_t num_blocks;
 	uint32_t block_size;
 	struct pmem_disk *pdisk;
 	int rc;
+
+	*bdev = NULL;
+
+	if (name == NULL) {
+		SPDK_ERRLOG("Missing name parameter for spdk_create_pmem_disk()\n");
+		return EINVAL;
+	}
 
 	if (pmemblk_check(pmem_file, 0) != 1) {
 		SPDK_ERRLOG("Pool '%s' check failed: %s\n", pmem_file, pmemblk_errormsg());
@@ -325,12 +330,8 @@ spdk_create_pmem_disk(const char *pmem_file, char *name, struct spdk_bdev **bdev
 		free(pdisk);
 		return EINVAL;
 	}
-	if (name) {
-		pdisk->disk.name = spdk_sprintf_alloc("%s", name);
-	} else {
-		pdisk->disk.name = spdk_sprintf_alloc("pmem%d", pmem_disk_count);
-	}
 
+	pdisk->disk.name = strdup(name);
 	if (!pdisk->disk.name) {
 		pmemblk_close(pdisk->pool);
 		free(pdisk);
@@ -338,8 +339,6 @@ spdk_create_pmem_disk(const char *pmem_file, char *name, struct spdk_bdev **bdev
 	}
 
 	pdisk->disk.product_name = "pmemblk disk";
-	pmem_disk_count++;
-
 	pdisk->disk.write_cache = 0;
 	pdisk->disk.blocklen = block_size;
 	pdisk->disk.blockcnt = num_blocks;

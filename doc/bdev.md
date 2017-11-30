@@ -84,7 +84,7 @@ Example:
 ~~~
 It is possible to create pmem bdev using SPDK RPC:
 ~~~
-./scripts/rpc.py construct_pmem_bdev /path/to/pmem_pool
+./scripts/rpc.py construct_pmem_bdev -n bdev_name /path/to/pmem_pool
 ~~~
 
 ## Null {#bdev_config_null}

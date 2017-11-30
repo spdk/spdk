@@ -13,6 +13,7 @@ test_all=true
 test_all_get=false
 default_pool_file=$TEST_DIR/test/pmem/pool_file
 obj_pool_file=$TEST_DIR/test/pmem/obj_pool_file
+bdev_name=pmem0
 
 function usage()
 {
@@ -459,7 +460,7 @@ function construct_pmem_bdev_tc2()
 	pmem_clean_pool_file
 
 	pmem_create_pool_file
-	if $rpc_py construct_pmem_bdev $TEST_DIR/non/existing/path/non_existent_file; then
+	if $rpc_py construct_pmem_bdev -n $bdev_name $TEST_DIR/non/existing/path/non_existent_file; then
 		error "Created pmem bdev w/out valid pool file!"
 	fi
 
@@ -476,7 +477,7 @@ function construct_pmem_bdev_tc3()
 	pmem_print_tc_name ${FUNCNAME[0]}
 
 	truncate -s 32M $TEST_DIR/test/pmem/random_file
-	if $rpc_py construct_pmem_bdev $TEST_DIR/test/pmem/random_file; then
+	if $rpc_py construct_pmem_bdev -n $bdev_name $TEST_DIR/test/pmem/random_file; then
 		error "Created pmem bdev from random file!"
 	fi
 
@@ -501,7 +502,7 @@ function construct_pmem_bdev_tc4()
 		truncate -s "32M" $obj_pool_file
 	fi
 
-	if $rpc_py construct_pmem_bdev $TEST_DIR/test/pmem/obj_pool_file; then
+	if $rpc_py construct_pmem_bdev -n $bdev_name $TEST_DIR/test/pmem/obj_pool_file; then
 		pmem_clean_pool_file $TEST_DIR/test/pmem/obj_pool_file
 		error "Created pmem bdev from obj type pmem file!"
 	fi
@@ -521,7 +522,7 @@ function construct_pmem_bdev_tc5()
 		error "Failed to get pmem info!"
 	fi
 
-	pmem_bdev_name=$($rpc_py construct_pmem_bdev $default_pool_file)
+	pmem_bdev_name=$($rpc_py construct_pmem_bdev -n $bdev_name $default_pool_file)
 	if [ $? != 0 ]; then
 		error "Failed to create pmem bdev"
 	fi
@@ -553,7 +554,7 @@ function construct_pmem_bdev_tc6()
 		error "Failed to get info on pmem pool file!"
 	fi
 
-	pmem_bdev_name=$($rpc_py construct_pmem_bdev $default_pool_file)
+	pmem_bdev_name=$($rpc_py construct_pmem_bdev -n $bdev_name $default_pool_file)
 	if [ $? != 0 ]; then
 		error "Failed to create pmem bdev!"
 	fi
@@ -562,7 +563,7 @@ function construct_pmem_bdev_tc6()
 		error "Pmem bdev not found!"
 	fi
 
-	if  $rpc_py construct_pmem_bdev $default_pool_file; then
+	if  $rpc_py construct_pmem_bdev -n $bdev_name $default_pool_file; then
 		error "Constructed pmem bdev with occupied path!"
 	fi
 
@@ -593,7 +594,7 @@ function delete_bdev_tc1()
 		error "Failed to get pmem info!"
 	fi
 
-	pmem_bdev_name=$($rpc_py construct_pmem_bdev $default_pool_file)
+	pmem_bdev_name=$($rpc_py construct_pmem_bdev -n $bdev_name $default_pool_file)
 	if [ $? != 0 ]; then
 		error "Failed to create pmem bdev!"
 	fi
@@ -626,7 +627,7 @@ function delete_bdev_tc2()
 		error "Failed to get pmem info!"
 	fi
 
-	pmem_bdev_name=$($rpc_py construct_pmem_bdev $default_pool_file)
+	pmem_bdev_name=$($rpc_py construct_pmem_bdev -n $bdev_name $default_pool_file)
 	if [ $? != 0 ]; then
 		error "Failed to create pmem bdev"
 	fi

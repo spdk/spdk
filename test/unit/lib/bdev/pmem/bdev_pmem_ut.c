@@ -50,6 +50,8 @@ struct pmemblk {
 	uint8_t *buffer;
 };
 
+static const char *g_bdev_name = "pmem0";
+
 /* PMEMblkpool is a typedef of struct pmemblk */
 static PMEMblkpool g_pool_ok = {
 	.name = "/pools/ok_pool",
@@ -424,8 +426,14 @@ ut_pmem_open_close(void)
 	CU_ASSERT_EQUAL(pools_cnt, g_opened_pools);
 	CU_ASSERT_NOT_EQUAL(rc, 0);
 
-	/* Open good  pool */
+	/* Open pool with NULL name */
 	rc = spdk_create_pmem_disk(g_pool_ok.name, NULL, &bdev);
+	CU_ASSERT_PTR_NULL(bdev);
+	CU_ASSERT_EQUAL(pools_cnt, g_opened_pools);
+	CU_ASSERT_NOT_EQUAL(rc, 0);
+
+	/* Open good pool */
+	rc = spdk_create_pmem_disk(g_pool_ok.name, g_bdev_name, &bdev);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 	CU_ASSERT_TRUE(g_pool_ok.is_open);
 	CU_ASSERT_EQUAL(pools_cnt + 1, g_opened_pools);
@@ -456,7 +464,7 @@ ut_pmem_write_read(void)
 		{ 0, 4 * g_pool_ok.bsize },
 	};
 
-	rc = spdk_create_pmem_disk(g_pool_ok.name, NULL, &bdev);
+	rc = spdk_create_pmem_disk(g_pool_ok.name, g_bdev_name, &bdev);
 	CU_ASSERT_EQUAL(rc, 0);
 
 	SPDK_CU_ASSERT_FATAL(g_pool_ok.nblock > 40);
@@ -630,7 +638,7 @@ ut_pmem_reset(void)
 	struct spdk_bdev *bdev;
 	int rc;
 
-	rc = spdk_create_pmem_disk(g_pool_ok.name, NULL, &bdev);
+	rc = spdk_create_pmem_disk(g_pool_ok.name, g_bdev_name, &bdev);
 	CU_ASSERT_EQUAL(rc, 0);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 
@@ -650,7 +658,7 @@ ut_pmem_unmap_write_zero(int16_t io_type)
 	int rc;
 
 	CU_ASSERT(io_type == SPDK_BDEV_IO_TYPE_UNMAP || io_type == SPDK_BDEV_IO_TYPE_WRITE_ZEROES);
-	rc = spdk_create_pmem_disk(g_pool_ok.name, NULL, &bdev);
+	rc = spdk_create_pmem_disk(g_pool_ok.name, g_bdev_name, &bdev);
 	CU_ASSERT_EQUAL(rc, 0);
 	SPDK_CU_ASSERT_FATAL(bdev != NULL);
 	SPDK_CU_ASSERT_FATAL(g_pool_ok.nblock > 40);
