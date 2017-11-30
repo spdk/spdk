@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8028e920_75ed4467",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T08:05:19Z",
+      "side": 1,
+      "message": "I think this should be put in this commit: https://review.gerrithub.io/#/c/389072/",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 2
+      },
+      "revId": "eb7d4fb8721a674a52a8d8108b6017600818bdec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b314d7c9_4ceabcbb",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T08:05:19Z",
+      "side": 1,
+      "message": "This too",
+      "range": {
+        "startLine": 84,
+        "startChar": 38,
+        "endLine": 84,
+        "endChar": 44
+      },
+      "revId": "eb7d4fb8721a674a52a8d8108b6017600818bdec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b1655a6_0287363a",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T08:05:19Z",
+      "side": 1,
+      "message": "This too",
+      "range": {
+        "startLine": 92,
+        "startChar": 37,
+        "endLine": 92,
+        "endChar": 44
+      },
+      "revId": "eb7d4fb8721a674a52a8d8108b6017600818bdec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
