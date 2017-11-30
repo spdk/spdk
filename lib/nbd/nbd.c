@@ -242,10 +242,15 @@ process_request(struct spdk_nbd_disk *nbd)
 
 	io->payload_size = from_be32(&io->req.len);
 	spdk_dma_free(io->payload);
-	io->payload = spdk_dma_malloc(io->payload_size, nbd->buf_align, NULL);
-	if (io->payload == NULL) {
-		SPDK_ERRLOG("could not allocate io->payload of size %d\n", io->payload_size);
-		return -ENOMEM;
+
+	if (io->payload_size) {
+		io->payload = spdk_dma_malloc(io->payload_size, nbd->buf_align, NULL);
+		if (io->payload == NULL) {
+			SPDK_ERRLOG("could not allocate io->payload of size %d\n", io->payload_size);
+			return -ENOMEM;
+		}
+	} else {
+		io->payload = NULL;
 	}
 
 	if (from_be32(&io->req.magic) != NBD_REQUEST_MAGIC) {
