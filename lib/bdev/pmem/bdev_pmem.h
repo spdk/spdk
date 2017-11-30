@@ -36,6 +36,6 @@
 
 #include "spdk/bdev.h"
 
-int spdk_create_pmem_disk(const char *pmem_file, char *name, struct spdk_bdev **bdev);
+int spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev **bdev);
 
 #endif /* SPDK_BDEV_PMEM_H */
