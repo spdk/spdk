@@ -22,6 +22,30 @@
       "revId": "abce9194cf9c7a8b23cac2c3bca2a2c9eed0f212",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e7bb93b6_caaeab16",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-11-30T22:29:16Z",
+      "side": 1,
+      "message": "heh, no clue.  I\u0027ll remove it whatever it is",
+      "parentUuid": "099d5ad5_5a2439c0",
+      "range": {
+        "startLine": 782,
+        "startChar": 1,
+        "endLine": 782,
+        "endChar": 2
+      },
+      "revId": "abce9194cf9c7a8b23cac2c3bca2a2c9eed0f212",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
