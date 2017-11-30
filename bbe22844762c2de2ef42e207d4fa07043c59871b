@@ -16,6 +16,24 @@
       "revId": "bbe22844762c2de2ef42e207d4fa07043c59871b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9129d32f_d101097c",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1426,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-11-30T21:30:19Z",
+      "side": 1,
+      "message": "I was just preserving the logic from the existing code above, but looking at it again, it should never be possible for a valid nvme_bdev to have a NULL nvme_ctrlr pointer, so I\u0027ll reupload without this check.",
+      "parentUuid": "2a14721c_a113b742",
+      "revId": "bbe22844762c2de2ef42e207d4fa07043c59871b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
