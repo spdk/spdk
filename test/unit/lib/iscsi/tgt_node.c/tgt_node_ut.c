@@ -79,6 +79,92 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 	return dev->lun[lun_id];
 }
 
+int
+spdk_scsi_dev_find_lowest_free_lun_id(struct spdk_scsi_dev *dev)
+{
+	if (dev == NULL) {
+		return -1;
+	} else if (dev->lun[0] != NULL) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
+int
+spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, char *lun_name, int lun_id,
+		      void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
+		      void *hotremove_ctx)
+{
+	if (lun_name == NULL) {
+		return -1;
+	} else {
+		return 0;
+	}
+}
+
+static void
+add_lun_test_cases(void)
+{
+	struct spdk_iscsi_tgt_node tgtnode;
+	int lun_id = 0;
+	char *lun_name = NULL;
+	struct spdk_scsi_dev scsi_dev;
+	struct spdk_scsi_lun scsi_lun;
+	int rc;
+
+	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
+	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
+
+	/* case 1 */
+	tgtnode.num_active_conns = 1;
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, lun_name, lun_id);
+	CU_ASSERT(rc != 0);
+
+	/* case 2 */
+	tgtnode.num_active_conns = 0;
+	lun_id = -2;
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, lun_name, lun_id);
+	CU_ASSERT(rc != 0);
+
+	/* case 3 */
+	lun_id = SPDK_SCSI_DEV_MAX_LUN;
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, lun_name, lun_id);
+	CU_ASSERT(rc != 0);
+
+	/* case 4 */
+	lun_id = -1;
+	tgtnode.dev = NULL;
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, lun_name, lun_id);
+	CU_ASSERT(rc != 0);
+
+	/* case 5 */
+	lun_id = -1;
+	tgtnode.dev = &scsi_dev;
+	scsi_dev.lun[0] = &scsi_lun;
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, lun_name, lun_id);
+	CU_ASSERT(rc != 0);
+
+	/* case 6 */
+	lun_id = -1;
+	scsi_dev.lun[0] = NULL;
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, lun_name, lun_id);
+	CU_ASSERT(rc != 0);
+
+	/* case 7 */
+	lun_id = 0;
+	lun_name = "LUN0";
+
+	rc = spdk_iscsi_tgt_node_add_lun(&tgtnode, lun_name, lun_id);
+	CU_ASSERT(rc == 0);
+}
+
 static void
 config_file_fail_cases(void)
 {
@@ -639,7 +725,8 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "config file fail cases", config_file_fail_cases) == NULL
+		CU_add_test(suite, "add lun test cases", add_lun_test_cases) == NULL
+		|| CU_add_test(suite, "config file fail cases", config_file_fail_cases) == NULL
 		|| CU_add_test(suite, "allow ipv6 allowed case", allow_ipv6_allowed) == NULL
 		|| CU_add_test(suite, "allow ipv6 denied case", allow_ipv6_denied) == NULL
 		|| CU_add_test(suite, "allow ipv4 allowed case", allow_ipv4_allowed) == NULL
