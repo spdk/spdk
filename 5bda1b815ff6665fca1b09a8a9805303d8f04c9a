@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0b6c8ad_991454e5",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T14:22:32Z",
+      "side": 1,
+      "message": "5 VMs",
+      "range": {
+        "startLine": 20,
+        "startChar": 54,
+        "endLine": 20,
+        "endChar": 60
+      },
+      "revId": "5bda1b815ff6665fca1b09a8a9805303d8f04c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5bd651b_43765147",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T14:22:32Z",
+      "side": 1,
+      "message": "Mallocs are not listed as required bdevs in original test plan",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 79
+      },
+      "revId": "5bda1b815ff6665fca1b09a8a9805303d8f04c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "476d11f9_08eddf78",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T14:22:32Z",
+      "side": 1,
+      "message": "This function grabs PCIe addresses from gen_nvme.sh output. But why do you need to  first call gen_nvme and then play with if\u0027s and sed\u0027s? You could just call the command from gen_nvme.sh@10 and it returns PCIe addresses just the same.",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 1
+      },
+      "revId": "5bda1b815ff6665fca1b09a8a9805303d8f04c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72757778_be6af0a9",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T14:22:32Z",
+      "side": 1,
+      "message": "echo \"8086 0953\" \u003e /sys/bus/pci/devices/0000\\:84\\:00.0/driver/remove_id\nthen unbind",
+      "range": {
+        "startLine": 39,
+        "startChar": 4,
+        "endLine": 39,
+        "endChar": 55
+      },
+      "revId": "5bda1b815ff6665fca1b09a8a9805303d8f04c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7179727_0e068691",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T14:22:32Z",
+      "side": 1,
+      "message": "similar to previous comment, first do add_id",
+      "range": {
+        "startLine": 43,
+        "startChar": 4,
+        "endLine": 43,
+        "endChar": 59
+      },
+      "revId": "5bda1b815ff6665fca1b09a8a9805303d8f04c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "960ed627_7cea3dfd",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T14:22:32Z",
+      "side": 1,
+      "message": "tabs / spaces",
+      "range": {
+        "startLine": 114,
+        "startChar": 0,
+        "endLine": 114,
+        "endChar": 24
+      },
+      "revId": "5bda1b815ff6665fca1b09a8a9805303d8f04c9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
