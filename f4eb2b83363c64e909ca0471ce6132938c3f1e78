@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3f196d2_e97088b8",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-30T23:13:39Z",
+      "side": 1,
+      "message": "Can we break these sudo commands out into a separate script?  and then have the docs specify to run that script as something like sudo scripts/vagrant/create_nvme_img.sh when using libvirt.\n\nThen we avoid things like someone running this on Linux and getting a random password prompt when doing \"vagrant up\" - or even worse, getting 4 random password prompts - one for each sudo command",
+      "revId": "f4eb2b83363c64e909ca0471ce6132938c3f1e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
