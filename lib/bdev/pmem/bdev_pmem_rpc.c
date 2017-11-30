@@ -48,11 +48,12 @@ static void
 free_rpc_construct_pmem_bdev(struct rpc_construct_pmem *req)
 {
 	free(req->pmem_file);
+	free(req->name);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_pmem_decoders[] = {
 	{"pmem_file", offsetof(struct rpc_construct_pmem, pmem_file), spdk_json_decode_string},
-	{"name", offsetof(struct rpc_construct_pmem, name), spdk_json_decode_string, true},
+	{"name", offsetof(struct rpc_construct_pmem, name), spdk_json_decode_string},
 };
 
 static void
