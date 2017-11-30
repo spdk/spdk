@@ -52,6 +52,24 @@
       "revId": "94a5361d75c1cefd8f75a6fea7bcfebe8b4ae4b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6f61258_13b77156",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-30T01:13:22Z",
+      "side": 1,
+      "message": "Yes, Daniel. We cannot suppose g_tgt.state \u003d ACCEPTOR when get the \"ctrlr +c \" signal, g_tgt.state could be in any state when we receive the signal.",
+      "parentUuid": "af19282a_3fc9e1c5",
+      "revId": "94a5361d75c1cefd8f75a6fea7bcfebe8b4ae4b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
