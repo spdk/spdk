@@ -92,7 +92,7 @@ struct virtio_scsi_scan_base {
 	/** Virtqueue used for the scan I/O. */
 	struct virtqueue		*vq;
 
-	virtio_create_device_cb		cb_fn;
+	bdev_virtio_create_cb		cb_fn;
 	void				*cb_arg;
 
 	/* Currently queried target */
@@ -568,7 +568,7 @@ bdev_virtio_ctrlq_poll(void *arg)
 }
 
 static int
-bdev_virtio_create_cb(void *io_device, void *ctx_buf)
+bdev_virtio_scsi_ch_create_cb(void *io_device, void *ctx_buf)
 {
 	struct virtio_dev *vdev = io_device;
 	struct bdev_virtio_io_channel *ch = ctx_buf;
@@ -592,7 +592,7 @@ bdev_virtio_create_cb(void *io_device, void *ctx_buf)
 }
 
 static void
-bdev_virtio_destroy_cb(void *io_device, void *ctx_buf)
+bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_virtio_io_channel *io_channel = ctx_buf;
 	struct virtio_dev *vdev = io_channel->vdev;
@@ -669,7 +669,8 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 	ctrlq->poller_ctx = ctrlq_ring;
 	ctrlq->poller = spdk_poller_register(bdev_virtio_ctrlq_poll, base->vdev, CTRLQ_POLL_PERIOD_US);
 
-	spdk_io_device_register(base->vdev, bdev_virtio_create_cb, bdev_virtio_destroy_cb,
+	spdk_io_device_register(base->vdev, bdev_virtio_scsi_ch_create_cb,
+				bdev_virtio_scsi_ch_destroy_cb,
 				sizeof(struct bdev_virtio_io_channel));
 
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
@@ -1244,7 +1245,7 @@ bdev_virtio_scsi_free(struct virtio_dev *vdev)
 }
 
 static int
-bdev_virtio_scsi_scan(struct virtio_dev *vdev, virtio_create_device_cb cb_fn, void *cb_arg)
+bdev_virtio_scsi_scan(struct virtio_dev *vdev, bdev_virtio_create_cb cb_fn, void *cb_arg)
 {
 	struct virtio_scsi_scan_base *base = spdk_dma_zmalloc(sizeof(struct virtio_scsi_scan_base), 64,
 					     NULL);
@@ -1388,8 +1389,8 @@ bdev_virtio_finish(void)
 }
 
 int
-create_virtio_user_scsi_device(const char *base_name, const char *path, unsigned num_queues,
-			       unsigned queue_size, virtio_create_device_cb cb_fn, void *cb_arg)
+bdev_virtio_scsi_dev_create(const char *base_name, const char *path, unsigned num_queues,
+			    unsigned queue_size, bdev_virtio_create_cb cb_fn, void *cb_arg)
 {
 	struct virtio_dev *vdev;
 	int rc;
