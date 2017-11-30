@@ -5,6 +5,79 @@
 SPDK implements a [JSON-RPC 2.0](http://www.jsonrpc.org/specification) server
 to allow external management tools to dynamically configure SPDK components.
 
+# App Framework {#jsonrpc_components_app}
+
+## kill_instance {#rpc_kill_instance}
+
+Send a signal to the application.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+sig_name                | Required | string      | Signal to send (SIGINT, SIGTERM, SIGQUIT, SIGHUP, or SIGKILL)
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "kill_instance",
+  "params": {
+    "sig_name": "SIGINT"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## context_switch_monitor {#rpc_context_switch_monitor}
+
+Query, enable, or disable the context switch monitoring functionality.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+enabled                 | Optional | boolean     | Enable (`true`) or disable (`false`) monitoring (omit this parameter to query the current state)
+
+### Response
+
+The current state of context switch monitoring is returned as a boolean.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "context_switch_monitor",
+  "params": {
+    "enabled": false
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": false
+}
+~~~
+
+
 # NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
 ## get_nvmf_subsystems method {#rpc_get_nvmf_subsystems}
