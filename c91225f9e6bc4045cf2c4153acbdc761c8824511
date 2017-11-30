@@ -272,6 +272,30 @@
     },
     {
       "key": {
+        "uuid": "4740c462_6d99a436",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-11-30T15:57:58Z",
+      "side": 1,
+      "message": "I got some random failures while shutting down vm. Adding some delay resolved this issue",
+      "parentUuid": "36b87c0a_fb0f547b",
+      "range": {
+        "startLine": 107,
+        "startChar": 1,
+        "endLine": 107,
+        "endChar": 8
+      },
+      "revId": "c91225f9e6bc4045cf2c4153acbdc761c8824511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "598700cc_de99f2e7",
         "filename": "test/vhost/readonly/readonly.sh",
         "patchSetId": 32
