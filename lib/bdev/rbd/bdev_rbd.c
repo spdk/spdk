@@ -201,14 +201,8 @@ bdev_rbd_start_aio(rbd_image_t image, struct spdk_bdev_io *bdev_io,
 static int bdev_rbd_library_init(void);
 static void bdev_rbd_library_fini(void);
 
-static int
-bdev_rbd_get_ctx_size(void)
-{
-	return 0;
-}
-
 SPDK_BDEV_MODULE_REGISTER(rbd, bdev_rbd_library_init, bdev_rbd_library_fini, NULL,
-			  bdev_rbd_get_ctx_size, NULL)
+			  NULL, NULL)
 
 static int64_t
 bdev_rbd_rw(struct bdev_rbd *disk, struct spdk_io_channel *ch,

@@ -56,14 +56,8 @@ static int pmem_disk_count = 0;
 static int bdev_pmem_initialize(void);
 static void bdev_pmem_finish(void);
 
-static int
-bdev_pmem_get_ctx_size(void)
-{
-	return 0;
-}
-
 SPDK_BDEV_MODULE_REGISTER(pmem, bdev_pmem_initialize, bdev_pmem_finish,
-			  NULL, bdev_pmem_get_ctx_size, NULL)
+			  NULL, NULL, NULL)
 SPDK_BDEV_MODULE_ASYNC_FINI(pmem);
 
 

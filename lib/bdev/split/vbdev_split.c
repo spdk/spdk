@@ -270,12 +270,6 @@ vbdev_split_fini(void)
 	spdk_bdev_part_tailq_fini(&g_split_disks);
 }
 
-static int
-vbdev_split_get_ctx_size(void)
-{
-	return 0;
-}
-
 SPDK_BDEV_MODULE_REGISTER(split, vbdev_split_init, vbdev_split_fini, NULL,
-			  vbdev_split_get_ctx_size, vbdev_split_examine)
+			  NULL, vbdev_split_examine)
 SPDK_LOG_REGISTER_TRACE_FLAG("vbdev_split", SPDK_TRACE_VBDEV_SPLIT)
