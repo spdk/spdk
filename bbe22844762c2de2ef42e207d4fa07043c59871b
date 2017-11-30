@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a14721c_a113b742",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1426,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-30T21:05:26Z",
+      "side": 1,
+      "message": "I\u0027m curious - what\u0027s the case where nbdev-\u003envme_ctrlr is NULL here?",
+      "revId": "bbe22844762c2de2ef42e207d4fa07043c59871b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
