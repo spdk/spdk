@@ -204,6 +204,17 @@ is_write(enum spdk_bdev_io_type io_type)
 	}
 }
 
+void
+nbd_disconnect(struct spdk_nbd_disk *nbd)
+{
+	/*
+	 * nbd soft-disconnection to terminate transmission phase.
+	 * After receiving this ioctl command, nbd kernel module will send
+	 * a NBD_CMD_DISC type io to nbd server in order to inform server.
+	 */
+	ioctl(nbd->dev_fd, NBD_DISCONNECT);
+}
+
 static void
 _nbd_stop(struct spdk_nbd_disk *nbd)
 {
