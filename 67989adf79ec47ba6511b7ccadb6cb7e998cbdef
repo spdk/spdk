@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "590f1c63_d73914f1",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-30T08:42:35Z",
+      "side": 1,
+      "message": "I created this function based on RCF -\u003e blob.h:265\nActually my first idea was to do as you mention - see patch that will be abandoned: https://review.gerrithub.io/#/c/388217/. In that case I will change it to be set in create_opts().",
+      "parentUuid": "be6d495c_290c0067",
+      "revId": "67989adf79ec47ba6511b7ccadb6cb7e998cbdef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6092d0df_cc7c7e71",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 4
@@ -64,6 +82,24 @@
       "writtenOn": "2017-11-29T17:29:39Z",
       "side": 1,
       "message": "We should use a bit in one of the flag masks above.  Probably invalid_flags.\n\nThe idea here is that invalid_flags, data_ro_flags and md_ro_flags are the feature flag masks.  Then let\u0027s say we add a new blob feature in the future.  A blobstore may have 100 blobs in it, but only 1 of them use this new feature.  We want an old blobstore application to still be able to read the 99 \"normal\" blobs, but when we define the feature, we can choose how this old application should treat this blob with the new feature.\n\nIf we put the feature flag in invalid_flags, then when the old application sees a bit set in invalid_flags that it does not know about, it will not allow this blob to be opened.\n\nFor data_ro_flags, it will allow the blob to be opened, but in read-only mode (data and metadata).\n\nFor md_ro_flags, it will allow the blob to be opened but in metadata read-only mode.  So it cannot be resized or have xattrs modified, but will allow data reads and writes.\n\nSo we should do something like:\n\n#define SPDK_BLOB_THIN_PROV (1ULL \u003c\u003c 0)\n#define SPDK_BLOB_INVALID_FLAGS_MASK SPDK_BLOB_THIN_PROV",
+      "revId": "67989adf79ec47ba6511b7ccadb6cb7e998cbdef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b3483a4_75c16139",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-11-30T08:42:35Z",
+      "side": 1,
+      "message": "OK, I understand the invalid_flags purpose now - I will use it instead of feature_flags. By the way... maybe we could change the invalid_flags name to something like features_flags - it will be more self explanatory.",
+      "parentUuid": "272f24f3_467534ae",
       "revId": "67989adf79ec47ba6511b7ccadb6cb7e998cbdef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
