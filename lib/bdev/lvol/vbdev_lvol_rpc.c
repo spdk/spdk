@@ -50,8 +50,6 @@ static int
 vbdev_get_lvol_store_by_uuid_xor_name(const char *uuid, const char *lvs_name,
 				      struct spdk_lvol_store **lvs)
 {
-	uuid_t lvol_store_uuid;
-
 	if ((uuid == NULL && lvs_name == NULL)) {
 		SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "lvs UUID nor lvs name specified\n");
 		return -EINVAL;
@@ -60,15 +58,10 @@ vbdev_get_lvol_store_by_uuid_xor_name(const char *uuid, const char *lvs_name,
 			     lvs_name);
 		return -EINVAL;
 	} else if (uuid) {
-		if (uuid_parse(uuid, lvol_store_uuid)) {
-			SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "incorrect UUID '%s'\n", uuid);
-			return -EINVAL;
-		}
-
-		*lvs = vbdev_get_lvol_store_by_uuid(lvol_store_uuid);
+		*lvs = vbdev_get_lvol_store_by_uuid(uuid);
 
 		if (*lvs == NULL) {
-			SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "blobstore with UUID '%p' not found\n", &lvol_store_uuid);
+			SPDK_INFOLOG(SPDK_TRACE_VBDEV_LVOL, "blobstore with UUID '%s' not found\n", uuid);
 			return -ENODEV;
 		}
 	} else if (lvs_name) {
