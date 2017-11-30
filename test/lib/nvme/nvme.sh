@@ -89,9 +89,10 @@ if [ `uname` = Linux ]; then
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	timing_enter aer
-	$testdir/aer/aer
-	timing_exit aer
+	# TODO: temporarily disabled - temperature AER doesn't fire on emulated controllers
+	#timing_enter aer
+	#$testdir/aer/aer
+	#timing_exit aer
 
 	timing_enter reset
 	$testdir/reset/reset -q 64 -w write -s 4096 -t 2
