@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8496acf0_bb4f150e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-30T13:42:53Z",
+      "side": 1,
+      "message": "This might be never NULL if list is OK",
+      "range": {
+        "startLine": 386,
+        "startChar": 2,
+        "endLine": 388,
+        "endChar": 3
+      },
+      "revId": "baf0532cd6b19ea4a60c02dcd8d497d0adaaea0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f4761b7_72eafdfa",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-30T13:42:53Z",
+      "side": 1,
+      "message": "Lets remove this also",
+      "range": {
+        "startLine": 390,
+        "startChar": 6,
+        "endLine": 390,
+        "endChar": 10
+      },
+      "revId": "baf0532cd6b19ea4a60c02dcd8d497d0adaaea0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c85ba730_fc140fb6",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-30T13:42:53Z",
+      "side": 1,
+      "message": "lets convert this if into assert",
+      "range": {
+        "startLine": 607,
+        "startChar": 0,
+        "endLine": 611,
+        "endChar": 2
+      },
+      "revId": "baf0532cd6b19ea4a60c02dcd8d497d0adaaea0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14db6b33_d651aab4",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 974,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-30T13:42:53Z",
+      "side": 1,
+      "message": "This need to be TAILQ_FOREACH_SAFE",
+      "range": {
+        "startLine": 974,
+        "startChar": 1,
+        "endLine": 974,
+        "endChar": 14
+      },
+      "revId": "baf0532cd6b19ea4a60c02dcd8d497d0adaaea0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "510df270_c16dae58",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 983,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-11-30T13:42:53Z",
+      "side": 1,
+      "message": "Lets we keep orginal logic",
+      "range": {
+        "startLine": 975,
+        "startChar": 0,
+        "endLine": 983,
+        "endChar": 3
+      },
+      "revId": "baf0532cd6b19ea4a60c02dcd8d497d0adaaea0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
