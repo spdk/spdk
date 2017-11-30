@@ -554,6 +554,9 @@ _spdk_iscsi_tgt_node_delete_pg_map(struct spdk_iscsi_tgt_node *target,
 	TAILQ_REMOVE(&target->pg_map_head, pg_map, tailq);
 	target->num_pg_maps--;
 	pg_map->pg->ref--;
+
+	spdk_scsi_dev_delete_port(target->dev, pg_map->pg->tag);
+
 	free(pg_map);
 }
 
