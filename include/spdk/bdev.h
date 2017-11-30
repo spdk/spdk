@@ -243,6 +243,14 @@ int spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ct
 const char *spdk_bdev_get_name(const struct spdk_bdev *bdev);
 
 /**
+ * Get block device aliases list.
+ *
+ * \param bdev Block device to query.
+ * \return Aliases list of bdev as a null-terminated strings.
+ */
+const struct aliases_list *spdk_bdev_get_aliases(const struct spdk_bdev *bdev);
+
+/**
  * Get block device product name.
  *
  * \param bdev Block device to query.

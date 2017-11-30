@@ -905,6 +905,12 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 	return bdev->name;
 }
 
+const struct aliases_list *
+spdk_bdev_get_aliases(const struct spdk_bdev *bdev)
+{
+	return &bdev->aliases;
+}
+
 const char *
 spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
 {
