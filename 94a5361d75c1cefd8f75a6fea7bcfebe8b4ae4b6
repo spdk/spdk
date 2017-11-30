@@ -34,6 +34,24 @@
       "revId": "94a5361d75c1cefd8f75a6fea7bcfebe8b4ae4b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1831e4c_99b44aaf",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-11-30T01:07:38Z",
+      "side": 1,
+      "message": "Hi Ben/Daniel,\nThis is possible, I already tested and confirmed this is a defect. You can plus ctrlr + c, and that time the state is before acceptor state. \nYou can not postpone ctrl+c after we get into ACCEPTOR STATE. And in some cases, we cannot even get into such state. So still need to handle such case. At least, for shutting down, we cannot suppose we are in NVMF_TGT_FINI_STOP_ACCEPORT STATE.",
+      "parentUuid": "af19282a_3fc9e1c5",
+      "revId": "94a5361d75c1cefd8f75a6fea7bcfebe8b4ae4b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
