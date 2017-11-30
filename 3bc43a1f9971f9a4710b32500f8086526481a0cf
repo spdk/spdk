@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab397c0a_be935c7b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-30T15:00:41Z",
+      "side": 1,
+      "message": "we should only allow cluster_idx \u003d\u003d 0 if spdk_blob_is_thin_provisioned() \u003d\u003d true; otherwise 0 is an invalid cluster_idx and we should return -EINVAL;\n\nactually, this code here is probably fine, the -EINVAL check should go up around line 229\n\nnote that we will always persist the FLAGS descriptor first, so when you get the EXTENT descriptors, you will know if the blob is thin provisioned or not",
+      "revId": "3bc43a1f9971f9a4710b32500f8086526481a0cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
