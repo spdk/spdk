@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c95976b_f9d70286",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T07:56:02Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we use that kind of guard in other places as well to be consistent?\nI know that vm_kill_all is the most critical (because we preventative run it before VMs setup) but I think we could also do that in vm_shutdown_all",
+      "range": {
+        "startLine": 333,
+        "startChar": 2,
+        "endLine": 335,
+        "endChar": 4
+      },
+      "revId": "cc3b7d83f1657675610eeb36418563224d18b35e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
