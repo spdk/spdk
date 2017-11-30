@@ -44,6 +44,27 @@ SPDK_DECLARE_BDEV_MODULE(lvol);
 static TAILQ_HEAD(, lvol_store_bdev) g_spdk_lvol_pairs = TAILQ_HEAD_INITIALIZER(
 			g_spdk_lvol_pairs);
 
+static struct lvol_store_bdev *
+vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
+{
+	struct spdk_lvol_store *lvs = NULL;
+	struct lvol_store_bdev *lvs_bdev = vbdev_lvol_store_first();
+
+	while (lvs_bdev != NULL) {
+		lvs = lvs_bdev->lvs;
+		if (lvs == lvs_orig) {
+			if (lvs_bdev->req != NULL) {
+				/* We do not allow access to lvs that are being destroyed */
+				return NULL;
+			} else {
+				return lvs_bdev;
+			}
+		}
+		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
+	}
+	return NULL;
+}
+
 static void
 vbdev_lvs_hotremove_cb(void *ctx)
 {
@@ -325,28 +346,7 @@ vbdev_get_lvol_store_by_name(const char *name)
 	return NULL;
 }
 
-struct lvol_store_bdev *
-vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
-{
-	struct spdk_lvol_store *lvs = NULL;
-	struct lvol_store_bdev *lvs_bdev = vbdev_lvol_store_first();
-
-	while (lvs_bdev != NULL) {
-		lvs = lvs_bdev->lvs;
-		if (lvs == lvs_orig) {
-			if (lvs_bdev->req != NULL) {
-				/* We do not allow access to lvs that are being destroyed */
-				return NULL;
-			} else {
-				return lvs_bdev;
-			}
-		}
-		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
-	}
-	return NULL;
-}
-
-struct spdk_lvol *
+static struct spdk_lvol *
 vbdev_get_lvol_by_name(const char *name)
 {
 	struct spdk_lvol *lvol, *tmp_lvol;

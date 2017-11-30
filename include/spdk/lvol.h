@@ -168,36 +168,8 @@ void spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *
  * \param lvol Handle to lvol
  * \return IO channel
  */
-
 struct spdk_io_channel *spdk_lvol_get_io_channel(struct spdk_lvol *lvol);
 
-/**
- * \brief Search for handle to lvolstore bdev
- * \param lvs_orig Handle to spdk_lvol_store
- * \return Handle to lvol_store_bdev or NULL if not found.
- */
-struct lvol_store_bdev *vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig);
-
-/**
- * \brief Search for handle to lvol
- * \param name Name of bdev
- * \return Handle to spdk_lvol or NULL if not found.
- */
-struct spdk_lvol *vbdev_get_lvol_by_name(const char *name);
-
-/**
- * \brief Search for handle lvolstore
- * \param uuid_str UUID of lvolstore
- * \return Handle to spdk_lvol_store or NULL if not found.
- */
-struct spdk_lvol_store *vbdev_get_lvol_store_by_uuid(const char *uuid_str);
-
-/**
- * \brief Search for handle to lvolstore
- * \param name name of lvolstore
- * \return Handle to spdk_lvol_store or NULL if not found.
- */
-struct spdk_lvol_store *vbdev_get_lvol_store_by_name(const char *name);
 void spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete cb_fn,
 		   void *cb_arg);
 void spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);

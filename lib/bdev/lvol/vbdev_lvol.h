@@ -57,4 +57,19 @@ int vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 		      void *cb_arg);
 
 int vbdev_lvol_resize(char *name, size_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg);
+
+/**
+ * \brief Search for handle lvolstore
+ * \param uuid_str UUID of lvolstore
+ * \return Handle to spdk_lvol_store or NULL if not found.
+ */
+struct spdk_lvol_store *vbdev_get_lvol_store_by_uuid(const char *uuid_str);
+
+/**
+ * \brief Search for handle to lvolstore
+ * \param name name of lvolstore
+ * \return Handle to spdk_lvol_store or NULL if not found.
+ */
+struct spdk_lvol_store *vbdev_get_lvol_store_by_name(const char *name);
+
 #endif /* SPDK_VBDEV_LVOL_H */
