@@ -40,7 +40,6 @@
 
 #include "spdk/queue.h"
 #include "spdk/blob.h"
-#include <uuid/uuid.h>
 
 struct spdk_lvol_store;
 struct spdk_lvol;
@@ -188,10 +187,11 @@ struct spdk_lvol *vbdev_get_lvol_by_name(const char *name);
 
 /**
  * \brief Search for handle lvolstore
- * \param uuid UUID of lvolstore
+ * \param uuid_str UUID of lvolstore
  * \return Handle to spdk_lvol_store or NULL if not found.
  */
-struct spdk_lvol_store *vbdev_get_lvol_store_by_uuid(uuid_t uuid);
+struct spdk_lvol_store *vbdev_get_lvol_store_by_uuid(const char *uuid_str);
+
 /**
  * \brief Search for handle to lvolstore
  * \param name name of lvolstore

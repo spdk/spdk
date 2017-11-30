@@ -281,8 +281,8 @@ vbdev_lvol_store_next(struct lvol_store_bdev *prev)
 	return lvs_bdev;
 }
 
-struct spdk_lvol_store *
-vbdev_get_lvol_store_by_uuid(uuid_t uuid)
+static struct spdk_lvol_store *
+_vbdev_get_lvol_store_by_uuid(uuid_t uuid)
 {
 	struct spdk_lvol_store *lvs = NULL;
 	struct lvol_store_bdev *lvs_bdev = vbdev_lvol_store_first();
@@ -295,6 +295,18 @@ vbdev_get_lvol_store_by_uuid(uuid_t uuid)
 		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
 	}
 	return NULL;
+}
+
+struct spdk_lvol_store *
+vbdev_get_lvol_store_by_uuid(const char *uuid_str)
+{
+	uuid_t uuid;
+
+	if (uuid_parse(uuid_str, uuid)) {
+		return NULL;
+	}
+
+	return _vbdev_get_lvol_store_by_uuid(uuid);
 }
 
 struct spdk_lvol_store *
