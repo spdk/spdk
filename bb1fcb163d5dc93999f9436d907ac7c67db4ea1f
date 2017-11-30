@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "036e6a2a_fdef5e0e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-11-30T14:56:31Z",
+      "side": 1,
+      "message": "could you rebase this from the latest version of my patch: https://review.gerrithub.io/#/c/388703/\n\nInstead of adding extra flags in spdk_blob for all of these, I would prefer to add macros or inline functions like this:\n\n#define spdk_blob_is_thin_provisioned(blob) (blob-\u003einvalid_flags \u0026 SPDK_BLOB_THIN_PROV)",
+      "revId": "bb1fcb163d5dc93999f9436d907ac7c67db4ea1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
