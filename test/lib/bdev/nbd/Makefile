@@ -38,7 +38,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = nbd
 
-C_SRCS := nbd.c
+C_SRCS := nbd.c nbd_rpc.c
 
 CFLAGS += -I. $(ENV_CFLAGS)
 

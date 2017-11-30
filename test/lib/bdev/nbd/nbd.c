@@ -44,9 +44,9 @@
 #include "spdk/util.h"
 
 static struct spdk_poller *g_nbd_poller;
-static struct spdk_nbd_disk *g_nbd_disk;
+struct spdk_nbd_disk *g_nbd_disk;
 static char *g_bdev_name;
-static char *g_nbd_name = "/dev/nbd0";
+char *g_nbd_name = "/dev/nbd0";
 
 #include "../common.c"
 
