@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6c73dde_b612928f",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2017-11-30T11:19:17Z",
+      "side": 0,
+      "message": "Use RPC \"construct_nvme_bdev\" method to replace it.",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 50
+      },
+      "revId": "415a1485cf5bb40a899f41d06be9f0491c5bc994",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

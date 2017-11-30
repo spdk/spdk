@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3591446_26f263e3",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2017-11-30T11:19:17Z",
+      "side": 1,
+      "message": "Now we only has one P3700 SSD in Spdk SPDK Automated Test Server,I think it can add a different type ssd (like P4500)on test server.",
+      "range": {
+        "startLine": 81,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 47
+      },
+      "revId": "751a2dfc1d3ae0cb9cba5f0655ade618755a5893",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
