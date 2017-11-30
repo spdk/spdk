@@ -702,17 +702,11 @@ end:
 }
 
 int
-vbdev_lvol_create(uuid_t uuid, const char *name, size_t sz,
+vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 		  spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
-	struct spdk_lvol_store *lvs;
 	int rc;
-
-	lvs = vbdev_get_lvol_store_by_uuid(uuid);
-	if (lvs == NULL) {
-		return -ENODEV;
-	}
 
 	req = calloc(1, sizeof(*req));
 	if (req == NULL) {
