@@ -34,8 +34,44 @@
 #ifndef SPDK_NBD_H_
 #define SPDK_NBD_H_
 
+#include <linux/nbd.h>
+#include "spdk/bdev.h"
+
 struct spdk_bdev;
-struct spdk_nbd_disk;
+
+struct nbd_io {
+	enum spdk_bdev_io_type	type;
+	int			ref;
+	void			*payload;
+
+	/* NOTE: for TRIM, this represents number of bytes to trim. */
+	uint32_t		payload_size;
+
+	bool			payload_in_progress;
+
+	struct nbd_request	req;
+	bool			req_in_progress;
+
+	struct nbd_reply	resp;
+	bool			resp_in_progress;
+
+	/*
+	 * Tracks current progress on reading/writing a request,
+	 * response, or payload from the nbd socket.
+	 */
+	uint32_t		offset;
+};
+
+struct spdk_nbd_disk {
+	struct spdk_bdev	*bdev;
+	struct spdk_bdev_desc	*bdev_desc;
+	struct spdk_io_channel	*ch;
+	int			dev_fd;
+	int			kernel_sp_fd;
+	int			spdk_sp_fd;
+	struct nbd_io		io;
+	uint32_t		buf_align;
+};
 
 struct spdk_nbd_disk *spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path);
 
