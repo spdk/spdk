@@ -38,9 +38,9 @@
 #ifndef SPDK_LVOL_H
 #define SPDK_LVOL_H
 
-#include "spdk/queue.h"
-#include "spdk/blob.h"
+#include "spdk/stdinc.h"
 
+struct spdk_bs_dev;
 struct spdk_lvol_store;
 struct spdk_lvol;
 
