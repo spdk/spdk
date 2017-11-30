@@ -190,7 +190,7 @@ struct spdk_bdev {
 	char *name;
 
 	/** Unique aliases for this block device. */
-	TAILQ_HEAD(, spdk_bdev) aliases;
+	TAILQ_HEAD(aliases_list, spdk_bdev) aliases;
 
 	TAILQ_ENTRY(spdk_bdev) aliases_link;
 
