@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b7f78789_33bc5dcd",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-30T14:54:07Z",
+      "side": 1,
+      "message": "You\u0027re not annoying. Ack :)",
+      "parentUuid": "368312f2_98e1a0b9",
+      "range": {
+        "startLine": 213,
+        "startChar": 3,
+        "endLine": 213,
+        "endChar": 60
+      },
+      "revId": "219a245e89bf55bc69cf44b8211b53c92f607c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8b3150d4_1ee091fe",
         "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2017-11-28T17:41:26Z",
       "side": 1,
       "message": "virtio_dev_destruct?",
+      "range": {
+        "startLine": 214,
+        "startChar": 42,
+        "endLine": 214,
+        "endChar": 59
+      },
+      "revId": "219a245e89bf55bc69cf44b8211b53c92f607c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "904103fb_c42d2e33",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-11-30T14:54:07Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8b3150d4_1ee091fe",
       "range": {
         "startLine": 214,
         "startChar": 42,
