@@ -39,17 +39,13 @@
 static char g_path[256];
 
 static void
-usage(char *executable_name)
+bdev_svc_usage(void)
 {
-	printf("%s [options]\n", executable_name);
-	printf("options:\n");
-	printf(" -c config  config file [required]\n");
-	printf(" -i shared memory ID\n");
-	printf(" -m mask    core mask for DPDK\n");
-	printf(" -n channel number of memory channels used for DPDK\n");
-	printf(" -p core    master (primary) core for DPDK\n");
-	printf(" -s size    memory size in MB for DPDK\n");
-	printf(" -H         show this usage\n");
+}
+
+static void
+bdev_svc_parse_arg(int ch, char *arg)
+{
 }
 
 static void
@@ -79,49 +75,20 @@ bdev_svc_shutdown(void)
 int
 main(int argc, char **argv)
 {
-	int ch, rc;
+	int rc;
 	struct spdk_app_opts opts = {};
 
 	/* default value in opts structure */
 	spdk_app_opts_init(&opts);
 
 	opts.name = "bdev_svc";
-
-	while ((ch = getopt(argc, argv, "c:i:m:n:p:s:H")) != -1) {
-		switch (ch) {
-		case 'c':
-			opts.config_file = optarg;
-			break;
-		case 'i':
-			opts.shm_id = atoi(optarg);
-			break;
-		case 'm':
-			opts.reactor_mask = optarg;
-			break;
-		case 'n':
-			opts.mem_channel = atoi(optarg);
-			break;
-		case 'p':
-			opts.master_core = atoi(optarg);
-			break;
-		case 's':
-			opts.mem_size = atoi(optarg);
-			break;
-		case 'H':
-		default:
-			usage(argv[0]);
-			exit(EXIT_SUCCESS);
-		}
-	}
-
-	if (!opts.config_file) {
-		fprintf(stderr, "Configuration file is required.\n");
-		usage(argv[0]);
-		exit(1);
-	}
-
 	opts.shutdown_cb = bdev_svc_shutdown;
 	opts.max_delay_us = 1000 * 1000;
+
+	rc = spdk_app_parse_args(argc, argv, &opts, "", bdev_svc_parse_arg, bdev_svc_usage);
+	if (rc) {
+		return rc;
+	}
 
 	rc = spdk_app_start(&opts, bdev_svc_start, (void *)(intptr_t)opts.shm_id, NULL);
 
