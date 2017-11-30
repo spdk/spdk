@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8634bb99_4a0d3874",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T08:47:17Z",
+      "side": 1,
+      "message": "Please run it at least once on Test Pool without nightly so we know it passes correctly",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 2
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a5fd84d_de07caef",
+        "filename": "test/iscsi_tgt/multiconnection/iscsi.conf",
+        "patchSetId": 11
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T08:47:17Z",
+      "side": 1,
+      "message": "Is this config ok? I think all Test Pool machines have 1 NVMe.\nAdditional Split directives won\u0027t break anything but they seem not needed to me.\n\nAlso, this split will NOT work, because in scripts you use name \"nvme\" instead of \"Nvme\" (capital letter)",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 20
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d26a485_37aa2338",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T08:47:17Z",
+      "side": 1,
+      "message": "bdfaddr is only used for \"construct_nvme_bdev\" RPC call.\nI think you can just use gen_nvme.sh \u003e\u003e config file, like in iscsi_tgt/ext4test.sh @ line 15.",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 4
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a13dc8c4_3aea0c3c",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T08:47:17Z",
+      "side": 1,
+      "message": "What if there is only 1 NVMe disk, and not 2 how it is assmed in this script? This part breaks for me.",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 22
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b097390c_4fa64d63",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T08:47:17Z",
+      "side": 1,
+      "message": "Not sure if we need to use lvols to test multiconnection. Using plain Malloc Bdevs or Split NVMe would be just fine I think.\n\nWe already use lvols and multiple connections in iscsi_tgt/iscsi_lvol.sh. Up to you if you\u0027d like to keep lvols in this test or not.",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 95
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "796b1cc4_3798c891",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T08:47:17Z",
+      "side": 1,
+      "message": "Some echo\u0027s have \"INFO:\", others don\u0027t. Try to keep it consistent: either remove INFOs from all echo messages, or add them",
+      "range": {
+        "startLine": 68,
+        "startChar": 6,
+        "endLine": 68,
+        "endChar": 12
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b929898_be4c68a0",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T08:47:17Z",
+      "side": 1,
+      "message": "Is tab needed here?",
+      "range": {
+        "startLine": 78,
+        "startChar": 9,
+        "endLine": 78,
+        "endChar": 11
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34aa20a8_8896b866",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-11-30T08:47:17Z",
+      "side": 1,
+      "message": "this is not needed because of line 83",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 33
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
