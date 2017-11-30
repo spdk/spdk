@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b591cbb6_5f8d803e",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-30T07:37:58Z",
+      "side": 1,
+      "message": "not sure why we need a new event to cancel the poller? any detail about this? I test this logic here, and it works well.",
+      "parentUuid": "b196df4e_98229528",
+      "revId": "70a96e15052bb0d529ab334dafcca488093cdc17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d3cd4ba_a39facc1",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 24
@@ -30,6 +48,24 @@
       "writtenOn": "2017-11-30T07:28:30Z",
       "side": 1,
       "message": "The reset logic is not correct, since you want to queue all the reset event and process them one by one, so here you should test the \u0027rest_in_progress\u0027 first and then queue the new reset event.",
+      "revId": "70a96e15052bb0d529ab334dafcca488093cdc17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdcf13a3_92fa34ee",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-11-30T07:37:58Z",
+      "side": 1,
+      "message": "the bdev layer already do the work, please check the function _spdk_bdev_channel_start_reset(), it will make sure there will be only one reset command infight.",
+      "parentUuid": "5d3cd4ba_a39facc1",
       "revId": "70a96e15052bb0d529ab334dafcca488093cdc17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
