@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "ee854191_36219b39",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-30T07:49:22Z",
+      "side": 1,
+      "message": "I mean maybe it is not safe to cancel the poller itself inside poller\u0027s callback function.",
+      "parentUuid": "b591cbb6_5f8d803e",
+      "revId": "70a96e15052bb0d529ab334dafcca488093cdc17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d3cd4ba_a39facc1",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 24
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "the bdev layer already do the work, please check the function _spdk_bdev_channel_start_reset(), it will make sure there will be only one reset command infight.",
       "parentUuid": "5d3cd4ba_a39facc1",
+      "revId": "70a96e15052bb0d529ab334dafcca488093cdc17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d724b573_2aaaa9cb",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-11-30T07:49:22Z",
+      "side": 1,
+      "message": "For synchronize this should be okay, but here you are processing the asynchronies event. Since the bdev layer will not send 2 reset events at the same time, why not process the reset in bdev_aio_reset with synchronize method, this will make the code much cleaner.",
+      "parentUuid": "fdcf13a3_92fa34ee",
       "revId": "70a96e15052bb0d529ab334dafcca488093cdc17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
