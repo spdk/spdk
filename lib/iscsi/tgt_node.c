@@ -48,6 +48,7 @@
 #include "iscsi/init_grp.h"
 #include "spdk/scsi.h"
 #include "iscsi/task.h"
+#include "scsi/scsi_internal.h"
 
 #define MAX_TMPBUF 1024
 #define MAX_MASKBUF 128
@@ -523,8 +524,15 @@ spdk_iscsi_tgt_node_add_pg_map(struct spdk_iscsi_tgt_node *target,
 			       struct spdk_iscsi_portal_grp *pg)
 {
 	struct spdk_iscsi_pg_map *pg_map;
+	char port_name[MAX_TMPBUF];
 
 	if (spdk_iscsi_tgt_node_find_pg_map(target, pg) != NULL) {
+		return NULL;
+	}
+
+	if (target->num_pg_maps >= SPDK_SCSI_DEV_MAX_PORTS) {
+		SPDK_ERRLOG("Number of PG maps is more than allowed (max=%d)\n",
+			    SPDK_SCSI_DEV_MAX_PORTS);
 		return NULL;
 	}
 
@@ -540,6 +548,10 @@ spdk_iscsi_tgt_node_add_pg_map(struct spdk_iscsi_tgt_node *target,
 	target->num_pg_maps++;
 	TAILQ_INSERT_TAIL(&target->pg_map_head, pg_map, tailq);
 
+	snprintf(port_name, sizeof(port_name), "%s,t,0x%4.4x",
+		 target->dev->name, pg->tag);
+	spdk_scsi_dev_add_port(target->dev, pg->tag, port_name);
+
 	return pg_map;
 }
 
@@ -550,6 +562,9 @@ _spdk_iscsi_tgt_node_delete_pg_map(struct spdk_iscsi_tgt_node *target,
 	TAILQ_REMOVE(&target->pg_map_head, pg_map, tailq);
 	target->num_pg_maps--;
 	pg_map->pg->ref--;
+
+	spdk_scsi_dev_delete_port(target->dev, pg_map->pg->tag);
+
 	free(pg_map);
 }
 
@@ -716,11 +731,8 @@ spdk_iscsi_tgt_node_construct(int target_index,
 			      int auth_chap_disabled, int auth_chap_required, int auth_chap_mutual, int auth_group,
 			      int header_digest, int data_digest)
 {
-	char				fullname[MAX_TMPBUF], port_name[MAX_TMPBUF];
+	char				fullname[MAX_TMPBUF];
 	struct spdk_iscsi_tgt_node	*target;
-	struct spdk_iscsi_portal_grp	*pg;
-	struct spdk_iscsi_pg_map	*pg_map;
-	int				num_unique_portal_groups;
 	int				i, rc;
 
 	if (auth_chap_disabled && auth_chap_required) {
@@ -805,21 +817,6 @@ spdk_iscsi_tgt_node_construct(int target_index,
 			spdk_iscsi_tgt_node_destruct(target);
 			return NULL;
 		}
-	}
-
-	num_unique_portal_groups = 0;
-	TAILQ_FOREACH(pg_map, &target->pg_map_head, tailq) {
-
-		if (++num_unique_portal_groups > SPDK_SCSI_DEV_MAX_PORTS) {
-			SPDK_ERRLOG("too many unique portal groups\n");
-			spdk_iscsi_tgt_node_destruct(target);
-			return NULL;
-		}
-
-		pg = pg_map->pg;
-		snprintf(port_name, sizeof(port_name), "%s,t,0x%4.4x",
-			 name, pg->tag);
-		spdk_scsi_dev_add_port(target->dev, pg->tag, port_name);
 	}
 
 	target->auth_chap_disabled = auth_chap_disabled;
