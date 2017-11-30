@@ -415,10 +415,8 @@ int virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *
  * Initialize a virtio_dev for the given PCI device.
  * The virtio_dev will try to use \c SPDK_VIRTIO_MAX_VIRTQUEUES queues by
  * default and might fail to start. It is advised to overwrite the
- * `virtio_dev->max_queues` field manually before calling \c virtio_dev_restart.
- * The proper value might be read from e.g. device PCI config.
- * See \c virtio_dev_read_dev_config.
- * The device has to be freed with \c virtio_dev_free.
+ * `virtio_dev->max_queues` field manually starting the device.
+ * The virtio_dev has to be freed with \c virtio_dev_destruct.
  *
  * \param vdev preallocated vhost device struct to operate on
  * \param name name of this virtio device
