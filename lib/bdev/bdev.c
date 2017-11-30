@@ -905,6 +905,12 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 	return bdev->name;
 }
 
+const struct aliases_list *
+spdk_bdev_get_aliases(const struct spdk_bdev *bdev)
+{
+	return &bdev->aliases;
+}
+
 const char *
 spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
 {
@@ -1849,6 +1855,12 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INIT(&bdev->base_bdevs);
 
 	TAILQ_INIT(&bdev->aliases);
+
+
+	spdk_bdev_alias_add(bdev, "test");
+	spdk_bdev_alias_add(bdev, "test1");
+	spdk_bdev_alias_add(bdev, "test2");
+	spdk_bdev_alias_add(bdev, "test3");
 
 	bdev->reset_in_progress = NULL;
 
