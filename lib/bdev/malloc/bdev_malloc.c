@@ -434,13 +434,6 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 	return &mdisk->disk;
 }
 
-static void free_malloc_disk(struct malloc_disk *mdisk)
-{
-	free(mdisk->disk.name);
-	spdk_dma_free(mdisk->malloc_buf);
-	spdk_dma_free(mdisk);
-}
-
 static int bdev_malloc_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Malloc");
@@ -483,7 +476,7 @@ static void bdev_malloc_finish(void)
 	while (g_malloc_disk_head != NULL) {
 		mdisk = g_malloc_disk_head;
 		g_malloc_disk_head = mdisk->next;
-		free_malloc_disk(mdisk);
+		spdk_bdev_unregister(&mdisk->disk, NULL, NULL);
 	}
 }
 
