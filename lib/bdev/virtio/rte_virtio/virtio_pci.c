@@ -510,7 +510,6 @@ virtio_pci_dev_init(struct virtio_dev *vdev, const char *name,
 	vdev->modern = 1;
 	vdev->max_queues = SPDK_VIRTIO_MAX_VIRTQUEUES;
 
-	TAILQ_INSERT_TAIL(&g_virtio_driver.scsi_devs, vdev, tailq);
 	return 0;
 }
 
