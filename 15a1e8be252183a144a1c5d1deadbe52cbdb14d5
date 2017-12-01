@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3abc3c5_5f36ecb8",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T22:06:59Z",
+      "side": 1,
+      "message": "can we instead do something like:\n\nif ! [ -d \"$vm\" ]; then\n   continue\nfi\n\nThen we don\u0027t have to change all of the indenting everywhere.\n\nOnly made this comment here, but I think we should use this same construct in the ones above too.  Makes the patch much much smaller.",
+      "revId": "15a1e8be252183a144a1c5d1deadbe52cbdb14d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
