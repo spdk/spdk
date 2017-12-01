@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "57ff81a4_faf59b52",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-12-01T23:40:06Z",
+      "side": 1,
+      "message": "Hi Ben, we call the spdk_for_each_channel() when we get one reset command, and I think here is the first time we find that no IO pending and we could unregister the reset timer? if we move this logic to the timer, it will after this function ?",
+      "parentUuid": "779b924d_a160db5e",
+      "revId": "524f1f787dcb7b0a2dd9067444d1feb912ed1d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d78a9e3_9bee53be",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 30
