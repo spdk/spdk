@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64982c14_73914a70",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 781,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-01T08:46:45Z",
+      "side": 1,
+      "message": "Why do we destroy lvol store here?",
+      "range": {
+        "startLine": 781,
+        "startChar": 8,
+        "endLine": 781,
+        "endChar": 48
+      },
+      "revId": "ab6b03238d3ad0c667ae9c3b590d6b08ce08b57d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "516513c2_09759cd0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-01T08:46:45Z",
+      "side": 1,
+      "message": "remove \"ret value\" and just do:\n\"if self.c.check_get_lvol_stores() !\u003d 0\"",
+      "range": {
+        "startLine": 793,
+        "startChar": 8,
+        "endLine": 796,
+        "endChar": 27
+      },
+      "revId": "ab6b03238d3ad0c667ae9c3b590d6b08ce08b57d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d4ac4e7_c2142955",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-01T08:46:45Z",
+      "side": 1,
+      "message": "As last step you also remove existing lvol store",
+      "revId": "ab6b03238d3ad0c667ae9c3b590d6b08ce08b57d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "987aae40_5274a6c7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-01T08:46:45Z",
+      "side": 1,
+      "message": "You should mention that we expect lvol store to be tasted correctly",
+      "revId": "ab6b03238d3ad0c667ae9c3b590d6b08ce08b57d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
