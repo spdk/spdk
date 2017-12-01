@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92045322_262c2138",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-01T18:25:05Z",
+      "side": 1,
+      "message": "I think the right fix is to check if the state is NVMF_TGT_RUNNING. If it is running, set the state to STOP_ACCEPTOR like it did before. If the state is not running, set the state to ERROR.",
+      "revId": "6bbc7d2875e976069e1eb3b87a89933a7565d188",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
