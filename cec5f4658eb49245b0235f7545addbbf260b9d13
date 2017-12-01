@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d2c7d81_822aaf9c",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T22:28:48Z",
+      "side": 1,
+      "message": "how about just \"no_init_trim\"?\n\nI see later in the code where it is shortening \"disable_trim_on_init\" to just \"disable_trim\" - but that is mislead, since just \"disable_trim\" means something very different.\n\nSo if we want to pick a shorter name, \"no_init_trim\" removes 8 characters.",
+      "revId": "cec5f4658eb49245b0235f7545addbbf260b9d13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "135e1050_f5fd331e",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T22:28:48Z",
+      "side": 1,
+      "message": "no_init_trim",
+      "revId": "cec5f4658eb49245b0235f7545addbbf260b9d13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f95a79b4_5bfd0555",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T22:28:48Z",
+      "side": 1,
+      "message": "let\u0027s make this a bool and name it no_init_trim\n\nsimilar to how contruct_vhost_blk_controller uses a bool for the readonly flag",
+      "revId": "cec5f4658eb49245b0235f7545addbbf260b9d13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "779d62d0_d2d16252",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T22:28:48Z",
+      "side": 1,
+      "message": "should call this no_init_trim\n\nlet\u0027s also make it a bool instead of a string",
+      "revId": "cec5f4658eb49245b0235f7545addbbf260b9d13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57232d9b_4ca475dd",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T22:28:48Z",
+      "side": 1,
+      "message": "no_init_trim",
+      "revId": "cec5f4658eb49245b0235f7545addbbf260b9d13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
