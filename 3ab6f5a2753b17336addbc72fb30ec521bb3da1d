@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84e7a87f_946da112",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-01T17:02:13Z",
+      "side": 1,
+      "message": "I saw Jim suggested somewhere else that we change spdk_bdev_get_io_stat so that it didn\u0027t 0 the stats. I think that is probably a good idea because it eliminates a number of race conditions when two different users are trying to ask for stats. Can you do that patch first and then this one?",
+      "revId": "3ab6f5a2753b17336addbc72fb30ec521bb3da1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1805c966_18c41649",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1333,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-01T17:02:13Z",
+      "side": 1,
+      "message": "get_io_stat_in_progress needs to be set with an atomic compare and exchange or there is a race condition.",
+      "revId": "3ab6f5a2753b17336addbc72fb30ec521bb3da1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
