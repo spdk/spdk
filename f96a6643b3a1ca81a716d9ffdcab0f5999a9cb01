@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ac1fcef_abb720e0",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-01T08:02:30Z",
+      "side": 1,
+      "message": "We should keep check for lvs \u003d\u003d NULL here.",
+      "revId": "f96a6643b3a1ca81a716d9ffdcab0f5999a9cb01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
