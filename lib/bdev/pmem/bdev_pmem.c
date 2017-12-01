@@ -393,6 +393,7 @@ bdev_pmem_finish(void)
 
 	TAILQ_FOREACH_SAFE(pdisk, &g_pmem_disks, tailq, tmp) {
 		bdev_pmem_destruct(pdisk);
+		spdk_bdev_unregister(&pdisk->disk, NULL, NULL);
 	}
 
 	spdk_io_device_unregister(&g_pmem_disks, bdev_pmem_finish_done);
