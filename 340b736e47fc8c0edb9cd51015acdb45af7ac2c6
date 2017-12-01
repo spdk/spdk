@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "89667c07_617b858a",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-01T20:18:21Z",
+      "side": 1,
+      "message": "I think this needs an \u0027else\u0027 to set io_payload to NULL - otherwise, the next request will try to free the current payload pointer again.",
+      "revId": "340b736e47fc8c0edb9cd51015acdb45af7ac2c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
