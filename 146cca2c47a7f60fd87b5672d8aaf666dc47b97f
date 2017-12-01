@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00de2db2_625da3ba",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 3
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T21:59:57Z",
+      "side": 1,
+      "message": "Hi Daniel,\n\nWe don\u0027t want the puts below to happen unless we are actually using libvirt.  For example, on my MacBook where I\u0027m using VirtualBox, I see the puts message several times.\n\nYou can change this to:\n\nconfig.vm.provider \"libvirt\" do |libvirt, override|\n\nthen make the change below.  This fixes the problem on my MacBook.\n\nThanks,\n\n-Jim",
+      "revId": "146cca2c47a7f60fd87b5672d8aaf666dc47b97f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4900c0e7_7c917569",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 3
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T21:59:57Z",
+      "side": 1,
+      "message": "override.puts",
+      "revId": "146cca2c47a7f60fd87b5672d8aaf666dc47b97f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebb42996_d84ae113",
+        "filename": "scripts/vagrant/create_nvme_img.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T21:59:57Z",
+      "side": 1,
+      "message": "I think it would be better to remove the sudos in this file, and then the user can just run the script under sudo if necessary.",
+      "revId": "146cca2c47a7f60fd87b5672d8aaf666dc47b97f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
