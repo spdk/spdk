@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b4e47aa_b61e3926",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T21:17:11Z",
+      "side": 1,
+      "message": "realloc() doesn\u0027t zero out the part of the buffer that got added - so I don\u0027t think this will really work, there could be garbage at the new index and the channel would never get allocated\n\nI\u0027m also not sure why this check is needed?  Shouldn\u0027t we always just try to set the channel here?",
+      "revId": "a748ae6b1a734d6ac5e0ac28c0696de67fb4d1c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
