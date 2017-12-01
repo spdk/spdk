@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0cadb41f_a644d80f",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-01T17:57:40Z",
+      "side": 1,
+      "message": "This looks unusual - shouldn\u0027t unregistering the bdev remove it from the g_nvme_bdevs list?  Maybe there is a missing step in bdev_nvme_destruct().",
+      "revId": "89e5201bb30d6049dae6e118240334165a4665e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
