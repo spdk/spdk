@@ -267,7 +267,7 @@ bdev_null_finish(void)
 	struct null_bdev *bdev, *tmp;
 
 	TAILQ_FOREACH_SAFE(bdev, &g_null_bdev_head, tailq, tmp) {
-		bdev_null_destruct(bdev);
+		spdk_bdev_unregister(&bdev->bdev, NULL, NULL);
 	}
 }
 
