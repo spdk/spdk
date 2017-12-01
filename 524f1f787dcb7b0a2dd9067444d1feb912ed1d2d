@@ -16,6 +16,24 @@
       "revId": "524f1f787dcb7b0a2dd9067444d1feb912ed1d2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09ff26f7_26607077",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-01T01:15:56Z",
+      "side": 1,
+      "message": "seems reasonable here, poll_unregister will set to NULL through.",
+      "parentUuid": "2d78a9e3_9bee53be",
+      "revId": "524f1f787dcb7b0a2dd9067444d1feb912ed1d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
