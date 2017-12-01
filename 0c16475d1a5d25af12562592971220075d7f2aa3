@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83f24d2c_ad53eaa0",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T22:31:23Z",
+      "side": 1,
+      "message": "We did not have this check before - is this needed?\n\nIf so, this should really be broken up into a separate patch - this patch can still create the new function, but then the second patch can change what it does.",
+      "revId": "0c16475d1a5d25af12562592971220075d7f2aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
