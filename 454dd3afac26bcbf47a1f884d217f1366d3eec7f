@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a57659f_be28ab54",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-01T08:42:18Z",
+      "side": 1,
+      "message": "Not needed since we use localhost unix socket",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 13
+      },
+      "revId": "454dd3afac26bcbf47a1f884d217f1366d3eec7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc1b6b32_dff5bab9",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-01T08:42:18Z",
+      "side": 1,
+      "message": "After moving the condition to line 77 I think this chunk can be removed",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 2
+      },
+      "revId": "454dd3afac26bcbf47a1f884d217f1366d3eec7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "247dc29b_9d4a4d55",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-01T08:42:18Z",
+      "side": 1,
+      "message": "you have  $COMMON_DIR variable for that path",
+      "range": {
+        "startLine": 101,
+        "startChar": 1,
+        "endLine": 101,
+        "endChar": 20
+      },
+      "revId": "454dd3afac26bcbf47a1f884d217f1366d3eec7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f140c43e_95bef6b3",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-01T08:42:18Z",
+      "side": 1,
+      "message": "partition",
+      "range": {
+        "startLine": 103,
+        "startChar": 24,
+        "endLine": 103,
+        "endChar": 34
+      },
+      "revId": "454dd3afac26bcbf47a1f884d217f1366d3eec7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc1ee18c_32cd1fb8",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-01T08:42:18Z",
+      "side": 1,
+      "message": "feature",
+      "range": {
+        "startLine": 115,
+        "startChar": 30,
+        "endLine": 115,
+        "endChar": 39
+      },
+      "revId": "454dd3afac26bcbf47a1f884d217f1366d3eec7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5986440_4d34d560",
+        "filename": "test/vhost/readonly/vhost.conf.in",
+        "patchSetId": 33
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-01T08:42:18Z",
+      "side": 1,
+      "message": "Not needed",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 13
+      },
+      "revId": "454dd3afac26bcbf47a1f884d217f1366d3eec7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7397b163_a9e94c6d",
+        "filename": "test/vhost/readonly/vhost.conf.in",
+        "patchSetId": 33
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-01T08:42:18Z",
+      "side": 1,
+      "message": "I think this is not needed as well, this is what happens by default when you don\u0027t have [RPC] section",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 6,
+        "endChar": 27
+      },
+      "revId": "454dd3afac26bcbf47a1f884d217f1366d3eec7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
