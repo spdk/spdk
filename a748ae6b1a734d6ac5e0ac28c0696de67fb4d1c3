@@ -16,6 +16,24 @@
       "revId": "a748ae6b1a734d6ac5e0ac28c0696de67fb4d1c3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "521bbaf7_2a96dfc2",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-01T21:20:13Z",
+      "side": 1,
+      "message": "For now, adding subsystems and namespaces to poll groups is asynchronous but the user has no way to wait for their completion (I\u0027ll add that later). That means a user could add a subsystem then add two namespaces all synchronously, and by the time this function executes on the poll group the events from the initial subsystem creation may have already created the I/O channel. It\u0027s a mess until I fix the APIs.\n\nI\u0027ll zero the memory though.",
+      "parentUuid": "6b4e47aa_b61e3926",
+      "revId": "a748ae6b1a734d6ac5e0ac28c0696de67fb4d1c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
