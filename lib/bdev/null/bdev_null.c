@@ -274,7 +274,7 @@ bdev_null_finish(void)
 
 	TAILQ_FOREACH_SAFE(bdev, &g_null_bdev_head, tailq, tmp) {
 		TAILQ_REMOVE(&g_null_bdev_head, bdev, tailq);
-		spdk_dma_free(bdev);
+		spdk_bdev_unregister(&bdev->bdev, NULL, NULL);
 	}
 }
 
