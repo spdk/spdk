@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "e9607b9a_9cd93df9",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-01T09:26:18Z",
+      "side": 1,
+      "message": "I need not config file here. If use it,I need a extra step to parse conf to get bdfaddr.",
+      "parentUuid": "0d26a485_37aa2338",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 4
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a13dc8c4_3aea0c3c",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 11
@@ -82,6 +106,30 @@
       "writtenOn": "2017-11-30T08:47:17Z",
       "side": 1,
       "message": "What if there is only 1 NVMe disk, and not 2 how it is assmed in this script? This part breaks for me.",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 22
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ffabd60_829b4899",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-01T09:26:18Z",
+      "side": 1,
+      "message": "Thanks, this consideration is very thoughtful. The case is designed to run on 128 connection, need 2 NVMe disk which splited to 64 parts each. If there is only 1 disk, creating iSCSI target node will display an error and exit. Or I add extra scripts to split 128 on one disk, need I do it?",
+      "parentUuid": "a13dc8c4_3aea0c3c",
       "range": {
         "startLine": 45,
         "startChar": 0,
@@ -117,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "4a6d9f34_24ae4478",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-01T09:26:18Z",
+      "side": 1,
+      "message": "Paul Luse discussed with us, and decided to use lovls and nvme to test multiconnection and blobstore.",
+      "parentUuid": "b097390c_4fa64d63",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 95
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "796b1cc4_3798c891",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 11
@@ -128,6 +200,30 @@
       "writtenOn": "2017-11-30T08:47:17Z",
       "side": 1,
       "message": "Some echo\u0027s have \"INFO:\", others don\u0027t. Try to keep it consistent: either remove INFOs from all echo messages, or add them",
+      "range": {
+        "startLine": 68,
+        "startChar": 6,
+        "endLine": 68,
+        "endChar": 12
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce23456f_22c2e150",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-01T09:26:18Z",
+      "side": 1,
+      "message": "OK, I will unify the writing with others.",
+      "parentUuid": "796b1cc4_3798c891",
       "range": {
         "startLine": 68,
         "startChar": 6,
@@ -163,6 +259,30 @@
     },
     {
       "key": {
+        "uuid": "45be3571_f70e8cda",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-01T09:26:18Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "0b929898_be4c68a0",
+      "range": {
+        "startLine": 78,
+        "startChar": 9,
+        "endLine": 78,
+        "endChar": 11
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34aa20a8_8896b866",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 11
@@ -174,6 +294,30 @@
       "writtenOn": "2017-11-30T08:47:17Z",
       "side": 1,
       "message": "this is not needed because of line 83",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 33
+      },
+      "revId": "6d59e907ebc63b0ad3351fcbfe645f00f155311e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a00ebe51_2b5ea49e",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-01T09:26:18Z",
+      "side": 1,
+      "message": "Thanks, removed.",
+      "parentUuid": "34aa20a8_8896b866",
       "range": {
         "startLine": 80,
         "startChar": 0,
