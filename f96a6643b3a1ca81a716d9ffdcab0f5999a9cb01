@@ -16,6 +16,24 @@
       "revId": "f96a6643b3a1ca81a716d9ffdcab0f5999a9cb01",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fea8d02_94935a1e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T20:55:28Z",
+      "side": 1,
+      "message": "I don\u0027t think so.  If someone passes a NULL lvs here, that\u0027s a user error.",
+      "parentUuid": "3ac1fcef_abb720e0",
+      "revId": "f96a6643b3a1ca81a716d9ffdcab0f5999a9cb01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
