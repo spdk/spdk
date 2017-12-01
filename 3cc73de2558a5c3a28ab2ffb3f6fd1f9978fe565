@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d2304f9_10da8e74",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-01T19:34:36Z",
+      "side": 1,
+      "message": "Instead of having a function ask if the string is defined, what if you make a function that is nvme_rdma_event_to_str(uint32_t event) and returns the event string or the string \"%d: undefined\" otherwise.\n\nI think that would make the code simpler.",
+      "revId": "3cc73de2558a5c3a28ab2ffb3f6fd1f9978fe565",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
