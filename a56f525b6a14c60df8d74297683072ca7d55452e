@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7147b92b_9ba3a627",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T16:33:12Z",
+      "side": 1,
+      "message": "Let\u0027s not add thin_provisioned here yet.\n\nI\u0027d rather see this match the RFC document I put together - where user can specify size, xattr_count, xattr_names, and a get_xattr_value function\n\nThen later patch can add the thin_provisioned flag (once blobstore supports thin provisioning)",
+      "revId": "a56f525b6a14c60df8d74297683072ca7d55452e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
