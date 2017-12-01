@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9129829f_3d8ba182",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T23:53:57Z",
+      "side": 1,
+      "message": "This should be broken up into shorter lines.\n\nCan you also describe a bit what you might use this for, and what context you might call it from?\n\nOne problem I see is that if this gets called from the context of the poller function, it will all crash, since we remove the poller from the requisite TAILQ (see reactor.c:440 and reactor.c:456).\n\nWould the following changes work for you and Fujitsu?\n1) Change function to spdk_poller_set_period().\n2) spdk_poller_set_period() fails if you go from 0 to \u003e0, or vice versa.  Meaning you can only change a timer that already had a period \u003e 0 to a different period \u003e 0.\n3) if the period is changed, the new period does not take effect until after the current timer period expires.",
+      "revId": "7ce7b16c93037da17aadb7a78267578112588d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d94dbc33_412e8caf",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T23:53:57Z",
+      "side": 1,
+      "message": "I don\u0027t think we need to add this member.  We can always calculate this from period_ticks.",
+      "revId": "7ce7b16c93037da17aadb7a78267578112588d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
