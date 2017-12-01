@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce52f1b4_3a0cd38a",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-01T17:59:17Z",
+      "side": 1,
+      "message": "I don\u0027t think strstr is the right function choice here. That will match other words that contain \"ALL\". Instead, I think it should use strcasecmp to be both case insensitive and to verify it is an exact match.\n\nWere you using strstr to avoid matching whitespace?",
+      "revId": "58f0c7c862ce48019ec250e696207f2ecd63af37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
