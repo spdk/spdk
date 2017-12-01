@@ -308,6 +308,24 @@ spdk_sock_set_sendbuf(int sock, int sz)
 			  &sz, sizeof(sz));
 }
 
+int
+spdk_epoll_create(int size)
+{
+	return epoll_create1(0);
+}
+
+int
+spdk_epoll_ctl(int sock, int op, int fd, struct epoll_event *event)
+{
+	return epoll_ctl(sock, op, fd, event);
+}
+
+int
+spdk_epoll_wait(int sock, struct epoll_event *events, int maxevents, int timeout)
+{
+	return epoll_wait(sock, events, maxevents, timeout);
+}
+
 bool
 spdk_sock_is_ipv6(int sock)
 {

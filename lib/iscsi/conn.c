@@ -231,7 +231,7 @@ static int
 init_idle_conns(void)
 {
 	assert(g_poll_fd == 0);
-	g_poll_fd = epoll_create1(0);
+	g_poll_fd = spdk_epoll_create(0);
 	if (g_poll_fd < 0) {
 		SPDK_ERRLOG("epoll_create1() failed, errno %d: %s\n", errno, spdk_strerror(errno));
 		return -1;
@@ -250,11 +250,11 @@ add_idle_conn(struct spdk_iscsi_conn *conn)
 	event.data.u64 = 0LL;
 	event.data.ptr = conn;
 
-	rc = epoll_ctl(g_poll_fd, EPOLL_CTL_ADD, conn->sock, &event);
+	rc = spdk_epoll_ctl(g_poll_fd, EPOLL_CTL_ADD, conn->sock, &event);
 	if (rc == 0) {
 		return 0;
 	} else {
-		SPDK_ERRLOG("conn epoll_ctl failed\n");
+		SPDK_ERRLOG("conn spdk_epoll_ctl failed\n");
 		return -1;
 	}
 }
@@ -269,11 +269,11 @@ del_idle_conn(struct spdk_iscsi_conn *conn)
 	 * The event parameter is ignored but needs to be non-NULL to work around a bug in old
 	 * kernel versions.
 	 */
-	rc = epoll_ctl(g_poll_fd, EPOLL_CTL_DEL, conn->sock, &event);
+	rc = spdk_epoll_ctl(g_poll_fd, EPOLL_CTL_DEL, conn->sock, &event);
 	if (rc == 0) {
 		return 0;
 	} else {
-		SPDK_ERRLOG("epoll_ctl(EPOLL_CTL_DEL) failed\n");
+		SPDK_ERRLOG("spdk_epoll_ctl(EPOLL_CTL_DEL) failed\n");
 		return -1;
 	}
 }
@@ -288,19 +288,19 @@ check_idle_conns(void)
 
 	/* if nothing idle, can exit now */
 	if (STAILQ_EMPTY(&g_idle_conn_list_head)) {
-		/* this epoll_wait is needed to finish socket closing process */
-		epoll_wait(g_poll_fd, events, SPDK_MAX_POLLERS_PER_CORE, 0);
+		/* this spdk_epoll_wait is needed to finish socket closing process */
+		spdk_epoll_wait(g_poll_fd, events, SPDK_MAX_POLLERS_PER_CORE, 0);
 	}
 
 	/* Perform a non-blocking epoll */
-	nfds = epoll_wait(g_poll_fd, events, SPDK_MAX_POLLERS_PER_CORE, 0);
+	nfds = spdk_epoll_wait(g_poll_fd, events, SPDK_MAX_POLLERS_PER_CORE, 0);
 	if (nfds < 0) {
-		SPDK_ERRLOG("epoll_wait failed! (ret: %d)\n", nfds);
+		SPDK_ERRLOG("spdk_epoll_wait failed! (ret: %d)\n", nfds);
 		return;
 	}
 
 	if (nfds > SPDK_MAX_POLLERS_PER_CORE) {
-		SPDK_ERRLOG("epoll_wait events exceeded limit! %d > %d\n", nfds,
+		SPDK_ERRLOG("spdk_epoll_wait events exceeded limit! %d > %d\n", nfds,
 			    SPDK_MAX_POLLERS_PER_CORE);
 		assert(0);
 	}
