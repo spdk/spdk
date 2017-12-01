@@ -242,6 +242,7 @@ bdev_nvme_destruct(void *ctx)
 	struct nvme_ctrlr *nvme_ctrlr = nvme_disk->nvme_ctrlr;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	TAILQ_REMOVE(&g_nvme_bdevs, nvme_disk, link);
 	nvme_ctrlr->ref--;
 	free(nvme_disk->disk.name);
 	free(nvme_disk);
@@ -886,22 +887,16 @@ static void
 remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_bdev *nvme_bdev, *btmp;
-	TAILQ_HEAD(, nvme_bdev) removed_bdevs;
 
-	TAILQ_INIT(&removed_bdevs);
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
 		if (nvme_bdev->nvme_ctrlr->ctrlr == ctrlr) {
-			TAILQ_REMOVE(&g_nvme_bdevs, nvme_bdev, link);
-			TAILQ_INSERT_TAIL(&removed_bdevs, nvme_bdev, link);
+			pthread_mutex_unlock(&g_bdev_nvme_mutex);
+			spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
+			pthread_mutex_lock(&g_bdev_nvme_mutex);
 		}
 	}
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-
-	TAILQ_FOREACH_SAFE(nvme_bdev, &removed_bdevs, link, btmp) {
-		TAILQ_REMOVE(&removed_bdevs, nvme_bdev, link);
-		spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
-	}
 }
 
 static void
@@ -1119,7 +1114,6 @@ bdev_nvme_library_fini(void)
 	}
 
 	TAILQ_FOREACH_SAFE(nvme_bdev, &g_nvme_bdevs, link, btmp) {
-		TAILQ_REMOVE(&g_nvme_bdevs, nvme_bdev, link);
 		spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
 	}
 }
