@@ -169,16 +169,11 @@ struct virtqueue {
 	/** Context for response poller. */
 	void *poller_ctx;
 
-	struct vq_desc_extra vq_descx[0];
-};
+	//todo remove, replace entirely by req_end
+	int32_t last_req_start;
+	int32_t last_req_end;
 
-struct virtio_req {
-	struct iovec	*iov;
-	struct iovec	iov_req;
-	struct iovec	iov_resp;
-	uint32_t	iovcnt;
-	int		is_write;
-	uint32_t	data_transferred;
+	struct vq_desc_extra vq_descx[0];
 };
 
 struct virtio_driver {
@@ -202,20 +197,18 @@ typedef int (*virtio_pci_create_cb)(struct virtio_pci_ctx *pci_ctx);
 	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
 	 1ULL << VIRTIO_F_VERSION_1)
 
-uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
-			  uint16_t nb_pkts);
+uint16_t virtio_recv_pkts(struct virtqueue *vq, void **io, uint16_t nb_pkts);
 
-/**
- * Put given request into the virtqueue.  The virtio device owning
- * the virtqueue must be started. This will also send an interrupt unless
- * the host explicitly set VRING_USED_F_NO_NOTIFY in virtqueue flags.
- *
- * \param vq virtio queue
- * \param req virtio request
- * \return 0 on success. In case the ring is full or no free descriptors
- * are available -ENOMEM is returned.
- */
-int virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req);
+void virtqueue_req_start(struct virtqueue *vq, void *req_ctx);
+
+void virtqueue_req_flush(struct virtqueue *vq);
+
+void virtqueue_req_abort(struct virtqueue *vq);
+
+void virtqueue_req_add_desc(struct virtqueue *vq, struct iovec *iov,
+			    uint16_t iovcnt, uint16_t flags);
+
+int16_t virtqueue_get_free_desc_cnt(struct virtqueue *vq);
 
 /**
  * Construct a virtio device.  The device will be in stopped state by default.

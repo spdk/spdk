@@ -138,6 +138,8 @@ virtio_init_vring(struct virtqueue *vq)
 	vq->vq_avail_idx = 0;
 	vq->vq_desc_tail_idx = (uint16_t)(vq->vq_nentries - 1);
 	vq->vq_free_cnt = vq->vq_nentries;
+	vq->last_req_start = -1;
+	vq->last_req_end = 0;
 	memset(vq->vq_descx, 0, sizeof(struct vq_desc_extra) * vq->vq_nentries);
 
 	vring_desc_init(vr->desc, size);
@@ -391,7 +393,7 @@ vq_ring_free_chain(struct virtqueue *vq, uint16_t desc_idx)
 }
 
 static uint16_t
-virtqueue_dequeue_burst_rx(struct virtqueue *vq, struct virtio_req **rx_pkts,
+virtqueue_dequeue_burst_rx(struct virtqueue *vq, void **rx_pkts,
 			   uint32_t *len, uint16_t num)
 {
 	struct vring_used_elem *uep;
@@ -423,89 +425,123 @@ virtqueue_dequeue_burst_rx(struct virtqueue *vq, struct virtio_req **rx_pkts,
 	return i;
 }
 
-static inline void
-virtqueue_iov_to_desc(struct virtqueue *vq, uint16_t desc_idx, struct iovec *iov)
+void
+virtqueue_req_start(struct virtqueue *vq, void *req_ctx)
 {
-	if (!vq->vdev->is_hw) {
-		vq->vq_ring.desc[desc_idx].addr  = (uintptr_t)iov->iov_base;
-	} else {
-		vq->vq_ring.desc[desc_idx].addr = spdk_vtophys(iov->iov_base);
+	struct vring_desc *desc;
+	struct vq_desc_extra *dxp;
+
+	assert(virtio_dev_get_status(vq->vdev) & VIRTIO_CONFIG_S_DRIVER_OK);
+
+	if (vq->last_req_start != -1) {
+		desc = &vq->vq_ring.desc[vq->last_req_end];
+		desc->flags &= ~VRING_DESC_F_NEXT;
 	}
 
-	vq->vq_ring.desc[desc_idx].len = iov->iov_len;
+	vq->last_req_start = vq->vq_desc_head_idx;
+	dxp = &vq->vq_descx[vq->last_req_start];
+	dxp->cookie = req_ctx;
+	dxp->ndescs = 0;
 }
 
-static int
-virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
+void
+virtqueue_req_flush(struct virtqueue *vq)
+{
+	struct vring_desc *desc;
+
+	if (vq->last_req_start == -1) {
+		/* no requests have been started */
+		return;
+	}
+
+	desc = &vq->vq_ring.desc[vq->last_req_end];
+	desc->flags &= ~VRING_DESC_F_NEXT;
+
+	vq_update_avail_ring(vq, vq->last_req_start);
+	vq->last_req_start = -1;
+	vq_update_avail_idx(vq);
+	if (spdk_unlikely(virtqueue_kick_prepare(vq))) {
+		virtio_dev_backend_ops(vq->vdev)->notify_queue(vq->vdev, vq);
+		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "Notified backend after xmit\n");
+	}
+}
+
+void
+virtqueue_req_abort(struct virtqueue *vq)
+{
+	struct vring_desc *desc;
+
+	if (vq->last_req_start == -1) {
+		/* no requests have been started */
+		return;
+	}
+
+	desc = &vq->vq_ring.desc[vq->last_req_end];
+	desc->flags &= ~VRING_DESC_F_NEXT;
+
+	vq_ring_free_chain(vq, vq->last_req_start);
+	vq->last_req_start = -1;
+}
+
+static uint16_t
+_virtqueue_write_desc(struct virtqueue *vq, uint16_t head_idx, struct iovec *iov, uint16_t flags)
+{
+	struct vring_desc *desc;
+
+	desc = &vq->vq_ring.desc[head_idx];
+
+	if (!vq->vdev->is_hw) {
+		desc->addr  = (uintptr_t)iov->iov_base;
+	} else {
+		desc->addr = spdk_vtophys(iov->iov_base);
+	}
+	desc->len = iov->iov_len;
+	desc->flags = flags;
+
+	return desc->next;
+}
+
+void
+virtqueue_req_add_desc(struct virtqueue *vq, struct iovec *iov, uint16_t iovcnt,
+			   uint16_t flags)
 {
 	struct vq_desc_extra *dxp;
-	struct vring_desc *descs;
-	uint32_t i;
-	uint16_t head_idx, idx;
-	uint32_t total_iovs = req->iovcnt + 2;
-	struct iovec *iov = req->iov;
+	uint16_t i, new_head, last_req_end;
 
-	if (total_iovs > vq->vq_free_cnt) {
-		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV,
-			      "not enough free descriptors. requested %"PRIu32", got %"PRIu16"\n",
-			      total_iovs, vq->vq_free_cnt);
-		return -ENOMEM;
+	assert(iovcnt <= vq->vq_free_cnt);
+
+	new_head = vq->vq_desc_head_idx;
+	for (i = 0; i < iovcnt; ++i) {
+		last_req_end = new_head;
+		new_head = _virtqueue_write_desc(vq, new_head, &iov[i], flags);
 	}
 
-	head_idx = vq->vq_desc_head_idx;
-	idx = head_idx;
-	dxp = &vq->vq_descx[idx];
-	dxp->cookie = (void *)req;
-	dxp->ndescs = total_iovs;
+	dxp = &vq->vq_descx[vq->last_req_start];
+	dxp->ndescs += iovcnt;
 
-	descs = vq->vq_ring.desc;
-
-	virtqueue_iov_to_desc(vq, idx, &req->iov_req);
-	descs[idx].flags = VRING_DESC_F_NEXT;
-	idx = descs[idx].next;
-
-	if (req->is_write || req->iovcnt == 0) {
-		for (i = 0; i < req->iovcnt; i++) {
-			virtqueue_iov_to_desc(vq, idx, &iov[i]);
-			descs[idx].flags = VRING_DESC_F_NEXT;
-			idx = descs[idx].next;
-		}
-
-		virtqueue_iov_to_desc(vq, idx, &req->iov_resp);
-		descs[idx].flags = VRING_DESC_F_WRITE;
-		idx = descs[idx].next;
-	} else {
-		virtqueue_iov_to_desc(vq, idx, &req->iov_resp);
-		descs[idx].flags = VRING_DESC_F_WRITE | VRING_DESC_F_NEXT;
-		idx = descs[idx].next;
-
-		for (i = 0; i < req->iovcnt; i++) {
-			virtqueue_iov_to_desc(vq, idx, &iov[i]);
-			descs[idx].flags = VRING_DESC_F_WRITE;
-			descs[idx].flags |= (i + 1) != req->iovcnt ? VRING_DESC_F_NEXT : 0;
-			idx = descs[idx].next;
-		}
-	}
-
-	vq->vq_desc_head_idx = idx;
+	vq->last_req_end = last_req_end;
+	vq->vq_desc_head_idx = new_head;
 	if (vq->vq_desc_head_idx == VQ_RING_DESC_CHAIN_END) {
 		assert(vq->vq_free_cnt == 0);
 		vq->vq_desc_tail_idx = VQ_RING_DESC_CHAIN_END;
 	}
-	vq->vq_free_cnt = (uint16_t)(vq->vq_free_cnt - total_iovs);
-	vq_update_avail_ring(vq, head_idx);
-	return 0;
+	vq->vq_free_cnt = (uint16_t)(vq->vq_free_cnt - iovcnt);
+}
+
+int16_t
+virtqueue_get_free_desc_cnt(struct virtqueue *vq)
+{
+	return vq->vq_free_cnt;
 }
 
 #define VIRTIO_MBUF_BURST_SZ 64
 #define DESC_PER_CACHELINE (RTE_CACHE_LINE_SIZE / sizeof(struct vring_desc))
 uint16_t
-virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkts)
+virtio_recv_pkts(struct virtqueue *vq, void **io, uint16_t nb_pkts)
 {
-	struct virtio_req *rxm;
 	uint16_t nb_used, num, nb_rx;
 	uint32_t len[VIRTIO_MBUF_BURST_SZ];
-	struct virtio_req *rcv_pkts[VIRTIO_MBUF_BURST_SZ];
+	void *rcv_pkts[VIRTIO_MBUF_BURST_SZ];
 	uint32_t i;
 
 	assert(virtio_dev_get_status(vq->vdev) & VIRTIO_CONFIG_S_DRIVER_OK);
@@ -524,40 +560,11 @@ virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkt
 	SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "used:%"PRIu16" dequeue:%"PRIu16"\n", nb_used, num);
 
 	for (i = 0; i < num ; i++) {
-		rxm = rcv_pkts[i];
-
 		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "packet len:%"PRIu32"\n", len[i]);
-
-		rxm->data_transferred = (uint16_t)(len[i]);
-
-		reqs[nb_rx++] = rxm;
+		io[nb_rx++] = rcv_pkts[i];
 	}
 
 	return nb_rx;
-}
-
-int
-virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req)
-{
-	struct virtio_dev *vdev = vq->vdev;
-	int rc;
-
-	assert(virtio_dev_get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK);
-	virtio_rmb();
-
-	rc = virtqueue_enqueue_xmit(vq, req);
-	if (spdk_unlikely(rc != 0)) {
-		return rc;
-	}
-
-	vq_update_avail_idx(vq);
-
-	if (spdk_unlikely(virtqueue_kick_prepare(vq))) {
-		virtio_dev_backend_ops(vdev)->notify_queue(vdev, vq);
-		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV, "Notified backend after xmit\n");
-	}
-
-	return 0;
 }
 
 int
