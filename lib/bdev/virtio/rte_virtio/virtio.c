@@ -393,7 +393,7 @@ vq_ring_free_chain(struct virtqueue *vq, uint16_t desc_idx)
 }
 
 static uint16_t
-virtqueue_dequeue_burst_rx(struct virtqueue *vq, struct virtio_req **rx_pkts,
+virtqueue_dequeue_burst_rx(struct virtqueue *vq, void **rx_pkts,
 			   uint32_t *len, uint16_t num)
 {
 	struct vring_used_elem *uep;
@@ -535,58 +535,14 @@ virtqueue_req_add_iov(struct virtqueue *vq, struct iovec *iovs, uint16_t iovcnt,
 	return 0;
 }
 
-static int
-virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
-{
-	uint32_t total_iovs = req->iovcnt + 2;
-	int rc;
-
-	virtqueue_req_new(vq, req);
-	rc = virtqueue_req_add_iov(vq, &req->iov_req, 1, false);
-	if (rc != 0) {
-		goto err_abort_nospc;
-	}
-
-	if (req->is_write) {
-		rc = virtqueue_req_add_iov(vq, req->iov, req->iovcnt, false);
-		if (rc != 0) {
-			goto err_abort_nospc;
-		}
-
-		rc = virtqueue_req_add_iov(vq, &req->iov_resp, 1, true);
-		if (rc != 0) {
-			goto err_abort_nospc;
-		}
-	} else {
-		rc = virtqueue_req_add_iov(vq, &req->iov_resp, 1, true);
-		if (rc != 0) {
-			goto err_abort_nospc;
-		}
-
-		rc = virtqueue_req_add_iov(vq, req->iov, req->iovcnt, true);
-		if (rc != 0) {
-			goto err_abort_nospc;
-		}
-	}
-
-	return 0;
-err_abort_nospc:
-	virtqueue_req_abort(vq);
-	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV,
-		      "not enough free descriptors. requested %"PRIu32", got %"PRIu16"\n",
-		      total_iovs, vq->vq_free_cnt);
-	return -ENOMEM;
-}
-
 #define VIRTIO_MBUF_BURST_SZ 64
 #define DESC_PER_CACHELINE (RTE_CACHE_LINE_SIZE / sizeof(struct vring_desc))
 uint16_t
-virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkts)
+virtio_recv_pkts(struct virtqueue *vq, void **io, uint16_t nb_pkts)
 {
-	struct virtio_req *rxm;
 	uint16_t nb_used, num, nb_rx;
 	uint32_t len[VIRTIO_MBUF_BURST_SZ];
-	struct virtio_req *rcv_pkts[VIRTIO_MBUF_BURST_SZ];
+	void *rcv_pkts[VIRTIO_MBUF_BURST_SZ];
 	uint32_t i;
 
 	assert(virtio_dev_get_status(vq->vdev) & VIRTIO_CONFIG_S_DRIVER_OK);
@@ -605,34 +561,11 @@ virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkt
 	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "used:%"PRIu16" dequeue:%"PRIu16"\n", nb_used, num);
 
 	for (i = 0; i < num ; i++) {
-		rxm = rcv_pkts[i];
-
 		SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "packet len:%"PRIu32"\n", len[i]);
-
-		rxm->data_transferred = (uint16_t)(len[i]);
-
-		reqs[nb_rx++] = rxm;
+		io[nb_rx++] = rcv_pkts[i];
 	}
 
 	return nb_rx;
-}
-
-int
-virtio_xmit_pkt(struct virtqueue *vq, struct virtio_req *req)
-{
-	struct virtio_dev *vdev = vq->vdev;
-	int rc;
-
-	assert(virtio_dev_get_status(vdev) & VIRTIO_CONFIG_S_DRIVER_OK);
-	virtio_rmb();
-
-	rc = virtqueue_enqueue_xmit(vq, req);
-	if (spdk_unlikely(rc != 0)) {
-		return rc;
-	}
-
-	virtqueue_req_flush(vq);
-	return 0;
 }
 
 int
