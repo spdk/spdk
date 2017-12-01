@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "217e66b5_0d825572",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-01T00:06:05Z",
+      "side": 1,
+      "message": "This should be possible to make \u0027const char * const\u0027.\n\nWe should also add a comment that this is in the order of enum spdk_log_level.\n\nAlternatively, see below - if you implement _get_log_level_name() as a switch or if() chain, this array can be removed, and the binding between enum order and this array doesn\u0027t need to be documented.",
+      "revId": "b3554b6b1651f24c0e2564c0b7005db62e78df13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "802bd8a1_1d3ce74f",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-01T00:06:05Z",
+      "side": 1,
+      "message": "This should return const char *.",
+      "revId": "b3554b6b1651f24c0e2564c0b7005db62e78df13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc916fee_1b90e957",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-01T00:06:05Z",
+      "side": 1,
+      "message": "I think it would be simpler to just make this a switch or chain of ifs like you had before; otherwise, this needs a bounds check.",
+      "revId": "b3554b6b1651f24c0e2564c0b7005db62e78df13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
