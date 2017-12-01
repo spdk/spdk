@@ -16,6 +16,24 @@
       "revId": "b32f545c5caf8f6188df4249cb8863dde35fc6e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5dcfc83_689f4b78",
+        "filename": "lib/util/string.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-01T09:48:20Z",
+      "side": 1,
+      "message": "and what about pthread_getspecific/pthread_setspecific? This should be portable.",
+      "parentUuid": "55a50b4e_a24fcef7",
+      "revId": "b32f545c5caf8f6188df4249cb8863dde35fc6e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
