@@ -16,6 +16,24 @@
       "revId": "58f0c7c862ce48019ec250e696207f2ecd63af37",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "580328fe_bbaa268a",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-01T21:06:36Z",
+      "side": 1,
+      "message": "I think this also needs to match \"!ALL\" (see the unit tests).",
+      "parentUuid": "ce52f1b4_3a0cd38a",
+      "revId": "58f0c7c862ce48019ec250e696207f2ecd63af37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
