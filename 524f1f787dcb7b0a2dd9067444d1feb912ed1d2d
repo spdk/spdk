@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "01ea731a_5b9c29ea",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-01T18:13:27Z",
+      "side": 1,
+      "message": "I think these functions you\u0027re adding should be right above bdev_aio_reset but below bdev_aio_poll.",
+      "revId": "524f1f787dcb7b0a2dd9067444d1feb912ed1d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "779b924d_a160db5e",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-01T18:13:27Z",
+      "side": 1,
+      "message": "Move lines 226-228 into bdev_aio_reset_retry_timer - you want to stop the timer immediately after it fires.",
+      "revId": "524f1f787dcb7b0a2dd9067444d1feb912ed1d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d78a9e3_9bee53be",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 30
