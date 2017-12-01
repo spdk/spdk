@@ -103,8 +103,8 @@ struct virtio_scsi_scan_info {
 struct virtio_scsi_scan_base {
 	struct virtio_scsi_dev		*svdev;
 
-	/** Virtqueue used for the scan I/O. */
-	struct virtqueue		*vq;
+	/** I/O channel used for the scan I/O. */
+	struct bdev_virtio_io_channel	*channel;
 
 	bdev_virtio_create_cb		cb_fn;
 	void				*cb_arg;
@@ -145,6 +145,22 @@ static bool g_bdev_virtio_finish = false;
 
 static void virtio_scsi_dev_unregister_cb(void *io_device);
 static void virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev);
+static int bdev_virtio_scsi_ch_create_cb(void *io_device, void *ctx_buf);
+static void bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf);
+
+static void
+virtio_scsi_dev_init(struct virtio_scsi_dev *svdev)
+{
+	TAILQ_INIT(&svdev->luns);
+	svdev->scan_ctx = NULL;
+	svdev->removed = false;
+
+	spdk_io_device_register(svdev, bdev_virtio_scsi_ch_create_cb,
+				bdev_virtio_scsi_ch_destroy_cb,
+				sizeof(struct bdev_virtio_io_channel));
+
+	TAILQ_INSERT_TAIL(&g_virtio_driver.scsi_devs, &svdev->vdev, tailq);
+}
 
 static int
 virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx)
@@ -161,10 +177,6 @@ virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx)
 		SPDK_ERRLOG("virtio device calloc failed\n");
 		return -1;
 	}
-
-	TAILQ_INIT(&svdev->luns);
-	svdev->scan_ctx = NULL;
-	svdev->removed = false;
 
 	vdev = &svdev->vdev;
 	name = spdk_sprintf_alloc("VirtioScsi%"PRIu32, ++pci_dev_counter);
@@ -185,7 +197,7 @@ virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx)
 				   &num_queues, sizeof(num_queues));
 	vdev->max_queues = SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED + num_queues;
 
-	TAILQ_INSERT_TAIL(&g_virtio_driver.scsi_devs, vdev, tailq);
+	virtio_scsi_dev_init(svdev);
 	return 0;
 }
 
@@ -203,10 +215,6 @@ virtio_user_scsi_dev_create(const char *name, const char *path,
 		return NULL;
 	}
 
-	TAILQ_INIT(&svdev->luns);
-	svdev->scan_ctx = NULL;
-	svdev->removed = false;
-
 	vdev = &svdev->vdev;
 	rc = virtio_user_dev_init(vdev, name, path, num_queues, queue_size,
 				  SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
@@ -216,8 +224,7 @@ virtio_user_scsi_dev_create(const char *name, const char *path,
 		return NULL;
 	}
 
-
-	TAILQ_INSERT_TAIL(&g_virtio_driver.scsi_devs, vdev, tailq);
+	virtio_scsi_dev_init(svdev);
 	return svdev;
 }
 
@@ -684,7 +691,6 @@ static void
 scan_target_abort(struct virtio_scsi_scan_base *base, int error)
 {
 	struct virtio_scsi_dev *svdev = base->svdev;
-	struct virtio_dev *vdev = &svdev->vdev;
 	struct virtio_scsi_disk *disk;
 	struct virtqueue *vq;
 
@@ -693,11 +699,10 @@ scan_target_abort(struct virtio_scsi_scan_base *base, int error)
 		free(disk);
 	}
 
-	vq = base->vq;
+	vq = base->channel->vq;
 	spdk_poller_unregister(&vq->poller);
-	spdk_dma_free(vq->poller_ctx);
-	vq->poller_ctx = NULL;
-	virtio_dev_release_queue(vdev, vq->vq_queue_index);
+	vq->poller = spdk_poller_register(bdev_virtio_poll, base->channel, 0);
+	spdk_put_io_channel(spdk_io_channel_from_ctx(base->channel));
 
 	if (base->cb_fn) {
 		base->cb_fn(base->cb_arg, error, NULL, 0);
@@ -715,7 +720,7 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 	size_t bdevs_cnt = 0;
 	struct spdk_bdev *bdevs[BDEV_VIRTIO_MAX_TARGET];
 	struct virtio_scsi_disk *disk;
-	struct virtqueue *ctrlq;
+	struct virtqueue *vq, *ctrlq;
 	struct spdk_ring *ctrlq_ring;
 	int rc;
 
@@ -728,9 +733,10 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 		return;
 	}
 
-	spdk_poller_unregister(&base->vq->poller);
-	base->vq->poller_ctx = NULL;
-	virtio_dev_release_queue(vdev, base->vq->vq_queue_index);
+	vq = base->channel->vq;
+	spdk_poller_unregister(&vq->poller);
+	vq->poller = spdk_poller_register(bdev_virtio_poll, base->channel, 0);
+	spdk_put_io_channel(spdk_io_channel_from_ctx(base->channel));
 
 	ctrlq_ring = spdk_ring_create(SPDK_RING_TYPE_MP_SC, CTRLQ_RING_SIZE,
 				      SPDK_ENV_SOCKET_ID_ANY);
@@ -751,10 +757,6 @@ scan_target_finish(struct virtio_scsi_scan_base *base)
 	ctrlq = vdev->vqs[VIRTIO_SCSI_CONTROLQ];
 	ctrlq->poller_ctx = ctrlq_ring;
 	ctrlq->poller = spdk_poller_register(bdev_virtio_ctrlq_poll, vdev, CTRLQ_POLL_PERIOD_US);
-
-	spdk_io_device_register(base->svdev, bdev_virtio_scsi_ch_create_cb,
-				bdev_virtio_scsi_ch_destroy_cb,
-				sizeof(struct bdev_virtio_io_channel));
 
 	while ((disk = TAILQ_FIRST(&base->found_disks))) {
 		TAILQ_REMOVE(&base->found_disks, disk, link);
@@ -799,7 +801,7 @@ send_inquiry_vpd(struct virtio_scsi_scan_base *base, uint8_t target_id, struct v
 	inquiry_cdb->page_code = page_code;
 	to_be16(inquiry_cdb->alloc_len, iov[0].iov_len);
 
-	rc = virtio_xmit_pkt(base->vq, vreq);
+	rc = virtio_xmit_pkt(base->channel->vq, vreq);
 	if (rc != 0) {
 		assert(false);
 	}
@@ -819,7 +821,7 @@ send_read_cap_10(struct virtio_scsi_scan_base *base, uint8_t target_id, struct v
 	iov[0].iov_len = 8;
 	req->cdb[0] = SPDK_SBC_READ_CAPACITY_10;
 
-	rc = virtio_xmit_pkt(base->vq, vreq);
+	rc = virtio_xmit_pkt(base->channel->vq, vreq);
 	if (rc != 0) {
 		assert(false);
 	}
@@ -841,7 +843,7 @@ send_read_cap_16(struct virtio_scsi_scan_base *base, uint8_t target_id, struct v
 	req->cdb[1] = SPDK_SBC_SAI_READ_CAPACITY_16;
 	to_be32(&req->cdb[10], iov[0].iov_len);
 
-	rc = virtio_xmit_pkt(base->vq, vreq);
+	rc = virtio_xmit_pkt(base->channel->vq, vreq);
 	if (rc != 0) {
 		assert(false);
 	}
@@ -1145,7 +1147,7 @@ process_scan_resp(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 		}
 
 		/* resend the same request */
-		rc = virtio_xmit_pkt(base->vq, vreq);
+		rc = virtio_xmit_pkt(base->channel->vq, vreq);
 		if (rc != 0) {
 			assert(false);
 		}
@@ -1182,16 +1184,46 @@ process_scan_resp(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 }
 
 static void
-bdev_scan_poll(void *arg)
+bdev_virtio_scan_poll(void *arg)
 {
-	struct virtio_scsi_scan_base *base = arg;
-	struct virtio_req *req;
-	uint16_t cnt;
+	struct bdev_virtio_io_channel *ch = arg;
+	struct virtio_scsi_dev *svdev = ch->svdev;
+	struct virtio_req *req[32];
+	uint16_t i, cnt;
 
-	cnt = virtio_recv_pkts(base->vq, &req, 1);
-	if (cnt > 0) {
-		process_scan_resp(base, req);
+	cnt = virtio_recv_pkts(ch->vq, req, SPDK_COUNTOF(req));
+	for (i = 0; i < cnt; ++i) {
+		if (spdk_unlikely(req[i] == &svdev->scan_ctx->io_ctx.vreq)) {
+			process_scan_resp(svdev->scan_ctx, req[i]);
+			continue;
+		}
+
+		bdev_virtio_io_cpl(req[i]);
 	}
+}
+
+static int
+send_inquiry(struct virtio_scsi_scan_base *base, uint8_t target_id, struct virtio_req *vreq)
+{
+	struct iovec *iov = vreq->iov;
+	struct virtio_scsi_cmd_req *req = vreq->iov_req.iov_base;
+	struct spdk_scsi_cdb_inquiry *cdb;
+
+	memset(req, 0, sizeof(*req));
+	req->lun[0] = 1;
+	req->lun[1] = target_id;
+
+	iov[0].iov_base = (void *)&base->payload;
+	iov[0].iov_len = BDEV_VIRTIO_SCAN_PAYLOAD_SIZE;
+
+	req->lun[0] = 1;
+	req->lun[1] = base->info.target;
+
+	cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
+	cdb->opcode = SPDK_SPC_INQUIRY;
+	to_be16(cdb->alloc_len, BDEV_VIRTIO_SCAN_PAYLOAD_SIZE);
+
+	return virtio_xmit_pkt(base->channel->vq, vreq);
 }
 
 static int
@@ -1201,7 +1233,6 @@ scan_target(struct virtio_scsi_scan_base *base)
 	struct virtio_req *vreq;
 	struct virtio_scsi_cmd_req *req;
 	struct virtio_scsi_cmd_resp *resp;
-	struct spdk_scsi_cdb_inquiry *cdb;
 
 	memset(&base->info, 0, sizeof(base->info));
 	base->info.target = base->target;
@@ -1221,18 +1252,8 @@ scan_target(struct virtio_scsi_scan_base *base)
 	vreq->iov_resp.iov_base = (void *)resp;
 	vreq->iov_resp.iov_len = sizeof(*resp);
 
-	iov[0].iov_base = (void *)&base->payload;
-	iov[0].iov_len = BDEV_VIRTIO_SCAN_PAYLOAD_SIZE;
-
-	req->lun[0] = 1;
-	req->lun[1] = base->info.target;
-
-	cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
-	cdb->opcode = SPDK_SPC_INQUIRY;
-	to_be16(cdb->alloc_len, BDEV_VIRTIO_SCAN_PAYLOAD_SIZE);
-
 	base->retries = SCAN_REQUEST_RETRIES;
-	return virtio_xmit_pkt(base->vq, vreq);
+	return send_inquiry(base, 0, vreq);
 }
 
 static int
@@ -1307,8 +1328,14 @@ bdev_virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb c
 {
 	struct virtio_dev *vdev = &svdev->vdev;
 	struct virtio_scsi_scan_base *base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
+	struct spdk_io_channel *io_ch;
 	struct virtqueue *vq;
 	int rc;
+
+	if (svdev->scan_ctx) {
+		SPDK_ERRLOG("Target scan already in progress.\n");
+		return -EBUSY;
+	}
 
 	if (base == NULL) {
 		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
@@ -1327,24 +1354,30 @@ bdev_virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb c
 	base->svdev = svdev;
 	TAILQ_INIT(&base->found_disks);
 
-	rc = virtio_dev_acquire_queue(vdev, VIRTIO_SCSI_REQUESTQ);
-	if (rc != 0) {
-		SPDK_ERRLOG("Couldn't acquire requestq for the target scan.\n");
+	io_ch = spdk_get_io_channel(base->svdev);
+	if (io_ch == NULL) {
+		/* TODO: do scan on other core */
 		spdk_dma_free(base);
+		return -EBUSY;
+	}
+
+	base->channel = spdk_io_channel_get_ctx(io_ch);
+	vq = base->channel->vq;
+
+	svdev->scan_ctx = base;
+	rc = scan_target(base);
+	if (rc) {
+		svdev->scan_ctx = NULL;
+		SPDK_ERRLOG("Failed to start target scan.\n");
+		spdk_put_io_channel(io_ch);
 		return rc;
 	}
 
-	vq = vdev->vqs[VIRTIO_SCSI_REQUESTQ];
-	base->vq = vq;
-
-	svdev->scan_ctx = base;
-
-	vq->poller_ctx = base;
-	vq->poller = spdk_poller_register(bdev_scan_poll, base, 0);
-	rc = scan_target(base);
-	if (rc) {
-		SPDK_ERRLOG("Failed to start target scan.\n");
-	}
+	/* Switch virtqueue poller to also process scan I/O. The scan is not
+	 * processed by default due to additional performance overhead.
+	 */
+	spdk_poller_unregister(&vq->poller);
+	vq->poller = spdk_poller_register(bdev_virtio_scan_poll, base->channel, 0);
 
 	return rc;
 }
