@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e4ba550_cab3ed25",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-01T18:15:53Z",
+      "side": 1,
+      "message": "The unregister call should remove the bdev from the list (see bdev_null_destruct() above).",
+      "revId": "46e5890ff578990dc069477cbcfbdd2487c60ef2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
