@@ -3003,9 +3003,15 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		}
 
 		if (pdu->data_segment_len > transfer_len) {
-			SPDK_ERRLOG("data segment len > task transfer len\n");
+			SPDK_ERRLOG("data segment len(=%d) > task transfer len(=%d)\n",
+				    (int)pdu->data_segment_len, transfer_len);
 			spdk_iscsi_task_put(task);
-			return SPDK_ISCSI_CONNECTION_FATAL;
+			rc = spdk_iscsi_reject(conn, pdu,
+					       ISCSI_REASON_PROTOCOL_ERROR);
+			if (rc < 0) {
+				SPDK_ERRLOG("iscsi_reject() failed\n");
+			}
+			return rc;
 		}
 
 		/* check the ImmediateData and also pdu->data_segment_len */
