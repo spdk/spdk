@@ -442,9 +442,10 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 	struct vring_desc *descs;
 	uint32_t i;
 	uint16_t head_idx, idx;
-	uint32_t total_iovs = req->iovcnt + 2;
+	uint32_t total_iovs;
 	struct iovec *iov = req->iov;
 
+	total_iovs = req->iovcnt + !!req->iov_req.iov_base + !!req->iov_resp.iov_base;
 	if (total_iovs > vq->vq_free_cnt) {
 		SPDK_DEBUGLOG(SPDK_TRACE_VIRTIO_DEV,
 			      "not enough free descriptors. requested %"PRIu32", got %"PRIu16"\n",
@@ -460,9 +461,11 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 
 	descs = vq->vq_ring.desc;
 
-	virtqueue_iov_to_desc(vq, idx, &req->iov_req);
-	descs[idx].flags = VRING_DESC_F_NEXT;
-	idx = descs[idx].next;
+	if (req->iov_req.iov_base) {
+		virtqueue_iov_to_desc(vq, idx, &req->iov_req);
+		descs[idx].flags = VRING_DESC_F_NEXT;
+		idx = descs[idx].next;
+	}
 
 	if (req->is_write || req->iovcnt == 0) {
 		for (i = 0; i < req->iovcnt; i++) {
@@ -471,13 +474,17 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 			idx = descs[idx].next;
 		}
 
-		virtqueue_iov_to_desc(vq, idx, &req->iov_resp);
-		descs[idx].flags = VRING_DESC_F_WRITE;
-		idx = descs[idx].next;
+		if (req->iov_resp.iov_base) {
+			virtqueue_iov_to_desc(vq, idx, &req->iov_resp);
+			descs[idx].flags = VRING_DESC_F_WRITE;
+			idx = descs[idx].next;
+		}
 	} else {
-		virtqueue_iov_to_desc(vq, idx, &req->iov_resp);
-		descs[idx].flags = VRING_DESC_F_WRITE | VRING_DESC_F_NEXT;
-		idx = descs[idx].next;
+		if (req->iov_resp.iov_base) {
+			virtqueue_iov_to_desc(vq, idx, &req->iov_resp);
+			descs[idx].flags = VRING_DESC_F_WRITE | VRING_DESC_F_NEXT;
+			idx = descs[idx].next;
+		}
 
 		for (i = 0; i < req->iovcnt; i++) {
 			virtqueue_iov_to_desc(vq, idx, &iov[i]);
