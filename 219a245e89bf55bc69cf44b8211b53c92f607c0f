@@ -93,6 +93,23 @@
       "revId": "219a245e89bf55bc69cf44b8211b53c92f607c0f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a06c960a_7a8a0dc9",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T23:20:23Z",
+      "side": 1,
+      "message": "should this become virtio_dev_reset, and rename virtio_dev_reset to virtio_dev_stop?\n\ni think it\u0027s a bit confusing that the comment for virtio_dev_restart says that it resets the device, but the comment for virtio_dev_reset says nothing about reset",
+      "revId": "219a245e89bf55bc69cf44b8211b53c92f607c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
