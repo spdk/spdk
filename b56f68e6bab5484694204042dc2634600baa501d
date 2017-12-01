@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "355484c0_91aa1d40",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-01T23:31:12Z",
+      "side": 1,
+      "message": "please make this g_spdk_vhost_ctrlr_id\n\nwe try to put \"g_\" before any global variables to make it clear when seeing them elsewhere in the code that they are global and not local\n\nof course, just below here, we have dev_dirname which has no g_ - maybe you can fix that in a separate patch :)",
+      "revId": "b56f68e6bab5484694204042dc2634600baa501d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
