@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d78a9e3_9bee53be",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-01T01:09:48Z",
+      "side": 1,
+      "message": "reset_retry_timer should be set to NULL here, or just set to NULL at the bdev_aio_reset function.",
+      "revId": "524f1f787dcb7b0a2dd9067444d1feb912ed1d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
