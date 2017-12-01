@@ -41,15 +41,16 @@
 #include "spdk/env.h"
 #include "spdk/copy_engine.h"
 #include "spdk/io_channel.h"
+#include "spdk/queue.h"
 #include "spdk/string.h"
 
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
 struct malloc_disk {
-	struct spdk_bdev	disk;
-	void 			*malloc_buf;
-	struct malloc_disk	*next;
+	struct spdk_bdev		disk;
+	void 				*malloc_buf;
+	TAILQ_ENTRY(malloc_disk)	link;
 };
 
 struct malloc_task {
@@ -87,7 +88,7 @@ malloc_done(void *ref, int status)
 	}
 }
 
-static struct malloc_disk *g_malloc_disk_head = NULL;
+static TAILQ_HEAD(, malloc_disk) g_malloc_disks = TAILQ_HEAD_INITIALIZER(g_malloc_disks);
 
 int malloc_disk_count = 0;
 
@@ -105,29 +106,6 @@ SPDK_BDEV_MODULE_REGISTER(malloc, bdev_malloc_initialize, bdev_malloc_finish,
 			  bdev_malloc_get_spdk_running_config, bdev_malloc_get_ctx_size, NULL)
 
 static void
-bdev_malloc_delete_from_list(struct malloc_disk *malloc_disk)
-{
-	struct malloc_disk *prev = NULL;
-	struct malloc_disk *node = g_malloc_disk_head;
-
-	if (malloc_disk == NULL)
-		return;
-
-	while (node != NULL) {
-		if (node == malloc_disk) {
-			if (prev != NULL) {
-				prev->next = malloc_disk->next;
-			} else {
-				g_malloc_disk_head = malloc_disk->next;
-			}
-			break;
-		}
-		prev = node;
-		node = node->next;
-	}
-}
-
-static void
 malloc_disk_free(struct malloc_disk *malloc_disk)
 {
 	if (!malloc_disk) {
@@ -143,7 +121,8 @@ static int
 bdev_malloc_destruct(void *ctx)
 {
 	struct malloc_disk *malloc_disk = ctx;
-	bdev_malloc_delete_from_list(malloc_disk);
+
+	TAILQ_REMOVE(&g_malloc_disks, malloc_disk, link);
 	malloc_disk_free(malloc_disk);
 	return 0;
 }
@@ -428,8 +407,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 		return NULL;
 	}
 
-	mdisk->next = g_malloc_disk_head;
-	g_malloc_disk_head = mdisk;
+	TAILQ_INSERT_TAIL(&g_malloc_disks, mdisk, link);
 
 	return &mdisk->disk;
 }
@@ -471,11 +449,9 @@ end:
 
 static void bdev_malloc_finish(void)
 {
-	struct malloc_disk *mdisk;
+	struct malloc_disk *mdisk, *tmp;
 
-	while (g_malloc_disk_head != NULL) {
-		mdisk = g_malloc_disk_head;
-		g_malloc_disk_head = mdisk->next;
+	TAILQ_FOREACH_SAFE(mdisk, &g_malloc_disks, link, tmp) {
 		spdk_bdev_unregister(&mdisk->disk, NULL, NULL);
 	}
 }
@@ -485,17 +461,16 @@ bdev_malloc_get_spdk_running_config(FILE *fp)
 {
 	int num_malloc_luns = 0;
 	uint64_t malloc_lun_size = 0;
+	struct malloc_disk *mdisk;
 
 	/* count number of malloc LUNs, get LUN size */
-	struct malloc_disk *mdisk = g_malloc_disk_head;
-	while (mdisk != NULL) {
+	TAILQ_FOREACH(mdisk, &g_malloc_disks, link) {
 		if (0 == malloc_lun_size) {
 			/* assume all malloc luns the same size */
 			malloc_lun_size = mdisk->disk.blocklen * mdisk->disk.blockcnt;
 			malloc_lun_size /= (1024 * 1024);
 		}
 		num_malloc_luns++;
-		mdisk = mdisk->next;
 	}
 
 	if (num_malloc_luns > 0) {
