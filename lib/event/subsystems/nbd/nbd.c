@@ -31,18 +31,28 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_NBD_H_
-#define SPDK_NBD_H_
+#include "spdk/stdinc.h"
 
-struct spdk_bdev;
-struct spdk_nbd_disk;
+#include "spdk/nbd.h"
 
-int spdk_nbd_init(void);
+#include "spdk_internal/event.h"
 
-void spdk_nbd_fini(void);
+static void
+spdk_nbd_subsystem_init(void)
+{
+	int rc;
 
-struct spdk_nbd_disk *spdk_nbd_start(const char *bdev_name, const char *nbd_path);
+	rc = spdk_nbd_init();
 
-void spdk_nbd_stop(struct spdk_nbd_disk *nbd);
+	spdk_subsystem_init_next(rc);
+}
 
-#endif
+static void
+spdk_nbd_subsystem_fini(void)
+{
+	spdk_nbd_fini();
+	spdk_subsystem_fini_next();
+}
+
+SPDK_SUBSYSTEM_REGISTER(nbd, spdk_nbd_subsystem_init, spdk_nbd_subsystem_fini, NULL)
+SPDK_SUBSYSTEM_DEPEND(nbd, bdev)

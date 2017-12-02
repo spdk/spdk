@@ -79,6 +79,34 @@ struct spdk_nbd_disk {
 	uint32_t		buf_align;
 };
 
+struct spdk_nbd_disk_globals {
+	pthread_mutex_t			mutex;
+	TAILQ_HEAD(, spdk_nbd_disk)	disk_head;
+};
+
+static struct spdk_nbd_disk_globals g_spdk_nbd;
+
+int
+spdk_nbd_init(void)
+{
+	int rc;
+
+	rc = pthread_mutex_init(&g_spdk_nbd.mutex, NULL);
+	if (rc != 0) {
+		SPDK_ERRLOG("mutex_init() failed\n");
+		return -1;
+	}
+	TAILQ_INIT(&g_spdk_nbd.disk_head);
+
+	return 0;
+}
+
+void
+spdk_nbd_fini(void)
+{
+	pthread_mutex_destroy(&g_spdk_nbd.mutex);
+}
+
 static bool
 is_read(enum spdk_bdev_io_type io_type)
 {
