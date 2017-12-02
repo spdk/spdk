@@ -163,12 +163,6 @@ struct virtqueue {
 	/** Thread that's polling this queue. */
 	struct spdk_thread *owner_thread;
 
-	/** Response poller. */
-	struct spdk_poller	*poller;
-
-	/** Context for response poller. */
-	void *poller_ctx;
-
 	struct vq_desc_extra vq_descx[0];
 };
 
