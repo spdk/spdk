@@ -110,6 +110,24 @@
       "revId": "219a245e89bf55bc69cf44b8211b53c92f607c0f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c6a7232_63d49b40",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-02T16:42:21Z",
+      "side": 1,
+      "message": "Ack, I\u0027ll change these a bit.",
+      "parentUuid": "a06c960a_7a8a0dc9",
+      "revId": "219a245e89bf55bc69cf44b8211b53c92f607c0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
