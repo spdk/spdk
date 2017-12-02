@@ -203,7 +203,8 @@ typedef int (*virtio_pci_create_cb)(struct virtio_pci_ctx *pci_ctx);
 /* Features desired/implemented by this driver. */
 #define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
 	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
-	 1ULL << VIRTIO_F_VERSION_1)
+	 1ULL << VIRTIO_F_VERSION_1		|	\
+	 1ULL << VIRTIO_SCSI_F_HOTPLUG)
 
 uint16_t virtio_recv_pkts(struct virtqueue *vq, void **io, uint16_t nb_pkts);
 
