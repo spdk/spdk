@@ -77,7 +77,88 @@ struct spdk_nbd_disk {
 	struct nbd_io		io;
 	struct spdk_poller *nbd_poller;
 	uint32_t		buf_align;
+
+	TAILQ_ENTRY(spdk_nbd_disk)      tailq;
 };
+
+struct spdk_nbd_disk_globals {
+	pthread_mutex_t mutex;
+	TAILQ_HEAD(, spdk_nbd_disk)     disk_head;
+};
+
+struct spdk_nbd_disk_globals g_spdk_nbd;
+
+int
+spdk_nbd_init(void)
+{
+	int rc;
+	rc = pthread_mutex_init(&g_spdk_nbd.mutex, NULL);
+	if (rc != 0) {
+		SPDK_ERRLOG("mutex_init() failed\n");
+		return -1;
+	}
+	TAILQ_INIT(&g_spdk_nbd.disk_head);
+
+	return 0;
+}
+
+void
+spdk_nbd_fini(void)
+{
+	pthread_mutex_destroy(&g_spdk_nbd.mutex);
+}
+
+static int
+spdk_nbd_disk_register(struct spdk_nbd_disk *nbd)
+{
+	struct spdk_nbd_disk *nbd_idx;
+	struct spdk_nbd_disk *nbd_tmp;
+	const char *idx_bdev_name;
+	const char *bdev_name = spdk_bdev_get_name(nbd->bdev);
+
+	int ret = 0;
+
+	pthread_mutex_lock(&g_spdk_nbd.mutex);
+	/*
+	 * check whether nbd path has already been registered.
+	 */
+	TAILQ_FOREACH_SAFE(nbd_idx, &g_spdk_nbd.disk_head, tailq, nbd_tmp) {
+		idx_bdev_name = spdk_bdev_get_name(nbd_idx->bdev);
+		if (!strcmp(idx_bdev_name, bdev_name)) {
+			SPDK_NOTICELOG("%s is already exported as a nbd disk", bdev_name);
+			ret = -1;
+			goto out;
+		}
+	}
+	TAILQ_INSERT_TAIL(&g_spdk_nbd.disk_head, nbd, tailq);
+
+out:
+	pthread_mutex_unlock(&g_spdk_nbd.mutex);
+	return ret;
+}
+
+static void
+spdk_nbd_disk_unregister(struct spdk_nbd_disk *nbd)
+{
+	struct spdk_nbd_disk *nbd_idx;
+	struct spdk_nbd_disk *nbd_tmp;
+	const char *idx_bdev_name;
+	const char *bdev_name = spdk_bdev_get_name(nbd->bdev);
+
+	pthread_mutex_lock(&g_spdk_nbd.mutex);
+	/*
+	 * nbd disk may be stopped before registered.
+	 * check its nbd path to make sure it is registered.
+	 */
+	TAILQ_FOREACH_SAFE(nbd_idx, &g_spdk_nbd.disk_head, tailq, nbd_tmp) {
+		idx_bdev_name = spdk_bdev_get_name(nbd_idx->bdev);
+		if (!strcmp(idx_bdev_name, bdev_name)) {
+			TAILQ_REMOVE(&g_spdk_nbd.disk_head, nbd_idx, tailq);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_spdk_nbd.mutex);
+}
 
 static bool
 is_read(enum spdk_bdev_io_type io_type)
@@ -127,6 +208,8 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 	if (nbd->nbd_poller) {
 		spdk_poller_unregister(&nbd->nbd_poller);
 	}
+
+	spdk_nbd_disk_unregister(nbd);
 
 	free(nbd);
 }
@@ -434,6 +517,12 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	rc = spdk_bdev_open(bdev, true, NULL, NULL, &nbd->bdev_desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not open bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
+		goto err;
+	}
+
+	/* Add nbd_disk to the end of disk list */
+	rc = spdk_nbd_disk_register(nbd);
+	if (rc != 0) {
 		goto err;
 	}
 
