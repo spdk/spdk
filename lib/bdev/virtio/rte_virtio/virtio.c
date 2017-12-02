@@ -219,7 +219,6 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	virtio_init_vring(vq);
 
 	vq->owner_thread = NULL;
-	vq->poller = NULL;
 
 	if (virtio_dev_backend_ops(dev)->setup_queue(dev, vq) < 0) {
 		SPDK_ERRLOG("setup_queue failed\n");
@@ -594,7 +593,6 @@ virtio_dev_acquire_queue(struct virtio_dev *vdev, uint16_t index)
 		return -1;
 	}
 
-	assert(vq->poller == NULL);
 	vq->owner_thread = spdk_get_thread();
 	pthread_mutex_unlock(&vdev->mutex);
 	return 0;
@@ -620,7 +618,6 @@ virtio_dev_find_and_acquire_queue(struct virtio_dev *vdev, uint16_t start_index)
 		return -1;
 	}
 
-	assert(vq->poller == NULL);
 	vq->owner_thread = spdk_get_thread();
 	pthread_mutex_unlock(&vdev->mutex);
 	return i;
@@ -673,7 +670,6 @@ virtio_dev_release_queue(struct virtio_dev *vdev, uint16_t index)
 		return;
 	}
 
-	assert(vq->poller == NULL);
 	assert(vq->owner_thread == spdk_get_thread());
 	vq->owner_thread = NULL;
 	pthread_mutex_unlock(&vdev->mutex);
