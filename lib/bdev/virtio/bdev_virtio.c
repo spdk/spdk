@@ -60,6 +60,8 @@
 /* Number of non-request queues - eventq and controlq */
 #define SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED 2
 
+#define VIRTIO_SCSI_EVENTQ_BUFFER_COUNT 16
+
 #define VIRTIO_SCSI_CONTROLQ	0
 #define VIRTIO_SCSI_EVENTQ	1
 #define VIRTIO_SCSI_REQUESTQ	2
@@ -83,6 +85,9 @@ struct virtio_scsi_dev {
 	/** Controlq messages to be sent. */
 	struct spdk_ring		*ctrlq_ring;
 
+	/** Buffers for the eventq. */
+	struct virtio_scsi_eventq_io	*eventq_ios;
+
 	/** Device marked for removal. */
 	bool removed;
 };
@@ -98,6 +103,11 @@ struct virtio_scsi_io_ctx {
 		struct virtio_scsi_cmd_resp resp;
 		struct virtio_scsi_ctrl_tmf_resp tmf_resp;
 	};
+};
+
+struct virtio_scsi_eventq_io {
+	struct iovec			iov;
+	struct virtio_scsi_event	ev;
 };
 
 struct virtio_scsi_scan_info {
@@ -155,20 +165,40 @@ static bool g_bdev_virtio_finish = false;
 
 /* Features desired/implemented by this driver. */
 #define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
-	(1ULL << VIRTIO_SCSI_F_INOUT)
+	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
+	 1ULL << VIRTIO_SCSI_F_HOTPLUG)
 
 static void virtio_scsi_dev_unregister_cb(void *io_device);
 static void virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev);
 static int bdev_virtio_scsi_ch_create_cb(void *io_device, void *ctx_buf);
 static void bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf);
 static void process_scan_resp(struct virtio_scsi_scan_base *base);
-static void bdev_virtio_ctrlq_poll(void *arg);
+static void bdev_virtio_mgmt_poll(void *arg);
+
+static int
+virtio_scsi_dev_send_eventq_io(struct virtqueue *vq, struct virtio_scsi_eventq_io *io)
+{
+	int rc;
+
+	rc = virtqueue_req_start(vq, io, 1);
+	if (rc != 0) {
+		return -1;
+	}
+
+	virtqueue_req_add_iovs(vq, &io->iov, 1, SPDK_VIRTIO_DESC_WR);
+	virtqueue_req_flush(vq);
+
+	return 0;
+}
 
 static int
 virtio_scsi_dev_init(struct virtio_scsi_dev *svdev)
 {
 	struct virtio_dev *vdev = &svdev->vdev;
 	struct spdk_ring *ctrlq_ring;
+	struct virtio_scsi_eventq_io *eventq_io;
+	struct virtqueue *eventq;
+	uint16_t i, num_events;
 	int rc;
 
 	rc = virtio_dev_restart(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
@@ -190,8 +220,37 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev)
 		return -1;
 	}
 
+	rc = virtio_dev_acquire_queue(vdev, VIRTIO_SCSI_EVENTQ);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to acquire the eventq.\n");
+		virtio_dev_release_queue(vdev, VIRTIO_SCSI_CONTROLQ);
+		spdk_ring_free(ctrlq_ring);
+		return -1;
+	}
+
+	eventq = vdev->vqs[VIRTIO_SCSI_EVENTQ];
+	num_events = spdk_min(eventq->vq_nentries, VIRTIO_SCSI_EVENTQ_BUFFER_COUNT);
+	svdev->eventq_ios = spdk_dma_zmalloc(sizeof(*svdev->eventq_ios) * num_events,
+					     0, NULL);
+	if (svdev->eventq_ios == NULL) {
+		SPDK_ERRLOG("cannot allocate memory for %"PRIu16" eventq buffers \n",
+			    num_events);
+		virtio_dev_release_queue(vdev, VIRTIO_SCSI_EVENTQ);
+		virtio_dev_release_queue(vdev, VIRTIO_SCSI_CONTROLQ);
+		spdk_ring_free(ctrlq_ring);
+		return -1;
+	}
+
+	for (i = 0; i < num_events; i++) {
+		eventq_io = &svdev->eventq_ios[i];
+		eventq_io->iov.iov_base = &eventq_io->ev;
+		eventq_io->iov.iov_len = sizeof(eventq_io->ev);
+		virtio_scsi_dev_send_eventq_io(eventq, eventq_io);
+	}
+
 	svdev->ctrlq_ring = ctrlq_ring;
-	svdev->mgmt_poller = spdk_poller_register(bdev_virtio_ctrlq_poll, svdev,
+
+	svdev->mgmt_poller = spdk_poller_register(bdev_virtio_mgmt_poll, svdev,
 			     MGMT_POLL_PERIOD_US);
 
 	TAILQ_INIT(&svdev->luns);
@@ -281,6 +340,20 @@ virtio_user_scsi_dev_create(const char *name, const char *path,
 	}
 
 	return svdev;
+}
+
+static struct virtio_scsi_disk *
+virtio_scsi_dev_get_disk_by_id(struct virtio_scsi_dev *svdev, uint8_t target_id)
+{
+	struct virtio_scsi_disk *disk;
+
+	TAILQ_FOREACH(disk, &svdev->luns, link) {
+		if (disk->info.target == target_id) {
+			return disk;
+		}
+	}
+
+	return NULL;
 }
 
 static int _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base);
@@ -652,6 +725,29 @@ bdev_virtio_tmf_cpl(struct spdk_bdev_io *bdev_io)
 }
 
 static void
+bdev_virtio_eventq_io_cpl(struct virtio_scsi_dev *svdev, struct virtio_scsi_eventq_io *io)
+{
+	struct virtio_scsi_event *ev = &io->ev;
+	struct virtio_scsi_disk *disk;
+
+	if (ev->lun[0] != 1) {
+		SPDK_WARNLOG("Received an event with invalid data layout.\n");
+		goto out;
+	}
+
+	if (ev->event == VIRTIO_SCSI_T_TRANSPORT_RESET &&
+	    ev->reason == VIRTIO_SCSI_EVT_RESET_REMOVED) {
+		disk = virtio_scsi_dev_get_disk_by_id(svdev, ev->lun[1]);
+		if (disk != NULL) {
+			spdk_bdev_unregister(&disk->bdev, NULL, NULL);
+		}
+	}
+
+out:
+	virtio_scsi_dev_send_eventq_io(svdev->vdev.vqs[VIRTIO_SCSI_EVENTQ], io);
+}
+
+static void
 bdev_virtio_tmf_abort_nomem_cb(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
@@ -700,28 +796,34 @@ bdev_virtio_send_tmf_io(struct virtqueue *ctrlq, struct spdk_bdev_io *bdev_io)
 }
 
 static void
-bdev_virtio_ctrlq_poll(void *arg)
+bdev_virtio_mgmt_poll(void *arg)
 {
 	struct virtio_scsi_dev *svdev = arg;
 	struct virtio_dev *vdev = &svdev->vdev;
+	struct virtqueue *eventq = vdev->vqs[VIRTIO_SCSI_EVENTQ];
 	struct virtqueue *ctrlq = vdev->vqs[VIRTIO_SCSI_CONTROLQ];
 	struct spdk_ring *send_ring = svdev->ctrlq_ring;
-	struct spdk_bdev_io *bdev_io[16];
+	void *io[16];
 	uint32_t io_len[16];
 	uint16_t i, cnt;
 	int rc;
 
-	cnt = spdk_ring_dequeue(send_ring, (void **)bdev_io, SPDK_COUNTOF(bdev_io));
+	cnt = spdk_ring_dequeue(send_ring, io, SPDK_COUNTOF(io));
 	for (i = 0; i < cnt; ++i) {
-		rc = bdev_virtio_send_tmf_io(ctrlq, bdev_io[i]);
+		rc = bdev_virtio_send_tmf_io(ctrlq, io[i]);
 		if (rc != 0) {
-			bdev_virtio_tmf_abort(bdev_io[i], rc);
+			bdev_virtio_tmf_abort(io[i], rc);
 		}
 	}
 
-	cnt = virtio_recv_pkts(ctrlq, (void **)bdev_io, io_len, SPDK_COUNTOF(bdev_io));
+	cnt = virtio_recv_pkts(ctrlq, io, io_len, SPDK_COUNTOF(io));
 	for (i = 0; i < cnt; ++i) {
-		bdev_virtio_tmf_cpl(bdev_io[i]);
+		bdev_virtio_tmf_cpl(io[i]);
+	}
+
+	cnt = virtio_recv_pkts(eventq, io, io_len, SPDK_COUNTOF(io));
+	for (i = 0; i < cnt; ++i) {
+		bdev_virtio_eventq_io_cpl(svdev, io[i]);
 	}
 }
 
@@ -1462,10 +1564,12 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 	spdk_ring_free(svdev->ctrlq_ring);
 	spdk_poller_unregister(&svdev->mgmt_poller);
 
+	virtio_dev_release_queue(vdev, VIRTIO_SCSI_EVENTQ);
 	virtio_dev_release_queue(vdev, VIRTIO_SCSI_CONTROLQ);
 
 	virtio_dev_stop(vdev);
 	virtio_dev_destruct(vdev);
+	spdk_dma_free(svdev->eventq_ios);
 	free(svdev);
 
 	TAILQ_REMOVE(&g_virtio_driver.scsi_devs, vdev, tailq);
