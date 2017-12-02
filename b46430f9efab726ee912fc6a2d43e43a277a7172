@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cccda71c_83da16e8",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-02T05:01:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1422389b_99111f3c",
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6933e1b4_9cdd270d",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "f82d6d85_828f9334",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-02T05:01:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6933e1b4_9cdd270d",
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8dd91e29_967d5b84",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 3
@@ -47,6 +83,24 @@
       "writtenOn": "2017-11-29T05:12:10Z",
       "side": 1,
       "message": "same here.",
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "815d29f6_5c5e69a8",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-02T05:01:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8dd91e29_967d5b84",
       "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -112,6 +166,30 @@
       "side": 1,
       "message": "Your comment makes sense to me. But please improve this patch gradually to make easier to understand.\n\nFor example this function receives not only request but also payload. However this function is named as nbd_io_recv_req.",
       "parentUuid": "f8fb38cc_cb2fe0c3",
+      "range": {
+        "startLine": 345,
+        "startChar": 3,
+        "endLine": 347,
+        "endChar": 52
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c191946_1569e40a",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-02T05:01:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "72683772_3993be37",
       "range": {
         "startLine": 345,
         "startChar": 3,
@@ -240,6 +318,30 @@
     },
     {
       "key": {
+        "uuid": "08b943c9_b2806315",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 505,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-02T05:01:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5686df93_f214650d",
+      "range": {
+        "startLine": 505,
+        "startChar": 0,
+        "endLine": 505,
+        "endChar": 15
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4f1119d_590cfd5b",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 3
@@ -287,6 +389,30 @@
     },
     {
       "key": {
+        "uuid": "15668d48_333a2094",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-02T05:01:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4800d2e5_37074922",
+      "range": {
+        "startLine": 553,
+        "startChar": 2,
+        "endLine": 554,
+        "endChar": 23
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0581c82d_5f79c72b",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 3
@@ -322,6 +448,30 @@
       "side": 1,
       "message": "yes, adding batch process is more efficient.",
       "parentUuid": "0581c82d_5f79c72b",
+      "range": {
+        "startLine": 541,
+        "startChar": 0,
+        "endLine": 555,
+        "endChar": 2
+      },
+      "revId": "b46430f9efab726ee912fc6a2d43e43a277a7172",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c83858f9_bde5fbe5",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 555,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-02T05:01:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0702f093_c7db7bf1",
       "range": {
         "startLine": 541,
         "startChar": 0,
