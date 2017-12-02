@@ -229,6 +229,10 @@ bdev_rbd_flush(struct bdev_rbd *disk, struct spdk_io_channel *ch,
 static int
 bdev_rbd_destruct(void *ctx)
 {
+	struct bdev_rbd *rbd = ctx;
+
+	TAILQ_REMOVE(&g_rbds, rbd, tailq);
+	bdev_rbd_free(rbd);
 	return 0;
 }
 
@@ -468,12 +472,10 @@ static const struct spdk_bdev_fn_table rbd_fn_table = {
 static void
 bdev_rbd_library_fini(void)
 {
-	struct bdev_rbd *rbd;
+	struct bdev_rbd *rbd, *btmp;
 
-	while (!TAILQ_EMPTY(&g_rbds)) {
-		rbd = TAILQ_FIRST(&g_rbds);
-		TAILQ_REMOVE(&g_rbds, rbd, tailq);
-		bdev_rbd_free(rbd);
+	TAILQ_FOREACH_SAFE(rbd, &g_rbds, tailq, btmp) {
+		spdk_bdev_unregister(&rbd->disk, NULL, NULL);
 	}
 }
 
