@@ -16,6 +16,24 @@
       "revId": "6bbc7d2875e976069e1eb3b87a89933a7565d188",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5d7f9c9_61eeb3c9",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-02T00:05:08Z",
+      "side": 1,
+      "message": "Even this，we stiil need to check g_acceptor_poller. We may just finish g_acceptor_poller initialization. iF just set to error, we will not release the resource",
+      "parentUuid": "92045322_262c2138",
+      "revId": "6bbc7d2875e976069e1eb3b87a89933a7565d188",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
