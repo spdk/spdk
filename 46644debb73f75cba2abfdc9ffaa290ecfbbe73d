@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b4feaeaa_1137a8d8",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-02T05:01:08Z",
+      "side": 1,
+      "message": "in read_from_socket, sizeof(io-\u003ereq) is the maximum length.\nif that happened, there mush be some logical error in nbd related code. So the content of one if-branch for  io-\u003eoffset \u003e sizeof(io-\u003ereq) may just abort SPDK app.",
+      "parentUuid": "ec354691_68604310",
+      "range": {
+        "startLine": 342,
+        "startChar": 0,
+        "endLine": 342,
+        "endChar": 37
+      },
+      "revId": "46644debb73f75cba2abfdc9ffaa290ecfbbe73d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "285bbf3e_c37546f9",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 9
@@ -59,6 +83,30 @@
       "writtenOn": "2017-12-01T05:19:51Z",
       "side": 1,
       "message": "any completed nbd_io with no payload is already returned to the pool at this point.\nHence you may touch nbd_io in the free pool.\nIt looks not secure and should be avoided.",
+      "range": {
+        "startLine": 587,
+        "startChar": 0,
+        "endLine": 590,
+        "endChar": 4
+      },
+      "revId": "46644debb73f75cba2abfdc9ffaa290ecfbbe73d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ff5cf15_48064f94",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-02T05:01:08Z",
+      "side": 1,
+      "message": "These return actions are serialized step by step in a same poller. we may treat them as atomic operation.",
+      "parentUuid": "d95fe969_89f7feb3",
       "range": {
         "startLine": 587,
         "startChar": 0,
