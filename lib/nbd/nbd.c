@@ -75,6 +75,7 @@ struct spdk_nbd_disk {
 	int			kernel_sp_fd;
 	int			spdk_sp_fd;
 	struct nbd_io		io;
+	struct spdk_poller	*nbd_poller;
 	uint32_t		buf_align;
 };
 
@@ -121,6 +122,10 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 
 	if (nbd->kernel_sp_fd >= 0) {
 		close(nbd->kernel_sp_fd);
+	}
+
+	if (nbd->nbd_poller) {
+		spdk_poller_unregister(&nbd->nbd_poller);
 	}
 
 	free(nbd);
@@ -286,8 +291,13 @@ process_request(struct spdk_nbd_disk *nbd)
 	return 0;
 }
 
-int
-spdk_nbd_poll(struct spdk_nbd_disk *nbd)
+/**
+ * Poll an NBD instance.
+ *
+ * \return 0 on success or negated errno values on error (e.g. connection closed).
+ */
+static int
+_spdk_nbd_poll(struct spdk_nbd_disk *nbd)
 {
 	struct nbd_io	*io = &nbd->io;
 	int		fd = nbd->spdk_sp_fd;
@@ -355,6 +365,19 @@ spdk_nbd_poll(struct spdk_nbd_disk *nbd)
 	return 0;
 }
 
+static void
+spdk_nbd_poll(void *arg)
+{
+	struct spdk_nbd_disk *nbd = arg;
+	int rc;
+
+	rc = _spdk_nbd_poll(nbd);
+	if (rc < 0) {
+		SPDK_NOTICELOG("spdk_nbd_poll got error %d; close it", rc);
+		spdk_nbd_stop(nbd);
+	}
+}
+
 static void *
 nbd_start_kernel(void *arg)
 {
@@ -388,14 +411,21 @@ nbd_start_kernel(void *arg)
 }
 
 struct spdk_nbd_disk *
-spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
+spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 {
 	struct spdk_nbd_disk	*nbd;
+	struct spdk_bdev	*bdev;
 	pthread_t		tid;
 	int			rc;
 	int			sp[2];
 	char			buf[64];
 	int			flag;
+
+	bdev = spdk_bdev_get_by_name(bdev_name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("no bdev %s exists\n", bdev_name);
+		return NULL;
+	}
 
 	nbd = calloc(1, sizeof(*nbd));
 	if (nbd == NULL) {
@@ -477,6 +507,8 @@ spdk_nbd_start(struct spdk_bdev *bdev, const char *nbd_path)
 
 	to_be32(&nbd->io.resp.magic, NBD_REPLY_MAGIC);
 	nbd->io.req_in_progress = true;
+
+	nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, nbd, 0);
 
 	return nbd;
 
