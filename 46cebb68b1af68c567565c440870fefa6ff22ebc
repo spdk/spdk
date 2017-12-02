@@ -16,6 +16,24 @@
       "revId": "46cebb68b1af68c567565c440870fefa6ff22ebc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "baf7f4d7_e6744e87",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio_pci.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-02T16:41:20Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c1011ad5_32899fbb",
+      "revId": "46cebb68b1af68c567565c440870fefa6ff22ebc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
