@@ -1,0 +1,37 @@
+This is a very rough initial cut at an SPDK iSCSI initiator bdev module.  It
+only performs synchronous operations (connect, login, read cap, read/write)
+to a single hardcoded iSCSI LUN.  But this passes basic verify tests with
+bdevperf and our SPDK iSCSI target.
+
+You can try using the libiscsi package on your system, but at least on some
+versions of Ubuntu, the iov read/write APIs are in the header file but not
+defined in the library, so you'll get undefined reference errors on
+iscsi_read/write16_iov_sync.  If you run into this, suggest removing the
+libiscsi package from your system and building/installing from source
+instead.
+
+1) git clone https://github.com/sahlberg/libiscsi.git
+2) cd libiscsi
+3) ./autogen.sh
+4) ./configure
+5) make -jX
+6) sudo make install
+
+To Do Items
+===========
+1) Some installations include the read/write iov API calls in the header files,
+   but the implementations are not in the installed libraries.  So will probably
+   need to enable iSCSI initiator with a CONFIG option pointing to a locally
+   built version, instead of relying on libiscsi installed package and adding it
+   to pkgdep.sh script.
+2) We do not want to create a separate session for each I/O channel for a given
+   bdev.  So will need to marshall all I/O to a single thread.
+3) Use REPORT_LUNS to dynamically find all of the block devices attached to the
+   iSCSI target node instead of hard-coding LUN 0.
+4) Create RPCs.  Config file parameters are optional but focus should be on RPCs.
+5) Use asynchronous versions of everything - this includes connect/login/disconnect,
+   read capacity as well as read/write.  Will need to plumb libiscsi event framework
+   to enable the polling.
+6) Choose initiator name as part of RPC configuration.  Currently this is hardcoded
+   with g_initiator string.
+7) Implement reset path.
