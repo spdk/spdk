@@ -175,10 +175,6 @@ For better performance use 4 VCPU (`-smp 4`) and 4 queues for each controller
 ~~~
 host: $ cd spdk
 host: $ cat vhost.conf
-[Rpc]
-  Enable Yes
-  Listen 127.0.0.1:5261
-
 [Malloc]
   NumberOfLuns 3
   LunSizeInMb 128
