@@ -140,6 +140,30 @@
     },
     {
       "key": {
+        "uuid": "8190edd6_d709ac27",
+        "filename": "test/vhost/readonly/vhost.conf.in",
+        "patchSetId": 33
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-12-04T12:55:32Z",
+      "side": 1,
+      "message": "We still need this vhost.conf.in file to run vhost. I think this test will execute faster if we disable Ioat",
+      "parentUuid": "d5986440_4d34d560",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 13
+      },
+      "revId": "454dd3afac26bcbf47a1f884d217f1366d3eec7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7397b163_a9e94c6d",
         "filename": "test/vhost/readonly/vhost.conf.in",
         "patchSetId": 33
