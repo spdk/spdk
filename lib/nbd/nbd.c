@@ -149,6 +149,10 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 		close(nbd->dev_fd);
 	}
 
+	if (nbd->nbd_path) {
+		free(nbd->nbd_path);
+	}
+
 	if (nbd->spdk_sp_fd >= 0) {
 		close(nbd->spdk_sp_fd);
 	}
@@ -495,6 +499,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 
 	nbd->spdk_sp_fd = sp[0];
 	nbd->kernel_sp_fd = sp[1];
+	nbd->nbd_path = strdup(nbd_path);
 	nbd->dev_fd = open(nbd_path, O_RDWR);
 	if (nbd->dev_fd == -1) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
