@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4a68ffa_cb52940c",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-04T17:43:17Z",
+      "side": 1,
+      "message": "spdk_sprintf_alloc() needs a NULL check for allocation failure.",
+      "revId": "6535f71db97eff40b3edc0483b1470d76bf6df59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
