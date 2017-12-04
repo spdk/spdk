@@ -63,6 +63,18 @@ spdk_nbd_init(void)
 void
 spdk_nbd_fini(void)
 {
+	struct spdk_nbd_disk *nbd_idx, *nbd_tmp;
+
+	/*
+	 * Stop running spdk_nbd_disk.
+	 * Here, mutex locking and nbd removing are unnecessary, since
+	 * internal spdk_nbd_disk_unregister will lock mutex and remove
+	 * nbd from tailq.
+	 */
+	TAILQ_FOREACH_SAFE(nbd_idx, &g_spdk_nbd.disk_head, tailq, nbd_tmp) {
+		spdk_nbd_stop(nbd_idx);
+	}
+
 	pthread_mutex_destroy(&g_spdk_nbd.mutex);
 }
 
