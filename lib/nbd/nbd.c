@@ -79,6 +79,8 @@ struct spdk_nbd_disk {
 	struct nbd_io		io;
 	struct spdk_poller	*nbd_poller;
 	uint32_t		buf_align;
+
+	TAILQ_ENTRY(spdk_nbd_disk)	tailq;
 };
 
 struct spdk_nbd_disk_globals {
@@ -98,6 +100,74 @@ spdk_nbd_init(void)
 void
 spdk_nbd_fini(void)
 {
+	struct spdk_nbd_disk *nbd_idx, *nbd_tmp;
+
+	/*
+	 * Stop running spdk_nbd_disk.
+	 * Here, nbd removing are unnecessary, but _SAFE variant
+	 * is needed, since internal spdk_nbd_disk_unregister will
+	 * remove nbd from TAILQ.
+	 */
+	TAILQ_FOREACH_SAFE(nbd_idx, &g_spdk_nbd.disk_head, tailq, nbd_tmp) {
+		spdk_nbd_stop(nbd_idx);
+	}
+}
+
+static int
+spdk_nbd_disk_register(struct spdk_nbd_disk *nbd)
+{
+	if (spdk_nbd_disk_find_by_nbd_path(nbd->nbd_path)) {
+		SPDK_NOTICELOG("%s is already exported\n", nbd->nbd_path);
+		return -1;
+	}
+
+	TAILQ_INSERT_TAIL(&g_spdk_nbd.disk_head, nbd, tailq);
+
+	return 0;
+}
+
+static void
+spdk_nbd_disk_unregister(struct spdk_nbd_disk *nbd)
+{
+	struct spdk_nbd_disk *nbd_idx, *nbd_tmp;
+
+	/*
+	 * nbd disk may be stopped before registered.
+	 * check whether it was registered.
+	 */
+	TAILQ_FOREACH_SAFE(nbd_idx, &g_spdk_nbd.disk_head, tailq, nbd_tmp) {
+		if (nbd == nbd_idx) {
+			TAILQ_REMOVE(&g_spdk_nbd.disk_head, nbd_idx, tailq);
+			break;
+		}
+	}
+}
+
+struct spdk_nbd_disk *
+spdk_nbd_disk_find_by_nbd_path(const char *nbd_path)
+{
+	struct spdk_nbd_disk *nbd;
+
+	/*
+	 * check whether nbd has already been registered by nbd path.
+	 */
+	TAILQ_FOREACH(nbd, &g_spdk_nbd.disk_head, tailq) {
+		if (!strcmp(nbd->nbd_path, nbd_path)) {
+			return nbd;
+		}
+	}
+
+	return NULL;
+}
+
+struct spdk_nbd_disk *spdk_nbd_disk_first(void)
+{
+	return TAILQ_FIRST(&g_spdk_nbd.disk_head);
+}
+
+struct spdk_nbd_disk *spdk_nbd_disk_next(struct spdk_nbd_disk *prev)
+{
+	return TAILQ_NEXT(prev, tailq);
 }
 
 const char *
@@ -164,6 +234,8 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 	if (nbd->nbd_poller) {
 		spdk_poller_unregister(&nbd->nbd_poller);
 	}
+
+	spdk_nbd_disk_unregister(nbd);
 
 	free(nbd);
 }
@@ -480,6 +552,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 
 	nbd->io.ref = 1;
 	nbd->bdev = bdev;
+
 	nbd->ch = spdk_bdev_get_io_channel(nbd->bdev_desc);
 	nbd->buf_align = spdk_max(spdk_bdev_get_buf_align(bdev), 64);
 
@@ -494,6 +567,11 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	nbd->nbd_path = strdup(nbd_path);
 	if (!nbd->nbd_path) {
 		SPDK_ERRLOG("strdup allocation failure\n");
+		goto err;
+	}
+	/* Add nbd_disk to the end of disk list */
+	rc = spdk_nbd_disk_register(nbd);
+	if (rc != 0) {
 		goto err;
 	}
 
