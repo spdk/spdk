@@ -16,6 +16,24 @@
       "revId": "0c16475d1a5d25af12562592971220075d7f2aa3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c364aee_48679307",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-04T10:45:56Z",
+      "side": 1,
+      "message": "This is the same check as in vbdev_get_lvs_bdev_by_lvs() - it checks if lvs_bdev that is about to be returned is not being freed right now. If yes, we don\u0027t want to to return it to the caller.",
+      "parentUuid": "83f24d2c_ad53eaa0",
+      "revId": "0c16475d1a5d25af12562592971220075d7f2aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
