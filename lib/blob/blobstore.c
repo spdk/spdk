@@ -271,8 +271,12 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob_dat
 
 			for (i = 0; i < desc_extent->length / sizeof(desc_extent->extents[0]); i++) {
 				for (j = 0; j < desc_extent->extents[i].length; j++) {
-					blob->active.clusters[blob->active.num_clusters++] = _spdk_bs_cluster_to_lba(blob->bs,
-							desc_extent->extents[i].cluster_idx + j);
+					if (desc_extent->extents[i].cluster_idx != 0) {
+						blob->active.clusters[blob->active.num_clusters++] = _spdk_bs_cluster_to_lba(blob->bs,
+								desc_extent->extents[i].cluster_idx + j);
+					} else {
+						blob->active.clusters[blob->active.num_clusters++] = 0;
+					}
 				}
 			}
 
@@ -795,7 +799,10 @@ _spdk_blob_persist_unmap_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 	for (i = blob->active.num_clusters; i < blob->active.cluster_array_size; i++) {
 		uint32_t cluster_num = _spdk_bs_lba_to_cluster(bs, blob->active.clusters[i]);
 
-		_spdk_bs_release_cluster(bs, cluster_num);
+		/* Nothing to release if it was not allocated */
+		if (blob->active.clusters[i] != 0) {
+			_spdk_bs_release_cluster(bs, cluster_num);
+		}
 	}
 
 	if (blob->active.num_clusters == 0) {
@@ -836,19 +843,26 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 		uint64_t next_lba = blob->active.clusters[i];
 		uint32_t next_lba_count = _spdk_bs_cluster_to_lba(bs, 1);
 
-		if ((lba + lba_count) == next_lba) {
-			/* This cluster is contiguous with the previous one. */
-			lba_count += next_lba_count;
-			continue;
-		}
+		/* Skip if cluster is not allocated */
+		if (next_lba != 0) {
+			if ((lba + lba_count) == next_lba) {
+				/* This cluster is contiguous with the previous one. */
+				lba_count += next_lba_count;
+				continue;
+			}
 
-		/* This cluster is not contiguous with the previous one. */
+			/* This cluster is not contiguous with the previous one. */
 
-		/* If a run of LBAs previously existing, send them
-		 * as an unmap.
-		 */
-		if (lba_count > 0) {
+			/* If a run of LBAs previously existing, send them
+			 * as an unmap.
+			 */
+			if (lba_count > 0) {
+				spdk_bs_batch_unmap(batch, lba, lba_count);
+			}
+		} else if (lba_count > _spdk_bs_cluster_to_lba(bs, 1)) {
+			/* Unmap contignuous set of LBAs found before this unallocated cluster */
 			spdk_bs_batch_unmap(batch, lba, lba_count);
+			next_lba_count = 0;
 		}
 
 		/* Start building the next batch */
@@ -856,7 +870,7 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 		lba_count = next_lba_count;
 	}
 
-	/* If we ended with a contiguous set of LBAs, send the unmap now */
+	/* If we ended with a contiguous set of LBAs, send the unmap now if they are allocated */
 	if (lba_count > 0) {
 		spdk_bs_batch_unmap(batch, lba, lba_count);
 	}
@@ -1023,15 +1037,16 @@ _spdk_resize_blob(struct spdk_blob_data *blob, uint64_t sz)
 	 * and another to actually claim them.
 	 */
 
-	lfc = 0;
-	for (i = blob->active.num_clusters; i < sz; i++) {
-		lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
-		if (lfc >= bs->total_clusters) {
-			/* No more free clusters. Cannot satisfy the request */
-			assert(false);
-			return -1;
+	if (spdk_blob_is_thin_provisioned(blob) == false) {
+		lfc = 0;
+		for (i = blob->active.num_clusters; i < sz; i++) {
+			lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
+			if (lfc >= bs->total_clusters) {
+				/* No more free clusters. Cannot satisfy the request */
+				return -ENOMEM;
+			}
+			lfc++;
 		}
-		lfc++;
 	}
 
 	if (sz > blob->active.num_clusters) {
@@ -1043,17 +1058,23 @@ _spdk_resize_blob(struct spdk_blob_data *blob, uint64_t sz)
 			assert(false);
 			return -1;
 		}
+		memset(tmp + blob->active.cluster_array_size, 0,
+		       sizeof(uint64_t) * (sz - blob->active.cluster_array_size));
 		blob->active.clusters = tmp;
 		blob->active.cluster_array_size = sz;
 	}
 
-	lfc = 0;
-	for (i = blob->active.num_clusters; i < sz; i++) {
-		lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
-		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", lfc, blob->id);
-		_spdk_bs_claim_cluster(bs, lfc);
-		blob->active.clusters[i] = _spdk_bs_cluster_to_lba(bs, lfc);
-		lfc++;
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+
+	if (spdk_blob_is_thin_provisioned(blob) == false) {
+		lfc = 0;
+		for (i = blob->active.num_clusters; i < sz; i++) {
+			lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
+			SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", lfc, blob->id);
+			_spdk_bs_claim_cluster(bs, lfc);
+			blob->active.clusters[i] = _spdk_bs_cluster_to_lba(bs, lfc);
+			lfc++;
+		}
 	}
 
 	blob->active.num_clusters = sz;
