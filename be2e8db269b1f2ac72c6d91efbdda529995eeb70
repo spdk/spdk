@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d205c44_498a4bba",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-04T17:09:05Z",
+      "side": 1,
+      "message": "Does \u0027size\u0027 refer to the size of the options struct for ABI compatibility, or does it refer to the number of clusters in a blob? What are the units? At a minimum, please document this. Even better would be to document it and pick a more descriptive name (if it is cluster count).\n\nAlso, it probably makes more sense to define this structure right above the function where it is used.",
+      "revId": "be2e8db269b1f2ac72c6d91efbdda529995eeb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37107799_2ac4f64f",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-04T17:09:05Z",
+      "side": 1,
+      "message": "The name of this function makes me think it is creating an spdk_blob_opts structure, not that it is creating a blob with additional options. Maybe a better name is spdk_bs_md_create_blob_ext, or the old POSIX naming standby, spdk_bs_md_create_blob2.\n\nIn reality, I want to do one more major pass through this API at some point and finalize all of the names. The _md_ and _io_ parts are all going to go away for sure, and there are probably other clean ups to do. Given that, I\u0027m not that concerned with maintaining backward compatibility everywhere just yet.",
+      "revId": "be2e8db269b1f2ac72c6d91efbdda529995eeb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89ffc31a_6f1c64cd",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2605,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-04T17:09:05Z",
+      "side": 1,
+      "message": "It\u0027s hard to evaluate whether spdk_blob_opts is the right design if you don\u0027t actually use it. I think we really need to implement parsing the options right in this patch so that we can be certain that the API this is proposing actually works in practice.",
+      "revId": "be2e8db269b1f2ac72c6d91efbdda529995eeb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
