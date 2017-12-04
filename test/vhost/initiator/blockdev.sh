@@ -96,7 +96,7 @@ for bdev in $bdevs; do
         timing_exit bounds
 
         timing_enter bdev_svc
-        bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf /var/tmp/spdk2.sock | jq -r '.[] | select(.claimed == false)')
+        bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.claimed == false)')
         timing_exit bdev_svc
 
         if [ -d /usr/src/fio ]; then
