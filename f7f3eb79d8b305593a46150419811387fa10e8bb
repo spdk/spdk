@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47edaa34_f214ef92",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-04T16:56:45Z",
+      "side": 1,
+      "message": "We should probably just set nullglob globally in autotest_common.sh (I don\u0027t think we ever want the non-nullglob behavior), but this is OK for now.",
+      "revId": "f7f3eb79d8b305593a46150419811387fa10e8bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
