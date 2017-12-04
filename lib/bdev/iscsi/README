@@ -1,0 +1,24 @@
+This is a very rough initial cut at an SPDK iSCSI initiator bdev module.  It
+only performs operations (connect, login, read cap, read/write).
+But this passes basic verify tests with bdevperf and with fio.
+
+Configuration file for iSCSI initiator is in the following format.
+Note that the "/0" at the end means "LUN 0".
+
+[iSCSI_Initiator]
+  URL iscsi://127.0.0.1/iqn.2016-06.io.spdk:disk1/0 iSCSI0
+
+To Do Items
+===========
+1) Create RPCs.
+2) Use asynchronous polling for connect/login/disconnect.  Read/write is already
+   using libiscsi event framework.
+3) Choose initiator name as part of RPC configuration.  Currently this is hardcoded
+   with g_initiator string.
+4) Implement reset path.
+5) Implement unmap path.
+6) Use REPORT_LUNS to dynamically find all of the block devices attached to the
+   iSCSI target node instead of hard-coding LUN 0.  This will need some extra
+   investigation in libiscsi.  Currently the full URL is used which includes the LUN.
+   Not sure yet how we can login to target node and then submit IO to different
+   LUNs.  Let's treat this as low priority for now.
