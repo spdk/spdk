@@ -604,6 +604,18 @@ p = subparsers.add_parser('delete_bdev', help='Delete a blockdev')
 p.add_argument('bdev_name', help='Blockdev name to be deleted. Example: Malloc0.')
 p.set_defaults(func=delete_bdev)
 
+def start_nbd_disk(args):
+    params = {
+        'bdev_name': args.bdev_name,
+        'nbd_device': args.nbd_device
+    }
+    jsonrpc_call('start_nbd_disk', params)
+
+p = subparsers.add_parser('start_nbd_disk', help='Export a bdev as a nbd disk')
+p.add_argument('bdev_name', help='Blockdev name to be exported. Example: Malloc0.')
+p.add_argument('nbd_device', help='Nbd device name to be assigned. Example: /dev/nbd0.')
+p.set_defaults(func=start_nbd_disk)
+
 def stop_nbd_disk(args):
     params = {'nbd_device': args.nbd_device}
     jsonrpc_call('stop_nbd_disk', params)
