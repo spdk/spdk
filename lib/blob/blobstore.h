@@ -241,9 +241,12 @@ struct spdk_blob_md_descriptor_extent {
  * As new flags are defined, these values will be updated to reflect the
  *  mask of all flag values understood by this application.
  */
-#define SPDK_BLOB_INVALID_FLAGS_MASK	0
+#define SPDK_BLOB_THIN_PROV (1ULL << 0)
+#define SPDK_BLOB_INVALID_FLAGS_MASK	SPDK_BLOB_THIN_PROV
 #define SPDK_BLOB_DATA_RO_FLAGS_MASK	0
 #define SPDK_BLOB_MD_RO_FLAGS_MASK	0
+
+#define spdk_blob_is_thin_provisioned(blob) (blob->invalid_flags & SPDK_BLOB_THIN_PROV)
 
 struct spdk_blob_md_descriptor_flags {
 	uint8_t		type;
@@ -444,6 +447,22 @@ _spdk_bs_num_pages_to_cluster_boundary(struct spdk_blob *blob, uint32_t page)
 	pages_per_cluster = blob->bs->pages_per_cluster;
 
 	return pages_per_cluster - (page % pages_per_cluster);
+}
+
+/* Given a page offset into a blob, look up if it is from allocated cluster. */
+static inline bool
+_spdk_bs_blob_is_page_from_allocated_cluster(struct spdk_blob *blob, uint32_t page)
+{
+	uint64_t	lba;
+	uint32_t	pages_per_cluster;
+
+	pages_per_cluster = blob->bs->pages_per_cluster;
+
+	assert(page < blob->active.num_clusters * pages_per_cluster);
+
+	lba = blob->active.clusters[page / pages_per_cluster];
+
+	return (bool)(lba != 0);
 }
 
 #endif
