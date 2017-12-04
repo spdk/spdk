@@ -104,6 +104,24 @@
     },
     {
       "key": {
+        "uuid": "ef6518b7_8734539d",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-04T21:38:55Z",
+      "side": 1,
+      "message": "This is to prevent mistakes like \"Dev 0\" and \"Target 0\" in the same controller like\n\nDev 0 Malloc0\nTarget 0 Malloc1",
+      "parentUuid": "e02e2e98_89f53fe1",
+      "revId": "f4fa68c5ceae4fb07a3ae0315d00e3bdd77ec611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6af21972_6a0811b6",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 9
