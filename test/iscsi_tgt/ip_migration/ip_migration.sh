@@ -6,7 +6,7 @@ source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 PORT=3260
 NETMASK=127.0.0.0/24

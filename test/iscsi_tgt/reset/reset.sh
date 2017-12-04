@@ -18,7 +18,7 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 if ! hash sg_reset; then
 	exit 1
