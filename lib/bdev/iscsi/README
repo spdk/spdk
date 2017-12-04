@@ -1,0 +1,16 @@
+This is a very rough initial cut at an SPDK iSCSI initiator bdev module.  It
+only performs operations (connect, login, read cap, read/write)
+to a single hardcoded iSCSI LUN.  But this passes basic verify tests with
+bdevperf and our SPDK iSCSI target.
+
+To Do Items
+===========
+1) Use REPORT_LUNS to dynamically find all of the block devices attached to the
+   iSCSI target node instead of hard-coding LUN 0.
+2) Create RPCs.  Config file parameters are optional but focus should be on RPCs.
+3) Use asynchronous polling for connect/login/disconnect.  Read/write is already
+   using libiscsi event framework.
+4) Choose initiator name as part of RPC configuration.  Currently this is hardcoded
+   with g_initiator string.
+5) Implement reset path.
+6) Implement unmap path.
