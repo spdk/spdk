@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c0540dd9_99eef7c7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011274
+      },
+      "writtenOn": "2017-12-04T18:24:51Z",
+      "side": 1,
+      "message": "\u003e This should be broken up into shorter lines.\n \u003e \n \u003e Can you also describe a bit what you might use this for, and what\n \u003e context you might call it from?\n \u003e \n\nIn our case, we want to convert the adminq_timer_poller from polling for an AEN to polling for pass_thru completion(s). Once we\u0027re done, we want to reset the timer back to the original AEN timer. Our specific use case is to significantly speed up the rpc call for nvme fw download, but it can also be used to make configuration changes while IO is suspended.\n\n \u003e One problem I see is that if this gets called from the context of\n \u003e the poller function, it will all crash, since we remove the poller\n \u003e from the requisite TAILQ (see reactor.c:440 and reactor.c:456).\n \u003e \n\nThat is why we make the modification as an event rather than in-line. This ensures that the modification is done outside the context of any poller. We can add an assert if poller-\u003estate \u003d\u003d SPDK_POLLER_STATE_RUNNING since this should never happen.\n\n \u003e Would the following changes work for you and Fujitsu?\n \u003e 1) Change function to spdk_poller_set_period().\n \u003e 2) spdk_poller_set_period() fails if you go from 0 to \u003e0, or vice\n \u003e versa.  Meaning you can only change a timer that already had a\n \u003e period \u003e 0 to a different period \u003e 0.\n \u003e 3) if the period is changed, the new period does not take effect\n \u003e until after the current timer period expires.\n\nThis would work for our fw download case since there are multiple adminq commands, but I am worried about the use case of a single adminq command with suspended IO. I think the current logic covers more use cases.",
+      "parentUuid": "9129829f_3d8ba182",
+      "revId": "7ce7b16c93037da17aadb7a78267578112588d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d94dbc33_412e8caf",
         "filename": "lib/event/reactor.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2017-12-01T23:53:57Z",
       "side": 1,
       "message": "I don\u0027t think we need to add this member.  We can always calculate this from period_ticks.",
+      "revId": "7ce7b16c93037da17aadb7a78267578112588d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fa85516_999c4cdc",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011274
+      },
+      "writtenOn": "2017-12-04T18:24:51Z",
+      "side": 1,
+      "message": "The purpose of this member is to save the original value so that it can restored. I don\u0027t think we can guarantee that spdk_get_ticks_hz() will always return the same value or be a multiple of period * ticks_per_us. Therefore, recalculation can result it a value slightly from the original.",
+      "parentUuid": "d94dbc33_412e8caf",
       "revId": "7ce7b16c93037da17aadb7a78267578112588d32",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
