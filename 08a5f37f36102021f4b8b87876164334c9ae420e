@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf68e730_1ff654f8",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-04T05:52:51Z",
+      "side": 1,
+      "message": "please follow the same code style as the other fields in the same structure.",
+      "revId": "08a5f37f36102021f4b8b87876164334c9ae420e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52eabcdc_12db3946",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-04T05:52:51Z",
+      "side": 1,
+      "message": "same here.",
+      "revId": "08a5f37f36102021f4b8b87876164334c9ae420e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a0a2c8a_eb98d476",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-04T05:52:51Z",
+      "side": 1,
+      "message": "No need for this, calloc for the nbd structure.",
+      "revId": "08a5f37f36102021f4b8b87876164334c9ae420e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
