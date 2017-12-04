@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "453661f1_9bbd9482",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-04T16:43:37Z",
+      "side": 1,
+      "message": "This should be an INFOLOG at most, not NOTICELOG.",
+      "range": {
+        "startLine": 683,
+        "startChar": 1,
+        "endLine": 683,
+        "endChar": 15
+      },
+      "revId": "3bdedbb1cb7d80aaad0caebc9cbb00a4ea847d55",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
