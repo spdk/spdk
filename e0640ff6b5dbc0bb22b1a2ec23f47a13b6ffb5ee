@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0b17a44_42c35492",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-04T21:01:34Z",
+      "side": 1,
+      "message": "where does the rdma_reject happen now?  or is it not needed?  at first though maybe the caller (spdk_nvmf_rdma_accept) would do it if you return an errno here, but i don\u0027t see it",
+      "revId": "e0640ff6b5dbc0bb22b1a2ec23f47a13b6ffb5ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d7ee0d1_16542bf7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-04T21:01:34Z",
+      "side": 1,
+      "message": "renumber the error labels since you\u0027ve removed err1?  that\u0027s a nit though",
+      "revId": "e0640ff6b5dbc0bb22b1a2ec23f47a13b6ffb5ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
