@@ -10,6 +10,7 @@ MALLOC_BLOCK_SIZE=512
 NVMF_SUBSYS=11
 
 rpc_py="python $rootdir/scripts/rpc.py"
+fio_py="python $rootdir/scripts/nvmf_fio.py"
 
 set -e
 
@@ -54,8 +55,9 @@ for i in `seq 1 $NVMF_SUBSYS`; do
 	waitforblk "nvme${k}n1"
 done
 
-$testdir/../fio/nvmf_fio.py 262144 64 read 10
-$testdir/../fio/nvmf_fio.py 262144 64 randwrite 10
+dev_list=$(get_devices_list nvmf)
+$fio_py $dev_list 262144 64 read 10
+$fio_py $dev_list 262144 64 randwrite 10
 
 sync
 for i in `seq 1 $NVMF_SUBSYS`; do

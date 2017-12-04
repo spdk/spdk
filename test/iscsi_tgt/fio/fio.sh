@@ -29,7 +29,7 @@ function running_config() {
 	timing_exit start_iscsi_tgt2
 
 	sleep 1
-	$fio_py 4096 1 randrw 5
+	$fio_py $dev_list 4096 1 randrw 5
 }
 
 if [ -z "$TARGET_IP" ]; then
@@ -50,7 +50,7 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=4096
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 timing_enter start_iscsi_tgt
 
@@ -81,12 +81,14 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 trap "iscsicleanup; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 sleep 1
-$fio_py 4096 1 randrw 1 verify
-$fio_py 131072 32 randrw 1 verify
-$fio_py 524288 128 randrw 1 verify
+dev_list=$(get_devices_list iscsi)
+
+$fio_py $dev_list 4096 1 randrw 1 verify
+$fio_py $dev_list 131072 32 randrw 1 verify
+$fio_py $dev_list 524288 128 randrw 1 verify
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	$fio_py 4096 1 write 300 verify
+	$fio_py $dev_list 4096 1 write 300 verify
 
 	# Run the running_config test which will generate a config file from the
 	#  running iSCSI target, then kill and restart the iSCSI target using the
