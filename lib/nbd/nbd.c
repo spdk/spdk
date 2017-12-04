@@ -37,6 +37,7 @@
 #include <linux/nbd.h>
 
 #include "spdk/nbd.h"
+#include "nbd_internal.h"
 #include "spdk/bdev.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
@@ -72,6 +73,7 @@ struct spdk_nbd_disk {
 	struct spdk_bdev_desc	*bdev_desc;
 	struct spdk_io_channel	*ch;
 	int			dev_fd;
+	char			*nbd_path;
 	int			kernel_sp_fd;
 	int			spdk_sp_fd;
 	struct nbd_io		io;
@@ -96,6 +98,18 @@ spdk_nbd_init(void)
 void
 spdk_nbd_fini(void)
 {
+}
+
+const char *
+spdk_nbd_disk_get_nbd_path(struct spdk_nbd_disk *nbd)
+{
+	return nbd->nbd_path;
+}
+
+const char *
+spdk_nbd_disk_get_bdev_name(struct spdk_nbd_disk *nbd)
+{
+	return spdk_bdev_get_name(nbd->bdev);
 }
 
 static bool
@@ -133,6 +147,10 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 
 	if (nbd->dev_fd >= 0) {
 		close(nbd->dev_fd);
+	}
+
+	if (nbd->nbd_path) {
+		free(nbd->nbd_path);
 	}
 
 	if (nbd->spdk_sp_fd >= 0) {
@@ -473,6 +491,12 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 
 	nbd->spdk_sp_fd = sp[0];
 	nbd->kernel_sp_fd = sp[1];
+	nbd->nbd_path = strdup(nbd_path);
+	if (!nbd->nbd_path) {
+		SPDK_ERRLOG("strdup allocation failure\n");
+		goto err;
+	}
+
 	nbd->dev_fd = open(nbd_path, O_RDWR);
 	if (nbd->dev_fd == -1) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
