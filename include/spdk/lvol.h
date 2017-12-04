@@ -127,12 +127,11 @@ int spdk_lvs_unload(struct spdk_lvol_store *lvol_store,
  * All lvols have to be closed beforehand, when doing destroy.
  *
  * \param lvol_store Handle to lvolstore
- * \param umap_device When set to true, unmaps whole lvolstore, otherwise writes zeros in first block
  * \param cb_fn Completion callback
  * \param cb_arg Completion callback custom arguments
  * \return error
  */
-int spdk_lvs_destroy(struct spdk_lvol_store *lvol_store, bool unmap_device,
+int spdk_lvs_destroy(struct spdk_lvol_store *lvol_store,
 		     spdk_lvs_op_complete cb_fn, void *cb_arg);
 
 /**

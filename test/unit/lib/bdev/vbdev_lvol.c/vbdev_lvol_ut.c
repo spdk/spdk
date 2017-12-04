@@ -208,7 +208,7 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *c
 }
 
 int
-spdk_lvs_destroy(struct spdk_lvol_store *lvs,  bool unmap_device, spdk_lvs_op_complete cb_fn,
+spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		 void *cb_arg)
 {
 	struct spdk_lvol *lvol, *tmp;
@@ -297,7 +297,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 		if (!lvol->lvol_store->destruct) {
 			spdk_lvs_unload(lvol->lvol_store, destruct_req->cb_fn, destruct_req->cb_arg);
 		} else {
-			spdk_lvs_destroy(lvol->lvol_store, false, destruct_req->cb_fn, destruct_req->cb_arg);
+			spdk_lvs_destroy(lvol->lvol_store, destruct_req->cb_fn, destruct_req->cb_arg);
 			free(destruct_req);
 		}
 	}

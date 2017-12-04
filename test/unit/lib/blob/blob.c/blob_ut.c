@@ -1495,7 +1495,7 @@ bs_destroy(void)
 
 	/* Destroy the blob store */
 	g_bserrno = -1;
-	spdk_bs_destroy(g_bs, 0, bs_op_complete, NULL);
+	spdk_bs_destroy(g_bs, bs_op_complete, NULL);
 	/* Callback is called after device is destroyed in next scheduler run. */
 	_bs_flush_scheduler();
 	CU_ASSERT(TAILQ_EMPTY(&g_scheduled_ops));
