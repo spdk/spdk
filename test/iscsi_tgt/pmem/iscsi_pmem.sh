@@ -21,7 +21,7 @@ PMEM_BLOCK_SIZE=512
 TGT_NR=10
 PMEM_PER_TGT=1
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 timing_enter iscsi_pmem
 

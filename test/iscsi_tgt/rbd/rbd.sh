@@ -19,7 +19,7 @@ INITIATOR_NAME=ANY
 NETMASK=$INITIATOR_IP/32
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 timing_enter start_iscsi_tgt
 

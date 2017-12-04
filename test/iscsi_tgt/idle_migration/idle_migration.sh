@@ -10,7 +10,7 @@ timing_enter idle_migration
 # iSCSI target configuration
 PORT=3260
 
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 timing_enter start_iscsi_tgt
 

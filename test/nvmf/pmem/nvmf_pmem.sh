@@ -9,7 +9,9 @@ RUNTIME=$1
 PMEM_BDEVS=""
 SUBSYS_NR=1
 PMEM_PER_SUBSYS=8
+
 rpc_py="python $rootdir/scripts/rpc.py"
+fio_py="python $rootdir/scripts/nvmf_fio.py"
 
 function disconnect_nvmf()
 {
@@ -74,7 +76,7 @@ done
 timing_exit nvmf_connect
 
 timing_enter fio_test
-$testdir/../fio/nvmf_fio.py 131072 64 randwrite $RUNTIME verify
+$fio_py 131072 64 randwrite $RUNTIME verify
 timing_exit fio_test
 
 sync
