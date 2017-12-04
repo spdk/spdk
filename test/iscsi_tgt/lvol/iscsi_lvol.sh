@@ -26,7 +26,7 @@ else
 fi
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 timing_enter start_iscsi_tgt
 
@@ -65,7 +65,8 @@ iscsiadm -m node --login -p $TARGET_IP:$PORT
 timing_exit discovery
 
 timing_enter fio
-$fio_py 131072 8 randwrite 10 verify
+dev_list=$(get_devices_list iscsi)
+$fio_py $dev_list 131072 8 randwrite 10 verify
 timing_exit fio
 
 rm -f ./local-job0-0-verify.state
