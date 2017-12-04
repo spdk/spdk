@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54884f40_7b4c71c1",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-04T16:23:26Z",
+      "side": 1,
+      "message": "It would be good to be consistent with locking - register() takes the lock itself, but unregister() requires the caller to hold it.  (We can clean this up in a later patch; each function should at least have a comment if it requires the caller to hold the lock.)",
+      "revId": "db01cee7d27f00387b082e67aca0e1248e4d0976",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b493f573_98d50624",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-04T16:23:26Z",
+      "side": 1,
+      "message": "We should probably also remove target-\u003enum and the target_index parameter, but that can be a later cleanup patch.",
+      "revId": "db01cee7d27f00387b082e67aca0e1248e4d0976",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
