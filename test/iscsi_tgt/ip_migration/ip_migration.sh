@@ -6,7 +6,7 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 # Namespaces are NOT used here on purpose. This test requires changes to detect
 # ifc_index for interface that was put into namespace. Needed for add_ip_address.
@@ -72,7 +72,8 @@ iscsiadm -m node --login -p $MIGRATION_ADDRESS:$ISCSI_PORT
 
 # fio tests for multi-process
 sleep 1
-$fio_py 4096 32 randrw 10 &
+dev_list=$(get_devices_list iscsi)
+$fio_py $dev_list 4096 32 randrw 10 &
 fiopid=$!
 sleep 5
 

@@ -609,5 +609,17 @@ function freebsd_update_contigmem_mod()
 	fi
 }
 
+function get_devices_list(){
+	local re_format="\[.*\]"
+	local alldev=$(python scripts/common/initdevice.py $1)
+	if [[ ! $alldev =~ $re_format ]]; then
+		echo "No available devices found."
+		return -1
+	fi
+	dev_list=${alldev#*[}
+	dev_list=${dev_list%]}
+	echo  "$dev_list"
+}
+
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
