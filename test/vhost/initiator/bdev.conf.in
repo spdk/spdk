@@ -2,9 +2,5 @@
   Path /tmp/vhost.0
   Queues 16
 
-[Rpc]
-  Enable Yes
-  Listen /var/tmp/spdk2.sock
-
 [Ioat]
   Disable Yes
