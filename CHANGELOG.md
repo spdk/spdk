@@ -53,6 +53,12 @@ The prototype for spdk_poller_fn() has been modified; it now returns a value ind
 whether or not the poller did any work.  Existing pollers will need to be updated to
 return a value.
 
+### iSCSI initiator
+
+An iSCSI initiator bdev module has been added to SPDK.  This module should be considered
+experimental pending additional features and tests.  More details can be found in
+lib/bdev/iscsi/README.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System
