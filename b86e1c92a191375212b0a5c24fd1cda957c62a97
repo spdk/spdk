@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0146a8b9_a872c6df",
+        "filename": "test/vhost/readonly/delete_partition_vm.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-04T21:57:34Z",
+      "side": 1,
+      "message": "just \"rm -rf $BASE_DIR/$test_folder_name\" will do the job",
+      "range": {
+        "startLine": 17,
+        "startChar": 1,
+        "endLine": 18,
+        "endChar": 27
+      },
+      "revId": "b86e1c92a191375212b0a5c24fd1cda957c62a97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80e09a71_ad04c0b2",
+        "filename": "test/vhost/readonly/delete_partition_vm.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-04T21:57:34Z",
+      "side": 1,
+      "message": "if [[ ! -d \"/sys/block/$disk_name ]]; then\n\nis simpler and a lot easier to read.",
+      "range": {
+        "startLine": 36,
+        "startChar": 5,
+        "endLine": 36,
+        "endChar": 48
+      },
+      "revId": "b86e1c92a191375212b0a5c24fd1cda957c62a97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35a81764_948a1bcb",
+        "filename": "test/vhost/readonly/delete_partition_vm.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-04T21:57:34Z",
+      "side": 1,
+      "message": "nice hack :D",
+      "range": {
+        "startLine": 40,
+        "startChar": 8,
+        "endLine": 40,
+        "endChar": 46
+      },
+      "revId": "b86e1c92a191375212b0a5c24fd1cda957c62a97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b52d50a3_e95cbf9e",
+        "filename": "test/vhost/readonly/delete_partition_vm.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-04T21:57:34Z",
+      "side": 1,
+      "message": "Why removing file from folder that will be \"rm -rf\" later? Also I see that if the file exist it is fine and also it is fine if it is missing so why bother yourself with this file at all?",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 2
+      },
+      "revId": "b86e1c92a191375212b0a5c24fd1cda957c62a97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "505b360c_2a0c6ef2",
+        "filename": "test/vhost/readonly/delete_partition_vm.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-04T21:57:34Z",
+      "side": 1,
+      "message": "I think I already commented that \u0027if \u0027 statement in this function is invalid here. Pls inline this function here (and in error function) and just umount without \"if\" statement so it will not silently ignore missing mount.\n\nThe same is repeated in other sh files.",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 18
+      },
+      "revId": "b86e1c92a191375212b0a5c24fd1cda957c62a97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
