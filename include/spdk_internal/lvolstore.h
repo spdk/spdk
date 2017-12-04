@@ -70,7 +70,6 @@ struct spdk_lvs_destroy_req {
 	spdk_lvs_op_complete    cb_fn;
 	void                    *cb_arg;
 	struct spdk_lvol_store	*lvs;
-	bool			unmap_device;
 };
 
 struct spdk_lvol_with_handle_req {

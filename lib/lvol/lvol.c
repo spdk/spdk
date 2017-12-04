@@ -693,12 +693,12 @@ _lvs_destroy_super_cb(void *cb_arg, int bserrno)
 	assert(lvs != NULL);
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Destroying lvol store\n");
-	spdk_bs_destroy(lvs->blobstore, lvs_req->unmap_device, _lvs_destroy_cb, lvs_req);
+	spdk_bs_destroy(lvs->blobstore, _lvs_destroy_cb, lvs_req);
 	_spdk_lvs_free(lvs);
 }
 
 int
-spdk_lvs_destroy(struct spdk_lvol_store *lvs, bool unmap_device, spdk_lvs_op_complete cb_fn,
+spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		 void *cb_arg)
 {
 	struct spdk_lvs_destroy_req *lvs_req;
@@ -735,7 +735,6 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, bool unmap_device, spdk_lvs_op_com
 	lvs_req->cb_fn = cb_fn;
 	lvs_req->cb_arg = cb_arg;
 	lvs_req->lvs = lvs;
-	lvs_req->unmap_device = unmap_device;
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Deleting super blob\n");
 	spdk_bs_md_delete_blob(lvs->blobstore, lvs->super_blob_id, _lvs_destroy_super_cb, lvs_req);
@@ -799,7 +798,7 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 
 	if (lvol->lvol_store->destruct_req && TAILQ_EMPTY(&lvol->lvol_store->lvols)) {
 		if (lvol->lvol_store->destruct)
-			spdk_lvs_destroy(lvol->lvol_store, false, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
+			spdk_lvs_destroy(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
 	}
 
 	SPDK_INFOLOG(SPDK_TRACE_LVOL, "Lvol %s deleted\n", lvol->old_name);

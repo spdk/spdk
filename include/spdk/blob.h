@@ -167,14 +167,12 @@ void spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 void spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 		  spdk_bs_op_with_handle_complete cb_fn, void *cb_arg);
 
-/* Destroy a blob store by unmapping super block and destroying in-memory structures.
- * If unmap_device is set to true, entire device will be unmapped. Otherwise only
- * super block will be unmapped.
+/* Destroy a blob store by zeroing the metadata and freeing in-memory structures.
  */
-void spdk_bs_destroy(struct spdk_blob_store *bs, bool unmap_device, spdk_bs_op_complete cb_fn,
+void spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 		     void *cb_arg);
 
-/* Flush all volatile data to disk and destroy in-memory structures. */
+/* Flush all volatile data to disk and free in-memory structures. */
 void spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_arg);
 
 /* Set the given blob as the super blob. This will be retrievable immediately after an
