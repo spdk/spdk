@@ -16,7 +16,7 @@ if [ -z $NVMF_FIRST_TARGET_IP ]; then
 fi
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 ISCSI_PORT=3260
 NVMF_PORT=4420
@@ -69,7 +69,8 @@ trap "iscsicleanup; killprocess $iscsipid; killprocess $nvmfpid; exit 1" SIGINT 
 sleep 1
 
 echo "Running FIO"
-$fio_py 4096 1 randrw 1 verify
+dev_list=$(get_devices_list iscsi)
+$fio_py $dev_list 4096 1 randrw 1 verify
 
 rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT

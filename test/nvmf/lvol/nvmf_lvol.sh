@@ -11,6 +11,7 @@ LVOL_BDEV_SIZE=10
 SUBSYS_NR=10
 
 rpc_py="python $rootdir/scripts/rpc.py"
+fio_py="python $rootdir/scripts/nvmf_fio.py"
 
 function disconnect_nvmf()
 {
@@ -74,7 +75,8 @@ for i in `seq 1 $SUBSYS_NR`; do
 	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 done
 
-$testdir/../fio/nvmf_fio.py 262144 64 randwrite 10 verify
+dev_list=$(get_devices_list nvmf)
+$fio_py $dev_list 262144 64 randwrite 10 verify
 
 sync
 disconnect_nvmf
