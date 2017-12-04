@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "056b99ee_30de6a52",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-04T16:38:47Z",
+      "side": 1,
+      "message": "This needs to be rebased to the latest. The entry should go in the v18.01 section now.",
+      "revId": "7103cef40545d1acc01bf037c4d00e22c0bd9bef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45e6c59c_f9acad59",
+        "filename": "include/spdk/blob_nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-04T16:38:47Z",
+      "side": 1,
+      "message": "What C++ code is including this header? Usually the \"extern C\" stuff is put in the C++ code and C headers are left alone.",
+      "revId": "7103cef40545d1acc01bf037c4d00e22c0bd9bef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2623ac54_33946aa4",
+        "filename": "lib/blob/nvme/blob_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-04T16:38:47Z",
+      "side": 1,
+      "message": "Who polls the qpair?",
+      "revId": "7103cef40545d1acc01bf037c4d00e22c0bd9bef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "541cbbe3_3b00cbf2",
+        "filename": "lib/blob/nvme/blob_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-04T16:38:47Z",
+      "side": 1,
+      "message": "You should confirm b is not NULL before calling spdk_io_device_register. That way if it fails you don\u0027t need to unregister the I/O device.",
+      "revId": "7103cef40545d1acc01bf037c4d00e22c0bd9bef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
