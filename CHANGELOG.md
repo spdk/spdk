@@ -47,6 +47,12 @@ option, but instead returns SPDK_APP_PARSE_ARGS_HELP and
 SPDK_APP_PARSE_ARGS_FAIL, respectively, and SPDK_APP_PARSE_ARGS_SUCCESS
 on success.
 
+### iSCSI initiator
+
+An iSCSI initiator bdev module has been added to SPDK.  This module should be considered
+experimental pending additional features and tests.  More details can be found in
+lib/bdev/iscsi/README.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System
