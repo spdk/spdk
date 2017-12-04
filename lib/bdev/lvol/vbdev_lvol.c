@@ -238,7 +238,7 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 
 	if (all_lvols_closed == true) {
 		if (destroy) {
-			spdk_lvs_destroy(lvs, false, _vbdev_lvs_remove_cb, lvs_bdev);
+			spdk_lvs_destroy(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
 		} else {
 			spdk_lvs_unload(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
 		}

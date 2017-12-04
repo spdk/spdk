@@ -2335,12 +2335,11 @@ _spdk_bs_destroy_trim_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 
 	_spdk_bs_free(bs);
-	spdk_dma_free(ctx->super);
 	free(ctx);
 }
 
 void
-spdk_bs_destroy(struct spdk_blob_store *bs, bool unmap_device, spdk_bs_op_complete cb_fn,
+spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 		void *cb_arg)
 {
 	struct spdk_bs_cpl	cpl;
@@ -2365,31 +2364,20 @@ spdk_bs_destroy(struct spdk_blob_store *bs, bool unmap_device, spdk_bs_op_comple
 		return;
 	}
 
-	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
-	if (!ctx->super) {
-		free(ctx);
-		cb_fn(cb_arg, -ENOMEM);
-		return;
-	}
-
 	ctx->bs = bs;
 
 	seq = spdk_bs_sequence_start(bs->md_target.md_channel, &cpl);
 	if (!seq) {
-		spdk_dma_free(ctx->super);
 		free(ctx);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
 
-	if (unmap_device) {
-		/* TRIM the entire device */
-		spdk_bs_sequence_unmap(seq, 0,  bs->dev->blockcnt,  _spdk_bs_destroy_trim_cpl, ctx);
-	} else {
-		/* Write zeroes to the super block */
-		spdk_bs_sequence_write(seq, ctx->super, _spdk_bs_page_to_lba(bs, 0), _spdk_bs_byte_to_lba(bs,
-				       sizeof(*ctx->super)), _spdk_bs_destroy_trim_cpl, ctx);
-	}
+	/* Write zeroes to the super block */
+	spdk_bs_sequence_write_zeroes(seq,
+				      _spdk_bs_page_to_lba(bs, 0),
+				      _spdk_bs_byte_to_lba(bs, sizeof(struct spdk_bs_super_block)),
+				      _spdk_bs_destroy_trim_cpl, ctx);
 }
 
 /* END spdk_bs_destroy */

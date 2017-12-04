@@ -256,7 +256,7 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 }
 
 void
-spdk_bs_destroy(struct spdk_blob_store *bs, bool unmap_device, spdk_bs_op_complete cb_fn,
+spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 		void *cb_arg)
 {
 	free(bs);
@@ -482,7 +482,7 @@ lvs_init_destroy_success(void)
 
 	/* Lvol store contains one lvol, this destroy should fail. */
 	g_lvserrno = -1;
-	rc = spdk_lvs_destroy(g_lvol_store, true, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_destroy(g_lvol_store, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == -EBUSY);
 	CU_ASSERT(g_lvserrno == -EBUSY);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
@@ -493,7 +493,7 @@ lvs_init_destroy_success(void)
 	spdk_lvol_destroy(g_lvol, destroy_cb, NULL);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_destroy(g_lvol_store, true, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_destroy(g_lvol_store, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
@@ -607,7 +607,7 @@ lvs_names(void)
 
 	/* Now destroy lvolstore 'x' and then confirm we can create a new lvolstore with name 'x'. */
 	g_lvserrno = -1;
-	rc = spdk_lvs_destroy(lvs_x, false, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_destroy(lvs_x, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
@@ -636,7 +636,7 @@ lvs_names(void)
 
 	/* Destroy the second lvolstore 'x'.  Then we should be able to load the first lvolstore 'x'. */
 	g_lvserrno = -1;
-	rc = spdk_lvs_destroy(lvs_x2, false, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_destroy(lvs_x2, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvserrno = -1;
@@ -646,12 +646,12 @@ lvs_names(void)
 	lvs_x = g_lvol_store;
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_destroy(lvs_x, false, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_destroy(lvs_x, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_destroy(lvs_y, false, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_destroy(lvs_y, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 
@@ -1231,7 +1231,7 @@ lvol_open(void)
 	}
 
 	g_lvserrno = -1;
-	spdk_lvs_destroy(g_lvol_store, false, lvol_store_op_complete, NULL);
+	spdk_lvs_destroy(g_lvol_store, lvol_store_op_complete, NULL);
 
 	free(req);
 	free(blob1);
@@ -1311,7 +1311,7 @@ lvol_names(void)
 	spdk_lvol_destroy(lvol2, destroy_cb, NULL);
 
 	g_lvserrno = -1;
-	rc = spdk_lvs_destroy(lvs, false, lvol_store_op_complete, NULL);
+	rc = spdk_lvs_destroy(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	g_lvol_store = NULL;
