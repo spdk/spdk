@@ -95,3 +95,6 @@ CONFIG_NVML?=n
 
 # Build with VPP
 CONFIG_VPP?=n
+
+# Requires libiscsi development libraries.
+CONFIG_LIBISCSI?=n
