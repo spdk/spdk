@@ -33,6 +33,12 @@ A number of functions have been renamed:
 
 The old names still exist but are deprecated.  They will be removed in the v18.07 release.
 
+### iSCSI initiator
+
+An iSCSI initiator bdev module has been added to SPDK.  This module should be considered
+experimental pending additional features and tests.  More details can be found in
+lib/bdev/iscsi/README.
+
 ## v18.01: Blobstore Thin Provisioning
 
 ### Build System
