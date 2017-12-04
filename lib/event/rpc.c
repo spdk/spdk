@@ -98,10 +98,17 @@ spdk_rpc_finish(void)
 void
 spdk_rpc_config_text(FILE *fp)
 {
+	const char *listen_addr;
+
+	listen_addr = rpc_get_listen_addr();
+	if (listen_addr == NULL) {
+		return;
+	}
+
 	fprintf(fp,
 		"\n"
 		"[Rpc]\n"
 		"  # Listen address for the RPC service.\n"
 		"  # May be an IP address or an absolute path to a Unix socket.\n"
-		"  Listen %s\n", rpc_get_listen_addr());
+		"  Listen %s\n", listen_addr);
 }
