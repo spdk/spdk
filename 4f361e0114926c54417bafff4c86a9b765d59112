@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d8345d0_c02504d0",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-04T16:37:33Z",
+      "side": 1,
+      "message": "Generally, we should try to avoid dependencies between libraries on internal headers.\n\nI think this can be avoided by using an existing public SCSI API function - see below.",
+      "revId": "4f361e0114926c54417bafff4c86a9b765d59112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6029a950_472b4975",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-04T16:37:33Z",
+      "side": 1,
+      "message": "I believe this target-\u003edev-\u003ename reference is the only reason for the added scsi_internal.h header above.  Please use spdk_scsi_dev_get_name() instead so that we don\u0027t have to use the internal header.",
+      "range": {
+        "startLine": 552,
+        "startChar": 3,
+        "endLine": 552,
+        "endChar": 20
+      },
+      "revId": "4f361e0114926c54417bafff4c86a9b765d59112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
