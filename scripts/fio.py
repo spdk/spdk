@@ -16,7 +16,7 @@ ioengine=libaio
 direct=1
 bs=%(blocksize)d
 iodepth=%(iodepth)d
-norandommap=1
+norandommap=%(norandommap)d
 %(verify)s
 verify_dump=1
 
@@ -73,48 +73,73 @@ def main():
     fio.communicate(create_fio_config(io_size, queue_depth, device_paths, test_type, runtime, verify))
     fio.stdin.close()
     rc = fio.wait()
-    print "FIO completed with code %d\n" % rc
+    print "FIO completed with code {}\n".format(rc)
     sys.stdout.flush()
     sys.exit(rc)
 
 def get_target_devices():
-    output = check_output('iscsiadm -m session -P 3', shell=True)
-    return re.findall("Attached scsi disk (sd[a-z]+)", output)
+    output = check_output('lsblk -l -o NAME', shell=True)
+    nvmf_devs = re.findall("(nvme[0-9]+n[0-9]+)\n", output)
+    try:
+        output = check_output('iscsiadm -m session -P 3', shell=True)
+        iscsi_devs = re.findall("Attached scsi disk (sd[a-z]+)", output)
+    except:
+        print "Could not find iSCSI disks."
+        iscsi_devs = []
+    if not iscsi_devs and not nvmf_devs:
+        print "No iSCSI disks and NVMF disks are found."
+        sys.exit(0)
+    total_devs = []
+    for dev in iscsi_devs + nvmf_devs:
+        output = check_output('lsblk /dev/{} -o MOUNTPOINT -n'.format(dev), shell=True)
+        if re.search("\S", output):
+            print "Active mountpoints on /dev/{}, so skip this device.".format(dev)
+        else:
+            total_devs += [dev]
+    if not total_devs:
+            print "All devices are mounted."
+            sys.exit(0)
+    return total_devs
 
 def create_fio_config(size, q_depth, devices, test, run_time, verify):
+    norandommap = 0
     if not verify:
         verifyfio = ""
+        norandommap = 1
     else:
         verifyfio = verify_template
-    fiofile = fio_template % {"blocksize": size, "iodepth": q_depth,
-                              "testtype": test, "runtime": run_time, "verify": verifyfio}
+    fiofile = fio_template % {"blocksize": size, "iodepth": q_depth, "testtype": test, "runtime": run_time,
+                              "norandommap": norandommap, "verify": verifyfio}
     for (i, dev) in enumerate(devices):
         fiofile += fio_job_template % {"jobnumber": i, "device": dev}
     return fiofile
 
-def set_device_parameter(devices, filename_template, value):
-    for dev in devices:
-        filename = filename_template % dev
-        f = open(filename, 'r+b')
-        f.write(value)
-        f.close()
+def set_device_parameter(device, filename_template, value):
+    filename = filename_template % device
+    f = open(filename, 'r+b')
+    f.write(value)
+    f.close()
 
 def configure_devices(devices):
-    set_device_parameter(devices, "/sys/block/%s/queue/nomerges", "2")
-    set_device_parameter(devices, "/sys/block/%s/queue/nr_requests", "128")
-    requested_qd = 128
-    qd = requested_qd
-    while qd > 0:
+    for dev in devices:
+        set_device_parameter(dev, "/sys/block/%s/queue/nomerges", "2")
+        set_device_parameter(dev, "/sys/block/%s/queue/nr_requests", "128")
+        requested_qd = 128
+        qd = requested_qd
+        while qd > 0:
+            try:
+                set_device_parameter(dev, "/sys/block/%s/device/queue_depth", str(qd))
+                break
+            except IOError:
+                qd = qd - 1
+        if qd == 0:
+            print "Could not set block device queue depths."
+        else:
+            print "Requested queue_depth {} but only {} is supported.".format(str(requested_qd), str(qd))
         try:
-            set_device_parameter(devices, "/sys/block/%s/device/queue_depth", str(qd))
-            break
-        except IOError:
-            qd = qd - 1
-    if qd == 0:
-        print "Could not set block device queue depths."
-    else:
-        print "Requested queue_depth {} but only {} is supported.".format(str(requested_qd), str(qd))
-    set_device_parameter(devices, "/sys/block/%s/queue/scheduler", "noop")
+            set_device_parameter(dev, "/sys/block/%s/queue/scheduler", "noop")
+        except:
+            print "Could not set block device queue scheduler."
 
 if __name__ == "__main__":
     main()
