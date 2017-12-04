@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65e76e1f_feb98acb",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-04T20:54:48Z",
+      "side": 1,
+      "message": "vhost: Switch \"Dev\" keyword to \"Target\"\n\n(By changing the first line in this way, git log --oneline shows a very good explanation of exactly what was changed.  Just saying \"new keyword\" is too ambiguous.)",
+      "revId": "f4fa68c5ceae4fb07a3ae0315d00e3bdd77ec611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30968ddc_c8761992",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-04T20:54:48Z",
+      "side": 1,
+      "message": "indentation is off",
+      "revId": "f4fa68c5ceae4fb07a3ae0315d00e3bdd77ec611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "965e5014_4f177488",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-04T20:54:48Z",
+      "side": 1,
+      "message": "indentation is off",
+      "revId": "f4fa68c5ceae4fb07a3ae0315d00e3bdd77ec611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ce2a779_f7d41cc9",
+        "filename": "doc/vhost.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-04T20:54:48Z",
+      "side": 1,
+      "message": "You can remove this line.  No need to mention this deprecated name - just point everyone to use \"Target\".",
+      "revId": "f4fa68c5ceae4fb07a3ae0315d00e3bdd77ec611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cce7929_49a18c37",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-04T20:54:48Z",
+      "side": 1,
+      "message": "should we use \"tgt\" instead of \"target\" in the names?\n\niSCSI has iscsi_tgt_node\nNVMe-oF has spdk_nvmf_tgt\n\nSpelling out \"target\" in the comments is OK though obviously.",
+      "revId": "f4fa68c5ceae4fb07a3ae0315d00e3bdd77ec611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e02e2e98_89f53fe1",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-04T20:54:48Z",
+      "side": 1,
+      "message": "This check should be removed.  The comment on the review says this is supposed to guard against something like this:\n\nDev 0 Malloc0\nTarget 1 Malloc1\n\nBut in that case, dev will be \"Dev\" for the first iteration, and target will be NULL.\ndev will be NULL for the second iteration and target will be \"Target\".\n\nThere is no way for dev and target to both be !NULL.\n\nIf someone uses a mix of Dev and Target, let them do it.  You already have a good deprecation warning for using \"Dev\".  Adding additional complexity here to ensure consistency isn\u0027t really necessary.",
+      "revId": "f4fa68c5ceae4fb07a3ae0315d00e3bdd77ec611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6af21972_6a0811b6",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-04T20:54:48Z",
+      "side": 1,
+      "message": "you should keep the newline here",
+      "revId": "f4fa68c5ceae4fb07a3ae0315d00e3bdd77ec611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
