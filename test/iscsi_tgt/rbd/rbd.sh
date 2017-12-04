@@ -18,7 +18,7 @@ timing_exit rbd_setup
 timing_enter rbd
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 timing_enter start_iscsi_tgt
 
@@ -49,8 +49,9 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 trap "iscsicleanup; killprocess $pid; rbd_cleanup; exit 1" SIGINT SIGTERM EXIT
 
 sleep 1
-$fio_py 4096 1 randrw 1 verify
-$fio_py 131072 32 randrw 1 verify
+dev_list=$(get_devices_list iscsi)
+$fio_py $dev_list 4096 1 randrw 1 verify
+$fio_py $dev_list 131072 32 randrw 1 verify
 
 rm -f ./local-job0-0-verify.state
 
