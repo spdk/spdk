@@ -47,6 +47,8 @@ function usage()
 	echo "                           No path required."
 	echo " rdma                      [disabled]"
 	echo "                           No path required."
+	echo " libiscsi                  [disabled]"
+	echo "                           No path required."
 	echo " vtune                     Required to profile I/O under Intel VTune Amplifier XE."
 	echo "                           example: /opt/intel/vtune_amplifier_xe_version"
 	echo ""
@@ -132,6 +134,12 @@ for i in "$@"; do
 			;;
 		--without-rdma)
 			CONFIG_RDMA=n
+			;;
+		--with-libiscsi)
+			CONFIG_LIBISCSI=y
+			;;
+		--without-libiscsi)
+			CONFIG_LIBISCSI=n
 			;;
 		--with-dpdk=*)
 			check_dir "$i"
@@ -305,6 +313,9 @@ if [ -n "$FIO_SOURCE_DIR" ]; then
 fi
 if [ -n "$CONFIG_RDMA" ]; then
 	echo "CONFIG_RDMA?=$CONFIG_RDMA" >> CONFIG.local
+fi
+if [ -n "$CONFIG_LIBISCSI" ]; then
+	echo "CONFIG_LIBISCSI?=$CONFIG_LIBISCSI" >> CONFIG.local
 fi
 if [ -n "$CONFIG_RBD" ]; then
 	echo "CONFIG_RBD?=$CONFIG_RBD" >> CONFIG.local
