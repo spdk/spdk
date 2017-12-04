@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "f1b820db_390d9e91",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-04T16:47:04Z",
+      "side": 1,
+      "message": "You don\u0027t know how long the spdk_for_each_channel call will take, and you don\u0027t want your reset timer to fire a second time while spdk_for_each_channel is still running. That\u0027s why you should immediately stop the timer in the callback (bdev_aio_reset_retry_timer). You can start it again when the spdk_for_each_channel completes.",
+      "parentUuid": "57ff81a4_faf59b52",
+      "revId": "524f1f787dcb7b0a2dd9067444d1feb912ed1d2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d78a9e3_9bee53be",
         "filename": "lib/bdev/aio/bdev_aio.c",
         "patchSetId": 30
