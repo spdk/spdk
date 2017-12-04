@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1be97987_c0ac5de0",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-04T09:53:19Z",
+      "side": 1,
+      "message": "Try using\nrte_vhost_driver_unregister(vdev-\u003epath);\nand remove legacy if(sprintf...)",
+      "range": {
+        "startLine": 974,
+        "startChar": 0,
+        "endLine": 981,
+        "endChar": 3
+      },
+      "revId": "7587129cc6d7032e7573895a3c562aaef0589eb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
