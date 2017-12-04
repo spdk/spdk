@@ -39,6 +39,23 @@
       "revId": "4f361e0114926c54417bafff4c86a9b765d59112",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57d5644e_af87efc5",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-04T21:08:50Z",
+      "side": 1,
+      "message": "this should also check the return code from spdk_scsi_dev_add_port()\n\nif it failed, cleanup and return NULL\n\nmaybe move the TAILQ_INSERT_TAIL after spdk_scsi_dev_add_port so then you only have to free the memory during cleanup",
+      "revId": "4f361e0114926c54417bafff4c86a9b765d59112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
