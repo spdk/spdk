@@ -16,7 +16,7 @@ if [ -z $NVMF_FIRST_TARGET_IP ]; then
 fi
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 ISCSI_PORT=3260
 NVMF_PORT=4420
