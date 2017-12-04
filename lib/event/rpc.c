@@ -69,7 +69,7 @@ spdk_rpc_initialize(const char *listen_addr)
 {
 	int rc;
 
-	if (rpc_get_listen_addr() != NULL) {
+	if (listen_addr == NULL) {
 		listen_addr = rpc_get_listen_addr();
 	}
 
