@@ -24,7 +24,7 @@ NVMF_PORT=4420
 timing_enter nvme_remote
 
 # Start the NVMf target
-$rootdir/app/nvmf_tgt/nvmf_tgt -c $rootdir/test/nvmf/nvmf.conf -m 0x2 -p 1 -s 384 &
+$rootdir/app/nvmf_tgt/nvmf_tgt -c $rootdir/test/nvmf/nvmf.conf -m 0x2 -p 1 -s 512 &
 nvmfpid=$!
 echo "NVMf target launched. pid: $nvmfpid"
 trap "killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
