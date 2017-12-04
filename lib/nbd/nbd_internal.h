@@ -69,6 +69,7 @@ struct spdk_nbd_disk {
 	struct spdk_bdev_desc	*bdev_desc;
 	struct spdk_io_channel	*ch;
 	int			dev_fd;
+	char			*nbd_path;
 	int			kernel_sp_fd;
 	int			spdk_sp_fd;
 	struct nbd_io		io;
