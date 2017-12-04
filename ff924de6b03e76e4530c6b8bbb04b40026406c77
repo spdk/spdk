@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67cd25fd_b58ec162",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-04T17:18:04Z",
+      "side": 1,
+      "message": "I think we need to enumerate the scenarios here to see if this option makes sense at all.\n\n1) The device supports fast deallocate. This is nearly every production NVMe device. In this case, the user would never use this option since it would be a performance hit.\n\n2) The device doesn\u0027t support deallocate. In this case, we should just be skipping the trim calls altogether already. That\u0027s the only course of action anyway. We already explicitly zero out the metadata both on init and at run time and we can\u0027t get around that.\n\n3) The device does support deallocate, but it\u0027s very slow or doesn\u0027t help with performance. Devices like this are usually engineering samples, in my experience. In this case, we\u0027ll still try to trim clusters both on init and at run time, but it\u0027s going to hurt performance significantly. I think for this case, we want an option to skip sending the trims. But you\u0027d want to skip sending the trims both at init and at run time.\n\nGiven the 3 scenarios, I think the only option that makes sense is to provide an option to skip all trims, not just the ones at init.",
+      "revId": "ff924de6b03e76e4530c6b8bbb04b40026406c77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
