@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac56679e_a7e3b4e1",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1084,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-04T09:26:01Z",
+      "side": 1,
+      "message": "Just one question, what about VHOST_USER_NEED_REPLY flag? Are we sure we will not send message second time in lines 1182 to 1186?",
+      "range": {
+        "startLine": 1084,
+        "startChar": 2,
+        "endLine": 1084,
+        "endChar": 31
+      },
+      "revId": "55fe15c47be26840005651d8d7894cfb8fd45b31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
