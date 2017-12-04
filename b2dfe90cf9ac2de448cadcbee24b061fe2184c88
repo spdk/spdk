@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d113d48f_c813989b",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-04T16:32:19Z",
+      "side": 1,
+      "message": "We generally use calloc() to avoid leaving data fields uninitialized (malloc() is fine as long as all members are initialized, but it would be nice to use calloc() in future changes).",
+      "range": {
+        "startLine": 458,
+        "startChar": 10,
+        "endLine": 458,
+        "endChar": 16
+      },
+      "revId": "b2dfe90cf9ac2de448cadcbee24b061fe2184c88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
