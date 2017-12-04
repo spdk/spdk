@@ -46,6 +46,30 @@
       "revId": "55fe15c47be26840005651d8d7894cfb8fd45b31",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6c5d1b6_5ae5b9e3",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1084,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-04T22:05:36Z",
+      "side": 1,
+      "message": "and how about line 1123. Do we have bug here?\nDoes GET-like messages need VHOST_USER_NEED_REPLY to send replay or those don\u0027t need this flag to send replay?",
+      "parentUuid": "e8733628_3d294b07",
+      "range": {
+        "startLine": 1084,
+        "startChar": 2,
+        "endLine": 1084,
+        "endChar": 31
+      },
+      "revId": "55fe15c47be26840005651d8d7894cfb8fd45b31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
