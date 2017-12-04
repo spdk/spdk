@@ -21,7 +21,7 @@ PMEM_BLOCK_SIZE=512
 TGT_NR=10
 PMEM_PER_TGT=1
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 timing_enter iscsi_pmem
 
@@ -60,7 +60,8 @@ iscsiadm -m node --login -p $TARGET_IP:$PORT
 timing_exit discovery
 
 timing_enter fio_test
-$fio_py $BLOCKSIZE 64 randwrite $RUNTIME verify
+dev_list=$(get_devices_list iscsi)
+$fio_py $dev_list $BLOCKSIZE 64 randwrite $RUNTIME verify
 timing_exit fio_test
 
 iscsicleanup

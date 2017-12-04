@@ -530,5 +530,12 @@ function get_bdev_size()
 	echo "$bdev_size"
 }
 
+function get_devices_list(){
+local alldev=$(python scripts/common/getdevice.py $1)
+dev_list=${alldev#*[}
+dev_list=${dev_list%]}
+echo  "$dev_list"
+}
+
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
