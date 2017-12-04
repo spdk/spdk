@@ -155,7 +155,7 @@ spdk_iscsi_portal_close(struct spdk_iscsi_portal *p)
 		SPDK_DEBUGLOG(SPDK_TRACE_NET, "close portal (%s, %s)\n",
 			      p->host, p->port);
 		spdk_iscsi_acceptor_stop(p);
-		close(p->sock);
+		spdk_sock_close(p->sock);
 		p->sock = -1;
 	}
 }
