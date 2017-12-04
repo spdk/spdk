@@ -31,26 +31,16 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-ifeq ($(CONFIG_VTUNE),y)
-CFLAGS += -I$(VTUNE_SOURCE_DIR)/include -I$(VTUNE_SOURCE_DIR)/sdk/src/ittnotify
-endif
-
-C_SRCS = bdev.c part.c scsi_nvme.c
-C_SRCS-$(CONFIG_VTUNE) += vtune.c
-LIBNAME = bdev
-
-DIRS-y += error gpt lvol malloc null nvme passthru rpc split
-
-ifeq ($(OS),Linux)
-DIRS-y += aio
-DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
-DIRS-$(CONFIG_VIRTIO) += virtio
-DIRS-$(CONFIG_NVML) += pmem
-endif
-
-DIRS-$(CONFIG_RBD) += rbd
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
+# CentOS 7 libiscsi package has functions declared inline but not
+# defined in the header file.  Not aware of any way to disable
+# this warning so just make sure the warning isn't treated as
+# an error.
+CFLAGS += -Wno-error
+C_SRCS = bdev_iscsi.c
+LIBNAME = bdev_iscsi
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

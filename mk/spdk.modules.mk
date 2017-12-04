@@ -43,6 +43,11 @@ endif
 ifeq ($(OS),Linux)
 BLOCKDEV_MODULES_LIST += bdev_aio bdev_virtio virtio
 BLOCKDEV_MODULES_DEPS += -laio
+ifeq ($(CONFIG_ISCSI_INITIATOR),y)
+BLOCKDEV_MODULES_LIST += bdev_iscsi
+# Fedora installs libiscsi to /usr/lib64/iscsi for some reason.
+BLOCKDEV_MODULES_DEPS += -L/usr/lib64/iscsi -liscsi
+endif
 endif
 
 ifeq ($(CONFIG_RBD),y)
