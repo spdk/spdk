@@ -9,6 +9,7 @@ MALLOC_BDEV_SIZE=128
 MALLOC_BLOCK_SIZE=512
 
 rpc_py="python $rootdir/scripts/rpc.py"
+fio_py="python $rootdir/scripts/fio.py"
 
 set -e
 
@@ -42,8 +43,8 @@ for i in `seq 1 11`; do
 	nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode${i}" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
 done
 
-$testdir/../fio/nvmf_fio.py 262144 64 read 10
-$testdir/../fio/nvmf_fio.py 262144 64 randwrite 10
+$fio_py 262144 64 read 10
+$fio_py 262144 64 randwrite 10
 
 sync
 for i in `seq 1 11`; do
