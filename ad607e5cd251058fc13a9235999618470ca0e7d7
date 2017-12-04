@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f71c75f4_2b59e17f",
+        "filename": "lib/bdev/virtio/bdev_virtio.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-04T20:11:54Z",
+      "side": 1,
+      "message": "should probably say \"if the connection is successful, the device will be automatically scanned\"",
+      "revId": "ad607e5cd251058fc13a9235999618470ca0e7d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
