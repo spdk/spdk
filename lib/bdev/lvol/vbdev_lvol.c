@@ -73,7 +73,12 @@ vbdev_get_lvs_bdev_by_bdev(struct spdk_bdev *bdev_orig)
 
 	while (lvs_bdev != NULL) {
 		if (lvs_bdev->bdev == bdev_orig) {
-			return lvs_bdev;
+			if (lvs_bdev->req != NULL) {
+				/* We do not allow access to lvs that are being destroyed */
+				return NULL;
+			} else {
+				return lvs_bdev;
+			}
 		}
 		lvs_bdev = vbdev_lvol_store_next(lvs_bdev);
 	}
