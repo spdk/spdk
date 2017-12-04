@@ -82,7 +82,8 @@ _spdk_bs_release_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 void
 spdk_blob_opts_init(struct spdk_blob_opts *opts)
 {
-
+	opts->read_only = false;
+	opts->thin_provision = false;
 }
 
 static struct spdk_blob *
@@ -2627,6 +2628,10 @@ void spdk_bs_md_create_blob_opts(struct spdk_blob_store *bs, struct spdk_blob_op
 		return;
 	}
 
+	blob->data_ro_flags = opts.read_only;
+	blob->md_ro = opts.read_only;
+	blob->invalid_flags |= SPDK_BLOB_THIN_PROV;
+
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
@@ -2812,6 +2817,15 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 	_spdk_blob_load(seq, blob, _spdk_bs_md_open_blob_cpl, blob);
 }
+
+/* START spdk_bs_md_set_read_only */
+void spdk_bs_md_set_read_only(struct spdk_blob *blob, bool read_only)
+{
+	blob->data_ro_flags = read_only;
+	blob->md_ro = read_only;
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+}
+/* END spdk_bs_md_set_read_only */
 
 /* START spdk_bs_md_sync_blob */
 static void

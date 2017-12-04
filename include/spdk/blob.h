@@ -72,6 +72,8 @@ typedef uint64_t spdk_blob_id;
 #define SPDK_BLOBID_INVALID	(uint64_t)-1
 #define SPDK_BLOBSTORE_TYPE_LENGTH 16
 
+#define SPDK_BLOB_THIN_PROV (1ULL << 0)
+
 struct spdk_blob_store;
 struct spdk_io_channel;
 struct spdk_blob;
@@ -158,6 +160,8 @@ struct spdk_bs_opts {
 
 struct spdk_blob_opts {
 	size_t	size;
+	bool	read_only;
+	bool	thin_provision;
 	int	xattr_count;
 	char	**xattr_names;
 	void	(*get_xattr_value)(void *arg, const char *name,
@@ -250,6 +254,9 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
  * These changes are not persisted to disk until
  * spdk_bs_md_sync_blob() is called. */
 int spdk_bs_md_resize_blob(struct spdk_blob *blob, size_t sz);
+
+/* Set blob as read only */
+void spdk_bs_md_set_read_only(struct spdk_blob *blob, bool read_only);
 
 /* Sync a blob */
 /* Make a blob persistent. This applies to open, resize, set xattr,
