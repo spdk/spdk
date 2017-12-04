@@ -9,8 +9,9 @@ function node_login_fio_logout()
 {
 	iscsiadm -m node --login -p $TARGET_IP:$PORT
 	sleep 1
-	$fio_py 512 1 write 2
-	$fio_py 512 1 read 2
+	dev_list=$(get_devices_list iscsi)
+	$fio_py $dev_list 512 1 write 2
+	$fio_py $dev_list 512 1 read 2
 	iscsiadm -m node --logout -p $TARGET_IP:$PORT
 	sleep 1
 }
@@ -74,7 +75,7 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 timing_enter start_iscsi_tgt
 

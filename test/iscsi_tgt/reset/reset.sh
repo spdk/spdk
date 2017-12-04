@@ -18,7 +18,7 @@ MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 if ! hash sg_reset; then
 	exit 1
@@ -53,7 +53,8 @@ sleep 1
 dev=$(iscsiadm -m session -P 3 | grep "Attached scsi disk" | awk '{print $4}')
 
 sleep 1
-$fio_py 512 1 read 60 &
+dev_list=$(get_devices_list iscsi)
+$fio_py $dev_list 512 1 read 60 &
 fiopid=$!
 echo "FIO pid: $fiopid"
 

@@ -6,7 +6,7 @@ source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 PORT=3260
 NETMASK=127.0.0.0/24
@@ -70,7 +70,8 @@ iscsiadm -m node --login -p $MIGRATION_ADDRESS:$PORT
 
 # fio tests for multi-process
 sleep 1
-$fio_py 4096 32 randrw 10 &
+dev_list=$(get_devices_list iscsi)
+$fio_py $dev_list 4096 32 randrw 10 &
 fiopid=$!
 sleep 5
 

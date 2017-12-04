@@ -6,7 +6,7 @@ source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/iscsi_tgt/common.sh
 
 rpc_py="python $rootdir/scripts/rpc.py"
-fio_py="python $rootdir/scripts/fio.py"
+fio_py="python $rootdir/scripts/iscsi_fio.py"
 
 CONNECTION_NUMBER=30
 
@@ -81,8 +81,9 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 sleep 1
 
 echo "Running FIO"
-$fio_py 131072 64 randrw 5
-$fio_py 262144 16 randwrite 10
+dev_list=$(get_devices_list iscsi)
+$fio_py $dev_list 131072 64 randrw 5
+$fio_py $dev_list 262144 16 randwrite 10
 sync
 
 trap - SIGINT SIGTERM EXIT
