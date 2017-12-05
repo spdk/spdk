@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0daa85f_7878f4d9",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-05T18:13:57Z",
+      "side": 1,
+      "message": "I think this part of the patch belongs in https://review.gerrithub.io/#/c/390097/.\n\nThis does not seem related to adding the nbd start rpc.",
+      "revId": "5a4cf9a2b3f143dfb2b404316245eb7bb3f8b611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
