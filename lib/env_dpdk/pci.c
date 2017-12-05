@@ -465,7 +465,7 @@ int
 spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 {
 	int dev_fd;
-	char shm_name[64];
+	char dev_name[64];
 	int pid;
 	void *dev_map;
 	struct flock pcidev_lock = {
@@ -475,17 +475,18 @@ spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 		.l_len = 0,
 	};
 
-	snprintf(shm_name, sizeof(shm_name), "%04x:%02x:%02x.%x", pci_addr->domain, pci_addr->bus,
+	snprintf(dev_name, sizeof(dev_name), "/tmp/spdk_pci_lock_%04x:%02x:%02x.%x", pci_addr->domain,
+		 pci_addr->bus,
 		 pci_addr->dev, pci_addr->func);
 
-	dev_fd = shm_open(shm_name, O_RDWR | O_CREAT, 0600);
+	dev_fd = open(dev_name, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
 	if (dev_fd == -1) {
-		fprintf(stderr, "could not shm_open %s\n", shm_name);
+		fprintf(stderr, "could not open %s\n", dev_name);
 		return -1;
 	}
 
 	if (ftruncate(dev_fd, sizeof(int)) != 0) {
-		fprintf(stderr, "could not truncate shm %s\n", shm_name);
+		fprintf(stderr, "could not truncate %s\n", dev_name);
 		close(dev_fd);
 		return -1;
 	}
@@ -493,7 +494,7 @@ spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 	dev_map = mmap(NULL, sizeof(int), PROT_READ | PROT_WRITE,
 		       MAP_SHARED, dev_fd, 0);
 	if (dev_map == NULL) {
-		fprintf(stderr, "could not mmap shm %s\n", shm_name);
+		fprintf(stderr, "could not mmap dev %s\n", dev_name);
 		close(dev_fd);
 		return -1;
 	}
@@ -501,7 +502,7 @@ spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr)
 	if (fcntl(dev_fd, F_SETLK, &pcidev_lock) != 0) {
 		pid = *(int *)dev_map;
 		fprintf(stderr, "Cannot create lock on device %s, probably"
-			" process %d has claimed it\n", shm_name, pid);
+			" process %d has claimed it\n", dev_name, pid);
 		munmap(dev_map, sizeof(int));
 		close(dev_fd);
 		return -1;
