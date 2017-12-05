@@ -89,6 +89,16 @@ spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
 {
 }
 
+const char *
+spdk_scsi_dev_get_name(const struct spdk_scsi_dev *dev)
+{
+	if (dev != NULL) {
+		return dev->name;
+	}
+
+	return NULL;
+}
+
 uint32_t
 spdk_env_get_current_core(void)
 {
@@ -124,6 +134,12 @@ spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 int
 spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 		      int drop_all)
+{
+	return 0;
+}
+
+int
+spdk_scsi_dev_delete_port(struct spdk_scsi_dev *dev, uint64_t id)
 {
 	return 0;
 }
