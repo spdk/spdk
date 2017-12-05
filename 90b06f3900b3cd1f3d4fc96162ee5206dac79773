@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "8d63eec5_353ff085",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T15:54:15Z",
+      "side": 1,
+      "message": "This breaks one of requirement of having one single \"bdev name\" and multiple \"bdev aliases\" similar to how symlinks for devices work.\n\nBesides wouldn\u0027t that be just adding what spdk_bdev_alias_add/del() does within spdk_bdev_[un]register() ?\nI think approach of changing [un]register functions offers same functionality, but hides this interaction from user of API.",
+      "parentUuid": "4b020eb1_fcf5dec3",
+      "range": {
+        "startLine": 390,
+        "startChar": 4,
+        "endLine": 390,
+        "endChar": 22
+      },
+      "revId": "90b06f3900b3cd1f3d4fc96162ee5206dac79773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ebc277b6_1856b92b",
         "filename": "include/spdk_internal/bdev.h",
         "patchSetId": 2
