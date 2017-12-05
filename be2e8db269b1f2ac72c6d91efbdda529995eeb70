@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d66cd68e_0744980a",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T10:46:57Z",
+      "side": 0,
+      "message": "Unrelated change.",
+      "range": {
+        "startLine": 160,
+        "startChar": 41,
+        "endLine": 160,
+        "endChar": 42
+      },
+      "revId": "be2e8db269b1f2ac72c6d91efbdda529995eeb70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

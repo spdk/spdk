@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26bb13c5_9794023d",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T10:46:57Z",
+      "side": 1,
+      "message": "Please see previous comment by Maciek:\n\"Please also set thin provisioning in blob-\u003einvalid_flags:\nblob-\u003einvalid_flags |\u003d SPDK_BLOB_THIN_PROV;\nwhere:\n#define SPDK_BLOB_THIN_PROV (1ULL \u003c\u003c 0)\n#define SPDK_BLOB_INVALID_FLAGS_MASK\tSPDK_BLOB_THIN_PROV\"\n\nIf invalid_flags_mask does not match, blobs will not load. Please see _spdk_blob_parse_page() funtion.",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 39
+      },
+      "revId": "8e37a678d4e53e901ff13fe49b82837d7fda83bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75b035d9_d2f55e6b",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T10:46:57Z",
+      "side": 1,
+      "message": "I realize read_only was put into spdk_blob_opts in trello card. But thinking about this right now, it does not seem like a right place for it.\nNot sure there is a case for having metadata set to read only when creating blob. Having separate call to mark it as such should be enough (spdk_bs_md_set_read_only()).",
+      "range": {
+        "startLine": 163,
+        "startChar": 1,
+        "endLine": 163,
+        "endChar": 16
+      },
+      "revId": "8e37a678d4e53e901ff13fe49b82837d7fda83bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
