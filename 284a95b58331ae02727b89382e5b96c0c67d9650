@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "440594d4_4bf74f2b",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-05T16:50:50Z",
+      "side": 1,
+      "message": "nbd_path can probably be const char *",
+      "range": {
+        "startLine": 97,
+        "startChar": 31,
+        "endLine": 97,
+        "endChar": 45
+      },
+      "revId": "284a95b58331ae02727b89382e5b96c0c67d9650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51fa5317_222a8227",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-05T16:50:50Z",
+      "side": 1,
+      "message": "The _SAFE variants are only needed when deleting an item from within the loop.",
+      "range": {
+        "startLine": 107,
+        "startChar": 1,
+        "endLine": 107,
+        "endChar": 19
+      },
+      "revId": "284a95b58331ae02727b89382e5b96c0c67d9650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7d91e2b_41b52dfc",
+        "filename": "lib/nbd/nbd_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-05T16:50:50Z",
+      "side": 1,
+      "message": "Function declarations should be on one line (only function implementations should be wrapped after the return type).",
+      "revId": "284a95b58331ae02727b89382e5b96c0c67d9650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "749d59a6_bd726e7e",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-05T16:50:50Z",
+      "side": 1,
+      "message": "I think it might be nicer to make this into a function with a spdk_nbd_disk parameter in the main nbd.c file; that would help keep the RPC code and NBD code decoupled.",
+      "revId": "284a95b58331ae02727b89382e5b96c0c67d9650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
