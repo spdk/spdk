@@ -49,6 +49,29 @@
     },
     {
       "key": {
+        "uuid": "4b020eb1_fcf5dec3",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-05T11:20:55Z",
+      "side": 1,
+      "message": "could we use spdk_bdev_register to register given bdev under given name?\npossibly spdk_bdev_register(struct spdk_bdev *bdev, const char *name);\nThen we could register a bdev multiple times - under different names.\n\nSimilar with unregister - spdk_bdev_unregister(const char *name, spdk_bdev_unregister_cb fn, void *cb_arg);",
+      "range": {
+        "startLine": 390,
+        "startChar": 4,
+        "endLine": 390,
+        "endChar": 22
+      },
+      "revId": "90b06f3900b3cd1f3d4fc96162ee5206dac79773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ebc277b6_1856b92b",
         "filename": "include/spdk_internal/bdev.h",
         "patchSetId": 2
