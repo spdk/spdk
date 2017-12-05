@@ -48,6 +48,52 @@
     },
     {
       "key": {
+        "uuid": "c7b64489_730e7ff8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-05T11:02:51Z",
+      "side": 1,
+      "message": "-ENOMEM",
+      "range": {
+        "startLine": 854,
+        "startChar": 9,
+        "endLine": 854,
+        "endChar": 11
+      },
+      "revId": "90b06f3900b3cd1f3d4fc96162ee5206dac79773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11ad1eac_df8443aa",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 879,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-05T11:02:51Z",
+      "side": 1,
+      "message": "-EEXIST",
+      "range": {
+        "startLine": 879,
+        "startChar": 8,
+        "endLine": 879,
+        "endChar": 10
+      },
+      "revId": "90b06f3900b3cd1f3d4fc96162ee5206dac79773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ffbf721_7a657909",
         "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
         "patchSetId": 2
@@ -64,6 +110,29 @@
         "startChar": 1,
         "endLine": 375,
         "endChar": 20
+      },
+      "revId": "90b06f3900b3cd1f3d4fc96162ee5206dac79773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "166ca4ef_f5b68b2c",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-05T11:02:51Z",
+      "side": 1,
+      "message": "-EEXIST",
+      "range": {
+        "startLine": 381,
+        "startChar": 17,
+        "endLine": 381,
+        "endChar": 19
       },
       "revId": "90b06f3900b3cd1f3d4fc96162ee5206dac79773",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
