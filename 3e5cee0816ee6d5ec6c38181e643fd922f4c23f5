@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbb00578_be3c62b6",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T15:54:15Z",
+      "side": 1,
+      "message": "We might want to keep the convention here to make it clear what this functionality adds.",
+      "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3582399_b6edc331",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T15:54:15Z",
+      "side": 1,
+      "message": "aliases",
+      "range": {
+        "startLine": 408,
+        "startChar": 28,
+        "endLine": 408,
+        "endChar": 33
+      },
+      "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3bb50d6_7880d648",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T15:54:15Z",
+      "side": 1,
+      "message": "alias",
+      "range": {
+        "startLine": 408,
+        "startChar": 7,
+        "endLine": 408,
+        "endChar": 11
+      },
+      "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80e21085_8a716e93",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T15:54:15Z",
+      "side": 1,
+      "message": "alias",
+      "range": {
+        "startLine": 411,
+        "startChar": 10,
+        "endLine": 411,
+        "endChar": 19
+      },
+      "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5041e4a2_50b919ef",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T15:54:15Z",
+      "side": 1,
+      "message": "alias",
+      "range": {
+        "startLine": 414,
+        "startChar": 54,
+        "endLine": 414,
+        "endChar": 58
+      },
+      "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48b1e88f_09737137",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 859,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T15:54:15Z",
+      "side": 1,
+      "message": "I think it shall be verified here that new alias does not conflict with bdev-\u003ename or any of aliases present on this particular bdev. Similar to alias_del below. Returning EEXIST on conflict.\n\nNext patch in sereies adds check for conflict with other registered bdevs.",
+      "range": {
+        "startLine": 859,
+        "startChar": 1,
+        "endLine": 859,
+        "endChar": 47
+      },
+      "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32672995_555cb7ab",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 879,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T15:54:15Z",
+      "side": 1,
+      "message": "Might be nitpicking but I think ENOENT suits here better.",
+      "range": {
+        "startLine": 879,
+        "startChar": 9,
+        "endLine": 879,
+        "endChar": 15
+      },
+      "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
