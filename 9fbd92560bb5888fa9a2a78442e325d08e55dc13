@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8de33949_694e49bb",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 842,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T20:06:54Z",
+      "side": 1,
+      "message": "-\u003escsi_tgt_num",
+      "range": {
+        "startLine": 842,
+        "startChar": 69,
+        "endLine": 842,
+        "endChar": 81
+      },
+      "revId": "9fbd92560bb5888fa9a2a78442e325d08e55dc13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
