@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "596902c8_917ff83f",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-05T08:42:16Z",
+      "side": 1,
+      "message": "Overall I am OK with the patch, it\u0027s fine, but could you run it as least once in per-patch mode so that build pool actually verifies it?",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 2
+      },
+      "revId": "8a114bea0ee2ba752ab45b32baebf5b533d8b244",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48ad0c06_ece7caba",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-05T08:42:16Z",
+      "side": 1,
+      "message": "Do we need that? I think it\u0027s not needed",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 34
+      },
+      "revId": "8a114bea0ee2ba752ab45b32baebf5b533d8b244",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83fa51ec_54a524ad",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-05T08:42:16Z",
+      "side": 1,
+      "message": "This could use a comment why you\u0027re doing that.\nOther option would be to make a copy of iscsi.conf at start of script, then run gen_nvme \u003e\u003e copy.conf and remove the copy after we\u0027re done testing.",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 34
+      },
+      "revId": "8a114bea0ee2ba752ab45b32baebf5b533d8b244",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
