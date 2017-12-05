@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "596e088b_d1a344a6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 860,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T20:00:22Z",
+      "side": 1,
+      "message": "Why this is changed? If lba_count \u003e 0 \u0026\u0026 lba \u003d\u003d 0 there is something not right here.",
+      "range": {
+        "startLine": 860,
+        "startChar": 19,
+        "endLine": 860,
+        "endChar": 30
+      },
+      "revId": "c014cf13c16fc70585b9f9de60bf8c51a16ea88c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0300225e_2dbd7e3e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1178,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T20:00:22Z",
+      "side": 1,
+      "message": "I strongly advice to convert this to \u0027allocated \u003d true\u0027",
+      "range": {
+        "startLine": 1178,
+        "startChar": 9,
+        "endLine": 1178,
+        "endChar": 28
+      },
+      "revId": "c014cf13c16fc70585b9f9de60bf8c51a16ea88c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f432ab53_a14adc3f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1224,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T20:00:22Z",
+      "side": 1,
+      "message": "if \u0027unallocated\u0027 will be \u0027allocated\u0027 this could be just \nif (allocated) {",
+      "range": {
+        "startLine": 1224,
+        "startChar": 3,
+        "endLine": 1224,
+        "endChar": 30
+      },
+      "revId": "c014cf13c16fc70585b9f9de60bf8c51a16ea88c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
