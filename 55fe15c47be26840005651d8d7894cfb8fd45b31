@@ -70,6 +70,30 @@
       "revId": "55fe15c47be26840005651d8d7894cfb8fd45b31",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f351084d_b11d0f68",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1084,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-05T01:16:42Z",
+      "side": 1,
+      "message": "No, it depends on the QEMU master, SET_LOG_BASE always needs a reply.",
+      "parentUuid": "e6c5d1b6_5ae5b9e3",
+      "range": {
+        "startLine": 1084,
+        "startChar": 2,
+        "endLine": 1084,
+        "endChar": 31
+      },
+      "revId": "55fe15c47be26840005651d8d7894cfb8fd45b31",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
