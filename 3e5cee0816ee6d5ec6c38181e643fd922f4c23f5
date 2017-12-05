@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "1e54bdfc_50ed0358",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T20:19:56Z",
+      "side": 1,
+      "message": "-\u003e spdk_bdev_alias?",
+      "range": {
+        "startLine": 185,
+        "startChar": 7,
+        "endLine": 185,
+        "endChar": 24
+      },
+      "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cbb00578_be3c62b6",
         "filename": "include/spdk_internal/bdev.h",
         "patchSetId": 5
@@ -111,6 +134,52 @@
     },
     {
       "key": {
+        "uuid": "b919e1d2_60084061",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 846,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T20:19:56Z",
+      "side": 1,
+      "message": "This should be \u0027cont char *\u0027",
+      "range": {
+        "startLine": 846,
+        "startChar": 44,
+        "endLine": 846,
+        "endChar": 55
+      },
+      "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9212f0c7_53cc9416",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 857,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T20:19:56Z",
+      "side": 1,
+      "message": "this should be\ntmp-\u003ealias \u003d strdup(alias);\nI would also vote for havind alias in struct spdk_bdev_aliases be fixed size array and just snprintf alias to tmp-\u003ealias",
+      "range": {
+        "startLine": 857,
+        "startChar": 1,
+        "endLine": 857,
+        "endChar": 20
+      },
+      "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48b1e88f_09737137",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
@@ -127,6 +196,29 @@
         "startChar": 1,
         "endLine": 859,
         "endChar": 47
+      },
+      "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ecb4169d_3eb08624",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 869,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T20:19:56Z",
+      "side": 1,
+      "message": "Why _SAFE version?",
+      "range": {
+        "startLine": 869,
+        "startChar": 1,
+        "endLine": 869,
+        "endChar": 19
       },
       "revId": "3e5cee0816ee6d5ec6c38181e643fd922f4c23f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
