@@ -171,6 +171,15 @@ spdk_nvmf_subsystem_delete_done(void *io_device, void *ctx, int status)
 {
 	struct spdk_nvmf_tgt *tgt = io_device;
 	struct spdk_nvmf_subsystem *subsystem = ctx;
+	struct spdk_nvmf_ns *ns;
+
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		if (ns->bdev == NULL) {
+			continue;
+		}
+		spdk_bdev_close(ns->desc);
+	}
 
 	free(subsystem->ns);
 
@@ -220,7 +229,6 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
 		spdk_nvmf_ctrlr_destruct(ctrlr);
 	}
-
 	/* Send a message to each poll group to notify it that a subsystem
 	 * is no longer available.
 	 * TODO: This call does not currently allow the user to wait for these
