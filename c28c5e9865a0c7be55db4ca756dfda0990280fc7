@@ -16,6 +16,24 @@
       "revId": "c28c5e9865a0c7be55db4ca756dfda0990280fc7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "460657e4_0145d207",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-05T20:11:13Z",
+      "side": 1,
+      "message": "Yeah wow this is/was badly broken.\n\nIt should be assigning a pointer into the ctrlr_event_data.",
+      "parentUuid": "6268b830_0fe6e86d",
+      "revId": "c28c5e9865a0c7be55db4ca756dfda0990280fc7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
