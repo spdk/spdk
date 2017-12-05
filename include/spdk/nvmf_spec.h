@@ -439,7 +439,7 @@ SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_rdma_accept_private_data) == 32, "Inc
 
 struct spdk_nvmf_rdma_reject_private_data {
 	uint16_t	recfmt; /* record format */
-	struct spdk_nvme_status status;
+	uint16_t	sts; /* status */
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_rdma_reject_private_data) == 4, "Incorrect size");
 
@@ -450,7 +450,7 @@ union spdk_nvmf_rdma_private_data {
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvmf_rdma_private_data) == 32, "Incorrect size");
 
-enum spdk_nvmf_rdma_transport_errors {
+enum spdk_nvmf_rdma_transport_error {
 	SPDK_NVMF_RDMA_ERROR_INVALID_PRIVATE_DATA_LENGTH	= 0x1,
 	SPDK_NVMF_RDMA_ERROR_INVALID_RECFMT			= 0x2,
 	SPDK_NVMF_RDMA_ERROR_INVALID_QID			= 0x3,
@@ -459,7 +459,6 @@ enum spdk_nvmf_rdma_transport_errors {
 	SPDK_NVMF_RDMA_ERROR_NO_RESOURCES			= 0x6,
 	SPDK_NVMF_RDMA_ERROR_INVALID_IRD			= 0x7,
 	SPDK_NVMF_RDMA_ERROR_INVALID_ORD			= 0x8,
-	SPDK_NVMF_RDMA_ERROR_INVALID_CNTLID			= 0x9,
 };
 
 #pragma pack(pop)

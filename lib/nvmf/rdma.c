@@ -578,39 +578,74 @@ request_transfer_out(struct spdk_nvmf_request *req)
 }
 
 static int
+spdk_nvmf_rdma_event_accept(struct rdma_cm_id *id, struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	struct spdk_nvmf_rdma_accept_private_data	accept_data;
+	struct rdma_conn_param				ctrlr_event_data = {};
+	int						rc;
+
+	accept_data.recfmt = 0;
+	accept_data.crqsize = rqpair->max_queue_depth;
+
+	ctrlr_event_data.private_data = &accept_data;
+	ctrlr_event_data.private_data_len = sizeof(accept_data);
+	if (id->ps == RDMA_PS_TCP) {
+		ctrlr_event_data.responder_resources = 0; /* We accept 0 reads from the host */
+		ctrlr_event_data.initiator_depth = rqpair->max_rw_depth;
+	}
+
+	rc = rdma_accept(id, &ctrlr_event_data);
+	if (rc) {
+		SPDK_ERRLOG("Error %d on rdma_accept\n", errno);
+	} else {
+		SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Sent back the accept\n");
+	}
+
+	return rc;
+}
+
+static void
+spdk_nvmf_rdma_event_reject(struct rdma_cm_id *id, enum spdk_nvmf_rdma_transport_error error)
+{
+	struct spdk_nvmf_rdma_reject_private_data	rej_data;
+
+	rej_data.recfmt = 0;
+	rej_data.sts = error;
+
+	rdma_reject(id, &rej_data, sizeof(rej_data));
+}
+
+static int
 nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *event)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_qpair	*rqpair = NULL;
 	struct spdk_nvmf_rdma_port 	*port;
 	struct rdma_conn_param		*rdma_param = NULL;
-	struct rdma_conn_param		ctrlr_event_data;
 	const struct spdk_nvmf_rdma_request_private_data *private_data = NULL;
-	struct spdk_nvmf_rdma_accept_private_data accept_data;
-	uint16_t			sts = 0;
 	uint16_t			max_queue_depth;
 	uint16_t			max_rw_depth;
 	int 				rc;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
-	if (event->id == NULL) {
-		SPDK_ERRLOG("connect request: missing cm_id\n");
-		goto err0;
-	}
-
-	if (event->id->verbs == NULL) {
-		SPDK_ERRLOG("connect request: missing cm_id ibv_context\n");
-		goto err0;
-	}
+	assert(event->id != NULL); /* Impossible. Can't even reject the connection. */
+	assert(event->id->verbs != NULL); /* Impossible. No way to handle this. */
 
 	rdma_param = &event->param.conn;
 	if (rdma_param->private_data == NULL ||
 	    rdma_param->private_data_len < sizeof(struct spdk_nvmf_rdma_request_private_data)) {
 		SPDK_ERRLOG("connect request: no private data provided\n");
-		goto err0;
+		spdk_nvmf_rdma_event_reject(event->id, SPDK_NVMF_RDMA_ERROR_INVALID_PRIVATE_DATA_LENGTH);
+		return -1;
 	}
+
 	private_data = rdma_param->private_data;
+	if (private_data->recfmt != 0) {
+		SPDK_ERRLOG("Received RDMA private data with RECFMT != 0\n");
+		spdk_nvmf_rdma_event_reject(event->id, SPDK_NVMF_RDMA_ERROR_INVALID_RECFMT);
+		return -1;
+	}
 
 	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Connect Recv on fabric intf name %s, dev_name %s\n",
 		      event->id->verbs->device->name, event->id->verbs->device->dev_name);
@@ -661,7 +696,8 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	rqpair = calloc(1, sizeof(struct spdk_nvmf_rdma_qpair));
 	if (rqpair == NULL) {
 		SPDK_ERRLOG("Could not allocate new connection.\n");
-		goto err1;
+		spdk_nvmf_rdma_event_reject(event->id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
+		return -1;
 	}
 
 	rqpair->port = port;
@@ -677,22 +713,13 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	spdk_nvmf_rdma_qpair_initialize(&rqpair->qpair);
 
-	accept_data.recfmt = 0;
-	accept_data.crqsize = max_queue_depth;
-	ctrlr_event_data = *rdma_param;
-	ctrlr_event_data.private_data = &accept_data;
-	ctrlr_event_data.private_data_len = sizeof(accept_data);
-	if (event->id->ps == RDMA_PS_TCP) {
-		ctrlr_event_data.responder_resources = 0; /* We accept 0 reads from the host */
-		ctrlr_event_data.initiator_depth = max_rw_depth;
-	}
-
-	rc = rdma_accept(event->id, &ctrlr_event_data);
+	rc = spdk_nvmf_rdma_event_accept(rqpair->cm_id, rqpair);
 	if (rc) {
-		SPDK_ERRLOG("Error %d on rdma_accept\n", errno);
-		goto err2;
+		/* Try to reject, but we probably can't */
+		spdk_nvmf_rdma_event_reject(event->id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		return -1;
 	}
-	SPDK_DEBUGLOG(SPDK_TRACE_RDMA, "Sent back the accept\n");
 
 	/* Add this RDMA connection to the global list until a CONNECT capsule
 	 * is received. */
@@ -700,22 +727,12 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	rc = spdk_nvmf_rdma_qpair_allocate_channel(rqpair, rtransport);
 	if (rc) {
-		goto err2;
+		spdk_nvmf_rdma_event_reject(event->id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		return -1;
 	}
 
 	return 0;
-
-err2:
-	spdk_nvmf_rdma_qpair_destroy(rqpair);
-
-err1:	{
-		struct spdk_nvmf_rdma_reject_private_data rej_data;
-
-		rej_data.status.sc = sts;
-		rdma_reject(event->id, &ctrlr_event_data, sizeof(rej_data));
-	}
-err0:
-	return -1;
 }
 
 static void
