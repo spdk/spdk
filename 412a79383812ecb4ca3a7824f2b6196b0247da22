@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77e2c925_caa80cf8",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-05T08:38:53Z",
+      "side": 1,
+      "message": "Hi Xiaodong, it\u0027s not a good idea to use the g_spdk_nbd variable here, can we use spdk_nbd_start similar API to do this?",
+      "revId": "412a79383812ecb4ca3a7824f2b6196b0247da22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
