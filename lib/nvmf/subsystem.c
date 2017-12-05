@@ -199,6 +199,7 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 	struct spdk_nvmf_listener	*listener, *listener_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
 	struct spdk_nvmf_ctrlr		*ctrlr, *ctrlr_tmp;
+	struct spdk_nvmf_ns 		*ns;
 
 	if (!subsystem) {
 		return;
@@ -221,6 +222,13 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		spdk_nvmf_ctrlr_destruct(ctrlr);
 	}
 
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		if (ns->bdev == NULL) {
+			continue;
+		}
+		spdk_bdev_close(ns->desc);
+	}
 	/* Send a message to each poll group to notify it that a subsystem
 	 * is no longer available.
 	 * TODO: This call does not currently allow the user to wait for these
