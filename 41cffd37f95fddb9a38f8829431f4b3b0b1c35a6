@@ -22,6 +22,29 @@
       "revId": "41cffd37f95fddb9a38f8829431f4b3b0b1c35a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e67d6561_df2021e7",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T20:32:10Z",
+      "side": 1,
+      "message": "You should write JSON array (spdk_json_write_object_begin)",
+      "range": {
+        "startLine": 53,
+        "startChar": 1,
+        "endLine": 53,
+        "endChar": 33
+      },
+      "revId": "41cffd37f95fddb9a38f8829431f4b3b0b1c35a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
