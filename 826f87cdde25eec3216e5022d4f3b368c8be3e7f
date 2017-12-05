@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "def701cb_fa07f985",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1986,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-05T22:24:57Z",
+      "side": 1,
+      "message": "These changes were required because the sequence is released when the channel is put as part of _spdk_bs_free. It used to work because putting a channel was deferred.",
+      "revId": "826f87cdde25eec3216e5022d4f3b368c8be3e7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "265a48bd_4110e806",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2332,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-05T22:24:57Z",
+      "side": 1,
+      "message": "This used to happen when io devices were unregistered asynchronously, which made the code hard to follow. Now that they are unregistered synchronously (inside _spdk_bs_free) this call can be moved here.",
+      "revId": "826f87cdde25eec3216e5022d4f3b368c8be3e7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
