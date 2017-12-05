@@ -160,6 +160,11 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	return 0;
 }
 
+void
+spdk_bdev_close(struct spdk_bdev_desc *desc)
+{
+}
+
 const char *
 spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
