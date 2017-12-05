@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38851eed_e8dfd524",
+        "filename": "lib/nbd/nbd_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-05T06:46:46Z",
+      "side": 1,
+      "message": "extra empty line, and please use SPDK_NBD_INTERNNAL_H as the macro definition.",
+      "revId": "b66cb7bc2d2e88899a52e9f17ca91ca3763dbbaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
