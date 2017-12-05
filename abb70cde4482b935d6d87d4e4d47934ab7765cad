@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3af86443_053b0a52",
+        "filename": "app/nvmf_tgt/nvmf_tgt.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-05T21:58:50Z",
+      "side": 1,
+      "message": "/* */ commenting style",
+      "revId": "abb70cde4482b935d6d87d4e4d47934ab7765cad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1b415cb_9b5b54e6",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-05T21:58:50Z",
+      "side": 1,
+      "message": "maybe add a brief comment describing what the new_qpair_fn is for?",
+      "revId": "abb70cde4482b935d6d87d4e4d47934ab7765cad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
