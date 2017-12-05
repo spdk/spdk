@@ -601,7 +601,6 @@ int
 spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 {
 	unsigned ctrlr_num;
-	char path[PATH_MAX];
 
 	if (vdev->vid != -1) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
@@ -619,15 +618,10 @@ spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 		return -ENOSPC;
 	}
 
-	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, vdev->name) >= (int)sizeof(path)) {
-		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", vdev->name, dev_dirname,
-			    vdev->name);
-		return -EINVAL;
-	}
-
-	if (rte_vhost_driver_unregister(path) != 0) {
+	if (rte_vhost_driver_unregister(vdev->path) != 0) {
 		SPDK_ERRLOG("Could not unregister controller %s with vhost library\n"
-			    "Check if domain socket %s still exists\n", vdev->name, path);
+			    "Check if domain socket %s still exists\n",
+			    vdev->name, vdev->path);
 		return -EIO;
 	}
 
@@ -988,7 +982,6 @@ static void *
 session_shutdown(void *arg)
 {
 	struct spdk_vhost_dev *vdev = NULL;
-	char path[PATH_MAX];
 	int i;
 
 	for (i = 0; i < MAX_VHOST_DEVICES; i++) {
@@ -997,14 +990,7 @@ session_shutdown(void *arg)
 			continue;
 		}
 
-		if (snprintf(path, sizeof(path), "%s%s", dev_dirname, vdev->name) >= (int)sizeof(path)) {
-			SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", vdev->name, dev_dirname,
-				    vdev->name);
-			assert(false);
-			continue;
-		}
-
-		rte_vhost_driver_unregister(path);
+		rte_vhost_driver_unregister(vdev->path);
 	}
 
 	SPDK_NOTICELOG("Exiting\n");
