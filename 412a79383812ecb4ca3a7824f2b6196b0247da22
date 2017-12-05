@@ -16,6 +16,24 @@
       "revId": "412a79383812ecb4ca3a7824f2b6196b0247da22",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76b55e73_31f6d9aa",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-05T09:19:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "77e2c925_caa80cf8",
+      "revId": "412a79383812ecb4ca3a7824f2b6196b0247da22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
