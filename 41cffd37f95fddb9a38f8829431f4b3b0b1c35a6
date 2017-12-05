@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c20c502_95209aee",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 918,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T20:28:56Z",
+      "side": 1,
+      "message": "This is in public API so I advice to convert this to making an array of strdupp\u0027ed aliases.\nSomething like\nchar **spdk_bdev_get_aliases(const struct spdk_bdev *bdev, size_t *cnt);",
+      "range": {
+        "startLine": 914,
+        "startChar": 0,
+        "endLine": 918,
+        "endChar": 1
+      },
+      "revId": "41cffd37f95fddb9a38f8829431f4b3b0b1c35a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
