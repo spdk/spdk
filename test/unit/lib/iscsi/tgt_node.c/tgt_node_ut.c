@@ -186,6 +186,7 @@ node_access_allowed(void)
 	struct spdk_iscsi_portal portal;
 	struct spdk_iscsi_initiator_name iname;
 	struct spdk_iscsi_initiator_netmask imask;
+	struct spdk_scsi_dev scsi_dev;
 	struct spdk_iscsi_pg_map *pg_map;
 	char *iqn, *addr;
 	bool result;
@@ -212,6 +213,11 @@ node_access_allowed(void)
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
 	tgtnode.name = "iqn.2017-10.spdk.io:0001";
 	TAILQ_INIT(&tgtnode.pg_map_head);
+
+	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
+	strncpy(scsi_dev.name, "iqn.2017-10.spdk.io:0001", SPDK_SCSI_DEV_MAX_NAME);
+	tgtnode.dev = &scsi_dev;
+
 	pg_map = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg);
 	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig);
 
@@ -244,6 +250,7 @@ node_access_denied_by_empty_netmask(void)
 	struct spdk_iscsi_conn conn;
 	struct spdk_iscsi_portal portal;
 	struct spdk_iscsi_initiator_name iname;
+	struct spdk_scsi_dev scsi_dev;
 	struct spdk_iscsi_pg_map *pg_map;
 	char *iqn, *addr;
 	bool result;
@@ -268,6 +275,11 @@ node_access_denied_by_empty_netmask(void)
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
 	tgtnode.name = "iqn.2017-10.spdk.io:0001";
 	TAILQ_INIT(&tgtnode.pg_map_head);
+
+	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
+	strncpy(scsi_dev.name, "iqn.2017-10.spdk.io:0001", SPDK_SCSI_DEV_MAX_NAME);
+	tgtnode.dev = &scsi_dev;
+
 	pg_map = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg);
 	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig);
 
@@ -307,6 +319,7 @@ node_access_multi_initiator_groups_cases(void)
 	struct spdk_iscsi_init_grp ig1, ig2;
 	struct spdk_iscsi_initiator_name iname1, iname2;
 	struct spdk_iscsi_initiator_netmask imask1, imask2;
+	struct spdk_scsi_dev scsi_dev;
 	struct spdk_iscsi_pg_map *pg_map;
 	char *iqn, *addr;
 	bool result;
@@ -315,6 +328,11 @@ node_access_multi_initiator_groups_cases(void)
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
 	tgtnode.name = IQN1;
 	TAILQ_INIT(&tgtnode.pg_map_head);
+
+	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
+	strncpy(scsi_dev.name, IQN1, SPDK_SCSI_DEV_MAX_NAME);
+	tgtnode.dev = &scsi_dev;
+
 	pg_map = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg);
 	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig1);
 	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig2);
@@ -553,12 +571,18 @@ allow_iscsi_name_multi_maps_case(void)
 	struct spdk_iscsi_init_grp ig;
 	struct spdk_iscsi_initiator_name iname;
 	struct spdk_iscsi_pg_map *pg_map1, *pg_map2;
+	struct spdk_scsi_dev scsi_dev;
 	char *iqn;
 	bool result;
 
 	/* target initialization */
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
 	TAILQ_INIT(&tgtnode.pg_map_head);
+
+	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
+	strncpy(scsi_dev.name, IQN1, SPDK_SCSI_DEV_MAX_NAME);
+	tgtnode.dev = &scsi_dev;
+
 	pg_map1 = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg1);
 	pg_map2 = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg2);
 	spdk_iscsi_pg_map_add_ig_map(pg_map1, &ig);
