@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3f07f4cf_6bcf2892",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-05T05:49:34Z",
+      "side": 1,
+      "message": "I removed #include \"scsi/scsi_internal.h\".\nspdk/scsi.h is already included in this file.",
+      "parentUuid": "2d8345d0_c02504d0",
+      "revId": "4f361e0114926c54417bafff4c86a9b765d59112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6029a950_472b4975",
         "filename": "lib/iscsi/tgt_node.c",
         "patchSetId": 8
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "c7d347ea_41ca7849",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-05T05:49:34Z",
+      "side": 1,
+      "message": "I changed to use spdk_scsi_dev_get_name(target-\u003edev).",
+      "parentUuid": "6029a950_472b4975",
+      "range": {
+        "startLine": 552,
+        "startChar": 3,
+        "endLine": 552,
+        "endChar": 20
+      },
+      "revId": "4f361e0114926c54417bafff4c86a9b765d59112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "57d5644e_af87efc5",
         "filename": "lib/iscsi/tgt_node.c",
         "patchSetId": 8
@@ -53,6 +95,24 @@
       "writtenOn": "2017-12-04T21:08:50Z",
       "side": 1,
       "message": "this should also check the return code from spdk_scsi_dev_add_port()\n\nif it failed, cleanup and return NULL\n\nmaybe move the TAILQ_INSERT_TAIL after spdk_scsi_dev_add_port so then you only have to free the memory during cleanup",
+      "revId": "4f361e0114926c54417bafff4c86a9b765d59112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "344facf8_3f53c031",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-05T05:49:34Z",
+      "side": 1,
+      "message": "I adopted your idea.",
+      "parentUuid": "57d5644e_af87efc5",
       "revId": "4f361e0114926c54417bafff4c86a9b765d59112",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
