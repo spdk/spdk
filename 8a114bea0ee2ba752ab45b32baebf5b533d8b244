@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "d2ebab4f_160aae20",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-05T09:18:32Z",
+      "side": 1,
+      "message": "I understand that, but currently this patch runs FIO for only 5 seconds so we could remove RUN_NIGHTLY for just one patch set to test if the test actually passes test pool (currently you may have +1, but it wasn\u0027t executed as its a nightly test only). You could re-add RUN_NIGHTLY in next patch set.\nAre you OK with that?",
+      "parentUuid": "d4baa777_bb2bd34f",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 2
+      },
+      "revId": "8a114bea0ee2ba752ab45b32baebf5b533d8b244",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48ad0c06_ece7caba",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 14
