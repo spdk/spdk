@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4e7659d_6e755983",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1839,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-05T16:23:27Z",
+      "side": 1,
+      "message": "If bdev had aliases before registering, they should be checked as well. Otherwise we might end up with two different bdevs with same alias registered.",
+      "range": {
+        "startLine": 1839,
+        "startChar": 5,
+        "endLine": 1839,
+        "endChar": 38
+      },
+      "revId": "104fb2166cd1e962fe8a47c006cd00ac1483b83e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
