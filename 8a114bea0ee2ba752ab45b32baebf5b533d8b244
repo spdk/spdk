@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d4baa777_bb2bd34f",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-05T09:08:45Z",
+      "side": 1,
+      "message": "Given that this test can take a long time if we expand cases in future, so we put this into nightly. There are other cases test iscsi in per-patch.",
+      "parentUuid": "596902c8_917ff83f",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 2
+      },
+      "revId": "8a114bea0ee2ba752ab45b32baebf5b533d8b244",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48ad0c06_ece7caba",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 14
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "912d0ac0_1b746eb6",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-05T09:08:45Z",
+      "side": 1,
+      "message": "This means discard lines from the 16th line.\nI put an iscsi.conf in this dir in order to use MaxSessions(\u003e128), because I will test 128 connections. The conf can\u0027t be removed after test.\nSo I append one line(nvme info) into the conf.Then remove it after test.\nIf there is no \"sed -i \u002716,$d\u0027\", I don\u0027t know remove how many lines at last.",
+      "parentUuid": "48ad0c06_ece7caba",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 34
+      },
+      "revId": "8a114bea0ee2ba752ab45b32baebf5b533d8b244",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83fa51ec_54a524ad",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 14
@@ -59,6 +107,30 @@
       "writtenOn": "2017-12-05T08:42:16Z",
       "side": 1,
       "message": "This could use a comment why you\u0027re doing that.\nOther option would be to make a copy of iscsi.conf at start of script, then run gen_nvme \u003e\u003e copy.conf and remove the copy after we\u0027re done testing.",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 34
+      },
+      "revId": "8a114bea0ee2ba752ab45b32baebf5b533d8b244",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "591067f9_edc46eef",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-05T09:08:45Z",
+      "side": 1,
+      "message": "Yes, adding comments will be better.",
+      "parentUuid": "83fa51ec_54a524ad",
       "range": {
         "startLine": 72,
         "startChar": 0,
