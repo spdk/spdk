@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7abbb189_9f4779f0",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-05T07:16:25Z",
+      "side": 1,
+      "message": "You can re-use local_nvme_trid here for local NVMe SSDs",
+      "revId": "223402df56d669ac1e2ff5530dd96ad63051a2b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
