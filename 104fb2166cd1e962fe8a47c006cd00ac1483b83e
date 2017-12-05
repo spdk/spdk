@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "fd202810_0c78c7e3",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T20:10:38Z",
+      "side": 1,
+      "message": "List shouldn\u0027t be changed during iterations so why _SAFE version?",
+      "range": {
+        "startLine": 239,
+        "startChar": 2,
+        "endLine": 239,
+        "endChar": 20
+      },
+      "revId": "104fb2166cd1e962fe8a47c006cd00ac1483b83e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d4e7659d_6e755983",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 5
