@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1406e98d_4281b037",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1289,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-05T19:41:59Z",
+      "side": 1,
+      "message": "what if we allowed passing lun_id \u003d -1 to spdk_scsi_dev_add_lun()?  then let that function find the lowest free lun ID and use it\n\nthen you can simplify the code here and remove spdk_scsi_dev_find_lowest_free_lun_id from the public API",
+      "revId": "f73da4754f66eccaa8a284071801a90f988a9027",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63f09e75_f5f44137",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-05T19:41:59Z",
+      "side": 1,
+      "message": "i don\u0027t think this function is needed anymore - the lun-\u003eclaimed flag is not really used anywhere\n\nthis can be cleaned up in a different patch though",
+      "revId": "f73da4754f66eccaa8a284071801a90f988a9027",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
