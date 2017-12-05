@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6268b830_0fe6e86d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-05T19:23:56Z",
+      "side": 1,
+      "message": "what does this do?  rej_data is on the stack and it doesn\u0027t get assigned anywhere and doesn\u0027t get passed to rdma_reject()\n\nthe original code did something similar, so it\u0027s not really introduced by this patch but might as well fix it while you\u0027re here",
+      "revId": "c28c5e9865a0c7be55db4ca756dfda0990280fc7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
