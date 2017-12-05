@@ -10,8 +10,7 @@ fio_template = """
 thread=1
 invalidate=1
 rw=%(testtype)s
-time_based=1
-runtime=%(runtime)s
+%(runtime)s
 ioengine=libaio
 direct=1
 bs=%(blocksize)d
@@ -19,7 +18,12 @@ iodepth=%(iodepth)d
 norandommap=1
 %(verify)s
 verify_dump=1
+%(runsize)s
+"""
 
+time_template = """
+time_based=1
+runtime=%(runtime)s
 """
 
 verify_template = """
@@ -27,6 +31,14 @@ do_verify=1
 verify=crc32c-intel
 """
 
+verify_write_template = """
+do_verify=0
+verify=crc32c-intel
+"""
+
+runsize_template = """
+size=%(runsize)s
+"""
 
 fio_job_template = """
 [job%(jobnumber)d]
@@ -46,8 +58,13 @@ def main():
         print "usage:"
         print "  " + sys.argv[0] + " <io_size> <queue_depth> <test_type> <runtime>"
         print "advanced usage:"
+        print "  " + sys.argv[0] + " <io_size> <queue_depth> <test_type> <runtime> verify <runsize>"
         print "If you want to run fio with verify, please add verify string after runtime."
-        print "Currently fio.py only support write rw randwrite randrw with verify enabled."
+        print "You can also add runsize argument. The form of runsize is  [1-9]+{K, M, G}."
+        print "For example, you can input 512K to just test 512K size of the disk."
+        print "You can also input 512M or 128G for the runsize parameter."
+        print "If you added verify argument and the test_type is read or randread, the"
+        print "runsize argument is mandatory."
         sys.exit(1)
 
     io_size = int(sys.argv[1])
@@ -55,9 +72,16 @@ def main():
     test_type = sys.argv[3]
     runtime = sys.argv[4]
     if len(sys.argv) > 5:
-        verify = True
+        if sys.argv[5] == 'verify':
+            verify = True
+        else:
+            verify = False
     else:
         verify = False
+    if len(sys.argv) > 6:
+        runsize = sys.argv[6]
+    else:
+        runsize = ''
 
     devices = get_target_devices()
     print "Found devices: ", devices
@@ -69,8 +93,17 @@ def main():
     sys.stdout.flush()
     signal.signal(signal.SIGTERM, interrupt_handler)
     signal.signal(signal.SIGINT, interrupt_handler)
+    if verify and (test_type == "read" or test_type == "randread"):
+        for device in device_paths:
+            fio = Popen([fio_executable, '-'], stdin=PIPE)
+            fio.communicate(create_fio_config(io_size, 1, [device], 'write', runtime, verify, runsize, True))
+            fio.stdin.close()
+            rc = fio.wait()
+            if rc != 0:
+                print "FIO write operaton completed with code %d\n" % rc
+                sys.exit(rc)
     fio = Popen([fio_executable, '-'], stdin=PIPE)
-    fio.communicate(create_fio_config(io_size, queue_depth, device_paths, test_type, runtime, verify))
+    fio.communicate(create_fio_config(io_size, queue_depth, device_paths, test_type, runtime, verify, runsize, False))
     fio.stdin.close()
     rc = fio.wait()
     print "FIO completed with code %d\n" % rc
@@ -91,13 +124,21 @@ def get_target_devices():
         sys.exit(0)
     return iscsi_devs + nvmf_devs
 
-def create_fio_config(size, q_depth, devices, test, run_time, verify):
+def create_fio_config(size, q_depth, devices, test, run_time, verify, run_size='', read_verify=False):
+    run_time = time_template % {"runtime": run_time}
     if not verify:
         verifyfio = ""
-    else:
+    elif not read_verify:
         verifyfio = verify_template
-    fiofile = fio_template % {"blocksize": size, "iodepth": q_depth,
-                              "testtype": test, "runtime": run_time, "verify": verifyfio}
+    else:
+        verifyfio = verify_write_template
+    if run_size:
+        runsizeparam = runsize_template % {"runsize": run_size}
+        run_time = ""
+    else:
+        runsizeparam = ""
+    fiofile = fio_template % {"blocksize": size, "iodepth": q_depth, "testtype": test, "runtime": run_time,
+                              "runsize": runsizeparam, "verify": verifyfio}
     for (i, dev) in enumerate(devices):
         fiofile += fio_job_template % {"jobnumber": i, "device": dev}
     return fiofile
