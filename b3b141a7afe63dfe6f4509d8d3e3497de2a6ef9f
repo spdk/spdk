@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0959d588_fcb24785",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-05T08:12:54Z",
+      "side": 1,
+      "message": "Provide some info about cause of fail?",
+      "range": {
+        "startLine": 153,
+        "startChar": 8,
+        "endLine": 153,
+        "endChar": 17
+      },
+      "revId": "b3b141a7afe63dfe6f4509d8d3e3497de2a6ef9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc76d956_dbf83c60",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-05T08:12:54Z",
+      "side": 1,
+      "message": "I think this is a wrong place for putting these functions. All similar functions are stored in rpc_commands_Lib.py\n(notice that all rpc calls are in that file)",
+      "range": {
+        "startLine": 155,
+        "startChar": 0,
+        "endLine": 163,
+        "endChar": 87
+      },
+      "revId": "b3b141a7afe63dfe6f4509d8d3e3497de2a6ef9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
