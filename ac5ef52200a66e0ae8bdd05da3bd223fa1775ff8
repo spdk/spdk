@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03da8faa_66592a5d",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-05T16:53:21Z",
+      "side": 1,
+      "message": "I\u0027m not sure it should be an error to export the same bdev more than once as an NBD device - does something break in this case?",
+      "revId": "ac5ef52200a66e0ae8bdd05da3bd223fa1775ff8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
