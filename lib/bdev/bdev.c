@@ -917,6 +917,12 @@ spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
 	return bdev->product_name;
 }
 
+const struct spdk_bdev_aliases_list *
+spdk_bdev_get_aliases(const struct spdk_bdev *bdev)
+{
+	return &bdev->aliases;
+}
+
 uint32_t
 spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 {
@@ -1848,7 +1854,7 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 		return -EEXIST;
 	}
 
-	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
+	TAILQ_FOREACH(tmp, spdk_bdev_get_aliases(bdev), tailq) {
 		if (spdk_bdev_get_by_name(tmp->alias)) {
 			SPDK_ERRLOG("Bdev alias:%s already exists\n", bdev->name);
 			return -EEXIST;
