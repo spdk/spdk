@@ -123,8 +123,8 @@ if $nested_lvol; then
         lb_name=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_nest 16000)
         lvol_bdevs+=("$lb_name")
 
-        echo "INFO: Creating nested lvol store on lvol bdev: $lb_guid"
-        ls_guid=$($rpc_py construct_lvol_store $lb_guid lvs_n_$i)
+        echo "INFO: Creating nested lvol store on lvol bdev: $lb_name"
+        ls_guid=$($rpc_py construct_lvol_store $lb_name lvs_n_$i)
         nest_lvol_stores+=("$ls_guid")
     done
 fi
