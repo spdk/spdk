@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "179323c1_613cf933",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-05T16:53:34Z",
+      "side": 1,
+      "message": "This should be static (doesn\u0027t need to be exposed outside of this file).",
+      "revId": "9943aaa5764e1831f569e49784c283ba7b99da7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "804d2091_bfaad9c4",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-05T16:53:34Z",
+      "side": 1,
+      "message": "Small formatting nitpick: add a blank line between variable declarations and code.",
+      "revId": "9943aaa5764e1831f569e49784c283ba7b99da7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
