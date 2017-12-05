@@ -167,6 +167,10 @@ void spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 void spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts,
 		  spdk_bs_op_with_handle_complete cb_fn, void *cb_arg);
 
+struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs);
+
+void spdk_bs_free_io_channel(struct spdk_io_channel *channel);
+
 /* Destroy a blob store by zeroing the metadata and freeing in-memory structures.
  */
 void spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
@@ -178,11 +182,11 @@ void spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void 
 /* Set the given blob as the super blob. This will be retrievable immediately after an
  * spdk_bs_load on the next initialization.
  */
-void spdk_bs_set_super(struct spdk_blob_store *bs, spdk_blob_id blobid,
-		       spdk_bs_op_complete cb_fn, void *cb_arg);
+void spdk_bs_set_super(struct spdk_blob_store *bs, struct spdk_io_channel *bs_channel,
+		       spdk_blob_id blobid, spdk_bs_op_complete cb_fn, void *cb_arg);
 
 /* Open the super blob. */
-void spdk_bs_get_super(struct spdk_blob_store *bs,
+void spdk_bs_get_super(struct spdk_blob_store *bs, struct spdk_io_channel *bs_channel,
 		       spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
 /* Get the cluster size in bytes. Used in the extend operation. */
@@ -197,16 +201,6 @@ uint64_t spdk_bs_free_cluster_count(struct spdk_blob_store *bs);
 /* Get the total number of clusters accessible by user. */
 uint64_t spdk_bs_total_data_cluster_count(struct spdk_blob_store *bs);
 
-/* Register the current thread as the metadata thread. All functions beginning with
- * the prefix "spdk_bs_md" must be called only from this thread.
- */
-int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
-
-/* Unregister the current thread as the metadata thread. This allows a different
- * thread to be registered.
- */
-int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
-
 /* Return the blobid */
 spdk_blob_id spdk_blob_get_id(struct spdk_blob *blob);
 
@@ -217,86 +211,77 @@ uint64_t spdk_blob_get_num_pages(struct spdk_blob *blob);
 uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 
 /* Create a new blob with initial size of 'sz' clusters. */
-void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
-			    spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+void spdk_bs_create_blob(struct spdk_blob_store *bs, struct spdk_io_channel *bs_channel,
+			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
 /* Delete an existing blob. */
-void spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
-			    spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_bs_delete_blob(struct spdk_blob_store *bs, struct spdk_io_channel *bs_channel,
+			 spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg);
 
-/* Open a blob */
-void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
-			  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+/* Open a blob,  The returned spdk_blob handle may only be used on this thread. */
+void spdk_bs_open_blob(struct spdk_blob_store *bs, struct spdk_io_channel *bs_channel,
+		       spdk_blob_id blobid, spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 
 /* Resize a blob to 'sz' clusters.
  *
  * These changes are not persisted to disk until
  * spdk_bs_md_sync_blob() is called. */
-int spdk_bs_md_resize_blob(struct spdk_blob *blob, size_t sz);
+int spdk_blob_resize(struct spdk_blob *blob, size_t sz);
 
 /* Sync a blob */
-/* Make a blob persistent. This applies to open, resize, set xattr,
+/* Make a blob persistent. This applies to resize, set xattr,
  * and remove xattr. These operations will not be persistent until
  * the blob has been synced.
  *
  * I/O operations (read/write) are synced independently. See
  * spdk_bs_io_flush_channel().
  */
-void spdk_bs_md_sync_blob(struct spdk_blob *blob,
-			  spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Close a blob. This will automatically sync. */
-void spdk_bs_md_close_blob(struct spdk_blob **blob, spdk_blob_op_complete cb_fn, void *cb_arg);
-
-struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs);
-
-void spdk_bs_free_io_channel(struct spdk_io_channel *channel);
-
-/* Force all previously completed operations on this channel to be persistent. */
-void spdk_bs_io_flush_channel(struct spdk_io_channel *channel,
-			      spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_close(struct spdk_blob **blob, struct spdk_io_channel *bs_channel,
+		     spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Write data to a blob. Offset is in pages from the beginning of the blob. */
-void spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			   void *payload, uint64_t offset, uint64_t length,
-			   spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_write(struct spdk_blob *blob,
+		     void *payload, uint64_t offset, uint64_t length,
+		     spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Read data from a blob. Offset is in pages from the beginning of the blob. */
-void spdk_bs_io_read_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			  void *payload, uint64_t offset, uint64_t length,
-			  spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_read(struct spdk_blob *blob,
+		    void *payload, uint64_t offset, uint64_t length,
+		    spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Write data to a blob. Offset is in pages from the beginning of the blob. */
-void spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-			    spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_writev(struct spdk_blob *blob,
+		      struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+		      spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Read data from a blob. Offset is in pages from the beginning of the blob. */
-void spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
-			   spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_readv(struct spdk_blob *blob,
+		     struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
+		     spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Unmap area of a blob. Offset is in pages from the beginning of the blob. */
-void spdk_bs_io_unmap_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-			   uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_unmap(struct spdk_blob *blob,
+		     uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Write zeros into area of a blob. Offset is in pages from the beginning of the blob. */
-void spdk_bs_io_write_zeroes_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
-				  uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_write_zeroes(struct spdk_blob *blob,
+			    uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Iterate through all blobs */
-void spdk_bs_md_iter_first(struct spdk_blob_store *bs,
-			   spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
-void spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **blob,
-			  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+void spdk_bs_iter_first(struct spdk_blob_store *bs, struct spdk_io_channel *bs_channel,
+			spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+void spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_io_channel *bs_channel,
+		       struct spdk_blob **blob, spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 
-int spdk_blob_md_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
-			   uint16_t value_len);
-int spdk_blob_md_remove_xattr(struct spdk_blob *blob, const char *name);
-int spdk_bs_md_get_xattr_value(struct spdk_blob *blob, const char *name,
-			       const void **value, size_t *value_len);
-int spdk_bs_md_get_xattr_names(struct spdk_blob *blob,
-			       struct spdk_xattr_names **names);
+int spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
+			uint16_t value_len);
+int spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name);
+int spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
+			      const void **value, size_t *value_len);
+int spdk_blob_get_xattr_names(struct spdk_blob *blob, struct spdk_xattr_names **names);
 
 uint32_t spdk_xattr_names_get_count(struct spdk_xattr_names *names);
 const char *spdk_xattr_names_get_name(struct spdk_xattr_names *names, uint32_t index);
