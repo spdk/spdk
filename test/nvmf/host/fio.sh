@@ -37,11 +37,37 @@ $rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode1 "trtype:RDMA traddr:
 
 PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 
-LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=RDMA adrfam=IPv4 traddr=$NVMF_FIRST_TARGET_IP trsvcid=4420 ns=1"
+# Test fio_plugin as host with malloc backend
+LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=RDMA adrfam=IPv4 \
+traddr=$NVMF_FIRST_TARGET_IP trsvcid=4420 ns=1"
+$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+
+# Test fio_plugin as host with nvme lvol backend
+bdfs=$(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}')
+$rpc_py construct_nvme_bdev -b Nvme0 -t PCIe -a $(echo $bdfs | awk '{ print $1 }')
+ls_guid=$($rpc_py construct_lvol_store Nvme0n1 lvs_0)
+lb_guid=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_0 16000)
+$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode2 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000002 -n "$lb_guid"
+LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=RDMA adrfam=IPv4 \
+traddr=$NVMF_FIRST_TARGET_IP trsvcid=4420 ns=1"
+$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode2
+
+# Test fio_plugin as host with nvme lvol nested backend
+ls_nested_guid=$($rpc_py construct_lvol_store $lb_guid lvs_n_0)
+lb_nested_guid=$($rpc_py construct_lvol_bdev -u $ls_nested_guid lbd_nest_0 2000)
+$rpc_py construct_nvmf_subsystem nqn.2016-06.io.spdk:cnode3 "trtype:RDMA traddr:$NVMF_FIRST_TARGET_IP trsvcid:4420" "" -a -s SPDK00000000000003 -n "$lb_nested_guid"
+LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=RDMA adrfam=IPv4 \
+traddr=$NVMF_FIRST_TARGET_IP trsvcid=4420 ns=1"
+$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode3
 
 sync
 
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+# Delete lvol_bdev and destroy lvol_store.
+$rpc_py delete_bdev "$lb_nested_guid"
+$rpc_py destroy_lvol_store -l lvs_n_0
+$rpc_py delete_bdev "$lb_guid"
+$rpc_py destroy_lvol_store -l lvs_0
+$rpc_py delete_bdev "Nvme0n1"
 
 trap - SIGINT SIGTERM EXIT
 
