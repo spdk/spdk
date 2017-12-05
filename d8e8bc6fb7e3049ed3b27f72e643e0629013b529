@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e72d667f_6d4b21f1",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-05T08:22:20Z",
+      "side": 1,
+      "message": "Can be declared in the same line",
+      "revId": "d8e8bc6fb7e3049ed3b27f72e643e0629013b529",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd1c3d7e_d94cd736",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-05T08:22:20Z",
+      "side": 1,
+      "message": "remove the extra empty line",
+      "revId": "d8e8bc6fb7e3049ed3b27f72e643e0629013b529",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7692c73_c341eea2",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-05T08:22:20Z",
+      "side": 1,
+      "message": "same here.",
+      "revId": "d8e8bc6fb7e3049ed3b27f72e643e0629013b529",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "112385aa_d4cd87f4",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-05T08:22:20Z",
+      "side": 1,
+      "message": "I think you don\u0027t need to another compare here, if nbd_idx equals nbd, that\u0027s the device you want to remove.",
+      "revId": "d8e8bc6fb7e3049ed3b27f72e643e0629013b529",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
