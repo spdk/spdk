@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e8f3f11_99097427",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-05T10:52:43Z",
+      "side": 1,
+      "message": "Why do we create list of bdevs instead of creating only list of names? It would better to do something similar to spdk_iscsi_initiator_name",
+      "range": {
+        "startLine": 193,
+        "startChar": 14,
+        "endLine": 193,
+        "endChar": 23
+      },
+      "revId": "90b06f3900b3cd1f3d4fc96162ee5206dac79773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebc277b6_1856b92b",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-05T10:52:43Z",
+      "side": 1,
+      "message": "deleted from",
+      "range": {
+        "startLine": 417,
+        "startChar": 26,
+        "endLine": 417,
+        "endChar": 31
+      },
+      "revId": "90b06f3900b3cd1f3d4fc96162ee5206dac79773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ffbf721_7a657909",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-05T10:52:43Z",
+      "side": 1,
+      "message": "This should probably return error as you are adding name that bdev already have.",
+      "range": {
+        "startLine": 375,
+        "startChar": 1,
+        "endLine": 375,
+        "endChar": 20
+      },
+      "revId": "90b06f3900b3cd1f3d4fc96162ee5206dac79773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "889daffc_01aadcb3",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-05T10:52:43Z",
+      "side": 1,
+      "message": "Do we need this here? We don\u0027t use it inside vbdev_lvol.c",
+      "range": {
+        "startLine": 418,
+        "startChar": 0,
+        "endLine": 428,
+        "endChar": 1
+      },
+      "revId": "90b06f3900b3cd1f3d4fc96162ee5206dac79773",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
