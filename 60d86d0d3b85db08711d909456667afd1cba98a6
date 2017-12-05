@@ -71,6 +71,29 @@
     },
     {
       "key": {
+        "uuid": "849de4c8_8515e58c",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-05T10:57:13Z",
+      "side": 1,
+      "message": "You could just assert(vdev !\u003d NULL)\n\nvhost_event_cb is a blocking call (sem_wait, vhost.c:819) run under g_spdk_vhost_mutex. No events can be processed between scheduling this callback and executing it, so the controller couldn\u0027t have been deleted.",
+      "range": {
+        "startLine": 734,
+        "startChar": 1,
+        "endLine": 737,
+        "endChar": 2
+      },
+      "revId": "60d86d0d3b85db08711d909456667afd1cba98a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1b6d9349_ba8c00db",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 2
@@ -87,6 +110,29 @@
         "startChar": 14,
         "endLine": 755,
         "endChar": 16
+      },
+      "revId": "60d86d0d3b85db08711d909456667afd1cba98a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e50c9983_da294850",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 786,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-05T10:57:13Z",
+      "side": 1,
+      "message": "The code above seems completely pointless. It\u0027s not really clear what\u0027s the purpose of this patch. Could you squash it with the linked-list one?",
+      "range": {
+        "startLine": 783,
+        "startChar": 1,
+        "endLine": 786,
+        "endChar": 2
       },
       "revId": "60d86d0d3b85db08711d909456667afd1cba98a6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
