@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98f8b21d_dc4a0591",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1027,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T22:02:59Z",
+      "side": 1,
+      "message": "use dev-\u003evid",
+      "range": {
+        "startLine": 1027,
+        "startChar": 55,
+        "endLine": 1027,
+        "endChar": 66
+      },
+      "revId": "9a539284639535009e2c02bb228ead2cca31a3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e5a4da5_39cc767a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-05T22:02:59Z",
+      "side": 1,
+      "message": "those callbacks should be static and should invoke callback from struct spdk_vhost_dev_backend.",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 47
+      },
+      "revId": "9a539284639535009e2c02bb228ead2cca31a3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
