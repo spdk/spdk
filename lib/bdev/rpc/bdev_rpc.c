@@ -36,11 +36,35 @@
 
 #include "spdk_internal/bdev.h"
 
+#define SPDK_ALIAS_MAX_LEN	20
+
 static void
 spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 			struct spdk_bdev *bdev)
 {
+	size_t cnt;
+	uint i;
+	char **list;
+
 	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "aliases");
+	spdk_json_write_array_begin(w);
+
+	list = spdk_bdev_get_aliases(bdev, &cnt);
+
+	for (i = 0; i < cnt; i++) {
+		spdk_json_write_string(w, list[i]);
+	}
+
+	if (list != NULL) {
+		for (i = cnt; i > 0; i--) {
+			free(list[i - 1]);
+		}
+		free(list);
+	}
+
+	spdk_json_write_array_end(w);
 
 	spdk_json_write_name(w, "name");
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));

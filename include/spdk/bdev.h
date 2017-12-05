@@ -251,6 +251,15 @@ const char *spdk_bdev_get_name(const struct spdk_bdev *bdev);
 const char *spdk_bdev_get_product_name(const struct spdk_bdev *bdev);
 
 /**
+ * Get block device aliases list.
+ *
+ * \param bdev Block device to query.
+ * \param cnt Pointer to list size
+ * \return Aliases list of bdev as a null-terminated strings.
+ */
+char **spdk_bdev_get_aliases(const struct spdk_bdev *bdev, size_t *cnt);
+
+/**
  * Get block device logical block size.
  *
  * \param bdev Block device to query.
