@@ -81,6 +81,24 @@
       "revId": "124b916e6b4a9f921bb7df071058b19ba5fc59c2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b51b4af_a7e2444e",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-05T18:07:37Z",
+      "side": 1,
+      "message": "OK - I\u0027m fine with this.  I agree that putting flags in spdk_bs_dev to indicate which operations are supported might be better but this will work.",
+      "parentUuid": "ef89470b_255f7e7b",
+      "revId": "124b916e6b4a9f921bb7df071058b19ba5fc59c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
