@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51be9009_1d183283",
+        "filename": "test/vhost/readonly/enabled_readonly_vm.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-06T08:37:06Z",
+      "side": 1,
+      "message": "too much",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 54,
+        "endChar": 4
+      },
+      "revId": "2540906ee1986a9541ad7f084f81d1e9593bc754",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b45b395f_28502e47",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-06T08:37:06Z",
+      "side": 1,
+      "message": "make this --vm-image",
+      "range": {
+        "startLine": 23,
+        "startChar": 13,
+        "endLine": 23,
+        "endChar": 21
+      },
+      "revId": "2540906ee1986a9541ad7f084f81d1e9593bc754",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "666a050c_4ded301c",
+        "filename": "test/vhost/readonly/readonly.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-06T08:37:06Z",
+      "side": 1,
+      "message": "-\u003e --disk",
+      "range": {
+        "startLine": 24,
+        "startChar": 11,
+        "endLine": 24,
+        "endChar": 17
+      },
+      "revId": "2540906ee1986a9541ad7f084f81d1e9593bc754",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
