@@ -272,8 +272,7 @@ blob_create(void)
 {
 	struct spdk_blob_store *bs;
 	struct spdk_bs_dev *dev;
-
-
+	struct spdk_blob_opts opts;
 
 	dev = init_dev();
 
@@ -286,6 +285,11 @@ blob_create(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 
+	spdk_blob_opts_init(&opts);
+	opts.thin_provision = true;
+	spdk_bs_md_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
 
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
