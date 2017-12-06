@@ -83,6 +83,12 @@ _spdk_bs_release_cluster(struct spdk_blob_store *bs, uint32_t cluster_num)
 	bs->num_free_clusters++;
 }
 
+void
+spdk_blob_opts_init(struct spdk_blob_opts *opts)
+{
+	opts->num_clusters = 0;
+}
+
 static struct spdk_blob_data *
 _spdk_blob_alloc(struct spdk_blob_store *bs, spdk_blob_id id)
 {
@@ -2570,12 +2576,13 @@ _spdk_bs_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
-void spdk_bs_create_blob(struct spdk_blob_store *bs,
-			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts *opts,
+			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_data	*blob;
 	uint32_t		page_idx;
 	struct spdk_bs_cpl 	cpl;
+	struct spdk_blob_opts	opts_default;
 	spdk_bs_sequence_t	*seq;
 	spdk_blob_id		id;
 
@@ -2596,6 +2603,12 @@ void spdk_bs_create_blob(struct spdk_blob_store *bs,
 		return;
 	}
 
+	if (!opts) {
+		spdk_blob_opts_init(&opts_default);
+		opts = &opts_default;
+	}
+
+	spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
@@ -2609,6 +2622,12 @@ void spdk_bs_create_blob(struct spdk_blob_store *bs,
 	}
 
 	_spdk_blob_persist(seq, blob, _spdk_bs_create_blob_cpl, blob);
+}
+
+void spdk_bs_create_blob(struct spdk_blob_store *bs,
+			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	spdk_bs_create_blob_ext(bs, NULL, cb_fn, cb_arg);
 }
 
 /* END spdk_bs_create_blob */
