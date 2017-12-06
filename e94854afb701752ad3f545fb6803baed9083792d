@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9c786d2_f4c414ba",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1599,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-06T05:00:00Z",
+      "side": 1,
+      "message": "I think the old name of this function was better - this name seems to indicate it is resetting the channel but that\u0027s not really the case, this is done after the channel has been effectively reset.",
+      "revId": "e94854afb701752ad3f545fb6803baed9083792d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
