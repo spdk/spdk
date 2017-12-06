@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "d46b9f47_12112ba6",
+        "filename": "lib/blob/bdev/blob_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-06T07:49:43Z",
+      "side": 1,
+      "message": "Taking into account your comment below on unmaps within batches - this solution will work in this case.",
+      "parentUuid": "d48b7c38_a4980f0e",
+      "range": {
+        "startLine": 146,
+        "startChar": 5,
+        "endLine": 146,
+        "endChar": 74
+      },
+      "revId": "124b916e6b4a9f921bb7df071058b19ba5fc59c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6fa0137_328671c4",
         "filename": "lib/blob/bdev/blob_bdev.c",
         "patchSetId": 1
