@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "c6f54cf3_ab0d393e",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-06T04:32:22Z",
+      "side": 1,
+      "message": "Remvoe mutex,there is no competence when operating this global var, since both nbd RPC and nbd test app would start spdk_nbd_disk on spdk app start core in this series of patches.",
+      "range": {
+        "startLine": 83,
+        "startChar": 1,
+        "endLine": 83,
+        "endChar": 23
+      },
+      "revId": "9943aaa5764e1831f569e49784c283ba7b99da7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "179323c1_613cf933",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 7
@@ -19,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "cfc43f6c_ac35f35b",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-06T04:32:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "179323c1_613cf933",
+      "revId": "9943aaa5764e1831f569e49784c283ba7b99da7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "804d2091_bfaad9c4",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 7
@@ -30,6 +71,24 @@
       "writtenOn": "2017-12-05T16:53:34Z",
       "side": 1,
       "message": "Small formatting nitpick: add a blank line between variable declarations and code.",
+      "revId": "9943aaa5764e1831f569e49784c283ba7b99da7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8aacc393_e7c5c102",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-06T04:32:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "804d2091_bfaad9c4",
       "revId": "9943aaa5764e1831f569e49784c283ba7b99da7a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
