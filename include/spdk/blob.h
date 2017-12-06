@@ -209,6 +209,7 @@ uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 struct spdk_blob_opts {
 	size_t  num_clusters;
 	bool	read_only;
+	bool    thin_provision;
 	int	xattr_count;
 	char	**xattr_names;
 	void	(*get_xattr_value)(void *arg, const char *name,
