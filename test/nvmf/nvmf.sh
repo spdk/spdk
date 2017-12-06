@@ -37,10 +37,6 @@ if [ $SPDK_TEST_NVML -eq 1 ]; then
 	fi
 fi
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_test test/nvmf/multiconnection/multiconnection.sh
-fi
-
 timing_enter host
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
@@ -57,6 +53,10 @@ run_test test/nvmf/host/fio.sh
 timing_exit host
 trap - SIGINT SIGTERM EXIT
 kill_stub
+
+#if [ $RUN_NIGHTLY -eq 1 ]; then
+	run_test test/nvmf/multiconnection/multiconnection.sh
+#fi
 
 # TODO: enable nvme device detachment for multi-process so that
 #  we can use the stub for this test
