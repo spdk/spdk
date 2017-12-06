@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e427cf06_9016b2f3",
+        "filename": "test/unit/lib/scsi/dev.c/dev_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-06T04:46:27Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nI think instead of adding more tests around spdk_scsi_lun_claim, that we should remove the lun-\u003eclaimed flag.\n\nThis flag is from a long time ago and is no longer needed.\n\nMaybe add a patch before this one, cleaning up lun.c and removing the claimed flag, and then adjust the unit tests in this file?\n\n-Jim",
+      "revId": "91725abab9b75ae0297dbf4242e4f4290e3033d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
