@@ -16,6 +16,24 @@
       "revId": "6cce3666ea105e0584f94984e7a7b8091eafa0b3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4bf068c1_691b0b48",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-06T23:39:35Z",
+      "side": 0,
+      "message": "I had originally added them when setting up the unit tests to catch calls to unimplemented stubs, but now that we have the mock framework, it shouldn\u0027t be a problem to set the mocked return value to whatever we want.",
+      "parentUuid": "50e73137_a00f93eb",
+      "revId": "6cce3666ea105e0584f94984e7a7b8091eafa0b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
