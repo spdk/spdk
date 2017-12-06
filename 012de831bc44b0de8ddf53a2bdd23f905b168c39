@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd3d6871_68d548c6",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-06T23:36:00Z",
+      "side": 1,
+      "message": "You could do this instead:\n\nif (spdk_nbd_disk_find_by_nbd_path(nbd-\u003enbd_path)) {\n  SPDK_NOTICELOG(\"%s is already exported\\n\", nbd-\u003enbd_path);\n  return -1;\n}",
+      "revId": "012de831bc44b0de8ddf53a2bdd23f905b168c39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47a1e01f_728870b3",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-06T23:36:00Z",
+      "side": 1,
+      "message": "this isn\u0027t really needed - just return -1 directly instead of goto out",
+      "revId": "012de831bc44b0de8ddf53a2bdd23f905b168c39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
