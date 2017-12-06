@@ -42,6 +42,7 @@
 #define SPDK_UEVENT_H_
 
 #define SPDK_NVME_UEVENT_SUBSYSTEM_UIO 1
+#define SPDK_NVME_UEVENT_SUBSYSTEM_VFIO 2
 
 enum spdk_nvme_uevent_action {
 	SPDK_NVME_UEVENT_ADD = 0,
