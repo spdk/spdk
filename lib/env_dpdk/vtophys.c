@@ -157,7 +157,7 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 	paddr = rte_mem_virt2phy((void *)vaddr);
 	if (paddr == 0) {
 		/*
-		 * The vaddr was valid but returned 0.  Touch the page
+		 * The vaddr was valid but returned 0. Touch the page
 		 * to ensure a backing page gets assigned, then call
 		 * rte_mem_virt2phy() again.
 		 */

@@ -85,6 +85,8 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 	opts->xattr_count = 0;
 	opts->xattr_names = NULL;
 	opts->get_xattr_value = NULL;
+	opts->num_clusters = 0;
+	opts->thin_provision = false;
 }
 
 static struct spdk_blob *
@@ -2641,6 +2643,14 @@ void spdk_bs_md_create_blob_ext(struct spdk_blob_store *bs, struct spdk_blob_opt
 		opts = &opts_default;
 	}
 
+	if (opts->thin_provision) {
+		blob->invalid_flags |= SPDK_BLOB_THIN_PROV;
+	}
+
+	if (opts->num_clusters) {
+		spdk_bs_md_resize_blob(blob, opts->num_clusters);
+	}
+
 	_spdk_bs_md_set_xattrs(blob, opts);
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
@@ -2828,6 +2838,19 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 	_spdk_blob_load(seq, blob, _spdk_bs_md_open_blob_cpl, blob);
 }
+
+/* START spdk_bs_md_set_read_only */
+void spdk_bs_md_set_read_only(struct spdk_blob *blob, bool read_only)
+{
+	blob->data_ro = read_only;
+	blob->data_ro_flags |= SPDK_BLOB_DATA_READ_ONLY;
+
+	blob->md_ro = read_only;
+	blob->md_ro_flags |= SPDK_BLOB_MD_READ_ONLY;
+
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+}
+/* END spdk_bs_md_set_read_only */
 
 /* START spdk_bs_md_sync_blob */
 static void
