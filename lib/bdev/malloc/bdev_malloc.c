@@ -381,6 +381,8 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 		return NULL;
 	}
 
+	TAILQ_INIT(&mdisk->disk.aliases);
+
 	if (name) {
 		mdisk->disk.name = strdup(name);
 	} else {
