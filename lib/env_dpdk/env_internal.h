@@ -86,5 +86,7 @@ int spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx, spdk_pci_enum_cb enum_
 
 void spdk_mem_map_init(void);
 void spdk_vtophys_init(void);
+void spdk_vtophys_get_ref(void);
+void spdk_vtophys_put_ref(void);
 
 #endif
