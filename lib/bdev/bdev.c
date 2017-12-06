@@ -1321,8 +1321,8 @@ _spdk_bdev_reset_dev(void *io_device, void *ctx, int status)
 }
 
 static int
-_spdk_bdev_reset_abort_channel(void *io_device, struct spdk_io_channel *ch,
-			       void *ctx)
+_spdk_bdev_reset_freeze_channel(void *io_device, struct spdk_io_channel *ch,
+				void *ctx)
 {
 	struct spdk_bdev_channel	*channel;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
@@ -1344,7 +1344,7 @@ _spdk_bdev_start_reset(void *ctx)
 {
 	struct spdk_bdev_channel *ch = ctx;
 
-	spdk_for_each_channel(ch->bdev, _spdk_bdev_reset_abort_channel,
+	spdk_for_each_channel(ch->bdev, _spdk_bdev_reset_freeze_channel,
 			      ch, _spdk_bdev_reset_dev);
 }
 
@@ -1369,19 +1369,6 @@ _spdk_bdev_channel_start_reset(struct spdk_bdev_channel *ch)
 		_spdk_bdev_start_reset(ch);
 	}
 	pthread_mutex_unlock(&bdev->mutex);
-}
-
-static int
-_spdk_bdev_complete_reset_channel(void *io_device, struct spdk_io_channel *_ch, void *ctx)
-{
-	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
-
-	ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
-	if (!TAILQ_EMPTY(&ch->queued_resets)) {
-		_spdk_bdev_channel_start_reset(ch);
-	}
-
-	return 0;
 }
 
 int
@@ -1595,6 +1582,32 @@ _spdk_bdev_io_complete(void *ctx)
 	bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
 }
 
+static void
+_spdk_bdev_reset_complete(void *io_device, void *ctx, int status)
+{
+	struct spdk_bdev_io *bdev_io = ctx;
+
+	if (bdev_io->u.reset.ch_ref != NULL) {
+		spdk_put_io_channel(bdev_io->u.reset.ch_ref);
+		bdev_io->u.reset.ch_ref = NULL;
+	}
+
+	_spdk_bdev_io_complete(bdev_io);
+}
+
+static int
+_spdk_bdev_unfreeze_channel(void *io_device, struct spdk_io_channel *_ch, void *ctx)
+{
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+
+	ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
+	if (!TAILQ_EMPTY(&ch->queued_resets)) {
+		_spdk_bdev_channel_start_reset(ch);
+	}
+
+	return 0;
+}
+
 void
 spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status status)
 {
@@ -1604,18 +1617,23 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	bdev_io->status = status;
 
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
+		bool unlock_channels = false;
+
 		if (status == SPDK_BDEV_IO_STATUS_NOMEM) {
 			SPDK_ERRLOG("NOMEM returned for reset\n");
 		}
 		pthread_mutex_lock(&bdev->mutex);
 		if (bdev_io == bdev->reset_in_progress) {
 			bdev->reset_in_progress = NULL;
+			unlock_channels = true;
 		}
 		pthread_mutex_unlock(&bdev->mutex);
-		if (bdev_io->u.reset.ch_ref != NULL) {
-			spdk_put_io_channel(bdev_io->u.reset.ch_ref);
+
+		if (unlock_channels) {
+			spdk_for_each_channel(bdev, _spdk_bdev_unfreeze_channel, bdev_io,
+					      _spdk_bdev_reset_complete);
+			return;
 		}
-		spdk_for_each_channel(bdev, _spdk_bdev_complete_reset_channel, NULL, NULL);
 	} else {
 		assert(bdev_ch->io_outstanding > 0);
 		bdev_ch->io_outstanding--;
@@ -1672,7 +1690,7 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	}
 #endif
 
-	if (bdev_io->in_submit_request || bdev_io->type == SPDK_BDEV_IO_TYPE_RESET) {
+	if (bdev_io->in_submit_request) {
 		/*
 		 * Defer completion to avoid potential infinite recursion if the
 		 * user's completion callback issues a new I/O.
