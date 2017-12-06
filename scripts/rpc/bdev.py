@@ -59,11 +59,11 @@ def construct_error_bdev(args):
     args.client.call('construct_error_bdev', params, verbose=args.verbose)
 
 
-def get_bdevs(args):
+def get_bdevs(args, client):
     params = {}
-    if args.name:
-        params['name'] = args.name
-    print_dict(args.client.call('get_bdevs', params))
+    if 'name' in args.keys():
+        params['name'] = args['name']
+    print_dict(client.call('get_bdevs', params))
 
 
 def delete_bdev(args):

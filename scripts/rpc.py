@@ -342,5 +342,5 @@ if __name__ == "__main__":
 
     # PARSE ARGS
     args = parser.parse_args()
-    args.client = rpc.client.JSONRPCClient(args.server_addr, args.port)
-    args.func(args)
+    client = rpc.client.JSONRPCClient(args.server_addr, args.port)
+    args.func(vars(args), client)
