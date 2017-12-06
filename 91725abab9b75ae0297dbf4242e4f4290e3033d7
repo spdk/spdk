@@ -16,6 +16,24 @@
       "revId": "91725abab9b75ae0297dbf4242e4f4290e3033d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48070e54_6a76659c",
+        "filename": "test/unit/lib/scsi/dev.c/dev_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-06T07:27:54Z",
+      "side": 1,
+      "message": "Thank you for providing very nice idea!\nIt simplified both library and test code much before adding this patch.",
+      "parentUuid": "e427cf06_9016b2f3",
+      "revId": "91725abab9b75ae0297dbf4242e4f4290e3033d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
