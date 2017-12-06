@@ -220,7 +220,18 @@ uint64_t spdk_blob_get_num_pages(struct spdk_blob *blob);
 /* Return the number of clusters allocated to the blob */
 uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 
-/* Create a new blob with initial size of 'sz' clusters. */
+struct spdk_blob_opts {
+	size_t num_clusters;
+};
+
+/* Initialize an spdk_blob_opts structure to the default blob option values. */
+void spdk_blob_opts_init(struct spdk_blob_opts *opts);
+
+/* Create a new blob with options. */
+void spdk_bs_md_create_blob_ext(struct spdk_blob_store *bs, struct spdk_blob_opts *o,
+				spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+
+/* Create a new blob with initial size of 0 clusters. */
 void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
 			    spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
