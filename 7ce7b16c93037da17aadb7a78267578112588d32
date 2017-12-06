@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "7dad44cf_f7931faa",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011274
+      },
+      "writtenOn": "2017-12-06T22:27:00Z",
+      "side": 1,
+      "message": "\u003e Thanks Paul - this really helps me understand why Fujitsu has\n \u003e submitted this patch.\n \u003e \n \u003e Can you explain a bit more what is meant by \"suspended IO\"?\n \u003e \n\nI was referring to some comments Ben made at the last meetup when we were discussing virtual controllers. He suggested suspending current IOs for virtual controllers if an adminq command was sent to the underlying physical controller that changed the configuration. You can check with Ben to see if this PR would be useful.\n\n \u003e Here is another possibility - what if we had an RPC to create a\n \u003e second poller for the adminq?  You\u0027ll need to make sure it runs on\n \u003e the same thread as the AEN poller.  Then you could start this\n \u003e poller before submitting the FW download command and stop it once\n \u003e its done.  Then we don\u0027t have to muck with changing existing\n \u003e pollers.\n\nIf Ben says he doesn\u0027t need this, then we can take a look at this approach.",
+      "parentUuid": "012c3601_9f3de0da",
+      "revId": "7ce7b16c93037da17aadb7a78267578112588d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d94dbc33_412e8caf",
         "filename": "lib/event/reactor.c",
         "patchSetId": 3
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "SPDK already depends on invariant TSC for timers - we only store the number of ticks and use that to determine when a timer expires and where to put it in the list for rescheduling.\n\nIntel CPUs have had invariant TSC for a long time - are there other architectures that do not provide an invariant TSC?",
       "parentUuid": "9fa85516_999c4cdc",
+      "revId": "7ce7b16c93037da17aadb7a78267578112588d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91f2c828_2432f81e",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011274
+      },
+      "writtenOn": "2017-12-06T22:27:00Z",
+      "side": 1,
+      "message": "\u003e SPDK already depends on invariant TSC for timers - we only store\n \u003e the number of ticks and use that to determine when a timer expires\n \u003e and where to put it in the list for rescheduling.\n \u003e \n \u003e Intel CPUs have had invariant TSC for a long time - are there other\n \u003e architectures that do not provide an invariant TSC?\n\nYes, you are right about invariant TSC. But for some reason in our testing we sometimes saw an odd number from spdk_get_ticks_hz() which resulted in returning the original value minus 1 due to rounding from the division. It\u0027s not that big of a deal, so we can do the calculation if you want. Also, we wouldn\u0027t need this if we go with the second poller approach.",
+      "parentUuid": "5cd94eaf_10207758",
       "revId": "7ce7b16c93037da17aadb7a78267578112588d32",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
