@@ -32,9 +32,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-
+#include "spdk/env.h"
 #include "spdk/log.h"
 #include "iscsi/conn.h"
 #include "iscsi/task.h"
@@ -47,7 +45,7 @@ spdk_iscsi_task_free(struct spdk_scsi_task *scsi_task)
 	spdk_iscsi_task_disassociate_pdu(task);
 	assert(task->conn->pending_task_cnt > 0);
 	task->conn->pending_task_cnt--;
-	rte_mempool_put(g_spdk_iscsi.task_pool, (void *)task);
+	spdk_mempool_put(g_spdk_iscsi.task_pool, (void *)task);
 }
 
 struct spdk_iscsi_task *
@@ -55,10 +53,9 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent
 		    spdk_scsi_task_cpl cpl_fn)
 {
 	struct spdk_iscsi_task *task;
-	int rc;
 
-	rc = rte_mempool_get(g_spdk_iscsi.task_pool, (void **)&task);
-	if ((rc < 0) || !task) {
+	task = spdk_mempool_get(g_spdk_iscsi.task_pool);
+	if (!task) {
 		SPDK_ERRLOG("Unable to get task\n");
 		abort();
 	}

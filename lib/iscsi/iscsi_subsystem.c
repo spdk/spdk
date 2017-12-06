@@ -390,12 +390,10 @@ spdk_iscsi_initialize_task_pool(void)
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 
 	/* create scsi_task pool */
-	iscsi->task_pool = rte_mempool_create("SCSI_TASK_Pool",
-					      DEFAULT_TASK_POOL_SIZE,
-					      sizeof(struct spdk_iscsi_task),
-					      128, 0,
-					      NULL, NULL, NULL, NULL,
-					      SOCKET_ID_ANY, 0);
+	iscsi->task_pool = spdk_mempool_create("SCSI_TASK_Pool",
+					       DEFAULT_TASK_POOL_SIZE,
+					       sizeof(struct spdk_iscsi_task),
+					       128, SOCKET_ID_ANY);
 	if (!iscsi->task_pool) {
 		SPDK_ERRLOG("create task pool failed\n");
 		return -1;
@@ -483,7 +481,7 @@ spdk_iscsi_free_pools(void)
 	rte_mempool_free(iscsi->session_pool);
 	rte_mempool_free(iscsi->pdu_immediate_data_pool);
 	rte_mempool_free(iscsi->pdu_data_out_pool);
-	rte_mempool_free(iscsi->task_pool);
+	spdk_mempool_free(iscsi->task_pool);
 }
 
 void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
