@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "012c3601_9f3de0da",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-06T21:55:03Z",
+      "side": 1,
+      "message": "Thanks Paul - this really helps me understand why Fujitsu has submitted this patch.\n\nCan you explain a bit more what is meant by \"suspended IO\"?\n\nHere is another possibility - what if we had an RPC to create a second poller for the adminq?  You\u0027ll need to make sure it runs on the same thread as the AEN poller.  Then you could start this poller before submitting the FW download command and stop it once its done.  Then we don\u0027t have to muck with changing existing pollers.",
+      "parentUuid": "c0540dd9_99eef7c7",
+      "revId": "7ce7b16c93037da17aadb7a78267578112588d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d94dbc33_412e8caf",
         "filename": "lib/event/reactor.c",
         "patchSetId": 3
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "The purpose of this member is to save the original value so that it can restored. I don\u0027t think we can guarantee that spdk_get_ticks_hz() will always return the same value or be a multiple of period * ticks_per_us. Therefore, recalculation can result it a value slightly from the original.",
       "parentUuid": "d94dbc33_412e8caf",
+      "revId": "7ce7b16c93037da17aadb7a78267578112588d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cd94eaf_10207758",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-06T21:55:03Z",
+      "side": 1,
+      "message": "SPDK already depends on invariant TSC for timers - we only store the number of ticks and use that to determine when a timer expires and where to put it in the list for rescheduling.\n\nIntel CPUs have had invariant TSC for a long time - are there other architectures that do not provide an invariant TSC?",
+      "parentUuid": "9fa85516_999c4cdc",
       "revId": "7ce7b16c93037da17aadb7a78267578112588d32",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
