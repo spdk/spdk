@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bcb4c374_f59f904a",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-06T21:34:15Z",
+      "side": 1,
+      "message": "These modules should only be necessary when using the kernel NVMe-oF target, and they shouldn\u0027t be loaded if the user wants to run the SPDK target.  Can you add a clarifying comment here, or move this to a different section of the docs? (This file is about running the SPDK nvmf_tgt, not the kernel target.)",
+      "revId": "fea93ca475828a1ac02961d97fe016650d7b6592",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
