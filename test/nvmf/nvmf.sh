@@ -37,9 +37,9 @@ if [ $SPDK_TEST_NVML -eq 1 ]; then
 	fi
 fi
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
+#if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test test/nvmf/multiconnection/multiconnection.sh
-fi
+#fi
 
 timing_enter host
 
