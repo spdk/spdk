@@ -22,6 +22,30 @@
       "revId": "56f61c8feb8f64786f14c720060b15fc1bcbbcdb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d088c6c1_e441f227",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-06T22:50:49Z",
+      "side": 0,
+      "message": "I think lun name is already compared on lines 298-299 - so I think it is ok to just remove these lines",
+      "parentUuid": "a2cfd72e_55a838ea",
+      "range": {
+        "startLine": 321,
+        "startChar": 1,
+        "endLine": 324,
+        "endChar": 84
+      },
+      "revId": "56f61c8feb8f64786f14c720060b15fc1bcbbcdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
