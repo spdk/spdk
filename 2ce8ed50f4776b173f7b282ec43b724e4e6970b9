@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7bd2837_abfef1e9",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-06T08:14:12Z",
+      "side": 1,
+      "message": "You should not change the name here, it\u0027s not compatible with the specification.",
+      "revId": "2ce8ed50f4776b173f7b282ec43b724e4e6970b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ff42c85_f2127a87",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-06T08:14:12Z",
+      "side": 1,
+      "message": "you can combine with the previous tests, if the NVMe controller exist, just skip the tests, then you can move LD_PRELOAD outside of if section.",
+      "revId": "2ce8ed50f4776b173f7b282ec43b724e4e6970b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
