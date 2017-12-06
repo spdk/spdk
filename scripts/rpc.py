@@ -574,6 +574,16 @@ p = subparsers.add_parser('stop_nbd_disk', help='Stop a nbd disk')
 p.add_argument('nbd_device', help='Nbd device name to be stopped. Example: /dev/nbd0.')
 p.set_defaults(func=stop_nbd_disk)
 
+def get_nbd_disks(args):
+    params = {}
+    if args.nbd_device:
+        params['nbd_device'] = args.nbd_device
+    print_dict(jsonrpc_call('get_nbd_disks', params))
+
+p = subparsers.add_parser('get_nbd_disks', help='Display current nbd device list or required nbd device')
+p.add_argument('-p', '--nbd_device', help="Path of the nbd device. Example: /dev/nbd0", required=False)
+p.set_defaults(func=get_nbd_disks)
+
 def get_nvmf_subsystems(args):
     print_dict(jsonrpc_call('get_nvmf_subsystems'))
 

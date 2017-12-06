@@ -162,3 +162,90 @@ invalid:
 }
 
 SPDK_RPC_REGISTER("stop_nbd_disk", spdk_rpc_stop_nbd_disk)
+
+static void
+spdk_rpc_dump_nbd_info(struct spdk_json_write_ctx *w,
+		       struct spdk_nbd_disk *nbd)
+{
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "nbd_device");
+	spdk_json_write_string(w, spdk_nbd_disk_get_nbd_path(nbd));
+
+	spdk_json_write_name(w, "bdev_name");
+	spdk_json_write_string(w, spdk_nbd_disk_get_bdev_name(nbd));
+
+	spdk_json_write_object_end(w);
+}
+
+struct rpc_get_nbd_disks {
+	char *nbd_device;
+};
+
+static void
+free_rpc_get_nbd_disks(struct rpc_get_nbd_disks *r)
+{
+	free(r->nbd_device);
+}
+
+static const struct spdk_json_object_decoder rpc_get_nbd_disks_decoders[] = {
+	{"nbd_device", offsetof(struct rpc_get_nbd_disks, nbd_device), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_get_nbd_disks(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
+{
+	struct rpc_get_nbd_disks req = {};
+	struct spdk_json_write_ctx *w;
+	struct spdk_nbd_disk *nbd = NULL;
+
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_get_nbd_disks_decoders,
+					    SPDK_COUNTOF(rpc_get_nbd_disks_decoders),
+					    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			goto invalid;
+		} else {
+			if (req.nbd_device == NULL) {
+				SPDK_ERRLOG("missing nbd_device param\n");
+				goto invalid;
+			}
+
+			nbd = spdk_nbd_disk_find_by_nbd_path(req.nbd_device);
+			if (nbd == NULL) {
+				SPDK_ERRLOG("nbd device '%s' does not exist\n", req.nbd_device);
+				goto invalid;
+			}
+
+			free_rpc_get_nbd_disks(&req);
+		}
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	if (nbd != NULL) {
+		spdk_rpc_dump_nbd_info(w, nbd);
+	} else {
+		for (nbd = spdk_nbd_disk_first(); nbd != NULL; nbd = spdk_nbd_disk_next(nbd)) {
+			spdk_rpc_dump_nbd_info(w, nbd);
+		}
+	}
+
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+
+	free_rpc_get_nbd_disks(&req);
+}
+SPDK_RPC_REGISTER("get_nbd_disks", spdk_rpc_get_nbd_disks)
