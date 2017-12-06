@@ -112,6 +112,16 @@ struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		const char *name);
 
 /**
+ * \brief Returns the address of the tsc variable saved in the thread
+ */
+uint64_t *spdk_get_thread_tsc_addr(void);
+
+/**
+ * \brief Returns the tsc value for the calling thread.
+ */
+uint64_t spdk_get_thread_tsc(struct spdk_thread *th);
+
+/**
  * \brief Releases any resources related to the calling thread for I/O channel allocation.
  *
  * All I/O channel references related to the calling thread must be released using
