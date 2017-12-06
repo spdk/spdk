@@ -16,6 +16,24 @@
       "revId": "5a4cf9a2b3f143dfb2b404316245eb7bb3f8b611",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0266db89_dbeddda4",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-06T04:36:44Z",
+      "side": 1,
+      "message": "yes, this should not belong this patch.\nMaybe it is more appropriate putting into patch (https://review.gerrithub.io/#/c/390170/)",
+      "parentUuid": "b0daa85f_7878f4d9",
+      "revId": "5a4cf9a2b3f143dfb2b404316245eb7bb3f8b611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
