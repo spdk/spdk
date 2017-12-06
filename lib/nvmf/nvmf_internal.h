@@ -125,10 +125,12 @@ struct spdk_nvmf_request {
 };
 
 struct spdk_nvmf_ns {
+	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	uint32_t id;
 	bool allocated;
+	bool is_removed;
 };
 
 enum spdk_nvmf_qpair_type {
@@ -217,6 +219,9 @@ int spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 				       struct spdk_nvmf_subsystem *subsystem);
 int spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem);
+int
+spdk_nvmf_poll_group_remove_ns(struct spdk_nvmf_poll_group *group,
+			       struct spdk_nvmf_ns *ns);
 int spdk_nvmf_poll_group_add_ns(struct spdk_nvmf_poll_group *group,
 				struct spdk_nvmf_subsystem *subsystem,
 				struct spdk_nvmf_ns *ns);
