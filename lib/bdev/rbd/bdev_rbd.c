@@ -515,6 +515,8 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 		return NULL;
 	}
 
+	TAILQ_INIT(&rbd->disk.aliases);
+
 	rbd->disk.name = spdk_sprintf_alloc("Ceph%d", bdev_rbd_count);
 	if (!rbd->disk.name) {
 		bdev_rbd_free(rbd);
