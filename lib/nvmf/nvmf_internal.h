@@ -130,6 +130,7 @@ struct spdk_nvmf_ns {
 	struct spdk_bdev_desc *desc;
 	uint32_t id;
 	bool allocated;
+	bool is_removed;
 };
 
 enum spdk_nvmf_qpair_type {
