@@ -226,12 +226,20 @@ spdk_bdev_next_leaf(struct spdk_bdev *prev)
 struct spdk_bdev *
 spdk_bdev_get_by_name(const char *bdev_name)
 {
+	struct spdk_bdev_alias *tmp;
 	struct spdk_bdev *bdev = spdk_bdev_first();
 
 	while (bdev != NULL) {
 		if (strcmp(bdev_name, bdev->name) == 0) {
 			return bdev;
 		}
+
+		TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
+			if (strcmp(bdev_name, tmp->alias) == 0) {
+				return bdev;
+			}
+		}
+
 		bdev = spdk_bdev_next(bdev);
 	}
 
@@ -856,6 +864,11 @@ spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
 		if (strcmp(alias, tmp->alias) == 0) {
 			return -EEXIST;
 		}
+	}
+
+	if (spdk_bdev_get_by_name(alias)) {
+		SPDK_ERRLOG("Bdev name/alias: %s already exists\n", alias);
+		return -EEXIST;
 	}
 
 	tmp = calloc(1, sizeof(*tmp));
@@ -1844,6 +1857,7 @@ static int
 _spdk_bdev_register(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_module_if *module;
+	struct spdk_bdev_alias *tmp;
 
 	assert(bdev->module != NULL);
 
@@ -1857,14 +1871,19 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 		return -EEXIST;
 	}
 
+	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
+		if (spdk_bdev_get_by_name(tmp->alias)) {
+			SPDK_ERRLOG("Bdev alias:%s already exists\n", bdev->name);
+			return -EEXIST;
+		}
+	}
+
 	bdev->status = SPDK_BDEV_STATUS_READY;
 
 	TAILQ_INIT(&bdev->open_descs);
 
 	TAILQ_INIT(&bdev->vbdevs);
 	TAILQ_INIT(&bdev->base_bdevs);
-
-	TAILQ_INIT(&bdev->aliases);
 
 	bdev->reset_in_progress = NULL;
 
@@ -2342,6 +2361,8 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 			 char *name, uint64_t offset_blocks, uint64_t num_blocks,
 			 char *product_name)
 {
+	TAILQ_INIT(&part->bdev.aliases);
+
 	part->bdev.name = name;
 	part->bdev.blocklen = base->bdev->blocklen;
 	part->bdev.blockcnt = num_blocks;
