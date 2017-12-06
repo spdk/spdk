@@ -51,6 +51,8 @@
 #define SPDK_BLOB_OPTS_MAX_MD_OPS 32
 #define SPDK_BLOB_OPTS_MAX_CHANNEL_OPS 512
 #define SPDK_BLOB_BLOBID_HIGH_BIT (1ULL << 32)
+#define SPDK_BLOB_THIN_PROV (1ULL << 0)
+#define SPDK_BLOB_INVALID_FLAGS_MASK	SPDK_BLOB_THIN_PROV
 
 struct spdk_xattr {
 	/* TODO: reorder for best packing */

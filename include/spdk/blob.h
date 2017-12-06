@@ -219,6 +219,8 @@ uint64_t spdk_blob_get_num_pages(struct spdk_blob *blob);
 uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 
 struct spdk_blob_opts {
+	size_t  size;
+	bool    thin_provision;
 	int	xattr_count;
 	char	**xattr_names;
 	void	(*get_xattr_value)(void *arg, const char *name,
@@ -249,6 +251,9 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
  * These changes are not persisted to disk until
  * spdk_bs_md_sync_blob() is called. */
 int spdk_bs_md_resize_blob(struct spdk_blob *blob, size_t sz);
+
+/* Set blob as read only */
+void spdk_bs_md_set_read_only(struct spdk_blob *blob, bool read_only);
 
 /* Sync a blob */
 /* Make a blob persistent. This applies to open, resize, set xattr,
