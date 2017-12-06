@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b58553e9_2796ba2b",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-06T16:23:18Z",
+      "side": 1,
+      "message": "You are silently discarding \u0027const\u0027. This why spdk_bdev_get_aliases() should not return pointer to internal list.",
+      "range": {
+        "startLine": 52,
+        "startChar": 1,
+        "endLine": 52,
+        "endChar": 57
+      },
+      "revId": "3eb33640623a9a52b78f809a7f664506a4c83193",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
