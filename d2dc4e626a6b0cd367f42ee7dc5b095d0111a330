@@ -16,6 +16,24 @@
       "revId": "d2dc4e626a6b0cd367f42ee7dc5b095d0111a330",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95009ebf_25562914",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1206,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-06T22:57:55Z",
+      "side": 1,
+      "message": "I was afraid you would say that.\nI\u0027ll split it then",
+      "parentUuid": "b364e003_bcd3ae7e",
+      "revId": "d2dc4e626a6b0cd367f42ee7dc5b095d0111a330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
