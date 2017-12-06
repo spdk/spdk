@@ -450,26 +450,26 @@ spdk_nvmf_subsystem_remove_ns_from_poll_group(void *io_device,
 	return spdk_nvmf_poll_group_remove_ns(group, ns);
 }
 
-uint32_t
+	uint32_t
 spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
 	struct spdk_nvmf_ns *ns;
 
 	ns = &subsystem->ns[nsid - 1];
 	spdk_for_each_channel(ns->subsystem->tgt,
-			      spdk_nvmf_subsystem_remove_ns_from_poll_group,
-			      ns,
-			      spdk_nvmf_remove_ns_done);
+			spdk_nvmf_subsystem_remove_ns_from_poll_group,
+			ns,
+			spdk_nvmf_remove_ns_done);
 	return 0;
 }
 
-static void
+	static void
 spdk_nvmf_subsystem_add_ns_done(void *io_device, void *ctx, int status)
 {
 	return;
 }
 
-static int
+	static int
 spdk_nvmf_subsystem_ns_update_poll_group(void *io_device,
 		struct spdk_io_channel *ch,
 		void *c)
@@ -480,6 +480,25 @@ spdk_nvmf_subsystem_ns_update_poll_group(void *io_device,
 	group = spdk_io_channel_get_ctx(ch);
 
 	return spdk_nvmf_poll_group_add_ns(group, ns->subsystem, ns);
+}
+
+static void
+_spdk_nvmf_ns_hot_remove(void *ctx)
+{
+	struct spdk_nvmf_ns *ns = ctx;
+
+	spdk_nvmf_subsystem_remove_ns(ns->subsystem, ns->id);
+}
+
+static void
+spdk_nvmf_ns_hot_remove(void *remove_ctx)
+{
+	struct spdk_nvmf_ns *ns = remove_ctx;
+
+	ns->is_removed = true;
+	spdk_thread_send_msg(ns->subsystem->tgt->master_thread,
+			     _spdk_nvmf_ns_hot_remove,
+			     ns);
 }
 
 uint32_t
@@ -548,7 +567,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	ns->bdev = bdev;
 	ns->id = nsid;
 	ns->subsystem = subsystem;
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &ns->desc);
+	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ns_hot_remove, ns, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
