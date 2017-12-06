@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50e73137_a00f93eb",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-06T22:44:53Z",
+      "side": 0,
+      "message": "guess we don\u0027t care about these aborts()?",
+      "revId": "6cce3666ea105e0584f94984e7a7b8091eafa0b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
