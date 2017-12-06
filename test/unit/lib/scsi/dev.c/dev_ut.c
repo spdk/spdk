@@ -95,18 +95,44 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 			void *hotremove_ctx)
 {
 	struct spdk_scsi_lun *lun;
+	struct lun_entry *p;
 
 	lun = calloc(1, sizeof(struct spdk_scsi_lun));
 	SPDK_CU_ASSERT_FATAL(lun != NULL);
 
 	snprintf(lun->name, sizeof(lun->name), "%s", name);
 	lun->bdev = bdev;
+
+	TAILQ_FOREACH(p, &g_lun_head, lun_entries) {
+		CU_ASSERT_FATAL(p->lun != NULL);
+		if (strncmp(p->lun->name, lun->name, sizeof(lun->name)) == 0)
+			return NULL;
+	}
+
+	p = calloc(1, sizeof(struct lun_entry));
+	SPDK_CU_ASSERT_FATAL(p != NULL);
+
+	p->lun = lun;
+
+	TAILQ_INSERT_TAIL(&g_lun_head, p, lun_entries);
+
 	return lun;
 }
 
 int
 spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
+	struct lun_entry *p, *tmp;
+
+	TAILQ_FOREACH_SAFE(p, &g_lun_head, lun_entries, tmp) {
+		CU_ASSERT_FATAL(p->lun != NULL);
+		if (strncmp(p->lun->name, lun->name, sizeof(lun->name)) == 0) {
+			TAILQ_REMOVE(&g_lun_head, p, lun_entries);
+			free(p);
+			break;
+		}
+	}
+
 	free(lun);
 	return 0;
 }
@@ -123,42 +149,6 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	}
 
 	return NULL;
-}
-
-int
-spdk_scsi_lun_claim(struct spdk_scsi_lun *lun)
-{
-	struct lun_entry *p;
-
-	TAILQ_FOREACH(p, &g_lun_head, lun_entries) {
-		CU_ASSERT_FATAL(p->lun != NULL);
-		if (strncmp(p->lun->name, lun->name, sizeof(lun->name)) == 0)
-			return -1;
-	}
-
-	p = calloc(1, sizeof(struct lun_entry));
-	SPDK_CU_ASSERT_FATAL(p != NULL);
-
-	p->lun = lun;
-
-	TAILQ_INSERT_TAIL(&g_lun_head, p, lun_entries);
-	return 0;
-}
-
-int
-spdk_scsi_lun_unclaim(struct spdk_scsi_lun *lun)
-{
-	struct lun_entry *p, *tmp;
-
-	TAILQ_FOREACH_SAFE(p, &g_lun_head, lun_entries, tmp) {
-		CU_ASSERT_FATAL(p->lun != NULL);
-		if (strncmp(p->lun->name, lun->name, sizeof(lun->name)) == 0) {
-			TAILQ_REMOVE(&g_lun_head, p, lun_entries);
-			free(p);
-			return 0;
-		}
-	}
-	return 0;
 }
 
 int

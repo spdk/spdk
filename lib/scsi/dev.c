@@ -81,7 +81,6 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 			continue;
 		}
 
-		spdk_scsi_lun_unclaim(dev->lun[i]);
 		spdk_scsi_lun_destruct(dev->lun[i]);
 		dev->lun[i] = NULL;
 	}
@@ -89,22 +88,13 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 	free_dev(dev);
 }
 
-static int
+static void
 spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev,
 		      struct spdk_scsi_lun *lun, int id)
 {
-	int rc;
-
-	rc = spdk_scsi_lun_claim(lun);
-	if (rc < 0) {
-		return rc;
-	}
-
 	lun->id = id;
 	lun->dev = dev;
 	dev->lun[id] = lun;
-
-	return 0;
 }
 
 void
@@ -133,7 +123,7 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 	struct spdk_bdev *bdev;
 	struct spdk_scsi_lun *lun = NULL;
 	bool found_lun_0;
-	int i, rc;
+	int i;
 
 	if (num_luns == 0) {
 		SPDK_ERRLOG("device %s: no LUNs specified\n", name);
@@ -182,11 +172,7 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 			goto error;
 		}
 
-		rc = spdk_scsi_dev_add_lun(dev, lun, lun_id_list[i]);
-		if (rc < 0) {
-			spdk_scsi_lun_destruct(lun);
-			goto error;
-		}
+		spdk_scsi_dev_add_lun(dev, lun, lun_id_list[i]);
 	}
 
 	return dev;
