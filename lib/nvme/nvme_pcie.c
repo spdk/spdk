@@ -228,7 +228,8 @@ _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 	struct spdk_pci_addr pci_addr;
 
 	while (spdk_get_uevent(hotplug_fd, &event) > 0) {
-		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO) {
+		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO ||
+		    event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_VFIO) {
 			if (event.action == SPDK_NVME_UEVENT_ADD) {
 				SPDK_DEBUGLOG(SPDK_TRACE_NVME, "add nvme address: %s\n",
 					      event.traddr);

@@ -93,10 +93,14 @@ parse_event(const char *buf, struct spdk_uevent *event)
 	char action[SPDK_UEVENT_MSG_LEN];
 	char subsystem[SPDK_UEVENT_MSG_LEN];
 	char dev_path[SPDK_UEVENT_MSG_LEN];
+	char driver[SPDK_UEVENT_MSG_LEN];
+	char vfio_pci_addr[SPDK_UEVENT_MSG_LEN];
 
 	memset(action, 0, SPDK_UEVENT_MSG_LEN);
 	memset(subsystem, 0, SPDK_UEVENT_MSG_LEN);
 	memset(dev_path, 0, SPDK_UEVENT_MSG_LEN);
+	memset(driver, 0, SPDK_UEVENT_MSG_LEN);
+	memset(vfio_pci_addr, 0, SPDK_UEVENT_MSG_LEN);
 
 	while (*buf) {
 		if (!strncmp(buf, "ACTION=", 7)) {
@@ -108,6 +112,12 @@ parse_event(const char *buf, struct spdk_uevent *event)
 		} else if (!strncmp(buf, "SUBSYSTEM=", 10)) {
 			buf += 10;
 			snprintf(subsystem, sizeof(subsystem), "%s", buf);
+		} else if (!strncmp(buf, "DRIVER=", 7)) {
+			buf += 7;
+			snprintf(driver, sizeof(driver), "%s", buf);
+		} else if (!strncmp(buf, "PCI_SLOT_NAME=", 14)) {
+			buf += 14;
+			snprintf(vfio_pci_addr, sizeof(vfio_pci_addr), "%s", buf);
 		}
 		while (*buf++)
 			;
@@ -136,6 +146,24 @@ parse_event(const char *buf, struct spdk_uevent *event)
 		}
 		spdk_pci_addr_fmt(event->traddr, sizeof(event->traddr), &pci_addr);
 		return 1;
+	}
+	if (!strncmp(driver, "vfio-pci", 8)) {
+		struct spdk_pci_addr pci_addr;
+
+		event->subsystem = SPDK_NVME_UEVENT_SUBSYSTEM_VFIO;
+		if (!strncmp(action, "add", 3)) {
+			event->action = SPDK_NVME_UEVENT_ADD;
+		}
+		if (!strncmp(action, "remove", 6)) {
+			event->action = SPDK_NVME_UEVENT_REMOVE;
+		}
+		if (spdk_pci_addr_parse(&pci_addr, vfio_pci_addr) != 0) {
+			SPDK_ERRLOG("Invalid format for NVMe BDF: %s\n", vfio_pci_addr);
+			return -1;
+		}
+		spdk_pci_addr_fmt(event->traddr, sizeof(event->traddr), &pci_addr);
+		return 1;
+
 	}
 	return -1;
 }
