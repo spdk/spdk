@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2cfd72e_55a838ea",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-06T11:51:41Z",
+      "side": 0,
+      "message": "I deleted once but comparing lun-\u003ename with the specified lun name will be better. If you agree with this change, I will do tomorrow.",
+      "range": {
+        "startLine": 321,
+        "startChar": 1,
+        "endLine": 324,
+        "endChar": 84
+      },
+      "revId": "56f61c8feb8f64786f14c720060b15fc1bcbbcdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
