@@ -34,9 +34,9 @@ if [ $SPDK_TEST_NVML -eq 1 ]; then
 	run_test test/nvmf/pmem/nvmf_pmem.sh 10
 fi
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-	run_test test/nvmf/multiconnection/multiconnection.sh
-fi
+#if [ $RUN_NIGHTLY -eq 1 ]; then
+run_test test/nvmf/multiconnection/multiconnection.sh
+#fi
 
 if [ $RUN_NIGHTLY -eq 1 ] && [ $SPDK_TEST_NVML -eq 1 ]; then
 	run_test test/nvmf/pmem/nvmf_pmem.sh 600
