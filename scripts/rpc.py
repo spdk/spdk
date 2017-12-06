@@ -380,6 +380,60 @@ p.add_argument('lvol_name', help='name for this lvol')
 p.add_argument('size', help='size in MiB for this bdev', type=int)
 p.set_defaults(func=construct_lvol_bdev)
 
+def construct_lvol_snapshot(args):
+    params = {'base_name': args.base_name,
+              'snapshot_name': args.snapshot_name}
+    print_array(jsonrpc_call('construct_lvol_snapshot', params))
+p = subparsers.add_parser('construct_lvol_snapshot', help='Create snapshot from existing lvol')
+p.add_argument('base_name', help='name of an lvol from which snpapshot will be created')
+p.add_argument('snapshot_name', help='snapshot name')
+p.set_defaults(func=construct_lvol_snapshot)
+
+def construct_lvol_clone(args):
+    params = {'snapshot_name': args.snapshot_name,
+              'clone_name': args.clone_name}
+    if (args.uuid and args.lvs_name) or (not args.uuid and not args.lvs_name):
+        print("You need to specify either uuid or name of lvolstore")
+    else:
+        if args.uuid:
+            params['uuid'] = args.uuid
+        if args.lvs_name:
+            params['lvs_name'] = args.lvs_name
+    print_array(jsonrpc_call('construct_lvol_clone', params))
+p = subparsers.add_parser('construct_lvol_clone', help='Create clone of existing snapshot')
+p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
+p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
+p.add_argument('snapshot_name', help='name of a snapshot to be cloned')
+p.add_argument('clone_name', help='clone name')
+p.set_defaults(func=construct_lvol_clone)
+
+def copy_lvol_to_image(args):
+    params = {'lvol_name': args.lvol_name,
+              'file_name': args.file_name}
+    print_array(jsonrpc_call('copy_lvol_to_image', params))
+p = subparsers.add_parser('copy_lvol_to_image', help='Copy lvol content to file')
+p.add_argument('lvol_name', help='lvol name')
+p.add_argument('file_name', help='file name')
+p.set_defaults(func=copy_lvol_to_image)
+
+def copy_image_to_lvol(args):
+    params = {'lvol_name': args.lvol_name,
+              'file_name': args.file_name}
+    if (args.uuid and args.lvs_name) or (not args.uuid and not args.lvs_name):
+        print("You need to specify either uuid or name of lvolstore")
+    else:
+        if args.uuid:
+            params['uuid'] = args.uuid
+        if args.lvs_name:
+            params['lvs_name'] = args.lvs_name
+    print_array(jsonrpc_call('copy_image_to_lvol', params))
+p = subparsers.add_parser('copy_image_to_lvol', help='Create lvol from file on selected lvol store')
+p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
+p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
+p.add_argument('lvol_name', help='lvol name')
+p.add_argument('file_name', help='file name')
+p.set_defaults(func=copy_image_to_lvol)
+
 # Logical volume resize feature is disabled, as it is currently work in progress
 #
 # def resize_lvol_bdev(args):

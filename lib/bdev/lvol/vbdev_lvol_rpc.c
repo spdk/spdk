@@ -493,3 +493,414 @@ spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("get_lvol_stores", spdk_rpc_get_lvol_stores)
+
+struct rpc_construct_lvol_snapshot {
+	char *base_name;
+	char *snapshot_name;
+};
+
+static void
+free_rpc_construct_lvol_snapshot(struct rpc_construct_lvol_snapshot *req)
+{
+	free(req->base_name);
+	free(req->snapshot_name);
+}
+
+static const struct spdk_json_object_decoder rpc_construct_lvol_snapshot_decoders[] = {
+	{"base_name", offsetof(struct rpc_construct_lvol_snapshot, base_name), spdk_json_decode_string, true},
+	{"snapshot_name", offsetof(struct rpc_construct_lvol_snapshot, snapshot_name), spdk_json_decode_string, true},
+};
+
+static void
+_spdk_rpc_construct_lvol_snapshot_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = cb_arg;
+	char buf[64];
+
+	if (lvolerrno != 0) {
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	spdk_json_write_string(w, lvol->bdev->name);
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_strerror_r(-lvolerrno, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+}
+
+static void
+spdk_rpc_construct_lvol_snapshot(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	struct rpc_construct_lvol_snapshot req = {};
+	struct spdk_lvol *base_lvol;
+	int rc;
+	char buf[64];
+
+	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Creating snapshot\n");
+
+	if (spdk_json_decode_object(params, rpc_construct_lvol_snapshot_decoders,
+				    SPDK_COUNTOF(rpc_construct_lvol_snapshot_decoders),
+				    &req)) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (req.base_name == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no base name\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (req.snapshot_name == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no snapshot name\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	base_lvol = vbdev_get_lvol_by_name(req.base_name);
+	if (base_lvol == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no lvol present with name %s\n", req.base_name);
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = vbdev_lvol_create_snapshot(base_lvol, req.snapshot_name, _spdk_rpc_construct_lvol_snapshot_cb,
+					request);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_construct_lvol_snapshot(&req);
+	return;
+
+invalid:
+	spdk_strerror_r(-rc, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	free_rpc_construct_lvol_snapshot(&req);
+}
+
+SPDK_RPC_REGISTER("construct_lvol_snapshot", spdk_rpc_construct_lvol_snapshot)
+
+struct rpc_construct_lvol_clone {
+	char *uuid;
+	char *lvs_name;
+	char *snapshot_name;
+	char *clone_name;
+};
+
+static void
+free_rpc_construct_lvol_clone(struct rpc_construct_lvol_clone *req)
+{
+	free(req->uuid);
+	free(req->lvs_name);
+	free(req->snapshot_name);
+	free(req->clone_name);
+}
+
+static const struct spdk_json_object_decoder rpc_construct_lvol_clone_decoders[] = {
+	{"uuid", offsetof(struct rpc_construct_lvol_clone, uuid), spdk_json_decode_string, true},
+	{"lvs_name", offsetof(struct rpc_construct_lvol_clone, lvs_name), spdk_json_decode_string, true},
+	{"snapshot_name", offsetof(struct rpc_construct_lvol_clone, snapshot_name), spdk_json_decode_string, true},
+	{"clone_name", offsetof(struct rpc_construct_lvol_clone, clone_name), spdk_json_decode_string},
+};
+
+static void
+_spdk_rpc_construct_lvol_clone_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = cb_arg;
+	char buf[64];
+
+	if (lvolerrno != 0) {
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	spdk_json_write_string(w, lvol->bdev->name);
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_strerror_r(-lvolerrno, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+}
+
+static void
+spdk_rpc_construct_lvol_clone(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params)
+{
+	struct rpc_construct_lvol_clone req = {};
+	struct spdk_lvol *snapshot_lvol;
+	int rc;
+	char buf[64];
+	struct spdk_lvol_store *lvs = NULL;
+
+	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Creating clone\n");
+
+	if (spdk_json_decode_object(params, rpc_construct_lvol_clone_decoders,
+				    SPDK_COUNTOF(rpc_construct_lvol_clone_decoders),
+				    &req)) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = vbdev_get_lvol_store_by_uuid_xor_name(req.uuid, req.lvs_name, &lvs);
+	if (rc != 0) {
+		goto invalid;
+	}
+
+	if (req.snapshot_name == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no snapshot name\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (req.clone_name == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no clone name\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	snapshot_lvol = vbdev_get_lvol_by_name(req.snapshot_name);
+	if (snapshot_lvol == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no lvol present with name %s\n", req.snapshot_name);
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = vbdev_lvol_create_clone(snapshot_lvol, lvs, req.clone_name, _spdk_rpc_construct_lvol_clone_cb,
+				     request);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_construct_lvol_clone(&req);
+	return;
+
+invalid:
+	spdk_strerror_r(-rc, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	free_rpc_construct_lvol_clone(&req);
+}
+
+SPDK_RPC_REGISTER("construct_lvol_clone", spdk_rpc_construct_lvol_clone)
+
+struct rpc_copy_lvol_to_image {
+	char *lvol_name;
+	char *file_name;
+};
+
+static void
+free_rpc_copy_lvol_to_image(struct rpc_copy_lvol_to_image *req)
+{
+	free(req->lvol_name);
+	free(req->file_name);
+}
+
+static const struct spdk_json_object_decoder rpc_copy_lvol_to_image_decoders[] = {
+	{"lvol_name", offsetof(struct rpc_copy_lvol_to_image, lvol_name), spdk_json_decode_string, true},
+	{"file_name", offsetof(struct rpc_copy_lvol_to_image, file_name), spdk_json_decode_string, true},
+};
+
+static void
+_spdk_rpc_copy_lvol_to_image_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = cb_arg;
+	char buf[64];
+
+	if (lvolerrno != 0) {
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	spdk_json_write_string(w, lvol->bdev->name);
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_strerror_r(-lvolerrno, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+}
+
+static void
+spdk_rpc_copy_lvol_to_image(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_copy_lvol_to_image req = {};
+	struct spdk_lvol *lvol;
+	int rc;
+	char buf[64];
+
+	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Copying lvol to file\n");
+
+	if (spdk_json_decode_object(params, rpc_copy_lvol_to_image_decoders,
+				    SPDK_COUNTOF(rpc_copy_lvol_to_image_decoders),
+				    &req)) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (req.lvol_name == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no lvol name\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (req.file_name == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no file name\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	lvol = vbdev_get_lvol_by_name(req.lvol_name);
+	if (lvol == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no lvol present with name %s\n", req.lvol_name);
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = vbdev_copy_lvol_to_image(lvol, req.file_name, _spdk_rpc_copy_lvol_to_image_cb, request);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_copy_lvol_to_image(&req);
+	return;
+
+invalid:
+	spdk_strerror_r(-rc, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	free_rpc_copy_lvol_to_image(&req);
+}
+
+SPDK_RPC_REGISTER("copy_lvol_to_image", spdk_rpc_copy_lvol_to_image)
+
+struct rpc_copy_image_to_lvol {
+	char *uuid;
+	char *lvs_name;
+	char *lvol_name;
+	char *file_name;
+};
+
+static void
+free_rpc_copy_image_to_lvol(struct rpc_copy_image_to_lvol *req)
+{
+	free(req->uuid);
+	free(req->lvs_name);
+	free(req->lvol_name);
+	free(req->file_name);
+}
+
+static const struct spdk_json_object_decoder rpc_copy_image_to_lvol_decoders[] = {
+	{"uuid", offsetof(struct rpc_copy_image_to_lvol, uuid), spdk_json_decode_string, true},
+	{"lvs_name", offsetof(struct rpc_copy_image_to_lvol, lvs_name), spdk_json_decode_string, true},
+	{"lvol_name", offsetof(struct rpc_copy_image_to_lvol, lvol_name), spdk_json_decode_string, true},
+	{"file_name", offsetof(struct rpc_copy_image_to_lvol, file_name), spdk_json_decode_string, true},
+};
+
+static void
+_spdk_rpc_copy_image_to_lvol_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = cb_arg;
+	char buf[64];
+
+	if (lvolerrno != 0) {
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	spdk_json_write_string(w, lvol->bdev->name);
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_strerror_r(-lvolerrno, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+}
+
+static void
+spdk_rpc_copy_image_to_lvol(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_copy_image_to_lvol req = {};
+	struct spdk_lvol_store *lvs;
+	int rc;
+	char buf[64];
+
+	SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "Copying file to lvol\n");
+
+	if (spdk_json_decode_object(params, rpc_copy_image_to_lvol_decoders,
+				    SPDK_COUNTOF(rpc_copy_image_to_lvol_decoders),
+				    &req)) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = vbdev_get_lvol_store_by_uuid_xor_name(req.uuid, req.lvs_name, &lvs);
+	if (rc != 0) {
+		goto invalid;
+	}
+
+	if (req.lvol_name == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no lvol name\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (req.file_name == NULL) {
+		SPDK_INFOLOG(SPDK_LOG_LVOL_RPC, "no file name\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = vbdev_copy_image_to_lvol(req.lvol_name, lvs, req.file_name, _spdk_rpc_copy_image_to_lvol_cb,
+				      request);
+	if (rc < 0) {
+		goto invalid;
+	}
+
+	free_rpc_copy_image_to_lvol(&req);
+	return;
+
+invalid:
+	spdk_strerror_r(-rc, buf, sizeof(buf));
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, buf);
+	free_rpc_copy_image_to_lvol(&req);
+}
+
+SPDK_RPC_REGISTER("copy_image_to_lvol", spdk_rpc_copy_image_to_lvol)
