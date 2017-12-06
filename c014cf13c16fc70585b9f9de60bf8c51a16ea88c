@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4b06e127_708773e2",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 860,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-06T08:41:16Z",
+      "side": 1,
+      "message": "This means that the current cluster is not allocated, so we should not do the unmap (blob-\u003eactive.clusters[i] \u003d\u003d 0)",
+      "parentUuid": "596e088b_d1a344a6",
+      "range": {
+        "startLine": 860,
+        "startChar": 19,
+        "endLine": 860,
+        "endChar": 30
+      },
+      "revId": "c014cf13c16fc70585b9f9de60bf8c51a16ea88c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0300225e_2dbd7e3e",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 13
