@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b15cb14d_a46aea57",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-06T05:15:03Z",
+      "side": 1,
+      "message": "why do user_fn and user_arg need to be saved on the stack?",
+      "revId": "7b2de1a0712a866657216accf07e36e3b74eac02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82b86e16_56c09359",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-06T05:15:03Z",
+      "side": 1,
+      "message": "does this need to be under ifdef DEBUG?",
+      "revId": "7b2de1a0712a866657216accf07e36e3b74eac02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
