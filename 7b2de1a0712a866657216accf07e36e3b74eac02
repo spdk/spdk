@@ -33,6 +33,24 @@
       "revId": "7b2de1a0712a866657216accf07e36e3b74eac02",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4bf22c18_d0be194a",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-06T22:05:58Z",
+      "side": 1,
+      "message": "Calling spdk_get_thread is slow so I limited it to debug builds.",
+      "parentUuid": "82b86e16_56c09359",
+      "revId": "7b2de1a0712a866657216accf07e36e3b74eac02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
