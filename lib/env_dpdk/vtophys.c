@@ -56,15 +56,18 @@
 /* Internal DPDK function forward declaration */
 int pci_vfio_is_enabled(void);
 
-struct vfio_cfg {
-	int fd;
-	bool enabled;
+struct spdk_vfio_dma_map {
+	struct vfio_iommu_type1_dma_map map;
+	TAILQ_ENTRY(spdk_vfio_dma_map) tailq;
 };
 
-static struct vfio_cfg g_vfio = {
+struct vfio_cfg g_spdk_vfio = {
 	.fd = -1,
-	.enabled = false
+	.enabled = false,
+	.device_ref = 0,
+	.maps = TAILQ_HEAD_INITIALIZER(g_spdk_vfio.maps)
 };
+
 #else
 #define SPDK_VFIO_ENABLED 0
 #endif
@@ -82,16 +85,27 @@ static struct spdk_mem_map *g_vtophys_map;
 static int
 vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 {
-	struct vfio_iommu_type1_dma_map dma_map;
+	struct spdk_vfio_dma_map *dma_map;
 	int ret;
 
-	dma_map.argsz = sizeof(dma_map);
-	dma_map.flags = VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE;
-	dma_map.vaddr = vaddr;
-	dma_map.iova = iova;
-	dma_map.size = size;
+	dma_map = calloc(1, sizeof(*dma_map));
+	if (dma_map == NULL) {
+		return -ENOMEM;
+	}
 
-	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map);
+	dma_map->map.argsz = sizeof(dma_map);
+	dma_map->map.flags = VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE;
+	dma_map->map.vaddr = vaddr;
+	dma_map->map.iova = iova;
+	dma_map->map.size = size;
+
+	TAILQ_INSERT_TAIL(&g_spdk_vfio.maps, dma_map, tailq);
+
+	if (g_spdk_vfio.device_ref == 0) {
+		return 0;
+	}
+
+	ret = ioctl(g_spdk_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map);
 
 	if (ret) {
 		DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);
@@ -103,21 +117,43 @@ vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 static int
 vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
 {
-	struct vfio_iommu_type1_dma_unmap dma_unmap;
+	struct vfio_iommu_type1_dma_map dma_unmap;
+	struct spdk_vfio_dma_map *dma_map;
 	int ret;
+
+	TAILQ_FOREACH(dma_map, &g_spdk_vfio.maps, tailq) {
+		if (dma_map->map.iova == iova) {
+			break;
+		}
+	}
+
+	if (dma_map == NULL) {
+		DEBUG_PRINT("Cannot clear DMA mapping at IOVA %"PRIx64" - it's not mapped\n", iova);
+		return -EIO; //TODO find a better errno
+	}
+
+	if (dma_map->map.size < size) {
+		//TODO
+		return -EIO; //TODO
+	}
 
 	dma_unmap.argsz = sizeof(dma_unmap);
 	dma_unmap.flags = 0;
 	dma_unmap.iova = iova;
 	dma_unmap.size = size;
 
-	ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_unmap);
+	ret = ioctl(g_spdk_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_unmap);
 
 	if (ret) {
+		//TODO if all devices have been hotremoved, this message
+		//will be printed because DMA mapping has been cleared already
 		DEBUG_PRINT("Cannot clear DMA mapping, error %d\n", errno);
+		return ret;
 	}
 
-	return ret;
+	free(dma_map);
+	TAILQ_REMOVE(&g_spdk_vfio.maps, dma_map, tailq);
+	return 0;
 }
 #endif
 
@@ -200,7 +236,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 			if (paddr == SPDK_VTOPHYS_ERROR) {
 				/* This is not an address that DPDK is managing. */
 #if SPDK_VFIO_ENABLED
-				if (g_vfio.enabled) {
+				if (g_spdk_vfio.enabled) {
 					/* We'll use the virtual address as the iova. DPDK
 					 * currently uses physical addresses as the iovas (or counts
 					 * up from 0 if it can't get physical addresses), so
@@ -238,7 +274,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 				 * This is not an address that DPDK is managing. If vfio is enabled,
 				 * we need to unmap the range from the IOMMU
 				 */
-				if (g_vfio.enabled) {
+				if (g_spdk_vfio.enabled) {
 					paddr = spdk_mem_map_translate(map, (uint64_t)vaddr);
 					rc = vtophys_iommu_unmap_dma(paddr, VALUE_2MB);
 					if (rc) {
@@ -293,23 +329,42 @@ spdk_vtophys_iommu_init(void)
 		}
 
 		if (memcmp(link_path, vfio_path, sizeof(vfio_path) - 1) == 0) {
-			sscanf(d->d_name, "%d", &g_vfio.fd);
+			sscanf(d->d_name, "%d", &g_spdk_vfio.fd);
 			break;
 		}
 	}
 
 	closedir(dir);
 
-	if (g_vfio.fd < 0) {
+	if (g_spdk_vfio.fd < 0) {
 		DEBUG_PRINT("Failed to discover DPDK VFIO container fd.\n");
 		return;
 	}
 
-	g_vfio.enabled = true;
+	g_spdk_vfio.enabled = true;
 
 	return;
 }
 #endif
+
+void
+spdk_vtophys_remap(void)
+{
+	struct spdk_vfio_dma_map *dma_map;
+	int ret;
+
+	if (g_spdk_vfio.device_ref !=  1) {
+		return;
+	}
+
+	TAILQ_FOREACH(dma_map, &g_spdk_vfio.maps, tailq) {
+		ret = ioctl(g_spdk_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
+		if (ret) {
+			DEBUG_PRINT("Cannot update DMA mapping, error %d\n", errno);
+			break;
+		}
+	}
+}
 
 void
 spdk_vtophys_init(void)

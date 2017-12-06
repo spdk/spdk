@@ -45,6 +45,7 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 		     struct rte_pci_device *device)
 {
 	struct spdk_pci_enum_ctx *ctx = (struct spdk_pci_enum_ctx *)driver;
+	int rc;
 
 	if (!ctx->cb_fn) {
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
@@ -66,7 +67,16 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 		usleep(500 * 1000);
 	}
 
-	return ctx->cb_fn(ctx->cb_arg, (struct spdk_pci_device *)device);
+	rc = ctx->cb_fn(ctx->cb_arg, (struct spdk_pci_device *)device);
+	if (rc != 0) {
+	       return rc;
+	}
+
+	if (++g_spdk_vfio.device_ref == 1) {
+		spdk_vtophys_remap();
+	}
+
+	return 0;
 }
 
 int
@@ -102,6 +112,9 @@ spdk_pci_device_detach(struct spdk_pci_device *device)
 #else
 	rte_eal_pci_detach(&device->addr);
 #endif
+
+	assert(g_spdk_vfio.device_ref > 0);
+	g_spdk_vfio.device_ref--;
 }
 
 int

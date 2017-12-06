@@ -77,6 +77,16 @@ struct spdk_pci_enum_ctx {
 	bool			is_registered;
 };
 
+struct vfio_cfg {
+	int fd;
+	bool enabled;
+	unsigned device_ref;
+	TAILQ_HEAD(, spdk_vfio_dma_map) maps;
+};
+
+extern struct vfio_cfg g_spdk_vfio;
+extern pthread_mutex_t g_spdk_mem_map_mutex;
+
 int spdk_pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int spdk_pci_device_fini(struct rte_pci_device *device);
 
@@ -86,5 +96,6 @@ int spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx, spdk_pci_enum_cb enum_
 
 void spdk_mem_map_init(void);
 void spdk_vtophys_init(void);
+void spdk_vtophys_remap(void);
 
 #endif

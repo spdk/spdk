@@ -89,7 +89,7 @@ struct spdk_mem_map {
 
 static struct spdk_mem_map *g_mem_reg_map;
 static TAILQ_HEAD(, spdk_mem_map) g_spdk_mem_maps = TAILQ_HEAD_INITIALIZER(g_spdk_mem_maps);
-static pthread_mutex_t g_spdk_mem_map_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t g_spdk_mem_map_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /*
  * Walk the currently registered memory via the main memory registration map
