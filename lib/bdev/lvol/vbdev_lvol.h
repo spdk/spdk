@@ -47,6 +47,8 @@ struct lvol_store_bdev {
 	TAILQ_ENTRY(lvol_store_bdev)	lvol_stores;
 };
 
+struct spdk_lvol *vbdev_get_lvol_by_name(const char *name);
+
 int vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster_sz,
 		     spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg);
 void vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg);
@@ -54,6 +56,19 @@ void vbdev_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, v
 
 int vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 		      bool thin_provisioned, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+
+int vbdev_lvol_create_snapshot(struct spdk_lvol *base_lvol, const char *name,
+			       spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+
+int vbdev_lvol_create_clone(struct spdk_lvol *snapshot_lvol, struct spdk_lvol_store *lvs,
+			    const char *name,
+			    spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+
+int vbdev_copy_lvol_to_image(struct spdk_lvol *lvol, const char *file_name,
+			     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+
+int vbdev_copy_image_to_lvol(const char *lvol_name, struct spdk_lvol_store *lvs,
+			     const char *file_name, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 
 int vbdev_lvol_resize(char *name, size_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg);
 
