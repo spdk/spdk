@@ -680,6 +680,8 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		return NULL;
 	}
 
+	TAILQ_INIT(&bdev->aliases);
+
 	bdev->name = spdk_sprintf_alloc("%s/%s", lvs_bdev->lvs->name, lvol->name);
 	if (bdev->name == NULL) {
 		SPDK_ERRLOG("Cannot alloc memory for bdev name\n");
