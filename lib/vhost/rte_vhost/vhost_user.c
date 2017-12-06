@@ -231,7 +231,18 @@ vhost_user_set_vring_num(struct virtio_net *dev,
 				RTE_CACHE_LINE_SIZE);
 	if (!vq->shadow_used_ring) {
 		RTE_LOG(ERR, VHOST_CONFIG,
-			"failed to allocate memory for shadow used ring.\n");
+			"failed to allocate memory for shadow used ring (size=%u el_size=%u).\n",
+			(unsigned)vq->size, (unsigned)sizeof(struct vring_used_elem));
+		FILE *f = fopen("/dev/stderr", "w+");
+		if (f) {
+			fflush(stdout);
+			fflush(stderr);
+			rte_malloc_dump_stats(f, "");
+			fclose(f);
+		} else {
+			RTE_LOG(ERR, VHOST_CONFIG, "Whoops, can't open /dev/stderr\n");
+		}
+
 		return -1;
 	}
 
