@@ -331,7 +331,10 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 		return EINVAL;
 	}
 
+	TAILQ_INIT(&pdisk->disk.aliases);
+
 	pdisk->disk.name = strdup(name);
+
 	if (!pdisk->disk.name) {
 		pmemblk_close(pdisk->pool);
 		free(pdisk);

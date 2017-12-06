@@ -1152,6 +1152,8 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		bdev->ns = ns;
 		nvme_ctrlr->ref++;
 
+		TAILQ_INIT(&bdev->disk.aliases);
+
 		bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
 		if (!bdev->disk.name) {
 			free(bdev);
