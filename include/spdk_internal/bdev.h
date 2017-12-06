@@ -385,6 +385,9 @@ struct spdk_bdev_io {
 	/** It may be used by modules to put the bdev_io into its own list. */
 	TAILQ_ENTRY(spdk_bdev_io) module_link;
 
+	/** Current tsc at submit time. Used to calculate latency at completion. */
+	uint64_t submit_tsc;
+
 	/**
 	 * Per I/O context for use by the bdev module.
 	 */

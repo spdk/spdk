@@ -412,12 +412,18 @@ _spdk_reactor_run(void *arg)
 	uint32_t		sleep_us;
 	uint32_t 		timer_poll_count;
 	char			thread_name[32];
+	uint64_t		*thread_tsc_addr;
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
 	if (spdk_allocate_thread(_spdk_reactor_send_msg,
 				 _spdk_reactor_start_poller,
 				 _spdk_reactor_stop_poller,
 				 reactor, thread_name) == NULL) {
+		return -1;
+	}
+
+	if ((thread_tsc_addr = spdk_get_thread_tsc_addr()) == NULL) {
+		SPDK_ERRLOG("failed to obtained thread tsc variable address\n");
 		return -1;
 	}
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
@@ -433,8 +439,11 @@ _spdk_reactor_run(void *arg)
 	while (1) {
 		bool took_action = false;
 
+		*thread_tsc_addr = spdk_get_ticks();
+
 		event_count = _spdk_event_queue_run_batch(reactor);
 		if (event_count > 0) {
+			*thread_tsc_addr = spdk_get_ticks();
 			took_action = true;
 		}
 

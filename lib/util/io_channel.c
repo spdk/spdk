@@ -69,6 +69,7 @@ struct spdk_thread {
 	TAILQ_HEAD(, spdk_io_channel) io_channels;
 	TAILQ_ENTRY(spdk_thread) tailq;
 	char *name;
+	uint64_t tsc;
 };
 
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
@@ -138,10 +139,28 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		_set_thread_name(name);
 		thread->name = strdup(name);
 	}
+	thread->tsc = 0;
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	return thread;
+}
+
+uint64_t *
+spdk_get_thread_tsc_addr(void)
+{
+	struct spdk_thread *thread = spdk_get_thread();
+	if (thread) {
+		return &(thread->tsc);
+	}
+	return NULL;
+}
+
+uint64_t
+spdk_get_thread_tsc(struct spdk_thread *th)
+{
+	assert(th != NULL);
+	return th->tsc;
 }
 
 void
