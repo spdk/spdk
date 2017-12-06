@@ -391,7 +391,7 @@ io_during_reset(void)
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	/*
-	 * Now submit a reset, and leave it pending while we submit I?O on two different
+	 * Now submit a reset, and leave it pending while we submit I/O on two different
 	 *  channels.  These I/O should be failed by the bdev layer since the reset is in
 	 *  progress.
 	 */
@@ -425,13 +425,29 @@ io_during_reset(void)
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_FAILED);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_FAILED);
 
+	/*
+	 * Complete the reset
+	 */
 	set_thread(0);
 	stub_complete_io(0);
+
+	/*
+	 * Only poll thread 0. We should not get a completion.
+	 */
+	poll_thread(0);
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_PENDING);
+
+	/*
+	 * Poll both thread 0 and 1 so the messages can propagate and we
+	 * get a completion.
+	 */
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
+
 	spdk_put_io_channel(io_ch[0]);
 	set_thread(1);
 	spdk_put_io_channel(io_ch[1]);
 	poll_threads();
-	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	teardown_test();
 }
