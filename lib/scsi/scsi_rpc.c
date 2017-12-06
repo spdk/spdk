@@ -62,8 +62,6 @@ spdk_rpc_get_luns(struct spdk_jsonrpc_request *request,
 		struct spdk_scsi_lun *lun = current->lun;
 
 		spdk_json_write_object_begin(w);
-		spdk_json_write_name(w, "claimed");
-		spdk_json_write_bool(w, lun->claimed);
 		spdk_json_write_name(w, "name");
 		spdk_json_write_string(w, lun->name);
 		spdk_json_write_object_end(w);

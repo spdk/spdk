@@ -318,10 +318,6 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
            "chap required value is {}, expected {}".format(jsonvalues[0]['chap_required'], rpc_param['chap_required']))
     verify(jsonvalues[0]['chap_auth_group'] == rpc_param['chap_auth_group'], 1,
            "chap auth group value is {}, expected {}".format(jsonvalues[0]['chap_auth_group'], rpc_param['chap_auth_group']))
-    output = rpc.get_luns()
-    jsonvalue = json.loads(output)
-    verify(jsonvalue[0]['claimed'] is True, 1,
-           "The claimed value is {}, expected true".format(jsonvalue[0]['claimed']))
 
     rpc.delete_target_node(name)
     output = rpc.get_target_nodes()

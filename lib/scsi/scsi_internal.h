@@ -107,9 +107,6 @@ struct spdk_scsi_lun {
 	/** The LUN is removed */
 	bool				removed;
 
-	/** The LUN is clamed */
-	bool claimed;
-
 	/** Callback to be fired when LUN removal is first triggered. */
 	void (*hotremove_cb)(const struct spdk_scsi_lun *lun, void *arg);
 
@@ -143,8 +140,6 @@ void spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task, enum spdk_scsi_task_func func);
 void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
-int spdk_scsi_lun_claim(struct spdk_scsi_lun *lun);
-int spdk_scsi_lun_unclaim(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_delete(const char *lun_name);
 int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun);
 void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun);

@@ -337,30 +337,6 @@ spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 }
 
 int
-spdk_scsi_lun_claim(struct spdk_scsi_lun *lun)
-{
-	assert(spdk_lun_db_get_lun(lun->name) != NULL);
-
-	if (lun->claimed != false) {
-		return -1;
-	}
-
-	lun->claimed = true;
-	return 0;
-}
-
-int
-spdk_scsi_lun_unclaim(struct spdk_scsi_lun *lun)
-{
-	assert(spdk_lun_db_get_lun(lun->name) != NULL);
-	assert(lun->claimed == true);
-	lun->claimed = false;
-	lun->dev = NULL;
-
-	return 0;
-}
-
-int
 spdk_scsi_lun_delete(const char *lun_name)
 {
 	struct spdk_scsi_lun *lun;

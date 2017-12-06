@@ -659,9 +659,6 @@ lun_delete(void)
 
 	lun = lun_construct();
 
-	rc = spdk_scsi_lun_claim(lun);
-	CU_ASSERT_EQUAL(rc, 0);
-
 	rc = spdk_scsi_lun_delete(lun->name);
 	CU_ASSERT_EQUAL(rc, 0);
 
