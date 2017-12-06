@@ -87,4 +87,16 @@ int spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx, spdk_pci_enum_cb enum_
 void spdk_mem_map_init(void);
 void spdk_vtophys_init(void);
 
+/**
+ * Increase the refcount of active DMA-capable devices managed by SPDK.
+ * This must be called after a `rte_pci_device` is created.
+ */
+void spdk_vtophys_get_ref(void);
+
+/**
+ * Decrease the refcount of active DMA-capable devices managed by SPDK.
+ * This must be called before a `rte_pci_device` is destroyed.
+ */
+void spdk_vtophys_put_ref(void);
+
 #endif

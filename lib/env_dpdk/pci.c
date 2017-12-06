@@ -45,6 +45,7 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 		     struct rte_pci_device *device)
 {
 	struct spdk_pci_enum_ctx *ctx = (struct spdk_pci_enum_ctx *)driver;
+	int rc;
 
 	if (!ctx->cb_fn) {
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
@@ -66,12 +67,19 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 		usleep(500 * 1000);
 	}
 
-	return ctx->cb_fn(ctx->cb_arg, (struct spdk_pci_device *)device);
+	rc = ctx->cb_fn(ctx->cb_arg, (struct spdk_pci_device *)device);
+	if (rc != 0) {
+		return rc;
+	}
+
+	spdk_vtophys_get_ref();
+	return 0;
 }
 
 int
 spdk_pci_device_fini(struct rte_pci_device *device)
 {
+	spdk_vtophys_put_ref();
 	return 0;
 }
 
