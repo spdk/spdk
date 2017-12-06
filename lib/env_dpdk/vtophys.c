@@ -56,15 +56,27 @@
 /* Internal DPDK function forward declaration */
 int pci_vfio_is_enabled(void);
 
+struct spdk_vfio_dma_map {
+	struct vfio_iommu_type1_dma_map map;
+	TAILQ_ENTRY(spdk_vfio_dma_map) tailq;
+};
+
 struct vfio_cfg {
 	int fd;
 	bool enabled;
+	unsigned device_ref;
+	TAILQ_HEAD(, spdk_vfio_dma_map) maps;
+	pthread_mutex_t mutex;
 };
 
 static struct vfio_cfg g_vfio = {
 	.fd = -1,
-	.enabled = false
+	.enabled = false,
+	.device_ref = 0,
+	.maps = TAILQ_HEAD_INITIALIZER(g_vfio.maps),
+	.mutex = PTHREAD_MUTEX_INITIALIZER
 };
+
 #else
 #define SPDK_VFIO_ENABLED 0
 #endif
@@ -82,29 +94,75 @@ static struct spdk_mem_map *g_vtophys_map;
 static int
 vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 {
-	struct vfio_iommu_type1_dma_map dma_map;
+	struct spdk_vfio_dma_map *dma_map;
 	int ret;
 
-	dma_map.argsz = sizeof(dma_map);
-	dma_map.flags = VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE;
-	dma_map.vaddr = vaddr;
-	dma_map.iova = iova;
-	dma_map.size = size;
-
-	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map);
-
-	if (ret) {
-		DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);
+	dma_map = calloc(1, sizeof(*dma_map));
+	if (dma_map == NULL) {
+		return -ENOMEM;
 	}
 
-	return ret;
+	dma_map->map.argsz = sizeof(dma_map);
+	dma_map->map.flags = VFIO_DMA_MAP_FLAG_READ | VFIO_DMA_MAP_FLAG_WRITE;
+	dma_map->map.vaddr = vaddr;
+	dma_map->map.iova = iova;
+	dma_map->map.size = size;
+
+	pthread_mutex_lock(&g_vfio.mutex);
+	if (g_vfio.device_ref == 0) {
+		/* VFIO requires at least one device (IOMMU group) to be added to
+		 * a VFIO container before it is possible to perform any IOMMU
+		 * operations on that container. This memory will be mapped once
+		 * the first device (IOMMU group) is hotplugged.
+		 */
+		goto out_insert;
+	}
+	pthread_mutex_unlock(&g_vfio.mutex);
+
+	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map);
+	if (ret) {
+		DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);
+		free(dma_map);
+		return ret;
+	}
+
+	pthread_mutex_lock(&g_vfio.mutex);
+out_insert:
+	TAILQ_INSERT_TAIL(&g_vfio.maps, dma_map, tailq);
+	pthread_mutex_unlock(&g_vfio.mutex);
+
+	return 0;
 }
 
 static int
 vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
 {
 	struct vfio_iommu_type1_dma_unmap dma_unmap;
+	struct spdk_vfio_dma_map *dma_map;
 	int ret;
+
+	pthread_mutex_lock(&g_vfio.mutex);
+	TAILQ_FOREACH(dma_map, &g_vfio.maps, tailq) {
+		if (dma_map->map.iova == iova) {
+			break;
+		}
+	}
+
+	if (dma_map == NULL) {
+		DEBUG_PRINT("Cannot clear DMA mapping for IOVA %"PRIx64" - it's not mapped\n", iova);
+		pthread_mutex_unlock(&g_vfio.mutex);
+		return -ENXIO;
+	}
+
+	/** don't support partial or multiple-page unmap for now */
+	assert(dma_map->map.size == size);
+
+	if (g_vfio.device_ref == 0) {
+		/* Memory is not mapped anymore, just remove it's references */
+		goto out_remove;
+	}
+
+	pthread_mutex_unlock(&g_vfio.mutex);
 
 	dma_unmap.argsz = sizeof(dma_unmap);
 	dma_unmap.flags = 0;
@@ -112,12 +170,17 @@ vtophys_iommu_unmap_dma(uint64_t iova, uint64_t size)
 	dma_unmap.size = size;
 
 	ret = ioctl(g_vfio.fd, VFIO_IOMMU_UNMAP_DMA, &dma_unmap);
-
 	if (ret) {
 		DEBUG_PRINT("Cannot clear DMA mapping, error %d\n", errno);
+		return ret;
 	}
 
-	return ret;
+	pthread_mutex_lock(&g_vfio.mutex);
+out_remove:
+	TAILQ_REMOVE(&g_vfio.maps, dma_map, tailq);
+	pthread_mutex_unlock(&g_vfio.mutex);
+	free(dma_map);
+	return 0;
 }
 #endif
 
@@ -310,6 +373,60 @@ spdk_vtophys_iommu_init(void)
 	return;
 }
 #endif
+
+void
+spdk_vtophys_get_ref(void)
+{
+#if SPDK_VFIO_ENABLED
+	struct spdk_vfio_dma_map *dma_map;
+	int ret;
+
+	if (!g_vfio.enabled) {
+		return;
+	}
+
+	pthread_mutex_lock(&g_vfio.mutex);
+	g_vfio.device_ref++;
+	if (g_vfio.device_ref > 1) {
+		pthread_mutex_unlock(&g_vfio.mutex);
+		return;
+	}
+
+	/* This is the first device using DPDK vfio. This means that the first
+	 * IOMMU group has just been added to the DPDK vfio container. From this
+	 * point it is possible to map memory for dma.
+	 */
+	TAILQ_FOREACH(dma_map, &g_vfio.maps, tailq) {
+		ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
+		if (ret) {
+			DEBUG_PRINT("Cannot update DMA mapping, error %d\n", errno);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_vfio.mutex);
+#endif
+}
+
+void
+spdk_vtophys_put_ref(void)
+{
+#if SPDK_VFIO_ENABLED
+	if (!g_vfio.enabled) {
+		return;
+	}
+
+	pthread_mutex_lock(&g_vfio.mutex);
+	assert(g_vfio.device_ref > 0);
+	g_vfio.device_ref--;
+	pthread_mutex_unlock(&g_vfio.mutex);
+
+	/* If this is the last device using DPDK vfio, the DPDK vfio container
+	 * has now no more IOMMU groups and all it's DMA mappings have been
+	 * automatically removed. All memory will have to be re-mapped once
+	 * a new device is hotplugged.
+	 */
+#endif
+}
 
 void
 spdk_vtophys_init(void)
