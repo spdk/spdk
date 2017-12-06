@@ -36,6 +36,7 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
+#include "spdk/event.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
@@ -187,6 +188,29 @@ spdk_nvmf_subsystem_delete_done(void *io_device, void *ctx, int status)
 	tgt->discovery_genctr++;
 
 	free(subsystem);
+}
+
+static void
+spdk_nvmf_remove_ns_done(void *io_device, void *ctx, int status)
+{
+	struct spdk_nvmf_ns *ns = ctx;
+	struct spdk_nvmf_subsystem *subsystem = ns->subsystem;
+
+	spdk_bdev_close(ns->desc);
+	ns->allocated = false;
+	subsystem->num_allocated_nsid--;
+}
+
+static int
+spdk_nvmf_subsystem_remove_ns_from_poll_group(void *io_device,
+		struct spdk_io_channel *ch,
+		void *ctx)
+{
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_ns *ns = ctx;
+
+	group = spdk_io_channel_get_ctx(ch);
+	return spdk_nvmf_poll_group_remove_ns(group, ns);
 }
 
 static int
@@ -414,6 +438,28 @@ spdk_nvmf_subsystem_ns_update_poll_group(void *io_device,
 	return spdk_nvmf_poll_group_add_ns(group, ctx->subsystem, ctx->ns);
 }
 
+static void
+_spdk_nvmf_ns_hot_remove(void *ctx)
+{
+	struct spdk_nvmf_ns *ns = ctx;
+
+	spdk_for_each_channel(ns->subsystem->tgt,
+			      spdk_nvmf_subsystem_remove_ns_from_poll_group,
+			      ns,
+			      spdk_nvmf_remove_ns_done);
+}
+
+static void
+spdk_nvmf_ns_hot_remove(void *remove_ctx)
+{
+	struct spdk_nvmf_ns *ns = remove_ctx;
+
+	ns->is_removed = true;
+	spdk_thread_send_msg(ns->subsystem->tgt->master_thread,
+			     _spdk_nvmf_ns_hot_remove,
+			     ns);
+}
+
 uint32_t
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
 			   uint32_t nsid)
@@ -480,7 +526,8 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	memset(ns, 0, sizeof(*ns));
 	ns->bdev = bdev;
 	ns->id = nsid;
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &ns->desc);
+	ns->subsystem = subsystem;
+	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ns_hot_remove, ns, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
