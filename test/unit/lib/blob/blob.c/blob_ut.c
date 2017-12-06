@@ -268,6 +268,30 @@ blob_open(void)
 }
 
 static void
+blob_create(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+
+
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	spdk_bs_md_create_blob_ext(bs, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+static void
 blob_delete(void)
 {
 	struct spdk_blob_store *bs;
@@ -2126,6 +2150,7 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "blob_init", blob_init) == NULL ||
 		CU_add_test(suite, "blob_open", blob_open) == NULL ||
+		CU_add_test(suite, "blob_create", blob_create) == NULL ||
 		CU_add_test(suite, "blob_delete", blob_delete) == NULL ||
 		CU_add_test(suite, "blob_resize", blob_resize) == NULL ||
 		CU_add_test(suite, "channel_ops", channel_ops) == NULL ||
