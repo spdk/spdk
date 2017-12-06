@@ -87,6 +87,16 @@ modprobe mlx5_core
 modprobe mlx5_ib
 ~~~
 
+## Prerequisites for Nvme over fabric {#nvmf_prereqs_fabrics}
+
+Before starting our NVMe-oF target we must load NVMe-oF related modules.
+
+~~~{.sh}
+modprobe nvme_rdma
+modprobe nvme-fabrics
+modprobe nvme_core
+~~~
+
 ### Assigning IP addresses to RDMA NICs
 
 ~~~{.sh}
@@ -129,7 +139,7 @@ nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a 192.168.100.8 -s 4420
 
 Disconnect:
 ~~~{.sh}
-nvme disconnect -n "nqn.2016-06.io.spdk.cnode1"
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 ~~~
 
 ## Assigning CPU Cores to the NVMe over Fabrics Target {#nvmf_config_lcore}
