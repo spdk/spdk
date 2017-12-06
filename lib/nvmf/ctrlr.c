@@ -310,6 +310,13 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
+		if (spdk_nvmf_ctrlr_get_qpair(ctrlr, cmd->qid)) {
+			SPDK_ERRLOG("Got I/O connect with duplicate QID %u\n", cmd->qid);
+			rsp->status.sct = SPDK_NVME_SCT_GENERIC;
+			rsp->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+
 		/* check if we would exceed ctrlr connection limit */
 		if (ctrlr->num_qpairs >= ctrlr->max_qpairs_allowed) {
 			SPDK_ERRLOG("qpair limit %d\n", ctrlr->num_qpairs);

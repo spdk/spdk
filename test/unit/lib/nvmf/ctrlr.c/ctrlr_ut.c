@@ -232,6 +232,7 @@ test_connect(void)
 	struct spdk_nvmf_subsystem subsystem;
 	struct spdk_nvmf_request req;
 	struct spdk_nvmf_qpair qpair;
+	struct spdk_nvmf_qpair qpair2;
 	struct spdk_nvmf_ctrlr ctrlr;
 	struct spdk_nvmf_tgt tgt;
 	union nvmf_h2c_msg cmd;
@@ -490,6 +491,19 @@ test_connect(void)
 	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVMF_FABRIC_SC_CONTROLLER_BUSY);
 	CU_ASSERT(qpair.ctrlr == NULL);
 	ctrlr.num_qpairs = 0;
+
+	/* I/O connect with duplicate queue ID */
+	memset(&rsp, 0, sizeof(rsp));
+	memset(&qpair2, 0, sizeof(qpair2));
+	qpair2.qid = 1;
+	TAILQ_INSERT_TAIL(&ctrlr.qpairs, &qpair, link);
+	cmd.connect_cmd.qid = 1;
+	rc = spdk_nvmf_ctrlr_connect(&req);
+	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE);
+	CU_ASSERT(rsp.nvme_cpl.status.sct == SPDK_NVME_SCT_GENERIC);
+	CU_ASSERT(rsp.nvme_cpl.status.sc == SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR);
+	CU_ASSERT(qpair.ctrlr == NULL);
+	TAILQ_INIT(&ctrlr.qpairs);
 
 	/* Clean up globals */
 	MOCK_SET(spdk_nvmf_tgt_find_subsystem, struct spdk_nvmf_subsystem *, NULL);
