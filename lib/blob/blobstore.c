@@ -86,6 +86,7 @@ void
 spdk_blob_opts_init(struct spdk_blob_opts *opts)
 {
 	opts->num_clusters = 0;
+	opts->thin_provision = false;
 }
 
 static struct spdk_blob_data *
@@ -2573,6 +2574,15 @@ _spdk_bs_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
+static void
+_spdk_bs_set_thin_provion(struct spdk_blob_data *blob)
+{
+	blob->invalid = true;
+	blob->invalid_flags |= SPDK_BLOB_THIN_PROV;
+
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+}
+
 void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, struct spdk_blob_opts *opts,
 			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
@@ -2605,7 +2615,12 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, struct spdk_blob_opts *
 		opts = &opts_default;
 	}
 
+	if (opts->thin_provision) {
+		_spdk_bs_set_thin_provion(blob);
+	}
+
 	spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
+
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
