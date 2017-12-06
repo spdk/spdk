@@ -235,11 +235,8 @@ struct spdk_blob_md_descriptor_extent {
 	} extents[0];
 };
 
-/*
- * As new flags are defined, these values will be updated to reflect the
- *  mask of all flag values understood by this application.
- */
-#define SPDK_BLOB_INVALID_FLAGS_MASK	0
+#define SPDK_BLOB_THIN_PROV (1ULL << 0)
+#define SPDK_BLOB_INVALID_FLAGS_MASK	SPDK_BLOB_THIN_PROV
 
 #define SPDK_BLOB_READ_ONLY (1ULL << 0)
 #define SPDK_BLOB_DATA_RO_FLAGS_MASK	SPDK_BLOB_READ_ONLY

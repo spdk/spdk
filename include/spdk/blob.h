@@ -208,6 +208,7 @@ uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 
 struct spdk_blob_opts {
 	uint64_t  num_clusters;
+	bool	thin_provision;
 	/* Number of attributes */
 	size_t	xattr_count;
 	/* Array of attribute names. Caller should free this array after use. */
