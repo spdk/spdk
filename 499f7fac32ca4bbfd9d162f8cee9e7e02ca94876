@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30397793_17b5d5cd",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-06T11:49:57Z",
+      "side": 1,
+      "message": "all other prints use print() syntax, please change to be consistent",
+      "range": {
+        "startLine": 144,
+        "startChar": 8,
+        "endLine": 144,
+        "endChar": 50
+      },
+      "revId": "499f7fac32ca4bbfd9d162f8cee9e7e02ca94876",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4d5c5cf_6e3ee969",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-06T11:49:57Z",
+      "side": 1,
+      "message": "Do we need address? We could just do:\n\"for word in line.split()\"",
+      "range": {
+        "startLine": 148,
+        "startChar": 20,
+        "endLine": 149,
+        "endChar": 40
+      },
+      "revId": "499f7fac32ca4bbfd9d162f8cee9e7e02ca94876",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1fe803b_f21ce0cd",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-06T11:49:57Z",
+      "side": 1,
+      "message": "all other prints use print() syntax, please change to be consistent",
+      "range": {
+        "startLine": 153,
+        "startChar": 7,
+        "endLine": 153,
+        "endChar": 62
+      },
+      "revId": "499f7fac32ca4bbfd9d162f8cee9e7e02ca94876",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
