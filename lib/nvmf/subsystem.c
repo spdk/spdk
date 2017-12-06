@@ -36,6 +36,7 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
+#include "spdk/event.h"
 #include "spdk/likely.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
@@ -187,6 +188,52 @@ spdk_nvmf_subsystem_delete_done(void *io_device, void *ctx, int status)
 	tgt->discovery_genctr++;
 
 	free(subsystem);
+}
+
+static void
+spdk_nvmf_hotplug_process(struct spdk_nvmf_subsystem *subsystem)
+{
+	struct spdk_nvmf_ns *ns;
+	uint32_t i, max_nsid = 0, cur_nsid = 0;
+
+	for (i = 0; i < subsystem->max_nsid; i++) {
+		ns = _spdk_nvmf_subsystem_get_ns(subsystem, i + 1);
+		if (ns && cur_nsid < ns->id) {
+			cur_nsid = ns->id;
+		}
+		if (ns && ns->is_removed) {
+			spdk_bdev_close(ns->desc);
+			ns->allocated = false;
+			cur_nsid = 0;
+			subsystem->num_allocated_nsid--;
+		}
+		if (cur_nsid) {
+			max_nsid = cur_nsid;
+		}
+	}
+	if (subsystem->max_nsid != max_nsid) {
+		subsystem->max_nsid = max_nsid;
+	}
+}
+
+static void
+spdk_nvmf_remove_ns_done(void *io_device, void *ctx, int status)
+{
+	struct spdk_nvmf_ns *ns = ctx;
+
+	spdk_nvmf_hotplug_process(ns->subsystem);
+}
+
+static int
+spdk_nvmf_subsystem_remove_ns_from_poll_group(void *io_device,
+		struct spdk_io_channel *ch,
+		void *ctx)
+{
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_ns *ns = ctx;
+
+	group = spdk_io_channel_get_ctx(ch);
+	return spdk_nvmf_poll_group_remove_ns(group, ns);
 }
 
 static int
@@ -413,6 +460,29 @@ spdk_nvmf_subsystem_ns_update_poll_group(void *io_device,
 	return spdk_nvmf_poll_group_add_ns(group, ctx->subsystem, ctx->ns);
 }
 
+static void
+_spdk_nvmf_ns_hot_remove(void *arg1, void *arg2)
+{
+	struct spdk_nvmf_ns *ns = arg1;
+
+	spdk_for_each_channel(ns->subsystem->tgt,
+			      spdk_nvmf_subsystem_remove_ns_from_poll_group,
+			      ns,
+			      spdk_nvmf_remove_ns_done);
+}
+
+static void
+spdk_nvmf_ns_hot_remove(void *remove_ctx)
+{
+	struct spdk_nvmf_ns *ns = remove_ctx;
+	struct spdk_event *remove_event;
+
+	ns->is_removed = true;
+
+	remove_event = spdk_event_allocate(spdk_env_get_current_core(), _spdk_nvmf_ns_hot_remove, ns, NULL);
+	spdk_event_call(remove_event);
+}
+
 uint32_t
 spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bdev *bdev,
 			   uint32_t nsid)
@@ -479,7 +549,8 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	memset(ns, 0, sizeof(*ns));
 	ns->bdev = bdev;
 	ns->id = nsid;
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &ns->desc);
+	ns->subsystem = subsystem;
+	rc = spdk_bdev_open(bdev, true, spdk_nvmf_ns_hot_remove, ns, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
 			    subsystem->subnqn, spdk_bdev_get_name(bdev), rc);
