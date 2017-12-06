@@ -208,6 +208,7 @@ uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 
 struct spdk_blob_opts {
 	size_t  num_clusters;
+	bool    thin_provision;
 };
 
 /* Initialize an spdk_blob_opts structure to the default blob option values. */
