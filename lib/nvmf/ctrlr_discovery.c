@@ -40,6 +40,7 @@
 #include "nvmf_internal.h"
 #include "transport.h"
 
+#include "spdk/event.h"
 #include "spdk/string.h"
 #include "spdk/trace.h"
 #include "spdk/nvmf_spec.h"
