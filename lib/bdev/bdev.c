@@ -804,8 +804,12 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
 	struct spdk_io_channel *ch = bdev_ch->channel;
 	struct spdk_bdev_module_channel	*shared_ch = bdev_ch->module_ch;
+	struct spdk_thread *th;
 
 	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
+
+	th = spdk_io_channel_get_thread(ch);
+	bdev_io->submit_tsc = spdk_get_thread_tsc(th);
 
 	shared_ch->io_outstanding++;
 	bdev_io->in_submit_request = true;
@@ -1643,6 +1647,7 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	struct spdk_bdev_channel *channel = spdk_io_channel_get_ctx(ch);
 
+	channel->stat.ticks_us_rate = spdk_get_ticks_hz() / 1000000;
 	*stat = channel->stat;
 	memset(&channel->stat, 0, sizeof(channel->stat));
 }
@@ -1848,6 +1853,8 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
 	struct spdk_bdev_module_channel	*shared_ch = bdev_ch->module_ch;
+	struct spdk_thread *th;
+	uint64_t tsc;
 
 	bdev_io->status = status;
 
@@ -1890,15 +1897,20 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 		}
 	}
 
+	th = spdk_io_channel_get_thread(bdev_ch->channel);
+	tsc = spdk_get_thread_tsc(th);
+
 	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
 			bdev_ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev->blocklen;
 			bdev_ch->stat.num_read_ops++;
+			bdev_ch->stat.read_latency_ticks += (tsc - bdev_io->submit_tsc);
 			break;
 		case SPDK_BDEV_IO_TYPE_WRITE:
 			bdev_ch->stat.bytes_written += bdev_io->u.bdev.num_blocks * bdev->blocklen;
 			bdev_ch->stat.num_write_ops++;
+			bdev_ch->stat.write_latency_ticks += (tsc - bdev_io->submit_tsc);
 			break;
 		default:
 			break;
