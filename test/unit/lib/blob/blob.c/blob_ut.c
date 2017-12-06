@@ -266,6 +266,80 @@ blob_open(void)
 }
 
 static void
+blob_create(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob_opts opts;
+	spdk_blob_id blobid;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Create blob with 10 clusters */
+
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Create blob with 0 clusters */
+
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 0;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0)
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Create blob with default options (opts == NULL) */
+
+	spdk_bs_create_blob_ext(bs, NULL, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 0)
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+static void
 blob_delete(void)
 {
 	struct spdk_blob_store *bs;
@@ -2173,6 +2247,7 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "blob_init", blob_init) == NULL ||
 		CU_add_test(suite, "blob_open", blob_open) == NULL ||
+		CU_add_test(suite, "blob_create", blob_create) == NULL ||
 		CU_add_test(suite, "blob_delete", blob_delete) == NULL ||
 		CU_add_test(suite, "blob_resize", blob_resize) == NULL ||
 		CU_add_test(suite, "channel_ops", channel_ops) == NULL ||
