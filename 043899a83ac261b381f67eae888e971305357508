@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "94098597_6371433a",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-06T23:26:43Z",
+      "side": 1,
+      "message": "This commit should only use tgt for the new code.  Changes to do global target\u003d\u003etgt should be in a separate patch - that is not related to switching Dev to Target keyword.\n\nSorry - I should have been more clear on this - my intention was not to turn this into a massive patch by globally replacing target \u003d\u003e tgt in all of the vhost code.  I just did not want to add the use of \"target\" in the public vhost API.",
+      "revId": "043899a83ac261b381f67eae888e971305357508",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d76fe1dd_16c2e822",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-06T23:26:43Z",
+      "side": 1,
+      "message": "OK - so both Pawel and I were wrong.\n\nThis actually does not prevent Dev 0 and Target 0 in the same controller, it guards against any combination of Dev and Target (even if the indices are unique).  This check does work - for the example I gave, they will both return non-NULL on the first iteration and we will return -1 here.\n\nBut I think we should not do this in the loop.  There is no reason to do this check more than once.  Just do this before the loop:\n\ndev \u003d spdk_conf_section_get_nval(sp, \"Dev\", 0);\ntarget \u003d spdk_conf_section_get_nval(sp, \"Target\", 0);\nif (dev \u0026\u0026 target) {\n  SPDK_ERRLOG(\"Used both etc etc.\\n\");\n}\n\nif (dev) {\n  keyword \u003d \"Dev\";\n} else {\n  keyword \u003d \"Target\";\n}\n\nfor (i \u003d 0; ; i++) {\n  if (spdk_conf_section_get_nval(sp, keyword, i) \u003d\u003d NULL) {\n    break;\n  }\n\n  // do the rest of the stuff for this entry\n}",
+      "revId": "043899a83ac261b381f67eae888e971305357508",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
