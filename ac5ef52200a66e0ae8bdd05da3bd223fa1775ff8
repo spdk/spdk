@@ -16,6 +16,24 @@
       "revId": "ac5ef52200a66e0ae8bdd05da3bd223fa1775ff8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13d7130e_0f150efa",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-06T05:46:18Z",
+      "side": 1,
+      "message": "No break here. Just want to avoid R/W competence。 This limitation can be removed.",
+      "parentUuid": "03da8faa_66592a5d",
+      "revId": "ac5ef52200a66e0ae8bdd05da3bd223fa1775ff8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
