@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ff481086_19e41e2b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 918,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-06T10:26:57Z",
+      "side": 1,
+      "message": "I thought about returning char**, but Tomasz Zawadzki suggested to return pointer to list.",
+      "parentUuid": "7c20c502_95209aee",
+      "range": {
+        "startLine": 914,
+        "startChar": 0,
+        "endLine": 918,
+        "endChar": 1
+      },
+      "revId": "41cffd37f95fddb9a38f8829431f4b3b0b1c35a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e67d6561_df2021e7",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 8
