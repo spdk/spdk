@@ -141,6 +141,8 @@ create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
 		return NULL;
 	}
 
+	TAILQ_INIT(&bdev->bdev.aliases);
+
 	bdev->bdev.name = strdup(name);
 	if (!bdev->bdev.name) {
 		spdk_dma_free(bdev);
