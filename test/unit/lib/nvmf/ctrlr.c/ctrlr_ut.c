@@ -34,144 +34,104 @@
 #include "spdk/stdinc.h"
 
 #include "spdk_cunit.h"
+#include "spdk_internal/mock.h"
 
 #include "ctrlr.c"
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
-struct spdk_nvmf_subsystem *
-spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
-{
-	return NULL;
-}
 
-const struct spdk_nvme_ctrlr_data *
-spdk_nvme_ctrlr_get_data(struct spdk_nvme_ctrlr *ctrlr)
-{
-	return NULL;
-}
+DEFINE_STUB(spdk_nvmf_tgt_find_subsystem,
+	    struct spdk_nvmf_subsystem *,
+	    (struct spdk_nvmf_tgt *tgt, const char *subnqn),
+	    NULL)
 
-struct spdk_nvmf_poll_group *
-spdk_nvmf_poll_group_create(struct spdk_nvmf_tgt *tgt)
-{
-	return NULL;
-}
+DEFINE_STUB(spdk_nvmf_poll_group_create,
+	    struct spdk_nvmf_poll_group *,
+	    (struct spdk_nvmf_tgt *tgt),
+	    NULL)
 
-void
-spdk_nvmf_poll_group_destroy(struct spdk_nvmf_poll_group *group)
-{
-}
+DEFINE_STUB_V(spdk_nvmf_poll_group_destroy,
+	      (struct spdk_nvmf_poll_group *group))
 
-void
-spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair)
-{
-}
+DEFINE_STUB_V(spdk_nvmf_transport_qpair_fini,
+	      (struct spdk_nvmf_qpair *qpair))
 
-int
-spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
-			 struct spdk_nvmf_qpair *qpair)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_nvmf_poll_group_add,
+	    int,
+	    (struct spdk_nvmf_poll_group *group, struct spdk_nvmf_qpair *qpair),
+	    0)
 
-int
-spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
-			    struct spdk_nvmf_qpair *qpair)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_nvmf_poll_group_remove,
+	    int,
+	    (struct spdk_nvmf_poll_group *group, struct spdk_nvmf_qpair *qpair),
+	    0)
 
-const char *
-spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
-{
-	abort();
-	return NULL;
-}
+DEFINE_STUB(spdk_nvmf_subsystem_get_sn,
+	    const char *,
+	    (const struct spdk_nvmf_subsystem *subsystem),
+	    NULL)
 
-struct spdk_nvmf_ns *
-spdk_nvmf_subsystem_get_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
-{
-	abort();
-	return NULL;
-}
+DEFINE_STUB(spdk_nvmf_subsystem_get_ns,
+	    struct spdk_nvmf_ns *,
+	    (struct spdk_nvmf_subsystem *subsystem, uint32_t nsid),
+	    NULL)
 
-struct spdk_nvmf_ns *
-spdk_nvmf_subsystem_get_first_ns(struct spdk_nvmf_subsystem *subsystem)
-{
-	abort();
-	return NULL;
-}
+DEFINE_STUB(spdk_nvmf_subsystem_get_first_ns,
+	    struct spdk_nvmf_ns *,
+	    (struct spdk_nvmf_subsystem *subsystem),
+	    NULL)
 
-struct spdk_nvmf_ns *
-spdk_nvmf_subsystem_get_next_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ns *prev_ns)
-{
-	abort();
-	return NULL;
-}
+DEFINE_STUB(spdk_nvmf_subsystem_get_next_ns,
+	    struct spdk_nvmf_ns *,
+	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ns *prev_ns),
+	    NULL)
 
-bool
-spdk_nvmf_subsystem_host_allowed(struct spdk_nvmf_subsystem *subsystem, const char *hostnqn)
-{
-	return true;
-}
+DEFINE_STUB(spdk_nvmf_subsystem_host_allowed,
+	    bool,
+	    (struct spdk_nvmf_subsystem *subsystem, const char *hostnqn),
+	    true)
 
-int
-spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_nvmf_subsystem_add_ctrlr,
+	    int,
+	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr),
+	    0)
 
-void
-spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
-				 struct spdk_nvmf_ctrlr *ctrlr)
-{
-}
+DEFINE_STUB_V(spdk_nvmf_subsystem_remove_ctrlr,
+	      (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr))
 
-struct spdk_nvmf_ctrlr *
-spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid)
-{
-	return NULL;
-}
+DEFINE_STUB(spdk_nvmf_subsystem_get_ctrlr,
+	    struct spdk_nvmf_ctrlr *,
+	    (struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid),
+	    NULL)
 
-bool
-spdk_nvmf_ctrlr_dsm_supported(struct spdk_nvmf_ctrlr *ctrlr)
-{
-	abort();
-	return false;
-}
+DEFINE_STUB(spdk_nvmf_ctrlr_dsm_supported,
+	    bool,
+	    (struct spdk_nvmf_ctrlr *ctrlr),
+	    false)
 
-bool
-spdk_nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr)
-{
-	abort();
-	return false;
-}
+DEFINE_STUB(spdk_nvmf_ctrlr_write_zeroes_supported,
+	    bool,
+	    (struct spdk_nvmf_ctrlr *ctrlr),
+	    false)
 
-int
-spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_bdev *bdev, struct spdk_nvme_ns_data *nsdata)
-{
-	abort();
-	return -1;
-}
+DEFINE_STUB(spdk_nvmf_bdev_ctrlr_identify_ns,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_nvme_ns_data *nsdata),
+	    -1)
 
-void
-spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
-				 uint64_t offset, uint32_t length)
-{
-	abort();
-}
+DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,
+	      (struct spdk_nvmf_tgt *tgt, void *buffer, uint64_t offset, uint32_t length))
 
-int
-spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
+DEFINE_STUB(spdk_nvmf_request_complete,
+	    int,
+	    (struct spdk_nvmf_request *req),
+	    -1)
 
-int
-spdk_nvmf_request_abort(struct spdk_nvmf_request *req)
-{
-	return -1;
-}
+DEFINE_STUB(spdk_nvmf_request_abort,
+	    int,
+	    (struct spdk_nvmf_request *req),
+	    -1)
 
 static void
 test_get_log_page(void)
