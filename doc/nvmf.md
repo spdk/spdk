@@ -129,7 +129,7 @@ nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a 192.168.100.8 -s 4420
 
 Disconnect:
 ~~~{.sh}
-nvme disconnect -n "nqn.2016-06.io.spdk.cnode1"
+nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 ~~~
 
 ## Assigning CPU Cores to the NVMe over Fabrics Target {#nvmf_config_lcore}
