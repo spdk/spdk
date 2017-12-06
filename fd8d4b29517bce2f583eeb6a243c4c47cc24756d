@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbf81455_cd612573",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-06T08:48:40Z",
+      "side": 1,
+      "message": "You can keep this line same as original.",
+      "revId": "fd8d4b29517bce2f583eeb6a243c4c47cc24756d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df7335b0_4f13e0e4",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-06T08:48:40Z",
+      "side": 1,
+      "message": "I\u0027m okay here, nice to combine the 2 if section together.",
+      "revId": "fd8d4b29517bce2f583eeb6a243c4c47cc24756d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e76c23a_900387df",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-06T08:48:40Z",
+      "side": 1,
+      "message": "same here, extra line for LD_PRLOAD.",
+      "revId": "fd8d4b29517bce2f583eeb6a243c4c47cc24756d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
