@@ -39,6 +39,24 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
+struct spdk_event *
+spdk_event_allocate(uint32_t core, spdk_event_fn fn, void *arg1, void *arg2)
+{
+	return NULL;
+}
+
+void
+spdk_event_call(struct spdk_event *event)
+{
+
+}
+
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 			   const struct spdk_nvme_transport_id *trid)
@@ -94,6 +112,13 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 int
 spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 				      struct spdk_nvmf_subsystem *subsystem)
+{
+	return 0;
+}
+
+int
+spdk_nvmf_poll_group_remove_ns(struct spdk_nvmf_poll_group *group,
+			       struct spdk_nvmf_ns *ns)
 {
 	return 0;
 }
