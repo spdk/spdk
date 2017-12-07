@@ -95,9 +95,6 @@ struct spdk_scsi_lun {
 	/**  The reference number for this LUN, thus we can correctly free the io_channel */
 	uint32_t ref;
 
-	/** Name for this LUN. */
-	char name[SPDK_SCSI_LUN_MAX_NAME_LENGTH];
-
 	/** Poller to release the resource of the lun when it is hot removed */
 	struct spdk_poller *hotplug_poller;
 
@@ -117,19 +114,12 @@ struct spdk_scsi_lun {
 	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;	/* pending tasks */
 };
 
-struct spdk_lun_db_entry {
-	struct spdk_scsi_lun *lun;
-	struct spdk_lun_db_entry *next;
-};
-
-extern struct spdk_lun_db_entry *spdk_scsi_lun_list_head;
-
 /* This typedef exists to work around an astyle 2.05 bug.
  * Remove it when astyle is fixed.
  */
 typedef struct spdk_scsi_lun _spdk_scsi_lun;
 
-_spdk_scsi_lun *spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
+_spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 					void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 					void *hotremove_ctx);
 int spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
@@ -143,11 +133,6 @@ int spdk_scsi_lun_delete(struct spdk_scsi_lun *lun);
 int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun);
 void spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun);
 bool spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun);
-
-int spdk_scsi_lun_db_add(struct spdk_scsi_lun *lun);
-int spdk_scsi_lun_db_delete(struct spdk_scsi_lun *lun);
-
-struct spdk_scsi_lun *spdk_lun_db_get_lun(const char *lun_name);
 
 struct spdk_scsi_dev *spdk_scsi_dev_get_list(void);
 
