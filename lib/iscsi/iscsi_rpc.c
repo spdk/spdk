@@ -811,6 +811,7 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	size_t i = 0;
 	int rc = -1;
+	spdk_cpuset_t cpumask;
 
 	if (spdk_json_decode_object(params, rpc_portal_group_decoders,
 				    SPDK_COUNTOF(rpc_portal_group_decoders),
@@ -820,8 +821,9 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 	}
 
 	for (i = 0; i < req.portal_list.num_portals; i++) {
+		SPDK_CPU_ZERO(&cpumask);
 		portal_list[i] = spdk_iscsi_portal_create(req.portal_list.portals[i].host,
-				 req.portal_list.portals[i].port, 0);
+				 req.portal_list.portals[i].port, &cpumask);
 		if (portal_list[i] == NULL) {
 			SPDK_ERRLOG("portal_list allocation failed\n");
 			goto out;

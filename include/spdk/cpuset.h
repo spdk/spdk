@@ -31,67 +31,54 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * Standard C headers
- *
- * This file is intended to be included first by all other SPDK files.
- */
+#ifndef _SPDK_CPUSET_H
+#define _SPDK_CPUSET_H
 
-#ifndef SPDK_STDINC_H
-#define SPDK_STDINC_H
+#include "spdk/stdinc.h"
+
+#if defined(__linux__)
+typedef	cpu_set_t spdk_cpuset_t;
+
+/* For Linux define FreeBSD-like macros */
+#define SPDK_CPU_EQUAL(set1, set2) CPU_EQUAL(set1, set2)
+#define SPDK_CPU_AND(set1, set2) CPU_AND(set1, set1, set2)
+#define SPDK_CPU_OR(set1, set2) CPU_OR(set1, set1, set2)
+
+#elif defined(__FreeBSD__)
+typedef cpuset_t spdk_cpuset_t;
+
+#define SPDK_CPU_EQUAL(set1, set2) CPU_CMP(set1, set2)
+#define SPDK_CPU_AND(set1, set2) CPU_AND(set1, set2)
+#define SPDK_CPU_OR(set1, set2) CPU_OR(set1, set2)
+
+#endif
+
+#define SPDK_CPU_SETSIZE CPU_SETSIZE
+#define SPDK_CPU_ZERO(set) CPU_ZERO(set)
+#define SPDK_CPU_SET(cpu, set) CPU_SET(cpu, set)
+#define SPDK_CPU_CLR(cpu, set) CPU_CLR(cpu, set)
+#define SPDK_CPU_ISSET(cpu, set) CPU_ISSET(cpu, set)
+#define SPDK_CPU_COUNT(set) CPU_COUNT(set)
+
+#define SPDK_CPUSET_STR_MAX_LEN (SPDK_CPU_SETSIZE / 4 + 1)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* Standard C */
-#include <assert.h>
-#include <ctype.h>
-#include <errno.h>
-#include <inttypes.h>
-#include <limits.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
+/**
+ * \brief Convert a CPU set to hex string.
+ */
+char *spdk_core_mask_hex(const spdk_cpuset_t *cpumask, char *mask, size_t n);
 
-/* POSIX */
-#include <arpa/inet.h>
-#include <dirent.h>
-#include <fcntl.h>
-#include <ifaddrs.h>
-#include <netdb.h>
-#include <poll.h>
-#include <pthread.h>
-#include <semaphore.h>
-#include <signal.h>
-#include <syslog.h>
-#include <termios.h>
-#include <unistd.h>
-#include <net/if.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <sys/ioctl.h>
-#include <sys/mman.h>
-#include <sys/resource.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/uio.h>
-#include <sys/un.h>
-#include <sys/user.h>
-#include <sys/wait.h>
-
-#if defined(__FreeBSD__)
-#include <sys/cpuset.h>
-#endif
+/**
+ * \brief Convert a string containing a CPU core mask into a cpuset. By default
+ * hexadecimal value is used or as CPU list enclosed in square brackets
+ * defined as: 'c1[-c2][,c3[-c4],...]'
+ */
+int spdk_parse_core_mask(const char *mask, spdk_cpuset_t *cpumask);
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* SPDK_STDINC_H */
+#endif /* _SPDK_CPUSET_H */
