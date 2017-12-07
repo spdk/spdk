@@ -134,7 +134,7 @@ spdk_bs_sequence_t *spdk_bs_sequence_start(struct spdk_io_channel *channel,
 
 void spdk_bs_sequence_read(spdk_bs_sequence_t *seq, void *payload,
 			   uint64_t lba, uint32_t lba_count,
-			   spdk_bs_sequence_cpl cb_fn, void *cb_arg);
+			   spdk_bs_sequence_cpl cb_fn, void *cb_arg, struct spdk_bs_dev *back_dev);
 
 void spdk_bs_sequence_write(spdk_bs_sequence_t *seq, void *payload,
 			    uint64_t lba, uint32_t lba_count,
