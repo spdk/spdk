@@ -175,11 +175,11 @@ int spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
  *
  * \param vdev vhost SCSI device
  * \param scsi_tgt_num slot to attach to
- * \param lun_name name of the SPDK bdev to associate with SCSI LUN0
+ * \param bdev_name name of the SPDK bdev to associate with SCSI LUN0
  * \return 0 on success, negative errno on error.
  */
 int spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
-				const char *lun_name);
+				const char *bdev_name);
 
 /**
  * Get SCSI target from vhost SCSI device on given slot. Max

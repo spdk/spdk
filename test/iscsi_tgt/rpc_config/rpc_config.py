@@ -158,21 +158,10 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     print "verify_scsi_devices_rpc_methods passed"
 
 
-def verify_luns_rpc_methods(rpc_py, rpc_param):
+def create_luns(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
-    output = rpc.get_luns()
-    jsonvalue = json.loads(output)
-    verify(not jsonvalue, 1,
-           "get_luns returned {}, expected empty".format(jsonvalue))
-
     for i in range(1, rpc_param['lun_total'] + 1):
         rpc.construct_malloc_bdev(rpc_param['malloc_bdev_size'], rpc_param['malloc_block_size'])
-        output = rpc.get_luns()
-        jsonvalue = json.loads(output)
-        verify(not jsonvalue, 1,
-               "get_luns returned {}, expected empty".format(jsonvalue))
-
-    print "verify_luns_rpc_methods passed"
 
 
 def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
@@ -295,8 +284,8 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == 1, 1,
            "get_target_nodes returned {} nodes, expected 1".format(len(jsonvalues)))
-    verify(jsonvalues[0]['luns'][0]['name'] == "Malloc" + str(rpc_param['lun_total']), 1,
-           "lun_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['name'], str(rpc_param['lun_total'])))
+    verify(jsonvalues[0]['luns'][0]['bdev_name'] == "Malloc" + str(rpc_param['lun_total']), 1,
+           "bdev_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['bdev_name'], str(rpc_param['lun_total'])))
     name = jsonvalues[0]['name']
     verify(name == "iqn.2016-06.io.spdk:" + rpc_param['target_name'], 1,
            "target name value is {}, expected {}".format(name, "iqn.2016-06.io.spdk:" + rpc_param['target_name']))
@@ -418,7 +407,7 @@ if __name__ == "__main__":
         verify_trace_flag_rpc_methods(rpc_py, rpc_param)
         verify_get_interfaces(rpc_py)
         verify_add_delete_ip_address(rpc_py)
-        verify_luns_rpc_methods(rpc_py, rpc_param)
+        create_luns(rpc_py, rpc_param)
         verify_portal_groups_rpc_methods(rpc_py, rpc_param)
         verify_initiator_groups_rpc_methods(rpc_py, rpc_param)
         verify_target_nodes_rpc_methods(rpc_py, rpc_param)
