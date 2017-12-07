@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48e7437f_ac47fb0d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T18:42:27Z",
+      "side": 1,
+      "message": "how about:\n\nDisplay full or specified nbd device list",
+      "revId": "496c6b1ea2c10bbb0c7c8679a20c48f315f5a42e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
