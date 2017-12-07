@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a751d9b5_aed5c4a2",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T05:16:39Z",
+      "side": 1,
+      "message": "I would prefer to not have this in the main I/O path.\n\nInstead, could you add a loop to the shutdown that sends an event to each thread.  That event should run a function that loops through the targets assigned to that thread, and calls end_target(target) on each.  Similar to the loop in bdevperf_run.",
+      "revId": "43c96ca04dc0ce40d4251318d83b7f0aadd04638",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd94fd93_5ecfc374",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T05:16:39Z",
+      "side": 1,
+      "message": "can use printf here instead of fprintf(stdout)\n\nI think maybe we have other cases of this in SPDK - we can also fix those later\n\nor maybe do not print these messages at all?  later you have a good warning message says that application was shutdown",
+      "revId": "43c96ca04dc0ce40d4251318d83b7f0aadd04638",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "398a13ea_2763f004",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 864,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T05:16:39Z",
+      "side": 1,
+      "message": "Received shutdown signal, test time is about %d seconds\n\nThis can also just be printf instead of fprintf(stdout) - they are the same thing",
+      "revId": "43c96ca04dc0ce40d4251318d83b7f0aadd04638",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6fc3f6f_e22229a3",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 868,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T05:16:39Z",
+      "side": 1,
+      "message": "I think we might need to change g_time_in_sec to something g_time_in_usec\n\nmy concern is that if it runs for 1.99 seconds, this will get rounded down to 1 second - then performance will appear much better than it really is\n\nif we pass time by microseconds, then the results will be much more accurate",
+      "revId": "43c96ca04dc0ce40d4251318d83b7f0aadd04638",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87fe26bc_ad00a251",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T05:16:39Z",
+      "side": 1,
+      "message": "Test time less than one second, no performance data will be shown\n\nalso just use printf here",
+      "revId": "43c96ca04dc0ce40d4251318d83b7f0aadd04638",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
