@@ -60,9 +60,11 @@ static bool g_verify = false;
 static bool g_reset = false;
 static bool g_unmap = false;
 static int g_queue_depth;
-static int g_time_in_sec;
+static uint64_t g_time_in_usec;
 static int g_show_performance_real_time = 0;
 static bool g_run_failed = false;
+static bool g_shutdown = false;
+static uint64_t g_shutdown_tsc;
 static bool g_zcopy = true;
 static int g_mem_size = 0;
 static unsigned g_master_core;
@@ -508,7 +510,7 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 
 		/* Start a timer to stop this I/O chain when the run is over */
 		target->run_timer = spdk_poller_register(end_target, target,
-				    g_time_in_sec * 1000000);
+				    g_time_in_usec);
 		if (g_reset) {
 			target->reset_timer = spdk_poller_register(reset_target, target,
 					      10 * 1000000);
@@ -535,7 +537,7 @@ static void usage(char *program_name)
 }
 
 static void
-performance_dump(int io_time)
+performance_dump(int io_time_in_usec)
 {
 	uint32_t index;
 	unsigned lcore_id;
@@ -552,8 +554,8 @@ performance_dump(int io_time)
 			printf("\r Logical core: %u\n", lcore_id);
 		}
 		while (target != NULL) {
-			io_per_second = (float)target->io_completed /
-					io_time;
+			io_per_second = (float)target->io_completed * 1000000 /
+					io_time_in_usec;
 			mb_per_second = io_per_second * g_io_size /
 					(1024 * 1024);
 			printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
@@ -647,10 +649,11 @@ bdevperf_run(void *arg1, void *arg2)
 		return;
 	}
 
-	printf("Running I/O for %d seconds...\n", g_time_in_sec);
+	printf("Running I/O for %" PRIu64 " seconds...\n", g_time_in_usec / 1000000);
 	fflush(stdout);
 
 	/* Start a timer to dump performance numbers */
+	g_shutdown_tsc = spdk_get_ticks();
 	if (g_show_performance_real_time) {
 		g_perf_timer = spdk_poller_register(performance_statistics_thread, NULL, 1000000);
 	}
@@ -668,6 +671,40 @@ bdevperf_run(void *arg1, void *arg2)
 	}
 }
 
+static void
+bdevperf_stop_io_on_core(void *arg1, void *arg2)
+{
+	struct io_target *target = arg1;
+
+	/* Stop I/O for each block device. */
+	while (target != NULL) {
+		end_target(target);
+		target = target->next;
+	}
+}
+
+static void
+spdk_bdevperf_shutdown_cb(void)
+{
+	uint32_t i;
+	struct io_target *target;
+	struct spdk_event *event;
+
+	g_shutdown = true;
+	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
+
+	/* Send events to stop all I/O on each core */
+	for (i = 0; i < spdk_env_get_core_count(); i++) {
+		target = head[i];
+		if (target == NULL) {
+			break;
+		}
+		event = spdk_event_allocate(target->lcore, bdevperf_stop_io_on_core,
+					    target, NULL);
+		spdk_event_call(event);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
@@ -677,13 +714,14 @@ main(int argc, char **argv)
 	int op;
 	bool mix_specified;
 	struct spdk_app_opts opts = {};
+	uint64_t time_in_sec;
 
 	/* default value */
 	config_file = NULL;
 	g_queue_depth = 0;
 	g_io_size = 0;
 	workload_type = NULL;
-	g_time_in_sec = 0;
+	time_in_sec = 0;
 	mix_specified = false;
 	core_mask = NULL;
 
@@ -705,7 +743,7 @@ main(int argc, char **argv)
 			g_io_size = atoi(optarg);
 			break;
 		case 't':
-			g_time_in_sec = atoi(optarg);
+			time_in_sec = atoi(optarg);
 			break;
 		case 'w':
 			workload_type = optarg;
@@ -739,10 +777,11 @@ main(int argc, char **argv)
 		usage(argv[0]);
 		exit(1);
 	}
-	if (g_time_in_sec <= 0) {
+	if (time_in_sec <= 0) {
 		usage(argv[0]);
 		exit(1);
 	}
+	g_time_in_usec = time_in_sec * 1000000LL;
 
 	if (strcmp(workload_type, "read") &&
 	    strcmp(workload_type, "write") &&
@@ -826,9 +865,9 @@ main(int argc, char **argv)
 	}
 
 	if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
-		fprintf(stdout, "I/O size of %d is greather than zero copy threshold (%d).\n",
-			g_io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
-		fprintf(stdout, "Zero copy mechanism will not be used.\n");
+		printf("I/O size of %d is greather than zero copy threshold (%d).\n",
+		       g_io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
+		printf("Zero copy mechanism will not be used.\n");
 		g_zcopy = false;
 	}
 
@@ -838,9 +877,21 @@ main(int argc, char **argv)
 		opts.mem_size = g_mem_size;
 	}
 
+	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 	spdk_app_start(&opts, bdevperf_run, NULL, NULL);
 
-	performance_dump(g_time_in_sec);
+	if (g_shutdown) {
+		g_time_in_usec = g_shutdown_tsc * 1000000 / spdk_get_ticks_hz();
+		printf("Received shutdown signal, test time is about %.6f seconds\n",
+		       (double)g_time_in_usec / 1000000);
+	}
+
+	if (g_time_in_usec) {
+		performance_dump(g_time_in_usec);
+	} else {
+		printf("Test time less than one microsecond, no performance data will be shown\n");
+	}
+
 	blockdev_heads_destroy();
 	spdk_app_fini();
 	printf("done.\n");
