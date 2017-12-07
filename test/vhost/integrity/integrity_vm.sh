@@ -23,6 +23,8 @@ for dev in $devs; do
             mkfs_cmd+=" -f -F"
         elif [ "btrfs" == $fs ]; then
             mkfs_cmd+=" -f"
+        elif [ "xfs" == $fs ]; then
+            mkfs_cmd+=" -f"
         elif [ "fat" == $fs ]; then
             mkfs_cmd+=" -I"
         else
