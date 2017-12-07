@@ -82,12 +82,6 @@ def jsonrpc_call(method, params={}):
 
     return response['result']
 
-def get_luns(args):
-    print_dict(jsonrpc_call('get_luns'))
-
-p = subparsers.add_parser('get_luns', help='Display active LUNs')
-p.set_defaults(func=get_luns)
-
 
 def get_portal_groups(args):
     print_dict(jsonrpc_call('get_portal_groups'))

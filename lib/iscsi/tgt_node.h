@@ -104,7 +104,7 @@ _spdk_iscsi_tgt_node *
 spdk_iscsi_tgt_node_construct(int target_index,
 			      const char *name, const char *alias,
 			      int *pg_tag_list, int *ig_tag_list, uint16_t num_maps,
-			      char *lun_name_list[], int *lun_id_list, int num_luns,
+			      char *bdev_name_list[], int *lun_id_list, int num_luns,
 			      int queue_depth,
 			      int no_auth_chap, int auth_chap, int auth_chap_mutual, int auth_group,
 			      int header_digest, int data_digest);
