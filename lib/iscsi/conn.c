@@ -79,7 +79,7 @@ static pthread_mutex_t g_conns_mutex;
 
 static struct spdk_poller *g_shutdown_timer = NULL;
 
-static uint32_t spdk_iscsi_conn_allocate_reactor(uint64_t cpumask);
+static uint32_t spdk_iscsi_conn_allocate_reactor(spdk_cpuset_t *cpumask);
 static void __add_idle_conn(void *arg1, void *arg2);
 
 /** Global variables used for managing idle connections. */
@@ -438,7 +438,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->pg_tag = portal->group->tag;
 	conn->portal_host = strdup(portal->host);
 	conn->portal_port = strdup(portal->port);
-	conn->portal_cpumask = portal->cpumask;
+	memcpy(&conn->portal_cpumask, &portal->cpumask, sizeof(spdk_cpuset_t));
 	conn->sock = sock;
 
 	conn->state = ISCSI_CONN_STATE_INVALID;
@@ -775,7 +775,7 @@ spdk_iscsi_conn_get_migrate_event(struct spdk_iscsi_conn *conn, int *_lcore)
 	struct spdk_iscsi_tgt_node *target;
 	int lcore;
 
-	lcore = spdk_iscsi_conn_allocate_reactor(conn->portal->cpumask);
+	lcore = spdk_iscsi_conn_allocate_reactor(&conn->portal->cpumask);
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
 		target = conn->sess->target;
 		pthread_mutex_lock(&target->mutex);
@@ -1563,24 +1563,25 @@ spdk_iscsi_conn_set_min_per_core(int count)
 }
 
 static uint32_t
-spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
+spdk_iscsi_conn_allocate_reactor(spdk_cpuset_t *cpumask)
 {
 	uint32_t i, selected_core;
 	enum rte_lcore_state_t state;
 	uint32_t master_lcore = rte_get_master_lcore();
 	int32_t num_pollers, min_pollers;
+	spdk_cpuset_t cpumask_valid;
 
-	cpumask &= spdk_app_get_core_mask();
-	if (cpumask == 0) {
+	spdk_app_get_core_mask(&cpumask_valid);
+	CPU_AND(&cpumask_valid, &cpumask_valid, cpumask);
+	if (CPU_COUNT(&cpumask_valid) == 0) {
 		return 0;
 	}
 
 	min_pollers = INT_MAX;
 	selected_core = 0;
 
-	/* we use u64 as CPU core mask */
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
-		if (!((1ULL << i) & cpumask)) {
+	for (i = 0; i < RTE_MAX_LCORE; i++) {
+		if (!CPU_ISSET(i, &cpumask_valid)) {
 			continue;
 		}
 

@@ -553,46 +553,35 @@ spdk_app_get_current_core(void)
 }
 
 int
-spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
+spdk_app_parse_core_mask(const char *mask, spdk_cpuset_t *cpumask)
 {
+	int ret;
 	uint32_t i;
-	char *end;
-	uint64_t validmask;
+	spdk_cpuset_t cpumask_valid;
 
-	if (mask == NULL || cpumask == NULL) {
-		return -1;
-	}
+	ret = spdk_parse_core_mask(mask, cpumask);
+	if (ret < 0)
+		return ret;
 
-	errno = 0;
-	*cpumask = strtoull(mask, &end, 16);
-	if (*end != '\0' || errno) {
-		return -1;
-	}
-
-	validmask = 0;
+	CPU_ZERO(&cpumask_valid);
 	SPDK_ENV_FOREACH_CORE(i) {
-		if (i >= 64) {
-			break;
-		}
-		validmask |= 1ULL << i;
+		CPU_SET(i, &cpumask_valid);
 	}
-
-	*cpumask &= validmask;
+	CPU_AND(cpumask, &cpumask_valid, cpumask);
 
 	return 0;
 }
 
-uint64_t
-spdk_app_get_core_mask(void)
+void
+spdk_app_get_core_mask(spdk_cpuset_t *cpumask)
 {
 	uint32_t i;
-	uint64_t mask = 0;
 
+	CPU_ZERO(cpumask);
 	SPDK_ENV_FOREACH_CORE(i) {
-		mask |= 1ULL << i;
+		CPU_SET(i, cpumask);
 	}
 
-	return mask;
 }
 
 

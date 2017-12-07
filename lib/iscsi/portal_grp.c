@@ -66,7 +66,7 @@ spdk_iscsi_portal_find_by_addr(const char *host, const char *port)
 
 /* Assumes caller allocated host and port strings on the heap */
 struct spdk_iscsi_portal *
-spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
+spdk_iscsi_portal_create(const char *host, const char *port, spdk_cpuset_t *cpumask)
 {
 	struct spdk_iscsi_portal *p = NULL;
 
@@ -101,7 +101,7 @@ spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 	}
 
 	p->port = strdup(port);
-	p->cpumask = cpumask;
+	memcpy(&p->cpumask, cpumask, sizeof(spdk_cpuset_t));
 	p->sock = -1;
 	p->group = NULL; /* set at a later time by caller */
 	p->acceptor_poller = NULL;
@@ -167,10 +167,13 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 {
 	char *host = NULL, *port = NULL;
 	const char *cpumask_str;
-	uint64_t cpumask = 0;
+	spdk_cpuset_t cpumask;
+	spdk_cpuset_t cpumask_valid;
 
 	int n, len, rc = -1;
 	const char *p, *q;
+
+	CPU_ZERO(&cpumask);
 
 	if (portalstring == NULL) {
 		SPDK_ERRLOG("portal error\n");
@@ -286,18 +289,24 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 			SPDK_ERRLOG("invalid portal cpumask %s\n", cpumask_str);
 			goto error_out;
 		}
-		if ((cpumask & spdk_app_get_core_mask()) != cpumask) {
+
+		spdk_app_get_core_mask(&cpumask_valid);
+		CPU_AND(&cpumask_valid, &cpumask_valid, &cpumask);
+
+		if (!CPU_EQUAL(&cpumask, &cpumask_valid)) {
+			char hex_buf[1024];
+			spdk_app_get_core_mask(&cpumask_valid);
 			SPDK_ERRLOG("portal cpumask %s not a subset of "
-				    "reactor mask %jx\n", cpumask_str,
-				    spdk_app_get_core_mask());
+				    "reactor mask %s\n", cpumask_str,
+				    spdk_core_mask_hex(&cpumask_valid, hex_buf, sizeof(hex_buf)));
 			goto error_out;
 		}
 	} else {
-		cpumask = spdk_app_get_core_mask();
+		spdk_app_get_core_mask(&cpumask);
 	}
 
 	if (!dry_run) {
-		*ip = spdk_iscsi_portal_create(host, port, cpumask);
+		*ip = spdk_iscsi_portal_create(host, port, &cpumask);
 		if (!*ip) {
 			goto error_out;
 		}

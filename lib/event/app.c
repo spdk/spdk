@@ -91,7 +91,7 @@ spdk_app_get_shm_id(void)
 "  #  specifying a ReactorMask.  Default is to allow work items to run\n" \
 "  #  on all cores.  Core 0 must be set in the mask if one is specified.\n" \
 "  # Default: 0xFFFF (cores 0-15)\n" \
-"  ReactorMask \"0x%" PRIX64 "\"\n" \
+"  ReactorMask \"0x%s\"\n" \
 "\n" \
 "  # Tracepoint group mask for spdk trace buffers\n" \
 "  # Default: 0x0 (all tracepoint groups disabled)\n" \
@@ -102,11 +102,18 @@ spdk_app_get_shm_id(void)
 static void
 spdk_app_config_dump_global_section(FILE *fp)
 {
+	spdk_cpuset_t coremask;
+	char buf[1024];
+
 	if (NULL == fp)
 		return;
 
+	spdk_app_get_core_mask(&coremask);
+	spdk_core_mask_hex(&coremask, buf, sizeof(buf));
+
 	fprintf(fp, GLOBAL_CONFIG_TMPL,
-		spdk_app_get_core_mask(), spdk_trace_get_tpoint_group_mask());
+		buf, spdk_trace_get_tpoint_group_mask());
+
 }
 
 int
