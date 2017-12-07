@@ -73,6 +73,9 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 	timing_exit fio
 fi
 
+# Run bdevperf with Gpt
+$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -s 4096 -w read -t 5
+
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	# Temporarily disabled - infinite loop
 	timing_enter reset
