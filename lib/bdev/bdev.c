@@ -1020,6 +1020,12 @@ spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
 	return bdev->product_name;
 }
 
+const struct spdk_bdev_aliases_list *
+spdk_bdev_get_aliases(const struct spdk_bdev *bdev)
+{
+	return &bdev->aliases;
+}
+
 uint32_t
 spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 {
