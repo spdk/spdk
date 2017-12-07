@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6bedae18_43eb2485",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-07T02:58:43Z",
+      "side": 1,
+      "message": "You can remove nbd_idx variable here, return NULL at last.",
+      "revId": "92ed53125217cfeabfeb66fb0805d4e9ea7e674c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
