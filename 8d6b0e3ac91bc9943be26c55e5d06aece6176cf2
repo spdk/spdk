@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8022ea39_9f33fc5f",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-07T17:27:08Z",
+      "side": 1,
+      "message": "Variable declarations should be at the beginning of the block, and add a blank line between declarations and code.",
+      "revId": "8d6b0e3ac91bc9943be26c55e5d06aece6176cf2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7089443_a7ab3aab",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-07T17:27:08Z",
+      "side": 1,
+      "message": "strcpy() is on our banned functions list - please use snprintf() instead.",
+      "range": {
+        "startLine": 232,
+        "startChar": 1,
+        "endLine": 232,
+        "endChar": 7
+      },
+      "revId": "8d6b0e3ac91bc9943be26c55e5d06aece6176cf2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7bbac62_fa8c6547",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 234,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-07T17:27:08Z",
+      "side": 1,
+      "message": "This needs to be rebased after the shared_attached_ctrlrs change.",
+      "range": {
+        "startLine": 234,
+        "startChar": 20,
+        "endLine": 234,
+        "endChar": 55
+      },
+      "revId": "8d6b0e3ac91bc9943be26c55e5d06aece6176cf2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee3afbd7_c96e2111",
+        "filename": "test/unit/lib/nvme/nvme.c/nvme_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-07T17:27:08Z",
+      "side": 1,
+      "message": "Replace strcpy() here as well (more instances below).",
+      "range": {
+        "startLine": 236,
+        "startChar": 1,
+        "endLine": 236,
+        "endChar": 7
+      },
+      "revId": "8d6b0e3ac91bc9943be26c55e5d06aece6176cf2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
