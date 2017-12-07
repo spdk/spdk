@@ -274,7 +274,7 @@ spdk_scsi_lun_hot_remove(void *remove_ctx)
  * \return pointer to the new spdk_scsi_lun object otherwise
  */
 _spdk_scsi_lun *
-spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
+spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 			void (*hotremove_cb)(const struct spdk_scsi_lun *, void *), void *hotremove_ctx)
 {
 	struct spdk_scsi_lun *lun;
@@ -282,12 +282,6 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 
 	if (bdev == NULL) {
 		SPDK_ERRLOG("bdev must be non-NULL\n");
-		return NULL;
-	}
-
-	lun = spdk_lun_db_get_lun(name);
-	if (lun) {
-		SPDK_ERRLOG("LUN %s already created\n", lun->name);
 		return NULL;
 	}
 
@@ -300,7 +294,7 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 	rc = spdk_bdev_open(bdev, true, spdk_scsi_lun_hot_remove, lun, &lun->bdev_desc);
 
 	if (rc != 0) {
-		SPDK_ERRLOG("LUN %s: bdev %s cannot be opened, error=%d\n", name, spdk_bdev_get_name(bdev), rc);
+		SPDK_ERRLOG("bdev %s cannot be opened, error=%d\n", spdk_bdev_get_name(bdev), rc);
 		free(lun);
 		return NULL;
 	}
@@ -309,17 +303,8 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 	TAILQ_INIT(&lun->pending_tasks);
 
 	lun->bdev = bdev;
-	snprintf(lun->name, sizeof(lun->name), "%s", name);
 	lun->hotremove_cb = hotremove_cb;
 	lun->hotremove_ctx = hotremove_ctx;
-
-	rc = spdk_scsi_lun_db_add(lun);
-	if (rc < 0) {
-		SPDK_ERRLOG("Unable to add LUN %s to DB\n", lun->name);
-		spdk_bdev_close(lun->bdev_desc);
-		free(lun);
-		return NULL;
-	}
 
 	return lun;
 }
@@ -329,7 +314,6 @@ spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
 	spdk_bdev_close(lun->bdev_desc);
 	spdk_poller_unregister(&lun->hotplug_poller);
-	spdk_scsi_lun_db_delete(lun);
 
 	free(lun);
 
@@ -363,7 +347,8 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
 			lun->ref++;
 			return 0;
 		}
-		SPDK_ERRLOG("io_channel already allocated for lun %s\n", lun->name);
+		SPDK_ERRLOG("io_channel already allocated for lun %s\n",
+			    spdk_bdev_get_name(lun->bdev));
 		return -1;
 	}
 
@@ -396,9 +381,9 @@ spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
 }
 
 const char *
-spdk_scsi_lun_get_name(const struct spdk_scsi_lun *lun)
+spdk_scsi_lun_get_bdev_name(const struct spdk_scsi_lun *lun)
 {
-	return lun->name;
+	return spdk_bdev_get_name(lun->bdev);
 }
 
 const struct spdk_scsi_dev *
