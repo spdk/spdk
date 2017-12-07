@@ -16,6 +16,24 @@
       "revId": "eee0defa4c78b7b023fd903fc11b53cc82378bb7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8668a36_61a1f357",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-07T23:42:39Z",
+      "side": 1,
+      "message": "Thank you, target_node_add_lun is much better.",
+      "parentUuid": "0e7b0105_4a02739d",
+      "revId": "eee0defa4c78b7b023fd903fc11b53cc82378bb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
