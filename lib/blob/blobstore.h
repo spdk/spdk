@@ -108,7 +108,7 @@ enum spdk_blob_state {
 	SPDK_BLOB_STATE_SYNCING,
 };
 
-struct spdk_blob {
+struct spdk_blob_data {
 	struct spdk_blob_store *bs;
 
 	uint32_t	open_ref;
@@ -138,8 +138,11 @@ struct spdk_blob {
 	 */
 	TAILQ_HEAD(, spdk_xattr) xattrs;
 
-	TAILQ_ENTRY(spdk_blob) link;
+	TAILQ_ENTRY(spdk_blob_data) link;
 };
+
+#define __blob_to_data(x)	((struct spdk_blob_data *)(x))
+#define __data_to_blob(x)	((struct spdk_blob *)(x))
 
 struct spdk_blob_store {
 	uint64_t			md_start; /* Offset from beginning of disk, in pages */
@@ -172,7 +175,7 @@ struct spdk_blob_store {
 	struct spdk_bs_cpl		unload_cpl;
 	int				unload_err;
 
-	TAILQ_HEAD(, spdk_blob) 	blobs;
+	TAILQ_HEAD(, spdk_blob_data) 	blobs;
 };
 
 struct spdk_bs_channel {
@@ -418,7 +421,7 @@ _spdk_bs_page_to_blobid(uint32_t page_idx)
  * start of that page.
  */
 static inline uint64_t
-_spdk_bs_blob_page_to_lba(struct spdk_blob *blob, uint32_t page)
+_spdk_bs_blob_page_to_lba(struct spdk_blob_data *blob, uint32_t page)
 {
 	uint64_t	lba;
 	uint32_t	pages_per_cluster;
@@ -437,7 +440,7 @@ _spdk_bs_blob_page_to_lba(struct spdk_blob *blob, uint32_t page)
  * next cluster boundary.
  */
 static inline uint32_t
-_spdk_bs_num_pages_to_cluster_boundary(struct spdk_blob *blob, uint32_t page)
+_spdk_bs_num_pages_to_cluster_boundary(struct spdk_blob_data *blob, uint32_t page)
 {
 	uint32_t	pages_per_cluster;
 

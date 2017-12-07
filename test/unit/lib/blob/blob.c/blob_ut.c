@@ -329,10 +329,10 @@ blob_resize(void)
 	blob = g_blob;
 
 	/* Confirm that resize fails if blob is marked read-only. */
-	blob->md_ro = true;
+	__blob_to_data(blob)->md_ro = true;
 	rc = spdk_bs_md_resize_blob(blob, 5);
 	CU_ASSERT(rc == -EPERM);
-	blob->md_ro = false;
+	__blob_to_data(blob)->md_ro = false;
 
 	/* The blob started at 0 clusters. Resize it to be 5. */
 	rc = spdk_bs_md_resize_blob(blob, 5);
@@ -435,10 +435,10 @@ blob_write(void)
 	CU_ASSERT(rc == 0);
 
 	/* Confirm that write fails if blob is marked read-only. */
-	blob->data_ro = true;
+	__blob_to_data(blob)->data_ro = true;
 	spdk_bs_io_write_blob(blob, channel, payload, 0, 1, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == -EPERM);
-	blob->data_ro = false;
+	__blob_to_data(blob)->data_ro = false;
 
 	/* Write to the blob */
 	spdk_bs_io_write_blob(blob, channel, payload, 0, 1, blob_op_complete, NULL);
@@ -507,10 +507,10 @@ blob_read(void)
 	CU_ASSERT(rc == 0);
 
 	/* Confirm that read passes if blob is marked read-only. */
-	blob->data_ro = true;
+	__blob_to_data(blob)->data_ro = true;
 	spdk_bs_io_read_blob(blob, channel, payload, 0, 1, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
-	blob->data_ro = false;
+	__blob_to_data(blob)->data_ro = false;
 
 	/* Read from the blob */
 	spdk_bs_io_read_blob(blob, channel, payload, 0, 1, blob_op_complete, NULL);
@@ -635,9 +635,9 @@ blob_rw_verify_iov(void)
 	 *  that cross cluster boundaries.  Start by asserting that the allocated
 	 *  clusters are where we expect before modifying the second cluster.
 	 */
-	CU_ASSERT(blob->active.clusters[0] == 1 * 256);
-	CU_ASSERT(blob->active.clusters[1] == 2 * 256);
-	blob->active.clusters[1] = 3 * 256;
+	CU_ASSERT(__blob_to_data(blob)->active.clusters[0] == 1 * 256);
+	CU_ASSERT(__blob_to_data(blob)->active.clusters[1] == 2 * 256);
+	__blob_to_data(blob)->active.clusters[1] = 3 * 256;
 
 	memset(payload_write, 0xE5, sizeof(payload_write));
 	iov_write[0].iov_base = payload_write;
@@ -797,7 +797,7 @@ blob_rw_iov_read_only(void)
 	CU_ASSERT(rc == 0);
 
 	/* Verify that writev failed if read_only flag is set. */
-	blob->data_ro = true;
+	__blob_to_data(blob)->data_ro = true;
 	iov_write.iov_base = payload_write;
 	iov_write.iov_len = sizeof(payload_write);
 	spdk_bs_io_writev_blob(blob, channel, &iov_write, 1, 0, 1, blob_op_complete, NULL);
@@ -890,11 +890,11 @@ blob_xattr(void)
 	blob = g_blob;
 
 	/* Test that set_xattr fails if md_ro flag is set. */
-	blob->md_ro = true;
+	__blob_to_data(blob)->md_ro = true;
 	rc = spdk_blob_md_set_xattr(blob, "name", "log.txt", strlen("log.txt") + 1);
 	CU_ASSERT(rc == -EPERM);
 
-	blob->md_ro = false;
+	__blob_to_data(blob)->md_ro = false;
 	rc = spdk_blob_md_set_xattr(blob, "name", "log.txt", strlen("log.txt") + 1);
 	CU_ASSERT(rc == 0);
 
@@ -909,13 +909,13 @@ blob_xattr(void)
 
 	/* get_xattr should still work even if md_ro flag is set. */
 	value = NULL;
-	blob->md_ro = true;
+	__blob_to_data(blob)->md_ro = true;
 	rc = spdk_bs_md_get_xattr_value(blob, "length", &value, &value_len);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(value != NULL);
 	CU_ASSERT(*(uint64_t *)value == length);
 	CU_ASSERT(value_len == 8);
-	blob->md_ro = false;
+	__blob_to_data(blob)->md_ro = false;
 
 	rc = spdk_bs_md_get_xattr_value(blob, "foobar", &value, &value_len);
 	CU_ASSERT(rc == -ENOENT);
@@ -935,11 +935,11 @@ blob_xattr(void)
 	spdk_xattr_names_free(names);
 
 	/* Confirm that remove_xattr fails if md_ro is set to true. */
-	blob->md_ro = true;
+	__blob_to_data(blob)->md_ro = true;
 	rc = spdk_blob_md_remove_xattr(blob, "name");
 	CU_ASSERT(rc == -EPERM);
 
-	blob->md_ro = false;
+	__blob_to_data(blob)->md_ro = false;
 	rc = spdk_blob_md_remove_xattr(blob, "name");
 	CU_ASSERT(rc == 0);
 
@@ -2030,12 +2030,12 @@ blob_flags(void)
 	CU_ASSERT(g_blob != NULL);
 	blob_md_ro = g_blob;
 
-	blob_invalid->invalid_flags = (1ULL << 63);
-	blob_invalid->state = SPDK_BLOB_STATE_DIRTY;
-	blob_data_ro->data_ro_flags = (1ULL << 62);
-	blob_data_ro->state = SPDK_BLOB_STATE_DIRTY;
-	blob_md_ro->md_ro_flags = (1ULL << 61);
-	blob_md_ro->state = SPDK_BLOB_STATE_DIRTY;
+	__blob_to_data(blob_invalid)->invalid_flags = (1ULL << 63);
+	__blob_to_data(blob_invalid)->state = SPDK_BLOB_STATE_DIRTY;
+	__blob_to_data(blob_data_ro)->data_ro_flags = (1ULL << 62);
+	__blob_to_data(blob_data_ro)->state = SPDK_BLOB_STATE_DIRTY;
+	__blob_to_data(blob_md_ro)->md_ro_flags = (1ULL << 61);
+	__blob_to_data(blob_md_ro)->state = SPDK_BLOB_STATE_DIRTY;
 
 	g_bserrno = -1;
 	spdk_bs_md_sync_blob(blob_invalid, blob_op_complete, NULL);
@@ -2087,8 +2087,8 @@ blob_flags(void)
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob_data_ro = g_blob;
 	/* If an unknown data_ro flag was found, the blob should be marked both data and md read-only. */
-	CU_ASSERT(blob_data_ro->data_ro == true);
-	CU_ASSERT(blob_data_ro->md_ro == true);
+	CU_ASSERT(__blob_to_data(blob_data_ro)->data_ro == true);
+	CU_ASSERT(__blob_to_data(blob_data_ro)->md_ro == true);
 
 	g_blob = NULL;
 	g_bserrno = -1;
@@ -2096,8 +2096,8 @@ blob_flags(void)
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob_md_ro = g_blob;
-	CU_ASSERT(blob_md_ro->data_ro == false);
-	CU_ASSERT(blob_md_ro->md_ro == true);
+	CU_ASSERT(__blob_to_data(blob_md_ro)->data_ro == false);
+	CU_ASSERT(__blob_to_data(blob_md_ro)->md_ro == true);
 
 	spdk_bs_md_close_blob(&blob_data_ro, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
