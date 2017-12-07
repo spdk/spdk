@@ -38,6 +38,11 @@ function usage()
     echo "                          lvol store and lvol bdevs."
     echo "                          (NVMe->lvol_store->lvol_bdev->lvol_store->lvol_bdev)"
     echo "                          Default: False"
+    echo "    --fs-type=TYPE        Filesystem type to use for filesystem tests"
+    echo "                          ntfs - use ntfs filesystem"
+    echo "                          btrfs - use btrfs filesystem"
+    echo "                          fat - use fat filesystem"
+    echo "                          xfs - use xfs filesystem"
     echo "-x                        set -x for script debug"
     echo "    --distribute-cores    Use custom config file and run vhost controllers"
     echo "                          on different CPU cores instead of single core."
@@ -55,6 +60,7 @@ while getopts 'xh-:' optchar; do
             max-disks=*) max_disks="${OPTARG#*=}" ;;
             ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
             nested-lvol) nested_lvol=true ;;
+            fs-type=*) fs_type="${OPTARG#*=}" ;;
             distribute-cores) distribute_cores=true ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
@@ -192,37 +198,57 @@ $rpc_py get_luns
 $COMMON_DIR/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
 vm_wait_for_boot 600 $used_vms
 
-# Get disk names from VMs and run FIO traffic
-run_fio="python $COMMON_DIR/run_fio.py --fio-bin=$fio_bin"
-run_fio+=" --job-file=$COMMON_DIR/fio_jobs/default_integrity.job"
-run_fio+=" --out=$TEST_DIR "
+if [[ -n $fs_type ]]; then
+    for vm_num in $used_vms; do
+        vm_dir=$VM_BASE_DIR/$vm_num
+        qemu_mask_param="VM_${vm_num}_qemu_mask"
 
-for vm_num in $used_vms; do
-    vm_dir=$VM_BASE_DIR/$vm_num
-    qemu_mask_param="VM_${vm_num}_qemu_mask"
+        host_name="VM-$vm_num-${!qemu_mask_param}"
+        vm_ssh $vm_num "hostname $host_name"
+        port=$(cat $vm_dir/ssh_socket)
+        # Run Filesystem test case
+        sshpass -p root scp -P $port -r $BASE_DIR/../integrity/integrity_vm.sh root@127.0.0.1:~
+        if [[ "$ctrl_type" == "vhost_scsi" ]]; then
+            vm_check_scsi_location $vm_num
+            sshpass -p root ssh -p $port root@127.0.0.1 "fs=$fs_type disk=\"$SCSI_DISK\" ~/integrity_vm.sh scsi"
+        elif [[ "$ctrl_type" == "vhost_blk" ]]; then
+            vm_check_blk_location $vm_num
+            sshpass -p root ssh -p $port root@127.0.0.1 "fs=$fs_type disk=\"$SCSI_DISK\" ~/integrity_vm.sh blk"
+        fi
+    done
+else
+    # Get disk names from VMs and run FIO traffic
+    run_fio="python $COMMON_DIR/run_fio.py --fio-bin=$fio_bin"
+    run_fio+=" --job-file=$COMMON_DIR/fio_jobs/default_integrity.job"
+    run_fio+=" --out=$TEST_DIR "
 
-    host_name="VM-$vm_num-${!qemu_mask_param}"
-    vm_ssh $vm_num "hostname $host_name"
-    vm_start_fio_server --fio-bin=$fio_bin $vm_num
+    for vm_num in $used_vms; do
+        vm_dir=$VM_BASE_DIR/$vm_num
+        qemu_mask_param="VM_${vm_num}_qemu_mask"
 
-    if [[ "$ctrl_type" == "vhost_scsi" ]]; then
-        vm_check_scsi_location $vm_num
-    elif [[ "$ctrl_type" == "vhost_blk" ]]; then
-        vm_check_blk_location $vm_num
-    fi
+        host_name="VM-$vm_num-${!qemu_mask_param}"
+        vm_ssh $vm_num "hostname $host_name"
+        vm_start_fio_server --fio-bin=$fio_bin $vm_num
 
-    run_fio+="127.0.0.1:$(cat $vm_dir/fio_socket):"
-    for disk in $SCSI_DISK; do
-        run_fio+="/dev/$disk:"
+        if [[ "$ctrl_type" == "vhost_scsi" ]]; then
+            vm_check_scsi_location $vm_num
+        elif [[ "$ctrl_type" == "vhost_blk" ]]; then
+            vm_check_blk_location $vm_num
+        fi
+
+        run_fio+="127.0.0.1:$(cat $vm_dir/fio_socket):"
+        for disk in $SCSI_DISK; do
+            run_fio+="/dev/$disk:"
+        done
+        run_fio="${run_fio::-1}"
+        run_fio+=","
     done
     run_fio="${run_fio::-1}"
-    run_fio+=","
-done
-run_fio="${run_fio::-1}"
 
-# Run FIO traffic
-echo -e "$run_fio"
-$run_fio
+    # Run FIO traffic
+    echo -e "$run_fio"
+    $run_fio
+fi
 
 echo "INFO: Shutting down virtual machines..."
 vm_shutdown_all
