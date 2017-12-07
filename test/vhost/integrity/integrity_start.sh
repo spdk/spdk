@@ -77,6 +77,16 @@ function cleanup_virsh() {
     rm $VM_BAK_IMG || true
 }
 
+function cleanup_lvol() {
+    echo "INFO: Removing lvol bdevs"
+    $rpc_py delete_bdev $lb_name
+    echo -e "\tINFO: lvol bdev $lb_name removed"
+
+    echo "INFO: Removing lvol stores"
+    $rpc_py destroy_lvol_store -u $lvol_store
+    echo -e "\tINFO: lvol stote $lvol_store removed"
+}
+
 timing_enter integrity_test
 
 # Backing image for VM
@@ -112,12 +122,20 @@ $rootdir/app/vhost/vhost -c $basedir/vhost.conf &
 pid=$!
 echo "Process pid: $pid"
 waitforlisten "$pid"
+
+lvol_store=$($rpc_py construct_lvol_store Nvme0n1 lvs_0)
+free_mb=$(get_lvs_free_mb "$lvol_store")
+lb_name=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_0 $free_mb)
+
 if [[ "$VHOST_MODE" == "scsi" ]]; then
     $rpc_py construct_vhost_scsi_controller naa.0
-    $rpc_py add_vhost_scsi_lun naa.0 0 Nvme0n1
+    $rpc_py add_vhost_scsi_lun naa.0 0 $lb_name
 else
-    $rpc_py construct_vhost_blk_controller naa.0 Nvme0n1
+    $rpc_py construct_vhost_blk_controller naa.0 $lb_name
 fi
+
+trap "cleanup_lvol; cleanup_virsh; killprocess $pid; exit 1" SIGINT SIGTERM EXIT ERR
+
 chmod 777 /tmp/naa.0
 
 virsh create $basedir/vm_conf.xml
@@ -142,6 +160,9 @@ cleanup_virsh
 rm $basedir/vm_conf.xml || true
 rm $basedir/vnet_conf.xml || true
 rm $basedir/vhost.conf || true
+
+# Delete lvol bdev, destroy lvol store
+cleanup_lvol
 
 # Try to gracefully stop spdk vhost
 if /bin/kill -INT $pid; then
