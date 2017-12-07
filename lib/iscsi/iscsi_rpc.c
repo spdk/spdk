@@ -304,8 +304,8 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 
 			if (lun) {
 				spdk_json_write_object_begin(w);
-				spdk_json_write_name(w, "name");
-				spdk_json_write_string(w, spdk_scsi_lun_get_name(lun));
+				spdk_json_write_name(w, "bdev_name");
+				spdk_json_write_string(w, spdk_scsi_lun_get_bdev_name(lun));
 				spdk_json_write_name(w, "id");
 				spdk_json_write_int32(w, spdk_scsi_lun_get_id(lun));
 				spdk_json_write_object_end(w);
