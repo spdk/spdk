@@ -444,7 +444,9 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 		goto error_return;
 	}
 
-	fdisk->disk.blockcnt = disk_size / fdisk->disk.blocklen;
+	if (spdk_bdev_set_num_blocks(&(fdisk->disk), disk_size / fdisk->disk.blocklen) != 0)
+		goto error_return;
+
 	fdisk->disk.ctxt = fdisk;
 
 	fdisk->disk.fn_table = &aio_fn_table;

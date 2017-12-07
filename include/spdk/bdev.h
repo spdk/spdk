@@ -297,6 +297,17 @@ uint32_t spdk_bdev_get_optimal_io_boundary(const struct spdk_bdev *bdev);
 bool spdk_bdev_has_write_cache(const struct spdk_bdev *bdev);
 
 /**
+ * Resize for a bdev.
+ *
+ * Change number of blocks for provided block device.
+ *
+ * \param bdev Block device to change.
+ * \param size New size of bdev.
+ * \return 0 on success, negated errno on failure.
+ */
+int spdk_bdev_set_num_blocks(struct spdk_bdev *bdev, uint64_t size);
+
+/**
  * Obtain an I/O channel for the block device opened by the specified
  * descriptor. I/O channels are bound to threads, so the resulting I/O
  * channel may only be used from the thread it was originally obtained
