@@ -5,7 +5,10 @@ basedir=$(readlink -f $(dirname $0))
 MAKE="make -j$(( $(nproc)  * 2 ))"
 
 if [[ -n $disk ]]; then
-    devs=$disk
+    echo "**********************************"
+    echo $disk
+    echo "**********************************"
+    sleep 6000
 else
     if [[ $1 == "scsi" ]]; then
         devs=""
