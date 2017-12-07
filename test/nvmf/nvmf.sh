@@ -34,9 +34,9 @@ if [ $SPDK_TEST_NVML -eq 1 ]; then
 	run_test test/nvmf/pmem/nvmf_pmem.sh 10
 fi
 
-#if [ $RUN_NIGHTLY -eq 1 ]; then
-run_test test/nvmf/multiconnection/multiconnection.sh
-#fi
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	run_test test/nvmf/multiconnection/multiconnection.sh
+fi
 
 if [ $RUN_NIGHTLY -eq 1 ] && [ $SPDK_TEST_NVML -eq 1 ]; then
 	run_test test/nvmf/pmem/nvmf_pmem.sh 600
@@ -50,6 +50,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	true
 fi
 run_test test/nvmf/host/bdevperf.sh
+run_test test/nvmf/host/bdevperf_gpt.sh
 run_test test/nvmf/host/identify.sh
 run_test test/nvmf/host/perf.sh
 run_test test/nvmf/host/identify_kernel_nvmf.sh
