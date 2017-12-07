@@ -1303,6 +1303,11 @@ _spdk_blob_request_submit_rw_iov(struct spdk_blob *blob, struct spdk_io_channel 
 
 	assert(blob != NULL);
 
+	if (!read && blob->data_ro) {
+		cb_fn(cb_arg, -EPERM);
+		return;
+	}
+
 	if (length == 0) {
 		cb_fn(cb_arg, 0);
 		return;
@@ -2939,10 +2944,6 @@ void spdk_bs_io_writev_blob(struct spdk_blob *blob, struct spdk_io_channel *chan
 			    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
 			    spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	if (blob->data_ro) {
-		cb_fn(cb_arg, -EPERM);
-		return;
-	}
 	_spdk_blob_request_submit_rw_iov(blob, channel, iov, iovcnt, offset, length, cb_fn, cb_arg, false);
 }
 
