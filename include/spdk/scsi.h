@@ -43,6 +43,10 @@
 
 #include "spdk/queue.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* Defines for SPDK tracing framework */
 #define OWNER_SCSI_DEV				0x10
 #define OBJECT_SCSI_TASK			0x10
@@ -265,5 +269,9 @@ spdk_scsi_task_get_primary(struct spdk_scsi_task *task)
 		return task;
 	}
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_SCSI_H */

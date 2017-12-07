@@ -42,6 +42,10 @@
 
 #include "spdk/queue.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define IDLE_INTERVAL_TIME_IN_US 5000
 
 int spdk_interface_init(void);
@@ -82,5 +86,9 @@ int spdk_sock_set_sendbuf(int sock, int sz);
 
 bool spdk_sock_is_ipv6(int sock);
 bool spdk_sock_is_ipv4(int sock);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_NET_FRAMEWORK_H */

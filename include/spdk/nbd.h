@@ -34,6 +34,10 @@
 #ifndef SPDK_NBD_H_
 #define SPDK_NBD_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spdk_bdev;
 struct spdk_nbd_disk;
 
@@ -44,5 +48,9 @@ void spdk_nbd_fini(void);
 struct spdk_nbd_disk *spdk_nbd_start(const char *bdev_name, const char *nbd_path);
 
 void spdk_nbd_stop(struct spdk_nbd_disk *nbd);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

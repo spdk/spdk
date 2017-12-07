@@ -40,6 +40,10 @@
 
 #include "spdk/stdinc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spdk_bs_dev;
 struct spdk_lvol_store;
 struct spdk_lvol;
@@ -173,5 +177,8 @@ void spdk_lvs_load(struct spdk_bs_dev *bs_dev, spdk_lvs_op_with_handle_complete 
 		   void *cb_arg);
 void spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif  /* SPDK_LVOL_H */

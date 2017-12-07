@@ -68,6 +68,10 @@
 
 #include "spdk/stdinc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef uint64_t spdk_blob_id;
 #define SPDK_BLOBID_INVALID	(uint64_t)-1
 #define SPDK_BLOBSTORE_TYPE_LENGTH 16
@@ -304,5 +308,9 @@ void spdk_xattr_names_free(struct spdk_xattr_names *names);
 
 struct spdk_bs_type spdk_bs_get_bstype(struct spdk_blob_store *bs);
 void spdk_bs_set_bstype(struct spdk_blob_store *bs, struct spdk_bs_type bstype);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_BLOB_H_ */

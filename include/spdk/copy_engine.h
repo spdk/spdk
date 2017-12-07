@@ -40,6 +40,10 @@
 
 #include "spdk/stdinc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void (*spdk_copy_completion_cb)(void *ref, int status);
 typedef void (*spdk_copy_fini_cb)(void *cb_arg);
 
@@ -57,5 +61,9 @@ int spdk_copy_submit(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch
 int spdk_copy_submit_fill(struct spdk_copy_task *copy_req, struct spdk_io_channel *ch,
 			  void *dst, uint8_t fill, uint64_t nbytes, spdk_copy_completion_cb cb);
 size_t spdk_copy_task_size(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

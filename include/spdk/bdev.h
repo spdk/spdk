@@ -44,6 +44,10 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/nvme_spec.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SPDK_BDEV_SMALL_BUF_MAX_SIZE 8192
 #define SPDK_BDEV_LARGE_BUF_MAX_SIZE (64 * 1024)
 
@@ -750,5 +754,9 @@ void spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
  * \param iovcntp Pointer to be filled with number of iovec entries.
  */
 void spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_BDEV_H_ */
