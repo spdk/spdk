@@ -45,6 +45,10 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spdk_nvmf_tgt;
 struct spdk_nvmf_subsystem;
 struct spdk_nvmf_ctrlr;
@@ -321,5 +325,9 @@ enum spdk_nvmf_subtype spdk_nvmf_subsystem_get_type(struct spdk_nvmf_subsystem *
 void spdk_nvmf_handle_connect(struct spdk_nvmf_request *req);
 
 void spdk_nvmf_ctrlr_disconnect(struct spdk_nvmf_qpair *qpair);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

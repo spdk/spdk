@@ -42,6 +42,10 @@
 
 #include "spdk/queue.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spdk_thread;
 struct spdk_io_channel;
 struct spdk_poller;
@@ -219,5 +223,9 @@ struct spdk_thread *spdk_io_channel_get_thread(struct spdk_io_channel *ch);
  */
 void spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 			   spdk_channel_for_each_cpl cpl);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_IO_CHANNEL_H_ */

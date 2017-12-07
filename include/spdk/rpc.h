@@ -38,6 +38,10 @@
 
 #include "spdk/jsonrpc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int spdk_rpc_listen(const char *listen_addr);
 void spdk_rpc_accept(void);
 void spdk_rpc_close(void);
@@ -52,5 +56,9 @@ static void __attribute__((constructor)) rpc_register_##func(void) \
 { \
 	spdk_rpc_register_method(method, func); \
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

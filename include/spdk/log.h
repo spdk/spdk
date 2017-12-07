@@ -41,6 +41,10 @@
 
 #include "spdk/stdinc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * Initialize the logging module. Messages prior
  * to this call will be dropped.
@@ -101,5 +105,9 @@ int spdk_log_set_trace_flag(const char *flag);
 int spdk_log_clear_trace_flag(const char *flag);
 
 void spdk_tracelog_usage(FILE *f, const char *trace_arg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_LOG_H */

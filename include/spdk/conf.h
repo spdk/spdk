@@ -41,6 +41,10 @@
 
 #include "spdk/stdinc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 struct spdk_conf_value;
 struct spdk_conf_item;
 struct spdk_conf_section;
@@ -66,5 +70,9 @@ int spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key);
 bool spdk_conf_section_get_boolval(struct spdk_conf_section *sp, const char *key, bool default_val);
 
 void spdk_conf_set_as_default(struct spdk_conf *cp);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

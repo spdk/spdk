@@ -41,6 +41,10 @@
 
 #include "spdk/stdinc.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 enum spdk_json_val_type {
 	SPDK_JSON_VAL_INVALID,
 	SPDK_JSON_VAL_NULL,
@@ -236,5 +240,9 @@ int spdk_json_write_val(struct spdk_json_write_ctx *w, const struct spdk_json_va
  * Can be used to write values with specific encodings that differ from the JSON writer output.
  */
 int spdk_json_write_val_raw(struct spdk_json_write_ctx *w, const void *data, size_t len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

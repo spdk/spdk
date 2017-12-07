@@ -42,6 +42,10 @@
 
 #include "spdk/blob.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SPDK_FILE_NAME_MAX	255
 
 struct spdk_file;
@@ -128,5 +132,9 @@ uint64_t spdk_fs_get_cache_size(void);
 void spdk_file_set_priority(struct spdk_file *file, uint32_t priority);
 
 int spdk_file_sync(struct spdk_file *file, struct spdk_io_channel *channel);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_FS_H_ */
