@@ -80,7 +80,7 @@ struct spdk_iscsi_conn {
 	int				pg_tag;
 	char				*portal_host;
 	char				*portal_port;
-	uint64_t			portal_cpumask;
+	spdk_cpuset_t		portal_cpumask;
 	uint32_t			lcore;
 	int				sock;
 	struct spdk_iscsi_sess		*sess;
