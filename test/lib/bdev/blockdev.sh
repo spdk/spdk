@@ -73,6 +73,21 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 	timing_exit fio
 fi
 
+# Create conf file for bdevperf with gpt
+cat > $testdir/bdev_gpt.conf << EOL
+[Gpt]
+  Disable No
+EOL
+
+# Get Nvme0n1 info through filtering gen_nvme.sh's result
+# Only need one nvme and discard the remaining lines from the 5th line
+$rootdir/scripts/gen_nvme.sh >> $testdir/bdev_gpt.conf
+sed -i '5,$d' $testdir/bdev_gpt.conf
+
+# Run bdevperf with gpt
+$testdir/bdevperf/bdevperf -c $testdir/bdev_gpt.conf -q 128 -s 4096 -w read -t 5
+rm -f $testdir/bdev.conf
+
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	# Temporarily disabled - infinite loop
 	timing_enter reset
