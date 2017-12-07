@@ -46,7 +46,7 @@ target.  A fully documented example configuration file is located at
 
 Storage backends are devices which will be exposed to the guest OS.
 Vhost-blk backends are exposed as block devices in the guest OS, and vhost-scsi backends are
-exposed as as SCSI LUNs on devices attached to the vhost-scsi controller in the guest OS.
+exposed as SCSI LUNs on devices attached to the vhost-scsi controller in the guest OS.
 SPDK supports several different types of storage backends, including NVMe,
 Linux AIO, malloc ramdisk and Ceph RBD.  Refer to @ref bdev_getting_started for
 additional information on specifying storage backends in the configuration file.
