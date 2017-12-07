@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6924f30e_8311ad6f",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-07T15:39:19Z",
+      "side": 1,
+      "message": "Artifact",
+      "range": {
+        "startLine": 122,
+        "startChar": 44,
+        "endLine": 122,
+        "endChar": 45
+      },
+      "revId": "8ff8e73527d9f5ea82e20d3f2f4de57bc2fc4f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2d10487_caf258bc",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-07T15:39:19Z",
+      "side": 1,
+      "message": "DPDK NICs might be registered in container/group and mappings will not be cleared. Lets unmap regions here when device_ref drop to zero. This way we avoid errors when we map it again in spdk_vtophys_get_ref().",
+      "range": {
+        "startLine": 420,
+        "startChar": 1,
+        "endLine": 420,
+        "endChar": 21
+      },
+      "revId": "8ff8e73527d9f5ea82e20d3f2f4de57bc2fc4f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
