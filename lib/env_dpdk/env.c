@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
+#include "spdk/cpuset.h"
 
 #include <rte_config.h>
 #include <rte_cycles.h>
@@ -244,13 +245,13 @@ spdk_unaffinitize_thread(void)
 	rte_cpuset_t new_cpuset;
 	long num_cores, i;
 
-	CPU_ZERO(&new_cpuset);
+	SPDK_CPU_ZERO(&new_cpuset);
 
 	num_cores = sysconf(_SC_NPROCESSORS_CONF);
 
 	/* Create a mask containing all CPUs */
 	for (i = 0; i < num_cores; i++) {
-		CPU_SET(i, &new_cpuset);
+		SPDK_CPU_SET(i, &new_cpuset);
 	}
 
 	rte_thread_set_affinity(&new_cpuset);

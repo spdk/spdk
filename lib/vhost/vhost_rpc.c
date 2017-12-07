@@ -469,6 +469,8 @@ static int
 spdk_rpc_get_vhost_controllers_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct rpc_get_vhost_ctrlrs *ctx = arg;
+	spdk_cpuset_t cpumask;
+	char buf[1024];
 
 	if (vdev == NULL) {
 		spdk_json_write_array_end(ctx->w);
@@ -483,7 +485,8 @@ spdk_rpc_get_vhost_controllers_cb(struct spdk_vhost_dev *vdev, void *arg)
 	spdk_json_write_string(ctx->w, spdk_vhost_dev_get_name(vdev));
 
 	spdk_json_write_name(ctx->w, "cpumask");
-	spdk_json_write_string_fmt(ctx->w, "%#" PRIx64, spdk_vhost_dev_get_cpumask(vdev));
+	spdk_vhost_dev_get_cpumask(vdev, &cpumask);
+	spdk_json_write_string(ctx->w, spdk_core_mask_hex(&cpumask, buf, sizeof(buf)));
 
 	spdk_json_write_name(ctx->w, "backend_specific");
 

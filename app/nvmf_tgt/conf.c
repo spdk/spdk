@@ -196,7 +196,7 @@ spdk_nvmf_parse_nvmf_tgt(void)
 }
 
 static int
-spdk_nvmf_allocate_lcore(uint64_t mask, uint32_t lcore)
+spdk_nvmf_allocate_lcore(spdk_cpuset_t *mask, uint32_t lcore)
 {
 	uint32_t end;
 
@@ -207,7 +207,7 @@ spdk_nvmf_allocate_lcore(uint64_t mask, uint32_t lcore)
 	}
 
 	do {
-		if (((mask >> lcore) & 1U) == 1U) {
+		if (SPDK_CPU_ISSET(lcore, mask)) {
 			break;
 		}
 		lcore = (lcore + 1) % 64;
@@ -383,7 +383,7 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 	struct nvmf_tgt_subsystem *app_subsys;
 	int i, rc;
 	size_t j;
-	uint64_t mask;
+	spdk_cpuset_t mask;
 	struct spdk_bdev *bdev;
 
 	if (name == NULL) {
@@ -406,8 +406,8 @@ spdk_nvmf_construct_subsystem(const char *name, int32_t lcore,
 	}
 
 	/* Determine which core to assign to the subsystem */
-	mask = spdk_app_get_core_mask();
-	lcore = spdk_nvmf_allocate_lcore(mask, lcore);
+	spdk_app_get_core_mask(&mask);
+	lcore = spdk_nvmf_allocate_lcore(&mask, lcore);
 	g_last_core = lcore;
 
 	app_subsys = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME, num_ns, lcore);

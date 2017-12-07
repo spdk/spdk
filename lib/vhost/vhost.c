@@ -470,22 +470,30 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 }
 
 static int
-spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask)
+spdk_vhost_parse_core_mask(const char *mask, spdk_cpuset_t *cpumask)
 {
-	char *end;
+	int ret;
+	spdk_cpuset_t cpumask_valid;
+
+	if (cpumask == NULL)
+		return -1;
 
 	if (mask == NULL) {
-		*cpumask = spdk_app_get_core_mask();
+		spdk_app_get_core_mask(cpumask);
 		return 0;
 	}
 
-	errno = 0;
-	*cpumask = strtoull(mask, &end, 16);
+	ret = spdk_parse_core_mask(mask, cpumask);
+	if (ret < 0)
+		return ret;
 
-	if (*end != '\0' || errno || !*cpumask ||
-	    ((*cpumask & spdk_app_get_core_mask()) != *cpumask)) {
+	if (SPDK_CPU_COUNT(cpumask) == 0)
 		return -1;
-	}
+
+	spdk_app_get_core_mask(&cpumask_valid);
+	SPDK_CPU_AND(&cpumask_valid, cpumask);
+	if (!SPDK_CPU_EQUAL(cpumask, &cpumask_valid))
+		return -1;
 
 	return 0;
 }
@@ -498,7 +506,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	char path[PATH_MAX];
 	struct stat file_stat;
 	char buf[64];
-	uint64_t cpumask;
+	spdk_cpuset_t cpumask, cpumask_valid;
 
 	assert(vdev);
 
@@ -508,8 +516,10 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	}
 
 	if (spdk_vhost_parse_core_mask(mask_str, &cpumask) != 0) {
-		SPDK_ERRLOG("cpumask %s not a subset of app mask 0x%jx\n",
-			    mask_str, spdk_app_get_core_mask());
+		char hex_buf[1024];
+		spdk_app_get_core_mask(&cpumask_valid);
+		SPDK_ERRLOG("cpumask %s not a subset of app mask 0x%s\n",
+			    mask_str, spdk_core_mask_hex(&cpumask_valid, hex_buf, sizeof(hex_buf)));
 		return -EINVAL;
 	}
 
@@ -573,7 +583,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	vdev->path = strdup(path);
 	vdev->vid = -1;
 	vdev->lcore = -1;
-	vdev->cpumask = cpumask;
+	memcpy(&vdev->cpumask, &cpumask, sizeof(spdk_cpuset_t));
 	vdev->type = type;
 	vdev->backend = backend;
 
@@ -660,22 +670,24 @@ spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev)
 	return vdev->name;
 }
 
-uint64_t
-spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
+void
+spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev, spdk_cpuset_t *cpumask)
 {
 	assert(vdev != NULL);
-	return vdev->cpumask;
+	memcpy(cpumask, &vdev->cpumask, sizeof(spdk_cpuset_t));
 }
 
 static uint32_t
-spdk_vhost_allocate_reactor(uint64_t cpumask)
+spdk_vhost_allocate_reactor(spdk_cpuset_t *cpumask)
 {
 	uint32_t i, selected_core;
 	uint32_t min_ctrlrs;
+	spdk_cpuset_t cpumask_valid;
 
-	cpumask &= spdk_app_get_core_mask();
+	spdk_app_get_core_mask(&cpumask_valid);
+	SPDK_CPU_AND(&cpumask_valid, cpumask);
 
-	if (cpumask == 0) {
+	if (SPDK_CPU_COUNT(&cpumask_valid) == 0) {
 		return 0;
 	}
 
@@ -683,7 +695,7 @@ spdk_vhost_allocate_reactor(uint64_t cpumask)
 	selected_core = 0;
 
 	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
-		if (!((1ULL << i) & cpumask)) {
+		if (!SPDK_CPU_ISSET(i, &cpumask_valid)) {
 			continue;
 		}
 
@@ -928,7 +940,7 @@ start_device(int vid)
 		goto out;
 	}
 
-	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
+	vdev->lcore = spdk_vhost_allocate_reactor(&vdev->cpumask);
 	rc = spdk_vhost_event_send(vdev, vdev->backend->start_device, 3, "start device");
 	if (rc != 0) {
 		free(vdev->mem);
