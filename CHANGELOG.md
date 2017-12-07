@@ -27,6 +27,14 @@ framework to request registration and unregistration of pollers.
 The poller abstraction was removed from the bdev layer. There is now a general purpose
 abstraction for pollers available in include/spdk/io_channel.h
 
+### NVMe Driver
+
+The logic which support hotplug of vfio-attached devices has been implemented in SPDK, but to
+totally enable this feature, there is still some work need to be done for kernel vfio-pci driver.
+vfio-pci driver should trigger one "remove" uevent at the very beginning of the remove interface
+of pci driver, this will make sure the SPDK could detect the event and release the vfio-attached
+device Fd and related resource when the device removed.
+
 ## v17.10: Logical Volumes
 
 ### New dependencies
