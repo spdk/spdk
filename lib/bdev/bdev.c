@@ -917,6 +917,24 @@ spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
 	return bdev->product_name;
 }
 
+char **
+spdk_bdev_get_aliases(const struct spdk_bdev *bdev, size_t *cnt)
+{
+	struct spdk_bdev_alias *tmp;
+	char **list = NULL;
+	size_t i = 0;
+
+	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
+		i++;
+		list = realloc(list, i * sizeof(*list));
+		list[i - 1] = strdup(tmp->alias);
+	}
+
+	*cnt = i;
+
+	return list;
+}
+
 uint32_t
 spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
 {
