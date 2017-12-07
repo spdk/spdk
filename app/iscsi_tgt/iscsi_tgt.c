@@ -45,9 +45,9 @@ static void
 spdk_sigusr1(int signo __attribute__((__unused__)))
 {
 	char *config_str = NULL;
-	if (spdk_app_get_running_config(&config_str, "iscsi.conf") < 0)
+	if (spdk_app_get_running_config(&config_str, "iscsi.conf") < 0) {
 		fprintf(stderr, "Error getting config\n");
-	else {
+	} else {
 		fprintf(stdout, "============================\n");
 		fprintf(stdout, " iSCSI target running config\n");
 		fprintf(stdout, "=============================\n");

@@ -428,13 +428,15 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 		goto exit;
 	}
 
-	if (!cmbsz.bits.sz)
+	if (!cmbsz.bits.sz) {
 		goto exit;
+	}
 
 	bir = cmbloc.bits.bir;
 	/* Values 0 2 3 4 5 are valid for BAR */
-	if (bir > 5 || bir == 1)
+	if (bir > 5 || bir == 1) {
 		goto exit;
+	}
 
 	/* unit size for 4KB/64KB/1MB/16MB/256MB/4GB/64GB */
 	unit_size = (uint64_t)1 << (12 + 4 * cmbsz.bits.szu);
@@ -500,8 +502,9 @@ nvme_pcie_ctrlr_alloc_cmb(struct spdk_nvme_ctrlr *ctrlr, uint64_t length, uint64
 	round_offset = pctrlr->cmb_current_offset;
 	round_offset = (round_offset + (aligned - 1)) & ~(aligned - 1);
 
-	if (round_offset + length > pctrlr->cmb_size)
+	if (round_offset + length > pctrlr->cmb_size) {
 		return -1;
+	}
 
 	*offset = round_offset;
 	pctrlr->cmb_current_offset = round_offset + length;
@@ -1953,8 +1956,9 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	while (1) {
 		cpl = &pqpair->cpl[pqpair->cq_head];
 
-		if (cpl->status.p != pqpair->phase)
+		if (cpl->status.p != pqpair->phase) {
 			break;
+		}
 #ifdef __PPC64__
 		/*
 		 * This memory barrier prevents reordering of:

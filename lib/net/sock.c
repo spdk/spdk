@@ -43,8 +43,9 @@ static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 {
 	const char *result = NULL;
 
-	if (sa == NULL || host == NULL)
+	if (sa == NULL || host == NULL) {
 		return -1;
+	}
 
 	switch (sa->sa_family) {
 	case AF_INET:
@@ -59,10 +60,11 @@ static int get_addr_str(struct sockaddr *sa, char *host, size_t hlen)
 		break;
 	}
 
-	if (result != NULL)
+	if (result != NULL) {
 		return 0;
-	else
+	} else {
 		return -1;
+	}
 }
 
 int
@@ -132,13 +134,15 @@ spdk_sock_create(const char *ip, int port, enum spdk_sock_create_type type)
 	int val = 1;
 	int rc;
 
-	if (ip == NULL)
+	if (ip == NULL) {
 		return -1;
+	}
 	if (ip[0] == '[') {
 		snprintf(buf, sizeof(buf), "%s", ip + 1);
 		p = strchr(buf, ']');
-		if (p != NULL)
+		if (p != NULL) {
 			*p = '\0';
+		}
 		ip = (const char *) &buf[0];
 	}
 
@@ -284,8 +288,9 @@ spdk_sock_set_recvlowat(int s, int nbytes)
 
 	val = nbytes;
 	rc = setsockopt(s, SOL_SOCKET, SO_RCVLOWAT, &val, sizeof val);
-	if (rc != 0)
+	if (rc != 0) {
 		return -1;
+	}
 	return 0;
 }
 

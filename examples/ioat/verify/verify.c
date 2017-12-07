@@ -137,8 +137,9 @@ static void prepare_ioat_task(struct thread_entry *thread_entry, struct ioat_tas
 		/* ensure that the length of memset block is 8 Bytes aligned */
 		num_ddwords = (rand_r(&seed) % SRC_BUFFER_SIZE) / 8;
 		len = num_ddwords * 8;
-		if (len < 8)
+		if (len < 8) {
 			len = 8;
+		}
 		dst_offset = rand_r(&seed) % (SRC_BUFFER_SIZE - len);
 		ioat_task->fill_pattern = fill_pattern;
 	} else {
@@ -172,8 +173,9 @@ ioat_done(void *cb_arg)
 			}
 			value += 8;
 		}
-		if (!failed)
+		if (!failed) {
 			thread_entry->fill_completed++;
+		}
 	} else {
 		if (memcmp(ioat_task->src, ioat_task->dst, ioat_task->len)) {
 			thread_entry->xfer_failed++;
@@ -307,8 +309,9 @@ submit_xfers(struct thread_entry *thread_entry, uint64_t queue_depth)
 
 		ioat_task->type = IOAT_COPY_TYPE;
 		if (spdk_ioat_get_dma_capabilities(thread_entry->chan) & SPDK_IOAT_ENGINE_FILL_SUPPORTED) {
-			if (queue_depth % 2)
+			if (queue_depth % 2) {
 				ioat_task->type = IOAT_FILL_TYPE;
+			}
 		}
 		prepare_ioat_task(thread_entry, ioat_task);
 		submit_single_xfer(ioat_task);

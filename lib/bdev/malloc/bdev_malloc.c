@@ -133,8 +133,9 @@ bdev_malloc_check_iov_len(struct iovec *iovs, int iovcnt, size_t nbytes)
 	int i;
 
 	for (i = 0; i < iovcnt; i++) {
-		if (nbytes < iovs[i].iov_len)
+		if (nbytes < iovs[i].iov_len) {
 			return 0;
+		}
 
 		nbytes -= iovs[i].iov_len;
 	}

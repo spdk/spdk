@@ -196,25 +196,30 @@ get_hugepage_file_info(struct hugepage_file_info huges[], int max)
 		tmp = strchr(tmp, ' ') + 1; /** skip offset */
 		tmp = strchr(tmp, ' ') + 1; /** skip dev */
 		tmp = strchr(tmp, ' ') + 1; /** skip inode */
-		while (*tmp == ' ')         /** skip spaces */
+		while (*tmp == ' ') {       /** skip spaces */
 			tmp++;
+		}
 		tail = strrchr(tmp, '\n');  /** remove newline if exists */
-		if (tail)
+		if (tail) {
 			*tail = '\0';
+		}
 
 		/* Match HUGEFILE_FMT, aka "%s/%smap_%d",
 		 * which is defined in eal_filesystem.h
 		 */
 		str_underline = strrchr(tmp, '_');
-		if (!str_underline)
+		if (!str_underline) {
 			continue;
+		}
 
 		str_start = str_underline - strlen("map");
-		if (str_start < tmp)
+		if (str_start < tmp) {
 			continue;
+		}
 
-		if (sscanf(str_start, "map_%d", &huge_index) != 1)
+		if (sscanf(str_start, "map_%d", &huge_index) != 1) {
 			continue;
+		}
 
 		if (idx >= max) {
 			SPDK_ERRLOG("Exceed maximum of %d\n", max);
@@ -314,8 +319,9 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		break;
 
 	case VHOST_USER_SET_MEM_TABLE:
-		if (prepare_vhost_memory_user(&msg, fds) < 0)
+		if (prepare_vhost_memory_user(&msg, fds) < 0) {
 			return -1;
+		}
 		fd_num = msg.payload.memory.nregions;
 		msg.size = sizeof(msg.payload.memory.nregions);
 		msg.size += sizeof(msg.payload.memory.padding);
@@ -350,10 +356,11 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		file = arg;
 		msg.payload.u64 = file->index & VHOST_USER_VRING_IDX_MASK;
 		msg.size = sizeof(msg.payload.u64);
-		if (file->fd > 0)
+		if (file->fd > 0) {
 			fds[fd_num++] = file->fd;
-		else
+		} else {
 			msg.payload.u64 |= VHOST_USER_VRING_NOFD_MASK;
+		}
 		break;
 
 	default:
@@ -370,8 +377,9 @@ vhost_user_sock(struct virtio_user_dev *dev,
 	}
 
 	if (req == VHOST_USER_SET_MEM_TABLE)
-		for (i = 0; i < fd_num; ++i)
+		for (i = 0; i < fd_num; ++i) {
 			close(fds[i]);
+		}
 
 	if (need_reply) {
 		if (vhost_user_read(vhostfd, &msg) < 0) {

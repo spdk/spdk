@@ -194,8 +194,9 @@ display_namespace(struct spdk_nvme_ns *ns)
 	       (long long)nsdata->nuse / 1024 / 1024);
 	printf("Format Progress Indicator:   %s\n",
 	       nsdata->fpi.fpi_supported ? "Supported" : "Not Supported");
-	if (nsdata->fpi.fpi_supported && nsdata->fpi.percentage_remaining)
+	if (nsdata->fpi.fpi_supported && nsdata->fpi.percentage_remaining) {
 		printf("Formatted Percentage:	%d%%\n", 100 - nsdata->fpi.percentage_remaining);
+	}
 	printf("Number of LBA Formats:       %d\n", nsdata->nlbaf + 1);
 	printf("Current LBA Format:          LBA Format #%02d\n",
 	       nsdata->flbas.format);
@@ -945,8 +946,9 @@ int main(int argc, char **argv)
 			break;
 		}
 
-		if (exit_flag)
+		if (exit_flag) {
 			break;
+		}
 
 		while (getchar() != '\n');
 		printf("press Enter to display cmd menu ...\n");

@@ -42,8 +42,9 @@ int spdk_md5init(struct spdk_md5ctx *md5ctx)
 {
 	int rc;
 
-	if (md5ctx == NULL)
+	if (md5ctx == NULL) {
 		return -1;
+	}
 	rc = MD5_Init(&md5ctx->md5ctx);
 	return rc;
 }
@@ -52,8 +53,9 @@ int spdk_md5final(void *md5, struct spdk_md5ctx *md5ctx)
 {
 	int rc;
 
-	if (md5ctx == NULL || md5 == NULL)
+	if (md5ctx == NULL || md5 == NULL) {
 		return -1;
+	}
 	rc = MD5_Final(md5, &md5ctx->md5ctx);
 	return rc;
 }
@@ -62,10 +64,12 @@ int spdk_md5update(struct spdk_md5ctx *md5ctx, const void *data, size_t len)
 {
 	int rc;
 
-	if (md5ctx == NULL)
+	if (md5ctx == NULL) {
 		return -1;
-	if (data == NULL || len == 0)
+	}
+	if (data == NULL || len == 0) {
 		return 0;
+	}
 	rc = MD5_Update(&md5ctx->md5ctx, data, len);
 	return rc;
 }

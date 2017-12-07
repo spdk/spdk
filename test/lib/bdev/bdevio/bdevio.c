@@ -230,12 +230,14 @@ sgl_chop_buffer(struct bdevio_request *req, int iov_len)
 	char *buf = req->buf;
 
 	req->iovcnt = 0;
-	if (!iov_len)
+	if (!iov_len) {
 		return;
+	}
 
 	for (; data_len > 0 && req->iovcnt < BUFFER_IOVS; req->iovcnt++) {
-		if (data_len < iov_len)
+		if (data_len < iov_len) {
 			iov_len = data_len;
+		}
 
 		req->iov[req->iovcnt].iov_base = buf;
 		req->iov[req->iovcnt].iov_len = iov_len;

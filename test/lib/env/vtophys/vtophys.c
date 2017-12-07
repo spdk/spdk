@@ -45,8 +45,9 @@ vtophys_negative_test(void)
 
 	for (i = 0; i < 31; i++) {
 		p = malloc(size);
-		if (p == NULL)
+		if (p == NULL) {
 			continue;
+		}
 
 		if (spdk_vtophys(p) != SPDK_VTOPHYS_ERROR) {
 			rc = -1;
@@ -66,10 +67,11 @@ vtophys_negative_test(void)
 		printf("Err: kernel-mode address incorrectly allowed\n");
 	}
 
-	if (!rc)
+	if (!rc) {
 		printf("vtophys_negative_test passed\n");
-	else
+	} else {
 		printf("vtophys_negative_test failed\n");
+	}
 
 	return rc;
 }
@@ -84,8 +86,9 @@ vtophys_positive_test(void)
 
 	for (i = 0; i < 31; i++) {
 		p = spdk_dma_zmalloc(size, 512, NULL);
-		if (p == NULL)
+		if (p == NULL) {
 			continue;
+		}
 
 		if (spdk_vtophys(p) == SPDK_VTOPHYS_ERROR) {
 			rc = -1;
@@ -98,10 +101,11 @@ vtophys_positive_test(void)
 		size = size << 1;
 	}
 
-	if (!rc)
+	if (!rc) {
 		printf("vtophys_positive_test passed\n");
-	else
+	} else {
 		printf("vtophys_positive_test failed\n");
+	}
 
 	return rc;
 }
@@ -154,12 +158,14 @@ main(int argc, char **argv)
 	spdk_env_init(&opts);
 
 	rc = vtophys_negative_test();
-	if (rc < 0)
+	if (rc < 0) {
 		return rc;
+	}
 
 	rc = vtophys_positive_test();
-	if (rc < 0)
+	if (rc < 0) {
 		return rc;
+	}
 
 	rc = mem_map_test();
 	return rc;

@@ -100,8 +100,9 @@ spdk_lvs_load(struct spdk_bs_dev *dev,
 int
 spdk_bs_bdev_claim(struct spdk_bs_dev *bs_dev, struct spdk_bdev_module_if *module)
 {
-	if (lvol_already_opened == true)
+	if (lvol_already_opened == true) {
 		return -1;
+	}
 
 	lvol_already_opened = true;
 
@@ -143,8 +144,9 @@ spdk_bdev_create_bs_dev(struct spdk_bdev *bdev, spdk_bdev_remove_cb_t remove_cb,
 {
 	struct spdk_bs_dev *bs_dev;
 
-	if (lvol_already_opened == true || bdev == NULL)
+	if (lvol_already_opened == true || bdev == NULL) {
 		return NULL;
+	}
 
 	bs_dev = calloc(1, sizeof(*bs_dev));
 	SPDK_CU_ASSERT_FATAL(bs_dev != NULL);
@@ -167,8 +169,9 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 	struct spdk_lvol_store *lvs;
 	int error = 0;
 
-	if (lvol_store_initialize_fail)
+	if (lvol_store_initialize_fail) {
 		return -1;
+	}
 
 	if (lvol_store_initialize_cb_fail) {
 		bs_dev->destroy(bs_dev);
@@ -201,8 +204,9 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *c
 
 	g_bs_dev->destroy(g_bs_dev);
 
-	if (cb_fn != NULL)
+	if (cb_fn != NULL) {
 		cb_fn(cb_arg, 0);
+	}
 
 	return 0;
 }
@@ -223,8 +227,9 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 
 	g_bs_dev->destroy(g_bs_dev);
 
-	if (cb_fn != NULL)
+	if (cb_fn != NULL) {
 		cb_fn(cb_arg, 0);
+	}
 
 	return 0;
 }

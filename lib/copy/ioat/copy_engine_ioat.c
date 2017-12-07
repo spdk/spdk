@@ -286,8 +286,9 @@ copy_engine_ioat_init(void)
 		/* Init the whitelist */
 		for (i = 0; i < IOAT_MAX_CHANNELS; i++) {
 			pci_bdf = spdk_conf_section_get_nmval(sp, "Whitelist", i, 0);
-			if (!pci_bdf)
+			if (!pci_bdf) {
 				break;
+			}
 
 			if (spdk_pci_addr_parse(&probe_ctx.whitelist[probe_ctx.num_whitelist_devices], pci_bdf) < 0) {
 				SPDK_ERRLOG("Invalid Ioat Whitelist address %s\n", pci_bdf);

@@ -1221,8 +1221,9 @@ bdev_nvme_queued_reset_sgl(void *ref, uint32_t sgl_offset)
 	bio->iov_offset = sgl_offset;
 	for (bio->iovpos = 0; bio->iovpos < bio->iovcnt; bio->iovpos++) {
 		iov = &bio->iovs[bio->iovpos];
-		if (bio->iov_offset < iov->iov_len)
+		if (bio->iov_offset < iov->iov_len) {
 			break;
+		}
 
 		bio->iov_offset -= iov->iov_len;
 	}

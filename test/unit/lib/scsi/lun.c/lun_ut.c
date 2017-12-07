@@ -122,8 +122,9 @@ void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = malloc(size);
-	if (phys_addr)
+	if (phys_addr) {
 		*phys_addr = (uint64_t)buf;
+	}
 	return buf;
 }
 
@@ -131,8 +132,9 @@ void *
 spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = calloc(size, 1);
-	if (phys_addr)
+	if (phys_addr) {
 		*phys_addr = (uint64_t)buf;
+	}
 	return buf;
 }
 
@@ -188,17 +190,18 @@ spdk_bdev_scsi_reset(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 int
 spdk_bdev_scsi_execute(struct spdk_bdev *bdev, struct spdk_scsi_task *task)
 {
-	if (g_lun_execute_fail)
+	if (g_lun_execute_fail) {
 		return -EINVAL;
-	else {
+	} else {
 		task->status = SPDK_SCSI_STATUS_GOOD;
 
-		if (g_lun_execute_status == SPDK_SCSI_TASK_PENDING)
+		if (g_lun_execute_status == SPDK_SCSI_TASK_PENDING) {
 			return g_lun_execute_status;
-		else if (g_lun_execute_status == SPDK_SCSI_TASK_COMPLETE)
+		} else if (g_lun_execute_status == SPDK_SCSI_TASK_COMPLETE) {
 			return g_lun_execute_status;
-		else
+		} else {
 			return 0;
+		}
 	}
 }
 

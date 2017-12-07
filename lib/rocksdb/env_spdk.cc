@@ -617,8 +617,9 @@ SpdkEnv::~SpdkEnv()
 		spdk_fs_iter iter;
 		struct spdk_file *file;
 
-		if (!g_sync_args.channel)
+		if (!g_sync_args.channel) {
 			SpdkInitializeThread();
+		}
 		iter = spdk_fs_iter_first(g_fs);
 		while (iter != NULL) {
 			file = spdk_fs_iter_get_file(iter);

@@ -60,8 +60,9 @@ spdk_uevent_connect(void)
 	addr.nl_groups = 0xffffffff;
 
 	netlink_fd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
-	if (netlink_fd < 0)
+	if (netlink_fd < 0) {
 		return -1;
+	}
 
 	setsockopt(netlink_fd, SOL_SOCKET, SO_RCVBUFFORCE, &size, sizeof(size));
 

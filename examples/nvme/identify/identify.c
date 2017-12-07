@@ -587,10 +587,11 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("  May be connected to multiple hosts:  %s\n", cdata->cmic.multi_host ? "Yes" : "No");
 	printf("  Associated with SR-IOV VF:           %s\n", cdata->cmic.sr_iov ? "Yes" : "No");
 	printf("Max Data Transfer Size:                ");
-	if (cdata->mdts == 0)
+	if (cdata->mdts == 0) {
 		printf("Unlimited\n");
-	else
+	} else {
 		printf("%" PRIu64 "\n", (uint64_t)1 << (12 + cap.bits.mpsmin + cdata->mdts));
+	}
 	if (features[SPDK_NVME_FEAT_ERROR_RECOVERY].valid) {
 		unsigned tler = features[SPDK_NVME_FEAT_ERROR_RECOVERY].result & 0xFFFF;
 		printf("Error Recovery Timeout:                ");
@@ -665,15 +666,17 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	printf("Abort Command Limit:                   %d\n", cdata->acl + 1);
 	printf("Async Event Request Limit:             %d\n", cdata->aerl + 1);
 	printf("Number of Firmware Slots:              ");
-	if (cdata->oacs.firmware != 0)
+	if (cdata->oacs.firmware != 0) {
 		printf("%d\n", cdata->frmw.num_slots);
-	else
+	} else {
 		printf("N/A\n");
+	}
 	printf("Firmware Slot 1 Read-Only:             ");
-	if (cdata->oacs.firmware != 0)
+	if (cdata->oacs.firmware != 0) {
 		printf("%s\n", cdata->frmw.slot1_ro ? "Yes" : "No");
-	else
+	} else {
 		printf("N/A\n");
+	}
 	if (cdata->fwug == 0x00) {
 		printf("Firmware Update Granularity:           No Information Provided\n");
 	} else if (cdata->fwug == 0xFF) {

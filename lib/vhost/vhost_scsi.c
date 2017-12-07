@@ -278,8 +278,9 @@ spdk_vhost_scsi_task_init_target(struct spdk_vhost_scsi_task *task, const __u8 *
 	SPDK_TRACEDUMP(SPDK_LOG_VHOST_SCSI_QUEUE, "LUN", lun, 8);
 
 	/* First byte must be 1 and second is target */
-	if (lun[0] != 1 || lun[1] >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS)
+	if (lun[0] != 1 || lun[1] >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
 		return -1;
+	}
 
 	dev = task->svdev->scsi_dev[lun[1]];
 	task->scsi_dev = dev;
