@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad745083_b95b9ebc",
+        "filename": "scripts/fio.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T19:57:34Z",
+      "side": 1,
+      "message": "I guess this is OK for now - since nvmf_fio.py also did this.  But if the test system has a mounted filesystem on a local attached NVMe SSD, will this will run fio against that SSD also and corrupt the filesystem?\n\nWe should consider this for a future patch.",
+      "revId": "c85414c7868714f9f54052df656332c0d218dea8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f00b68f7_13dce20f",
+        "filename": "scripts/fio.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T19:57:34Z",
+      "side": 1,
+      "message": "the set_device_parameter and configure_devices changes - do they need to be in this patch?  seems these are not associated with adding nvme-of support",
+      "revId": "c85414c7868714f9f54052df656332c0d218dea8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
