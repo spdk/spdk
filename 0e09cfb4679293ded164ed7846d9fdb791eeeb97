@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e28512e5_683ac9f2",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 3
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-07T15:04:47Z",
+      "side": 1,
+      "message": "Commented; should this be here?",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 11
+      },
+      "revId": "0e09cfb4679293ded164ed7846d9fdb791eeeb97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a1c98db_fbf8a784",
+        "filename": "test/vhost/common/run_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-07T15:04:47Z",
+      "side": 1,
+      "message": "This is done via autotest.config file which consists masks for QEMU and SPDK.",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 47
+      },
+      "revId": "0e09cfb4679293ded164ed7846d9fdb791eeeb97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33a145c8_2ec13365",
+        "filename": "test/vhost/common/run_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-07T15:04:47Z",
+      "side": 1,
+      "message": "You don\u0027t pass these variables as arguments to \"spdk_vhost_run\" function on line 60, so I am pretty sure these are unused.",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 34
+      },
+      "revId": "0e09cfb4679293ded164ed7846d9fdb791eeeb97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4f90c99_9fd9ff3d",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-07T15:04:47Z",
+      "side": 1,
+      "message": "This will probably not work on test pool because each server/VM has only 1 disk",
+      "range": {
+        "startLine": 116,
+        "startChar": 25,
+        "endLine": 116,
+        "endChar": 38
+      },
+      "revId": "0e09cfb4679293ded164ed7846d9fdb791eeeb97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
