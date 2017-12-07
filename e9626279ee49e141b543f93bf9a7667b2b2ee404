@@ -16,6 +16,24 @@
       "revId": "e9626279ee49e141b543f93bf9a7667b2b2ee404",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61c74767_4f75f2c4",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-07T01:48:54Z",
+      "side": 1,
+      "message": "Hi Daniel\nThanks for review. Originally I done the judgment in spdk_vhost.sh script. And I add the new cases here now.",
+      "parentUuid": "e8665618_fe98d4dd",
+      "revId": "e9626279ee49e141b543f93bf9a7667b2b2ee404",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
