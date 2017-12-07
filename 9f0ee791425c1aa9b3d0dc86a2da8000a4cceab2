@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "6b9e3f0b_a9e3a2ac",
+        "filename": "examples/bdev/fio_plugin/Makefile",
+        "patchSetId": 33
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-07T22:52:51Z",
+      "side": 1,
+      "message": "fio_plugin should not be using the normal event framework.  It provides its own implementation of the io_channel functions.",
+      "range": {
+        "startLine": 46,
+        "startChar": 59,
+        "endLine": 46,
+        "endChar": 64
+      },
+      "revId": "9f0ee791425c1aa9b3d0dc86a2da8000a4cceab2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7eaf1c66_8ee96dd9",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 33
@@ -19,6 +42,23 @@
         "endLine": 176,
         "endChar": 32
       },
+      "revId": "9f0ee791425c1aa9b3d0dc86a2da8000a4cceab2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ec03a9b_3a86412e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-07T22:52:51Z",
+      "side": 1,
+      "message": "This section still looks overly complex to me.\n\nThe algorithm I would like to see here is something like:\n\nio_submit():\n- Add I/O to the tail of bdev_ch-\u003eqos_io\n- Call submit_qos_io()\n(Note that there are no extra checks here for timeouts, etc., just a simple TAILQ_INSERT_TAIL.)\n\npoll_qos():\n- Reset per-millisecond counter\n- Call submit_qos_io()\n\nsubmit_qos_io():\n- Check for timeouts (if necessary)\n- While I/O per millisecond limit hasn\u0027t been reached, remove I/Os from the head of bdev_ch-\u003eqos_io and submit them, and increment the counter for each I/O submitted\n\nThen all of the special-case logic that is currently split up into two places can be centralized.\n\nI\u0027d also still prefer not to introduce the _BUSY error state into this patch; if it really is necessary, it should be added as a separate patch.",
       "revId": "9f0ee791425c1aa9b3d0dc86a2da8000a4cceab2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
