@@ -77,6 +77,25 @@ function cleanup_virsh() {
     rm $VM_BAK_IMG || true
 }
 
+function cleanup_lvol() {
+    echo "INFO: Removing lvol bdevs"
+    $rpc_py delete_bdev $lb_name
+    echo -e "\tINFO: lvol bdev $lb_name removed"
+
+    echo "INFO: Removing lvol stores"
+    $rpc_py destroy_lvol_store -u $lvol_store
+    echo -e "\tINFO: lvol stote $lvol_store removed"
+}
+
+function get_lvs_free_mb() {
+    local lvs_uuid=$1
+    local fc=$($rpc_py get_lvol_stores | jq --arg lvs "$lvs_uuid" '.[] | select(.uuid==$lvs) .free_clusters')
+    local cs=$($rpc_py get_lvol_stores | jq --arg lvs "$lvs_uuid" '.[] | select(.uuid==$lvs) .cluster_size')
+
+    # Change to MB's
+    free_mb=$((fc*cs/1024/1024))
+}
+
 timing_enter integrity_test
 
 # Backing image for VM
@@ -112,12 +131,22 @@ $rootdir/app/vhost/vhost -c $basedir/vhost.conf &
 pid=$!
 echo "Process pid: $pid"
 waitforlisten "$pid"
+
+echo "INFO: Creating lvol store on device Nvme0n1"
+lvol_store=$($rpc_py construct_lvol_store Nvme0n1 lvs_0)
+echo "INFO: Creating lvol bdev on lvol store lvs_0"
+get_lvs_free_mb $lvol_store
+lb_name=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_0 $free_mb)
+
 if [[ "$VHOST_MODE" == "scsi" ]]; then
     $rpc_py construct_vhost_scsi_controller naa.0
-    $rpc_py add_vhost_scsi_lun naa.0 0 Nvme0n1
+    $rpc_py add_vhost_scsi_lun naa.0 0 $lb_name
 else
-    $rpc_py construct_vhost_blk_controller naa.0 Nvme0n1
+    $rpc_py construct_vhost_blk_controller naa.0 $lb_name
 fi
+
+trap "cleanup_lvol; cleanup_virsh; killprocess $pid; exit 1" SIGINT SIGTERM EXIT ERR
+
 chmod 777 /tmp/naa.0
 
 virsh create $basedir/vm_conf.xml
@@ -136,6 +165,9 @@ done
 # Run test on Virtual Machine
 $SCPCMD -r $basedir/integrity_vm.sh root@$VM_IP:~
 $SSHCMD root@$VM_IP "fs=$VM_FS ~/integrity_vm.sh $VHOST_MODE"
+
+# Delete lvol bdev, destroy lvol store
+cleanup_lvol
 
 # Kill VM, cleanup config files
 cleanup_virsh
