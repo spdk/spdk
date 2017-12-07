@@ -46,6 +46,10 @@
 #include "spdk/queue.h"
 #include "spdk/log.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef void (*spdk_event_fn)(void *arg1, void *arg2);
 
 /**
@@ -192,5 +196,9 @@ void spdk_reactor_enable_context_switch_monitor(bool enabled);
  * \brief Return whether context switch monitoring is enabled.
  */
 bool spdk_reactor_context_switch_monitor_enabled(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

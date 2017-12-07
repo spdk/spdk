@@ -43,6 +43,10 @@
 
 #include "spdk/json.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SPDK_JSONRPC_ERROR_PARSE_ERROR		-32700
 #define SPDK_JSONRPC_ERROR_INVALID_REQUEST	-32600
 #define SPDK_JSONRPC_ERROR_METHOD_NOT_FOUND	-32601
@@ -102,5 +106,9 @@ void spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_j
  */
 void spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				      int error_code, const char *msg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

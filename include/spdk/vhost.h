@@ -43,6 +43,10 @@
 
 #include "spdk/event.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 int spdk_vhost_init(void);
 void spdk_vhost_fini(void);
 
@@ -290,5 +294,9 @@ void spdk_vhost_call_external_event(const char *vdev_name, spdk_vhost_event_fn f
  * \param arg parameter to be passed to *fn*.
  */
 void spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_VHOST_H */
