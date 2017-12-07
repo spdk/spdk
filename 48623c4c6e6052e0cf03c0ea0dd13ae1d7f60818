@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c6ebb9d_409cac5b",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T23:52:41Z",
+      "side": 1,
+      "message": "Daniel is right - double instead of float would be better here.",
+      "revId": "48623c4c6e6052e0cf03c0ea0dd13ae1d7f60818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "727296eb_c25d9816",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 892,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T23:52:41Z",
+      "side": 1,
+      "message": "Theoretically if we ctrl+c after less than 1 microsecond, we could hit this case.  But practically I don\u0027t think that could ever happen.  So I\u0027m OK keeping this check in.",
+      "revId": "48623c4c6e6052e0cf03c0ea0dd13ae1d7f60818",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
