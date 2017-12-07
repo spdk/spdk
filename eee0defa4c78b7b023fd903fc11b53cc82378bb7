@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e7b0105_4a02739d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T17:00:21Z",
+      "side": 1,
+      "message": "what do you think of \"target_node_add_lun\" as the name?  then it is more clear what the lun is being added to",
+      "revId": "eee0defa4c78b7b023fd903fc11b53cc82378bb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
