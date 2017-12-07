@@ -186,7 +186,19 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 
 	/* set the coremask */
-	args = spdk_push_arg(args, &argcount, _sprintf_alloc("-c %s", opts->core_mask));
+	/* NOTE: If coremask starts with '[' and ends with ']' it is a core list
+	 */
+	if (opts->core_mask[0] == '[') {
+		char *l_arg = _sprintf_alloc("-l %s", opts->core_mask + 1);
+		int len = strlen(l_arg);
+		if (l_arg[len - 1] == ']') {
+			l_arg[len - 1] = '\0';
+		}
+		args = spdk_push_arg(args, &argcount, l_arg);
+	} else {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("-c %s", opts->core_mask));
+	}
+
 	if (args == NULL) {
 		return -1;
 	}
