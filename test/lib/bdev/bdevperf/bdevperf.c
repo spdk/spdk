@@ -508,7 +508,7 @@ bdevperf_submit_on_core(void *arg1, void *arg2)
 
 		/* Start a timer to stop this I/O chain when the run is over */
 		target->run_timer = spdk_poller_register(end_target, target,
-				    g_time_in_sec * 1000000);
+				    g_time_in_sec * 1000000LL);
 		if (g_reset) {
 			target->reset_timer = spdk_poller_register(reset_target, target,
 					      10 * 1000000);
