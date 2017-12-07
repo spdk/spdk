@@ -89,7 +89,6 @@ rpc_create_virtio_user_scsi_bdev_cb(void *ctx, int result, struct spdk_bdev **bd
 
 		for (i = 0; i < cnt; i++) {
 			spdk_json_write_string(w, spdk_bdev_get_name(bdevs[i]));
-			bdevs++;
 		}
 
 		spdk_json_write_array_end(w);
