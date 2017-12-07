@@ -167,7 +167,7 @@ spdk_scsi_dev_construct(const char *name, char *lun_name_list[], int *lun_id_lis
 			goto error;
 		}
 
-		lun = spdk_scsi_lun_construct(spdk_bdev_get_name(bdev), bdev, hotremove_cb, hotremove_ctx);
+		lun = spdk_scsi_lun_construct(bdev, hotremove_cb, hotremove_ctx);
 		if (lun == NULL) {
 			goto error;
 		}
@@ -300,7 +300,7 @@ spdk_scsi_dev_print(struct spdk_scsi_dev *dev)
 		lun = dev->lun[i];
 		if (lun == NULL)
 			continue;
-		printf("device %d: LUN%d %s\n", dev->id, i, lun->name);
+		printf("device %d: LUN%d %s\n", dev->id, i, spdk_bdev_get_name(lun->bdev));
 	}
 }
 

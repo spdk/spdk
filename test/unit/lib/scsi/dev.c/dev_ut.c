@@ -51,16 +51,9 @@ static struct spdk_bdev g_bdevs[] = {
 	{"malloc1"},
 };
 
-struct lun_entry {
-	TAILQ_ENTRY(lun_entry) lun_entries;
-	struct spdk_scsi_lun *lun;
-};
-TAILQ_HEAD(, lun_entry) g_lun_head;
-
 static int
 test_setup(void)
 {
-	TAILQ_INIT(&g_lun_head);
 	return 0;
 }
 
@@ -90,31 +83,16 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 }
 
 _spdk_scsi_lun *
-spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
+spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 			void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
 			void *hotremove_ctx)
 {
 	struct spdk_scsi_lun *lun;
-	struct lun_entry *p;
 
 	lun = calloc(1, sizeof(struct spdk_scsi_lun));
 	SPDK_CU_ASSERT_FATAL(lun != NULL);
 
-	snprintf(lun->name, sizeof(lun->name), "%s", name);
 	lun->bdev = bdev;
-
-	TAILQ_FOREACH(p, &g_lun_head, lun_entries) {
-		CU_ASSERT_FATAL(p->lun != NULL);
-		if (strncmp(p->lun->name, lun->name, sizeof(lun->name)) == 0)
-			return NULL;
-	}
-
-	p = calloc(1, sizeof(struct lun_entry));
-	SPDK_CU_ASSERT_FATAL(p != NULL);
-
-	p->lun = lun;
-
-	TAILQ_INSERT_TAIL(&g_lun_head, p, lun_entries);
 
 	return lun;
 }
@@ -122,17 +100,6 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 int
 spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
-	struct lun_entry *p, *tmp;
-
-	TAILQ_FOREACH_SAFE(p, &g_lun_head, lun_entries, tmp) {
-		CU_ASSERT_FATAL(p->lun != NULL);
-		if (strncmp(p->lun->name, lun->name, sizeof(lun->name)) == 0) {
-			TAILQ_REMOVE(&g_lun_head, p, lun_entries);
-			free(p);
-			break;
-		}
-	}
-
 	free(lun);
 	return 0;
 }
@@ -290,8 +257,6 @@ dev_construct_success(void)
 
 	/* free the dev */
 	spdk_scsi_dev_destruct(dev);
-
-	CU_ASSERT(TAILQ_EMPTY(&g_lun_head));
 }
 
 static void
@@ -309,8 +274,6 @@ dev_construct_success_lun_zero_not_first(void)
 
 	/* free the dev */
 	spdk_scsi_dev_destruct(dev);
-
-	CU_ASSERT(TAILQ_EMPTY(&g_lun_head));
 }
 
 static void
@@ -334,8 +297,6 @@ dev_construct_same_lun_two_devices(void)
 
 	/* free the dev */
 	spdk_scsi_dev_destruct(dev);
-
-	CU_ASSERT(TAILQ_EMPTY(&g_lun_head));
 }
 
 static void
@@ -350,8 +311,6 @@ dev_construct_same_lun_one_device(void)
 
 	/* Fails to construct dev and returns NULL */
 	CU_ASSERT_TRUE(dev == NULL);
-
-	CU_ASSERT(TAILQ_EMPTY(&g_lun_head));
 }
 
 static void
