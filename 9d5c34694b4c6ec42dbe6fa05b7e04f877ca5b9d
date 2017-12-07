@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e709f892_9578725a",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-07T21:54:59Z",
+      "side": 0,
+      "message": "could this be removed as well? there\u0027s not really any limit now",
+      "range": {
+        "startLine": 60,
+        "startChar": 8,
+        "endLine": 60,
+        "endChar": 37
+      },
+      "revId": "9d5c34694b4c6ec42dbe6fa05b7e04f877ca5b9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
