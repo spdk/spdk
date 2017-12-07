@@ -145,6 +145,14 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 		timing_enter readonly
 		run_test ./test/vhost/spdk_vhost.sh --readonly
 		timing_exit readonly
+
+		timing_enter fs_integrity_scsi
+		run_test ./test/vhost/spdk_vhost.sh --fs-integrity-scsi
+		timing_exit fs_integrity_scsi
+
+		timing_enter fs_integrity_blk
+		run_test ./test/vhost/spdk_vhost.sh --fs-integrity-blk
+		timing_exit fs_integrity_blk
 	fi
 
 	timing_enter integrity_lvol_scsi
