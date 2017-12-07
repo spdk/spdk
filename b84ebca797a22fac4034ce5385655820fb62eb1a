@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0b41839_ffd94cd0",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T20:06:15Z",
+      "side": 1,
+      "message": "please let\u0027s add num_clusters to the previous patch\n\nthen the previous patch adds opts support for all current per-blob metadata fields (size and xattrs)",
+      "revId": "b84ebca797a22fac4034ce5385655820fb62eb1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45293ec1_f506049e",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T20:06:15Z",
+      "side": 1,
+      "message": "let\u0027s add thin_provision and read_only as separate patches\n\nand in the new patch, read_only should be a blob_opt too",
+      "revId": "b84ebca797a22fac4034ce5385655820fb62eb1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e50196ce_26b2c707",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2650,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T20:06:15Z",
+      "side": 1,
+      "message": "you don\u0027t need this check - if you pass 0 to spdk_bs_md_resize_blob(), it will do nothing",
+      "revId": "b84ebca797a22fac4034ce5385655820fb62eb1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85f40a60_4b20b34a",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T20:06:15Z",
+      "side": 1,
+      "message": "I think we should just have a single flag SPDK_BLOB_READ_ONLY.  If the user has set this flag, it means both data and md are read-only.",
+      "revId": "b84ebca797a22fac4034ce5385655820fb62eb1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "463cda6f_15e91999",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T20:06:15Z",
+      "side": 1,
+      "message": "?",
+      "revId": "b84ebca797a22fac4034ce5385655820fb62eb1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
