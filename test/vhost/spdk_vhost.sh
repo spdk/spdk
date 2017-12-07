@@ -87,11 +87,11 @@ case $1 in
 		;;
 	-fs|--fs-integrity-scsi)
 		echo 'Running filesystem integrity suite...'
-		./integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f ntfs
+		./integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f "xfs ntfs btrfs ext4"
 		;;
 	-fb|--fs-integrity-blk)
 		echo 'Running filesystem integrity suite...'
-		./integrity/integrity_start.sh -i $VM_IMAGE -m blk -f ntfs
+		./integrity/integrity_start.sh -i $VM_IMAGE -m blk -f "xfs ntfs btrfs ext4"
 		;;
 	-ils|--integrity-lvol-scsi)
 		echo 'Running lvol integrity suite...'
