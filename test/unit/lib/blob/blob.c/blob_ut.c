@@ -2212,6 +2212,7 @@ blob_thin_prov_rw(void)
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
 	uint8_t payload_read[10 * 4096];
+	uint8_t payload_write[10 * 4096];
 	int rc;
 
 	dev = init_dev();
@@ -2259,15 +2260,13 @@ blob_thin_prov_rw(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(zero, payload_read, 4 * 4096) == 0);
 
-	/* Enable after writes are implemented
-	 * memset(payload_write, 0xE5, sizeof(payload_write));
-	 * spdk_bs_io_write_blob(blob, channel, payload_write, 4, 10, blob_op_complete, NULL);
-	 * CU_ASSERT(g_bserrno == 0);
-	 *
-	 * spdk_bs_io_read_blob(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
-	 * CU_ASSERT(g_bserrno == 0);
-	 * CU_ASSERT(memcmp(payload_write, payload_read, 4 * 4096) == 0);
-	 */
+	memset(payload_write, 0xE5, sizeof(payload_write));
+	spdk_bs_io_write_blob(blob, channel, payload_write, 4, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_io_read_blob(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 4 * 4096) == 0);
 
 	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -2294,7 +2293,9 @@ blob_thin_prov_rw_iov(void)
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
 	uint8_t payload_read[10 * 4096];
+	uint8_t payload_write[10 * 4096];
 	struct iovec iov_read[3];
+	struct iovec iov_write[3];
 
 	int rc;
 
@@ -2325,9 +2326,6 @@ blob_thin_prov_rw_iov(void)
 
 	CU_ASSERT(blob->active.num_clusters == 0);
 
-	/* Set blob as thin provisioned */
-	blob->invalid_flags |= SPDK_BLOB_THIN_PROV;
-
 	/* The blob started at 0 clusters. Resize it to be 5, but still unallocated. */
 	rc = spdk_bs_md_resize_blob(blob, 5);
 	CU_ASSERT(rc == 0);
@@ -2352,37 +2350,27 @@ blob_thin_prov_rw_iov(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(zero, payload_read, 10 * 4096) == 0);
 
-	/* Enable when writes are implemented
-	 * blob->active.clusters[1] = 3 * 256;
-	 *
-	 * memset(payload_write, 0xE5, sizeof(payload_write));
-	 * iov_write[0].iov_base = payload_write;
-	 * iov_write[0].iov_len = 1 * 4096;
-	 * iov_write[1].iov_base = payload_write + 1 * 4096;
-	 * iov_write[1].iov_len = 5 * 4096;
-	 * iov_write[2].iov_base = payload_write + 6 * 4096;
-	 * iov_write[2].iov_len = 4 * 4096;
-	 *
-	 * spdk_bs_io_writev_blob(blob, channel, iov_write, 3, 250, 10, blob_op_complete, NULL);
-	 * CU_ASSERT(g_bserrno == 0);
-	 *
-	 * memset(payload_read, 0xAA, sizeof(payload_read));
-	 * iov_read[0].iov_base = payload_read;
-	 * iov_read[0].iov_len = 3 * 4096;
-	 * iov_read[1].iov_base = payload_read + 3 * 4096;
-	 * iov_read[1].iov_len = 4 * 4096;
-	 * iov_read[2].iov_base = payload_read + 7 * 4096;
-	 * iov_read[2].iov_len = 3 * 4096;
-	 * spdk_bs_io_readv_blob(blob, channel, iov_read, 3, 250, 10, blob_op_complete, NULL);
-	 * CU_ASSERT(g_bserrno == 0);
-	 * CU_ASSERT(memcmp(payload_write, payload_read, 10 * 4096) == 0);
-	 *
-	 * buf = calloc(1, 256 * 4096);
-	 * SPDK_CU_ASSERT_FATAL(buf != NULL);
-	 *
-	 * CU_ASSERT(memcmp(buf, &g_dev_buffer[512 * 4096], 256 * 4096) == 0);
-	 * free(buf);
-	 */
+	memset(payload_write, 0xE5, sizeof(payload_write));
+	iov_write[0].iov_base = payload_write;
+	iov_write[0].iov_len = 1 * 4096;
+	iov_write[1].iov_base = payload_write + 1 * 4096;
+	iov_write[1].iov_len = 5 * 4096;
+	iov_write[2].iov_base = payload_write + 6 * 4096;
+	iov_write[2].iov_len = 4 * 4096;
+
+	spdk_bs_io_writev_blob(blob, channel, iov_write, 3, 250, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	memset(payload_read, 0xAA, sizeof(payload_read));
+	iov_read[0].iov_base = payload_read;
+	iov_read[0].iov_len = 3 * 4096;
+	iov_read[1].iov_base = payload_read + 3 * 4096;
+	iov_read[1].iov_len = 4 * 4096;
+	iov_read[2].iov_base = payload_read + 7 * 4096;
+	iov_read[2].iov_len = 3 * 4096;
+	spdk_bs_io_readv_blob(blob, channel, iov_read, 3, 250, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 10 * 4096) == 0);
 
 	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
