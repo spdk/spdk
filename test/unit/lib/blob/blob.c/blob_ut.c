@@ -2212,6 +2212,7 @@ blob_thin_prov_rw(void)
 	spdk_blob_id blobid;
 	uint64_t free_clusters;
 	uint8_t payload_read[10 * 4096];
+	uint8_t payload_write[10 * 4096];
 	int rc;
 
 	dev = init_dev();
@@ -2259,15 +2260,13 @@ blob_thin_prov_rw(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(zero, payload_read, 4 * 4096) == 0);
 
-	/* Enable after writes are implemented
-	 * memset(payload_write, 0xE5, sizeof(payload_write));
-	 * spdk_bs_io_write_blob(blob, channel, payload_write, 4, 10, blob_op_complete, NULL);
-	 * CU_ASSERT(g_bserrno == 0);
-	 *
-	 * spdk_bs_io_read_blob(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
-	 * CU_ASSERT(g_bserrno == 0);
-	 * CU_ASSERT(memcmp(payload_write, payload_read, 4 * 4096) == 0);
-	 */
+	memset(payload_write, 0xE5, sizeof(payload_write));
+	spdk_bs_io_write_blob(blob, channel, payload_write, 4, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_io_read_blob(blob, channel, payload_read, 4, 10, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(memcmp(payload_write, payload_read, 4 * 4096) == 0);
 
 	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
