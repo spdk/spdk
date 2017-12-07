@@ -50,6 +50,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	true
 fi
 run_test test/nvmf/host/bdevperf.sh
+run_test test/nvmf/host/bdevperf_gpt.sh
 run_test test/nvmf/host/identify.sh
 run_test test/nvmf/host/perf.sh
 run_test test/nvmf/host/identify_kernel_nvmf.sh
