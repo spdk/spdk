@@ -63,6 +63,8 @@ static int g_queue_depth;
 static int g_time_in_sec;
 static int g_show_performance_real_time = 0;
 static bool g_run_failed = false;
+static bool g_shutdown = false;
+static uint64_t g_shutdown_tsc;
 static bool g_zcopy = true;
 static int g_mem_size = 0;
 static unsigned g_master_core;
@@ -239,6 +241,17 @@ end_run(void *arg1, void *arg2)
 }
 
 static void
+end_target(void *arg)
+{
+	struct io_target *target = arg;
+	spdk_poller_unregister(&target->run_timer);
+	if (g_reset) {
+		spdk_poller_unregister(&target->reset_timer);
+	}
+	target->is_draining = true;
+}
+
+static void
 bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct io_target	*target;
@@ -271,6 +284,13 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	TAILQ_INSERT_TAIL(&target->task_list, task, link);
 
 	spdk_bdev_free_io(bdev_io);
+
+	if (g_shutdown) {
+		/* Only need to set it in one time */
+		if (!target->is_draining) {
+			end_target(target);
+		}
+	}
 
 	/*
 	 * is_draining indicates when time has expired for the test run
@@ -424,19 +444,6 @@ bdevperf_submit_io(struct io_target *target, int queue_depth)
 	while (queue_depth-- > 0) {
 		bdevperf_submit_single(target);
 	}
-}
-
-static void
-end_target(void *arg)
-{
-	struct io_target *target = arg;
-
-	spdk_poller_unregister(&target->run_timer);
-	if (g_reset) {
-		spdk_poller_unregister(&target->reset_timer);
-	}
-
-	target->is_draining = true;
 }
 
 static void reset_target(void *arg);
@@ -651,6 +658,7 @@ bdevperf_run(void *arg1, void *arg2)
 	fflush(stdout);
 
 	/* Start a timer to dump performance numbers */
+	g_shutdown_tsc = spdk_get_ticks();
 	if (g_show_performance_real_time) {
 		g_perf_timer = spdk_poller_register(performance_statistics_thread, NULL, 1000000);
 	}
@@ -666,6 +674,16 @@ bdevperf_run(void *arg1, void *arg2)
 					    target, NULL);
 		spdk_event_call(event);
 	}
+}
+
+static void
+spdk_bdevperf_shutdown_cb(void)
+{
+	fprintf(stdout, "\n============================\n");
+	fprintf(stdout, "   Bdevperf shutdown signal\n");
+	fprintf(stdout, "============================\n");
+	g_shutdown = true;
+	g_shutdown_tsc = spdk_get_ticks() - g_shutdown_tsc;
 }
 
 int
@@ -838,9 +856,20 @@ main(int argc, char **argv)
 		opts.mem_size = g_mem_size;
 	}
 
+	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 	spdk_app_start(&opts, bdevperf_run, NULL, NULL);
 
-	performance_dump(g_time_in_sec);
+	if (g_shutdown) {
+		g_time_in_sec = g_shutdown_tsc / spdk_get_ticks_hz();
+		fprintf(stdout, "Receives shut down signal, test time is about %d seconds\n", g_time_in_sec);
+	}
+
+	if (g_time_in_sec) {
+		performance_dump(g_time_in_sec);
+	} else {
+		fprintf(stdout, "Test time < 1 second, no performance data will be showed\n");
+	}
+
 	blockdev_heads_destroy();
 	spdk_app_fini();
 	printf("done.\n");
