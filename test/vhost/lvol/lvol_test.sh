@@ -186,7 +186,6 @@ done
 $rpc_py get_lvol_stores
 $rpc_py get_bdevs
 $rpc_py get_vhost_controllers
-$rpc_py get_luns
 
 # Run VMs
 $COMMON_DIR/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
@@ -276,7 +275,6 @@ done
 $rpc_py get_lvol_stores
 $rpc_py get_bdevs
 $rpc_py get_vhost_controllers
-$rpc_py get_luns
 
 echo "INFO: Shutting down SPDK vhost app..."
 spdk_vhost_kill
