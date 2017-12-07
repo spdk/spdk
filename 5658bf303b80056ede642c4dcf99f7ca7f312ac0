@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26426dbc_1418a2db",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-07T00:17:20Z",
+      "side": 1,
+      "message": "the actual unmapping happens inside spdk_pci_device_detach, so there might be a little data race now.\nwe might want to wrap contents of spdk_pci_device_detach with vfio mutex somehow.",
+      "revId": "5658bf303b80056ede642c4dcf99f7ca7f312ac0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
