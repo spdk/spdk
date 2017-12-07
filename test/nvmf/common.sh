@@ -120,7 +120,7 @@ function get_rdma_if_list()
 function get_ip_address()
 {
 	interface=$1
-	ifconfig $interface | grep "inet " | awk '{print $2}'
+	ifconfig $interface | grep "inet " | awk '{print $2}' | sed 's/[^0-9\.]//g'
 }
 
 function nvmfcleanup()
