@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e10fc44f_8072f0de",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-07T23:46:34Z",
+      "side": 1,
+      "message": "This could use SPDK_COUNTOF() (and maybe just put that into the \u0027if\u0027 statement instead of in a variable).",
+      "range": {
+        "startLine": 187,
+        "startChar": 30,
+        "endLine": 187,
+        "endChar": 87
+      },
+      "revId": "df4250df1dcc67ff4ca5334baad47a1292d6fb19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d0705ed_67a43b9f",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-07T23:46:34Z",
+      "side": 1,
+      "message": "Trim this extra blank line.",
+      "revId": "df4250df1dcc67ff4ca5334baad47a1292d6fb19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0ebe6ca_692147ff",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-07T23:46:34Z",
+      "side": 1,
+      "message": "This lookup should use the helper function as well just to be safe.",
+      "range": {
+        "startLine": 216,
+        "startChar": 7,
+        "endLine": 216,
+        "endChar": 29
+      },
+      "revId": "df4250df1dcc67ff4ca5334baad47a1292d6fb19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
