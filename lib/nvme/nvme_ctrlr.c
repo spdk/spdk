@@ -1844,8 +1844,9 @@ spdk_nvme_ctrlr_attach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	status.done = false;
 	res = nvme_ctrlr_cmd_attach_ns(ctrlr, nsid, payload,
 				       nvme_completion_poll_cb, &status);
-	if (res)
+	if (res) {
 		return res;
+	}
 	while (status.done == false) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
@@ -1869,8 +1870,9 @@ spdk_nvme_ctrlr_detach_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	status.done = false;
 	res = nvme_ctrlr_cmd_detach_ns(ctrlr, nsid, payload,
 				       nvme_completion_poll_cb, &status);
-	if (res)
+	if (res) {
 		return res;
+	}
 	while (status.done == false) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
@@ -1892,8 +1894,9 @@ spdk_nvme_ctrlr_create_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns_dat
 
 	status.done = false;
 	res = nvme_ctrlr_cmd_create_ns(ctrlr, payload, nvme_completion_poll_cb, &status);
-	if (res)
+	if (res) {
 		return 0;
+	}
 	while (status.done == false) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
@@ -1921,8 +1924,9 @@ spdk_nvme_ctrlr_delete_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid)
 
 	status.done = false;
 	res = nvme_ctrlr_cmd_delete_ns(ctrlr, nsid, nvme_completion_poll_cb, &status);
-	if (res)
+	if (res) {
 		return res;
+	}
 	while (status.done == false) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
@@ -1946,8 +1950,9 @@ spdk_nvme_ctrlr_format(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	status.done = false;
 	res = nvme_ctrlr_cmd_format(ctrlr, nsid, format, nvme_completion_poll_cb,
 				    &status);
-	if (res)
+	if (res) {
 		return res;
+	}
 	while (status.done == false) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 		spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
@@ -2003,8 +2008,9 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 		res = nvme_ctrlr_cmd_fw_image_download(ctrlr, transfer, offset, p,
 						       nvme_completion_poll_cb,
 						       &status);
-		if (res)
+		if (res) {
 			return res;
+		}
 
 		while (status.done == false) {
 			nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
@@ -2029,8 +2035,9 @@ spdk_nvme_ctrlr_update_firmware(struct spdk_nvme_ctrlr *ctrlr, void *payload, ui
 
 	res = nvme_ctrlr_cmd_fw_commit(ctrlr, &fw_commit, nvme_completion_poll_cb,
 				       &status);
-	if (res)
+	if (res) {
 		return res;
+	}
 
 	while (status.done == false) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);

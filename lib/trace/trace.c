@@ -82,8 +82,9 @@ spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 	next_entry->arg1 = arg1;
 
 	lcore_history->next_entry++;
-	if (lcore_history->next_entry == SPDK_TRACE_SIZE)
+	if (lcore_history->next_entry == SPDK_TRACE_SIZE) {
 		lcore_history->next_entry = 0;
+	}
 }
 
 void

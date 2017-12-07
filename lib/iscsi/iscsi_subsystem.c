@@ -88,18 +88,21 @@ spdk_iscsi_config_dump_section(FILE *fp)
 	const char *authmethod = "None";
 	char authgroup[32] = "None";
 
-	if (NULL == fp)
+	if (NULL == fp) {
 		return;
+	}
 
-	if (g_spdk_iscsi.req_discovery_auth)
+	if (g_spdk_iscsi.req_discovery_auth) {
 		authmethod = "CHAP";
-	else if (g_spdk_iscsi.req_discovery_auth_mutual)
+	} else if (g_spdk_iscsi.req_discovery_auth_mutual) {
 		authmethod = "CHAP Mutual";
-	else if (!g_spdk_iscsi.no_discovery_auth)
+	} else if (!g_spdk_iscsi.no_discovery_auth) {
 		authmethod = "Auto";
+	}
 
-	if (g_spdk_iscsi.discovery_auth_group)
+	if (g_spdk_iscsi.discovery_auth_group) {
 		snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", g_spdk_iscsi.discovery_auth_group);
+	}
 
 	fprintf(fp, ISCSI_CONFIG_TMPL,
 		g_spdk_iscsi.nodebase, g_spdk_iscsi.authfile,
@@ -140,11 +143,11 @@ spdk_iscsi_config_dump_portal_groups(FILE *fp)
 
 	/* Dump portal groups */
 	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
-		if (NULL == pg) continue;
+		if (NULL == pg) { continue; }
 		fprintf(fp, PORTAL_GROUP_TMPL, pg->tag, pg->tag);
 		/* Dump portals */
 		TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
-			if (NULL == p) continue;
+			if (NULL == p) { continue; }
 			fprintf(fp, PORTAL_TMPL, p->host, p->port);
 		}
 	}
@@ -181,7 +184,7 @@ spdk_iscsi_config_dump_initiator_groups(FILE *fp)
 
 	/* Dump initiator groups */
 	TAILQ_FOREACH(ig, &g_spdk_iscsi.ig_head, tailq) {
-		if (NULL == ig) continue;
+		if (NULL == ig) { continue; }
 		fprintf(fp, INITIATOR_GROUP_TMPL, ig->tag, ig->tag);
 
 		/* Dump initiators */
@@ -246,7 +249,7 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 		const char *usedigest = "Auto";
 
 		dev = target->dev;
-		if (NULL == dev) continue;
+		if (NULL == dev) { continue; }
 
 		idx = target->num;
 		fprintf(fp, TARGET_NODE_TMPL, idx, idx, target->name, spdk_scsi_dev_get_name(dev));
@@ -259,22 +262,25 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 			}
 		}
 
-		if (target->auth_chap_disabled)
+		if (target->auth_chap_disabled) {
 			authmethod = "None";
-		else if (!target->auth_chap_required)
+		} else if (!target->auth_chap_required) {
 			authmethod = "Auto";
-		else if (target->auth_chap_mutual)
+		} else if (target->auth_chap_mutual) {
 			authmethod = "CHAP Mutual";
-		else
+		} else {
 			authmethod = "CHAP";
+		}
 
-		if (target->auth_group > 0)
+		if (target->auth_group > 0) {
 			snprintf(authgroup, sizeof(authgroup), "AuthGroup%d", target->auth_group);
+		}
 
-		if (target->header_digest)
+		if (target->header_digest) {
 			usedigest = "Header";
-		else if (target->data_digest)
+		} else if (target->data_digest) {
 			usedigest = "Data";
+		}
 
 		fprintf(fp, TARGET_NODE_AUTH_TMPL,
 			authmethod, authgroup, usedigest);
@@ -489,8 +495,9 @@ spdk_iscsi_free_pools(void)
 
 void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 {
-	if (!pdu)
+	if (!pdu) {
 		return;
+	}
 
 	pdu->ref--;
 
@@ -500,11 +507,13 @@ void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 	}
 
 	if (pdu->ref == 0) {
-		if (pdu->mobj)
+		if (pdu->mobj) {
 			rte_mempool_put(pdu->mobj->mp, (void *)pdu->mobj);
+		}
 
-		if (pdu->data && !pdu->data_from_mempool)
+		if (pdu->data && !pdu->data_from_mempool) {
 			free(pdu->data);
+		}
 
 		rte_mempool_put(g_spdk_iscsi.pdu_pool, (void *)pdu);
 	}
@@ -746,12 +755,14 @@ spdk_iscsi_read_parameters_from_config_file(struct spdk_conf_section *sp)
 		}
 	}
 	min_conn_per_core = spdk_conf_section_get_intval(sp, "MinConnectionsPerCore");
-	if (min_conn_per_core >= 0)
+	if (min_conn_per_core >= 0) {
 		spdk_iscsi_conn_set_min_per_core(min_conn_per_core);
+	}
 
 	conn_idle_interval = spdk_conf_section_get_intval(sp, "MinConnectionIdleInterval");
-	if (conn_idle_interval > 0)
+	if (conn_idle_interval > 0) {
 		spdk_iscsi_set_min_conn_idle_interval(conn_idle_interval);
+	}
 }
 
 static int

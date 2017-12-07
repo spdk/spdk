@@ -135,13 +135,15 @@ print_float(const char *arg_string, float arg)
 static void
 print_arg(bool arg_is_ptr, const char *arg_string, uint64_t arg)
 {
-	if (arg_string[0] == 0)
+	if (arg_string[0] == 0) {
 		return;
+	}
 
-	if (arg_is_ptr)
+	if (arg_is_ptr) {
 		print_ptr(arg_string, arg);
-	else
+	} else {
 		print_uint64(arg_string, arg);
+	}
 }
 
 static void
@@ -236,19 +238,23 @@ populate_events(struct spdk_trace_history *history)
 	if (num_entries == num_entries_filled) {
 		first = last = 0;
 		for (i = 1; i < num_entries; i++) {
-			if (e[i].tsc < e[first].tsc)
+			if (e[i].tsc < e[first].tsc) {
 				first = i;
-			if (e[i].tsc > e[last].tsc)
+			}
+			if (e[i].tsc > e[last].tsc) {
 				last = i;
+			}
 		}
 
 		first += g_fudge_factor;
-		if (first >= num_entries)
+		if (first >= num_entries) {
 			first -= num_entries;
+		}
 
 		last -= g_fudge_factor;
-		if (last < 0)
+		if (last < 0) {
 			last += num_entries;
+		}
 	} else {
 		first = 0;
 		last = num_entries_filled - 1;

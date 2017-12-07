@@ -539,8 +539,9 @@ spdk_nvme_ns_cmd_comparev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (reset_sgl_fn == NULL || next_sge_fn == NULL)
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
+	}
 
 	payload.type = NVME_PAYLOAD_TYPE_SGL;
 	payload.md = NULL;
@@ -615,8 +616,9 @@ spdk_nvme_ns_cmd_readv(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (reset_sgl_fn == NULL || next_sge_fn == NULL)
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
+	}
 
 	payload.type = NVME_PAYLOAD_TYPE_SGL;
 	payload.md = NULL;
@@ -687,8 +689,9 @@ spdk_nvme_ns_cmd_writev(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 	struct nvme_request *req;
 	struct nvme_payload payload;
 
-	if (reset_sgl_fn == NULL || next_sge_fn == NULL)
+	if (reset_sgl_fn == NULL || next_sge_fn == NULL) {
 		return -EINVAL;
+	}
 
 	payload.type = NVME_PAYLOAD_TYPE_SGL;
 	payload.md = NULL;
@@ -898,8 +901,9 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 	struct nvme_request	*req;
 	struct spdk_nvme_cmd	*cmd;
 
-	if (len % 4)
+	if (len % 4) {
 		return -EINVAL;
+	}
 	num_dwords = len / 4;
 
 	req = nvme_allocate_request_user_copy(qpair, payload, len, cb_fn, cb_arg, false);

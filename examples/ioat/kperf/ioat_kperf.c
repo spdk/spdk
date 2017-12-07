@@ -43,13 +43,14 @@ check_modules(char *driver_name)
 	char buffer[256];
 
 	fd = fopen(proc_modules, "r");
-	if (!fd)
+	if (!fd) {
 		return -1;
+	}
 
 	while (fgets(buffer, sizeof(buffer), fd)) {
-		if (strstr(buffer, driver_name) == NULL)
+		if (strstr(buffer, driver_name) == NULL) {
 			continue;
-		else {
+		} else {
 			fclose(fd);
 			return 0;
 		}
@@ -160,8 +161,9 @@ get_dma_channel_count(void)
 
 	while ((e = readdir(dir)) != NULL) {
 		str = strstr(e->d_name, ":");
-		if (str != NULL)
+		if (str != NULL) {
 			count++;
+		}
 	}
 	closedir(dir);
 

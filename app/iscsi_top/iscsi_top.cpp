@@ -56,14 +56,17 @@ static void usage(void)
 static bool
 conns_compare(struct spdk_iscsi_conn *first, struct spdk_iscsi_conn *second)
 {
-	if (first->lcore < second->lcore)
+	if (first->lcore < second->lcore) {
 		return true;
+	}
 
-	if (first->lcore > second->lcore)
+	if (first->lcore > second->lcore) {
 		return false;
+	}
 
-	if (first->id < second->id)
+	if (first->id < second->id) {
 		return true;
+	}
 
 	return false;
 }

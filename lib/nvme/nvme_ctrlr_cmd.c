@@ -68,8 +68,9 @@ spdk_nvme_ctrlr_cmd_io_raw_with_md(struct spdk_nvme_ctrlr *ctrlr,
 	payload.md = md_buf;
 
 	req = nvme_allocate_request(qpair, &payload, len, cb_fn, cb_arg);
-	if (req == NULL)
+	if (req == NULL) {
 		return -ENOMEM;
+	}
 
 	memcpy(&req->cmd, cmd, sizeof(req->cmd));
 

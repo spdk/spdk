@@ -384,8 +384,9 @@ int spdk_initialize_iscsi_conns(void)
 		g_num_connections[i] = 0;
 	}
 
-	if (g_conn_idle_interval_in_tsc == -1)
+	if (g_conn_idle_interval_in_tsc == -1) {
 		spdk_iscsi_set_min_conn_idle_interval(spdk_net_framework_idle_time());
+	}
 
 	STAILQ_INIT(&g_idle_conn_list_head);
 	if (init_idle_conns() < 0) {
@@ -447,14 +448,17 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 
 	conn->partial_text_parameter = NULL;
 
-	for (i = 0; i < MAX_CONNECTION_PARAMS; i++)
+	for (i = 0; i < MAX_CONNECTION_PARAMS; i++) {
 		conn->conn_param_state_negotiated[i] = false;
+	}
 
-	for (i = 0; i < MAX_SESSION_PARAMS; i++)
+	for (i = 0; i < MAX_SESSION_PARAMS; i++) {
 		conn->sess_param_state_negotiated[i] = false;
+	}
 
-	for (i = 0; i < DEFAULT_MAXR2T; i++)
+	for (i = 0; i < DEFAULT_MAXR2T; i++) {
 		conn->outstanding_r2t_tasks[i] = NULL;
+	}
 
 	TAILQ_INIT(&conn->write_pdu_list);
 	TAILQ_INIT(&conn->snack_pdu_list);
@@ -472,16 +476,18 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 
 	bufsize = 2 * 1024 * 1024;
 	rc = spdk_sock_set_recvbuf(conn->sock, bufsize);
-	if (rc != 0)
+	if (rc != 0) {
 		SPDK_ERRLOG("spdk_sock_set_recvbuf failed\n");
+	}
 
 	bufsize = 32 * 1024 * 1024 / g_spdk_iscsi.MaxConnections;
 	if (bufsize > 2 * 1024 * 1024) {
 		bufsize = 2 * 1024 * 1024;
 	}
 	rc = spdk_sock_set_sendbuf(conn->sock, bufsize);
-	if (rc != 0)
+	if (rc != 0) {
 		SPDK_ERRLOG("spdk_sock_set_sendbuf failed\n");
+	}
 
 	/* set low water mark */
 	rc = spdk_sock_set_recvlowat(conn->sock, 1);
@@ -575,8 +581,9 @@ static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 		spdk_put_pdu(pdu);
 	}
 
-	if (conn->pending_task_cnt)
+	if (conn->pending_task_cnt) {
 		return -1;
+	}
 
 	return 0;
 
@@ -585,8 +592,9 @@ static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 static void spdk_iscsi_conn_free(struct spdk_iscsi_conn *conn)
 {
 
-	if (conn == NULL)
+	if (conn == NULL) {
 		return;
+	}
 
 	spdk_iscsi_param_free(conn->params);
 
@@ -664,8 +672,9 @@ spdk_iscsi_conn_cleanup_backend(struct spdk_iscsi_conn *conn)
 		/* clean up all tasks to all LUNs for session */
 		rc = spdk_iscsi_tgt_node_cleanup_luns(conn,
 						      conn->sess->target);
-		if (rc < 0)
+		if (rc < 0) {
 			SPDK_ERRLOG("target abort failed\n");
+		}
 	}
 }
 
@@ -732,8 +741,9 @@ spdk_iscsi_get_active_conns(void)
 	pthread_mutex_lock(&g_conns_mutex);
 	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
 		conn = spdk_find_iscsi_connection_by_id(i);
-		if (conn == NULL)
+		if (conn == NULL) {
 			continue;
+		}
 		num++;
 	}
 	pthread_mutex_unlock(&g_conns_mutex);
@@ -853,8 +863,9 @@ void spdk_shutdown_iscsi_conns(void)
 
 	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
 		conn = spdk_find_iscsi_connection_by_id(i);
-		if (conn == NULL)
+		if (conn == NULL) {
 			continue;
+		}
 		conn->state = ISCSI_CONN_STATE_EXITING;
 	}
 
@@ -878,14 +889,17 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
 	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
 		xconn = spdk_find_iscsi_connection_by_id(i);
 
-		if (xconn == NULL)
+		if (xconn == NULL) {
 			continue;
+		}
 
-		if (xconn == conn)
+		if (xconn == conn) {
 			continue;
+		}
 
-		if (!drop_all && xconn->initiator_port == NULL)
+		if (!drop_all && xconn->initiator_port == NULL) {
 			continue;
+		}
 
 		xconn_match =
 			drop_all ? xconn->initiator_name : spdk_scsi_port_get_name(xconn->initiator_port);
@@ -1437,8 +1451,9 @@ spdk_iscsi_conn_login_do_work(void *arg)
 
 	/* General connection processing */
 	rc = spdk_iscsi_conn_execute(conn);
-	if (rc < 0)
+	if (rc < 0) {
 		return;
+	}
 
 	/* Check if this connection transitioned to full feature phase. If it
 	 * did, migrate it to a dedicated reactor for the target node.

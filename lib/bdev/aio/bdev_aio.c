@@ -360,8 +360,9 @@ static const struct spdk_bdev_fn_table aio_fn_table = {
 
 static void aio_free_disk(struct file_disk *fdisk)
 {
-	if (fdisk == NULL)
+	if (fdisk == NULL) {
 		return;
+	}
 	free(fdisk->filename);
 	free(fdisk->disk.name);
 	free(fdisk);
@@ -540,8 +541,9 @@ bdev_aio_get_spdk_running_config(FILE *fp)
 		name = fdisk->disk.name;
 		block_size = fdisk->disk.blocklen;
 		fprintf(fp, "  AIO %s %s ", file, name);
-		if (fdisk->block_size_override)
+		if (fdisk->block_size_override) {
 			fprintf(fp, "%d", block_size);
+		}
 		fprintf(fp, "\n");
 	}
 	fprintf(fp, "\n");

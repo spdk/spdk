@@ -75,8 +75,9 @@ vring_desc_init(struct vring_desc *dp, uint16_t n)
 {
 	uint16_t i;
 
-	for (i = 0; i < n - 1; i++)
+	for (i = 0; i < n - 1; i++) {
 		dp[i].next = (uint16_t)(i + 1);
+	}
 	dp[i].next = VQ_RING_DESC_CHAIN_END;
 }
 
@@ -110,8 +111,9 @@ vq_update_avail_ring(struct virtqueue *vq, uint16_t desc_idx)
 	 * descriptor.
 	 */
 	avail_idx = (uint16_t)(vq->vq_avail_idx & (vq->vq_nentries - 1));
-	if (spdk_unlikely(vq->vq_ring.avail->ring[avail_idx] != desc_idx))
+	if (spdk_unlikely(vq->vq_ring.avail->ring[avail_idx] != desc_idx)) {
 		vq->vq_ring.avail->ring[avail_idx] = desc_idx;
+	}
 	vq->vq_avail_idx++;
 }
 
@@ -237,13 +239,15 @@ virtio_free_queues(struct virtio_dev *dev)
 	struct virtqueue *vq;
 	uint16_t i;
 
-	if (dev->vqs == NULL)
+	if (dev->vqs == NULL) {
 		return;
+	}
 
 	for (i = 0; i < nr_vq; i++) {
 		vq = dev->vqs[i];
-		if (!vq)
+		if (!vq) {
 			continue;
+		}
 
 		spdk_dma_free(vq->vq_ring_virt_mem);
 
@@ -337,12 +341,14 @@ virtio_dev_restart(struct virtio_dev *dev, uint64_t req_features)
 
 	/* Tell the host we've known how to drive the device. */
 	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_DRIVER);
-	if (virtio_negotiate_features(dev, req_features) < 0)
+	if (virtio_negotiate_features(dev, req_features) < 0) {
 		return -1;
+	}
 
 	ret = virtio_alloc_queues(dev);
-	if (ret < 0)
+	if (ret < 0) {
 		return ret;
+	}
 
 	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_DRIVER_OK);
 	return 0;
@@ -517,8 +523,9 @@ virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs, uint16_t nb_pkt
 
 	num = (uint16_t)(spdk_likely(nb_used <= nb_pkts) ? nb_used : nb_pkts);
 	num = (uint16_t)(spdk_likely(num <= VIRTIO_MBUF_BURST_SZ) ? num : VIRTIO_MBUF_BURST_SZ);
-	if (spdk_likely(num > DESC_PER_CACHELINE))
+	if (spdk_likely(num > DESC_PER_CACHELINE)) {
 		num = num - ((vq->vq_used_cons_idx + num) % DESC_PER_CACHELINE);
+	}
 
 	num = virtqueue_dequeue_burst_rx(vq, rcv_pkts, len, num);
 	SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_DEV, "used:%"PRIu16" dequeue:%"PRIu16"\n", nb_used, num);
@@ -688,8 +695,9 @@ virtio_dev_stop(struct virtio_dev *dev)
 void
 virtio_dev_set_status(struct virtio_dev *dev, uint8_t status)
 {
-	if (status != VIRTIO_CONFIG_S_RESET)
+	if (status != VIRTIO_CONFIG_S_RESET) {
 		status |= virtio_dev_backend_ops(dev)->get_status(dev);
+	}
 
 	virtio_dev_backend_ops(dev)->set_status(dev, status);
 }

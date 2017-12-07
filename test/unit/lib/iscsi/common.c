@@ -32,8 +32,9 @@ spdk_scsi_task_put(struct spdk_scsi_task *task)
 void
 spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 {
-	if (!pdu)
+	if (!pdu) {
 		return;
+	}
 
 	pdu->ref--;
 	if (pdu->ref < 0) {

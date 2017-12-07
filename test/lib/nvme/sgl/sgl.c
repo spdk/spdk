@@ -82,8 +82,9 @@ static void nvme_request_reset_sgl(void *cb_arg, uint32_t sgl_offset)
 	for (i = 0; i < req->nseg; i++) {
 		iov = &req->iovs[i];
 		offset += iov->len;
-		if (offset > sgl_offset)
+		if (offset > sgl_offset) {
 			break;
+		}
 	}
 	req->current_iov_index = i;
 	req->current_iov_bytes_left = offset - sgl_offset;
@@ -120,10 +121,11 @@ static int nvme_request_next_sge(void *cb_arg, void **address, uint32_t *length)
 static void
 io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	if (spdk_nvme_cpl_is_error(cpl))
+	if (spdk_nvme_cpl_is_error(cpl)) {
 		io_complete_flag = 2;
-	else
+	} else {
 		io_complete_flag = 1;
+	}
 }
 
 static void build_io_request_0(struct io_request *req)
@@ -400,8 +402,9 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 
 	io_complete_flag = 0;
 
-	while (!io_complete_flag)
+	while (!io_complete_flag) {
 		spdk_nvme_qpair_process_completions(qpair, 1);
+	}
 
 	if (io_complete_flag != 1) {
 		fprintf(stderr, "%s: %s writev failed\n", dev->name, test_name);
@@ -429,8 +432,9 @@ writev_readv_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, const ch
 		return -1;
 	}
 
-	while (!io_complete_flag)
+	while (!io_complete_flag) {
 		spdk_nvme_qpair_process_completions(qpair, 1);
+	}
 
 	if (io_complete_flag != 1) {
 		fprintf(stderr, "%s: %s readv failed\n", dev->name, test_name);

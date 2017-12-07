@@ -104,8 +104,9 @@ spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
 	int i;
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		if (dev->lun[i] == lun)
+		if (dev->lun[i] == lun) {
 			dev->lun[i] = NULL;
+		}
 	}
 }
 
@@ -298,8 +299,9 @@ spdk_scsi_dev_print(struct spdk_scsi_dev *dev)
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		lun = dev->lun[i];
-		if (lun == NULL)
+		if (lun == NULL) {
 			continue;
+		}
 		printf("device %d: LUN%d %s\n", dev->id, i, lun->name);
 	}
 }

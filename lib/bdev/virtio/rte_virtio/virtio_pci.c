@@ -141,8 +141,9 @@ modern_read_dev_config(struct virtio_dev *dev, size_t offset,
 		old_gen = spdk_mmio_read_1(&hw->common_cfg->config_generation);
 
 		p = dst;
-		for (i = 0;  i < length; i++)
+		for (i = 0;  i < length; i++) {
 			*p++ = spdk_mmio_read_1((uint8_t *)hw->dev_cfg + offset + i);
+		}
 
 		new_gen = spdk_mmio_read_1(&hw->common_cfg->config_generation);
 	} while (old_gen != new_gen);
@@ -156,8 +157,9 @@ modern_write_dev_config(struct virtio_dev *dev, size_t offset,
 	int i;
 	const uint8_t *p = src;
 
-	for (i = 0;  i < length; i++)
+	for (i = 0;  i < length; i++) {
 		spdk_mmio_write_1(((uint8_t *)hw->dev_cfg) + offset + i, *p++);
+	}
 }
 
 static uint64_t
@@ -237,8 +239,9 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	uint64_t desc_addr, avail_addr, used_addr;
 	uint16_t notify_off;
 
-	if (!check_vq_phys_addr_ok(vq))
+	if (!check_vq_phys_addr_ok(vq)) {
 		return -1;
+	}
 
 	desc_addr = vq->vq_ring_mem;
 	avail_addr = desc_addr + vq->vq_nentries * sizeof(struct vring_desc);
@@ -360,8 +363,9 @@ virtio_read_caps(struct virtio_hw *hw)
 			break;
 		}
 
-		if (cap.cap_vndr == PCI_CAP_ID_MSIX)
+		if (cap.cap_vndr == PCI_CAP_ID_MSIX) {
 			hw->use_msix = 1;
+		}
 
 		if (cap.cap_vndr != PCI_CAP_ID_VNDR) {
 			SPDK_DEBUGLOG(SPDK_LOG_VIRTIO_PCI,
