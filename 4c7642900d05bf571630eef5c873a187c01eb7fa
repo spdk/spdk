@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7731a272_9647b351",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T18:17:10Z",
+      "side": 1,
+      "message": "but assert() generates no code when NDEBUG is defined - and we define NDEBUG for non-debug builds - so I don\u0027t think this ifdef is needed",
+      "revId": "4c7642900d05bf571630eef5c873a187c01eb7fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
