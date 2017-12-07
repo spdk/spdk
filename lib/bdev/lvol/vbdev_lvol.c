@@ -209,8 +209,9 @@ _vbdev_lvs_remove_cb(void *cb_arg, int lvserrno)
 		free(lvs_bdev);
 	}
 
-	if (req->cb_fn != NULL)
+	if (req->cb_fn != NULL) {
 		req->cb_fn(req->cb_arg, lvserrno);
+	}
 	free(req);
 }
 
@@ -226,16 +227,18 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
 	if (!lvs_bdev) {
 		SPDK_ERRLOG("No such lvol store found\n");
-		if (cb_fn != NULL)
+		if (cb_fn != NULL) {
 			cb_fn(cb_arg, -ENODEV);
+		}
 		return;
 	}
 
 	req = calloc(1, sizeof(*req));
 	if (!req) {
 		SPDK_ERRLOG("Cannot alloc memory for vbdev lvol store request pointer\n");
-		if (cb_fn != NULL)
+		if (cb_fn != NULL) {
 			cb_fn(cb_arg, -ENOMEM);
+		}
 		return;
 	}
 

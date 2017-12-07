@@ -331,8 +331,9 @@ static int netlink_addr_msg(uint32_t ifc_idx, uint32_t ip_address, uint32_t crea
 	} req;
 	struct rtattr *rta;
 
-	if (spdk_interface_available(ifc_idx))
+	if (spdk_interface_available(ifc_idx)) {
 		return -1;
+	}
 
 	fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
 	if (fd < 0) {

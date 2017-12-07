@@ -157,8 +157,9 @@ reservation_ns_register(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *q
 		spdk_nvme_qpair_process_completions(qpair, 100);
 	}
 
-	if (reserve_command_result)
+	if (reserve_command_result) {
 		fprintf(stderr, "Reservation Register Failed\n");
+	}
 
 	return 0;
 }
@@ -249,8 +250,9 @@ reservation_ns_acquire(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qp
 		spdk_nvme_qpair_process_completions(qpair, 100);
 	}
 
-	if (reserve_command_result)
+	if (reserve_command_result) {
 		fprintf(stderr, "Reservation Acquire Failed\n");
+	}
 
 	return 0;
 }
@@ -283,8 +285,9 @@ reservation_ns_release(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qp
 		spdk_nvme_qpair_process_completions(qpair, 100);
 	}
 
-	if (reserve_command_result)
+	if (reserve_command_result) {
 		fprintf(stderr, "Reservation Release Failed\n");
+	}
 
 	return 0;
 }
@@ -305,8 +308,9 @@ reserve_controller(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair,
 	printf("Reservations:                %s\n",
 	       cdata->oncs.reservations ? "Supported" : "Not Supported");
 
-	if (!cdata->oncs.reservations)
+	if (!cdata->oncs.reservations) {
 		return;
+	}
 
 	get_host_identifier(ctrlr);
 

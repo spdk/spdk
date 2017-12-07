@@ -446,8 +446,9 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 		 */
 		label = spdk_conf_section_get_nmval(sp, "Portal", i, 0);
 		portal = spdk_conf_section_get_nmval(sp, "Portal", i, 1);
-		if (label == NULL || portal == NULL)
+		if (label == NULL || portal == NULL) {
 			break;
+		}
 		rc = spdk_iscsi_portal_create_from_configline(portal, &p, 1);
 		if (rc < 0) {
 			SPDK_ERRLOG("parse portal error (%s)\n", portal);
@@ -634,8 +635,9 @@ spdk_iscsi_portal_grp_unregister(struct spdk_iscsi_portal_grp *pg)
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH_SAFE(portal_group, &g_spdk_iscsi.pg_head, tailq, portal_group_tmp) {
-		if (portal_group->tag == pg->tag)
+		if (portal_group->tag == pg->tag) {
 			TAILQ_REMOVE(&g_spdk_iscsi.pg_head, portal_group, tailq);
+		}
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }

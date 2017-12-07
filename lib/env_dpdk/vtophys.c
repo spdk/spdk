@@ -284,8 +284,9 @@ spdk_vtophys_iommu_init(void)
 	}
 
 	while ((d = readdir(dir)) != NULL) {
-		if (d->d_type != DT_LNK)
+		if (d->d_type != DT_LNK) {
 			continue;
+		}
 
 		snprintf(proc_fd_path, sizeof(proc_fd_path), "/proc/self/fd/%s", d->d_name);
 		if (readlink(proc_fd_path, link_path, sizeof(link_path)) != (sizeof(vfio_path) - 1)) {

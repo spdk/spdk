@@ -48,8 +48,9 @@ void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = malloc(size);
-	if (phys_addr)
+	if (phys_addr) {
 		*phys_addr = (uint64_t)buf;
+	}
 
 	return buf;
 }
@@ -58,8 +59,9 @@ void *
 spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = calloc(size, 1);
-	if (phys_addr)
+	if (phys_addr) {
 		*phys_addr = (uint64_t)buf;
+	}
 
 	return buf;
 }
@@ -127,8 +129,9 @@ spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 static void
 spdk_put_task(struct spdk_scsi_task *task)
 {
-	if (task->alloc_len)
+	if (task->alloc_len) {
 		free(task->iov.iov_base);
+	}
 
 	task->iov.iov_base = NULL;
 	task->iov.iov_len = 0;

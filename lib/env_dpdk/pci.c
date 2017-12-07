@@ -390,12 +390,14 @@ spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t 
 	uint32_t pos, header = 0;
 	uint32_t i, buf[2];
 
-	if (len < 17)
+	if (len < 17) {
 		return -1;
+	}
 
 	err = spdk_pci_device_cfg_read32(dev, &header, PCI_CFG_SIZE);
-	if (err || !header)
+	if (err || !header) {
 		return -1;
+	}
 
 	pos = PCI_CFG_SIZE;
 	while (1) {
@@ -405,8 +407,9 @@ spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t 
 				pos += 4;
 				for (i = 0; i < 2; i++) {
 					err = spdk_pci_device_cfg_read32(dev, &buf[i], pos + 4 * i);
-					if (err)
+					if (err) {
 						return -1;
+					}
 				}
 				snprintf(sn, len, "%08x%08x", buf[1], buf[0]);
 				return 0;
@@ -414,11 +417,13 @@ spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t 
 		}
 		pos = (header >> 20) & 0xffc;
 		/* 0 if no other items exist */
-		if (pos < PCI_CFG_SIZE)
+		if (pos < PCI_CFG_SIZE) {
 			return -1;
+		}
 		err = spdk_pci_device_cfg_read32(dev, &header, pos);
-		if (err)
+		if (err) {
 			return -1;
+		}
 	}
 	return -1;
 }

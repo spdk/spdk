@@ -137,17 +137,20 @@ virtio_user_start_device(struct virtio_dev *vdev)
 	int ret;
 
 	/* tell vhost to create queues */
-	if (virtio_user_queue_setup(vdev, virtio_user_create_queue) < 0)
+	if (virtio_user_queue_setup(vdev, virtio_user_create_queue) < 0) {
 		return -1;
+	}
 
 	/* share memory regions */
 	ret = dev->ops->send_request(dev, VHOST_USER_SET_MEM_TABLE, NULL);
-	if (ret < 0)
+	if (ret < 0) {
 		return -1;
+	}
 
 	/* kick queues */
-	if (virtio_user_queue_setup(vdev, virtio_user_kick_queue) < 0)
+	if (virtio_user_queue_setup(vdev, virtio_user_kick_queue) < 0) {
 		return -1;
+	}
 
 	return 0;
 }
@@ -172,8 +175,9 @@ virtio_user_dev_setup(struct virtio_dev *vdev)
 
 	dev->ops = &ops_user;
 
-	if (dev->ops->setup(dev) < 0)
+	if (dev->ops->setup(dev) < 0) {
 		return -1;
+	}
 
 	return 0;
 }

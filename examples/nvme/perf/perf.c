@@ -320,8 +320,9 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 	g_controllers = entry;
 
 	if (g_latency_ssd_tracking_enable &&
-	    spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
+	    spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)) {
 		set_latency_tracking_feature(ctrlr, true);
+	}
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	for (nsid = 1; nsid <= num_ns; nsid++) {
@@ -870,12 +871,14 @@ print_latency_page(struct ctrlr_entry *entry)
 	printf("--------------------------------------------------------\n");
 
 	for (i = 0; i < 32; i++) {
-		if (entry->latency_page->buckets_32us[i])
+		if (entry->latency_page->buckets_32us[i]) {
 			printf("Bucket %dus - %dus: %d\n", i * 32, (i + 1) * 32, entry->latency_page->buckets_32us[i]);
+		}
 	}
 	for (i = 0; i < 31; i++) {
-		if (entry->latency_page->buckets_1ms[i])
+		if (entry->latency_page->buckets_1ms[i]) {
 			printf("Bucket %dms - %dms: %d\n", i + 1, i + 2, entry->latency_page->buckets_1ms[i]);
+		}
 	}
 	for (i = 0; i < 31; i++) {
 		if (entry->latency_page->buckets_32ms[i])
@@ -1280,8 +1283,9 @@ unregister_controllers(void)
 		struct ctrlr_entry *next = entry->next;
 		spdk_dma_free(entry->latency_page);
 		if (g_latency_ssd_tracking_enable &&
-		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
+		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)) {
 			set_latency_tracking_feature(entry->ctrlr, false);
+		}
 		spdk_nvme_detach(entry->ctrlr);
 		free(entry);
 		entry = next;

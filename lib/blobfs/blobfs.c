@@ -545,8 +545,9 @@ iter_delete_cb(void *ctx, int bserrno)
 	struct spdk_fs_cb_args *args = &req->args;
 	struct spdk_filesystem *fs = args->fs;
 
-	if (_handle_deleted_files(req) == 0)
+	if (_handle_deleted_files(req) == 0) {
 		return;
+	}
 
 	args->fn.fs_op_with_handle(args->arg, fs, 0);
 	free_fs_request(req);
@@ -566,8 +567,9 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 
 	if (rc == -ENOENT) {
 		/* Finished iterating */
-		if (_handle_deleted_files(req) == 0)
+		if (_handle_deleted_files(req) == 0) {
 			return;
+		}
 		args->fn.fs_op_with_handle(args->arg, fs, 0);
 		free_fs_request(req);
 		return;

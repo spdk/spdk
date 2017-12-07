@@ -111,10 +111,11 @@ struct io_request {
 static void
 io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	if (spdk_nvme_cpl_is_error(cpl))
+	if (spdk_nvme_cpl_is_error(cpl)) {
 		io_complete_flag = 2;
-	else
+	} else {
 		io_complete_flag = 1;
+	}
 }
 
 static void
@@ -128,10 +129,11 @@ ns_data_buffer_reset(struct spdk_nvme_ns *ns, struct io_request *req, uint8_t da
 	md_size = spdk_nvme_ns_get_md_size(ns);
 
 	for (i = 0; i < req->lba_count; i++) {
-		if (req->use_extended_lba)
+		if (req->use_extended_lba) {
 			offset = (sector_size + md_size) * i;
-		else
+		} else {
 			offset = sector_size * i;
+		}
 
 		buf = (uint8_t *)req->contig + offset;
 		memset(buf, data_pattern, sector_size);
@@ -169,14 +171,16 @@ static uint32_t dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct
 	req->lba_count = 2;
 
 	/* extended LBA only for the test case */
-	if (!(spdk_nvme_ns_supports_extended_lba(ns)))
+	if (!(spdk_nvme_ns_supports_extended_lba(ns))) {
 		return 0;
+	}
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
 	req->contig = spdk_dma_zmalloc((sector_size + md_size) * req->lba_count, 0x1000, NULL);
-	if (!req->contig)
+	if (!req->contig) {
 		return 0;
+	}
 
 	req->lba = 0x200000;
 	req->use_extended_lba = true;
@@ -211,8 +215,9 @@ static uint32_t dp_with_pract_test(struct spdk_nvme_ns *ns, struct io_request *r
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	/* No additional metadata buffer provided */
 	req->contig = spdk_dma_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
-	if (!req->contig)
+	if (!req->contig) {
 		return 0;
+	}
 
 	switch (spdk_nvme_ns_get_pi_type(ns)) {
 	case SPDK_NVME_FMT_NVM_PROTECTION_TYPE3:
@@ -252,14 +257,16 @@ static uint32_t dp_without_pract_extended_lba_test(struct spdk_nvme_ns *ns, stru
 	}
 
 	/* extended LBA only for the test case */
-	if (!(spdk_nvme_ns_supports_extended_lba(ns)))
+	if (!(spdk_nvme_ns_supports_extended_lba(ns))) {
 		return 0;
+	}
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
 	req->contig = spdk_dma_zmalloc((sector_size + md_size) * req->lba_count, 0x1000, NULL);
-	if (!req->contig)
+	if (!req->contig) {
 		return 0;
+	}
 
 	req->lba = 0x200000;
 	req->use_extended_lba = true;
@@ -286,14 +293,16 @@ static uint32_t dp_without_flags_extended_lba_test(struct spdk_nvme_ns *ns, stru
 	req->lba_count = 16;
 
 	/* extended LBA only for the test case */
-	if (!(spdk_nvme_ns_supports_extended_lba(ns)))
+	if (!(spdk_nvme_ns_supports_extended_lba(ns))) {
 		return 0;
+	}
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
 	req->contig = spdk_dma_zmalloc((sector_size + md_size) * req->lba_count, 0x1000, NULL);
-	if (!req->contig)
+	if (!req->contig) {
 		return 0;
+	}
 
 	req->lba = 0x400000;
 	req->use_extended_lba = true;
@@ -320,14 +329,16 @@ static uint32_t dp_without_pract_separate_meta_test(struct spdk_nvme_ns *ns, str
 	}
 
 	/* separate metadata payload for the test case */
-	if (spdk_nvme_ns_supports_extended_lba(ns))
+	if (spdk_nvme_ns_supports_extended_lba(ns)) {
 		return 0;
+	}
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
 	req->contig = spdk_dma_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
-	if (!req->contig)
+	if (!req->contig) {
 		return 0;
+	}
 
 	req->metadata = spdk_dma_zmalloc(md_size * req->lba_count, 0x1000, NULL);
 	if (!req->metadata) {
@@ -363,14 +374,16 @@ static uint32_t dp_without_pract_separate_meta_apptag_test(struct spdk_nvme_ns *
 	req->lba_count = 1;
 
 	/* separate metadata payload for the test case */
-	if (spdk_nvme_ns_supports_extended_lba(ns))
+	if (spdk_nvme_ns_supports_extended_lba(ns)) {
 		return 0;
+	}
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
 	req->contig = spdk_dma_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
-	if (!req->contig)
+	if (!req->contig) {
 		return 0;
+	}
 
 	req->metadata = spdk_dma_zmalloc(md_size * req->lba_count, 0x1000, NULL);
 	if (!req->metadata) {
@@ -404,14 +417,16 @@ static uint32_t dp_without_flags_separate_meta_test(struct spdk_nvme_ns *ns, str
 	req->lba_count = 16;
 
 	/* separate metadata payload for the test case */
-	if (spdk_nvme_ns_supports_extended_lba(ns))
+	if (spdk_nvme_ns_supports_extended_lba(ns)) {
 		return 0;
+	}
 
 	sector_size = spdk_nvme_ns_get_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
 	req->contig = spdk_dma_zmalloc(sector_size * req->lba_count, 0x1000, NULL);
-	if (!req->contig)
+	if (!req->contig) {
 		return 0;
+	}
 
 	req->metadata = spdk_dma_zmalloc(md_size * req->lba_count, 0x1000, NULL);
 	if (!req->metadata) {
@@ -436,11 +451,13 @@ free_req(struct io_request *req)
 		return;
 	}
 
-	if (req->contig)
+	if (req->contig) {
 		spdk_dma_free(req->contig);
+	}
 
-	if (req->metadata)
+	if (req->metadata) {
 		spdk_dma_free(req->metadata);
+	}
 
 	spdk_dma_free(req);
 }
@@ -456,10 +473,11 @@ ns_data_buffer_compare(struct spdk_nvme_ns *ns, struct io_request *req, uint8_t 
 	md_size = spdk_nvme_ns_get_md_size(ns);
 
 	for (i = 0; i < req->lba_count; i++) {
-		if (req->use_extended_lba)
+		if (req->use_extended_lba) {
 			offset = (sector_size + md_size) * i;
-		else
+		} else {
 			offset = sector_size * i;
+		}
 
 		buf = (uint8_t *)req->contig + offset;
 		for (j = 0; j < sector_size; j++) {
@@ -490,8 +508,9 @@ write_read_e2e_dp_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, con
 		return 0;
 	}
 
-	if (!(spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED))
+	if (!(spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED)) {
 		return 0;
+	}
 
 	nsdata = spdk_nvme_ns_get_data(ns);
 	if (!nsdata || !spdk_nvme_ns_get_sector_size(ns)) {
@@ -541,8 +560,9 @@ write_read_e2e_dp_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, con
 
 	io_complete_flag = 0;
 
-	while (!io_complete_flag)
+	while (!io_complete_flag) {
 		spdk_nvme_qpair_process_completions(qpair, 1);
+	}
 
 	if (io_complete_flag != 1) {
 		fprintf(stderr, "%s: %s write exec failed\n", dev->name, test_name);
@@ -574,8 +594,9 @@ write_read_e2e_dp_tests(struct dev *dev, nvme_build_io_req_fn_t build_io_fn, con
 		return -1;
 	}
 
-	while (!io_complete_flag)
+	while (!io_complete_flag) {
 		spdk_nvme_qpair_process_completions(qpair, 1);
+	}
 
 	if (io_complete_flag != 1) {
 		fprintf(stderr, "%s: %s read failed\n", dev->name, test_name);

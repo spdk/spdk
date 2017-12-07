@@ -300,8 +300,9 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 	/* counts number of definitions */
 	for (i = 0; ; i++) {
 		val = spdk_conf_section_get_nval(sp, "InitiatorName", i);
-		if (val == NULL)
+		if (val == NULL) {
 			break;
+		}
 	}
 	if (i == 0) {
 		SPDK_ERRLOG("num_initiator_names = 0\n");
@@ -314,8 +315,9 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 	}
 	for (i = 0; ; i++) {
 		val = spdk_conf_section_get_nval(sp, "Netmask", i);
-		if (val == NULL)
+		if (val == NULL) {
 			break;
+		}
 	}
 	if (i == 0) {
 		SPDK_ERRLOG("num_initiator_mask = 0\n");
@@ -524,8 +526,9 @@ spdk_initiator_group_unregister(struct spdk_iscsi_init_grp *ig)
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_FOREACH_SAFE(initiator_group, &g_spdk_iscsi.ig_head, tailq, initiator_group_tmp) {
-		if (ig->tag == initiator_group->tag)
+		if (ig->tag == initiator_group->tag) {
 			TAILQ_REMOVE(&g_spdk_iscsi.ig_head, initiator_group, tailq);
+		}
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }

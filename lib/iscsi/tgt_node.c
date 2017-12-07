@@ -63,14 +63,17 @@ spdk_iscsi_ipv6_netmask_allow_addr(const char *netmask, const char *addr)
 	int bits, bmask;
 	int i;
 
-	if (netmask[0] != '[')
+	if (netmask[0] != '[') {
 		return false;
+	}
 	p = strchr(netmask, ']');
-	if (p == NULL)
+	if (p == NULL) {
 		return false;
+	}
 	n = p - (netmask + 1);
-	if (n + 1 > sizeof mask)
+	if (n + 1 > sizeof mask) {
 		return false;
+	}
 
 	memcpy(mask, netmask + 1, n);
 	mask[n] = '\0';
@@ -78,8 +81,9 @@ spdk_iscsi_ipv6_netmask_allow_addr(const char *netmask, const char *addr)
 
 	if (p[0] == '/') {
 		bits = (int) strtol(p + 1, NULL, 10);
-		if (bits < 0 || bits > 128)
+		if (bits < 0 || bits > 128) {
 			return false;
+		}
 	} else {
 		bits = 128;
 	}
@@ -97,13 +101,15 @@ spdk_iscsi_ipv6_netmask_allow_addr(const char *netmask, const char *addr)
 
 	/* check 128bits */
 	for (i = 0; i < (bits / 8); i++) {
-		if (in6_mask.s6_addr[i] != in6_addr.s6_addr[i])
+		if (in6_mask.s6_addr[i] != in6_addr.s6_addr[i]) {
 			return false;
+		}
 	}
 	if (bits % 8) {
 		bmask = (0xffU << (8 - (bits % 8))) & 0xffU;
-		if ((in6_mask.s6_addr[i] & bmask) != (in6_addr.s6_addr[i] & bmask))
+		if ((in6_mask.s6_addr[i] & bmask) != (in6_addr.s6_addr[i] & bmask)) {
 			return false;
+		}
 	}
 
 	/* match */
@@ -126,16 +132,18 @@ spdk_iscsi_ipv4_netmask_allow_addr(const char *netmask, const char *addr)
 		p = netmask + strlen(netmask);
 	}
 	n = p - netmask;
-	if (n + 1 > sizeof mask)
+	if (n + 1 > sizeof mask) {
 		return false;
+	}
 
 	memcpy(mask, netmask, n);
 	mask[n] = '\0';
 
 	if (p[0] == '/') {
 		bits = (int) strtol(p + 1, NULL, 10);
-		if (bits < 0 || bits > 32)
+		if (bits < 0 || bits > 32) {
 			return false;
+		}
 	} else {
 		bits = 32;
 	}
@@ -148,8 +156,9 @@ spdk_iscsi_ipv4_netmask_allow_addr(const char *netmask, const char *addr)
 
 	/* check 32bits */
 	bmask = (0xffffffffULL << (32 - bits)) & 0xffffffffU;
-	if ((ntohl(in4_mask.s_addr) & bmask) != (ntohl(in4_addr.s_addr) & bmask))
+	if ((ntohl(in4_mask.s_addr) & bmask) != (ntohl(in4_addr.s_addr) & bmask)) {
 		return false;
+	}
 
 	/* match */
 	return true;
@@ -158,18 +167,22 @@ spdk_iscsi_ipv4_netmask_allow_addr(const char *netmask, const char *addr)
 static bool
 spdk_iscsi_netmask_allow_addr(const char *netmask, const char *addr)
 {
-	if (netmask == NULL || addr == NULL)
+	if (netmask == NULL || addr == NULL) {
 		return false;
-	if (strcasecmp(netmask, "ALL") == 0)
+	}
+	if (strcasecmp(netmask, "ALL") == 0) {
 		return true;
+	}
 	if (netmask[0] == '[') {
 		/* IPv6 */
-		if (spdk_iscsi_ipv6_netmask_allow_addr(netmask, addr))
+		if (spdk_iscsi_ipv6_netmask_allow_addr(netmask, addr)) {
 			return true;
+		}
 	} else {
 		/* IPv4 */
-		if (spdk_iscsi_ipv4_netmask_allow_addr(netmask, addr))
+		if (spdk_iscsi_ipv4_netmask_allow_addr(netmask, addr)) {
 			return true;
+		}
 	}
 	return false;
 }
@@ -228,8 +241,9 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 	int rc;
 	bool allowed = false;
 
-	if (conn == NULL || target == NULL || iqn == NULL || addr == NULL)
+	if (conn == NULL || target == NULL || iqn == NULL || addr == NULL) {
 		return false;
+	}
 	pg = conn->portal->group;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "pg=%d, iqn=%s, addr=%s\n",
@@ -268,8 +282,9 @@ spdk_iscsi_tgt_node_allow_iscsi_name(struct spdk_iscsi_tgt_node *target, const c
 	int rc;
 	bool result = false;
 
-	if (target == NULL || iqn == NULL)
+	if (target == NULL || iqn == NULL) {
 		return false;
+	}
 
 	TAILQ_FOREACH(pg_map, &target->pg_map_head, tailq) {
 		TAILQ_FOREACH(ig_map, &pg_map->ig_map_head, tailq) {
@@ -298,8 +313,9 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 	int len;
 	int rc;
 
-	if (conn == NULL)
+	if (conn == NULL) {
 		return 0;
+	}
 
 	total = data_len;
 	if (alloc_len < 1) {
@@ -386,8 +402,9 @@ spdk_iscsi_find_tgt_node(const char *target_name)
 {
 	struct spdk_iscsi_tgt_node *target;
 
-	if (target_name == NULL)
+	if (target_name == NULL) {
 		return NULL;
+	}
 	TAILQ_FOREACH(target, &g_spdk_iscsi.target_head, tailq) {
 		if (strcasecmp(target_name, target->name) == 0) {
 			return target;
@@ -786,18 +803,24 @@ spdk_check_iscsi_name(const char *name)
 
 	/* valid iSCSI name? */
 	for (n = 0; up[n] != 0; n++) {
-		if (up[n] > 0x00U && up[n] <= 0x2cU)
+		if (up[n] > 0x00U && up[n] <= 0x2cU) {
 			return -1;
-		if (up[n] == 0x2fU)
+		}
+		if (up[n] == 0x2fU) {
 			return -1;
-		if (up[n] >= 0x3bU && up[n] <= 0x40U)
+		}
+		if (up[n] >= 0x3bU && up[n] <= 0x40U) {
 			return -1;
-		if (up[n] >= 0x5bU && up[n] <= 0x60U)
+		}
+		if (up[n] >= 0x5bU && up[n] <= 0x60U) {
 			return -1;
-		if (up[n] >= 0x7bU && up[n] <= 0x7fU)
+		}
+		if (up[n] >= 0x7bU && up[n] <= 0x7fU) {
 			return -1;
-		if (isspace(up[n]))
+		}
+		if (isspace(up[n])) {
 			return -1;
+		}
 	}
 	/* valid format? */
 	if (strncasecmp(name, "iqn.", 4) == 0) {
@@ -852,8 +875,9 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	    && strncasecmp(name, "eui.", 4) != 0
 	    && strncasecmp(name, "naa.", 4) != 0) {
 		snprintf(fullname, sizeof(fullname), "%s:%s", g_spdk_iscsi.nodebase, name);
-	} else
+	} else {
 		snprintf(fullname, sizeof(fullname), "%s", name);
+	}
 
 	if (spdk_check_iscsi_name(fullname) != 0) {
 		SPDK_ERRLOG("TargetName %s contains an invalid character or format.\n",
@@ -983,8 +1007,9 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 
 	for (i = 0; i < MAX_TARGET_MAP; i++) {
 		val = spdk_conf_section_get_nmval(sp, "Mapping", i, 0);
-		if (val == NULL)
+		if (val == NULL) {
 			break;
+		}
 		pg_tag = spdk_conf_section_get_nmval(sp, "Mapping", i, 0);
 		ig_tag = spdk_conf_section_get_nmval(sp, "Mapping", i, 1);
 		if (pg_tag == NULL || ig_tag == NULL) {
@@ -1021,8 +1046,9 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 	if (val != NULL) {
 		for (i = 0; ; i++) {
 			val = spdk_conf_section_get_nmval(sp, "AuthMethod", 0, i);
-			if (val == NULL)
+			if (val == NULL) {
 				break;
+			}
 			if (strcasecmp(val, "CHAP") == 0) {
 				auth_chap_required = 1;
 			} else if (strcasecmp(val, "Mutual") == 0) {
@@ -1085,8 +1111,9 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 	if (val != NULL) {
 		for (i = 0; ; i++) {
 			val = spdk_conf_section_get_nmval(sp, "UseDigest", 0, i);
-			if (val == NULL)
+			if (val == NULL) {
 				break;
+			}
 			if (strcasecmp(val, "Header") == 0) {
 				header_digest = 1;
 			} else if (strcasecmp(val, "Data") == 0) {
@@ -1223,8 +1250,9 @@ spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(target->dev, i);
 
-		if (!lun)
+		if (!lun) {
 			continue;
+		}
 
 		/* we create a fake management task per LUN to cleanup */
 		task = spdk_iscsi_task_get(conn, NULL, spdk_iscsi_task_mgmt_cpl);

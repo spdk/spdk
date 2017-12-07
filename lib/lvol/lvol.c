@@ -668,8 +668,9 @@ _spdk_lvs_destruct_cb(void *cb_arg, int lvserrno)
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol store bdev deleted\n");
 
-	if (req->cb_fn != NULL)
+	if (req->cb_fn != NULL) {
 		req->cb_fn(req->cb_arg, lvserrno);
+	}
 	free(req);
 }
 
@@ -797,8 +798,9 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
 
 	if (lvol->lvol_store->destruct_req && TAILQ_EMPTY(&lvol->lvol_store->lvols)) {
-		if (lvol->lvol_store->destruct)
+		if (lvol->lvol_store->destruct) {
 			spdk_lvs_destroy(lvol->lvol_store, _spdk_lvs_destruct_cb, lvol->lvol_store->destruct_req);
+		}
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s deleted\n", lvol->old_name);

@@ -90,8 +90,9 @@ subsystem_sort(void)
 				if (strcmp(subsystem->name, subsystem_dep->name) == 0) {
 					depends_on = true;
 					depends_on_sorted = !!spdk_subsystem_find(&subsystems_list, subsystem_dep->depends_on);
-					if (depends_on_sorted)
+					if (depends_on_sorted) {
 						continue;
+					}
 					break;
 				}
 			}
@@ -238,7 +239,8 @@ spdk_subsystem_config(FILE *fp)
 	struct spdk_subsystem *subsystem;
 
 	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
-		if (subsystem->config)
+		if (subsystem->config) {
 			subsystem->config(fp);
+		}
 	}
 }

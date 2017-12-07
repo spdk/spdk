@@ -95,8 +95,9 @@ spdk_get_ifaddr_numa_node(const char *if_addr)
 	addr_in.sin_addr.s_addr = inet_addr(if_addr);
 
 	ret = getifaddrs(&ifaddrs);
-	if (ret < 0)
+	if (ret < 0) {
 		return -1;
+	}
 
 	for (ifa = ifaddrs; ifa != NULL; ifa = ifa->ifa_next) {
 		addr = *(struct sockaddr_in *)ifa->ifa_addr;

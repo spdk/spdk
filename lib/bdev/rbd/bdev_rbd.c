@@ -211,8 +211,9 @@ bdev_rbd_rw(struct bdev_rbd *disk, struct spdk_io_channel *ch,
 {
 	struct bdev_rbd_io_channel *rbdio_ch = spdk_io_channel_get_ctx(ch);
 
-	if (iovcnt != 1 || iov->iov_len != len)
+	if (iovcnt != 1 || iov->iov_len != len) {
 		return -1;
+	}
 
 	return bdev_rbd_start_aio(rbdio_ch->image, bdev_io, iov->iov_base, offset, len);
 }
@@ -566,8 +567,9 @@ bdev_rbd_library_init(void)
 	/* Init rbd block devices */
 	for (i = 0; ; i++) {
 		val = spdk_conf_section_get_nval(sp, "Ceph", i);
-		if (val == NULL)
+		if (val == NULL) {
 			break;
+		}
 
 		/* get the Rbd_pool name */
 		pool_name = spdk_conf_section_get_nmval(sp, "Ceph", i, 0);

@@ -102,8 +102,9 @@ spdk_app_get_shm_id(void)
 static void
 spdk_app_config_dump_global_section(FILE *fp)
 {
-	if (NULL == fp)
+	if (NULL == fp) {
 		return;
+	}
 
 	fprintf(fp, GLOBAL_CONFIG_TMPL,
 		spdk_app_get_core_mask(), spdk_trace_get_tpoint_group_mask());
@@ -148,8 +149,9 @@ spdk_app_get_running_config(char **config_str, char *name)
 	}
 	fseek(fp, 0, SEEK_SET);
 	ret = fread(*config_str, sizeof(char), length, fp);
-	if (ret < length)
+	if (ret < length) {
 		SPDK_ERRLOG("short read\n");
+	}
 	fclose(fp);
 	(*config_str)[length] = '\0';
 
@@ -185,8 +187,9 @@ __shutdown_event_cb(void *arg1, void *arg2)
 void
 spdk_app_opts_init(struct spdk_app_opts *opts)
 {
-	if (!opts)
+	if (!opts) {
 		return;
+	}
 
 	memset(opts, 0, sizeof(*opts));
 

@@ -267,8 +267,9 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
 	g_controllers = entry;
 
 	if ((g_arbitration.latency_tracking_enable != 0) &&
-	    spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
+	    spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)) {
 		set_latency_tracking_feature(ctrlr, true);
+	}
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	for (nsid = 1; nsid <= num_ns; nsid++) {
@@ -902,8 +903,9 @@ unregister_controllers(void)
 	while (entry) {
 		struct ctrlr_entry *next = entry->next;
 		if (g_arbitration.latency_tracking_enable &&
-		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING))
+		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)) {
 			set_latency_tracking_feature(entry->ctrlr, false);
+		}
 		spdk_nvme_detach(entry->ctrlr);
 		free(entry);
 		entry = next;

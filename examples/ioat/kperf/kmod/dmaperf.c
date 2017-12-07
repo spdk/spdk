@@ -161,25 +161,29 @@ static ssize_t perf_copy(struct pthr_ctx *pctx, char *dst,
 	src_off = (size_t)src & ~PAGE_MASK;
 	dst_off = (size_t)dst & ~PAGE_MASK;
 
-	if (!is_dma_copy_aligned(device, src_off, dst_off, size))
+	if (!is_dma_copy_aligned(device, src_off, dst_off, size)) {
 		return -ENODEV;
+	}
 
 	unmap = dmaengine_get_unmap_data(device->dev, 2, GFP_NOWAIT);
-	if (!unmap)
+	if (!unmap) {
 		return -ENOMEM;
+	}
 
 	unmap->len = size;
 	unmap->addr[0] = dma_map_page(device->dev, virt_to_page(src),
 				      src_off, size, DMA_TO_DEVICE);
-	if (dma_mapping_error(device->dev, unmap->addr[0]))
+	if (dma_mapping_error(device->dev, unmap->addr[0])) {
 		goto err_get_unmap;
+	}
 
 	unmap->to_cnt = 1;
 
 	unmap->addr[1] = dma_map_page(device->dev, virt_to_page(dst),
 				      dst_off, size, DMA_FROM_DEVICE);
-	if (dma_mapping_error(device->dev, unmap->addr[1]))
+	if (dma_mapping_error(device->dev, unmap->addr[1])) {
 		goto err_get_unmap;
+	}
 	unmap->from_cnt = 1;
 
 dma_prep_retry:
@@ -202,8 +206,9 @@ dma_prep_retry:
 	dma_set_unmap(txd, unmap);
 
 	cookie = dmaengine_submit(txd);
-	if (dma_submit_error(cookie))
+	if (dma_submit_error(cookie)) {
 		goto err_set_unmap;
+	}
 
 	atomic_inc(&pctx->dma_sync);
 
@@ -246,15 +251,17 @@ static int perf_move_data(struct pthr_ctx *pctx, char *dst, char *src,
 		if (copied_chunks == chunks) {
 			tmp = dst;
 			copied_chunks = 0;
-		} else
+		} else {
 			tmp += buf_size;
+		}
 	}
 
 	printk("%s: All DMA descriptors submitted\n", current->comm);
 
 	/* FIXME: need a timeout here eventually */
-	while (atomic_read(&pctx->dma_sync) != 0)
+	while (atomic_read(&pctx->dma_sync) != 0) {
 		msleep(1);
+	}
 
 	pr_info("%s: dma_up: %d  dma_down: %d dma_prep_err: %d\n",
 		current->comm, pctx->dma_up, pctx->dma_down,
@@ -330,14 +337,16 @@ static int dma_perf_thread(void *data)
 	buf_size = 1ULL << seg_order;
 	total = 1ULL << run_order;
 
-	if (buf_size > MAX_TEST_SIZE)
+	if (buf_size > MAX_TEST_SIZE) {
 		buf_size = MAX_TEST_SIZE;
+	}
 
 	dst = (char *)mw->virt_addr;
 
 	atomic_inc(&perf->tsync);
-	while (atomic_read(&perf->tsync) != perf->perf_threads)
+	while (atomic_read(&perf->tsync) != perf->perf_threads) {
 		schedule();
+	}
 
 	rc = perf_move_data(pctx, dst, src, buf_size, win_size, total);
 
@@ -352,8 +361,9 @@ static int dma_perf_thread(void *data)
 	return 0;
 
 err:
-	if (src)
+	if (src) {
 		kfree(src);
+	}
 
 	if (dma_chan) {
 		dma_release_channel(dma_chan);
@@ -367,8 +377,9 @@ static void perf_free_mw(struct pthr_ctx *pctx)
 {
 	struct perf_mw *mw = &pctx->mw;
 
-	if (!mw->virt_addr)
+	if (!mw->virt_addr) {
 		return;
+	}
 
 	kfree(mw->virt_addr);
 	mw->buf_size = 0;
@@ -379,8 +390,9 @@ static int perf_set_mw(struct pthr_ctx *pctx, size_t size)
 {
 	struct perf_mw *mw = &pctx->mw;
 
-	if (!size)
+	if (!size) {
 		return -EINVAL;
+	}
 
 	mw->buf_size = size;
 
@@ -401,8 +413,9 @@ static ssize_t debugfs_run_read(struct file *filp, char __user *ubuf,
 	char *buf;
 	ssize_t ret, out_offset;
 
-	if (!perf)
+	if (!perf) {
 		return 0;
+	}
 
 	buf = kmalloc(64, GFP_KERNEL);
 	out_offset = snprintf(buf, 64, "%d\n", perf->run);
@@ -418,11 +431,13 @@ static ssize_t debugfs_run_write(struct file *filp, const char __user *ubuf,
 	struct perf_ctx *perf = filp->private_data;
 	int node, i;
 
-	if (perf->perf_threads == 0)
+	if (perf->perf_threads == 0) {
 		return 0;
+	}
 
-	if (atomic_read(&perf->tsync) == 0)
+	if (atomic_read(&perf->tsync) == 0) {
 		perf->run = false;
+	}
 
 	if (perf->run == true) {
 		/* lets stop the threads */
@@ -431,8 +446,9 @@ static ssize_t debugfs_run_write(struct file *filp, const char __user *ubuf,
 			if (perf->pthr_ctx[i].thread) {
 				kthread_stop(perf->pthr_ctx[i].thread);
 				perf->pthr_ctx[i].thread = NULL;
-			} else
+			} else {
 				break;
+			}
 		}
 	} else {
 		perf->run = true;
@@ -473,21 +489,23 @@ static ssize_t debugfs_run_write(struct file *filp, const char __user *ubuf,
 				kthread_create_on_node(dma_perf_thread,
 						       (void *)pctx,
 						       node, "dma_perf %d", i);
-			if (pctx->thread)
+			if (pctx->thread) {
 				wake_up_process(pctx->thread);
-			else {
+			} else {
 				perf->run = false;
 				for (i = 0; i < MAX_THREADS; i++) {
 					if (pctx->thread) {
 						kthread_stop(pctx->thread);
 						pctx->thread = NULL;
-					} else
+					} else {
 						break;
+					}
 				}
 			}
 
-			if (perf->run == false)
+			if (perf->run == false) {
 				return -ENXIO;
+			}
 		}
 
 	}
@@ -509,8 +527,9 @@ static ssize_t debugfs_status_read(struct file *filp, char __user *ubuf,
 	char *buf;
 	ssize_t ret, out_offset;
 
-	if (!perf)
+	if (!perf) {
 		return 0;
+	}
 
 	buf = kmalloc(64, GFP_KERNEL);
 	out_offset = snprintf(buf, 64, "%s\n", atomic_read(&perf->tsync) ? "running" : "idle");
@@ -532,69 +551,80 @@ static int perf_debugfs_setup(struct perf_ctx *perf)
 	int i;
 	char temp_name[64];
 
-	if (!perf_debugfs_dir)
+	if (!perf_debugfs_dir) {
 		return -ENODEV;
+	}
 
 	perf->debugfs_node_dir = debugfs_create_dir("dmaperf",
 				 perf_debugfs_dir);
-	if (!perf->debugfs_node_dir)
+	if (!perf->debugfs_node_dir) {
 		return -ENODEV;
+	}
 
 	perf->debugfs_run = debugfs_create_file("run", S_IRUSR | S_IWUSR,
 						perf->debugfs_node_dir, perf,
 						&dma_perf_debugfs_run);
-	if (!perf->debugfs_run)
+	if (!perf->debugfs_run) {
 		return -ENODEV;
+	}
 
 	perf->debugfs_status = debugfs_create_file("status", S_IRUSR,
 			       perf->debugfs_node_dir, perf,
 			       &dma_perf_debugfs_status);
-	if (!perf->debugfs_status)
+	if (!perf->debugfs_status) {
 		return -ENODEV;
+	}
 
 	perf->debugfs_threads = debugfs_create_u8("threads", S_IRUSR | S_IWUSR,
 				perf->debugfs_node_dir,
 				&perf->perf_threads);
-	if (!perf->debugfs_threads)
+	if (!perf->debugfs_threads) {
 		return -ENODEV;
+	}
 
 	perf->debugfs_queue_depth = debugfs_create_u32("queue_depth", S_IRUSR | S_IWUSR,
 				    perf->debugfs_node_dir,
 				    &queue_depth);
-	if (!perf->debugfs_queue_depth)
+	if (!perf->debugfs_queue_depth) {
 		return -ENODEV;
+	}
 
 	perf->debugfs_transfer_size_order = debugfs_create_u32("transfer_size_order", S_IRUSR | S_IWUSR,
 					    perf->debugfs_node_dir,
 					    &seg_order);
-	if (!perf->debugfs_transfer_size_order)
+	if (!perf->debugfs_transfer_size_order) {
 		return -ENODEV;
+	}
 
 	perf->debugfs_total_size_order = debugfs_create_u32("total_size_order", S_IRUSR | S_IWUSR,
 					 perf->debugfs_node_dir,
 					 &run_order);
-	if (!perf->debugfs_total_size_order)
+	if (!perf->debugfs_total_size_order) {
 		return -ENODEV;
+	}
 
 	for (i = 0; i < MAX_THREADS; i++) {
 		struct pthr_ctx *pctx = &perf->pthr_ctx[i];
 		sprintf(temp_name, "thread_%d", i);
 
 		pctx->debugfs_thr_dir = debugfs_create_dir(temp_name, perf->debugfs_node_dir);
-		if (!pctx->debugfs_thr_dir)
+		if (!pctx->debugfs_thr_dir) {
 			return -ENODEV;
+		}
 
 		pctx->debugfs_copied = debugfs_create_u64("copied", S_IRUSR,
 				       pctx->debugfs_thr_dir,
 				       &pctx->copied);
-		if (!pctx->debugfs_copied)
+		if (!pctx->debugfs_copied) {
 			return -ENODEV;
+		}
 
 		pctx->debugfs_elapsed_time = debugfs_create_u64("elapsed_time", S_IRUSR,
 					     pctx->debugfs_thr_dir,
 					     &pctx->elapsed_time);
-		if (!pctx->debugfs_elapsed_time)
+		if (!pctx->debugfs_elapsed_time) {
 			return -ENODEV;
+		}
 	}
 
 	return 0;
@@ -619,12 +649,14 @@ static int perf_probe(void)
 
 	if (debugfs_initialized() && !perf_debugfs_dir) {
 		perf_debugfs_dir = debugfs_create_dir(KBUILD_MODNAME, NULL);
-		if (!perf_debugfs_dir)
+		if (!perf_debugfs_dir) {
 			goto err_ctx;
+		}
 
 		rc = perf_debugfs_setup(perf);
-		if (rc)
+		if (rc) {
 			goto err_ctx;
+		}
 	}
 
 	g_perf = perf;
@@ -648,8 +680,9 @@ static void perf_remove(void)
 
 	for (i = 0; i < MAX_THREADS; i++) {
 		struct pthr_ctx *pctx = &perf->pthr_ctx[i];
-		if (pctx->dma_chan)
+		if (pctx->dma_chan) {
 			dma_release_channel(pctx->dma_chan);
+		}
 		perf_free_mw(pctx);
 	}
 

@@ -131,8 +131,9 @@ spdk_scsi_task_scatter_data(struct spdk_scsi_task *task, const void *src, size_t
 	struct iovec *iovs = task->iovs;
 	const uint8_t *pos;
 
-	if (buf_len == 0)
+	if (buf_len == 0) {
 		return 0;
+	}
 
 	if (task->iovcnt == 1 && iovs[0].iov_base == NULL) {
 		spdk_scsi_task_alloc_data(task, buf_len);
