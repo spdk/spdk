@@ -16,6 +16,41 @@
       "revId": "4c5bc5550aa1893ddefef1305c1630d8471a75cc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce115ab0_3027b413",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 885,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-07T17:35:01Z",
+      "side": 1,
+      "message": "Agreed, although double is probably a better choice.",
+      "parentUuid": "a8edd256_debbf5f0",
+      "revId": "4c5bc5550aa1893ddefef1305c1630d8471a75cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8df64bb_b4a2f4be",
+        "filename": "test/lib/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 892,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-07T17:35:01Z",
+      "side": 1,
+      "message": "I don\u0027t think this can happen - time_in_sec is checked to be at least 1 before we get here, so g_time_in_usec should always be non-zero, unless there was an overflow (that should be checked separately).",
+      "revId": "4c5bc5550aa1893ddefef1305c1630d8471a75cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
