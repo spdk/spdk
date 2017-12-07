@@ -333,13 +333,13 @@ node_access_multi_initiator_groups_cases(void)
 	strncpy(scsi_dev.name, IQN1, SPDK_SCSI_DEV_MAX_NAME);
 	tgtnode.dev = &scsi_dev;
 
-	pg_map = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg);
-	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig1);
-	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig2);
-
 	/* portal group initialization */
 	memset(&pg, 0, sizeof(struct spdk_iscsi_portal_grp));
 	pg.tag = 1;
+
+	pg_map = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg);
+	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig1);
+	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig2);
 
 	/* portal initialization */
 	memset(&portal, 0, sizeof(struct spdk_iscsi_portal));
@@ -582,6 +582,12 @@ allow_iscsi_name_multi_maps_case(void)
 	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
 	strncpy(scsi_dev.name, IQN1, SPDK_SCSI_DEV_MAX_NAME);
 	tgtnode.dev = &scsi_dev;
+
+	/* portal group initialization */
+	memset(&pg1, 0, sizeof(struct spdk_iscsi_portal_grp));
+	pg1.tag = 1;
+	memset(&pg2, 0, sizeof(struct spdk_iscsi_portal_grp));
+	pg2.tag = 1;
 
 	pg_map1 = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg1);
 	pg_map2 = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg2);
