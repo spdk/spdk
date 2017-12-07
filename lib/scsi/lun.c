@@ -232,7 +232,7 @@ spdk_scsi_lun_hotplug(void *arg)
 
 	if (!spdk_scsi_lun_has_pending_tasks(lun)) {
 		spdk_scsi_lun_free_io_channel(lun);
-		spdk_scsi_lun_delete(lun->name);
+		spdk_scsi_lun_delete(lun);
 	}
 }
 
@@ -339,18 +339,11 @@ spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 }
 
 int
-spdk_scsi_lun_delete(const char *lun_name)
+spdk_scsi_lun_delete(struct spdk_scsi_lun *lun)
 {
-	struct spdk_scsi_lun *lun;
 	struct spdk_scsi_dev *dev;
 
 	pthread_mutex_lock(&g_spdk_scsi.mutex);
-	lun = spdk_lun_db_get_lun(lun_name);
-	if (lun == NULL) {
-		SPDK_ERRLOG("LUN '%s' not found\n", lun_name);
-		pthread_mutex_unlock(&g_spdk_scsi.mutex);
-		return -1;
-	}
 
 	dev = lun->dev;
 
