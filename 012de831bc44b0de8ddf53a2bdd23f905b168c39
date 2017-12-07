@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "187f533c_6c98f09b",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-07T00:11:32Z",
+      "side": 1,
+      "message": "Done\n\nyes, this way is concise.",
+      "parentUuid": "bd3d6871_68d548c6",
+      "revId": "012de831bc44b0de8ddf53a2bdd23f905b168c39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47a1e01f_728870b3",
         "filename": "lib/nbd/nbd.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2017-12-06T23:36:00Z",
       "side": 1,
       "message": "this isn\u0027t really needed - just return -1 directly instead of goto out",
+      "revId": "012de831bc44b0de8ddf53a2bdd23f905b168c39",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd8362c4_8770f372",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-07T00:11:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "47a1e01f_728870b3",
       "revId": "012de831bc44b0de8ddf53a2bdd23f905b168c39",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
