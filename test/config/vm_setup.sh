@@ -33,6 +33,7 @@ sudo dnf install -y fio
 sudo dnf install -y librbd-devel
 sudo dnf install -y kernel-devel
 sudo dnf install -y gflags-devel
+sudo dnf install -y libasan
 sudo dnf install -y libubsan
 sudo dnf install -y autoconf
 sudo dnf install -y automake
