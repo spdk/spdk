@@ -4,15 +4,19 @@ set -xe
 basedir=$(readlink -f $(dirname $0))
 MAKE="make -j$(( $(nproc)  * 2 ))"
 
-if [[ $1 == "scsi" ]]; then
-    devs=""
-    for entry in /sys/block/sd*; do
-        if grep -Eq '(INTEL|RAWSCSI|LIO-ORG)' $entry/device/vendor; then
-            devs+="$(basename $entry)"
-        fi
-    done
-else script=$blk_script;
-    devs=$(cd /sys/block; echo vd*)
+if [[ -n $disk ]]; then
+    devs=$disk
+else
+    if [[ $1 == "scsi" ]]; then
+        devs=""
+        for entry in /sys/block/sd*; do
+            if grep -Eq '(INTEL|RAWSCSI|LIO-ORG)' $entry/device/vendor; then
+                devs+="$(basename $entry)"
+            fi
+        done
+    else script=$blk_script;
+        devs=$(cd /sys/block; echo vd*)
+    fi
 fi
 
 trap "exit 1" SIGINT SIGTERM EXIT
@@ -25,6 +29,8 @@ for dev in $devs; do
             mkfs_cmd+=" -f"
         elif [ "fat" == $fs ]; then
             mkfs_cmd+=" -I"
+        elif [ "xfs" == $fs ]; then
+            mkfs_cmd+=" -f"
         else
             mkfs_cmd+=" -F"
         fi
