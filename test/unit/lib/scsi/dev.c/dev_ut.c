@@ -97,17 +97,17 @@ spdk_scsi_lun_construct(const char *name, struct spdk_bdev *bdev,
 	struct spdk_scsi_lun *lun;
 	struct lun_entry *p;
 
-	lun = calloc(1, sizeof(struct spdk_scsi_lun));
-	SPDK_CU_ASSERT_FATAL(lun != NULL);
-
-	snprintf(lun->name, sizeof(lun->name), "%s", name);
-	lun->bdev = bdev;
-
 	TAILQ_FOREACH(p, &g_lun_head, lun_entries) {
 		CU_ASSERT_FATAL(p->lun != NULL);
-		if (strncmp(p->lun->name, lun->name, sizeof(lun->name)) == 0)
+		if (strcmp(p->lun->name, name) == 0) {
 			return NULL;
+		}
 	}
+
+	lun = calloc(1, sizeof(struct spdk_scsi_lun));
+	SPDK_CU_ASSERT_FATAL(lun != NULL);
+	snprintf(lun->name, sizeof(lun->name), "%s", name);
+	lun->bdev = bdev;
 
 	p = calloc(1, sizeof(struct lun_entry));
 	SPDK_CU_ASSERT_FATAL(p != NULL);
