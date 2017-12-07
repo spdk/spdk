@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f5c9c4f4_f45b68f1",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T18:29:26Z",
+      "side": 1,
+      "message": "Yeah - will update this as the changes are implemented.  There are a lot of other comments in here that will need to be updated too.",
+      "parentUuid": "df4df0be_4ee43263",
+      "revId": "b2ade68c8c35d7f2538a8d5f115ad031ac227f7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "273d42df_18a27a92",
         "filename": "include/spdk/blob.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2017-12-07T17:15:19Z",
       "side": 1,
       "message": "destroy and unload should probably automatically create a channel internally. There are ordering considerations around freeing the channel and freeing the blobstore object, so it\u0027s more convenient if we just deal with those internally. It definitely is less efficient, though, so I could be convinced to leave it as is.",
+      "revId": "b2ade68c8c35d7f2538a8d5f115ad031ac227f7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e80279af_f14ebd69",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T18:29:26Z",
+      "side": 1,
+      "message": "I went back and forth on this.  But I think you\u0027re right.  We don\u0027t want someone to allocate an IO channel through spdk_bs interface to use here, and then have to free it using a different method.",
+      "parentUuid": "273d42df_18a27a92",
       "revId": "b2ade68c8c35d7f2538a8d5f115ad031ac227f7f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7855b394_f5a6cd43",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T18:29:26Z",
+      "side": 1,
+      "message": "Good idea.",
+      "parentUuid": "35bb04d9_c48592b1",
+      "revId": "b2ade68c8c35d7f2538a8d5f115ad031ac227f7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92450195_88e49aaa",
         "filename": "include/spdk/blob.h",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2017-12-07T17:15:19Z",
       "side": 1,
       "message": "I just noticed in this comment that this claims to apply to the open operation. I\u0027m not sure that\u0027s true.",
+      "revId": "b2ade68c8c35d7f2538a8d5f115ad031ac227f7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d7e26ed_f4b9f002",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T18:29:26Z",
+      "side": 1,
+      "message": "Yeah - this was wrong.  Will fix.",
+      "parentUuid": "92450195_88e49aaa",
       "revId": "b2ade68c8c35d7f2538a8d5f115ad031ac227f7f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "d41f95b9_5e8965be",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T18:29:26Z",
+      "side": 1,
+      "message": "Yep - I missed this one.",
+      "parentUuid": "b4108e0c_3d5c5b39",
+      "revId": "b2ade68c8c35d7f2538a8d5f115ad031ac227f7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9a83c2ee_154ecd15",
         "filename": "include/spdk/blob.h",
         "patchSetId": 1
@@ -98,6 +188,24 @@
       "writtenOn": "2017-12-07T17:15:19Z",
       "side": 1,
       "message": "These two functions should probably be moved near the top of the API header, right under init and load.",
+      "revId": "b2ade68c8c35d7f2538a8d5f115ad031ac227f7f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b34a1e94_a75c48b5",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-07T18:29:26Z",
+      "side": 1,
+      "message": "Agreed.",
+      "parentUuid": "9a83c2ee_154ecd15",
       "revId": "b2ade68c8c35d7f2538a8d5f115ad031ac227f7f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
