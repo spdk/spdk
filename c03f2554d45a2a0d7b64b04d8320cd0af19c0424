@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea0d2967_123b1dd3",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-07T01:27:17Z",
+      "side": 1,
+      "message": "I got what you want to do, keep LD_PRELOAD line inside if is better.",
+      "revId": "c03f2554d45a2a0d7b64b04d8320cd0af19c0424",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c90b7b5f_56c382fe",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-07T01:27:17Z",
+      "side": 1,
+      "message": "Here, I think the expression is better:\n\nif [ -n \"$bdfs\" ]; then\ntest 3 nvmf nodes\nelif\ntest 1 malloc node\nfi.",
+      "revId": "c03f2554d45a2a0d7b64b04d8320cd0af19c0424",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
