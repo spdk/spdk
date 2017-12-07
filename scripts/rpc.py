@@ -163,6 +163,24 @@ p.add_argument('chap_auth_group', help="""Authentication group ID for this targe
 p.set_defaults(func=construct_target_node)
 
 
+def target_node_add_lun(args):
+    params = {
+        'name': args.name,
+        'lun_name': args.lun_name,
+    }
+    if args.lun_id:
+        params['lun_id'] = args.lun_id
+    jsonrpc_call('target_node_add_lun', params)
+
+p = subparsers.add_parser('target_node_add_lun', help='Add LUN to the target node')
+p.add_argument('name', help='Target node name (ASCII)')
+p.add_argument('lun_name', help="""LUN name enclosed in quotes.
+*** LUN name cannot contain space or colon characters ***""")
+p.add_argument('-i', dest='lun_id', help="""LUN ID (integer >= 0)
+*** If LUN ID is omitted or -1, the lowest free one is assigned ***""", type=int)
+p.set_defaults(func=target_node_add_lun)
+
+
 def add_pg_ig_maps(args):
     pg_tags = []
     ig_tags = []
