@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abaa5e7d_6c37851f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2631,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-07T08:00:06Z",
+      "side": 1,
+      "message": "This should be blob-\u003einvalid_flags instead of blob-\u003einvalid",
+      "range": {
+        "startLine": 2631,
+        "startChar": 2,
+        "endLine": 2631,
+        "endChar": 15
+      },
+      "revId": "ea97c54ea6d31a62378c3c39c9d7ba9aeb3988e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4f2e4ad_6cc25e93",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-07T08:00:06Z",
+      "side": 1,
+      "message": "This should be defined at line 246 - #define SPDK_BLOB_INVALID_FLAGS_MASK already exists there",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 56
+      },
+      "revId": "ea97c54ea6d31a62378c3c39c9d7ba9aeb3988e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
