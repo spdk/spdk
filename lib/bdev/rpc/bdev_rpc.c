@@ -40,10 +40,29 @@ static void
 spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 			struct spdk_bdev *bdev)
 {
+	size_t cnt;
+	size_t i;
+	char **list;
+
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_name(w, "name");
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+
+	spdk_json_write_name(w, "aliases");
+	spdk_json_write_array_begin(w);
+
+	list = spdk_bdev_get_aliases(bdev, &cnt);
+
+	if (list != NULL) {
+		for (i = 0; i < cnt; i++) {
+			spdk_json_write_string(w, list[i]);
+			free(list[i]);
+		}
+	}
+	free(list);
+
+	spdk_json_write_array_end(w);
 
 	spdk_json_write_name(w, "product_name");
 	spdk_json_write_string(w, spdk_bdev_get_product_name(bdev));
