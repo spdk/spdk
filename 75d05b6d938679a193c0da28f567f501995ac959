@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b0297de_539064ad",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2017-12-07T06:51:27Z",
+      "side": 1,
+      "message": "Do we plan to test with the same parameters like block size 262144 for 3 times? We may change the bs and qd for different cases.",
+      "revId": "75d05b6d938679a193c0da28f567f501995ac959",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
