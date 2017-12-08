@@ -148,7 +148,7 @@
 #define ISCSI_AHS_LEN 60
 
 struct spdk_mobj {
-	struct rte_mempool *mp;
+	struct spdk_mempool *mp;
 	void *buf;
 	size_t len;
 	uint64_t reserved; /* do not use */
@@ -287,10 +287,10 @@ struct spdk_iscsi_globals {
 	uint32_t ErrorRecoveryLevel;
 	uint32_t AllowDuplicateIsid;
 
-	struct rte_mempool *pdu_pool;
-	struct rte_mempool *pdu_immediate_data_pool;
-	struct rte_mempool *pdu_data_out_pool;
-	struct rte_mempool *session_pool;
+	struct spdk_mempool *pdu_pool;
+	struct spdk_mempool *pdu_immediate_data_pool;
+	struct spdk_mempool *pdu_data_out_pool;
+	struct spdk_mempool *session_pool;
 	struct spdk_mempool *task_pool;
 
 	struct spdk_iscsi_sess	**session;
