@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f165d839_595a31b2",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-08T17:28:49Z",
+      "side": 1,
+      "message": "I think we can just use spdk_vtophys instead of adding this function.",
+      "revId": "0ed235091c67ca1b3a09679188037b821fff7807",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
