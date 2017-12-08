@@ -34,9 +34,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-
 #include "spdk/crc32.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
@@ -356,7 +353,7 @@ int
 spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 {
 	struct spdk_iscsi_pdu *pdu;
-	struct rte_mempool *pool;
+	struct spdk_mempool *pool;
 	uint32_t crc32c;
 	int ahs_len;
 	int data_len;
@@ -444,7 +441,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 				conn->pdu_in_progress = NULL;
 				return SPDK_ISCSI_CONNECTION_FATAL;
 			}
-			rte_mempool_get(pool, (void **)&pdu->mobj);
+			pdu->mobj = spdk_mempool_get(pool);
 			if (pdu->mobj == NULL) {
 				*_pdu = NULL;
 				return SPDK_SUCCESS;
@@ -4525,7 +4522,7 @@ void spdk_free_sess(struct spdk_iscsi_sess *sess)
 	spdk_iscsi_param_free(sess->params);
 	free(sess->conns);
 	spdk_scsi_port_free(&sess->initiator_port);
-	rte_mempool_put(g_spdk_iscsi.session_pool, (void *)sess);
+	spdk_mempool_put(g_spdk_iscsi.session_pool, (void *)sess);
 }
 
 static int
@@ -4536,8 +4533,8 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 	struct spdk_iscsi_sess *sess;
 	int rc;
 
-	rc = rte_mempool_get(g_spdk_iscsi.session_pool, (void **)&sess);
-	if ((rc < 0) || !sess) {
+	sess = spdk_mempool_get(g_spdk_iscsi.session_pool);
+	if (!sess) {
 		SPDK_ERRLOG("Unable to get session object\n");
 		SPDK_ERRLOG("MaxSessions set to %d\n", g_spdk_iscsi.MaxSessions);
 		return -ENOMEM;
