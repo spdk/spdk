@@ -351,10 +351,10 @@ function print_backtrace() {
 		local line_nr="${BASH_LINENO[$((i - 1))]}"
 		local src="${BASH_SOURCE[$i]}"
 		echo "in $src:$line_nr -> $func()"
-		echo "     ..."
+		echo "	 ..."
 		nl -w 4 -ba -nln $src | grep -B 5 -A 5 "^$line_nr[^0-9]" | \
 			sed "s/^/   /g" | sed "s/^   $line_nr /=> $line_nr /g"
-		echo "     ..."
+		echo "	 ..."
 	done
 	echo ""
 	echo "========== Backtrace end =========="
@@ -495,6 +495,28 @@ function fio_config_add_job()
 
 	echo "[job_$filename]" >> $config_file
 	echo "filename=$filename" >> $config_file
+}
+
+function get_lvs_free_mb()
+{
+	local lvs_uuid=$1
+	local lvs_info=$($rpc_py get_lvol_stores)
+	local fc=$(jq --arg lvs "$lvs_uuid" '.[] | select(.uuid==$lvs) .free_clusters' <<< "$lvs_info")
+	local cs=$(jq --arg lvs "$lvs_uuid" '.[] | select(.uuid==$lvs) .cluster_size' <<< "$lvs_info")
+
+	# Change to MB's
+	free_mb=$((fc*cs/1024/1024))
+}
+
+function get_lbd_size()
+{
+	local lbd_name=$1
+	local lbd_info=$($rpc_py get_bdevs)
+	local bs=$(jq --arg lbd "$lbd_name" '.[] | select(.name==$lbd) .block_size' <<< "$lbd_info")
+	local nb=$(jq --arg lbd "$lbd_name" '.[] | select(.name==$lbd) .num_blocks' <<< "$lbd_info")
+
+	# Change to MB's
+	blk_dev_size=$((bs*nb/1024/1024))
 }
 
 set -o errtrace

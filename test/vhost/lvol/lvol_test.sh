@@ -5,7 +5,7 @@ BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
 
 . $COMMON_DIR/common.sh
-
+. $SPDK_BUILD_DIR/scripts/autotest_common.sh
 rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py "
 
 vm_count=1
@@ -14,8 +14,6 @@ ctrl_type="vhost_scsi"
 use_fs=false
 nested_lvol=false
 distribute_cores=false
-base_bdev_size=10000
-nest_bdev_size=""
 
 function usage()
 {
@@ -43,6 +41,33 @@ function usage()
     echo "                          on different CPU cores instead of single core."
     echo "                          Default: False"
     exit 0
+}
+
+function clean_lvol_cfg()
+{
+    echo "INFO: Removing nested lvol bdevs"
+    for lvol_bdev in "${nest_lvol_bdevs[@]}"; do
+        $rpc_py delete_bdev $lvol_bdev
+        echo -e "\tINFO: nested lvol bdev $lvol_bdev removed"
+    done
+    
+    echo "INFO: Removing nested lvol stores"
+    for lvol_store in "${nest_lvol_stores[@]}"; do
+        $rpc_py destroy_lvol_store -u $lvol_store
+        echo -e "\tINFO: nested lvol store $lvol_store removed"
+    done
+    
+    echo "INFO: Removing lvol bdevs"
+    for lvol_bdev in "${lvol_bdevs[@]}"; do
+        $rpc_py delete_bdev $lvol_bdev
+        echo -e "\tINFO: lvol bdev $lvol_bdev removed"
+    done
+    
+    echo "INFO: Removing lvol stores"
+    for lvol_store in "${lvol_stores[@]}"; do
+        $rpc_py destroy_lvol_store -u $lvol_store
+        echo -e "\tINFO: lvol store $lvol_store removed"
+    done    
 }
 
 while getopts 'xh-:' optchar; do
@@ -80,11 +105,11 @@ is lower than number of requested disks for test ($max_disks)"
 fi
 
 if $distribute_cores; then
-	# FIXME: this need to be handled entirely in common.sh
+    # FIXME: this need to be handled entirely in common.sh
     source $BASE_DIR/autotest.config
 fi
 
-trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
+trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGINT SIGTERM ERR
 
 vm_kill_all
 
@@ -101,6 +126,7 @@ echo "INFO: running SPDK"
 echo ""
 $COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
 echo ""
+trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGINT SIGTERM ERR
 
 lvol_stores=()
 lvol_bdevs=()
@@ -110,44 +136,54 @@ used_vms=""
 
 # On each NVMe create one lvol store
 for (( i=0; i<$max_disks; i++ ));do
+
+    # Create base lvol store on NVMe
     echo "INFO: Creating lvol store on device Nvme${i}n1"
     ls_guid=$($rpc_py construct_lvol_store Nvme${i}n1 lvs_$i)
     lvol_stores+=("$ls_guid")
-done
-
-# Create lvol bdev for nested lvol stores if needed
-if $nested_lvol; then
-    for lvol_store in "${lvol_stores[@]}"; do
-
-        echo "INFO: Creating lvol bdev on lvol store $lvol_store"
-        lb_name=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_nest 16000)
-        lvol_bdevs+=("$lb_name")
-
-        echo "INFO: Creating nested lvol store on lvol bdev: $lb_name"
-        ls_guid=$($rpc_py construct_lvol_store $lb_name lvs_n_$i)
-        nest_lvol_stores+=("$ls_guid")
-    done
-fi
-
-# For each VM create one lvol bdev on each 'normal' and nested lvol store
-for (( i=0; i<$vm_count; i++)); do
-    bdevs=()
-    echo "INFO: Creating lvol bdevs for VM $i"
-    for lvol_store in "${lvol_stores[@]}"; do
-        lb_name=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_$i 10000)
-        lvol_bdevs+=("$lb_name")
-        bdevs+=("$lb_name")
-    done
-
+    
     if $nested_lvol; then
-        echo "INFO: Creating nested lvol bdevs for VM $i"
-        for lvol_store in "${nest_lvol_stores[@]}"; do
-            lb_guid=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_nest_$i 2000)
-            nest_lvol_bdevs+=("$lb_guid")
-            bdevs+=("$lb_guid")
+        get_lvs_free_mb $ls_guid
+        size=$((free_mb/((vm_count+1))))
+        
+        echo "INFO: Creating lvol bdev on lvol store: $ls_guid"
+        lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_nest $size)
+        
+        echo "INFO: Creating nested lvol store on lvol bdev: $lb_name"
+        nest_ls_guid=$($rpc_py construct_lvol_store $lb_name lvs_n_$i)
+        nest_lvol_stores+=("$nest_ls_guid")
+        
+        for (( j=0; j<$vm_count; j++)); do
+            echo "INFO: Creating nested lvol bdev for VM $i on lvol store $nest_ls_guid"
+            get_lvs_free_mb $nest_ls_guid
+            nest_size=$((free_mb/((vm_count-j))))
+            lb_name=$($rpc_py construct_lvol_bdev -u $nest_ls_guid lbd_vm_$j $nest_size)
+            nest_lvol_bdevs+=("$lb_name")
         done
     fi
 
+    # Create base lvol bdevs
+    for (( j=0; j<$vm_count; j++)); do
+        echo "INFO: Creating lvol bdev for VM $i on lvol store $ls_guid"
+        get_lvs_free_mb $ls_guid
+        size=$((free_mb/((vm_count-j))))
+        lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_vm_$j $size)
+        lvol_bdevs+=("$lb_name")
+    done
+done
+
+bdev_info=$($rpc_py get_bdevs)
+echo "Configuration after initial set-up:"
+$rpc_py get_lvol_stores
+echo "$bdev_info"
+
+# Set up VMs
+for (( i=0; i<$vm_count; i++)); do
+    vm="vm_$i"
+    bdevs=$(jq -r --arg vm "$vm" 'map(select(.product_name=="Logical Volume") |
+        select(.name | contains($vm)) | .name) | join(" ")' <<< "$bdev_info")
+    bdevs=($bdevs)
+    
     setup_cmd="$COMMON_DIR/vm_setup.sh $x --work-dir=$TEST_DIR"
     if [[ "$ctrl_type" == "vhost_scsi" ]]; then
         setup_cmd+=" --test-type=spdk_vhost_scsi"
@@ -172,8 +208,10 @@ for (( i=0; i<$vm_count; i++)); do
     elif [[ "$ctrl_type" == "vhost_blk" ]]; then
         disk=""
         for (( j=0; j<${#bdevs[@]}; j++)); do
+            get_lbd_size ${bdevs[$j]}
+
             $rpc_py construct_vhost_blk_controller naa.$j.$i ${bdevs[$j]} $mask_arg
-            disk+="${j}_size_1500M:"
+            disk+="${j}_size_${blk_dev_size}M:"
         done
         disk="${disk::-1}"
         setup_cmd+=" --disk=$disk"
@@ -183,8 +221,6 @@ for (( i=0; i<$vm_count; i++)); do
     used_vms+=" $i"
 done
 
-$rpc_py get_lvol_stores
-$rpc_py get_bdevs
 $rpc_py get_vhost_controllers
 $rpc_py get_luns
 
@@ -249,29 +285,7 @@ elif [[ "$ctrl_type" == "vhost_blk" ]]; then
     done
 fi
 
-echo "INFO: Removing nested lvol bdevs"
-for lvol_bdev in "${nest_lvol_bdevs[@]}"; do
-    $rpc_py delete_bdev $lvol_bdev
-    echo -e "\tINFO: nested lvol bdev $lvol_bdev removed"
-done
-
-echo "INFO: Removing nested lvol stores"
-for lvol_store in "${nest_lvol_stores[@]}"; do
-    $rpc_py destroy_lvol_store -u $lvol_store
-    echo -e "\tINFO: nested lvol store $lvol_store removed"
-done
-
-echo "INFO: Removing lvol bdevs"
-for lvol_bdev in "${lvol_bdevs[@]}"; do
-    $rpc_py delete_bdev $lvol_bdev
-    echo -e "\tINFO: lvol bdev $lvol_bdev removed"
-done
-
-echo "INFO: Removing lvol stores"
-for lvol_store in "${lvol_stores[@]}"; do
-    $rpc_py destroy_lvol_store -u $lvol_store
-    echo -e "\tINFO: lvol store $lvol_store removed"
-done
+clean_lvol_cfg
 
 $rpc_py get_lvol_stores
 $rpc_py get_bdevs
