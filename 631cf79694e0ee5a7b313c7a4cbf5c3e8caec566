@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "783b8376_edaa131c",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T16:17:57Z",
+      "side": 1,
+      "message": "Will rephrase in next patch.\nIf nested\u003dtrue then 1 extra bdev per lvol store will be used as a base for nested lvol store (with nested lvol bdevs).",
+      "parentUuid": "a5e75558_5d2b6a5f",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 141,
+        "endChar": 66
+      },
+      "revId": "631cf79694e0ee5a7b313c7a4cbf5c3e8caec566",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "553864e6_6194b922",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2017-12-08T16:01:26Z",
       "side": 1,
       "message": "Doesn\u0027t free_mb always decrease after iteration for each VM ? Making it so that lvol bdevs do not take whole size of the device ?",
+      "range": {
+        "startLine": 160,
+        "startChar": 0,
+        "endLine": 161,
+        "endChar": 40
+      },
+      "revId": "631cf79694e0ee5a7b313c7a4cbf5c3e8caec566",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6aca41d9_76e32910",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T16:17:57Z",
+      "side": 1,
+      "message": "Whole device is used.\nhttp://10.102.17.105:8080/job/vhost_lvol_scsi/170/console\nHere is an output for the test with 3NVMe\u0027s and 3VM. Ctrl+F for \"lvs_0\" - you will find a summary of the config after all RPC set up is done.\n\"\"free_clusters\": 0, \"",
+      "parentUuid": "553864e6_6194b922",
       "range": {
         "startLine": 160,
         "startChar": 0,
