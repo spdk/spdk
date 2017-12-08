@@ -497,5 +497,29 @@ function fio_config_add_job()
 	echo "filename=$filename" >> $config_file
 }
 
+function get_lvs_free_mb()
+{
+	local lvs_uuid=$1
+	local lvs_info=$($rpc_py get_lvol_stores)
+	local fc=$(jq ".[] | select(.uuid==\"$lvs_uuid\") .free_clusters" <<< "$lvs_info")
+	local cs=$(jq ".[] | select(.uuid==\"$lvs_uuid\") .cluster_size" <<< "$lvs_info")
+
+	# Change to MB's
+	free_mb=$((fc*cs/1024/1024))
+	echo "$free_mb"
+}
+
+function get_bdev_size()
+{
+	local bdev_name=$1
+	local bdev_info=$($rpc_py get_bdevs -b $bdev_name)
+	local bs=$(jq ".[] .block_size" <<< "$bdev_info")
+	local nb=$(jq ".[] .num_blocks" <<< "$bdev_info")
+
+	# Change to MB's
+	bdev_size=$((bs*nb/1024/1024))
+	echo "$bdev_size"
+}
+
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
