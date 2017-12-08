@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a71bdc52_adc7b99c",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1287,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-08T17:53:26Z",
+      "side": 1,
+      "message": "I think this needs to be updated after Jim\u0027s patch that changes spdk_scsi_dev_add_lun() to take a spdk_scsi_lun pointer instead of a LUN name.\n\nspdk_iscsi_tgt_node_add_lun() should probably also take struct spdk_scsi_lun *lun instead of char *name as well.",
+      "revId": "35f323697abeaf1f3f2caf944d929a8b4b2ec23f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
