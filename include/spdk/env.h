@@ -78,6 +78,12 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
 void spdk_env_init(const struct spdk_env_opts *opts);
 
 /**
+ * Get the physical address of a virtual address allocated by spdk_dma* or spdk_mempool
+ */
+uint64_t
+spdk_virt_to_phys(void *vaddr);
+
+/**
  * Allocate a pinned, physically contiguous memory buffer with the
  *   given size and alignment.
  */
@@ -153,6 +159,11 @@ struct spdk_mempool;
  */
 struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
 		size_t ele_size, size_t cache_size, int socket_id);
+
+/**
+ * Get the name of a mempool
+ */
+char *spdk_mempool_get_name(struct spdk_mempool *mp);
 
 /**
  * Free a memory pool.
