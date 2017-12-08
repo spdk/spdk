@@ -361,7 +361,8 @@ test_parse_request_streaming(void)
 	FREE_REQUEST();
 
 	/* Partial (but not invalid) requests - parse should not consume anything. */
-	strcpy(g_buf, "{\"jsonrpc\":\"2.0\",\"method\":\"b\",\"params\":[2],\"id\":2}");
+	snprintf(g_buf, sizeof(g_buf), "%s",
+		 "{\"jsonrpc\":\"2.0\",\"method\":\"b\",\"params\":[2],\"id\":2}");
 	len = strlen(g_buf);
 
 	/* Try every partial length up to the full request length */

@@ -240,7 +240,7 @@ parse_valid_test(void)
 	data = malloc(len);
 	SPDK_CU_ASSERT_FATAL(data != NULL);
 	memset(data, 'A', len);
-	strcpy(data, "CHAP_C");
+	memcpy(data, "CHAP_C", 6);
 	data[6] = '=';
 	data[len - 1] = '\0';
 	rc = spdk_iscsi_parse_params(&params, data, len, false, NULL);
@@ -315,7 +315,7 @@ parse_invalid_test(void)
 	data = malloc(len);
 	SPDK_CU_ASSERT_FATAL(data != NULL);
 	memset(data, 'A', len);
-	strcpy(data, "CHAP_C");
+	memcpy(data, "CHAP_C", 6);
 	data[6] = '=';
 	data[len - 1] = '\0';
 	rc = spdk_iscsi_parse_params(&params, data, len, false, NULL);
