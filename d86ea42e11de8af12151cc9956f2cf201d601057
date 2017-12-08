@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e3d749b_016a1166",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T15:30:18Z",
+      "side": 1,
+      "message": "I know this is copied from other script, but you should check if lvol bdev of size 16000MB will fit to created lvol store.\nLet\u0027s not copy bad chunks.\nSee here for an example:\nhttps://review.gerrithub.io/#/c/390983/1/test/vhost/lvol/lvol_test.sh",
+      "range": {
+        "startLine": 59,
+        "startChar": 1,
+        "endLine": 59,
+        "endChar": 64
+      },
+      "revId": "d86ea42e11de8af12151cc9956f2cf201d601057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
