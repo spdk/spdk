@@ -286,8 +286,7 @@ sync_cb(void *arg1, int bserrno)
 		return;
 	}
 
-	spdk_bs_md_close_blob(&cli_context->blob, close_cb,
-			      cli_context);
+	spdk_blob_close(&cli_context->blob, close_cb, cli_context);
 }
 
 /*
@@ -307,8 +306,7 @@ open_now_resize_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	}
 	cli_context->blob = blob;
 
-	rc = spdk_bs_md_resize_blob(cli_context->blob,
-				    cli_context->num_clusters);
+	rc = spdk_blob_resize(cli_context->blob, cli_context->num_clusters);
 	if (rc) {
 		unload_bs(cli_context, "Error in blob resize",
 			  bserrno);
@@ -323,8 +321,7 @@ open_now_resize_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	 * Always a good idea to sync after MD changes or the changes
 	 * may be lost if things aren't closed cleanly.
 	 */
-	spdk_bs_md_sync_blob(cli_context->blob, sync_cb,
-			     cli_context);
+	spdk_blob_sync_md(cli_context->blob, sync_cb, cli_context);
 }
 
 /*
@@ -440,14 +437,14 @@ show_blob(struct cli_context_t *cli_context)
 	val = spdk_blob_get_num_pages(cli_context->blob);
 	printf("# of pages: %" PRIu64 "\n", val);
 
-	spdk_bs_md_get_xattr_names(cli_context->blob, &names);
+	spdk_blob_get_xattr_names(cli_context->blob, &names);
 
 	printf("# of xattrs: %d\n", spdk_xattr_names_get_count(names));
 	printf("xattrs:\n");
 	for (i = 0; i < spdk_xattr_names_get_count(names); i++) {
-		spdk_bs_md_get_xattr_value(cli_context->blob,
-					   spdk_xattr_names_get_name(names, i),
-					   &value, &value_len);
+		spdk_blob_get_xattr_value(cli_context->blob,
+					  spdk_xattr_names_get_name(names, i),
+					  &value, &value_len);
 		if ((value_len + 1) > sizeof(data)) {
 			printf("FYI: adjusting size of xattr due to CLI limits.\n");
 			value_len = sizeof(data) - 1;
@@ -560,18 +557,15 @@ set_xattr_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	cli_context->blob = blob;
 
 	if (cli_context->action == CLI_SET_XATTR) {
-		spdk_blob_md_set_xattr(cli_context->blob,
-				       cli_context->key,
-				       cli_context->value,
-				       strlen(cli_context->value) + 1);
+		spdk_blob_set_xattr(cli_context->blob, cli_context->key,
+				    cli_context->value, strlen(cli_context->value) + 1);
 		printf("Xattr has been set.\n");
 	} else {
-		spdk_blob_md_remove_xattr(cli_context->blob,
-					  cli_context->key);
+		spdk_blob_remove_xattr(cli_context->blob, cli_context->key);
 		printf("Xattr has been removed.\n");
 	}
 
-	spdk_bs_md_sync_blob(cli_context->blob, sync_cb, cli_context);
+	spdk_blob_sync_md(cli_context->blob, sync_cb, cli_context);
 }
 
 /*
@@ -609,8 +603,7 @@ read_dump_cb(void *arg1, int bserrno)
 		/* done reading */
 		printf("\nFile write complete (to %s).\n", cli_context->file);
 		fclose(cli_context->fp);
-		spdk_bs_md_close_blob(&cli_context->blob, close_cb,
-				      cli_context);
+		spdk_blob_close(&cli_context->blob, close_cb, cli_context);
 	}
 }
 
@@ -658,7 +651,7 @@ write_imp_cb(void *arg1, int bserrno)
 		/* done writing */
 		printf("\nBlob import complete (from %s).\n", cli_context->file);
 		fclose(cli_context->fp);
-		spdk_bs_md_close_blob(&cli_context->blob, close_cb, cli_context);
+		spdk_blob_close(&cli_context->blob, close_cb, cli_context);
 	}
 }
 
@@ -688,7 +681,7 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 					    ALIGN_4K, NULL);
 	if (cli_context->buff == NULL) {
 		printf("Error in allocating memory\n");
-		spdk_bs_md_close_blob(&cli_context->blob, close_cb, cli_context);
+		spdk_blob_close(&cli_context->blob, close_cb, cli_context);
 		return;
 	}
 	printf("Working");
@@ -698,7 +691,7 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		cli_context->fp = fopen(cli_context->file, "w");
 		if (cli_context->fp == NULL) {
 			printf("Error in opening file\n");
-			spdk_bs_md_close_blob(&cli_context->blob, close_cb, cli_context);
+			spdk_blob_close(&cli_context->blob, close_cb, cli_context);
 			return;
 		}
 
@@ -710,7 +703,7 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		cli_context->fp = fopen(cli_context->file, "r");
 		if (cli_context->fp == NULL) {
 			printf("Error in opening file\n");
-			spdk_bs_md_close_blob(&cli_context->blob, close_cb, cli_context);
+			spdk_blob_close(&cli_context->blob, close_cb, cli_context);
 			return;
 		}
 
@@ -758,8 +751,7 @@ write_cb(void *arg1, int bserrno)
 	} else {
 		/* done writing */
 		printf("\nBlob fill complete (with 0x%x).\n", cli_context->fill_value);
-		spdk_bs_md_close_blob(&cli_context->blob, close_cb,
-				      cli_context);
+		spdk_blob_close(&cli_context->blob, close_cb, cli_context);
 	}
 }
 
