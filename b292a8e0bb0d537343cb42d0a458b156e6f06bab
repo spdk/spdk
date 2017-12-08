@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "650c1d5f_3d08f389",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-08T00:04:49Z",
+      "side": 1,
+      "message": "I think this should just be grouped under \"NVMe driver\", since we will probably have more NVMe changes to note later.",
+      "revId": "b292a8e0bb0d537343cb42d0a458b156e6f06bab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b7e611d_d47da6bb",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-08T00:04:49Z",
+      "side": 1,
+      "message": "for -\u003e to",
+      "range": {
+        "startLine": 32,
+        "startChar": 92,
+        "endLine": 32,
+        "endChar": 95
+      },
+      "revId": "b292a8e0bb0d537343cb42d0a458b156e6f06bab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4a7238c_f48b37da",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-08T00:04:49Z",
+      "side": 1,
+      "message": "have -\u003e has",
+      "range": {
+        "startLine": 32,
+        "startChar": 57,
+        "endLine": 32,
+        "endChar": 61
+      },
+      "revId": "b292a8e0bb0d537343cb42d0a458b156e6f06bab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33e4808a_321ad086",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-08T00:04:49Z",
+      "side": 1,
+      "message": "are -\u003e is",
+      "range": {
+        "startLine": 33,
+        "startChar": 35,
+        "endLine": 33,
+        "endChar": 38
+      },
+      "revId": "b292a8e0bb0d537343cb42d0a458b156e6f06bab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
