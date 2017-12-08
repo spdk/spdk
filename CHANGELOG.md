@@ -46,6 +46,11 @@ spdk_bs_md_get_xattr_names => spdk_blob_get_xattr_names
 spdk_bs_md_get_xattr_value => spdk_blob_get_xattr_value
 spdk_blob_md_set_xattr => spdk_blob_set_xattr
 spdk_blob_md_remove_xattr => spdk_blob_remove_xattr
+spdk_bs_md_create_blob => spdk_bs_create_blob
+spdk_bs_md_open_blob => spdk_bs_open_blob
+spdk_bs_md_delete_blob => spdk_bs_delete_blob
+spdk_bs_md_iter_first => spdk_bs_iter_first
+spdk_bs_md_iter_next => spdk_bs_iter_next
 
 ## v17.10: Logical Volumes
 
