@@ -33,18 +33,13 @@
  */
 
 #include "spdk/stdinc.h"
-
-#include <rte_config.h>
-#include <rte_mempool.h>
-#include <rte_version.h>
+#include "spdk/env.h"
 
 #include "iscsi/iscsi.h"
 #include "iscsi/init_grp.h"
 #include "iscsi/portal_grp.h"
 #include "iscsi/conn.h"
 #include "iscsi/task.h"
-
-#include "spdk/env.h"
 
 #include "spdk_internal/event.h"
 #include "spdk_internal/log.h"
@@ -303,7 +298,7 @@ spdk_iscsi_config_dump_target_nodes(FILE *fp)
 }
 
 static void
-spdk_mobj_ctor(struct rte_mempool *mp, __attribute__((unused)) void *arg,
+spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 	       void *_m, __attribute__((unused)) unsigned i)
 {
 	struct spdk_mobj *m = _m;
@@ -320,12 +315,7 @@ spdk_mobj_ctor(struct rte_mempool *mp, __attribute__((unused)) void *arg,
 	 * right before the 512B aligned buffer area.
 	 */
 	phys_addr = (uint64_t *)m->buf - 1;
-
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
-	*phys_addr = rte_mempool_virt2iova(m) + off;
-#else
-	*phys_addr = rte_mempool_virt2phy(mp, m) + off;
-#endif
+	*phys_addr = spdk_vtophys(m) + off;
 }
 
 #define NUM_PDU_PER_CONNECTION(iscsi)	(2 * (iscsi->MaxQueueDepth + MAX_LARGE_DATAIN_PER_CONNECTION + 8))
@@ -342,35 +332,30 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 			     sizeof(struct spdk_mobj) + 512;
 
 	/* create PDU pool */
-	iscsi->pdu_pool = rte_mempool_create("PDU_Pool",
-					     PDU_POOL_SIZE(iscsi),
-					     sizeof(struct spdk_iscsi_pdu),
-					     256, 0,
-					     NULL, NULL, NULL, NULL,
-					     SOCKET_ID_ANY, 0);
+	iscsi->pdu_pool = spdk_mempool_create("PDU_Pool",
+					      PDU_POOL_SIZE(iscsi),
+					      sizeof(struct spdk_iscsi_pdu),
+					      256, SPDK_ENV_SOCKET_ID_ANY);
 	if (!iscsi->pdu_pool) {
 		SPDK_ERRLOG("create PDU pool failed\n");
 		return -1;
 	}
 
-	iscsi->pdu_immediate_data_pool =
-		rte_mempool_create("PDU_immediate_data_Pool",
-				   IMMEDIATE_DATA_POOL_SIZE(iscsi),
-				   imm_mobj_size,
-				   0, 0, NULL, NULL,
-				   spdk_mobj_ctor, NULL,
-				   rte_socket_id(), 0);
+	iscsi->pdu_immediate_data_pool = spdk_mempool_create_ctor("PDU_immediate_data_Pool",
+					 IMMEDIATE_DATA_POOL_SIZE(iscsi),
+					 imm_mobj_size, 0,
+					 spdk_env_get_socket_id(spdk_env_get_current_core()),
+					 spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_immediate_data_pool) {
 		SPDK_ERRLOG("create PDU 8k pool failed\n");
 		return -1;
 	}
 
-	iscsi->pdu_data_out_pool = rte_mempool_create("PDU_data_out_Pool",
+	iscsi->pdu_data_out_pool = spdk_mempool_create_ctor("PDU_data_out_Pool",
 				   DATA_OUT_POOL_SIZE(iscsi),
-				   dout_mobj_size,
-				   0, 0, NULL, NULL,
-				   spdk_mobj_ctor, NULL,
-				   rte_socket_id(), 0);
+				   dout_mobj_size, 0,
+				   spdk_env_get_socket_id(spdk_env_get_current_core()),
+				   spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_data_out_pool) {
 		SPDK_ERRLOG("create PDU 64k pool failed\n");
 		return -1;
@@ -379,7 +364,7 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 	return 0;
 }
 
-static void spdk_iscsi_sess_ctor(struct rte_mempool *pool, void *arg,
+static void spdk_iscsi_sess_ctor(struct spdk_mempool *pool, void *arg,
 				 void *session_buf, unsigned index)
 {
 	struct spdk_iscsi_globals		*iscsi = arg;
@@ -402,7 +387,7 @@ spdk_iscsi_initialize_task_pool(void)
 	iscsi->task_pool = spdk_mempool_create("SCSI_TASK_Pool",
 					       DEFAULT_TASK_POOL_SIZE,
 					       sizeof(struct spdk_iscsi_task),
-					       128, SOCKET_ID_ANY);
+					       128, SPDK_ENV_SOCKET_ID_ANY);
 	if (!iscsi->task_pool) {
 		SPDK_ERRLOG("create task pool failed\n");
 		return -1;
@@ -416,13 +401,11 @@ static int spdk_iscsi_initialize_session_pool(void)
 {
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 
-	iscsi->session_pool = rte_mempool_create("Session_Pool",
+	iscsi->session_pool = spdk_mempool_create_ctor("Session_Pool",
 			      SESSION_POOL_SIZE(iscsi),
-			      sizeof(struct spdk_iscsi_sess),
-			      0, 0,
-			      NULL, NULL,
-			      spdk_iscsi_sess_ctor, iscsi,
-			      SOCKET_ID_ANY, 0);
+			      sizeof(struct spdk_iscsi_sess), 0,
+			      SPDK_ENV_SOCKET_ID_ANY,
+			      spdk_iscsi_sess_ctor, iscsi);
 	if (!iscsi->session_pool) {
 		SPDK_ERRLOG("create session pool failed\n");
 		return -1;
@@ -449,23 +432,12 @@ spdk_iscsi_initialize_all_pools(void)
 	return 0;
 }
 
-/*
- * Wrapper to provide rte_mempool_avail_count() on older DPDK versions.
- * Drop this if the minimum DPDK version is raised to at least 16.07.
- */
-#if RTE_VERSION < RTE_VERSION_NUM(16, 7, 0, 1)
-static unsigned rte_mempool_avail_count(const struct rte_mempool *pool)
-{
-	return rte_mempool_count(pool);
-}
-#endif
-
 static void
-spdk_iscsi_check_pool(struct rte_mempool *pool, uint32_t count)
+spdk_iscsi_check_pool(struct spdk_mempool *pool, size_t count)
 {
-	if (rte_mempool_avail_count(pool) != count) {
-		SPDK_ERRLOG("rte_mempool_avail_count(%s) == %d, should be %d\n",
-			    pool->name, rte_mempool_avail_count(pool), count);
+	if (spdk_mempool_count(pool) != count) {
+		SPDK_ERRLOG("spdk_mempool_count(%s) == %zu, should be %zu\n",
+			    spdk_mempool_get_name(pool), spdk_mempool_count(pool), count);
 	}
 }
 
@@ -486,10 +458,10 @@ spdk_iscsi_free_pools(void)
 {
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 
-	rte_mempool_free(iscsi->pdu_pool);
-	rte_mempool_free(iscsi->session_pool);
-	rte_mempool_free(iscsi->pdu_immediate_data_pool);
-	rte_mempool_free(iscsi->pdu_data_out_pool);
+	spdk_mempool_free(iscsi->pdu_pool);
+	spdk_mempool_free(iscsi->session_pool);
+	spdk_mempool_free(iscsi->pdu_immediate_data_pool);
+	spdk_mempool_free(iscsi->pdu_data_out_pool);
 	spdk_mempool_free(iscsi->task_pool);
 }
 
@@ -508,24 +480,23 @@ void spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
 
 	if (pdu->ref == 0) {
 		if (pdu->mobj) {
-			rte_mempool_put(pdu->mobj->mp, (void *)pdu->mobj);
+			spdk_mempool_put(pdu->mobj->mp, (void *)pdu->mobj);
 		}
 
 		if (pdu->data && !pdu->data_from_mempool) {
 			free(pdu->data);
 		}
 
-		rte_mempool_put(g_spdk_iscsi.pdu_pool, (void *)pdu);
+		spdk_mempool_put(g_spdk_iscsi.pdu_pool, (void *)pdu);
 	}
 }
 
 struct spdk_iscsi_pdu *spdk_get_pdu(void)
 {
 	struct spdk_iscsi_pdu *pdu;
-	int rc;
 
-	rc = rte_mempool_get(g_spdk_iscsi.pdu_pool, (void **)&pdu);
-	if ((rc < 0) || !pdu) {
+	pdu = spdk_mempool_get(g_spdk_iscsi.pdu_pool);
+	if (!pdu) {
 		SPDK_ERRLOG("Unable to get PDU\n");
 		abort();
 	}
