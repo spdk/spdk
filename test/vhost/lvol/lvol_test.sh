@@ -14,8 +14,6 @@ ctrl_type="vhost_scsi"
 use_fs=false
 nested_lvol=false
 distribute_cores=false
-base_bdev_size=10000
-nest_bdev_size=""
 
 function usage()
 {
@@ -43,6 +41,26 @@ function usage()
     echo "                          on different CPU cores instead of single core."
     echo "                          Default: False"
     exit 0
+}
+
+function get_lvs_free_mb()
+{
+    local lvs_uuid=$1
+    local fc=$($rpc_py get_lvol_stores | jq --arg lvs "$lvs_uuid" '.[] | select(.uuid==$lvs) .free_clusters')
+    local cs=$($rpc_py get_lvol_stores | jq --arg lvs "$lvs_uuid" '.[] | select(.uuid==$lvs) .cluster_size')
+
+    # Change to MB's
+    free_mb=$((fc*cs/1024/1024))
+}
+
+function get_lbd_size()
+{
+    local lbd_name=$1
+    local bs=$($rpc_py get_bdevs | jq --arg lbd "$lbd_name" '.[] | select(.name==$lbd) .block_size')
+    local nb=$($rpc_py get_bdevs | jq --arg lbd "$lbd_name" '.[] | select(.name==$lbd) .num_blocks')
+
+    # Change to MB's
+    blk_dev_size=$((bs*nb/1024/1024))
 }
 
 while getopts 'xh-:' optchar; do
@@ -80,7 +98,7 @@ is lower than number of requested disks for test ($max_disks)"
 fi
 
 if $distribute_cores; then
-	# FIXME: this need to be handled entirely in common.sh
+    # FIXME: this need to be handled entirely in common.sh
     source $BASE_DIR/autotest.config
 fi
 
@@ -119,8 +137,14 @@ done
 if $nested_lvol; then
     for lvol_store in "${lvol_stores[@]}"; do
 
+        # Divide free space on lvol store into roughly equal sized lvol bdevs
+        # If nested=true then divide by vm_count + 1 because
+        # 1 extra lvol bdev per lvol store is needed to be used as a base for
+        # nested lvol store with nested lvol bdevs
+        get_lvs_free_mb $lvol_store
+        size=$((free_mb/((vm_count-i+1))))
         echo "INFO: Creating lvol bdev on lvol store $lvol_store"
-        lb_name=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_nest 16000)
+        lb_name=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_nest $size)
         lvol_bdevs+=("$lb_name")
 
         echo "INFO: Creating nested lvol store on lvol bdev: $lb_name"
@@ -132,9 +156,12 @@ fi
 # For each VM create one lvol bdev on each 'normal' and nested lvol store
 for (( i=0; i<$vm_count; i++)); do
     bdevs=()
+
     echo "INFO: Creating lvol bdevs for VM $i"
     for lvol_store in "${lvol_stores[@]}"; do
-        lb_name=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_$i 10000)
+        get_lvs_free_mb $lvol_store
+        size=$((free_mb/((vm_count-i))))
+        lb_name=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_$i $size)
         lvol_bdevs+=("$lb_name")
         bdevs+=("$lb_name")
     done
@@ -142,7 +169,9 @@ for (( i=0; i<$vm_count; i++)); do
     if $nested_lvol; then
         echo "INFO: Creating nested lvol bdevs for VM $i"
         for lvol_store in "${nest_lvol_stores[@]}"; do
-            lb_guid=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_nest_$i 2000)
+            get_lvs_free_mb $lvol_store
+            size=$((free_mb/((vm_count-i))))
+            lb_guid=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_nest_$i $size)
             nest_lvol_bdevs+=("$lb_guid")
             bdevs+=("$lb_guid")
         done
@@ -172,8 +201,10 @@ for (( i=0; i<$vm_count; i++)); do
     elif [[ "$ctrl_type" == "vhost_blk" ]]; then
         disk=""
         for (( j=0; j<${#bdevs[@]}; j++)); do
+            get_lbd_size ${bdevs[$j]}
+
             $rpc_py construct_vhost_blk_controller naa.$j.$i ${bdevs[$j]} $mask_arg
-            disk+="${j}_size_1500M:"
+            disk+="${j}_size_${blk_dev_size}M:"
         done
         disk="${disk::-1}"
         setup_cmd+=" --disk=$disk"
