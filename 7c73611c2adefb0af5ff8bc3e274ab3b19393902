@@ -1,0 +1,153 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a7a2e0a_bdcd5cc8",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-08T17:59:44Z",
+      "side": 1,
+      "message": "could this be moved to include/spdk/stdinc.h?\nI guess this is fine, but while here - is it pthread_np.h that\u0027s really required here? Could we include  \u003csys/cpuset.h\u003e instead?",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 23
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23792ef0_ec892a5f",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-08T17:59:44Z",
+      "side": 1,
+      "message": "could you add the license text here?\n\nAlso, does this file need to be in env_dpdk? I cannot see any direct DPDK references here.\n---\nSPDK does not directly depend on DPDK. We have our own abstraction layer for EAL. One EAL implementation makes use of DPDK - and it\u0027s placed in lib/env_dpdk. Currently there are no other supported EAL backends, but  there\u0027s some work going on that already.\n\nSince this file is not DPDK-specific I suggest moving it to lib/util",
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c30ca3f_ae37543d",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-08T17:59:44Z",
+      "side": 1,
+      "message": "this makes a good call for unit tests, could you add at least some very basic ones?",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 18
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fb2387c_2704bfc1",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-08T17:59:44Z",
+      "side": 1,
+      "message": "could you add brackets for those statements?\nThis will be soon enforced by astyle - https://review.gerrithub.io/c/390914/",
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec86172b_4997947a",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-08T17:59:44Z",
+      "side": 1,
+      "message": "is this change intended? I think it should remain as CPU_ZERO as new_cpuset not of spdk_cpuset_t type",
+      "range": {
+        "startLine": 248,
+        "startChar": 1,
+        "endLine": 248,
+        "endChar": 14
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e521318d_5ccc007f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-08T17:59:44Z",
+      "side": 1,
+      "message": "this could probably use some define\ne.g. SPDK_CPUSET_STR_MAX_LEN",
+      "range": {
+        "startLine": 519,
+        "startChar": 15,
+        "endLine": 519,
+        "endChar": 19
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b425c6a_df85f3ed",
+        "filename": "test/unit/lib/vhost/vhost.c/vhost_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-08T17:59:44Z",
+      "side": 1,
+      "message": "is this declaration required here?",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 52
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
