@@ -47,6 +47,9 @@
 
 #define BLOB_CRC32C_INITIAL    0xffffffffUL
 
+static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
+static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
+
 static inline size_t
 divide_round_up(size_t num, size_t divisor)
 {
@@ -2532,7 +2535,8 @@ spdk_bs_total_data_cluster_count(struct spdk_blob_store *bs)
 	return bs->total_data_clusters;
 }
 
-int spdk_bs_register_md_thread(struct spdk_blob_store *bs)
+static int
+spdk_bs_register_md_thread(struct spdk_blob_store *bs)
 {
 	bs->md_target.md_channel = spdk_get_io_channel(&bs->md_target);
 	if (!bs->md_target.md_channel) {
@@ -2543,7 +2547,8 @@ int spdk_bs_register_md_thread(struct spdk_blob_store *bs)
 	return 0;
 }
 
-int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs)
+static int
+spdk_bs_unregister_md_thread(struct spdk_blob_store *bs)
 {
 	spdk_put_io_channel(bs->md_target.md_channel);
 
