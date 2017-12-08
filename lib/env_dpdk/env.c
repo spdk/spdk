@@ -177,6 +177,12 @@ spdk_mempool_create(const char *name, size_t count,
 	return (struct spdk_mempool *)mp;
 }
 
+char *
+spdk_mempool_get_name(struct spdk_mempool *mp)
+{
+	return ((struct rte_mempool *)mp)->name;
+}
+
 void
 spdk_mempool_free(struct spdk_mempool *mp)
 {

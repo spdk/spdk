@@ -155,6 +155,11 @@ struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
 		size_t ele_size, size_t cache_size, int socket_id);
 
 /**
+ * Get the name of a mempool
+ */
+char *spdk_mempool_get_name(struct spdk_mempool *mp);
+
+/**
  * Free a memory pool.
  */
 void spdk_mempool_free(struct spdk_mempool *mp);
