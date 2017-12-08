@@ -349,11 +349,30 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 	return crc32c;
 }
 
+static void
+spdk_pdu_data_buf_init(struct spdk_mempool *mp, struct spdk_mobj *m)
+{
+	uint64_t *phys_addr;
+	ptrdiff_t off;
+
+	m->mp = mp;
+	m->buf = (uint8_t *)m + sizeof(struct spdk_mobj);
+	m->buf = (void *)((unsigned long)((uint8_t *)m->buf + 512) & ~511UL);
+	off = (uint64_t)(uint8_t *)m->buf - (uint64_t)(uint8_t *)m;
+
+	/*
+	 * we store the physical address in a 64bit unsigned integer
+	 * right before the 512B aligned buffer area.
+	 */
+	phys_addr = (uint64_t *)m->buf - 1;
+	*phys_addr = spdk_mempool_virt2phy(mp, m) + off;
+}
+
 int
 spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 {
 	struct spdk_iscsi_pdu *pdu;
-	struct rte_mempool *pool;
+	struct spdk_mempool *pool;
 	uint32_t crc32c;
 	int ahs_len;
 	int data_len;
@@ -441,11 +460,12 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 				conn->pdu_in_progress = NULL;
 				return SPDK_ISCSI_CONNECTION_FATAL;
 			}
-			rte_mempool_get(pool, (void **)&pdu->mobj);
+			pdu->mobj = spdk_mempool_get(pool);
 			if (pdu->mobj == NULL) {
 				*_pdu = NULL;
 				return SPDK_SUCCESS;
 			}
+			spdk_pdu_data_buf_init(pool, pdu->mobj);
 			pdu->data_buf = pdu->mobj->buf;
 		}
 
@@ -4460,7 +4480,7 @@ void spdk_free_sess(struct spdk_iscsi_sess *sess)
 	spdk_iscsi_param_free(sess->params);
 	free(sess->conns);
 	spdk_scsi_port_free(&sess->initiator_port);
-	rte_mempool_put(g_spdk_iscsi.session_pool, (void *)sess);
+	spdk_mempool_put(g_spdk_iscsi.session_pool, (void *)sess);
 }
 
 static int
@@ -4471,8 +4491,8 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 	struct spdk_iscsi_sess *sess;
 	int rc;
 
-	rc = rte_mempool_get(g_spdk_iscsi.session_pool, (void **)&sess);
-	if ((rc < 0) || !sess) {
+	sess = spdk_mempool_get(g_spdk_iscsi.session_pool);
+	if (!sess) {
 		SPDK_ERRLOG("Unable to get session object\n");
 		SPDK_ERRLOG("MaxSessions set to %d\n", g_spdk_iscsi.MaxSessions);
 		return -ENOMEM;
