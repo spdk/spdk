@@ -2632,9 +2632,9 @@ void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
 
 /* END spdk_bs_md_create_blob */
 
-/* START spdk_bs_md_resize_blob */
+/* START spdk_blob_resize */
 int
-spdk_bs_md_resize_blob(struct spdk_blob *_blob, uint64_t sz)
+spdk_blob_resize(struct spdk_blob *_blob, uint64_t sz)
 {
 	struct spdk_blob_data	*blob = __blob_to_data(_blob);
 	int			rc;
@@ -2659,7 +2659,7 @@ spdk_bs_md_resize_blob(struct spdk_blob *_blob, uint64_t sz)
 	return 0;
 }
 
-/* END spdk_bs_md_resize_blob */
+/* END spdk_blob_resize */
 
 
 /* START spdk_bs_md_delete_blob */
@@ -2796,15 +2796,15 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	_spdk_blob_load(seq, blob, _spdk_bs_md_open_blob_cpl, blob);
 }
 
-/* START spdk_bs_md_sync_blob */
+/* START spdk_blob_sync_md */
 static void
-_spdk_blob_sync_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_blob_sync_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
-void spdk_bs_md_sync_blob(struct spdk_blob *_blob,
-			  spdk_blob_op_complete cb_fn, void *cb_arg)
+void
+spdk_blob_sync_md(struct spdk_blob *_blob, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_data	*blob = __blob_to_data(_blob);
 	struct spdk_bs_cpl	cpl;
@@ -2837,12 +2837,12 @@ void spdk_bs_md_sync_blob(struct spdk_blob *_blob,
 		return;
 	}
 
-	_spdk_blob_persist(seq, blob, _spdk_blob_sync_cpl, blob);
+	_spdk_blob_persist(seq, blob, _spdk_blob_sync_md_cpl, blob);
 }
 
-/* END spdk_bs_md_sync_blob */
+/* END spdk_blob_sync_md */
 
-/* START spdk_bs_md_close_blob */
+/* START spdk_blob_close */
 
 static void
 _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
@@ -2859,8 +2859,7 @@ _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
-void spdk_bs_md_close_blob(struct spdk_blob **b,
-			   spdk_blob_op_complete cb_fn, void *cb_arg)
+void spdk_blob_close(struct spdk_blob **b, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_cpl	cpl;
 	struct spdk_blob_data	*blob;
@@ -2901,7 +2900,7 @@ void spdk_bs_md_close_blob(struct spdk_blob **b,
 	_spdk_blob_persist(seq, blob, _spdk_blob_close_cpl, b);
 }
 
-/* END spdk_bs_md_close_blob */
+/* END spdk_blob_close */
 
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
@@ -3058,12 +3057,12 @@ spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
 	ctx->cb_arg = cb_arg;
 
 	/* Close the existing blob */
-	spdk_bs_md_close_blob(b, _spdk_bs_iter_close_cpl, ctx);
+	spdk_blob_close(b, _spdk_bs_iter_close_cpl, ctx);
 }
 
 int
-spdk_blob_md_set_xattr(struct spdk_blob *_blob, const char *name, const void *value,
-		       uint16_t value_len)
+spdk_blob_set_xattr(struct spdk_blob *_blob, const char *name, const void *value,
+		    uint16_t value_len)
 {
 	struct spdk_blob_data	*blob = __blob_to_data(_blob);
 	struct spdk_xattr 	*xattr;
@@ -3106,7 +3105,7 @@ spdk_blob_md_set_xattr(struct spdk_blob *_blob, const char *name, const void *va
 }
 
 int
-spdk_blob_md_remove_xattr(struct spdk_blob *_blob, const char *name)
+spdk_blob_remove_xattr(struct spdk_blob *_blob, const char *name)
 {
 	struct spdk_blob_data	*blob = __blob_to_data(_blob);
 	struct spdk_xattr	*xattr;
@@ -3137,8 +3136,8 @@ spdk_blob_md_remove_xattr(struct spdk_blob *_blob, const char *name)
 }
 
 int
-spdk_bs_md_get_xattr_value(struct spdk_blob *_blob, const char *name,
-			   const void **value, size_t *value_len)
+spdk_blob_get_xattr_value(struct spdk_blob *_blob, const char *name,
+			  const void **value, size_t *value_len)
 {
 	struct spdk_blob_data	*blob = __blob_to_data(_blob);
 	struct spdk_xattr	*xattr;
@@ -3160,8 +3159,7 @@ struct spdk_xattr_names {
 };
 
 int
-spdk_bs_md_get_xattr_names(struct spdk_blob *_blob,
-			   struct spdk_xattr_names **names)
+spdk_blob_get_xattr_names(struct spdk_blob *_blob, struct spdk_xattr_names **names)
 {
 	struct spdk_blob_data	*blob = __blob_to_data(_blob);
 	struct spdk_xattr	*xattr;

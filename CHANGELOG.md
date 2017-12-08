@@ -35,6 +35,18 @@ vfio-pci driver should trigger one "remove" uevent at the very beginning of the 
 of pci driver, this will make sure the SPDK could detect the event and release the vfio-attached
 device Fd and related resource when the device removed.
 
+### Blobstore
+
+A number of functions have been renamed:
+
+spdk_bs_md_resize_blob => spdk_blob_resize
+spdk_bs_md_sync_blob => spdk_blob_sync_md
+spdk_bs_md_close_blob => spdk_blob_close
+spdk_bs_md_get_xattr_names => spdk_blob_get_xattr_names
+spdk_bs_md_get_xattr_value => spdk_blob_get_xattr_value
+spdk_blob_md_set_xattr => spdk_blob_set_xattr
+spdk_blob_md_remove_xattr => spdk_blob_remove_xattr
+
 ## v17.10: Logical Volumes
 
 ### New dependencies
