@@ -177,6 +177,22 @@ spdk_mempool_create(const char *name, size_t count,
 	return (struct spdk_mempool *)mp;
 }
 
+char *
+spdk_mempool_get_name(struct spdk_mempool *mp)
+{
+	return ((struct rte_mempool *)mp)->name;
+}
+
+uint64_t
+spdk_mempool_virt2phy(struct spdk_mempool *mp, void *obj)
+{
+#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+	return rte_mempool_virt2iova(obj);
+#else
+	return rte_mempool_virt2phy((struct rte_mempool *)mp, obj);
+#endif
+}
+
 void
 spdk_mempool_free(struct spdk_mempool *mp)
 {
