@@ -137,8 +137,8 @@ delete_blob(void *arg1, int bserrno)
 		return;
 	}
 
-	spdk_bs_md_delete_blob(hello_context->bs, hello_context->blobid,
-			       delete_complete, hello_context);
+	spdk_bs_delete_blob(hello_context->bs, hello_context->blobid,
+			    delete_complete, hello_context);
 }
 
 /*
@@ -339,8 +339,8 @@ blob_create_complete(void *arg1, spdk_blob_id blobid, int bserrno)
 	SPDK_NOTICELOG("new blob id %" PRIu64 "\n", hello_context->blobid);
 
 	/* We have to open the blob before we can do things like resize. */
-	spdk_bs_md_open_blob(hello_context->bs, hello_context->blobid,
-			     open_complete, hello_context);
+	spdk_bs_open_blob(hello_context->bs, hello_context->blobid,
+			  open_complete, hello_context);
 }
 
 /*
@@ -350,8 +350,7 @@ static void
 create_blob(struct hello_context_t *hello_context)
 {
 	SPDK_NOTICELOG("entry\n");
-	spdk_bs_md_create_blob(hello_context->bs, blob_create_complete,
-			       hello_context);
+	spdk_bs_create_blob(hello_context->bs, blob_create_complete, hello_context);
 }
 
 /*
