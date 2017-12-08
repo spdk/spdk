@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7639fd78_485d8c0f",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-08T20:58:35Z",
+      "side": 1,
+      "message": "could you append:\n|| true\nto the end of the line? this way you won\u0027t have to change set -e",
+      "range": {
+        "startLine": 73,
+        "startChar": 52,
+        "endLine": 73,
+        "endChar": 53
+      },
+      "revId": "8fcb437f904778431b48d938a6a866fa3d0a11e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
