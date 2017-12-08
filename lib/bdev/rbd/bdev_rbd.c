@@ -303,7 +303,7 @@ bdev_rbd_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	}
 }
 
-static void
+static int
 bdev_rbd_io_poll(void *arg)
 {
 	struct bdev_rbd_io_channel *ch = arg;
@@ -340,6 +340,7 @@ bdev_rbd_io_poll(void *arg)
 		rbd_aio_release(comps[i]);
 		spdk_bdev_io_complete(bdev_io, status);
 	}
+	return rc;
 }
 
 static void

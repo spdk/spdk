@@ -58,10 +58,11 @@ rpc_get_listen_addr(void)
 	return spdk_conf_section_get_val(sp, "Listen");
 }
 
-static void
+static int
 spdk_rpc_subsystem_poll(void *arg)
 {
 	spdk_rpc_accept();
+	return 1;
 }
 
 void

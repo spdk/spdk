@@ -62,7 +62,7 @@ spdk_nvmf_tgt_opts_init(struct spdk_nvmf_tgt_opts *opts)
 	opts->max_io_size = SPDK_NVMF_DEFAULT_MAX_IO_SIZE;
 }
 
-static void
+static int
 spdk_nvmf_poll_group_poll(void *ctx)
 {
 	struct spdk_nvmf_poll_group *group = ctx;
@@ -72,9 +72,10 @@ spdk_nvmf_poll_group_poll(void *ctx)
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		rc = spdk_nvmf_transport_poll_group_poll(tgroup);
 		if (rc < 0) {
-			return;
+			return -1;
 		}
 	}
+	return 1;
 }
 
 static int
@@ -113,7 +114,7 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 {
 	struct spdk_nvmf_poll_group *group = ctx_buf;
@@ -142,6 +143,7 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	}
 
 	free(group->sgroups);
+	return 1;
 }
 
 struct spdk_nvmf_tgt *

@@ -65,7 +65,7 @@ struct spdk_copy_module_if {
 	 *
 	 *  Modules are not required to define this function.
 	 */
-	void	(*module_fini)(void *ctx);
+	int	(*module_fini)(void *ctx);
 
 	/** Function called to return a text string representing the
 	 *   module's configuration options for inclusion in an

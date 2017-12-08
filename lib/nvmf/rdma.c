@@ -735,12 +735,13 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	return 0;
 }
 
-static void
+static int
 nvmf_rdma_handle_disconnect(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair = ctx;
 
 	spdk_nvmf_ctrlr_disconnect(qpair);
+	return 1;
 }
 
 static int

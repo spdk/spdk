@@ -261,7 +261,7 @@ struct call_thread {
 	spdk_thread_fn cpl;
 };
 
-static void
+static int
 spdk_on_thread(void *ctx)
 {
 	struct call_thread *ct = ctx;
@@ -278,6 +278,7 @@ spdk_on_thread(void *ctx)
 	} else {
 		spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ctx);
 	}
+	return 1;
 }
 
 void
@@ -462,20 +463,20 @@ spdk_get_io_channel(void *io_device)
 	return ch;
 }
 
-static void
+static int
 _spdk_put_io_channel(void *arg)
 {
 	struct spdk_io_channel *ch = arg;
 
 	if (ch->ref == 0) {
 		SPDK_ERRLOG("ref already zero\n");
-		return;
+		return -1;
 	}
 
 	ch->ref--;
 
 	if (ch->ref > 0) {
-		return;
+		return -1;
 	}
 
 	ch->destroy_cb(ch->dev->io_device, spdk_io_channel_get_ctx(ch));
@@ -488,6 +489,7 @@ _spdk_put_io_channel(void *arg)
 		_spdk_io_device_attempt_free(ch->dev);
 	}
 	free(ch);
+	return 1;
 }
 
 void
@@ -527,7 +529,7 @@ struct call_channel {
 	spdk_channel_for_each_cpl cpl;
 };
 
-static void
+static int
 _call_completion(void *ctx)
 {
 	struct call_channel *ch_ctx = ctx;
@@ -536,9 +538,10 @@ _call_completion(void *ctx)
 		ch_ctx->cpl(ch_ctx->io_device, ch_ctx->ctx, ch_ctx->status);
 	}
 	free(ch_ctx);
+	return 1;
 }
 
-static void
+static int
 _call_channel(void *ctx)
 {
 	struct call_channel *ch_ctx = ctx;
@@ -574,7 +577,7 @@ _call_channel(void *ctx)
 				ch_ctx->cur_thread = thread;
 				pthread_mutex_unlock(&g_devlist_mutex);
 				spdk_thread_send_msg(thread, _call_channel, ch_ctx);
-				return;
+				return -1;
 			}
 		}
 		thread = TAILQ_NEXT(thread, tailq);
@@ -585,6 +588,7 @@ end:
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	spdk_thread_send_msg(ch_ctx->orig_thread, _call_completion, ch_ctx);
+	return 1;
 }
 
 void

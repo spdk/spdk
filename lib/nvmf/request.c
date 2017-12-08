@@ -44,7 +44,7 @@
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
 
-static void
+static int
 spdk_nvmf_request_complete_on_qpair(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
@@ -62,6 +62,7 @@ spdk_nvmf_request_complete_on_qpair(void *ctx)
 	if (spdk_nvmf_transport_req_complete(req)) {
 		SPDK_ERRLOG("Transport request completion error!\n");
 	}
+	return 1;
 }
 
 int
@@ -130,7 +131,7 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum spdk_nvmf_qpair_type qpair_
 	}
 }
 
-static void
+static int
 spdk_nvmf_request_exec_on_master(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
@@ -153,6 +154,7 @@ spdk_nvmf_request_exec_on_master(void *ctx)
 	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
 		spdk_nvmf_request_complete(req);
 	}
+	return 1;
 }
 
 void
