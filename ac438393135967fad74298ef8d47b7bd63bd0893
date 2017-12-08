@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a7d2556_90a8ce05",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T07:18:10Z",
+      "side": 1,
+      "message": "as on line 207 - you should use \"vm_ssh $vm_num (cmd)\"\n\nAlso - I am totally against using integrity_vm.sh script. It\u0027s main purpose is to create filesystem on scsi/blk disk and run kernel compilation on it, while lvol_test.sh doet just FIO traffic. I don\u0027t think mixing these tests/scripts is a good idea.",
+      "range": {
+        "startLine": 213,
+        "startChar": 12,
+        "endLine": 213,
+        "endChar": 112
+      },
+      "revId": "ac438393135967fad74298ef8d47b7bd63bd0893",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c21830c_5415fcf5",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T07:18:10Z",
+      "side": 1,
+      "message": "as on line 207 - you should use \"vm_ssh $vm_num (cmd)\"",
+      "range": {
+        "startLine": 216,
+        "startChar": 12,
+        "endLine": 216,
+        "endChar": 111
+      },
+      "revId": "ac438393135967fad74298ef8d47b7bd63bd0893",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
