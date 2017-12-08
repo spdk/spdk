@@ -63,6 +63,14 @@ spdk_nvmf_shutdown_cb(void)
 	fprintf(stdout, "   NVMF shutdown signal\n");
 	fprintf(stdout, "=========================\n");
 
+	if (g_tgt.state < NVMF_TGT_RUNNING) {
+		g_tgt.state = NVMF_TGT_SHUTDOWN_REQ;
+		return;
+	} else if (g_tgt.state > NVMF_TGT_RUNNING) {
+		/* Already in Shutdown status, ignore the signal */
+		return;
+	}
+
 	g_tgt.state = NVMF_TGT_FINI_STOP_ACCEPTOR;
 	nvmf_tgt_advance_state(NULL, NULL);
 }
@@ -165,7 +173,11 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 static void
 nvmf_tgt_create_poll_group_done(void *ctx)
 {
-	g_tgt.state = NVMF_TGT_INIT_START_ACCEPTOR;
+	if (g_tgt.state == NVMF_TGT_SHUTDOWN_REQ) {
+		g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
+	} else {
+		g_tgt.state = NVMF_TGT_INIT_START_ACCEPTOR;
+	}
 	nvmf_tgt_advance_state(NULL, NULL);
 }
 
@@ -198,8 +210,6 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 		case NVMF_TGT_INIT_NONE: {
 			uint32_t core;
 
-			g_tgt.state = NVMF_TGT_INIT_PARSE_CONFIG;
-
 			/* Find the maximum core number */
 			SPDK_ENV_FOREACH_CORE(core) {
 				g_num_poll_groups = spdk_max(g_num_poll_groups, core + 1);
@@ -214,6 +224,12 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			}
 
 			g_tgt.core = spdk_env_get_first_core();
+
+			if (g_tgt.state == NVMF_TGT_SHUTDOWN_REQ) {
+				g_tgt.state = NVMF_TGT_FINI_FREE_RESOURCES;
+			} else {
+				g_tgt.state = NVMF_TGT_INIT_PARSE_CONFIG;
+			}
 			break;
 		}
 		case NVMF_TGT_INIT_PARSE_CONFIG:
@@ -224,7 +240,12 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 				rc = -EINVAL;
 				break;
 			}
-			g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUPS;
+
+			if (g_tgt.state == NVMF_TGT_SHUTDOWN_REQ) {
+				g_tgt.state = NVMF_TGT_FINI_FREE_RESOURCES;
+			} else {
+				g_tgt.state = NVMF_TGT_INIT_CREATE_POLL_GROUPS;
+			}
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUPS:
 			/* Send a message to each thread and create a poll group */

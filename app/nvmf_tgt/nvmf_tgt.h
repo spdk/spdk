@@ -62,6 +62,7 @@ enum nvmf_tgt_state {
 	NVMF_TGT_FINI_FREE_RESOURCES,
 	NVMF_TGT_STOPPED,
 	NVMF_TGT_ERROR,
+	NVMF_TGT_SHUTDOWN_REQ,
 };
 
 struct nvmf_tgt {
