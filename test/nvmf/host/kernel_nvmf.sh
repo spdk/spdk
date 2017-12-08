@@ -54,6 +54,19 @@ $rootdir/examples/nvme/identify/identify -r "\
 	trsvcid:$NVMF_PORT \
 	subnqn:nqn.2014-08.org.nvmexpress.discovery" -t all
 
+$rootdir/examples/nvme/perf/perf -q 128 -s 4096 -w randrw -M 50 -r "\
+	trtype:RDMA \
+	adrfam:IPv4 \
+	traddr:$NVMF_FIRST_TARGET_IP \
+	trsvcid:$NVMF_PORT \
+	subnqn:$subsystemname" -t 1
+
+LD_PRELOAD=$rootdir/examples/nvme/fio_plugin/fio_plugin /usr/src/fio/fio $rootdir/examples/nvme/fio_plugin/example_config.fio --filename="\
+	trtype=RDMA \
+	adrfam=IPv4 \
+	traddr=$NVMF_FIRST_TARGET_IP \
+	trsvcid=4420 ns=1"
+
 rm -rf /sys/kernel/config/nvmet/ports/1/subsystems/$subsystemname
 
 echo 0 > /sys/kernel/config/nvmet/subsystems/$subsystemname/namespaces/1/enable
