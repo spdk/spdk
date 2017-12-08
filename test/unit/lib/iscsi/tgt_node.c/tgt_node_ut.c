@@ -324,6 +324,9 @@ node_access_multi_initiator_groups_cases(void)
 	char *iqn, *addr;
 	bool result;
 
+	memset(&ig1, 0, sizeof(ig1));
+	memset(&ig2, 0, sizeof(ig2));
+
 	/* target initialization */
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
 	tgtnode.name = IQN1;
@@ -574,6 +577,8 @@ allow_iscsi_name_multi_maps_case(void)
 	struct spdk_scsi_dev scsi_dev;
 	char *iqn;
 	bool result;
+
+	memset(&ig, 0, sizeof(ig));
 
 	/* target initialization */
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
