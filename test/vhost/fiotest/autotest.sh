@@ -178,16 +178,16 @@ for vm_conf in ${vms[@]}; do
 					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
 
 					echo "INFO: Trying to remove nonexistent device on existing controller"
-					if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 1 > /dev/null; then
+					if $rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 1 > /dev/null; then
 						echo "ERROR: Removing nonexistent device (1) from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
 						false
 					fi
 
 					echo "INFO: Trying to remove existing device from a controller"
-					$rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0
+					$rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0
 
 					echo "INFO: Trying to remove a just-deleted device from a controller again"
-					if $rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0 > /dev/null; then
+					if $rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0 > /dev/null; then
 						echo "ERROR: Removing device 0 from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
 						false
 					fi
@@ -204,7 +204,7 @@ for vm_conf in ${vms[@]}; do
 			fi
 
 			echo "INFO: Trying to remove device from nonexistent scsi controller"
-			if $rpc_py remove_vhost_scsi_dev vhost.nonexistent.name 0; then
+			if $rpc_py remove_vhost_scsi_target vhost.nonexistent.name 0; then
 				echo "ERROR: Removing device from nonexistent scsi controller succeeded, but it shouldn't"
 				false
 			fi
@@ -255,7 +255,7 @@ if [[ $test_type == "spdk_vhost_scsi" ]]; then
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
 				echo "INFO: Hotdetach test. Trying to remove existing device from a controller naa.$disk.${conf[0]}"
-				$rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0
+				$rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0
 
 				sleep 0.1
 
@@ -354,7 +354,7 @@ if ! $no_shutdown; then
 					disk=${disk%%_*}
 					echo "INFO: Removing all vhost devices from controller naa.$disk.${conf[0]}"
 					if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
-						$rpc_py remove_vhost_scsi_dev naa.$disk.${conf[0]} 0
+						$rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0
 					fi
 
 					$rpc_py remove_vhost_controller naa.$disk.${conf[0]}
