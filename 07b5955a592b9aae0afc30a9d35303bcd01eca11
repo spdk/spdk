@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "003f60ef_86ccb275",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T08:11:45Z",
+      "side": 1,
+      "message": "Test plan mentions only 3 test cases:\nrw 4k 1 verify\nrandrw 128k 32 verify\nrandwrite 1m 128 verify\n\nPlease update either the test plan or the test cases here.",
+      "range": {
+        "startLine": 36,
+        "startChar": 1,
+        "endLine": 39,
+        "endChar": 16
+      },
+      "revId": "07b5955a592b9aae0afc30a9d35303bcd01eca11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aed266e6_d6294e13",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T08:11:45Z",
+      "side": 1,
+      "message": "Changed operation to NVMe bdevs, so Malloc references can be removed.",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 22
+      },
+      "revId": "07b5955a592b9aae0afc30a9d35303bcd01eca11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "312280b0_24af5a8d",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T08:11:45Z",
+      "side": 1,
+      "message": "Why do you call gen_nvme.sh and then pipe it to a grep, instead of just calling:\n\"lspci -mm -n | grep 0108 | tr -d \u0027\"\u0027 | awk -F \" \" \u0027{print \"0000:\"$1}\u0027\"? (which is in gen_nvme.sh by the way)\nThis also gives you a list of PCIe addresses and you don\u0027t have to call out an external script",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 108
+      },
+      "revId": "07b5955a592b9aae0afc30a9d35303bcd01eca11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e24c551_7ee7dca6",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T08:11:45Z",
+      "side": 1,
+      "message": "Is 1 second really enough?",
+      "range": {
+        "startLine": 108,
+        "startChar": 13,
+        "endLine": 108,
+        "endChar": 14
+      },
+      "revId": "07b5955a592b9aae0afc30a9d35303bcd01eca11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab8850c2_2f96c5d1",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T08:11:45Z",
+      "side": 1,
+      "message": "change it to:\nrm -f ./local-job* or something like that",
+      "range": {
+        "startLine": 146,
+        "startChar": 0,
+        "endLine": 146,
+        "endChar": 33
+      },
+      "revId": "07b5955a592b9aae0afc30a9d35303bcd01eca11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c2a5645_43ae8a82",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T08:11:45Z",
+      "side": 1,
+      "message": "Commented - should it be here?",
+      "range": {
+        "startLine": 151,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 8
+      },
+      "revId": "07b5955a592b9aae0afc30a9d35303bcd01eca11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
