@@ -51,7 +51,7 @@ fi
 run_test test/nvmf/host/bdevperf.sh
 run_test test/nvmf/host/identify.sh
 run_test test/nvmf/host/perf.sh
-run_test test/nvmf/host/identify_kernel_nvmf.sh
+run_test test/nvmf/host/kernel_nvmf.sh
 run_test test/nvmf/host/fio.sh
 
 timing_exit host
