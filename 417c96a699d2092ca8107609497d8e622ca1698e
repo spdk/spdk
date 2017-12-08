@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4048b3bd_644e3d2d",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-08T22:37:40Z",
+      "side": 1,
+      "message": "I think you want a longer poller than 1 microsecond. Probably at least several hundred microseconds. Resets are long operations.",
+      "revId": "417c96a699d2092ca8107609497d8e622ca1698e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa93819d_cdc92357",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-08T22:37:40Z",
+      "side": 1,
+      "message": "You can delete _bdev_process_reset and just call spdk_for_each_channel here. Then inside bdev_aio_reset you can just call this timer callback directly.",
+      "revId": "417c96a699d2092ca8107609497d8e622ca1698e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
