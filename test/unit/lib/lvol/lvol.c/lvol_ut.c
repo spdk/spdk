@@ -88,8 +88,8 @@ struct lvol_ut_bs_dev {
 };
 
 void
-spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
-		     spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
+		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob *next;
 	int _errno = 0;
@@ -105,8 +105,8 @@ spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
 }
 
 void
-spdk_bs_md_iter_first(struct spdk_blob_store *bs,
-		      spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+spdk_bs_iter_first(struct spdk_blob_store *bs,
+		   spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob *first;
 	int _errno = 0;
@@ -265,8 +265,8 @@ spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 }
 
 void
-spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
-		       spdk_blob_op_complete cb_fn, void *cb_arg)
+spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
+		    spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob *blob;
 
@@ -323,8 +323,8 @@ spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_
 }
 
 void
-spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
-		     spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
+		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob *blob;
 
@@ -346,8 +346,8 @@ spdk_bs_free_cluster_count(struct spdk_blob_store *bs)
 }
 
 void
-spdk_bs_md_create_blob(struct spdk_blob_store *bs,
-		       spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+spdk_bs_create_blob(struct spdk_blob_store *bs,
+		    spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob *b;
 

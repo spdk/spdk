@@ -135,7 +135,7 @@ spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, 
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
 
-	spdk_bs_md_open_blob(lvol->lvol_store->blobstore, lvol->blob_id, _spdk_lvol_open_cb, req);
+	spdk_bs_open_blob(lvol->lvol_store->blobstore, lvol->blob_id, _spdk_lvol_open_cb, req);
 }
 
 static void
@@ -175,7 +175,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	if (blob_id == lvs->super_blob_id) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "found superblob %"PRIu64"\n", (uint64_t)blob_id);
-		spdk_bs_md_iter_next(bs, &blob, _spdk_load_next_lvol, req);
+		spdk_bs_iter_next(bs, &blob, _spdk_load_next_lvol, req);
 		return;
 	}
 
@@ -217,7 +217,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "added lvol %s\n", lvol->old_name);
 
-	spdk_bs_md_iter_next(bs, &blob, _spdk_load_next_lvol, req);
+	spdk_bs_iter_next(bs, &blob, _spdk_load_next_lvol, req);
 
 	return;
 
@@ -248,7 +248,7 @@ _spdk_close_super_cb(void *cb_arg, int lvolerrno)
 	}
 
 	/* Start loading lvols */
-	spdk_bs_md_iter_first(lvs->blobstore, _spdk_load_next_lvol, req);
+	spdk_bs_iter_first(lvs->blobstore, _spdk_load_next_lvol, req);
 }
 
 static void
@@ -334,7 +334,7 @@ _spdk_lvs_open_super(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 		return;
 	}
 
-	spdk_bs_md_open_blob(bs, blobid, _spdk_lvs_read_uuid, req);
+	spdk_bs_open_blob(bs, blobid, _spdk_lvs_read_uuid, req);
 }
 
 static void
@@ -492,7 +492,7 @@ _spdk_super_blob_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 
 	bs = req->lvol_store->blobstore;
 
-	spdk_bs_md_open_blob(bs, blobid, _spdk_super_blob_create_open_cb, req);
+	spdk_bs_open_blob(bs, blobid, _spdk_super_blob_create_open_cb, req);
 }
 
 static void
@@ -517,7 +517,7 @@ _spdk_lvs_init_cb(void *cb_arg, struct spdk_blob_store *bs, int lvserrno)
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol store initialized\n");
 
 	/* create super blob */
-	spdk_bs_md_create_blob(lvs->blobstore, _spdk_super_blob_create_cb, lvs_req);
+	spdk_bs_create_blob(lvs->blobstore, _spdk_super_blob_create_cb, lvs_req);
 }
 
 void
@@ -738,7 +738,7 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	lvs_req->lvs = lvs;
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "Deleting super blob\n");
-	spdk_bs_md_delete_blob(lvs->blobstore, lvs->super_blob_id, _lvs_destroy_super_cb, lvs_req);
+	spdk_bs_delete_blob(lvs->blobstore, lvs->super_blob_id, _lvs_destroy_super_cb, lvs_req);
 
 	return 0;
 }
@@ -833,7 +833,7 @@ _spdk_lvol_destroy_cb(void *cb_arg, int lvolerrno)
 	}
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "Blob closed on lvol %s\n", lvol->old_name);
 
-	spdk_bs_md_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
+	spdk_bs_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
 }
 
 
@@ -921,7 +921,7 @@ _spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 
 	bs = req->lvol->lvol_store->blobstore;
 
-	spdk_bs_md_open_blob(bs, blobid, _spdk_lvol_create_open_cb, req);
+	spdk_bs_open_blob(bs, blobid, _spdk_lvol_create_open_cb, req);
 }
 
 int
@@ -986,7 +986,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
 	req->lvol = lvol;
 
-	spdk_bs_md_create_blob(lvs->blobstore, _spdk_lvol_create_cb, req);
+	spdk_bs_create_blob(lvs->blobstore, _spdk_lvol_create_cb, req);
 
 	return 0;
 }
@@ -1091,7 +1091,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	req->cb_arg = lvol_req;
 	req->lvol = lvol;
 
-	spdk_bs_md_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
+	spdk_bs_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
 }
 
 void
