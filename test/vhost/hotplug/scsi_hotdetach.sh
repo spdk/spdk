@@ -144,7 +144,7 @@ function hotdetach_tc1() {
     $run_fio &
     last_pid=$!
     sleep 3
-    $rpc_py remove_vhost_scsi_dev naa.Nvme0n1p4.2 0
+    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p4.2 0
     set +xe
     wait $last_pid
     check_fio_retcode "Hotdetach test case 1: Iteration 1." 1 $?
@@ -166,7 +166,7 @@ function hotdetach_tc2() {
     $run_fio &
     last_pid=$!
     sleep 3
-    $rpc_py remove_vhost_scsi_dev naa.Nvme0n1p4.2 0
+    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p4.2 0
     set +xe
     wait $last_pid
     check_fio_retcode "Hotdetach test case 2: Iteration 1." 1 $?
@@ -188,7 +188,7 @@ function hotdetach_tc3() {
     $run_fio &
     last_pid=$!
     sleep 3
-    $rpc_py remove_vhost_scsi_dev naa.Nvme0n1p4.2 0
+    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p4.2 0
     wait $last_pid
     check_fio_retcode "Hotdetach test case 3: Iteration 1." 0 $?
     second_disk=""
@@ -213,7 +213,7 @@ function hotdetach_tc4() {
     $run_fio &
     second_fio_pid=$!
     sleep 3
-    $rpc_py remove_vhost_scsi_dev naa.Nvme0n1p4.2 0
+    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p4.2 0
     set +xe
     wait $first_fio_pid
     check_fio_retcode "Hotdetach test case 4: Iteration 1." 1 $?
