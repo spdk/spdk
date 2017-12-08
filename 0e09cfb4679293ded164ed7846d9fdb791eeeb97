@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dffc85bd_2e8c10b2",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 3
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-08T03:16:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e28512e5_683ac9f2",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 11
+      },
+      "revId": "0e09cfb4679293ded164ed7846d9fdb791eeeb97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a1c98db_fbf8a784",
         "filename": "test/vhost/common/run_vhost.sh",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-12-07T15:04:47Z",
       "side": 1,
       "message": "This is done via autotest.config file which consists masks for QEMU and SPDK.",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 47
+      },
+      "revId": "0e09cfb4679293ded164ed7846d9fdb791eeeb97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bd176f4_2ca9edba",
+        "filename": "test/vhost/common/run_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-08T03:16:54Z",
+      "side": 1,
+      "message": "I know the autotest.config in \"test/vhost/lvol\" but it\u0027s only used for QEMU. In line 54(. vhost/common/common.sh) it\u0027s reload the masks which used for SPDK. In line 31 in \"common.sh\" it reload the masks with \"common/autotest.config\" file. There are different.",
+      "parentUuid": "1a1c98db_fbf8a784",
       "range": {
         "startLine": 35,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "16124e09_8b6ea0dd",
+        "filename": "test/vhost/common/run_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-08T03:16:54Z",
+      "side": 1,
+      "message": "We don\u0027t need to pass these variables. In line 54 it\u0027s load these variables and I change them with \"vhost/lvol/autotest.config\" in line 55.\nI have ran these scripts with \"distribute_cores\" so I am pretty sure these are used when in \"spdk_vhost_run\".",
+      "parentUuid": "33a145c8_2ec13365",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 34
+      },
+      "revId": "0e09cfb4679293ded164ed7846d9fdb791eeeb97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4f90c99_9fd9ff3d",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2017-12-07T15:04:47Z",
       "side": 1,
       "message": "This will probably not work on test pool because each server/VM has only 1 disk",
+      "range": {
+        "startLine": 116,
+        "startChar": 25,
+        "endLine": 116,
+        "endChar": 38
+      },
+      "revId": "0e09cfb4679293ded164ed7846d9fdb791eeeb97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d94607e_5c62c5d2",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-08T03:16:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b4f90c99_9fd9ff3d",
       "range": {
         "startLine": 116,
         "startChar": 25,
