@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f77888c_58603afa",
+        "filename": "include/spdk/vhost.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-08T01:51:09Z",
+      "side": 1,
+      "message": "bdev_name?",
+      "range": {
+        "startLine": 174,
+        "startChar": 10,
+        "endLine": 174,
+        "endChar": 14
+      },
+      "revId": "31b98637ef84b8ac01840372d3cb079fa02e95ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb45ee26_192baf42",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-08T01:51:09Z",
+      "side": 1,
+      "message": "as same as tgt_node.h",
+      "range": {
+        "startLine": 827,
+        "startChar": 9,
+        "endLine": 827,
+        "endChar": 69
+      },
+      "revId": "31b98637ef84b8ac01840372d3cb079fa02e95ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e6ad229_2138fd1f",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1126,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-08T01:51:09Z",
+      "side": 1,
+      "message": "It looks that you omitted Dariusz\u0027s feedback, strdup.\nAnd please take care strdup failure.",
+      "range": {
+        "startLine": 1126,
+        "startChar": 2,
+        "endLine": 1126,
+        "endChar": 33
+      },
+      "revId": "31b98637ef84b8ac01840372d3cb079fa02e95ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce971b5d_fde51b57",
+        "filename": "lib/iscsi/tgt_node.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-08T01:51:09Z",
+      "side": 1,
+      "message": "name_list is bdev_name_list and hence lun_id_list is bdev_lun_id_list?",
+      "range": {
+        "startLine": 107,
+        "startChar": 44,
+        "endLine": 107,
+        "endChar": 55
+      },
+      "revId": "31b98637ef84b8ac01840372d3cb079fa02e95ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0d535d8_f2ab96bc",
+        "filename": "lib/iscsi/tgt_node.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-08T01:51:09Z",
+      "side": 1,
+      "message": "num_bdevs? or num_lun_bdevs?",
+      "range": {
+        "startLine": 107,
+        "startChar": 61,
+        "endLine": 107,
+        "endChar": 69
+      },
+      "revId": "31b98637ef84b8ac01840372d3cb079fa02e95ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
