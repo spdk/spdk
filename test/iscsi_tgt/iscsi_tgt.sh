@@ -53,10 +53,13 @@ fi
 trap - SIGINT SIGTERM EXIT
 kill_stub
 
-# TODO: enable remote NVMe controllers with multi-process so that
-#  we can use the stub for this test
-#Test configure remote NVMe device from rpc
-run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 0
-#Test configure remote NVMe device from conf file
-run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 1
+if [ $SPDK_TEST_NVMF -eq 1 ]; then
+	# TODO: enable remote NVMe controllers with multi-process so that
+	#  we can use the stub for this test
+	# Test configure remote NVMe device from rpc
+	run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 0
+	# Test configure remote NVMe device from conf file
+	run_test ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh 1
+fi
+
 timing_exit iscsi_tgt
