@@ -51,6 +51,19 @@ else
 fi
 rm -f comment.log
 
+echo -n "Checking for use of forbidden library functions..."
+
+git grep -w strcpy -- app examples lib test > badfunc.log || true
+
+if [ -s badfunc.log ]; then
+	echo " Forbidden library functions detected"
+	cat badfunc.log
+	rc=1
+else
+	echo " OK"
+fi
+rm -f badfunc.log
+
 echo -n "Checking blank lines at end of file..."
 
 if ! git grep -I -l -e . -z | \
