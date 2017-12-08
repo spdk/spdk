@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce981e0d_ff25b6b3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-08T19:50:08Z",
+      "side": 1,
+      "message": "instead of kernel 3.13, I would just say older kernels - this is surely not limited to only 3.13",
+      "revId": "a820c2aa4bcd37504bd30e120d35505736e2b9f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
