@@ -530,7 +530,7 @@ _handle_deleted_files(struct spdk_fs_request *req)
 
 		deleted_file = TAILQ_FIRST(&args->op.fs_load.deleted_files);
 		TAILQ_REMOVE(&args->op.fs_load.deleted_files, deleted_file, tailq);
-		spdk_bs_md_delete_blob(fs->bs, deleted_file->id, iter_delete_cb, req);
+		spdk_bs_delete_blob(fs->bs, deleted_file->id, iter_delete_cb, req);
 		free(deleted_file);
 		return 0;
 	}
@@ -626,7 +626,7 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 		TAILQ_INSERT_TAIL(&args->op.fs_load.deleted_files, deleted_file, tailq);
 	}
 
-	spdk_bs_md_iter_next(fs->bs, &blob, iter_cb, req);
+	spdk_bs_iter_next(fs->bs, &blob, iter_cb, req);
 }
 
 static void
@@ -661,7 +661,7 @@ load_cb(void *ctx, struct spdk_blob_store *bs, int bserrno)
 	}
 
 	common_fs_bs_init(fs, bs);
-	spdk_bs_md_iter_first(fs->bs, iter_cb, req);
+	spdk_bs_iter_first(fs->bs, iter_cb, req);
 }
 
 void
@@ -873,7 +873,7 @@ fs_create_blob_create_cb(void *ctx, spdk_blob_id blobid, int bserrno)
 	struct spdk_file *f = args->file;
 
 	f->blobid = blobid;
-	spdk_bs_md_open_blob(f->fs->bs, blobid, fs_create_blob_open_cb, req);
+	spdk_bs_open_blob(f->fs->bs, blobid, fs_create_blob_open_cb, req);
 }
 
 void
@@ -913,7 +913,7 @@ spdk_fs_create_file_async(struct spdk_filesystem *fs, const char *name,
 	args->arg = cb_arg;
 
 	file->name = strdup(name);
-	spdk_bs_md_create_blob(fs->bs, fs_create_blob_create_cb, args);
+	spdk_bs_create_blob(fs->bs, fs_create_blob_create_cb, args);
 }
 
 static void
@@ -1002,7 +1002,7 @@ fs_open_blob_create_cb(void *ctx, int bserrno)
 	TAILQ_INSERT_TAIL(&file->open_requests, req, args.op.open.tailq);
 	if (file->ref_count == 1) {
 		assert(file->blob == NULL);
-		spdk_bs_md_open_blob(fs->bs, file->blobid, fs_open_blob_done, req);
+		spdk_bs_open_blob(fs->bs, file->blobid, fs_open_blob_done, req);
 	} else if (file->blob != NULL) {
 		fs_open_blob_done(req, file->blob, 0);
 	} else {
@@ -1152,7 +1152,7 @@ __spdk_fs_md_rename_file(struct spdk_fs_request *req)
 	free(f->name);
 	f->name = strdup(args->op.rename.new_name);
 	args->file = f;
-	spdk_bs_md_open_blob(args->fs->bs, f->blobid, fs_rename_blob_open_cb, req);
+	spdk_bs_open_blob(args->fs->bs, f->blobid, fs_rename_blob_open_cb, req);
 }
 
 static void
@@ -1307,7 +1307,7 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	free(f->tree);
 	free(f);
 
-	spdk_bs_md_delete_blob(fs->bs, blobid, blob_delete_cb, req);
+	spdk_bs_delete_blob(fs->bs, blobid, blob_delete_cb, req);
 }
 
 static void

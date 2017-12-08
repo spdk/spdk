@@ -347,8 +347,8 @@ blob_create_cb(void *arg1, spdk_blob_id blobid, int bserrno)
 	}
 
 	/* We have to open the blob before we can do things like resize. */
-	spdk_bs_md_open_blob(cli_context->bs, cli_context->blobid,
-			     open_now_resize_cb, cli_context);
+	spdk_bs_open_blob(cli_context->bs, cli_context->blobid,
+			  open_now_resize_cb, cli_context);
 }
 
 /*
@@ -519,8 +519,7 @@ blob_iter_cb(void *arg1, struct spdk_blob *blob, int bserrno)
 		show_blob(cli_context);
 	}
 
-	spdk_bs_md_iter_next(cli_context->bs, &blob, blob_iter_cb,
-			     cli_context);
+	spdk_bs_iter_next(cli_context->bs, &blob, blob_iter_cb, cli_context);
 }
 
 /*
@@ -822,27 +821,26 @@ load_bs_cb(void *arg1, struct spdk_blob_store *bs, int bserrno)
 		spdk_bs_get_super(cli_context->bs, show_bs_cb, cli_context);
 		break;
 	case CLI_CREATE_BLOB:
-		spdk_bs_md_create_blob(cli_context->bs, blob_create_cb,
-				       cli_context);
+		spdk_bs_create_blob(cli_context->bs, blob_create_cb, cli_context);
 		break;
 	case CLI_SET_XATTR:
 	case CLI_REM_XATTR:
-		spdk_bs_md_open_blob(cli_context->bs, cli_context->blobid,
-				     set_xattr_cb, cli_context);
+		spdk_bs_open_blob(cli_context->bs, cli_context->blobid,
+				  set_xattr_cb, cli_context);
 		break;
 	case CLI_SHOW_BLOB:
 	case CLI_LIST_BLOBS:
-		spdk_bs_md_iter_first(cli_context->bs, blob_iter_cb, cli_context);
+		spdk_bs_iter_first(cli_context->bs, blob_iter_cb, cli_context);
 
 		break;
 	case CLI_DUMP_BLOB:
 	case CLI_IMPORT_BLOB:
-		spdk_bs_md_open_blob(cli_context->bs, cli_context->blobid,
-				     dump_imp_open_cb, cli_context);
+		spdk_bs_open_blob(cli_context->bs, cli_context->blobid,
+				  dump_imp_open_cb, cli_context);
 		break;
 	case CLI_FILL:
-		spdk_bs_md_open_blob(cli_context->bs, cli_context->blobid,
-				     fill_blob_cb, cli_context);
+		spdk_bs_open_blob(cli_context->bs, cli_context->blobid,
+				  fill_blob_cb, cli_context);
 		break;
 
 	default:
