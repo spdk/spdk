@@ -501,32 +501,14 @@ spdk_nbd_poll(void *arg)
 static void *
 nbd_start_kernel(void *arg)
 {
-	struct spdk_nbd_disk *nbd = arg;
-	int rc;
-	char buf[64];
+	int dev_fd = (int)(intptr_t)arg;
 
 	spdk_unaffinitize_thread();
 
-	rc = ioctl(nbd->dev_fd, NBD_SET_SOCK, nbd->kernel_sp_fd);
-	if (rc == -1) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", buf);
-		pthread_exit(NULL);
-	}
-
-#ifdef NBD_FLAG_SEND_TRIM
-	rc = ioctl(nbd->dev_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
-	if (rc == -1) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", buf);
-		pthread_exit(NULL);
-	}
-#endif
-
 	/* This will block in the kernel until we close the spdk_sp_fd. */
-	ioctl(nbd->dev_fd, NBD_DO_IT);
-	ioctl(nbd->dev_fd, NBD_CLEAR_QUE);
-	ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
+	ioctl(dev_fd, NBD_DO_IT);
+	ioctl(dev_fd, NBD_CLEAR_QUE);
+	ioctl(dev_fd, NBD_CLEAR_SOCK);
 	pthread_exit(NULL);
 }
 
@@ -616,7 +598,23 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 
 	printf("Enabling kernel access to bdev %s via %s\n", spdk_bdev_get_name(bdev), nbd_path);
 
-	rc = pthread_create(&tid, NULL, &nbd_start_kernel, nbd);
+	rc = ioctl(nbd->dev_fd, NBD_SET_SOCK, nbd->kernel_sp_fd);
+	if (rc == -1) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", buf);
+		goto err;
+	}
+
+#ifdef NBD_FLAG_SEND_TRIM
+	rc = ioctl(nbd->dev_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
+	if (rc == -1) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", buf);
+		goto err;
+	}
+#endif
+
+	rc = pthread_create(&tid, NULL, nbd_start_kernel, (void *)(intptr_t)nbd->dev_fd);
 	if (rc != 0) {
 		spdk_strerror_r(rc, buf, sizeof(buf));
 		SPDK_ERRLOG("could not create thread: %s\n", buf);
