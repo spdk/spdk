@@ -45,6 +45,8 @@
 #include "spdk/util.h"
 #include "spdk/io_channel.h"
 
+#include "spdk_internal/log.h"
+
 struct nbd_io {
 	enum spdk_bdev_io_type	type;
 	int			ref;
@@ -489,11 +491,14 @@ static void
 spdk_nbd_poll(void *arg)
 {
 	struct spdk_nbd_disk *nbd = arg;
+	char buf[64];
 	int rc;
 
 	rc = _spdk_nbd_poll(nbd);
 	if (rc < 0) {
-		SPDK_NOTICELOG("spdk_nbd_poll got error %d; close it", rc);
+		spdk_strerror_r(-rc, buf, sizeof(buf));
+		SPDK_INFOLOG(SPDK_LOG_NBD, "spdk_nbd_poll() returned %s (%d); closing connection\n",
+			     buf, rc);
 		spdk_nbd_stop(nbd);
 	}
 }
@@ -596,7 +601,8 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		goto err;
 	}
 
-	printf("Enabling kernel access to bdev %s via %s\n", spdk_bdev_get_name(bdev), nbd_path);
+	SPDK_INFOLOG(SPDK_LOG_NBD, "Enabling kernel access to bdev %s via %s\n",
+		     spdk_bdev_get_name(bdev), nbd_path);
 
 	rc = ioctl(nbd->dev_fd, NBD_SET_SOCK, nbd->kernel_sp_fd);
 	if (rc == -1) {
@@ -647,3 +653,5 @@ err:
 
 	return NULL;
 }
+
+SPDK_LOG_REGISTER_COMPONENT("nbd", SPDK_LOG_NBD)
