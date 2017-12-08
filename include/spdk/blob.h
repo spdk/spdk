@@ -238,10 +238,6 @@ struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs);
 
 void spdk_bs_free_io_channel(struct spdk_io_channel *channel);
 
-/* Force all previously completed operations on this channel to be persistent. */
-void spdk_bs_io_flush_channel(struct spdk_io_channel *channel,
-			      spdk_blob_op_complete cb_fn, void *cb_arg);
-
 /* Write data to a blob. Offset is in pages from the beginning of the blob. */
 void spdk_bs_io_write_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 			   void *payload, uint64_t offset, uint64_t length,

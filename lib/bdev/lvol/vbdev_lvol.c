@@ -491,7 +491,6 @@ vbdev_lvol_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
-	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
@@ -592,16 +591,6 @@ lvol_write(struct spdk_lvol *lvol, struct spdk_io_channel *ch, struct spdk_bdev_
 			       num_pages, lvol_op_comp, task);
 }
 
-static void
-lvol_flush(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
-{
-	struct lvol_task *task = (struct lvol_task *)bdev_io->driver_ctx;
-
-	task->status = SPDK_BDEV_IO_STATUS_SUCCESS;
-
-	spdk_bs_io_flush_channel(ch, lvol_op_comp, task);
-}
-
 static int
 lvol_reset(struct spdk_bdev_io *bdev_io)
 {
@@ -627,9 +616,6 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 		break;
 	case SPDK_BDEV_IO_TYPE_RESET:
 		lvol_reset(bdev_io);
-		break;
-	case SPDK_BDEV_IO_TYPE_FLUSH:
-		lvol_flush(ch, bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		lvol_unmap(lvol, ch, bdev_io);
