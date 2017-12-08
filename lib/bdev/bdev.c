@@ -359,7 +359,7 @@ spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
@@ -367,6 +367,7 @@ spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 	if (!TAILQ_EMPTY(&ch->need_buf_small) || !TAILQ_EMPTY(&ch->need_buf_large)) {
 		SPDK_ERRLOG("Pending I/O list wasn't empty on channel destruction\n");
 	}
+	return 1;
 }
 
 static void
@@ -537,7 +538,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 	spdk_bdev_module_action_complete();
 }
 
-static void
+static int
 spdk_bdev_module_finish_cb(void *io_device)
 {
 	spdk_bdev_fini_cb cb_fn = g_fini_cb_fn;
@@ -545,6 +546,7 @@ spdk_bdev_module_finish_cb(void *io_device)
 	cb_fn(g_fini_cb_arg);
 	g_fini_cb_fn = NULL;
 	g_fini_cb_arg = NULL;
+	return 1;
 }
 
 static void
@@ -578,7 +580,7 @@ spdk_bdev_module_finish_complete(void)
 	spdk_io_device_unregister(&g_bdev_mgr, spdk_bdev_module_finish_cb);
 }
 
-static void
+static int
 spdk_bdev_module_finish_iter(void *arg)
 {
 	/* Notice that this variable is static. It is saved between calls to
@@ -608,7 +610,7 @@ spdk_bdev_module_finish_iter(void *arg)
 		}
 
 		if (bdev_module->async_fini) {
-			return;
+			return -1;
 		}
 
 		bdev_module = TAILQ_NEXT(bdev_module, tailq);
@@ -616,6 +618,7 @@ spdk_bdev_module_finish_iter(void *arg)
 
 	resume_bdev_module = NULL;
 	spdk_bdev_module_finish_complete();
+	return 1;
 }
 
 void
@@ -824,7 +827,7 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 	}
 }
 
-static void
+static int
 spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_channel	*ch = ctx_buf;
@@ -840,6 +843,7 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	spdk_put_io_channel(ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
 	assert(ch->io_outstanding == 0);
+	return 1;
 }
 
 struct spdk_io_channel *
@@ -1586,13 +1590,14 @@ _spdk_bdev_ch_retry_io(struct spdk_bdev_channel *bdev_ch)
 	}
 }
 
-static void
+static int
 _spdk_bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
 	assert(bdev_io->cb != NULL);
 	bdev_io->cb(bdev_io, bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS, bdev_io->caller_ctx);
+	return bdev_io->status == SPDK_BDEV_IO_STATUS_SUCCESS;
 }
 
 void
@@ -2221,7 +2226,7 @@ spdk_bdev_part_channel_create_cb(void *io_device, void *ctx_buf)
 	}
 }
 
-static void
+static int
 spdk_bdev_part_channel_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_part *part = SPDK_CONTAINEROF(io_device, struct spdk_bdev_part, base);
@@ -2231,6 +2236,7 @@ spdk_bdev_part_channel_destroy_cb(void *io_device, void *ctx_buf)
 		part->base->ch_destroy_cb(io_device, ctx_buf);
 	}
 	spdk_put_io_channel(ch->base_ch);
+	return 1;
 }
 
 int

@@ -174,9 +174,10 @@ null_bdev_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 null_bdev_destroy_cb(void *io_device, void *ctx_buf)
 {
+	return 0;
 }
 
 static int

@@ -141,22 +141,25 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 	return -1;
 }
 
-static void
+static int
 acceptor_poll(void *arg)
 {
 	struct spdk_nvmf_tgt *tgt = arg;
 
 	spdk_nvmf_tgt_accept(tgt);
+
+	return 1;
 }
 
-static void
+static int
 nvmf_tgt_destroy_poll_group_done(void *ctx)
 {
 	g_tgt.state = NVMF_TGT_FINI_SHUTDOWN_SUBSYSTEMS;
 	nvmf_tgt_advance_state(NULL, NULL);
+	return 1;
 }
 
-static void
+static int
 nvmf_tgt_destroy_poll_group(void *ctx)
 {
 	struct nvmf_tgt_poll_group *pg;
@@ -169,16 +172,18 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 
 	assert(g_active_poll_groups > 0);
 	g_active_poll_groups--;
+	return 1;
 }
 
-static void
+static int
 nvmf_tgt_create_poll_group_done(void *ctx)
 {
 	g_tgt.state = NVMF_TGT_INIT_START_ACCEPTOR;
 	nvmf_tgt_advance_state(NULL, NULL);
+	return 1;
 }
 
-static void
+static int
 nvmf_tgt_create_poll_group(void *ctx)
 {
 	struct nvmf_tgt_poll_group *pg;
@@ -192,6 +197,7 @@ nvmf_tgt_create_poll_group(void *ctx)
 	}
 
 	g_active_poll_groups++;
+	return 1;
 }
 
 static void

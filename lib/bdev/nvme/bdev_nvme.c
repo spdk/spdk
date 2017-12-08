@@ -190,14 +190,14 @@ bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 				   iov, iovcnt, lba_count, lba);
 }
 
-static void
+static int
 bdev_nvme_poll(void *arg)
 {
 	struct nvme_io_channel *ch = arg;
 	int32_t num_completions;
 
 	if (ch->qpair == NULL) {
-		return;
+		return -1;
 	}
 
 	if (ch->collect_spin_stat && ch->start_ticks == 0) {
@@ -217,22 +217,25 @@ bdev_nvme_poll(void *arg)
 			ch->end_ticks = spdk_get_ticks();
 		}
 	}
+	return num_completions;
 }
 
-static void
+static int
 bdev_nvme_poll_adminq(void *arg)
 {
 	struct spdk_nvme_ctrlr *ctrlr = arg;
 
-	spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	return spdk_nvme_ctrlr_process_admin_completions(ctrlr);
 }
 
-static void
+static int
 bdev_nvme_unregister_cb(void *io_device)
 {
 	struct spdk_nvme_ctrlr *ctrlr = io_device;
 
 	spdk_nvme_detach(ctrlr);
+
+	return 1;
 }
 
 static int
@@ -537,13 +540,15 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 bdev_nvme_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct nvme_io_channel *ch = ctx_buf;
 
 	spdk_nvme_ctrlr_free_io_qpair(ch->qpair);
 	spdk_poller_unregister(&ch->poller);
+
+	return 1;
 }
 
 static struct spdk_io_channel *
@@ -899,12 +904,15 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
-static void
+static int
 bdev_nvme_hotplug(void *arg)
 {
-	if (spdk_nvme_probe(NULL, NULL, hotplug_probe_cb, attach_cb, remove_cb) != 0) {
+	int rc = spdk_nvme_probe(NULL, NULL, hotplug_probe_cb, attach_cb, remove_cb);
+	if (rc != 0) {
 		SPDK_ERRLOG("spdk_nvme_probe() failed\n");
+		return -1;
 	}
+	return rc;
 }
 
 int
@@ -1193,7 +1201,7 @@ bdev_nvme_queued_done(void *ref, const struct spdk_nvme_cpl *cpl)
 	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->status.sct, cpl->status.sc);
 }
 
-static void
+static int
 bdev_nvme_admin_passthru_completion(void *ctx)
 {
 	struct nvme_bdev_io *bio = ctx;
@@ -1201,6 +1209,7 @@ bdev_nvme_admin_passthru_completion(void *ctx)
 
 	spdk_bdev_io_complete_nvme_status(bdev_io,
 					  bio->cpl.status.sct, bio->cpl.status.sc);
+	return 1;
 }
 
 static void

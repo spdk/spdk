@@ -50,11 +50,11 @@ struct spdk_thread;
 struct spdk_io_channel;
 struct spdk_poller;
 
-typedef void (*spdk_thread_fn)(void *ctx);
+typedef int (*spdk_thread_fn)(void *ctx);
 typedef void (*spdk_thread_pass_msg)(spdk_thread_fn fn, void *ctx,
 				     void *thread_ctx);
 
-typedef void (*spdk_poller_fn)(void *ctx);
+typedef int (*spdk_poller_fn)(void *ctx);
 typedef struct spdk_poller *(*spdk_start_poller)(void *thread_ctx,
 		spdk_poller_fn fn,
 		void *arg,
@@ -62,9 +62,9 @@ typedef struct spdk_poller *(*spdk_start_poller)(void *thread_ctx,
 typedef void (*spdk_stop_poller)(struct spdk_poller *poller, void *thread_ctx);
 
 typedef int (*spdk_io_channel_create_cb)(void *io_device, void *ctx_buf);
-typedef void (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
+typedef int (*spdk_io_channel_destroy_cb)(void *io_device, void *ctx_buf);
 
-typedef void (*spdk_io_device_unregister_cb)(void *io_device);
+typedef int (*spdk_io_device_unregister_cb)(void *io_device);
 
 typedef int (*spdk_channel_msg)(void *io_device, struct spdk_io_channel *ch,
 				void *ctx);

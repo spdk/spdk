@@ -317,7 +317,7 @@ process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
 	}
 }
 
-static void
+static int
 vdev_worker(void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = arg;
@@ -328,6 +328,7 @@ vdev_worker(void *arg)
 	}
 
 	spdk_vhost_dev_used_signal(&bvdev->vdev);
+	return 1;
 }
 
 static void
@@ -350,7 +351,7 @@ no_bdev_process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue
 	spdk_vhost_vq_used_ring_enqueue(&bvdev->vdev, vq, req_idx, 0);
 }
 
-static void
+static int
 no_bdev_vdev_worker(void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = arg;
@@ -361,6 +362,7 @@ no_bdev_vdev_worker(void *arg)
 	}
 
 	spdk_vhost_dev_used_signal(&bvdev->vdev);
+	return 1;
 }
 
 static struct spdk_vhost_blk_dev *
@@ -517,7 +519,7 @@ struct spdk_vhost_dev_destroy_ctx {
 	void *event_ctx;
 };
 
-static void
+static int
 destroy_device_poller_cb(void *arg)
 {
 	struct spdk_vhost_dev_destroy_ctx *ctx = arg;
@@ -525,7 +527,7 @@ destroy_device_poller_cb(void *arg)
 	int i;
 
 	if (bvdev->vdev.task_cnt > 0) {
-		return;
+		return -1;
 	}
 
 	for (i = 0; i < bvdev->vdev.num_queues; i++) {
@@ -546,6 +548,7 @@ destroy_device_poller_cb(void *arg)
 	spdk_poller_unregister(&ctx->poller);
 	spdk_vhost_dev_backend_event_done(ctx->event_ctx, 0);
 	spdk_dma_free(ctx);
+	return 1;
 }
 
 static int

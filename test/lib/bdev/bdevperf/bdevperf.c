@@ -428,7 +428,7 @@ bdevperf_submit_io(struct io_target *target, int queue_depth)
 	}
 }
 
-static void
+static int
 end_target(void *arg)
 {
 	struct io_target *target = arg;
@@ -439,9 +439,10 @@ end_target(void *arg)
 	}
 
 	target->is_draining = true;
+	return 1;
 }
 
-static void reset_target(void *arg);
+static int reset_target(void *arg);
 
 static void
 reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
@@ -462,7 +463,7 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 			      10 * 1000000);
 }
 
-static void
+static int
 reset_target(void *arg)
 {
 	struct io_target *target = arg;
@@ -486,6 +487,7 @@ reset_target(void *arg)
 		target->is_draining = true;
 		g_run_failed = true;
 	}
+	return 1;
 }
 
 static void
@@ -573,10 +575,11 @@ performance_dump(int io_time_in_usec)
 
 }
 
-static void
+static int
 performance_statistics_thread(void *arg)
 {
 	performance_dump(1);
+	return 1;
 }
 
 static int

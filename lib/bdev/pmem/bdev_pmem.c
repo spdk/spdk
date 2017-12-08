@@ -268,9 +268,10 @@ bdev_pmem_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 bdev_pmem_destroy_cb(void *io_device, void *ctx_buf)
 {
+	return 1;
 }
 
 static const struct spdk_bdev_fn_table pmem_fn_table = {
@@ -379,10 +380,11 @@ bdev_pmem_initialize(void)
 
 }
 
-static void
+static int
 bdev_pmem_finish_done(void *io_device)
 {
 	spdk_bdev_module_finish_done();
+	return 1;
 }
 
 static void

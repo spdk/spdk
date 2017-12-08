@@ -55,12 +55,13 @@ thread_alloc(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_threads));
 }
 
-static void
+static int
 send_msg_cb(void *ctx)
 {
 	bool *done = ctx;
 
 	*done = true;
+	return 1;
 }
 
 static void
@@ -97,12 +98,13 @@ thread_send_msg(void)
 	free_threads();
 }
 
-static void
+static int
 for_each_cb(void *ctx)
 {
 	int *count = ctx;
 
 	(*count)++;
+	return 1;
 }
 
 static void
@@ -141,9 +143,10 @@ channel_create(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 channel_destroy(void *io_device, void *ctx_buf)
 {
+	return 0;
 }
 
 static int
@@ -327,12 +330,13 @@ create_cb_1(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 destroy_cb_1(void *io_device, void *ctx_buf)
 {
 	CU_ASSERT(io_device == &device1);
 	CU_ASSERT(*(uint64_t *)ctx_buf == ctx1);
 	g_destroy_cb_calls++;
+	return 1;
 }
 
 static int
@@ -344,12 +348,13 @@ create_cb_2(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 destroy_cb_2(void *io_device, void *ctx_buf)
 {
 	CU_ASSERT(io_device == &device2);
 	CU_ASSERT(*(uint64_t *)ctx_buf == ctx2);
 	g_destroy_cb_calls++;
+	return 1;
 }
 
 static int

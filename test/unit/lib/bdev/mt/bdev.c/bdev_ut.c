@@ -78,9 +78,10 @@ stub_create_ch(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 stub_destroy_ch(void *io_device, void *ctx_buf)
 {
+	return 0;
 }
 
 static struct spdk_io_channel *
