@@ -387,11 +387,6 @@ spdk_bs_io_readv_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 }
 
 void
-spdk_bs_io_flush_channel(struct spdk_io_channel *channel, spdk_blob_op_complete cb_fn, void *cb_arg)
-{
-}
-
-void
 spdk_bdev_module_list_add(struct spdk_bdev_module_if *bdev_module)
 {
 }
@@ -855,8 +850,6 @@ ut_vbdev_lvol_io_type_supported(void)
 	CU_ASSERT(ret == true);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_WRITE);
 	CU_ASSERT(ret == true);
-	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_FLUSH);
-	CU_ASSERT(ret == true);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_RESET);
 	CU_ASSERT(ret == true);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_UNMAP);
@@ -865,6 +858,8 @@ ut_vbdev_lvol_io_type_supported(void)
 	CU_ASSERT(ret == true);
 
 	/* Unsupported types */
+	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_FLUSH);
+	CU_ASSERT(ret == false);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_ADMIN);
 	CU_ASSERT(ret == false);
 	ret = vbdev_lvol_io_type_supported(lvol, SPDK_BDEV_IO_TYPE_NVME_IO);
@@ -878,30 +873,6 @@ ut_lvol_op_comp(void)
 
 	lvol_op_comp(&task, 1);
 	CU_ASSERT(task.status == SPDK_BDEV_IO_STATUS_FAILED);
-}
-
-static void
-ut_lvol_flush(void)
-{
-	g_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct lvol_task));
-	SPDK_CU_ASSERT_FATAL(g_io != NULL);
-	g_base_bdev = calloc(1, sizeof(struct spdk_bdev));
-	SPDK_CU_ASSERT_FATAL(g_base_bdev != NULL);
-	g_lvol = calloc(1, sizeof(struct spdk_lvol));
-	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
-
-	g_task = (struct lvol_task *)g_io->driver_ctx;
-	g_io->bdev = g_base_bdev;
-	g_io->bdev->ctxt = g_lvol;
-
-	/* Successful flush to lvol */
-	lvol_flush(g_ch, g_io);
-
-	CU_ASSERT(g_task->status == SPDK_BDEV_IO_STATUS_SUCCESS);
-
-	free(g_io);
-	free(g_base_bdev);
-	free(g_lvol);
 }
 
 static void
@@ -974,7 +945,6 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_vbdev_lvol_get_io_channel", ut_vbdev_lvol_get_io_channel) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_io_type_supported", ut_vbdev_lvol_io_type_supported) == NULL ||
 		CU_add_test(suite, "ut_lvol_op_comp", ut_lvol_op_comp) == NULL ||
-		CU_add_test(suite, "ut_lvol_flush", ut_lvol_flush) == NULL ||
 		CU_add_test(suite, "ut_lvol_read_write", ut_lvol_read_write) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL ||
 		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL
