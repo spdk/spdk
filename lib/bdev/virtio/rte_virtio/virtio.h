@@ -169,7 +169,16 @@ struct virtqueue {
 	/** Context for response poller. */
 	void *poller_ctx;
 
+	uint16_t req_start;
+	uint16_t req_end;
+
 	struct vq_desc_extra vq_descx[0];
+};
+
+enum spdk_virtio_desc_type {
+	SPDK_VIRTIO_DESC_RO = 0, /**< Read only */
+	SPDK_VIRTIO_DESC_WR = VRING_DESC_F_WRITE, /**< Write only */
+	/* TODO VIRTIO_DESC_INDIRECT */
 };
 
 struct virtio_req {
@@ -204,6 +213,57 @@ typedef int (*virtio_pci_create_cb)(struct virtio_pci_ctx *pci_ctx);
 
 uint16_t virtio_recv_pkts(struct virtqueue *vq, struct virtio_req **reqs,
 			  uint16_t nb_pkts);
+
+/**
+ * Start a new request on the current vring head position. The request will
+ * be bound to given opaque cookie object. All previous requests will be
+ * still kept in a ring until they are flushed or the request is aborted.
+ * If a previous request is empty (no descriptors have been added) this call
+ * will overwrite it. The device owning given virtqueue must be started.
+ *
+ * \param vq virtio queue
+ * \param cookie opaque object to bind with this request. Once the request
+ * is sent, processed and a response is received, the same object will be
+ * returned to the user calling the virtio poll API.
+ * \param iovcnt number of required iovectors for the request. This can be
+ * higher than than the actual number of descriptors to be added.
+ * \return 0 on success or negative errno otherwise. If not enough iovectors
+ * are available, -ENOSPC is returned.
+ */
+int virtqueue_req_start(struct virtqueue *vq, void *cookie, int iovcnt);
+
+/**
+ * Flush a virtqueue. This will make the host device see and process all
+ * previously queued requests. An interrupt might be automatically sent if
+ * the host device expects it. The device owning given virtqueue must be started.
+ *
+ * \param vq virtio queue
+ */
+void virtqueue_req_flush(struct virtqueue *vq);
+
+/**
+ * Abort the very last request in a virtqueue. This will restore virtqueue
+ * state to the point before the last request was created. Note that this
+ * is only effective if a queue hasn't been flushed yet.  The device owning
+ * given virtqueue must be started.
+ *
+ * \param vq virtio queue
+ */
+void virtqueue_req_abort(struct virtqueue *vq);
+
+/**
+ * Add iovec chain to the last created request. This call does not provide any
+ * error-checking. The caller has to ensure that he doesn't add more iovs than
+ * what was specified during request creation. The device owning given virtqueue
+ * must be started.
+ *
+ * \param vq virtio queue
+ * \param iovs iovec array
+ * \param iovcnt number of iovs in iovec array
+ * \param desc_type type of all given iovectors
+ */
+void virtqueue_req_add_iovs(struct virtqueue *vq, struct iovec *iovs, uint16_t iovcnt,
+			    enum spdk_virtio_desc_type desc_type);
 
 /**
  * Put given request into the virtqueue.  The virtio device owning
