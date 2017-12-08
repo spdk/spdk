@@ -225,7 +225,7 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 	}
 }
 
-static void
+static int
 spdk_scsi_lun_hotplug(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
@@ -234,6 +234,7 @@ spdk_scsi_lun_hotplug(void *arg)
 		spdk_scsi_lun_free_io_channel(lun);
 		spdk_scsi_lun_delete(lun);
 	}
+	return 1;
 }
 
 static void

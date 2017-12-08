@@ -276,7 +276,7 @@ spdk_nvmf_rdma_mgmt_channel_create(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_nvmf_rdma_mgmt_channel *ch = ctx_buf;
@@ -284,6 +284,7 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 	if (!TAILQ_EMPTY(&ch->pending_data_buf_queue)) {
 		SPDK_ERRLOG("Pending I/O list wasn't empty on channel destruction\n");
 	}
+	return 1;
 }
 
 static int
@@ -367,6 +368,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	attr.send_cq		= rqpair->cq;
 	attr.recv_cq		= rqpair->cq;
 	attr.cap.max_send_wr	= rqpair->max_queue_depth * 2; /* SEND, READ, and WRITE operations */
+	attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
 	attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
 	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
 	attr.cap.max_recv_sge	= NVMF_DEFAULT_RX_SGE;
@@ -735,12 +737,13 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	return 0;
 }
 
-static void
+static int
 nvmf_rdma_handle_disconnect(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair = ctx;
 
 	spdk_nvmf_ctrlr_disconnect(qpair);
+	return 1;
 }
 
 static int

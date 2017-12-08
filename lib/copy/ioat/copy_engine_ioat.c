@@ -106,7 +106,7 @@ struct ioat_task {
 };
 
 static int copy_engine_ioat_init(void);
-static void copy_engine_ioat_exit(void *ctx);
+static int copy_engine_ioat_exit(void *ctx);
 
 static size_t
 copy_engine_ioat_get_ctx_size(void)
@@ -117,7 +117,7 @@ copy_engine_ioat_get_ctx_size(void)
 SPDK_COPY_MODULE_REGISTER(copy_engine_ioat_init, copy_engine_ioat_exit, NULL,
 			  copy_engine_ioat_get_ctx_size)
 
-static void
+static int
 copy_engine_ioat_exit(void *ctx)
 {
 	struct ioat_device *dev;
@@ -130,6 +130,7 @@ copy_engine_ioat_exit(void *ctx)
 		spdk_dma_free(dev);
 	}
 	spdk_copy_engine_module_finish();
+	return 1;
 }
 
 static void
@@ -174,12 +175,12 @@ ioat_copy_submit_fill(void *cb_arg, struct spdk_io_channel *ch, void *dst, uint8
 	return spdk_ioat_submit_fill(ioat_ch->ioat_ch, ioat_task, ioat_done, dst, fill64, nbytes);
 }
 
-static void
+static int
 ioat_poll(void *arg)
 {
 	struct spdk_ioat_chan *chan = arg;
 
-	spdk_ioat_process_events(chan);
+	return spdk_ioat_process_events(chan);
 }
 
 static struct spdk_io_channel *ioat_get_io_channel(void);
@@ -207,13 +208,14 @@ ioat_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 ioat_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct ioat_io_channel *ch = ctx_buf;
 
 	ioat_free_device(ch->ioat_dev);
 	spdk_poller_unregister(&ch->poller);
+	return 1;
 }
 
 static struct spdk_io_channel *

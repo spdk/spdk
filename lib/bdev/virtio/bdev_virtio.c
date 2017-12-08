@@ -492,7 +492,7 @@ bdev_virtio_io_cpl(struct virtio_req *req)
 	spdk_bdev_io_complete_scsi_status(bdev_io, io_ctx->resp.status, sk, asc, ascq);
 }
 
-static void
+static int
 bdev_virtio_poll(void *arg)
 {
 	struct bdev_virtio_io_channel *ch = arg;
@@ -503,9 +503,10 @@ bdev_virtio_poll(void *arg)
 	for (i = 0; i < cnt; ++i) {
 		bdev_virtio_io_cpl(req[i]);
 	}
+	return cnt;
 }
 
-static void
+static int
 bdev_virtio_tmf_cpl_cb(void *ctx)
 {
 	struct virtio_req *req = ctx;
@@ -517,6 +518,7 @@ bdev_virtio_tmf_cpl_cb(void *ctx)
 	} else {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
+	return 1;
 }
 
 static void
@@ -528,20 +530,22 @@ bdev_virtio_tmf_cpl(struct virtio_req *req)
 	spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io), bdev_virtio_tmf_cpl_cb, req);
 }
 
-static void
+static int
 bdev_virtio_tmf_abort_nomem_cb(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
 	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
+	return 1;
 }
 
-static void
+static int
 bdev_virtio_tmf_abort_ioerr_cb(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
 
 	spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	return 1;
 }
 
 static void
@@ -560,14 +564,14 @@ bdev_virtio_tmf_abort(struct virtio_req *req, int status)
 	spdk_thread_send_msg(spdk_bdev_io_get_thread(bdev_io), fn, bdev_io);
 }
 
-static void
+static int
 bdev_virtio_ctrlq_poll(void *arg)
 {
 	struct virtio_dev *vdev = arg;
 	struct virtqueue *ctrlq = vdev->vqs[VIRTIO_SCSI_CONTROLQ];
 	struct spdk_ring *send_ring = ctrlq->poller_ctx;
 	struct virtio_req *req[16];
-	uint16_t i, cnt;
+	uint16_t i, j, cnt;
 	int rc;
 
 	cnt = spdk_ring_dequeue(send_ring, (void **)req, SPDK_COUNTOF(req));
@@ -579,9 +583,10 @@ bdev_virtio_ctrlq_poll(void *arg)
 	}
 
 	cnt = virtio_recv_pkts(ctrlq, req, SPDK_COUNTOF(req));
-	for (i = 0; i < cnt; ++i) {
-		bdev_virtio_tmf_cpl(req[i]);
+	for (j = 0; j < cnt; ++j) {
+		bdev_virtio_tmf_cpl(req[j]);
 	}
+	return ((i | j) ? 1 : 0);
 }
 
 static int
@@ -609,7 +614,7 @@ bdev_virtio_scsi_ch_create_cb(void *io_device, void *ctx_buf)
 	return 0;
 }
 
-static void
+static int
 bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_virtio_io_channel *io_channel = ctx_buf;
@@ -619,6 +624,7 @@ bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf)
 
 	spdk_poller_unregister(&vq->poller);
 	virtio_dev_release_queue(vdev, vq->vq_queue_index);
+	return 1;
 }
 
 static void
@@ -1117,7 +1123,7 @@ process_scan_resp(struct virtio_scsi_scan_base *base, struct virtio_req *vreq)
 	}
 }
 
-static void
+static int
 bdev_scan_poll(void *arg)
 {
 	struct virtio_scsi_scan_base *base = arg;
@@ -1127,7 +1133,9 @@ bdev_scan_poll(void *arg)
 	cnt = virtio_recv_pkts(base->vq, &req, 1);
 	if (cnt > 0) {
 		process_scan_resp(base, req);
+		return 1;
 	}
+	return 0;
 }
 
 static int
@@ -1369,7 +1377,7 @@ out:
 	return rc;
 }
 
-static void
+static int
 virtio_scsi_dev_unregister_cb(void *io_device)
 {
 	struct virtio_scsi_dev *svdev = io_device;
@@ -1382,7 +1390,7 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 	thread = virtio_dev_queue_get_thread(vdev, VIRTIO_SCSI_CONTROLQ);
 	if (thread != spdk_get_thread()) {
 		spdk_thread_send_msg(thread, virtio_scsi_dev_unregister_cb, io_device);
-		return;
+		return -1;
 	}
 
 	if (virtio_dev_queue_is_acquired(vdev, VIRTIO_SCSI_CONTROLQ)) {
@@ -1406,6 +1414,7 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 	if (finish_module) {
 		spdk_bdev_module_finish_done();
 	}
+	return 1;
 }
 
 static void
