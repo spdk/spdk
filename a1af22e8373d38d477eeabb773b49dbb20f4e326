@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e44b1805_2cdcbd3f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-08T16:59:04Z",
+      "side": 1,
+      "message": "This seems OK, although it would be nice to avoid changing rpc.py API when not necessary.\n\nWe also need to add test coverage for this method (that can be a separate patch).",
+      "revId": "a1af22e8373d38d477eeabb773b49dbb20f4e326",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
