@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95d1500b_90f47eae",
+        "filename": "test/lvol/rpc_commands_lib.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-08T15:36:40Z",
+      "side": 1,
+      "message": "This parameter is unused, please pass it to RPC.",
+      "range": {
+        "startLine": 143,
+        "startChar": 45,
+        "endLine": 143,
+        "endChar": 51
+      },
+      "revId": "7e0f62f65d072ef037c97b3f982416bdd3434d47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4d852c6_8cbec163",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-08T15:36:40Z",
+      "side": 1,
+      "message": "Can\u0027t we use some variables to set it just once and refer to multiple times ?",
+      "range": {
+        "startLine": 145,
+        "startChar": 19,
+        "endLine": 145,
+        "endChar": 41
+      },
+      "revId": "7e0f62f65d072ef037c97b3f982416bdd3434d47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "343697de_302c9030",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-08T15:36:40Z",
+      "side": 1,
+      "message": "Aren\u0027t those unused now ?",
+      "range": {
+        "startLine": 516,
+        "startChar": 0,
+        "endLine": 519,
+        "endChar": 52
+      },
+      "revId": "7e0f62f65d072ef037c97b3f982416bdd3434d47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e237282_f892a611",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-08T15:36:40Z",
+      "side": 1,
+      "message": "Can\u0027t we put this function inside construct_nvme_bdev() ?",
+      "range": {
+        "startLine": 528,
+        "startChar": 22,
+        "endLine": 528,
+        "endChar": 46
+      },
+      "revId": "7e0f62f65d072ef037c97b3f982416bdd3434d47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc7fe06a_caf7a7be",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 789,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-08T15:36:40Z",
+      "side": 1,
+      "message": "unused",
+      "range": {
+        "startLine": 786,
+        "startChar": 0,
+        "endLine": 789,
+        "endChar": 52
+      },
+      "revId": "7e0f62f65d072ef037c97b3f982416bdd3434d47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
