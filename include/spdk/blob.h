@@ -44,12 +44,8 @@
  * a few general rules regarding thread safety to avoid taking locks
  * in the I/O path. Functions starting with the prefix "spdk_bs_md" must only
  * be called from the metadata thread, of which there is only one at a time.
- * The user application can declare which thread is the metadata thread by
- * calling \ref spdk_bs_register_md_thread, but by default it is the thread
- * that was used to create the blobstore initially. The metadata thread can
- * be changed at run time by first unregistering
- * (\ref spdk_bs_unregister_md_thread) and then re-registering. Registering
- * a thread as the metadata thread is expensive and should be avoided.
+ * The metadata thread is the thread which called spdk_bs_init() or
+ * spdk_bs_load().
  *
  * Functions starting with the prefix "spdk_bs_io" are passed a channel
  * as an argument, and channels may only be used from the thread they were
@@ -200,16 +196,6 @@ uint64_t spdk_bs_free_cluster_count(struct spdk_blob_store *bs);
 
 /* Get the total number of clusters accessible by user. */
 uint64_t spdk_bs_total_data_cluster_count(struct spdk_blob_store *bs);
-
-/* Register the current thread as the metadata thread. All functions beginning with
- * the prefix "spdk_bs_md" must be called only from this thread.
- */
-int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
-
-/* Unregister the current thread as the metadata thread. This allows a different
- * thread to be registered.
- */
-int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
 
 /* Return the blobid */
 spdk_blob_id spdk_blob_get_id(struct spdk_blob *blob);
