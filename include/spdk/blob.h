@@ -235,22 +235,18 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 /* Resize a blob to 'sz' clusters.
  *
  * These changes are not persisted to disk until
- * spdk_bs_md_sync_blob() is called. */
-int spdk_bs_md_resize_blob(struct spdk_blob *blob, size_t sz);
+ * spdk_blob_sync_md() is called. */
+int spdk_blob_resize(struct spdk_blob *blob, size_t sz);
 
 /* Sync a blob */
-/* Make a blob persistent. This applies to open, resize, set xattr,
+/* Make a blob persistent. This applies to resize, set xattr,
  * and remove xattr. These operations will not be persistent until
  * the blob has been synced.
- *
- * I/O operations (read/write) are synced independently. See
- * spdk_bs_io_flush_channel().
  */
-void spdk_bs_md_sync_blob(struct spdk_blob *blob,
-			  spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Close a blob. This will automatically sync. */
-void spdk_bs_md_close_blob(struct spdk_blob **blob, spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_close(struct spdk_blob **blob, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs);
 
@@ -294,13 +290,12 @@ void spdk_bs_md_iter_first(struct spdk_blob_store *bs,
 void spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **blob,
 			  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 
-int spdk_blob_md_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
-			   uint16_t value_len);
-int spdk_blob_md_remove_xattr(struct spdk_blob *blob, const char *name);
-int spdk_bs_md_get_xattr_value(struct spdk_blob *blob, const char *name,
-			       const void **value, size_t *value_len);
-int spdk_bs_md_get_xattr_names(struct spdk_blob *blob,
-			       struct spdk_xattr_names **names);
+int spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
+			uint16_t value_len);
+int spdk_blob_remove_xattr(struct spdk_blob *blob, const char *name);
+int spdk_blob_get_xattr_value(struct spdk_blob *blob, const char *name,
+			      const void **value, size_t *value_len);
+int spdk_blob_get_xattr_names(struct spdk_blob *blob, struct spdk_xattr_names **names);
 
 uint32_t spdk_xattr_names_get_count(struct spdk_xattr_names *names);
 const char *spdk_xattr_names_get_name(struct spdk_xattr_names *names, uint32_t index);

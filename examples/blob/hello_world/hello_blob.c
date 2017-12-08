@@ -168,8 +168,7 @@ read_complete(void *arg1, int bserrno)
 	}
 
 	/* Now let's close it and delete the blob in the callback. */
-	spdk_bs_md_close_blob(&hello_context->blob, delete_blob,
-			      hello_context);
+	spdk_blob_close(&hello_context->blob, delete_blob, hello_context);
 }
 
 /*
@@ -298,7 +297,7 @@ open_complete(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	 * there'd usually be many blobs of various sizes. The resize
 	 * unit is a cluster.
 	 */
-	rc = spdk_bs_md_resize_blob(hello_context->blob, free);
+	rc = spdk_blob_resize(hello_context->blob, free);
 	if (rc) {
 		unload_bs(hello_context, "Error in blob resize",
 			  bserrno);
@@ -318,8 +317,7 @@ open_complete(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	 * good idea to sync after making metadata changes unless
 	 * it has an unacceptable impact on application performance.
 	 */
-	spdk_bs_md_sync_blob(hello_context->blob, sync_complete,
-			     hello_context);
+	spdk_blob_sync_md(hello_context->blob, sync_complete, hello_context);
 }
 
 /*

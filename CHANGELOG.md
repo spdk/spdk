@@ -27,6 +27,18 @@ framework to request registration and unregistration of pollers.
 The poller abstraction was removed from the bdev layer. There is now a general purpose
 abstraction for pollers available in include/spdk/io_channel.h
 
+### Blobstore
+
+A number of functions have been renamed:
+
+spdk_bs_md_resize_blob => spdk_blob_resize
+spdk_bs_md_sync_blob => spdk_blob_sync_md
+spdk_bs_md_close_blob => spdk_blob_close
+spdk_bs_md_get_xattr_names => spdk_blob_get_xattr_names
+spdk_bs_md_get_xattr_value => spdk_blob_get_xattr_value
+spdk_blob_md_set_xattr => spdk_blob_set_xattr
+spdk_blob_md_remove_xattr => spdk_blob_remove_xattr
+
 ## v17.10: Logical Volumes
 
 ### New dependencies
