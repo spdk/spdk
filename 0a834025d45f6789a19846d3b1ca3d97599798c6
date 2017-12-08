@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "ad880cc4_61d1d4be",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-08T17:24:04Z",
+      "side": 1,
+      "message": "I would prefer to create an spdk_mempool_create variant where we can pass a constructor function.  Then we can avoid object construction in main I/O path.\n\nMaybe spdk_mempool_create_with_ctor()?\n\nBut I think that function should be added in separate patch, before this one.",
+      "revId": "0a834025d45f6789a19846d3b1ca3d97599798c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0dd182cb_026283de",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 2
