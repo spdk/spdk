@@ -207,16 +207,16 @@ uint64_t spdk_blob_get_num_pages(struct spdk_blob *blob);
 uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 
 /* Create a new blob with initial size of 'sz' clusters. */
-void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
-			    spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
+void spdk_bs_create_blob(struct spdk_blob_store *bs,
+			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg);
 
 /* Delete an existing blob. */
-void spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
-			    spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			 spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Open a blob */
-void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
-			  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
+		       spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 
 /* Resize a blob to 'sz' clusters.
  *
@@ -267,10 +267,10 @@ void spdk_bs_io_write_zeroes_blob(struct spdk_blob *blob, struct spdk_io_channel
 				  uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Iterate through all blobs */
-void spdk_bs_md_iter_first(struct spdk_blob_store *bs,
-			   spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
-void spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **blob,
-			  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+void spdk_bs_iter_first(struct spdk_blob_store *bs,
+			spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+void spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob **blob,
+		       spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 
 int spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,
 			uint16_t value_len);
