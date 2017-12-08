@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e3461dc2_58d4de63",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-08T13:14:27Z",
+      "side": 0,
+      "message": "Your patch looks fine but it looks that spdk_mempool_get() does not check the return value of rte_mempool_get() like the above.\n\nI think spdk_mempool_get should have the above error check in another patch.",
+      "range": {
+        "startLine": 518,
+        "startChar": 0,
+        "endLine": 522,
+        "endChar": 2
+      },
+      "revId": "0ed235091c67ca1b3a09679188037b821fff7807",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

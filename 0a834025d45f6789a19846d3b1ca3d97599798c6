@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0dd182cb_026283de",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 388,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-08T13:14:27Z",
+      "side": 1,
+      "message": "for ( ; i \u003e 0; --i) { put(pool, session[i - 1]); } saves j but your code is simple and fine.\n\nrte_mempool_put() does not clear the object data and tsih will be saved. Clearing this will be better or not?",
+      "range": {
+        "startLine": 386,
+        "startChar": 0,
+        "endLine": 388,
+        "endChar": 2
+      },
+      "revId": "0a834025d45f6789a19846d3b1ca3d97599798c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
