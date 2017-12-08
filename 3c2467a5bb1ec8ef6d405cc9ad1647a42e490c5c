@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a71d5e6b_a0accfeb",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 533,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T07:47:55Z",
+      "side": 1,
+      "message": "Reflect that change in the test plan as well.\nApplies to all other modified tests",
+      "range": {
+        "startLine": 528,
+        "startChar": 8,
+        "endLine": 533,
+        "endChar": 27
+      },
+      "revId": "3c2467a5bb1ec8ef6d405cc9ad1647a42e490c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ab9b554_4357caa5",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T07:47:55Z",
+      "side": 1,
+      "message": "From trello task:\n\"At least 1 tasting test is required to do a full restart.\"\n\nPlease leave test 650  with stop/start vhost scenario.\nMaciek, please confirm that it\u0027s the right test to do so.",
+      "range": {
+        "startLine": 711,
+        "startChar": 7,
+        "endLine": 717,
+        "endChar": 27
+      },
+      "revId": "3c2467a5bb1ec8ef6d405cc9ad1647a42e490c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
