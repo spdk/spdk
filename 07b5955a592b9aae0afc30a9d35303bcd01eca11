@@ -71,6 +71,29 @@
     },
     {
       "key": {
+        "uuid": "ffed2c24_3643a472",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-08T09:07:56Z",
+      "side": 1,
+      "message": "If you wanted hot-plugged devices then shouldnt you have this in config file?:\n[Nvme]\nHotplugEnable Yes\nWith that you could skip \"construct_nvme_bdev\"",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 66
+      },
+      "revId": "07b5955a592b9aae0afc30a9d35303bcd01eca11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e24c551_7ee7dca6",
         "filename": "test/iscsi_tgt/fio/fio.sh",
         "patchSetId": 17
