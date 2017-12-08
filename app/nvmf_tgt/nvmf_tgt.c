@@ -57,14 +57,36 @@ static struct spdk_poller *g_acceptor_poller = NULL;
 static void nvmf_tgt_advance_state(void *arg1, void *arg2);
 
 static void
-spdk_nvmf_shutdown_cb(void)
+_spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
 {
-	fprintf(stdout, "\n=========================\n");
-	fprintf(stdout, "   NVMF shutdown signal\n");
-	fprintf(stdout, "=========================\n");
+	/* Still in initialization state, defer shutdown operation */
+	if (g_tgt.state < NVMF_TGT_RUNNING) {
+		spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(),
+						    _spdk_nvmf_shutdown_cb, NULL, NULL));
+		return;
+	} else if (g_tgt.state > NVMF_TGT_RUNNING) {
+		/* Already in Shutdown status, ignore the signal */
+		return;
+	}
 
 	g_tgt.state = NVMF_TGT_FINI_STOP_ACCEPTOR;
 	nvmf_tgt_advance_state(NULL, NULL);
+}
+
+static void
+spdk_nvmf_shutdown_cb(void)
+{
+	printf("\n=========================\n");
+	printf("   NVMF shutdown signal\n");
+	printf("=========================\n");
+
+	/* Always let the first core to handle the case */
+	if (spdk_env_get_current_core() != spdk_env_get_first_core()) {
+		spdk_event_call(spdk_event_allocate(spdk_env_get_first_core(),
+						    _spdk_nvmf_shutdown_cb, NULL, NULL));
+	} else {
+		_spdk_nvmf_shutdown_cb(NULL, NULL);
+	}
 }
 
 struct spdk_nvmf_subsystem *
