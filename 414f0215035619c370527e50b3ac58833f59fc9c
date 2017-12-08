@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "55cedb5a_f0fa897b",
+        "filename": "test/nvmf/multiconnection/multiconnection.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-08T09:44:24Z",
+      "side": 1,
+      "message": "You could see patch set 3 build log.\n 03:49:28\t# for i in `seq 0 $CONNECTION_NUMBER`\n 03:49:28\t# nvme connect -t rdma -n nqn.2016-06.io.spdk:cnode41 -a 192.168.100.8 -s 4420\n 03:49:29\t# for i in `seq 0 $CONNECTION_NUMBER`\n 03:49:29\t# nvme connect -t rdma -n nqn.2016-06.io.spdk:cnode42 -a 192.168.100.8 -s 4420\nrdma.c: 417:spdk_nvmf_rdma_qpair_create: *ERROR*: Unable to allocate sufficient memory for RDMA queue.\nI found 42 is the max connection value for autotest, so I set 40 connection in my patch.\nMy local test server can support 64 connection and up.",
+      "parentUuid": "4fda6868_f940228b",
+      "range": {
+        "startLine": 9,
+        "startChar": 18,
+        "endLine": 9,
+        "endChar": 20
+      },
+      "revId": "414f0215035619c370527e50b3ac58833f59fc9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3b724a7_1ab40c9a",
         "filename": "test/nvmf/multiconnection/multiconnection.sh",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2017-12-08T07:41:20Z",
       "side": 1,
       "message": "This module is loaded in nvmf/common.sh.",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 19
+      },
+      "revId": "414f0215035619c370527e50b3ac58833f59fc9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ce5bb08_5a7eebe5",
+        "filename": "test/nvmf/multiconnection/multiconnection.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-08T09:44:24Z",
+      "side": 1,
+      "message": "Removed.",
+      "parentUuid": "d3b724a7_1ab40c9a",
       "range": {
         "startLine": 11,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "728ce000_730703f8",
+        "filename": "test/nvmf/multiconnection/multiconnection.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-08T09:44:24Z",
+      "side": 1,
+      "message": "The default HUGEMEM is 2G, 128M*40connection need at least 5G, originally  12288 is for more connection, now it can be reduced to 8G.",
+      "parentUuid": "20699ef6_1cc8f9f8",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 39
+      },
+      "revId": "414f0215035619c370527e50b3ac58833f59fc9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15f774fd_28cfd5b1",
         "filename": "test/nvmf/multiconnection/multiconnection.sh",
         "patchSetId": 5
@@ -82,6 +154,30 @@
       "writtenOn": "2017-12-08T07:41:20Z",
       "side": 1,
       "message": "Test plan from Qun mentions two cases, not just one:\n131072 64 randrw 5 verify\n262144 16 randwrite 10 verify",
+      "range": {
+        "startLine": 89,
+        "startChar": 0,
+        "endLine": 89,
+        "endChar": 57
+      },
+      "revId": "414f0215035619c370527e50b3ac58833f59fc9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "275328b4_29f657c3",
+        "filename": "test/nvmf/multiconnection/multiconnection.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-08T09:44:24Z",
+      "side": 1,
+      "message": "Your observation is very careful. You could see patch set 4 build log.\njob38: (groupid\u003d0, jobs\u003d1): err\u003d 5 (file:io_u.c:1711, func\u003dio_u error, error\u003dInput/output error): pid\u003d76446: Thu Dec  7 06:22:35 2017\nThere is a issue resulting in the err. I know someone is fixing it.\nSo now I try to remove err test case and reduce I/O size temporarily.",
+      "parentUuid": "15f774fd_28cfd5b1",
       "range": {
         "startLine": 89,
         "startChar": 0,
