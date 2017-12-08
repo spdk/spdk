@@ -69,14 +69,31 @@ nvmf_tgt_delete_subsystem(struct nvmf_tgt_subsystem *app_subsys)
 }
 
 static void
+_spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
+{
+	/* Still in initialization state, defer shutdown operation */
+	if (g_tgt.state < NVMF_TGT_RUNNING) {
+		spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(),
+						    _spdk_nvmf_shutdown_cb, NULL, NULL));
+		return;
+	} else if (g_tgt.state > NVMF_TGT_RUNNING) {
+		/* Already in Shutdown status, ignore the signal */
+		return;
+	}
+
+	g_tgt.state = NVMF_TGT_FINI_STOP_ACCEPTOR;
+	nvmf_tgt_advance_state(NULL, NULL);
+}
+
+static void
 spdk_nvmf_shutdown_cb(void)
 {
 	fprintf(stdout, "\n=========================\n");
 	fprintf(stdout, "   NVMF shutdown signal\n");
 	fprintf(stdout, "=========================\n");
 
-	g_tgt.state = NVMF_TGT_FINI_STOP_ACCEPTOR;
-	nvmf_tgt_advance_state(NULL, NULL);
+	spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(),
+					    _spdk_nvmf_shutdown_cb, NULL, NULL));
 }
 
 struct nvmf_tgt_subsystem *
