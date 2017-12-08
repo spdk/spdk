@@ -579,14 +579,14 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 		return;
 	}
 
-	rc = spdk_bs_md_get_xattr_value(blob, "name", (const void **)&name, &value_len);
+	rc = spdk_blob_get_xattr_value(blob, "name", (const void **)&name, &value_len);
 	if (rc < 0) {
 		args->fn.fs_op_with_handle(args->arg, fs, rc);
 		free_fs_request(req);
 		return;
 	}
 
-	rc = spdk_bs_md_get_xattr_value(blob, "length", (const void **)&length, &value_len);
+	rc = spdk_blob_get_xattr_value(blob, "length", (const void **)&length, &value_len);
 	if (rc < 0) {
 		args->fn.fs_op_with_handle(args->arg, fs, rc);
 		free_fs_request(req);
@@ -596,7 +596,7 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 	assert(value_len == 8);
 
 	/* This file could be deleted last time without close it, then app crashed, so we delete it now */
-	rc = spdk_bs_md_get_xattr_value(blob, "is_deleted", (const void **)&is_deleted, &value_len);
+	rc = spdk_blob_get_xattr_value(blob, "is_deleted", (const void **)&is_deleted, &value_len);
 	if (rc < 0) {
 		struct spdk_file *f;
 
@@ -858,11 +858,11 @@ fs_create_blob_open_cb(void *ctx, struct spdk_blob *blob, int bserrno)
 	uint64_t length = 0;
 
 	f->blob = blob;
-	spdk_bs_md_resize_blob(blob, 1);
-	spdk_blob_md_set_xattr(blob, "name", f->name, strlen(f->name) + 1);
-	spdk_blob_md_set_xattr(blob, "length", &length, sizeof(length));
+	spdk_blob_resize(blob, 1);
+	spdk_blob_set_xattr(blob, "name", f->name, strlen(f->name) + 1);
+	spdk_blob_set_xattr(blob, "length", &length, sizeof(length));
 
-	spdk_bs_md_close_blob(&f->blob, fs_create_blob_close_cb, args);
+	spdk_blob_close(&f->blob, fs_create_blob_close_cb, args);
 }
 
 static void
@@ -1132,8 +1132,8 @@ fs_rename_blob_open_cb(void *ctx, struct spdk_blob *blob, int bserrno)
 	const char *new_name = args->op.rename.new_name;
 
 	f->blob = blob;
-	spdk_blob_md_set_xattr(blob, "name", new_name, strlen(new_name) + 1);
-	spdk_bs_md_close_blob(&f->blob, fs_rename_blob_close_cb, req);
+	spdk_blob_set_xattr(blob, "name", new_name, strlen(new_name) + 1);
+	spdk_blob_close(&f->blob, fs_rename_blob_close_cb, req);
 }
 
 static void
@@ -1292,8 +1292,8 @@ spdk_fs_delete_file_async(struct spdk_filesystem *fs, const char *name,
 	if (f->ref_count > 0) {
 		/* If the ref > 0, we mark the file as deleted and delete it when we close it. */
 		f->is_deleted = true;
-		spdk_blob_md_set_xattr(f->blob, "is_deleted", &f->is_deleted, sizeof(bool));
-		spdk_bs_md_sync_blob(f->blob, blob_delete_cb, args);
+		spdk_blob_set_xattr(f->blob, "is_deleted", &f->is_deleted, sizeof(bool));
+		spdk_blob_sync_md(f->blob, blob_delete_cb, args);
 		return;
 	}
 
@@ -1434,15 +1434,15 @@ spdk_file_truncate_async(struct spdk_file *file, uint64_t length,
 
 	num_clusters = __bytes_to_clusters(length, fs->bs_opts.cluster_sz);
 
-	spdk_bs_md_resize_blob(file->blob, num_clusters);
-	spdk_blob_md_set_xattr(file->blob, "length", &length, sizeof(length));
+	spdk_blob_resize(file->blob, num_clusters);
+	spdk_blob_set_xattr(file->blob, "length", &length, sizeof(length));
 
 	file->length = length;
 	if (file->append_pos > file->length) {
 		file->append_pos = file->length;
 	}
 
-	spdk_bs_md_sync_blob(file->blob, fs_truncate_complete_cb, args);
+	spdk_blob_sync_md(file->blob, fs_truncate_complete_cb, args);
 }
 
 static void
@@ -1839,11 +1839,11 @@ __check_sync_reqs(struct spdk_file *file)
 	if (sync_req != NULL && !sync_req->args.op.sync.xattr_in_progress) {
 		BLOBFS_TRACE(file, "set xattr length 0x%jx\n", file->length_flushed);
 		sync_req->args.op.sync.xattr_in_progress = true;
-		spdk_blob_md_set_xattr(file->blob, "length", &file->length_flushed,
-				       sizeof(file->length_flushed));
+		spdk_blob_set_xattr(file->blob, "length", &file->length_flushed,
+				    sizeof(file->length_flushed));
 
 		pthread_spin_unlock(&file->lock);
-		spdk_bs_md_sync_blob(file->blob, __file_cache_finish_sync_bs_cb, file);
+		spdk_blob_sync_md(file->blob, __file_cache_finish_sync_bs_cb, file);
 	} else {
 		pthread_spin_unlock(&file->lock);
 	}
@@ -1942,9 +1942,9 @@ __file_extend_blob(void *_args)
 	struct spdk_fs_cb_args *args = _args;
 	struct spdk_file *file = args->file;
 
-	spdk_bs_md_resize_blob(file->blob, args->op.resize.num_clusters);
+	spdk_blob_resize(file->blob, args->op.resize.num_clusters);
 
-	spdk_bs_md_sync_blob(file->blob, __file_extend_done, args);
+	spdk_blob_sync_md(file->blob, __file_extend_done, args);
 }
 
 static void
@@ -2369,7 +2369,7 @@ __file_close_async(struct spdk_file *file, struct spdk_fs_request *req)
 
 	pthread_spin_unlock(&file->lock);
 
-	spdk_bs_md_close_blob(&file->blob, __file_close_async_done, req);
+	spdk_blob_close(&file->blob, __file_close_async_done, req);
 }
 
 static void

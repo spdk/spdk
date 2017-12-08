@@ -855,7 +855,7 @@ _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 		SPDK_ERRLOG("Cannot create bdev for lvol %s\n", lvol->old_name);
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
 		lvs->lvol_count--;
-		spdk_bs_md_close_blob(&lvol->blob, _vbdev_lvol_close_cb, lvs);
+		spdk_blob_close(&lvol->blob, _vbdev_lvol_close_cb, lvs);
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvol %s failed\n", lvol->old_name);
 		free(lvol->old_name);
 		free(lvol);

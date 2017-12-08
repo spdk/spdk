@@ -200,7 +200,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		goto invalid;
 	}
 
-	rc = spdk_bs_md_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
+	rc = spdk_blob_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len > SPDK_LVOL_NAME_MAX) {
 		SPDK_ERRLOG("Cannot assign lvol name\n");
 		free(lvol->old_name);
@@ -281,26 +281,26 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		return;
 	}
 
-	rc = spdk_bs_md_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
+	rc = spdk_blob_get_xattr_value(blob, "uuid", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len != UUID_STRING_LEN || attr[UUID_STRING_LEN - 1] != '\0') {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "missing or incorrect UUID\n");
 		req->lvserrno = -EINVAL;
-		spdk_bs_md_close_blob(&blob, _spdk_close_super_blob_with_error_cb, req);
+		spdk_blob_close(&blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
 
 	if (uuid_parse(attr, lvs->uuid)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "incorrect UUID '%s'\n", attr);
 		req->lvserrno = -EINVAL;
-		spdk_bs_md_close_blob(&blob, _spdk_close_super_blob_with_error_cb, req);
+		spdk_blob_close(&blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
 
-	rc = spdk_bs_md_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
+	rc = spdk_blob_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len > SPDK_LVS_NAME_MAX) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "missing or invalid name\n");
 		req->lvserrno = -EINVAL;
-		spdk_bs_md_close_blob(&blob, _spdk_close_super_blob_with_error_cb, req);
+		spdk_blob_close(&blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
 
@@ -310,13 +310,13 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	if (rc) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "lvolstore with name %s already exists\n", lvs->name);
 		req->lvserrno = -EEXIST;
-		spdk_bs_md_close_blob(&blob, _spdk_close_super_blob_with_error_cb, req);
+		spdk_blob_close(&blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
 
 	lvs->super_blob_id = spdk_blob_get_id(blob);
 
-	spdk_bs_md_close_blob(&blob, _spdk_close_super_cb, req);
+	spdk_blob_close(&blob, _spdk_close_super_cb, req);
 }
 
 static void
@@ -429,7 +429,7 @@ _spdk_super_blob_set_cb(void *cb_arg, int lvolerrno)
 		return;
 	}
 
-	spdk_bs_md_close_blob(&blob, _spdk_super_create_close_cb, req);
+	spdk_blob_close(&blob, _spdk_super_create_close_cb, req);
 }
 
 static void
@@ -450,9 +450,9 @@ _spdk_super_blob_init_cb(void *cb_arg, int lvolerrno)
 
 	uuid_unparse(lvs->uuid, uuid);
 
-	spdk_blob_md_set_xattr(blob, "uuid", uuid, UUID_STRING_LEN);
-	spdk_blob_md_set_xattr(blob, "name", lvs->name, strnlen(lvs->name, SPDK_LVS_NAME_MAX) + 1);
-	spdk_bs_md_sync_blob(blob, _spdk_super_blob_set_cb, req);
+	spdk_blob_set_xattr(blob, "uuid", uuid, UUID_STRING_LEN);
+	spdk_blob_set_xattr(blob, "name", lvs->name, strnlen(lvs->name, SPDK_LVS_NAME_MAX) + 1);
+	spdk_blob_sync_md(blob, _spdk_super_blob_set_cb, req);
 }
 
 static void
@@ -844,7 +844,7 @@ _spdk_lvol_sync_cb(void *cb_arg, int lvolerrno)
 	struct spdk_lvol *lvol = req->lvol;
 
 	if (lvolerrno != 0) {
-		spdk_bs_md_close_blob(&lvol->blob, _spdk_lvol_delete_blob_cb, lvol);
+		spdk_blob_close(&lvol->blob, _spdk_lvol_delete_blob_cb, lvol);
 	} else {
 		lvol->ref_count++;
 	}
@@ -873,29 +873,29 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	uuid_unparse(lvol->lvol_store->uuid, uuid);
 	lvol->old_name = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
 	if (!lvol->old_name) {
-		spdk_bs_md_close_blob(&blob, _spdk_lvol_delete_blob_cb, lvol);
+		spdk_blob_close(&blob, _spdk_lvol_delete_blob_cb, lvol);
 		SPDK_ERRLOG("Cannot alloc memory for lvol name\n");
 		lvolerrno = -ENOMEM;
 		free(lvol);
 		goto invalid;
 	}
 
-	lvolerrno = spdk_bs_md_resize_blob(blob, lvol->num_clusters);
+	lvolerrno = spdk_blob_resize(blob, lvol->num_clusters);
 	if (lvolerrno < 0) {
-		spdk_bs_md_close_blob(&blob, _spdk_lvol_destroy_cb, lvol);
+		spdk_blob_close(&blob, _spdk_lvol_destroy_cb, lvol);
 		goto invalid;
 	}
 
-	lvolerrno = spdk_blob_md_set_xattr(blob, "name", lvol->name,
-					   strnlen(lvol->name, SPDK_LVOL_NAME_MAX) + 1);
+	lvolerrno = spdk_blob_set_xattr(blob, "name", lvol->name,
+					strnlen(lvol->name, SPDK_LVOL_NAME_MAX) + 1);
 	if (lvolerrno < 0) {
-		spdk_bs_md_close_blob(&blob, _spdk_lvol_destroy_cb, lvol);
+		spdk_blob_close(&blob, _spdk_lvol_destroy_cb, lvol);
 		goto invalid;
 	}
 
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 
-	spdk_bs_md_sync_blob(blob, _spdk_lvol_sync_cb, req);
+	spdk_blob_sync_md(blob, _spdk_lvol_sync_cb, req);
 
 	return;
 
@@ -1029,16 +1029,16 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	rc = spdk_bs_md_resize_blob(blob, sz);
+	rc = spdk_blob_resize(blob, sz);
 	if (rc < 0) {
 		goto invalid;
 	}
 
 	lvol->num_clusters = new_clusters;
 
-	spdk_blob_md_set_xattr(blob, "length", &sz, sizeof(sz));
+	spdk_blob_set_xattr(blob, "length", &sz, sizeof(sz));
 
-	spdk_bs_md_sync_blob(blob, _spdk_lvol_resize_cb, req);
+	spdk_blob_sync_md(blob, _spdk_lvol_resize_cb, req);
 
 	return rc;
 
@@ -1129,7 +1129,7 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
 
-	spdk_bs_md_close_blob(&(lvol->blob), _spdk_lvol_close_blob_cb, req);
+	spdk_blob_close(&(lvol->blob), _spdk_lvol_close_blob_cb, req);
 }
 
 struct spdk_io_channel *
