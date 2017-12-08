@@ -69,7 +69,11 @@ function get_nvme_name_from_bdf {
 	nvme_devs=`lsblk -d --output NAME | grep "^nvme"`
 	set -e
 	for dev in $nvme_devs; do
-		bdf=$(basename $(readlink /sys/block/$dev/device/device))
+		link_name=$(readlink /sys/block/$dev/device/device) || true
+		if [ -z "$link_name" ]; then
+			link_name=$(readlink /sys/block/$dev/device)
+		fi
+		bdf=$(basename "$link_name")
 		if [ "$bdf" = "$1" ]; then
 			eval "$2=$dev"
 			return
