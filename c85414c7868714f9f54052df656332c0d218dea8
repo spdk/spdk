@@ -37,6 +37,42 @@
     },
     {
       "key": {
+        "uuid": "abba8562_4c1981f6",
+        "filename": "scripts/fio.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2017-12-08T14:29:26Z",
+      "side": 1,
+      "message": "Yes, I will do it for iSCSI and nvme/nvmf devices.",
+      "parentUuid": "3618abc9_586b2e1f",
+      "revId": "c85414c7868714f9f54052df656332c0d218dea8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e183b4ed_cfc6d0ee",
+        "filename": "scripts/fio.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2017-12-08T14:29:26Z",
+      "side": 1,
+      "message": "Good question. I will add this function in next patch.",
+      "parentUuid": "ad745083_b95b9ebc",
+      "revId": "c85414c7868714f9f54052df656332c0d218dea8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f00b68f7_13dce20f",
         "filename": "scripts/fio.py",
         "patchSetId": 5
@@ -48,6 +84,24 @@
       "writtenOn": "2017-12-07T19:57:34Z",
       "side": 1,
       "message": "the set_device_parameter and configure_devices changes - do they need to be in this patch?  seems these are not associated with adding nvme-of support",
+      "revId": "c85414c7868714f9f54052df656332c0d218dea8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9da32e48_bc00f40f",
+        "filename": "scripts/fio.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2017-12-08T14:29:26Z",
+      "side": 1,
+      "message": "These two functions will report error while dealing with nvmf devices. I think it is why they are commented in nvmf_fio.py. So I used exception to set nvmf devices parameter to avoid error.",
+      "parentUuid": "f00b68f7_13dce20f",
       "revId": "c85414c7868714f9f54052df656332c0d218dea8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
