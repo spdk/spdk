@@ -2582,10 +2582,10 @@ uint64_t spdk_blob_get_num_clusters(struct spdk_blob *_blob)
 	return blob->active.num_clusters;
 }
 
-/* START spdk_bs_md_create_blob */
+/* START spdk_bs_create_blob */
 
 static void
-_spdk_bs_md_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_bs_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_data *blob = cb_arg;
 
@@ -2594,8 +2594,8 @@ _spdk_bs_md_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
-void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
-			    spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+void spdk_bs_create_blob(struct spdk_blob_store *bs,
+			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_data	*blob;
 	uint32_t		page_idx;
@@ -2632,10 +2632,10 @@ void spdk_bs_md_create_blob(struct spdk_blob_store *bs,
 		return;
 	}
 
-	_spdk_blob_persist(seq, blob, _spdk_bs_md_create_blob_cpl, blob);
+	_spdk_blob_persist(seq, blob, _spdk_bs_create_blob_cpl, blob);
 }
 
-/* END spdk_bs_md_create_blob */
+/* END spdk_bs_create_blob */
 
 /* START spdk_blob_resize */
 int
@@ -2667,10 +2667,10 @@ spdk_blob_resize(struct spdk_blob *_blob, uint64_t sz)
 /* END spdk_blob_resize */
 
 
-/* START spdk_bs_md_delete_blob */
+/* START spdk_bs_delete_blob */
 
 static void
-_spdk_bs_md_delete_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_bs_delete_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_data *blob = cb_arg;
 
@@ -2680,7 +2680,7 @@ _spdk_bs_md_delete_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 }
 
 static void
-_spdk_bs_md_delete_open_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_bs_delete_open_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_data *blob = cb_arg;
 
@@ -2693,12 +2693,12 @@ _spdk_bs_md_delete_open_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	blob->active.num_pages = 0;
 	_spdk_resize_blob(blob, 0);
 
-	_spdk_blob_persist(seq, blob, _spdk_bs_md_delete_blob_cpl, blob);
+	_spdk_blob_persist(seq, blob, _spdk_bs_delete_blob_cpl, blob);
 }
 
 void
-spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
-		       spdk_blob_op_complete cb_fn, void *cb_arg)
+spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
+		    spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_data	*blob;
 	struct spdk_bs_cpl	cpl;
@@ -2730,15 +2730,15 @@ spdk_bs_md_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		return;
 	}
 
-	_spdk_blob_load(seq, blob, _spdk_bs_md_delete_open_cpl, blob);
+	_spdk_blob_load(seq, blob, _spdk_bs_delete_open_cpl, blob);
 }
 
-/* END spdk_bs_md_delete_blob */
+/* END spdk_bs_delete_blob */
 
-/* START spdk_bs_md_open_blob */
+/* START spdk_bs_open_blob */
 
 static void
-_spdk_bs_md_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_bs_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_data *blob = cb_arg;
 
@@ -2756,8 +2756,8 @@ _spdk_bs_md_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
-void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
-			  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
+		       spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob_data		*blob;
 	struct spdk_bs_cpl		cpl;
@@ -2798,10 +2798,13 @@ void spdk_bs_md_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		return;
 	}
 
-	_spdk_blob_load(seq, blob, _spdk_bs_md_open_blob_cpl, blob);
+	_spdk_blob_load(seq, blob, _spdk_bs_open_blob_cpl, blob);
 }
 
+/* END spdk_bs_open_blob */
+
 /* START spdk_blob_sync_md */
+
 static void
 _spdk_blob_sync_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
@@ -3001,12 +3004,12 @@ _spdk_bs_iter_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 		return;
 	}
 
-	spdk_bs_md_open_blob(bs, id, _spdk_bs_iter_cpl, ctx);
+	spdk_bs_open_blob(bs, id, _spdk_bs_iter_cpl, ctx);
 }
 
 void
-spdk_bs_md_iter_first(struct spdk_blob_store *bs,
-		      spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+spdk_bs_iter_first(struct spdk_blob_store *bs,
+		   spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_iter_ctx *ctx;
 
@@ -3033,8 +3036,8 @@ _spdk_bs_iter_close_cpl(void *cb_arg, int bserrno)
 }
 
 void
-spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
-		     spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
+spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
+		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_iter_ctx *ctx;
 	struct spdk_blob_data	*blob;
