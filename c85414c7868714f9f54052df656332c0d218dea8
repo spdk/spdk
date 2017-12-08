@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3618abc9_586b2e1f",
+        "filename": "scripts/fio.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-08T02:57:33Z",
+      "side": 1,
+      "message": "Agreed, we should omit the devices which have valid mountpoint, both for iSCSI and nvme/nvmf tests.",
+      "parentUuid": "ad745083_b95b9ebc",
+      "revId": "c85414c7868714f9f54052df656332c0d218dea8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f00b68f7_13dce20f",
         "filename": "scripts/fio.py",
         "patchSetId": 5
