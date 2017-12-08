@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e483050_cdf5538d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-08T13:19:42Z",
+      "side": 1,
+      "message": "Why not call it spdk_bdev_resize(bdev, size) ?\nEven if at the current stage, setting the blockcnt is most that it does, in future much more logic will go into it.",
+      "range": {
+        "startLine": 308,
+        "startChar": 4,
+        "endLine": 308,
+        "endChar": 28
+      },
+      "revId": "3afb5255c879f6199d9647206d1a98542b5d3976",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebaabb56_cdbe8566",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-08T13:19:42Z",
+      "side": 1,
+      "message": "This is not wrong, but it was convention to use curly brackets even in one liners.\n\nif (condition) {\n    goto error_return;\n}",
+      "revId": "3afb5255c879f6199d9647206d1a98542b5d3976",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
