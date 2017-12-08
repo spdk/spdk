@@ -2917,13 +2917,6 @@ void spdk_bs_free_io_channel(struct spdk_io_channel *channel)
 	spdk_put_io_channel(channel);
 }
 
-void spdk_bs_io_flush_channel(struct spdk_io_channel *channel,
-			      spdk_blob_op_complete cb_fn, void *cb_arg)
-{
-	/* Flush is synchronous right now */
-	cb_fn(cb_arg, 0);
-}
-
 void spdk_bs_io_unmap_blob(struct spdk_blob *blob, struct spdk_io_channel *channel,
 			   uint64_t offset, uint64_t length, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
