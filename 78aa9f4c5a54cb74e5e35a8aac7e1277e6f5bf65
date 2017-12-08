@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9fbf7533_d96114df",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-08T19:03:19Z",
+      "side": 1,
+      "message": "This is going to wait for initialization to complete - but if you got the shutdown signal I don\u0027t know if we really want to wait that long. We want to stop initialization early and move to shutting down as quickly as we can.\n\nI think the best way to tackle this is to add a new state after NVMF_TGT_RUNNING called \"NVMF_TGT_SHUTDOWN_REQUESTED\", and that state just advances the state to NVMF_TGT_FINI_STOP_ACCEPTOR. You can set the state to that new state witin this if statement, but don\u0027t call nvmf_tgt_advance_state. Then, in the normal initialization path, any time it would have set g_tgt.state to a new state in response to an asynchronous operation, check if the state has been changed to NVMF_TGT_SHUTDOWN_REQUESTED. Don\u0027t overwrite the state if it was changed, but still call nvmf_tgt_advance_state. I think the only place you have to do this is nvmf_tgt_create_poll_group_done. You can also check for NVMF_TGT_SHUTDOWN_REQUESTED in nvmf_tgt_create_poll_group and skip creating a new poll group if the user has already pressed ctrl-c. That way it will actually stop initialization early.\n\nIt would probably help if you added a utility function to set the state that looked like this:\n\nvoid\nnvmf_tgt_set_state(enum nvmf_tgt_state expected_state, enum nvmf_tgt_state next_state)\n{\n    switch (next_state) {\n        case NVMF_TGT_SHUTDOWN_REQUESTED:\n        case NVMF_TGT_ERROR:\n            /* You can enter these states from any other\n             * state\n             */\n            g_tgt.state \u003d next_state;\n            break;\n        default:\n            if (g_tgt.state \u003d\u003d NVMF_TGT_SHUTDOWN_REQUESTED) {\n                break;\n            }\n            /* Fall through */\n        case SPDK_NVMF_FINI_STOP_ACCEPTOR;\n            assert(g_tgt.state \u003d\u003d expected_state);\n            assert(next_state \u003d\u003d expected_state + 1);\n            g_tgt.state \u003d next_state;\n            break;\n    }\n}\n\nThis verifies that the state machine is moving through the states correctly and handles the behavior for skipping to the shutdown requested state.",
+      "revId": "78aa9f4c5a54cb74e5e35a8aac7e1277e6f5bf65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff657aa2_0e7f96a0",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-08T19:03:19Z",
+      "side": 1,
+      "message": "This is not necessarily the same core as the one executing nvmf_tgt_advance_state. I think you need to save the \"initialization\" thread somewhere globally at start up and send the message there.",
+      "revId": "78aa9f4c5a54cb74e5e35a8aac7e1277e6f5bf65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
