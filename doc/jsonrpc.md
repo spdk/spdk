@@ -78,6 +78,101 @@ Example response:
 ~~~
 
 
+# Block Device Abstraction Layer {#jsonrpc_components_bdev}
+
+## get_bdevs {#rpc_get_bdevs}
+
+Get information about block devices (bdevs).
+
+### Parameters
+
+The user may specify no parameters in order to list all block devices, or a block device may be
+specified by name.
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | Block device name
+
+### Response
+
+The response is an array of objects containing information about the requested block devices.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_bdevs",
+  "params": {
+    "name": "Malloc0"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "Malloc0",
+      "product_name": "Malloc disk",
+      "block_size": 512,
+      "num_blocks": 20480,
+      "claimed": false,
+      "supported_io_types": {
+        "read": true,
+        "write": true,
+        "unmap": true,
+        "write_zeroes": true,
+        "flush": true,
+        "reset": true,
+        "nvme_admin": false,
+        "nvme_io": false
+      },
+      "driver_specific": {}
+    }
+  ]
+}
+~~~
+
+## delete_bdev {#rpc_delete_bdev}
+
+Unregister a block device.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "delete_bdev",
+  "params": {
+    "name": "Malloc0"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+
+
 # NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
 ## get_nvmf_subsystems method {#rpc_get_nvmf_subsystems}
