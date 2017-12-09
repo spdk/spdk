@@ -65,6 +65,29 @@
     },
     {
       "key": {
+        "uuid": "a182fd7e_804916d0",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-09T19:26:42Z",
+      "side": 1,
+      "message": "Maybe better name would be mask_size, sz or cnt?",
+      "range": {
+        "startLine": 4,
+        "startChar": 65,
+        "endLine": 4,
+        "endChar": 66
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0fb2387c_2704bfc1",
         "filename": "lib/env_dpdk/cpuset.c",
         "patchSetId": 2
@@ -79,6 +102,75 @@
       "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2677c35_fd9d895d",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-09T19:26:42Z",
+      "side": 1,
+      "message": "can you use toascii() or this is not portable?",
+      "range": {
+        "startLine": 25,
+        "startChar": 10,
+        "endLine": 25,
+        "endChar": 18
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70598e50_e8eb4c91",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-09T19:26:42Z",
+      "side": 1,
+      "message": "buffer overflow? You are not using \u0027n\u0027 parameter.",
+      "range": {
+        "startLine": 25,
+        "startChar": 3,
+        "endLine": 27,
+        "endChar": 9
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "309b12fd_10d24c40",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-09T19:26:42Z",
+      "side": 1,
+      "message": "I think this need unit tests. At least three cases are not caught here: \"[10--11]\" and \"[,10-11]\" and \"[11-10]\"",
+      "range": {
+        "startLine": 63,
+        "startChar": 1,
+        "endLine": 91,
+        "endChar": 23
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -102,6 +194,29 @@
       "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "988ec236_1c826e1d",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-09T19:26:42Z",
+      "side": 1,
+      "message": "You missed one old integer cpumask. You are getting NULL pointer crash from here https://github.com/spdk/spdk/blob/fcccf1676785435b1c8721dc4c8aa0af0e403c2c/lib/iscsi/iscsi_rpc.c#L824 - last parameter is cpumask (integer - zero).",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 1
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
