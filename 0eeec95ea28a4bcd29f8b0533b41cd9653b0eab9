@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8bbaedb3_8ea68022",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-09T18:17:53Z",
+      "side": 1,
+      "message": "I totally agree with you but this proposed API is - gently speaking - not simple enough. Virtio spec say that the request have fixed layout: zero or more RO descriptor then zero or more WR descriptors. This is a hint that the simplest needed and sufficient API to place request (aka buffer according to Virtio) is a function with following declaration:\n\nint virito_send_req(struct virtqueue *vq, struct iovec *ro, size_t ro_cnt, struct iovec *wr, size_t wr_cnt);\n\nOf course we can place the whole \"struct iovec *ro, size_t ro_cnt, struct iovec *wr, size_t wr_cnt\" part in struct virtio_req or whatever is good for us but final logic should be equivalent.\n\nSee http://docs.oasis-open.org/virtio/virtio/v1.0/csprd01/virtio-v1.0-csprd01.html#x1-270001",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 25
+      },
+      "revId": "0eeec95ea28a4bcd29f8b0533b41cd9653b0eab9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
