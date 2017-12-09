@@ -124,8 +124,11 @@ vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 		 * unconditionally until the first SPDK-managed device is
 		 * hotplugged.
 		 */
+		fprintf(stderr, "tag12 defer.\n");
 		goto out_insert;
 	}
+
+	fprintf(stderr, "tag12 map inline.\n");
 
 	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
 	if (ret) {
@@ -395,8 +398,11 @@ spdk_vtophys_get_ref(void)
 	g_vfio.device_ref++;
 	if (g_vfio.device_ref > 1) {
 		pthread_mutex_unlock(&g_vfio.mutex);
+		fprintf(stderr, "tag12 get ref.\n");
 		return;
 	}
+
+	fprintf(stderr, "tag12 map.\n");
 
 	/* This is the first SPDK device using DPDK vfio. This means that the first
 	 * IOMMU group might have been just been added to the DPDK vfio container.
@@ -429,8 +435,11 @@ spdk_vtophys_put_ref(void)
 	g_vfio.device_ref--;
 	if (g_vfio.device_ref > 0) {
 		pthread_mutex_unlock(&g_vfio.mutex);
+		fprintf(stderr, "tag12 put ref.\n");
 		return;
 	}
+
+	fprintf(stderr, "tag12 unmap.\n");
 
 	/* This is the last SPDK device using DPDK vfio. If DPDK doesn't have
 	 * any additional devices using it's vfio container, all the mappings
