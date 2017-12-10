@@ -22,6 +22,30 @@
       "revId": "0eeec95ea28a4bcd29f8b0533b41cd9653b0eab9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30094f8d_3bf33202",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-10T09:50:07Z",
+      "side": 1,
+      "message": "virtio_req used to look somewhat like this in the beginning:\n\nstruct virtio_req {\n  struct iovec *iovs;\n  int iovcnt;\n  int write_start_index;\n}\n\nWe\u0027ve switched to the separate request/response descriptors model to allow us doing zero-copy on the I/O descriptor chain.\nIn bdev_virtio, once we got a raw I/O iovec chain, we would have to append/prepend additional Virtio-SCSI request/response descriptors We\u0027d have to reallocate or copy the iovec chain. We do not necessarily want that - not if we can easily avoid it.\n\nTo do some kind of zero-copy the API could look like this:\nint virito_send_req(struct virtqueue *vq, struct iovec **ro, size_t *ro_cnt, size_t ro_iovec_cnt, struct iovec **wr, size_t *wr_cnt, size_t wr_iovec_cnt);\nbut I simply don\u0027t like it.\n\n\u003e not simple enough\n\nit\u0027s a generic virtio library, let it be",
+      "parentUuid": "8bbaedb3_8ea68022",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 25
+      },
+      "revId": "0eeec95ea28a4bcd29f8b0533b41cd9653b0eab9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
