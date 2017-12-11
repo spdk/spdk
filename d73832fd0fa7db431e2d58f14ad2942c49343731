@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ac28880_d9c21f35",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-11T22:53:01Z",
+      "side": 1,
+      "message": "We also need to remove write_cache \u003d 1 here.",
+      "revId": "d73832fd0fa7db431e2d58f14ad2942c49343731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
