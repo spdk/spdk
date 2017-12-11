@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebfab8e2_f3339fa9",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2817,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-11T09:50:45Z",
+      "side": 1,
+      "message": "I read_only is false you set data_ro and md_ro to false, but you set flags as it was true.",
+      "range": {
+        "startLine": 2813,
+        "startChar": 0,
+        "endLine": 2817,
+        "endChar": 45
+      },
+      "revId": "a7312c37294130a043f3414f1139679480048674",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "285421e2_88478478",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2819,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-11T09:50:45Z",
+      "side": 1,
+      "message": "This should only be set if previous flags state has been changed.",
+      "range": {
+        "startLine": 2819,
+        "startChar": 1,
+        "endLine": 2819,
+        "endChar": 37
+      },
+      "revId": "a7312c37294130a043f3414f1139679480048674",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b889f6dd_075187f7",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-11T09:50:45Z",
+      "side": 1,
+      "message": "data_ro_flags \u0026 SPDK_BLOB_DATA_READ_ONLY \u003d SPDK_BLOB_DATA_READ_ONLY  would probably better. Same for line 428.",
+      "range": {
+        "startLine": 426,
+        "startChar": 1,
+        "endLine": 426,
+        "endChar": 60
+      },
+      "revId": "a7312c37294130a043f3414f1139679480048674",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "928a3126_24e9a270",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-11T09:50:45Z",
+      "side": 1,
+      "message": "You can also add spdk_bs_md_set_read_only(blob, false) and check if flags were correctly updated. Also you can check dirty state flag.",
+      "revId": "a7312c37294130a043f3414f1139679480048674",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
