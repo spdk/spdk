@@ -240,7 +240,9 @@ struct spdk_blob_md_descriptor_extent {
  *  mask of all flag values understood by this application.
  */
 #define SPDK_BLOB_INVALID_FLAGS_MASK	0
-#define SPDK_BLOB_DATA_RO_FLAGS_MASK	0
+
+#define SPDK_BLOB_READ_ONLY (1ULL << 0)
+#define SPDK_BLOB_DATA_RO_FLAGS_MASK	SPDK_BLOB_READ_ONLY
 #define SPDK_BLOB_MD_RO_FLAGS_MASK	0
 
 struct spdk_blob_md_descriptor_flags {
