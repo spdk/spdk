@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "af0601fa_5d55eb1d",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2234,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-11T20:51:23Z",
+      "side": 1,
+      "message": "I think g_value should get initialized somewhere here.  By default, g_value will just be set to 0, but that\u0027s not a very good test value.  Better to pick something that will not cause a test to pass accidentally.",
+      "revId": "b28c1fa73e616a1b71a6d24fc98bc586a9e80f67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e65c1d6c_aa5f62ea",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2237,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-11T20:51:23Z",
+      "side": 1,
+      "message": "We only test 1 xattr count?  It seems good unit tests would want to test more than 1 also.",
+      "revId": "b28c1fa73e616a1b71a6d24fc98bc586a9e80f67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
