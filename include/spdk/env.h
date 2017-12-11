@@ -155,6 +155,28 @@ struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
 		size_t ele_size, size_t cache_size, int socket_id);
 
 /**
+ * An object callback function for mempool.
+ *
+ * Used by spdk_mempool_create_ctor
+ */
+typedef void (spdk_mempool_obj_cb_t)(struct spdk_mempool *mp,
+				     void *opaque, void *obj, unsigned obj_idx);
+
+/**
+ * Create a thread-safe memory pool with user provided initialization function and argument.
+ *
+ * \param cache_size How many elements may be cached in per-core caches. Use
+ *        SPDK_MEMPOOL_DEFAULT_CACHE_SIZE for a reasonable default, or 0 for no
+ *	  per-core cache.
+ * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY for any socket.
+ * \param obj_init  User provided object calll back initialization function.
+ * \paam obj_init_arg User provided callback initialization function argument.
+ */
+struct spdk_mempool *spdk_mempool_create_ctor(const char *name, size_t count,
+		size_t ele_size, size_t cache_size, int socket_id,
+		spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg);
+
+/**
  * Get the name of a mempool
  */
 char *spdk_mempool_get_name(struct spdk_mempool *mp);
