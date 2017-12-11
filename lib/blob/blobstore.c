@@ -227,6 +227,11 @@ _spdk_blob_parse_page(const struct spdk_blob_md_page *page, struct spdk_blob_dat
 				blob->md_ro = true;
 			}
 
+			if ((desc_flags->data_ro_flags & SPDK_BLOB_READ_ONLY)) {
+				blob->data_ro = true;
+				blob->md_ro = true;
+			}
+
 			blob->invalid_flags = desc_flags->invalid_flags;
 			blob->data_ro_flags = desc_flags->data_ro_flags;
 			blob->md_ro_flags = desc_flags->md_ro_flags;
@@ -2614,6 +2619,7 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 	}
 	_spdk_blob_set_xattrs(__data_to_blob(blob), opts);
 	spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
+
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
@@ -2826,8 +2832,20 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 	_spdk_blob_load(seq, blob, _spdk_bs_open_blob_cpl, blob);
 }
-
 /* END spdk_bs_open_blob */
+
+/* START spdk_blob_set_read_only */
+void spdk_blob_set_read_only(struct spdk_blob *b)
+{
+	struct spdk_blob_data *blob = __blob_to_data(b);
+
+	blob->data_ro = true;
+	blob->md_ro = true;
+	blob->data_ro_flags |= SPDK_BLOB_READ_ONLY;
+
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+}
+/* END spdk_blob_set_read_only */
 
 /* START spdk_blob_sync_md */
 
