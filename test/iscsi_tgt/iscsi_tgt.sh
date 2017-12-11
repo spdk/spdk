@@ -38,10 +38,6 @@ if [ $SPDK_TEST_NVML -eq 1 ]; then
 	run_test ./test/iscsi_tgt/pmem/iscsi_pmem.sh 4096 10
 fi
 
-if [ $RUN_NIGHTLY -eq 1 ] && [ $SPDK_TEST_NVML -eq 1 ]; then
-	run_test ./test/iscsi_tgt/pmem/iscsi_pmem.sh 131072 600
-fi
-
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test ./test/iscsi_tgt/ip_migration/ip_migration.sh
 fi
