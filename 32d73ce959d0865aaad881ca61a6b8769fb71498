@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d291aab_a462098c",
+        "filename": "test/nvmf/host/kernel_nvmf.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-11T05:41:00Z",
+      "side": 1,
+      "message": "192.168.100.8 and 4420 are all hardcoded.",
+      "revId": "32d73ce959d0865aaad881ca61a6b8769fb71498",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
