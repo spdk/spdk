@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35daba8f_6b19e6f5",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-11T15:38:35Z",
+      "side": 1,
+      "message": "Combine this function with spdk_nvmf_remove_ns_done - that\u0027s the only place where it is used.",
+      "revId": "ca22a2210cb43c17a53fff6a5331bb46e9f5155b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b594460_f91f1b30",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-11T15:38:35Z",
+      "side": 1,
+      "message": "I think you should just destroy the one namespace that got the hot remove event - don\u0027t loop over all namespaces. There could be other hot remove chains of events occurring in the system that we don\u0027t want to interfere with.",
+      "revId": "ca22a2210cb43c17a53fff6a5331bb46e9f5155b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ebe552d_b22b4e2f",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-11T15:38:35Z",
+      "side": 1,
+      "message": "This should be sending a message to tgt-\u003emaster_thread - that\u0027s the thread where everything will be coordinated.",
+      "revId": "ca22a2210cb43c17a53fff6a5331bb46e9f5155b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "884a488d_8c0babf4",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-11T15:38:35Z",
+      "side": 1,
+      "message": "It\u0027s probably a good idea to add a general purpose spdk_nvmf_subsystem_remove_ns(subsystem, nsid) function first, as part of the global nvmf API. Then, in response to a hot remove event, just call that.",
+      "revId": "ca22a2210cb43c17a53fff6a5331bb46e9f5155b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
