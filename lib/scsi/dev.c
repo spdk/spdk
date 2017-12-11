@@ -290,23 +290,6 @@ spdk_scsi_dev_find_port_by_id(struct spdk_scsi_dev *dev, uint64_t id)
 }
 
 void
-spdk_scsi_dev_print(struct spdk_scsi_dev *dev)
-{
-	struct spdk_scsi_lun *lun;
-	int i;
-
-	printf("device %d HDD UNIT\n", dev->id);
-
-	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		lun = dev->lun[i];
-		if (lun == NULL) {
-			continue;
-		}
-		printf("device %d: LUN%d %s\n", dev->id, i, lun->name);
-	}
-}
-
-void
 spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev)
 {
 	int i;

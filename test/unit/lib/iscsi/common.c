@@ -175,11 +175,6 @@ spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 }
 
 void
-spdk_scsi_dev_print(struct spdk_scsi_dev *dev)
-{
-}
-
-void
 spdk_scsi_task_set_status(struct spdk_scsi_task *task, int sc, int sk, int asc, int ascq)
 {
 }

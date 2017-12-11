@@ -36,6 +36,7 @@
 #include "spdk/scsi.h"
 
 #include "CUnit/Basic.h"
+#include "spdk_internal/mock.h"
 
 #include "../common.c"
 #include "iscsi/tgt_node.c"
@@ -44,6 +45,21 @@
 struct spdk_iscsi_globals g_spdk_iscsi;
 
 const char *config_file;
+
+DEFINE_STUB(spdk_scsi_dev_get_id,
+	    int,
+	    (const struct spdk_scsi_dev *dev),
+	    0);
+
+DEFINE_STUB(spdk_scsi_lun_get_name,
+	    const char *,
+	    (const struct spdk_scsi_lun *lun),
+	    NULL);
+
+DEFINE_STUB(spdk_scsi_lun_get_id,
+	    int,
+	    (const struct spdk_scsi_lun *lun),
+	    0);
 
 bool
 spdk_sock_is_ipv6(int sock)

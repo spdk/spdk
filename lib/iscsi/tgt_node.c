@@ -1176,7 +1176,17 @@ spdk_cf_add_iscsi_tgt_node(struct spdk_conf_section *sp)
 		return -1;
 	}
 
-	spdk_scsi_dev_print(target->dev);
+	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
+		struct spdk_scsi_lun *lun = spdk_scsi_dev_get_lun(target->dev, i);
+
+		if (lun) {
+			SPDK_INFOLOG(SPDK_LOG_ISCSI, "device %d: LUN%d %s\n",
+				     spdk_scsi_dev_get_id(target->dev),
+				     spdk_scsi_lun_get_id(lun),
+				     spdk_scsi_lun_get_name(lun));
+		}
+	}
+
 	return 0;
 }
 
