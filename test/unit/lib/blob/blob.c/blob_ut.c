@@ -341,6 +341,7 @@ blob_create(void)
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
+
 }
 static void
 blob_delete(void)
@@ -441,6 +442,62 @@ blob_resize(void)
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
+}
+
+static void
+blob_read_only(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob_data *blob_data;
+	struct spdk_bs_opts opts;
+	spdk_blob_id blobid;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+	strncpy(opts.bstype.bstype, "TESTTYPE", SPDK_BLOBSTORE_TYPE_LENGTH);
+
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	spdk_bs_create_blob(bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	spdk_blob_set_read_only(blob);
+
+	blob_data = __blob_to_data(blob);
+	CU_ASSERT(blob_data->data_ro == true);
+	CU_ASSERT(blob_data->data_ro_flags & SPDK_BLOB_READ_ONLY);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	blob_data = __blob_to_data(blob);
+	CU_ASSERT(blob_data->data_ro == true);
+	CU_ASSERT(blob_data->data_ro_flags & SPDK_BLOB_READ_ONLY);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
 }
 
 static void
@@ -2416,6 +2473,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_create", blob_create) == NULL ||
 		CU_add_test(suite, "blob_delete", blob_delete) == NULL ||
 		CU_add_test(suite, "blob_resize", blob_resize) == NULL ||
+		CU_add_test(suite, "blob_read_only", blob_read_only) == NULL ||
 		CU_add_test(suite, "channel_ops", channel_ops) == NULL ||
 		CU_add_test(suite, "blob_super", blob_super) == NULL ||
 		CU_add_test(suite, "blob_write", blob_write) == NULL ||
