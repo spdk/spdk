@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc333aac_d9d9e4fc",
+        "filename": "test/nvmf/host/kernel_nvmf.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-11T05:22:53Z",
+      "side": 1,
+      "message": "hardcoded IP and Port, please also remove the extra space character at end of this line. Please also check subnqn is empty or not.",
+      "revId": "bb5008d5ce22c64bf3528054c9cf65e2129a82f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
