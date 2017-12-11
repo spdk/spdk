@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "df37334a_3941e079",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 918,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:23:13Z",
+      "side": 1,
+      "message": "I\u0027m fine with this as well.",
+      "parentUuid": "ff481086_19e41e2b",
+      "range": {
+        "startLine": 914,
+        "startChar": 0,
+        "endLine": 918,
+        "endChar": 1
+      },
+      "revId": "41cffd37f95fddb9a38f8829431f4b3b0b1c35a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e67d6561_df2021e7",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 8
