@@ -37,9 +37,6 @@
 #include "spdk/trace.h"
 #include "spdk/log.h"
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 struct spdk_trace_flags *g_trace_flags = NULL;
 static struct spdk_trace_register_fn *g_reg_fn_head = NULL;
 
