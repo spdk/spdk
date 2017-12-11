@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f481d65b_449a8b2a",
+        "filename": "test/nvmf/host/kernel_nvmf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-11T04:50:49Z",
+      "side": 1,
+      "message": "The discovery subsystem can\u0027t be used as performance tests. You should get the valid subsystem from the discovery subsystem and connect to them for performance tests.",
+      "revId": "c8a2846cdaca6597f548cdc7eeddbf9db4bd0359",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
