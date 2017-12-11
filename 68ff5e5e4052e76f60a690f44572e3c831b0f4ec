@@ -16,6 +16,116 @@
       "revId": "68ff5e5e4052e76f60a690f44572e3c831b0f4ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c596b82_c3e4d1d7",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-11T09:22:57Z",
+      "side": 1,
+      "message": "Can this test be done using malloc bdev? Copying, unpacking and comipling kernel sources will take some space, and 128-256MB malloc is not enough, while creating 1024MB (or bigger) malloc bdev was quite troublesome (at least on my test machine)",
+      "parentUuid": "14795238_3a3865d4",
+      "revId": "68ff5e5e4052e76f60a690f44572e3c831b0f4ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b5acea3_45252eeb",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-11T09:22:57Z",
+      "side": 1,
+      "message": "Why does the name suggest nested bdev?",
+      "range": {
+        "startLine": 45,
+        "startChar": 41,
+        "endLine": 45,
+        "endChar": 49
+      },
+      "revId": "68ff5e5e4052e76f60a690f44572e3c831b0f4ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57ca9b29_e20eb625",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-11T09:22:57Z",
+      "side": 1,
+      "message": "If we follow Changpeng\u0027s advice here and use malloc bdev if no NVMe is available on server - you cannot be sure that is will have 16000 MB of space to create a lvol bdev. You need to check free space left on lvol store and then create lvol bdev.",
+      "range": {
+        "startLine": 45,
+        "startChar": 50,
+        "endLine": 45,
+        "endChar": 55
+      },
+      "revId": "68ff5e5e4052e76f60a690f44572e3c831b0f4ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fafe8e2_6df4ef23",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-11T09:22:57Z",
+      "side": 1,
+      "message": "construct_lvol_bdev returns name of created lvol bdev after successful rpc call. You can save that returned name to a variable and use it here instead of hardcoding the name",
+      "range": {
+        "startLine": 50,
+        "startChar": 53,
+        "endLine": 50,
+        "endChar": 67
+      },
+      "revId": "68ff5e5e4052e76f60a690f44572e3c831b0f4ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e142e9ed_46239f7c",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-11T09:22:57Z",
+      "side": 1,
+      "message": "$kernel_dir is an empty string. Where is the path for $kernel_dir passed for this test?",
+      "range": {
+        "startLine": 80,
+        "startChar": 9,
+        "endLine": 80,
+        "endChar": 19
+      },
+      "revId": "68ff5e5e4052e76f60a690f44572e3c831b0f4ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
