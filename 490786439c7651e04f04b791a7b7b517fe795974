@@ -22,6 +22,30 @@
       "revId": "490786439c7651e04f04b791a7b7b517fe795974",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c5a2cfc_209d1f73",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-11T06:33:19Z",
+      "side": 1,
+      "message": "Good catch, \"nqn.2016-06.io.spdk-cnode2\" is not a valid subsystem name for NVMeoF, I mentioned in previous patch set, but seems that you reverted it.",
+      "parentUuid": "f0cdc550_b214a3b8",
+      "range": {
+        "startLine": 53,
+        "startChar": 30,
+        "endLine": 54,
+        "endChar": 64
+      },
+      "revId": "490786439c7651e04f04b791a7b7b517fe795974",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
