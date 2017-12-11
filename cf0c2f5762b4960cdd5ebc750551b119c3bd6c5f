@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1d31383_39976dab",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 511,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-11T01:48:17Z",
+      "side": 1,
+      "message": "how about also moving these 2 ioctl into _nbd_stop, ahead of close(dev_fd).\nAt present, close(dev_fd) is always executed before the return of ioctl(nbd-\u003edev_fd, NBD_DO_IT). So when executing these 2 ioctl commands, dev_fd is already closed.",
+      "range": {
+        "startLine": 510,
+        "startChar": 0,
+        "endLine": 511,
+        "endChar": 31
+      },
+      "revId": "cf0c2f5762b4960cdd5ebc750551b119c3bd6c5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
