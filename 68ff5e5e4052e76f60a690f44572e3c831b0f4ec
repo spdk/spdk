@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14795238_3a3865d4",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-11T05:12:10Z",
+      "side": 1,
+      "message": "You should check bdf is empty or not, for those systems without NVMe devices, malloc device should be used.",
+      "revId": "68ff5e5e4052e76f60a690f44572e3c831b0f4ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
