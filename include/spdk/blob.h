@@ -208,6 +208,7 @@ uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 
 struct spdk_blob_opts {
 	uint64_t  num_clusters;
+	bool	read_only;
 	/* Number of attributes */
 	size_t	xattr_count;
 	/* Array of attribute names. Caller should free this array after use. */
@@ -243,6 +244,9 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
  * These changes are not persisted to disk until
  * spdk_blob_sync_md() is called. */
 int spdk_blob_resize(struct spdk_blob *blob, size_t sz);
+
+/* Set blob as read only */
+void spdk_blob_set_read_only(struct spdk_blob *blob);
 
 /* Sync a blob */
 /* Make a blob persistent. This applies to resize, set xattr,
