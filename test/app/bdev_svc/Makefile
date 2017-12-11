@@ -38,8 +38,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = bdev_svc
 
-CFLAGS += $(ENV_CFLAGS)
-
 C_SRCS := bdev_svc.c
 
 SPDK_LIB_LIST = event_bdev event_copy

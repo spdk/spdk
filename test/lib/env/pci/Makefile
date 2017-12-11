@@ -39,8 +39,6 @@ APP = pci_ut
 
 C_SRCS = pci_ut.c
 
-CFLAGS += $(ENV_CFLAGS)
-
 LIBS += $(ENV_LINKER_ARGS) -lcunit
 
 all: $(APP)

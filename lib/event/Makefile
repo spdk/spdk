@@ -34,7 +34,6 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS)
 LIBNAME = event
 C_SRCS = app.c reactor.c rpc.c subsystem.c
 

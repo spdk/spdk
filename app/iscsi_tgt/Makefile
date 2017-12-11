@@ -38,8 +38,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = iscsi_tgt
 
-CFLAGS += $(ENV_CFLAGS)
-
 # Add iSCSI library directory to include path
 # TODO: remove this once iSCSI has a public API header
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib

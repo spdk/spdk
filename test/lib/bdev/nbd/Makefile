@@ -40,8 +40,6 @@ APP = nbd
 
 C_SRCS := nbd.c
 
-CFLAGS += -I. $(ENV_CFLAGS)
-
 SPDK_LIB_LIST = event_bdev event_copy event_nbd
 SPDK_LIB_LIST += bdev bdev_rpc copy event trace log log_rpc conf util rpc jsonrpc json nbd
 
