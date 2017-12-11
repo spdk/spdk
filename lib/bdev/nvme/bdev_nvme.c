@@ -271,35 +271,38 @@ bdev_nvme_flush(struct nvme_bdev *nbdev, struct nvme_bdev_io *bio,
 }
 
 static void
-_bdev_nvme_reset_done(void *io_device, void *ctx, int status)
+_bdev_nvme_reset_done(struct spdk_io_channel_iter *i, int status)
 {
+	void *ctx = spdk_io_channel_iter_get_ctx(i);
 	int rc = SPDK_BDEV_IO_STATUS_SUCCESS;
+
 	if (status) {
 		rc = SPDK_BDEV_IO_STATUS_FAILED;
 	}
 	spdk_bdev_io_complete(spdk_bdev_io_from_ctx(ctx), rc);
 }
 
-static int
-_bdev_nvme_reset_create_qpair(void *io_device, struct spdk_io_channel *ch,
-			      void *ctx)
+static void
+_bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 {
-	struct spdk_nvme_ctrlr *ctrlr = io_device;
-	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	struct spdk_nvme_ctrlr *ctrlr = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(_ch);
 
 	nvme_ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
 	if (!nvme_ch->qpair) {
-		return -1;
+		spdk_for_each_channel_continue(i, -1);
+		return;
 	}
 
-	return 0;
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
-_bdev_nvme_reset(void *io_device, void *ctx, int status)
+_bdev_nvme_reset(struct spdk_io_channel_iter *i, int status)
 {
-	struct spdk_nvme_ctrlr *ctrlr = io_device;
-	struct nvme_bdev_io *bio = ctx;
+	struct spdk_nvme_ctrlr *ctrlr = spdk_io_channel_iter_get_io_device(i);
+	struct nvme_bdev_io *bio = spdk_io_channel_iter_get_ctx(i);
 	int rc;
 
 	if (status) {
@@ -316,16 +319,16 @@ _bdev_nvme_reset(void *io_device, void *ctx, int status)
 	/* Recreate all of the I/O queue pairs */
 	spdk_for_each_channel(ctrlr,
 			      _bdev_nvme_reset_create_qpair,
-			      ctx,
+			      bio,
 			      _bdev_nvme_reset_done);
 
 
 }
 
-static int
-_bdev_nvme_reset_destroy_qpair(void *io_device, struct spdk_io_channel *ch,
-			       void *ctx)
+static void
+_bdev_nvme_reset_destroy_qpair(struct spdk_io_channel_iter *i)
 {
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	int rc;
 
@@ -334,7 +337,7 @@ _bdev_nvme_reset_destroy_qpair(void *io_device, struct spdk_io_channel *ch,
 		nvme_ch->qpair = NULL;
 	}
 
-	return rc;
+	spdk_for_each_channel_continue(i, rc);
 }
 
 static int
