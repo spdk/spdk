@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ad7a2429_dc25bdf4",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-11T05:38:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "67234fa4_477422b1",
+      "range": {
+        "startLine": 116,
+        "startChar": 12,
+        "endLine": 116,
+        "endChar": 31
+      },
+      "revId": "87b14a0448efa336e631bfe0bef38628c0f31da2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7cdb1e92_a69990a8",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2017-12-08T09:23:59Z",
       "side": 1,
       "message": "I know that this line is copied from other script, but you cannot be sure that lvol store has 16000MB of space. I think you should check size of it via RPC and then use it to construct lvol bdev",
+      "range": {
+        "startLine": 119,
+        "startChar": 0,
+        "endLine": 119,
+        "endChar": 65
+      },
+      "revId": "87b14a0448efa336e631bfe0bef38628c0f31da2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d2f083b_1c3738a1",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-11T05:38:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7cdb1e92_a69990a8",
       "range": {
         "startLine": 119,
         "startChar": 0,
