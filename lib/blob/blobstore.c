@@ -88,6 +88,9 @@ spdk_blob_opts_init(struct spdk_blob_opts *opts)
 	opts->num_clusters = 0;
 	opts->thin_provision = false;
 	opts->read_only = false;
+	opts->xattr_count = 0;
+	opts->xattr_names = NULL;
+	opts->get_xattr_value = NULL;
 }
 
 static struct spdk_blob_data *
@@ -2584,6 +2587,19 @@ _spdk_bs_set_thin_provion(struct spdk_blob_data *blob)
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 }
 
+static void
+_spdk_blob_set_xattrs(struct spdk_blob	*blob, struct spdk_blob_opts *opts)
+{
+	int i;
+	size_t value_len;
+	const void *value;
+
+	for (i = 0; i < opts->xattr_count; i++) {
+		opts->get_xattr_value(NULL, opts->xattr_names[i], &value, &value_len);
+		spdk_blob_set_xattr(blob, opts->xattr_names[i], value, value_len);
+	}
+}
+
 void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, struct spdk_blob_opts *opts,
 			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
@@ -2625,6 +2641,8 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, struct spdk_blob_opts *
 	if (opts->read_only) {
 		spdk_bs_set_read_only(__data_to_blob(blob));
 	}
+
+	_spdk_blob_set_xattrs(__data_to_blob(blob), opts);
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
