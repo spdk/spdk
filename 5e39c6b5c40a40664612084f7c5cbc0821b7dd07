@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9b45670_87ee2640",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 373,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:29:31Z",
+      "side": 1,
+      "message": "I think more comments might go a long way to better understand currently tested cases.",
+      "range": {
+        "startLine": 373,
+        "startChar": 0,
+        "endLine": 373,
+        "endChar": 18
+      },
+      "revId": "5e39c6b5c40a40664612084f7c5cbc0821b7dd07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d03fc17_65e6921f",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:29:31Z",
+      "side": 1,
+      "message": "Why are bdevs module claimed here ? I\u0027m not sure this changes much in UT, compared to \"open_write_test\" section that does spdk_bdev_open().",
+      "range": {
+        "startLine": 381,
+        "startChar": 6,
+        "endLine": 381,
+        "endChar": 80
+      },
+      "revId": "5e39c6b5c40a40664612084f7c5cbc0821b7dd07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe815887_13eb9643",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:29:31Z",
+      "side": 1,
+      "message": "/* Try adding alias identical to name */",
+      "range": {
+        "startLine": 396,
+        "startChar": 1,
+        "endLine": 396,
+        "endChar": 26
+      },
+      "revId": "5e39c6b5c40a40664612084f7c5cbc0821b7dd07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a4522e7_9bb19c85",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:29:31Z",
+      "side": 1,
+      "message": "Does it need to be done twice ?",
+      "range": {
+        "startLine": 400,
+        "startChar": 1,
+        "endLine": 401,
+        "endChar": 26
+      },
+      "revId": "5e39c6b5c40a40664612084f7c5cbc0821b7dd07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43409071_473671d4",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:29:31Z",
+      "side": 1,
+      "message": "/* Try adding same alias to two different registered bdevs */",
+      "range": {
+        "startLine": 403,
+        "startChar": 1,
+        "endLine": 403,
+        "endChar": 28
+      },
+      "revId": "5e39c6b5c40a40664612084f7c5cbc0821b7dd07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f80c9d75_3e749fc9",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:29:31Z",
+      "side": 1,
+      "message": "Does it need to be done twice ?",
+      "range": {
+        "startLine": 413,
+        "startChar": 0,
+        "endLine": 414,
+        "endChar": 26
+      },
+      "revId": "5e39c6b5c40a40664612084f7c5cbc0821b7dd07",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
