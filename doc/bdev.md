@@ -194,11 +194,13 @@ The bdev NBD app can be used to temporarily expose an SPDK bdev through the Linu
 block stack so that standard partitioning tools can be used.
 
 ~~~
-# Expose bdev Nvme0n1 as kernel block device /dev/nbd0
 # Assumes bdev.conf is already configured with a bdev named Nvme0n1 -
 # see the NVMe section above.
-test/lib/bdev/nbd/nbd -c bdev.conf -b Nvme0n1 -n /dev/nbd0 &
+test/app/bdev_svc/bdev_svc -c bdev.conf &
 nbd_pid=$!
+
+# Expose bdev Nvme0n1 as kernel block device /dev/nbd0 by JSON-RPC
+scripts/rpc.py start_nbd_disk Nvme0n1 /dev/nbd0
 
 # Create GPT partition table.
 parted -s /dev/nbd0 mklabel gpt
