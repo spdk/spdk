@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f5fc5f5_f9503ce9",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-11T08:20:46Z",
+      "side": 1,
+      "message": "No code change for the source file, can you remove this line?",
+      "revId": "907e14c2681e9dce150aff8aead479b55f1a6845",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "988418d2_a5b2d237",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-11T08:20:46Z",
+      "side": 1,
+      "message": "This part of logic is complicated, how about keep max_nsid growing for the subsystem life cycle? You have marked the namespace as removed, and the namespace is ready for new coming bdev if users specify the nsid with the empty one.",
+      "revId": "907e14c2681e9dce150aff8aead479b55f1a6845",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
