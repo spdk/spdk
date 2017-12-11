@@ -546,9 +546,94 @@ Expected result:
 - return code != 0
 - Error code response printed to stdout
 
-### logical volume tasting tests
+### logical volume tasting and snapshot tests
 
-#### TEST CASE 650 - Name: tasting_positive
+### Provisioning
+
+#### TEST CASE 650 - Name: thin_provisioning_check_space
+- run vhost app and create malloc bdev with size 64M
+- construct lvol store on malloc bdev
+- create thin provisioned lvol bdev
+- check and save number of free clusters for lvol store
+- write data (less than lvs cluster size) to created lvol bdev starting from offset 0.
+- check that free clusters on lvol store was decremented by 1
+- write data (lsv cluster size) to lvol bdev with offset set to 1,5 of cluster size
+- check that free clusters on lvol store was decremented by 2
+- write data to lvol bdev to the end of its size
+- check that lvol store free clusters number equals to 0
+- destroy thin provisioned lvol bdev
+- check that saved number of free clusters equals to present free clusters
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 651 - Name: thin_provisioning_read_empty_bdev
+- run vhost app and create malloc bdev with size 64M
+- construct lvol store on malloc bdev
+- create thin provisioned lvol bdev
+- perform read operations and check if they return zeros
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 652 - Name: thin_provisioning_data_integrity_test
+- run vhost app and create malloc bdev with size 64M
+- construct lvol store on malloc bdev
+- construct thin provisioned lvol bdev
+- run fio test with rw=write and with verification
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 653 - Name: thin_provisioning_resize
+- run vhost app and create malloc bdev with size 64M
+- construct lvol store on malloc bdev
+- construct thin provisioned lvol bdevs on created lvol store with size 30M
+- resize bdev to 50M
+- check if bdev size changed (equals to 50M)
+- check if lvs size didn't change (check free cluster counter)
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 654 - Name: thin_provisioning_disks_size_bigger_than_lvs_size
+- run vhost app and create Malloc bdev with size 64M
+- construct lvol store on Malloc bdev
+- construct two thin provisioned lvol bdevs on created lvol store with size equals to 50M
+- fill first bdev to 75% of space
+- fill second bdev to 75% of space
+- check if error message occured while filling second bdev with data
+- check if data on first disk stayed unchanged
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 655 - Name: thin_provisioning_filling_disks_less_than_lvs_size
+- run vhost app and create malloc bdev with size 64M
+- construct lvol store on malloc bdev
+- construct two thin provisioned lvol bdevs on created lvol store with size 40M
+- check if bdevs are available and size of every disk equals to 40M
+- write 35M to one disk and 20M to second one
+- check if operation didn't fail
+- destroy lvol store
+- destroy Malloc bdev
+
+#### TEST CASE 656 - Name: tasting_positive
 Positive test for tasting a multi lvol bdev configuration.
 Create a lvol store with some lvol bdevs on NVMe drive and restart vhost app.
 After restarting configuration should be automatically loaded and should be exactly
@@ -590,7 +675,7 @@ Expected results:
 - all RPC configuration calls successful, return code = 0
 - no other operation fails
 
-#### TEST CASE 651 - Name: tasting_lvol_store_positive
+#### TEST CASE 657 - Name: tasting_lvol_store_positive
 Positive test for tasting lvol store.
 Steps:
 - run vhost app with NVMe bdev
@@ -617,4 +702,8 @@ Steps:
 Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
+- no other operation fails
+
+Expected result:
+- calls successful, return code = 0
 - no other operation fails
