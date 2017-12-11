@@ -1392,10 +1392,12 @@ _spdk_blob_lookup(struct spdk_blob_store *bs, spdk_blob_id blobid)
 }
 
 static int
-_spdk_bs_channel_create(struct spdk_blob_store *bs, struct spdk_bs_channel *channel,
-			uint32_t max_ops)
+_spdk_bs_channel_create(void *io_device, void *ctx_buf)
 {
+	struct spdk_blob_store		*bs = io_device;
+	struct spdk_bs_channel		*channel = ctx_buf;
 	struct spdk_bs_dev		*dev;
+	uint32_t			max_ops = bs->max_channel_ops;
 	uint32_t			i;
 
 	dev = bs->dev;
@@ -1424,29 +1426,6 @@ _spdk_bs_channel_create(struct spdk_blob_store *bs, struct spdk_bs_channel *chan
 	return 0;
 }
 
-static int
-_spdk_bs_md_channel_create(void *io_device, void *ctx_buf)
-{
-	struct spdk_blob_store		*bs;
-	struct spdk_bs_channel		*channel = ctx_buf;
-
-	bs = SPDK_CONTAINEROF(io_device, struct spdk_blob_store, md_target);
-
-	return _spdk_bs_channel_create(bs, channel, bs->md_target.max_md_ops);
-}
-
-static int
-_spdk_bs_io_channel_create(void *io_device, void *ctx_buf)
-{
-	struct spdk_blob_store		*bs;
-	struct spdk_bs_channel		*channel = ctx_buf;
-
-	bs = SPDK_CONTAINEROF(io_device, struct spdk_blob_store, io_target);
-
-	return _spdk_bs_channel_create(bs, channel, bs->io_target.max_channel_ops);
-}
-
-
 static void
 _spdk_bs_channel_destroy(void *io_device, void *ctx_buf)
 {
@@ -1459,10 +1438,9 @@ _spdk_bs_channel_destroy(void *io_device, void *ctx_buf)
 static void
 _spdk_bs_dev_destroy(void *io_device)
 {
-	struct spdk_blob_store *bs;
+	struct spdk_blob_store *bs = io_device;
 	struct spdk_blob_data	*blob, *blob_tmp;
 
-	bs = SPDK_CONTAINEROF(io_device, struct spdk_blob_store, md_target);
 	bs->dev->destroy(bs->dev);
 
 	TAILQ_FOREACH_SAFE(blob, &bs->blobs, link, blob_tmp) {
@@ -1485,8 +1463,7 @@ static void
 _spdk_bs_free(struct spdk_blob_store *bs)
 {
 	spdk_bs_unregister_md_thread(bs);
-	spdk_io_device_unregister(&bs->io_target, NULL);
-	spdk_io_device_unregister(&bs->md_target, _spdk_bs_dev_destroy);
+	spdk_io_device_unregister(bs, _spdk_bs_dev_destroy);
 }
 
 void
@@ -1553,27 +1530,23 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 		return NULL;
 	}
 
-	bs->md_target.max_md_ops = opts->max_md_ops;
-	bs->io_target.max_channel_ops = opts->max_channel_ops;
+	bs->max_channel_ops = opts->max_channel_ops;
 	bs->super_blob = SPDK_BLOBID_INVALID;
 	memcpy(&bs->bstype, &opts->bstype, sizeof(opts->bstype));
 
 	/* The metadata is assumed to be at least 1 page */
 	bs->used_md_pages = spdk_bit_array_create(1);
 
-	spdk_io_device_register(&bs->md_target, _spdk_bs_md_channel_create, _spdk_bs_channel_destroy,
+	spdk_io_device_register(bs, _spdk_bs_channel_create, _spdk_bs_channel_destroy,
 				sizeof(struct spdk_bs_channel));
 	rc = spdk_bs_register_md_thread(bs);
 	if (rc == -1) {
-		spdk_io_device_unregister(&bs->md_target, NULL);
+		spdk_io_device_unregister(bs, NULL);
 		spdk_bit_array_free(&bs->used_md_pages);
 		spdk_bit_array_free(&bs->used_clusters);
 		free(bs);
 		return NULL;
 	}
-
-	spdk_io_device_register(&bs->io_target, _spdk_bs_io_channel_create, _spdk_bs_channel_destroy,
-				sizeof(struct spdk_bs_channel));
 
 	return bs;
 }
@@ -2114,7 +2087,7 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	cpl.u.bs_handle.cb_arg = cb_arg;
 	cpl.u.bs_handle.bs = bs;
 
-	seq = spdk_bs_sequence_start(bs->md_target.md_channel, &cpl);
+	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
 		spdk_dma_free(ctx->super);
 		free(ctx);
@@ -2305,7 +2278,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	cpl.u.bs_handle.cb_arg = cb_arg;
 	cpl.u.bs_handle.bs = bs;
 
-	seq = spdk_bs_sequence_start(bs->md_target.md_channel, &cpl);
+	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
 		spdk_dma_free(ctx->super);
 		free(ctx);
@@ -2376,7 +2349,7 @@ spdk_bs_destroy(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn,
 
 	ctx->bs = bs;
 
-	seq = spdk_bs_sequence_start(bs->md_target.md_channel, &cpl);
+	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
 		free(ctx);
 		cb_fn(cb_arg, -ENOMEM);
@@ -2476,7 +2449,7 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 	cpl.u.bs_basic.cb_fn = cb_fn;
 	cpl.u.bs_basic.cb_arg = cb_arg;
 
-	seq = spdk_bs_sequence_start(bs->md_target.md_channel, &cpl);
+	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
 		spdk_dma_free(ctx->super);
 		free(ctx);
@@ -2538,8 +2511,8 @@ spdk_bs_total_data_cluster_count(struct spdk_blob_store *bs)
 static int
 spdk_bs_register_md_thread(struct spdk_blob_store *bs)
 {
-	bs->md_target.md_channel = spdk_get_io_channel(&bs->md_target);
-	if (!bs->md_target.md_channel) {
+	bs->md_channel = spdk_get_io_channel(bs);
+	if (!bs->md_channel) {
 		SPDK_ERRLOG("Failed to get IO channel.\n");
 		return -1;
 	}
@@ -2550,7 +2523,7 @@ spdk_bs_register_md_thread(struct spdk_blob_store *bs)
 static int
 spdk_bs_unregister_md_thread(struct spdk_blob_store *bs)
 {
-	spdk_put_io_channel(bs->md_target.md_channel);
+	spdk_put_io_channel(bs->md_channel);
 
 	return 0;
 }
@@ -2625,7 +2598,7 @@ void spdk_bs_create_blob(struct spdk_blob_store *bs,
 	cpl.u.blobid.cb_arg = cb_arg;
 	cpl.u.blobid.blobid = blob->id;
 
-	seq = spdk_bs_sequence_start(bs->md_target.md_channel, &cpl);
+	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
 		_spdk_blob_free(blob);
 		cb_fn(cb_arg, 0, -ENOMEM);
@@ -2723,7 +2696,7 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	cpl.u.blob_basic.cb_fn = cb_fn;
 	cpl.u.blob_basic.cb_arg = cb_arg;
 
-	seq = spdk_bs_sequence_start(bs->md_target.md_channel, &cpl);
+	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
 		_spdk_blob_free(blob);
 		cb_fn(cb_arg, -ENOMEM);
@@ -2791,7 +2764,7 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 	cpl.u.blob_handle.cb_arg = cb_arg;
 	cpl.u.blob_handle.blob = __data_to_blob(blob);
 
-	seq = spdk_bs_sequence_start(bs->md_target.md_channel, &cpl);
+	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
 		_spdk_blob_free(blob);
 		cb_fn(cb_arg, NULL, -ENOMEM);
@@ -2839,7 +2812,7 @@ spdk_blob_sync_md(struct spdk_blob *_blob, spdk_blob_op_complete cb_fn, void *cb
 	cpl.u.blob_basic.cb_fn = cb_fn;
 	cpl.u.blob_basic.cb_arg = cb_arg;
 
-	seq = spdk_bs_sequence_start(blob->bs->md_target.md_channel, &cpl);
+	seq = spdk_bs_sequence_start(blob->bs->md_channel, &cpl);
 	if (!seq) {
 		cb_fn(cb_arg, -ENOMEM);
 		return;
@@ -2893,7 +2866,7 @@ void spdk_blob_close(struct spdk_blob **b, spdk_blob_op_complete cb_fn, void *cb
 	cpl.u.blob_basic.cb_fn = cb_fn;
 	cpl.u.blob_basic.cb_arg = cb_arg;
 
-	seq = spdk_bs_sequence_start(blob->bs->md_target.md_channel, &cpl);
+	seq = spdk_bs_sequence_start(blob->bs->md_channel, &cpl);
 	if (!seq) {
 		cb_fn(cb_arg, -ENOMEM);
 		return;
@@ -2912,7 +2885,7 @@ void spdk_blob_close(struct spdk_blob **b, spdk_blob_op_complete cb_fn, void *cb
 
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs)
 {
-	return spdk_get_io_channel(&bs->io_target);
+	return spdk_get_io_channel(bs);
 }
 
 void spdk_bs_free_io_channel(struct spdk_io_channel *channel)
