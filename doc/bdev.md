@@ -197,8 +197,11 @@ block stack so that standard partitioning tools can be used.
 # Expose bdev Nvme0n1 as kernel block device /dev/nbd0
 # Assumes bdev.conf is already configured with a bdev named Nvme0n1 -
 # see the NVMe section above.
-test/lib/bdev/nbd/nbd -c bdev.conf -b Nvme0n1 -n /dev/nbd0 &
+test/app/bdev_src/bdev_src -c bdev.conf &
 nbd_pid=$!
+
+# Create nbd disk by JSON-RPC
+scripts/rpc.py start_nbd_disk Nvme0n1 /dev/nbd0
 
 # Create GPT partition table.
 parted -s /dev/nbd0 mklabel gpt
