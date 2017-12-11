@@ -370,6 +370,8 @@ function part_dev_by_gpt () {
 		devname=$2
 		rootdir=$3
 		operation=$4
+		local nbd_path=/dev/nbd0
+		local rpc_server=/var/tmp/spdk-gpt-bdevs.sock
 
 		if [ ! -e $conf ]; then
 			return 1
@@ -384,24 +386,28 @@ function part_dev_by_gpt () {
 		echo "  Disable Yes" >> ${conf}.gpt
 
 		modprobe nbd
-		$rootdir/test/lib/bdev/nbd/nbd -c ${conf}.gpt -b $devname -n /dev/nbd0 &
+		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf}.gpt &
 		nbd_pid=$!
 		echo "Process nbd pid: $nbd_pid"
-		waitforlisten $nbd_pid
-		waitfornbd nbd0
+		waitforlisten $nbd_pid $rpc_server
+
+		# Start bdev as a nbd device
+		$rootdir/scripts/rpc.py -s "$rpc_server" start_nbd_disk $devname $nbd_path
+
+		waitfornbd ${nbd_path:5}
 
 		if [ "$operation" = create ]; then
-			parted -s /dev/nbd0 mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
+			parted -s $nbd_path mklabel gpt mkpart first '0%' '50%' mkpart second '50%' '100%'
 
 			# change the GUID to SPDK GUID value
 			SPDK_GPT_GUID=`grep SPDK_GPT_PART_TYPE_GUID $rootdir/lib/bdev/gpt/gpt.h \
 				| awk -F "(" '{ print $2}' | sed 's/)//g' \
 				| awk -F ", " '{ print $1 "-" $2 "-" $3 "-" $4 "-" $5}' | sed 's/0x//g'`
-			sgdisk -t 1:$SPDK_GPT_GUID /dev/nbd0
-			sgdisk -t 2:$SPDK_GPT_GUID /dev/nbd0
+			sgdisk -t 1:$SPDK_GPT_GUID $nbd_path
+			sgdisk -t 2:$SPDK_GPT_GUID $nbd_path
 		elif [ "$operation" = reset ]; then
 			# clear the partition table
-			dd if=/dev/zero of=/dev/nbd0 bs=4096 count=8 oflag=direct
+			dd if=/dev/zero of=$nbd_path bs=4096 count=8 oflag=direct
 		fi
 
 		killprocess $nbd_pid
