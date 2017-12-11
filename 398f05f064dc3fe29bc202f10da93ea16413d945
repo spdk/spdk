@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47913008_abde4bfc",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 225,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-11T20:59:42Z",
+      "side": 1,
+      "message": "spacing is not aligned",
+      "revId": "398f05f064dc3fe29bc202f10da93ea16413d945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c22fceb_f88c2d48",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-11T20:59:42Z",
+      "side": 1,
+      "message": "I propose we do not add this now.  Force users to use spdk_bs_md_create_blob_ext() to set thin_provision for now.  This will avoid someone trying to set thin provisioned after a blob has been created and resized.\n\nIn the future, if we want to allow someone to set thin provisioned after the fact, to grow the blob with unallocated clusters, we can always add it later.  But that is out of scope for this first release of thin provisioning and snapshot support.",
+      "revId": "398f05f064dc3fe29bc202f10da93ea16413d945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7eced0ef_fdf0184e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2621,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-11T20:59:42Z",
+      "side": 1,
+      "message": "this has to be done before resizing the blob - otherwise spdk_bs_md_resize_blob will allocate clusters!",
+      "revId": "398f05f064dc3fe29bc202f10da93ea16413d945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "195ad24f_037f7f78",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2809,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-11T20:59:42Z",
+      "side": 1,
+      "message": "need whitespace before this line - also there is a misspelling",
+      "revId": "398f05f064dc3fe29bc202f10da93ea16413d945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
