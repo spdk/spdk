@@ -224,6 +224,10 @@ struct spdk_blob_opts {
 	size_t num_clusters;
 	bool    thin_provision;
 	bool	read_only;
+	int	xattr_count;
+	char	**xattr_names;
+	void	(*get_xattr_value)(void *arg, const char *name,
+				   const void **value, size_t *value_len);
 };
 
 /* Initialize an spdk_blob_opts structure to the default blob option values. */
