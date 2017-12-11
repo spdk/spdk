@@ -22,11 +22,16 @@ framework (include/spdk/event.h) to the I/O channel library
 (include/spdk/io_channel.h). This allows code that doesn't depend on the event
 framework to request registration and unregistration of pollers.
 
+A new function spdk_io_device_stat() was added. This is used to obtain the I/O
+statistics of the given device.
+
 ### Block Device Abstraction Layer (bdev)
 
 The poller abstraction was removed from the bdev layer. There is now a general purpose
 abstraction for pollers available in include/spdk/io_channel.h
 
+A new funciton spdk_bdev_get_io_statistic() was added. This is used to obtain the
+state of the I/O channel of the specified device.
 ### NVMe Driver
 
 The logic which support hotplug of vfio-attached devices has been implemented in SPDK, but to

@@ -54,6 +54,7 @@ vhost_app_opts_init(struct spdk_app_opts *opts)
 	opts->name = "vhost";
 	opts->config_file = SPDK_VHOST_DEFAULT_CONFIG;
 	opts->mem_size = SPDK_VHOST_DEFAULT_MEM_SIZE;
+	opts->shm_id = 1;
 }
 
 static void
