@@ -36,3 +36,4 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 TEST_FILE = subsystem_ut.c
 
 include $(SPDK_ROOT_DIR)/mk/nvmf.unittest.mk
+SPDK_LIB_LIST += bdev
