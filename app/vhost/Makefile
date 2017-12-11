@@ -38,8 +38,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = vhost
 
-CFLAGS += $(ENV_CFLAGS)
-
 C_SRCS := vhost.c
 
 SPDK_LIB_LIST = event_bdev event_copy event_net event_scsi event_vhost

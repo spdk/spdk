@@ -35,7 +35,6 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS)
 APP = reactor_perf
 C_SRCS := reactor_perf.c
 

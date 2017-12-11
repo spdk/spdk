@@ -37,8 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 APP = stub
 
-CFLAGS += $(ENV_CFLAGS)
-
 C_SRCS := stub.c
 
 SPDK_LIB_LIST = event conf nvme util log trace rpc jsonrpc json

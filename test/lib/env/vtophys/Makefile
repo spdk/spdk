@@ -39,8 +39,6 @@ APP = vtophys
 
 C_SRCS = vtophys.c
 
-CFLAGS += $(ENV_CFLAGS)
-
 LIBS += $(SPDK_LIBS) $(ENV_LINKER_ARGS)
 
 all: $(APP)

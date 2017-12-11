@@ -34,7 +34,6 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-CFLAGS += $(ENV_CFLAGS)
 LIBNAME = nvmf
 
 C_SRCS = ctrlr.c ctrlr_discovery.c ctrlr_bdev.c \
