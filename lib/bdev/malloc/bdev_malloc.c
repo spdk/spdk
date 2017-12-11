@@ -112,7 +112,7 @@ malloc_disk_free(struct malloc_disk *malloc_disk)
 		return;
 	}
 
-	free(malloc_disk->disk.name);
+	spdk_dma_free(malloc_disk->disk.name);
 	spdk_dma_free(malloc_disk->malloc_buf);
 	spdk_dma_free(malloc_disk);
 }
@@ -384,7 +384,11 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 		mdisk->disk.name = strdup(name);
 	} else {
 		/* Auto-generate a name */
-		mdisk->disk.name = spdk_sprintf_alloc("Malloc%d", malloc_disk_count);
+		char *bdev_name_t = NULL;
+		bdev_name_t = spdk_sprintf_alloc("Malloc%d", malloc_disk_count);
+		mdisk->disk.name = spdk_dma_zmalloc(20 * sizeof(char), 0, NULL);
+		strcpy(mdisk->disk.name, bdev_name_t);
+		free(bdev_name_t);
 		malloc_disk_count++;
 	}
 	if (!mdisk->disk.name) {

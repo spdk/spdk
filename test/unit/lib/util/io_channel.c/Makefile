@@ -36,7 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.mock.unittest.mk
 
-SPDK_LIB_LIST = log cunit spdk_mock
+SPDK_LIB_LIST = log cunit spdk_mock bdev
 
 CFLAGS += $(ENV_CFLAGS)
 CFLAGS += -I$(SPDK_ROOT_DIR)/test

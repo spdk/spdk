@@ -36,7 +36,7 @@
 #include "spdk_cunit.h"
 
 #include "subsystem.c"
-
+#include "lib/test_env.c"
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
 int
@@ -153,6 +153,7 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 }
 
+/*
 int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 	       void *remove_ctx, struct spdk_bdev_desc **desc)
@@ -170,7 +171,7 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
 	return "test";
 }
-
+*/
 static void
 test_spdk_nvmf_subsystem_add_ns(void)
 {
