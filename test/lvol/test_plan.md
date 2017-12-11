@@ -618,3 +618,89 @@ Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
 - no other operation fails
+
+### Provisioning
+
+#### TEST CASE 750 - Name: thin_provisioning_check_space
+- run vhost app and create Malloc bdev with size 100M
+- construct lvol store on Malloc bdev
+- create lvol thin provisioned lvol bdev
+- check and save number of free clusters for lvol store
+- write data (less than lvs cluster size) to created lvol bdev starting from offset 0.
+- check that free clusters on lvol store was decremented by 1
+- write data (lsv cluster size) to lvol bdev with offset set to 1,5 of cluster size
+- check that free clusters on lvol store was decremented by 2
+- write data to lvol bdev to the end of its size
+- check that lvol store free clusters number equals to 0
+- destroy lvol store
+- destroy Malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 751 - Name: thin_provisioning_read_empty_bdev
+- run vhost app and create Malloc bdev with size 100M
+- construct lvol store on Malloc bdev
+- perform read operations and check if they return zeros
+- destroy lvol store
+- destroy Malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 752 - Name: thin_provisioning_data_integrity_test
+- run vhost app and create Malloc bdev with size 100M
+- construct lvol store on Malloc bdev
+- run fio test with rw=write and with verification
+- destroy lvol store
+- destroy Malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 753 - Name: thin_provisioning_resize
+- run vhost app and create Malloc bdev with size 100M
+- construct lvol store on Malloc bdev
+- construct thin provisioned lvol bdevs on created lvol store with size 50M
+- resize bdev to 70M
+- check if bdev size changed (equals to 70M)
+- check if lvs size didn't change (check free cluster counter)
+- destroy lvol store
+- destroy Malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 754 - Name: thin_provisioning_disks_size_bigger_than_lvs_size
+- run vhost app and create Malloc bdev with size 100M
+- construct lvol store on Malloc bdev
+- construct two thin provisioned lvol bdevs on created lvol store with size equals to 90M
+- fill first bdev to 75% of space
+- fill second bdev to 75% of space
+- check if error message occured while filling second bdev with data
+- check if data on first disk stayed unchanged
+- destroy lvol store
+- destroy Malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 755 - Name: thin_provisioning_filling_disks_less_than_lvs_size
+- run vhost app and create Malloc bdev with size 100M
+- construct lvol store on Malloc bdev
+- construct two thin provisioned lvol bdevs on created lvol store with size 75M
+- check if bdevs are available and size of every disk equals to 75M
+- write 75M to one disk and 20M to second one
+- check if operation didn't fail
+- destroy lvol store
+- destroy Malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
