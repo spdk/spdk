@@ -189,9 +189,12 @@ void *
 spdk_mempool_get(struct spdk_mempool *mp)
 {
 	void *ele = NULL;
+	int rc;
 
-	rte_mempool_get((struct rte_mempool *)mp, &ele);
-
+	rc = rte_mempool_get((struct rte_mempool *)mp, &ele);
+	if (rc != 0) {
+		return NULL;
+	}
 	return ele;
 }
 
