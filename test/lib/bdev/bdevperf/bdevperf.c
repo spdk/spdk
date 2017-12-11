@@ -714,7 +714,7 @@ main(int argc, char **argv)
 	int op;
 	bool mix_specified;
 	struct spdk_app_opts opts = {};
-	uint64_t time_in_sec;
+	int time_in_sec;
 
 	/* default value */
 	config_file = NULL;
