@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e81151d_59c78ea9",
+        "filename": "include/spdk/jsonrpc_util.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-11T20:43:31Z",
+      "side": 1,
+      "message": "I think these helpers are a good idea, but I\u0027d prefer to make them something like spdk_json_write_named_bool(), etc., taking a spdk_json_write_ctx pointer - this would make them more widely applicable (not specific to JSON-RPC).\n\nCan you do just this part as a separate patch? That would help getting it reviewed (in general, small, self-contained patches are nicer to review than one large change that rewrites everything).",
+      "revId": "a7de8cabbc0b69d99df0be4035d48f1e13ab5551",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
