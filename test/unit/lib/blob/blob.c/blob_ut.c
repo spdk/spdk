@@ -47,6 +47,7 @@ struct spdk_blob *g_blob;
 int g_bserrno;
 struct spdk_xattr_names *g_names;
 int g_done;
+uint64_t g_value;
 
 bool g_scheduler_delay = false;
 
@@ -2233,6 +2234,73 @@ blob_flags(void)
 	CU_ASSERT(g_bserrno == 0);
 }
 
+static void _get_xattr_value(void *arg, const char *name,
+			     const void **value, size_t *value_len)
+{
+	*value_len = sizeof(g_value);
+	*value = &g_value;
+}
+
+static void
+blob_set_xattrs(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob_opts opts;
+	spdk_blob_id blobid;
+	const void *value;
+	size_t value_len;
+	char name[] = "test";
+	char *names[] = {name};
+	int rc;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	spdk_blob_opts_init(&opts);
+
+	opts.xattr_names = names;
+	opts.get_xattr_value = _get_xattr_value;
+	opts.xattr_count = 1;
+
+	spdk_bs_md_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_md_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	/* Get the xattrs */
+	value = NULL;
+
+	rc = spdk_blob_get_xattr_value(blob, "test", &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(*(uint64_t *)value == g_value);
+	CU_ASSERT(value_len == 8);
+
+	rc = spdk_blob_get_xattr_value(blob, "foobar", &value, &value_len);
+	CU_ASSERT(rc == -ENOENT);
+
+	spdk_blob_close(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2277,7 +2345,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_crc", blob_crc) == NULL ||
 		CU_add_test(suite, "super_block_crc", super_block_crc) == NULL ||
 		CU_add_test(suite, "blob_dirty_shutdown", blob_dirty_shutdown) == NULL ||
-		CU_add_test(suite, "blob_flags", blob_flags) == NULL
+		CU_add_test(suite, "blob_flags", blob_flags) == NULL ||
+		CU_add_test(suite, "blob_set_xattrs", blob_set_xattrs) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
