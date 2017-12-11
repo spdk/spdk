@@ -146,18 +146,19 @@ channel_destroy(void *io_device, void *ctx_buf)
 {
 }
 
-static int
-channel_msg(void *io_device, struct spdk_io_channel *ch, void *ctx)
+static void
+channel_msg(struct spdk_io_channel_iter *i)
 {
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	int *count = spdk_io_channel_get_ctx(ch);
 
 	(*count)++;
 
-	return 0;
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
-channel_cpl(void *io_device, void *ctx, int status)
+channel_cpl(struct spdk_io_channel_iter *i, int status)
 {
 }
 
@@ -215,20 +216,20 @@ struct unreg_ctx {
 	bool	foreach_done;
 };
 
-static int
-unreg_ch_done(void *io_device, struct spdk_io_channel *_ch, void *_ctx)
+static void
+unreg_ch_done(struct spdk_io_channel_iter *i)
 {
-	struct unreg_ctx *ctx = _ctx;
+	struct unreg_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
 
 	ctx->ch_done = true;
 
-	return 0;
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
-unreg_foreach_done(void *io_device, void *_ctx, int status)
+unreg_foreach_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct unreg_ctx *ctx = _ctx;
+	struct unreg_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
 
 	ctx->foreach_done = true;
 }
