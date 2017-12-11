@@ -33,10 +33,11 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/env.h"
+#include "spdk/io_channel.h"
 #include "spdk/fd.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
+#include "spdk/event.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
 #include "spdk/nvme_intel.h"
@@ -104,6 +105,8 @@ static const double g_latency_cutoffs[] = {
 };
 
 struct ns_worker_ctx {
+	struct spdk_poller	*run_timer;
+	struct spdk_poller	*check_poller;
 	struct ns_entry		*entry;
 	uint64_t		io_completed;
 	uint64_t		total_tsc;
@@ -162,6 +165,8 @@ static int g_num_workers = 0;
 
 static uint64_t g_tsc_rate;
 
+static unsigned g_master_core;
+static int g_ns_ctx;
 static uint32_t g_io_align = 0x200;
 static uint32_t g_io_size_bytes;
 static uint32_t g_max_io_md_size;
@@ -609,10 +614,22 @@ submit_single_io(struct perf_task *task)
 }
 
 static void
+cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx);
+
+static void
+end_run(void *arg1, void *arg2)
+{
+	if (--g_ns_ctx == 0) {
+		spdk_app_stop(0);
+	}
+}
+
+static void
 task_complete(struct perf_task *task)
 {
 	struct ns_worker_ctx	*ns_ctx;
 	uint64_t		tsc_diff;
+	struct spdk_event 	*complete;
 
 	ns_ctx = task->ns_ctx;
 	ns_ctx->current_queue_depth--;
@@ -638,6 +655,13 @@ task_complete(struct perf_task *task)
 	if (ns_ctx->is_draining) {
 		spdk_dma_free(task->buf);
 		free(task);
+		if (ns_ctx->current_queue_depth == 0) {
+			cleanup_ns_worker_ctx(ns_ctx);
+			spdk_poller_unregister(&ns_ctx->check_poller);
+			complete = spdk_event_allocate(g_master_core, end_run, NULL, NULL);
+			spdk_event_call(complete);
+		}
+
 	} else {
 		submit_single_io(task);
 	}
@@ -650,8 +674,10 @@ io_complete(void *ctx, const struct spdk_nvme_cpl *completion)
 }
 
 static void
-check_io(struct ns_worker_ctx *ns_ctx)
+check_io(void *arg)
 {
+	struct ns_worker_ctx *ns_ctx = arg;
+
 #if HAVE_LIBAIO
 	if (ns_ctx->entry->type == ENTRY_TYPE_AIO_FILE) {
 		aio_check_io(ns_ctx);
@@ -690,15 +716,6 @@ submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
 		task->ns_ctx = ns_ctx;
 
 		submit_single_io(task);
-	}
-}
-
-static void
-drain_io(struct ns_worker_ctx *ns_ctx)
-{
-	ns_ctx->is_draining = true;
-	while (ns_ctx->current_queue_depth > 0) {
-		check_io(ns_ctx);
 	}
 }
 
@@ -744,61 +761,6 @@ cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	} else {
 		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair);
 	}
-}
-
-static int
-work_fn(void *arg)
-{
-	uint64_t tsc_end;
-	struct worker_thread *worker = (struct worker_thread *)arg;
-	struct ns_worker_ctx *ns_ctx = NULL;
-
-	printf("Starting thread on core %u\n", worker->lcore);
-
-	/* Allocate a queue pair for each namespace. */
-	ns_ctx = worker->ns_ctx;
-	while (ns_ctx != NULL) {
-		if (init_ns_worker_ctx(ns_ctx) != 0) {
-			printf("ERROR: init_ns_worker_ctx() failed\n");
-			return 1;
-		}
-		ns_ctx = ns_ctx->next;
-	}
-
-	tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
-
-	/* Submit initial I/O for each namespace. */
-	ns_ctx = worker->ns_ctx;
-	while (ns_ctx != NULL) {
-		submit_io(ns_ctx, g_queue_depth);
-		ns_ctx = ns_ctx->next;
-	}
-
-	while (1) {
-		/*
-		 * Check for completed I/O for each controller. A new
-		 * I/O will be submitted in the io_complete callback
-		 * to replace each I/O that is completed.
-		 */
-		ns_ctx = worker->ns_ctx;
-		while (ns_ctx != NULL) {
-			check_io(ns_ctx);
-			ns_ctx = ns_ctx->next;
-		}
-
-		if (spdk_get_ticks() > tsc_end) {
-			break;
-		}
-	}
-
-	ns_ctx = worker->ns_ctx;
-	while (ns_ctx != NULL) {
-		drain_io(ns_ctx);
-		cleanup_ns_worker_ctx(ns_ctx);
-		ns_ctx = ns_ctx->next;
-	}
-
-	return 0;
 }
 
 static void usage(char *program_name)
@@ -1472,7 +1434,6 @@ associate_workers_with_ns(void)
 	int			i, count;
 
 	count = g_num_namespaces > g_num_workers ? g_num_namespaces : g_num_workers;
-
 	for (i = 0; i < count; i++) {
 		if (entry == NULL) {
 			break;
@@ -1490,7 +1451,7 @@ associate_workers_with_ns(void)
 		ns_ctx->next = worker->ns_ctx;
 		ns_ctx->histogram = spdk_histogram_data_alloc();
 		worker->ns_ctx = ns_ctx;
-
+		g_ns_ctx++;
 		worker = worker->next;
 		if (worker == NULL) {
 			worker = g_workers;
@@ -1506,48 +1467,49 @@ associate_workers_with_ns(void)
 	return 0;
 }
 
-int main(int argc, char **argv)
+static void
+end_target(void *arg)
 {
-	int rc;
-	struct worker_thread *worker, *master_worker;
-	unsigned master_core;
-	struct spdk_env_opts opts;
+	struct ns_worker_ctx *ns_ctx = arg;
 
-	rc = parse_args(argc, argv);
-	if (rc != 0) {
-		return rc;
-	}
+	spdk_poller_unregister(&ns_ctx->run_timer);
+	ns_ctx->is_draining = true;
+}
 
-	spdk_env_opts_init(&opts);
-	opts.name = "perf";
-	opts.shm_id = g_shm_id;
-	if (g_core_mask) {
-		opts.core_mask = g_core_mask;
-	}
+static void
+nvmeperf_submit_on_core(void *arg1, void *arg2)
+{
+	struct worker_thread *worker = arg1;
+	struct ns_worker_ctx *ns_ctx = worker->ns_ctx;
 
-	if (g_dpdk_mem) {
-		opts.mem_size = g_dpdk_mem;
+	while (ns_ctx != NULL) {
+		if (init_ns_worker_ctx(ns_ctx) != 0) {
+			printf("ERROR: init_ns_worker_ctx() failed\n");
+			return;
+		}
+
+		/* Start a timer to stop this I/O chain when the run is over */
+		ns_ctx->run_timer = spdk_poller_register(end_target, ns_ctx,
+				    g_time_in_sec * 1000000);
+		ns_ctx->check_poller = spdk_poller_register(check_io, ns_ctx, 0);
+		submit_io(ns_ctx, g_queue_depth);
+		ns_ctx = ns_ctx->next;
 	}
-	if (g_no_pci) {
-		opts.no_pci = g_no_pci;
-	}
-	spdk_env_init(&opts);
+}
+
+static void
+perf_start(void *arg1, void *arg2)
+{
+	struct worker_thread *worker;
+	struct spdk_event *event;
 
 	g_tsc_rate = spdk_get_ticks_hz();
-
 	if (register_workers() != 0) {
-		rc = -1;
-		goto cleanup;
-	}
-
-	if (register_aio_files(argc, argv) != 0) {
-		rc = -1;
-		goto cleanup;
+		return;
 	}
 
 	if (register_controllers() != 0) {
-		rc = -1;
-		goto cleanup;
+		return;
 	}
 
 	if (g_warn) {
@@ -1556,34 +1518,57 @@ int main(int argc, char **argv)
 
 	if (g_num_namespaces == 0) {
 		fprintf(stderr, "No valid NVMe controllers or AIO devices found\n");
-		return 0;
+		return;
 	}
 
 	if (associate_workers_with_ns() != 0) {
+		return;
+	}
+
+	printf("Running I/O for %d seconds...\n", g_time_in_sec);
+	fflush(stdout);
+
+	g_master_core = spdk_env_get_current_core();
+	/* Send events to start all I/O */
+	worker = g_workers;
+	while (worker != NULL) {
+		event = spdk_event_allocate(worker->lcore, nvmeperf_submit_on_core, worker, NULL);
+		spdk_event_call(event);
+		worker = worker->next;
+	}
+}
+
+int main(int argc, char **argv)
+{
+	int rc;
+	struct spdk_app_opts opts = {};
+
+	rc = parse_args(argc, argv);
+	if (rc != 0) {
+		return rc;
+	}
+
+	spdk_app_opts_init(&opts);
+	opts.name = "perf";
+	opts.shm_id = g_shm_id;
+	if (g_core_mask) {
+		opts.reactor_mask = g_core_mask;
+	}
+
+	if (g_dpdk_mem) {
+		opts.mem_size = g_dpdk_mem;
+	}
+	if (g_no_pci) {
+		opts.no_pci = g_no_pci;
+	}
+
+	if (register_aio_files(argc, argv) != 0) {
 		rc = -1;
 		goto cleanup;
 	}
 
 	printf("Initialization complete. Launching workers.\n");
-
-	/* Launch all of the slave workers */
-	master_core = spdk_env_get_current_core();
-	master_worker = NULL;
-	worker = g_workers;
-	while (worker != NULL) {
-		if (worker->lcore != master_core) {
-			spdk_env_thread_launch_pinned(worker->lcore, work_fn, worker);
-		} else {
-			assert(master_worker == NULL);
-			master_worker = worker;
-		}
-		worker = worker->next;
-	}
-
-	assert(master_worker != NULL);
-	rc = work_fn(master_worker);
-
-	spdk_env_thread_wait_all();
+	spdk_app_start(&opts, perf_start, NULL, NULL);
 
 	print_stats();
 
@@ -1592,6 +1577,7 @@ cleanup:
 	unregister_namespaces();
 	unregister_controllers();
 	unregister_workers();
+	spdk_app_fini();
 
 	if (rc != 0) {
 		fprintf(stderr, "%s: errors occured\n", argv[0]);
