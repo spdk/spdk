@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7bd3a802_91ef2179",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2175,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-11T09:54:50Z",
+      "side": 1,
+      "message": "This function actually do not test anything xattrs specific. Can add some xattrs sets and reads?",
+      "range": {
+        "startLine": 2175,
+        "startChar": 0,
+        "endLine": 2175,
+        "endChar": 21
+      },
+      "revId": "ca5996b3a706f84e54bb8f3c6fa1e1d0a992a38c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5162bfc5_3e989c74",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2199,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-11T09:54:50Z",
+      "side": 1,
+      "message": "Too many empty lines.",
+      "range": {
+        "startLine": 2199,
+        "startChar": 0,
+        "endLine": 2199,
+        "endChar": 0
+      },
+      "revId": "ca5996b3a706f84e54bb8f3c6fa1e1d0a992a38c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
