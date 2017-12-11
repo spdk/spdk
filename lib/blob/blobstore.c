@@ -2656,6 +2656,17 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, struct spdk_blob_opts *
 	_spdk_blob_persist(seq, blob, _spdk_bs_create_blob_cpl, blob);
 }
 
+void spdk_bs_create_blob_clone(struct spdk_blob_store *bs, struct spdk_blob_data *blob
+			       spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob_opts 	opts;
+
+	spdk_blob_opts_init(&opts);
+	opts.read_only = true;
+
+	spdk_bs_create_blob_ext(bs, NULL, cb_fn, cb_arg);
+}
+
 void spdk_bs_create_blob(struct spdk_blob_store *bs,
 			 spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
