@@ -423,6 +423,45 @@ blob_resize(void)
 }
 
 static void
+blob_read_only(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	spdk_blob_id blobid;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	spdk_bs_md_create_blob(bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_md_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	spdk_bs_md_set_read_only(blob);
+	CU_ASSERT(blob->data_ro == true);
+	CU_ASSERT(blob->data_ro_flags & SPDK_BLOB_READ_ONLY);
+	CU_ASSERT(blob->md_ro == true);
+	CU_ASSERT(blob->md_ro_flags & SPDK_BLOB_READ_ONLY);
+
+	spdk_bs_md_close_blob(&blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+}
+
+static void
 channel_ops(void)
 {
 	struct spdk_blob_store *bs;
@@ -2183,6 +2222,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_create", blob_create) == NULL ||
 		CU_add_test(suite, "blob_delete", blob_delete) == NULL ||
 		CU_add_test(suite, "blob_resize", blob_resize) == NULL ||
+		CU_add_test(suite, "blob_read_only", blob_read_only) == NULL ||
 		CU_add_test(suite, "channel_ops", channel_ops) == NULL ||
 		CU_add_test(suite, "blob_super", blob_super) == NULL ||
 		CU_add_test(suite, "blob_write", blob_write) == NULL ||

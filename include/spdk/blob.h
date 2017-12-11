@@ -223,6 +223,7 @@ uint64_t spdk_blob_get_num_clusters(struct spdk_blob *blob);
 struct spdk_blob_opts {
 	size_t num_clusters;
 	bool    thin_provision;
+	bool	read_only;
 };
 
 /* Initialize an spdk_blob_opts structure to the default blob option values. */
@@ -252,6 +253,9 @@ int spdk_bs_md_resize_blob(struct spdk_blob *blob, size_t sz);
 
 /* Set blob as thin provisioned */
 void spdk_bs_md_set_thin_provision(struct spdk_blob *blob);
+
+/* Set blob as read only */
+void spdk_bs_md_set_read_only(struct spdk_blob *blob);
 
 /* Sync a blob */
 /* Make a blob persistent. This applies to open, resize, set xattr,
