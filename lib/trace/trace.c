@@ -37,9 +37,6 @@
 #include "spdk/string.h"
 #include "spdk/trace.h"
 
-#include <rte_config.h>
-#include <rte_lcore.h>
-
 static char g_shm_name[64];
 
 static struct spdk_trace_histories *g_trace_histories;
@@ -63,7 +60,7 @@ spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 		return;
 	}
 
-	lcore = rte_lcore_id();
+	lcore = spdk_env_get_current_core();
 	if (lcore >= SPDK_TRACE_MAX_LCORE) {
 		return;
 	}
