@@ -87,6 +87,9 @@ void
 spdk_blob_opts_init(struct spdk_blob_opts *opts)
 {
 	opts->num_clusters = 0;
+	opts->xattr_count = 0;
+	opts->xattr_names = NULL;
+	opts->get_xattr_value = NULL;
 }
 
 static struct spdk_blob_data *
@@ -2558,6 +2561,21 @@ _spdk_bs_create_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
+static void
+_spdk_blob_set_xattrs(struct spdk_blob	*blob, const struct spdk_blob_opts *opts)
+{
+	uint64_t i;
+	size_t value_len = 0;
+	const void *value = NULL;
+
+	for (i = 0; i < opts->xattr_count; i++) {
+		if (opts->get_xattr_value) {
+			opts->get_xattr_value(opts->xattr_ctx, opts->xattr_names[i], &value, &value_len);
+		}
+		spdk_blob_set_xattr(blob, opts->xattr_names[i], value, value_len);
+	}
+}
+
 void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_opts *opts,
 			     spdk_blob_op_with_id_complete cb_fn, void *cb_arg)
 {
@@ -2589,7 +2607,7 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		spdk_blob_opts_init(&opts_default);
 		opts = &opts_default;
 	}
-
+	_spdk_blob_set_xattrs(__data_to_blob(blob), opts);
 	spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
