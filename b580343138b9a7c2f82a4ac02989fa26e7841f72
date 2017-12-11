@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5797ba8_efd443d8",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-11T18:00:39Z",
+      "side": 1,
+      "message": "There are two other cases we should test - 0 size and null options",
+      "revId": "b580343138b9a7c2f82a4ac02989fa26e7841f72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ddce2657_716e7234",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-11T18:00:39Z",
+      "side": 1,
+      "message": "This should use the public API function to ask how many clusters the blob has",
+      "revId": "b580343138b9a7c2f82a4ac02989fa26e7841f72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
