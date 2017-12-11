@@ -232,25 +232,27 @@ bdev_aio_poll(void *arg)
 	}
 }
 
-static int
-_bdev_aio_get_io_inflight(void *io_device, struct spdk_io_channel *ch,
-			  void *ctx)
+static void
+_bdev_aio_get_io_inflight(struct spdk_io_channel_iter *i)
 {
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
 	struct bdev_aio_io_channel *aio_ch = spdk_io_channel_get_ctx(ch);
 
 	if (aio_ch->io_inflight) {
-		return -1;
+		spdk_for_each_channel_continue(i, -1);
+		return;
 	}
-	return 0;
+
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
 bdev_aio_reset_retry_timer(void *arg);
 
 static void
-_bdev_aio_get_io_inflight_done(void *io_device, void *ctx, int status)
+_bdev_aio_get_io_inflight_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct file_disk *fdisk = ctx;
+	struct file_disk *fdisk = spdk_io_channel_iter_get_ctx(i);
 
 	if (status == -1) {
 		fdisk->reset_retry_timer = spdk_poller_register(bdev_aio_reset_retry_timer, fdisk, 500);

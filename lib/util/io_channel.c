@@ -514,12 +514,13 @@ spdk_io_channel_get_thread(struct spdk_io_channel *ch)
 	return ch->thread;
 }
 
-struct call_channel {
+struct spdk_io_channel_iter {
 	void *io_device;
 	struct io_device *dev;
 	spdk_channel_msg fn;
 	int status;
 	void *ctx;
+	struct spdk_io_channel *ch;
 
 	struct spdk_thread *cur_thread;
 
@@ -527,64 +528,59 @@ struct call_channel {
 	spdk_channel_for_each_cpl cpl;
 };
 
+void *
+spdk_io_channel_iter_get_io_device(struct spdk_io_channel_iter *i)
+{
+	return i->io_device;
+}
+
+struct spdk_io_channel *
+spdk_io_channel_iter_get_channel(struct spdk_io_channel_iter *i)
+{
+	return i->ch;
+}
+
+void *
+spdk_io_channel_iter_get_ctx(struct spdk_io_channel_iter *i)
+{
+	return i->ctx;
+}
+
 static void
 _call_completion(void *ctx)
 {
-	struct call_channel *ch_ctx = ctx;
+	struct spdk_io_channel_iter *i = ctx;
 
-	if (ch_ctx->cpl != NULL) {
-		ch_ctx->cpl(ch_ctx->io_device, ch_ctx->ctx, ch_ctx->status);
+	if (i->cpl != NULL) {
+		i->cpl(i, i->status);
 	}
-	free(ch_ctx);
+	free(i);
 }
 
 static void
 _call_channel(void *ctx)
 {
-	struct call_channel *ch_ctx = ctx;
-	struct spdk_thread *thread;
+	struct spdk_io_channel_iter *i = ctx;
 	struct spdk_io_channel *ch;
-
-	thread = ch_ctx->cur_thread;
-	pthread_mutex_lock(&g_devlist_mutex);
-	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-		if (ch->dev->io_device == ch_ctx->io_device) {
-			break;
-		}
-	}
-	pthread_mutex_unlock(&g_devlist_mutex);
 
 	/*
 	 * It is possible that the channel was deleted before this
 	 *  message had a chance to execute.  If so, skip calling
 	 *  the fn() on this thread.
 	 */
-	if (ch != NULL) {
-		ch_ctx->status = ch_ctx->fn(ch_ctx->io_device, ch, ch_ctx->ctx);
-	}
-
 	pthread_mutex_lock(&g_devlist_mutex);
-	if (ch_ctx->status) {
-		goto end;
-	}
-	thread = TAILQ_NEXT(thread, tailq);
-	while (thread) {
-		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-			if (ch->dev->io_device == ch_ctx->io_device) {
-				ch_ctx->cur_thread = thread;
-				pthread_mutex_unlock(&g_devlist_mutex);
-				spdk_thread_send_msg(thread, _call_channel, ch_ctx);
-				return;
-			}
+	TAILQ_FOREACH(ch, &i->cur_thread->io_channels, tailq) {
+		if (ch->dev->io_device == i->io_device) {
+			break;
 		}
-		thread = TAILQ_NEXT(thread, tailq);
 	}
-
-end:
-	ch_ctx->dev->for_each_count--;
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	spdk_thread_send_msg(ch_ctx->orig_thread, _call_completion, ch_ctx);
+	if (ch) {
+		i->fn(i);
+	} else {
+		spdk_for_each_channel_continue(i, 0);
+	}
 }
 
 void
@@ -593,38 +589,75 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 {
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
-	struct call_channel *ch_ctx;
+	struct spdk_io_channel_iter *i;
 
-	ch_ctx = calloc(1, sizeof(*ch_ctx));
-	if (!ch_ctx) {
-		SPDK_ERRLOG("Unable to allocate context\n");
+	i = calloc(1, sizeof(*i));
+	if (!i) {
+		SPDK_ERRLOG("Unable to allocate iterator\n");
 		return;
 	}
 
-	ch_ctx->io_device = io_device;
-	ch_ctx->fn = fn;
-	ch_ctx->ctx = ctx;
-	ch_ctx->cpl = cpl;
+	i->io_device = io_device;
+	i->fn = fn;
+	i->ctx = ctx;
+	i->cpl = cpl;
 
 	pthread_mutex_lock(&g_devlist_mutex);
-	ch_ctx->orig_thread = _get_thread();
+	i->orig_thread = _get_thread();
 
 	TAILQ_FOREACH(thread, &g_threads, tailq) {
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 			if (ch->dev->io_device == io_device) {
 				ch->dev->for_each_count++;
-				ch_ctx->dev = ch->dev;
-				ch_ctx->cur_thread = thread;
+				i->dev = ch->dev;
+				i->cur_thread = thread;
+				i->ch = ch;
 				pthread_mutex_unlock(&g_devlist_mutex);
-				spdk_thread_send_msg(thread, _call_channel, ch_ctx);
+				spdk_thread_send_msg(thread, _call_channel, i);
 				return;
 			}
 		}
 	}
 
-	free(ch_ctx);
-
 	pthread_mutex_unlock(&g_devlist_mutex);
 
-	cpl(io_device, ctx, 0);
+	cpl(i, 0);
+
+	free(i);
+}
+
+void
+spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_thread *thread;
+	struct spdk_io_channel *ch;
+
+	assert(i->cur_thread == spdk_get_thread());
+
+	i->status = status;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+	if (status) {
+		goto end;
+	}
+	thread = TAILQ_NEXT(i->cur_thread, tailq);
+	while (thread) {
+		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+			if (ch->dev->io_device == i->io_device) {
+				i->cur_thread = thread;
+				i->ch = ch;
+				pthread_mutex_unlock(&g_devlist_mutex);
+				spdk_thread_send_msg(thread, _call_channel, i);
+				return;
+			}
+		}
+		thread = TAILQ_NEXT(thread, tailq);
+	}
+
+end:
+	i->dev->for_each_count--;
+	i->ch = NULL;
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 }
