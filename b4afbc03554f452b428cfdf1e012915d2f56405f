@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a15c3af2_56ab4805",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-11T09:41:56Z",
+      "side": 1,
+      "message": "Not entirely true - you can init it with different size when you pass opt with set size",
+      "range": {
+        "startLine": 230,
+        "startChar": 38,
+        "endLine": 230,
+        "endChar": 64
+      },
+      "revId": "b4afbc03554f452b428cfdf1e012915d2f56405f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "072b5080_e42dc9d8",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-11T09:41:56Z",
+      "side": 1,
+      "message": "Too many empty lines",
+      "range": {
+        "startLine": 275,
+        "startChar": 0,
+        "endLine": 276,
+        "endChar": 0
+      },
+      "revId": "b4afbc03554f452b428cfdf1e012915d2f56405f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91511779_6b9abf7a",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-11T09:41:56Z",
+      "side": 1,
+      "message": "Too many empty lines",
+      "range": {
+        "startLine": 288,
+        "startChar": 0,
+        "endLine": 288,
+        "endChar": 0
+      },
+      "revId": "b4afbc03554f452b428cfdf1e012915d2f56405f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f4d9f1d_dcd4a14b",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-11T09:41:56Z",
+      "side": 1,
+      "message": "You can add case where you set size in opts and check if it was set correctly after blob creation.",
+      "revId": "b4afbc03554f452b428cfdf1e012915d2f56405f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
