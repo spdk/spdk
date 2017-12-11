@@ -47,6 +47,9 @@ struct spdk_blob *g_blob;
 int g_bserrno;
 struct spdk_xattr_names *g_names;
 int g_done;
+char *g_xattr_names[] = {"first", "second", "third"};
+char *g_xattr_values[] = {"one", "two", "three"};
+uint64_t g_ctx = 1729;
 
 bool g_scheduler_delay = false;
 
@@ -2265,6 +2268,133 @@ bs_version(void)
 	CU_ASSERT(super->used_blobid_mask_len == 0);
 }
 
+static void
+_get_xattr_value(void *arg, const char *name,
+		 const void **value, size_t *value_len)
+{
+	uint64_t i;
+
+	SPDK_CU_ASSERT_FATAL(value_len != NULL);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(arg == &g_ctx)
+
+	for (i = 0; i < sizeof(g_xattr_names); i++) {
+		if (!strcmp(name, g_xattr_names[i])) {
+			*value_len = strlen(g_xattr_values[i]);
+			*value = g_xattr_values[i];
+			break;
+		}
+	}
+}
+
+static void
+_get_xattr_value_null(void *arg, const char *name,
+		      const void **value, size_t *value_len)
+{
+	SPDK_CU_ASSERT_FATAL(value_len != NULL);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(arg == NULL)
+
+	*value_len = 0;
+	*value = NULL;
+}
+
+static void
+blob_set_xattrs(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob *blob;
+	struct spdk_blob_opts opts;
+	spdk_blob_id blobid;
+	const void *value;
+	size_t value_len;
+	int rc;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	/* Create blob with extra attributes */
+	spdk_blob_opts_init(&opts);
+
+	opts.xattr_names = g_xattr_names;
+	opts.get_xattr_value = _get_xattr_value;
+	opts.xattr_count = 3;
+	opts.xattr_ctx = &g_ctx;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	/* Get the xattrs */
+	value = NULL;
+
+	rc = spdk_blob_get_xattr_value(blob, g_xattr_names[0], &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(value_len == strlen(g_xattr_values[0]));
+	CU_ASSERT_NSTRING_EQUAL_FATAL(value, g_xattr_values[0], value_len);
+
+	rc = spdk_blob_get_xattr_value(blob, g_xattr_names[1], &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(value_len == strlen(g_xattr_values[1]));
+	CU_ASSERT_NSTRING_EQUAL((char *)value, g_xattr_values[1], value_len);
+
+	rc = spdk_blob_get_xattr_value(blob, g_xattr_names[2], &value, &value_len);
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(value != NULL);
+	CU_ASSERT(value_len == strlen(g_xattr_values[2]));
+	CU_ASSERT_NSTRING_EQUAL((char *)value, g_xattr_values[2], value_len);
+
+	/* Try to get non existing attribute */
+
+	rc = spdk_blob_get_xattr_value(blob, "foobar", &value, &value_len);
+	CU_ASSERT(rc == -ENOENT);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	blob = NULL;
+	g_blob = NULL;
+	g_blobid = SPDK_BLOBID_INVALID;
+
+	/* NULL callback */
+	spdk_blob_opts_init(&opts);
+	opts.xattr_names = g_xattr_names;
+	opts.get_xattr_value = NULL;
+	opts.xattr_count = 1;
+	opts.xattr_ctx = &g_ctx;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+
+	/* NULL values */
+	spdk_blob_opts_init(&opts);
+	opts.xattr_names = g_xattr_names;
+	opts.get_xattr_value = _get_xattr_value_null;
+	opts.xattr_count = 1;
+	opts.xattr_ctx = NULL;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == -EINVAL);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2309,7 +2439,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "super_block_crc", super_block_crc) == NULL ||
 		CU_add_test(suite, "blob_dirty_shutdown", blob_dirty_shutdown) == NULL ||
 		CU_add_test(suite, "blob_flags", blob_flags) == NULL ||
-		CU_add_test(suite, "bs_version", bs_version) == NULL
+		CU_add_test(suite, "bs_version", bs_version) == NULL ||
+		CU_add_test(suite, "blob_set_xattrs", blob_set_xattrs) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
