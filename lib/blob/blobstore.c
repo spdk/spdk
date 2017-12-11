@@ -86,6 +86,7 @@ void
 spdk_blob_opts_init(struct spdk_blob_opts *opts)
 {
 	opts->num_clusters = 0;
+	opts->read_only = false;
 	opts->xattr_count = 0;
 	opts->xattr_names = NULL;
 	opts->get_xattr_value = NULL;
@@ -2624,6 +2625,10 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, struct spdk_blob_opts *
 
 	spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
 
+	if (opts->read_only) {
+		spdk_bs_set_read_only(__data_to_blob(blob));
+	}
+
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
@@ -2810,8 +2815,19 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 	_spdk_blob_load(seq, blob, _spdk_bs_open_blob_cpl, blob);
 }
-
 /* END spdk_bs_open_blob */
+
+/* START spdk_bs_set_read_only */
+void spdk_bs_set_read_only(struct spdk_blob *b)
+{
+	struct spdk_blob_data *blob = __blob_to_data(b);
+
+	blob->data_ro = true;
+	blob->data_ro_flags |= SPDK_BLOB_READ_ONLY;
+
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+}
+/* END spdk_bs_set_read_only */
 
 /* START spdk_blob_sync_md */
 
