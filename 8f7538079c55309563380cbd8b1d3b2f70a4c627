@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7dc93d71_1475046d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:23:13Z",
+      "side": 1,
+      "message": "Why not size_t ?",
+      "range": {
+        "startLine": 925,
+        "startChar": 1,
+        "endLine": 925,
+        "endChar": 5
+      },
+      "revId": "8f7538079c55309563380cbd8b1d3b2f70a4c627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0642608_bfa5cf7d",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:23:13Z",
+      "side": 1,
+      "message": "This is unnecessary.",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 29
+      },
+      "revId": "8f7538079c55309563380cbd8b1d3b2f70a4c627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e31cef7_996c3a01",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:23:13Z",
+      "side": 1,
+      "message": "This is very nitpicky. Can\u0027t this be size_t, same as variable above ?",
+      "range": {
+        "startLine": 46,
+        "startChar": 1,
+        "endLine": 46,
+        "endChar": 5
+      },
+      "revId": "8f7538079c55309563380cbd8b1d3b2f70a4c627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4726580a_27448624",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:23:13Z",
+      "side": 1,
+      "message": "Why not free it inside loop above ?",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 3
+      },
+      "revId": "8f7538079c55309563380cbd8b1d3b2f70a4c627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29f54b3e_b918ce99",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-11T16:23:13Z",
+      "side": 1,
+      "message": "Can we first list name of bdev (as there is just one and cannot be changed), then proceed to listing all aliases ?",
+      "range": {
+        "startLine": 69,
+        "startChar": 1,
+        "endLine": 69,
+        "endChar": 33
+      },
+      "revId": "8f7538079c55309563380cbd8b1d3b2f70a4c627",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
