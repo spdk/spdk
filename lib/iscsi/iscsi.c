@@ -4113,6 +4113,7 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 	int lun_i;
 	int F_bit;
 	int rc;
+	int reject_reason = ISCSI_REASON_INVALID_PDU_FIELD;
 
 	if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
 		SPDK_ERRLOG("ISCSI_OP_SCSI_DATAOUT not allowed in discovery session\n");
@@ -4151,7 +4152,8 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 		if (conn->sess->ErrorRecoveryLevel >= 1) {
 			goto send_r2t_recovery_return;
 		} else {
-			return SPDK_ISCSI_CONNECTION_FATAL;
+			reject_reason = ISCSI_REASON_PROTOCOL_ERROR;
+			goto reject_return;
 		}
 	}
 
@@ -4224,7 +4226,7 @@ send_r2t_recovery_return:
 	return rc;
 
 reject_return:
-	rc = spdk_iscsi_reject(conn, pdu, ISCSI_REASON_INVALID_PDU_FIELD);
+	rc = spdk_iscsi_reject(conn, pdu, reject_reason);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_reject() failed\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
