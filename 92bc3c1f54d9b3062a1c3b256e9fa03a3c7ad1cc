@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a4d1e00_257dc667",
+        "filename": "test/lib/nvme/nvme.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-11T04:58:25Z",
+      "side": 1,
+      "message": "Agree with Jim, seems this is not required, 2 perf application has tested with multi-process, currently arbitration is valid for D3600/3700.",
+      "revId": "92bc3c1f54d9b3062a1c3b256e9fa03a3c7ad1cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
