@@ -39,7 +39,7 @@ CFLAGS += $(ENV_CFLAGS)
 APP = reactor
 C_SRCS := reactor.c
 
-SPDK_LIB_LIST = event trace conf util log rpc jsonrpc json
+SPDK_LIB_LIST = event trace conf util log rpc jsonrpc json bdev
 
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 

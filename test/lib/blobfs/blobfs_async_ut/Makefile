@@ -41,7 +41,7 @@ C_SRCS := blobfs_async_ut.c
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/blobfs -I$(SPDK_ROOT_DIR)/lib/blob
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 
-SPDK_LIB_LIST = blob log util
+SPDK_LIB_LIST = blob log util bdev
 
 LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
 

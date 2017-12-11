@@ -36,7 +36,7 @@
 #include "spdk_cunit.h"
 
 #include "request.c"
-
+#include "lib/test_env.c"
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
 void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
