@@ -36,9 +36,10 @@
 #include "spdk_cunit.h"
 
 #include "ctrlr_discovery.c"
-
+#include "lib/test_env.c"
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
+/*
 int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 	       void *remove_ctx, struct spdk_bdev_desc **desc)
@@ -56,7 +57,7 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 {
 	return "test";
 }
-
+*/
 int
 spdk_nvmf_transport_listen(struct spdk_nvmf_transport *transport,
 			   const struct spdk_nvme_transport_id *trid)
