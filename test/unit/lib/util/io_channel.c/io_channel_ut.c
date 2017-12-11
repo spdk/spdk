@@ -48,11 +48,11 @@ _send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 static void
 thread_alloc(void)
 {
-	CU_ASSERT(TAILQ_EMPTY(&g_threads));
+	CU_ASSERT(TAILQ_EMPTY(&g_thread_mgr->threads));
 	allocate_threads(1);
-	CU_ASSERT(!TAILQ_EMPTY(&g_threads));
+	CU_ASSERT(!TAILQ_EMPTY(&g_thread_mgr->threads));
 	free_threads();
-	CU_ASSERT(TAILQ_EMPTY(&g_threads));
+	CU_ASSERT(TAILQ_EMPTY(&g_thread_mgr->threads));
 }
 
 static void
@@ -409,7 +409,7 @@ channel(void)
 	spdk_io_device_unregister(&device3, NULL);
 	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
 	spdk_free_thread();
-	CU_ASSERT(TAILQ_EMPTY(&g_threads));
+	CU_ASSERT(TAILQ_EMPTY(&g_thread_mgr->threads));
 }
 
 int

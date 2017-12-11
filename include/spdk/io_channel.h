@@ -41,6 +41,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
+#include "spdk/bdev.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -224,8 +225,8 @@ struct spdk_thread *spdk_io_channel_get_thread(struct spdk_io_channel *ch);
 void spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 			   spdk_channel_for_each_cpl cpl);
 
+void spdk_io_device_stat(void *io_device, struct spdk_bdev_io_stat *iostat);
+
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* SPDK_IO_CHANNEL_H_ */
