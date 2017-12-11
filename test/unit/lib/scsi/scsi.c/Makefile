@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 SPDK_LIB_LIST = log conf trace util
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi $(ENV_CFLAGS)
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/scsi
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 LIBS += -lcunit

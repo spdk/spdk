@@ -38,8 +38,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = nvmf_tgt
 
-CFLAGS += $(ENV_CFLAGS)
-
 C_SRCS := conf.c nvmf_main.c nvmf_tgt.c nvmf_rpc.c
 
 SPDK_LIB_LIST = event_bdev event_copy
