@@ -618,3 +618,76 @@ Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
 - no other operation fails
+
+### Provisioning
+
+#### TEST CASE 750 - Name: thin_provisioning_check_space
+- run vhost app with NVMe bdev
+- construct lvol store on NVMe bdev with size 1G
+- check if space consumed by lvs equals to metadata of created lvs
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+- destroy lvol store
+
+#### TEST CASE 751 - Name: thin_provisioning_read_empty_bdev
+- run vhost app with NVMe bdev
+- construct lvol store on NVMe bdev with size 1G
+- perform read operations and check if they return zeros
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 752 - Name: thin_provisioning_data_integrity_test
+- run vhost app with NVMe bdev
+- construct lvol store on NVMe bdev with size 1G
+- run fio test with rw=write and with verification
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 753 - Name: thin_provisioning_resize
+- run vhost app with NVMe bdev
+- construct lvol store on NVMe bdev with size 100G
+- construct thin provisioned lvol bdevs on created lvol store with size 50G
+- resize bdev to 70G
+- check if bdev size changed (equals to 70G)
+- check if lvs size didn't change (check free cluster counter)
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 754 - Name: thin_provisioning_disks_size_bigger_than_lvs_size
+- run vhost app with NVMe bdev
+- construct lvol store on NVMe bdev with size 1G
+- construct two thin provisioned lvol bdevs on created lvol store with size equals to 900M
+- fill first bdev to 75% of space
+- fill second bdev to 75% of space
+- check if error message occured while filling second bdev with data
+- check if data on first disk stayed unchanged
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 755 - Name: thin_provisioning_filling_disks_less_than_lvs_size
+- run vhost app with NVMe bdev
+- construct lvol store on NVMe bdev with size 1G
+- construct two thin provisioned lvol bdevs on created lvol store with size 750M
+- check if bdevs are available and size of every disk equals to 750M
+- write 750M to one disk and 200M to second one
+- check if operation didn't fail
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
