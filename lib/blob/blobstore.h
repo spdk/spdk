@@ -148,15 +148,8 @@ struct spdk_blob_store {
 	uint64_t			md_start; /* Offset from beginning of disk, in pages */
 	uint32_t			md_len; /* Count, in pages */
 
-	struct {
-		uint32_t		max_md_ops;
-		struct spdk_io_channel	*md_channel;
-	} md_target;
-
-	struct {
-		uint32_t		max_channel_ops;
-	} io_target;
-
+	struct spdk_io_channel		*md_channel;
+	uint32_t			max_channel_ops;
 
 	struct spdk_bs_dev		*dev;
 
