@@ -546,9 +546,108 @@ Expected result:
 - return code != 0
 - Error code response printed to stdout
 
+### logical volume tasting and snapshot tests
+
+### Provisioning
+
+#### TEST CASE 650 - Name: thin_provisioning_check_space
+- create malloc bdev
+- construct lvol store on malloc bdev
+- create thin provisioned lvol bdev with size equals to lvol store free space
+- check and save number of free clusters for lvol store
+- write data (less than lvs cluster size) to created lvol bdev starting from offset 0.
+- check that free clusters on lvol store was decremented by 1
+- write data (lsv cluster size) to lvol bdev with offset set to one and half of cluster size
+- check that free clusters on lvol store was decremented by 2
+- write data to lvol bdev to the end of its size
+- check that lvol store free clusters number equals to 0
+- destroy thin provisioned lvol bdev
+- check that saved number of free clusters equals to current free clusters
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 651 - Name: thin_provisioning_read_empty_bdev
+- create malloc bdev
+- construct lvol store on malloc bdev
+- create thin provisioned lvol bdev
+- perform read operations and check if they return zeroes
+- destroy thin provisioned lvol bdev
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 652 - Name: thin_provisioning_data_integrity_test
+- create malloc bdev
+- construct lvol store on malloc bdev
+- construct thin provisioned lvol bdev
+- on lvol bdev perform write operation with verification
+- destroy thin provisioned lvol bdev
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- verification ends with success
+- no other operation fails
+
+#### TEST CASE 653 - Name: thin_provisioning_resize
+- create malloc bdev
+- construct lvol store on malloc bdev
+- construct thin provisioned lvol bdevs on created lvol store with size 30M
+- fill all free space of lvol bdev with some data
+- save number of free clusters for lvs
+- resize bdev to full size of lvs
+- check if bdev size changed (roughly equals to size of malloc bdev)
+- check if free_clusters on lvs remain unaffected
+- perform write operation with verification
+  to newly created free space of lvol bdev
+- resize bdev to 30M and check if it ended with success
+- check if free clusters on lvs equals to saved counter
+- destroy thin provisioned lvol bdev
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 654 - Name: thin_overprovisioning
+- create malloc bdev
+- construct lvol store on malloc bdev
+- construct two thin provisioned lvol bdevs on created lvol store
+  with size equals to free lvs size
+- fill first bdev to 75% of its space with specific pattern
+- fill second bdev to 75% of its space
+- check if error message occured while filling second bdev with data
+- check if data on first disk stayed unchanged
+- destroy thin provisioned lvol bdev
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 655 - Name: thin_provisioning_filling_disks_less_than_lvs_size
+- create malloc bdev
+- construct lvol store on malloc bdev
+- construct two thin provisioned lvol bdevs on created lvol store with size 40M
+- check if bdevs are available and size of every disk equals to 40M
+- write 35M to one disk and 20M to second one with verification
+- check if operation didn't fail
+- destroy lvol store
+- destroy Malloc bdev
+
 ### logical volume tasting tests
 
-#### TEST CASE 650 - Name: tasting_positive
+#### TEST CASE 700 - Name: tasting_positive
 Positive test for tasting a multi lvol bdev configuration.
 Create a lvol store with some lvol bdevs on NVMe drive and restart vhost app.
 After restarting configuration should be automatically loaded and should be exactly
@@ -590,7 +689,7 @@ Expected results:
 - all RPC configuration calls successful, return code = 0
 - no other operation fails
 
-#### TEST CASE 651 - Name: tasting_lvol_store_positive
+#### TEST CASE 701 - Name: tasting_lvol_store_positive
 Positive test for tasting lvol store.
 Steps:
 - run vhost app with NVMe bdev
@@ -606,7 +705,7 @@ Expected result:
 
 ### SIGTERM
 
-#### TEST CASE 700 - Name: SIGTERM
+#### TEST CASE 750 - Name: SIGTERM
 Call CTRL+C (SIGTERM) occurs after creating lvol store
 Steps:
 - create a malloc bdev
