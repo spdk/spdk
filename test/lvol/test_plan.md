@@ -618,3 +618,68 @@ Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
 - no other operation fails
+
+### Provisioning
+
+#### TEST CASE 750 - Name: provisioning_check_space
+- run vhost app with NVMe bdev
+- construct thin provisioned lvol store on NVMe bdev with size 1G
+- check if space consumed by lvs equals to metadata of created lvs
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 751 - Name: provisioning_check_zeros
+- run vhost app with NVMe bdev
+- construct thin provisioned lvol store on NVMe bdev with size 1G
+- perform read operations and check if they return zeros
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 752 - Name: provisioning_integrity_test
+- run vhost app with NVMe bdev
+- construct thin provisioned lvol store on NVMe bdev with size 1G
+- run fio test with rw=write and with verification
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 753 - Name: provisioning_resize
+- run vhost app with NVMe bdev
+- construct thin provisioned lvol store on NVMe bdev with size 100G
+- construct lvol bdevs on created lvol store with size 50G
+- resize bdev to 70G
+- check if bdev size equals to 70G and lvs size didn't change
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 754 - Name: provisioning_disks_size_bigger_than_lvs_size
+- run vhost app with NVMe bdev
+- construct thin provisioned lvol store on NVMe bdev with size 1G
+- construct two lvol bdevs on created lvol store with size equals to 900M
+- fill first bdev to 75% of space
+- fill second bdev to 75% of space
+- check if error message occured, and data on first disk stayed unchanged
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 755 - Name: provisioning_filling_disks_less_than_lvs_size
+- run vhost app with NVMe bdev
+- construct thin provisioned lvol store on NVMe bdev with size 1G
+- construct two lvol bdevs on created lvol store with size 750M
+- check if bdevs are available and size of every disk equals to 750M 
+- write 750M to one disk and 200M to second one
+- check if operation didn't fail
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
