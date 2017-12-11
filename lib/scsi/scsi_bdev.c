@@ -1657,6 +1657,10 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 
 	case SPDK_SBC_READ_10:
 	case SPDK_SBC_WRITE_10:
+		/* RDPROTECT, DPO, and FUA are not supported yet */
+		if ((cdb[1] & (0xE0 | 0x10 | 0x08)) != 0) {
+			goto invalid_cdb;
+		}
 		lba = from_be32(&cdb[2]);
 		xfer_len = from_be16(&cdb[7]);
 		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len,
@@ -1664,12 +1668,20 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 
 	case SPDK_SBC_READ_12:
 	case SPDK_SBC_WRITE_12:
+		/* RDPROTECT, DPO, and FUA are not supported yet */
+		if ((cdb[1] & (0xE0 | 0x10 | 0x08)) != 0) {
+			goto invalid_cdb;
+		}
 		lba = from_be32(&cdb[2]);
 		xfer_len = from_be32(&cdb[6]);
 		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len,
 						cdb[0] == SPDK_SBC_READ_12);
 	case SPDK_SBC_READ_16:
 	case SPDK_SBC_WRITE_16:
+		/* RDPROTECT, DPO, and FUA are not supported yet */
+		if ((cdb[1] & (0xE0 | 0x10 | 0x08)) != 0) {
+			goto invalid_cdb;
+		}
 		lba = from_be64(&cdb[2]);
 		xfer_len = from_be32(&cdb[10]);
 		return spdk_bdev_scsi_readwrite(bdev, task, lba, xfer_len,
@@ -1749,6 +1761,13 @@ spdk_bdev_scsi_process_block(struct spdk_bdev *bdev,
 		return SPDK_SCSI_TASK_UNKNOWN;
 	}
 
+	return SPDK_SCSI_TASK_COMPLETE;
+
+invalid_cdb:
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+				  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+				  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 	return SPDK_SCSI_TASK_COMPLETE;
 }
 
