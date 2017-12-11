@@ -44,22 +44,22 @@
 #include "spdk_internal/bdev.h"
 #include "spdk/env.h"
 
-DEFINE_STUB(spdk_bdev_free_io, int, (struct spdk_bdev_io *bdev_io), 0);
-DEFINE_STUB(spdk_bdev_readv, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
-				   struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes, spdk_bdev_io_completion_cb cb,
-				   void *cb_arg), 0);
-DEFINE_STUB(spdk_bdev_writev, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+DEFINE_STUB(spdk_bdev_free_io_test, int, (struct spdk_bdev_io *bdev_io), 0);
+DEFINE_STUB(spdk_bdev_readv_test, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+				   	struct iovec *iov, int iovcnt, uint64_t offset, uint64_t nbytes, spdk_bdev_io_completion_cb cb,
+				   	void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_writev_test, int, (struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 				    struct iovec *iov, int iovcnt, uint64_t offset, uint64_t len, spdk_bdev_io_completion_cb cb,
 				    void *cb_arg), 0);
-DEFINE_STUB_P(spdk_bdev_get_product_name, const char, (const struct spdk_bdev *bdev), {0});
-DEFINE_STUB_P(spdk_bdev_get_name, const char, (const struct spdk_bdev *bdev), {0});
+DEFINE_STUB_P(spdk_bdev_get_product_name_test, const char, (const struct spdk_bdev *bdev), {0});
+DEFINE_STUB_P(spdk_bdev_get_name_test, const char, (const struct spdk_bdev *bdev), {0});
 DEFINE_STUB_P(spdk_conf_section_get_val, char, (struct spdk_conf_section *sp, const char *key), {0});
-DEFINE_STUB_P(spdk_bdev_get_by_name, struct spdk_bdev, (const char *bdev_name), {0});
-DEFINE_STUB(spdk_bdev_open, int, (struct spdk_bdev *bdev, bool write,
-				  spdk_bdev_remove_cb_t remove_cb, void *remove_ctx, struct spdk_bdev_desc **desc), 0);
-DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
+DEFINE_STUB_P(spdk_bdev_get_by_name_test, struct spdk_bdev, (const char *bdev_name), {0});
+DEFINE_STUB(spdk_bdev_open_test, int, (struct spdk_bdev *bdev, bool write,
+				  	spdk_bdev_remove_cb_t remove_cb, void *remove_ctx, struct spdk_bdev_desc **desc), 0);
+DEFINE_STUB_V(spdk_bdev_close_test, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(rte_vhost_driver_enable_features, int, (const char *path, uint64_t features), 0);
-DEFINE_STUB_P(spdk_bdev_get_io_channel, struct spdk_io_channel, (struct spdk_bdev_desc *desc), {0});
+DEFINE_STUB_P(spdk_bdev_get_io_channel_test, struct spdk_io_channel, (struct spdk_bdev_desc *desc), {0});
 
 static void
 vhost_blk_controller_construct_test(void)
@@ -102,18 +102,18 @@ vhost_blk_construct_test(void)
 	MOCK_SET(spdk_vhost_dev_construct_fail, bool, false);
 
 	/* Create device with invalid name */
-	MOCK_SET_P(spdk_bdev_get_by_name, struct spdk_bdev *, NULL);
+	MOCK_SET_P(spdk_bdev_get_by_name_test, struct spdk_bdev *, NULL);
 	rc = spdk_vhost_blk_construct("vhost.0", "0x1", NULL, true);
 	CU_ASSERT(rc != 0);
 
 	/* Device could not be opened */
-	MOCK_SET_P(spdk_bdev_get_by_name, struct spdk_bdev *, ut_p_spdk_bdev);
-	MOCK_SET(spdk_bdev_open, int, -ENOMEM);
+	MOCK_SET_P(spdk_bdev_get_by_name_test, struct spdk_bdev *, ut_p_spdk_bdev);
+	MOCK_SET(spdk_bdev_open_test, int, -ENOMEM);
 	rc = spdk_vhost_blk_construct("vhost.0", "0x1", "Malloc0", true);
 	CU_ASSERT(rc != 0);
 
 	/* Failed to construct controller */
-	MOCK_SET(spdk_bdev_open, int, 0);
+	MOCK_SET(spdk_bdev_open_test, int, 0);
 	MOCK_SET(spdk_vhost_dev_construct_fail, bool, true);
 	rc = spdk_vhost_blk_construct("vhost.0", "0x1", "Malloc0", true);
 	CU_ASSERT(rc != 0);
