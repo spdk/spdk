@@ -150,8 +150,9 @@ spdk_memzone_dump(FILE *f)
 }
 
 struct spdk_mempool *
-spdk_mempool_create(const char *name, size_t count,
-		    size_t ele_size, size_t cache_size, int socket_id)
+spdk_mempool_create_ctor(const char *name, size_t count,
+			 size_t ele_size, size_t cache_size, int socket_id,
+			 spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg)
 {
 	struct rte_mempool *mp;
 	size_t tmp;
@@ -171,10 +172,19 @@ spdk_mempool_create(const char *name, size_t count,
 	}
 
 	mp = rte_mempool_create(name, count, ele_size, cache_size,
-				0, NULL, NULL, NULL, NULL,
+				0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
 				socket_id, 0);
 
 	return (struct spdk_mempool *)mp;
+}
+
+
+struct spdk_mempool *
+spdk_mempool_create(const char *name, size_t count,
+		    size_t ele_size, size_t cache_size, int socket_id)
+{
+	return spdk_mempool_create_ctor(name, count, ele_size, cache_size, socket_id,
+					NULL, NULL);
 }
 
 char *
