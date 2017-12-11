@@ -71,21 +71,20 @@ spdk_nvmf_valid_nqn(const char *nqn)
 }
 
 static void
-spdk_nvmf_subsystem_create_done(void *io_device, void *ctx, int status)
+spdk_nvmf_subsystem_create_done(struct spdk_io_channel_iter *i, int status)
 {
 }
 
-static int
-spdk_nvmf_subsystem_add_to_poll_group(void *io_device,
-				      struct spdk_io_channel *ch,
-				      void *ctx)
+static void
+spdk_nvmf_subsystem_add_to_poll_group(struct spdk_io_channel_iter *i)
 {
-	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_subsystem *subsystem = ctx;
+	struct spdk_nvmf_subsystem *subsystem = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
+	int rc;
 
-	group = spdk_io_channel_get_ctx(ch);
-
-	return spdk_nvmf_poll_group_add_subsystem(group, subsystem);
+	rc = spdk_nvmf_poll_group_add_subsystem(group, subsystem);
+	spdk_for_each_channel_continue(i, rc);
 }
 
 struct spdk_nvmf_subsystem *
@@ -167,10 +166,10 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 }
 
 static void
-spdk_nvmf_subsystem_delete_done(void *io_device, void *ctx, int status)
+spdk_nvmf_subsystem_delete_done(struct spdk_io_channel_iter *i, int status)
 {
-	struct spdk_nvmf_tgt *tgt = io_device;
-	struct spdk_nvmf_subsystem *subsystem = ctx;
+	struct spdk_nvmf_tgt *tgt = spdk_io_channel_iter_get_io_device(i);
+	struct spdk_nvmf_subsystem *subsystem = spdk_io_channel_iter_get_ctx(i);
 	struct spdk_nvmf_ns *ns;
 
 	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
@@ -189,17 +188,17 @@ spdk_nvmf_subsystem_delete_done(void *io_device, void *ctx, int status)
 	free(subsystem);
 }
 
-static int
-spdk_nvmf_subsystem_remove_from_poll_group(void *io_device,
-		struct spdk_io_channel *ch,
-		void *ctx)
+static void
+spdk_nvmf_subsystem_remove_from_poll_group(struct spdk_io_channel_iter *i)
 {
-	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_subsystem *subsystem = ctx;
+	struct spdk_nvmf_subsystem *subsystem = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
+	int rc;
 
-	group = spdk_io_channel_get_ctx(ch);
+	rc = spdk_nvmf_poll_group_remove_subsystem(group, subsystem);
 
-	return spdk_nvmf_poll_group_remove_subsystem(group, subsystem);
+	spdk_for_each_channel_continue(i, rc);
 }
 
 void
@@ -433,22 +432,24 @@ struct spdk_nvmf_subsystem_add_ns_ctx {
 };
 
 static void
-spdk_nvmf_subsystem_add_ns_done(void *io_device, void *ctx, int status)
+spdk_nvmf_subsystem_add_ns_done(struct spdk_io_channel_iter *i, int status)
 {
+	void *ctx = spdk_io_channel_iter_get_ctx(i);
+
 	free(ctx);
 }
 
-static int
-spdk_nvmf_subsystem_ns_update_poll_group(void *io_device,
-		struct spdk_io_channel *ch,
-		void *c)
+static void
+spdk_nvmf_subsystem_ns_update_poll_group(struct spdk_io_channel_iter *i)
 {
-	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_subsystem_add_ns_ctx *ctx = c;
+	struct spdk_nvmf_subsystem_add_ns_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
+	int rc;
 
-	group = spdk_io_channel_get_ctx(ch);
+	rc = spdk_nvmf_poll_group_add_ns(group, ctx->subsystem, ctx->ns);
 
-	return spdk_nvmf_poll_group_add_ns(group, ctx->subsystem, ctx->ns);
+	spdk_for_each_channel_continue(i, rc);
 }
 
 uint32_t

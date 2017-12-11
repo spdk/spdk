@@ -1310,9 +1310,9 @@ spdk_bdev_flush_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 }
 
 static void
-_spdk_bdev_reset_dev(void *io_device, void *ctx, int status)
+_spdk_bdev_reset_dev(struct spdk_io_channel_iter *i, int status)
 {
-	struct spdk_bdev_channel *ch = ctx;
+	struct spdk_bdev_channel *ch = spdk_io_channel_iter_get_ctx(i);
 	struct spdk_bdev_io *bdev_io;
 
 	bdev_io = TAILQ_FIRST(&ch->queued_resets);
@@ -1320,13 +1320,14 @@ _spdk_bdev_reset_dev(void *io_device, void *ctx, int status)
 	spdk_bdev_io_submit_reset(bdev_io);
 }
 
-static int
-_spdk_bdev_reset_freeze_channel(void *io_device, struct spdk_io_channel *ch,
-				void *ctx)
+static void
+_spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 {
+	struct spdk_io_channel 		*ch;
 	struct spdk_bdev_channel	*channel;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
 
+	ch = spdk_io_channel_iter_get_channel(i);
 	channel = spdk_io_channel_get_ctx(ch);
 	mgmt_channel = spdk_io_channel_get_ctx(channel->mgmt_channel);
 
@@ -1336,7 +1337,7 @@ _spdk_bdev_reset_freeze_channel(void *io_device, struct spdk_io_channel *ch,
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
 
-	return 0;
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -1583,9 +1584,9 @@ _spdk_bdev_io_complete(void *ctx)
 }
 
 static void
-_spdk_bdev_reset_complete(void *io_device, void *ctx, int status)
+_spdk_bdev_reset_complete(struct spdk_io_channel_iter *i, int status)
 {
-	struct spdk_bdev_io *bdev_io = ctx;
+	struct spdk_bdev_io *bdev_io = spdk_io_channel_iter_get_ctx(i);
 
 	if (bdev_io->u.reset.ch_ref != NULL) {
 		spdk_put_io_channel(bdev_io->u.reset.ch_ref);
@@ -1595,9 +1596,10 @@ _spdk_bdev_reset_complete(void *io_device, void *ctx, int status)
 	_spdk_bdev_io_complete(bdev_io);
 }
 
-static int
-_spdk_bdev_unfreeze_channel(void *io_device, struct spdk_io_channel *_ch, void *ctx)
+static void
+_spdk_bdev_unfreeze_channel(struct spdk_io_channel_iter *i)
 {
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
 	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
 
 	ch->flags &= ~BDEV_CH_RESET_IN_PROGRESS;
@@ -1605,7 +1607,7 @@ _spdk_bdev_unfreeze_channel(void *io_device, struct spdk_io_channel *_ch, void *
 		_spdk_bdev_channel_start_reset(ch);
 	}
 
-	return 0;
+	spdk_for_each_channel_continue(i, 0);
 }
 
 void

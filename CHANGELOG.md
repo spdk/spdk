@@ -22,6 +22,10 @@ framework (include/spdk/event.h) to the I/O channel library
 (include/spdk/io_channel.h). This allows code that doesn't depend on the event
 framework to request registration and unregistration of pollers.
 
+spdk_for_each_channel() now allows asynchronous operations during iteration.
+Instead of immediately continuing the interation upon returning from the iteration
+callback, the user must call spdk_for_each_channel_continue() to resume iteration.
+
 ### Block Device Abstraction Layer (bdev)
 
 The poller abstraction was removed from the bdev layer. There is now a general purpose
