@@ -622,19 +622,6 @@ dev_find_port_by_id_success(void)
 	}
 }
 
-static void
-dev_print_success(void)
-{
-	struct spdk_scsi_dev dev = { 0 };
-	struct spdk_scsi_lun lun = { 0 };
-
-	dev.lun[0] = &lun;
-
-	/* Prints the dev and a list of the LUNs associated with
-	 * the dev */
-	spdk_scsi_dev_print(&dev);
-}
-
 int
 main(int argc, char **argv)
 {
@@ -693,7 +680,6 @@ main(int argc, char **argv)
 			       dev_find_port_by_id_id_not_found_failure) == NULL
 		|| CU_add_test(suite, "dev find port by id - success",
 			       dev_find_port_by_id_success) == NULL
-		|| CU_add_test(suite, "dev print - success", dev_print_success) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
