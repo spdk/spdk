@@ -335,6 +335,7 @@ nvme_pcie_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32
 	*value = spdk_mmio_read_4(nvme_pcie_reg_addr(ctrlr, offset));
 	g_thread_mmio_ctrlr = NULL;
 	if (~(*value) == 0) {
+		pctrlr->ctrlr.is_removed = true;
 		return -1;
 	}
 
@@ -352,6 +353,7 @@ nvme_pcie_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64
 	*value = spdk_mmio_read_8(nvme_pcie_reg_addr(ctrlr, offset));
 	g_thread_mmio_ctrlr = NULL;
 	if (~(*value) == 0) {
+		pctrlr->ctrlr.is_removed = true;
 		return -1;
 	}
 
