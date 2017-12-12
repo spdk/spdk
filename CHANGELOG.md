@@ -29,11 +29,14 @@ abstraction for pollers available in include/spdk/io_channel.h
 
 ### NVMe Driver
 
-The logic which support hotplug of vfio-attached devices has been implemented in SPDK, but to
-totally enable this feature, there is still some work need to be done for kernel vfio-pci driver.
-vfio-pci driver should trigger one "remove" uevent at the very beginning of the remove interface
-of pci driver, this will make sure the SPDK could detect the event and release the vfio-attached
-device Fd and related resource when the device removed.
+The logic which support hotplug of vfio-attached devices has been implemented in SPDK,
+but compare with uio driver, vfio-pci driver does not trigger "remove" uevent at the
+very beginning of the remove interface of pci driver, it will wait until the application
+release the device fd. But for SPDK, the application will wait for the event and then
+release the device fd, this is a "logical dead lock". To solve this issue, we add a new
+approch which will help on detect the hot remove event for vfio-attached devices, we
+read the csts register when admin command complete, if the device hot removed, the register
+will be all "F", then the dirver know that the device is removed.
 
 ### Blobstore
 
