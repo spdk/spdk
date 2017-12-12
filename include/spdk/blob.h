@@ -232,7 +232,7 @@ int spdk_blob_resize(struct spdk_blob *blob, size_t sz);
 void spdk_blob_sync_md(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 /* Close a blob. This will automatically sync. */
-void spdk_blob_close(struct spdk_blob **blob, spdk_blob_op_complete cb_fn, void *cb_arg);
+void spdk_blob_close(struct spdk_blob *blob, spdk_blob_op_complete cb_fn, void *cb_arg);
 
 struct spdk_io_channel *spdk_bs_alloc_io_channel(struct spdk_blob_store *bs);
 
