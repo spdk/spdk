@@ -36,10 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 DIRS-y = bdevio bdevperf
 
-ifeq ($(OS),Linux)
-DIRS-y += nbd
-endif
-
 .PHONY: all clean $(DIRS-y)
 
 all: $(DIRS-y)
