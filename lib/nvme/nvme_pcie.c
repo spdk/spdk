@@ -2021,12 +2021,21 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			pqpair->cq_head = 0;
 			pqpair->phase = !pqpair->phase;
 		}
-
+#ifdef SPDK_CONFIG_NVME_FORCE_DOORBELL
+		g_thread_mmio_ctrlr = pctrlr;
+		if (spdk_likely(nvme_pcie_qpair_update_mmio_required(qpair, pqpair->cq_head,
+				pqpair->cq_shadow_hdbl,
+				pqpair->cq_eventidx))) {
+			spdk_mmio_write_4(pqpair->cq_hdbl, pqpair->cq_head);
+		}
+		g_thread_mmio_ctrlr = NULL;
+#endif
 		if (++num_completions == max_completions) {
 			break;
 		}
 	}
 
+#ifndef SPDK_CONFIG_NVME_FORCE_DOORBELL
 	if (num_completions > 0) {
 		g_thread_mmio_ctrlr = pctrlr;
 		if (spdk_likely(nvme_pcie_qpair_update_mmio_required(qpair, pqpair->cq_head,
@@ -2036,7 +2045,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		}
 		g_thread_mmio_ctrlr = NULL;
 	}
-
+#endif
 	if (spdk_unlikely(qpair->ctrlr->timeout_cb_fn != NULL) &&
 	    qpair->ctrlr->state == NVME_CTRLR_STATE_READY) {
 		/*

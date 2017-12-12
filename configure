@@ -21,6 +21,7 @@ function usage()
 	echo " --enable-ubsan            Enable undefined behavior sanitizer"
 	echo " --enable-coverage         Enable code coverage tracking"
 	echo " --enable-lto              Enable link-time optimization"
+	echo " --enable-mmio             Force MMIO doorbell write for each completion"
 	echo " --with-env=path           Use an alternate environment implementation"
 	echo ""
 	echo "Specifying Dependencies:"
@@ -97,6 +98,12 @@ for i in "$@"; do
 			;;
 		--disable-werror)
 			CONFIG_WERROR=n
+			;;
+		--enable-mmio)
+			CONFIG_NVME_FORCE_DOORBELL=y
+			;;
+		--disable-mmio)
+			CONFIG_NVME_FORCE_DOORBELL=n
 			;;
 		--with-env=*)
 			CONFIG_ENV="${i#*=}"
@@ -213,6 +220,9 @@ if [ -n "$CONFIG_DEBUG" ]; then
 fi
 if [ -n "$CONFIG_WERROR" ]; then
 	echo "CONFIG_WERROR?=$CONFIG_WERROR" >> CONFIG.local
+fi
+if [ -n "$CONFIG_MMIO" ]; then
+        echo "CONFIG_MMIO?=$CONFIG_MMIO" >> CONFIG.local
 fi
 if [ -n "$CONFIG_COVERAGE" ]; then
 	echo "CONFIG_COVERAGE?=$CONFIG_COVERAGE" >> CONFIG.local
