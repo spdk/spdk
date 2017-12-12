@@ -168,7 +168,7 @@ read_complete(void *arg1, int bserrno)
 	}
 
 	/* Now let's close it and delete the blob in the callback. */
-	spdk_blob_close(&hello_context->blob, delete_blob, hello_context);
+	spdk_blob_close(hello_context->blob, delete_blob, hello_context);
 }
 
 /*

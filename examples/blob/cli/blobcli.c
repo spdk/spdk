@@ -286,7 +286,7 @@ sync_cb(void *arg1, int bserrno)
 		return;
 	}
 
-	spdk_blob_close(&cli_context->blob, close_cb, cli_context);
+	spdk_blob_close(cli_context->blob, close_cb, cli_context);
 }
 
 /*
@@ -602,7 +602,7 @@ read_dump_cb(void *arg1, int bserrno)
 		/* done reading */
 		printf("\nFile write complete (to %s).\n", cli_context->file);
 		fclose(cli_context->fp);
-		spdk_blob_close(&cli_context->blob, close_cb, cli_context);
+		spdk_blob_close(cli_context->blob, close_cb, cli_context);
 	}
 }
 
@@ -650,7 +650,7 @@ write_imp_cb(void *arg1, int bserrno)
 		/* done writing */
 		printf("\nBlob import complete (from %s).\n", cli_context->file);
 		fclose(cli_context->fp);
-		spdk_blob_close(&cli_context->blob, close_cb, cli_context);
+		spdk_blob_close(cli_context->blob, close_cb, cli_context);
 	}
 }
 
@@ -680,7 +680,7 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 					    ALIGN_4K, NULL);
 	if (cli_context->buff == NULL) {
 		printf("Error in allocating memory\n");
-		spdk_blob_close(&cli_context->blob, close_cb, cli_context);
+		spdk_blob_close(cli_context->blob, close_cb, cli_context);
 		return;
 	}
 	printf("Working");
@@ -690,7 +690,7 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		cli_context->fp = fopen(cli_context->file, "w");
 		if (cli_context->fp == NULL) {
 			printf("Error in opening file\n");
-			spdk_blob_close(&cli_context->blob, close_cb, cli_context);
+			spdk_blob_close(cli_context->blob, close_cb, cli_context);
 			return;
 		}
 
@@ -702,7 +702,7 @@ dump_imp_open_cb(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		cli_context->fp = fopen(cli_context->file, "r");
 		if (cli_context->fp == NULL) {
 			printf("Error in opening file\n");
-			spdk_blob_close(&cli_context->blob, close_cb, cli_context);
+			spdk_blob_close(cli_context->blob, close_cb, cli_context);
 			return;
 		}
 
@@ -750,7 +750,7 @@ write_cb(void *arg1, int bserrno)
 	} else {
 		/* done writing */
 		printf("\nBlob fill complete (with 0x%x).\n", cli_context->fill_value);
-		spdk_blob_close(&cli_context->blob, close_cb, cli_context);
+		spdk_blob_close(cli_context->blob, close_cb, cli_context);
 	}
 }
 
