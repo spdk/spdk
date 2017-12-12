@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f1fec048_3a2fa388",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-12T23:18:34Z",
+      "side": 1,
+      "message": "Hi Daniel, \n\nThis was my completely misunderstanding and thank you for your feedback.\n\nYesterday when I tested this command through rpc.py I thought wraparound of print buffer occurred.\n\nI checked the source code but I did not find any issue and I planned to investigate today again.\n\nToday I tested rpc.py again but nothing wrong occurred.\nFrom now I will check your other comments.\n\nThanks",
+      "parentUuid": "96753dc3_6511aa17",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab02aedf_d5eab913",
         "filename": "lib/iscsi/iscsi_rpc.c",
         "patchSetId": 2
