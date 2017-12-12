@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbe81a02_a14ee18e",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-12T19:56:42Z",
+      "side": 1,
+      "message": "I think checking here for bvdev-\u003ebdev_desc !\u003d NULL is not needed as bvdev-\u003ebdev_desc might not be NULL if bvdev-\u003ebdev !\u003d NULL. So just doing:\n\nspdk_bdev_close(bvdev-\u003ebdev_desc);\nbvdev-\u003ebdev_desc \u003d NULL;\n\nnust be sufficient.\n\nLater check in spdk_vhost_blk_destroy() is OK.\n\nI think Dariusz also had this in his mind making previous comment? :)",
+      "range": {
+        "startLine": 403,
+        "startChar": 0,
+        "endLine": 406,
+        "endChar": 2
+      },
+      "revId": "0dd13320a48154ab4830550b7fad9ca753cdce41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
