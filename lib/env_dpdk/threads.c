@@ -67,6 +67,12 @@ spdk_env_get_next_core(uint32_t prev_core)
 }
 
 uint32_t
+spdk_env_get_master_core(void)
+{
+	return rte_get_master_lcore();
+}
+
+uint32_t
 spdk_env_get_socket_id(uint32_t core)
 {
 	return rte_lcore_to_socket_id(core);

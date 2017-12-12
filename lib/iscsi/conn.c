@@ -1365,7 +1365,7 @@ static void spdk_iscsi_conn_handle_idle(struct spdk_iscsi_conn *conn)
 	    conn->pending_task_cnt == 0) {
 
 		spdk_trace_record(TRACE_ISCSI_CONN_IDLE, conn->id, 0, 0, 0);
-		spdk_iscsi_conn_stop_poller(conn, __add_idle_conn, rte_get_master_lcore());
+		spdk_iscsi_conn_stop_poller(conn, __add_idle_conn, spdk_env_get_master_core());
 	}
 }
 
@@ -1582,7 +1582,7 @@ spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 {
 	uint32_t i, selected_core;
 	enum rte_lcore_state_t state;
-	uint32_t master_lcore = rte_get_master_lcore();
+	uint32_t master_lcore = spdk_env_get_master_core();
 	int32_t num_pollers, min_pollers;
 
 	cpumask &= spdk_app_get_core_mask();
