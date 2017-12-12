@@ -930,6 +930,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	struct spdk_blob_store *bs;
 	struct spdk_lvol *lvol, *tmp;
 	uint64_t num_clusters, free_clusters;
+	unsigned char uuid[37] = "";
 
 	if (lvs == NULL) {
 		SPDK_ERRLOG("lvol store does not exist\n");
@@ -981,7 +982,10 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	lvol->lvol_store = lvs;
 	lvol->num_clusters = num_clusters;
 	lvol->close_only = false;
-	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
+
+	uuid_generate_time(uuid);
+	uuid_unparse(uuid, lvol->name);
+
 	req->lvol = lvol;
 
 	spdk_bs_md_create_blob(lvs->blobstore, _spdk_lvol_create_cb, req);

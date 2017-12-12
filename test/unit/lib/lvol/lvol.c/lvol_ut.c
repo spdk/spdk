@@ -87,6 +87,12 @@ struct lvol_ut_bs_dev {
 	struct spdk_blob_store	*bs;
 };
 
+int
+spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
+{
+	return 0;
+}
+
 void
 spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
 		     spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
