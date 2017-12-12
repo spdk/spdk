@@ -1,6 +1,6 @@
 # Bracket Style
 style=kr # K&R brackets
-add-braces # Add braces to one-line conditional statements
+j # Add braces to one-line conditional statements
 keep-one-line-blocks # Don't break blocks that are on one line
 
 # Indentation
