@@ -467,6 +467,20 @@ spdk_nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
 	return NULL;
 }
 
+/* This function must be called while holding g_spdk_nvme_driver->lock */
+struct spdk_nvme_ctrlr *
+spdk_nvme_get_first_shared_ctrlr(void)
+{
+	return TAILQ_FIRST(&g_spdk_nvme_driver->shared_attached_ctrlrs);
+}
+
+/* This function must be called while holding g_spdk_nvme_driver->lock */
+struct spdk_nvme_ctrlr *
+spdk_nvme_get_next_shared_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return TAILQ_NEXT(ctrlr, tailq);
+}
+
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
 static int
 spdk_nvme_probe_internal(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
