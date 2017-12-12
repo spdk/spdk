@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ed5e01a_4e15f4fe",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-12T08:34:18Z",
+      "side": 1,
+      "message": "this seems like a good idea, but won\u0027t this cause double-free now? seems like we close descriptor unconditionally during vhost-blk device destroy, virtio_blk.c:742.\nWe might want to add some additional checks in there.",
+      "revId": "538f74d68d7d30718d6bf6458e538bd90c0e87b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
