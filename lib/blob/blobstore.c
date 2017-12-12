@@ -2859,17 +2859,20 @@ _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_data *blob = cb_arg;
 
-	if (blob->open_ref == 0) {
-		/*
-		 * Blobs with active.num_pages == 0 are deleted blobs.
-		 *  these blobs are removed from the blob_store list
-		 *  when the deletion process starts - so don't try to
-		 *  remove them again.
-		 */
-		if (blob->active.num_pages > 0) {
-			TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+	if (bserrno == 0) {
+		blob->open_ref--;
+		if (blob->open_ref == 0) {
+			/*
+			 * Blobs with active.num_pages == 0 are deleted blobs.
+			 *  these blobs are removed from the blob_store list
+			 *  when the deletion process starts - so don't try to
+			 *  remove them again.
+			 */
+			if (blob->active.num_pages > 0) {
+				TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+			}
+			_spdk_blob_free(blob);
 		}
-		_spdk_blob_free(blob);
 	}
 
 	spdk_bs_sequence_finish(seq, bserrno);
@@ -2894,8 +2897,6 @@ void spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_
 		cb_fn(cb_arg, -EBADF);
 		return;
 	}
-
-	blob->open_ref--;
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;
