@@ -342,3 +342,33 @@ spdk_strerror_r(int errnum, char *buf, size_t buflen)
 	return strerror_r(errnum, buf, buflen);
 #endif
 }
+
+size_t
+spdk_snprintf_spc_pad(void *dst, size_t size, const char *format, ...)
+{
+	size_t written;
+	size_t pad_len;
+	va_list ap;
+	size_t i;
+	va_start(ap, format);
+	written = vsnprintf(dst, size, format, ap);
+	va_end(ap);
+	if (written >= size) {
+		/* Output truncated */
+		return (size);
+	}
+
+	/* Account for NULL terminator */
+	written++;
+
+	pad_len = (written + 3) & ~0x3;
+	if (pad_len >= size) {
+		return (written);
+	}
+
+	for (i = written; i < pad_len; i++) {
+		((char *)dst)[i] = 0;
+	}
+
+	return (pad_len);
+}

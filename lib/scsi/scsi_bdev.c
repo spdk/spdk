@@ -325,7 +325,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			desig->reserved0 = 0;
 			desig->piv = 1;
 			desig->reserved1 = 0;
-			desig->len = snprintf(desig->desig, SPDK_SCSI_DEV_MAX_NAME, "%s", dev->name);
+			desig->len = spdk_snprintf_spc_pad(desig->desig, SPDK_SCSI_DEV_MAX_NAME, "%s", dev->name);
 			len += sizeof(struct spdk_scsi_desig_desc) + desig->len;
 
 			buf += sizeof(struct spdk_scsi_desig_desc) + desig->len;
@@ -339,7 +339,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			desig->reserved0 = 0;
 			desig->piv = 1;
 			desig->reserved1 = 0;
-			desig->len = snprintf(desig->desig, SPDK_SCSI_PORT_MAX_NAME_LENGTH, "%s", port->name);
+			desig->len = spdk_snprintf_spc_pad(desig->desig, SPDK_SCSI_PORT_MAX_NAME_LENGTH, "%s", port->name);
 			len += sizeof(struct spdk_scsi_desig_desc) + desig->len;
 
 			buf += sizeof(struct spdk_scsi_desig_desc) + desig->len;

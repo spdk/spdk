@@ -148,6 +148,18 @@ size_t spdk_strlen_pad(const void *str, size_t size, int pad);
  */
 int spdk_parse_ip_addr(char *ip, char **host, char **port);
 
+/**
+ * Prints to destination buffer and pads the length to a multiple of
+ * 4 bytes if possibles. The padded bytes are 0.
+ *
+ * \param dst Destination buffer to be printed in to
+ * \param size Size of the destination buffer
+ * \param format Format of the source string
+ *
+ * \return Length of the zero padded buffer
+ */
+size_t spdk_snprintf_spc_pad(void *dst, size_t size, const char *format, ...);
+
 #ifdef __cplusplus
 }
 #endif
