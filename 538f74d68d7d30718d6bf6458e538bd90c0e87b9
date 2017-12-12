@@ -16,6 +16,24 @@
       "revId": "538f74d68d7d30718d6bf6458e538bd90c0e87b9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5fc0273_16923cf0",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-12T08:44:57Z",
+      "side": 1,
+      "message": "Currently this will not cause double-free, but I can add the additional check here. For normal case, without this function, vhost-blk can\u0027t close the shutdown the NVMe device for normal exit.",
+      "parentUuid": "1ed5e01a_4e15f4fe",
+      "revId": "538f74d68d7d30718d6bf6458e538bd90c0e87b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
