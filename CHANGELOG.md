@@ -67,6 +67,12 @@ rather than struct spdk_blob **.
 The function signature of spdk_bs_iter_next has changed.  It now takes a struct spdk_blob * argument
 rather than struct spdk_blob **.
 
+### NBD device
+
+The NBD application (test/lib/bdev/nbd) has been removed; Same functionality can now be
+achieved by using the test/app/bdev_svc application and start_nbd_disk RPC method.
+See the [GPT](http://www.spdk.io/doc/bdev.html#bdev_config_gpt) documentation for more details.
+
 ## v17.10: Logical Volumes
 
 ### New dependencies
