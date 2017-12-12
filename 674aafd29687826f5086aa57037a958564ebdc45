@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad076178_ecde72c0",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 787,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-12T12:20:19Z",
+      "side": 1,
+      "message": "Those are still unused after the change.",
+      "range": {
+        "startLine": 784,
+        "startChar": 0,
+        "endLine": 787,
+        "endChar": 52
+      },
+      "revId": "674aafd29687826f5086aa57037a958564ebdc45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8ec73f6_ffe875cd",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 797,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-12T12:20:19Z",
+      "side": 1,
+      "message": "Why can\u0027t construct_nvme_bdev() just take nvme name as argument ? Will there be other uses for having _find_traddress_for_nvme() as separate function ?",
+      "range": {
+        "startLine": 797,
+        "startChar": 19,
+        "endLine": 797,
+        "endChar": 38
+      },
+      "revId": "674aafd29687826f5086aa57037a958564ebdc45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
