@@ -59,9 +59,41 @@ bool lvol_store_initialize_cb_fail = false;
 bool lvol_already_opened = false;
 bool g_examine_done = false;
 
+void spdk_bdev_clean_aliases(struct spdk_bdev *bdev)
+{
+
+}
+
+const struct spdk_bdev_aliases_list *
+spdk_bdev_get_aliases(const struct spdk_bdev *bdev)
+{
+	return &bdev->aliases;
+}
+
+int
+spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
+{
+	return 0;
+}
+
+int
+spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
+{
+	return 0;
+}
+
 void
 spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno)
 {
+}
+
+int
+spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, g_lvolerrno);
+
+	return 0;
 }
 
 void
