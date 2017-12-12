@@ -141,13 +141,12 @@ int spdk_lvs_destroy(struct spdk_lvol_store *lvol_store,
 /**
  * \brief Create lvol on given lvolstore with specified size
  * \param lvs Handle to lvolstore
- * \param name Name of lvol
  * \param sz size of lvol in bytes
  * \param cb_fn Completion callback
  * \param cb_arg Completion callback custom arguments
  * \return error
  */
-int spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
+int spdk_lvol_create(struct spdk_lvol_store *lvs, uint64_t sz,
 		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
