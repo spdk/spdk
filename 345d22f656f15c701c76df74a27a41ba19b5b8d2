@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbc92483_95b47885",
+        "filename": "lib/iscsi/conn.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T17:42:18Z",
+      "side": 0,
+      "message": "This file uses the queue.h macros, so it should still include it directly (rather than depending on iscsi.h to include queue.h).",
+      "revId": "345d22f656f15c701c76df74a27a41ba19b5b8d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a799d847_460d062f",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T17:42:18Z",
+      "side": 1,
+      "message": "I don\u0027t think this file uses anything from event.h - can you clarify why this is needed?",
+      "revId": "8448620a890f0d85d2d34fdb33e91e080b3652f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
