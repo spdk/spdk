@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "ec77ca5e_f0d3d3e5",
+        "filename": "include/spdk/blob_nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T20:34:25Z",
+      "side": 1,
+      "message": "We should consistently add the extern \"C\" - a recent patch added it to all the other headers, so this one should have it too. (It\u0027s also easy for us to add and doesn\u0027t hurt to nest, so there should be no problem if the C++ code also wraps the #include again.)",
+      "parentUuid": "45e6c59c_f9acad59",
+      "revId": "7103cef40545d1acc01bf037c4d00e22c0bd9bef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2623ac54_33946aa4",
         "filename": "lib/blob/nvme/blob_nvme.c",
         "patchSetId": 5
