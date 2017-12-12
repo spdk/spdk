@@ -274,6 +274,12 @@ spdk_nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
 	return NULL;
 }
 
+union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_csts_register csts = {};
+
+	return csts;
+}
 
 #if 0 /* TODO: update PCIe-specific unit test */
 static void
