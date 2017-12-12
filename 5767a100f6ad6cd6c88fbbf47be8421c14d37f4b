@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e04f0c53_73cbcbc8",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-12T19:59:25Z",
+      "side": 1,
+      "message": "what about app?",
+      "revId": "5767a100f6ad6cd6c88fbbf47be8421c14d37f4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
