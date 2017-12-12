@@ -62,6 +62,8 @@ static bool g_unmap = false;
 static int g_queue_depth;
 static uint64_t g_time_in_usec;
 static int g_show_performance_real_time = 0;
+static uint64_t g_show_performance_period_in_usec = 1000000;
+static uint64_t g_show_performance_period_num = 0;
 static bool g_run_failed = false;
 static bool g_shutdown = false;
 static uint64_t g_shutdown_tsc;
@@ -581,7 +583,8 @@ performance_dump(int io_time_in_usec)
 static void
 performance_statistics_thread(void *arg)
 {
-	performance_dump(1);
+	g_show_performance_period_num++;
+	performance_dump(g_show_performance_period_num * g_show_performance_period_in_usec);
 }
 
 static int
@@ -660,7 +663,8 @@ bdevperf_run(void *arg1, void *arg2)
 	/* Start a timer to dump performance numbers */
 	g_shutdown_tsc = spdk_get_ticks();
 	if (g_show_performance_real_time) {
-		g_perf_timer = spdk_poller_register(performance_statistics_thread, NULL, 1000000);
+		g_perf_timer = spdk_poller_register(performance_statistics_thread, NULL,
+						    g_show_performance_period_in_usec);
 	}
 
 	g_master_core = spdk_env_get_current_core();
