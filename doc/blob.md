@@ -176,7 +176,8 @@ It contains basic information about the blobstore. The metadata region
 is the remainder of cluster 0 and may extend to additional clusters.
 
     <super-block> ::= <sb-version> <sb-len> <sb-super-blob> <sb-params>
-                      <sb-metadata-start> <sb-metadata-len> <crc>
+                      <sb-metadata-start> <sb-metadata-len>
+                      <sb-blobid-start> <sb-blobid-len> <crc>
     <sb-version> ::= u32
     <sb-len> ::= u32 # Length of this super block, in bytes. Starts from the
                      # beginning of this structure.
@@ -185,6 +186,8 @@ is the remainder of cluster 0 and may extend to additional clusters.
 
     <sb-md-start> ::= u64 # Metadata start location, in pages
     <sb-md-len> ::= u64 # Metadata length, in pages
+    <sb-blobid-start> ::= u32 # Start of bitmask of valid blobids (in pages)
+    <sb-blobid-len> ::= u32 # Lenget of bitmask of valid blobids (in pages)
     <crc> ::= u32 # Crc for super block
 
 The `<sb-params>` data contains parameters specified by the user when the blob

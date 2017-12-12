@@ -1455,6 +1455,7 @@ _spdk_bs_dev_destroy(void *io_device)
 		_spdk_blob_free(blob);
 	}
 
+	spdk_bit_array_free(&bs->used_blobids);
 	spdk_bit_array_free(&bs->used_md_pages);
 	spdk_bit_array_free(&bs->used_clusters);
 	/*
@@ -1543,12 +1544,14 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 
 	/* The metadata is assumed to be at least 1 page */
 	bs->used_md_pages = spdk_bit_array_create(1);
+	bs->used_blobids = spdk_bit_array_create(0);
 
 	spdk_io_device_register(bs, _spdk_bs_channel_create, _spdk_bs_channel_destroy,
 				sizeof(struct spdk_bs_channel));
 	rc = spdk_bs_register_md_thread(bs);
 	if (rc == -1) {
 		spdk_io_device_unregister(bs, NULL);
+		spdk_bit_array_free(&bs->used_blobids);
 		spdk_bit_array_free(&bs->used_md_pages);
 		spdk_bit_array_free(&bs->used_clusters);
 		free(bs);
@@ -1665,9 +1668,84 @@ _spdk_bs_write_used_md(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl 
 }
 
 static void
+_spdk_bs_write_used_blobids(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl cb_fn)
+{
+	struct spdk_bs_load_ctx	*ctx = arg;
+	uint64_t	mask_size, lba, lba_count;
+
+	if (ctx->super->used_blobid_mask_len == 0) {
+		/*
+		 * This is a pre-v3 on-disk format where the blobid mask does not get
+		 *  written to disk.
+		 */
+		cb_fn(seq, arg, 0);
+		return;
+	}
+
+	mask_size = ctx->super->used_blobid_mask_len * SPDK_BS_PAGE_SIZE;
+	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
+	if (!ctx->mask) {
+		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		return;
+	}
+
+	ctx->mask->type = SPDK_MD_MASK_TYPE_USED_BLOBIDS;
+	ctx->mask->length = ctx->super->md_len;
+	assert(ctx->mask->length == spdk_bit_array_capacity(ctx->bs->used_blobids));
+
+	_spdk_bs_set_mask(ctx->bs->used_blobids, ctx->mask);
+	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_blobid_mask_start);
+	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_blobid_mask_len);
+	spdk_bs_sequence_write(seq, ctx->mask, lba, lba_count, cb_fn, arg);
+}
+
+static void
+_spdk_bs_load_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint32_t i, j;
+	int rc;
+
+	/* The type must be correct */
+	assert(ctx->mask->type == SPDK_MD_MASK_TYPE_USED_BLOBIDS);
+
+	/* The length of the mask (in bits) must not be greater than
+	 * the length of the buffer (converted to bits) */
+	assert(ctx->mask->length <= (ctx->super->used_blobid_mask_len * SPDK_BS_PAGE_SIZE * 8));
+
+	/* The length of the mask must be exactly equal to the size
+	 * (in pages) of the metadata region */
+	assert(ctx->mask->length == ctx->super->md_len);
+
+	rc = spdk_bit_array_resize(&ctx->bs->used_blobids, ctx->mask->length);
+	if (rc < 0) {
+		spdk_dma_free(ctx->mask);
+		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		return;
+	}
+
+	for (i = 0; i < ctx->mask->length / 8; i++) {
+		uint8_t segment = ctx->mask->mask[i];
+		for (j = 0; segment; j++) {
+			if (segment & 1U) {
+				spdk_bit_array_set(ctx->bs->used_blobids, (i * 8) + j);
+			}
+			segment >>= 1U;
+		}
+	}
+
+	spdk_dma_free(ctx->super);
+	spdk_dma_free(ctx->mask);
+	free(ctx);
+
+	spdk_bs_sequence_finish(seq, bserrno);
+}
+
+static void
 _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
+	uint64_t		lba, lba_count, mask_size;
 	uint32_t		i, j;
 	int			rc;
 
@@ -1699,11 +1777,19 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 		}
 	}
 
-	spdk_dma_free(ctx->super);
 	spdk_dma_free(ctx->mask);
-	free(ctx);
 
-	spdk_bs_sequence_finish(seq, bserrno);
+	/* Read the used blobids mask */
+	mask_size = ctx->super->used_blobid_mask_len * SPDK_BS_PAGE_SIZE;
+	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
+	if (!ctx->mask) {
+		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		return;
+	}
+	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_blobid_mask_start);
+	lba_count = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_blobid_mask_len);
+	spdk_bs_sequence_read(seq, ctx->mask, lba, lba_count,
+			      _spdk_bs_load_used_blobids_cpl, ctx);
 }
 
 static void
@@ -1854,13 +1940,25 @@ _spdk_bs_load_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 }
 
 static void
+_spdk_bs_load_write_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx	*ctx = cb_arg;
+
+	spdk_dma_free(ctx->mask);
+	ctx->mask = NULL;
+
+	_spdk_bs_write_used_clusters(seq, cb_arg, _spdk_bs_load_write_used_clusters_cpl);
+}
+
+static void
 _spdk_bs_load_write_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx	*ctx = cb_arg;
 
 	spdk_dma_free(ctx->mask);
+	ctx->mask = NULL;
 
-	_spdk_bs_write_used_clusters(seq, cb_arg, _spdk_bs_load_write_used_clusters_cpl);
+	_spdk_bs_write_used_blobids(seq, cb_arg, _spdk_bs_load_write_used_blobids_cpl);
 }
 
 static void
@@ -1884,6 +1982,9 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	if (_spdk_bs_load_cur_md_page_valid(ctx) == true) {
 		if (ctx->page->sequence_num == 0 || ctx->in_page_chain == true) {
 			spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
+			if (ctx->page->sequence_num == 0) {
+				spdk_bit_array_set(ctx->bs->used_blobids, page_num);
+			}
 			if (_spdk_bs_load_replay_md_parse_page(ctx->page, ctx->bs)) {
 				_spdk_bs_load_ctx_fail(seq, ctx, -EILSEQ);
 				return;
@@ -1959,6 +2060,12 @@ _spdk_bs_recover(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
+	rc = spdk_bit_array_resize(&ctx->bs->used_blobids, ctx->super->md_len);
+	if (rc < 0) {
+		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
+		return;
+	}
+
 	rc = spdk_bit_array_resize(&ctx->bs->used_clusters, ctx->bs->total_clusters);
 	if (rc < 0) {
 		_spdk_bs_load_ctx_fail(seq, ctx, -ENOMEM);
@@ -2017,11 +2124,19 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	ctx->bs->super_blob = ctx->super->super_blob;
 	memcpy(&ctx->bs->bstype, &ctx->super->bstype, sizeof(ctx->super->bstype));
 
-	if (ctx->super->clean == 1) {
+	if (ctx->super->clean == 0) {
+		_spdk_bs_recover(seq, ctx, 0);
+	} else if (ctx->super->used_blobid_mask_len == 0) {
+		/*
+		 * Metadata is clean, but this is an old metadata format without
+		 *  a blobid mask.  Clear the clean bit and then build the masks
+		 *  using _spdk_bs_recover.
+		 */
+		ctx->super->clean = 0;
+		_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_recover, ctx);
+	} else {
 		ctx->super->clean = 0;
 		_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_load_write_super_cpl, ctx);
-	} else {
-		_spdk_bs_recover(seq, ctx, 0);
 	}
 }
 
@@ -2187,6 +2302,13 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 		return;
 	}
 
+	rc = spdk_bit_array_resize(&bs->used_blobids, bs->md_len);
+	if (rc < 0) {
+		_spdk_bs_free(bs);
+		cb_fn(cb_arg, NULL, -ENOMEM);
+		return;
+	}
+
 	ctx = calloc(1, sizeof(*ctx));
 	if (!ctx) {
 		_spdk_bs_free(bs);
@@ -2237,10 +2359,20 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 					    SPDK_BS_PAGE_SIZE);
 	num_md_pages += ctx->super->used_cluster_mask_len;
 
+	/* The used_blobids mask requires 1 bit per metadata page, rounded
+	 * up to the nearest page, plus a header.
+	 */
+	ctx->super->used_blobid_mask_start = num_md_pages;
+	ctx->super->used_blobid_mask_len = divide_round_up(sizeof(struct spdk_bs_md_mask) +
+					   divide_round_up(bs->md_len, 8),
+					   SPDK_BS_PAGE_SIZE);
+	num_md_pages += ctx->super->used_blobid_mask_len;
+
 	/* The metadata region size was chosen above */
 	ctx->super->md_start = bs->md_start = num_md_pages;
 	ctx->super->md_len = bs->md_len;
 	num_md_pages += bs->md_len;
+
 	num_md_lba = _spdk_bs_page_to_lba(bs, num_md_pages);
 
 	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
@@ -2390,13 +2522,25 @@ _spdk_bs_unload_write_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, i
 }
 
 static void
+_spdk_bs_unload_write_used_blobids_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+{
+	struct spdk_bs_load_ctx	*ctx = cb_arg;
+
+	spdk_dma_free(ctx->mask);
+	ctx->mask = NULL;
+
+	_spdk_bs_write_used_clusters(seq, cb_arg, _spdk_bs_unload_write_used_clusters_cpl);
+}
+
+static void
 _spdk_bs_unload_write_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx	*ctx = cb_arg;
 
 	spdk_dma_free(ctx->mask);
+	ctx->mask = NULL;
 
-	_spdk_bs_write_used_clusters(seq, cb_arg, _spdk_bs_unload_write_used_clusters_cpl);
+	_spdk_bs_write_used_blobids(seq, cb_arg, _spdk_bs_unload_write_used_blobids_cpl);
 }
 
 static void
@@ -2573,6 +2717,7 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		cb_fn(cb_arg, 0, -ENOMEM);
 		return;
 	}
+	spdk_bit_array_set(bs->used_blobids, page_idx);
 	spdk_bit_array_set(bs->used_md_pages, page_idx);
 
 	id = _spdk_bs_page_to_blobid(page_idx);
@@ -2686,6 +2831,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 {
 	spdk_bs_sequence_t *seq = cb_arg;
 	struct spdk_blob_data *blob = __blob_to_data(_blob);
+	uint32_t page_num;
 
 	if (bserrno != 0) {
 		spdk_bs_sequence_finish(seq, bserrno);
@@ -2707,6 +2853,8 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	 *  get returned after this point by _spdk_blob_lookup().
 	 */
 	TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+	page_num = _spdk_bs_blobid_to_page(blob->id);
+	spdk_bit_array_clear(blob->bs->used_blobids, page_num);
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 	blob->active.num_pages = 0;
 	_spdk_resize_blob(blob, 0);
@@ -2769,17 +2917,17 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Opening blob %lu\n", blobid);
 
+	page_num = _spdk_bs_blobid_to_page(blobid);
+	if (spdk_bit_array_get(bs->used_blobids, page_num) == false) {
+		/* Invalid blobid */
+		cb_fn(cb_arg, NULL, -ENOENT);
+		return;
+	}
+
 	blob = _spdk_blob_lookup(bs, blobid);
 	if (blob) {
 		blob->open_ref++;
 		cb_fn(cb_arg, __data_to_blob(blob), 0);
-		return;
-	}
-
-	page_num = _spdk_bs_blobid_to_page(blobid);
-	if (spdk_bit_array_get(bs->used_md_pages, page_num) == false) {
-		/* Invalid blobid */
-		cb_fn(cb_arg, NULL, -ENOENT);
 		return;
 	}
 
@@ -2996,8 +3144,8 @@ _spdk_bs_iter_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	}
 
 	ctx->page_num++;
-	ctx->page_num = spdk_bit_array_find_first_set(bs->used_md_pages, ctx->page_num);
-	if (ctx->page_num >= spdk_bit_array_capacity(bs->used_md_pages)) {
+	ctx->page_num = spdk_bit_array_find_first_set(bs->used_blobids, ctx->page_num);
+	if (ctx->page_num >= spdk_bit_array_capacity(bs->used_blobids)) {
 		ctx->cb_fn(ctx->cb_arg, NULL, -ENOENT);
 		free(ctx);
 		return;
