@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff11b1a2_b00c9200",
+        "filename": "app/nvmf_tgt/nvmf_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T21:00:21Z",
+      "side": 1,
+      "message": "Why the rename?",
+      "revId": "26994a58c7c72cb9a22ddf804fbb8db17b63431c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
