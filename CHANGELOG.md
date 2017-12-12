@@ -59,6 +59,9 @@ spdk_bs_md_iter_next => spdk_bs_iter_next
 The function signature of spdk_blob_close has changed.  It now takes a struct spdk_blob * argument
 rather than struct spdk_blob **.
 
+The function signature of spdk_bs_iter_next has changed.  It now takes a struct spdk_blob * argument
+rather than struct spdk_blob **.
+
 ## v17.10: Logical Volumes
 
 ### New dependencies

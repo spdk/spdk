@@ -175,7 +175,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	if (blob_id == lvs->super_blob_id) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "found superblob %"PRIu64"\n", (uint64_t)blob_id);
-		spdk_bs_iter_next(bs, &blob, _spdk_load_next_lvol, req);
+		spdk_bs_iter_next(bs, blob, _spdk_load_next_lvol, req);
 		return;
 	}
 
@@ -217,7 +217,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "added lvol %s\n", lvol->old_name);
 
-	spdk_bs_iter_next(bs, &blob, _spdk_load_next_lvol, req);
+	spdk_bs_iter_next(bs, blob, _spdk_load_next_lvol, req);
 
 	return;
 

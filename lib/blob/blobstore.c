@@ -2998,14 +2998,14 @@ _spdk_bs_iter_close_cpl(void *cb_arg, int bserrno)
 }
 
 void
-spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
+spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob *b,
 		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_iter_ctx *ctx;
 	struct spdk_blob_data	*blob;
 
 	assert(b != NULL);
-	blob = __blob_to_data(*b);
+	blob = __blob_to_data(b);
 	assert(blob != NULL);
 
 	ctx = calloc(1, sizeof(*ctx));
@@ -3020,7 +3020,7 @@ spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
 	ctx->cb_arg = cb_arg;
 
 	/* Close the existing blob */
-	spdk_blob_close(*b, _spdk_bs_iter_close_cpl, ctx);
+	spdk_blob_close(b, _spdk_bs_iter_close_cpl, ctx);
 }
 
 int

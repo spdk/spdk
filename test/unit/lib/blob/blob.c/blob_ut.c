@@ -847,7 +847,7 @@ blob_iter(void)
 	blob = g_blob;
 	CU_ASSERT(spdk_blob_get_id(blob) == blobid);
 
-	spdk_bs_iter_next(bs, &blob, blob_op_with_handle_complete, NULL);
+	spdk_bs_iter_next(bs, blob, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_blob == NULL);
 	CU_ASSERT(g_bserrno == -ENOENT);
 
