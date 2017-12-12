@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e233856_218f5345",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-12T18:52:37Z",
+      "side": 1,
+      "message": "Should this comment move down to just before line 579?",
+      "revId": "87fd64ca36555b19e72b3ec11430d9c085667398",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "639967d6_395a9bba",
+        "filename": "lib/util/io_channel.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-12T18:52:37Z",
+      "side": 1,
+      "message": "the previous code was guarding against a channel for device A getting freed and then that same buffer getting allocated as a channel for device B - that\u0027s why it was comparing the io_device of the channel, not the channel itself",
+      "revId": "87fd64ca36555b19e72b3ec11430d9c085667398",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
