@@ -939,19 +939,19 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	}
 
 	if (name == NULL || strnlen(name, SPDK_LVS_NAME_MAX) == 0) {
-		SPDK_ERRLOG("No name specified.\n");
+		SPDK_INFOLOG(SPDK_LOG_LVOL, "No name specified.\n");
 		return -EINVAL;
 	}
 
 	if (strnlen(name, SPDK_LVOL_NAME_MAX) == SPDK_LVOL_NAME_MAX) {
-		SPDK_ERRLOG("Name has no null terminator.\n");
+		SPDK_INFOLOG(SPDK_LOG_LVOL, "Name has no null terminator.\n");
 		return -EINVAL;
 	}
 
 	TAILQ_FOREACH(tmp, &lvs->lvols, link) {
 		if (!strncmp(name, tmp->name, SPDK_LVOL_NAME_MAX)) {
-			SPDK_ERRLOG("lvol with name %s already exists\n", name);
-			return -EINVAL;
+			SPDK_INFOLOG(SPDK_LOG_LVOL, "lvol with name %s already exists\n", name);
+			return -EEXIST;
 		}
 	}
 
@@ -984,6 +984,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	lvol->num_clusters = num_clusters;
 	lvol->close_only = false;
 	strncpy(lvol->name, name, SPDK_LVS_NAME_MAX);
+
 	req->lvol = lvol;
 
 	spdk_bs_create_blob(lvs->blobstore, _spdk_lvol_create_cb, req);
