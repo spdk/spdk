@@ -45,6 +45,30 @@
       "revId": "674aafd29687826f5086aa57037a958564ebdc45",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87d846cb_b614cf7e",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 797,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-12T14:33:12Z",
+      "side": 1,
+      "message": "Talked to Pawel directly. _find_traddress_for_nvme() can stay as separate function, as it uses config file to determine the pcie addresses. Meanwhile rpc_commands_lib.py only does RPC.",
+      "parentUuid": "e8ec73f6_ffe875cd",
+      "range": {
+        "startLine": 797,
+        "startChar": 19,
+        "endLine": 797,
+        "endChar": 38
+      },
+      "revId": "674aafd29687826f5086aa57037a958564ebdc45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
