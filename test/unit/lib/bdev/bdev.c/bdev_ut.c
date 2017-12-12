@@ -430,6 +430,31 @@ alias_add_del_test(void)
 
 	free(bdev[0]);
 	free(bdev[1]);
+
+
+	/* Trying to do aliases cleaning */
+
+	/* Creating and registering bdev */
+	bdev[0] = allocate_bdev("bdev");
+	SPDK_CU_ASSERT_FATAL(bdev[0] != 0);
+
+	/* Trying to add few different aliases */
+	rc = spdk_bdev_alias_add(bdev[0], "alias1");
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_bdev_alias_add(bdev[0], "alias2");
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_bdev_alias_add(bdev[0], "alias3");
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_bdev_clean_aliases(bdev[0]);
+	CU_ASSERT(rc == 0);
+
+	/* Unregister and free bdevs */
+	spdk_bdev_unregister(bdev[0], NULL, NULL);
+
+	free(bdev[0]);
 }
 
 int

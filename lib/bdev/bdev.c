@@ -902,6 +902,20 @@ spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
 	return -ENOENT;
 }
 
+int
+spdk_bdev_clean_aliases(struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_alias *tmp;
+
+	TAILQ_FOREACH(tmp, &bdev->aliases, tailq) {
+		TAILQ_REMOVE(&bdev->aliases, tmp, tailq);
+		free(tmp->alias);
+		free(tmp);
+	}
+
+	return 0;
+}
+
 struct spdk_io_channel *
 spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
 {
