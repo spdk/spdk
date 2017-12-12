@@ -59,6 +59,24 @@ bool lvol_store_initialize_cb_fail = false;
 bool lvol_already_opened = false;
 bool g_examine_done = false;
 
+static void
+_spdk_rpc_lvol_store_rename_cb(void *cb_arg, int lvserrno)
+{
+
+}
+
+int
+spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
+{
+	return 0;
+}
+
+int
+spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias)
+{
+	return 0;
+}
+
 void
 spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno)
 {
@@ -457,7 +475,7 @@ _lvol_create(struct spdk_lvol_store *lvs)
 }
 
 int
-spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
+spdk_lvol_create(struct spdk_lvol_store *lvs, size_t sz,
 		 spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol *lvol;
@@ -949,6 +967,35 @@ ut_vbdev_lvol_submit_request(void)
 	free(g_base_bdev);
 }
 
+static void
+ut_lvs_rename(void)
+{
+	int rc = 0;
+	struct spdk_lvol_store *lvs;
+
+	/* Lvol store is succesfully created */
+	rc = vbdev_lvs_create(&g_bdev, "old_lvs_name", 0, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(g_bs_dev != NULL);
+
+	lvs = g_lvol_store;
+	g_lvol_store = NULL;
+
+	uuid_generate_time(lvs->uuid);
+	strncpy(lvs->name, "old_lvs_name", SPDK_LVS_NAME_MAX);
+
+	/* Trying to rename lvs */
+	rc = vbdev_lvol_rename_store("old_lvs_name", "new_lvs_name", _spdk_rpc_lvol_store_rename_cb, NULL);
+	CU_ASSERT(rc == 0);
+
+	/* Unload lvol store */
+	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -977,7 +1024,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_lvol_flush", ut_lvol_flush) == NULL ||
 		CU_add_test(suite, "ut_lvol_read_write", ut_lvol_read_write) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL ||
-		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL
+		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL ||
+		CU_add_test(suite, "ut_lvs_rename", ut_lvs_rename) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
