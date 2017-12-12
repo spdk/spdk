@@ -70,6 +70,30 @@
       "revId": "490786439c7651e04f04b791a7b7b517fe795974",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ec55f3b_8ca753aa",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-12T07:36:18Z",
+      "side": 1,
+      "message": "NVMe specification [NVMe Qualified Names] said a colon(:) prefix should be used for NQN, so I think \"nqn.2016-06.io.spdk-cnode2\" is not a valid one, although it can works.",
+      "parentUuid": "d086e3a2_5b895798",
+      "range": {
+        "startLine": 53,
+        "startChar": 30,
+        "endLine": 54,
+        "endChar": 64
+      },
+      "revId": "490786439c7651e04f04b791a7b7b517fe795974",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
