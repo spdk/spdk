@@ -87,6 +87,12 @@ struct lvol_ut_bs_dev {
 	struct spdk_blob_store	*bs;
 };
 
+int
+spdk_bdev_alias_add(struct spdk_bdev *bdev, const char *alias)
+{
+	return 0;
+}
+
 void
 spdk_bs_md_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
 		     spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
@@ -426,7 +432,7 @@ lvs_init_unload_success(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 	CU_ASSERT(!TAILQ_EMPTY(&g_lvol_stores));
 
-	spdk_lvol_create(g_lvol_store, "lvol", 10, lvol_op_with_handle_complete, NULL);
+	spdk_lvol_create(g_lvol_store, 10, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
@@ -474,7 +480,7 @@ lvs_init_destroy_success(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
-	spdk_lvol_create(g_lvol_store, "lvol", 10, lvol_op_with_handle_complete, NULL);
+	spdk_lvol_create(g_lvol_store, 10, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
@@ -676,7 +682,7 @@ lvol_create_destroy_success(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
-	spdk_lvol_create(g_lvol_store, "lvol", 10, lvol_op_with_handle_complete, NULL);
+	spdk_lvol_create(g_lvol_store, 10, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
@@ -721,11 +727,11 @@ lvol_create_fail(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
 	g_lvol = NULL;
-	rc = spdk_lvol_create(NULL, "lvol", 10, lvol_op_with_handle_complete, NULL);
+	rc = spdk_lvol_create(NULL, 10, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvol == NULL);
 
-	rc = spdk_lvol_create(g_lvol_store, "lvol", DEV_BUFFER_SIZE + 1,
+	rc = spdk_lvol_create(g_lvol_store, DEV_BUFFER_SIZE + 1,
 			      lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_lvol == NULL);
@@ -760,7 +766,7 @@ lvol_destroy_fail(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
-	spdk_lvol_create(g_lvol_store, "lvol", 10, lvol_op_with_handle_complete, NULL);
+	spdk_lvol_create(g_lvol_store, 10, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
@@ -799,7 +805,7 @@ lvol_close_fail(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
-	spdk_lvol_create(g_lvol_store, "lvol", 10, lvol_op_with_handle_complete, NULL);
+	spdk_lvol_create(g_lvol_store, 10, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
@@ -837,7 +843,7 @@ lvol_close_success(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
-	spdk_lvol_create(g_lvol_store, "lvol", 10, lvol_op_with_handle_complete, NULL);
+	spdk_lvol_create(g_lvol_store, 10, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
@@ -876,7 +882,7 @@ lvol_resize(void)
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
-	spdk_lvol_create(g_lvol_store, "lvol", 10, lvol_op_with_handle_complete, NULL);
+	spdk_lvol_create(g_lvol_store, 10, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
@@ -1246,7 +1252,6 @@ lvol_names(void)
 	struct spdk_lvs_opts opts;
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvol *lvol, *lvol2;
-	char fullname[SPDK_LVOL_NAME_MAX];
 	int rc = 0;
 
 	init_dev(&dev);
@@ -1264,28 +1269,14 @@ lvol_names(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 	lvs = g_lvol_store;
 
-	rc = spdk_lvol_create(lvs, NULL, 1, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == -EINVAL);
-
-	rc = spdk_lvol_create(lvs, "", 1, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == -EINVAL);
-
-	memset(fullname, 'x', sizeof(fullname));
-	rc = spdk_lvol_create(lvs, fullname, 1, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == -EINVAL);
-
-	g_lvserrno = -1;
-	rc = spdk_lvol_create(lvs, "lvol", 1, lvol_op_with_handle_complete, NULL);
+	rc = spdk_lvol_create(lvs, 1, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 	lvol = g_lvol;
 
-	rc = spdk_lvol_create(lvs, "lvol", 1, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == -EINVAL);
-
 	g_lvserrno = -1;
-	rc = spdk_lvol_create(lvs, "lvol2", 1, lvol_op_with_handle_complete, NULL);
+	rc = spdk_lvol_create(lvs, 1, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
@@ -1296,7 +1287,7 @@ lvol_names(void)
 
 	g_lvserrno = -1;
 	g_lvol = NULL;
-	rc = spdk_lvol_create(lvs, "lvol", 1, lvol_op_with_handle_complete, NULL);
+	rc = spdk_lvol_create(lvs, 1, lvol_op_with_handle_complete, NULL);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
@@ -1335,7 +1326,7 @@ static void lvol_refcnt(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
 
 
-	spdk_lvol_create(g_lvol_store, "lvol", 10, lvol_op_with_handle_complete, NULL);
+	spdk_lvol_create(g_lvol_store, 10, lvol_op_with_handle_complete, NULL);
 
 	CU_ASSERT(g_lvserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);

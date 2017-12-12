@@ -50,4 +50,5 @@ echo
 . $COMMON_DIR/common.sh
 
 # Starting vhost with valid options
+gcc -v
 spdk_vhost_run $CONF_DIR
