@@ -44,6 +44,7 @@ class Commands_Rpc(object):
         return unclaimed_bdevs
 
     def get_unused_nbds(self):
+        ### Query block dev by lsblk
         print("INFO: Get unused nbds")
         ### Get nbd list that nbd.mod supports
         cmd = "lsblk -a -d -n -o NAME | grep nbd"
@@ -63,9 +64,8 @@ class Commands_Rpc(object):
         spdk_nbds = []
         rc = 0
         for i in range(len(unclaimed_bdevs)):
-            if len(unused_nbds) > 0:
-                nbd_name = unused_nbds[0]
-                del(unused_nbds[0])
+            if i < len(unused_nbds):
+                nbd_name = unused_nbds[i]
                 print("Info: export bdev:{bdev} as nbd:{nbd} by RPC Command: "
                       "start_nbd_disk request".format(bdev=unclaimed_bdevs[i], nbd=nbd_name))
                 output, rc = self.rpc.start_nbd_disk(unclaimed_bdevs[i], nbd_name)

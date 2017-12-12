@@ -23,6 +23,7 @@ function usage() {
                                     2: 'list_nbd_disks_one_by_one_positive',
                                     3: 'list_all_nbd_disks_positive',
                                     4: 'stop_nbd_disk_positive',
+                                    5: 'lsblk_check_positive',
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,3,4\", default: all"

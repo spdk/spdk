@@ -18,7 +18,7 @@ def test_counter():
     '''
     :return: the number of tests
     '''
-    return 4
+    return 5
 
 
 def header(num):
@@ -27,6 +27,7 @@ def header(num):
         2: 'list_nbd_disks_one_by_one_positive',
         3: 'list_all_nbd_disks_positive',
         4: 'stop_nbd_disk_positive',
+        5: 'lsblk_check_positive',
     }
     print("========================================================")
     print("Test Case {num}: Start".format(num=num))
@@ -143,4 +144,22 @@ class TestCases(object):
         if self._start_nbd_app() != 0:
             fail_count += 1
         footer(4)
+        return fail_count
+
+    def test_case5(self):
+        header(5)
+        unclaimed_bdevs = self.c.get_unclaimed_bdevs()
+        unused_nbds = self.c.get_unused_nbds()
+        spdk_nbds, fail_count = self.c.start_nbd_disks(unclaimed_bdevs, unused_nbds)
+        ### lsblk will read head of each block dev
+        unused_nbds_post = self.c.get_unused_nbds()
+        if len(set(unused_nbds) - set(spdk_nbds) - set(unused_nbds_post)) != 0:
+            print("ERROR: failed on lsblk check")
+            fail_count += 1
+        ### restart nbd app to keep a clear configuration
+        fail_count += self._stop_nbd_app()
+        remove(self.pid_file)
+        if self._start_nbd_app() != 0:
+            fail_count += 1
+        footer(5)
         return fail_count
