@@ -2948,7 +2948,6 @@ struct spdk_bs_iter_ctx {
 static void
 _spdk_bs_iter_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 {
-	struct spdk_blob_data *blob = __blob_to_data(_blob);
 	struct spdk_bs_iter_ctx *ctx = cb_arg;
 	struct spdk_blob_store *bs = ctx->bs;
 	spdk_blob_id id;
@@ -2968,14 +2967,6 @@ _spdk_bs_iter_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	}
 
 	id = _spdk_bs_page_to_blobid(ctx->page_num);
-
-	blob = _spdk_blob_lookup(bs, id);
-	if (blob) {
-		blob->open_ref++;
-		ctx->cb_fn(ctx->cb_arg, _blob, 0);
-		free(ctx);
-		return;
-	}
 
 	spdk_bs_open_blob(bs, id, _spdk_bs_iter_cpl, ctx);
 }
