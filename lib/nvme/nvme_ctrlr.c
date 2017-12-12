@@ -1763,9 +1763,7 @@ union spdk_nvme_csts_register spdk_nvme_ctrlr_get_regs_csts(struct spdk_nvme_ctr
 {
 	union spdk_nvme_csts_register csts;
 
-	if (nvme_ctrlr_get_csts(ctrlr, &csts)) {
-		csts.raw = 0;
-	}
+	nvme_ctrlr_get_csts(ctrlr, &csts);
 	return csts;
 }
 
@@ -1778,9 +1776,7 @@ union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *
 {
 	union spdk_nvme_vs_register vs;
 
-	if (nvme_ctrlr_get_vs(ctrlr, &vs)) {
-		vs.raw = 0;
-	}
+	nvme_ctrlr_get_vs(ctrlr, &vs);
 	return vs;
 }
 
