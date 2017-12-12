@@ -291,6 +291,9 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     net_mapping = portal_tag + ":" + initiator_tag
     rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'],
                               rpc_param['chap_disable'], rpc_param['chap_mutal'], rpc_param['chap_required'], rpc_param['chap_auth_group'])
+    output = rpc.get_iscsi_global_params()
+    jsonvalues = json.loads(output)
+    nodebase = jsonvalues[0]['node_base']
     output = rpc.get_target_nodes()
     jsonvalues = json.loads(output)
     verify(len(jsonvalues) == 1, 1,
@@ -298,8 +301,8 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     verify(jsonvalues[0]['luns'][0]['name'] == "Malloc" + str(rpc_param['lun_total']), 1,
            "lun_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['name'], str(rpc_param['lun_total'])))
     name = jsonvalues[0]['name']
-    verify(name == "iqn.2016-06.io.spdk:" + rpc_param['target_name'], 1,
-           "target name value is {}, expected {}".format(name, "iqn.2016-06.io.spdk:" + rpc_param['target_name']))
+    verify(name == nodebase + ":" + rpc_param['target_name'], 1,
+           "target name value is {}, expected {}".format(name, nodebase + ":" + rpc_param['target_name']))
     verify(jsonvalues[0]['alias_name'] == rpc_param['alias_name'], 1,
            "target alias_name value is {}, expected {}".format(jsonvalues[0]['alias_name'], rpc_param['alias_name']))
     verify(jsonvalues[0]['luns'][0]['id'] == 0, 1,
