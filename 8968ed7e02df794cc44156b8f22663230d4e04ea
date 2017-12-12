@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ddb01b5_4892c8be",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T20:29:00Z",
+      "side": 1,
+      "message": "The first line of the commit message should be a short summary of the change (something like \"scsi: fix VPD page SCSI name designator format\").\n\nThe rest of the commit message looks good as-is, so just adding a subject line at the top should be sufficient.",
+      "revId": "8968ed7e02df794cc44156b8f22663230d4e04ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8b9e640_0bc1ce5b",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T20:29:00Z",
+      "side": 1,
+      "message": "Since this function is very specific to this particular SCSI name string designator type, it is probably better to just add the new function as a private function in this file, rather than making it a public string API (I don\u0027t think it will be used elsewhere).\n\nIt also might be simpler to remove the printf-style format string, since we aren\u0027t really using it here - maybe it could work more like spdk_strcpy_pad().",
+      "revId": "8968ed7e02df794cc44156b8f22663230d4e04ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
