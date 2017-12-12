@@ -2103,6 +2103,58 @@ blob_flags(void)
 	CU_ASSERT(g_bserrno == 0);
 }
 
+static void
+bs_version(void)
+{
+	struct spdk_bs_super_block *super;
+	struct spdk_bs_dev *dev;
+	struct spdk_bs_opts opts;
+
+	dev = init_dev();
+	spdk_bs_opts_init(&opts);
+
+	/* Initialize a new blob store */
+	spdk_bs_init(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	/*
+	 * Change the bs version on disk.  This will allow us to
+	 *  test that the version does not get modified automatically
+	 *  when loading and unloading the blobstore.
+	 */
+	super = (struct spdk_bs_super_block *)&g_dev_buffer[0];
+	CU_ASSERT(super->version == SPDK_BS_VERSION);
+	super->version = 2;
+	super->crc = _spdk_blob_md_page_calc_crc(super);
+
+	/* Load an existing blob store */
+	dev = init_dev();
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	/*
+	 * Create a blob - just to make sure that when we unload it
+	 *  results in writing the super block (since metadata pages
+	 *  were allocated.
+	 */
+	spdk_bs_create_blob(g_bs, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+
+	/* Unload the blob store */
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	CU_ASSERT(super->version == 2);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -2145,7 +2197,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_crc", blob_crc) == NULL ||
 		CU_add_test(suite, "super_block_crc", super_block_crc) == NULL ||
 		CU_add_test(suite, "blob_dirty_shutdown", blob_dirty_shutdown) == NULL ||
-		CU_add_test(suite, "blob_flags", blob_flags) == NULL
+		CU_add_test(suite, "blob_flags", blob_flags) == NULL ||
+		CU_add_test(suite, "bs_version", bs_version) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
