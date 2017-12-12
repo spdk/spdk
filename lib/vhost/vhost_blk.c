@@ -400,6 +400,7 @@ _bdev_remove_cb(struct spdk_vhost_dev *vdev, void *arg)
 		bvdev->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, bvdev, 0);
 	}
 
+	spdk_bdev_close(bvdev->bdev_desc);
 	bvdev->bdev = NULL;
 	return 0;
 }
