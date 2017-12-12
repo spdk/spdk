@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4786463d_73cd291d",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-12T08:28:59Z",
+      "side": 1,
+      "message": "should be 0xffffffffU",
+      "revId": "a4010478eaae429c0a8cdca4883aa82e47c82259",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
