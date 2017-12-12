@@ -45,47 +45,6 @@
 #include "spdk_internal/log.h"
 
 static void
-spdk_nvmf_request_complete_on_qpair(void *ctx)
-{
-	struct spdk_nvmf_request *req = ctx;
-	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
-
-	rsp->sqid = 0;
-	rsp->status.p = 0;
-	rsp->cid = req->cmd->nvme_cmd.cid;
-
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF,
-		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u status=0x%04x\n",
-		      rsp->cid, rsp->cdw0, rsp->rsvd1,
-		      *(uint16_t *)&rsp->status);
-
-	if (spdk_nvmf_transport_req_complete(req)) {
-		SPDK_ERRLOG("Transport request completion error!\n");
-	}
-}
-
-int
-spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
-{
-	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-
-	if (cmd->opc == SPDK_NVME_OPC_FABRIC ||
-	    req->qpair->type == QPAIR_TYPE_AQ) {
-		struct spdk_io_channel *ch;
-
-		ch = spdk_io_channel_from_ctx(req->qpair->group);
-		/* Pass a message back to the originating thread. */
-		spdk_thread_send_msg(spdk_io_channel_get_thread(ch),
-				     spdk_nvmf_request_complete_on_qpair,
-				     req);
-	} else {
-		spdk_nvmf_request_complete_on_qpair(req);
-	}
-
-	return 0;
-}
-
-static void
 nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum spdk_nvmf_qpair_type qpair_type)
 {
 	struct spdk_nvmf_capsule_cmd *cap_hdr = &h2c_msg->nvmf_cmd;
@@ -127,6 +86,47 @@ nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, enum spdk_nvmf_qpair_type qpair_
 				      sgl->generic.type, sgl->generic.subtype);
 		}
 	}
+}
+
+static void
+spdk_nvmf_request_complete_on_qpair(void *ctx)
+{
+	struct spdk_nvmf_request *req = ctx;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+
+	rsp->sqid = 0;
+	rsp->status.p = 0;
+	rsp->cid = req->cmd->nvme_cmd.cid;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF,
+		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u status=0x%04x\n",
+		      rsp->cid, rsp->cdw0, rsp->rsvd1,
+		      *(uint16_t *)&rsp->status);
+
+	if (spdk_nvmf_transport_req_complete(req)) {
+		SPDK_ERRLOG("Transport request completion error!\n");
+	}
+}
+
+int
+spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC ||
+	    req->qpair->type == QPAIR_TYPE_AQ) {
+		struct spdk_io_channel *ch;
+
+		ch = spdk_io_channel_from_ctx(req->qpair->group);
+		/* Pass a message back to the originating thread. */
+		spdk_thread_send_msg(spdk_io_channel_get_thread(ch),
+				     spdk_nvmf_request_complete_on_qpair,
+				     req);
+	} else {
+		spdk_nvmf_request_complete_on_qpair(req);
+	}
+
+	return 0;
 }
 
 static void
