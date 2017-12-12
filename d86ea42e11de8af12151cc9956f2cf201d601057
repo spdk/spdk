@@ -22,6 +22,30 @@
       "revId": "d86ea42e11de8af12151cc9956f2cf201d601057",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "333e019a_54b35343",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2017-12-12T08:12:47Z",
+      "side": 1,
+      "message": "Hi, Karol\n\nI think you can define the function get_lvs_free_mb() and get_lbd_size() in autotest_comman.sh,So that anyone who test lvol backend can call these function.Because not only vhost need to test lvol backend but also nvmf and iscsi is need to test with lvol backebd too. So may I call the function later when your patch merged? I think define in autotest_comman.sh can reduce the code repeat.What is your ideal?\n\nThanks\nWenzhong",
+      "parentUuid": "9e3d749b_016a1166",
+      "range": {
+        "startLine": 59,
+        "startChar": 1,
+        "endLine": 59,
+        "endChar": 64
+      },
+      "revId": "d86ea42e11de8af12151cc9956f2cf201d601057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
