@@ -88,6 +88,29 @@
     },
     {
       "key": {
+        "uuid": "aa2e66fb_a777ea75",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-12T12:13:30Z",
+      "side": 1,
+      "message": "binary \u003c-\u003e hex string is nice function! Your algorithm is well considered.\n\nThe following may be simpler but I\u0027m not sure this casting of pointer is allowed. \n\n- Casting the pointer of spdk_cpuset_t to the byte pointer,\n- reading a byte, and then\n- get two hex value by using lower 4 bits and upper 4 bits as index to hex[], respectively",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 18
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0fb2387c_2704bfc1",
         "filename": "lib/env_dpdk/cpuset.c",
         "patchSetId": 2
@@ -102,6 +125,29 @@
       "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e77fdbf_1082b811",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-12T12:13:30Z",
+      "side": 1,
+      "message": "This function is not strict for performance hence just using SPDK_CPU_SETSIZE as lcore_max may be enough.",
+      "range": {
+        "startLine": 14,
+        "startChar": 1,
+        "endLine": 16,
+        "endChar": 21
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
