@@ -438,6 +438,13 @@ int spdk_bdev_alias_del(struct spdk_bdev *bdev, const char *alias);
 const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bdev *bdev);
 
 /**
+ * Removes all aliases from bdev aliases lis
+ *
+ * \param bdev Block device to query.
+ */
+void spdk_bdev_clean_aliases(const struct spdk_bdev *bdev);
+
+/**
  * Allocate a buffer for given bdev_io.  Allocation will happen
  * only if the bdev_io has no assigned SGL yet. The buffer will be
  * freed automatically on \c spdk_bdev_free_io() call. This call

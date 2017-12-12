@@ -939,19 +939,19 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	}
 
 	if (name == NULL || strnlen(name, SPDK_LVS_NAME_MAX) == 0) {
-		SPDK_ERRLOG("No name specified.\n");
+		SPDK_INFOLOG(SPDK_LOG_LVOL, "No name specified.\n");
 		return -EINVAL;
 	}
 
 	if (strnlen(name, SPDK_LVOL_NAME_MAX) == SPDK_LVOL_NAME_MAX) {
-		SPDK_ERRLOG("Name has no null terminator.\n");
+		SPDK_INFOLOG(SPDK_LOG_LVOL, "Name has no null terminator.\n");
 		return -EINVAL;
 	}
 
 	TAILQ_FOREACH(tmp, &lvs->lvols, link) {
 		if (!strncmp(name, tmp->name, SPDK_LVOL_NAME_MAX)) {
-			SPDK_ERRLOG("lvol with name %s already exists\n", name);
-			return -EINVAL;
+			SPDK_INFOLOG(SPDK_LOG_LVOL, "lvol with name %s already exists\n", name);
+			return -EEXIST;
 		}
 	}
 
@@ -1046,6 +1046,37 @@ invalid:
 	req->cb_fn(req->cb_arg, rc);
 	free(req);
 	return rc;
+}
+
+static void
+_spdk_lvol_rename_cb(void *cb_arg, int lvolerrno)
+{
+	struct spdk_lvol_req *req = cb_arg;
+
+	req->cb_fn(req->cb_arg, lvolerrno);
+	free(req);
+}
+
+int
+spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
+		 spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_blob *blob = lvol->blob;
+	struct spdk_lvol_req *req;
+
+	req = calloc(1, sizeof(*req));
+	if (!req) {
+		SPDK_ERRLOG("Cannot alloc memory for lvol request pointer\n");
+		return -ENOMEM;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	spdk_blob_set_xattr(blob, "name", new_name, strlen(new_name));
+
+	spdk_blob_sync_md(blob, _spdk_lvol_rename_cb, req);
+
+	return 0;
 }
 
 void

@@ -1994,6 +1994,16 @@ spdk_vbdev_unregister(struct spdk_bdev *vbdev, spdk_bdev_unregister_cb cb_fn, vo
 	spdk_bdev_unregister(vbdev, cb_fn, cb_arg);
 }
 
+void
+spdk_bdev_clean_aliases(const struct spdk_bdev *bdev)
+{
+	struct spdk_bdev_alias *tmp;
+
+	TAILQ_FOREACH(tmp, spdk_bdev_get_aliases(bdev), tailq) {
+		free(tmp->alias);
+	}
+}
+
 int
 spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
 	       void *remove_ctx, struct spdk_bdev_desc **_desc)
