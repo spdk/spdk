@@ -61,7 +61,7 @@ struct nvme_ctrlr {
 	struct spdk_nvme_transport_id	trid;
 	char				*name;
 	int				ref;
-
+	bool				is_removed;
 	struct spdk_poller		*adminq_timer_poller;
 
 	/** linked list pointer for device list */
@@ -222,9 +222,24 @@ bdev_nvme_poll(void *arg)
 static void
 bdev_nvme_poll_adminq(void *arg)
 {
-	struct spdk_nvme_ctrlr *ctrlr = arg;
+	struct nvme_ctrlr *nvme_ctrlr = arg;
+	struct spdk_nvme_ctrlr *ctrlr = nvme_ctrlr->ctrlr;
+	union spdk_nvme_csts_register csts;
 
 	spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+
+	/* This is a work around for vfio-attached deivce hot remove detection,
+	 * if the device hot removed and we try to read the register, it will
+	 * return 0xffffffff.
+	 */
+	if (g_nvme_hotplug_enabled) {
+		if (nvme_ctrlr->is_removed == false) {
+			csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
+			if (csts.raw == 0xffffffff) {
+				nvme_ctrlr->is_removed = true;
+			}
+		}
+	}
 }
 
 static void
@@ -872,7 +887,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	nvme_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, ctrlr,
+	nvme_ctrlr->adminq_timer_poller = spdk_poller_register(bdev_nvme_poll_adminq, nvme_ctrlr,
 					  g_nvme_adminq_poll_timeout_us);
 
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
