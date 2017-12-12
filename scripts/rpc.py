@@ -344,7 +344,6 @@ p = subparsers.add_parser('construct_error_bdev', help='Add bdev with error inje
 p.add_argument('base_name', help='base bdev name')
 p.set_defaults(func=construct_error_bdev)
 
-
 def construct_lvol_store(args):
     params = {'bdev_name': args.bdev_name, 'lvs_name': args.lvs_name}
 
@@ -357,7 +356,6 @@ p.add_argument('bdev_name', help='base bdev name')
 p.add_argument('lvs_name', help='name for lvol store')
 p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int, required=False)
 p.set_defaults(func=construct_lvol_store)
-
 
 def construct_lvol_bdev(args):
     num_bytes = (args.size * 1024 * 1024)
@@ -376,6 +374,18 @@ p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
 p.add_argument('lvol_name', help='name for this lvol')
 p.add_argument('size', help='size in MiB for this bdev', type=int)
 p.set_defaults(func=construct_lvol_bdev)
+
+def rename_lvol_bdev(args):
+    params = {
+        'old_lvol_bdev_name': args.old_lvol_bdev_name,
+        'new_lvol_bdev_name': args.new_lvol_bdev_name
+    }
+
+    print_array(jsonrpc_call('rename_lvol_bdev', params))
+p = subparsers.add_parser('rename_lvol_bdev', help='Change lvol bdev name')
+p.add_argument('old_lvol_bdev_name', help='old lvol name')
+p.add_argument('new_lvol_bdev_name', help='new lvol name')
+p.set_defaults(func=rename_lvol_bdev)
 
 # Logical volume resize feature is disabled, as it is currently work in progress
 #
