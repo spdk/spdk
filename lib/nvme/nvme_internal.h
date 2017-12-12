@@ -616,6 +616,12 @@ void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme
 struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 	const struct spdk_nvme_transport_id *trid);
 
+struct spdk_nvme_ctrlr *
+spdk_nvme_get_first_shared_ctrlr(void);
+
+struct spdk_nvme_ctrlr *
+spdk_nvme_get_next_shared_ctrlr(struct spdk_nvme_ctrlr *ctrlr);
+
 /* Transport specific functions */
 #define DECLARE_TRANSPORT(name) \
 	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(const struct spdk_nvme_transport_id *trid, const struct spdk_nvme_ctrlr_opts *opts, \
