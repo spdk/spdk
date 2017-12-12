@@ -971,3 +971,81 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_iscsi_connections", spdk_rpc_get_iscsi_connections)
+
+static void
+spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
+				 const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_iscsi_global_params requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "auth_file");
+	spdk_json_write_string(w, g_spdk_iscsi.authfile);
+
+	spdk_json_write_name(w, "node_base");
+	spdk_json_write_string(w, g_spdk_iscsi.nodebase);
+
+	spdk_json_write_name(w, "max_sessions");
+	spdk_json_write_uint32(w, g_spdk_iscsi.MaxSessions);
+
+	spdk_json_write_name(w, "max_connections_per_session");
+	spdk_json_write_uint32(w, g_spdk_iscsi.MaxConnectionsPerSession);
+
+	spdk_json_write_name(w, "max_queue_depth");
+	spdk_json_write_uint32(w, g_spdk_iscsi.MaxQueueDepth);
+
+	spdk_json_write_name(w, "default_time2wait");
+	spdk_json_write_uint32(w, g_spdk_iscsi.DefaultTime2Wait);
+
+	spdk_json_write_name(w, "immediate_data");
+	spdk_json_write_bool(w, g_spdk_iscsi.ImmediateData);
+
+	spdk_json_write_name(w, "allow_duplicated_isid");
+	spdk_json_write_bool(w, g_spdk_iscsi.AllowDuplicateIsid);
+
+	spdk_json_write_name(w, "error_recovery_level");
+	spdk_json_write_uint32(w, g_spdk_iscsi.ErrorRecoveryLevel);
+
+	spdk_json_write_name(w, "timeout");
+	spdk_json_write_int32(w, g_spdk_iscsi.timeout);
+
+	spdk_json_write_name(w, "flush_timeout");
+	spdk_json_write_uint64(w, g_spdk_iscsi.flush_timeout);
+
+	spdk_json_write_name(w, "nop_in_interval");
+	spdk_json_write_int32(w, g_spdk_iscsi.nopininterval);
+
+	spdk_json_write_name(w, "discovery_auth_method");
+	if (g_spdk_iscsi.no_discovery_auth != 0) {
+		spdk_json_write_string(w, "none");
+	} else if (g_spdk_iscsi.req_discovery_auth == 0) {
+		spdk_json_write_string(w, "auto");
+	} else if (g_spdk_iscsi.req_discovery_auth_mutual != 0) {
+		spdk_json_write_string(w, "chap mutual");
+	} else {
+		spdk_json_write_string(w, "chap");
+	}
+
+	spdk_json_write_name(w, "discovery_auth_group");
+	if (g_spdk_iscsi.discovery_auth_group == 0) {
+		spdk_json_write_string(w, "none");
+	} else {
+		spdk_json_write_int32(w, g_spdk_iscsi.discovery_auth_group);
+	}
+	spdk_json_write_object_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_iscsi_global_params", spdk_rpc_get_iscsi_global_params)
