@@ -626,7 +626,7 @@ iter_cb(void *ctx, struct spdk_blob *blob, int rc)
 		TAILQ_INSERT_TAIL(&args->op.fs_load.deleted_files, deleted_file, tailq);
 	}
 
-	spdk_bs_iter_next(fs->bs, &blob, iter_cb, req);
+	spdk_bs_iter_next(fs->bs, blob, iter_cb, req);
 }
 
 static void

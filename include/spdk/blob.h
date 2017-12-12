@@ -269,7 +269,7 @@ void spdk_bs_io_write_zeroes_blob(struct spdk_blob *blob, struct spdk_io_channel
 /* Iterate through all blobs */
 void spdk_bs_iter_first(struct spdk_blob_store *bs,
 			spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
-void spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob **blob,
+void spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob *blob,
 		       spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 
 int spdk_blob_set_xattr(struct spdk_blob *blob, const char *name, const void *value,

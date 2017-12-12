@@ -519,7 +519,7 @@ blob_iter_cb(void *arg1, struct spdk_blob *blob, int bserrno)
 		show_blob(cli_context);
 	}
 
-	spdk_bs_iter_next(cli_context->bs, &blob, blob_iter_cb, cli_context);
+	spdk_bs_iter_next(cli_context->bs, blob, blob_iter_cb, cli_context);
 }
 
 /*
