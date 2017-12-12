@@ -46,6 +46,30 @@
       "revId": "490786439c7651e04f04b791a7b7b517fe795974",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d086e3a2_5b895798",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2017-12-12T07:15:25Z",
+      "side": 1,
+      "message": "Hi,Changpeng \n\nThe \"nqn.2016-06.io.spdk-cnode2\" is valid,the \n\"nqn.2016-06.io.spdk:cnode1\" is not valid when test with many subsystems.\nI got it: When test fio_plugin with many subsystem,we can\u0027t use \":\" in subsystem name. we should use \".\" or \"-\" replace \":\". Because fio_plugin use \":\" distinguish the number of filename. spdk/example/nvme/fio_plugin/README.md 59~62 lines has refer it.So I will consistent the sunnqn name with \"-\".\n\nThanks\nWenzhong",
+      "parentUuid": "7c5a2cfc_209d1f73",
+      "range": {
+        "startLine": 53,
+        "startChar": 30,
+        "endLine": 54,
+        "endChar": 64
+      },
+      "revId": "490786439c7651e04f04b791a7b7b517fe795974",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
