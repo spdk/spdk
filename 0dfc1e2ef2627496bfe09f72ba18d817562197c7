@@ -1,0 +1,274 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a41df2f_4e53b103",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "thin provisioning",
+      "range": {
+        "startLine": 7,
+        "startChar": 25,
+        "endLine": 7,
+        "endChar": 37
+      },
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "989b9f5d_cbb55601",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "prefix should be thin provisioning",
+      "range": {
+        "startLine": 624,
+        "startChar": 27,
+        "endLine": 624,
+        "endChar": 51
+      },
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f4ae519_11ae301d",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "I think almost all of these tests can be done on malloc bdev with 1MB cluster size for example",
+      "range": {
+        "startLine": 625,
+        "startChar": 2,
+        "endLine": 625,
+        "endChar": 30
+      },
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97e959a5_adf34134",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "lvol store is not thin provisioned. thin provisioning applies to lvol bdevs",
+      "range": {
+        "startLine": 626,
+        "startChar": 12,
+        "endLine": 626,
+        "endChar": 39
+      },
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94fda63b_f8654fa2",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "This will need more clarification.\nConsumed space by empty thin provisioned lvol should be of 1 lvs cluster size or less. Maciek to clarify.",
+      "range": {
+        "startLine": 627,
+        "startChar": 2,
+        "endLine": 627,
+        "endChar": 66
+      },
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "767d0332_7135a2bc",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "destroy lvol store and bdev at end of test; this comment applies to all other tests as well",
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da415746_7da3ff7f",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "how about \"read on empty bdev\"?",
+      "range": {
+        "startLine": 633,
+        "startChar": 40,
+        "endLine": 633,
+        "endChar": 51
+      },
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5575f399_975d5127",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "data_integrity_test",
+      "range": {
+        "startLine": 642,
+        "startChar": 40,
+        "endLine": 642,
+        "endChar": 54
+      },
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1e3e66e_b8cddbf0",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 656,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "after resizing thin provisioned lvol bdev you need to check if:\n- lvol bdev size changed (get_bdevs call)\n- lvol store free clusters counter did not change (get_lvol_stores call)",
+      "range": {
+        "startLine": 656,
+        "startChar": 2,
+        "endLine": 656,
+        "endChar": 61
+      },
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a941a8fd_b5f6fee7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "how about just \"overprovisioning\"",
+      "range": {
+        "startLine": 662,
+        "startChar": 40,
+        "endLine": 662,
+        "endChar": 71
+      },
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d08fa7a2_44998108",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 665,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "why not just thin provision with size \u003d lvol store size?",
+      "range": {
+        "startLine": 665,
+        "startChar": 69,
+        "endLine": 665,
+        "endChar": 73
+      },
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49ccf235_c6031b15",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-12T07:49:12Z",
+      "side": 1,
+      "message": "When should the error occur?",
+      "range": {
+        "startLine": 668,
+        "startChar": 2,
+        "endLine": 668,
+        "endChar": 32
+      },
+      "revId": "0dfc1e2ef2627496bfe09f72ba18d817562197c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
