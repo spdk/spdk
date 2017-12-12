@@ -601,9 +601,11 @@ spdk_iscsi_tgt_node_delete_pg_map(struct spdk_iscsi_tgt_node *target,
 	}
 
 	if (pg_map->num_ig_maps > 0) {
-		return -ENOTEMPTY;
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "delete %d ig_maps forcefully\n",
+			      pg_map->num_ig_maps);
 	}
 
+	spdk_iscsi_pg_map_delete_all_ig_maps(pg_map);
 	_spdk_iscsi_tgt_node_delete_pg_map(target, pg_map);
 	return 0;
 }
