@@ -538,6 +538,13 @@ p = subparsers.add_parser('get_iscsi_connections', help='Display iSCSI connectio
 p.set_defaults(func=get_iscsi_connections)
 
 
+def get_iscsi_global_params(args):
+    print_dict(jsonrpc_call('get_iscsi_global_params'))
+
+p = subparsers.add_parser('get_iscsi_global_params', help='Display iSCSI global parameters')
+p.set_defaults(func=get_iscsi_global_params)
+
+
 def get_scsi_devices(args):
     print_dict(jsonrpc_call('get_scsi_devices'))
 
