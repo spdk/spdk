@@ -67,6 +67,24 @@
       "revId": "ca22a2210cb43c17a53fff6a5331bb46e9f5155b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5154ecca_671b2c78",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011231
+      },
+      "writtenOn": "2017-12-12T05:07:35Z",
+      "side": 1,
+      "message": "sure, I will add this public API later.",
+      "parentUuid": "884a488d_8c0babf4",
+      "revId": "ca22a2210cb43c17a53fff6a5331bb46e9f5155b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
