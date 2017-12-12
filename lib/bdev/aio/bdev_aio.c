@@ -422,7 +422,7 @@ create_aio_disk(const char *name, const char *filename, uint32_t block_size)
 	uint64_t disk_size;
 	int rc;
 
-	fdisk = calloc(sizeof(*fdisk), 1);
+	fdisk = calloc(1, sizeof(*fdisk));
 	if (!fdisk) {
 		SPDK_ERRLOG("Unable to allocate enough memory for aio backend\n");
 		return NULL;
