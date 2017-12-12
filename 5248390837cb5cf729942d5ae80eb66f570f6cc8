@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96753dc3_6511aa17",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T17:25:17Z",
+      "side": 1,
+      "message": "I\u0027m not sure I understand what you mean by \"was overflowed\" here - is there a buffer that is not big enough in the JSON-RPC layer?",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab02aedf_d5eab913",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 992,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T17:25:17Z",
+      "side": 1,
+      "message": "I don\u0027t think these items make sense as an array; is there any reason they can\u0027t be all in one object?\n\nAlternatively, if it makes sense to subdivide them into categories, maybe each category could be a separate named object in a single larger object.",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29afbbe7_12426721",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1013,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T17:25:17Z",
+      "side": 1,
+      "message": "This looks like it should use a bool instead.",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd462c1f_3449a925",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T17:25:17Z",
+      "side": 1,
+      "message": "This \u0027if\u0027 could probably be folded into an \u0027else if\u0027 to avoid the extra level of nesting.",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c07cbb71_d82098e0",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1050,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T17:25:17Z",
+      "side": 1,
+      "message": "This seems to output the same thing regardless of the req_discovery_auth_mutual setting - is that intentional?",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1d6e846_24f84632",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T17:25:17Z",
+      "side": 1,
+      "message": "Should this print the name of the discovery auth group instead?",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
