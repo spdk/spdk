@@ -2183,6 +2183,7 @@ bs_version(void)
 	struct spdk_bs_super_block *super;
 	struct spdk_bs_dev *dev;
 	struct spdk_bs_opts opts;
+	spdk_blob_id blobid;
 
 	dev = init_dev();
 	spdk_bs_opts_init(&opts);
@@ -2204,7 +2205,18 @@ bs_version(void)
 	 */
 	super = (struct spdk_bs_super_block *)&g_dev_buffer[0];
 	CU_ASSERT(super->version == SPDK_BS_VERSION);
+	CU_ASSERT(super->clean == 1);
 	super->version = 2;
+	/*
+	 * Version 2 metadata does not have a used blobid mask, so clear
+	 *  those fields in the super block and zero the corresponding
+	 *  region on "disk".  We will use this to ensure blob IDs are
+	 *  correctly reconstructed.
+	 */
+	memset(&g_dev_buffer[super->used_blobid_mask_start * PAGE_SIZE], 0,
+	       super->used_blobid_mask_len * PAGE_SIZE);
+	super->used_blobid_mask_start = 0;
+	super->used_blobid_mask_len = 0;
 	super->crc = _spdk_blob_md_page_calc_crc(super);
 
 	/* Load an existing blob store */
@@ -2212,6 +2224,7 @@ bs_version(void)
 	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	CU_ASSERT(super->clean == 0);
 
 	/*
 	 * Create a blob - just to make sure that when we unload it
@@ -2221,12 +2234,35 @@ bs_version(void)
 	spdk_bs_create_blob(g_bs, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
 
 	/* Unload the blob store */
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
 	CU_ASSERT(super->version == 2);
+	CU_ASSERT(super->used_blobid_mask_start == 0);
+	CU_ASSERT(super->used_blobid_mask_len == 0);
+
+	dev = init_dev();
+	spdk_bs_load(dev, &opts, bs_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+
+	g_blob = NULL;
+	spdk_bs_open_blob(g_bs, blobid, blob_op_with_handle_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blob != NULL);
+
+	spdk_blob_close(g_blob, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+	CU_ASSERT(super->version == 2);
+	CU_ASSERT(super->used_blobid_mask_start == 0);
+	CU_ASSERT(super->used_blobid_mask_len == 0);
 }
 
 int main(int argc, char **argv)

@@ -155,6 +155,7 @@ struct spdk_blob_store {
 
 	struct spdk_bit_array		*used_md_pages;
 	struct spdk_bit_array		*used_clusters;
+	struct spdk_bit_array		*used_blobids;
 
 	uint32_t			cluster_sz;
 	uint64_t			total_clusters;
@@ -200,6 +201,7 @@ enum spdk_blob_op_type {
 
 #define SPDK_MD_MASK_TYPE_USED_PAGES 0
 #define SPDK_MD_MASK_TYPE_USED_CLUSTERS 1
+#define SPDK_MD_MASK_TYPE_USED_BLOBIDS 2
 
 struct spdk_bs_md_mask {
 	uint8_t		type;
@@ -308,7 +310,10 @@ struct spdk_bs_super_block {
 
 	struct spdk_bs_type 	bstype; /* blobstore type */
 
-	uint8_t		reserved[4020];
+	uint32_t	used_blobid_mask_start; /* Offset from beginning of disk, in pages */
+	uint32_t	used_blobid_mask_len; /* Count, in pages */
+
+	uint8_t		reserved[4012];
 	uint32_t	crc;
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_bs_super_block) == 0x1000, "Invalid super block size");
