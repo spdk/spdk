@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "759aa3a1_2f0b1966",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1767,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-12T17:48:44Z",
+      "side": 0,
+      "message": "If this function fails, csts may be uninitialized, so we should probably still set csts.raw to something (just maybe 0xFFFFFFFFu instead of 0).",
+      "revId": "ded506f742045b7f96b695b3c57d0d3b9e1e1d67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
