@@ -303,11 +303,11 @@ spdk_bs_get_cluster_size(struct spdk_blob_store *bs)
 	return BS_CLUSTER_SIZE;
 }
 
-void spdk_blob_close(struct spdk_blob **b, spdk_blob_op_complete cb_fn, void *cb_arg)
+void spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	(*b)->ref--;
+	b->ref--;
 
-	cb_fn(cb_arg, (*b)->close_status);
+	cb_fn(cb_arg, b->close_status);
 }
 
 int

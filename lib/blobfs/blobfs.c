@@ -862,7 +862,7 @@ fs_create_blob_open_cb(void *ctx, struct spdk_blob *blob, int bserrno)
 	spdk_blob_set_xattr(blob, "name", f->name, strlen(f->name) + 1);
 	spdk_blob_set_xattr(blob, "length", &length, sizeof(length));
 
-	spdk_blob_close(&f->blob, fs_create_blob_close_cb, args);
+	spdk_blob_close(f->blob, fs_create_blob_close_cb, args);
 }
 
 static void
@@ -1133,7 +1133,7 @@ fs_rename_blob_open_cb(void *ctx, struct spdk_blob *blob, int bserrno)
 
 	f->blob = blob;
 	spdk_blob_set_xattr(blob, "name", new_name, strlen(new_name) + 1);
-	spdk_blob_close(&f->blob, fs_rename_blob_close_cb, req);
+	spdk_blob_close(f->blob, fs_rename_blob_close_cb, req);
 }
 
 static void
@@ -2369,7 +2369,7 @@ __file_close_async(struct spdk_file *file, struct spdk_fs_request *req)
 
 	pthread_spin_unlock(&file->lock);
 
-	spdk_blob_close(&file->blob, __file_close_async_done, req);
+	spdk_blob_close(file->blob, __file_close_async_done, req);
 }
 
 static void
