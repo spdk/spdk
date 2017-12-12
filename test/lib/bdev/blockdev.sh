@@ -32,6 +32,7 @@ $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
 
 timing_enter nbd
+run_test $testdir/nbd/nbd.sh --test-cases=all
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
 fi
