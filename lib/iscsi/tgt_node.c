@@ -922,7 +922,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 		}
 	}
 
-	target->dev = spdk_scsi_dev_construct(name, lun_name_list, lun_id_list, num_luns,
+	target->dev = spdk_scsi_dev_construct(fullname, lun_name_list, lun_id_list, num_luns,
 					      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
 
 	if (!target->dev) {
