@@ -49,6 +49,7 @@
 
 static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
 static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
+static void _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno);
 
 static inline size_t
 divide_round_up(size_t num, size_t divisor)
@@ -2645,54 +2646,81 @@ spdk_blob_resize(struct spdk_blob *_blob, uint64_t sz)
 /* START spdk_bs_delete_blob */
 
 static void
-_spdk_bs_delete_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_bs_delete_close_cpl(void *cb_arg, int bserrno)
 {
-	struct spdk_blob_data *blob = cb_arg;
-
-	_spdk_blob_free(blob);
+	spdk_bs_sequence_t *seq = cb_arg;
 
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
 static void
-_spdk_bs_delete_open_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_bs_delete_persist_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_data *blob = cb_arg;
+	struct spdk_blob *_blob = cb_arg;
+	struct spdk_blob_data *blob = __blob_to_data(_blob);
 
-	/* If the blob have crc error, we just return NULL. */
-	if (blob == NULL) {
+	if (bserrno != 0) {
+		/*
+		 * We already removed this blob from the blobstore tailq, so
+		 *  we need to free it here since this is the last reference
+		 *  to it.
+		 */
+		_spdk_blob_free(blob);
+		_spdk_bs_delete_close_cpl(seq, bserrno);
+		return;
+	}
+
+	/*
+	 * This will immediately decrement the ref_count and call
+	 *  the completion routine since the metadata state is clean.
+	 *  By calling spdk_blob_close, we reduce the number of call
+	 *  points into code that touches the blob->open_ref count
+	 *  and the blobstore's blob list.
+	 */
+	spdk_blob_close(_blob, _spdk_bs_delete_close_cpl, seq);
+}
+
+static void
+_spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
+{
+	spdk_bs_sequence_t *seq = cb_arg;
+	struct spdk_blob_data *blob = __blob_to_data(_blob);
+
+	if (bserrno != 0) {
 		spdk_bs_sequence_finish(seq, bserrno);
 		return;
 	}
+
+	if (blob->open_ref > 1) {
+		/*
+		 * Someone has this blob open (besides this delete context).
+		 *  Decrement the ref count directly and return -EBUSY.
+		 */
+		blob->open_ref--;
+		spdk_bs_sequence_finish(seq, -EBUSY);
+		return;
+	}
+
+	/*
+	 * Remove the blob from the blob_store list now, to ensure it does not
+	 *  get returned after this point by _spdk_blob_lookup().
+	 */
+	TAILQ_REMOVE(&blob->bs->blobs, blob, link);
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 	blob->active.num_pages = 0;
 	_spdk_resize_blob(blob, 0);
 
-	_spdk_blob_persist(seq, blob, _spdk_bs_delete_blob_cpl, blob);
+	_spdk_blob_persist(seq, blob, _spdk_bs_delete_persist_cpl, _blob);
 }
 
 void
 spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		    spdk_blob_op_complete cb_fn, void *cb_arg)
 {
-	struct spdk_blob_data	*blob;
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t 	*seq;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Deleting blob %lu\n", blobid);
-
-	blob = _spdk_blob_lookup(bs, blobid);
-	if (blob) {
-		assert(blob->open_ref > 0);
-		cb_fn(cb_arg, -EINVAL);
-		return;
-	}
-
-	blob = _spdk_blob_alloc(bs, blobid);
-	if (!blob) {
-		cb_fn(cb_arg, -ENOMEM);
-		return;
-	}
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;
@@ -2700,12 +2728,11 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 
 	seq = spdk_bs_sequence_start(bs->md_channel, &cpl);
 	if (!seq) {
-		_spdk_blob_free(blob);
 		cb_fn(cb_arg, -ENOMEM);
 		return;
 	}
 
-	_spdk_blob_load(seq, blob, _spdk_bs_delete_open_cpl, blob);
+	spdk_bs_open_blob(bs, blobid, _spdk_bs_delete_open_cpl, seq);
 }
 
 /* END spdk_bs_delete_blob */
@@ -2833,7 +2860,15 @@ _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	struct spdk_blob_data *blob = cb_arg;
 
 	if (blob->open_ref == 0) {
-		TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+		/*
+		 * Blobs with active.num_pages == 0 are deleted blobs.
+		 *  these blobs are removed from the blob_store list
+		 *  when the deletion process starts - so don't try to
+		 *  remove them again.
+		 */
+		if (blob->active.num_pages > 0) {
+			TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+		}
 		_spdk_blob_free(blob);
 	}
 
