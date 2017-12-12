@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "47571338_7dc110c1",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-12T08:53:21Z",
+      "side": 1,
+      "message": "I don\u0027t think \"i\" should be here.",
+      "range": {
+        "startLine": 145,
+        "startChar": 34,
+        "endLine": 145,
+        "endChar": 36
+      },
+      "revId": "1d58a7e74e87acaceeae9b2e25134e60aa65e878",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab70b642_99f24745",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-12T08:53:21Z",
+      "side": 1,
+      "message": "I don\u0027t think \"$i\" should be here.",
+      "range": {
+        "startLine": 151,
+        "startChar": 62,
+        "endLine": 151,
+        "endChar": 64
+      },
+      "revId": "1d58a7e74e87acaceeae9b2e25134e60aa65e878",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "076b9a70_da431cd4",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-12T08:53:21Z",
+      "side": 1,
+      "message": "I think those two parts could be taken outside of vm_count loop. It would make it much more simpler to create lvs and lvol bdevs above in one go.",
+      "range": {
+        "startLine": 160,
+        "startChar": 4,
+        "endLine": 178,
+        "endChar": 6
+      },
+      "revId": "1d58a7e74e87acaceeae9b2e25134e60aa65e878",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
