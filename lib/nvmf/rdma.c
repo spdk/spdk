@@ -56,6 +56,9 @@
 #define NVMF_DEFAULT_TX_SGE		1
 #define NVMF_DEFAULT_RX_SGE		2
 
+/* The RDMA completion queue size */
+#define NVMF_RDMA_CQ_SIZE	4096
+
 /* AIO backend requires block size aligned data buffers,
  * extra 4KiB aligned data buffer should work for most devices.
  */
@@ -116,6 +119,8 @@ struct spdk_nvmf_rdma_recv {
 	struct ibv_recv_wr		wr;
 	struct ibv_sge			sgl[NVMF_DEFAULT_RX_SGE];
 
+	struct spdk_nvmf_rdma_qpair	*qpair;
+
 	/* In-capsule data buffer */
 	uint8_t				*buf;
 
@@ -150,7 +155,6 @@ struct spdk_nvmf_rdma_qpair {
 	struct spdk_nvmf_rdma_poller		*poller;
 
 	struct rdma_cm_id			*cm_id;
-	struct ibv_cq				*cq;
 
 	/* The maximum number of I/O outstanding on this connection at one time */
 	uint16_t				max_queue_depth;
@@ -212,6 +216,8 @@ struct spdk_nvmf_rdma_qpair {
 struct spdk_nvmf_rdma_poller {
 	struct spdk_nvmf_rdma_device		*device;
 	struct spdk_nvmf_rdma_poll_group	*group;
+
+	struct ibv_cq				*cq;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
 
@@ -308,10 +314,6 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 		rdma_destroy_id(rqpair->cm_id);
 	}
 
-	if (rqpair->cq) {
-		ibv_destroy_cq(rqpair->cq);
-	}
-
 	if (rqpair->mgmt_channel) {
 		spdk_put_io_channel(rqpair->mgmt_channel);
 	}
@@ -339,20 +341,10 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 
-	rqpair->cq = ibv_create_cq(rqpair->cm_id->verbs, rqpair->max_queue_depth * 3, rqpair, NULL, 0);
-	if (!rqpair->cq) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("Unable to create completion queue\n");
-		SPDK_ERRLOG("Errno %d: %s\n", errno, buf);
-		rdma_destroy_id(rqpair->cm_id);
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return -1;
-	}
-
 	memset(&attr, 0, sizeof(struct ibv_qp_init_attr));
 	attr.qp_type		= IBV_QPT_RC;
-	attr.send_cq		= rqpair->cq;
-	attr.recv_cq		= rqpair->cq;
+	attr.send_cq		= rqpair->poller->cq;
+	attr.recv_cq		= rqpair->poller->cq;
 	attr.cap.max_send_wr	= rqpair->max_queue_depth * 2; /* SEND, READ, and WRITE operations */
 	attr.cap.max_recv_wr	= rqpair->max_queue_depth; /* RECV operations */
 	attr.cap.max_send_sge	= NVMF_DEFAULT_TX_SGE;
@@ -411,6 +403,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		struct ibv_recv_wr *bad_wr = NULL;
 
 		rdma_recv = &rqpair->recvs[i];
+		rdma_recv->qpair = rqpair;
 
 		/* Set up memory to receive commands */
 		rdma_recv->buf = (void *)((uintptr_t)rqpair->bufs + (i * rtransport->in_capsule_data_size));
@@ -1393,10 +1386,6 @@ spdk_nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
-static int
-spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
-			  struct spdk_nvmf_rdma_qpair *rqpair);
-
 static void
 spdk_nvmf_rdma_accept(struct spdk_nvmf_transport *transport, new_qpair_fn cb_fn)
 {
@@ -1511,6 +1500,15 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 
 		TAILQ_INIT(&poller->qpairs);
 
+		poller->cq = ibv_create_cq(device->context, NVMF_RDMA_CQ_SIZE, poller, NULL, 0);
+		if (!poller->cq) {
+			SPDK_ERRLOG("Unable to create completion queue\n");
+			free(poller);
+			free(rgroup);
+			pthread_mutex_unlock(&rtransport->lock);
+			return NULL;
+		}
+
 		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
 	}
 
@@ -1532,6 +1530,11 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tmp) {
 		TAILQ_REMOVE(&rgroup->pollers, poller, link);
+
+		if (poller->cq) {
+			ibv_destroy_cq(poller->cq);
+		}
+
 		free(poller);
 	}
 
@@ -1695,22 +1698,26 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 }
 
 static struct spdk_nvmf_rdma_request *
-get_rdma_req_from_wc(struct spdk_nvmf_rdma_qpair *rqpair,
-		     struct ibv_wc *wc)
+get_rdma_req_from_wc(struct ibv_wc *wc)
 {
 	struct spdk_nvmf_rdma_request *rdma_req;
 
 	rdma_req = (struct spdk_nvmf_rdma_request *)wc->wr_id;
 	assert(rdma_req != NULL);
+
+#ifdef DEBUG
+	struct spdk_nvmf_rdma_qpair *rqpair;
+	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
 	assert(rdma_req - rqpair->reqs >= 0);
 	assert(rdma_req - rqpair->reqs < (ptrdiff_t)rqpair->max_queue_depth);
+#endif
 
 	return rdma_req;
 }
 
 static struct spdk_nvmf_rdma_recv *
-get_rdma_recv_from_wc(struct spdk_nvmf_rdma_qpair *rqpair,
-		      struct ibv_wc *wc)
+get_rdma_recv_from_wc(struct ibv_wc *wc)
 {
 	struct spdk_nvmf_rdma_recv *rdma_recv;
 
@@ -1718,26 +1725,32 @@ get_rdma_recv_from_wc(struct spdk_nvmf_rdma_qpair *rqpair,
 
 	rdma_recv = (struct spdk_nvmf_rdma_recv *)wc->wr_id;
 	assert(rdma_recv != NULL);
+
+#ifdef DEBUG
+	struct spdk_nvmf_rdma_qpair *rqpair = rdma_recv->qpair;
+
 	assert(rdma_recv - rqpair->recvs >= 0);
 	assert(rdma_recv - rqpair->recvs < (ptrdiff_t)rqpair->max_queue_depth);
+#endif
 
 	return rdma_recv;
 }
 
 static int
-spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
-			  struct spdk_nvmf_rdma_qpair *rqpair)
+spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
+			   struct spdk_nvmf_rdma_poller *rpoller)
 {
 	struct ibv_wc wc[32];
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
+	struct spdk_nvmf_rdma_qpair	*rqpair;
 	int reaped, i;
 	int count = 0;
 	bool error = false;
 	char buf[64];
 
 	/* Poll for completing operations. */
-	reaped = ibv_poll_cq(rqpair->cq, 32, wc);
+	reaped = ibv_poll_cq(rpoller->cq, 32, wc);
 	if (reaped < 0) {
 		spdk_strerror_r(errno, buf, sizeof(buf));
 		SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
@@ -1748,14 +1761,15 @@ spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	for (i = 0; i < reaped; i++) {
 		if (wc[i].status) {
 			SPDK_ERRLOG("CQ error on CQ %p, Request 0x%lu (%d): %s\n",
-				    rqpair->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+				    rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
 			error = true;
 			continue;
 		}
 
 		switch (wc[i].opcode) {
 		case IBV_WC_SEND:
-			rdma_req = get_rdma_req_from_wc(rqpair, &wc[i]);
+			rdma_req = get_rdma_req_from_wc(&wc[i]);
+			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 			assert(rdma_req->state == RDMA_REQUEST_STATE_COMPLETING);
 			rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
@@ -1769,6 +1783,9 @@ spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			break;
 
 		case IBV_WC_RDMA_WRITE:
+			rdma_req = get_rdma_req_from_wc(&wc[i]);
+			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
 			rqpair->cur_rdma_rw_depth--;
 
 			/* Try to process other queued requests */
@@ -1776,7 +1793,8 @@ spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			break;
 
 		case IBV_WC_RDMA_READ:
-			rdma_req = get_rdma_req_from_wc(rqpair, &wc[i]);
+			rdma_req = get_rdma_req_from_wc(&wc[i]);
+			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 			assert(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 			rqpair->cur_rdma_rw_depth--;
@@ -1789,7 +1807,8 @@ spdk_nvmf_rdma_qpair_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			break;
 
 		case IBV_WC_RECV:
-			rdma_recv = get_rdma_recv_from_wc(rqpair, &wc[i]);
+			rdma_recv = get_rdma_recv_from_wc(&wc[i]);
+			rqpair = rdma_recv->qpair;
 
 			TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
 
@@ -1816,7 +1835,6 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_poll_group *rgroup;
 	struct spdk_nvmf_rdma_poller	*rpoller;
-	struct spdk_nvmf_rdma_qpair	*rqpair;
 	int				count, rc;
 
 	rtransport = SPDK_CONTAINEROF(group->transport, struct spdk_nvmf_rdma_transport, transport);
@@ -1824,13 +1842,11 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 
 	count = 0;
 	TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
-		TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
-			rc = spdk_nvmf_rdma_qpair_poll(rtransport, rqpair);
-			if (rc < 0) {
-				return rc;
-			}
-			count += rc;
+		rc = spdk_nvmf_rdma_poller_poll(rtransport, rpoller);
+		if (rc < 0) {
+			return rc;
 		}
+		count += rc;
 	}
 
 	return count;
