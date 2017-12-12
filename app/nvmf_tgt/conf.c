@@ -310,6 +310,23 @@ spdk_nvmf_parse_conf(void)
 	return 0;
 }
 
+static void
+_listen_done(void *ctx, struct spdk_nvme_transport_id *trid, int status)
+{
+	struct spdk_nvmf_subsystem *subsystem = ctx;
+
+	if (status) {
+		SPDK_ERRLOG("Failed to listen on transport %s, adrfam %s, traddr %s, trsvcid %s\n",
+			    spdk_nvme_transport_id_trtype_str(trid->trtype),
+			    spdk_nvme_transport_id_adrfam_str(trid->adrfam),
+			    trid->traddr,
+			    trid->trsvcid);
+		return;
+	}
+
+	spdk_nvmf_subsystem_add_listener(subsystem, trid);
+}
+
 int
 spdk_nvmf_construct_subsystem(const char *name,
 			      int num_listen_addresses, struct rpc_listen_address *addresses,
@@ -317,7 +334,7 @@ spdk_nvmf_construct_subsystem(const char *name,
 			      const char *sn, size_t num_ns, struct spdk_nvmf_ns_params *ns_list)
 {
 	struct spdk_nvmf_subsystem *subsystem;
-	int i, rc;
+	int i;
 	size_t j;
 	struct spdk_bdev *bdev;
 
@@ -358,16 +375,7 @@ spdk_nvmf_construct_subsystem(const char *name,
 		snprintf(trid.traddr, sizeof(trid.traddr), "%s", addresses[i].traddr);
 		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", addresses[i].trsvcid);
 
-		rc = spdk_nvmf_tgt_listen(g_tgt.tgt, &trid);
-		if (rc) {
-			SPDK_ERRLOG("Failed to listen on transport %s, adrfam %s, traddr %s, trsvcid %s\n",
-				    addresses[i].transport,
-				    addresses[i].adrfam,
-				    addresses[i].traddr,
-				    addresses[i].trsvcid);
-			goto error;
-		}
-		spdk_nvmf_subsystem_add_listener(subsystem, &trid);
+		spdk_nvmf_tgt_listen(g_tgt.tgt, &trid, _listen_done, subsystem);
 	}
 
 	/* Parse Host sections */

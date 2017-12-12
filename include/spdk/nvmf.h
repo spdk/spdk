@@ -84,6 +84,10 @@ struct spdk_nvmf_tgt *spdk_nvmf_tgt_create(struct spdk_nvmf_tgt_opts *opts);
  */
 void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
 
+typedef void (spdk_nvmf_tgt_listen_done)(void *ctx,
+		struct spdk_nvme_transport_id *trid,
+		int status);
+
 /**
  * Begin accepting new connections at the address provided.
  *
@@ -93,11 +97,17 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt);
  *
  * \param tgt The target associated with this listen address
  * \param trid The address to listen at
- *
- * \return 0 on success. Negated errno on failure.
+ * \param cb_fn A callback that will be invoked on the same thread
+ * 		that spdk_nvmf_tgt_listen was called from once all
+ * 		poll groups have been notified of the new listen address.
+ * 		The status will be 0 on success or a negated errno on
+ * 		failure.
+ * \param cb_arg Passed to the cb_fn callback.
  */
-int spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
-			 struct spdk_nvme_transport_id *trid);
+void spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
+			  struct spdk_nvme_transport_id *trid,
+			  spdk_nvmf_tgt_listen_done cb_fn,
+			  void *cb_arg);
 
 typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
 

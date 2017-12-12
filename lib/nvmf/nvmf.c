@@ -213,18 +213,35 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 struct spdk_nvmf_tgt_listen_ctx {
 	struct spdk_nvmf_transport *transport;
 	struct spdk_nvme_transport_id trid;
+
+	spdk_nvmf_tgt_listen_done *cb_fn;
+	void *cb_arg;
 };
 
 static void
-spdk_nvmf_tgt_listen_done(void *io_device, void *c, int status)
+_listen_done(void *io_device, void *c, int status)
 {
-	free(c);
+	struct spdk_nvmf_tgt_listen_ctx *ctx = c;
+	struct spdk_nvmf_tgt *tgt = io_device;
+	int rc;
+
+	rc = spdk_nvmf_transport_listen(ctx->transport, &ctx->trid);
+	if (rc < 0) {
+		SPDK_ERRLOG("Unable to listen on address '%s'\n", ctx->trid.traddr);
+	} else {
+		tgt->discovery_genctr++;
+	}
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg, &ctx->trid, rc);
+	}
+	free(ctx);
 }
 
 static int
-spdk_nvmf_tgt_listen_add_transport(void *io_device,
-				   struct spdk_io_channel *ch,
-				   void *c)
+_listen_add_transport(void *io_device,
+		      struct spdk_io_channel *ch,
+		      void *c)
 {
 	struct spdk_nvmf_tgt_listen_ctx *ctx = c;
 	struct spdk_nvmf_poll_group *group;
@@ -234,9 +251,11 @@ spdk_nvmf_tgt_listen_add_transport(void *io_device,
 	return spdk_nvmf_poll_group_add_transport(group, ctx->transport);
 }
 
-int
+void
 spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
-		     struct spdk_nvme_transport_id *trid)
+		     struct spdk_nvme_transport_id *trid,
+		     spdk_nvmf_tgt_listen_done cb_fn,
+		     void *cb_arg)
 {
 	struct spdk_nvmf_transport *transport;
 	int rc;
@@ -248,39 +267,42 @@ spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
 		transport = spdk_nvmf_transport_create(tgt, trid->trtype);
 		if (!transport) {
 			SPDK_ERRLOG("Transport initialization failed\n");
-			return -EINVAL;
+			cb_fn(cb_arg, trid, -EINVAL);
+			return;
 		}
 		TAILQ_INSERT_TAIL(&tgt->transports, transport, link);
 
 		ctx = calloc(1, sizeof(*ctx));
 		if (!ctx) {
-			return -ENOMEM;
+			cb_fn(cb_arg, trid, -ENOMEM);
+			return;
 		}
 
 		ctx->trid = *trid;
 		ctx->transport = transport;
+		ctx->cb_fn = cb_fn;
+		ctx->cb_arg = cb_arg;
 
 		/* Send a message to each poll group to notify it that a new transport
 		 * is available.
-		 * TODO: This call does not currently allow the user to wait for these
-		 * messages to propagate. It also does not protect against two calls
-		 * to this function overlapping
 		 */
 		spdk_for_each_channel(tgt,
-				      spdk_nvmf_tgt_listen_add_transport,
+				      _listen_add_transport,
 				      ctx,
-				      spdk_nvmf_tgt_listen_done);
+				      _listen_done);
+		return;
 	}
 
 	rc = spdk_nvmf_transport_listen(transport, trid);
 	if (rc < 0) {
 		SPDK_ERRLOG("Unable to listen on address '%s'\n", trid->traddr);
-		return rc;
+	} else {
+		tgt->discovery_genctr++;
 	}
 
-	tgt->discovery_genctr++;
-
-	return 0;
+	if (cb_fn) {
+		cb_fn(cb_arg, trid, rc);
+	}
 }
 
 struct spdk_nvmf_subsystem *
