@@ -1282,7 +1282,7 @@ lvol_names(void)
 	lvol = g_lvol;
 
 	rc = spdk_lvol_create(lvs, "lvol", 1, lvol_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(rc == -EEXIST);
 
 	g_lvserrno = -1;
 	rc = spdk_lvol_create(lvs, "lvol2", 1, lvol_op_with_handle_complete, NULL);
