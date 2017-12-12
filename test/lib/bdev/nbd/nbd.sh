@@ -24,6 +24,7 @@ function usage() {
                                     3: 'list_all_nbd_disks_positive',
                                     4: 'stop_nbd_disk_positive',
                                     5: 'lsblk_check_positive',
+                                    6: 'write_workload_by_dd_positive',
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,3,4\", default: all"

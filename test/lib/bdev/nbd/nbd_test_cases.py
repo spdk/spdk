@@ -18,7 +18,7 @@ def test_counter():
     '''
     :return: the number of tests
     '''
-    return 5
+    return 6
 
 
 def header(num):
@@ -28,6 +28,7 @@ def header(num):
         3: 'list_all_nbd_disks_positive',
         4: 'stop_nbd_disk_positive',
         5: 'lsblk_check_positive',
+        6: 'write_workload_by_dd_positive',
     }
     print("========================================================")
     print("Test Case {num}: Start".format(num=num))
@@ -162,4 +163,38 @@ class TestCases(object):
         if self._start_nbd_app() != 0:
             fail_count += 1
         footer(5)
+        return fail_count
+
+    def test_case6(self):
+        header(6)
+        unclaimed_bdevs = self.c.get_unclaimed_bdevs()
+        unused_nbds = self.c.get_unused_nbds()
+        spdk_nbds, fail_count = self.c.start_nbd_disks(unclaimed_bdevs, unused_nbds)
+        ### Record 1MB rand data into tmp file by dd
+        base_path = path.dirname(sys.argv[0])
+        tmp_dd = path.join(base_path, 'tmd_dd_file')
+        cmd = "dd if=/dev/urandom of={tmpf} bs=4k count=256".format(tmpf=tmp_dd)
+        print(cmd)
+        dd_proc = subprocess.Popen(cmd, shell=True)
+        dd_proc.wait()
+        ### Write that 1MB rand data into each nbd device by dd
+        for i in range(len(spdk_nbds)):
+            cmd = "dd if={tmpf} of={nbd} bs=4k count=256".format(
+                tmpf=tmp_dd, nbd=spdk_nbds[i])
+            print(cmd)
+            dd_proc = subprocess.Popen(cmd, shell=True)
+            dd_proc.wait()
+        ### Compare writen data
+        for i in range(len(spdk_nbds)):
+            cmd = "cmp {nbd} {tmpf} -n 1M".format(
+                tmpf=tmp_dd, nbd=spdk_nbds[i])
+            print(cmd)
+            fail_count += subprocess.call(cmd, shell=True)
+        remove(tmp_dd)
+        ### restart nbd app to keep a clear configuration
+        fail_count += self._stop_nbd_app()
+        remove(self.pid_file)
+        if self._start_nbd_app() != 0:
+            fail_count += 1
+        footer(6)
         return fail_count
