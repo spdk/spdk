@@ -235,9 +235,10 @@ static int
 _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 			   spdk_nvme_remove_cb remove_cb)
 {
-	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_ctrlr *ctrlr, *tmp;
 	struct spdk_uevent event;
 	struct spdk_pci_addr pci_addr;
+	union spdk_nvme_csts_register csts;
 
 	while (spdk_get_uevent(hotplug_fd, &event) > 0) {
 		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO ||
@@ -273,6 +274,17 @@ _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 					nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 				}
 			}
+		}
+	}
+
+	/* This is a work around for vfio-attached device hot remove detection. */
+	TAILQ_FOREACH_SAFE(ctrlr, &g_spdk_nvme_driver->shared_attached_ctrlrs, tailq, tmp) {
+		csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
+		if (csts.raw == 0xffffffffU) {
+			nvme_ctrlr_fail(ctrlr, true);
+			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+			remove_cb(cb_ctx, ctrlr);
+			nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 		}
 	}
 	return 0;
