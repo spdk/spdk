@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4bc09a52_545c9fee",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2020,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-12T11:20:05Z",
+      "side": 1,
+      "message": "Doesn\u0027t this belong to some previous patch in series or did it change as result of this patch ?",
+      "range": {
+        "startLine": 2020,
+        "startChar": 1,
+        "endLine": 2020,
+        "endChar": 21
+      },
+      "revId": "fa24659f5e6fde29db3f0dcc5e4cb2899d1f1b09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49874761_c2949982",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2167,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-12T11:20:05Z",
+      "side": 1,
+      "message": "Could we check over provisioning as well ? As in create two blobs, resize so sum of their sizes is above that of blobstore device.",
+      "revId": "fa24659f5e6fde29db3f0dcc5e4cb2899d1f1b09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
