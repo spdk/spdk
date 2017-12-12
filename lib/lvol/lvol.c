@@ -285,14 +285,14 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	if (rc != 0 || value_len != UUID_STRING_LEN || attr[UUID_STRING_LEN - 1] != '\0') {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "missing or incorrect UUID\n");
 		req->lvserrno = -EINVAL;
-		spdk_blob_close(&blob, _spdk_close_super_blob_with_error_cb, req);
+		spdk_blob_close(blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
 
 	if (uuid_parse(attr, lvs->uuid)) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "incorrect UUID '%s'\n", attr);
 		req->lvserrno = -EINVAL;
-		spdk_blob_close(&blob, _spdk_close_super_blob_with_error_cb, req);
+		spdk_blob_close(blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
 
@@ -300,7 +300,7 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	if (rc != 0 || value_len > SPDK_LVS_NAME_MAX) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "missing or invalid name\n");
 		req->lvserrno = -EINVAL;
-		spdk_blob_close(&blob, _spdk_close_super_blob_with_error_cb, req);
+		spdk_blob_close(blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
 
@@ -310,13 +310,13 @@ _spdk_lvs_read_uuid(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	if (rc) {
 		SPDK_INFOLOG(SPDK_LOG_LVOL, "lvolstore with name %s already exists\n", lvs->name);
 		req->lvserrno = -EEXIST;
-		spdk_blob_close(&blob, _spdk_close_super_blob_with_error_cb, req);
+		spdk_blob_close(blob, _spdk_close_super_blob_with_error_cb, req);
 		return;
 	}
 
 	lvs->super_blob_id = spdk_blob_get_id(blob);
 
-	spdk_blob_close(&blob, _spdk_close_super_cb, req);
+	spdk_blob_close(blob, _spdk_close_super_cb, req);
 }
 
 static void
@@ -429,7 +429,7 @@ _spdk_super_blob_set_cb(void *cb_arg, int lvolerrno)
 		return;
 	}
 
-	spdk_blob_close(&blob, _spdk_super_create_close_cb, req);
+	spdk_blob_close(blob, _spdk_super_create_close_cb, req);
 }
 
 static void
@@ -844,7 +844,7 @@ _spdk_lvol_sync_cb(void *cb_arg, int lvolerrno)
 	struct spdk_lvol *lvol = req->lvol;
 
 	if (lvolerrno != 0) {
-		spdk_blob_close(&lvol->blob, _spdk_lvol_delete_blob_cb, lvol);
+		spdk_blob_close(lvol->blob, _spdk_lvol_delete_blob_cb, lvol);
 	} else {
 		lvol->ref_count++;
 	}
@@ -873,7 +873,7 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	uuid_unparse(lvol->lvol_store->uuid, uuid);
 	lvol->old_name = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
 	if (!lvol->old_name) {
-		spdk_blob_close(&blob, _spdk_lvol_delete_blob_cb, lvol);
+		spdk_blob_close(blob, _spdk_lvol_delete_blob_cb, lvol);
 		SPDK_ERRLOG("Cannot alloc memory for lvol name\n");
 		lvolerrno = -ENOMEM;
 		free(lvol);
@@ -882,14 +882,14 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	lvolerrno = spdk_blob_resize(blob, lvol->num_clusters);
 	if (lvolerrno < 0) {
-		spdk_blob_close(&blob, _spdk_lvol_destroy_cb, lvol);
+		spdk_blob_close(blob, _spdk_lvol_destroy_cb, lvol);
 		goto invalid;
 	}
 
 	lvolerrno = spdk_blob_set_xattr(blob, "name", lvol->name,
 					strnlen(lvol->name, SPDK_LVOL_NAME_MAX) + 1);
 	if (lvolerrno < 0) {
-		spdk_blob_close(&blob, _spdk_lvol_destroy_cb, lvol);
+		spdk_blob_close(blob, _spdk_lvol_destroy_cb, lvol);
 		goto invalid;
 	}
 
@@ -1129,7 +1129,7 @@ spdk_lvol_close(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_ar
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
 
-	spdk_blob_close(&(lvol->blob), _spdk_lvol_close_blob_cb, req);
+	spdk_blob_close(lvol->blob, _spdk_lvol_close_blob_cb, req);
 }
 
 struct spdk_io_channel *

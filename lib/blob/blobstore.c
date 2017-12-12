@@ -2828,26 +2828,24 @@ spdk_blob_sync_md(struct spdk_blob *_blob, spdk_blob_op_complete cb_fn, void *cb
 static void
 _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
-	struct spdk_blob_data **blob = cb_arg;
+	struct spdk_blob_data *blob = cb_arg;
 
-	if ((*blob)->open_ref == 0) {
-		TAILQ_REMOVE(&(*blob)->bs->blobs, (*blob), link);
-		_spdk_blob_free((*blob));
+	if (blob->open_ref == 0) {
+		TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+		_spdk_blob_free(blob);
 	}
-
-	*blob = NULL;
 
 	spdk_bs_sequence_finish(seq, bserrno);
 }
 
-void spdk_blob_close(struct spdk_blob **b, spdk_blob_op_complete cb_fn, void *cb_arg)
+void spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_cpl	cpl;
 	struct spdk_blob_data	*blob;
 	spdk_bs_sequence_t	*seq;
 
 	assert(b != NULL);
-	blob = __blob_to_data(*b);
+	blob = __blob_to_data(b);
 	assert(blob != NULL);
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Closing blob %lu\n", blob->id);
@@ -2873,12 +2871,12 @@ void spdk_blob_close(struct spdk_blob **b, spdk_blob_op_complete cb_fn, void *cb
 	}
 
 	if (blob->state == SPDK_BLOB_STATE_CLEAN) {
-		_spdk_blob_close_cpl(seq, b, 0);
+		_spdk_blob_close_cpl(seq, blob, 0);
 		return;
 	}
 
 	/* Sync metadata */
-	_spdk_blob_persist(seq, blob, _spdk_blob_close_cpl, b);
+	_spdk_blob_persist(seq, blob, _spdk_blob_close_cpl, blob);
 }
 
 /* END spdk_blob_close */
@@ -3022,7 +3020,7 @@ spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
 	ctx->cb_arg = cb_arg;
 
 	/* Close the existing blob */
-	spdk_blob_close(b, _spdk_bs_iter_close_cpl, ctx);
+	spdk_blob_close(*b, _spdk_bs_iter_close_cpl, ctx);
 }
 
 int

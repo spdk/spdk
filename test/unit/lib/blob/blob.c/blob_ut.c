@@ -237,7 +237,7 @@ blob_open(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(blob == g_blob);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(blob == NULL);
 
@@ -246,7 +246,7 @@ blob_open(void)
 	 *  should succeed.
 	 */
 	blob = g_blob;
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	/*
@@ -258,7 +258,7 @@ blob_open(void)
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
@@ -356,7 +356,7 @@ blob_resize(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT((free_clusters - 10) == spdk_bs_free_cluster_count(bs));
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
@@ -453,7 +453,7 @@ blob_write(void)
 			      blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == -EINVAL);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_free_io_channel(channel);
@@ -525,7 +525,7 @@ blob_read(void)
 			     blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == -EINVAL);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_free_io_channel(channel);
@@ -579,7 +579,7 @@ blob_rw_verify(void)
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(memcmp(payload_write, payload_read, 4 * 4096) == 0);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_free_io_channel(channel);
@@ -669,7 +669,7 @@ blob_rw_verify_iov(void)
 	CU_ASSERT(memcmp(buf, &g_dev_buffer[512 * 4096], 256 * 4096) == 0);
 	free(buf);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_free_io_channel(channel);
@@ -747,7 +747,7 @@ blob_rw_verify_iov_nomem(void)
 	CU_ASSERT(req_count == bs_channel_get_req_count(channel));
 	MOCK_SET(calloc, void *, (void *)MOCK_PASS_THRU);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_free_io_channel(channel);
@@ -808,7 +808,7 @@ blob_rw_iov_read_only(void)
 	spdk_bs_io_readv_blob(blob, channel, &iov_read, 1, 0, 1, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_free_io_channel(channel);
@@ -945,7 +945,7 @@ blob_xattr(void)
 	rc = spdk_blob_remove_xattr(blob, "foobar");
 	CU_ASSERT(rc == -ENOENT);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -1009,7 +1009,7 @@ bs_load(void)
 	rc = spdk_blob_resize(blob, 10);
 	CU_ASSERT(rc == 0);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	blob = NULL;
 	g_blob = NULL;
@@ -1054,7 +1054,7 @@ bs_load(void)
 
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	blob = NULL;
 	g_blob = NULL;
@@ -1237,7 +1237,7 @@ bs_unload(void)
 
 	/* Close the blob, then successfully unload blobstore */
 	g_bserrno = -1;
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(blob == NULL);
 
@@ -1380,7 +1380,7 @@ bs_usable_clusters(void)
 		CU_ASSERT(rc == 0);
 
 		g_bserrno = -1;
-		spdk_blob_close(&g_blob, blob_op_complete, NULL);
+		spdk_blob_close(g_blob, blob_op_complete, NULL);
 		CU_ASSERT(g_bserrno == 0);
 
 		CU_ASSERT(spdk_bs_total_data_cluster_count(g_bs) == clusters);
@@ -1464,7 +1464,7 @@ bs_resize_md(void)
 		CU_ASSERT(g_bserrno == 0);
 		CU_ASSERT(g_blob !=  NULL);
 		g_bserrno = -1;
-		spdk_blob_close(&g_blob, blob_op_complete, NULL);
+		spdk_blob_close(g_blob, blob_op_complete, NULL);
 		CU_ASSERT(g_bserrno == 0);
 	}
 
@@ -1574,7 +1574,7 @@ blob_serialize(void)
 
 	/* Close the blobs */
 	for (i = 0; i < 2; i++) {
-		spdk_blob_close(&blob[i], blob_op_complete, NULL);
+		spdk_blob_close(blob[i], blob_op_complete, NULL);
 		CU_ASSERT(g_bserrno == 0);
 	}
 
@@ -1603,7 +1603,7 @@ blob_serialize(void)
 
 		CU_ASSERT(spdk_blob_get_num_clusters(blob[i]) == 3);
 
-		spdk_blob_close(&blob[i], blob_op_complete, NULL);
+		spdk_blob_close(blob[i], blob_op_complete, NULL);
 		CU_ASSERT(g_bserrno == 0);
 	}
 
@@ -1640,7 +1640,7 @@ blob_crc(void)
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(blob == NULL);
 
@@ -1754,7 +1754,7 @@ blob_dirty_shutdown(void)
 	rc = spdk_blob_resize(blob, 10);
 	CU_ASSERT(rc == 0);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	blob = NULL;
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
@@ -1786,7 +1786,7 @@ blob_dirty_shutdown(void)
 	rc = spdk_blob_resize(blob, 20);
 	CU_ASSERT(rc == 0);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	blob = NULL;
 	g_blob = NULL;
@@ -1808,7 +1808,7 @@ blob_dirty_shutdown(void)
 	blob = g_blob;
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 20);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	blob = NULL;
 	g_blob = NULL;
@@ -1837,7 +1837,7 @@ blob_dirty_shutdown(void)
 	rc = spdk_blob_resize(blob, 10);
 	CU_ASSERT(rc == 0);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	blob = NULL;
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
@@ -1865,7 +1865,7 @@ blob_dirty_shutdown(void)
 	CU_ASSERT(value_len == 8);
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	spdk_bs_delete_blob(g_bs, blobid2, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
@@ -1885,7 +1885,7 @@ blob_dirty_shutdown(void)
 	spdk_bs_open_blob(g_bs, blobid1, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blob != NULL);
-	spdk_blob_close(&g_blob, blob_op_complete, NULL);
+	spdk_blob_close(g_blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
@@ -1923,7 +1923,7 @@ blob_dirty_shutdown(void)
 	rc = spdk_blob_set_xattr(blob, "length", &length, sizeof(length));
 	CU_ASSERT(rc == 0);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	blob = NULL;
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
@@ -1941,7 +1941,7 @@ blob_dirty_shutdown(void)
 	rc = spdk_blob_set_xattr(blob, "length", &length, sizeof(length));
 	CU_ASSERT(rc == 0);
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	blob = NULL;
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
@@ -1971,7 +1971,7 @@ blob_dirty_shutdown(void)
 	CU_ASSERT(g_blob != NULL);
 	blob = g_blob;
 
-	spdk_blob_close(&blob, blob_op_complete, NULL);
+	spdk_blob_close(blob, blob_op_complete, NULL);
 	blob = NULL;
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
@@ -2046,15 +2046,15 @@ blob_flags(void)
 	CU_ASSERT(g_bserrno == 0);
 
 	g_bserrno = -1;
-	spdk_blob_close(&blob_invalid, blob_op_complete, NULL);
+	spdk_blob_close(blob_invalid, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	blob_invalid = NULL;
 	g_bserrno = -1;
-	spdk_blob_close(&blob_data_ro, blob_op_complete, NULL);
+	spdk_blob_close(blob_data_ro, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	blob_data_ro = NULL;
 	g_bserrno = -1;
-	spdk_blob_close(&blob_md_ro, blob_op_complete, NULL);
+	spdk_blob_close(blob_md_ro, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	blob_md_ro = NULL;
 
@@ -2097,9 +2097,9 @@ blob_flags(void)
 	CU_ASSERT(__blob_to_data(blob_md_ro)->data_ro == false);
 	CU_ASSERT(__blob_to_data(blob_md_ro)->md_ro == true);
 
-	spdk_blob_close(&blob_data_ro, blob_op_complete, NULL);
+	spdk_blob_close(blob_data_ro, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
-	spdk_blob_close(&blob_md_ro, blob_op_complete, NULL);
+	spdk_blob_close(blob_md_ro, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);

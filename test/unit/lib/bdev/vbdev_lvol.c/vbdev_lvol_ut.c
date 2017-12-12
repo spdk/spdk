@@ -71,7 +71,7 @@ spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, 
 }
 
 void
-spdk_blob_close(struct spdk_blob **b, spdk_blob_op_complete cb_fn, void *cb_arg)
+spdk_blob_close(struct spdk_blob *b, spdk_blob_op_complete cb_fn, void *cb_arg)
 {
 }
 
