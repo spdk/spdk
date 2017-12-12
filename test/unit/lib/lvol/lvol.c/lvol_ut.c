@@ -88,13 +88,13 @@ struct lvol_ut_bs_dev {
 };
 
 void
-spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob **b,
+spdk_bs_iter_next(struct spdk_blob_store *bs, struct spdk_blob *b,
 		  spdk_blob_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_blob *next;
 	int _errno = 0;
 
-	next = TAILQ_NEXT(*b, link);
+	next = TAILQ_NEXT(b, link);
 	if (next == NULL) {
 		_errno = -ENOENT;
 	} else if (next->load_status != 0) {
