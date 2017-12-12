@@ -648,6 +648,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	struct spdk_bdev *bdev;
 	struct lvol_store_bdev *lvs_bdev;
 	uint64_t total_size;
+	unsigned char *alias;
 	int rc;
 
 	if (!lvol->old_name) {
@@ -666,7 +667,7 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		return NULL;
 	}
 
-	bdev->name = spdk_sprintf_alloc("%s/%s", lvs_bdev->lvs->name, lvol->name);
+	bdev->name = spdk_sprintf_alloc("%s", lvol->old_name);
 	if (bdev->name == NULL) {
 		SPDK_ERRLOG("Cannot alloc memory for bdev name\n");
 		free(bdev);
@@ -687,6 +688,12 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		free(bdev->name);
 		free(bdev);
 		return NULL;
+	}
+
+	if (lvs_bdev->lvs->name != NULL && lvol->name != NULL) {
+		alias = spdk_sprintf_alloc("%s/%s", lvs_bdev->lvs->name, lvol->name);
+		spdk_bdev_alias_add(bdev, alias);
+		free(alias);
 	}
 
 	return bdev;
@@ -734,6 +741,72 @@ vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 	}
 
 	return rc;
+}
+
+int
+vbdev_lvs_rename(struct spdk_lvol_store *lvs, const char *new_lvs_name,
+		 spdk_lvs_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol *tmp;
+	struct lvol_store_bdev *lvs_bdev;
+
+	lvs = vbdev_get_lvol_store_by_name(new_lvs_name);
+	if (lvs != NULL) {
+		SPDK_ERRLOG("lvs with name: %s already exists\n", new_lvs_name);
+		if (cb_fn != NULL) {
+			cb_fn(cb_arg, -EEXIST);
+		}
+		return -EEXIST;
+	}
+
+	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
+	if (!lvs_bdev) {
+		SPDK_ERRLOG("No such lvol store found\n");
+		if (cb_fn != NULL) {
+			cb_fn(cb_arg, -ENODEV);
+		}
+		return -ENODEV;
+	}
+
+	strncpy(lvs->name, new_lvs_name, SPDK_LVS_NAME_MAX);
+
+	TAILQ_FOREACH(tmp, &lvs_bdev->lvs->lvols, link) {
+		spdk_sprintf_alloc(tmp->bdev->name, SPDK_LVS_NAME_MAX, "%s/%s", new_lvs_name, tmp->name);
+	}
+
+	cb_fn(cb_arg, 0);
+
+	return 0;
+}
+
+int
+vbdev_lvol_rename(const char *old_lvol_name, const char *new_lvol_name,
+		  spdk_lvs_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_bdev *bdev;
+	int rc;
+
+	bdev = spdk_bdev_get_by_name(old_lvol_name);
+	if (bdev == NULL) {
+		SPDK_ERRLOG("bdev '%s' does not exist\n", old_lvol_name);
+		return -ENOENT;
+	}
+
+	rc = spdk_bdev_alias_add(bdev, new_lvol_name);
+	if (rc != 0) {
+		SPDK_ERRLOG("cannot add alias '%s' \n", new_lvol_name);
+		return rc;
+	}
+
+	rc = spdk_bdev_alias_del(bdev, old_lvol_name);
+	if (rc != 0) {
+		SPDK_ERRLOG("cannot remove alias '%s' \n", old_lvol_name);
+		return rc;
+	}
+
+	cb_fn(cb_arg, 0);
+
+	return 0;
 }
 
 static void
