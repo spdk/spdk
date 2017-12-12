@@ -400,6 +400,8 @@ _bdev_remove_cb(struct spdk_vhost_dev *vdev, void *arg)
 		bvdev->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, bvdev, 0);
 	}
 
+	spdk_bdev_close(bvdev->bdev_desc);
+	bvdev->bdev_desc = NULL;
 	bvdev->bdev = NULL;
 	return 0;
 }
@@ -738,7 +740,10 @@ spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 		return rc;
 	}
 
-	spdk_bdev_close(bvdev->bdev_desc);
+	if (bvdev->bdev_desc) {
+		spdk_bdev_close(bvdev->bdev_desc);
+		bvdev->bdev_desc = NULL;
+	}
 	bvdev->bdev = NULL;
 
 	spdk_dma_free(bvdev);
