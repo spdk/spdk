@@ -1,0 +1,145 @@
+#!/usr/bin/env python
+import io
+import sys
+import random
+import signal
+import subprocess
+import pprint
+import socket
+
+from errno import ESRCH
+from os import kill, path, unlink, path, listdir, remove
+from nbd_rpc_commands_lib import Commands_Rpc
+from time import sleep
+
+
+def test_counter():
+    '''
+    :return: the number of tests
+    '''
+    return 4
+
+
+def header(num):
+    test_name = {
+        1: 'start_nbd_disk_positive',
+        2: 'list_nbd_disks_one_by_one_positive',
+        3: 'list_all_nbd_disks_positive',
+        4: 'stop_nbd_disk_positive',
+    }
+    print("========================================================")
+    print("Test Case {num}: Start".format(num=num))
+    print("Test Name: {name}".format(name=test_name[num]))
+    print("========================================================")
+
+def footer(num):
+    print("Test Case {num}: END\n".format(num=num))
+    print("========================================================")
+
+class TestCases(object):
+
+    def __init__(self, rpc_py, pid_file, app_file, conf_file):
+        self.c = Commands_Rpc(rpc_py)
+        self.pid_file = pid_file
+        self.app_file = app_file
+        self.conf_file = conf_file
+
+    def _stop_nbd_app(self):
+        with io.open(self.pid_file, 'r') as nbd_pid:
+            pid = int(nbd_pid.readline())
+            if pid:
+                try:
+                    kill(pid, signal.SIGTERM)
+                    for count in range(30):
+                        print("Info: Terminating nbd app...")
+                        sleep(1)
+                        kill(pid, 0)
+                except OSError, err:
+                    if err.errno == ESRCH:
+                        pass
+                    else:
+                        return 1
+                else:
+                    return 1
+            else:
+                return 1
+        return 0
+
+    def _start_nbd_app(self):
+        # start nbd app and record its pid
+        cmd = "{app} -c {config} & pid=$!; echo $pid > {pidf}".format(
+            app=self.app_file, config=self.conf_file, pidf=self.pid_file)
+        subprocess.call(cmd, shell=True)
+
+        # wait for listen
+        sock = socket.socket(socket.AF_UNIX)
+        for timeo in range(30):
+            if timeo == 29:
+                print("ERROR: Timeout on waitting for app start")
+                return 1
+            try:
+                sock.connect("/var/tmp/spdk.sock")
+            except socket.error as e:
+                print("Info: Waitting for RPC Unix socket...")
+                sleep(1)
+                continue
+            else:
+                sock.close()
+                break
+        return 0
+
+    # positive tests
+    def test_case1(self):
+        header(1)
+        unclaimed_bdevs = self.c.get_unclaimed_bdevs()
+        unused_nbds = self.c.get_unused_nbds()
+        spdk_nbds, fail_count = self.c.start_nbd_disks(unclaimed_bdevs, unused_nbds)
+        # restart nbd app to keep a clear configuration
+        fail_count += self._stop_nbd_app()
+        remove(self.pid_file)
+        if self._start_nbd_app() != 0:
+            fail_count += 1
+        footer(1)
+        return fail_count
+
+    def test_case2(self):
+        header(2)
+        unclaimed_bdevs = self.c.get_unclaimed_bdevs()
+        unused_nbds = self.c.get_unused_nbds()
+        spdk_nbds, fail_count = self.c.start_nbd_disks(unclaimed_bdevs, unused_nbds)
+        fail_count += self.c.get_nbd_disks(spdk_nbds)
+        # restart nbd app to keep a clear configuration
+        fail_count += self._stop_nbd_app()
+        remove(self.pid_file)
+        if self._start_nbd_app() != 0:
+            fail_count += 1
+        footer(2)
+        return fail_count
+
+    def test_case3(self):
+        header(3)
+        unclaimed_bdevs = self.c.get_unclaimed_bdevs()
+        unused_nbds = self.c.get_unused_nbds()
+        spdk_nbds, fail_count = self.c.start_nbd_disks(unclaimed_bdevs, unused_nbds)
+        fail_count += self.c.get_nbd_disks([])
+        # restart nbd app to keep a clear configuration
+        fail_count += self._stop_nbd_app()
+        remove(self.pid_file)
+        if self._start_nbd_app() != 0:
+            fail_count += 1
+        footer(3)
+        return fail_count
+
+    def test_case4(self):
+        header(4)
+        unclaimed_bdevs = self.c.get_unclaimed_bdevs()
+        unused_nbds = self.c.get_unused_nbds()
+        spdk_nbds, fail_count = self.c.start_nbd_disks(unclaimed_bdevs, unused_nbds)
+        fail_count += self.c.stop_nbd_disks(spdk_nbds)
+        # restart nbd app to keep a clear configuration
+        fail_count += self._stop_nbd_app()
+        remove(self.pid_file)
+        if self._start_nbd_app() != 0:
+            fail_count += 1
+        footer(4)
+        return fail_count
