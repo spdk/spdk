@@ -274,6 +274,17 @@ spdk_nvme_get_ctrlr_by_trid_unsafe(const struct spdk_nvme_transport_id *trid)
 	return NULL;
 }
 
+struct spdk_nvme_ctrlr *
+spdk_nvme_get_first_shared_ctrlr(void)
+{
+	return NULL;
+}
+
+struct spdk_nvme_ctrlr *
+spdk_nvme_get_next_shared_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return NULL;
+}
 
 #if 0 /* TODO: update PCIe-specific unit test */
 static void

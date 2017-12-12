@@ -275,6 +275,20 @@ _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 			}
 		}
 	}
+
+	/* This is a work around for vfio-attached device hot remove detection. */
+	for (ctrlr = spdk_nvme_get_first_shared_ctrlr(); ctrlr != NULL;
+	     ctrlr = spdk_nvme_get_next_shared_ctrlr(ctrlr)) {
+		if (ctrlr->is_removed) {
+			nvme_ctrlr_fail(ctrlr, true);
+			/* get the user app to clean up and stop I/O */
+			if (remove_cb) {
+				nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+				remove_cb(cb_ctx, ctrlr);
+				nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+			}
+		}
+	}
 	return 0;
 }
 

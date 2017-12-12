@@ -1750,6 +1750,11 @@ spdk_nvme_ctrlr_process_admin_completions(struct spdk_nvme_ctrlr *ctrlr)
 	num_completions = spdk_nvme_qpair_process_completions(ctrlr->adminq, 0);
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 
+	/* work around for detection of hot remove of vfio-attached devices */
+	if (ctrlr->is_removed == false) {
+		spdk_nvme_ctrlr_get_regs_csts(ctrlr);
+	}
+
 	return num_completions;
 }
 
