@@ -160,157 +160,6 @@ spdk_iscsi_portal_close(struct spdk_iscsi_portal *p)
 	}
 }
 
-static int
-spdk_iscsi_portal_create_from_configline(const char *portalstring,
-		struct spdk_iscsi_portal **ip,
-		int dry_run)
-{
-	char *host = NULL, *port = NULL;
-	const char *cpumask_str;
-	uint64_t cpumask = 0;
-
-	int n, len, rc = -1;
-	const char *p, *q;
-
-	if (portalstring == NULL) {
-		SPDK_ERRLOG("portal error\n");
-		goto error_out;
-	}
-
-	if (portalstring[0] == '[') {
-		/* IPv6 */
-		p = strchr(portalstring + 1, ']');
-		if (p == NULL) {
-			SPDK_ERRLOG("portal error\n");
-			goto error_out;
-		}
-		p++;
-		n = p - portalstring;
-		if (!dry_run) {
-			host = malloc(n + 1);
-			if (!host) {
-				perror("host");
-				goto error_out;
-			}
-			memcpy(host, portalstring, n);
-			host[n] = '\0';
-		}
-		if (p[0] == '\0') {
-			if (!dry_run) {
-				port = malloc(PORTNUMSTRLEN);
-				if (!port) {
-					perror("port");
-					goto error_out;
-				}
-				snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
-			}
-		} else {
-			if (p[0] != ':') {
-				SPDK_ERRLOG("portal error\n");
-				goto error_out;
-			}
-			if (!dry_run) {
-				q = strchr(portalstring, '@');
-				if (q == NULL) {
-					q = portalstring + strlen(portalstring);
-				}
-				len = q - p - 1;
-
-				port = malloc(len + 1);
-				if (!port) {
-					perror("port");
-					goto error_out;
-				}
-				memset(port, 0, len + 1);
-				memcpy(port, p + 1, len);
-			}
-		}
-	} else {
-		/* IPv4 */
-		p = strchr(portalstring, ':');
-		if (p == NULL) {
-			p = portalstring + strlen(portalstring);
-		}
-		n = p - portalstring;
-		if (!dry_run) {
-			host = malloc(n + 1);
-			if (!host) {
-				perror("host");
-				goto error_out;
-			}
-			memcpy(host, portalstring, n);
-			host[n] = '\0';
-		}
-		if (p[0] == '\0') {
-			if (!dry_run) {
-				port = malloc(PORTNUMSTRLEN);
-				if (!port) {
-					perror("port");
-					goto error_out;
-				}
-				snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
-			}
-		} else {
-			if (p[0] != ':') {
-				SPDK_ERRLOG("portal error\n");
-				goto error_out;
-			}
-			if (!dry_run) {
-				q = strchr(portalstring, '@');
-				if (q == NULL) {
-					q = portalstring + strlen(portalstring);
-				}
-
-				if (q == p) {
-					SPDK_ERRLOG("no port specified\n");
-					goto error_out;
-				}
-
-				len = q - p - 1;
-				port = malloc(len + 1);
-				if (!port) {
-					perror("port");
-					goto error_out;
-				}
-				memset(port, 0, len + 1);
-				memcpy(port, p + 1, len);
-			}
-
-		}
-	}
-
-	p = strchr(portalstring, '@');
-	if (p != NULL) {
-		cpumask_str = p + 1;
-		if (spdk_app_parse_core_mask(cpumask_str, &cpumask)) {
-			SPDK_ERRLOG("invalid portal cpumask %s\n", cpumask_str);
-			goto error_out;
-		}
-		if ((cpumask & spdk_app_get_core_mask()) != cpumask) {
-			SPDK_ERRLOG("portal cpumask %s not a subset of "
-				    "reactor mask %jx\n", cpumask_str,
-				    spdk_app_get_core_mask());
-			goto error_out;
-		}
-	} else {
-		cpumask = spdk_app_get_core_mask();
-	}
-
-	if (!dry_run) {
-		*ip = spdk_iscsi_portal_create(host, port, cpumask);
-		if (!*ip) {
-			goto error_out;
-		}
-	}
-
-	rc = 0;
-error_out:
-	free(host);
-	free(port);
-
-	return rc;
-}
-
 struct spdk_iscsi_portal_grp *
 spdk_iscsi_portal_grp_create(int tag)
 {
@@ -361,6 +210,31 @@ spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.pg_head, pg, tailq);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+}
+
+void
+spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
+				 struct spdk_iscsi_portal *p)
+{
+	assert(pg != NULL);
+	assert(p != NULL);
+
+	p->group = pg;
+	TAILQ_INSERT_TAIL(&pg->head, p, per_pg_tailq);
+}
+
+struct spdk_iscsi_portal_grp *
+spdk_iscsi_portal_grp_find_by_tag(int tag)
+{
+	struct spdk_iscsi_portal_grp *pg;
+
+	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
+		if (pg->tag == tag) {
+			return pg;
+		}
+	}
+
+	return NULL;
 }
 
 /**
@@ -420,25 +294,200 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 	return rc;
 }
 
-int
-spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
+struct config_portal {
+	char *host;
+	char *port;
+	uint64_t cpumask;
+};
+
+struct config_portal_list {
+	int num_portals;
+	struct config_portal portals[MAX_PORTAL];
+};
+
+struct config_portal_group {
+	int tag;
+	struct config_portal_list portal_list;
+};
+
+static void
+free_config_portal(struct config_portal *portal)
 {
-	struct spdk_iscsi_portal_grp *pg;
-	struct spdk_iscsi_portal	*p;
+	free(portal->host);
+	free(portal->port);
+}
+
+static void
+free_config_portal_list(struct config_portal_list *pl)
+{
+	int i;
+
+	for (i = 0; i < pl->num_portals; i++) {
+		free_config_portal(&pl->portals[i]);
+	}
+}
+
+static void
+free_config_portal_group(struct config_portal_group *pg)
+{
+	free_config_portal_list(&pg->portal_list);
+}
+
+static int
+spdk_iscsi_portal_decode_config_string(const char *portalstring,
+				       struct config_portal *portalconf)
+{
+	const char *cpumask_str;
+	int n, len;
+	const char *p, *q;
+
+	if (portalstring == NULL) {
+		SPDK_ERRLOG("portal error\n");
+		goto error_out;
+	}
+
+	if (portalstring[0] == '[') {
+		/* IPv6 */
+		p = strchr(portalstring + 1, ']');
+		if (p == NULL) {
+			SPDK_ERRLOG("portal error\n");
+			goto error_out;
+		}
+		p++;
+		n = p - portalstring;
+
+		portalconf->host = malloc(n + 1);
+		if (!portalconf->host) {
+			perror("host");
+			goto error_out;
+		}
+		memcpy(portalconf->host, portalstring, n);
+		portalconf->host[n] = '\0';
+
+		if (p[0] == '\0') {
+			portalconf->port = malloc(PORTNUMSTRLEN);
+			if (!portalconf->port) {
+				perror("port");
+				goto error_out;
+			}
+			snprintf(portalconf->port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
+		} else {
+			if (p[0] != ':') {
+				SPDK_ERRLOG("portal error\n");
+				goto error_out;
+			}
+
+			q = strchr(portalstring, '@');
+			if (q == NULL) {
+				q = portalstring + strlen(portalstring);
+			}
+			len = q - p - 1;
+
+			portalconf->port = malloc(len + 1);
+			if (!portalconf->port) {
+				perror("port");
+				goto error_out;
+			}
+			memset(portalconf->port, 0, len + 1);
+			memcpy(portalconf->port, p + 1, len);
+		}
+	} else {
+		/* IPv4 */
+		p = strchr(portalstring, ':');
+		if (p == NULL) {
+			p = portalstring + strlen(portalstring);
+		}
+		n = p - portalstring;
+
+		portalconf->host = malloc(n + 1);
+		if (!portalconf->host) {
+			perror("host");
+			goto error_out;
+		}
+		memcpy(portalconf->host, portalstring, n);
+		portalconf->host[n] = '\0';
+
+		if (p[0] == '\0') {
+			portalconf->port = malloc(PORTNUMSTRLEN);
+			if (!portalconf->port) {
+				perror("port");
+				goto error_out;
+			}
+			snprintf(portalconf->port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
+		} else {
+			if (p[0] != ':') {
+				SPDK_ERRLOG("portal error\n");
+				goto error_out;
+			}
+
+			q = strchr(portalstring, '@');
+			if (q == NULL) {
+				q = portalstring + strlen(portalstring);
+			}
+
+			if (q == p) {
+				SPDK_ERRLOG("no port specified\n");
+				goto error_out;
+			}
+
+			len = q - p - 1;
+			portalconf->port = malloc(len + 1);
+			if (!portalconf->port) {
+				perror("port");
+				goto error_out;
+			}
+			memset(portalconf->port, 0, len + 1);
+			memcpy(portalconf->port, p + 1, len);
+		}
+	}
+
+	p = strchr(portalstring, '@');
+	if (p != NULL) {
+		cpumask_str = p + 1;
+		if (spdk_app_parse_core_mask(cpumask_str, &portalconf->cpumask)) {
+			SPDK_ERRLOG("invalid portal cpumask %s\n", cpumask_str);
+			goto error_out;
+		}
+		if ((portalconf->cpumask & spdk_app_get_core_mask()) != portalconf->cpumask) {
+			SPDK_ERRLOG("portal cpumask %s not a subset of "
+				    "reactor mask %jx\n", cpumask_str,
+				    spdk_app_get_core_mask());
+			goto error_out;
+		}
+	} else {
+		portalconf->cpumask = spdk_app_get_core_mask();
+	}
+
+	return 0;
+
+error_out:
+	if (portalconf->host) {
+		free(portalconf->host);
+	}
+	if (portalconf->port) {
+		free(portalconf->port);
+	}
+
+	return -1;
+}
+
+static int
+spdk_iscsi_portal_grp_decode_config_section(struct spdk_conf_section *sp,
+		struct config_portal_group *pg)
+{
+	int i, rc;
 	const char *val;
 	char *label, *portal;
-	int portals = 0, i = 0, rc = 0;
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add portal group (from config file) %d\n",
-		      spdk_conf_section_get_num(sp));
+	pg->tag = spdk_conf_section_get_num(sp);
 
 	val = spdk_conf_section_get_val(sp, "Comment");
 	if (val != NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Comment %s\n", val);
 	}
 
-	/* counts number of definitions */
-	for (i = 0; ; i++) {
+	/* Portal entries will be truncated by MAX_PORTALS */
+	for (i = 0; i < MAX_PORTAL; i++) {
 		/*
 		 * label is no longer used, but we keep it in the config
 		 *  file definition so that we do not break existing config
@@ -449,80 +498,65 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 		if (label == NULL || portal == NULL) {
 			break;
 		}
-		rc = spdk_iscsi_portal_create_from_configline(portal, &p, 1);
+		rc = spdk_iscsi_portal_decode_config_string(portal,
+				&pg->portal_list.portals[i]);
 		if (rc < 0) {
 			SPDK_ERRLOG("parse portal error (%s)\n", portal);
-			goto error_out;
+			return -1;
 		}
 	}
+	pg->portal_list.num_portals = i;
 
-	portals = i;
-	if (portals > MAX_PORTAL) {
-		SPDK_ERRLOG("%d > MAX_PORTAL\n", portals);
+	return 0;
+}
+
+int
+spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
+{
+	struct config_portal_group conf_pg;
+	struct config_portal_list *conf_pl;
+	struct spdk_iscsi_portal *portal_list[MAX_PORTAL] = {};
+	int i = 0, rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add portal group (from config file) %d\n",
+		      spdk_conf_section_get_num(sp));
+
+	memset(&conf_pg, 0, sizeof(conf_pg));
+
+	rc = spdk_iscsi_portal_grp_decode_config_section(sp, &conf_pg);
+	if (rc != 0) {
+		SPDK_ERRLOG("parse config section error\n");
 		goto error_out;
 	}
 
-	pg = spdk_iscsi_portal_grp_create(spdk_conf_section_get_num(sp));
-	if (!pg) {
-		SPDK_ERRLOG("portal group malloc error (%s)\n", spdk_conf_section_get_name(sp));
+	conf_pl = &conf_pg.portal_list;
+
+	for (i = 0; i < conf_pg.portal_list.num_portals; i++) {
+		portal_list[i] = spdk_iscsi_portal_create(conf_pl->portals[i].host,
+				 conf_pl->portals[i].port,
+				 conf_pl->portals[i].cpumask);
+		if (portal_list[i] == NULL) {
+			SPDK_ERRLOG("portal list allocation failed\n");
+			goto error_out;
+		}
+	}
+
+	rc = spdk_iscsi_portal_grp_create_from_portal_list(conf_pg.tag, portal_list,
+			conf_pg.portal_list.num_portals);
+	if (rc < 0) {
+		SPDK_ERRLOG("create_from_portal_list failed\n");
 		goto error_out;
 	}
 
-	for (i = 0; i < portals; i++) {
-		label = spdk_conf_section_get_nmval(sp, "Portal", i, 0);
-		portal = spdk_conf_section_get_nmval(sp, "Portal", i, 1);
-		if (label == NULL || portal == NULL) {
-			spdk_iscsi_portal_grp_destroy(pg);
-			SPDK_ERRLOG("portal error\n");
-			goto error_out;
-		}
-
-		rc = spdk_iscsi_portal_create_from_configline(portal, &p, 0);
-		if (rc < 0) {
-			spdk_iscsi_portal_grp_destroy(pg);
-			SPDK_ERRLOG("parse portal error (%s)\n", portal);
-			goto error_out;
-		}
-
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
-			      "RIndex=%d, Host=%s, Port=%s, Tag=%d\n",
-			      i, p->host, p->port, spdk_conf_section_get_num(sp));
-
-		spdk_iscsi_portal_grp_add_portal(pg, p);
-	}
-
-	/* Add portal group to the end of the pg list */
-	spdk_iscsi_portal_grp_register(pg);
-
+	free_config_portal_group(&conf_pg);
 	return 0;
 
 error_out:
-	return -1;
-}
-
-void
-spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
-				 struct spdk_iscsi_portal *p)
-{
-	assert(pg != NULL);
-	assert(p != NULL);
-
-	p->group = pg;
-	TAILQ_INSERT_TAIL(&pg->head, p, per_pg_tailq);
-}
-
-struct spdk_iscsi_portal_grp *
-spdk_iscsi_portal_grp_find_by_tag(int tag)
-{
-	struct spdk_iscsi_portal_grp *pg;
-
-	TAILQ_FOREACH(pg, &g_spdk_iscsi.pg_head, tailq) {
-		if (pg->tag == tag) {
-			return pg;
-		}
+	for (; i > 0; --i) {
+		spdk_iscsi_portal_destroy(portal_list[i - 1]);
 	}
-
-	return NULL;
+	free_config_portal_group(&conf_pg);
+	return -1;
 }
 
 int
