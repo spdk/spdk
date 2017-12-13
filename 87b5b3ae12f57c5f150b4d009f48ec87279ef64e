@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "008b1559_ccb8af2a",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-13T05:28:23Z",
+      "side": 1,
+      "message": "zeroing super block",
+      "revId": "87b5b3ae12f57c5f150b4d009f48ec87279ef64e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "debb979c_d94b0108",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-13T05:28:23Z",
+      "side": 1,
+      "message": "No unmap_device now.",
+      "revId": "87b5b3ae12f57c5f150b4d009f48ec87279ef64e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8f6e19b8_418a40a9",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 506,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-13T05:28:23Z",
+      "side": 1,
+      "message": "negative",
+      "revId": "87b5b3ae12f57c5f150b4d009f48ec87279ef64e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
