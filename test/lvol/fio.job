@@ -1,0 +1,26 @@
+[global]
+thread=1
+
+[check_zeros]
+rw=read
+verify=pattern
+verify_pattern=0x00
+filename=/dev/nbd0
+
+[write_verify]
+rw=write
+do_verify=1
+verify=md5
+verify_backlog=1024
+verify=md5
+filename=/dev/nbd0:/dev/nbd1
+
+[fill_70_percent]
+rw=write
+size=20M
+filename=/dev/nbd0:/dev/nbd1
+
+[fill_45_percent]
+rw=write
+size 10M
+filename=/dev/nbd0:/dev/nbd1
