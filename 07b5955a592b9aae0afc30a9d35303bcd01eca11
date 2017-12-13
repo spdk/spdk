@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3b082b6e_2e90d4f3",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-13T21:51:11Z",
+      "side": 1,
+      "message": "So FYI we\u0027re trending away from test plans, at least checked into the repo. Their purpose should be to communicate intention between developers to facilitate quicker test implementation. If there was a plan for this already, I\u0027m not saying your comment isn\u0027t valid just making the point that the solution should be to make sure the code is what we want and once the patch is merged the plan means nothing (so no need to update it).\n\nThat said, seems like the pure write case may be overkill and I might argue against 3 q depths as well, I\u0027d probably choose QD 1 and 128 for the two depths.",
+      "parentUuid": "003f60ef_86ccb275",
+      "range": {
+        "startLine": 36,
+        "startChar": 1,
+        "endLine": 39,
+        "endChar": 16
+      },
+      "revId": "07b5955a592b9aae0afc30a9d35303bcd01eca11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aed266e6_d6294e13",
         "filename": "test/iscsi_tgt/fio/fio.sh",
         "patchSetId": 17
@@ -59,6 +83,30 @@
       "writtenOn": "2017-12-08T08:11:45Z",
       "side": 1,
       "message": "Why do you call gen_nvme.sh and then pipe it to a grep, instead of just calling:\n\"lspci -mm -n | grep 0108 | tr -d \u0027\"\u0027 | awk -F \" \" \u0027{print \"0000:\"$1}\u0027\"? (which is in gen_nvme.sh by the way)\nThis also gives you a list of PCIe addresses and you don\u0027t have to call out an external script",
+      "range": {
+        "startLine": 75,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 108
+      },
+      "revId": "07b5955a592b9aae0afc30a9d35303bcd01eca11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52a85bdd_1e3fa95e",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-13T21:51:11Z",
+      "side": 1,
+      "message": "and I think is consistent with a bunch of other test scripts as well",
+      "parentUuid": "312280b0_24af5a8d",
       "range": {
         "startLine": 75,
         "startChar": 0,
@@ -111,6 +159,23 @@
         "endLine": 108,
         "endChar": 14
       },
+      "revId": "07b5955a592b9aae0afc30a9d35303bcd01eca11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "981287e7_c888eb24",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-13T21:51:11Z",
+      "side": 1,
+      "message": "sorry for what might be a stupid question, but what\u0027s the purpose fo the fio runs above? The 1 sec is for per check-in and the 10 sec nightly I\u0027m guessing but why do either? I thought this was a test where we hotplug during IO and that IO is generated via the fio_py command below, no?",
       "revId": "07b5955a592b9aae0afc30a9d35303bcd01eca11",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
