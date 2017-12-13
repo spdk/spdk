@@ -34,10 +34,9 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/env.h"
-#include "spdk/event.h"
 #include "spdk/conf.h"
 #include "spdk/net.h"
+#include "spdk/scsi.h"
 
 #include "spdk_internal/log.h"
 
@@ -46,7 +45,6 @@
 #include "iscsi/tgt_node.h"
 #include "iscsi/portal_grp.h"
 #include "iscsi/init_grp.h"
-#include "spdk/scsi.h"
 #include "iscsi/task.h"
 
 #define MAX_TMPBUF 1024
