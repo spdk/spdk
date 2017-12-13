@@ -50,9 +50,15 @@ function usage() {
                                     550: 'delete_bdev_positive',
                                     600: 'construct_lvol_store_with_cluster_size_max',
                                     601 'construct_lvol_store_with_cluster_size_min',
-                                    650: 'tasting_positive',
-                                    651: 'tasting_lvol_store_positive',
-                                    700: 'SIGTERM'
+                                    650: 'thin_provisioning_check_space',
+                                    651: 'thin_provisioning_read_empty_bdev',
+                                    652: 'thin_provisionind_data_integrity_test',
+                                    653: 'thin_provisioning_resize',
+                                    654: 'thin_provisioning_disks_size_bigger_than_lvs_size',
+                                    655: 'thin_provisioning_filling_disks_less_than_lvs_size',
+                                    700: 'tasting_positive',
+                                    701: 'tasting_lvol_store_positive',
+                                    750: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"
