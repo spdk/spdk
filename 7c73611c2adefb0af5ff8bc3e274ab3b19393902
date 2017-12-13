@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a5c05212_56e693a8",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-13T12:42:45Z",
+      "side": 1,
+      "message": "Yes, \u003csys/cpuset.h\u003e will be fine",
+      "parentUuid": "8a7a2e0a_bdcd5cc8",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 23
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "23792ef0_ec892a5f",
         "filename": "lib/env_dpdk/cpuset.c",
         "patchSetId": 2
@@ -111,6 +135,78 @@
     },
     {
       "key": {
+        "uuid": "a7310bf6_9f167888",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-13T12:42:45Z",
+      "side": 1,
+      "message": "Unit tests for this function as well as for parsing are added in the update.",
+      "parentUuid": "8c30ca3f_ae37543d",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 18
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "333163cb_2b930d46",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-13T12:42:45Z",
+      "side": 1,
+      "message": "While we\u0027re supporting more than one system (Linux and FreeBSD) and implementation differ a little bit, I prefer to keep spdk_cpuset_t opaque and the most generic as it is possible.",
+      "parentUuid": "aa2e66fb_a777ea75",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 18
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21a34ada_7ff0a055",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-13T12:42:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a182fd7e_804916d0",
+      "range": {
+        "startLine": 4,
+        "startChar": 65,
+        "endLine": 4,
+        "endChar": 66
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0fb2387c_2704bfc1",
         "filename": "lib/env_dpdk/cpuset.c",
         "patchSetId": 2
@@ -128,6 +224,24 @@
     },
     {
       "key": {
+        "uuid": "78f82420_c82c7336",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-13T12:42:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0fb2387c_2704bfc1",
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e77fdbf_1082b811",
         "filename": "lib/env_dpdk/cpuset.c",
         "patchSetId": 2
@@ -139,6 +253,30 @@
       "writtenOn": "2017-12-12T12:13:30Z",
       "side": 1,
       "message": "This function is not strict for performance hence just using SPDK_CPU_SETSIZE as lcore_max may be enough.",
+      "range": {
+        "startLine": 14,
+        "startChar": 1,
+        "endLine": 16,
+        "endChar": 21
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4291ed8c_26050fa7",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-13T12:42:45Z",
+      "side": 1,
+      "message": "I need to know lcore_max to count the size of hex string and skip leading zeroes in it. First number in hex string contains the bit for lcore_max.",
+      "parentUuid": "8e77fdbf_1082b811",
       "range": {
         "startLine": 14,
         "startChar": 1,
@@ -174,6 +312,30 @@
     },
     {
       "key": {
+        "uuid": "9658511d_bbecf45c",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-13T12:42:45Z",
+      "side": 1,
+      "message": "I need to convert val to hex charaacter, not an ascii.",
+      "parentUuid": "c2677c35_fd9d895d",
+      "range": {
+        "startLine": 25,
+        "startChar": 10,
+        "endLine": 25,
+        "endChar": 18
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70598e50_e8eb4c91",
         "filename": "lib/env_dpdk/cpuset.c",
         "patchSetId": 2
@@ -185,6 +347,30 @@
       "writtenOn": "2017-12-09T19:26:42Z",
       "side": 1,
       "message": "buffer overflow? You are not using \u0027n\u0027 parameter.",
+      "range": {
+        "startLine": 25,
+        "startChar": 3,
+        "endLine": 27,
+        "endChar": 9
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54ce46e0_015c70b4",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-13T12:42:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "70598e50_e8eb4c91",
       "range": {
         "startLine": 25,
         "startChar": 3,
@@ -220,6 +406,30 @@
     },
     {
       "key": {
+        "uuid": "224627b2_83e50e41",
+        "filename": "lib/env_dpdk/cpuset.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-13T12:42:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "309b12fd_10d24c40",
+      "range": {
+        "startLine": 63,
+        "startChar": 1,
+        "endLine": 91,
+        "endChar": 23
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec86172b_4997947a",
         "filename": "lib/env_dpdk/env.c",
         "patchSetId": 2
@@ -231,6 +441,30 @@
       "writtenOn": "2017-12-08T17:59:44Z",
       "side": 1,
       "message": "is this change intended? I think it should remain as CPU_ZERO as new_cpuset not of spdk_cpuset_t type",
+      "range": {
+        "startLine": 248,
+        "startChar": 1,
+        "endLine": 248,
+        "endChar": 14
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25af3180_c88190d1",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-13T12:42:45Z",
+      "side": 1,
+      "message": "No, you\u0027re right. This is unintended.",
+      "parentUuid": "ec86172b_4997947a",
       "range": {
         "startLine": 248,
         "startChar": 1,
@@ -277,6 +511,30 @@
       "writtenOn": "2017-12-08T17:59:44Z",
       "side": 1,
       "message": "this could probably use some define\ne.g. SPDK_CPUSET_STR_MAX_LEN",
+      "range": {
+        "startLine": 519,
+        "startChar": 15,
+        "endLine": 519,
+        "endChar": 19
+      },
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab3e4c85_0cb6c62d",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-13T12:42:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e521318d_5ccc007f",
       "range": {
         "startLine": 519,
         "startChar": 15,
