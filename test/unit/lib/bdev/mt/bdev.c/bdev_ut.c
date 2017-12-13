@@ -602,7 +602,6 @@ io_during_qos(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(bdev_ch[1]->flags == 0);
 
-	poll_threads();
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
 
@@ -614,8 +613,10 @@ io_during_qos(void)
 	stub_complete_io(0);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
 
+	poll_threads();
+
 	set_thread(2);
-	bdev = bdev_ch[0]->bdev;
+	bdev = &g_bdev.bdev;
 	bdev->ios_per_sec = 2000;
 	io_ch[2] = spdk_bdev_get_io_channel(g_desc);
 	bdev_ch[2] = spdk_io_channel_get_ctx(io_ch[2]);
@@ -642,18 +643,24 @@ io_during_qos(void)
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
 
-	set_thread(0);
-	stub_complete_io(0);
-	spdk_put_io_channel(io_ch[0]);
-	set_thread(1);
-	stub_complete_io(1);
-	spdk_put_io_channel(io_ch[1]);
+	/*
+	 * IOs are operated on thread_id(2) via the QoS thread
+	 */
 	set_thread(2);
 	stub_complete_io(2);
-	spdk_put_io_channel(io_ch[2]);
+
 	poll_threads();
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	set_thread(0);
+	spdk_put_io_channel(io_ch[0]);
+	set_thread(1);
+	spdk_put_io_channel(io_ch[1]);
+	set_thread(2);
+	spdk_put_io_channel(io_ch[2]);
+
+	poll_threads();
 
 	teardown_test();
 }
@@ -701,6 +708,8 @@ io_during_qos_queue(void)
 	stub_complete_io(0);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
 
+	poll_threads();
+
 	set_thread(2);
 	bdev = bdev_ch[0]->bdev;
 	bdev->ios_per_sec = 1000;
@@ -739,7 +748,9 @@ io_during_qos_queue(void)
 	set_thread(2);
 	stub_complete_io(2);
 	spdk_put_io_channel(io_ch[2]);
+
 	poll_threads();
+
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_FAILED);
 

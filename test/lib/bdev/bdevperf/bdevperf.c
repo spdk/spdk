@@ -67,6 +67,8 @@ static int g_time_in_sec;
 static int g_show_performance_real_time = 0;
 static bool g_run_failed = false;
 static bool g_zcopy = true;
+static bool g_multi_threads_per_bdev = false;
+static int g_num_usage_on_same_target = 0;
 
 static struct spdk_poller *g_perf_timer = NULL;
 
@@ -78,17 +80,18 @@ struct io_target {
 	char			*name;
 	struct spdk_bdev	*bdev;
 	struct spdk_bdev_desc	*bdev_desc;
-	struct spdk_io_channel	*ch;
+	struct spdk_io_channel	*ch[RTE_MAX_LCORE];
 	struct io_target	*next;
 	unsigned		lcore;
-	int			io_completed;
-	int			current_queue_depth;
+	int			io_completed[RTE_MAX_LCORE];
+	int			current_queue_depth[RTE_MAX_LCORE];
 	uint64_t		size_in_ios;
 	uint64_t		offset_in_ios;
 	uint64_t		io_size_blocks;
-	bool			is_draining;
-	struct spdk_poller	*run_timer;
+	bool			is_draining[RTE_MAX_LCORE];
+	struct spdk_poller	*run_timer[RTE_MAX_LCORE];
 	struct spdk_poller	*reset_timer;
+	pthread_mutex_t		mutex;
 };
 
 struct io_target *head[RTE_MAX_LCORE];
@@ -180,8 +183,8 @@ bdevperf_construct_targets(void)
 		index = g_target_count % spdk_env_get_core_count();
 		target->next = head[index];
 		target->lcore = coremap[index];
-		target->io_completed = 0;
-		target->current_queue_depth = 0;
+		target->io_completed[index] = 0;
+		target->current_queue_depth[index] = 0;
 		target->offset_in_ios = 0;
 		target->io_size_blocks = g_io_size / spdk_bdev_get_block_size(bdev);
 		target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
@@ -192,9 +195,11 @@ bdevperf_construct_targets(void)
 		 */
 		g_min_alignment = spdk_max(g_min_alignment, align);
 
-		target->is_draining = false;
-		target->run_timer = NULL;
+		target->is_draining[index] = false;
+		target->run_timer[index] = NULL;
 		target->reset_timer = NULL;
+
+		pthread_mutex_init(&target->mutex, NULL);
 
 		head[index] = target;
 		g_target_count++;
@@ -207,13 +212,25 @@ static void
 end_run(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
+	uint32_t lcore = spdk_env_get_current_core();
 
-	spdk_put_io_channel(target->ch);
-	spdk_bdev_close(target->bdev_desc);
-	if (--g_target_count == 0) {
-		if (g_show_performance_real_time) {
-			spdk_poller_unregister(&g_perf_timer);
-		}
+	spdk_put_io_channel(target->ch[lcore]);
+
+	pthread_mutex_lock(&target->mutex);
+	if (g_multi_threads_per_bdev == true) {
+		g_num_usage_on_same_target--;
+	}
+	pthread_mutex_unlock(&target->mutex);
+
+	if (g_num_usage_on_same_target == 0) {
+		spdk_bdev_close(target->bdev_desc);
+	}
+
+	if (lcore == target->lcore && g_show_performance_real_time) {
+		spdk_poller_unregister(&g_perf_timer);
+	}
+	if ((--g_target_count == 0 && g_multi_threads_per_bdev == false) ||
+	    (g_num_usage_on_same_target == 0 && g_multi_threads_per_bdev == true)) {
 		if (g_run_failed) {
 			spdk_app_stop(1);
 		} else {
@@ -222,7 +239,7 @@ end_run(void *arg1, void *arg2)
 	}
 }
 
-struct rte_mempool *task_pool;
+struct rte_mempool *task_pool[RTE_MAX_LCORE];
 
 static void
 bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
@@ -232,12 +249,13 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	struct spdk_event 	*complete;
 	struct iovec		*iovs;
 	int			iovcnt;
+	int			lcore = spdk_env_get_current_core();
 
 	target = task->target;
 
 	if (!success) {
 		if (!g_reset) {
-			target->is_draining = true;
+			target->is_draining[lcore] = true;
 			g_run_failed = true;
 		}
 	} else if (g_verify || g_reset || g_unmap) {
@@ -246,15 +264,18 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		assert(iovs != NULL);
 		if (memcmp(task->buf, iovs[0].iov_base, g_io_size) != 0) {
 			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset_blocks);
-			target->is_draining = true;
+			target->is_draining[lcore] = true;
 			g_run_failed = true;
 		}
 	}
 
-	target->current_queue_depth--;
-	target->io_completed++;
+	target->current_queue_depth[lcore]--;
 
-	rte_mempool_put(task_pool, task);
+	if (success) {
+		target->io_completed[lcore]++;
+	}
+
+	rte_mempool_put(task_pool[lcore], task);
 
 	spdk_bdev_free_io(bdev_io);
 
@@ -264,10 +285,10 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	 * to complete.  In this case, do not submit a new I/O to replace
 	 * the one just completed.
 	 */
-	if (!target->is_draining) {
+	if (!target->is_draining[lcore]) {
 		bdevperf_submit_single(target);
-	} else if (target->current_queue_depth == 0) {
-		complete = spdk_event_allocate(rte_get_master_lcore(), end_run, target, NULL);
+	} else if (target->current_queue_depth[lcore] == 0) {
+		complete = spdk_event_allocate(lcore, end_run, target, NULL);
 		spdk_event_call(complete);
 	}
 }
@@ -277,7 +298,8 @@ bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 {
 	struct io_target	*target;
 	struct bdevperf_task	*task = cb_arg;
-	int rc;
+	int			rc;
+	int			lcore = spdk_env_get_current_core();
 
 	target = task->target;
 
@@ -285,11 +307,11 @@ bdevperf_unmap_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
 	memset(task->buf, 0, g_io_size);
 
 	/* Read the data back in */
-	rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch, NULL, task->offset_blocks,
+	rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch[lcore], NULL, task->offset_blocks,
 				   target->io_size_blocks, bdevperf_complete, task);
 	if (rc) {
 		printf("Failed to submit read: %d\n", rc);
-		target->is_draining = true;
+		target->is_draining[lcore] = true;
 		g_run_failed = true;
 		return;
 	}
@@ -305,25 +327,26 @@ bdevperf_verify_write_complete(struct spdk_bdev_io *bdev_io, bool success,
 	struct io_target	*target;
 	struct bdevperf_task	*task = cb_arg;
 	int			rc;
+	int			lcore = spdk_env_get_current_core();
 
 	target = task->target;
 
 	if (g_unmap) {
-		rc = spdk_bdev_unmap_blocks(target->bdev_desc, target->ch, task->offset_blocks,
+		rc = spdk_bdev_unmap_blocks(target->bdev_desc, target->ch[lcore], task->offset_blocks,
 					    target->io_size_blocks, bdevperf_unmap_complete, task);
 		if (rc) {
 			printf("Failed to submit unmap: %d\n", rc);
-			target->is_draining = true;
+			target->is_draining[lcore] = true;
 			g_run_failed = true;
 			return;
 		}
 	} else {
 		/* Read the data back in */
-		rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch, NULL, task->offset_blocks,
+		rc = spdk_bdev_read_blocks(target->bdev_desc, target->ch[lcore], NULL, task->offset_blocks,
 					   target->io_size_blocks, bdevperf_complete, task);
 		if (rc) {
 			printf("Failed to submit read: %d\n", rc);
-			target->is_draining = true;
+			target->is_draining[lcore] = true;
 			g_run_failed = true;
 			return;
 		}
@@ -351,11 +374,13 @@ bdevperf_submit_single(struct io_target *target)
 	uint64_t		offset_in_ios;
 	void			*rbuf;
 	int			rc;
+	int			lcore = spdk_env_get_current_core();
 
 	desc = target->bdev_desc;
-	ch = target->ch;
+	ch = target->ch[lcore];
 
-	if (rte_mempool_get(task_pool, (void **)&task) != 0 || task == NULL) {
+	assert(task_pool[lcore]);
+	if (rte_mempool_get(task_pool[lcore], (void **)&task) != 0 || task == NULL) {
 		printf("Task pool allocation failed\n");
 		abort();
 	}
@@ -380,7 +405,7 @@ bdevperf_submit_single(struct io_target *target)
 					     target->io_size_blocks, bdevperf_verify_write_complete, task);
 		if (rc) {
 			printf("Failed to submit writev: %d\n", rc);
-			target->is_draining = true;
+			target->is_draining[lcore] = true;
 			g_run_failed = true;
 			return;
 		}
@@ -391,7 +416,7 @@ bdevperf_submit_single(struct io_target *target)
 					   target->io_size_blocks, bdevperf_complete, task);
 		if (rc) {
 			printf("Failed to submit read: %d\n", rc);
-			target->is_draining = true;
+			target->is_draining[lcore] = true;
 			g_run_failed = true;
 			return;
 		}
@@ -402,13 +427,13 @@ bdevperf_submit_single(struct io_target *target)
 					     target->io_size_blocks, bdevperf_complete, task);
 		if (rc) {
 			printf("Failed to submit writev: %d\n", rc);
-			target->is_draining = true;
+			target->is_draining[lcore] = true;
 			g_run_failed = true;
 			return;
 		}
 	}
 
-	target->current_queue_depth++;
+	target->current_queue_depth[lcore]++;
 }
 
 static void
@@ -423,13 +448,14 @@ static void
 end_target(void *arg)
 {
 	struct io_target *target = arg;
+	uint32_t lcore = spdk_env_get_current_core();
 
-	spdk_poller_unregister(&target->run_timer);
-	if (g_reset) {
+	spdk_poller_unregister(&target->run_timer[lcore]);
+	if (lcore == target->lcore && g_reset && target->reset_timer) {
 		spdk_poller_unregister(&target->reset_timer);
 	}
 
-	target->is_draining = true;
+	target->is_draining[lcore] = true;
 }
 
 static void reset_target(void *arg);
@@ -442,11 +468,11 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	if (!success) {
 		printf("Reset blockdev=%s failed\n", spdk_bdev_get_name(target->bdev));
-		target->is_draining = true;
+		target->is_draining[target->lcore] = true;
 		g_run_failed = true;
 	}
 
-	rte_mempool_put(task_pool, task);
+	rte_mempool_put(task_pool[target->lcore], task);
 	spdk_bdev_free_io(bdev_io);
 
 	spdk_poller_register(&target->reset_timer, reset_target, target,
@@ -456,20 +482,23 @@ reset_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 static void
 reset_target(void *arg)
 {
-	struct io_target *target = arg;
+	struct io_target	*target = arg;
 	struct bdevperf_task	*task = NULL;
-	int rc;
+	int			rc;
+	uint32_t		lcore = spdk_env_get_current_core();
 
-	spdk_poller_unregister(&target->reset_timer);
+	if (lcore == target->lcore) {
+		spdk_poller_unregister(&target->reset_timer);
+	}
 
 	/* Do reset. */
-	rte_mempool_get(task_pool, (void **)&task);
+	rte_mempool_get(task_pool[target->lcore], (void **)&task);
 	task->target = target;
-	rc = spdk_bdev_reset(target->bdev_desc, target->ch,
+	rc = spdk_bdev_reset(target->bdev_desc, target->ch[target->lcore],
 			     reset_cb, task);
 	if (rc) {
 		printf("Reset failed: %d\n", rc);
-		target->is_draining = true;
+		target->is_draining[target->lcore] = true;
 		g_run_failed = true;
 	}
 }
@@ -478,16 +507,17 @@ static void
 bdevperf_submit_on_core(void *arg1, void *arg2)
 {
 	struct io_target *target = arg1;
+	int lcore = spdk_env_get_current_core();
 
 	/* Submit initial I/O for each block device. Each time one
 	 * completes, another will be submitted. */
 	while (target != NULL) {
-		target->ch = spdk_bdev_get_io_channel(target->bdev_desc);
+		target->ch[lcore] = spdk_bdev_get_io_channel(target->bdev_desc);
 
 		/* Start a timer to stop this I/O chain when the run is over */
-		spdk_poller_register(&target->run_timer, end_target, target,
+		spdk_poller_register(&target->run_timer[lcore], end_target, target,
 				     g_time_in_sec * 1000000);
-		if (g_reset) {
+		if (g_reset && !target->reset_timer) {
 			spdk_poller_register(&target->reset_timer, reset_target, target,
 					     10 * 1000000);
 		}
@@ -514,25 +544,45 @@ static void usage(char *program_name)
 static void
 performance_dump(int io_time)
 {
-	uint32_t index;
+	uint32_t index, i;
 	unsigned lcore_id;
 	float io_per_second, mb_per_second;
 	float total_io_per_second, total_mb_per_second;
+	float io_completed_on_one_target;
 	struct io_target *target;
+	uint32_t num_cores = spdk_env_get_core_count();
 
 	total_io_per_second = 0;
 	total_mb_per_second = 0;
-	for (index = 0; index < spdk_env_get_core_count(); index++) {
+	io_completed_on_one_target = 0;
+	for (index = 0; index < num_cores; index++) {
 		target = head[index];
 		if (target != NULL) {
 			lcore_id = target->lcore;
-			printf("\r Logical core: %u\n", lcore_id);
+			if (g_multi_threads_per_bdev == false) {
+				printf("\r Logical core: %u\n", lcore_id);
+			} else {
+				printf("\r Logical cores: %u - %u\n", lcore_id, num_cores - 1);
+			}
 		}
 		while (target != NULL) {
-			io_per_second = (float)target->io_completed /
-					io_time;
-			mb_per_second = io_per_second * g_io_size /
-					(1024 * 1024);
+			if (g_multi_threads_per_bdev == false) {
+				io_per_second = (float)target->io_completed[0] /
+						io_time;
+				mb_per_second = io_per_second * g_io_size /
+						(1024 * 1024);
+			} else {
+				for (i = lcore_id; i < num_cores; i++) {
+					if (g_multi_threads_per_bdev == true) {
+						printf("\r Logical core: %u IOs %d\n", i, target->io_completed[i]);
+					}
+					io_completed_on_one_target += target->io_completed[i];
+				}
+				io_per_second = (float)io_completed_on_one_target /
+						io_time;
+				mb_per_second = io_per_second * g_io_size /
+						(1024 * 1024);
+			}
 			printf("\r %-20s: %10.2f IO/s %10.2f MB/s\n",
 			       target->name, io_per_second, mb_per_second);
 			total_io_per_second += io_per_second;
@@ -560,24 +610,13 @@ bdevperf_run(void *arg1, void *arg2)
 	uint32_t i;
 	struct io_target *target;
 	struct spdk_event *event;
+	int lcore = spdk_env_get_current_core();
+	char pool_name[32];
+	uint32_t num_cores = spdk_env_get_core_count();
+	int num_count = spdk_max(128, g_target_count * g_queue_depth);
 
 	blockdev_heads_init();
 	bdevperf_construct_targets();
-
-	/*
-	 * Create the task pool after we have enumerated the targets, so that we know
-	 *  the min buffer alignment.  Some backends such as AIO have alignment restrictions
-	 *  that must be accounted for.
-	 */
-	task_pool = rte_mempool_create("task_pool", g_target_count * g_queue_depth,
-				       sizeof(struct bdevperf_task),
-				       64, 0, NULL, NULL, task_ctor, NULL,
-				       SOCKET_ID_ANY, 0);
-	if (!task_pool) {
-		SPDK_ERRLOG("Cannot allocate %d tasks\n", g_target_count * g_queue_depth);
-		spdk_app_stop(1);
-		return;
-	}
 
 	printf("Running I/O for %d seconds...\n", g_time_in_sec);
 	fflush(stdout);
@@ -588,14 +627,46 @@ bdevperf_run(void *arg1, void *arg2)
 				     1000000);
 	}
 
+	if (g_multi_threads_per_bdev == true && g_target_count == 1) {
+		g_num_usage_on_same_target = num_cores;
+	}
+
 	/* Send events to start all I/O */
-	for (i = 0; i < spdk_env_get_core_count(); i++) {
+	for (i = lcore; i < num_cores; i++) {
 		target = head[i];
 		if (target == NULL) {
-			break;
+			/* Enable multi threads on single bdev */
+			if (g_multi_threads_per_bdev == true && g_target_count == 1) {
+				target = head[lcore];
+				target->io_completed[i] = 0;
+				target->current_queue_depth[i] = 0;
+				target->run_timer[i] = NULL;
+				target->is_draining[i] = false;
+			}
+
+			if (target == NULL) {
+				break;
+			}
 		}
-		event = spdk_event_allocate(target->lcore, bdevperf_submit_on_core,
-					    target, NULL);
+
+		/*
+		 * Create the task pool after we have enumerated the targets, so that we know
+		 *  the min buffer alignment.  Some backends such as AIO have alignment restrictions
+		 *  that must be accounted for.
+		 */
+		snprintf(pool_name, 32, "task_pool_%d", i);
+		task_pool[i] = rte_mempool_create(pool_name, num_count,
+						  sizeof(struct bdevperf_task),
+						  64, 0, NULL, NULL, task_ctor, NULL,
+						  SOCKET_ID_ANY, 0);
+		if (!task_pool[i]) {
+			SPDK_ERRLOG("Cannot allocate %d tasks\n", num_count);
+			spdk_app_stop(1);
+			return;
+		}
+
+		printf("Running I/O on core %d...\n", i);
+		event = spdk_event_allocate(i, bdevperf_submit_on_core, target, NULL);
 		spdk_event_call(event);
 	}
 }
@@ -619,13 +690,16 @@ main(int argc, char **argv)
 	mix_specified = false;
 	core_mask = NULL;
 
-	while ((op = getopt(argc, argv, "c:m:q:s:t:w:M:S")) != -1) {
+	while ((op = getopt(argc, argv, "c:m:oq:s:t:w:M:S")) != -1) {
 		switch (op) {
 		case 'c':
 			config_file = optarg;
 			break;
 		case 'm':
 			core_mask = optarg;
+			break;
+		case 'o':
+			g_multi_threads_per_bdev = true;
 			break;
 		case 'q':
 			g_queue_depth = atoi(optarg);
@@ -712,6 +786,7 @@ main(int argc, char **argv)
 			core_mask = NULL;
 		}
 		g_verify = true;
+		g_multi_threads_per_bdev = false;
 		if (!strcmp(workload_type, "reset")) {
 			g_reset = true;
 		}

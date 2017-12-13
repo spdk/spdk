@@ -281,8 +281,13 @@ struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
 
-	/** The bdev I/O channel that this was submitted on. */
+	/** The bdev I/O channel that this was handled on. */
 	struct spdk_bdev_channel *ch;
+
+	/** The original bdev I/O channel that this was submitted on. */
+	struct spdk_bdev_channel *orig_ch;
+
+	uint64_t index;
 
 	/** bdev allocated memory associated with this request */
 	void *buf;
