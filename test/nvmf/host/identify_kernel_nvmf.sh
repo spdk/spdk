@@ -45,7 +45,7 @@ echo -n $NVMF_PORT > /sys/kernel/config/nvmet/ports/1/addr_trsvcid
 
 ln -s /sys/kernel/config/nvmet/subsystems/$subsystemname /sys/kernel/config/nvmet/ports/1/subsystems/$subsystemname
 
-sleep 2
+sleep 4
 
 $rootdir/examples/nvme/identify/identify -r "\
 	trtype:RDMA \
