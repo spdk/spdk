@@ -342,3 +342,44 @@ spdk_strerror_r(int errnum, char *buf, size_t buflen)
 	return strerror_r(errnum, buf, buflen);
 #endif
 }
+
+int
+spdk_parse_capacity(const char *cap_str, uint64_t *cap, bool *has_prefix)
+{
+	int rc;
+	char bin_prefix;
+
+	rc = sscanf(cap_str, "%"SCNu64"%c", cap, &bin_prefix);
+	if (rc == 1) {
+		*has_prefix = false;
+		return 0;
+	} else if (rc == 0) {
+		if (errno == 0) {
+			/* No scanf matches - the string does not start with a digit */
+			return -EINVAL;
+		} else {
+			/* Parsing error */
+			return -errno;
+		}
+	}
+
+	*has_prefix = true;
+	switch (bin_prefix) {
+	case 'k':
+	case 'K':
+		*cap *= 1024;
+		break;
+	case 'm':
+	case 'M':
+		*cap *= 1024 * 1024;
+		break;
+	case 'g':
+	case 'G':
+		*cap *= 1024 * 1024 * 1024;
+		break;
+	default:
+		return -EINVAL;
+	}
+
+	return 0;
+}

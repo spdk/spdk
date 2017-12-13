@@ -538,9 +538,33 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case 'r':
 			opts->rpc_addr = optarg;
 			break;
-		case 's':
-			opts->mem_size = atoi(optarg);
+		case 's': {
+			uint64_t mem_size_mb;
+			bool mem_size_has_prefix;
+
+			rc = spdk_parse_capacity(optarg, &mem_size_mb, &mem_size_has_prefix);
+			if (rc != 0) {
+				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
+				usage(argv[0], &default_opts, app_usage);
+				exit(EXIT_FAILURE);
+			}
+
+			if (mem_size_has_prefix) {
+				/* the mem size is in MB by default, so if a prefix was
+				 * specified, we need to manually convert to MB.
+				 */
+				mem_size_mb /= 1024 * 1024;
+			}
+
+			if (mem_size_mb > INT_MAX) {
+				fprintf(stderr, "invalid memory pool size `-s %s`\n", optarg);
+				usage(argv[0], &default_opts, app_usage);
+				exit(EXIT_FAILURE);
+			}
+
+			opts->mem_size = (int) mem_size_mb;
 			break;
+		}
 		case 't':
 			rc = spdk_log_set_trace_flag(optarg);
 			if (rc < 0) {
