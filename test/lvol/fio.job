@@ -1,0 +1,9 @@
+[global]
+thread=1
+
+[check_zeros]
+offset=1M
+rw=read
+verify=pattern
+verify_pattern=0x00
+filename=/dev/nbd0

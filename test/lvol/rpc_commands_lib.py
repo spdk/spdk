@@ -126,6 +126,16 @@ class Commands_Rpc(object):
         output, rc = self.rpc.resize_lvol_bdev(uuid, new_size)
         return rc
 
+    def start_nbd_disk(self, bdev_name, nbd_name):
+        print("INFO: RPC COMMAND start_nbd_disk")
+        output, rc = self.rpc.start_nbd_disk(bdev_name, nbd_name)
+        return rc
+
+    def stop_nbd_disk(self, nbd_name):
+        print("INFO: RPC COMMAND stop_nbd_disk")
+        output, rc = self.rpc.stop_nbd_disk(nbd_name)
+        return rc
+
     def get_lvol_stores(self):
         print("INFO: RPC COMMAND get_lvol_stores")
         output = json.loads(self.rpc.get_lvol_stores()[0])
