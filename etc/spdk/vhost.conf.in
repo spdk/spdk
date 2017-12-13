@@ -82,6 +82,15 @@
   # Units in microseconds.
   AdminPollRate 100000
 
+  # Disable handling of hotplug (runtime insert and remove) events,
+  # users can set to Yes if want to enable it.
+  # Default: No
+  HotplugEnable No
+
+  # Set how often the hotplug is processed for insert and remove events.
+  # Units in microseconds.
+  HotplugPollRate 0
+
 # The Split virtual block device slices block devices into multiple smaller bdevs.
 [Split]
   # Syntax:

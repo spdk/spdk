@@ -94,6 +94,10 @@
   # Default: No
   HotplugEnable No
 
+  # Set how often the hotplug is processed for insert and remove events.
+  # Units in microseconds.
+  HotplugPollRate 0
+
 # The Split virtual block device slices block devices into multiple smaller bdevs.
 [Split]
   # Syntax:
