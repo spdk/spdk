@@ -35,7 +35,6 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
-#include "spdk/event.h"
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
 #include "spdk/net.h"

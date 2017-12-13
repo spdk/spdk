@@ -39,7 +39,6 @@
 
 #include "iscsi/iscsi.h"
 #include "spdk/queue.h"
-#include "spdk/event.h"
 
 /*
  * MAX_CONNECTION_PARAMS: The numbers of the params in conn_param_table
@@ -65,6 +64,8 @@
 #define TRACE_ISCSI_TASK_QUEUE		SPDK_TPOINT_ID(TRACE_GROUP_ISCSI, 0x5)
 #define TRACE_ISCSI_CONN_ACTIVE		SPDK_TPOINT_ID(TRACE_GROUP_ISCSI, 0x6)
 #define TRACE_ISCSI_CONN_IDLE		SPDK_TPOINT_ID(TRACE_GROUP_ISCSI, 0x7)
+
+struct spdk_poller;
 
 struct spdk_iscsi_conn {
 	int				id;
