@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b855f630_acf094df",
+        "filename": "test/nvmf/host/kernel_nvmf.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-13T20:12:00Z",
+      "side": 1,
+      "message": "I think we already have the subsystem NQN in $subsystemname, so we don\u0027t need to discover it again.",
+      "revId": "34e4e0fdf5cb6e3beb82a005a36f9f17b80f2780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f205e0e1_a602fb7c",
+        "filename": "test/nvmf/host/kernel_nvmf.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-13T20:12:00Z",
+      "side": 1,
+      "message": "I think this \u0027if\u0027 should be removed - there should always be a subsystem configured.",
+      "revId": "34e4e0fdf5cb6e3beb82a005a36f9f17b80f2780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3eb85980_98092df5",
+        "filename": "test/nvmf/host/kernel_nvmf.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-13T20:12:00Z",
+      "side": 1,
+      "message": "Does this actually work? I thought we couldn\u0027t pass strings with \":\" in them via filename, since fio interprets that as a separator for multiple files.",
+      "range": {
+        "startLine": 71,
+        "startChar": 5,
+        "endLine": 71,
+        "endChar": 19
+      },
+      "revId": "34e4e0fdf5cb6e3beb82a005a36f9f17b80f2780",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
