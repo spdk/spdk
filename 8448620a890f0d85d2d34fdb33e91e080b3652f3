@@ -16,6 +16,24 @@
       "revId": "8448620a890f0d85d2d34fdb33e91e080b3652f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c57a6550_eea48de9",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-13T00:49:22Z",
+      "side": 1,
+      "message": "This is necessary because\n- each portal has processor affinity property represented by cpumask.\n- when a portal is created by iSCSI.conf, if user specifies cpumask, spdk_app_parse_core_mask() is used to validate the cpumask or if user doesn\u0027t specifiy cpumask, spdk_app_get_core_mask() is used to get the default cpumask.\n\n\nI really appreciate your critical review. I remembered that when we create a portal by JSON-RPC cpumask is set to 0 and the portal can only use CPU 0. I should have made possible to set cpumask by JSON-RPC and set default mask to not 0 but spdk_app_get_core_mask().\n\nI will do this by another patch.",
+      "parentUuid": "a799d847_460d062f",
+      "revId": "8448620a890f0d85d2d34fdb33e91e080b3652f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
