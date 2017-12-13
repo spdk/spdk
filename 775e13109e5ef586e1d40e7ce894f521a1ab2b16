@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9dae763_b970c5c7",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1410,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-13T17:04:21Z",
+      "side": 1,
+      "message": "This should also print out the comments from etc/spdk/iscsi.conf.in like the other running_config functions.",
+      "revId": "775e13109e5ef586e1d40e7ce894f521a1ab2b16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdedce7f_bab21c7c",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1417,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-13T17:04:21Z",
+      "side": 1,
+      "message": "This should use spdk_nvme_transport_id_trtype_str() rather than hard-coding RDMA.",
+      "range": {
+        "startLine": 1417,
+        "startChar": 37,
+        "endLine": 1417,
+        "endChar": 41
+      },
+      "revId": "775e13109e5ef586e1d40e7ce894f521a1ab2b16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c03627d8_fd81ace2",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1417,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-13T17:04:21Z",
+      "side": 1,
+      "message": "Also use spdk_nvme_transport_id_adrfam_str() instead of IPv4",
+      "range": {
+        "startLine": 1417,
+        "startChar": 49,
+        "endLine": 1417,
+        "endChar": 53
+      },
+      "revId": "775e13109e5ef586e1d40e7ce894f521a1ab2b16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d25505a_5701c7c0",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1439,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-13T17:04:21Z",
+      "side": 1,
+      "message": "This should also print HotplugPollRate.",
+      "revId": "775e13109e5ef586e1d40e7ce894f521a1ab2b16",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
