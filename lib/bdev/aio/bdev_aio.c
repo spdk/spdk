@@ -71,7 +71,8 @@ bdev_aio_open(struct file_disk *disk)
 		/* Try without O_DIRECT for non-disk files */
 		fd = open(disk->filename, O_RDWR);
 		if (fd < 0) {
-			perror("open");
+			SPDK_ERRLOG("Errno %d: can't open file (%s)\n",
+				    errno, disk->filename);
 			disk->fd = -1;
 			return -1;
 		}
@@ -93,7 +94,7 @@ bdev_aio_close(struct file_disk *disk)
 
 	rc = close(disk->fd);
 	if (rc < 0) {
-		perror("close");
+		SPDK_ERRLOG("Errno %d: can't close file (fd=%d)\n", errno, disk->fd);
 		return -1;
 	}
 
