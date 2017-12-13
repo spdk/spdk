@@ -35,13 +35,10 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/conf.h"
-#include "spdk/net.h"
 
 #include "spdk_internal/log.h"
 
 #include "iscsi/iscsi.h"
-#include "iscsi/tgt_node.h"
-#include "iscsi/conn.h"
 #include "iscsi/init_grp.h"
 
 static struct spdk_iscsi_init_grp *
