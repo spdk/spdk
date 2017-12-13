@@ -34,11 +34,14 @@
 #include "spdk_cunit.h"
 
 #include "lib/test_env.c"
+#include "lib/ut_multithread.c"
 
 /* HACK: disable VTune integration so the unit test doesn't need VTune headers and libs to build */
 #undef SPDK_CONFIG_VTUNE
 
 #include "bdev.c"
+
+#define BDEV_UT_NUM_THREADS 3
 
 SPDK_DECLARE_BDEV_MODULE(vbdev_ut);
 
@@ -139,12 +142,28 @@ free_vbdev(struct spdk_bdev *bdev)
 }
 
 static void
+bdev_init_cb(void *done, int rc)
+{
+	*(bool *)done = true;
+}
+
+static void
+bdev_env_init(void)
+{
+	bool done = false;
+
+	allocate_threads(BDEV_UT_NUM_THREADS);
+	spdk_bdev_initialize(bdev_init_cb, &done);
+}
+
+static void
 open_write_test(void)
 {
 	struct spdk_bdev *bdev[8];
 	struct spdk_bdev_desc *desc[8] = {};
 	int rc;
 
+	bdev_env_init();
 	/*
 	 * Create a tree of bdevs to test various open w/ write cases.
 	 *
