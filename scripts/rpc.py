@@ -369,10 +369,13 @@ def construct_lvol_bdev(args):
             params['uuid'] = args.uuid
         if args.lvs_name:
             params['lvs_name'] = args.lvs_name
-        print_array(jsonrpc_call('construct_lvol_bdev', params))
+    if args.thin_provisioned:
+        params['thin_provisioned'] = args.thin_provisioned
+    print_array(jsonrpc_call('construct_lvol_bdev', params))
 p = subparsers.add_parser('construct_lvol_bdev', help='Add a bdev with an logical volume backend')
 p.add_argument('-u', '--uuid', help='lvol store UUID', required=False)
 p.add_argument('-l', '--lvs_name', help='lvol store name', required=False)
+p.add_argument('-t', '--thin-provisioned', action='store_true', help='create lvol bdev as thin provisioned')
 p.add_argument('lvol_name', help='name for this lvol')
 p.add_argument('size', help='size in MiB for this bdev', type=int)
 p.set_defaults(func=construct_lvol_bdev)
