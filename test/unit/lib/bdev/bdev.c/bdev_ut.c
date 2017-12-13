@@ -40,6 +40,8 @@
 
 #include "bdev.c"
 
+#define BDEV_UT_NUM_THREADS 3
+
 SPDK_DECLARE_BDEV_MODULE(vbdev_ut);
 
 void
@@ -145,6 +147,7 @@ open_write_test(void)
 	struct spdk_bdev_desc *desc[8] = {};
 	int rc;
 
+	spdk_bdev_init_bdev_mgr();
 	/*
 	 * Create a tree of bdevs to test various open w/ write cases.
 	 *
