@@ -1799,6 +1799,8 @@ _spdk_bs_load_replay_md_parse_page(const struct spdk_blob_md_page *page, struct 
 			}
 		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_XATTR) {
 			/* Skip this item */
+		} else if (desc->type == SPDK_MD_DESCRIPTOR_TYPE_FLAGS) {
+			/* Skip this item */
 		} else {
 			/* Error */
 			return -1;
