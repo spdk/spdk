@@ -1161,12 +1161,14 @@ spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_
 
 	assert(vdev != NULL);
 	spdk_json_write_name(w, "scsi");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_array_begin(w);
 	for (dev_idx = 0; dev_idx < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; dev_idx++) {
 		sdev = spdk_vhost_scsi_dev_get_tgt(vdev, dev_idx);
 		if (!sdev) {
 			continue;
 		}
+
+		spdk_json_write_object_begin(w);
 
 		spdk_json_write_name(w, "scsi_dev_num");
 		spdk_json_write_uint32(w, dev_idx);
@@ -1198,9 +1200,10 @@ spdk_vhost_scsi_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_
 		}
 
 		spdk_json_write_array_end(w);
+		spdk_json_write_object_end(w);
 	}
 
-	spdk_json_write_object_end(w);
+	spdk_json_write_array_end(w);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vhost_scsi", SPDK_LOG_VHOST_SCSI)
