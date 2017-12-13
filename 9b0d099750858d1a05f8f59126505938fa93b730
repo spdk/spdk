@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd43d82f_7865af93",
+        "filename": "app/nvmf_tgt/conf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-13T23:20:21Z",
+      "side": 1,
+      "message": "This should be if lcore \u003c 0.",
+      "revId": "9b0d099750858d1a05f8f59126505938fa93b730",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
