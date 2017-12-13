@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6904c719_b4f321ae",
+        "filename": "include/spdk/blob_bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-13T06:18:18Z",
+      "side": 1,
+      "message": "Callback function when block device is removed",
+      "revId": "90f569d25686a1e3b3952583c50c42e5297682dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c474983_cac8781b",
+        "filename": "include/spdk/blob_bdev.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-13T06:18:18Z",
+      "side": 1,
+      "message": "negative",
+      "revId": "90f569d25686a1e3b3952583c50c42e5297682dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
