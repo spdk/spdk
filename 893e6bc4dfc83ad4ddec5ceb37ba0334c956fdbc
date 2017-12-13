@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdc2f883_a71499a6",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-13T21:11:19Z",
+      "side": 1,
+      "message": "What\u0027s the difference between adding the --max_disk\u003d1 parm and not having that switch at all (in other words, for scsi-nightly how is it different from the test invoked on line 100?  Same question, of course for blk",
+      "revId": "893e6bc4dfc83ad4ddec5ceb37ba0334c956fdbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
