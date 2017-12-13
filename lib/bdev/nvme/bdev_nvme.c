@@ -1405,7 +1405,40 @@ bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 static void
 bdev_nvme_get_spdk_running_config(FILE *fp)
 {
-	/* TODO */
+	struct nvme_ctrlr	*nvme_ctrlr;
+
+	fprintf(fp, "\n[Nvme]\n");
+
+	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+			fprintf(fp, "TransportId \"trtype:PCIe traddr:%s\" %s\n",
+				nvme_ctrlr->trid.traddr, nvme_ctrlr->name);
+		} else {
+			fprintf(fp, "TransportId \"trtype:RDMA adrfam:IPv4 traddr:%s trsvcid:%s subnqn:%s\" %s\n",
+				nvme_ctrlr->trid.traddr, nvme_ctrlr->trid.trsvcid,
+				nvme_ctrlr->trid.subnqn, nvme_ctrlr->name);
+		}
+	}
+
+	fprintf(fp, "RetryCount %d\n", spdk_nvme_retry_count);
+	fprintf(fp, "Timeout %d\n", g_timeout);
+
+	switch (g_action_on_timeout) {
+	case TIMEOUT_ACTION_NONE:
+		fprintf(fp, "ActionOnTimeout None\n");
+		break;
+	case TIMEOUT_ACTION_RESET:
+		fprintf(fp, "ActionOnTimeout Reset\n");
+		break;
+	case TIMEOUT_ACTION_ABORT:
+		fprintf(fp, "ActionOnTimeout Abort\n");
+		break;
+	}
+
+	fprintf(fp, "AdminPollRate %d\n", g_nvme_adminq_poll_timeout_us);
+	fprintf(fp, "HotplugEnable %s\n", g_nvme_hotplug_enabled ? "Yes" : "No");
+
+	fprintf(fp, "\n");
 }
 
 struct spdk_nvme_ctrlr *
