@@ -81,11 +81,6 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 }
 
 void
-spdk_iscsi_acceptor_stop(struct spdk_iscsi_portal *p)
-{
-}
-
-void
 spdk_iscsi_portal_grp_close_all(void)
 {
 }
