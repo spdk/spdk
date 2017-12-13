@@ -136,6 +136,72 @@ test_str_chomp(void)
 	CU_ASSERT(strcmp(s, "a") == 0);
 }
 
+static void
+test_parse_capacity(void)
+{
+	char str[128];
+	uint64_t cap;
+	int rc;
+	bool has_prefix;
+
+	rc = spdk_parse_capacity("472", &cap, &has_prefix);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cap == 472);
+	CU_ASSERT(has_prefix == false);
+
+	sprintf(str, "%"PRIu64, UINT64_MAX);
+	rc = spdk_parse_capacity(str, &cap, &has_prefix);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cap == UINT64_MAX);
+	CU_ASSERT(has_prefix == false);
+
+	rc = spdk_parse_capacity("12k", &cap, &has_prefix);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cap == 12 * 1024);
+	CU_ASSERT(has_prefix == true);
+
+	rc = spdk_parse_capacity("12K", &cap, &has_prefix);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cap == 12 * 1024);
+	CU_ASSERT(has_prefix == true);
+
+	rc = spdk_parse_capacity("12KB", &cap, &has_prefix);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cap == 12 * 1024);
+	CU_ASSERT(has_prefix == true);
+
+	rc = spdk_parse_capacity("100M", &cap, &has_prefix);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cap == 100 * 1024 * 1024);
+	CU_ASSERT(has_prefix == true);
+
+	rc = spdk_parse_capacity("128M", &cap, &has_prefix);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cap == 128 * 1024 * 1024);
+	CU_ASSERT(has_prefix == true);
+
+	rc = spdk_parse_capacity("4G", &cap, &has_prefix);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cap == 4ULL * 1024 * 1024 * 1024);
+	CU_ASSERT(has_prefix == true);
+
+	rc = spdk_parse_capacity("100M 512k", &cap, &has_prefix);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cap == 100ULL * 1024 * 1024);
+
+	rc = spdk_parse_capacity("12k8K", &cap, &has_prefix);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(cap == 12 * 1024);
+	CU_ASSERT(has_prefix == true);
+
+	/* Non-number */
+	rc = spdk_parse_capacity("G", &cap, &has_prefix);
+	CU_ASSERT(rc != 0);
+
+	rc = spdk_parse_capacity("darsto", &cap, &has_prefix);
+	CU_ASSERT(rc != 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -154,7 +220,8 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "test_parse_ip_addr", test_parse_ip_addr) == NULL ||
-		CU_add_test(suite, "test_str_chomp", test_str_chomp) == NULL) {
+		CU_add_test(suite, "test_str_chomp", test_str_chomp) == NULL ||
+		CU_add_test(suite, "test_parse_capacity", test_parse_capacity) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
