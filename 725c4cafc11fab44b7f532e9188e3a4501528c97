@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "97e1c011_7662c69e",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-13T07:10:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b22b5165_42786ad3",
+      "range": {
+        "startLine": 135,
+        "startChar": 0,
+        "endLine": 135,
+        "endChar": 50
+      },
+      "revId": "725c4cafc11fab44b7f532e9188e3a4501528c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c608df9b_7c2d1276",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2017-12-12T20:22:06Z",
       "side": 1,
       "message": "Rly? What about SIGABRT, SIGSEGV and SIGKILL?",
+      "range": {
+        "startLine": 148,
+        "startChar": 61,
+        "endLine": 148,
+        "endChar": 84
+      },
+      "revId": "725c4cafc11fab44b7f532e9188e3a4501528c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7592869b_e3b1f1f0",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-13T07:10:42Z",
+      "side": 1,
+      "message": "Do you think SIGKILL can be captured?",
+      "parentUuid": "c608df9b_7c2d1276",
       "range": {
         "startLine": 148,
         "startChar": 61,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "4a5bd05b_742d1c26",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-13T07:10:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ed0f7526_8dcc4d69",
+      "range": {
+        "startLine": 92,
+        "startChar": 0,
+        "endLine": 95,
+        "endChar": 62
+      },
+      "revId": "725c4cafc11fab44b7f532e9188e3a4501528c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d4bd7e97_52ab9af8",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 6
@@ -82,6 +154,30 @@
       "writtenOn": "2017-12-12T20:22:06Z",
       "side": 1,
       "message": "ditto",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 102,
+        "endChar": 61
+      },
+      "revId": "725c4cafc11fab44b7f532e9188e3a4501528c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "230d1cfa_6d274be0",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-13T07:10:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d4bd7e97_52ab9af8",
       "range": {
         "startLine": 100,
         "startChar": 0,
