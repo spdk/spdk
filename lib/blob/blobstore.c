@@ -1566,6 +1566,17 @@ struct spdk_bs_load_ctx {
 };
 
 static void
+_spdk_bs_load_fail(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, int bserrno)
+{
+	assert(bserrno != 0);
+
+	spdk_dma_free(ctx->super);
+	_spdk_bs_free(ctx->bs);
+	free(ctx);
+	spdk_bs_sequence_finish(seq, bserrno);
+}
+
+static void
 _spdk_bs_set_mask(struct spdk_bit_array *array, struct spdk_bs_md_mask *mask)
 {
 	uint32_t i = 0;
@@ -1603,9 +1614,7 @@ _spdk_bs_write_used_clusters(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequenc
 	mask_size = ctx->super->used_cluster_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
 	if (!ctx->mask) {
-		spdk_dma_free(ctx->super);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENOMEM);
+		_spdk_bs_load_fail(seq, ctx, -ENOMEM);
 		return;
 	}
 
@@ -1628,9 +1637,7 @@ _spdk_bs_write_used_md(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl 
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
 	if (!ctx->mask) {
-		spdk_dma_free(ctx->super);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENOMEM);
+		_spdk_bs_load_fail(seq, ctx, -ENOMEM);
 		return;
 	}
 
@@ -1661,11 +1668,8 @@ _spdk_bs_load_used_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserr
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_clusters, ctx->bs->total_clusters);
 	if (rc < 0) {
-		spdk_dma_free(ctx->super);
 		spdk_dma_free(ctx->mask);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENOMEM);
+		_spdk_bs_load_fail(seq, ctx, -ENOMEM);
 		return;
 	}
 
@@ -1707,11 +1711,8 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_md_pages, ctx->mask->length);
 	if (rc < 0) {
-		spdk_dma_free(ctx->super);
 		spdk_dma_free(ctx->mask);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENOMEM);
+		_spdk_bs_load_fail(seq, ctx, -ENOMEM);
 		return;
 	}
 
@@ -1730,10 +1731,7 @@ _spdk_bs_load_used_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	mask_size = ctx->super->used_cluster_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
 	if (!ctx->mask) {
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENOMEM);
+		_spdk_bs_load_fail(seq, ctx, -ENOMEM);
 		return;
 	}
 	lba = _spdk_bs_page_to_lba(ctx->bs, ctx->super->used_cluster_mask_start);
@@ -1752,10 +1750,7 @@ _spdk_bs_load_write_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
 	if (!ctx->mask) {
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENOMEM);
+		_spdk_bs_load_fail(seq, ctx, -ENOMEM);
 		return;
 	}
 
@@ -1868,10 +1863,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	uint32_t page_num;
 
 	if (bserrno != 0) {
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, bserrno);
+		_spdk_bs_load_fail(seq, ctx, bserrno);
 		return;
 	}
 
@@ -1880,10 +1872,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		if (ctx->page->sequence_num == 0 || ctx->in_page_chain == true) {
 			spdk_bit_array_set(ctx->bs->used_md_pages, page_num);
 			if (_spdk_bs_load_replay_md_parse_page(ctx->page, ctx->bs)) {
-				spdk_dma_free(ctx->super);
-				_spdk_bs_free(ctx->bs);
-				free(ctx);
-				spdk_bs_sequence_finish(seq, -EILSEQ);
+				_spdk_bs_load_fail(seq, ctx, -EILSEQ);
 				return;
 			}
 			if (ctx->page->next != SPDK_INVALID_MD_PAGE) {
@@ -1934,10 +1923,7 @@ _spdk_bs_load_replay_md(spdk_bs_sequence_t *seq, void *cb_arg)
 				     SPDK_BS_PAGE_SIZE,
 				     NULL);
 	if (!ctx->page) {
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENOMEM);
+		_spdk_bs_load_fail(seq, ctx, -ENOMEM);
 		return;
 	}
 	_spdk_bs_load_replay_cur_md_page(seq, cb_arg);
@@ -1951,19 +1937,13 @@ _spdk_bs_recover(spdk_bs_sequence_t *seq, void *cb_arg)
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_md_pages, ctx->super->md_len);
 	if (rc < 0) {
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENOMEM);
+		_spdk_bs_load_fail(seq, ctx, -ENOMEM);
 		return;
 	}
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_clusters, ctx->bs->total_clusters);
 	if (rc < 0) {
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENOMEM);
+		_spdk_bs_load_fail(seq, ctx, -ENOMEM);
 		return;
 	}
 
@@ -1980,28 +1960,19 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 
 	if (ctx->super->version > SPDK_BS_VERSION ||
 	    ctx->super->version < SPDK_BS_INITIAL_VERSION) {
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -EILSEQ);
+		_spdk_bs_load_fail(seq, ctx, -EILSEQ);
 		return;
 	}
 
 	if (memcmp(ctx->super->signature, SPDK_BS_SUPER_BLOCK_SIG,
 		   sizeof(ctx->super->signature)) != 0) {
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -EILSEQ);
+		_spdk_bs_load_fail(seq, ctx, -EILSEQ);
 		return;
 	}
 
 	crc = _spdk_blob_md_page_calc_crc(ctx->super);
 	if (crc != ctx->super->crc) {
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -EILSEQ);
+		_spdk_bs_load_fail(seq, ctx, -EILSEQ);
 		return;
 	}
 
@@ -2013,10 +1984,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Unexpected bstype\n");
 		SPDK_TRACEDUMP(SPDK_LOG_BLOB, "Expected:", ctx->bs->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
 		SPDK_TRACEDUMP(SPDK_LOG_BLOB, "Found:", ctx->super->bstype.bstype, SPDK_BLOBSTORE_TYPE_LENGTH);
-		spdk_dma_free(ctx->super);
-		_spdk_bs_free(ctx->bs);
-		free(ctx);
-		spdk_bs_sequence_finish(seq, -ENXIO);
+		_spdk_bs_load_fail(seq, ctx, -ENXIO);
 		return;
 	}
 
