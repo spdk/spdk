@@ -64,11 +64,21 @@
 
 # Users must change the PortalGroup section(s) to match the IP addresses
 #  for their environment.
-# PortalGroup sections define which TCP ports the iSCSI server will use
-#  to listen for incoming connections.  These are also used to determine
-#  which targets are accessible over each portal group.
+# PortalGroup sections define which network portals the iSCSI target
+#  will use to listen for incoming connections.  These are also used to
+#  determine which targets are accessible over each portal group.
+# Up to 1024 Portal directives are allowed.  These define the network
+#  portals of the portal group. The user must specify a IP address
+#  for each network portal, and may optionally specify a port and
+#  a cpumask. If the port is omitted, 3260 will be used. Cpumask will
+#  be used to set the processor affinity of the iSCSI connection
+#  through the portal.  If the cpumask is omitted, cpumask will be
+#  set to all available processors.
+#  Syntax:
+#    Portal <Name> <IP address>[:<port>[@<cpumask>]]
 [PortalGroup1]
   Portal DA1 192.168.2.21:3260
+  Portal DA2 192.168.2.22:3260@0xF
 
 # Users must change the InitiatorGroup section(s) to match the IP
 #  addresses and initiator configuration in their environment.
