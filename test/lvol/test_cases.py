@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 import io
+import os
 import sys
 import random
 import signal
 import subprocess
 import pprint
 import socket
+import shutil
 
 from errno import ESRCH
 from os import kill, path, unlink, path, listdir, remove
@@ -54,6 +56,12 @@ def header(num):
         650: 'tasting_positive',
         651: 'tasting_lvol_store_positive',
         700: 'SIGTERM',
+        750: 'thin_provisioning_check_space',
+        751: 'thin_provisioning_read_empty_bdev',
+        752: 'thin_provisionind_data_integrity_test',
+        753: 'thin_provisioning_resize',
+        754: 'thin_provisioning_disks_size_bigger_than_lvs_size',
+        755: 'thin_provisioning_filling_disks_less_than_lvs_size',
     }
     print("========================================================")
     print("Test Case {num}: Start".format(num=num))
@@ -82,6 +90,24 @@ class TestCases(object):
 
     def _gen_lvb_uudi(self):
         return "_".join([str(uuid4()), str(random.randrange(9999999999))])
+
+    def run_fio_test(self, section):
+        fio_tmp = path.join(self.path, 'fio_job.tmp')
+        fio_cmd = ["fio","--section", "%s" % section, "%s" % fio_tmp]
+        process = subprocess.Popen(fio_cmd, stdout=subprocess.PIPE)
+        rv = process.wait()
+        os.remove(fio_tmp)
+        if rv != 0:
+            return 1
+
+        return 0
+
+    def prepare_fio_job(self, sections):
+        fio_path = path.join(self.path, 'fio.job')
+        fio_tmp = path.join(self.path, 'fio_job.tmp')
+        shutil.copyfile(fio_path, fio_tmp)
+        with open(fio_tmp, 'a') as fio:
+            fio.write(sections)
 
     def _stop_vhost(self, pid_path):
         with io.open(pid_path, 'r') as vhost_pid:
@@ -815,4 +841,186 @@ class TestCases(object):
 
         fail_count += self._stop_vhost(pid_path)
         footer(700)
+        return fail_count
+
+    def test_case750(self):
+        header(750)
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        lvs = self.c.get_lvol_stores()
+        size = int(lvs[0]['free_clusters'] / 3)
+        for i in range(2):
+            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                                   self.lbd_name + str(i),
+                                                   size)
+        total_clusters = self.total_size / self.cluster_size
+        lvs_size = lvs[0][u'total_data_clusters']
+        free_clusters = lvs[0][u'free_clusters']
+        if int(free_clusters) != int(lvs_size):
+            fail_count += 1
+        if self.c.destroy_lvol_store(uuid_store) != 0:
+            fail_count += 1
+        footer(750)
+        return fail_count
+
+    def test_case751(self):
+        header(751)
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        lvs = self.c.get_lvol_stores()
+        size = int(lvs[0][u'free_clusters']) / 3
+        for i in range(2):
+            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                                   self.lbd_name + str(i),
+                                                   size)
+        nbd_name = "/dev/nbd"
+        rc = self.c.start_nbd_disk(self.lvs_name + "/" + self.lbd_name + str(0), nbd_name + str(0))
+        rc = self.c.start_nbd_disk(self.lvs_name + "/" + self.lbd_name + str(0), nbd_name + str(1))
+        sections = ""
+        self.prepare_fio_job(sections)
+        rv = self.run_fio_test("check_zeros")
+        if rv == 1:
+            print("Fio test ended with failure")
+            fail_count += 1
+        rc = self.c.stop_nbd_disk(nbd_name + str(0))
+        rc = self.c.stop_nbd_disk(nbd_name + str(1))
+        footer(751)
+        return fail_count
+
+    def test_case752(self):
+        header(752)
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        nbd_name = "/dev/nbd0"
+        rc = self.c.start_nbd_disk(base_name, nbd_name)
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        lvs = self.c.get_lvol_stores()
+        size = int(lvs[0][u'free_clusters']) / 3
+        for i in range(2):
+            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                                   self.lbd_name + str(i),
+                                                   size)
+        nbd_name = "/dev/nbd"
+        rc = self.c.start_nbd_disk(self.lvs_name + "/" + self.lbd_name + str(0), nbd_name + str(0))
+        rc = self.c.start_nbd_disk(self.lvs_name + "/" + self.lbd_name + str(0), nbd_name + str(1))
+        sections = ""
+        self.prepare_fio_job(sections)
+        rv = self.run_fio_test("write_verify")
+        if rv == 1:
+            print("Fio test ended with failure")
+            fail_count += 1
+        rc = self.c.stop_nbd_disk(nbd_name + str(0))
+        rc = self.c.stop_nbd_disk(nbd_name + str(1))
+        footer(752)
+        return fail_count
+
+    def test_case753(self):
+        header(753)
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        nbd_name = "/dev/nbd0"
+        rc = self.c.start_nbd_disk(base_name, nbd_name)
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        lvs = self.c.get_lvol_stores()
+        size = int(lvs[0][u'free_clusters']) / 2
+        for i in range(2):
+            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                                   self.lbd_name + str(i),
+                                                   size)
+        nbd_name = "/dev/nbd"
+        rc = self.c.start_nbd_disk(self.lvs_name + "/" + self.lbd_name + str(0), nbd_name + str(0))
+        rc = self.c.start_nbd_disk(self.lvs_name + "/" + self.lbd_name + str(0), nbd_name + str(1))
+        
+        sections = ""
+        self.prepare_fio_job(sections)
+        rv = self.run_fio_test("write_verify")
+        if rv == 1:
+            print("Fio test ended with failure")
+            fail_count += 1
+        rc = self.c.stop_nbd_disk(nbd_name + str(0))
+        rc = self.c.stop_nbd_disk(nbd_name + str(1))
+        footer(752)
+        footer(753)
+        return fail_count
+
+    def test_case754(self):
+        header(754)
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        nbd_name = "/dev/nbd0"
+        rc = self.c.start_nbd_disk(base_name, nbd_name)
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        lvs = self.c.get_lvol_stores()
+        size = int(lvs[0][u'free_clusters']) / 2 + 2
+        for i in range(2):
+            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                                   self.lbd_name + str(i),
+                                                   size)
+        nbd_name = "/dev/nbd"
+        rc = self.c.start_nbd_disk(self.lvs_name + "/" + self.lbd_name + str(0), nbd_name + str(0))
+        rc = self.c.start_nbd_disk(self.lvs_name + "/" + self.lbd_name + str(0), nbd_name + str(1))
+        
+        sections = ""
+        self.prepare_fio_job(sections)
+        rv = self.run_fio_test("fill_70_percent")
+        if rv == 1:
+            print("Fio test ended with failure")
+            fail_count += 1
+        rc = self.c.stop_nbd_disk(nbd_name + str(0))
+        rc = self.c.stop_nbd_disk(nbd_name + str(1))
+        footer(754)
+        return fail_count
+
+    def test_case755(self):
+        header(755)
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        nbd_name = "/dev/nbd0"
+        rc = self.c.start_nbd_disk(base_name, nbd_name)
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        lvs = self.c.get_lvol_stores()
+        size = int(lvs[0][u'free_clusters']) / 2 + 2
+        for i in range(2):
+            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                                   self.lbd_name + str(i),
+                                                   size)
+        nbd_name = "/dev/nbd"
+        rc = self.c.start_nbd_disk(self.lvs_name + "/" + self.lbd_name + str(0), nbd_name + str(0))
+        rc = self.c.start_nbd_disk(self.lvs_name + "/" + self.lbd_name + str(0), nbd_name + str(1))
+        
+        sections = ""
+        self.prepare_fio_job(sections)
+        rv = self.run_fio_test("fill_45_percent")
+        if rv == 1:
+            print("Fio test ended with failure")
+            fail_count += 1
+        rc = self.c.stop_nbd_disk(nbd_name + str(0))
+        rc = self.c.stop_nbd_disk(nbd_name + str(1))
+        footer(755)
         return fail_count
