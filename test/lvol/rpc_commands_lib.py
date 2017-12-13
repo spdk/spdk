@@ -96,14 +96,17 @@ class Commands_Rpc(object):
             "-c {cluster_sz}".format(cluster_sz=cluster_size))[0]
         return output.rstrip('\n')
 
-    def construct_lvol_bdev(self, uuid, lbd_name, size):
+    def construct_lvol_bdev(self, uuid, lbd_name, size, thin=False):
         print("INFO: RPC COMMAND construct_lvol_bdev")
         try:
             uuid_obj = UUID(uuid)
             name_opt = "-u"
         except ValueError:
             name_opt = "-l"
-        output = self.rpc.construct_lvol_bdev(name_opt, uuid, lbd_name, size)[0]
+        thin_provisioned = ""
+        if thin:
+            thin_provisioned = "-t"
+        output = self.rpc.construct_lvol_bdev(name_opt, uuid, lbd_name, size, thin_provisioned)[0]
         return output.rstrip('\n')
 
     def destroy_lvol_store(self, uuid):
@@ -124,6 +127,16 @@ class Commands_Rpc(object):
     def resize_lvol_bdev(self, uuid, new_size):
         print("INFO: RPC COMMAND resize_lvol_bdev")
         output, rc = self.rpc.resize_lvol_bdev(uuid, new_size)
+        return rc
+
+    def start_nbd_disk(self, bdev_name, nbd_name):
+        print("INFO: RPC COMMAND start_nbd_disk")
+        output, rc = self.rpc.start_nbd_disk(bdev_name, nbd_name)
+        return rc
+
+    def stop_nbd_disk(self, nbd_name):
+        print("INFO: RPC COMMAND stop_nbd_disk")
+        output, rc = self.rpc.stop_nbd_disk(nbd_name)
         return rc
 
     def get_lvol_stores(self):
