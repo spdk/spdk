@@ -110,6 +110,10 @@
   # Default: No
   HotplugEnable No
 
+  # Set how often the hotplug is processed for insert and remove events.
+  # Units in microseconds.
+  HotplugPollRate 0
+
 # Users may change this section to create a different number or size of
 #  malloc LUNs.
 # If the system has hardware DMA engine, it will use an IOAT

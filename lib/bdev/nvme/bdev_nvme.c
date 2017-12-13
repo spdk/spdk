@@ -1408,7 +1408,72 @@ bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 static void
 bdev_nvme_get_spdk_running_config(FILE *fp)
 {
-	/* TODO */
+	struct nvme_ctrlr	*nvme_ctrlr;
+
+	fprintf(fp, "\n[Nvme]");
+	fprintf(fp, "\n"
+		"# NVMe Device Whitelist\n"
+		"# Users may specify which NVMe devices to claim by their transport id.\n"
+		"# See spdk_nvme_transport_id_parse() in spdk/nvme.h for the correct format.\n"
+		"# The second argument is the assigned name, which can be referenced from\n"
+		"# other sections in the configuration file. For NVMe devices, a namespace\n"
+		"# is automatically appended to each name in the format <YourName>nY, where\n"
+		"# Y is the NSID (starts at 1).\n");
+
+	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+			fprintf(fp, "TransportId \"trtype:%s traddr:%s\" %s\n",
+				spdk_nvme_transport_id_trtype_str(nvme_ctrlr->trid.trtype),
+				nvme_ctrlr->trid.traddr, nvme_ctrlr->name);
+		} else {
+			fprintf(fp, "TransportId \"trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\" %s\n",
+				spdk_nvme_transport_id_trtype_str(nvme_ctrlr->trid.trtype),
+				spdk_nvme_transport_id_adrfam_str(nvme_ctrlr->trid.adrfam),
+				nvme_ctrlr->trid.traddr, nvme_ctrlr->trid.trsvcid,
+				nvme_ctrlr->trid.subnqn, nvme_ctrlr->name);
+		}
+	}
+
+	fprintf(fp, "\n"
+		"# The number of attempts per I/O when an I/O fails. Do not include\n"
+		"# this key to get the default behavior.\n");
+	fprintf(fp, "RetryCount %d\n", spdk_nvme_retry_count);
+	fprintf(fp, "\n"
+		"# Timeout for each command, in seconds. If 0, don't track timeouts.\n");
+	fprintf(fp, "Timeout %d\n", g_timeout);
+
+	fprintf(fp, "\n"
+		"# Action to take on command time out. Only valid when Timeout is greater\n"
+		"# than 0. This may be 'Reset' to reset the controller, 'Abort' to abort\n"
+		"# the command, or 'None' to just print a message but do nothing.\n"
+		"# Admin command timeouts will always result in a reset.\n");
+	switch (g_action_on_timeout) {
+	case TIMEOUT_ACTION_NONE:
+		fprintf(fp, "ActionOnTimeout None\n");
+		break;
+	case TIMEOUT_ACTION_RESET:
+		fprintf(fp, "ActionOnTimeout Reset\n");
+		break;
+	case TIMEOUT_ACTION_ABORT:
+		fprintf(fp, "ActionOnTimeout Abort\n");
+		break;
+	}
+
+	fprintf(fp, "\n"
+		"# Set how often the admin queue is polled for asynchronous events.\n"
+		"# Units in microseconds.\n");
+	fprintf(fp, "AdminPollRate %d\n", g_nvme_adminq_poll_timeout_us);
+	fprintf(fp, "\n"
+		"# Disable handling of hotplug (runtime insert and remove) events,\n"
+		"# users can set to Yes if want to enable it.\n"
+		"# Default: No\n");
+	fprintf(fp, "HotplugEnable %s\n", g_nvme_hotplug_enabled ? "Yes" : "No");
+	fprintf(fp, "\n"
+		"# Set how often the hotplug is processed for insert and remove events."
+		"# Units in microseconds.\n");
+	fprintf(fp, "HotplugPollRate %d\n", g_nvme_hotplug_poll_timeout_us);
+
+	fprintf(fp, "\n");
 }
 
 struct spdk_nvme_ctrlr *
