@@ -148,6 +148,18 @@ size_t spdk_strlen_pad(const void *str, size_t size, int pad);
  */
 int spdk_parse_ip_addr(char *ip, char **host, char **port);
 
+/**
+ * Parse a string representing a number possibly followed by a binary prefix.
+ * The string can contain a trailing "B" (KB,MB,GB) but it's not necessary.
+ * "128K" = 128 * 1024; "2G" = 2 * 1024 * 1024; "2GB" = 2 * 1024 * 1024;
+ * Additionally, lowercase "k" will be processed as well. "2k" = 2 * 1024.
+ *
+ * \param cap_str null terminated string
+ * \param cap pointer where the parsed capacity (in bytes) will be put
+ * \returned 0 on success, negative errno otherwise
+ */
+int spdk_parse_capacity(const char *cap_str, uint64_t *cap);
+
 #ifdef __cplusplus
 }
 #endif
