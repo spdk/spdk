@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ddd16a57_3a0fb2b2",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-13T20:15:59Z",
+      "side": 1,
+      "message": "This is not a valid NQN - all NQNs must have a colon (\":\") after the domain name part.",
+      "range": {
+        "startLine": 36,
+        "startChar": 33,
+        "endLine": 36,
+        "endChar": 59
+      },
+      "revId": "801914779c951511cf0d2ce8c094b21ba1e45131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
