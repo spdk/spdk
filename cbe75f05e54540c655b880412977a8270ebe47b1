@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6348bc1a_ced488ef",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-13T21:13:02Z",
+      "side": 1,
+      "message": "Rather than this heuristic, can we add another return parameter to the parsing function that says whether a prefix was specified at all? (e.g. true -\u003e returned number has a suffix applied, false -\u003e no suffix)",
+      "revId": "cbe75f05e54540c655b880412977a8270ebe47b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff2f1b0e_1e297cf9",
+        "filename": "lib/util/string.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-13T21:13:02Z",
+      "side": 1,
+      "message": "We could probably just allow lower and upper case for all characters, since there\u0027s no conflicting SI prefixes in the range we care about (to preemptively avoid confused users passing \"10m\" and complaining that it doesn\u0027t work).",
+      "revId": "cbe75f05e54540c655b880412977a8270ebe47b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
