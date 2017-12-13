@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "fa1e35ae_1e4a5f1d",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 992,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-13T00:02:45Z",
+      "side": 1,
+      "message": "Thank you. As I replied one object is OK.\nPrameters is not many and subdivision will not be necessary.",
+      "parentUuid": "ab02aedf_d5eab913",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "29afbbe7_12426721",
         "filename": "lib/iscsi/iscsi_rpc.c",
         "patchSetId": 2
@@ -65,6 +83,24 @@
       "writtenOn": "2017-12-12T17:25:17Z",
       "side": 1,
       "message": "This looks like it should use a bool instead.",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ec8f4ae_2f4cd3c9",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1013,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-13T00:02:45Z",
+      "side": 1,
+      "message": "Thanks, I adopt spdk_json_write_bool().",
+      "parentUuid": "29afbbe7_12426721",
       "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -88,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "6139be82_f864e3f9",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1047,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-13T00:02:45Z",
+      "side": 1,
+      "message": "OK",
+      "parentUuid": "dd462c1f_3449a925",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c07cbb71_d82098e0",
         "filename": "lib/iscsi/iscsi_rpc.c",
         "patchSetId": 2
@@ -105,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "247ecd97_e25c6e19",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1050,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-13T00:02:45Z",
+      "side": 1,
+      "message": "the final else must print just \"chap\". thank you.",
+      "parentUuid": "c07cbb71_d82098e0",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1d6e846_24f84632",
         "filename": "lib/iscsi/iscsi_rpc.c",
         "patchSetId": 2
@@ -116,6 +188,24 @@
       "writtenOn": "2017-12-12T17:25:17Z",
       "side": 1,
       "message": "Should this print the name of the discovery auth group instead?",
+      "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4aecc6e3_af15c7e3",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-13T00:02:45Z",
+      "side": 1,
+      "message": "Yes, group number must be printed. Thank you.",
+      "parentUuid": "a1d6e846_24f84632",
       "revId": "5248390837cb5cf729942d5ae80eb66f570f6cc8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
