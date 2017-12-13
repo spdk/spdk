@@ -248,6 +248,7 @@ struct rpc_construct_lvol_bdev {
 	char *lvs_name;
 	char *lvol_name;
 	uint64_t size;
+	bool thin_provisioned;
 };
 
 static void
@@ -263,6 +264,7 @@ static const struct spdk_json_object_decoder rpc_construct_lvol_bdev_decoders[] 
 	{"lvs_name", offsetof(struct rpc_construct_lvol_bdev, lvs_name), spdk_json_decode_string, true},
 	{"lvol_name", offsetof(struct rpc_construct_lvol_bdev, lvol_name), spdk_json_decode_string, true},
 	{"size", offsetof(struct rpc_construct_lvol_bdev, size), spdk_json_decode_uint64},
+	{"thin_provisioned", offsetof(struct rpc_construct_lvol_bdev, thin_provisioned), spdk_json_decode_bool, true},
 };
 
 static void
