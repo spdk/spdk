@@ -46,6 +46,30 @@
       "revId": "d86ea42e11de8af12151cc9956f2cf201d601057",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1566622c_c4b435f0",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-13T19:51:32Z",
+      "side": 1,
+      "message": "Whoever needs the functions first should go ahead and merge them as part of their patch, especially since they\u0027re pretty small.  If they\u0027re really big it may require more coordination (through the review process) but for these, I\u0027d say Wenzhong go ahead and add them to your patch where you feel they fit (and if we change that at some later date that\u0027s fine too)",
+      "parentUuid": "333e019a_54b35343",
+      "range": {
+        "startLine": 59,
+        "startChar": 1,
+        "endLine": 59,
+        "endChar": 64
+      },
+      "revId": "d86ea42e11de8af12151cc9956f2cf201d601057",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
