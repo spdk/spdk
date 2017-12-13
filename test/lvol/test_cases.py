@@ -6,6 +6,7 @@ import signal
 import subprocess
 import pprint
 import socket
+import shutil
 
 from errno import ESRCH
 from os import kill, path, unlink, path, listdir, remove
@@ -54,6 +55,7 @@ def header(num):
         650: 'tasting_positive',
         651: 'tasting_lvol_store_positive',
         700: 'SIGTERM',
+        750: 'thin_provisioning_check_space',
     }
     print("========================================================")
     print("Test Case {num}: Start".format(num=num))
@@ -81,6 +83,22 @@ class TestCases(object):
 
     def _gen_lvb_uudi(self):
         return "_".join([str(uuid4()), str(random.randrange(9999999999))])
+
+    def run_fio_test(self):
+        fio_tmp = path.join(self.path, 'fio_job.tmp')
+        fio_cmd = "fio %s" % fio_tmp
+        process = Popen(fio_cmd, shell=True, stdin=PIPE)
+        if process.wait() != 0:
+            return 1
+
+        return 0
+
+    def prepare_fio_job(self):
+        fio_path = path.join(self.path, 'fio_job.fio')
+        fio_tmp = path.join(self.path, 'fio_job.tmp')
+        shutil.copyfile(fio_path, fio_tmp)
+        with io.open(fio_tmp, 'r') as fio:
+            fio.write(sections)
 
     def _stop_vhost(self, pid_path):
         with io.open(pid_path, 'r') as vhost_pid:
@@ -811,4 +829,56 @@ class TestCases(object):
 
         fail_count += self._stop_vhost(pid_path)
         footer(700)
+        return fail_count
+
+    def test_case750(self):
+        header(750)
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        lvs = self.c.get_lvol_stores()
+        print ("Lvs: %s" % lvs)
+        if self.c.destroy_lvol_store(uuid_store) != 0:
+            fail_count += 1
+        footer(750)
+        return fail_count
+
+    def test_case751(self):
+        header(751)
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name,
+                                                 self.cluster_size)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        footer(751)
+        return fail_count
+
+    def test_case752(self):
+        header(752)
+
+        footer(752)
+        return fail_count
+
+    def test_case753(self):
+        header(753)
+
+        footer(753)
+        return fail_count
+
+    def test_case754(self):
+        header(754)
+
+        footer(754)
+        return fail_count
+
+    def test_case755(self):
+        header(755)
+
+        footer(755)
         return fail_count
