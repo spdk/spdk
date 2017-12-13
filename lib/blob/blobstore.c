@@ -1943,10 +1943,15 @@ _spdk_bs_load_replay_md(spdk_bs_sequence_t *seq, void *cb_arg)
 }
 
 static void
-_spdk_bs_recover(spdk_bs_sequence_t *seq, void *cb_arg)
+_spdk_bs_recover(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_bs_load_ctx *ctx = cb_arg;
 	int 		rc;
+
+	if (bserrno != 0) {
+		_spdk_bs_load_ctx_fail(seq, ctx, -EIO);
+		return;
+	}
 
 	rc = spdk_bit_array_resize(&ctx->bs->used_md_pages, ctx->super->md_len);
 	if (rc < 0) {
@@ -2016,7 +2021,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		ctx->super->clean = 0;
 		_spdk_bs_write_super(seq, ctx->bs, ctx->super, _spdk_bs_load_write_super_cpl, ctx);
 	} else {
-		_spdk_bs_recover(seq, ctx);
+		_spdk_bs_recover(seq, ctx, 0);
 	}
 }
 
