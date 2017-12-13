@@ -268,7 +268,10 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	target->current_queue_depth--;
-	target->io_completed++;
+
+	if (success) {
+		target->io_completed++;
+	}
 
 	TAILQ_INSERT_TAIL(&target->task_list, task, link);
 
