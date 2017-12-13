@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07fd531e_11ea125b",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-13T17:26:21Z",
+      "side": 1,
+      "message": "These aren\u0027t part of the public API and are only consumed by code that has visibility into g_spdk_nvme_driver-\u003eshared_attached_ctrlrs, so I don\u0027t think you need to add accessors. Where you were using these, just write:\n\n\nTAILQ_FOREACH(ctrlr, \u0026g_spdk_nvme_driver-\u003eshared_attached_ctrlrs, tailq) {\n...\n}",
+      "revId": "7aac4cf8045fc5b92a1f58062203e93f64b6a1e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f55640c2_8a063e12",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-13T17:26:21Z",
+      "side": 1,
+      "message": "What if we simplify this down and just read the CSTS register right here, and if it returns ~0, fail the controller and start doing a hot remove? Then you don\u0027t need to check in the admin poller.",
+      "revId": "7aac4cf8045fc5b92a1f58062203e93f64b6a1e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
