@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a0a7364_86599846",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-13T08:11:57Z",
+      "side": 1,
+      "message": "missing padding",
+      "range": {
+        "startLine": 79,
+        "startChar": 14,
+        "endLine": 79,
+        "endChar": 15
+      },
+      "revId": "ea09d21a08c7ad1c91582107442bb9ceeffa2a03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7459b2aa_2d2c2700",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-13T08:11:57Z",
+      "side": 1,
+      "message": "could you check it against NULL?",
+      "range": {
+        "startLine": 750,
+        "startChar": 14,
+        "endLine": 750,
+        "endChar": 27
+      },
+      "revId": "ea09d21a08c7ad1c91582107442bb9ceeffa2a03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16ea1919_990a951f",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 497,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-13T08:11:57Z",
+      "side": 1,
+      "message": "since this field is required, it cannot be NULL at this point. spdk_json_decode_object would return -1 in such case.\nThis check can be safely removed.",
+      "range": {
+        "startLine": 497,
+        "startChar": 1,
+        "endLine": 497,
+        "endChar": 38
+      },
+      "revId": "ea09d21a08c7ad1c91582107442bb9ceeffa2a03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3d433ad_b1762cc7",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-13T08:11:57Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 503,
+        "startChar": 1,
+        "endLine": 503,
+        "endChar": 38
+      },
+      "revId": "ea09d21a08c7ad1c91582107442bb9ceeffa2a03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "582ecc38_28055891",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 944,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-13T08:11:57Z",
+      "side": 1,
+      "message": "what\u0027s that check for?\nThere\u0027s no alias field available here.",
+      "revId": "ea09d21a08c7ad1c91582107442bb9ceeffa2a03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
