@@ -1,2 +1,5 @@
 [Ioat]
   Disable Yes
+
+[Split]
+  Split Nvme0n1 6
