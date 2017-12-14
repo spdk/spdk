@@ -1,148 +1,102 @@
 #!/usr/bin/env bash
 
-set -x
+set -e
+BASE_DIR=$(readlink -f $(dirname $0))
+[[ -z "$COMMON_DIR" ]] && COMMON_DIR="$(cd $BASE_DIR/../common && pwd)"
+ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 
-testdir=$(readlink -f $(dirname $0))
-rootdir=$(readlink -f $testdir/../../..)
-plugindir=$rootdir/examples/bdev/fio_plugin
-rpc_py="$rootdir/scripts/rpc.py"
+PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
+RPC_PY="$ROOT_DIR/scripts/rpc.py"
+FIO_BIN="/usr/src/fio/fio"
+BDEV_FIO="$BASE_DIR/bdev.fio"
 
-if [ $RUN_NIGHTLY -eq 1 ]; then
-        fio_rw=("write" "randwrite" "rw" "randrw")
-else
-        fio_rw=("randwrite")
+function usage()
+{
+	[[ ! -z $2 ]] && ( echo "$2"; echo ""; )
+	echo "Script for running vhost initiator tests."
+	echo "Usage: $(basename $1) [-h|--help] [--fiobin=PATH]"
+	echo "-h, --help         Print help and exit"
+	echo "    --fiobin=PATH  Path to fio binary on host [default=/usr/src/fio/fio]"
+}
+
+while getopts 'h-:' optchar; do
+	case "$optchar" in
+		-)
+		case "$OPTARG" in
+			help) usage $0 && exit 0 ;;
+			fiobin=*) FIO_BIN="${OPTARG#*=}" ;;
+			*) usage $0 echo "Invalid argument '$OPTARG'" && exit 1 ;;
+		esac
+		;;
+		h) usage $0 && exit 0 ;;
+		*) usage $0 "Invalid argument '$optchar'" && exit 1 ;;
+	esac
+done
+
+source $COMMON_DIR/common.sh
+
+if [ ! -x $FIO_BIN ]; then
+	error "Invalid path of fio binary"
 fi
 
+if [[ $EUID -ne 0 ]]; then
+	echo "INFO: Go away user come back as root"
+	exit 1
+fi
+
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	BDEV_FIO="$BASE_DIR/bdev_nightly.fio"
+fi
+
+trap 'rm -f *.state; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
-        LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=4k --runtime=10 $testdir/bdev.fio "$@" --spdk_mem=1024
-        fio_status=$?
-        if [ $fio_status != 0 ]; then
-                spdk_vhost_kill
-                exit 1
-        fi
-        rm -f *.state
-        rm -f $testdir/bdev.fio
+	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_BIN --ioengine=spdk_bdev\
+         --runtime=10 "$@" --spdk_mem=1024
 }
 
-function prepare_fio_job_4G() {
-        rw="$1"
-        fio_bdevs="$2"
-        echo "size=1G" >> $testdir/bdev.fio
-        echo "io_size=4G" >> $testdir/bdev.fio
-        echo "offset=4G" >> $testdir/bdev.fio
-        echo "[job_$rw]" >> $testdir/bdev.fio
-        echo "stonewall" >> $testdir/bdev.fio
-        echo "rw=$rw" >> $testdir/bdev.fio
-        echo -n "filename=" >> $testdir/bdev.fio
-        for b in $(echo $fio_bdevs | jq -r '.name'); do
-                echo -n "$b:" >> $testdir/bdev.fio
-        done
+function create_bdev_config()
+{
+	if [ -z "$($RPC_PY get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
+		error "Nvme0n1 bdev not found!"
+	fi
+
+	$RPC_PY construct_vhost_scsi_controller naa.Nvme0n1.0
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 0 Nvme0n1
+
+	$RPC_PY construct_malloc_bdev 128 512 --name Malloc0
+	$RPC_PY construct_vhost_scsi_controller naa.Malloc0.1
+	$RPC_PY add_vhost_scsi_lun naa.Malloc0.1 0 Malloc0
+
+	$RPC_PY construct_malloc_bdev 128 4096 --name Malloc1
+	$RPC_PY construct_vhost_scsi_controller naa.Malloc1.2
+	$RPC_PY add_vhost_scsi_lun naa.Malloc1.2 0 Malloc1
 }
 
-function prepare_fio_job_for_unmap() {
-        fio_bdevs="$1"
-        echo -n "filename=" >> $testdir/bdev.fio
-        for b in $(echo $fio_bdevs | jq -r '.name'); do
-                echo -n "$b:" >> $testdir/bdev.fio
-        done
-        echo "" >> $testdir/bdev.fio
-        echo "size=100m" >> $testdir/bdev.fio
-        echo "io_size=400m" >> $testdir/bdev.fio
-
-        # Check that sequential TRIM/UNMAP operations 'zeroes' disk space
-        echo "[trim_sequential]" >> $testdir/bdev.fio
-        echo "stonewall" >> $testdir/bdev.fio
-        echo "rw=trim" >> $testdir/bdev.fio
-        echo "trim_verify_zero=1" >> $testdir/bdev.fio
-
-        # Check that random TRIM/UNMAP operations 'zeroes' disk space
-        echo "[trim_random]" >> $testdir/bdev.fio
-        echo "stonewall" >> $testdir/bdev.fio
-        echo "rw=randtrim" >> $testdir/bdev.fio
-        echo "trim_verify_zero=1" >> $testdir/bdev.fio
-
-        # Check that after TRIM/UNMAP operation disk space can be used for read
-        # by using write with verify (which implies reads)
-        echo "[write]" >> $testdir/bdev.fio
-        echo "stonewall" >> $testdir/bdev.fio
-        echo "rw=write" >> $testdir/bdev.fio
-}
-
-source $rootdir/test/vhost/common/common.sh
-$rootdir/scripts/gen_nvme.sh
 timing_enter spdk_vhost_run
-spdk_vhost_run $testdir
+spdk_vhost_run $BASE_DIR
 timing_exit spdk_vhost_run
-$rpc_py construct_malloc_bdev 128 512
-$rpc_py construct_malloc_bdev 128 4096
-$rpc_py add_vhost_scsi_lun vhost.0 0 Nvme0n1
-$rpc_py add_vhost_scsi_lun vhost.1 0 Malloc0
-$rpc_py add_vhost_scsi_lun vhost.2 0 Malloc1
-$rpc_py get_bdevs
-bdevs=$($rpc_py get_bdevs | jq -r '.[] | .name')
 
+timing_enter create_bdev_config
+create_bdev_config
+timing_exit create_bdev_config
+
+timing_enter run_spdk_fio
+
+bdevs="VirtioScsi0t0:VirtioScsi1t0:VirtioScsi2t0"
+IFS=':'
 for bdev in $bdevs; do
-        timing_enter bdev
-
-        cp $testdir/bdev.conf.in $testdir/bdev.conf
-        if [ $bdev == "Nvme0n1" ]; then
-                sed -i "s|/tmp/vhost.0|$rootdir/../vhost/vhost.0|g" $testdir/bdev.conf
-        elif [ $bdev == "Malloc0" ]; then
-                sed -i "s|/tmp/vhost.0|$rootdir/../vhost/vhost.1|g" $testdir/bdev.conf
-        else
-                sed -i "s|/tmp/vhost.0|$rootdir/../vhost/vhost.2|g" $testdir/bdev.conf
-        fi
-
-        timing_enter bounds
-        $rootdir/test/lib/bdev/bdevio/bdevio $testdir/bdev.conf
-        timing_exit bounds
-
-        timing_enter bdev_svc
-        bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.claimed == false)')
-        timing_exit bdev_svc
-
-        if [ -d /usr/src/fio ]; then
-                timing_enter fio
-                for rw in "${fio_rw[@]}"; do
-                        timing_enter fio_rw_verify
-                        cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
-                        echo "[job_$rw]" >> $testdir/bdev.fio
-                        echo "stonewall" >> $testdir/bdev.fio
-                        echo "rw=$rw" >> $testdir/bdev.fio
-                        echo -n "filename=" >> $testdir/bdev.fio
-                        for b in $(echo $bdevs | jq -r '.name'); do
-                                echo -n "$b:" >> $testdir/bdev.fio
-                        done
-
-                        run_spdk_fio --spdk_conf=$testdir/bdev.conf
-
-                        timing_exit fio_rw_verify
-                done
-
-                #Host test for unmap
-                timing_enter unmap
-                cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
-                prepare_fio_job_for_unmap "$bdevs"
-                run_spdk_fio --spdk_conf=$testdir/bdev.conf
-                timing_exit unmap
-
-                #Host test for +4G
-                if [ $bdev == "Nvme0n1" ]; then
-                    for rw in "${fio_rw[@]}"; do
-                        timing_enter fio_4G_rw_verify
-                        notice " Running 4G test $rw for disk $bdev"
-                        cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
-                        prepare_fio_job_4G "$rw" "$bdevs"
-                        run_spdk_fio --spdk_conf=$testdir/bdev.conf
-                        timing_exit fio_4G_rw_verify
-                    done
-                fi
-                timing_exit fio
-        fi
-
-        rm -f $testdir/bdev.conf
-        timing_exit bdev
+	run_spdk_fio $BDEV_FIO --filename="$bdev" \
+	 --io_size=400m --size=100m --spdk_conf=$BASE_DIR/bdev.conf
 done
+
+timing_exit run_spdk_fio
+
+timing_enter run_spdk_fio_4G
+run_spdk_fio $BDEV_FIO --filename=VirtioScsi0t0 \
+ --io_size=4G --size=1G --offset=4G --spdk_conf=$BASE_DIR/bdev.conf
+timing_exit run_spdk_fio_4G
+
+rm -f *.state
 timing_enter spdk_vhost_kill
 spdk_vhost_kill
 timing_exit spdk_vhost_kill
