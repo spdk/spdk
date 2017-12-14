@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bdc367c6_aa52454a",
+        "filename": "test/nvmf/multiconnection/multiconnection.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-14T15:24:00Z",
+      "side": 1,
+      "message": "This will not work on NVMeOF VM, sorry:/ Known issue.\nSee my old patch here, it also fails with the same \"Cannot allocate memory\" error: https://review.gerrithub.io/#/c/380459/\n\nApparently it\u0027s how software nvmf driver is done - there\u0027s just not enough queues.",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 85,
+        "endChar": 4
+      },
+      "revId": "827a76718c90986a5d48b5f7e9c25b8f87ffbad7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
