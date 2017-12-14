@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6a82175_e7a96821",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 379,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T10:30:05Z",
+      "side": 1,
+      "message": "Can we please keep the comments consistent without double asterix ?\nEither\n/* Comment */\nor\n/*\n * Comment\n */",
+      "range": {
+        "startLine": 379,
+        "startChar": 1,
+        "endLine": 379,
+        "endChar": 4
+      },
+      "revId": "89b55ed394a3bda5d9efd64291468a713bffe050",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
