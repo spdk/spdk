@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "a6627537_f12c3eef",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2017-12-14T05:52:58Z",
+      "side": 1,
+      "message": "This is log information. And in the other vhost test scripts(lvol_test.sh), there are some \"echo INFO\" log messages. So I think we can keep this line for log usage.",
+      "parentUuid": "b22b5165_42786ad3",
+      "range": {
+        "startLine": 135,
+        "startChar": 0,
+        "endLine": 135,
+        "endChar": 50
+      },
+      "revId": "725c4cafc11fab44b7f532e9188e3a4501528c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c608df9b_7c2d1276",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 6
@@ -83,6 +107,30 @@
       "writtenOn": "2017-12-13T07:10:42Z",
       "side": 1,
       "message": "Do you think SIGKILL can be captured?",
+      "parentUuid": "c608df9b_7c2d1276",
+      "range": {
+        "startLine": 148,
+        "startChar": 61,
+        "endLine": 148,
+        "endChar": 84
+      },
+      "revId": "725c4cafc11fab44b7f532e9188e3a4501528c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7561306_2a878029",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2017-12-14T05:52:58Z",
+      "side": 1,
+      "message": "Just checked again. We just need to capture SIGINT, SIGTERM and EXIT. \nCan you provide some scenario about why to add SIGABRT, SIGSEGV and SIGKILL?",
       "parentUuid": "c608df9b_7c2d1276",
       "range": {
         "startLine": 148,
