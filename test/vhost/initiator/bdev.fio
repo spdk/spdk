@@ -9,25 +9,28 @@ verify=md5
 verify_backlog=1024
 iodepth=128
 bs=4K
+runtime=10
+size=25%
 
 [job_randwrite]
-stonewall
 rw=randwrite
-name=rardwrite
+name=randwrite
 
 [job_unmap_trim_sequential]
-stonewall
+offset=25%
 rw=trim
 trim_verify_zero=1
 name=unmap_trim_sequential
 
 [job_unmap_trim_random]
-stonewall
+offset=50%
 rw=randtrim
 trim_verify_zero=1
 name=unmap_trim_random
 
 [job_unmap_write]
 stonewall
-rw=write
+offset=25%
+size=50%
+rw=randwrite
 name=unmap_write
