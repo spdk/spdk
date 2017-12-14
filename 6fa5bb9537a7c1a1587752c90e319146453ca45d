@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97473574_29aa6153",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-14T10:25:59Z",
+      "side": 1,
+      "message": "After reconsidering - this test is not good. Metadata size depends on total size of used backend bdev and can also change in future if new information will be stored. So let\u0027s not check that.\n\nLet\u0027s change this test to thin_provisioning_write_check.\nSteps:\n1. Create lvol store\n2. Create lvol bdev with thin prov; check \u0026 save number of free clusters on LVS\n3. Write data to bdev on offset 0 (start of bdev); data size should be less than or equal to lvol store cluster size. Check that after writing free_clsters on lvs decremented by 1.\n4. Write data to bdev on offset which is not a multiple of cluster size (so for example if CS\u003d1MB, then use offset\u003d1,5MB) and write data with size \u003d cluster size.  Check that after writing free_clsters on lvs decremented by 2.\n5. Write data with size equal to lvol bdev size. Check that writing doesn\u0027t fail and that after this operation lvs free clusters \u003d 0",
+      "range": {
+        "startLine": 624,
+        "startChar": 0,
+        "endLine": 627,
+        "endChar": 66
+      },
+      "revId": "6fa5bb9537a7c1a1587752c90e319146453ca45d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "febfbdc4_0603f1ad",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-14T10:25:59Z",
+      "side": 1,
+      "message": "Like in previous patch comments - I think malloc bdev is enough for this test",
+      "range": {
+        "startLine": 635,
+        "startChar": 16,
+        "endLine": 635,
+        "endChar": 30
+      },
+      "revId": "6fa5bb9537a7c1a1587752c90e319146453ca45d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "944356ee_80f674fc",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-14T10:25:59Z",
+      "side": 1,
+      "message": "that is first step...",
+      "range": {
+        "startLine": 636,
+        "startChar": 2,
+        "endLine": 636,
+        "endChar": 35
+      },
+      "revId": "6fa5bb9537a7c1a1587752c90e319146453ca45d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c765f53_b0e11437",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-14T10:25:59Z",
+      "side": 1,
+      "message": "...and size is an argument for construct_lvol_bdev, not for lvol store.\nYou need to add next step in which you construct a lvol bdev.",
+      "range": {
+        "startLine": 636,
+        "startChar": 36,
+        "endLine": 636,
+        "endChar": 48
+      },
+      "revId": "6fa5bb9537a7c1a1587752c90e319146453ca45d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a385783_0296e189",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-14T10:25:59Z",
+      "side": 1,
+      "message": "zeroes",
+      "range": {
+        "startLine": 637,
+        "startChar": 51,
+        "endLine": 637,
+        "endChar": 56
+      },
+      "revId": "6fa5bb9537a7c1a1587752c90e319146453ca45d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14b45a91_8da0da3e",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-14T10:25:59Z",
+      "side": 1,
+      "message": "what about destroying lvol bdev?",
+      "range": {
+        "startLine": 638,
+        "startChar": 1,
+        "endLine": 638,
+        "endChar": 20
+      },
+      "revId": "6fa5bb9537a7c1a1587752c90e319146453ca45d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "974ccc5a_e5490a8b",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-14T10:25:59Z",
+      "side": 1,
+      "message": "malloc is enough",
+      "range": {
+        "startLine": 645,
+        "startChar": 21,
+        "endLine": 645,
+        "endChar": 30
+      },
+      "revId": "6fa5bb9537a7c1a1587752c90e319146453ca45d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
