@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39fb09e7_cb1f6493",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T15:52:41Z",
+      "side": 1,
+      "message": "why you don\u0027t use $lvs_uuid inside the query?",
+      "range": {
+        "startLine": 92,
+        "startChar": 44,
+        "endLine": 92,
+        "endChar": 108
+      },
+      "revId": "cd03eb73a534093c2a52ed1d50c1d9718ac74073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2bc118ca_bd5f2d3f",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T15:52:41Z",
+      "side": 1,
+      "message": "Please cache RPC command result and reuse it.",
+      "range": {
+        "startLine": 92,
+        "startChar": 15,
+        "endLine": 92,
+        "endChar": 38
+      },
+      "revId": "cd03eb73a534093c2a52ed1d50c1d9718ac74073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41bc4eb6_50330129",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T15:52:41Z",
+      "side": 1,
+      "message": "comment from PS1",
+      "range": {
+        "startLine": 146,
+        "startChar": 61,
+        "endLine": 146,
+        "endChar": 80
+      },
+      "revId": "cd03eb73a534093c2a52ed1d50c1d9718ac74073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a922bbaf_aa0afa7e",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T15:52:41Z",
+      "side": 1,
+      "message": "please use \"fs1,fs2,fs3\" syntax not \"mul\". you can easly replace \u0027,\u0027 with spaces in for loop using bash string manipulation.",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 26
+      },
+      "revId": "cd03eb73a534093c2a52ed1d50c1d9718ac74073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5100512_4bc6d138",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T15:52:41Z",
+      "side": 1,
+      "message": "If the partition table is properly created we should not need those hacks at all. Eg for ntfs why you use \u0027-F\u0027 flag? It will cover some critical errors. Also \u0027-f\u0027 is not what we should probably use.\n\nIf some mkfs still complain about existing FS use \u0027wipefs -a\u0027 on this device but please stop this insanity and remove this if-else.",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 18
+      },
+      "revId": "cd03eb73a534093c2a52ed1d50c1d9718ac74073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dc4aada_84abddc2",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T15:52:41Z",
+      "side": 1,
+      "message": "when if-else is removed we can use mkfs directly.",
+      "range": {
+        "startLine": 49,
+        "startChar": 16,
+        "endLine": 49,
+        "endChar": 25
+      },
+      "revId": "cd03eb73a534093c2a52ed1d50c1d9718ac74073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
