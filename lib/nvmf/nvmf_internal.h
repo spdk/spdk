@@ -125,6 +125,7 @@ struct spdk_nvmf_request {
 };
 
 struct spdk_nvmf_ns {
+	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	uint32_t id;
