@@ -18,6 +18,35 @@ function run_fio()
 }
 
 source $rootdir/scripts/autotest_common.sh
+source $testdir/nbd/nbd_common.sh
+
+function nbd_function_test() {
+	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
+		local rpc_server=/var/tmp/spdk-nbd.sock
+		local conf=$1
+		local nbd_num=6
+		local nbd_all=(`ls /dev/nbd*`)
+		local bdev_all=($bdevs_name)
+		local nbd_list=(${nbd_all[@]:0:$nbd_num})
+		local bdev_list=(${bdev_all[@]:0:$nbd_num})
+
+		if [ ! -e $conf ]; then
+			return 1
+		fi
+
+		modprobe nbd
+		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf} &
+		nbd_pid=$!
+		echo "Process nbd pid: $nbd_pid"
+		waitforlisten $nbd_pid $rpc_server
+
+		nbd_rpc_data_verify $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
+
+		killprocess $nbd_pid
+	fi
+
+	return 0
+}
 
 timing_enter bdev
 
@@ -31,15 +60,20 @@ timing_enter bounds
 $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
 
-timing_enter nbd
+timing_enter nbd_gpt
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
 fi
-timing_exit nbd
+timing_exit nbd_gpt
 
 timing_enter bdev_svc
 bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.claimed == false)')
 timing_exit bdev_svc
+
+timing_enter nbd
+bdevs_name=$(echo $bdevs | jq -r '.name')
+nbd_function_test $testdir/bdev.conf "$bdevs_name"
+timing_exit nbd
 
 if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 	timing_enter fio
