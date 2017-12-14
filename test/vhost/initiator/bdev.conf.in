@@ -1,18 +1,18 @@
 [VirtioUser0]
   Path /tmp/vhost.0
-  Queues 4
+  Queues 16
 
 [VirtioUser1]
   Path /tmp/vhost.1
-  Queues 4
+  Queues 16
 
 [VirtioUser2]
   Path /tmp/vhost.2
-  Queues 4
+  Queues 16
 
 [VirtioUser3]
   Path /tmp/vhost.3
-  Queues 4
+  Queues 16
 
 [Ioat]
   Disable Yes
