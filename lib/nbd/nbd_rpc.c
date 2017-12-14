@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/string.h"
+#include "spdk/env.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
@@ -118,6 +120,18 @@ static const struct spdk_json_object_decoder rpc_stop_nbd_disk_decoders[] = {
 	{"nbd_device", offsetof(struct rpc_stop_nbd_disk, nbd_device), spdk_json_decode_string},
 };
 
+static void *
+nbd_disconnect_thread(void *arg)
+{
+	struct spdk_nbd_disk *nbd = arg;
+
+	spdk_unaffinitize_thread();
+
+	nbd_disconnect(nbd);
+
+	pthread_exit(NULL);
+}
+
 static void
 spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
@@ -125,6 +139,9 @@ spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
 	struct rpc_stop_nbd_disk req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_nbd_disk *nbd;
+	pthread_t tid;
+	char buf[64];
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_stop_nbd_disk_decoders,
 				    SPDK_COUNTOF(rpc_stop_nbd_disk_decoders),
@@ -143,7 +160,23 @@ spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	nbd_disconnect(nbd);
+	/*
+	 * NBD ioctl of disconnect will block until data are flushed.
+	 * Create separate thread to execute it.
+	 */
+	rc = pthread_create(&tid, NULL, nbd_disconnect_thread, (void *)nbd);
+	if (rc != 0) {
+		spdk_strerror_r(rc, buf, sizeof(buf));
+		SPDK_ERRLOG("could not create nbd disconnect thread: %s\n", buf);
+		goto invalid;
+	}
+
+	rc = pthread_detach(tid);
+	if (rc != 0) {
+		spdk_strerror_r(rc, buf, sizeof(buf));
+		SPDK_ERRLOG("could not detach nbd disconnect thread: %s\n", buf);
+		goto invalid;
+	}
 
 	free_rpc_stop_nbd_disk(&req);
 
