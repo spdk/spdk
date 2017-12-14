@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "acc8fea4_e61c23b3",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 573,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T21:50:54Z",
+      "side": 1,
+      "message": "how do we communicate the actual amount of data that was transferred with this new method?",
+      "revId": "2e8c4b01ad6ae5ec3eca75d7b7a074e22ae4b042",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
