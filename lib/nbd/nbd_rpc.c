@@ -31,6 +31,8 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk/string.h"
+#include "spdk/env.h"
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 
@@ -118,47 +120,105 @@ static const struct spdk_json_object_decoder rpc_stop_nbd_disk_decoders[] = {
 	{"nbd_device", offsetof(struct rpc_stop_nbd_disk, nbd_device), spdk_json_decode_string},
 };
 
+struct nbd_disconnect_arg {
+	struct spdk_jsonrpc_request *request;
+	struct spdk_nbd_disk *nbd;
+};
+
+static void *
+nbd_disconnect_thread(void *arg)
+{
+	struct nbd_disconnect_arg *thd_arg = arg;
+	struct spdk_json_write_ctx *w;
+
+	spdk_unaffinitize_thread();
+
+	nbd_disconnect(thd_arg->nbd);
+
+	w = spdk_jsonrpc_begin_result(thd_arg->request);
+	if (w == NULL) {
+		goto out;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(thd_arg->request, w);
+
+out:
+	free(thd_arg);
+	pthread_exit(NULL);
+}
+
 static void
 spdk_rpc_stop_nbd_disk(struct spdk_jsonrpc_request *request,
 		       const struct spdk_json_val *params)
 {
 	struct rpc_stop_nbd_disk req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_nbd_disk *nbd;
+	pthread_t tid;
+	struct nbd_disconnect_arg *thd_arg = NULL;
+	char buf[64];
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_stop_nbd_disk_decoders,
 				    SPDK_COUNTOF(rpc_stop_nbd_disk_decoders),
 				    &req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto out;
 	}
 
 	if (req.nbd_device == NULL) {
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto out;
 	}
 
 	/* make sure nbd_device is registered */
 	nbd = spdk_nbd_disk_find_by_nbd_path(req.nbd_device);
 	if (!nbd) {
-		goto invalid;
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto out;
 	}
 
-	nbd_disconnect(nbd);
-
-	free_rpc_stop_nbd_disk(&req);
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
+	/*
+	 * thd_arg should be freed by created thread
+	 * if thread is created successfully.
+	 */
+	thd_arg = malloc(sizeof(*thd_arg));
+	if (!thd_arg) {
+		spdk_strerror_r(-ENOMEM, buf, sizeof(buf));
+		SPDK_ERRLOG("could not allocate nbd disconnect thread arg: %s\n", buf);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, buf);
+		goto out;
 	}
 
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
-	return;
+	thd_arg->request = request;
+	thd_arg->nbd = nbd;
 
-invalid:
+	/*
+	 * NBD ioctl of disconnect will block until data are flushed.
+	 * Create separate thread to execute it.
+	 */
+	rc = pthread_create(&tid, NULL, nbd_disconnect_thread, (void *)thd_arg);
+	if (rc != 0) {
+		spdk_strerror_r(rc, buf, sizeof(buf));
+		SPDK_ERRLOG("could not create nbd disconnect thread: %s\n", buf);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, buf);
+		free(thd_arg);
+		goto out;
+	}
+
+	rc = pthread_detach(tid);
+	if (rc != 0) {
+		spdk_strerror_r(rc, buf, sizeof(buf));
+		SPDK_ERRLOG("could not detach nbd disconnect thread: %s\n", buf);
+		goto out;
+	}
+
+out:
 	free_rpc_stop_nbd_disk(&req);
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 }
 
 SPDK_RPC_REGISTER("stop_nbd_disk", spdk_rpc_stop_nbd_disk)
