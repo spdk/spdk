@@ -366,7 +366,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	spdk_env_init(&env_opts);
 
-	printf("Total cores available: %d\n", spdk_env_get_core_count());
+	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 
 	/*
 	 * If mask not specified on command line or in configuration file,
