@@ -1,6 +1,0 @@
-[VirtioUser0]
-  Path /tmp/vhost.0
-  Queues 16
-
-[Ioat]
-  Disable Yes
