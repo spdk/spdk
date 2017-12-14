@@ -214,6 +214,30 @@
     },
     {
       "key": {
+        "uuid": "d648c889_cb3ac5e7",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T11:57:47Z",
+      "side": 1,
+      "message": "\u003e This must be out-of-box example so copy-paste will give the same outpu. \n\nGood point...",
+      "parentUuid": "c90f7b07_91c3e60d",
+      "range": {
+        "startLine": 189,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 3
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cfe3482d_118e76a5",
         "filename": "doc/vhost.md",
         "patchSetId": 1
@@ -273,6 +297,30 @@
       "side": 1,
       "message": "I was readeable for me at least. Maybe some voting ? :)",
       "parentUuid": "2d8e5a6a_5b93bc3a",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 229,
+        "endChar": 3
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f4d7795_2c9e5c6e",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T11:57:47Z",
+      "side": 1,
+      "message": "I\u0027d suggest a drinking contest",
+      "parentUuid": "56bf964d_c414e6d8",
       "range": {
         "startLine": 175,
         "startChar": 0,
