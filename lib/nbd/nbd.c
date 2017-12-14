@@ -229,6 +229,8 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 	}
 
 	if (nbd->dev_fd >= 0) {
+		ioctl(nbd->dev_fd, NBD_CLEAR_QUE);
+		ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
 		close(nbd->dev_fd);
 	}
 
@@ -512,8 +514,7 @@ nbd_start_kernel(void *arg)
 
 	/* This will block in the kernel until we close the spdk_sp_fd. */
 	ioctl(dev_fd, NBD_DO_IT);
-	ioctl(dev_fd, NBD_CLEAR_QUE);
-	ioctl(dev_fd, NBD_CLEAR_SOCK);
+
 	pthread_exit(NULL);
 }
 
