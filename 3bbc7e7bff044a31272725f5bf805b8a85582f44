@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d89aa742_c3a34bb3",
+        "filename": "test/vhost/initiator/bdev_4G.fio",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T17:39:38Z",
+      "side": 1,
+      "message": "does it need to be a separate file?\n\ncould we use default bdev.fio with fio argument --offset\u003d4G instead?\nWe\u0027d also need to specify size and io_size, but that\u0027s probably a good change anyway.",
+      "revId": "3bbc7e7bff044a31272725f5bf805b8a85582f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bad0439_5e93432f",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T17:39:38Z",
+      "side": 1,
+      "message": "--fiobin\u003dPATH",
+      "range": {
+        "startLine": 16,
+        "startChar": 42,
+        "endLine": 16,
+        "endChar": 50
+      },
+      "revId": "3bbc7e7bff044a31272725f5bf805b8a85582f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f990d23_47d90419",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T17:39:38Z",
+      "side": 1,
+      "message": "could you create a vhost-user device with RPC so that it has proper name already?\nWe should be able to remove this sed and entire bdev.conf.in file (there would be raw bdev.conf instead)",
+      "range": {
+        "startLine": 73,
+        "startChar": 1,
+        "endLine": 73,
+        "endChar": 79
+      },
+      "revId": "3bbc7e7bff044a31272725f5bf805b8a85582f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
