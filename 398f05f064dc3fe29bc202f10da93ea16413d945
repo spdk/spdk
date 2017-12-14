@@ -90,6 +90,30 @@
       "revId": "398f05f064dc3fe29bc202f10da93ea16413d945",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca8e5a80_4cb9a1fe",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2810,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T09:18:06Z",
+      "side": 1,
+      "message": "I meant as internal function like _spdk_bs_md_set_thin_provision() or similar.",
+      "parentUuid": "0b146cc1_7c7d9a6c",
+      "range": {
+        "startLine": 2810,
+        "startChar": 5,
+        "endLine": 2810,
+        "endChar": 34
+      },
+      "revId": "398f05f064dc3fe29bc202f10da93ea16413d945",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
