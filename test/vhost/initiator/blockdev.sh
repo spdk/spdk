@@ -8,6 +8,8 @@ ROOT_DIR=$(readlink -f $BASE_DIR/../../..)
 PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 RPC_PY="$ROOT_DIR/scripts/rpc.py"
 FIO_BIN="/usr/src/fio/fio"
+virtio_bdevs=""
+virtio_nvme_bdevs=""
 
 function usage()
 {
@@ -68,9 +70,9 @@ function create_bdev_config()
 	fi
 
 	cp $BASE_DIR/bdev.conf.in $BASE_DIR/bdev.conf
-	$RPC_PY construct_vhost_scsi_controller naa.Nvme0n1.0
-	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 0 Nvme0n1
-	sed -i "s|/tmp/vhost.0|$ROOT_DIR/../vhost/naa.Nvme0n1.0|g" $BASE_DIR/bdev.conf
+	$RPC_PY construct_vhost_scsi_controller naa.Nvme0n1p0.0
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1p0.0 0 Nvme0n1p0
+	sed -i "s|/tmp/vhost.0|$ROOT_DIR/../vhost/naa.Nvme0n1p0.0|g" $BASE_DIR/bdev.conf
 
 	malloc_name=$($RPC_PY construct_malloc_bdev 128 512)
 	$RPC_PY construct_vhost_scsi_controller naa."$malloc_name".1
@@ -81,14 +83,24 @@ function create_bdev_config()
 	$RPC_PY construct_vhost_scsi_controller naa."$malloc_name".2
 	$RPC_PY add_vhost_scsi_lun naa."$malloc_name".2 0 $malloc_name
 	sed -i "s|/tmp/vhost.2|$ROOT_DIR/../vhost/naa."$malloc_name".2|g" $BASE_DIR/bdev.conf
+
+	$RPC_PY construct_vhost_scsi_controller naa.Nvme0n1.3
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.3 0 Nvme0n1p1
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.3 1 Nvme0n1p2
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.3 2 Nvme0n1p3
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.3 3 Nvme0n1p4
+	sed -i "s|/tmp/vhost.3|$ROOT_DIR/../vhost/naa.Nvme0n1.3|g" $BASE_DIR/bdev.conf
+
+	virtio_bdevs="VirtioScsi0t0:VirtioScsi1t0:VirtioScsi2t0:VirtioScsi3t0:VirtioScsi3t1:VirtioScsi3t2:VirtioScsi3t3"
+	virtio_nvme_bdevs="VirtioScsi0t0:VirtioScsi3t0:VirtioScsi3t1:VirtioScsi3t2:VirtioScsi3t3"
 }
 
 timing_enter fio
 spdk_vhost_run $BASE_DIR
 
 create_bdev_config
-run_fio $BASE_DIR/bdev.fio --filename=VirtioScsi0t0:VirtioScsi1t0:VirtioScsi2t0 --spdk_conf=$BASE_DIR/bdev.conf
-run_fio $BASE_DIR/bdev_4G.fio --filename=VirtioScsi0t0 --spdk_conf=$BASE_DIR/bdev.conf
+run_fio $BASE_DIR/bdev.fio --filename=$virtio_bdevs --spdk_conf=$BASE_DIR/bdev.conf
+run_fio $BASE_DIR/bdev_4G.fio --filename=$virtio_nvme_bdevs --spdk_conf=$BASE_DIR/bdev.conf
 
 rm -f *.state
 rm -f $BASE_DIR/bdev.conf
