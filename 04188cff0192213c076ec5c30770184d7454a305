@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "439772b7_557e649f",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-14T23:21:47Z",
+      "side": 1,
+      "message": "I think this should be *end !\u003d \u0027\\0\u0027 and please log what the character is invalid.",
+      "range": {
+        "startLine": 113,
+        "startChar": 15,
+        "endLine": 113,
+        "endChar": 27
+      },
+      "revId": "04188cff0192213c076ec5c30770184d7454a305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a11a0001_4ec016e7",
         "filename": "lib/util/cpuset.c",
         "patchSetId": 6
