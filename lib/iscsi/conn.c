@@ -1229,7 +1229,8 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 0;
 		} else {
-			perror("writev");
+			SPDK_ERRLOG("Errno %d: spdk_sock_writev(fd=%d) failed\n",
+				    errno, conn->sock);
 			return -1;
 		}
 	}

@@ -791,7 +791,7 @@ spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 	authfile = strdup(g_spdk_iscsi.authfile);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	if (!authfile) {
-		perror("authfile");
+		SPDK_ERRLOG("cannot duplicate %s to authfile\n", g_spdk_iscsi.authfile);
 		return -ENOMEM;
 	}
 
@@ -843,7 +843,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 	/* for temporary store */
 	in_val = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
 	if (!in_val) {
-		perror("in_val");
+		SPDK_ERRLOG("out-of-memory for temporary store\n");
 		return -ENOMEM;
 	}
 
@@ -1054,7 +1054,7 @@ spdk_iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 
 	data = malloc(alloc_len);
 	if (!data) {
-		perror("data");
+		SPDK_ERRLOG("out-of-memory for data segment");
 		return -ENOMEM;
 	}
 
@@ -1846,7 +1846,7 @@ spdk_iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 
 	rsp_pdu->data = malloc(*alloc_len);
 	if (!rsp_pdu->data) {
-		perror("data");
+		SPDK_ERRLOG("out-of-memory for data segment\n");
 		return -ENOMEM;
 	}
 
@@ -2328,7 +2328,7 @@ spdk_iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	data = malloc(alloc_len);
 	if (!data) {
-		perror("data");
+		SPDK_ERRLOG("out-of-memory for data segment\n");
 		spdk_iscsi_param_free(params);
 		return -ENOMEM;
 	}
@@ -3493,7 +3493,7 @@ spdk_iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	data = malloc(data_len);
 	if (!data) {
-		perror("could not allocate ping buffer");
+		SPDK_ERRLOG("out-of-memory for ping data\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 	memset(data, 0, data_len);
@@ -4570,7 +4570,7 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 
 	sess->conns = malloc(sizeof(*sess->conns) * sess->MaxConnections);
 	if (!sess->conns) {
-		perror("conns");
+		SPDK_ERRLOG("out-of-memory for connections");
 		return -ENOMEM;
 	}
 

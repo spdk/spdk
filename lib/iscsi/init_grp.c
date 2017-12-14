@@ -328,7 +328,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 
 	initiators = calloc(num_initiator_names, sizeof(char *));
 	if (!initiators) {
-		perror("initiators");
+		SPDK_ERRLOG("out-of-memory for temporary buffer");
 		return -ENOMEM;
 	}
 	for (i = 0; i < num_initiator_names; i++) {
@@ -341,14 +341,14 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "InitiatorName %s\n", val);
 		initiators[i] = strdup(val);
 		if (!initiators[i]) {
-			perror("initiator name copy");
+			SPDK_ERRLOG("cannot duplicate initiator name\n");
 			rc = -ENOMEM;
 			goto cleanup;
 		}
 	}
 	netmasks = calloc(num_initiator_masks, sizeof(char *));
 	if (!netmasks) {
-		perror("netmasks");
+		SPDK_ERRLOG("out-of-memory for temporary buffer\n");
 		rc = -ENOMEM;
 		goto cleanup;
 	}
@@ -362,7 +362,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Netmask %s\n", val);
 		netmasks[i] = strdup(val);
 		if (!netmasks[i]) {
-			perror("initiator netmask copy");
+			SPDK_ERRLOG("cannot duplicate netmask\n");
 			rc = -ENOMEM;
 			goto cleanup;
 		}

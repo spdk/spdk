@@ -189,7 +189,7 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 		if (!dry_run) {
 			host = malloc(n + 1);
 			if (!host) {
-				perror("host");
+				SPDK_ERRLOG("out-of-memory for host\n");
 				goto error_out;
 			}
 			memcpy(host, portalstring, n);
@@ -199,7 +199,7 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 			if (!dry_run) {
 				port = malloc(PORTNUMSTRLEN);
 				if (!port) {
-					perror("port");
+					SPDK_ERRLOG("out-of-memory for port\n");
 					goto error_out;
 				}
 				snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
@@ -218,7 +218,7 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 
 				port = malloc(len + 1);
 				if (!port) {
-					perror("port");
+					SPDK_ERRLOG("out-of-memory for port\n");
 					goto error_out;
 				}
 				memset(port, 0, len + 1);
@@ -235,7 +235,7 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 		if (!dry_run) {
 			host = malloc(n + 1);
 			if (!host) {
-				perror("host");
+				SPDK_ERRLOG("out-of-memory for host\n");
 				goto error_out;
 			}
 			memcpy(host, portalstring, n);
@@ -245,7 +245,7 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 			if (!dry_run) {
 				port = malloc(PORTNUMSTRLEN);
 				if (!port) {
-					perror("port");
+					SPDK_ERRLOG("out-of-memory for port\n");
 					goto error_out;
 				}
 				snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
@@ -269,7 +269,7 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 				len = q - p - 1;
 				port = malloc(len + 1);
 				if (!port) {
-					perror("port");
+					SPDK_ERRLOG("out-of-memory for port\n");
 					goto error_out;
 				}
 				memset(port, 0, len + 1);

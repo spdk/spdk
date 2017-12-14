@@ -145,7 +145,7 @@ spdk_iscsi_param_add(struct iscsi_param **params, const char *key,
 
 	param = malloc(sizeof * param);
 	if (!param) {
-		perror("param");
+		SPDK_ERRLOG("out-of-memory for parameter\n");
 		return -ENOMEM;
 	}
 
@@ -245,7 +245,7 @@ spdk_iscsi_parse_param(struct iscsi_param **params, const uint8_t *data)
 
 	key_copy = malloc(key_len + 1);
 	if (!key_copy) {
-		perror("key_copy");
+		SPDK_ERRLOG("out-of-memory for key_copy\n");
 		return -ENOMEM;
 	}
 
@@ -523,7 +523,7 @@ spdk_iscsi_special_param_construction(struct spdk_iscsi_conn *conn,
 
 	val = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
 	if (!val) {
-		perror("val");
+		SPDK_ERRLOG("out-of-memory for temporary buffer\n");
 		return -ENOMEM;
 	}
 
@@ -921,20 +921,20 @@ spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 	/* for temporary store */
 	valid_list = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
 	if (!valid_list) {
-		perror("valid_list");
+		SPDK_ERRLOG("out-of-memory for valid_list\n");
 		return -ENOMEM;
 	}
 
 	in_val = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
 	if (!in_val) {
-		perror("in_val");
+		SPDK_ERRLOG("out-of-memory for in_val\n");
 		free(valid_list);
 		return -ENOMEM;
 	}
 
 	cur_val = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
 	if (!cur_val) {
-		perror("cur_val");
+		SPDK_ERRLOG("out-of-memory for cur_val\n");
 		free(valid_list);
 		free(in_val);
 		return -ENOMEM;
