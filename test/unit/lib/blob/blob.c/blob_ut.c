@@ -2012,17 +2012,17 @@ blob_flags(void)
 
 	spdk_bs_open_blob(g_bs, blobid_invalid, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
-	CU_ASSERT(g_blob != NULL);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob_invalid = g_blob;
 
 	spdk_bs_open_blob(g_bs, blobid_data_ro, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
-	CU_ASSERT(g_blob != NULL);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob_data_ro = g_blob;
 
 	spdk_bs_open_blob(g_bs, blobid_md_ro, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
-	CU_ASSERT(g_blob != NULL);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	blob_md_ro = g_blob;
 
 	__blob_to_data(blob_invalid)->invalid_flags = (1ULL << 63);
