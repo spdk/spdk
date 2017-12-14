@@ -427,15 +427,10 @@ spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener *listener)
 	return &listener->trid;
 }
 
-struct spdk_nvmf_subsystem_add_ns_ctx {
-	struct spdk_nvmf_subsystem	*subsystem;
-	struct spdk_nvmf_ns		*ns;
-};
-
 static void
 spdk_nvmf_subsystem_add_ns_done(void *io_device, void *ctx, int status)
 {
-	free(ctx);
+	return;
 }
 
 static int
@@ -444,11 +439,11 @@ spdk_nvmf_subsystem_ns_update_poll_group(void *io_device,
 		void *c)
 {
 	struct spdk_nvmf_poll_group *group;
-	struct spdk_nvmf_subsystem_add_ns_ctx *ctx = c;
+	struct spdk_nvmf_ns *ns = c;
 
 	group = spdk_io_channel_get_ctx(ch);
 
-	return spdk_nvmf_poll_group_add_ns(group, ctx->subsystem, ctx->ns);
+	return spdk_nvmf_poll_group_add_ns(group, ns->subsystem, ns);
 }
 
 uint32_t
@@ -456,7 +451,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 			   uint32_t nsid)
 {
 	struct spdk_nvmf_ns *ns;
-	struct spdk_nvmf_subsystem_add_ns_ctx *ctx;
 	uint32_t i;
 	int rc;
 
@@ -517,6 +511,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	memset(ns, 0, sizeof(*ns));
 	ns->bdev = bdev;
 	ns->id = nsid;
+	ns->subsystem = subsystem;
 	rc = spdk_bdev_open(bdev, true, NULL, NULL, &ns->desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Subsystem %s: bdev %s cannot be opened, error=%d\n",
@@ -533,13 +528,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	subsystem->max_nsid = spdk_max(subsystem->max_nsid, nsid);
 	subsystem->num_allocated_nsid++;
 
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		return -ENOMEM;
-	}
-	ctx->subsystem = subsystem;
-	ctx->ns = ns;
-
 	/* Send a message to each poll group to notify it that a new namespace
 	 * is available.
 	 * TODO: This call does not currently allow the user to wait for these
@@ -548,7 +536,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	 */
 	spdk_for_each_channel(subsystem->tgt,
 			      spdk_nvmf_subsystem_ns_update_poll_group,
-			      ctx,
+			      ns,
 			      spdk_nvmf_subsystem_add_ns_done);
 
 	return nsid;
