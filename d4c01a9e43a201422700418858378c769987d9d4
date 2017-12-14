@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d3b863d_eb9e519c",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2243,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:16:02Z",
+      "side": 1,
+      "message": "Please add more unit tests that focus not only on checking one attribute.",
+      "range": {
+        "startLine": 2243,
+        "startChar": 0,
+        "endLine": 2243,
+        "endChar": 15
+      },
+      "revId": "d4c01a9e43a201422700418858378c769987d9d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "377aac0f_0e6c2f09",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2267,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:16:02Z",
+      "side": 1,
+      "message": "There should be more attributes to tests than 1.",
+      "range": {
+        "startLine": 2267,
+        "startChar": 1,
+        "endLine": 2267,
+        "endChar": 22
+      },
+      "revId": "d4c01a9e43a201422700418858378c769987d9d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dd38143_3bab275e",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2285,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:16:02Z",
+      "side": 1,
+      "message": "As Jim noted previously. Even if this assert compares if those two values are the same, g_value will be 0 - making it poor choice to detect any potential failures.",
+      "range": {
+        "startLine": 2285,
+        "startChar": 1,
+        "endLine": 2285,
+        "endChar": 42
+      },
+      "revId": "d4c01a9e43a201422700418858378c769987d9d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
