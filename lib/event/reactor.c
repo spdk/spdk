@@ -658,7 +658,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 	char mempool_name[32];
 
 	socket_mask = spdk_reactor_get_socket_mask();
-	printf("Occupied cpu socket mask is 0x%lx\n", socket_mask);
+	SPDK_NOTICELOG("Occupied cpu socket mask is 0x%lx\n", socket_mask);
 
 	for (i = 0; i < SPDK_MAX_SOCKET; i++) {
 		if ((1ULL << i) & socket_mask) {
@@ -666,7 +666,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 		}
 	}
 	if (socket_count == 0) {
-		printf("No sockets occupied (internal error)\n");
+		SPDK_ERRLOG("No sockets occupied (internal error)\n");
 		return -1;
 	}
 
