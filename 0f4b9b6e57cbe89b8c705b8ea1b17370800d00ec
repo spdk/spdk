@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae56a0c5_e501d87c",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T09:07:29Z",
+      "side": 1,
+      "message": "Why this can be `io`? You can also remove lin 563 and the for loop bellow if you pass io intead rcv_pkts.",
+      "range": {
+        "startLine": 568,
+        "startChar": 38,
+        "endLine": 568,
+        "endChar": 46
+      },
+      "revId": "0f4b9b6e57cbe89b8c705b8ea1b17370800d00ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3aeb5b82_a16316c7",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T09:07:29Z",
+      "side": 1,
+      "message": "Is this still needed?",
+      "range": {
+        "startLine": 184,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 2
+      },
+      "revId": "0f4b9b6e57cbe89b8c705b8ea1b17370800d00ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
