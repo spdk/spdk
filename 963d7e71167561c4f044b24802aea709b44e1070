@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "558bee96_c352b9a5",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1232,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-14T21:46:14Z",
+      "side": 1,
+      "message": "This should probably use spdk_strerror_r() to convert errno to a string (see Jim\u0027s comment on the first patch in this series).",
+      "revId": "963d7e71167561c4f044b24802aea709b44e1070",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
