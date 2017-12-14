@@ -487,7 +487,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 		cp->current_section = sp;
 		sp->name = strdup(key);
 		if (sp->name == NULL) {
-			perror("strdup sp->name");
+			SPDK_ERRLOG("cannot duplicate %s to sp->name\n", key);
 			return -1;
 		}
 
@@ -513,7 +513,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 		append_cf_item(sp, ip);
 		ip->key = strdup(key);
 		if (ip->key == NULL) {
-			perror("strdup ip->key");
+			SPDK_ERRLOG("cannot make duplicate of %s\n", key);
 			return -1;
 		}
 		ip->val = NULL;
@@ -529,7 +529,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 				append_cf_value(ip, vp);
 				vp->value = strdup(val);
 				if (vp->value == NULL) {
-					perror("strdup vp->value");
+					SPDK_ERRLOG("cannot duplicate %s to vp->value\n", val);
 					return -1;
 				}
 			}
@@ -617,7 +617,7 @@ spdk_conf_read(struct spdk_conf *cp, const char *file)
 
 	cp->file = strdup(file);
 	if (cp->file == NULL) {
-		perror("strdup cp->file");
+		SPDK_ERRLOG("cannot duplicate %s to cp->file\n", file);
 		fclose(fp);
 		return -1;
 	}
