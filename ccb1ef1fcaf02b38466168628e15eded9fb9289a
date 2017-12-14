@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "616705bd_5842e014",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-14T21:44:05Z",
+      "side": 1,
+      "message": "This is probably fine as-is, but the only likely error here is out of memory, so we could skip including errno at all - \"could not allocate mdisk\" is enough information.\n\n(I don\u0027t think we actually want to require spdk_dma_zmalloc() to set errno either.)",
+      "revId": "ccb1ef1fcaf02b38466168628e15eded9fb9289a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
