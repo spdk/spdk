@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "297a34cc_2f5df569",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2820,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T22:44:18Z",
+      "side": 1,
+      "message": "newline after variable declarations",
+      "revId": "204306b1b2c542ebb058bbbd4c3e89697a4f0421",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b861714_c78d1861",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2825,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T22:44:18Z",
+      "side": 1,
+      "message": "we should only set this flag in data_ro_flags - that matches the mask where SPDK_BLOB_READ_ONLY was added to in blobstore.h",
+      "revId": "204306b1b2c542ebb058bbbd4c3e89697a4f0421",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
