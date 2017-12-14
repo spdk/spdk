@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "432228a4_69d39b18",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-14T15:46:25Z",
+      "side": 1,
+      "message": "In all of these cases (where there\u0027s no IO channel as a parm or in the API name) do we even need to mention IO channels in the description?",
+      "revId": "33176ea54348853a403d7db4b701dea505a586a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "254a582a_03c1bb70",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-14T15:46:25Z",
+      "side": 1,
+      "message": "Is the second sentence required for the description of *this* API? If so, seems like it should also be in the async API description above and if not (would be my suggestion) I\u0027d remove it.",
+      "revId": "33176ea54348853a403d7db4b701dea505a586a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12f49da2_e9171362",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-14T15:46:25Z",
+      "side": 1,
+      "message": "suggest removing \"and the context will be removed\" just to keep it short and to the point",
+      "revId": "33176ea54348853a403d7db4b701dea505a586a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d6dc273_31bb8e93",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-14T15:46:25Z",
+      "side": 1,
+      "message": "The second sentence I don\u0027t think is needed since the name of the API is pretty clear about what it\u0027s going to do here :)",
+      "revId": "33176ea54348853a403d7db4b701dea505a586a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
