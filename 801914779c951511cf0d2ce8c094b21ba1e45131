@@ -22,6 +22,30 @@
       "revId": "801914779c951511cf0d2ce8c094b21ba1e45131",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f3078d9_4a22720b",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011210
+      },
+      "writtenOn": "2017-12-14T02:54:18Z",
+      "side": 1,
+      "message": "As you said,since fio interprets that as a separator for multiple files,if we test with many files use \":\" will produce error:\n\n\"fio_plugin.c: 258:spdk_fio_setup: *ERROR*: Failed to find namespace \u0027ns\u003dX\u0027\nnvme.c: 758:spdk_nvme_transport_id_parse: *ERROR*: Unknown transport ID key \u0027cnode1 trsvcid\u0027\nfio_plugin.c: 279:spdk_fio_setup: *ERROR*: Invalid traddr\u003d\".\n\nAnd I want to test fio_plugin with many multiple files(I have use many --filename\u003d\"\" as argv),so I changed the \":\" to \"-\".Despite use \"-\" incompatible NVMe name specification.",
+      "parentUuid": "ddd16a57_3a0fb2b2",
+      "range": {
+        "startLine": 36,
+        "startChar": 33,
+        "endLine": 36,
+        "endChar": 59
+      },
+      "revId": "801914779c951511cf0d2ce8c094b21ba1e45131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
