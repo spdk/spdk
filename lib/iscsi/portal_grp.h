@@ -60,6 +60,7 @@ struct spdk_iscsi_portal_grp {
 struct spdk_iscsi_portal *spdk_iscsi_portal_create(const char *host, const char *port,
 		uint64_t cpumask);
 void spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p);
+int spdk_iscsi_portal_set_cpumask(struct spdk_iscsi_portal *p, const char *cpumask);
 
 struct spdk_iscsi_portal_grp *spdk_iscsi_portal_grp_create(int tag);
 int spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp);

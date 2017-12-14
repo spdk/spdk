@@ -853,6 +853,103 @@ out:
 }
 SPDK_RPC_REGISTER("add_portal_group", spdk_rpc_add_portal_group)
 
+struct rpc_portal_ex {
+	char *host;
+	char *port;
+	char *cpumask;
+};
+
+struct rpc_portal_group_ex {
+	int32_t tag;
+	struct rpc_portal_ex portal;
+};
+
+static void
+free_rpc_portal_ex(struct rpc_portal_ex *portal)
+{
+	free(portal->host);
+	free(portal->port);
+	free(portal->cpumask);
+}
+
+static void
+free_rpc_portal_group_ex(struct rpc_portal_group_ex *pg)
+{
+	free_rpc_portal_ex(&pg->portal);
+}
+
+static const struct spdk_json_object_decoder rpc_portal_ex_decoders[] = {
+	{"host", offsetof(struct rpc_portal_ex, host), spdk_json_decode_string},
+	{"port", offsetof(struct rpc_portal_ex, port), spdk_json_decode_string},
+	{"cpumask", offsetof(struct rpc_portal_ex, cpumask), spdk_json_decode_string},
+};
+
+static int
+decode_rpc_portal_ex(const struct spdk_json_val *val, void *out)
+{
+	struct rpc_portal_ex *portal = out;
+
+	return spdk_json_decode_object(val, rpc_portal_ex_decoders,
+				       SPDK_COUNTOF(rpc_portal_ex_decoders),
+				       portal);
+}
+
+static const struct spdk_json_object_decoder rpc_portal_group_ex_decoders[] = {
+	{"tag", offsetof(struct rpc_portal_group_ex, tag), spdk_json_decode_int32},
+	{"portal", offsetof(struct rpc_portal_group_ex, portal), decode_rpc_portal_ex},
+};
+
+static void
+spdk_rpc_add_portal_group_ex(struct spdk_jsonrpc_request *request,
+			     const struct spdk_json_val *params)
+{
+	struct rpc_portal_group_ex req = {};
+	struct spdk_iscsi_portal *portal = NULL;
+	struct spdk_json_write_ctx *w;
+	int rc = -1;
+
+	if (spdk_json_decode_object(params, rpc_portal_group_ex_decoders,
+				    SPDK_COUNTOF(rpc_portal_group_ex_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		goto out;
+	}
+
+	portal = spdk_iscsi_portal_create(req.portal.host, req.portal.port, 0);
+	if (portal == NULL) {
+		SPDK_ERRLOG("portal creation failed\n");
+		goto out;
+	}
+
+	rc = spdk_iscsi_portal_set_cpumask(portal, req.portal.cpumask);
+	if (rc < 0) {
+		SPDK_ERRLOG("set cpumask to portal failed\n");
+		goto out;
+	}
+
+	rc = spdk_iscsi_portal_grp_create_from_portal_list(req.tag, &portal, 1);
+	if (rc < 0) {
+		SPDK_ERRLOG("create_from_portal_list failed\n");
+	}
+
+out:
+	if (rc == 0) {
+		w = spdk_jsonrpc_begin_result(request);
+		if (w != NULL) {
+			spdk_json_write_bool(w, true);
+			spdk_jsonrpc_end_result(request, w);
+		}
+	} else {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		if (portal != NULL) {
+			spdk_iscsi_portal_destroy(portal);
+		}
+	}
+	free_rpc_portal_group_ex(&req);
+}
+SPDK_RPC_REGISTER("add_portal_group_ex", spdk_rpc_add_portal_group_ex)
+
 struct rpc_delete_portal_group {
 	int32_t tag;
 };
