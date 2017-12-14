@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5ef071e_c44edbbb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 2578,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T22:40:02Z",
+      "side": 1,
+      "message": "provion \u003d\u003e provision",
+      "revId": "1923398ff1d904541e8889a28c8384fdabf58483",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35317df1_44e34ed0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 2580,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T22:40:02Z",
+      "side": 1,
+      "message": "setting invalid \u003d true here does not really do anything\n\nthe blob-\u003einvalid flag actually should never have been checked in - that was my fault - I chose a different way for the md page parsing code to return that the page was invalid based on not understood flags",
+      "revId": "1923398ff1d904541e8889a28c8384fdabf58483",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
