@@ -793,7 +793,9 @@ send_scan_io(struct virtio_scsi_scan_base *base)
 	}
 
 	virtqueue_req_add_iovs(vq, &io_ctx->iov_req, 1, SPDK_VIRTIO_DESC_RO);
-	virtqueue_req_add_iovs(vq, &base->iov, 1, SPDK_VIRTIO_DESC_RO);
+	if (base->iov.iov_len > 0) {
+		virtqueue_req_add_iovs(vq, &base->iov, 1, SPDK_VIRTIO_DESC_RO);
+	}
 	virtqueue_req_add_iovs(vq, &io_ctx->iov_resp, 1, SPDK_VIRTIO_DESC_WR);
 
 	virtqueue_req_flush(vq);
@@ -803,13 +805,12 @@ send_scan_io(struct virtio_scsi_scan_base *base)
 static int
 send_inquiry(struct virtio_scsi_scan_base *base)
 {
-	struct iovec *iov = &base->iov;
 	struct virtio_scsi_cmd_req *req = &base->io_ctx.req;
 	struct spdk_scsi_cdb_inquiry *cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
 
 	memset(req, 0, sizeof(*req));
 
-	iov[0].iov_len = BDEV_VIRTIO_SCAN_PAYLOAD_SIZE;
+	base->iov.iov_len = BDEV_VIRTIO_SCAN_PAYLOAD_SIZE;
 	cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
 	cdb->opcode = SPDK_SPC_INQUIRY;
 	to_be16(cdb->alloc_len, BDEV_VIRTIO_SCAN_PAYLOAD_SIZE);
@@ -820,18 +821,17 @@ send_inquiry(struct virtio_scsi_scan_base *base)
 static void
 send_inquiry_vpd(struct virtio_scsi_scan_base *base, uint8_t page_code)
 {
-	struct iovec *iov = &base->iov;
 	struct virtio_scsi_cmd_req *req = &base->io_ctx.req;
 	struct spdk_scsi_cdb_inquiry *inquiry_cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
 	int rc;
 
 	memset(req, 0, sizeof(*req));
 
-	iov[0].iov_len = BDEV_VIRTIO_SCAN_PAYLOAD_SIZE;
+	base->iov.iov_len = BDEV_VIRTIO_SCAN_PAYLOAD_SIZE;
 	inquiry_cdb->opcode = SPDK_SPC_INQUIRY;
 	inquiry_cdb->evpd = 1;
 	inquiry_cdb->page_code = page_code;
-	to_be16(inquiry_cdb->alloc_len, iov[0].iov_len);
+	to_be16(inquiry_cdb->alloc_len, base->iov.iov_len);
 
 	rc = send_scan_io(base);
 	if (rc != 0) {
@@ -842,13 +842,12 @@ send_inquiry_vpd(struct virtio_scsi_scan_base *base, uint8_t page_code)
 static void
 send_read_cap_10(struct virtio_scsi_scan_base *base)
 {
-	struct iovec *iov = &base->iov;
 	struct virtio_scsi_cmd_req *req = &base->io_ctx.req;
 	int rc;
 
 	memset(req, 0, sizeof(*req));
 
-	iov[0].iov_len = 8;
+	base->iov.iov_len = 8;
 	req->cdb[0] = SPDK_SBC_READ_CAPACITY_10;
 
 	rc = send_scan_io(base);
@@ -860,16 +859,15 @@ send_read_cap_10(struct virtio_scsi_scan_base *base)
 static void
 send_read_cap_16(struct virtio_scsi_scan_base *base)
 {
-	struct iovec *iov = &base->iov;
 	struct virtio_scsi_cmd_req *req = &base->io_ctx.req;
 	int rc;
 
 	memset(req, 0, sizeof(*req));
 
-	iov[0].iov_len = 32;
+	base->iov.iov_len = 32;
 	req->cdb[0] = SPDK_SPC_SERVICE_ACTION_IN_16;
 	req->cdb[1] = SPDK_SBC_SAI_READ_CAPACITY_16;
-	to_be32(&req->cdb[10], iov[0].iov_len);
+	to_be32(&req->cdb[10], base->iov.iov_len);
 
 	rc = send_scan_io(base);
 	if (rc != 0) {
@@ -885,6 +883,7 @@ send_test_unit_ready(struct virtio_scsi_scan_base *base)
 
 	memset(req, 0, sizeof(*req));
 	req->cdb[0] = SPDK_SPC_TEST_UNIT_READY;
+	base->iov.iov_len = 0;
 
 	rc = send_scan_io(base);
 	if (rc != 0) {
@@ -901,6 +900,7 @@ send_start_stop_unit(struct virtio_scsi_scan_base *base)
 	memset(req, 0, sizeof(*req));
 	req->cdb[0] = SPDK_SBC_START_STOP_UNIT;
 	req->cdb[4] = SPDK_SBC_START_STOP_UNIT_START_BIT;
+	base->iov.iov_len = 0;
 
 	rc = send_scan_io(base);
 	if (rc != 0) {
