@@ -125,7 +125,9 @@ struct ns_worker_ctx {
 
 	union {
 		struct {
-			struct spdk_nvme_qpair	*qpair;
+			int			num_qpairs;
+			struct spdk_nvme_qpair	**qpair;
+			int			last_qpair;
 		} nvme;
 
 #if HAVE_LIBAIO
@@ -197,6 +199,7 @@ static uint32_t g_metacfg_prchk_flags;
 static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
+static int g_nr_io_queues_per_ns = 1;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
@@ -448,6 +451,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 {
 	uint64_t lba;
 	int rc;
+	int qp_num;
 
 	enum dif_mode {
 		DIF_MODE_NONE = 0,
@@ -465,6 +469,12 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 		}
 	}
 
+	qp_num = ns_ctx->u.nvme.last_qpair;
+	ns_ctx->u.nvme.last_qpair++;
+	if (ns_ctx->u.nvme.last_qpair == ns_ctx->u.nvme.num_qpairs) {
+		ns_ctx->u.nvme.last_qpair = 0;
+	}
+
 	if (mode != DIF_MODE_NONE) {
 		rc = spdk_dif_ctx_init(&task->dif_ctx, entry->block_size, entry->md_size,
 				       entry->md_interleave, entry->pi_loc,
@@ -477,7 +487,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	}
 
 	if (task->is_read) {
-		return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+		return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
 						     task->iov.iov_base, task->md_iov.iov_base,
 						     lba,
 						     entry->io_size_blocks, io_complete,
@@ -504,7 +514,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 			break;
 		}
 
-		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
 						      task->iov.iov_base, task->md_iov.iov_base,
 						      lba,
 						      entry->io_size_blocks, io_complete,
@@ -516,12 +526,14 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 static void
 nvme_check_io(struct ns_worker_ctx *ns_ctx)
 {
-	int count;
+	int i, rc;
 
-	count = spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair, g_max_completions);
-	if (count < 0) {
-		fprintf(stderr, "NVMe io qpair process completion error\n");
-		exit(1);
+	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
+		rc = spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair[i], g_max_completions);
+		if (rc < 0) {
+			fprintf(stderr, "NVMe io qpair process completion error\n");
+			exit(1);
+		}
 	}
 }
 
@@ -562,6 +574,13 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
 	struct spdk_nvme_io_qpair_opts opts;
 	struct ns_entry *entry = ns_ctx->entry;
+	int i;
+
+	ns_ctx->u.nvme.num_qpairs = g_nr_io_queues_per_ns;
+	ns_ctx->u.nvme.qpair = calloc(ns_ctx->u.nvme.num_qpairs, sizeof(struct spdk_nvme_qpair *));
+	if (!ns_ctx->u.nvme.qpair) {
+		return -1;
+	}
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(entry->u.nvme.ctrlr, &opts, sizeof(opts));
 	if (opts.io_queue_requests < entry->num_io_requests) {
@@ -569,11 +588,13 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 	}
 	opts.delay_pcie_doorbell = true;
 
-	ns_ctx->u.nvme.qpair = spdk_nvme_ctrlr_alloc_io_qpair(entry->u.nvme.ctrlr, &opts,
-			       sizeof(opts));
-	if (!ns_ctx->u.nvme.qpair) {
-		printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
-		return -1;
+	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
+		ns_ctx->u.nvme.qpair[i] = spdk_nvme_ctrlr_alloc_io_qpair(entry->u.nvme.ctrlr, &opts,
+					  sizeof(opts));
+		if (!ns_ctx->u.nvme.qpair[i]) {
+			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
+			return -1;
+		}
 	}
 
 	return 0;
@@ -582,7 +603,13 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 static void
 nvme_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
-	spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair);
+	int i;
+
+	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
+		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair[i]);
+	}
+
+	free(ns_ctx->u.nvme.qpair);
 }
 
 static const struct ns_fn_table nvme_fn_table = {
@@ -932,7 +959,7 @@ work_fn(void *arg)
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
-	/* Allocate a queue pair for each namespace. */
+	/* Allocate queue pairs for each namespace. */
 	ns_ctx = worker->ns_ctx;
 	while (ns_ctx != NULL) {
 		if (init_ns_worker_ctx(ns_ctx) != 0) {
@@ -1002,6 +1029,7 @@ static void usage(char *program_name)
 	printf("\n");
 	printf("\t[-q io depth]\n");
 	printf("\t[-o io size in bytes]\n");
+	printf("\t[-n number of io queues per namespace. default: 1]\n");
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
@@ -1435,10 +1463,11 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:k:s:t:w:DHILM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DHILM:")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'm':
+		case 'n':
 		case 'o':
 		case 'q':
 		case 'k':
@@ -1456,6 +1485,9 @@ parse_args(int argc, char **argv)
 				break;
 			case 'm':
 				g_max_completions = val;
+				break;
+			case 'n':
+				g_nr_io_queues_per_ns = val;
 				break;
 			case 'o':
 				g_io_size_bytes = val;
@@ -1515,6 +1547,11 @@ parse_args(int argc, char **argv)
 			usage(argv[0]);
 			return 1;
 		}
+	}
+
+	if (!g_nr_io_queues_per_ns) {
+		usage(argv[0]);
+		return 1;
 	}
 
 	if (!g_queue_depth) {
