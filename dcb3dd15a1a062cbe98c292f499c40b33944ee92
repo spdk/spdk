@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79f11ebe_de1179dc",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T16:36:45Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nThank you for taking the time to clean up these error messages!\n\nMaybe we should use spdk_strerror_r() for these instead?  You can see other examples of this in many places in SPDK.  This allows us to leverage POSIX strerror() strings when printing the error messages.\n\nThis would apply to the other patches as well.\n\n-Jim",
+      "revId": "dcb3dd15a1a062cbe98c292f499c40b33944ee92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
