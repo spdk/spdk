@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39306a0f_e62f4e39",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T17:37:39Z",
+      "side": 1,
+      "message": "I don\u0027t think we should do these in each bdev.  spdk_bdev_register() already initializes the alias list.  We also do not want bdev modules to pre-populate the alias list.\n\nOnly making this comment here - but this TAILQ_INIT should be removed from the other bdev modules too.",
+      "revId": "3555cae291a500c9a33d41eb322f03fc5c127584",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "081bb07d_544df0ac",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 863,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T17:37:39Z",
+      "side": 1,
+      "message": "this loop is not needed - it is covered by the spdk_bdev_get_by_name below, since spdk_bdev_get_by_name will check this bdev",
+      "revId": "3555cae291a500c9a33d41eb322f03fc5c127584",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "083c0f80_5de7a1d4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1874,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T17:37:39Z",
+      "side": 1,
+      "message": "I would prefer to just keep the TAILQ_INIT, and specify in the header file that aliases should not be pre-populated.  If bdev modules want to create aliases, they can call spdk_bdev_alias_add after spdk_bdev/vbdev_register.\n\nThen we do not need to modify the existing bdev modules, and will not break any bdev modules that others may have developed but are not in-tree.",
+      "revId": "3555cae291a500c9a33d41eb322f03fc5c127584",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2257d810_89d50d37",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2364,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T17:37:39Z",
+      "side": 1,
+      "message": "this should be removed - will be covered by spdk_vbdev_register later",
+      "revId": "3555cae291a500c9a33d41eb322f03fc5c127584",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ee6d890_8478bd77",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T17:37:39Z",
+      "side": 1,
+      "message": "I don\u0027t think we should support spdk_bdev_alias_add/del on bdevs that have not been registered yet.  Let\u0027s just clarify that in the API.",
+      "revId": "3555cae291a500c9a33d41eb322f03fc5c127584",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
