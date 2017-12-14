@@ -126,9 +126,6 @@ struct virtio_scsi_scan_base {
 	bdev_virtio_create_cb		cb_fn;
 	void				*cb_arg;
 
-	/* Currently queried target */
-	unsigned			target;
-
 	/** Remaining attempts for sending the current request. */
 	unsigned                        retries;
 
@@ -862,51 +859,30 @@ bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 static void
-_virtio_scsi_dev_scan_abort(struct virtio_scsi_scan_base *base, int error)
+_virtio_scsi_dev_scan_finish(struct virtio_scsi_scan_base *base, int errnum)
 {
 	struct virtio_scsi_dev *svdev = base->svdev;
-
-	spdk_put_io_channel(spdk_io_channel_from_ctx(base->channel));
-
-	if (base->cb_fn) {
-		base->cb_fn(base->cb_arg, error, NULL, 0);
-	}
-
-	spdk_dma_free(base);
-	svdev->scan_ctx = NULL;
-}
-
-static void
-_virtio_scsi_dev_scan_finish(struct virtio_scsi_scan_base *base)
-{
-	struct virtio_scsi_dev *svdev = base->svdev;
-	size_t bdevs_cnt = 0;
+	size_t bdevs_cnt;
 	struct spdk_bdev *bdevs[BDEV_VIRTIO_MAX_TARGET];
 	struct virtio_scsi_disk *disk;
-	int rc, cb_errnum = 0;
 
-	base->target++;
-	if (base->target < BDEV_VIRTIO_MAX_TARGET) {
-		rc = _virtio_scsi_dev_scan_next(base);
-		if (rc != 0) {
-			assert(false);
-		}
+	spdk_put_io_channel(spdk_io_channel_from_ctx(base->channel));
+	base->svdev->scan_ctx = NULL;
+
+	if (base->cb_fn == NULL) {
+		spdk_dma_free(base);
 		return;
 	}
 
-	spdk_put_io_channel(spdk_io_channel_from_ctx(base->channel));
-
-	TAILQ_FOREACH(disk, &svdev->luns, link) {
-		bdevs[bdevs_cnt] = &disk->bdev;
-		bdevs_cnt++;
+	bdevs_cnt = 0;
+	if (errnum == 0) {
+		TAILQ_FOREACH(disk, &svdev->luns, link) {
+			bdevs[bdevs_cnt] = &disk->bdev;
+			bdevs_cnt++;
+		}
 	}
 
-	base->svdev->scan_ctx = NULL;
-
-	if (base->cb_fn) {
-		base->cb_fn(base->cb_arg, cb_errnum, bdevs, bdevs_cnt);
-	}
-
+	base->cb_fn(base->cb_arg, errnum, bdevs, bdevs_cnt);
 	spdk_dma_free(base);
 }
 
@@ -928,6 +904,26 @@ send_scan_io(struct virtio_scsi_scan_base *base)
 
 	virtqueue_req_flush(vq);
 	return 0;
+}
+
+static int
+send_inquiry(struct virtio_scsi_scan_base *base, uint8_t target_id)
+{
+	struct iovec *iov = &base->iov;
+	struct virtio_scsi_cmd_req *req = &base->io_ctx.req;
+	struct spdk_scsi_cdb_inquiry *cdb;
+
+	memset(req, 0, sizeof(*req));
+	req->lun[0] = 1;
+	req->lun[1] = target_id;
+
+	iov->iov_len = BDEV_VIRTIO_SCAN_PAYLOAD_SIZE;
+
+	cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
+	cdb->opcode = SPDK_SPC_INQUIRY;
+	to_be16(cdb->alloc_len, BDEV_VIRTIO_SCAN_PAYLOAD_SIZE);
+
+	return send_scan_io(base);
 }
 
 static void
@@ -1262,7 +1258,7 @@ process_read_cap_10(struct virtio_scsi_scan_base *base)
 		return rc;
 	}
 
-	_virtio_scsi_dev_scan_finish(base);
+	_virtio_scsi_dev_scan_next(base);
 	return 0;
 }
 
@@ -1286,7 +1282,7 @@ process_read_cap_16(struct virtio_scsi_scan_base *base)
 		return rc;
 	}
 
-	_virtio_scsi_dev_scan_finish(base);
+	_virtio_scsi_dev_scan_next(base);
 	return 0;
 }
 
@@ -1301,7 +1297,7 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 	if (base->io_ctx.iov_req.iov_len < sizeof(struct virtio_scsi_cmd_req) ||
 	    base->io_ctx.iov_resp.iov_len < sizeof(struct virtio_scsi_cmd_resp)) {
 		SPDK_ERRLOG("Received target scan message with invalid length.\n");
-		_virtio_scsi_dev_scan_finish(base);
+		_virtio_scsi_dev_scan_next(base);
 		return;
 	}
 
@@ -1317,7 +1313,7 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 			SPDK_NOTICELOG("Target %"PRIu8" is present, but unavailable.\n", target_id);
 			SPDK_TRACEDUMP(SPDK_LOG_VIRTIO, "CDB", req->cdb, sizeof(req->cdb));
 			SPDK_TRACEDUMP(SPDK_LOG_VIRTIO, "SENSE DATA", resp->sense, sizeof(resp->sense));
-			_virtio_scsi_dev_scan_finish(base);
+			_virtio_scsi_dev_scan_next(base);
 			return;
 		}
 
@@ -1354,45 +1350,25 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 	}
 
 	if (rc < 0) {
-		_virtio_scsi_dev_scan_finish(base);
+		_virtio_scsi_dev_scan_next(base);
 	}
 }
 
 static int
 _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base)
 {
-	struct virtio_scsi_io_ctx *io_ctx;
-	struct virtio_scsi_cmd_req *req;
-	struct virtio_scsi_cmd_resp *resp;
-	struct spdk_scsi_cdb_inquiry *cdb;
-	struct iovec *iov;
+	uint8_t target_id;
+
+	target_id = base->info.target + 1;
+	if (target_id == BDEV_VIRTIO_MAX_TARGET) {
+		_virtio_scsi_dev_scan_finish(base, 0);
+		return 0;
+	}
 
 	memset(&base->info, 0, sizeof(base->info));
-	base->info.target = base->target;
+	base->info.target = target_id;
 
-	io_ctx = &base->io_ctx;
-	req = &io_ctx->req;
-	resp = &io_ctx->resp;
-	iov = &base->iov;
-
-	io_ctx->iov_req.iov_base = req;
-	io_ctx->iov_req.iov_len = sizeof(*req);
-
-	io_ctx->iov_resp.iov_base = resp;
-	io_ctx->iov_resp.iov_len = sizeof(*resp);
-
-	iov[0].iov_base = (void *)&base->payload;
-	iov[0].iov_len = BDEV_VIRTIO_SCAN_PAYLOAD_SIZE;
-
-	req->lun[0] = 1;
-	req->lun[1] = base->info.target;
-
-	cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
-	cdb->opcode = SPDK_SPC_INQUIRY;
-	to_be16(cdb->alloc_len, BDEV_VIRTIO_SCAN_PAYLOAD_SIZE);
-
-	base->retries = SCAN_REQUEST_RETRIES;
-	return send_scan_io(base);
+	return send_inquiry(base, target_id);
 }
 
 static int
@@ -1467,6 +1443,9 @@ virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn,
 {
 	struct virtio_scsi_scan_base *base;
 	struct spdk_io_channel *io_ch;
+	struct virtio_scsi_io_ctx *io_ctx;
+	struct virtio_scsi_cmd_req *req;
+	struct virtio_scsi_cmd_resp *resp;
 	int rc;
 
 	io_ch = spdk_get_io_channel(svdev);
@@ -1487,7 +1466,22 @@ virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn,
 
 	base->channel = spdk_io_channel_get_ctx(io_ch);
 	svdev->scan_ctx = base;
-	rc = _virtio_scsi_dev_scan_next(base);
+
+	memset(&base->info, 0, sizeof(base->info));
+	base->info.target = 0;
+
+	base->iov.iov_base = base->payload;
+	io_ctx = &base->io_ctx;
+	req = &io_ctx->req;
+	resp = &io_ctx->resp;
+	io_ctx->iov_req.iov_base = req;
+	io_ctx->iov_req.iov_len = sizeof(*req);
+	io_ctx->iov_resp.iov_base = resp;
+	io_ctx->iov_resp.iov_len = sizeof(*resp);
+
+	base->retries = SCAN_REQUEST_RETRIES;
+
+	rc = send_inquiry(base, 0);
 	if (rc) {
 		SPDK_ERRLOG("Failed to start target scan.\n");
 		spdk_put_io_channel(io_ch);
@@ -1607,7 +1601,7 @@ virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev)
 
 	scan_ctx = svdev->scan_ctx;
 	if (scan_ctx) {
-		_virtio_scsi_dev_scan_abort(scan_ctx, -EINTR);
+		_virtio_scsi_dev_scan_finish(scan_ctx, -EINTR);
 	}
 
 	TAILQ_FOREACH_SAFE(disk, &svdev->luns, link, disk_tmp) {
