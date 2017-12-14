@@ -16,6 +16,40 @@
       "revId": "893e6bc4dfc83ad4ddec5ceb37ba0334c956fdbc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d34a165_a08945fa",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2017-12-14T06:20:09Z",
+      "side": 1,
+      "message": "Is this to test the multi core? As to the current build_pool machine, there is only one disk, shall we comment it out? For the max-disk, will it be changed to 2 when we have 2 DUTs?",
+      "revId": "893e6bc4dfc83ad4ddec5ceb37ba0334c956fdbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "705fb27c_18b7122c",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2017-12-14T06:20:09Z",
+      "side": 1,
+      "message": "The same question as Line 117",
+      "revId": "893e6bc4dfc83ad4ddec5ceb37ba0334c956fdbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
