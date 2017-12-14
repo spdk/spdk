@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81fee1bb_51af1170",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T13:02:56Z",
+      "side": 1,
+      "message": "Sorry, should have been more precise in my previous comment. Multi-line comments in SPDK usually look bit different. For example this part would look like this:\n\n/*\n * Trying adding an alias identical to name.\n * Alias is identical to name, so it can not be added to aliases list.\n */",
+      "range": {
+        "startLine": 386,
+        "startChar": 0,
+        "endLine": 387,
+        "endChar": 73
+      },
+      "revId": "ecbbe0b4a7eea66498985b5de00325fa5819946f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
