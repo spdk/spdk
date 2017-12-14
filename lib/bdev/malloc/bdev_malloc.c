@@ -364,7 +364,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 
 	mdisk = spdk_dma_zmalloc(sizeof(*mdisk), 0, NULL);
 	if (!mdisk) {
-		perror("mdisk");
+		SPDK_ERRLOG("Errno %d: could not allocate mdisk\n", errno);
 		return NULL;
 	}
 
