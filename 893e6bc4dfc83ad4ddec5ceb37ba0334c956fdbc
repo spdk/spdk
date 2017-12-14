@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "d6637dc8_97e7fbe2",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2017-12-14T06:31:34Z",
+      "side": 1,
+      "message": "Can we try to use the crc32c-intel verification method? To keep same with fio.py.",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 10
+      },
+      "revId": "893e6bc4dfc83ad4ddec5ceb37ba0334c956fdbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fdc2f883_a71499a6",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 5
