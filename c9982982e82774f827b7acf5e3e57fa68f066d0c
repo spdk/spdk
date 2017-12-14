@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "b176b5ea_765a708a",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-14T23:14:45Z",
+      "side": 1,
+      "message": "yup I took the text that was most relevant for creating a PG.  will address all the comments and move from there",
+      "parentUuid": "6ca28c06_8069cb3c",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b2cec09_cfa95c3f",
         "filename": "doc/blob_pg.md",
         "patchSetId": 1
@@ -47,6 +65,24 @@
       "writtenOn": "2017-10-27T17:32:00Z",
       "side": 1,
       "message": "This type of header is used by Jekyll (which is used for the spdk.github.io repo), but not by Doxygen (which is used for doc/ in the spdk repo).",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97c43264_408e8ae8",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-14T23:14:45Z",
+      "side": 1,
+      "message": "thanks for fixing that for me",
+      "parentUuid": "5b2cec09_cfa95c3f",
       "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "af600ff8_189151d3",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-14T23:14:45Z",
+      "side": 1,
+      "message": "thanks",
+      "parentUuid": "10c5195e_b9eb1ff6",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bea81f0b_2eb5b664",
         "filename": "doc/blob_pg.md",
         "patchSetId": 1
@@ -81,6 +135,24 @@
       "writtenOn": "2017-10-27T17:32:00Z",
       "side": 1,
       "message": "Doxygen has a built-in way to generate named anchors - the header line can be modified to look like this:\n\n  ## Target Audience {#audience}\n\nHowever, we should use more specific names, since these are global to the whole Doxygen project - it should probably be something like {#blob_pg_audience} to avoid conflicts.",
+      "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f93a7ad2_aa8872b7",
+        "filename": "doc/blob_pg.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-14T23:14:45Z",
+      "side": 1,
+      "message": "cool, thanks again",
+      "parentUuid": "bea81f0b_2eb5b664",
       "revId": "c9982982e82774f827b7acf5e3e57fa68f066d0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
