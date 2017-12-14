@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ecd2c46_e40faaa3",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T10:00:33Z",
+      "side": 1,
+      "message": "I think core assignment need to be described in advanced section. Writing that \"this controllers will use CPU 0. See \u003clink to advanced section\u003e for proper CPU assignment\" - or romething simmilar. Let make this example as simple as possible.",
+      "range": {
+        "startLine": 89,
+        "startChar": 30,
+        "endLine": 92,
+        "endChar": 14
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a695274_ab47a28b",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T10:00:33Z",
+      "side": 1,
+      "message": "This need to be removed.",
+      "range": {
+        "startLine": 134,
+        "startChar": 68,
+        "endLine": 134,
+        "endChar": 73
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f07d6be_78181355",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T10:00:33Z",
+      "side": 1,
+      "message": "Are you sure this supported? I think we had some problems with memory hot-adding.",
+      "range": {
+        "startLine": 139,
+        "startChar": 48,
+        "endLine": 140,
+        "endChar": 23
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47c2db4d_45cdc007",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T10:00:33Z",
+      "side": 1,
+      "message": "I think this example should be using Malloc to be consistent wit description above",
+      "range": {
+        "startLine": 189,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 3
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfe3482d_118e76a5",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T10:00:33Z",
+      "side": 1,
+      "message": "I delibertly put this in one block to have everything look like console log. Why you split this",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 229,
+        "endChar": 3
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
