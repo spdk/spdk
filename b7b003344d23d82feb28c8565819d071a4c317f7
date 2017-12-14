@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c76f1c40_164c4029",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T10:46:28Z",
+      "side": 1,
+      "message": "I\u0027d prefer it in here. I consider this a key feature of SPDK. If you\u0027re about to use any SPDK app, you have to configure cpumasks.\nIt\u0027s not really \"advanced\" configuration. Running SPDK on hardcoded CPU 0 makes little to no sense.\nIf somebody is looking for a sequence of commands to copy-paste, he will find them in the example section.",
+      "parentUuid": "6ecd2c46_e40faaa3",
+      "range": {
+        "startLine": 89,
+        "startChar": 30,
+        "endLine": 92,
+        "endChar": 14
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a695274_ab47a28b",
         "filename": "doc/vhost.md",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2017-12-14T10:00:33Z",
       "side": 1,
       "message": "This need to be removed.",
+      "range": {
+        "startLine": 134,
+        "startChar": 68,
+        "endLine": 134,
+        "endChar": 73
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70e53e87_9d1a70c2",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T10:46:28Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2a695274_ab47a28b",
       "range": {
         "startLine": 134,
         "startChar": 68,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "8cadcc4c_89ed0cf1",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T10:46:28Z",
+      "side": 1,
+      "message": "I\u0027ll re-check it then. Let\u0027s remove this sentence for now.",
+      "parentUuid": "5f07d6be_78181355",
+      "range": {
+        "startLine": 139,
+        "startChar": 48,
+        "endLine": 140,
+        "endChar": 23
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47c2db4d_45cdc007",
         "filename": "doc/vhost.md",
         "patchSetId": 1
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "cc8df218_b9ccb5a9",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T10:46:28Z",
+      "side": 1,
+      "message": "How about both malloc and nvme? One disk for each controller.\nWe still have to configure a vhost-blk controller in this example. Seems like I missed that.\nAttaching raw nvme to a vm doesn\u0027t have much sense, but at least it shows the purpose of our bdev abstraction layer.",
+      "parentUuid": "47c2db4d_45cdc007",
+      "range": {
+        "startLine": 189,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 3
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cfe3482d_118e76a5",
         "filename": "doc/vhost.md",
         "patchSetId": 1
@@ -105,6 +201,30 @@
       "writtenOn": "2017-12-14T10:00:33Z",
       "side": 1,
       "message": "I delibertly put this in one block to have everything look like console log. Why you split this",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 229,
+        "endChar": 3
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d8e5a6a_5b93bc3a",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T10:46:28Z",
+      "side": 1,
+      "message": "It looks better.\nThis really didn\u0027t seem readable previously - http://www.spdk.io/doc/vhost.html#vhost_example",
+      "parentUuid": "cfe3482d_118e76a5",
       "range": {
         "startLine": 175,
         "startChar": 0,
