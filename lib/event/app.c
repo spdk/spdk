@@ -143,7 +143,7 @@ spdk_app_get_running_config(char **config_str, char *name)
 
 	*config_str = malloc(length + 1);
 	if (!*config_str) {
-		perror("config_str");
+		SPDK_ERRLOG("out-of-memory for config\n");
 		fclose(fp);
 		return -1;
 	}
