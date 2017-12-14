@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a11a0001_4ec016e7",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-14T12:53:36Z",
+      "side": 1,
+      "message": "parse_core_max() and spdk_core_max_hex() are good and parse_core_list() is also good. But I\u0027m not so sure about use case of parse_core_list(). This is used to decode configuration file? For JSON-RPC, for example Python have alternative function.",
+      "range": {
+        "startLine": 200,
+        "startChar": 0,
+        "endLine": 200,
+        "endChar": 44
+      },
+      "revId": "04188cff0192213c076ec5c30770184d7454a305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
