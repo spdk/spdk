@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7c04980_8c90ac07",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T17:47:25Z",
+      "side": 1,
+      "message": "I think doing all of these realloc() calls is not optimal - plus this requires the caller to free the memory that is being returned.\n\nI think for now, you can just have the RPC code iterate the aliases list directly.  That\u0027s not ideal - most of the bdev RPC code is using API calls - but there are some places (i.e. checking bdev-\u003emodule directly) where this is violated.\n\nThe normal paradigm for SPDK is to use iterators - i.e. spdk_bdev_alias_first, spdk_bdev_alias_next - which could be done here.  But for now I think just accessing the aliases list directly is OK.",
+      "revId": "1ee193a4678e8f7ea4cbc4949e2e9319fb7549ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
