@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "f73ca44b_7565f5c0",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2017-12-14T22:49:17Z",
+      "side": 1,
+      "message": "I like this, very concise!",
+      "revId": "04188cff0192213c076ec5c30770184d7454a305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a11a0001_4ec016e7",
         "filename": "lib/util/cpuset.c",
         "patchSetId": 6
