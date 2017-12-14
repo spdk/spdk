@@ -18,6 +18,7 @@ function run_fio()
 }
 
 source $rootdir/scripts/autotest_common.sh
+source $testdir/nbd/nbd_common.sh
 
 timing_enter bdev
 
@@ -32,6 +33,7 @@ $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
 
 timing_enter nbd
+nbd_function_test $testdir/bdev.conf
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
 fi
