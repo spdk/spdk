@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f22a0add_7f639517",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T17:43:51Z",
+      "side": 1,
+      "message": "this could be split into multiple lines as following:\nvirtio_bdevs\u003d\"VirtioScsi0t0:VirtioScsi1t0:VirtioScsi2t0:\"\nvirtio_bdevs\u003d\"$virtio_bdevs:VirtioScsi3t0:VirtioScsi3t1:VirtioScsi3t2:VirtioScsi3t3\"",
+      "range": {
+        "startLine": 94,
+        "startChar": 1,
+        "endLine": 94,
+        "endChar": 29
+      },
+      "revId": "1caf09411a95cef2d4b016cb3d2a5486edc09e98",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
