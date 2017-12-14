@@ -458,6 +458,23 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 }
 
 int
+spdk_nvmf_poll_group_remove_ns(struct spdk_nvmf_poll_group *group,
+			       struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvmf_subsystem_poll_group *sgroup;
+	uint32_t nsid = ns->id - 1;
+
+	sgroup = &group->sgroups[ns->subsystem->id];
+
+	if (sgroup->channels[nsid]) {
+		spdk_put_io_channel(sgroup->channels[nsid]);
+		sgroup->channels[nsid] = NULL;
+	}
+
+	return 0;
+}
+
+int
 spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 				      struct spdk_nvmf_subsystem *subsystem)
 {

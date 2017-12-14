@@ -287,6 +287,16 @@ uint32_t spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struc
 				    uint32_t nsid);
 
 /**
+ * Remove a namespace from a subsytem.
+ *
+ * \param subsystem Subsystem the namespace belong to.
+ * \param nsid Namespace ID to be removed.
+ *
+ * \return 0 on success or -1 on failure.
+ */
+int spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid);
+
+/**
  * Return the first allocated namespace in a subsystem.
  *
  * \param subsystem Subsystem to query.
