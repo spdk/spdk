@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "c90f7b07_91c3e60d",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T11:42:32Z",
+      "side": 1,
+      "message": "I\u0027m still against mixing other bdevs here. This must be out-of-box example so copy-paste will give the same outpu. If Nvme0 have different address user have to change this address. If he don\u0027t have Nvme at all but only want o practice he need to replace this command.\n\nIf you wish to describe more advance configuration let do this in other section (Examples or something) where you can describe how to use Nvme, lvols or other bdevs.",
+      "parentUuid": "cc8df218_b9ccb5a9",
+      "range": {
+        "startLine": 189,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 3
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cfe3482d_118e76a5",
         "filename": "doc/vhost.md",
         "patchSetId": 1
@@ -225,6 +249,30 @@
       "side": 1,
       "message": "It looks better.\nThis really didn\u0027t seem readable previously - http://www.spdk.io/doc/vhost.html#vhost_example",
       "parentUuid": "cfe3482d_118e76a5",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 229,
+        "endChar": 3
+      },
+      "revId": "b7b003344d23d82feb28c8565819d071a4c317f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56bf964d_c414e6d8",
+        "filename": "doc/vhost.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T11:42:32Z",
+      "side": 1,
+      "message": "I was readeable for me at least. Maybe some voting ? :)",
+      "parentUuid": "2d8e5a6a_5b93bc3a",
       "range": {
         "startLine": 175,
         "startChar": 0,
