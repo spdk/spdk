@@ -10,5 +10,9 @@
   Path /tmp/vhost.2
   Queues 4
 
+[VirtioUser3]
+  Path /tmp/vhost.3
+  Queues 4
+
 [Ioat]
   Disable Yes
