@@ -16,6 +16,24 @@
       "revId": "ccb1ef1fcaf02b38466168628e15eded9fb9289a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0078aa44_e4645b93",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T22:26:20Z",
+      "side": 1,
+      "message": "I think leaving out errno is best.  It\u0027s very likely errno would *not* be ENOMEM here, so the print message would be confusing.",
+      "parentUuid": "616705bd_5842e014",
+      "revId": "ccb1ef1fcaf02b38466168628e15eded9fb9289a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
