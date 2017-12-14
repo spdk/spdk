@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c6b4d1b_8cd997c3",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T10:04:36Z",
+      "side": 1,
+      "message": "I think this can be moved to allocate_bdev() and allocate_vbdev() even in this patch rather than next one in series.",
+      "range": {
+        "startLine": 371,
+        "startChar": 1,
+        "endLine": 371,
+        "endChar": 28
+      },
+      "revId": "9f84855935bf28b1f4fb9298eb039b37e8f0e9ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
