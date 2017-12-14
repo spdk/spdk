@@ -99,6 +99,13 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 }
 
 int
+spdk_nvmf_poll_group_remove_ns(struct spdk_nvmf_poll_group *group,
+			       struct spdk_nvmf_ns *ns)
+{
+	return 0;
+}
+
+int
 spdk_nvmf_poll_group_add_ns(struct spdk_nvmf_poll_group *group,
 			    struct spdk_nvmf_subsystem *subsystem,
 			    struct spdk_nvmf_ns *ns)

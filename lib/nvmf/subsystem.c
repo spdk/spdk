@@ -427,7 +427,43 @@ spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener *listener)
 }
 
 static void
-spdk_nvmf_subsystem_add_ns_done(struct spdk_io_channel_iter *i, int status)
+spdk_nvmf_remove_ns_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_nvmf_ns *ns = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_nvmf_subsystem *subsystem = ns->subsystem;
+
+	spdk_bdev_close(ns->desc);
+	ns->allocated = false;
+	subsystem->num_allocated_nsid--;
+}
+
+static int
+spdk_nvmf_subsystem_remove_ns_from_poll_group(struct spdk_io_channel_iter *i)
+{
+	struct spdk_nvmf_ns *ns = spdk_io_channel_iter_get_ctx(i);
+	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
+	int rc;
+
+	rc = spdk_nvmf_poll_group_remove_ns(group, ns);
+	spdk_for_each_channel_continue(i, rc);
+}
+
+uint32_t
+spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
+{
+	struct spdk_nvmf_ns *ns;
+
+	ns = &subsystem->ns[nsid - 1];
+	spdk_for_each_channel(ns->subsystem->tgt,
+			      spdk_nvmf_subsystem_remove_ns_from_poll_group,
+			      ns,
+			      spdk_nvmf_remove_ns_done);
+	return 0;
+}
+
+static void
+spdk_nvmf_subsystem_add_ns_done(void *io_device, void *ctx, int status)
 {
 	return;
 }
