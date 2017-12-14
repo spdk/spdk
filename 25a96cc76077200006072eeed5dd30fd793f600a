@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60b0255a_9ee513d9",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T08:55:24Z",
+      "side": 1,
+      "message": "Expected result here is num_clusters \u003d\u003d 0, as blob was created with NULL opts - thus using default 0.",
+      "range": {
+        "startLine": 329,
+        "startChar": 0,
+        "endLine": 329,
+        "endChar": 50
+      },
+      "revId": "25a96cc76077200006072eeed5dd30fd793f600a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
