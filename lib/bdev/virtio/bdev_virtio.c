@@ -129,9 +129,6 @@ struct virtio_scsi_scan_base {
 	/* Currently queried target */
 	unsigned			target;
 
-	/* Disks to be registered after the scan finishes */
-	TAILQ_HEAD(, virtio_scsi_disk) found_disks;
-
 	/** Remaining attempts for sending the current request. */
 	unsigned                        retries;
 
@@ -868,12 +865,6 @@ static void
 _virtio_scsi_dev_scan_abort(struct virtio_scsi_scan_base *base, int error)
 {
 	struct virtio_scsi_dev *svdev = base->svdev;
-	struct virtio_scsi_disk *disk;
-
-	while ((disk = TAILQ_FIRST(&base->found_disks))) {
-		TAILQ_REMOVE(&base->found_disks, disk, link);
-		free(disk);
-	}
 
 	spdk_put_io_channel(spdk_io_channel_from_ctx(base->channel));
 
@@ -905,15 +896,7 @@ _virtio_scsi_dev_scan_finish(struct virtio_scsi_scan_base *base)
 
 	spdk_put_io_channel(spdk_io_channel_from_ctx(base->channel));
 
-	while ((disk = TAILQ_FIRST(&base->found_disks))) {
-		TAILQ_REMOVE(&base->found_disks, disk, link);
-		rc = spdk_bdev_register(&disk->bdev);
-		if (rc) {
-			SPDK_ERRLOG("Failed to register bdev name=%s\n", disk->bdev.name);
-			cb_errnum = rc;
-			continue;
-		}
-		TAILQ_INSERT_TAIL(&svdev->luns, disk, link);
+	TAILQ_FOREACH(disk, &svdev->luns, link) {
 		bdevs[bdevs_cnt] = &disk->bdev;
 		bdevs_cnt++;
 	}
@@ -1196,27 +1179,29 @@ process_scan_inquiry(struct virtio_scsi_scan_base *base)
 	}
 }
 
+/* To be called only from the thread performing target scan */
 static int
-alloc_virtio_disk(struct virtio_scsi_scan_base *base)
+virtio_scsi_dev_add_tgt(struct virtio_scsi_dev *svdev, struct virtio_scsi_scan_info *info)
 {
 	struct virtio_scsi_disk *disk;
 	struct spdk_bdev *bdev;
+	int rc;
 
 	disk = calloc(1, sizeof(*disk));
 	if (disk == NULL) {
 		SPDK_ERRLOG("could not allocate disk\n");
-		return -1;
+		return -ENOMEM;
 	}
 
-	disk->svdev = base->svdev;
-	disk->info = base->info;
+	disk->svdev = svdev;
+	memcpy(&disk->info, info, sizeof(*info));
 
 	bdev = &disk->bdev;
-	bdev->name = spdk_sprintf_alloc("%st%"PRIu8, base->svdev->vdev.name, disk->info.target);
+	bdev->name = spdk_sprintf_alloc("%st%"PRIu8, svdev->vdev.name, info->target);
 	if (bdev->name == NULL) {
 		SPDK_ERRLOG("Couldn't alloc memory for the bdev name.\n");
 		free(disk);
-		return -1;
+		return -ENOMEM;
 	}
 
 	bdev->product_name = "Virtio SCSI Disk";
@@ -1228,8 +1213,14 @@ alloc_virtio_disk(struct virtio_scsi_scan_base *base)
 	bdev->fn_table = &virtio_fn_table;
 	bdev->module = SPDK_GET_BDEV_MODULE(virtio_scsi);
 
-	TAILQ_INSERT_TAIL(&base->found_disks, disk, link);
-	_virtio_scsi_dev_scan_finish(base);
+	rc = spdk_bdev_register(&disk->bdev);
+	if (rc) {
+		SPDK_ERRLOG("Failed to register bdev name=%s\n", disk->bdev.name);
+		free(disk);
+		return rc;
+	}
+
+	TAILQ_INSERT_TAIL(&svdev->luns, disk, link);
 	return 0;
 }
 
@@ -1241,6 +1232,7 @@ process_read_cap_10(struct virtio_scsi_scan_base *base)
 	uint64_t max_block;
 	uint32_t block_size;
 	uint8_t target_id = req->lun[1];
+	int rc;
 
 	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
 		SPDK_ERRLOG("READ CAPACITY (10) failed for target %"PRIu8".\n", target_id);
@@ -1258,7 +1250,13 @@ process_read_cap_10(struct virtio_scsi_scan_base *base)
 	base->info.num_blocks = (uint64_t)max_block + 1;
 	base->info.block_size = block_size;
 
-	return alloc_virtio_disk(base);
+	rc = virtio_scsi_dev_add_tgt(base->svdev, &base->info);
+	if (rc != 0) {
+		return rc;
+	}
+
+	_virtio_scsi_dev_scan_finish(base);
+	return 0;
 }
 
 static int
@@ -1267,6 +1265,7 @@ process_read_cap_16(struct virtio_scsi_scan_base *base)
 	struct virtio_scsi_cmd_req *req = &base->io_ctx.req;
 	struct virtio_scsi_cmd_resp *resp = &base->io_ctx.resp;
 	uint8_t target_id = req->lun[1];
+	int rc;
 
 	if (resp->response != VIRTIO_SCSI_S_OK || resp->status != SPDK_SCSI_STATUS_GOOD) {
 		SPDK_ERRLOG("READ CAPACITY (16) failed for target %"PRIu8".\n", target_id);
@@ -1275,7 +1274,13 @@ process_read_cap_16(struct virtio_scsi_scan_base *base)
 
 	base->info.num_blocks = from_be64(base->payload) + 1;
 	base->info.block_size = from_be32(base->payload + 8);
-	return alloc_virtio_disk(base);
+	rc = virtio_scsi_dev_add_tgt(base->svdev, &base->info);
+	if (rc != 0) {
+		return rc;
+	}
+
+	_virtio_scsi_dev_scan_finish(base);
+	return 0;
 }
 
 static void
@@ -1472,7 +1477,6 @@ virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn,
 	base->cb_arg = cb_arg;
 
 	base->svdev = svdev;
-	TAILQ_INIT(&base->found_disks);
 
 	base->channel = spdk_io_channel_get_ctx(io_ch);
 	svdev->scan_ctx = base;
