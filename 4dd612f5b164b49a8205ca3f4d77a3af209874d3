@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc588dfe_fb1c50d3",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T17:25:40Z",
+      "side": 1,
+      "message": "maybe call out the errno values here, i.e.\n\n-EEXIST if alias already exists as a name or alias on any bdev (including this one)\n-ENOMEM if memory cannot be allocated to store the alias",
+      "revId": "4dd612f5b164b49a8205ca3f4d77a3af209874d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1eda299_66763cb6",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T17:25:40Z",
+      "side": 1,
+      "message": "-ENOENT if alias does not exist",
+      "revId": "4dd612f5b164b49a8205ca3f4d77a3af209874d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dac95b98_3636111e",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T17:25:40Z",
+      "side": 1,
+      "message": "this is initialized in spdk_bdev_register - don\u0027t need to do this here",
+      "revId": "4dd612f5b164b49a8205ca3f4d77a3af209874d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10e7b77c_4c2152e3",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-14T17:25:40Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "4dd612f5b164b49a8205ca3f4d77a3af209874d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
