@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "231a9c47_24a10717",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 0,
+      "message": "I think it would make sense to keep name parameter, just make it optional.",
+      "range": {
+        "startLine": 928,
+        "startChar": 46,
+        "endLine": 928,
+        "endChar": 62
+      },
+      "revId": "1ee193a4678e8f7ea4cbc4949e2e9319fb7549ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57cb699c_3a2c662d",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 0,
+      "message": "Do not return error when name \u003d\u003d NULL, just proceed without setting the lvol-\u003ename.",
+      "range": {
+        "startLine": 941,
+        "startChar": 5,
+        "endLine": 941,
+        "endChar": 17
+      },
+      "revId": "1ee193a4678e8f7ea4cbc4949e2e9319fb7549ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,510 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1ec39f1_99b9d48f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "bdev-\u003ename could be set as lvol-\u003eold_name (this field really needs a rename as well. lvol-\u003eold_name is \"lvs-\u003euuid/blobid\".",
+      "range": {
+        "startLine": 685,
+        "startChar": 1,
+        "endLine": 685,
+        "endChar": 11
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06b20353_de1c51a6",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "\"lvs-\u003ename/lvol-\u003ename\" string might be best suited to be an alias.",
+      "range": {
+        "startLine": 685,
+        "startChar": 42,
+        "endLine": 685,
+        "endChar": 73
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "565cf103_5be1dbb5",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "This could be moved into _create_lvol_disk().",
+      "range": {
+        "startLine": 729,
+        "startChar": 1,
+        "endLine": 729,
+        "endChar": 45
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c3d0413_7b749beb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "If we keep name parameter, there would be no need to pass name in req.",
+      "range": {
+        "startLine": 754,
+        "startChar": 27,
+        "endLine": 754,
+        "endChar": 28
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d47b02e9_ffa33fb6",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 804,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "This might be better suited to lvol.c rather than here.",
+      "range": {
+        "startLine": 797,
+        "startChar": 0,
+        "endLine": 804,
+        "endChar": 18
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a683577_f1a7251a",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "Isn\u0027t this check performed by spdk_bdev_alias_add() already ?",
+      "range": {
+        "startLine": 816,
+        "startChar": 0,
+        "endLine": 820,
+        "endChar": 2
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbdc7a12_20d7bbab",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "If for some reason adding new alias fails, old one is already deleted. Adding new alias first, then deleting old one might be better idea.",
+      "range": {
+        "startLine": 828,
+        "startChar": 1,
+        "endLine": 828,
+        "endChar": 47
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3e8f155_5d62db06",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "Other lvs calls refer to struct spdk_lvol_store *lvs rather than by name (vbdev_lvs_destruct() and vbdev_lvs_unload(). If we keep it that way, API will be more consistent and two calls below (vbdev_get_lvol_store_by_uuid/name()) make more sense.",
+      "range": {
+        "startLine": 62,
+        "startChar": 24,
+        "endLine": 62,
+        "endChar": 48
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f7f77c5_f0c6882f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "I think vbdev_lvs_rename() would be more suiting name.",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 23
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de00eb05_d00d5dc9",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "To make it similar to naming of other functions in this file can this be named vbdev_lvol_rename() ?",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 22
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f723889b_dc6a6dfe",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "lvol",
+      "range": {
+        "startLine": 67,
+        "startChar": 66,
+        "endLine": 67,
+        "endChar": 70
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2a33c1e_1b2f0fd8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "\"old_bdev_name\" -\u003e \"old_lvol_name\" might be better.",
+      "range": {
+        "startLine": 67,
+        "startChar": 35,
+        "endLine": 67,
+        "endChar": 48
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7d1a7df_4f032433",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "Can we keep this callback consistent with originating call? \n_spdk_rpc_rename_lvol_store_cb()",
+      "range": {
+        "startLine": 191,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 30
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c885b07_bffc71ed",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "I think RPC could return bool instead of \"OK\" :)\nLike so: spdk_json_write_bool(w, true);",
+      "range": {
+        "startLine": 206,
+        "startChar": 1,
+        "endLine": 206,
+        "endChar": 33
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c11c151_cf8fcf36",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "spdk_json_write_bool(w, true);",
+      "range": {
+        "startLine": 458,
+        "startChar": 1,
+        "endLine": 458,
+        "endChar": 33
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33e87292_c4c6457c",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 972,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "I don\u0027t think name needs to be an uuid. Currently in vbdev we use lvol store uuid + blobid as unique and unchangeable identifier of lvol. This is put into lvol-\u003eold_name (this field could use a name change :/).\n\nMeanwhile \"friendly name\" in lvol-\u003ename is persisted separately as xattr in blob.",
+      "range": {
+        "startLine": 971,
+        "startChar": 0,
+        "endLine": 972,
+        "endChar": 32
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b5dbcb5_168a9f8a",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "\"bdev\" -\u003e \"lvol bdev\"",
+      "range": {
+        "startLine": 399,
+        "startChar": 59,
+        "endLine": 399,
+        "endChar": 63
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc74b2a3_685db2db",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "Stub for this callback can be removed, please see comment at bottom of this file.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 30
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88f6c8b4_a22534d9",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "This probably will need to be tested more thoroughly. Will post suggestions later.",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 78,
+        "endChar": 1
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4710e4cf_c3157f36",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "Previously not much was done in UT with lvs names, could those two lines be added to spdk_lvs_init() stub ?",
+      "range": {
+        "startLine": 986,
+        "startChar": 0,
+        "endLine": 987,
+        "endChar": 55
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff64e1ff_3021511c",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "Using lvol_store_op_complete here might be better than adding new stub. Especially that it allows to assert g_lvserrno.",
+      "range": {
+        "startLine": 990,
+        "startChar": 62,
+        "endLine": 990,
+        "endChar": 92
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b291d44a_e6ab1966",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T14:59:26Z",
+      "side": 1,
+      "message": "UT here is for lvol.c, which should not use struct spdk_bdev at all. Is it needed here ?",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 1
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
