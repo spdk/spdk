@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "393bf8eb_2334f9ce",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-14T10:39:39Z",
+      "side": 1,
+      "message": "Can we please check return from spdk_bdev_get_aliases. If it equals NULL, skip the loop and free(list).",
+      "range": {
+        "startLine": 55,
+        "startChar": 1,
+        "endLine": 55,
+        "endChar": 42
+      },
+      "revId": "eac94f7ec9e8462fa1365068cf0a5c2d42807311",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
