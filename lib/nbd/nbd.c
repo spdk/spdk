@@ -517,6 +517,14 @@ nbd_start_kernel(void *arg)
 	pthread_exit(NULL);
 }
 
+static void
+spdk_nbd_bdev_hot_remove(void *remove_ctx)
+{
+	struct spdk_nbd_disk *nbd = remove_ctx;
+
+	spdk_nbd_stop(nbd);
+}
+
 struct spdk_nbd_disk *
 spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 {
@@ -542,7 +550,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	nbd->spdk_sp_fd = -1;
 	nbd->kernel_sp_fd = -1;
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &nbd->bdev_desc);
+	rc = spdk_bdev_open(bdev, true, spdk_nbd_bdev_hot_remove, nbd, &nbd->bdev_desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not open bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
 		goto err;
