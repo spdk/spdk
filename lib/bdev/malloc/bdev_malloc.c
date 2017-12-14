@@ -396,7 +396,10 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 
 	mdisk->disk.write_cache = 1;
 	mdisk->disk.blocklen = block_size;
-	mdisk->disk.blockcnt = num_blocks;
+	if (spdk_bdev_set_num_blocks(&mdisk->disk, num_blocks) != 0) {
+		malloc_disk_free(mdisk);
+		return NULL;
+	}
 
 	mdisk->disk.ctxt = mdisk;
 	mdisk->disk.fn_table = &malloc_fn_table;
