@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7df9916b_41725186",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 568,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T10:06:28Z",
+      "side": 1,
+      "message": "I\u0027d rather keep it as is now. Let\u0027s change it in a separate patch.",
+      "parentUuid": "ae56a0c5_e501d87c",
+      "range": {
+        "startLine": 568,
+        "startChar": 38,
+        "endLine": 568,
+        "endChar": 46
+      },
+      "revId": "0f4b9b6e57cbe89b8c705b8ea1b17370800d00ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3aeb5b82_a16316c7",
         "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2017-12-14T09:07:29Z",
       "side": 1,
       "message": "Is this still needed?",
+      "range": {
+        "startLine": 184,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 2
+      },
+      "revId": "0f4b9b6e57cbe89b8c705b8ea1b17370800d00ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9401ef29_5b739b66",
+        "filename": "lib/bdev/virtio/rte_virtio/virtio.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-14T10:06:28Z",
+      "side": 1,
+      "message": "It\u0027s not. Thanks",
+      "parentUuid": "3aeb5b82_a16316c7",
       "range": {
         "startLine": 184,
         "startChar": 0,
