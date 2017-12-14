@@ -416,15 +416,27 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 static int bdev_malloc_initialize(void)
 {
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Malloc");
+	char *LunSize;
 	int NumberOfLuns, LunSizeInMB, BlockSize, i, rc = 0;
 	uint64_t size;
 	struct spdk_bdev *bdev;
+	bool has_size_prefix;
 
 	if (sp != NULL) {
 		NumberOfLuns = spdk_conf_section_get_intval(sp, "NumberOfLuns");
+		LunSize = spdk_conf_section_get_val(sp, "LunSize");
 		LunSizeInMB = spdk_conf_section_get_intval(sp, "LunSizeInMB");
 		BlockSize = spdk_conf_section_get_intval(sp, "BlockSize");
-		if ((NumberOfLuns < 1) || (LunSizeInMB < 1)) {
+		if (LunSize == NULL) {
+			size = (uint64_t)LunSizeInMB * 1024 * 1024;
+		} else {
+			rc = spdk_parse_capacity(LunSize, &size, &has_size_prefix);
+			if (rc != 0) {
+				SPDK_ERRLOG("Invalid size field `LunSize %s`\n", LunSize);
+				goto end;
+			}
+		}
+		if ((NumberOfLuns < 1) || (size < 1)) {
 			SPDK_ERRLOG("Malloc section present, but no devices specified\n");
 			rc = EINVAL;
 			goto end;
@@ -433,7 +445,6 @@ static int bdev_malloc_initialize(void)
 			/* Default is 512 bytes */
 			BlockSize = 512;
 		}
-		size = (uint64_t)LunSizeInMB * 1024 * 1024;
 		for (i = 0; i < NumberOfLuns; i++) {
 			bdev = create_malloc_disk(NULL, size / BlockSize, BlockSize);
 			if (bdev == NULL) {
