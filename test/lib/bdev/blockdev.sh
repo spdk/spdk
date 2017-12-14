@@ -18,6 +18,34 @@ function run_fio()
 }
 
 source $rootdir/scripts/autotest_common.sh
+source $testdir/nbd/nbd_common.sh
+
+function nbd_function_test() {
+	if [ $(uname -s) = Linux ]; then
+		local conf=$1
+		local rpc_server=/var/tmp/spdk-nbd.sock
+		local nbd_list=("/dev/nbd0" "/dev/nbd1" "/dev/nbd2" \
+					"/dev/nbd3" "/dev/nbd4" "/dev/nbd5")
+		local bdev_list=("AIO1" "Malloc2p1" "Malloc2p2" \
+					 "Malloc2p3" "Malloc2p4" "Malloc2p5")
+
+		if [ ! -e $conf ]; then
+			return 1
+		fi
+
+		modprobe nbd
+		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf} &
+		nbd_pid=$!
+		echo "Process nbd pid: $nbd_pid"
+		waitforlisten $nbd_pid $rpc_server
+
+		nbd_rpc_steps $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
+
+		killprocess $nbd_pid
+	fi
+
+	return 0
+}
 
 timing_enter bdev
 
@@ -32,6 +60,7 @@ $testdir/bdevio/bdevio $testdir/bdev.conf
 timing_exit bounds
 
 timing_enter nbd
+nbd_function_test $testdir/bdev.conf
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir
 fi
