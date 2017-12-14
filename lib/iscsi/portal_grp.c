@@ -160,6 +160,30 @@ spdk_iscsi_portal_close(struct spdk_iscsi_portal *p)
 	}
 }
 
+int
+spdk_iscsi_portal_set_cpumask(struct spdk_iscsi_portal *portal,
+			      const char *cpumask_str)
+{
+	uint64_t cpumask = 0;
+
+	if (cpumask_str != NULL) {
+		if (spdk_app_parse_core_mask(cpumask_str, &cpumask)) {
+			SPDK_ERRLOG("invalid portal cpumask %s\n", cpumask_str);
+			return -1;
+		}
+		if ((cpumask & spdk_app_get_core_mask()) != cpumask) {
+			SPDK_ERRLOG("portal cpumask %s is not a subset of reactor mask %jx\n",
+				    cpumask_str, spdk_app_get_core_mask());
+			return -1;
+		}
+	} else {
+		cpumask = spdk_app_get_core_mask();
+	}
+
+	portal->cpumask = cpumask;
+	return 0;
+}
+
 static int
 spdk_iscsi_portal_create_from_configline(const char *portalstring,
 		struct spdk_iscsi_portal **ip,

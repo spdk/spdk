@@ -3,6 +3,7 @@
 import argparse
 import json
 import socket
+import re
 
 try:
     from shlex import quote
@@ -481,6 +482,20 @@ p.add_argument('tag', help='Portal group tag (unique, integer > 0)', type=int)
 p.add_argument('portal_list', nargs=argparse.REMAINDER, help="""List of portals in 'host:port' format, separated by whitespace
 Example: '192.168.100.100:3260' '192.168.100.100:3261'""")
 p.set_defaults(func=add_portal_group)
+
+
+def add_portal_group_ex(args):
+    portal = []
+    host_port_mask = re.split(":|@", args.portal)
+    portal = {'host': host_port_mask[0], 'port': host_port_mask[1], 'cpumask': host_port_mask[2]}
+    params = {'tag': args.tag, 'portal': portal}
+    jsonrpc_call('add_portal_group_ex', params)
+
+p = subparsers.add_parser('add_portal_group_ex', help='Add a portal group with a portal and its cpumask')
+p.add_argument('tag', help='Portal group tag (unique integer > 0)', type=int)
+p.add_argument('portal', help="""a portal in 'host:port@cpumask' format
+Example: '192:168.100.100:3260@0xFF'""")
+p.set_defaults(func=add_portal_group_ex)
 
 
 def add_initiator_group(args):
