@@ -138,6 +138,16 @@ cd qemu
 sudo make install
 cd ~
 
+# We currently don't make any changes to the libiscsi repository for our tests, but it is possible that we will need
+# to later. Cloning from git is just future proofing the machines.
+git clone https://github.com/sahlberg/libiscsi
+cd libiscsi
+./autogen.sh
+./configure --prefix=/usr/local/libiscsi
+make
+sudo make install
+
+
 # create autorun-spdk.conf in home folder. This is sourced by the autotest_common.sh file.
 # By setting any one of the values below to 0, you can skip that specific test. If you are
 # using your autotest platform to do sanity checks before uploading to the build pool, it is
