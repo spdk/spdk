@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c112c1a1_e4c94444",
+        "filename": "test/lib/bdev/nbd/nbd_common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-14T22:35:36Z",
+      "side": 1,
+      "message": "This list of bdevs looks like it\u0027s based on the specific details of test/lib/bdev/blockdev.sh, so it probably shouldn\u0027t be hard-coded if this file is intended to be common.\n\nI think most of this test code isn\u0027t going to be used elsewhere, so it can just be integrated directly into blockdev.sh rather than a separate file.",
+      "revId": "4d89566c453c0c106717b1ee44527bf1e92c999c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
