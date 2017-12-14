@@ -59,7 +59,6 @@ function run_fio() {
 function create_bdev_config()
 {
 	local vbdevs
-	local vbdev_names
 
 	if [ -z "$($RPC_PY get_bdevs | jq '.[] | select(.name=="Nvme0n1")')" ]; then
 		error "Nvme0n1 bdev not found!"
@@ -83,8 +82,6 @@ function create_bdev_config()
 
 	vbdevs=$(discover_bdevs $ROOT_DIR $BASE_DIR/bdev.conf)
 	virtio_bdevs=$(jq -r '[.[].name] | join(":")' <<< $vbdevs)
-	virtio_nvme_bdevs=$(jq -r '[.[] |
-	 select(.driver_specific.virtio.socket=="naa.Nvme0n1.0").name] | join(":")' <<< $vbdevs)
 }
 
 timing_enter spdk_vhost_run
@@ -96,14 +93,8 @@ create_bdev_config
 timing_exit create_bdev_config
 
 timing_enter run_fio
-run_fio $BDEV_FIO --filename=$virtio_bdevs\
- --io_size=400m --size=100m --spdk_conf=$BASE_DIR/bdev.conf
+run_fio $BDEV_FIO --filename=$virtio_bdevs --spdk_conf=$BASE_DIR/bdev.conf
 timing_exit run_fio
-
-timing_enter run_fio_4G
-run_fio $BDEV_FIO --filename=$virtio_nvme_bdevs\
- --io_size=4G --size=1G --offset=4G --spdk_conf=$BASE_DIR/bdev.conf
-timing_exit run_fio_4G
 
 rm -f *.state
 timing_enter spdk_vhost_kill
