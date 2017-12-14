@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c07f66ff_b09401cd",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-14T15:10:23Z",
+      "side": 1,
+      "message": "I do not see these qd and bs combinations listed in porting test plan. Please confirm that these is the number of test runs that we\u0027d like to have or work with Anna to post them into test plan.",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 29
+      },
+      "revId": "8e57ea19a6c35e9c2f58e4f4b275de7e5fdc9849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a287bea_7934c765",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-14T15:10:23Z",
+      "side": 1,
+      "message": "60 * 9 (number of combinations in loop) \u003d 540s. Are we sure we can add that much to test pool?",
+      "range": {
+        "startLine": 76,
+        "startChar": 65,
+        "endLine": 76,
+        "endChar": 70
+      },
+      "revId": "8e57ea19a6c35e9c2f58e4f4b275de7e5fdc9849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
