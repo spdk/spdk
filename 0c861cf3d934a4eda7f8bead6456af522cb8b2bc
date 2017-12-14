@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0f3cb71_378b0688",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-14T22:23:20Z",
+      "side": 1,
+      "message": "This looks good, but if we want to be 100% correct, we should also defer completion of the RPC until the ioctl returns (pass the JSON-RPC request to the disconnect thread and call spdk_jsonrpc_begin_result() etc. only once it returns).",
+      "revId": "0c861cf3d934a4eda7f8bead6456af522cb8b2bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
