@@ -144,6 +144,30 @@
     },
     {
       "key": {
+        "uuid": "bdbd4148_f462befd",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-14T15:23:12Z",
+      "side": 1,
+      "message": "Only signal you need to trap is ERR.",
+      "parentUuid": "b7561306_2a878029",
+      "range": {
+        "startLine": 148,
+        "startChar": 61,
+        "endLine": 148,
+        "endChar": 84
+      },
+      "revId": "725c4cafc11fab44b7f532e9188e3a4501528c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed0f7526_8dcc4d69",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 6
