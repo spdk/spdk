@@ -9,6 +9,8 @@ PLUGIN_DIR=$ROOT_DIR/examples/bdev/fio_plugin
 RPC_PY="$ROOT_DIR/scripts/rpc.py"
 FIO_BIN="/usr/src/fio/fio"
 BDEV_FIO="$BASE_DIR/bdev.fio"
+virtio_bdevs=""
+virtio_nvme_bdevs=""
 
 function usage()
 {
@@ -61,7 +63,11 @@ function create_bdev_config()
 	fi
 
 	$RPC_PY construct_vhost_scsi_controller naa.Nvme0n1.0
-	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 0 Nvme0n1
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 0 Nvme0n1p0
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 1 Nvme0n1p1
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 2 Nvme0n1p2
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 3 Nvme0n1p3
+	$RPC_PY add_vhost_scsi_lun naa.Nvme0n1.0 4 Nvme0n1p4
 
 	$RPC_PY construct_malloc_bdev 128 512 --name Malloc0
 	$RPC_PY construct_vhost_scsi_controller naa.Malloc0.1
@@ -70,15 +76,19 @@ function create_bdev_config()
 	$RPC_PY construct_malloc_bdev 128 4096 --name Malloc1
 	$RPC_PY construct_vhost_scsi_controller naa.Malloc1.2
 	$RPC_PY add_vhost_scsi_lun naa.Malloc1.2 0 Malloc1
+
+	virtio_bdevs="VirtioScsi0t0:VirtioScsi0t1:VirtioScsi0t2:VirtioScsi0t3:"
+	virtio_bdevs+="VirtioScsi0t4:VirtioScsi1t0:VirtioScsi2t0"
+	virtio_nvme_bdevs="VirtioScsi0t0:VirtioScsi0t1:VirtioScsi0t2:VirtioScsi0t3:VirtioScsi0t4"
 }
 
 spdk_vhost_run $BASE_DIR
 
 create_bdev_config
 timing_enter fio
-run_fio $BDEV_FIO --filename=VirtioScsi0t0:VirtioScsi1t0:VirtioScsi2t0 \
+run_fio $BDEV_FIO --filename=$virtio_bdevs\
  --io_size=400m --size=100m --spdk_conf=$BASE_DIR/bdev.conf
-run_fio $BDEV_FIO --filename=VirtioScsi0t0 \
+run_fio $BDEV_FIO --filename=$virtio_nvme_bdevs\
  --io_size=4G --size=1G --offset=4G --spdk_conf=$BASE_DIR/bdev.conf
 
 timing_exit fio
