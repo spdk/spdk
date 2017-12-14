@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "03f855c3_c12b6eb7",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-14T07:23:16Z",
+      "side": 1,
+      "message": "Ok, I will change it to crc32c-intel and have a try.",
+      "parentUuid": "d6637dc8_97e7fbe2",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 10
+      },
+      "revId": "893e6bc4dfc83ad4ddec5ceb37ba0334c956fdbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fdc2f883_a71499a6",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 5
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "47159cfa_01aac2e6",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-14T07:23:16Z",
+      "side": 1,
+      "message": "Hi Paul, \nThanks for reviewing. The \"--max-disk\" parm is used to set the controller number which used in VM. If not use the \"--max-disk\" and the script will add all disks in environment. Currently, we only have one disk for the test machine, but we can add more disks later and set \"--max-disks\" to different values.\nThe nightly case and patch case use different fio job. \"default_integrity_nightly.job\" and \"default_integrity.job\".",
+      "parentUuid": "fdc2f883_a71499a6",
+      "revId": "893e6bc4dfc83ad4ddec5ceb37ba0334c956fdbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4d34a165_a08945fa",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 5
@@ -53,6 +95,24 @@
       "writtenOn": "2017-12-14T06:20:09Z",
       "side": 1,
       "message": "Is this to test the multi core? As to the current build_pool machine, there is only one disk, shall we comment it out? For the max-disk, will it be changed to 2 when we have 2 DUTs?",
+      "revId": "893e6bc4dfc83ad4ddec5ceb37ba0334c956fdbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b56a231b_bf06be39",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-14T07:23:16Z",
+      "side": 1,
+      "message": "Yes, the \"distribute-cores\" parm is used to test multi cores.\nCurrently, we only have one disk in environment, we can comment it out now.\nSure, we can change \"--max_disks\" to 2 when we have 2 DUTs.",
+      "parentUuid": "4d34a165_a08945fa",
       "revId": "893e6bc4dfc83ad4ddec5ceb37ba0334c956fdbc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
