@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5927ee47_40deb3fc",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-15T08:58:37Z",
+      "side": 1,
+      "message": "This I\u0027m unsure of. Would changing this value affect positively or negatively anything ? What if blocklen was equal to SPDK_BS_PAGE_SIZE ?",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 15
+      },
+      "revId": "86b0ee8f58b4f428ef22e92ee19a1b2eacc1bca7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2ce20b2_2cddef62",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1272,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-15T08:58:37Z",
+      "side": 1,
+      "message": "This math is repeated below as well. Doing it explicitly here might make it confusing and prone to errors in future.\n\nCan _spdk_bs_page_to_lba() and similar functions be modified to do this calculation on back_bs_dev or lets provide additional functions to do that.",
+      "range": {
+        "startLine": 1272,
+        "startChar": 9,
+        "endLine": 1272,
+        "endChar": 63
+      },
+      "revId": "86b0ee8f58b4f428ef22e92ee19a1b2eacc1bca7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3802c481_526b997d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-15T08:58:37Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 1283,
+        "startChar": 9,
+        "endLine": 1283,
+        "endChar": 74
+      },
+      "revId": "86b0ee8f58b4f428ef22e92ee19a1b2eacc1bca7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e5a70d1_b03d9562",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1356,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-15T08:58:37Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 1355,
+        "startChar": 0,
+        "endLine": 1356,
+        "endChar": 80
+      },
+      "revId": "86b0ee8f58b4f428ef22e92ee19a1b2eacc1bca7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3494221_4a881865",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 1462,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-15T08:58:37Z",
+      "side": 1,
+      "message": "Same as above.",
+      "range": {
+        "startLine": 1461,
+        "startChar": 3,
+        "endLine": 1462,
+        "endChar": 72
+      },
+      "revId": "86b0ee8f58b4f428ef22e92ee19a1b2eacc1bca7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
