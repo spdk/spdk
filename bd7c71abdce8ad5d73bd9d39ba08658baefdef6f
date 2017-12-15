@@ -16,6 +16,126 @@
       "revId": "bd7c71abdce8ad5d73bd9d39ba08658baefdef6f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66a8a4fd_0e61a304",
+        "filename": "include/spdk/crc16.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T17:48:11Z",
+      "side": 1,
+      "message": "Nitpick: this should probably include \"T10DIF\" as part of the name.",
+      "range": {
+        "startLine": 52,
+        "startChar": 8,
+        "endLine": 52,
+        "endChar": 29
+      },
+      "revId": "bd7c71abdce8ad5d73bd9d39ba08658baefdef6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11252388_fd6c8067",
+        "filename": "include/spdk/crc16.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T17:48:11Z",
+      "side": 1,
+      "message": "This should mention that it is the T10 DIF CRC-16.",
+      "revId": "bd7c71abdce8ad5d73bd9d39ba08658baefdef6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7a86b8a_c612a246",
+        "filename": "include/spdk/crc16.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T17:48:11Z",
+      "side": 1,
+      "message": "The input buffer should be passed as const void *.",
+      "range": {
+        "startLine": 61,
+        "startChar": 22,
+        "endLine": 61,
+        "endChar": 34
+      },
+      "revId": "bd7c71abdce8ad5d73bd9d39ba08658baefdef6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "843229d9_053775f7",
+        "filename": "include/spdk/crc16.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T17:48:11Z",
+      "side": 1,
+      "message": "Public API functions must have a spdk_ prefix.",
+      "range": {
+        "startLine": 61,
+        "startChar": 9,
+        "endLine": 61,
+        "endChar": 21
+      },
+      "revId": "bd7c71abdce8ad5d73bd9d39ba08658baefdef6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc0b4327_7c8b6c7e",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T17:48:11Z",
+      "side": 1,
+      "message": "Add a newline between return type and function name in function definitions.",
+      "revId": "bd7c71abdce8ad5d73bd9d39ba08658baefdef6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ece8db1_f73472a0",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T17:48:11Z",
+      "side": 1,
+      "message": "These counters should also be size_t to match the type of len.",
+      "revId": "bd7c71abdce8ad5d73bd9d39ba08658baefdef6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
