@@ -98,10 +98,10 @@
  *  try to configure, if available.
  */
 #define DEFAULT_MAX_IO_QUEUES		(1024)
-#define DEFAULT_IO_QUEUE_SIZE		(256)
+#define DEFAULT_IO_QUEUE_SIZE		(2048)
 
 #define DEFAULT_ADMIN_QUEUE_REQUESTS	(32)
-#define DEFAULT_IO_QUEUE_REQUESTS	(512)
+#define DEFAULT_IO_QUEUE_REQUESTS	(2048)
 
 #define DEFAULT_HOSTNQN			"nqn.2016-06.io.spdk:host"
 
