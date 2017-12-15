@@ -29,8 +29,6 @@ function usage()
 	echo "                          spdk_vhost_blk - use spdk vhost block"
 	echo "-x                        set -x for script debug"
 	echo "    --fio-bin=FIO         Use specific fio binary (will be uploaded to VM)"
-	echo "    --qemu-src=QEMU_DIR   Location of the QEMU sources"
-	echo "    --dpdk-src=DPDK_DIR   Location of the DPDK sources"
 	echo "    --fio-job=            Fio config to use for test.
 	echo "                          All VMs will run the same fio job when FIO executes."
 	echo "                          (no unique jobs for specific VMs)"
@@ -56,8 +54,6 @@ while getopts 'xh-:' optchar; do
 			help) usage $0 ;;
 			work-dir=*) TEST_DIR="${OPTARG#*=}" ;;
 			fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
-			qemu-src=*) QEMU_SRC_DIR="${OPTARG#*=}" ;;
-			dpdk-src=*) DPDK_SRC_DIR="${OPTARG#*=}" ;;
 			fio-job=*) fio_job="${OPTARG#*=}" ;;
 			dry-run) dry_run=true ;;
 			no-shutdown) no_shutdown=true ;;
@@ -83,31 +79,6 @@ fi
 . $COMMON_DIR/common.sh
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
-
-echo "==============="
-echo "INFO: checking qemu"
-
-if [[ ! -x $INSTALL_DIR/bin/qemu-system-x86_64 ]]; then
-	echo "INFO: can't find $INSTALL_DIR/bin/qemu-system-x86_64 - building and installing"
-
-	if [[ ! -d $QEMU_SRC_DIR ]]; then
-		echo "ERROR: Cannot find qemu source in $QEMU_SRC_DIR"
-		exit 1
-	else
-		echo "INFO: qemu source exists $QEMU_SRC_DIR - building"
-		qemu_build_and_install
-	fi
-fi
-
-echo "==============="
-echo ""
-echo "INFO: checking spdk"
-echo ""
-
-if [[ ! -x $SPDK_BUILD_DIR/app/vhost/vhost ]] || $force_build ; then
-	echo "INFO: $SPDK_BUILD_DIR/app/vhost/vhost - building and installing"
-	spdk_build_and_install
-fi
 
 vm_kill_all
 
