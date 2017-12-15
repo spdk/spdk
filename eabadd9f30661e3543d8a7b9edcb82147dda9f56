@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2a5b52a_42063f75",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-15T09:03:45Z",
+      "side": 1,
+      "message": "replace \u0027,\u0027 with spaces in for loop using bash string manipulation.",
+      "range": {
+        "startLine": 20,
+        "startChar": 10,
+        "endLine": 20,
+        "endChar": 33
+      },
+      "revId": "eabadd9f30661e3543d8a7b9edcb82147dda9f56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84229178_64cdd164",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-15T09:03:45Z",
+      "side": 1,
+      "message": "PS9 comment",
+      "range": {
+        "startLine": 33,
+        "startChar": 16,
+        "endLine": 33,
+        "endChar": 25
+      },
+      "revId": "eabadd9f30661e3543d8a7b9edcb82147dda9f56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
