@@ -36,6 +36,7 @@
 
 #include "spdk/conf.h"
 #include "spdk/net.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/log.h"
 
@@ -48,6 +49,7 @@ static struct spdk_iscsi_init_grp *
 spdk_iscsi_init_grp_create(int tag)
 {
 	struct spdk_iscsi_init_grp *ig;
+	char buf[64];
 
 	if (spdk_iscsi_init_grp_find_by_tag(tag)) {
 		SPDK_ERRLOG("duplicate initiator group tag (%d)\n", tag);
@@ -56,7 +58,9 @@ spdk_iscsi_init_grp_create(int tag)
 
 	ig = calloc(1, sizeof(*ig));
 	if (ig == NULL) {
-		SPDK_ERRLOG("initiator group malloc error (tag=%d)\n", tag);
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("calloc() failed for initiator group (tag=%d), errno %d: %s\n",
+			    tag, errno, buf);
 		return NULL;
 	}
 
@@ -84,6 +88,7 @@ spdk_iscsi_init_grp_add_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 {
 	struct spdk_iscsi_initiator_name *iname;
 	char *p;
+	char buf[64];
 
 	if (ig->ninitiators >= MAX_INITIATOR) {
 		SPDK_ERRLOG("> MAX_INITIATOR(=%d) is not allowed\n", MAX_INITIATOR);
@@ -97,11 +102,17 @@ spdk_iscsi_init_grp_add_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 
 	iname = malloc(sizeof(*iname));
 	if (iname == NULL) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("malloc() failed for initiator name str, errno %d: %s\n",
+			    errno, buf);
 		return -ENOMEM;
 	}
 
 	iname->name = strdup(name);
 	if (iname->name == NULL) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("strdup() failed for initiator name, errno %d: %s\n",
+			    errno, buf);
 		free(iname);
 		return -ENOMEM;
 	}
@@ -190,6 +201,7 @@ spdk_iscsi_init_grp_add_netmask(struct spdk_iscsi_init_grp *ig, char *mask)
 {
 	struct spdk_iscsi_initiator_netmask *imask;
 	char *p;
+	char buf[64];
 
 	if (ig->nnetmasks >= MAX_NETMASK) {
 		SPDK_ERRLOG("> MAX_NETMASK(=%d) is not allowed\n", MAX_NETMASK);
@@ -203,11 +215,17 @@ spdk_iscsi_init_grp_add_netmask(struct spdk_iscsi_init_grp *ig, char *mask)
 
 	imask = malloc(sizeof(*imask));
 	if (imask == NULL) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("malloc() failed for inititator mask str, errno %d: %s\n",
+			    errno, buf);
 		return -ENOMEM;
 	}
 
 	imask->mask = strdup(mask);
 	if (imask->mask == NULL) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("strdup() failed for initiator mask, errno %d: %s\n",
+			    errno, buf);
 		free(imask);
 		return -ENOMEM;
 	}
@@ -288,6 +306,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 	int num_initiator_names;
 	int num_initiator_masks;
 	char **initiators = NULL, **netmasks = NULL;
+	char buf[64];
 	int tag = spdk_conf_section_get_num(sp);
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add initiator group %d\n", tag);
@@ -331,7 +350,9 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 
 	initiators = calloc(num_initiator_names, sizeof(char *));
 	if (!initiators) {
-		perror("initiators");
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("calloc() failed for temp initiator name array, errno %d: %s\n",
+			    errno, buf);
 		return -ENOMEM;
 	}
 	for (i = 0; i < num_initiator_names; i++) {
@@ -344,14 +365,18 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "InitiatorName %s\n", val);
 		initiators[i] = strdup(val);
 		if (!initiators[i]) {
-			perror("initiator name copy");
+			spdk_strerror_r(errno, buf, sizeof(buf));
+			SPDK_ERRLOG("strdup() failed for temp initiator name, errno %d: %s\n",
+				    errno, buf);
 			rc = -ENOMEM;
 			goto cleanup;
 		}
 	}
 	netmasks = calloc(num_initiator_masks, sizeof(char *));
 	if (!netmasks) {
-		perror("netmasks");
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("calloc() failed for temp initiator mask array, errno %d: %s\n",
+			    errno, buf);
 		rc = -ENOMEM;
 		goto cleanup;
 	}
@@ -365,7 +390,9 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Netmask %s\n", val);
 		netmasks[i] = strdup(val);
 		if (!netmasks[i]) {
-			perror("initiator netmask copy");
+			spdk_strerror_r(errno, buf, sizeof(buf));
+			SPDK_ERRLOG("strdup() failed for temp initiator mask, errno %d: %s\n",
+				    errno, buf);
 			rc = -ENOMEM;
 			goto cleanup;
 		}

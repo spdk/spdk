@@ -740,6 +740,7 @@ static int
 spdk_iscsi_app_read_parameters(void)
 {
 	struct spdk_conf_section *sp;
+	char buf[64];
 	int rc;
 
 	g_spdk_iscsi.MaxSessions = DEFAULT_MAX_SESSIONS;
@@ -777,7 +778,9 @@ spdk_iscsi_app_read_parameters(void)
 
 	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
-		SPDK_ERRLOG("could not allocate session array\n");
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("spdk_dma_zmalloc() failed for session array, errno %d: %s\n",
+			    errno, buf);
 		return -1;
 	}
 
