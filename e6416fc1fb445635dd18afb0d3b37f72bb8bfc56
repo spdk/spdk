@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0e288372_74121e69",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-15T06:32:32Z",
+      "side": 1,
+      "message": "128M is a small unit. This patch only tests multiconnection IO feasibility and does not mind the available BDEV_SIZE which is covered by other tests. Thanks.",
+      "parentUuid": "a95f512a_19a76375",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 18
+      },
+      "revId": "e6416fc1fb445635dd18afb0d3b37f72bb8bfc56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d785402b_231aee55",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 20
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "90c7340a_ea0f2eb2",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-15T06:32:32Z",
+      "side": 1,
+      "message": "0-39, that is 40 connections. This number is from nvmf multi connections and in order to keep consistent. In fact the connection number 12 is enough to meet the purpose of testing.",
+      "parentUuid": "d785402b_231aee55",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 20
+      },
+      "revId": "e6416fc1fb445635dd18afb0d3b37f72bb8bfc56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98ddefcc_1e3e412e",
         "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
         "patchSetId": 20
@@ -59,6 +107,30 @@
       "writtenOn": "2017-12-14T15:31:19Z",
       "side": 1,
       "message": "Looking at porting test plan I see that these should be run:\n$fio_py 131072 64 randrw 5\n$fio_py 262144 16 randwrite 10",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 30
+      },
+      "revId": "e6416fc1fb445635dd18afb0d3b37f72bb8bfc56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4c800779_f151eef4",
+        "filename": "test/iscsi_tgt/multiconnection/multiconnection.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2017-12-15T06:32:32Z",
+      "side": 1,
+      "message": "OK,added.",
+      "parentUuid": "98ddefcc_1e3e412e",
       "range": {
         "startLine": 77,
         "startChar": 0,
