@@ -404,7 +404,7 @@ _spdk_reactor_run(void *arg)
 	uint32_t		event_count;
 	uint64_t		idle_started, now;
 	uint64_t		spin_cycles, sleep_cycles;
-	uint32_t		sleep_us;
+	int64_t			sleep_us;
 	uint32_t 		timer_poll_count;
 	char			thread_name[32];
 
