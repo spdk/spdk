@@ -70,7 +70,9 @@ function prepare_fio_job_for_unmap() {
 
 source $rootdir/test/vhost/common/common.sh
 $rootdir/scripts/gen_nvme.sh
+timing_enter spdk_vhost_run
 spdk_vhost_run $testdir
+timing_exit spdk_vhost_run
 $rpc_py construct_malloc_bdev 128 512
 $rpc_py construct_malloc_bdev 128 4096
 $rpc_py add_vhost_scsi_lun vhost.0 0 Nvme0n1
@@ -118,9 +120,11 @@ for bdev in $bdevs; do
                 done
 
                 #Host test for unmap
+                timing_enter unmap
                 cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
                 prepare_fio_job_for_unmap "$bdevs"
                 run_fio --spdk_conf=$testdir/bdev.conf
+                timing_exit unmap
 
                 #Host test for +4G
                 if [ $bdev == "Nvme0n1" ]; then
@@ -139,4 +143,6 @@ for bdev in $bdevs; do
         rm -f $testdir/bdev.conf
         timing_exit bdev
 done
+timing_enter spdk_vhost_kill
 spdk_vhost_kill
+timing_exit spdk_vhost_kill
