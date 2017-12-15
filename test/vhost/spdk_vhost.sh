@@ -6,7 +6,6 @@ DEFAULT_VM_IMAGE="/home/sys_sgsw/vhost_vm_image.qcow2"
 
 case $1 in
 	-h|--help)
-		echo "usage: $(basename $0) TEST_TYPE"
 		echo "Test type can be:"
 		echo "  -i |--integrity             for running an integrity test with vhost scsi"
 		echo "  -fs|--fs-integrity-scsi     for running an integrity test with filesystem"
@@ -60,7 +59,7 @@ case $1 in
 		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_scsi \
-		--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job \
+		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job \
 		--qemu-src=/home/sys_sgsw/vhost/qemu
 	;;
 	-pb|--performance-blk)
@@ -68,7 +67,7 @@ case $1 in
 		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_blk \
-		--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job \
+		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job \
 		--qemu-src=/home/sys_sgsw/vhost/qemu
 		;;
 	-i|--integrity)
@@ -76,7 +75,7 @@ case $1 in
 		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 		--test-type=spdk_vhost_scsi \
-		--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
+		--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job \
 		--qemu-src=/home/sys_sgsw/vhost/qemu -x
 		;;
 	-ib|--integrity-blk)
@@ -84,7 +83,7 @@ case $1 in
 		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 		--test-type=spdk_vhost_blk \
-		--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
+		--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job \
 		--qemu-src=/home/sys_sgsw/vhost/qemu -x
 		;;
 	-fs|--fs-integrity-scsi)
@@ -97,12 +96,12 @@ case $1 in
 		;;
 	-ils|--integrity-lvol-scsi)
 		echo 'Running lvol integrity suite...'
-		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		./lvol/lvol_test.sh -x --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--ctrl-type=vhost_scsi
 		;;
 	-ilb|--integrity-lvol-blk)
 		echo 'Running lvol integrity suite...'
-		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		./lvol/lvol_test.sh -x --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--ctrl-type=vhost_blk
 		;;
 	-hp|--hotplug)
@@ -113,7 +112,7 @@ case $1 in
 			--vm=2,$VM_IMAGE,Nvme0n1p4:Nvme0n1p5 \
 			--vm=3,$VM_IMAGE,Nvme0n1p6:Nvme0n1p7 \
 			--test-type=spdk_vhost_scsi \
-			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
+			--fio-job=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
 		;;
 	-ro|--readonly)
 		echo 'Running readonly tests suite...'
