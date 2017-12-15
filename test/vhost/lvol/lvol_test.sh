@@ -85,15 +85,6 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
 vm_kill_all
 
-echo "==============="
-echo ""
-echo "INFO: checking spdk"
-echo ""
-if [[ ! -x $SPDK_BUILD_DIR/app/vhost/vhost ]]; then
-    echo "ERROR: SPDK Vhost is not present - please build it."
-    exit 1
-fi
-
 echo "INFO: running SPDK"
 echo ""
 $COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
