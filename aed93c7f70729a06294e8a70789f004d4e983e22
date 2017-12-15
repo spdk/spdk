@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "350f8288_057c89fe",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T18:10:59Z",
+      "side": 1,
+      "message": "xattr_count should probably be size_t (size of an in-memory array).",
+      "revId": "aed93c7f70729a06294e8a70789f004d4e983e22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b9fd277_a635ea0a",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T18:10:59Z",
+      "side": 1,
+      "message": "This should probably have a doc string explaining who is responsible for freeing the names. (Does passing this structure to spdk_bs_create_blob_ext() take ownership, or does the caller still need to free the strings and array?)",
+      "revId": "aed93c7f70729a06294e8a70789f004d4e983e22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
