@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99468440_06683d19",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1597,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-15T15:01:18Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nI suggest removing all of this get_lcore_state() code.  This was all added before we had the env abstraction layer, and much of this no longer applies.  For example, lcores will never be in WAIT or FINISHED state now because the reactors never stop until the application is terminated.\n\nSo I think you can just use SPDK_ENV_FOREACH_CORE() here and remove a lot of this code.  It should also result in being able to easily remove most or all of the DPDK dependencies here.\n\nThanks,\n\n-Jim",
+      "revId": "0d6f9e2038a1e1199a4980751501f3a522cf1883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
