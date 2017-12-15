@@ -22,6 +22,9 @@
 set -e
 
 sudo dnf upgrade -y
+sudo dnf install -y gcc
+sudo dnf install -y gcc-c++
+sudo dnf install -y make
 sudo dnf install -y git
 sudo dnf install -y jq
 sudo dnf install -y valgrind
@@ -52,6 +55,11 @@ sudo dnf install -y glib2-devel
 sudo dnf install -y pixman-devel
 sudo dnf install -y libiscsi-devel
 sudo dnf install -y doxygen
+sudo dnf install -y astyle-devel
+sudo dnf install -y python
+sudo dnf install -y python-pep8
+sudo dnf install -y lcov
+sudo dnf install -y libuuid-devel
 
 cd ~
 
