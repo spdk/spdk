@@ -18,10 +18,8 @@ END_OF_CONFIG
 # Run_vhost uses run_vhost.sh (test/vhost/common) script.
 # This script calls spdk_vhost_run (common/common.sh) to run vhost.
 # Then prepare vhost with rpc calls and setup and run 4 VMs.
-function pre_test_case() {
+function pre_hot_attach_detach_test_case() {
     used_vms=""
-    run_vhost
-    rm $BASE_DIR/vhost.conf.in
     $SPDK_BUILD_DIR/scripts/rpc.py construct_vhost_scsi_controller naa.Nvme0n1p0.0
     $SPDK_BUILD_DIR/scripts/rpc.py construct_vhost_scsi_controller naa.Nvme0n1p1.0
     $SPDK_BUILD_DIR/scripts/rpc.py construct_vhost_scsi_controller naa.Nvme0n1p2.1
@@ -42,22 +40,36 @@ function pre_test_case() {
     vms_prepare "0 1 2 3"
 }
 
-function reboot_all_and_prepare() {
-    vms_reboot_all $1
-    vms_prepare $1
+function post_hot_attach_detach_test_case() {
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_scsi_target naa.Nvme0n1p4.2 0
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_scsi_target naa.Nvme0n1p4.2 1
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_scsi_target naa.Nvme0n1p5.2 0
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_scsi_target naa.Nvme0n1p5.2 1
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_scsi_target naa.Nvme0n1p6.3 0
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_scsi_target naa.Nvme0n1p6.3 1
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_scsi_target naa.Nvme0n1p7.3 0
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_scsi_target naa.Nvme0n1p7.3 1
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_controller naa.Nvme0n1p0.0
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_controller naa.Nvme0n1p1.0
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_controller naa.Nvme0n1p2.1
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_controller naa.Nvme0n1p3.1
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_controller naa.Nvme0n1p4.2
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_controller naa.Nvme0n1p5.2
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_controller naa.Nvme0n1p6.3
+    $SPDK_BUILD_DIR/scripts/rpc.py remove_vhost_controller naa.Nvme0n1p7.3
 }
 
-function post_test_case() {
-    vm_shutdown_all
-    spdk_vhost_kill
-}
-
+trap 'on_error_exit "${FUNCNAME}" "${LINENO}"' ERR
 gen_config
-pre_test_case
+run_vhost
+rm $BASE_DIR/vhost.conf.in
+pre_hot_attach_detach_test_case
 $BASE_DIR/scsi_hotattach.sh --fio-bin=$fio_bin &
 first_script=$!
 $BASE_DIR/scsi_hotdetach.sh --fio-bin=$fio_bin &
 second_script=$!
 wait $first_script
 wait $second_script
-post_test_case
+vm_shutdown_all
+post_hot_attach_detach_test_case
+spdk_vhost_kill
