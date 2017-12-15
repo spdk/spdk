@@ -29,8 +29,6 @@ function usage()
 	echo "                          spdk_vhost_blk - use spdk vhost block"
 	echo "-x                        set -x for script debug"
 	echo "    --fio-bin=FIO         Use specific fio binary (will be uploaded to VM)"
-	echo "    --qemu-src=QEMU_DIR   Location of the QEMU sources"
-	echo "    --dpdk-src=DPDK_DIR   Location of the DPDK sources"
 	echo "    --fio-job=            Fio config to use for test."
 	echo "                          All VMs will run the same fio job when FIO executes."
 	echo "                          (no unique jobs for specific VMs)"
