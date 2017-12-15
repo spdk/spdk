@@ -46,6 +46,30 @@
       "revId": "801914779c951511cf0d2ce8c094b21ba1e45131",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d19f0f9_c3230689",
+        "filename": "test/nvmf/host/fio.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2017-12-15T01:54:20Z",
+      "side": 1,
+      "message": "As discussed with Wenzhong about the background, in the folder of spdk, /spdk/example/nvme/fio-plugin/README.md file, line 59-62, it said that \"**Note**: The specification of the PCIe address should not use the normal \u0027:\u0027\nand instead only use \u0027.\u0027. This is a limitation in fio - it splits filenames on\n\u0027:\u0027. Also, the NVMe namespaces start at 1, not 0, and the namespace must be\nspecified at the end of the string.\" So there is a limitation in fio to use \":\", this is a known issue.\n@Karol, @Ziye, @Gang, @Daniel who all know about this issue. We are looking for any suggestion here what\u0027s next step.",
+      "parentUuid": "2f3078d9_4a22720b",
+      "range": {
+        "startLine": 36,
+        "startChar": 33,
+        "endLine": 36,
+        "endChar": 59
+      },
+      "revId": "801914779c951511cf0d2ce8c094b21ba1e45131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
