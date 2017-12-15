@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5511508e_065e33fc",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T18:07:50Z",
+      "side": 1,
+      "message": "num_clusters should be uint64_t, not size_t - this can matter on 32-bit platforms, for example.",
+      "revId": "d851f42615e20c595a6224bf304b2455862be6e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55e80a8b_4dfb6661",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T18:07:50Z",
+      "side": 1,
+      "message": "opts probably ought to be const here.",
+      "range": {
+        "startLine": 217,
+        "startChar": 57,
+        "endLine": 217,
+        "endChar": 81
+      },
+      "revId": "d851f42615e20c595a6224bf304b2455862be6e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "458b7a60_96cd67ad",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T18:07:50Z",
+      "side": 1,
+      "message": "Unrelated to this patch, but this comment needs to be updated - spdk_bs_create_blob() doesn\u0027t take a \u0027sz\u0027 parameter.",
+      "revId": "d851f42615e20c595a6224bf304b2455862be6e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ecc61d7_cbbcdccb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 2582,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T18:07:50Z",
+      "side": 1,
+      "message": "Whitespace nit: remove the space before the tab.",
+      "range": {
+        "startLine": 2582,
+        "startChar": 22,
+        "endLine": 2582,
+        "endChar": 23
+      },
+      "revId": "d851f42615e20c595a6224bf304b2455862be6e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a1a7fda_9c96b8da",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T18:07:50Z",
+      "side": 1,
+      "message": "It would be good to have comments for each block describing the scenario you are trying to test.",
+      "revId": "d851f42615e20c595a6224bf304b2455862be6e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
