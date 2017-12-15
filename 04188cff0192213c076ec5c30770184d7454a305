@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "bf9713f6_74622c50",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-15T08:56:21Z",
+      "side": 1,
+      "message": "Yes, you\u0027re right.",
+      "parentUuid": "439772b7_557e649f",
+      "range": {
+        "startLine": 113,
+        "startChar": 15,
+        "endLine": 113,
+        "endChar": 27
+      },
+      "revId": "04188cff0192213c076ec5c30770184d7454a305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a11a0001_4ec016e7",
         "filename": "lib/util/cpuset.c",
         "patchSetId": 6
@@ -53,6 +77,30 @@
       "writtenOn": "2017-12-14T12:53:36Z",
       "side": 1,
       "message": "parse_core_max() and spdk_core_max_hex() are good and parse_core_list() is also good. But I\u0027m not so sure about use case of parse_core_list(). This is used to decode configuration file? For JSON-RPC, for example Python have alternative function.",
+      "range": {
+        "startLine": 200,
+        "startChar": 0,
+        "endLine": 200,
+        "endChar": 44
+      },
+      "revId": "04188cff0192213c076ec5c30770184d7454a305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1950c9c8_7eefe1d6",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-15T08:56:21Z",
+      "side": 1,
+      "message": "Yes, the intention is to simplify definition of coremask especially where user must to do it manually, e.g. from command line. To set full cpuset (1024 bits) we need 256 hex digits.",
+      "parentUuid": "a11a0001_4ec016e7",
       "range": {
         "startLine": 200,
         "startChar": 0,
