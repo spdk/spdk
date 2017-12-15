@@ -34,9 +34,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-#include <rte_mempool.h>
-
 #if defined(__FreeBSD__)
 #include <sys/event.h>
 #else
@@ -69,8 +66,9 @@ static int64_t g_conn_idle_interval_in_tsc = -1;
 
 #define DEFAULT_CONNECTIONS_PER_LCORE	4
 #define SPDK_MAX_POLLERS_PER_CORE	4096
+#define SPDK_MAX_CORE			128
 static int g_connections_per_lcore = DEFAULT_CONNECTIONS_PER_LCORE;
-static uint32_t g_num_connections[RTE_MAX_LCORE];
+static uint32_t g_num_connections[SPDK_MAX_CORE];
 
 struct spdk_iscsi_conn *g_conns_array;
 static char g_shm_name[64];
@@ -380,7 +378,7 @@ int spdk_initialize_iscsi_conns(void)
 		g_conns_array[i].id = i;
 	}
 
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
+	for (i = 0; i < SPDK_MAX_CORE; i++) {
 		g_num_connections[i] = 0;
 	}
 
@@ -1365,7 +1363,7 @@ static void spdk_iscsi_conn_handle_idle(struct spdk_iscsi_conn *conn)
 	    conn->pending_task_cnt == 0) {
 
 		spdk_trace_record(TRACE_ISCSI_CONN_IDLE, conn->id, 0, 0, 0);
-		spdk_iscsi_conn_stop_poller(conn, __add_idle_conn, rte_get_master_lcore());
+		spdk_iscsi_conn_stop_poller(conn, __add_idle_conn, spdk_env_get_master_core());
 	}
 }
 
@@ -1581,8 +1579,8 @@ static uint32_t
 spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 {
 	uint32_t i, selected_core;
-	enum rte_lcore_state_t state;
-	uint32_t master_lcore = rte_get_master_lcore();
+	enum spdk_env_thread_state_t state;
+	uint32_t master_lcore = spdk_env_get_master_core();
 	int32_t num_pollers, min_pollers;
 
 	cpumask &= spdk_app_get_core_mask();
@@ -1593,35 +1591,26 @@ spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 	min_pollers = INT_MAX;
 	selected_core = 0;
 
-	/* we use u64 as CPU core mask */
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
-		if (!((1ULL << i) & cpumask)) {
-			continue;
-		}
-
-		/*
-		 * DPDK returns WAIT for the master lcore instead of RUNNING.
-		 * So we always treat the reactor on master core as RUNNING.
-		 */
+	SPDK_ENV_FOREACH_CORE(i) {
 		if (i == master_lcore) {
-			state = RUNNING;
+			state = SPDK_ENV_THREAD_RUNNING;
 		} else {
-			state = rte_eal_get_lcore_state(i);
+			state = spdk_env_get_thread_state(i);
 		}
-		if (state == FINISHED) {
-			rte_eal_wait_lcore(i);
+		if (state == SPDK_ENV_THREAD_FINISHED) {
+			spdk_env_thread_wait(i);
 		}
 
 		switch (state) {
-		case WAIT:
-		case FINISHED:
+		case SPDK_ENV_THREAD_WAIT:
+		case SPDK_ENV_THREAD_FINISHED:
 			/* Idle cores have 0 pollers. */
 			if (0 < min_pollers) {
 				selected_core = i;
 				min_pollers = 0;
 			}
 			break;
-		case RUNNING:
+		case SPDK_ENV_THREAD_RUNNING:
 			/* This lcore is running. Check how many pollers it already has. */
 			num_pollers = g_num_connections[i];
 
