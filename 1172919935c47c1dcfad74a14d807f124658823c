@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e2521cb_8fff4486",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 829,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-15T16:38:23Z",
+      "side": 1,
+      "message": "I think this should go after iov_resp, with VIRTIO_DESC_WR\n\nAlso indicates we probably have a bug on the target side - this patch should have failed if we do an INQUIRY with data direction WRITE.",
+      "revId": "1172919935c47c1dcfad74a14d807f124658823c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
