@@ -773,6 +773,48 @@ function vm_check_blk_location()
 	fi
 }
 
+function run_fio()
+{
+	local job_file=""
+	local fio_bin=""
+	local vms=()
+	local out=""
+
+	local args=( $@ )
+	for (( i = 0; i < ${#args[@]}; i++ )); do
+		local arg="${args[i]}"
+		case "$arg" in
+			--job-file=*) local job_file="${arg#*=}" ;;
+			--fio-bin=*) local fio_bin="--fio-bin=${arg#*=}" ;;
+			--vm=*) vms+=( "${arg#*=}" ) ;;
+			--out=*) local out="$arg" ;;
+		*)
+			error "Invalid argument '$arg'"
+			return 1
+			;;
+		esac
+	done
+	unset args
+
+	local fio_disks=""
+	local i
+	# prepare job file for each VM
+	for (( i = 0; i < ${#vms[@]}; i++ )); do
+		local vm=${vms[$i]}
+		local vm_num=${vm%%:*}
+		local vm_disks=${vm#*:}
+
+		sed "s@filename=@filename=$vm_disks@" $job_file | vm_ssh $vm_num 'cat > /root/job.file'
+		fio_disks+="127.0.0.1:$(vm_fio_socket $vm_num)$(printf ':/dev/%s' $vm_disks),"
+	done
+
+	if [[ ! -z ${out#*=} ]]; then
+		mkdir -p ${out#*=}
+	fi
+
+	python $SPDK_BUILD_DIR/test/vhost/common/run_fio.py --job-file=job.file $fio_bin $out ${fio_disks%,}
+}
+
 # Shutdown or kill any running VM and SPDK APP.
 #
 function at_app_exit()
