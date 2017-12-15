@@ -42,6 +42,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/json.h"
 #include "spdk/util.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/log.h"
 
@@ -65,13 +66,16 @@ static int
 bdev_aio_open(struct file_disk *disk)
 {
 	int fd;
+	char buf[64];
 
 	fd = open(disk->filename, O_RDWR | O_DIRECT);
 	if (fd < 0) {
 		/* Try without O_DIRECT for non-disk files */
 		fd = open(disk->filename, O_RDWR);
 		if (fd < 0) {
-			perror("open");
+			spdk_strerror_r(errno, buf, sizeof(buf));
+			SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
+				    disk->filename, errno, buf);
 			disk->fd = -1;
 			return -1;
 		}
@@ -86,6 +90,7 @@ static int
 bdev_aio_close(struct file_disk *disk)
 {
 	int rc;
+	char buf[64];
 
 	if (disk->fd == -1) {
 		return 0;
@@ -93,7 +98,9 @@ bdev_aio_close(struct file_disk *disk)
 
 	rc = close(disk->fd);
 	if (rc < 0) {
-		perror("close");
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("close() failed (fd=%d), errno %d: %s\n",
+			    disk->fd, errno, buf);
 		return -1;
 	}
 
