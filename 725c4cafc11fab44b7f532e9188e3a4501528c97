@@ -168,6 +168,30 @@
     },
     {
       "key": {
+        "uuid": "f1057162_e0417819",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-15T05:28:26Z",
+      "side": 1,
+      "message": "I think the SIGINT,SIGTERM,EXIT are needed. We can\u0027t clean lvol bdev and store when use \"ctrl + c\" to kill the process if only trap ERR.\nDo you have any strong reason about only trap ERR?",
+      "parentUuid": "bdbd4148_f462befd",
+      "range": {
+        "startLine": 148,
+        "startChar": 61,
+        "endLine": 148,
+        "endChar": 84
+      },
+      "revId": "725c4cafc11fab44b7f532e9188e3a4501528c97",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed0f7526_8dcc4d69",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 6
