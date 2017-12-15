@@ -193,9 +193,8 @@ $COMMON_DIR/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
 vm_wait_for_boot 600 $used_vms
 
 # Get disk names from VMs and run FIO traffic
-run_fio="python $COMMON_DIR/run_fio.py --fio-bin=$fio_bin"
-run_fio+=" --job-file=$COMMON_DIR/fio_jobs/default_integrity.job"
-run_fio+=" --out=$TEST_DIR "
+
+fio_disks=""
 
 for vm_num in $used_vms; do
     vm_dir=$VM_BASE_DIR/$vm_num
@@ -211,18 +210,11 @@ for vm_num in $used_vms; do
         vm_check_blk_location $vm_num
     fi
 
-    run_fio+="127.0.0.1:$(cat $vm_dir/fio_socket):"
-    for disk in $SCSI_DISK; do
-        run_fio+="/dev/$disk:"
-    done
-    run_fio="${run_fio::-1}"
-    run_fio+=","
+	fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' $SCSI_DISK)"
 done
-run_fio="${run_fio::-1}"
 
 # Run FIO traffic
-echo -e "$run_fio"
-$run_fio
+run_fio --job-file=$COMMON_DIR/fio_jobs/default_integrity.job --out=$TEST_DIR $fio_disks
 
 echo "INFO: Shutting down virtual machines..."
 vm_shutdown_all
