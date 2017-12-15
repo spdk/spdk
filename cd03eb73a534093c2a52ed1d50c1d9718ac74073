@@ -118,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "df222357_4b8293b9",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-15T06:37:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a922bbaf_aa0afa7e",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 26
+      },
+      "revId": "cd03eb73a534093c2a52ed1d50c1d9718ac74073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a5100512_4bc6d138",
         "filename": "test/vhost/integrity/integrity_vm.sh",
         "patchSetId": 9
@@ -129,6 +153,30 @@
       "writtenOn": "2017-12-14T15:52:41Z",
       "side": 1,
       "message": "If the partition table is properly created we should not need those hacks at all. Eg for ntfs why you use \u0027-F\u0027 flag? It will cover some critical errors. Also \u0027-f\u0027 is not what we should probably use.\n\nIf some mkfs still complain about existing FS use \u0027wipefs -a\u0027 on this device but please stop this insanity and remove this if-else.",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 18
+      },
+      "revId": "cd03eb73a534093c2a52ed1d50c1d9718ac74073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b7655f7a_b67026e9",
+        "filename": "test/vhost/integrity/integrity_vm.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-15T06:37:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a5100512_4bc6d138",
       "range": {
         "startLine": 30,
         "startChar": 0,
