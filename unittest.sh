@@ -99,6 +99,7 @@ $valgrind test/unit/lib/iscsi/iscsi.c/iscsi_ut
 $valgrind test/unit/lib/iscsi/init_grp.c/init_grp_ut test/unit/lib/iscsi/init_grp.c/init_grp.conf
 
 $valgrind test/unit/lib/util/bit_array.c/bit_array_ut
+$valgrind test/unit/lib/util/crc16.c/crc16_ut
 $valgrind test/unit/lib/util/crc32_ieee.c/crc32_ieee_ut
 $valgrind test/unit/lib/util/crc32c.c/crc32c_ut
 $valgrind test/unit/lib/util/io_channel.c/io_channel_ut
