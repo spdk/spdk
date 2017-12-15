@@ -172,3 +172,16 @@ function reboot_all_and_prepare() {
     vms_reboot_all $1
     vms_prepare $1
 }
+
+function post_test_case() {
+    vm_shutdown_all
+    spdk_vhost_kill
+}
+
+function on_error_exit() {
+    set +e
+    echo "Error on $1 - $2"
+    post_test_case
+    print_backtrace
+    exit 1
+}
