@@ -4,6 +4,19 @@ rootdir=$(readlink -f $(dirname $0))
 source "$rootdir/scripts/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
 
+SPDK_TEST_UNITTEST=0
+SPDK_TEST_ISCSI=0
+SPDK_TEST_BLOCKDEV=0
+SPDK_TEST_EVENT=0
+SPDK_TEST_NVME=0
+SPDK_TEST_IOAT=0
+SPDK_TEST_ISCSI=0
+SPDK_TEST_BLOBFS=0
+SPDK_TEST_NVMF=0
+SPDK_TEST_VHOST=1
+SPDK_TEST_LVOL=0
+SPDK_TEST_VHOST_INIT=0
+SPDK_TEST_NVML=0
 set -xe
 
 if [ $EUID -ne 0 ]; then
