@@ -255,6 +255,8 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		if (!g_reset) {
 			target->is_draining = true;
 			g_run_failed = true;
+			printf("task offset: %lu on target bdev=%s fails\n",
+			       task->offset_blocks, target->name);
 		}
 	} else if (g_verify || g_reset || g_unmap) {
 		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
