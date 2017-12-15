@@ -364,7 +364,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 
 	mdisk = spdk_dma_zmalloc(sizeof(*mdisk), 0, NULL);
 	if (!mdisk) {
-		perror("mdisk");
+		SPDK_ERRLOG("mdisk spdk_dma_zmalloc() failed\n");
 		return NULL;
 	}
 
@@ -376,7 +376,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 	 */
 	mdisk->malloc_buf = spdk_dma_zmalloc(num_blocks * block_size, 2 * 1024 * 1024, NULL);
 	if (!mdisk->malloc_buf) {
-		SPDK_ERRLOG("spdk_dma_zmalloc failed\n");
+		SPDK_ERRLOG("malloc_buf spdk_dma_zmalloc() failed\n");
 		malloc_disk_free(mdisk);
 		return NULL;
 	}
