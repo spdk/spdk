@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0dd4f33c_4007d3ed",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-15T15:18:40Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nIf spdk_dma_zmalloc fails, it does not set errno.  So strerror related functions should not be used here, because errno is undefined value.\n\nSPDK_ERRLOG(\"spdk_dma_zmalloc() failed\\n\");\n\nThis would be sufficient.  SPDK_ERRLOG will print file and line number which will easily point back to what failed.\n\n-Jim",
+      "revId": "3b08e1e3ada18dcf1d8a6f6da5cf8a3ba67b6b34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6923224f_f1ef2536",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-15T15:18:40Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "3b08e1e3ada18dcf1d8a6f6da5cf8a3ba67b6b34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
