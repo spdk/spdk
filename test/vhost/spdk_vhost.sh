@@ -110,7 +110,7 @@ case $1 in
 			--vm=2,$VM_IMAGE,Nvme0n1p4:Nvme0n1p5 \
 			--vm=3,$VM_IMAGE,Nvme0n1p6:Nvme0n1p7 \
 			--test-type=spdk_vhost_scsi \
-			--fio-job=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
+			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
 		;;
 	-ro|--readonly)
 		echo 'Running readonly tests suite...'
