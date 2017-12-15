@@ -42,6 +42,7 @@
 #include "spdk/nvme_intel.h"
 #include "spdk/histogram_data.h"
 #include "spdk/endian.h"
+#include "spdk/crc16.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -191,23 +192,6 @@ static int g_aio_optind; /* Index of first AIO filename in argv */
 
 static void
 task_complete(struct perf_task *task);
-
-static uint16_t crc16_t10dif(uint8_t *buf, size_t len)
-{
-	uint32_t rem = 0;
-	unsigned int i, j;
-
-	uint16_t poly = 0x8bb7;
-
-	for (i = 0; i < len; i++) {
-		rem = rem ^ (buf[i] << 8);
-		for (j = 0; j < 8; j++) {
-			rem = rem << 1;
-			rem = (rem & 0x10000) ? rem ^ poly : rem;
-		}
-	}
-	return (uint16_t)rem;
-}
 
 static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)

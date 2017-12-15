@@ -39,6 +39,7 @@
 
 #include "spdk/nvme.h"
 #include "spdk/env.h"
+#include "spdk/crc16.h"
 
 static uint32_t swap32(uint32_t value)
 {
@@ -59,23 +60,6 @@ static uint16_t swap16(uint16_t value)
 	result |= (value & 0xFF00) >> 8;
 
 	return result;
-}
-
-static uint16_t crc16_t10dif(uint8_t *buf, size_t len)
-{
-	uint32_t rem = 0;
-	unsigned int i, j;
-
-	uint16_t poly = 0x8bb7;
-
-	for (i = 0; i < len; i++) {
-		rem = rem ^ (buf[i] << 8);
-		for (j = 0; j < 8; j++) {
-			rem = rem << 1;
-			rem = (rem & 0x10000) ? rem ^ poly : rem;
-		}
-	}
-	return (uint16_t)rem;
 }
 
 #define MAX_DEVS 64
