@@ -7,13 +7,12 @@ BASE_DIR=$(readlink -f $(dirname $0))
 dry_run=false
 no_shutdown=false
 fio_bin="fio"
-fio_jobs="$COMMON_DIR/fio_jobs/"
+fio_jobs=""
 test_type=spdk_vhost_scsi
 reuse_vms=false
 force_build=false
 vms=()
 used_vms=""
-disk_split=""
 x=""
 
 function usage()
@@ -32,8 +31,7 @@ function usage()
 	echo "    --fio-bin=FIO         Use specific fio binary (will be uploaded to VM)"
 	echo "    --qemu-src=QEMU_DIR   Location of the QEMU sources"
 	echo "    --dpdk-src=DPDK_DIR   Location of the DPDK sources"
-	echo "    --fio-jobs=           Fio configs to use for tests. Can point to a directory or"
-	echo "                          can point to a directory with regex mask, example: ./dir/*.job"
+	echo "    --fio-job=            Fio config to use for test.
 	echo "                          All VMs will run the same fio job when FIO executes."
 	echo "                          (no unique jobs for specific VMs)"
 	echo "    --work-dir=WORK_DIR   Where to find build file. Must exist. [default: $TEST_DIR]"
@@ -46,10 +44,6 @@ function usage()
 	echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
 	echo "                          If test-type=spdk_vhost_blk then each disk can have additional size parameter, e.g."
 	echo "                          --vm=X,os.qcow,DISK_size_35G; unit can be M or G; default - 20G"
-	echo "    --disk-split          By default all test types execute fio jobs on all disks which are available on guest"
-	echo "                          system. Use this option if only some of the disks should be used for testing."
-	echo "                          Example: --disk-split=4,1-3 will result in VM 1 using it's first disk (ex. /dev/sda)"
-	echo "                          and VM 2 using it's disks 1-3 (ex. /dev/sdb, /dev/sdc, /dev/sdd)"
 	exit 0
 }
 
@@ -64,13 +58,12 @@ while getopts 'xh-:' optchar; do
 			fio-bin=*) fio_bin="--fio-bin=${OPTARG#*=}" ;;
 			qemu-src=*) QEMU_SRC_DIR="${OPTARG#*=}" ;;
 			dpdk-src=*) DPDK_SRC_DIR="${OPTARG#*=}" ;;
-			fio-jobs=*) fio_jobs="${OPTARG#*=}" ;;
+			fio-job=*) fio_job="${OPTARG#*=}" ;;
 			dry-run) dry_run=true ;;
 			no-shutdown) no_shutdown=true ;;
 			test-type=*) test_type="${OPTARG#*=}" ;;
 			force-build) force_build=true ;;
 			vm=*) vms+=("${OPTARG#*=}") ;;
-			disk-split=*) disk_split="${OPTARG#*=}" ;;
 			*) usage $0 "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
@@ -82,8 +75,9 @@ while getopts 'xh-:' optchar; do
 done
 shift $(( OPTIND - 1 ))
 
-if [[ -d "$fio_jobs" ]]; then
-	fio_jobs="$fio_jobs/*.job"
+if [[ ! -r "$fio_job" ]]; then
+	echo "ERROR: no fio job file specified"
+	exit 1
 fi
 
 . $COMMON_DIR/common.sh
@@ -274,23 +268,11 @@ echo ""
 echo "INFO: Testing..."
 
 echo "INFO: Running fio jobs ..."
-run_fio="python $COMMON_DIR/run_fio.py "
-run_fio+="$fio_bin "
-run_fio+="--job-file="
-for job in $fio_jobs; do
-	run_fio+="$job,"
-done
-run_fio="${run_fio::-1}"
-run_fio+=" "
-run_fio+="--out=$TEST_DIR "
-
-if [[ ! $disk_split == '' ]]; then
-	run_fio+="--split-disks=$disk_split "
-fi
 
 # Check if all VM have disk in tha same location
 DISK=""
 
+fio_disks=""
 for vm_num in $used_vms; do
 	vm_dir=$VM_BASE_DIR/$vm_num
 
@@ -308,19 +290,8 @@ for vm_num in $used_vms; do
 		vm_check_blk_location $vm_num
 	fi
 
-	run_fio+="127.0.0.1:$(cat $vm_dir/fio_socket):"
-	for disk in $SCSI_DISK; do
-		run_fio+="/dev/$disk:"
-	done
-	run_fio="${run_fio::-1}"
-	run_fio+=","
+	fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' $SCSI_DISK)"
 done
-
-run_fio="${run_fio%,}"
-run_fio+=" "
-run_fio="${run_fio::-1}"
-
-echo -e "$run_fio"
 
 if $dry_run; then
 	read -p "Enter to kill evething" xx
@@ -329,7 +300,7 @@ if $dry_run; then
 	exit 0
 fi
 
-$run_fio
+run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR" $fio_disks
 
 if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 	for vm_num in $used_vms; do
