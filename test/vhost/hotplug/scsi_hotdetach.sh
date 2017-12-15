@@ -157,7 +157,7 @@ function hotdetach_tc1() {
 # Also check if disc has been removed from VM.
 function hotdetach_tc2() {
     notice "Hotdetach test case 2"
-    $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
+    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
     sleep 2
     first_disk=""
     get_first_disk "2" first_disk
@@ -179,7 +179,7 @@ function hotdetach_tc2() {
 # Also check if disc has been removed from VM.
 function hotdetach_tc3() {
     notice "Hotdetach test case 3"
-    $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
+    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
     sleep 2
     first_disk=""
     get_first_disk "2" first_disk
@@ -201,7 +201,7 @@ function hotdetach_tc3() {
 # After reboot run fio test for remaining devices and check if fio passes.
 function hotdetach_tc4() {
     notice "Hotdetach test case 4"
-    $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
+    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
     sleep 2
     first_disk=""
     get_first_disk "2" first_disk
@@ -230,7 +230,12 @@ function hotdetach_tc4() {
     check_fio_retcode "Hotdetach test case 4: Iteration 3." 0 $?
 }
 
+function clear_after_tests() {
+    $rpc_py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
+}
+
 hotdetach_tc1
 hotdetach_tc2
 hotdetach_tc3
 hotdetach_tc4
+clear_after_tests

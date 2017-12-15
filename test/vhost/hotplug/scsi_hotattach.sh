@@ -89,7 +89,15 @@ function hotattach_tc4() {
     check_fio_retcode "Hotattach test case 4: Iteration 3." 0 $?
 }
 
+function cleanup_after_tests() {
+    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p0.0 0
+    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p0.0 1
+    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p1.0 0
+    $rpc_py remove_vhost_scsi_target naa.Nvme0n1p2.1 0
+}
+
 hotattach_tc1
 hotattach_tc2
 hotattach_tc3
 hotattach_tc4
+cleanup_after_tests
