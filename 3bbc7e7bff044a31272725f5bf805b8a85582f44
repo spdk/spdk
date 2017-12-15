@@ -62,6 +62,30 @@
       "revId": "3bbc7e7bff044a31272725f5bf805b8a85582f44",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "185549f5_c9977d8a",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-12-15T09:35:55Z",
+      "side": 1,
+      "message": "Unfortunately fio_plugin requires conf file with defined devices so we won\u0027t use RPC calls this time, but we can get rid of sed",
+      "parentUuid": "8f990d23_47d90419",
+      "range": {
+        "startLine": 73,
+        "startChar": 1,
+        "endLine": 73,
+        "endChar": 79
+      },
+      "revId": "3bbc7e7bff044a31272725f5bf805b8a85582f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
