@@ -52,9 +52,14 @@ timing_exit mkfs
 
 mkdir $output_dir/rocksdb
 RESULTS_DIR=$output_dir/rocksdb
-DURATION=30
-NUM_KEYS=50000000
 CACHE_SIZE=4096
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	DURATION=60
+	NUM_KEYS=100000000
+else
+	DURATION=20
+	NUM_KEYS=20000000
+fi
 
 cd $RESULTS_DIR
 
