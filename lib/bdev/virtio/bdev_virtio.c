@@ -355,12 +355,16 @@ bdev_virtio_send_io(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	struct virtio_req *vreq = &io_ctx->vreq;
 	int rc;
 
+	//SPDK_ERRLOG("SENDING %p\n", bdev_io);
+
 	rc = virtio_xmit_pkt(virtio_channel->vq, vreq);
 	if (spdk_likely(rc == 0)) {
 		return;
 	} else if (rc == -ENOMEM) {
+		SPDK_ERRLOG("NO MEM!\n");
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
 	} else {
+		SPDK_ERRLOG("ERR!\n");
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
@@ -597,6 +601,8 @@ bdev_virtio_io_cpl(struct virtio_req *req)
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(io_ctx);
 	int sk, asc, ascq;
 
+	//SPDK_ERRLOG("RECEIVED %p\n", bdev_io);
+
 	get_scsi_status(&io_ctx->resp, &sk, &asc, &ascq);
 	spdk_bdev_io_complete_scsi_status(bdev_io, io_ctx->resp.status, sk, asc, ascq);
 }
@@ -709,6 +715,8 @@ bdev_virtio_scsi_ch_create_cb(void *io_device, void *ctx_buf)
 	struct virtqueue *vq;
 	int32_t queue_idx;
 
+	SPDK_ERRLOG("Creating io_ch\n");
+
 	queue_idx = virtio_dev_find_and_acquire_queue(vdev, VIRTIO_SCSI_REQUESTQ);
 	if (queue_idx < 0) {
 		SPDK_ERRLOG("Couldn't get an unused queue for the io_channel.\n");
@@ -732,6 +740,9 @@ bdev_virtio_scsi_ch_destroy_cb(void *io_device, void *ctx_buf)
 	struct virtio_scsi_dev *svdev = io_channel->svdev;
 	struct virtio_dev *vdev = &svdev->vdev;
 	struct virtqueue *vq = io_channel->vq;
+
+	SPDK_ERRLOG("destroy io_ch\n");
+
 
 	spdk_poller_unregister(&vq->poller);
 	virtio_dev_release_queue(vdev, vq->vq_queue_index);

@@ -93,9 +93,9 @@ spdk_vhost_run $BASE_DIR
 
 create_bdev_config
 run_fio $BASE_DIR/bdev.fio --filename=$virtio_bdevs\
- --io_size=400m --size=100m --spdk_conf=$BASE_DIR/bdev.conf
-run_fio $BASE_DIR/bdev.fio --filename=$virtio_nvme_bdevs\
- --spdk_conf=$BASE_DIR/bdev.conf --io_size=4G --size=1G --offset=4G --spdk_conf=$BASE_DIR/bdev.conf
+  --spdk_conf=$BASE_DIR/bdev.conf
+#run_fio $BASE_DIR/bdev.fio --filename=$virtio_nvme_bdevs\
+# --spdk_conf=$BASE_DIR/bdev.conf --io_size=4G --size=1G --offset=4G --spdk_conf=$BASE_DIR/bdev.conf
 
 rm -f *.state
 spdk_vhost_kill

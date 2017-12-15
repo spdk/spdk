@@ -500,6 +500,8 @@ virtqueue_enqueue_xmit(struct virtqueue *vq, struct virtio_req *req)
 	}
 	vq->vq_free_cnt = (uint16_t)(vq->vq_free_cnt - total_iovs);
 	vq_update_avail_ring(vq, head_idx);
+
+	//SPDK_ERRLOG("Remaining %d descs\n", (int) vq->vq_free_cnt);
 	return 0;
 }
 

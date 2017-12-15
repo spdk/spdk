@@ -1616,6 +1616,10 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 
 	bdev_io->status = status;
 
+	if (status == SPDK_BDEV_IO_STATUS_NOMEM) {
+			SPDK_ERRLOG("BDEV CPL NOMEM\n");
+		}
+
 	if (spdk_unlikely(bdev_io->type == SPDK_BDEV_IO_TYPE_RESET)) {
 		bool unlock_channels = false;
 
