@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "aaf39c83_decde87e",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-15T05:28:26Z",
+      "side": 1,
+      "message": "This function is copied from Karol\u0027s patch, and we can add it into \"autotest_common.sh\" then anybody can use it. following is the patch, I will remove this function when the patch has been merged. https://review.gerrithub.io/#/c/387556/",
+      "parentUuid": "39fb09e7_cb1f6493",
+      "range": {
+        "startLine": 92,
+        "startChar": 44,
+        "endLine": 92,
+        "endChar": 108
+      },
+      "revId": "cd03eb73a534093c2a52ed1d50c1d9718ac74073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41bc4eb6_50330129",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 9
