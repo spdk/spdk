@@ -34,11 +34,10 @@ run_test ./test/iscsi_tgt/idle_migration/idle_migration.sh
 run_test ./test/iscsi_tgt/lvol/iscsi_lvol.sh
 run_test ./test/iscsi_tgt/fio/fio.sh
 
-if [ $SPDK_TEST_NVML -eq 1 ]; then
-	run_test ./test/iscsi_tgt/pmem/iscsi_pmem.sh 4096 10
-fi
-
 if [ $RUN_NIGHTLY -eq 1 ]; then
+	if [ $SPDK_TEST_NVML -eq 1 ]; then
+		run_test ./test/iscsi_tgt/pmem/iscsi_pmem.sh 4096 10
+	fi
 	run_test ./test/iscsi_tgt/ip_migration/ip_migration.sh
 	run_test ./test/iscsi_tgt/ext4test/ext4test.sh
 fi

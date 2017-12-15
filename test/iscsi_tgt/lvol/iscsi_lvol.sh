@@ -17,6 +17,13 @@ INITIATOR_NAME=ANY
 NETMASK=$INITIATOR_IP/32
 MALLOC_BDEV_SIZE=128
 MALLOC_BLOCK_SIZE=512
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	NUM_MALLOC=10
+	NUM_LVOL=10
+else
+	NUM_MALLOC=2
+	NUM_LVOL=2
+fi
 
 rpc_py="python $rootdir/scripts/rpc.py"
 fio_py="python $rootdir/scripts/fio.py"
@@ -36,13 +43,13 @@ timing_exit start_iscsi_tgt
 
 timing_enter setup
 $rpc_py add_portal_group 1 $TARGET_IP:$PORT
-for i in `seq 0 9`; do
+for i in `seq 1 $NUM_MALLOC`; do
     INITIATOR_TAG=$((i+2))
     $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
     bdev=$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)
     ls_guid=$($rpc_py construct_lvol_store $bdev lvs_$i -c 1048576)
     LUNs=""
-    for j in `seq 0 9`; do
+    for j in `seq 1 $NUM_LVOL`; do
         lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j 10)
         LUNs+="$lb_name:$j "
     done
