@@ -97,8 +97,10 @@ int spdk_sock_set_sendbuf(int sock, int sz);
 bool spdk_sock_is_ipv6(int sock);
 bool spdk_sock_is_ipv4(int sock);
 
+void spdk_sock_init(void);
+void spdk_sock_fini(void);
+
 #ifdef __cplusplus
 }
 #endif
-
 #endif /* SPDK_NET_FRAMEWORK_H */
