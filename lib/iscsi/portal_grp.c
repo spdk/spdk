@@ -37,6 +37,7 @@
 #include "spdk/conf.h"
 #include "spdk/net.h"
 #include "spdk/event.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/log.h"
 
@@ -69,6 +70,7 @@ struct spdk_iscsi_portal *
 spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 {
 	struct spdk_iscsi_portal *p = NULL;
+	char buf[64];
 
 	assert(host != NULL);
 	assert(port != NULL);
@@ -81,7 +83,9 @@ spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 
 	p = malloc(sizeof(*p));
 	if (!p) {
-		SPDK_ERRLOG("portal malloc error (%s, %s)\n", host, port);
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("malloc() failed for portal (%s, %s), errno %d: %s\n",
+			    host, port, errno, buf);
 		return NULL;
 	}
 
@@ -168,9 +172,9 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 	char *host = NULL, *port = NULL;
 	const char *cpumask_str;
 	uint64_t cpumask = 0;
-
 	int n, len, rc = -1;
 	const char *p, *q;
+	char buf[64];
 
 	if (portalstring == NULL) {
 		SPDK_ERRLOG("portal error\n");
@@ -189,7 +193,9 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 		if (!dry_run) {
 			host = malloc(n + 1);
 			if (!host) {
-				perror("host");
+				spdk_strerror_r(errno, buf, sizeof(buf));
+				SPDK_ERRLOG("malloc() failed for host, errno %d: %s\n",
+					    errno, buf);
 				goto error_out;
 			}
 			memcpy(host, portalstring, n);
@@ -199,7 +205,9 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 			if (!dry_run) {
 				port = malloc(PORTNUMSTRLEN);
 				if (!port) {
-					perror("port");
+					spdk_strerror_r(errno, buf, sizeof(buf));
+					SPDK_ERRLOG("malloc() failed for port, errno %d: %s\n",
+						    errno, buf);
 					goto error_out;
 				}
 				snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
@@ -218,7 +226,9 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 
 				port = malloc(len + 1);
 				if (!port) {
-					perror("port");
+					spdk_strerror_r(errno, buf, sizeof(buf));
+					SPDK_ERRLOG("malloc() failed for port, errno %d: %s\n",
+						    errno, buf);
 					goto error_out;
 				}
 				memset(port, 0, len + 1);
@@ -235,7 +245,9 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 		if (!dry_run) {
 			host = malloc(n + 1);
 			if (!host) {
-				perror("host");
+				spdk_strerror_r(errno, buf, sizeof(buf));
+				SPDK_ERRLOG("malloc() failed for host, errno %d: %s\n",
+					    errno, buf);
 				goto error_out;
 			}
 			memcpy(host, portalstring, n);
@@ -245,7 +257,9 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 			if (!dry_run) {
 				port = malloc(PORTNUMSTRLEN);
 				if (!port) {
-					perror("port");
+					spdk_strerror_r(errno, buf, sizeof(buf));
+					SPDK_ERRLOG("malloc() failed for port, errno %d: %s\n",
+						    errno, buf);
 					goto error_out;
 				}
 				snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
@@ -269,7 +283,9 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 				len = q - p - 1;
 				port = malloc(len + 1);
 				if (!port) {
-					perror("port");
+					spdk_strerror_r(errno, buf, sizeof(buf));
+					SPDK_ERRLOG("malloc() failed for port, errno %d: %s\n",
+						    errno, buf);
 					goto error_out;
 				}
 				memset(port, 0, len + 1);
@@ -305,8 +321,12 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 
 	rc = 0;
 error_out:
-	free(host);
-	free(port);
+	if (host) {
+		free(host);
+	}
+	if (port) {
+		free(port);
+	}
 
 	return rc;
 }
@@ -314,10 +334,13 @@ error_out:
 struct spdk_iscsi_portal_grp *
 spdk_iscsi_portal_grp_create(int tag)
 {
+	char buf[64];
 	struct spdk_iscsi_portal_grp *pg = malloc(sizeof(*pg));
 
 	if (!pg) {
-		SPDK_ERRLOG("portal group malloc error (%d)\n", tag);
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("malloc() failed for portal group (tag=%d), errno %d: %s\n",
+			    tag, errno, buf);
 		return NULL;
 	}
 
