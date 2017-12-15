@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "3a2ab13f_9f4fa41e",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T17:10:36Z",
+      "side": 1,
+      "message": "The return type is uint32_t, so it won\u0027t be able to return -1.  This should probably be int.",
+      "revId": "8c13a7933b2edf7fa486fcb6b3fd40a0697d2d7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc6368a2_0b593ba0",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T17:10:36Z",
+      "side": 1,
+      "message": "Trim this extra blank line inside the braces.",
+      "revId": "8c13a7933b2edf7fa486fcb6b3fd40a0697d2d7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d7ac9d80_260c1266",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 8
