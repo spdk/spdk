@@ -60,16 +60,14 @@ case $1 in
 		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_scsi \
-		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job \
-		--qemu-src=/home/sys_sgsw/vhost/qemu
+		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
 	;;
 	-pb|--performance-blk)
 		echo 'Running blk performance suite...'
 		./fiotest/autotest.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--vm=0,$VM_IMAGE,Nvme0n1p0 \
 		--test-type=spdk_vhost_blk \
-		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job \
-		--qemu-src=/home/sys_sgsw/vhost/qemu
+		--fio-job=$WORKDIR/common/fio_jobs/default_performance.job
 		;;
 	-i|--integrity)
 		echo 'Running SCSI integrity suite...'
@@ -77,7 +75,7 @@ case $1 in
 		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 		--test-type=spdk_vhost_scsi \
 		--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job \
-		--qemu-src=/home/sys_sgsw/vhost/qemu -x
+		-x
 		;;
 	-ib|--integrity-blk)
 		echo 'Running blk integrity suite...'
@@ -85,7 +83,7 @@ case $1 in
 		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1:Nvme0n1p2:Nvme0n1p3 \
 		--test-type=spdk_vhost_blk \
 		--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job \
-		--qemu-src=/home/sys_sgsw/vhost/qemu -x
+		-x
 		;;
 	-fs|--fs-integrity-scsi)
 		echo 'Running filesystem integrity suite...'
