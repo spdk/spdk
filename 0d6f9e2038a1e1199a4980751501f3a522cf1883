@@ -16,6 +16,24 @@
       "revId": "0d6f9e2038a1e1199a4980751501f3a522cf1883",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d95f8b57_1e3206a5",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1597,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-15T15:05:54Z",
+      "side": 1,
+      "message": "Now I see that you already figured this out in patch https://review.gerrithub.io/#/c/391339/.  Nice job!\n\nThis patch is OK then.",
+      "parentUuid": "99468440_06683d19",
+      "revId": "0d6f9e2038a1e1199a4980751501f3a522cf1883",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
