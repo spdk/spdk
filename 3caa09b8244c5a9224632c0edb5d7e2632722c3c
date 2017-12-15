@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a25824e0_64b50267",
+        "filename": "etc/spdk/iscsi.conf.in",
+        "patchSetId": 3
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-15T17:32:44Z",
+      "side": 1,
+      "message": "This change looks good, but there is a copy of this comment block (as part of the running config support) in iscsi_subsystem.c that also needs to be updated. (portal_group_section)",
+      "revId": "3caa09b8244c5a9224632c0edb5d7e2632722c3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
