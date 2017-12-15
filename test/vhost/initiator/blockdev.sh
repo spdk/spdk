@@ -13,7 +13,7 @@ else
         fio_rw=("randwrite")
 fi
 
-function run_fio() {
+function run_spdk_fio() {
         LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio --ioengine=spdk_bdev --iodepth=128 --bs=4k --runtime=10 $testdir/bdev.fio "$@" --spdk_mem=1024
         fio_status=$?
         if [ $fio_status != 0 ]; then
@@ -114,7 +114,7 @@ for bdev in $bdevs; do
                                 echo -n "$b:" >> $testdir/bdev.fio
                         done
 
-                        run_fio --spdk_conf=$testdir/bdev.conf
+                        run_spdk_fio --spdk_conf=$testdir/bdev.conf
 
                         timing_exit fio_rw_verify
                 done
@@ -123,7 +123,7 @@ for bdev in $bdevs; do
                 timing_enter unmap
                 cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
                 prepare_fio_job_for_unmap "$bdevs"
-                run_fio --spdk_conf=$testdir/bdev.conf
+                run_spdk_fio --spdk_conf=$testdir/bdev.conf
                 timing_exit unmap
 
                 #Host test for +4G
@@ -133,7 +133,7 @@ for bdev in $bdevs; do
                         echo "INFO: Running 4G test $rw for disk $bdev"
                         cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
                         prepare_fio_job_4G "$rw" "$bdevs"
-                        run_fio --spdk_conf=$testdir/bdev.conf
+                        run_spdk_fio --spdk_conf=$testdir/bdev.conf
                         timing_exit fio_4G_rw_verify
                     done
                 fi
