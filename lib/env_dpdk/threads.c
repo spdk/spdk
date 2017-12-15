@@ -49,6 +49,17 @@ spdk_env_get_current_core(void)
 }
 
 uint32_t
+spdk_env_get_master_core(void)
+{
+	return rte_get_master_lcore();
+}
+
+enum spdk_env_thread_state_t
+spdk_env_get_thread_state(uint32_t core) {
+	return (enum spdk_env_thread_state_t)rte_eal_get_lcore_state(core);
+}
+
+uint32_t
 spdk_env_get_first_core(void)
 {
 	return rte_get_next_lcore(-1, 0, 0);
@@ -80,6 +91,12 @@ spdk_env_thread_launch_pinned(uint32_t core, thread_start_fn fn, void *arg)
 	rc = rte_eal_remote_launch(fn, arg, core);
 
 	return rc;
+}
+
+void
+spdk_env_thread_wait(uint32_t core)
+{
+	rte_eal_wait_lcore(core);
 }
 
 void
