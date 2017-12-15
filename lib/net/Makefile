@@ -34,7 +34,13 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = interface.c sock.c net_framework_default.c net_rpc.c
+C_SRCS = interface.c net_framework_default.c net_rpc.c
+
+ifeq ($(CONFIG_VPP),y)
+C_SRCS += vpp.c
+else
+C_SRCS += sock.c
+endif
 
 LIBNAME = net
 
