@@ -39,6 +39,7 @@
 
 #include "spdk/nvme.h"
 #include "spdk/env.h"
+#include "spdk/crc16.h"
 
 static uint32_t swap32(uint32_t value)
 {
@@ -59,23 +60,6 @@ static uint16_t swap16(uint16_t value)
 	result |= (value & 0xFF00) >> 8;
 
 	return result;
-}
-
-static uint16_t crc16_t10dif(uint8_t *buf, size_t len)
-{
-	uint32_t rem = 0;
-	unsigned int i, j;
-
-	uint16_t poly = 0x8bb7;
-
-	for (i = 0; i < len; i++) {
-		rem = rem ^ (buf[i] << 8);
-		for (j = 0; j < 8; j++) {
-			rem = rem << 1;
-			rem = (rem & 0x10000) ? rem ^ poly : rem;
-		}
-	}
-	return (uint16_t)rem;
 }
 
 #define MAX_DEVS 64
@@ -190,10 +174,10 @@ static uint32_t dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct
 	ns_data_buffer_reset(ns, req, DATA_PATTERN);
 	pi = (struct spdk_nvme_protection_info *)(req->contig + sector_size + md_size - 8);
 	/* big-endian for guard */
-	pi->guard = swap16(crc16_t10dif(req->contig, sector_size));
+	pi->guard = swap16(spdk_crc16_t10dif(req->contig, sector_size));
 
 	pi = (struct spdk_nvme_protection_info *)(req->contig + (sector_size + md_size) * 2 - 8);
-	pi->guard = swap16(crc16_t10dif(req->contig + sector_size + md_size, sector_size));
+	pi->guard = swap16(spdk_crc16_t10dif(req->contig + sector_size + md_size, sector_size));
 
 	*io_flags = SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
 
