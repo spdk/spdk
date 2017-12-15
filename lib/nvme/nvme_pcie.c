@@ -161,6 +161,7 @@ struct nvme_pcie_qpair {
 
 	uint16_t sq_tail;
 	uint16_t cq_head;
+	uint16_t sq_head;
 
 	uint8_t phase;
 
@@ -1035,6 +1036,10 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 		pqpair->sq_tail = 0;
 	}
 
+	if (pqpair->sq_tail == pqpair->sq_head) {
+		SPDK_ERRLOG("sq_tail is passing sq_head!\n");
+	}
+
 	spdk_wmb();
 	g_thread_mmio_ctrlr = pctrlr;
 	spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
@@ -1905,6 +1910,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			break;
 
 		tr = &pqpair->tr[cpl->cid];
+		pqpair->sq_head = cpl->sqhd;
 
 		if (tr->active) {
 			nvme_pcie_qpair_complete_tracker(qpair, tr, cpl, true);
