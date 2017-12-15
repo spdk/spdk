@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8f33f2f_3defc43f",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-15T13:37:28Z",
+      "side": 1,
+      "message": "This looks a workaround. Even if we don\u0027t use RTE_MAX_LCORE, the constant of maximum number of processors should be global one.",
+      "range": {
+        "startLine": 69,
+        "startChar": 8,
+        "endLine": 69,
+        "endChar": 21
+      },
+      "revId": "fe89a7d8ec16a3100eb29a1b38ce625624698c34",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
