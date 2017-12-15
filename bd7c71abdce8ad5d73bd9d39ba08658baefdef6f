@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dbe9e2bb_cd57a9f5",
+        "filename": "include/spdk/crc16.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-15T17:01:27Z",
+      "side": 1,
+      "message": "do not need to give Daisuke a copyright notice for this file",
+      "revId": "bd7c71abdce8ad5d73bd9d39ba08658baefdef6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
