@@ -67,6 +67,15 @@ struct spdk_env_opts {
 };
 
 /**
+ * State of spdk thread.
+ */
+enum spdk_env_thread_state_t {
+	SPDK_ENV_THREAD_WAIT,       /**< waiting a new command */
+	SPDK_ENV_THREAD_RUNNING,    /**< executing command */
+	SPDK_ENV_THREAD_FINISHED,   /**< command executed */
+};
+
+/**
  * \brief Initialize the default value of opts
  */
 void spdk_env_opts_init(struct spdk_env_opts *opts);
@@ -222,6 +231,12 @@ uint32_t spdk_env_get_core_count(void);
 uint32_t spdk_env_get_current_core(void);
 
 /**
+ * \brief Return the CPU core index of the spdk master thread.
+ *
+ */
+uint32_t spdk_env_get_master_core(void);
+
+/**
  * \brief Return the index of the first dedicated CPU core for
  *	  this application.
  */
@@ -261,6 +276,16 @@ int spdk_env_thread_launch_pinned(uint32_t core, thread_start_fn fn, void *arg);
  * \brief Wait for all threads to exit before returning.
  */
 void spdk_env_thread_wait_all(void);
+
+/**
+ * \brief Wait for single thread to exit before returning.
+ */
+void spdk_env_thread_wait(uint32_t core);
+
+/**
+ * \brief Wait for single thread to exit before returning.
+ */
+enum spdk_env_thread_state_t spdk_env_get_thread_state(uint32_t core);
 
 /**
  * Return true if the calling process is primary process
