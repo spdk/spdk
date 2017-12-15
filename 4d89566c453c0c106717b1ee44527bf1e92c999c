@@ -16,6 +16,24 @@
       "revId": "4d89566c453c0c106717b1ee44527bf1e92c999c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49cf0dbd_a07bf058",
+        "filename": "test/lib/bdev/nbd/nbd_common.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-15T02:41:59Z",
+      "side": 1,
+      "message": "blockdev.sh is fulfilled of clear test steps. Just think it will make blockdev.sh not clear as before, if integrating all these nbd internal code into blockdev.sh.\nHow about placing these specific lists into function\u003cnbd_function_test\u003e, and then only integrate  function\u003cnbd_function_test\u003e into blockdev.sh",
+      "parentUuid": "c112c1a1_e4c94444",
+      "revId": "4d89566c453c0c106717b1ee44527bf1e92c999c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
