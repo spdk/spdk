@@ -267,7 +267,7 @@ _spdk_reactor_start_poller(void *thread_ctx,
 	poller->arg = arg;
 
 	if (period_microseconds) {
-		poller->period_ticks = (spdk_get_ticks_hz() * period_microseconds) / 1000000ULL;
+		poller->period_ticks = (uint64_t)(((double)spdk_get_ticks_hz() * period_microseconds) / 1000000ULL);
 	} else {
 		poller->period_ticks = 0;
 	}
@@ -492,7 +492,7 @@ _spdk_reactor_run(void *arg)
 						if (poller->next_run_tick <= now) {
 							sleep_us = 0;
 						} else {
-							sleep_us = ((poller->next_run_tick - now) * 1000000ULL) / spdk_get_ticks_hz();
+							sleep_us = (uint64_t)((double)(poller->next_run_tick - now) * 1000000ULL) / spdk_get_ticks_hz();
 						}
 					}
 				}
