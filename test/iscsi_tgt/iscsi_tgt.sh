@@ -10,6 +10,19 @@ fi
 export TARGET_IP=127.0.0.1
 export INITIATOR_IP=127.0.0.1
 
+if [ $SPDK_TEST_VPP -eq 1]; then
+	export INITIATOR_IP=10.10.1.10
+	VPP_CTL="$SPDK_VPP_DIR/build-root/install-vpp-native/vpp/bin/vppctl"
+	cd $SPDK_VPP_DIR
+	make run-release > /dev/null 2>&1 &
+	cd $rootdir
+	$VPP_CTL tap connect tap0
+	ip addr add $INITIATOR_IP/24 dev tap0
+	ip link set tap0 up
+	$VPP_CTL set interface state tap-0 up
+	$VPP_CTL set interface ip address tap-0 $INITIATOR_IP/24
+fi
+
 source $rootdir/test/iscsi_tgt/common.sh
 
 timing_enter iscsi_tgt

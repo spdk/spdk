@@ -43,7 +43,7 @@ CFLAGS += $(ENV_CFLAGS)
 C_SRCS := vhost.c
 
 SPDK_LIB_LIST = event_bdev event_copy event_net event_scsi event_vhost
-SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi net copy trace conf
+SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi copy trace conf
 SPDK_LIB_LIST += util log log_rpc event app_rpc
 SPDK_LIB_LIST += vhost rte_vhost
 
@@ -52,7 +52,8 @@ SPDK_LIB_LIST += event_nbd nbd
 endif
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
-	$(COPY_MODULES_LINKER_ARGS)
+	$(COPY_MODULES_LINKER_ARGS) \
+	$(NET_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 LIBS += $(ENV_LINKER_ARGS)
 

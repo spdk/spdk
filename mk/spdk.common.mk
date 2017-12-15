@@ -120,6 +120,11 @@ LIBS += -L$(CONFIG_NVML_DIR)/src/nondebug
 COMMON_CFLAGS += -I$(CONFIG_NVML_DIR)/src/include
 endif
 
+ifneq ($(CONFIG_VPP_DIR),)
+LIBS += -L$(CONFIG_VPP_DIR)/build-root/install-vpp-native/vpp/lib64
+COMMON_CFLAGS += -I$(CONFIG_VPP_DIR)/build-root/install-vpp-native/vpp/include
+endif
+
 ifeq ($(CONFIG_DEBUG), y)
 COMMON_CFLAGS += -DDEBUG -O0
 else
