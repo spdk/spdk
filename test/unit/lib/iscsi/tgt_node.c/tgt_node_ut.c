@@ -340,9 +340,6 @@ node_access_multi_initiator_groups_cases(void)
 	char *iqn, *addr;
 	bool result;
 
-	memset(&ig1, 0, sizeof(ig1));
-	memset(&ig2, 0, sizeof(ig2));
-
 	/* target initialization */
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
 	tgtnode.name = IQN1;
@@ -351,24 +348,6 @@ node_access_multi_initiator_groups_cases(void)
 	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
 	strncpy(scsi_dev.name, IQN1, SPDK_SCSI_DEV_MAX_NAME);
 	tgtnode.dev = &scsi_dev;
-
-	/* portal group initialization */
-	memset(&pg, 0, sizeof(struct spdk_iscsi_portal_grp));
-	pg.tag = 1;
-
-	pg_map = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg);
-	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig1);
-	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig2);
-
-	/* portal initialization */
-	memset(&portal, 0, sizeof(struct spdk_iscsi_portal));
-	portal.group = &pg;
-	portal.host = IP1;
-	portal.port = "3260";
-
-	/* connection initialization */
-	memset(&conn, 0, sizeof(struct spdk_iscsi_conn));
-	conn.portal = &portal;
 
 	/* initiator group initialization */
 	memset(&ig1, 0, sizeof(struct spdk_iscsi_init_grp));
@@ -396,6 +375,24 @@ node_access_multi_initiator_groups_cases(void)
 	ig2.nnetmasks = 1;
 	imask2.mask = NULL;
 	TAILQ_INSERT_TAIL(&ig2.netmask_head, &imask2, tailq);
+
+	/* portal group initialization */
+	memset(&pg, 0, sizeof(struct spdk_iscsi_portal_grp));
+	pg.tag = 1;
+
+	pg_map = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg);
+	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig1);
+	spdk_iscsi_pg_map_add_ig_map(pg_map, &ig2);
+
+	/* portal initialization */
+	memset(&portal, 0, sizeof(struct spdk_iscsi_portal));
+	portal.group = &pg;
+	portal.host = IP1;
+	portal.port = "3260";
+
+	/* connection initialization */
+	memset(&conn, 0, sizeof(struct spdk_iscsi_conn));
+	conn.portal = &portal;
 
 	iqn = IQN1;
 	addr = IP1;
@@ -594,8 +591,6 @@ allow_iscsi_name_multi_maps_case(void)
 	char *iqn;
 	bool result;
 
-	memset(&ig, 0, sizeof(ig));
-
 	/* target initialization */
 	memset(&tgtnode, 0, sizeof(struct spdk_iscsi_tgt_node));
 	TAILQ_INIT(&tgtnode.pg_map_head);
@@ -603,6 +598,14 @@ allow_iscsi_name_multi_maps_case(void)
 	memset(&scsi_dev, 0, sizeof(struct spdk_scsi_dev));
 	strncpy(scsi_dev.name, IQN1, SPDK_SCSI_DEV_MAX_NAME);
 	tgtnode.dev = &scsi_dev;
+
+	/* initiator group initialization */
+	memset(&ig, 0, sizeof(struct spdk_iscsi_init_grp));
+	TAILQ_INIT(&ig.initiator_head);
+
+	ig.ninitiators = 1;
+	iname.name = NULL;
+	TAILQ_INSERT_TAIL(&ig.initiator_head, &iname, tailq);
 
 	/* portal group initialization */
 	memset(&pg1, 0, sizeof(struct spdk_iscsi_portal_grp));
@@ -614,14 +617,6 @@ allow_iscsi_name_multi_maps_case(void)
 	pg_map2 = spdk_iscsi_tgt_node_add_pg_map(&tgtnode, &pg2);
 	spdk_iscsi_pg_map_add_ig_map(pg_map1, &ig);
 	spdk_iscsi_pg_map_add_ig_map(pg_map2, &ig);
-
-	/* initiator group initialization */
-	memset(&ig, 0, sizeof(struct spdk_iscsi_init_grp));
-	TAILQ_INIT(&ig.initiator_head);
-
-	ig.ninitiators = 1;
-	iname.name = NULL;
-	TAILQ_INSERT_TAIL(&ig.initiator_head, &iname, tailq);
 
 	/* test for IG1 <-> PG1, PG2 case */
 	iqn = IQN1;
