@@ -55,7 +55,7 @@ spdk_vsprintf_alloc(const char *format, va_list args)
 		}
 
 		va_copy(args_copy, args);
-		rc = vsnprintf(buf, bufsize, format, args_copy);
+		rc = vsnprintf(buf, bufsize, format, args);
 		va_end(args_copy);
 
 		/*
