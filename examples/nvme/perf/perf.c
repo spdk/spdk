@@ -1531,7 +1531,11 @@ int main(int argc, char **argv)
 	if (g_no_pci) {
 		opts.no_pci = g_no_pci;
 	}
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		fprintf(stderr, "Unable to initialize SPDK env\n");
+		rc = -1;
+		goto cleanup;
+	}
 
 	g_tsc_rate = spdk_get_ticks_hz();
 

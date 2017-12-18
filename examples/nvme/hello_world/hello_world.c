@@ -317,7 +317,10 @@ int main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "hello_world";
 	opts.shm_id = 0;
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		fprintf(stderr, "Unable to initialize SPDK env\n");
+		return 1;
+	}
 
 	printf("Initializing NVMe Controllers\n");
 

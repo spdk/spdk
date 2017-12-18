@@ -460,7 +460,10 @@ int main(int argc, char **argv)
 	if (g_shm_id > -1) {
 		opts.shm_id = g_shm_id;
 	}
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		fprintf(stderr, "Unable to initialize SPDK env\n");
+		return 1;
+	}
 
 	g_tsc_rate = spdk_get_ticks_hz();
 

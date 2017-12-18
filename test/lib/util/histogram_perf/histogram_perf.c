@@ -73,7 +73,10 @@ main(int argc, char **argv)
 	}
 
 	spdk_env_opts_init(&opts);
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts)) {
+		printf("Err: Unable to initialize SPDK env\n");
+		return 1;
+	}
 
 	for (i = 0; i < SPDK_COUNTOF(tsc); i++) {
 		tsc[i] = spdk_get_ticks();
