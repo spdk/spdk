@@ -145,6 +145,7 @@ open_write_test(void)
 	struct spdk_bdev_desc *desc[8] = {};
 	int rc;
 
+	spdk_bdev_init_bdev_mgr();
 	/*
 	 * Create a tree of bdevs to test various open w/ write cases.
 	 *
