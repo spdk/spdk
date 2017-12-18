@@ -47,21 +47,40 @@
 
 #include "spdk_internal/log.h"
 
+/*
+ * The life cycle of one NBD I/O just like this:
+ * 1. nbd kernel module sends io request header to nbd-server
+ * 2. if it's a write io, write data is sent as payload following header
+ * 3. after receiving request, nbd-server need to process it
+ * 4. after io process is done, nbd-server sends response header back
+ * 5. if it's a read io, read data is sent back as payload following header
+ * Based on that, nbd_io in SPDK has 5 states corresponding to its life cycle.
+ */
+enum nbd_io_state_t {
+	/* Receiving or ready to receive nbd request header */
+	NBD_IO_RECV_REQ = 0,
+	/* Receiving write payload */
+	NBD_IO_RECV_PAYLOAD,
+	/* processing or ready to process of SPDK bdev module */
+	NBD_IO_PROCESS,
+	/* Sending or ready to send nbd response header */
+	NBD_IO_SEND_RESP,
+	/* Sending read payload */
+	NBD_IO_SEND_PAYLOAD,
+};
+
 struct nbd_io {
-	enum spdk_bdev_io_type	type;
+	struct spdk_nbd_disk	*nbd;
+	enum nbd_io_state_t	state;
+
 	int			ref;
 	void			*payload;
 
 	/* NOTE: for TRIM, this represents number of bytes to trim. */
 	uint32_t		payload_size;
 
-	bool			payload_in_progress;
-
 	struct nbd_request	req;
-	bool			req_in_progress;
-
 	struct nbd_reply	resp;
-	bool			resp_in_progress;
 
 	/*
 	 * Tracks current progress on reading/writing a request,
@@ -184,28 +203,6 @@ spdk_nbd_disk_get_bdev_name(struct spdk_nbd_disk *nbd)
 	return spdk_bdev_get_name(nbd->bdev);
 }
 
-static bool
-is_read(enum spdk_bdev_io_type io_type)
-{
-	if (io_type == SPDK_BDEV_IO_TYPE_READ) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-static bool
-is_write(enum spdk_bdev_io_type io_type)
-{
-	switch (io_type) {
-	case SPDK_BDEV_IO_TYPE_WRITE:
-	case SPDK_BDEV_IO_TYPE_UNMAP:
-		return true;
-	default:
-		return false;
-	}
-}
-
 void
 nbd_disconnect(struct spdk_nbd_disk *nbd)
 {
@@ -308,111 +305,207 @@ static void
 nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct nbd_io	*io = cb_arg;
+	struct spdk_nbd_disk *nbd = io->nbd;
 
 	if (success) {
 		io->resp.error = 0;
 	} else {
 		to_be32(&io->resp.error, EIO);
 	}
-	io->resp_in_progress = true;
+
+	memcpy(&io->resp.handle, &io->req.handle, sizeof(io->resp.handle));
+	io->state = NBD_IO_SEND_RESP;
+
 	if (bdev_io != NULL) {
 		spdk_bdev_free_io(bdev_io);
 	}
 
 	io->ref--;
 	if (io->ref == 0) {
-		_nbd_stop(SPDK_CONTAINEROF(io, struct spdk_nbd_disk, io));
-	}
-}
-
-static void
-nbd_submit_bdev_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-		   struct spdk_io_channel *ch, struct nbd_io *io)
-{
-	int rc;
-
-	io->ref++;
-
-	switch (io->type) {
-	case SPDK_BDEV_IO_TYPE_READ:
-		rc = spdk_bdev_read(desc, ch, io->payload, from_be64(&io->req.from),
-				    io->payload_size, nbd_io_done, io);
-		break;
-	case SPDK_BDEV_IO_TYPE_WRITE:
-		rc = spdk_bdev_write(desc, ch, io->payload, from_be64(&io->req.from),
-				     io->payload_size, nbd_io_done, io);
-		break;
-	case SPDK_BDEV_IO_TYPE_UNMAP:
-		rc = spdk_bdev_unmap(desc, ch, from_be64(&io->req.from),
-				     io->payload_size, nbd_io_done, io);
-		break;
-	case SPDK_BDEV_IO_TYPE_FLUSH:
-		rc = spdk_bdev_flush(desc, ch, 0, spdk_bdev_get_num_blocks(bdev) * spdk_bdev_get_block_size(bdev),
-				     nbd_io_done, io);
-		break;
-	default:
-		rc = -1;
-		break;
-	}
-
-	if (rc == -1) {
-		nbd_io_done(NULL, false, io);
+		_nbd_stop(nbd);
 	}
 }
 
 static int
-process_request(struct spdk_nbd_disk *nbd)
+nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 {
-	struct nbd_io	*io = &nbd->io;
+	struct spdk_bdev_desc *desc = nbd->bdev_desc;
+	struct spdk_io_channel *ch = nbd->ch;
+	int rc = 0;
 
-	memcpy(&io->resp.handle, &io->req.handle, sizeof(io->resp.handle));
-	io->resp.error = 0;
-	io->offset = 0;
-
-	io->payload_size = from_be32(&io->req.len);
-	spdk_dma_free(io->payload);
-
-	if (io->payload_size) {
-		io->payload = spdk_dma_malloc(io->payload_size, nbd->buf_align, NULL);
-		if (io->payload == NULL) {
-			SPDK_ERRLOG("could not allocate io->payload of size %d\n", io->payload_size);
-			return -ENOMEM;
-		}
-	} else {
-		io->payload = NULL;
-	}
-
-	if (from_be32(&io->req.magic) != NBD_REQUEST_MAGIC) {
-		SPDK_ERRLOG("invalid request magic\n");
-		return -EINVAL;
-	}
+	io->ref++;
 
 	switch (from_be32(&io->req.type)) {
 	case NBD_CMD_READ:
-		io->type = SPDK_BDEV_IO_TYPE_READ;
-		nbd_submit_bdev_io(nbd->bdev, nbd->bdev_desc, nbd->ch, io);
+		rc = spdk_bdev_read(desc, ch, io->payload, from_be64(&io->req.from),
+				    io->payload_size, nbd_io_done, io);
 		break;
 	case NBD_CMD_WRITE:
-		io->type = SPDK_BDEV_IO_TYPE_WRITE;
-		io->payload_in_progress = true;
+		rc = spdk_bdev_write(desc, ch, io->payload, from_be64(&io->req.from),
+				     io->payload_size, nbd_io_done, io);
 		break;
-	case NBD_CMD_DISC:
-		return -ECONNRESET;
 #ifdef NBD_FLAG_SEND_FLUSH
 	case NBD_CMD_FLUSH:
-		io->type = SPDK_BDEV_IO_TYPE_FLUSH;
-		nbd_submit_bdev_io(nbd->bdev, nbd->bdev_desc, nbd->ch, io);
+		rc = spdk_bdev_flush(desc, ch, 0,
+				     spdk_bdev_get_num_blocks(nbd->bdev) * spdk_bdev_get_block_size(nbd->bdev),
+				     nbd_io_done, io);
 		break;
 #endif
 #ifdef NBD_FLAG_SEND_TRIM
 	case NBD_CMD_TRIM:
-		io->type = SPDK_BDEV_IO_TYPE_UNMAP;
-		nbd_submit_bdev_io(nbd->bdev, nbd->bdev_desc, nbd->ch, io);
+		rc = spdk_bdev_unmap(desc, ch, from_be64(&io->req.from),
+				     io->payload_size, nbd_io_done, io);
 		break;
 #endif
+	case NBD_CMD_DISC:
+		io->ref--;
+		return -ECONNRESET;
+	default:
+		rc = -1;
+	}
+
+	if (rc < 0) {
+		nbd_io_done(NULL, false, io);
 	}
 
 	return 0;
+}
+
+static int
+spdk_nbd_io_exec(struct nbd_io *io)
+{
+	struct spdk_nbd_disk *nbd = io->nbd;
+	int ret = 0;
+
+	if (io->state == NBD_IO_PROCESS) {
+		ret = nbd_submit_bdev_io(nbd, io);
+	}
+
+	return ret;
+}
+
+static int
+spdk_nbd_io_recv(struct nbd_io *io)
+{
+	struct spdk_nbd_disk *nbd = io->nbd;
+	int ret = 0;
+
+	if (io->state == NBD_IO_RECV_REQ) {
+		ret = read_from_socket(nbd->spdk_sp_fd, (char *)&io->req + io->offset,
+				       sizeof(io->req) - io->offset);
+		if (ret <= 0) {
+			return ret;
+		}
+
+		io->offset += ret;
+
+		/* request is fully received */
+		if (io->offset == sizeof(io->req)) {
+			io->offset = 0;
+
+			/* req magic check */
+			if (from_be32(&io->req.magic) != NBD_REQUEST_MAGIC) {
+				SPDK_ERRLOG("invalid request magic\n");
+				return -EINVAL;
+			}
+
+			/* io payload allocate */
+			io->payload_size = from_be32(&io->req.len);
+
+			if (io->payload_size) {
+				io->payload = spdk_dma_malloc(io->payload_size, nbd->buf_align, NULL);
+				if (io->payload == NULL) {
+					SPDK_ERRLOG("could not allocate io->payload of size %d\n", io->payload_size);
+					return -ENOMEM;
+				}
+			} else {
+				io->payload = NULL;
+			}
+
+			/* next IO step */
+			if (from_be32(&io->req.type) == NBD_CMD_WRITE) {
+				io->state = NBD_IO_RECV_PAYLOAD;
+			} else {
+				io->state = NBD_IO_PROCESS;
+				ret = spdk_nbd_io_exec(io);
+			}
+		}
+	}
+
+	if (io->state == NBD_IO_RECV_PAYLOAD) {
+		ret = read_from_socket(nbd->spdk_sp_fd, io->payload + io->offset, io->payload_size - io->offset);
+		if (ret <= 0) {
+			return ret;
+		}
+
+		io->offset += ret;
+
+		/* request payload is fully received */
+		if (io->offset == io->payload_size) {
+			io->offset = 0;
+			io->state = NBD_IO_PROCESS;
+			ret = spdk_nbd_io_exec(io);
+		}
+
+	}
+
+	return ret;
+}
+
+static int
+spdk_nbd_io_flush(struct nbd_io *io)
+{
+	struct spdk_nbd_disk *nbd = io->nbd;
+	int ret = 0;
+
+	/* resp error and handler are already set in io_done */
+
+	if (io->state == NBD_IO_SEND_RESP) {
+		ret = write_to_socket(nbd->spdk_sp_fd, (char *)&io->resp + io->offset,
+				      sizeof(io->resp) - io->offset);
+		if (ret <= 0) {
+			return ret;
+		}
+
+		io->offset += ret;
+
+		/* response is fully sent */
+		if (io->offset == sizeof(io->resp)) {
+			io->offset = 0;
+
+			/* next IO step */
+			if (from_be32(&io->req.type) != NBD_CMD_READ) {
+				io->state = NBD_IO_RECV_REQ;
+				if (io->payload) {
+					spdk_dma_free(io->payload);
+					io->payload = NULL;
+				}
+			} else {
+				io->state = NBD_IO_SEND_PAYLOAD;
+			}
+		}
+	}
+
+	/* response payload is fully sent */
+	if (io->state == NBD_IO_SEND_PAYLOAD) {
+		ret = write_to_socket(nbd->spdk_sp_fd, io->payload + io->offset, io->payload_size - io->offset);
+		if (ret <= 0) {
+			return ret;
+		}
+
+		io->offset += ret;
+
+		if (io->offset == io->payload_size) {
+			io->offset = 0;
+			io->state = NBD_IO_RECV_REQ;
+			if (io->payload) {
+				spdk_dma_free(io->payload);
+				io->payload = NULL;
+			}
+		}
+	}
+
+	return ret;
 }
 
 /**
@@ -424,69 +517,16 @@ static int
 _spdk_nbd_poll(struct spdk_nbd_disk *nbd)
 {
 	struct nbd_io	*io = &nbd->io;
-	int		fd = nbd->spdk_sp_fd;
-	int64_t		ret;
-	int		rc;
+	int rc;
 
-	if (io->req_in_progress) {
-		ret = read_from_socket(fd, (char *)&io->req + io->offset, sizeof(io->req) - io->offset);
-		if (ret <= 0) {
-			return ret;
-		}
-		io->offset += ret;
-		if (io->offset == sizeof(io->req)) {
-			io->req_in_progress = false;
-			rc = process_request(nbd);
-			if (rc != 0) {
-				return rc;
-			}
-		}
+	rc = spdk_nbd_io_recv(io);
+	if (rc < 0) {
+		return rc;
 	}
 
-	if (io->payload_in_progress && is_write(io->type)) {
-		ret = read_from_socket(fd, io->payload + io->offset, io->payload_size - io->offset);
-		if (ret <= 0) {
-			return ret;
-		}
-		io->offset += ret;
-		if (io->offset == io->payload_size) {
-			io->payload_in_progress = false;
-			nbd_submit_bdev_io(nbd->bdev, nbd->bdev_desc, nbd->ch, io);
-			io->offset = 0;
-		}
-	}
+	rc = spdk_nbd_io_flush(io);
 
-	if (io->resp_in_progress) {
-		ret = write_to_socket(fd, (char *)&io->resp + io->offset, sizeof(io->resp) - io->offset);
-		if (ret <= 0) {
-			return ret;
-		}
-		io->offset += ret;
-		if (io->offset == sizeof(io->resp)) {
-			io->resp_in_progress = false;
-			if (is_read(io->type)) {
-				io->payload_in_progress = true;
-			} else {
-				io->req_in_progress = true;
-			}
-			io->offset = 0;
-		}
-	}
-
-	if (io->payload_in_progress && is_read(io->type)) {
-		ret = write_to_socket(fd, io->payload + io->offset, io->payload_size - io->offset);
-		if (ret <= 0) {
-			return ret;
-		}
-		io->offset += ret;
-		if (io->offset == io->payload_size) {
-			io->payload_in_progress = false;
-			io->req_in_progress = true;
-			io->offset = 0;
-		}
-	}
-
-	return 0;
+	return rc;
 }
 
 static void
@@ -547,6 +587,8 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	if (nbd == NULL) {
 		return NULL;
 	}
+
+	nbd->io.nbd = nbd;
 	nbd->dev_fd = -1;
 	nbd->spdk_sp_fd = -1;
 	nbd->kernel_sp_fd = -1;
@@ -651,7 +693,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	}
 
 	to_be32(&nbd->io.resp.magic, NBD_REPLY_MAGIC);
-	nbd->io.req_in_progress = true;
 
 	nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, nbd, 0);
 
