@@ -40,12 +40,11 @@ while getopts 'xh-:' optchar; do
 done
 
 if [[ $EUID -ne 0 ]]; then
-	echo "Go away user come back as root"
-	exit 1
+	fail "Go away user come back as root"
 fi
 
-echo "INFO: $0"
-echo
+notice "$0"
+notice ""
 
 . $COMMON_DIR/common.sh
 
