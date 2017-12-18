@@ -660,7 +660,8 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		return NULL;
 	}
 
-	bdev = calloc(1, sizeof(struct spdk_bdev));
+	bdev = malloc(sizeof(struct spdk_bdev));
+	memset(bdev, 0, sizeof(struct spdk_bdev));
 	if (!bdev) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol bdev\n");
 		return NULL;

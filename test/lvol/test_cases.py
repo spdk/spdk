@@ -676,6 +676,7 @@ class TestCases(object):
         fail_count = 0
         uuid_bdevs = []
         base_name = "Nvme0n1"
+        base_name2 = "Nvme0n2"
 
         base_path = path.dirname(sys.argv[0])
         vhost_path = path.join(self.app_path, 'vhost')
@@ -754,14 +755,14 @@ class TestCases(object):
         for uuid_bdev in uuid_bdevs:
             self.c.delete_bdev(uuid_bdev)
 
-        if self.c.destroy_lvol_store(uuid_store) != 0:
-            fail_count += 1
+#        if self.c.destroy_lvol_store(uuid_store) != 0:
+#            fail_count += 1
 
-        uuid_bdevs = []
+#        uuid_bdevs = []
 
-        uuid_store = self.c.construct_lvol_store(base_name,
-                                                 self.lvs_name,
-                                                 self.cluster_size)
+#        uuid_store = self.c.construct_lvol_store(base_name,
+#                                                 self.lvs_name,
+#                                                 self.cluster_size)
         fail_count += self.c.check_get_lvol_stores(base_name,
                                                    uuid_store,
                                                    self.cluster_size)
