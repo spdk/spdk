@@ -973,7 +973,8 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 			return 0;
 		} else {
 			spdk_strerror_r(errno, errbuf, sizeof(errbuf));
-			SPDK_ERRLOG("Socket read error(%d): %s\n", errno, errbuf);
+			SPDK_ERRLOG("spdk_sock_recv() failed (fd=%d), errno %d: %s\n",
+				    conn->sock, errno, errbuf);
 		}
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
@@ -1181,6 +1182,7 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	uint32_t writev_offset;
 	struct spdk_iscsi_pdu *pdu;
 	int pdu_length;
+	char buf[64];
 
 	pdu = TAILQ_FIRST(&conn->write_pdu_list);
 
@@ -1229,7 +1231,9 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 0;
 		} else {
-			perror("writev");
+			spdk_strerror_r(errno, buf, sizeof(buf));
+			SPDK_ERRLOG("spdk_sock_writev() failed (fd=%d), errno %d: %s\n",
+				    conn->sock, errno, buf);
 			return -1;
 		}
 	}
