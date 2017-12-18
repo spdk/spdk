@@ -39,7 +39,6 @@
 char *
 spdk_vsprintf_alloc(const char *format, va_list args)
 {
-	va_list args_copy;
 	char *buf;
 	size_t bufsize;
 	int rc;
@@ -54,9 +53,7 @@ spdk_vsprintf_alloc(const char *format, va_list args)
 			return NULL;
 		}
 
-		va_copy(args_copy, args);
-		rc = vsnprintf(buf, bufsize, format, args_copy);
-		va_end(args_copy);
+		rc = vsnprintf(buf, bufsize, format, args);
 
 		/*
 		 * If vsnprintf() returned a count within our current buffer size, we are done.
