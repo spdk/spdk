@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "01b22be0_f4a71e55",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T11:15:43Z",
+      "side": 1,
+      "message": "Also:\ncontrollers in SCSI tests are created per VM, so even if you have 2 or more NVMe drives and 1 VM then you still get only 1 SCSI controller. If you want more then one controller then you need to run another VM.",
+      "parentUuid": "ccea9438_77e2d8f4",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 125,
+        "endChar": 4
+      },
+      "revId": "624e4a35b762abec14d71809a66dbfdae8250a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4e8fc5c_b4d177b2",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 6
