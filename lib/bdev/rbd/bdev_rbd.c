@@ -515,6 +515,14 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 		return NULL;
 	}
 
+	rbd->disk.write_cache = 0;
+	rbd->disk.blocklen = block_size;
+
+	if (spdk_bdev_set_num_blocks(&rbd->disk, rbd->info.size / rbd->disk.blocklen) != 0) {
+		bdev_rbd_free(rbd);
+		return NULL;
+	}
+
 	rbd->disk.name = spdk_sprintf_alloc("Ceph%d", bdev_rbd_count);
 	if (!rbd->disk.name) {
 		bdev_rbd_free(rbd);
@@ -523,9 +531,6 @@ spdk_bdev_rbd_create(const char *pool_name, const char *rbd_name, uint32_t block
 	rbd->disk.product_name = "Ceph Rbd Disk";
 	bdev_rbd_count++;
 
-	rbd->disk.write_cache = 0;
-	rbd->disk.blocklen = block_size;
-	rbd->disk.blockcnt = rbd->info.size / rbd->disk.blocklen;
 	rbd->disk.ctxt = rbd;
 	rbd->disk.fn_table = &rbd_fn_table;
 	rbd->disk.module = SPDK_GET_BDEV_MODULE(rbd);

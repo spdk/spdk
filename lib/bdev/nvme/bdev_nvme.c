@@ -1152,6 +1152,11 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		bdev->ns = ns;
 		nvme_ctrlr->ref++;
 
+		if (spdk_bdev_set_num_blocks(&bdev->disk, spdk_nvme_ns_get_num_sectors(ns)) != 0) {
+			free(bdev);
+			break;
+		}
+
 		bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
 		if (!bdev->disk.name) {
 			free(bdev);
@@ -1165,7 +1170,6 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 			bdev->disk.write_cache = 1;
 		}
 		bdev->disk.blocklen = spdk_nvme_ns_get_sector_size(ns);
-		bdev->disk.blockcnt = spdk_nvme_ns_get_num_sectors(ns);
 		bdev->disk.optimal_io_boundary = spdk_nvme_ns_get_optimal_io_boundary(ns);
 		bdev->disk.ctxt = bdev;
 		bdev->disk.fn_table = &nvmelib_fn_table;
