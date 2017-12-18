@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ed75966_88384209",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T13:09:46Z",
+      "side": 1,
+      "message": "So virtio_bdevs is for test where we run against controllers with: 1 SPlit Nvme, 1 Malloc, 1Malloc and 4 Split NVMes? So that\u0027s like test for multisocket + multitarget at the same time?\nWhy not just add multiple devs to first controller? instead of creating another one?",
+      "range": {
+        "startLine": 86,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 85
+      },
+      "revId": "9b75b6695949c24f627073cb33f250c1912cfb3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38ec6490_90edf5ae",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T13:09:46Z",
+      "side": 1,
+      "message": "You can do +\u003d instead",
+      "range": {
+        "startLine": 87,
+        "startChar": 13,
+        "endLine": 87,
+        "endChar": 28
+      },
+      "revId": "9b75b6695949c24f627073cb33f250c1912cfb3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "164eb860_6d233752",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T13:09:46Z",
+      "side": 1,
+      "message": "Not sure if that will work. I\u0027d have to check but I think vhost initiator tests are only run on VM with emulated NVMe. Emulated NVMe size is much lower than physical, so I\u0027d be careful with the offset, especially that you split NVMe in to 5 parts.",
+      "range": {
+        "startLine": 98,
+        "startChar": 1,
+        "endLine": 98,
+        "endChar": 99
+      },
+      "revId": "9b75b6695949c24f627073cb33f250c1912cfb3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
