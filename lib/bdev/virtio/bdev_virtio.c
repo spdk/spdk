@@ -129,6 +129,9 @@ struct virtio_scsi_scan_base {
 	/** Remaining attempts for sending the current request. */
 	unsigned                        retries;
 
+	/** If set, the last scan I/O needs to be resent */
+	bool				needs_resend;
+
 	struct virtio_scsi_io_ctx	io_ctx;
 	struct iovec			iov;
 	uint8_t				payload[BDEV_VIRTIO_SCAN_PAYLOAD_SIZE];
@@ -350,7 +353,9 @@ virtio_scsi_dev_get_disk_by_id(struct virtio_scsi_dev *svdev, uint8_t target_id)
 	return NULL;
 }
 
+static int send_scan_io(struct virtio_scsi_scan_base *base);
 static int _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base);
+static void _virtio_scsi_dev_scan_finish(struct virtio_scsi_scan_base *base, int errnum);
 
 static int
 bdev_virtio_get_ctx_size(void)
@@ -686,6 +691,7 @@ bdev_virtio_poll(void *arg)
 	void *io[32];
 	uint32_t io_len[32];
 	uint16_t i, cnt;
+	int rc;
 
 	cnt = virtio_recv_pkts(ch->vq, (void **)io, io_len, SPDK_COUNTOF(io));
 	for (i = 0; i < cnt; ++i) {
@@ -696,6 +702,18 @@ bdev_virtio_poll(void *arg)
 		}
 
 		bdev_virtio_io_cpl(io[i]);
+	}
+
+	if (spdk_unlikely(cnt > 0 && svdev->scan_ctx && svdev->scan_ctx->needs_resend)) {
+		rc = send_scan_io(svdev->scan_ctx);
+		if (rc != 0) {
+			assert(svdev->scan_ctx->retries > 0);
+			svdev->scan_ctx->retries--;
+			if (svdev->scan_ctx->retries == 0) {
+				SPDK_ERRLOG("Target scan failed unrecoverably with rc = %d.\n", rc);
+				_virtio_scsi_dev_scan_finish(svdev->scan_ctx, rc);
+			}
+		}
 	}
 }
 
@@ -900,7 +918,8 @@ send_scan_io(struct virtio_scsi_scan_base *base)
 
 	rc = virtqueue_req_start(vq, io_ctx, 2 + payload_iov_cnt);
 	if (rc != 0) {
-		return rc;
+		base->needs_resend = true;
+		return -1;
 	}
 
 	virtqueue_req_add_iovs(vq, &io_ctx->iov_req, 1, SPDK_VIRTIO_DESC_RO);
@@ -927,12 +946,11 @@ send_inquiry(struct virtio_scsi_scan_base *base)
 	return send_scan_io(base);
 }
 
-static void
+static int
 send_inquiry_vpd(struct virtio_scsi_scan_base *base, uint8_t page_code)
 {
 	struct virtio_scsi_cmd_req *req = &base->io_ctx.req;
 	struct spdk_scsi_cdb_inquiry *inquiry_cdb = (struct spdk_scsi_cdb_inquiry *)req->cdb;
-	int rc;
 
 	memset(req, 0, sizeof(*req));
 
@@ -942,34 +960,26 @@ send_inquiry_vpd(struct virtio_scsi_scan_base *base, uint8_t page_code)
 	inquiry_cdb->page_code = page_code;
 	to_be16(inquiry_cdb->alloc_len, base->iov.iov_len);
 
-	rc = send_scan_io(base);
-	if (rc != 0) {
-		assert(false);
-	}
+	return send_scan_io(base);
 }
 
-static void
+static int
 send_read_cap_10(struct virtio_scsi_scan_base *base)
 {
 	struct virtio_scsi_cmd_req *req = &base->io_ctx.req;
-	int rc;
 
 	memset(req, 0, sizeof(*req));
 
 	base->iov.iov_len = 8;
 	req->cdb[0] = SPDK_SBC_READ_CAPACITY_10;
 
-	rc = send_scan_io(base);
-	if (rc != 0) {
-		assert(false);
-	}
+	return send_scan_io(base);
 }
 
-static void
+static int
 send_read_cap_16(struct virtio_scsi_scan_base *base)
 {
 	struct virtio_scsi_cmd_req *req = &base->io_ctx.req;
-	int rc;
 
 	memset(req, 0, sizeof(*req));
 
@@ -978,58 +988,44 @@ send_read_cap_16(struct virtio_scsi_scan_base *base)
 	req->cdb[1] = SPDK_SBC_SAI_READ_CAPACITY_16;
 	to_be32(&req->cdb[10], base->iov.iov_len);
 
-	rc = send_scan_io(base);
-	if (rc != 0) {
-		assert(false);
-	}
+	return send_scan_io(base);
 }
 
-static void
+static int
 send_test_unit_ready(struct virtio_scsi_scan_base *base)
 {
 	struct virtio_scsi_cmd_req *req = &base->io_ctx.req;
-	int rc;
 
 	memset(req, 0, sizeof(*req));
 	req->cdb[0] = SPDK_SPC_TEST_UNIT_READY;
 	base->iov.iov_len = 0;
 
-	rc = send_scan_io(base);
-	if (rc != 0) {
-		assert(false);
-	}
+	return send_scan_io(base);
 }
 
-static void
+static int
 send_start_stop_unit(struct virtio_scsi_scan_base *base)
 {
 	struct virtio_scsi_cmd_req *req = &base->io_ctx.req;
-	int rc;
 
 	memset(req, 0, sizeof(*req));
 	req->cdb[0] = SPDK_SBC_START_STOP_UNIT;
 	req->cdb[4] = SPDK_SBC_START_STOP_UNIT_START_BIT;
 	base->iov.iov_len = 0;
 
-	rc = send_scan_io(base);
-	if (rc != 0) {
-		assert(false);
-	}
+	return send_scan_io(base);
 }
 
 static int
 process_scan_start_stop_unit(struct virtio_scsi_scan_base *base)
 {
 	struct virtio_scsi_cmd_resp *resp = &base->io_ctx.resp;
-	int rc = 0;
 
 	if (resp->response == VIRTIO_SCSI_S_OK && resp->status == SPDK_SCSI_STATUS_GOOD) {
-		send_inquiry_vpd(base, SPDK_SPC_VPD_SUPPORTED_VPD_PAGES);
-	} else {
-		rc = -1;
+		return send_inquiry_vpd(base, SPDK_SPC_VPD_SUPPORTED_VPD_PAGES);
 	}
 
-	return rc;
+	return -1;
 }
 
 static int
@@ -1037,23 +1033,20 @@ process_scan_test_unit_ready(struct virtio_scsi_scan_base *base)
 {
 	struct virtio_scsi_cmd_resp *resp = &base->io_ctx.resp;
 	int sk, asc, ascq;
-	int rc = 0;
 
 	get_scsi_status(resp, &sk, &asc, &ascq);
 
 	/* check response, get VPD if spun up otherwise send SSU */
 	if (resp->response == VIRTIO_SCSI_S_OK && resp->status == SPDK_SCSI_STATUS_GOOD) {
-		send_inquiry_vpd(base, SPDK_SPC_VPD_SUPPORTED_VPD_PAGES);
+		return send_inquiry_vpd(base, SPDK_SPC_VPD_SUPPORTED_VPD_PAGES);
 	} else if (resp->response == VIRTIO_SCSI_S_OK &&
 		   resp->status == SPDK_SCSI_STATUS_CHECK_CONDITION &&
 		   sk == SPDK_SCSI_SENSE_UNIT_ATTENTION &&
 		   asc == SPDK_SCSI_ASC_LOGICAL_UNIT_NOT_READY) {
-		send_start_stop_unit(base);
+		return send_start_stop_unit(base);
 	} else {
-		rc = -1;
+		return -1;
 	}
-
-	return rc;
 }
 
 static int
@@ -1076,8 +1069,7 @@ process_scan_inquiry_standard(struct virtio_scsi_scan_base *base)
 		return -1;
 	}
 
-	send_test_unit_ready(base);
-	return 0;
+	return send_test_unit_ready(base);
 }
 
 static int
@@ -1105,11 +1097,10 @@ process_scan_inquiry_vpd_supported_vpd_pages(struct virtio_scsi_scan_base *base)
 	}
 
 	if (block_provisioning_page_supported) {
-		send_inquiry_vpd(base, SPDK_SPC_VPD_BLOCK_THIN_PROVISION);
+		return send_inquiry_vpd(base, SPDK_SPC_VPD_BLOCK_THIN_PROVISION);
 	} else {
-		send_read_cap_10(base);
+		return send_read_cap_10(base);
 	}
-	return 0;
 }
 
 static int
@@ -1128,8 +1119,7 @@ process_scan_inquiry_vpd_block_thin_provision(struct virtio_scsi_scan_base *base
 	SPDK_INFOLOG(SPDK_LOG_VIRTIO, "Target %u: unmap supported = %d\n",
 		     base->info.target, (int)base->info.unmap_supported);
 
-	send_read_cap_10(base);
-	return 0;
+	return send_read_cap_10(base);
 }
 
 static int
@@ -1224,8 +1214,7 @@ process_read_cap_10(struct virtio_scsi_scan_base *base)
 	max_block = from_be32(base->payload);
 
 	if (max_block == 0xffffffff) {
-		send_read_cap_16(base);
-		return 0;
+		return send_read_cap_16(base);
 	}
 
 	base->info.num_blocks = (uint64_t)max_block + 1;
@@ -1236,8 +1225,7 @@ process_read_cap_10(struct virtio_scsi_scan_base *base)
 		return rc;
 	}
 
-	_virtio_scsi_dev_scan_next(base);
-	return 0;
+	return _virtio_scsi_dev_scan_next(base);
 }
 
 static int
@@ -1260,8 +1248,7 @@ process_read_cap_16(struct virtio_scsi_scan_base *base)
 		return rc;
 	}
 
-	_virtio_scsi_dev_scan_next(base);
-	return 0;
+	return _virtio_scsi_dev_scan_next(base);
 }
 
 static void
@@ -1298,7 +1285,7 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 		/* resend the same request */
 		rc = send_scan_io(base);
 		if (rc != 0) {
-			assert(false);
+			/* Let response poller do the resend */
 		}
 		return;
 	}
@@ -1327,7 +1314,11 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 		break;
 	}
 
-	if (rc < 0) {
+	if (rc != 0) {
+		if (base->needs_resend) {
+			return; /* Let response poller do the resend */
+		}
+
 		_virtio_scsi_dev_scan_next(base);
 	}
 }
@@ -1461,14 +1452,10 @@ virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn,
 
 	rc = send_inquiry(base);
 	if (rc) {
-		SPDK_ERRLOG("Failed to start target scan.\n");
-		spdk_put_io_channel(io_ch);
-		spdk_dma_free(base);
-		svdev->scan_ctx = NULL;
-		return rc;
+		/* Let response poller do the resend */
 	}
 
-	return rc;
+	return 0;
 }
 
 static void
