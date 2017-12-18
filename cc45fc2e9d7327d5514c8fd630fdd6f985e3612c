@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e11096cc_c4a1a1ae",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-18T10:09:43Z",
+      "side": 1,
+      "message": "Like Daniel previously mentioned, this would be better as uint64_t.",
+      "range": {
+        "startLine": 210,
+        "startChar": 1,
+        "endLine": 210,
+        "endChar": 7
+      },
+      "revId": "cc45fc2e9d7327d5514c8fd630fdd6f985e3612c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
