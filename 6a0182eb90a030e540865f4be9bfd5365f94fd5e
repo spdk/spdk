@@ -22,6 +22,30 @@
       "revId": "6a0182eb90a030e540865f4be9bfd5365f94fd5e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "527202e1_0363b9f4",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-12-18T23:37:34Z",
+      "side": 1,
+      "message": "May change this in a later patch.",
+      "parentUuid": "882faeaf_bb5ff066",
+      "range": {
+        "startLine": 252,
+        "startChar": 15,
+        "endLine": 252,
+        "endChar": 34
+      },
+      "revId": "6a0182eb90a030e540865f4be9bfd5365f94fd5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
