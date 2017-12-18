@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a04e20e_4bd29c90",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1762,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-18T18:12:49Z",
+      "side": 1,
+      "message": "Note that this shouldn\u0027t actually matter for hotplug, since the hotplug handling is done at a lower layer that isn\u0027t calling these public API spdk_nvme_ctrlr_get_regs_* helper functions.",
+      "range": {
+        "startLine": 1762,
+        "startChar": 30,
+        "endLine": 1762,
+        "endChar": 59
+      },
+      "revId": "aed94eb304a9952319303304ee306eb28e791d47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
