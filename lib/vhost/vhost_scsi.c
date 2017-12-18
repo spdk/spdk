@@ -528,6 +528,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 invalid_task:
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI_DATA, "%s: Invalid task at index %"PRIu16".\n",
 		      vdev->name, task->req_idx);
+	task->resp->response = VIRTIO_SCSI_S_ABORTED;
 	return -1;
 }
 
