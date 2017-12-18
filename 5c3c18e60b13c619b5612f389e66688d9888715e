@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "34779cbb_1ecfed30",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T14:55:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6ce0891b_c3bd933f",
+      "range": {
+        "startLine": 147,
+        "startChar": 13,
+        "endLine": 147,
+        "endChar": 40
+      },
+      "revId": "5c3c18e60b13c619b5612f389e66688d9888715e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34c5c9ec_b0350d3a",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 10
@@ -59,6 +83,30 @@
       "writtenOn": "2017-12-18T14:39:45Z",
       "side": 1,
       "message": "ditto",
+      "range": {
+        "startLine": 159,
+        "startChar": 21,
+        "endLine": 159,
+        "endChar": 49
+      },
+      "revId": "5c3c18e60b13c619b5612f389e66688d9888715e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2140bbb_61284f42",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T14:55:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "34c5c9ec_b0350d3a",
       "range": {
         "startLine": 159,
         "startChar": 21,
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "07889f98_6de59dc9",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T14:55:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c602df4a_96304b92",
+      "range": {
+        "startLine": 169,
+        "startChar": 13,
+        "endLine": 169,
+        "endChar": 40
+      },
+      "revId": "5c3c18e60b13c619b5612f389e66688d9888715e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0bc4b756_50b9f815",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 10
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "0991e035_6266d92c",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T14:55:50Z",
+      "side": 1,
+      "message": "Not sure what\u0027s the point here:P",
+      "parentUuid": "0bc4b756_50b9f815",
+      "range": {
+        "startLine": 175,
+        "startChar": 10,
+        "endLine": 175,
+        "endChar": 30
+      },
+      "revId": "5c3c18e60b13c619b5612f389e66688d9888715e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a4d23e2_0d4ea9a3",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 10
@@ -128,6 +224,30 @@
       "writtenOn": "2017-12-18T14:39:45Z",
       "side": 1,
       "message": "you can embedd $vm into jq query.",
+      "range": {
+        "startLine": 183,
+        "startChar": 18,
+        "endLine": 183,
+        "endChar": 32
+      },
+      "revId": "5c3c18e60b13c619b5612f389e66688d9888715e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92b3cef3_8a771f97",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T14:55:50Z",
+      "side": 1,
+      "message": "Done, although I don\u0027t feel like it improved readability due to escape \"\\\" in string",
+      "parentUuid": "1a4d23e2_0d4ea9a3",
       "range": {
         "startLine": 183,
         "startChar": 18,
