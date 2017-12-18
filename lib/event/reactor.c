@@ -46,6 +46,7 @@
 #define SPDK_REACTOR_SPIN_TIME_US	1000
 #define SPDK_TIMER_POLL_ITERATIONS	5
 #define SPDK_EVENT_BATCH_SIZE		8
+#define SPDK_SEC_TO_MICROSEC		1000000ULL
 
 enum spdk_poller_state {
 	/* The poller is registered with a reactor but not currently executing its fn. */
@@ -252,6 +253,7 @@ _spdk_reactor_start_poller(void *thread_ctx,
 {
 	struct spdk_poller *poller;
 	struct spdk_reactor *reactor;
+	uint64_t quotient, remainder, ticks;
 
 	reactor = thread_ctx;
 
@@ -267,7 +269,11 @@ _spdk_reactor_start_poller(void *thread_ctx,
 	poller->arg = arg;
 
 	if (period_microseconds) {
-		poller->period_ticks = (spdk_get_ticks_hz() * period_microseconds) / 1000000ULL;
+		quotient = period_microseconds / SPDK_SEC_TO_MICROSEC;
+		remainder = period_microseconds % SPDK_SEC_TO_MICROSEC;
+		ticks = spdk_get_ticks_hz();
+
+		poller->period_ticks = ticks * quotient + (ticks * remainder) / SPDK_SEC_TO_MICROSEC;
 	} else {
 		poller->period_ticks = 0;
 	}
@@ -418,8 +424,8 @@ _spdk_reactor_run(void *arg)
 	SPDK_NOTICELOG("Reactor started on core %u on socket %u\n", reactor->lcore,
 		       reactor->socket_id);
 
-	spin_cycles = SPDK_REACTOR_SPIN_TIME_US * spdk_get_ticks_hz() / 1000000ULL;
-	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / 1000000ULL;
+	spin_cycles = SPDK_REACTOR_SPIN_TIME_US * spdk_get_ticks_hz() / SPDK_SEC_TO_MICROSEC;
+	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / SPDK_SEC_TO_MICROSEC;
 	idle_started = 0;
 	timer_poll_count = 0;
 	if (g_context_switch_monitor_enabled) {
@@ -492,7 +498,8 @@ _spdk_reactor_run(void *arg)
 						if (poller->next_run_tick <= now) {
 							sleep_us = 0;
 						} else {
-							sleep_us = ((poller->next_run_tick - now) * 1000000ULL) / spdk_get_ticks_hz();
+							sleep_us = ((poller->next_run_tick - now) *
+								    SPDK_SEC_TO_MICROSEC) / spdk_get_ticks_hz();
 						}
 					}
 				}
