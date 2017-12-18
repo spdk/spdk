@@ -128,18 +128,24 @@ spdk_bs_sequence_start(struct spdk_io_channel *_channel,
 void
 spdk_bs_sequence_read(spdk_bs_sequence_t *seq, void *payload,
 		      uint64_t lba, uint32_t lba_count,
-		      spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+		      spdk_bs_sequence_cpl cb_fn, void *cb_arg, struct spdk_bs_dev *back_dev)
 {
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
+	struct spdk_bs_dev		*bs_dev;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
+
+	if (back_dev != NULL) {
+		bs_dev = back_dev;
+	} else {
+		bs_dev = channel->dev;
+	}
 
 	set->u.sequence.cb_fn = cb_fn;
 	set->u.sequence.cb_arg = cb_arg;
 
-	channel->dev->read(channel->dev, channel->dev_channel, payload, lba, lba_count,
-			   &set->cb_args);
+	bs_dev->read(bs_dev, channel->dev_channel, payload, lba, lba_count, &set->cb_args);
 }
 
 void
@@ -161,19 +167,26 @@ spdk_bs_sequence_write(spdk_bs_sequence_t *seq, void *payload,
 
 void
 spdk_bs_sequence_readv(spdk_bs_sequence_t *seq, struct iovec *iov, int iovcnt,
-		       uint64_t lba, uint32_t lba_count,
-		       spdk_bs_sequence_cpl cb_fn, void *cb_arg)
+		       uint64_t lba, uint32_t lba_count, spdk_bs_sequence_cpl cb_fn, void *cb_arg,
+		       struct spdk_bs_dev *back_dev)
 {
 	struct spdk_bs_request_set      *set = (struct spdk_bs_request_set *)seq;
 	struct spdk_bs_channel       *channel = set->channel;
+	struct spdk_bs_dev		*bs_dev;
+
+	if (back_dev != NULL) {
+		bs_dev = back_dev;
+	} else {
+		bs_dev = channel->dev;
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
 
 	set->u.sequence.cb_fn = cb_fn;
 	set->u.sequence.cb_arg = cb_arg;
 
-	channel->dev->readv(channel->dev, channel->dev_channel, iov, iovcnt, lba, lba_count,
-			    &set->cb_args);
+	bs_dev->readv(bs_dev, channel->dev_channel, iov, iovcnt, lba, lba_count,
+		      &set->cb_args);
 }
 
 void
@@ -306,16 +319,22 @@ spdk_bs_batch_open(struct spdk_io_channel *_channel,
 
 void
 spdk_bs_batch_read(spdk_bs_batch_t *batch, void *payload,
-		   uint64_t lba, uint32_t lba_count)
+		   uint64_t lba, uint32_t lba_count, struct spdk_bs_dev *back_dev)
 {
 	struct spdk_bs_request_set	*set = (struct spdk_bs_request_set *)batch;
 	struct spdk_bs_channel		*channel = set->channel;
+	struct spdk_bs_dev		*bs_dev;
+
+	if (back_dev != NULL) {
+		bs_dev = back_dev;
+	} else {
+		bs_dev = channel->dev;
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB_RW, "Reading %u blocks from LBA %lu\n", lba_count, lba);
 
 	set->u.batch.outstanding_ops++;
-	channel->dev->read(channel->dev, channel->dev_channel, payload, lba, lba_count,
-			   &set->cb_args);
+	bs_dev->read(bs_dev, channel->dev_channel, payload, lba, lba_count, &set->cb_args);
 }
 
 void
@@ -403,6 +422,14 @@ spdk_bs_sequence_to_batch(spdk_bs_sequence_t *seq, spdk_bs_sequence_cpl cb_fn, v
 	set->cb_args.cb_fn = spdk_bs_batch_completion;
 
 	return set;
+}
+
+void
+spdk_bs_sequence_to_batch_completion(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_request_set *set = (struct spdk_bs_request_set *)cb_arg;
+
+	set->cb_args.cb_fn(set->cb_args.channel, set->cb_args.cb_arg, bserrno);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("blob_rw", SPDK_LOG_BLOB_RW)
