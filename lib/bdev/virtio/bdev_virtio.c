@@ -682,6 +682,10 @@ bdev_virtio_poll(void *arg)
 	uint32_t io_len[32];
 	uint16_t i, cnt;
 
+	if (spdk_unlikely(svdev->scan_ctx && svdev->scan_ctx->needs_resend)) {
+		scan_continue(svdev->scan_ctx);
+	}
+
 	cnt = virtio_recv_pkts(ch->vq, (void **)io, io_len, SPDK_COUNTOF(io));
 	for (i = 0; i < cnt; ++i) {
 		if (spdk_unlikely(svdev->scan_ctx &&
@@ -903,6 +907,37 @@ send_scan_io(struct virtio_scsi_scan_base *base)
 
 	virtqueue_req_flush(vq);
 	return 0;
+}
+
+static void
+scan_continue(struct virtio_scsi_scan_base *base, enum virtio_scsi_scan_state state)
+{
+	int rc = 0;
+
+	switch (state) {
+	case VIRTIO_SCSI_SCAN_STATE_INQUIRY:
+		//TODO set inquiry req data inline
+		rc = send_scan_io(base, process_inquiry);
+		break;
+	case VIRTIO_SCSI_SCAN_STATE_TEST_UNIT_READY:
+		//TODO set req data inline
+		rc = send_scan_io(base, process_test_unit_ready);
+		break;
+	case VIRTIO_SCSI_SCAN_STATE_START_UNIT:
+		//TODO set req data inline
+		rc = send_scan_io(base, process_start_unit);
+		break;
+	case VIRTIO_SCSI_SCAN_STATE_ADD_TGT:
+		rc = virtio_scsi_dev_add_tgt(base, &base->info);
+		break;
+	case VIRTIO_SCSI_SCAN_STATE_NEXT_TGT:
+		base->info.target++;
+		//TODO call scan finish if necessary
+		scan_continue(base, VIRTIO_SCSI_SCAN_STATE_INQUIRY);
+		break;
+	}
+
+	base->needs_resend = rc != 0;
 }
 
 static int
