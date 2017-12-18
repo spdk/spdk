@@ -94,9 +94,11 @@ timing_exit create_bdev_config
 
 timing_enter run_spdk_fio
 run_spdk_fio $BDEV_FIO --filename=$virtio_bdevs --spdk_conf=$BASE_DIR/bdev.conf
+report_test_completion "VHOST_RUN_SPDK_FIO"
 timing_exit run_spdk_fio
 
 rm -f *.state
+
 timing_enter spdk_vhost_kill
 spdk_vhost_kill
 timing_exit spdk_vhost_kill
