@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "999ebdb2_e71ab55a",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-18T23:11:39Z",
+      "side": 1,
+      "message": "See my comment on another patch related to test plans.  The real question is if you are OK with what\u0027s here - test plans moving forward are just to help pre-plan the code so it\u0027s OK to ask the question to confirm that the code is correct but if it is there\u0027s no need to go update the test plan",
+      "parentUuid": "ccea9438_77e2d8f4",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 125,
+        "endChar": 4
+      },
+      "revId": "624e4a35b762abec14d71809a66dbfdae8250a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4e8fc5c_b4d177b2",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 6
@@ -60,6 +84,30 @@
       "writtenOn": "2017-12-18T10:46:29Z",
       "side": 1,
       "message": "I don\u0027t think there should be an \"else\" statement here.\nWith \"else\" one core / one ctrl test will only run fi there are no more then 1 NVMe disks in system.\nAnd looking at porting test plan I understand that all 3 test cases should be run if possible.",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 136,
+        "endChar": 6
+      },
+      "revId": "624e4a35b762abec14d71809a66dbfdae8250a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "162d8431_69e3d6f8",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-18T23:11:39Z",
+      "side": 1,
+      "message": "agree, the else should just be \u0027fi\u0027 so that all 3 are executed if \u003e1 drive is present... make sense",
+      "parentUuid": "b4e8fc5c_b4d177b2",
       "range": {
         "startLine": 136,
         "startChar": 2,
