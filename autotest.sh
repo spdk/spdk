@@ -71,9 +71,11 @@ timing_enter nvmf_setup
 rdma_device_init
 timing_exit nvmf_setup
 
-timing_enter rbd_setup
-rbd_setup
-timing_exit rbd_setup
+if [ $SPDK_TEST_RBD -eq 1 ]; then
+	timing_enter rbd_setup
+	rbd_setup
+	timing_exit rbd_setup
+fi
 
 #####################
 # Unit Tests
@@ -173,7 +175,9 @@ if [ $SPDK_TEST_NVML -eq 1 ]; then
 fi
 
 timing_enter cleanup
-rbd_cleanup
+if [ $SPDK_TEST_RBD -eq 1 ]; then
+	rbd_cleanup
+fi
 ./scripts/setup.sh reset
 if [ $SPDK_BUILD_IOAT_KMOD -eq 1 ]; then
 	./scripts/build_kmod.sh clean
