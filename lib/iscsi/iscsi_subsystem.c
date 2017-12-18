@@ -117,16 +117,25 @@ static const char *portal_group_section = \
 		"\n"
 		"# Users must change the PortalGroup section(s) to match the IP addresses\n"
 		"#  for their environment.\n"
-		"# PortalGroup sections define which TCP ports the iSCSI server will use\n"
-		"#  to listen for incoming connections.  These are also used to determine\n"
-		"#  which targets are accessible over each portal group.\n";
+		"# PortalGroup sections define which network portals the iSCSI target\n"
+		"# will use to listen for incoming connections.  These are also used to\n"
+		"#  determine which targets are accessible over each portal group.\n"
+		"# Up to 1024 Portal directives are allowed.  These define the network\n"
+		"#  portals of the portal group. The user must specify a IP address\n"
+		"#  for each network portal, and may optionally specify a port and\n"
+		"#  a cpumask. If the port is omitted, 3260 will be used. Cpumask will\n"
+		"#  be used to set the processor affinity of the iSCSI connection\n"
+		"#  through the portal.  If the cpumask is omitted, cpumask will be\n"
+		"#  set to all available processors.\n"
+		"#  Syntax:\n"
+		"#    Portal <Name> <IP address>[:<port>[@<cpumask>]]\n";
 
 #define PORTAL_GROUP_TMPL \
 "[PortalGroup%d]\n" \
 "  Comment \"Portal%d\"\n"
 
 #define PORTAL_TMPL \
-"  Portal DA1 %s:%s\n"
+"  Portal DA1 %s:%s@0x%" PRIx64 "\n"
 
 static void
 spdk_iscsi_config_dump_portal_groups(FILE *fp)
@@ -144,7 +153,7 @@ spdk_iscsi_config_dump_portal_groups(FILE *fp)
 		/* Dump portals */
 		TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
 			if (NULL == p) { continue; }
-			fprintf(fp, PORTAL_TMPL, p->host, p->port);
+			fprintf(fp, PORTAL_TMPL, p->host, p->port, p->cpumask);
 		}
 	}
 }
