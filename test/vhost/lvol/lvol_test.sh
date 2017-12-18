@@ -66,7 +66,7 @@ while getopts 'xh-:' optchar; do
     esac
 done
 
-echo "INFO: Get NVMe disks:"
+notice "Get NVMe disks:"
 nvmes=($(lspci -mm -n | grep 0108 | tr -d '"' | awk -F " " '{print "0000:"$1}'))
 
 if [[ -z $max_disks ]]; then
@@ -74,9 +74,7 @@ if [[ -z $max_disks ]]; then
 fi
 
 if [[ ${#nvmes[@]} -lt max_disks ]]; then
-    echo -e "ERROR: Number of NVMe drives (${#nvmes[@]})\n\
-is lower than number of requested disks for test ($max_disks)"
-    exit 1
+    fail "Number of NVMe drives (${#nvmes[@]}) is lower than number of requested disks for test ($max_disks)"
 fi
 
 if $distribute_cores; then
@@ -88,10 +86,9 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
 vm_kill_all
 
-echo "INFO: running SPDK"
-echo ""
+notice "running SPDK vhost"
 $COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
-echo ""
+notice "..."
 
 lvol_stores=()
 lvol_bdevs=()
@@ -101,7 +98,7 @@ used_vms=""
 
 # On each NVMe create one lvol store
 for (( i=0; i<$max_disks; i++ ));do
-    echo "INFO: Creating lvol store on device Nvme${i}n1"
+    notice "Creating lvol store on device Nvme${i}n1"
     ls_guid=$($rpc_py construct_lvol_store Nvme${i}n1 lvs_$i)
     lvol_stores+=("$ls_guid")
 done
@@ -110,11 +107,11 @@ done
 if $nested_lvol; then
     for lvol_store in "${lvol_stores[@]}"; do
 
-        echo "INFO: Creating lvol bdev on lvol store $lvol_store"
+        notice "Creating lvol bdev on lvol store $lvol_store"
         lb_name=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_nest 16000)
         lvol_bdevs+=("$lb_name")
 
-        echo "INFO: Creating nested lvol store on lvol bdev: $lb_name"
+        notice "Creating nested lvol store on lvol bdev: $lb_name"
         ls_guid=$($rpc_py construct_lvol_store $lb_name lvs_n_$i)
         nest_lvol_stores+=("$ls_guid")
     done
@@ -123,7 +120,7 @@ fi
 # For each VM create one lvol bdev on each 'normal' and nested lvol store
 for (( i=0; i<$vm_count; i++)); do
     bdevs=()
-    echo "INFO: Creating lvol bdevs for VM $i"
+    notice "Creating lvol bdevs for VM $i"
     for lvol_store in "${lvol_stores[@]}"; do
         lb_name=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_$i 10000)
         lvol_bdevs+=("$lb_name")
@@ -131,7 +128,7 @@ for (( i=0; i<$vm_count; i++)); do
     done
 
     if $nested_lvol; then
-        echo "INFO: Creating nested lvol bdevs for VM $i"
+        notice "Creating nested lvol bdevs for VM $i"
         for lvol_store in "${nest_lvol_stores[@]}"; do
             lb_guid=$($rpc_py construct_lvol_bdev -u $lvol_store lbd_nest_$i 2000)
             nest_lvol_bdevs+=("$lb_guid")
@@ -206,53 +203,53 @@ done
 # Run FIO traffic
 run_fio $fio_bin --job-file=$COMMON_DIR/fio_jobs/default_integrity.job --out="$TEST_DIR/fio_results" $fio_disks
 
-echo "INFO: Shutting down virtual machines..."
+notice "Shutting down virtual machines..."
 vm_shutdown_all
 sleep 2
 
-echo "INFO: Cleaning up vhost - remove LUNs, controllers, lvol bdevs and lvol stores"
+notice "Cleaning up vhost - remove LUNs, controllers, lvol bdevs and lvol stores"
 if [[ "$ctrl_type" == "vhost_scsi" ]]; then
     for (( i=0; i<$vm_count; i++)); do
-        echo "INFO: Removing devices from vhost SCSI controller naa.0.$i"
+        notice "Removing devices from vhost SCSI controller naa.0.$i"
         for (( j=0; j<${#bdevs[@]}; j++)); do
             $rpc_py remove_vhost_scsi_target naa.0.$i $j
-            echo -e "\tINFO: Removed device $j"
+            notice "    INFO: Removed device $j"
         done
-        echo "Removing vhost SCSI controller naa.0.$i"
+        notice "Removing vhost SCSI controller naa.0.$i"
         $rpc_py remove_vhost_controller naa.0.$i
     done
 elif [[ "$ctrl_type" == "vhost_blk" ]]; then
     for (( i=0; i<$vm_count; i++)); do
         for (( j=0; j<${#bdevs[@]}; j++)); do
-            echo "INFO: Removing vhost BLK controller naa.$j.$i"
+            notice "Removing vhost BLK controller naa.$j.$i"
             $rpc_py remove_vhost_controller naa.$j.$i
-            echo -e "\tINFO: Removed naa.$j.$i"
+            notice "    Removed naa.$j.$i"
         done
     done
 fi
 
-echo "INFO: Removing nested lvol bdevs"
+notice "Removing nested lvol bdevs"
 for lvol_bdev in "${nest_lvol_bdevs[@]}"; do
     $rpc_py delete_bdev $lvol_bdev
-    echo -e "\tINFO: nested lvol bdev $lvol_bdev removed"
+    notice "    nested lvol bdev $lvol_bdev removed"
 done
 
-echo "INFO: Removing nested lvol stores"
+notice "Removing nested lvol stores"
 for lvol_store in "${nest_lvol_stores[@]}"; do
     $rpc_py destroy_lvol_store -u $lvol_store
-    echo -e "\tINFO: nested lvol store $lvol_store removed"
+    notice "    nested lvol store $lvol_store removed"
 done
 
-echo "INFO: Removing lvol bdevs"
+notice "Removing lvol bdevs"
 for lvol_bdev in "${lvol_bdevs[@]}"; do
     $rpc_py delete_bdev $lvol_bdev
-    echo -e "\tINFO: lvol bdev $lvol_bdev removed"
+    notice "    lvol bdev $lvol_bdev removed"
 done
 
-echo "INFO: Removing lvol stores"
+notice "Removing lvol stores"
 for lvol_store in "${lvol_stores[@]}"; do
     $rpc_py destroy_lvol_store -u $lvol_store
-    echo -e "\tINFO: lvol store $lvol_store removed"
+    notice "    lvol store $lvol_store removed"
 done
 
 $rpc_py get_lvol_stores
@@ -260,5 +257,5 @@ $rpc_py get_bdevs
 $rpc_py get_vhost_controllers
 $rpc_py get_luns
 
-echo "INFO: Shutting down SPDK vhost app..."
+notice "Shutting down SPDK vhost app..."
 spdk_vhost_kill
