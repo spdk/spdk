@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20d32e9d_fe628822",
+        "filename": "autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-18T20:36:59Z",
+      "side": 1,
+      "message": "rbd_cleanup should be under the same condition as rbd_setup",
+      "revId": "95fe061e038ec008482a3e48d381cb99d13711a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
