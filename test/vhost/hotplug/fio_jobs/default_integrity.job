@@ -12,4 +12,5 @@ rw=randwrite
 do_verify=1
 verify=md5
 verify_backlog=1024
+time_based=1
 runtime=10

@@ -22,6 +22,7 @@ case $1 in
 		echo "  -ilsn|--integrity-lvol-scsi-nightly  for running an nightly integrity test with vhost scsi and lvol backends"
 		echo "  -ilbn|--integrity-lvol-blk-nightly   for running an nightly integrity test with vhost blk and lvol backends"
 		echo "  -hp|--hotplug                        for running hotplug tests"
+		echo "  -shr|--scsi-hot-remove               for running scsi hot remove tests"
 		echo "  -ro|--readonly                       for running readonly test for vhost blk"
 		echo "  -h |--help                           prints this message"
 		echo ""
@@ -159,6 +160,15 @@ case $1 in
 			--vm=3,$VM_IMAGE,Nvme0n1p6:Nvme0n1p7 \
 			--test-type=spdk_vhost_scsi \
 			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
+		;;
+	-shr|--scsi-hot-remove)
+		echo 'Running scsi hotremove tests suite...'
+		$WORKDIR/hotplug/scsi_hotplug.sh --fio-bin=$FIO_BIN \
+			--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
+			--vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
+			--test-type=spdk_vhost_scsi \
+			--scsi-hotremove-test \
+			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job
 		;;
 	-ro|--readonly)
 		echo 'Running readonly tests suite...'
