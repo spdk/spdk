@@ -1,5 +1,7 @@
 set -e
 
+: ${SPDK_VHOST_VERBOSE=false}
+
 BASE_DIR=$(readlink -f $(dirname $0))
 
 # Default running dir -> spdk/..
@@ -10,10 +12,72 @@ SPDK_BUILD_DIR=$BASE_DIR/../../../
 
 SPDK_VHOST_SCSI_TEST_DIR=$TEST_DIR/vhost
 
+function fail()
+{
+	if ! $SPDK_VHOST_VERBOSE; then
+		local verbose_out=""
+	elif [[ ${FUNCNAME[1]} == "source" ]]; then
+		local verbose_out=" (file $(basename ${BASH_SOURCE[0]}):${BASH_LINENO[0]})"
+	else
+		local verbose_out=" (function ${FUNCNAME[1]}:${BASH_LINENO[0]})"
+
+	fi
+
+	echo "===========" >&2
+	echo -e "FAIL$verbose_out: $@" >&2
+	echo "===========" >&2
+	exit 1
+}
+
+function error()
+{
+	if ! $SPDK_VHOST_VERBOSE; then
+		local verbose_out=""
+	elif [[ ${FUNCNAME[1]} == "source" ]]; then
+		local verbose_out=" (file $(basename ${BASH_SOURCE[0]}):${BASH_LINENO[0]})"
+	else
+		local verbose_out=" (function ${FUNCNAME[1]}:${BASH_LINENO[0]})"
+
+	fi
+
+	echo "===========" >&2
+	echo -e "ERROR$verbose_out: $@" >&2
+	echo "===========" >&2
+	# Don't 'return 1' since the stack trace will be incomplete (why?) missing upper command.
+	false
+}
+
+function warning()
+{
+	if ! $SPDK_VHOST_VERBOSE; then
+		local verbose_out=""
+	elif [[ ${FUNCNAME[1]} == "source" ]]; then
+		local verbose_out=" (file $(basename ${BASH_SOURCE[0]}) line ${BASH_LINENO[0]})"
+	else
+		local verbose_out=" (function ${FUNCNAME[1]}:${BASH_LINENO[0]})"
+	fi
+
+	echo -e "WARN$verbose_out: $@" >&2
+}
+
+function notice()
+{
+	if ! $SPDK_VHOST_VERBOSE; then
+		local verbose_out=""
+	elif [[ ${FUNCNAME[1]} == "source" ]]; then
+		local verbose_out=" (file $(basename ${BASH_SOURCE[0]}) line ${BASH_LINENO[0]})"
+	else
+		local verbose_out=" (function ${FUNCNAME[1]}:${BASH_LINENO[0]})"
+	fi
+
+	echo -e "INFO$verbose_out: $@"
+}
+
+
 # SSH key file
 : ${SPDK_VHOST_SSH_KEY_FILE="$HOME/.ssh/spdk_vhost_id_rsa"}
 if [[ ! -e "$SPDK_VHOST_SSH_KEY_FILE" ]]; then
-	echo "Could not find SSH key file $SPDK_VHOST_SSH_KEY_FILE"
+	error "Could not find SSH key file $SPDK_VHOST_SSH_KEY_FILE"
 	exit 1
 fi
 echo "Using SSH key file $SPDK_VHOST_SSH_KEY_FILE"
@@ -39,15 +103,6 @@ else
 	set +x
 fi
 
-function error()
-{
-	echo "==========="
-	echo -e "ERROR: $@"
-	echo "==========="
-	# Don't 'return 1' since the stack trace will be incomplete (why?) missing upper command.
-	false
-}
-
 function spdk_vhost_run()
 {
 	local vhost_conf_path="$1"
@@ -57,7 +112,7 @@ function spdk_vhost_run()
 	local vhost_socket="$SPDK_VHOST_SCSI_TEST_DIR/usvhost"
 	local vhost_conf_template="$vhost_conf_path/vhost.conf.in"
 	local vhost_conf_file="$vhost_conf_path/vhost.conf"
-	echo "INFO: starting vhost app in background"
+	notice "starting vhost app in background"
 	[[ -r "$vhost_pid_file" ]] && spdk_vhost_kill
 	[[ -d $SPDK_VHOST_SCSI_TEST_DIR ]] && rm -f $SPDK_VHOST_SCSI_TEST_DIR/*
 	mkdir -p $SPDK_VHOST_SCSI_TEST_DIR
@@ -77,18 +132,18 @@ function spdk_vhost_run()
 
 	local cmd="$vhost_app -m $vhost_reactor_mask -p $vhost_master_core -c $vhost_conf_file"
 
-	echo "INFO: Loging to:   $vhost_log_file"
-	echo "INFO: Config file: $vhost_conf_file"
-	echo "INFO: Socket:      $vhost_socket"
-	echo "INFO: Command:     $cmd"
+	notice "Loging to:   $vhost_log_file"
+	notice "Config file: $vhost_conf_file"
+	notice "Socket:      $vhost_socket"
+	notice "Command:     $cmd"
 
 	cd $SPDK_VHOST_SCSI_TEST_DIR; $cmd &
 	vhost_pid=$!
 	echo $vhost_pid > $vhost_pid_file
 
-	echo "INFO: waiting for app to run..."
+	notice "waiting for app to run..."
 	waitforlisten "$vhost_pid"
-	echo "INFO: vhost started - pid=$vhost_pid"
+	notice "vhost started - pid=$vhost_pid"
 
 	rm $vhost_conf_file
 }
@@ -98,15 +153,15 @@ function spdk_vhost_kill()
 	local vhost_pid_file="$SPDK_VHOST_SCSI_TEST_DIR/vhost.pid"
 
 	if [[ ! -r $vhost_pid_file ]]; then
-		echo "WARN: no vhost pid file found"
+		warning "no vhost pid file found"
 		return 0
 	fi
 
 	local vhost_pid="$(cat $vhost_pid_file)"
-	echo "INFO: killing vhost (PID $vhost_pid) app"
+	notice "killing vhost (PID $vhost_pid) app"
 
 	if /bin/kill -INT $vhost_pid >/dev/null; then
-		echo "INFO: sent SIGINT to vhost app - waiting 60 seconds to exit"
+		notice "sent SIGINT to vhost app - waiting 60 seconds to exit"
 		for ((i=0; i<60; i++)); do
 			if /bin/kill -0 $vhost_pid; then
 				echo "."
@@ -116,16 +171,16 @@ function spdk_vhost_kill()
 			fi
 		done
 		if /bin/kill -0 $vhost_pid; then
-			echo "ERROR: vhost was NOT killed - sending SIGKILL"
 			/bin/kill -KILL $vhost_pid
 			rm $vhost_pid_file
+			error "vhost was NOT exited - killed by SIGKILL"
 			return 1
 		fi
 	elif /bin/kill -0 $vhost_pid; then
 		error "vhost NOT killed - you need to kill it manually"
 		return 1
 	else
-		echo "INFO: vhost was no running"
+		notice "vhost was no running"
 	fi
 
 	rm $vhost_pid_file
@@ -139,7 +194,7 @@ function assert_number()
 {
 	[[ "$1" =~ [0-9]+ ]] && return 0
 
-	echo "${FUNCNAME[1]}() - ${BASH_LINENO[1]}: ERROR Invalid or missing paramter: need number but got '$1'" > /dev/stderr
+	error "Invalid or missing paramter: need number but got '$1'" > /dev/stderr
 	return 1;
 }
 
@@ -150,7 +205,7 @@ function vm_num_is_valid()
 {
 	[[ "$1" =~ ^[0-9]+$ ]] && return 0
 
-	echo "${FUNCNAME[1]}() - ${BASH_LINENO[1]}: ERROR Invalid or missing paramter: vm number '$1'" > /dev/stderr
+	error "Invalid or missing paramter: vm number '$1'" > /dev/stderr
 	return 1;
 }
 
@@ -243,7 +298,7 @@ function vm_is_running()
 		return 0
 	else
 		if [[ $EUID -ne 0 ]]; then
-			echo "WARNING: not root - assuming we running since can't be checked"
+			warning "not root - assuming VM running since can't be checked"
 			return 0
 		fi
 
@@ -286,16 +341,16 @@ function vm_shutdown()
 	fi
 
 	if ! vm_is_running $1; then
-		echo "INFO: VM$1 ($vm_dir) is not running"
+		notice "VM$1 ($vm_dir) is not running"
 		return 0
 	fi
 
 	# Temporarily disabling exit flag for next ssh command, since it will
 	# "fail" due to shutdown
-	echo "Shutting down virtual machine $vm_dir"
+	notice "Shutting down virtual machine $vm_dir"
 	set +e
 	vm_ssh $1 "nohup sh -c 'shutdown -h -P now'" || true
-	echo "INFO: VM$1 is shutting down - wait a while to complete"
+	notice "VM$1 is shutting down - wait a while to complete"
 	set -e
 }
 
@@ -308,16 +363,15 @@ function vm_kill()
 	local vm_dir="$VM_BASE_DIR/$1"
 
 	if [[ ! -r $vm_dir/qemu.pid ]]; then
-		#echo "WARN: VM$1 pid not found - not killing"
 		return 0
 	fi
 
 	local vm_pid="$(cat $vm_dir/qemu.pid)"
 
-	echo "Killing virtual machine $vm_dir (pid=$vm_pid)"
+	notice "Killing virtual machine $vm_dir (pid=$vm_pid)"
 	# First kill should fail, second one must fail
 	if /bin/kill $vm_pid; then
-		echo "INFO: process $vm_pid killed"
+		notice "process $vm_pid killed"
 		rm $vm_dir/qemu.pid
 	elif vm_is_running $1; then
 		error "Process $vm_pid NOT killed"
@@ -345,7 +399,7 @@ function vm_shutdown_all()
 		vm_shutdown $(basename $vm)
 	done
 
-	echo "INFO: Waiting for VMs to shutdown..."
+	notice "Waiting for VMs to shutdown..."
 	timeo=10
 	while [[ $timeo -gt 0 ]]; do
 		all_vms_down=1
@@ -357,7 +411,7 @@ function vm_shutdown_all()
 		done
 
 		if [[ $all_vms_down == 1 ]]; then
-			echo "INFO: All VMs successfully shut down"
+			notice "All VMs successfully shut down"
 			shopt -u nullglob
 			return 0
 		fi
@@ -408,7 +462,8 @@ function vm_setup()
 
 		vm_num_is_valid $vm_num || return 1
 		local vm_dir="$VM_BASE_DIR/$vm_num"
-		[[ -d $vm_dir ]] && echo "WARNING: removing existing VM in '$vm_dir'"
+		[[ -d $vm_dir ]] && warning "removing existing VM in '$vm_dir'"
+		# FIXME: why this is just echo???
 		echo "rm -rf $vm_dir"
 	else
 		local vm_dir=""
@@ -425,7 +480,7 @@ function vm_setup()
 		return 1
 	fi
 
-	echo "INFO: Creating new VM in $vm_dir"
+	notice "Creating new VM in $vm_dir"
 	mkdir -p $vm_dir
 	if [[ ! -r $os ]]; then
 		error "file not found: $os"
@@ -446,7 +501,7 @@ function vm_setup()
 
 	local task_mask=${!qemu_mask_param}
 
-	echo "INFO: TASK MASK: $task_mask"
+	notice "TASK MASK: $task_mask"
 	local cmd="taskset -a $task_mask $INSTALL_DIR/bin/qemu-system-x86_64 ${eol}"
 	local vm_socket_offset=$(( 10000 + 100 * vm_num ))
 
@@ -466,7 +521,7 @@ function vm_setup()
 
 	#-cpu host
 	local node_num=${!qemu_numa_node_param}
-	echo "INFO: NUMA NODE: $node_num"
+	notice "NUMA NODE: $node_num"
 	cmd+="-m 1024 --enable-kvm -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize -snapshot ${eol}"
 	cmd+="-object memory-backend-file,id=mem,size=1G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
 	cmd+="-numa node,memdev=mem ${eol}"
@@ -506,10 +561,10 @@ function vm_setup()
 							return 1
 					fi
 
-					echo "INFO: Creating Virtio disc $raw_disk"
+					notice "Creating Virtio disc $raw_disk"
 					dd if=/dev/zero of=$raw_disk bs=1024k count=10240
 				else
-					echo "INFO: Using existing image $raw_disk"
+					notice "Using existing image $raw_disk"
 				fi
 
 				cmd+="-device virtio-scsi-pci ${eol}"
@@ -517,7 +572,7 @@ function vm_setup()
 				cmd+="-drive if=none,id=hd$i,file=$raw_disk,format=raw$raw_cache ${eol}"
 				;;
 			spdk_vhost_scsi)
-				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
+				notice "using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
 				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$cpu_num,chardev=char_$disk ${eol}"
 				;;
@@ -528,7 +583,7 @@ function vm_setup()
 					size="20G"
 				fi
 				disk=${disk%%_*}
-				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
+				notice "using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
 				cmd+="-device vhost-user-blk-pci,num_queues=$cpu_num,chardev=char_$disk,"
 				cmd+="logical_block_size=4096,size=$size ${eol}"
@@ -541,7 +596,7 @@ function vm_setup()
 					error "$disk_type - disk(wnn)=$disk does not look like WNN number"
 					return 1
 				fi
-				echo "Using kernel vhost disk wwn=$disk"
+				notice "Using kernel vhost disk wwn=$disk"
 				cmd+=" -device vhost-scsi-pci,wwpn=$disk ${eol}"
 				;;
 			*)
@@ -554,7 +609,7 @@ function vm_setup()
 	# remove last $eol
 	cmd="${cmd%\\\\\\n  }"
 
-	echo "Saving to $vm_dir/run.sh:"
+	notice "Saving to $vm_dir/run.sh:"
 	(
 	echo '#!/bin/bash'
 	echo 'if [[ $EUID -ne 0 ]]; then '
@@ -598,7 +653,7 @@ function vm_run()
 		case "$optchar" in
 			a) run_all=true ;;
 			*)
-				echo "vm_run Unknown param $OPTARG"
+				error "Unknown param $OPTARG"
 				return 1
 			;;
 		esac
@@ -623,11 +678,11 @@ function vm_run()
 
 	for vm in $vms_to_run; do
 		if vm_is_running $(basename $vm); then
-			echo "WARNING: VM$(basename $vm) ($vm) already running"
+			warning "VM$(basename $vm) ($vm) already running"
 			continue
 		fi
 
-		echo "INFO: running $vm/run.sh"
+		notice "running $vm/run.sh"
 		if ! $vm/run.sh; then
 			error "FAILED to run vm $vm"
 			return 1
@@ -646,7 +701,7 @@ function vm_wait_for_boot()
 	[[ $timeout_time -lt 10 ]] && timeout_time=10
 	local timeout_time=$(date -d "+$timeout_time seconds" +%s)
 
-	echo "Waiting for VMs to boot"
+	notice "Waiting for VMs to boot"
 	shift
 	if [[ "$@" == "" ]]; then
 		local vms_to_check="$VM_BASE_DIR/[0-9]*"
@@ -660,26 +715,26 @@ function vm_wait_for_boot()
 	for vm in $vms_to_check; do
 		local vm_num=$(basename $vm)
 		local i=0
-		echo "INFO: waiting for VM$vm_num ($vm)"
+		notice "waiting for VM$vm_num ($vm)"
 		while ! vm_os_booted $vm_num; do
 			if ! vm_is_running $vm_num; then
-				echo
-				echo "ERROR: VM $vm_num is not running"
-				echo "================"
-				echo "QEMU LOG:"
+
+				warning "VM $vm_num is not running"
+				warning "================"
+				warning "QEMU LOG:"
 				if [[ -r $vm/qemu.log ]]; then
 					cat $vm/qemu.log
 				else
-					echo "LOG not found"
+					warning "LOG not found"
 				fi
 
-				echo "VM LOG:"
+				warning "VM LOG:"
 				if [[ -r $vm/serial.log ]]; then
 					cat $vm/serial.log
 				else
-					echo "LOG not found"
+					warning "LOG not found"
 				fi
-				echo "================"
+				warning "================"
 				return 1
 			fi
 
@@ -695,10 +750,10 @@ function vm_wait_for_boot()
 			sleep 1
 		done
 		echo ""
-		echo "INFO: VM$vm_num ready"
+		notice "VM$vm_num ready"
 	done
 
-	echo "INFO: all VMs ready"
+	notice "all VMs ready"
 	return 0
 }
 
@@ -712,16 +767,16 @@ function vm_start_fio_server()
 			case "$OPTARG" in
 				fio-bin=*) local fio_bin="${OPTARG#*=}" ;;
 				readonly) local readonly="--readonly" ;;
-				*) echo "Invalid argument '$OPTARG'" && return 1;;
+				*) error "Invalid argument '$OPTARG'" && return 1;;
 			esac
 			;;
-			*) echo "Invalid argument '$OPTARG'" && return 1;;
+			*) error "Invalid argument '$OPTARG'" && return 1;;
 		esac
 	done
 
 	shift $(( OPTIND - 1 ))
 	for vm_num in $@; do
-		echo "INFO: Starting fio server on VM$vm_num"
+		notice "Starting fio server on VM$vm_num"
 		if [[ $fio_bin != "" ]]; then
 			cat $fio_bin | vm_ssh $vm_num 'cat > /root/fio; chmod +x /root/fio'
 			vm_ssh $vm_num /root/fio $readonly --eta=never --server --daemonize=/root/fio.pid
@@ -757,7 +812,7 @@ function vm_check_scsi_location()
 function vm_reset_scsi_devices()
 {
 	for disk in "${@:2}"; do
-		echo "INFO: VM$1 Performing device reset on disk $disk"
+		notice "VM$1 Performing device reset on disk $disk"
 		vm_ssh $1 sg_reset /dev/$disk -vNd
 	done
 }
@@ -818,14 +873,14 @@ function run_fio()
 #
 function at_app_exit()
 {
-	echo "INFO: APP EXITING"
-	echo "INFO: killing all VMs"
+	notice "APP EXITING"
+	notice "killing all VMs"
 	vm_kill_all
 	# Kill vhost application
-	echo "INFO: killing vhost app"
+	notice "killing vhost app"
 	spdk_vhost_kill
 
-	echo "INFO: EXIT DONE"
+	notice "EXIT DONE"
 }
 
 function error_exit()
@@ -833,7 +888,7 @@ function error_exit()
 	trap - ERR
 	print_backtrace
 	set +e
-	echo "Error on $1 $2"
+	error "Error on $1 $2"
 
 	at_app_exit
 	exit 1
