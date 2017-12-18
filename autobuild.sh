@@ -33,7 +33,21 @@ timing_exit build_kmod
 scanbuild=''
 if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
 	scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
+	report_test_completion "SCANBUILD"
 fi
+
+if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
+	report_test_completion "VALGRIND"
+fi
+
+if [ $SPDK_RUN_ASAN -eq 1 ]; then
+	report_test_completion "ASAN"
+fi
+
+if [ $SPDK_RUN_UBSAN -eq 1 ]; then
+	report_test_completion "UBSAN"
+fi
+
 echo $scanbuild
 $MAKE $MAKEFLAGS clean
 
