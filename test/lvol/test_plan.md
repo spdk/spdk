@@ -620,3 +620,164 @@ Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
 - no other operation fails
+
+### snapshot
+
+#### TEST CASE 800 - Name: snapshot_readonly
+- run vhost app with Malloc bdev
+- construct lvol store on Malloc bdev with size 100M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- check if created snapshot has status as readonly
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 801 - Name: snapshot_compare_with_lvol_bdev
+- run vhost app with Malloc bdev
+- construct lvol store on Malloc bdev with size 100M
+- construct thin provisioned lvol bdev
+- fill snapshot with 50% of space
+- create snapshot of created lvol bdev
+- check if data on both lvol bdevs are the same
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 802 - Name: snapshot_check_write
+- run vhost app with Malloc bdev
+- construct lvol store on Malloc bdev with size 100M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- perform write operations to thin provisioned lvol bdev
+- check that snapshot hasn't changed
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 803 - Name: snapshot_during_io_traffic
+- run vhost app with Malloc bdev
+- construct lvol store on Malloc bdev with size 100M
+- construct thin provisioned lvol bdev
+- perform write to created lvol bdev
+- during wrire operation create snapshot of created lvol bdev
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 804 - Name: snapshot_removal
+- run vhost app with Malloc bdev
+- construct lvol store on Malloc bdev with size 100M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- try to remove snapshot
+- check if operation fails
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 805 - Name: snapshot_of_snapshot
+- run vhost app with Malloc bdev
+- construct lvol store on Malloc bdev with size 100M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- create snapshot of previously created snapshot
+- check if operation fails
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+### clone
+
+#### TEST CASE 850 - Name: clone_bdev_only
+- run vhost app with Malloc bdev
+- construct lvol store on Malloc bdev with size 100M
+- construct thin provisioned lvol bdev
+- create clone of created lvol bdev
+- check if operation fails
+- create snapshot of lvol bdev
+- create clone of snapshot
+- check if operation succeeded
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 851 - Name: clone_not_readonly
+- run vhost app with Malloc bdev
+- construct lvol store on Malloc bdev with size 100M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- create clone of snapshot
+- check if clone is not readonly
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 852 - Name: clone_is_thin_provisioned
+- run vhost app with Malloc bdev
+- construct lvol store on NVMe bdev with size 100M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- create clone of snapshot
+- check that clone is thin provisioned
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 853 - Name: clone_on_the_same_lvs
+- run vhost app with Malloc bdev
+- construct lvol store on NVMe bdev with size 100M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- create clone of snapshot on the same lvs
+  where snaphot was created
+- check if operation succeeded
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 854 - Name: clone_on_different_lvs
+- run vhost app with Malloc bdev
+- construct lvol store on NVMe bdev with size 100M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- create clone of created snapshot on different lvs
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 855 - Name: clone_and_remove_snapshot
+- run vhost app with Malloc bdev
+- construct lvol store on NVMe bdev with size 100M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- create clone of created snapshot
+- remove snapshot
+- perform write on clone and check if it fails
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
