@@ -45,22 +45,22 @@ fi
 
 if $all; then
 	if do_kill; then
-		echo 'INFO: killing all VMs'
+		notice "killing all VMs"
 		vm_kill_all
 	else
-		echo 'INFO: shutting down all VMs'
+		notice "shutting down all VMs"
 		vm_shutdown_all
 	fi
 else
 	shift $((OPTIND-1))
 
 	if do_kill; then
-		echo 'INFO: killing VMs: $@'
+		notice "INFO: killing VMs: $@"
 		for vm in $@; do
 			vm_kill $vm
 		done
 	else
-		echo 'INFO: shutting down all VMs'
+		notice "shutting down all VMs"
 		vm_shutdown_all
 	fi
 fi
