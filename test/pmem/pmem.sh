@@ -65,6 +65,7 @@ if [[ $EUID -ne 0 ]]; then
 fi
 
 source $TEST_DIR/test/pmem/common.sh
+source $TEST_DIR/scripts/autotest_common.sh
 
 #================================================
 # pmem_pool_info tests
@@ -694,4 +695,5 @@ if $test_delete_bdev || $test_all; then
 fi
 
 pmem_clean_pool_file
+report_test_completion "pmem"
 vhost_kill

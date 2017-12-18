@@ -60,4 +60,5 @@ trap - SIGINT SIGTERM EXIT
 iscsicleanup
 killprocess $pid
 
+report_test_completion "iscsi_rbd"
 timing_exit rbd

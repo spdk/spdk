@@ -39,7 +39,22 @@ make_timing_label='make'
 if [ $SPDK_RUN_SCANBUILD -eq 1 ] && hash scan-build; then
 	scanbuild="scan-build -o $out/scan-build-tmp --status-bugs"
 	make_timing_label='scanbuild_make'
+	report_test_completion "scanbuild"
+
 fi
+
+if [ $SPDK_RUN_VALGRIND -eq 1 ]; then
+	report_test_completion "valgrind"
+fi
+
+if [ $SPDK_RUN_ASAN -eq 1 ]; then
+	report_test_completion "asan"
+fi
+
+if [ $SPDK_RUN_UBSAN -eq 1 ]; then
+	report_test_completion "ubsan"
+fi
+
 echo $scanbuild
 $MAKE $MAKEFLAGS clean
 
