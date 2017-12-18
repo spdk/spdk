@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eb0b5cd4_dda9a5d2",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-18T13:13:51Z",
+      "side": 1,
+      "message": "I think the following may be more accurate:\n\n- quotient \u003d usecs / 1000000\n- remainder \u003d usecs % 1000000\n- ticks \u003d ticks_hz * quotient + (ticks_hz * remainder) / 1000000.\n\nIt is OK to do in one line.",
+      "range": {
+        "startLine": 271,
+        "startChar": 0,
+        "endLine": 273,
+        "endChar": 57
+      },
+      "revId": "40d23acbbc80d66887ddbc65152b19a48ac4f32b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
