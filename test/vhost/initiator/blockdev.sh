@@ -69,6 +69,7 @@ function prepare_fio_job_for_unmap() {
 }
 
 source $rootdir/test/vhost/common/common.sh
+source $rootdir/scripts/autotest_common.sh
 $rootdir/scripts/gen_nvme.sh
 spdk_vhost_run $testdir
 $rpc_py construct_malloc_bdev 128 512
@@ -93,10 +94,12 @@ for bdev in $bdevs; do
 
         timing_enter bounds
         $rootdir/test/lib/bdev/bdevio/bdevio $testdir/bdev.conf
+        report_test_completion "VHOST_INITIATOR_BOUNDS"
         timing_exit bounds
 
         timing_enter bdev_svc
         bdevs=$(discover_bdevs $rootdir $testdir/bdev.conf | jq -r '.[] | select(.claimed == false)')
+        report_test_completion "VHOST_INITIATOR_SVC"
         timing_exit bdev_svc
 
         if [ -d /usr/src/fio ]; then
@@ -114,6 +117,7 @@ for bdev in $bdevs; do
 
                         run_fio --spdk_conf=$testdir/bdev.conf
 
+                        report_test_completion "VHOST_INITIATOR_FIO_RW"
                         timing_exit fio_rw_verify
                 done
 
@@ -130,6 +134,7 @@ for bdev in $bdevs; do
                         cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
                         prepare_fio_job_4G "$rw" "$bdevs"
                         run_fio --spdk_conf=$testdir/bdev.conf
+                        report_test_completion "VHOST_INITIATOR_FIO_4G_RW"
                         timing_exit fio_4G_rw_verify
                     done
                 fi
