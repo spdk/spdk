@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3037f9c_86535843",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-12-18T12:47:25Z",
+      "side": 1,
+      "message": "This still can be overflow as double is 64bit and original return uint64_t is also 64bit. In the case that two 64bit multiply, the result may be overflow.\n\nMy fix is to do the \"/\" calculation first instead of doing \"*\".\n\nI\u0027ve also added an example in my patch.",
+      "range": {
+        "startLine": 270,
+        "startChar": 37,
+        "endLine": 270,
+        "endChar": 86
+      },
+      "revId": "9727be539f16f3bebe9fef1cce6423897a248860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
