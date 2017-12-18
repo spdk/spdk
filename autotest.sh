@@ -71,9 +71,11 @@ timing_enter nvmf_setup
 rdma_device_init
 timing_exit nvmf_setup
 
-timing_enter rbd_setup
-rbd_setup
-timing_exit rbd_setup
+if [ $SPDK_TEST_RBD -eq 1 ]; then
+	timing_enter rbd_setup
+	rbd_setup
+	timing_exit rbd_setup
+fi
 
 #####################
 # Unit Tests
