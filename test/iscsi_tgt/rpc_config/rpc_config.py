@@ -138,9 +138,12 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     check_output('iscsiadm -m discovery -t st -p {}'.format(rpc_param['target_ip']), shell=True)
     check_output('iscsiadm -m node --login', shell=True)
     name = json.loads(rpc.get_target_nodes())[0]['name']
+    output = rpc.get_iscsi_global_params()
+    jsonvalues = json.loads(output)
+    nodebase = jsonvalues['node_base']
     output = rpc.get_scsi_devices()
     jsonvalues = json.loads(output)
-    verify(jsonvalues[0]['device_name'] == rpc_param['target_name'], 1,
+    verify(jsonvalues[0]['device_name'] == nodebase + ":" + rpc_param['target_name'], 1,
            "device name vaule is {}, expected {}".format(jsonvalues[0]['device_name'], rpc_param['target_name']))
     verify(jsonvalues[0]['id'] == 0, 1,
            "device id value is {}, expected 0".format(jsonvalues[0]['id']))
