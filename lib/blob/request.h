@@ -194,4 +194,6 @@ spdk_bs_batch_t *spdk_bs_sequence_to_batch(spdk_bs_sequence_t *seq,
 		spdk_bs_sequence_cpl cb_fn,
 		void *cb_arg);
 
+void spdk_bs_sequence_to_batch_completion(void *cb_arg, int bserrno);
+
 #endif
