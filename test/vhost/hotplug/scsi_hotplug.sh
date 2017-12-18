@@ -11,6 +11,10 @@ function gen_config() {
     cat << END_OF_CONFIG >> $BASE_DIR/vhost.conf.in
 [Split]
   Split Nvme0n1 16
+  Split Nvme1n1 20
+  Split HotInNvme0n1 2
+  Split HotInNvme1n1 2
+  Split HotInNvme2n1 2
 END_OF_CONFIG
 }
 
@@ -34,8 +38,9 @@ function pre_hot_attach_detach_test_case() {
     $rpc_py add_vhost_scsi_lun naa.Nvme0n1p6.3 1 Nvme0n1p13
     $rpc_py add_vhost_scsi_lun naa.Nvme0n1p7.3 0 Nvme0n1p14
     $rpc_py add_vhost_scsi_lun naa.Nvme0n1p7.3 1 Nvme0n1p15
-    vms_setup_and_run "0 1 2 3"
-    vms_prepare "0 1 2 3"
+    vms_setup
+    vm_run_with_arg $used_vms
+    vms_prepare $used_vms
 }
 
 function clear_vhost_config() {
@@ -60,14 +65,24 @@ function clear_vhost_config() {
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 gen_config
 run_vhost
+sleep 10
 rm $BASE_DIR/vhost.conf.in
-pre_hot_attach_detach_test_case
-$BASE_DIR/scsi_hotattach.sh --fio-bin=$fio_bin &
-first_script=$!
-$BASE_DIR/scsi_hotdetach.sh --fio-bin=$fio_bin &
-second_script=$!
-wait $first_script
-wait $second_script
-vm_shutdown_all
-clear_vhost_config
-spdk_vhost_kill
+if [ $scsi_hot_remove_test == 0 ]; then
+    pre_hot_attach_detach_test_case
+    $BASE_DIR/scsi_hotattach.sh --fio-bin=$fio_bin &
+    first_script=$!
+    $BASE_DIR/scsi_hotdetach.sh --fio-bin=$fio_bin &
+    second_script=$!
+    wait $first_script
+    wait $second_script
+    vm_shutdown_all
+    post_hot_attach_detach_test_case
+fi
+vm_arg=""
+for vm in "${vms[@]}"; do
+    vm_arg+="--vm=$vm "
+done
+if [ $scsi_hot_remove_test == 1 ];then
+    $BASE_DIR/scsi_hotremove.sh --fio-bin=$fio_bin $vm_arg --test-type=spdk_vhost_scsi
+fi
+post_test_case
