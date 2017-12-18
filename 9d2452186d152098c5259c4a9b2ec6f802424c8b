@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "888d853d_16d8aab8",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-18T22:59:03Z",
+      "side": 1,
+      "message": "We should be consistent with terms of time.　It looks that you are using second, millisecond, microsecond, nanosecond.\n\nAnother term group is sec, msec, usec, nsec are consise. Difference between usec and us is little and we can ignore it.\n\nThe argument of spdk_reactor_init() is max_delay_us and the above macro is SPDK_REACTOR_SPIN_TIME_US. Both use not micro but u.\n\nOf course, second, millisecond, microsecond, nanosecond are OK but I like sec, msec, usec, nsec.\n\nHow do you think?",
+      "range": {
+        "startLine": 49,
+        "startChar": 8,
+        "endLine": 49,
+        "endChar": 28
+      },
+      "revId": "9d2452186d152098c5259c4a9b2ec6f802424c8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
