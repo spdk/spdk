@@ -31,6 +31,19 @@ callback, the user must call spdk_for_each_channel_continue() to resume iteratio
 The poller abstraction was removed from the bdev layer. There is now a general purpose
 abstraction for pollers available in include/spdk/io_channel.h
 
+### Lib
+
+A set of changes were made in the SPDK's lib code altering,
+instances of calls to `exit()` and `abort()` to return a failure instead
+wherever reasonably possible.  This has resulted in return type changes of
+the API for:
+
+- spdk_env_init() from type `void` to `int`.
+- spdk_mem_map_init() from type `void` to `int`.
+
+Applications making use of these APIs should be modified to check for
+a non-zero return value instead of relying on them to fail without return.
+
 ### NVMe Driver
 
 The logic which support hotplug of vfio-attached devices has been implemented in SPDK, but to

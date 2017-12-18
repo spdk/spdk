@@ -251,7 +251,11 @@ spdk_fio_init_env(struct thread_data *td)
 		opts.mem_size = eo->mem_mb;
 	}
 
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		SPDK_ERRLOG("Unable to initialize SPDK env\n");
+		spdk_conf_free(config);
+		return -1;
+	}
 	spdk_unaffinitize_thread();
 
 	/* Create an SPDK thread temporarily */

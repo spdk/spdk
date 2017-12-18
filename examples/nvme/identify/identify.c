@@ -1284,7 +1284,10 @@ int main(int argc, char **argv)
 	if (g_trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
 		opts.no_pci = true;
 	}
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		fprintf(stderr, "Unable to initialize SPDK env\n");
+		return 1;
+	}
 
 	/* A specific trid is required. */
 	if (strlen(g_trid.traddr) != 0) {

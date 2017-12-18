@@ -449,7 +449,7 @@ spdk_vtophys_put_ref(void)
 #endif
 }
 
-void
+int
 spdk_vtophys_init(void)
 {
 #if SPDK_VFIO_ENABLED
@@ -459,8 +459,9 @@ spdk_vtophys_init(void)
 	g_vtophys_map = spdk_mem_map_alloc(SPDK_VTOPHYS_ERROR, spdk_vtophys_notify, NULL);
 	if (g_vtophys_map == NULL) {
 		DEBUG_PRINT("vtophys map allocation failed\n");
-		abort();
+		return -1;
 	}
+	return 0;
 }
 
 uint64_t

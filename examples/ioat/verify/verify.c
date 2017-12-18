@@ -385,7 +385,10 @@ init(void)
 	spdk_env_opts_init(&opts);
 	opts.name = "verify";
 	opts.core_mask = g_user_config.core_mask;
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		fprintf(stderr, "Unable to initialize SPDK env\n");
+		return 1;
+	}
 
 	if (init_src_buffer() != 0) {
 		fprintf(stderr, "Could not init src buffer\n");

@@ -84,8 +84,8 @@ int spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx, spdk_pci_enum_cb enum_cb, 
 int spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx, spdk_pci_enum_cb enum_cb, void *enum_ctx,
 			   struct spdk_pci_addr *pci_address);
 
-void spdk_mem_map_init(void);
-void spdk_vtophys_init(void);
+int spdk_mem_map_init(void);
+int spdk_vtophys_init(void);
 
 /**
  * Increase the refcount of active DMA-capable devices managed by SPDK.

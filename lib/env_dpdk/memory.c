@@ -498,7 +498,7 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr)
 	return map_2mb->translation_2mb;
 }
 
-void
+int
 spdk_mem_map_init(void)
 {
 	struct rte_mem_config *mcfg;
@@ -507,7 +507,7 @@ spdk_mem_map_init(void)
 	g_mem_reg_map = spdk_mem_map_alloc(0, NULL, NULL);
 	if (g_mem_reg_map == NULL) {
 		DEBUG_PRINT("memory registration map allocation failed\n");
-		abort();
+		return -1;
 	}
 
 	/*
@@ -525,4 +525,5 @@ spdk_mem_map_init(void)
 
 		spdk_mem_register(seg->addr, seg->len);
 	}
+	return 0;
 }
