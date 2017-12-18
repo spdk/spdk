@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "27f2594d_fec4a182",
+        "filename": "test/vhost/integrity/integrity_start.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T11:45:44Z",
+      "side": 1,
+      "message": "Version with re-using the RPC output:\nhttps://review.gerrithub.io/#/c/390983/9/scripts/autotest_common.sh",
+      "parentUuid": "aaf39c83_decde87e",
+      "range": {
+        "startLine": 92,
+        "startChar": 44,
+        "endLine": 92,
+        "endChar": 108
+      },
+      "revId": "cd03eb73a534093c2a52ed1d50c1d9718ac74073",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "41bc4eb6_50330129",
         "filename": "test/vhost/integrity/integrity_start.sh",
         "patchSetId": 9
