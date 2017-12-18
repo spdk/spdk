@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e75b8faa_56392c55",
+        "filename": "test/lib/bdev/nbd/nbd_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-18T10:06:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "712e61b1_4f91456b",
+      "revId": "88e71e6931b8e4279fcf391fbed39859b22ce614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "baf3118f_98b90fa5",
         "filename": "test/lib/bdev/nbd/nbd_common.sh",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2017-12-18T08:10:13Z",
       "side": 1,
       "message": "I think here, write+verify tests is good, can we make more simple, just verify the data after write, so seems we don\u0027t need to stop it first and then start it again for verify test.",
+      "revId": "88e71e6931b8e4279fcf391fbed39859b22ce614",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f49de471_79887cc5",
+        "filename": "test/lib/bdev/nbd/nbd_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-18T10:06:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "baf3118f_98b90fa5",
       "revId": "88e71e6931b8e4279fcf391fbed39859b22ce614",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
