@@ -16,6 +16,24 @@
       "revId": "4b1c723fb5954d80dc87398e72b3258441b158c2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2f6eb0f_d9686302",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-18T20:05:30Z",
+      "side": 1,
+      "message": "Agreed.\n\nSince you\u0027re changing it anyway, you could also get the value of spdk_get_ticks_hz() once in a variable, rather than calling the function twice (it shouldn\u0027t be very expensive, but it would be good to avoid the call overhead if possible).",
+      "parentUuid": "48a588c8_b29e93ed",
+      "revId": "4b1c723fb5954d80dc87398e72b3258441b158c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
