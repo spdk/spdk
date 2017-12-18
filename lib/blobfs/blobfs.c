@@ -299,7 +299,7 @@ _spdk_fs_channel_create(struct spdk_filesystem *fs, struct spdk_fs_channel *chan
 {
 	uint32_t i;
 
-	channel->req_mem = calloc(max_ops, sizeof(struct spdk_fs_request));
+	channel->req_mem = spdk_dma_zmalloc(max_ops * sizeof(struct spdk_fs_request), 0, NULL);
 	if (!channel->req_mem) {
 		return -1;
 	}
@@ -354,7 +354,7 @@ _spdk_fs_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_fs_channel *channel = ctx_buf;
 
-	free(channel->req_mem);
+	spdk_dma_free(channel->req_mem);
 	if (channel->bs_channel != NULL) {
 		spdk_bs_free_io_channel(channel->bs_channel);
 	}
