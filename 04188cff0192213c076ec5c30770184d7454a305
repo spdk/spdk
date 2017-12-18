@@ -66,6 +66,30 @@
     },
     {
       "key": {
+        "uuid": "09750cfc_6bc3548c",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-18T15:03:26Z",
+      "side": 1,
+      "message": "I have removed this condition in a new patch. It\u0027s NULL only when mask is NULL (checked before) and *end !\u003d \u0027\\0\u0027 is checked later in this code. I\u0027ve also completed unit tests to cover this case.",
+      "parentUuid": "bf9713f6_74622c50",
+      "range": {
+        "startLine": 113,
+        "startChar": 15,
+        "endLine": 113,
+        "endChar": 27
+      },
+      "revId": "04188cff0192213c076ec5c30770184d7454a305",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a11a0001_4ec016e7",
         "filename": "lib/util/cpuset.c",
         "patchSetId": 6
