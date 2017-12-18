@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b195e09_e6077266",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-18T14:39:45Z",
+      "side": 1,
+      "message": "Isn\u0027t this sourced already in common.sh?",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 44
+      },
+      "revId": "5c3c18e60b13c619b5612f389e66688d9888715e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ce0891b_c3bd933f",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-18T14:39:45Z",
+      "side": 1,
+      "message": "Some bracets might be removed like \n$(( free_mb / ( vm_count + 1 ) ))\n\nAlso using spaces around variables would be more readable.",
+      "range": {
+        "startLine": 147,
+        "startChar": 13,
+        "endLine": 147,
+        "endChar": 40
+      },
+      "revId": "5c3c18e60b13c619b5612f389e66688d9888715e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34c5c9ec_b0350d3a",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-18T14:39:45Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 159,
+        "startChar": 21,
+        "endLine": 159,
+        "endChar": 49
+      },
+      "revId": "5c3c18e60b13c619b5612f389e66688d9888715e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c602df4a_96304b92",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-18T14:39:45Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 169,
+        "startChar": 13,
+        "endLine": 169,
+        "endChar": 40
+      },
+      "revId": "5c3c18e60b13c619b5612f389e66688d9888715e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bc4b756_50b9f815",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-18T14:39:45Z",
+      "side": 1,
+      "message": "Can wrap this into \" \"?",
+      "range": {
+        "startLine": 175,
+        "startChar": 10,
+        "endLine": 175,
+        "endChar": 30
+      },
+      "revId": "5c3c18e60b13c619b5612f389e66688d9888715e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a4d23e2_0d4ea9a3",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-18T14:39:45Z",
+      "side": 1,
+      "message": "you can embedd $vm into jq query.",
+      "range": {
+        "startLine": 183,
+        "startChar": 18,
+        "endLine": 183,
+        "endChar": 32
+      },
+      "revId": "5c3c18e60b13c619b5612f389e66688d9888715e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
