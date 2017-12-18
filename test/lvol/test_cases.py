@@ -700,6 +700,10 @@ class TestCases(object):
             uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
                                                    self.lbd_name + str(i),
                                                    size)
+            self.c.delete_bdev(uuid_bdev)
+            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                                   self.lbd_name + str(i),
+                                                   size)
             uuid_bdevs.append(uuid_bdev)
             fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
 
@@ -748,6 +752,10 @@ class TestCases(object):
             uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
                                                    self.lbd_name + str(i),
                                                    size)
+            self.c.delete_bdev(uuid_bdev)
+            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                                   self.lbd_name + str(i),
+                                                   size)
             uuid_bdevs.append(uuid_bdev)
             fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
 
@@ -762,6 +770,7 @@ class TestCases(object):
         uuid_store = self.c.construct_lvol_store(base_name,
                                                  self.lvs_name,
                                                  self.cluster_size)
+
         fail_count += self.c.check_get_lvol_stores(base_name,
                                                    uuid_store,
                                                    self.cluster_size)
