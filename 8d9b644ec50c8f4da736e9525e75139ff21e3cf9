@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e9cfe6f_00cbab35",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-18T07:51:54Z",
+      "side": 1,
+      "message": "Please add a note at bottom of commit message, that this patch relates only to unregistered bdev. Changing size of bdev at runtime, will come in future patch.",
+      "range": {
+        "startLine": 904,
+        "startChar": 5,
+        "endLine": 904,
+        "endChar": 43
+      },
+      "revId": "8d9b644ec50c8f4da736e9525e75139ff21e3cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e65fce9_0378d291",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-18T07:51:54Z",
+      "side": 1,
+      "message": "Please free(bdev) here as well.",
+      "range": {
+        "startLine": 673,
+        "startChar": 2,
+        "endLine": 673,
+        "endChar": 14
+      },
+      "revId": "8d9b644ec50c8f4da736e9525e75139ff21e3cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97495730_46a4b7fe",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-18T07:51:54Z",
+      "side": 1,
+      "message": "You\u0027ve moved lines here above to avoid freeing bdev-\u003ename in case of error, right ? Please remove those here.",
+      "range": {
+        "startLine": 683,
+        "startChar": 0,
+        "endLine": 686,
+        "endChar": 46
+      },
+      "revId": "8d9b644ec50c8f4da736e9525e75139ff21e3cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
