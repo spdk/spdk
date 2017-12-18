@@ -127,4 +127,5 @@ trap - SIGINT SIGTERM EXIT
 
 rm -f $ROCKSDB_CONF
 
+report_test_completion "blobfs"
 timing_exit rocksdb
