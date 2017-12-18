@@ -364,7 +364,11 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	env_opts.mem_size = opts->mem_size;
 	env_opts.no_pci = opts->no_pci;
 
-	spdk_env_init(&env_opts);
+	if (spdk_env_init(&env_opts) < 0) {
+		SPDK_ERRLOG("Unable to initialize SPDK env\n");
+		spdk_conf_free(g_spdk_app.config);
+		exit(EXIT_FAILURE);
+	}
 
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 

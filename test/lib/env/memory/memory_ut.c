@@ -240,7 +240,9 @@ main(int argc, char **argv)
 	g_page_array = spdk_bit_array_create(PAGE_ARRAY_SIZE);
 
 	/* Initialize the memory map */
-	spdk_mem_map_init();
+	if (spdk_mem_map_init() < 0) {
+		return CUE_NOMEMORY;
+	}
 
 	if (CU_initialize_registry() != CUE_SUCCESS) {
 		return CU_get_error();

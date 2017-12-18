@@ -1094,7 +1094,9 @@ main(int argc, char **argv)
 	opts.name = "arb";
 	opts.core_mask = g_arbitration.core_mask;
 	opts.shm_id = g_arbitration.shm_id;
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		return 1;
+	}
 
 	g_arbitration.tsc_rate = spdk_get_ticks_hz();
 

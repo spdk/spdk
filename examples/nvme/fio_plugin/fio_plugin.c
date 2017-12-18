@@ -243,7 +243,14 @@ static int spdk_fio_setup(struct thread_data *td)
 		opts.name = "fio";
 		opts.mem_size = fio_options->mem_size;
 		opts.shm_id = fio_options->shm_id;
-		spdk_env_init(&opts);
+		if (spdk_env_init(&opts) < 0) {
+			SPDK_ERRLOG("Unable to initialize SPDK env\n");
+			free(fio_thread->iocq);
+			free(fio_thread);
+			fio_thread = NULL;
+			pthread_mutex_unlock(&mutex);
+			return 1;
+		}
 		spdk_env_initialized = true;
 		spdk_unaffinitize_thread();
 	}

@@ -497,7 +497,10 @@ int main(int argc, char **argv)
 	opts.name = "nvme_sgl";
 	opts.core_mask = "0x1";
 	opts.shm_id = 0;
-	spdk_env_init(&opts);
+	if (spdk_env_init(&opts) < 0) {
+		fprintf(stderr, "Unable to initialize SPDK env\n");
+		return 1;
+	}
 
 	printf("NVMe Readv/Writev Request test\n");
 
