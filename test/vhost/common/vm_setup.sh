@@ -70,8 +70,7 @@ done
 [[ -z "$os" ]] && os="$TEST_DIR/debian.qcow2"
 [[ $test_type =~ "spdk_vhost" ]] && [[ -z "$disk" ]] && disk="$SPDK_VHOST_SCSI_TEST_DIR/usvhost"
 if [[ $test_type == "kernel_vhost" ]] && [[ -z "$disk" ]]; then
-	echo "ERROR: for $test_type '--disk=WWN' is mandatory"
-	exit 1
+	fail "for $test_type '--disk=WWN' is mandatory"
 fi
 
 vm_setup \

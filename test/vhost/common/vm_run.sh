@@ -36,14 +36,13 @@ done
 . $COMMON_DIR/common.sh
 
 if [[ $EUID -ne 0 ]]; then
-	echo "Go away user come back as root"
-	exit 1
+	fail "Go away user come back as root"
 fi
 
 if $run_all; then
 	vm_run -a
 else
 	shift $((OPTIND-1))
-	echo "INFO: running VMs: $@"
+	notice "running VMs: $@"
 	vm_run "$@"
 fi
