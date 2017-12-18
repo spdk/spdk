@@ -14,8 +14,7 @@ function get_first_disk() {
 
 function check_disks() {
     if [ "$1" == "$2" ]; then
-        echo "Disk has not been deleted"
-        exit 1
+        fail "Disk has not been deleted"
     fi
 }
 
@@ -137,7 +136,7 @@ function prepare_fio_cmd_tc3_iter1() {
 # During fio test for all devices remove first device from fifth controller and check if fio fails.
 # Also check if disc has been removed from VM.
 function hotdetach_tc1() {
-    echo "Hotdetach test case 1"
+    notice "Hotdetach test case 1"
     first_disk=""
     get_first_disk "2" first_disk
     prepare_fio_cmd_tc1_iter1 "2 3"
@@ -157,7 +156,7 @@ function hotdetach_tc1() {
 # During fio test for device from third VM remove first device from fifth controller and check if fio fails.
 # Also check if disc has been removed from VM.
 function hotdetach_tc2() {
-    echo "Hotdetach test case 2"
+    notice "Hotdetach test case 2"
     $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
     sleep 2
     first_disk=""
@@ -179,7 +178,7 @@ function hotdetach_tc2() {
 # Run fio test for all devices except one, then remove this device and check if fio passes.
 # Also check if disc has been removed from VM.
 function hotdetach_tc3() {
-    echo "Hotdetach test case 3"
+    notice "Hotdetach test case 3"
     $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
     sleep 2
     first_disk=""
@@ -201,7 +200,7 @@ function hotdetach_tc3() {
 # Also check if disc has been removed from VM.
 # After reboot run fio test for remaining devices and check if fio passes.
 function hotdetach_tc4() {
-    echo "Hotdetach test case 4"
+    notice "Hotdetach test case 4"
     $SPDK_BUILD_DIR/scripts/rpc.py add_vhost_scsi_lun naa.Nvme0n1p4.2 0 Nvme0n1p8
     sleep 2
     first_disk=""
