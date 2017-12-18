@@ -1,8 +1,3 @@
-#!/usr/bin/env bash
-set -e
-BASE_DIR=$(readlink -f $(dirname $0))
-[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
-
 dry_run=false
 no_shutdown=false
 fio_bin="fio"
@@ -13,6 +8,7 @@ vms=()
 used_vms=""
 disk_split=""
 x=""
+scsi_hot_remove_test=0
 
 
 function usage() {
@@ -34,6 +30,7 @@ function usage() {
     echo "                          NUM - VM number (mandatory)"
     echo "                          OS - VM os disk path (optional)"
     echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
+    echo "    --scsi-hotremove-test Run scsi hotremove tests"
     exit 0
 }
 
@@ -47,6 +44,7 @@ while getopts 'xh-:' optchar; do
             fio-jobs=*) fio_jobs="${OPTARG#*=}" ;;
             test-type=*) test_type="${OPTARG#*=}" ;;
             vm=*) vms+=("${OPTARG#*=}") ;;
+            scsi-hotremove-test) scsi_hot_remove_test=1 ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -108,11 +106,9 @@ function vms_setup() {
     done
 }
 
-function vms_setup_and_run() {
-    vms_setup
-    # Run everything
-    vm_run $used_vms
-    vm_wait_for_boot 600 $used_vms
+function vm_run_with_arg() {
+    vm_run $@
+    vm_wait_for_boot 300 $@
 }
 
 function vms_prepare() {
@@ -163,6 +159,52 @@ function check_fio_retcode() {
 }
 
 function reboot_all_and_prepare() {
-    vms_reboot_all $1
-    vms_prepare $1
+    vms_reboot_all "$1"
+    vms_prepare "$1"
+}
+
+function post_test_case() {
+    vm_shutdown_all
+    spdk_vhost_kill
+}
+
+function on_error_exit() {
+    set +e
+    echo "Error on $1 - $2"
+    post_test_case
+    local traddr=""
+    get_traddr "Nvme0" traddr
+    bind_nvme "$traddr"
+    print_backtrace
+    exit 1
+}
+
+function check_disks() {
+    if [ "$1" == "$2" ]; then
+        echo "Disk has not been deleted"
+        exit 1
+    fi
+}
+
+function get_traddr() {
+    local nvme_name=$1
+    local nvme="$( $SPDK_BUILD_DIR/scripts/gen_nvme.sh )"
+    while read -r line; do
+        if [[ $line == *"TransportID"* ]] && [[ $line == *$nvme_name* ]]; then
+            local word_array=($line)
+            for word in "${word_array[@]}"; do
+                if [[ $word == *"traddr"* ]]; then
+                    traddr=$( echo $word | sed 's/traddr://' | sed 's/"//' )
+                fi
+            done
+        fi
+    done <<< "$nvme"
+}
+
+function unbind_nvme() {
+    $rpc_py delete_bdev $1
+}
+
+function bind_nvme() {
+    $rpc_py construct_nvme_bdev -b $1 -t PCIe -a $2
 }
