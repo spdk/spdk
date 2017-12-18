@@ -88,4 +88,5 @@ trap - SIGINT SIGTERM EXIT
 iscsicleanup
 
 $rpc_py -s $rpc_second_addr kill_instance SIGTERM
+report_test_completion "nightly_iscsi_ip_migration"
 timing_exit ip_migration

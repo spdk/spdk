@@ -94,6 +94,7 @@ timing_exit create_bdev_config
 timing_enter run_spdk_fio
 run_spdk_fio $BASE_DIR/bdev.fio --filename=$virtio_bdevs --section=job_randwrite --section=job_randrw \
 	--section=job_write --section=job_rw --spdk_conf=$BASE_DIR/bdev.conf
+report_test_completion "vhost_run_spdk_fio"
 timing_exit run_spdk_fio
 
 timing_enter run_spdk_fio_unmap
@@ -146,6 +147,7 @@ vm_shutdown_all
 timing_exit vm_shutdown_all
 
 rm -f *.state
+
 timing_enter spdk_vhost_kill
 spdk_vhost_kill
 timing_exit spdk_vhost_kill

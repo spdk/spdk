@@ -23,7 +23,9 @@ if [ `uname` = Linux ]; then
 	$rootdir/examples/ioat/kperf/ioat_kperf -n 4 -q 4 -s 12 -t 32
 	rmmod dmaperf.ko
 	$rootdir/scripts/setup.sh
+	report_test_completion "ioat_kperf"
 	timing_exit kperf
 fi
 
+report_test_completion "ioat"
 timing_exit ioat

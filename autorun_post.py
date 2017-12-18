@@ -63,9 +63,69 @@ def prepDocumentation(output_dir, repo_dir):
     shutil.move(docDir, os.path.join(output_dir, 'doc'))
 
 
+def aggregateCompletedTests(output_dir, repo_dir):
+    test_list = {}
+    test_with_asan = {}
+    test_with_ubsan = {}
+    asan_enabled = False
+    ubsan_enabled = False
+    test_unit_with_valgrind = False
+    testFilePath = os.path.join(output_dir, '**', 'all_tests.txt')
+    completionFilePath = os.path.join(output_dir, '**', 'test_completions.txt')
+    testFiles = glob.glob(testFilePath, recursive=True)
+    completionFiles = glob.glob(completionFilePath, recursive=True)
+
+    if len(testFiles) == 0:
+        print("Unable to perform test completion aggregator. No input files.")
+        return 0
+    for item in testFiles:
+        with open(item, 'r') as raw_test_list:
+            for line in raw_test_list:
+                test_list[line.strip()] = (False, False, False)
+    for item in completionFiles:
+        with open(item, 'r') as completion_list:
+            completions = completion_list.read()
+
+            if "ASAN" not in completions:
+                asan_enabled = False
+            else:
+                asan_enabled = True
+
+            if "UBSAN" not in completions:
+                ubsan_enabled = False
+            else:
+                ubsan_enabled = True
+
+            if "VALGRIND" in completions and "UNITTEST" in completions:
+                test_unit_with_valgrind = True
+            for line in completions.split('\n'):
+                try:
+                    test_list[line.strip()] = (True, asan_enabled | test_list[line.strip()][1], ubsan_enabled | test_list[line.strip()][1])
+                except KeyError:
+                    continue
+
+    print("\n\n-----Tests Missing From Build------")
+    if not test_unit_with_valgrind:
+        print("UNITTEST_WITH_VALGRIND\n")
+    for item in sorted(test_list):
+        if test_list[item][0] is False:
+            print(item)
+
+    print("\n\n-----Tests Missing ASAN------")
+    for item in sorted(test_list):
+        if test_list[item][1] is False:
+            print(item)
+
+    print("\n\n-----Tests Missing UBSAN------")
+    for item in sorted(test_list):
+        if test_list[item][2] is False:
+            print(item)
+
+
 def main(output_dir, repo_dir):
     generateCoverageReport(output_dir, repo_dir)
     prepDocumentation(output_dir, repo_dir)
+    aggregateCompletedTests(output_dir, repo_dir)
 
 
 if __name__ == "__main__":
