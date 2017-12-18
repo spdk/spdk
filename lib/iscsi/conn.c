@@ -1612,18 +1612,11 @@ spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 		} else {
 			state = rte_eal_get_lcore_state(i);
 		}
-		if (state == FINISHED) {
-			rte_eal_wait_lcore(i);
-		}
 
 		switch (state) {
 		case WAIT:
 		case FINISHED:
-			/* Idle cores have 0 pollers. */
-			if (0 < min_pollers) {
-				selected_core = i;
-				min_pollers = 0;
-			}
+			/* reactor does not run on the lcore */
 			break;
 		case RUNNING:
 			/* This lcore is running. Check how many pollers it already has. */
