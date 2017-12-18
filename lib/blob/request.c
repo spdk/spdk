@@ -434,4 +434,12 @@ spdk_bs_sequence_to_batch(spdk_bs_sequence_t *seq, spdk_bs_sequence_cpl cb_fn, v
 	return set;
 }
 
+void
+spdk_bs_sequence_to_batch_completion(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_request_set *set = (struct spdk_bs_request_set *)cb_arg;
+
+	set->cb_args.cb_fn(set->cb_args.channel, set->cb_args.cb_arg, bserrno);
+}
+
 SPDK_LOG_REGISTER_COMPONENT("blob_rw", SPDK_LOG_BLOB_RW)
