@@ -620,3 +620,158 @@ Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
 - no other operation fails
+
+### snapshot and clone
+
+#### TEST CASE 800 - Name: snapshot_readonly
+- run vhost app with malloc bdev
+- construct lvol store on malloc bdev with size 64M
+- construct lvol bdev
+- create snapshot of created lvol bdev
+- check if created snapshot has status as readonly
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 801 - Name: snapshot_compare_with_lvol_bdev
+- run vhost app with malloc bdev
+- construct lvol store on malloc bdev with size 64M
+- construct thin provisioned lvol bdev
+- fill lvol bdev with 50% of space
+- create snapshot of created lvol bdev
+- install lvol bdev and snapshot in kernel using rpc start_nbd_disk
+- check using cmp programm if data on both lvol bdevs are the same
+- uninstall lvol bdev and snapshot from kernel using rpc stop_nbd_disk
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 802 - Name: snapshot_check_write
+- run vhost app with malloc bdev
+- construct lvol store on malloc bdev with size 64M
+- construct thin provisioned lvol bdev
+- install lvol bdev in kernel using rpc start_nbd_disk
+- fill lvol bdev with 50% of space using fio write
+- create snapshot of created lvol bdev
+- save some clusters of snapshot
+- fill lvol bdev again with 50% of space using fio write
+- compare save snapshot clusters with existing snapshot clusters
+  and check that data are the same
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 803 - Name: snapshot_during_io_traffic
+- run vhost app with malloc bdev
+- construct lvol store on malloc bdev with size 64M
+- construct thin provisioned lvol bdev
+- install lvol bdev in kernel using rpc start_nbd_disk
+- perform write to created lvol bdev with fio
+- during write operation create snapshot of created lvol bdev
+- check that snapshot has been created successfully
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 804 - Name: snapshot_removal
+- run vhost app with malloc bdev
+- construct lvol store on malloc bdev with size 64M
+- construct thin provisioned lvol bdev
+- install lvol bdev in kernel using rpc start_nbd_disk
+- fill lvol bdev with 50% of space using fio write
+- create snapshot of created lvol bdev
+- try to remove snapshot
+- check if operation ends with success
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 805 - Name: snapshot_of_snapshot
+- run vhost app with malloc bdev
+- construct lvol store on malloc bdev with size 64M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- create snapshot of previously created snapshot
+- check if operation fails
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 806 - Name: clone_bdev_only
+- run vhost app with malloc bdev
+- construct lvol store on malloc bdev with size 64M
+- construct thin provisioned lvol bdev
+- create clone of created lvol bdev
+- check if operation fails
+- create snapshot of lvol bdev
+- check that snapshot is readonly
+- create clone of snapshot
+- check if operation ends with success
+- check if clone is not readonly
+- check that clone is thin provisioned
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 807 - Name: clone_on_the_same_lvs
+- run vhost app with malloc bdev
+- construct lvol store on malloc bdev with size 64M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- create clone of snapshot on the same lvs
+  where snaphot was created
+- check if operation succeeded
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 808 - Name: clone_on_different_lvs
+- run vhost app with malloc bdev
+- construct lvol store on malloc bdev with size 64M
+- construct thin provisioned lvol bdev
+- create snapshot of created lvol bdev
+- create clone of created snapshot on different lvs
+- check if operation ends with success
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 810 - Name: clone_and_remove_snapshot
+- run vhost app with malloc bdev
+- construct lvol store on malloc bdev with size 64M
+- construct thin provisioned lvol bdev
+- fill lvol bdev with 50% of space
+- create snapshot of created lvol bdev
+- create clone of created snapshot
+- remove snapshot
+- perform write on clone and check if it fails
+- destroy lvol store
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
