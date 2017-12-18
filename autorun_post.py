@@ -61,10 +61,59 @@ def prepDocumentation(output_dir, repo_dir):
     print("docDir: ", docDir)
     shutil.move(docDir, os.path.join(output_dir, 'doc'))
 
+def aggregateCompletedTests(output_dir, repo_dir):
+    test_list = {}
+    test_with_asan = {}
+    test_with_ubsan = {}
+    asan_enabled = False
+    ubsan_enabled = False
+    test_unit_with_valgrind = False
+    testFilePath = os.path.join(output_dir, '**', 'all_tests.txt')
+    completionFilePath = os.path.join(output_dir, '**', 'test_completions.txt')
+    testFiles = glob.glob(testFilePath, recursive=True)
+    completionFiles = glob.glob(completionFilePath, recursive=True)
+
+    for item in testFiles:
+        with open(item, 'r') as raw_test_list:
+            for line in raw_test_list:
+                test_list[line.strip()] = (False, False, False)
+    for item in completionFiles:
+        with open(item, 'r') as completion_list:
+            completions = completion_list.read()
+            print(completions)
+            if "ASAN" not in completions:
+                asan_enabled = False
+            if "UBSAN" not in completions:
+                ubsan_enabled = False
+            if "VALGRIND" in completions and "UNITTEST" in completions:
+                test_unit_with_valgrind = True
+            for line in completions.split('\n'):
+                try:
+                    test_list[line.strip()] = (True, asan_enabled | test_list[line.strip()][1], ubsan_enabled | test_list[line.strip()][1])
+                except KeyError:
+                    continue
+
+    with open(os.path.join(output_dir, "tests_missing.txt"), 'w+') as missing_test_file:
+        if not test_unit_with_valgrind:
+            missing_test_file.write("UNITTEST_WITH_ASAN\n")
+        for item in test_list:
+            if test_list[item][0] == False:
+                missing_test_file.write(item + '\n')
+
+    with open(os.path.join(output_dir, "tests_without_asan.txt"), 'w+') as missing_asan_file:
+        for item in test_list:
+            if test_list[item][1] == False:
+                missing_asan_file.write(item + '\n')
+
+    with open(os.path.join(output_dir, "tests_without_ubsan.txt"), 'w+') as missing_ubsan_file:
+        for item in test_list:
+            if test_list[item][2] == False:
+                missing_ubsan_file.write(item + '\n')
 
 def main(output_dir, repo_dir):
     generateCoverageReport(output_dir, repo_dir)
     prepDocumentation(output_dir, repo_dir)
+    aggregateCompletedTests(output_dir, repo_dir)
 
 
 if __name__ == "__main__":
