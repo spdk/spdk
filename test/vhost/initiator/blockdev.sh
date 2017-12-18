@@ -130,7 +130,7 @@ for bdev in $bdevs; do
                 if [ $bdev == "Nvme0n1" ]; then
                     for rw in "${fio_rw[@]}"; do
                         timing_enter fio_4G_rw_verify
-                        echo "INFO: Running 4G test $rw for disk $bdev"
+                        notice " Running 4G test $rw for disk $bdev"
                         cp $testdir/../common/fio_jobs/default_initiator.job $testdir/bdev.fio
                         prepare_fio_job_4G "$rw" "$bdevs"
                         run_spdk_fio --spdk_conf=$testdir/bdev.conf

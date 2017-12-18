@@ -45,20 +45,19 @@ while getopts 'xh-:' optchar; do
 	esac
 done
 
-if [[ $EUID -ne 0 ]]; then
-	echo "INFO: Go away user come back as root"
-	exit 1
-fi
-
 . $COMMON_DIR/common.sh
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 
+if [[ $EUID -ne 0 ]]; then
+	fail "Go away user come back as root"
+fi
+
 function print_tc_name()
 {
-	echo ""
-	echo "==============================================================="
-	echo "Now running: $1"
-	echo "==============================================================="
+	notice ""
+	notice "==============================================================="
+	notice "Now running: $1"
+	notice "==============================================================="
 }
 
 function blk_ro_tc1()
@@ -72,19 +71,19 @@ function blk_ro_tc1()
 	if [[ $disk =~ .*malloc.* ]]; then
 		disk_name=$($rpc_py construct_malloc_bdev 512 4096)
 		if [ $? != 0 ]; then
-			error "Failed to create malloc bdev"
+			fail "Failed to create malloc bdev"
 		fi
 
 		disk=$disk_name"_size_512M"
 	else
 		disk_name=${disk%%_*}
 		if ! $rpc_py get_bdevs | jq -r '.[] .name' | grep -qi $disk_name$; then
-			error "$disk_name bdev not found!"
+			fail "$disk_name bdev not found!"
 		fi
 	fi
 
 #Create controller and create file on disk for later test
-	echo "INFO: Creating vhost_blk controller"
+	notice "Creating vhost_blk controller"
 	vhost_blk_name="naa.$disk_name.$vm_no"
 	$rpc_py construct_vhost_blk_controller $vhost_blk_name $disk_name
 	setup_cmd="$COMMON_DIR/vm_setup.sh $x --work-dir=$TEST_DIR --test-type=spdk_vhost_blk"
@@ -95,19 +94,19 @@ function blk_ro_tc1()
 
 	$COMMON_DIR/vm_run.sh $x --work-dir=$TEST_DIR $vm_no
 	vm_wait_for_boot 600 $vm_no
-	echo "INFO: Prepearing partition and file on guest VM"
+	notice "Prepearing partition and file on guest VM"
 	vm_ssh $vm_no "bash -s" < $BASE_DIR/disabled_readonly_vm.sh
 	sleep 1
 
 	vm_shutdown_all
 #Create readonly controller and test readonly featchure
-	echo "INFO: Removing controller and creating new one with readonly flag"
+	notice "Removing controller and creating new one with readonly flag"
 	$rpc_py remove_vhost_controller $vhost_blk_name
 	$rpc_py construct_vhost_blk_controller -r $vhost_blk_name $disk_name
 
 	$COMMON_DIR/vm_run.sh $x --work-dir=$TEST_DIR $vm_no
 	vm_wait_for_boot 600 $vm_no
-	echo "INFO: Testing readonly feature on guest VM"
+	notice "Testing readonly feature on guest VM"
 	vm_ssh $vm_no "bash -s" < $BASE_DIR/enabled_readonly_vm.sh
 	sleep 1
 
@@ -119,7 +118,7 @@ function blk_ro_tc1()
 
 	$COMMON_DIR/vm_run.sh $x --work-dir=$TEST_DIR $vm_no
 	vm_wait_for_boot 600 $vm_no
-	echo "INFO: removing partition and file from test disk on guest VM"
+	notice "removing partition and file from test disk on guest VM"
 	vm_ssh $vm_no "bash -s" < $BASE_DIR/delete_partition_vm.sh
 	sleep 1
 
