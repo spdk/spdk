@@ -3,6 +3,11 @@ set -e
 BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../../../ && pwd)"
 
+current_driver="vfio"
+if $BASE_DIR/../../../scripts/setup.sh status | grep uio; then
+    current_driver="uio"
+fi
+
 dry_run=false
 no_shutdown=false
 fio_bin="fio"
@@ -14,6 +19,7 @@ vms=()
 used_vms=""
 disk_split=""
 x=""
+scsi_hot_remove_test=0
 
 
 function usage() {
@@ -37,6 +43,7 @@ function usage() {
     echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
     echo "                          If test-type=spdk_vhost_blk then each disk can have additional size parameter, e.g."
     echo "                          --vm=X,os.qcow,DISK_size_35G; unit can be M or G; default - 20G"
+    echo "    --scsi-hotremove-test Run scsi hotremove tests"
     exit 0
 }
 
@@ -50,6 +57,7 @@ while getopts 'xh-:' optchar; do
             fio-jobs=*) fio_jobs="${OPTARG#*=}" ;;
             test-type=*) test_type="${OPTARG#*=}" ;;
             vm=*) vms+=("${OPTARG#*=}") ;;
+            scsi-hotremove-test) scsi_hot_remove_test=1 ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -114,11 +122,23 @@ function vms_setup() {
     done
 }
 
+function vm_run_with_arg() {
+    $BASE_DIR/../common/vm_run.sh $x --work-dir=$TEST_DIR $1
+    vm_wait_for_boot 600 $1
+}
+
 function vms_setup_and_run() {
     vms_setup
     # Run everything
     $BASE_DIR/../common/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
     vm_wait_for_boot 600 $used_vms
+}
+
+function vms_setup_and_run_with_arg() {
+    vms_setup
+    # Run everything
+    $BASE_DIR/../common/vm_run.sh $x --work-dir=$TEST_DIR $1
+    vm_wait_for_boot 600 $1
 }
 
 function vms_prepare() {
@@ -176,12 +196,84 @@ function reboot_all_and_prepare() {
 function post_test_case() {
     vm_shutdown_all
     spdk_vhost_kill
+    if [ $scsi_hot_remove_test == 1 ]; then
+        if [ $current_driver == "uio" ]; then
+            switch_to_uio
+        else
+            switch_to_vfio
+        fi
+    fi
 }
 
 function on_error_exit() {
     set +e
     echo "Error on $1 - $2"
     post_test_case
+    local traddr=""
+    get_traddr "Nvme0" traddr
+    bind_nvme "$traddr"
     print_backtrace
     exit 1
+}
+
+function get_disks() {
+    vm_check_scsi_location $1
+    eval $2='"$SCSI_DISK"'
+}
+
+function check_disks() {
+    if [ "$1" == "$2" ]; then
+        echo "Disk has not been deleted"
+        exit 1
+    fi
+}
+
+function get_traddr() {
+    local nvme_name=$1
+    local nvme="$( $BASE_DIR/../../../scripts/gen_nvme.sh )"
+    while read -r line; do
+        if [[ $line == *"TransportID"* ]] && [[ $line == *$nvme_name* ]]; then
+            word_array=($line)
+            for word in "${word_array[@]}"; do
+                if [[ $word == *"traddr"* ]]; then
+                    traddr=$( echo $word | sed 's/traddr://' | sed 's/"//' )
+                    eval $2=$traddr
+                fi
+            done
+        fi
+    done <<< "$nvme"
+}
+
+function unbind_nvme() {
+    echo "$1" > "/sys/bus/pci/devices/$1/driver/unbind"
+}
+
+function bind_nvme() {
+    echo "$1" > "/sys/bus/pci/drivers/uio_pci_generic/bind"
+}
+
+function switch_to_uio() {
+    if $BASE_DIR/../../../scripts/setup.sh status | grep uio; then
+        return 0
+    fi
+    $BASE_DIR/../../../scripts/setup.sh reset
+    sed -i "s/vfio-pci/uio_pci_generic/g" $BASE_DIR/../../../scripts/setup.sh
+    rmmod vfio_iommu_type1 || true
+    rmmod vfio_pci || true
+    rmmod vfio_virqfd || true
+    rmmod vfio || true
+    HUGEMEM=16 $BASE_DIR/../../../scripts/setup.sh
+}
+
+function switch_to_vfio() {
+    if $BASE_DIR/../../../scripts/setup.sh status | grep vfio; then
+        return 0
+    fi
+    $BASE_DIR/../../../scripts/setup.sh reset
+    sed -i "s/uio_pci_generic/vfio-pci/g" $BASE_DIR/../../../scripts/setup.sh
+    modprobe vfio || true
+    modprobe vfio_pci || true
+    modprobe vfio_virqfd || true
+    modprobe vfio_iommu_type1 || true
+    HUGEMEM=16 $BASE_DIR/../../../scripts/setup.sh
 }
