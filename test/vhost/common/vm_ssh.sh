@@ -48,10 +48,9 @@ fi
 if $boot_wait; then
 	while ! vm_os_booted $vm_num; do
 		if ! vm_is_running $vm_num; then
-			echo "ERROR: VM$vm_num is not running"
-				exit 1
+			fail "VM$vm_num is not running"
 		fi
-		echo "INFO: waiting for VM$vm_num to boot"
+		notice "waiting for VM$vm_num to boot"
 		sleep 1
 	done
 fi

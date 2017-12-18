@@ -83,7 +83,7 @@ vm_kill_all
 if [[ $test_type =~ "spdk_vhost" ]]; then
 	echo "==============="
 	echo ""
-	echo "INFO: running SPDK"
+	notice "running SPDK"
 	echo ""
 	$COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
 	echo
@@ -119,84 +119,84 @@ for vm_conf in ${vms[@]}; do
 
 	if [[ $test_type =~ "spdk_vhost" ]]; then
 
-		echo "INFO: Adding device via RPC ..."
+		notice "Adding device via RPC ..."
 		echo ""
 
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
 				if [[ "$test_type" == "spdk_vhost_blk" ]]; then
 					disk=${disk%%_*}
-					echo "INFO: Creating vhost block controller naa.$disk.${conf[0]} with device $disk"
+					notice "Creating vhost block controller naa.$disk.${conf[0]} with device $disk"
 					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $disk
 				else
-					echo "INFO: Trying to remove nonexistent controller"
+					notice "Trying to remove nonexistent controller"
 					if $rpc_py remove_vhost_controller unk0 > /dev/null; then
 						echo "ERROR: Removing nonexistent controller succeeded, but it shouldn't"
 						false
 					fi
-					echo "INFO: Creating controller naa.$disk.${conf[0]}"
+					notice "Creating controller naa.$disk.${conf[0]}"
 					$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
 
-					echo "INFO: Adding initial device (0) to naa.$disk.${conf[0]}"
+					notice "Adding initial device (0) to naa.$disk.${conf[0]}"
 					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
 
-					echo "INFO: Trying to remove nonexistent device on existing controller"
+					notice "Trying to remove nonexistent device on existing controller"
 					if $rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 1 > /dev/null; then
 						echo "ERROR: Removing nonexistent device (1) from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
 						false
 					fi
 
-					echo "INFO: Trying to remove existing device from a controller"
+					notice "Trying to remove existing device from a controller"
 					$rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0
 
-					echo "INFO: Trying to remove a just-deleted device from a controller again"
+					notice "Trying to remove a just-deleted device from a controller again"
 					if $rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0 > /dev/null; then
 						echo "ERROR: Removing device 0 from controller naa.$disk.${conf[0]} succeeded, but it shouldn't"
 						false
 					fi
 
-					echo "INFO: Re-adding device 0 to naa.$disk.${conf[0]}"
+					notice "Re-adding device 0 to naa.$disk.${conf[0]}"
 					$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
 				fi
 			done
 
-			echo "INFO: Trying to create scsi controller with incorrect cpumask"
+			notice "Trying to create scsi controller with incorrect cpumask"
 			if $rpc_py construct_vhost_scsi_controller vhost.invalid.cpumask --cpumask 9; then
 				echo "ERROR: Creating scsi controller with incorrect cpumask succeeded, but it shouldn't"
 				false
 			fi
 
-			echo "INFO: Trying to remove device from nonexistent scsi controller"
+			notice "Trying to remove device from nonexistent scsi controller"
 			if $rpc_py remove_vhost_scsi_target vhost.nonexistent.name 0; then
 				echo "ERROR: Removing device from nonexistent scsi controller succeeded, but it shouldn't"
 				false
 			fi
 
-			echo "INFO: Trying to add device to nonexistent scsi controller"
+			notice "Trying to add device to nonexistent scsi controller"
 			if $rpc_py add_vhost_scsi_lun vhost.nonexistent.name 0 Malloc0; then
 				echo "ERROR: Adding device to nonexistent scsi controller succeeded, but it shouldn't"
 				false
 			fi
 
-			echo "INFO: Trying to create scsi controller with incorrect name"
+			notice "Trying to create scsi controller with incorrect name"
 			if $rpc_py construct_vhost_scsi_controller .; then
 				echo "ERROR: Creating scsi controller with incorrect name succeeded, but it shouldn't"
 				false
 			fi
 
-			echo "INFO: Trying to create block controller with incorrect cpumask"
+			notice "Trying to create block controller with incorrect cpumask"
 			if $rpc_py construct_vhost_blk_controller vhost.invalid.cpumask  Malloc0 --cpumask 9; then
 				echo "ERROR: Creating block controller with incorrect cpumask succeeded, but it shouldn't"
 				false
 			fi
 
-			echo "INFO: Trying to remove nonexistent block controller"
+			notice "Trying to remove nonexistent block controller"
 			if $rpc_py remove_vhost_controller vhost.nonexistent.name; then
 				echo "ERROR: Removing nonexistent block controller succeeded, but it shouldn't"
 				false
 			fi
 
-			echo "INFO: Trying to create block controller with incorrect name"
+			notice "Trying to create block controller with incorrect name"
 			if $rpc_py construct_vhost_blk_controller . Malloc0; then
 				echo "ERROR: Creating block controller with incorrect name succeeded, but it shouldn't"
 				false
@@ -217,12 +217,12 @@ if [[ $test_type == "spdk_vhost_scsi" ]]; then
 		IFS=',' read -ra conf <<< "$vm_conf"
 		while IFS=':' read -ra disks; do
 			for disk in "${disks[@]}"; do
-				echo "INFO: Hotdetach test. Trying to remove existing device from a controller naa.$disk.${conf[0]}"
+				notice "Hotdetach test. Trying to remove existing device from a controller naa.$disk.${conf[0]}"
 				$rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0
 
 				sleep 0.1
 
-				echo "INFO: Hotattach test. Re-adding device 0 to naa.$disk.${conf[0]}"
+				notice "Hotattach test. Re-adding device 0 to naa.$disk.${conf[0]}"
 				$rpc_py add_vhost_scsi_lun naa.$disk.${conf[0]} 0 $disk
 			done
 		done <<< "${conf[2]}"
@@ -234,9 +234,9 @@ sleep 0.1
 
 echo "==============="
 echo ""
-echo "INFO: Testing..."
+notice "Testing..."
 
-echo "INFO: Running fio jobs ..."
+notice "Running fio jobs ..."
 
 # Check if all VM have disk in tha same location
 DISK=""
@@ -248,7 +248,7 @@ for vm_num in $used_vms; do
 	qemu_mask_param="VM_${vm_num}_qemu_mask"
 
 	host_name="VM-$vm_num-${!qemu_mask_param}"
-	echo "INFO: Setting up hostname: $host_name"
+	notice "Setting up hostname: $host_name"
 	vm_ssh $vm_num "hostname $host_name"
 	vm_start_fio_server $fio_bin $readonly $vm_num
 
@@ -279,20 +279,20 @@ fi
 
 if ! $no_shutdown; then
 	echo "==============="
-	echo "INFO: APP EXITING"
-	echo "INFO: killing all VMs"
+	notice "APP EXITING"
+	notice "killing all VMs"
 	vm_shutdown_all
-	echo "INFO: waiting 2 seconds to let all VMs die"
+	notice "waiting 2 seconds to let all VMs die"
 	sleep 2
 	if [[ $test_type =~ "spdk_vhost" ]]; then
-		echo "INFO: Removing vhost devices & controllers via RPC ..."
+		notice "Removing vhost devices & controllers via RPC ..."
 		for vm_conf in ${vms[@]}; do
 			IFS=',' read -ra conf <<< "$vm_conf"
 
 			while IFS=':' read -ra disks; do
 				for disk in "${disks[@]}"; do
 					disk=${disk%%_*}
-					echo "INFO: Removing all vhost devices from controller naa.$disk.${conf[0]}"
+					notice "Removing all vhost devices from controller naa.$disk.${conf[0]}"
 					if [[ "$test_type" == "spdk_vhost_scsi" ]]; then
 						$rpc_py remove_vhost_scsi_target naa.$disk.${conf[0]} 0
 					fi
@@ -302,16 +302,16 @@ if ! $no_shutdown; then
 			done <<< "${conf[2]}"
 		done
 	fi
-	echo "INFO: Testing done -> shutting down"
-	echo "INFO: killing vhost app"
+	notice "Testing done -> shutting down"
+	notice "killing vhost app"
 	spdk_vhost_kill
 
-	echo "INFO: EXIT DONE"
+	notice "EXIT DONE"
 	echo "==============="
 else
-	echo "==============="
-	echo
-	echo "INFO: Leaving environment working!"
-	echo ""
-	echo "==============="
+	notice "==============="
+	notice ""
+	notice "Leaving environment working!"
+	notice ""
+	notice "==============="
 fi
