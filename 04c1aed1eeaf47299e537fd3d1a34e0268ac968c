@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "3f47db29_6c3f7e9c",
+        "filename": "doc/vhost.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-18T21:21:49Z",
+      "side": 1,
+      "message": "I think a TOC here with links to major sections is a big help for anyone reading one of these",
+      "revId": "04c1aed1eeaf47299e537fd3d1a34e0268ac968c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1fbb07a_7e75b97c",
+        "filename": "doc/vhost.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-18T21:21:49Z",
+      "side": 1,
+      "message": "I think a lot more in terms of an intro would make a lot of sense given this is a user\u0027s guide.  Not as easy without pictures but explaining some context of what this module is, where it fits into the bigger picture and what value it brings (not marketing pitch but what\u0027s different with it versus without it that makes it a thing), etc.",
+      "revId": "04c1aed1eeaf47299e537fd3d1a34e0268ac968c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f1083636_c2f6603e",
         "filename": "doc/vhost.md",
         "patchSetId": 3
@@ -13,6 +47,30 @@
       "writtenOn": "2017-11-29T08:39:22Z",
       "side": 1,
       "message": "I would rather not mix this with vhost guide. Lets put a link for Malloc bdev or some general RPC guide that describe this in more details.",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 3
+      },
+      "revId": "04c1aed1eeaf47299e537fd3d1a34e0268ac968c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e79d84ca_1d357354",
+        "filename": "doc/vhost.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-18T21:21:49Z",
+      "side": 1,
+      "message": "I dunno, maybe this makes sense.  The intent is to get a dev up and running with this (basically) with a single doc with references to others for more complex stuff.  A one-liner for setting up a malloc disk with a reference to whatever RPC guide we have now or in the future I think makes sense",
+      "parentUuid": "f1083636_c2f6603e",
       "range": {
         "startLine": 74,
         "startChar": 0,
