@@ -16,7 +16,7 @@ Some configuration calls may also be validated by use of
 "get_*" RPC calls, which provide additional information for verifying
 results.
 
-Tests with thin provisioned lvol bdev are using nbd devices.
+Tests with thin provisioned lvol bdevs, snapshots and clones are using nbd devices.
 Before writing/reading to lvol bdev, bdev is installed with rpc start_nbd_disk.
 After finishing writing/reading, rpc stop_nbd_disk is used.
 
@@ -732,4 +732,120 @@ Steps:
 Expected result:
 - calls successful, return code = 0
 - get_bdevs: no change
+- no other operation fails
+
+### snapshot and clone
+
+#### TEST CASE 800 - Name: snapshot_readonly
+- constrcut malloc bdev
+- construct lvol store on malloc bdev
+- construct lvol bdev
+- fill lvol bdev with 100% of its space using write operation
+- create snapshot of created lvol bdev
+- check if created snapshot has readonly status
+- try to perform write operation on created snapshot
+- check if write failed
+- destroy lvol bdev
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 801 - Name: snapshot_compare_with_lvol_bdev
+- construct malloc bdev
+- construct lvol store on malloc bdev
+- construct thin provisioned lvol bdev with size less than 25% of lvs
+- construct thick provisioned lvol bdev with size less than 25% of lvs
+- fill first lvol bdev with 50% of its space
+- fill second lvol bdev with 100% of their space
+- create snapshots of created lvol bdevs and check that they are readonly
+- check using cmp program if data on corresponding lvol bdevs
+  and snapshots are the same
+- fill lvol bdev again with 50% of its space using write operation
+- compare thin provisioned bdev clusters with snapshot clusters
+  and check that 50% of data are the same and 50% are different
+- destroy lvol bdevs
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- removing snapshot should always end with success
+- no other operation fails
+
+#### TEST CASE 802 - Name: snapshot_during_io_traffic
+- construct malloc bdev
+- construct lvol store on malloc bdev
+- construct thin provisioned lvol bdev
+- perform write operation with verification to created lvol bdev
+- during write operation create snapshot of created lvol bdev
+- check that snapshot has been created successfully and check that it is readonly
+- check that write operation ended with success
+- destroy lvol bdev
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- no other operation fails
+
+#### TEST CASE 803 - Name: snapshot_of_snapshot
+- construct malloc bdev
+- construct lvol store on malloc bdev
+- construct thick provisioned lvol bdev
+- create snapshot of created lvol bdev and check that it is readonly
+- create snapshot of previously created snapshot
+- check if operation fails
+- destroy lvol bdev
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- creating snapshot of snapshot should fail
+- no other operation fails
+
+#### TEST CASE 804 - Name: clone_bdev_only
+- construct malloc bdev
+- construct lvol store on malloc
+- construct thick provisioned lvol bdev
+- create clone of created lvol bdev
+- check if operation fails
+- create snapshot of lvol bdev and check that it is readonly
+- create clone of created lvol bdev
+- check if operation failed
+- create clone of snapshot on the same lvs
+  where snaphot was created
+- check if operation ends with success
+- check if clone is not readonly
+- check that clone is thin provisioned
+- destroy lvol bdev
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
+- cloning thick provisioned lvol bdev should fail
+- no other operation fails
+
+#### TEST CASE 806 - Name: clone_writing_to_clone
+- construct with malloc bdev
+- construct lvol store on malloc bdev
+- construct thick provisioned lvol bdev
+- fill lvol bdev with 100% of its space
+- create snapshot of thick provisioned lvol bdev
+- create two clones of created snapshot
+- perform write operation to first clone
+  and verify that data were written correctly
+- check that operation ended with success
+- compare second clone with snapshot and check
+  that data on both bdevs are the same
+- destroy lvol bdev
+- destroy lvol store
+- destroy malloc bdev
+
+Expected result:
+- calls successful, return code = 0
 - no other operation fails
