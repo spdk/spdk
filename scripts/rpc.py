@@ -92,14 +92,14 @@ p.set_defaults(func=get_luns)
 def get_portal_groups(args):
     print_dict(jsonrpc_call('get_portal_groups'))
 
-p = subparsers.add_parser('get_portal_groups', help='Display current portal group configuration')
+p = subparsers.add_parser('get_portal_groups', help='Display portal groups')
 p.set_defaults(func=get_portal_groups)
 
 
 def get_initiator_groups(args):
     print_dict(jsonrpc_call('get_initiator_groups'))
 
-p = subparsers.add_parser('get_initiator_groups', help='Display current initiator group configuration')
+p = subparsers.add_parser('get_initiator_groups', help='Display initiator groups')
 p.set_defaults(func=get_initiator_groups)
 
 
