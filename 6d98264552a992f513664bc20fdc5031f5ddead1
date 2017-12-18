@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b37541ea_2d885ad8",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T10:07:13Z",
+      "side": 0,
+      "message": "Why did we remove nightly condition?",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 28
+      },
+      "revId": "6d98264552a992f513664bc20fdc5031f5ddead1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15480731_52817747",
+        "filename": "test/vhost/initiator/bdev.fio",
+        "patchSetId": 5
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T10:07:13Z",
+      "side": 1,
+      "message": "These were run in nightly only and I think it should stay that way.",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 7
+      },
+      "revId": "c80bbd62e16e5e47f5dadc164b63d05c9addbb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20e5b486_62104248",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T10:07:13Z",
+      "side": 1,
+      "message": "You source $COMMON_DIR/common.sh which  has \"error_exit\" function, which only lacks \"rm -f *.state\" line.\nI know this is a slight difference between these 2 functions, but this \"on_error_exit\" seems like a code duplication to me...\n\nMaybe add \"rm -f *.state\" to trap?",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 1
+      },
+      "revId": "c80bbd62e16e5e47f5dadc164b63d05c9addbb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25e50d64_9b504fa5",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T10:07:13Z",
+      "side": 1,
+      "message": "trap also for SIGTERM and SIGABRT",
+      "range": {
+        "startLine": 55,
+        "startChar": 45,
+        "endLine": 55,
+        "endChar": 48
+      },
+      "revId": "c80bbd62e16e5e47f5dadc164b63d05c9addbb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfde06ef_d4beba86",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T10:07:13Z",
+      "side": 1,
+      "message": "This is already in fio config file bdev.fio - is iodepth and bs parameter repetition needed here as well?",
+      "range": {
+        "startLine": 58,
+        "startChar": 8,
+        "endLine": 58,
+        "endChar": 30
+      },
+      "revId": "c80bbd62e16e5e47f5dadc164b63d05c9addbb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af7d7d0e_f8867d7c",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T10:07:13Z",
+      "side": 1,
+      "message": "No need to pipe jq to grep, you can use jq\u0027s select. Example:\nhttps://review.gerrithub.io/#/c/390983/9/scripts/autotest_common.sh",
+      "range": {
+        "startLine": 63,
+        "startChar": 1,
+        "endLine": 63,
+        "endChar": 71
+      },
+      "revId": "c80bbd62e16e5e47f5dadc164b63d05c9addbb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f3e3b60_ee770617",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T10:07:13Z",
+      "side": 1,
+      "message": "I\u0027d say timing for FIO test should be just before running the fio itself (so at line 82 in this commit) and should not include stuff like vhost start, rm -f or vhost kill; you cann add other timing sections for that.\nTiming exit should be just after we finish FIO tests, so at line 85.",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 16
+      },
+      "revId": "c80bbd62e16e5e47f5dadc164b63d05c9addbb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c00c3e26_055f2bb6",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T10:07:13Z",
+      "side": 1,
+      "message": "Could this be merged into a single line or would it be much of a fuss?",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 118
+      },
+      "revId": "c80bbd62e16e5e47f5dadc164b63d05c9addbb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
