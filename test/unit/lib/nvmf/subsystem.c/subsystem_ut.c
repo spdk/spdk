@@ -36,6 +36,7 @@
 #include "spdk_cunit.h"
 
 #include "subsystem.c"
+#include "lib/test_env.c"
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
