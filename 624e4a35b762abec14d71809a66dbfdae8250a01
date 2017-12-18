@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccea9438_77e2d8f4",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T10:46:29Z",
+      "side": 1,
+      "message": "Each of this test runs will run with default_integrity_nightly.job, which runs following fio tasks:\nrandwrite 512k 256qd \nrandrw 128k 64qd\n\nWhile in porting test plan I see that fio jobs are different for each run:\none core / one ctrl: randread 4k 16qd\none core / two ctrl: randwrite 512k 256qd\ntwo core / two ctrl: randrw 128k 64qd",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 125,
+        "endChar": 4
+      },
+      "revId": "624e4a35b762abec14d71809a66dbfdae8250a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4e8fc5c_b4d177b2",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T10:46:29Z",
+      "side": 1,
+      "message": "I don\u0027t think there should be an \"else\" statement here.\nWith \"else\" one core / one ctrl test will only run fi there are no more then 1 NVMe disks in system.\nAnd looking at porting test plan I understand that all 3 test cases should be run if possible.",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 136,
+        "endChar": 6
+      },
+      "revId": "624e4a35b762abec14d71809a66dbfdae8250a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
