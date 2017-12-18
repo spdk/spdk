@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57938d39_5990bb3a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1953,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-18T21:07:08Z",
+      "side": 1,
+      "message": "was not NULL\u0027ing this causing an issue with the old code, new code or neither and this was just clean up?",
+      "revId": "68c23de8c74d761236657248324a88ec4ee813dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
