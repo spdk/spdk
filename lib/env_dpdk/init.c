@@ -140,7 +140,9 @@ spdk_free_args(char **args, int argcount)
 		free(args[i]);
 	}
 
-	free(args);
+	if (argcount) {
+		free(args);
+	}
 }
 
 static char **
@@ -149,6 +151,8 @@ spdk_push_arg(char *args[], int *argcount, char *arg)
 	char **tmp;
 
 	if (arg == NULL) {
+		fprintf(stderr, "%s: NULL arg supplied\n", __func__);
+		spdk_free_args(args, *argcount);
 		return NULL;
 	}
 
@@ -261,7 +265,7 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	return argcount;
 }
 
-void spdk_env_init(const struct spdk_env_opts *opts)
+int spdk_env_init(const struct spdk_env_opts *opts)
 {
 	char **dpdk_args = NULL;
 	int i, rc;
@@ -270,7 +274,7 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 	rc = spdk_build_eal_cmdline(opts);
 	if (rc < 0) {
 		fprintf(stderr, "Invalid arguments to initialize DPDK\n");
-		exit(-1);
+		return -1;
 	}
 
 	printf("Starting %s initialization...\n", rte_version());
@@ -287,7 +291,7 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 	dpdk_args = calloc(eal_cmdline_argcount, sizeof(char *));
 	if (dpdk_args == NULL) {
 		fprintf(stderr, "Failed to allocate dpdk_args\n");
-		exit(-1);
+		return -1;
 	}
 	memcpy(dpdk_args, eal_cmdline, sizeof(char *) * eal_cmdline_argcount);
 
@@ -301,7 +305,7 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 
 	if (rc < 0) {
 		fprintf(stderr, "Failed to initialize DPDK\n");
-		exit(-1);
+		return -1;
 	}
 
 	if (opts->shm_id < 0) {
@@ -314,6 +318,14 @@ void spdk_env_init(const struct spdk_env_opts *opts)
 		spdk_env_unlink_shared_files();
 	}
 
-	spdk_mem_map_init();
-	spdk_vtophys_init();
+	if (spdk_mem_map_init() < 0) {
+		fprintf(stderr, "Failed to allocate mem_map\n");
+		return -1;
+	}
+	if (spdk_vtophys_init() < 0) {
+		fprintf(stderr, "Failed to initialize vtophys\n");
+		return -1;
+	}
+
+	return 0;
 }

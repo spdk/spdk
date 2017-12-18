@@ -74,8 +74,9 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
 /**
  * \brief Initialize the environment library. This must be called prior to using
  * any other functions in this library.
+ * \return 0 on success, or a negated errno value on failure.
  */
-void spdk_env_init(const struct spdk_env_opts *opts);
+int spdk_env_init(const struct spdk_env_opts *opts);
 
 /**
  * Allocate a pinned, physically contiguous memory buffer with the
