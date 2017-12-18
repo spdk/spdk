@@ -9,7 +9,6 @@ fio_bin="fio"
 fio_jobs="$BASE_DIR/fio_jobs/"
 test_type=spdk_vhost_scsi
 reuse_vms=false
-force_build=false
 vms=()
 used_vms=""
 disk_split=""
@@ -69,23 +68,23 @@ tmp_detach_job=$BASE_DIR/fio_jobs/fio_detach.job.tmp
 rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py "
 
 function print_test_fio_header() {
-    echo "==============="
-    echo ""
-    echo "INFO: Testing..."
+    notice "==============="
+    notice ""
+    notice "Testing..."
 
-    echo "INFO: Running fio jobs ..."
+    notice "Running fio jobs ..."
     if [ $# -gt 0 ]; then
         echo $1
     fi
 }
 
 function run_vhost() {
-    echo "==============="
-    echo ""
-    echo "INFO: running SPDK"
-    echo ""
+    notice "==============="
+    notice ""
+    notice "running SPDK"
+    notice ""
     $BASE_DIR/../common/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
-    echo
+    notice ""
 }
 
 function vms_setup() {
@@ -93,15 +92,13 @@ function vms_setup() {
         IFS=',' read -ra conf <<< "$vm_conf"
         setup_cmd="$BASE_DIR/../common/vm_setup.sh $x --work-dir=$TEST_DIR --test-type=$test_type"
         if [[ x"${conf[0]}" == x"" ]] || ! assert_number ${conf[0]}; then
-            echo "ERROR: invalid VM configuration syntax $vm_conf"
-            exit 1;
+            fail "invalid VM configuration syntax $vm_conf"
         fi
 
         # Sanity check if VM is not defined twice
         for vm_num in $used_vms; do
             if [[ $vm_num -eq ${conf[0]} ]]; then
-                echo "ERROR: VM$vm_num defined more than twice ( $(printf "'%s' " "${vms[@]}"))!"
-                exit 1
+                fail "VM$vm_num defined more than twice ( $(printf "'%s' " "${vms[@]}"))!"
             fi
         done
 
@@ -128,14 +125,14 @@ function vms_prepare() {
         qemu_mask_param="VM_${vm_num}_qemu_mask"
 
         host_name="VM-${vm_num}-${!qemu_mask_param}"
-        echo "INFO: Setting up hostname: $host_name"
+        notice "Setting up hostname: $host_name"
         vm_ssh $vm_num "hostname $host_name"
         vm_start_fio_server --fio-bin=$fio_bin $readonly $vm_num
     done
 }
 
 function vms_reboot_all() {
-    echo "Rebooting all vms "
+    notice "Rebooting all vms "
     for vm_num in $1; do
         vm_ssh $vm_num "reboot" || true
     done
@@ -149,18 +146,18 @@ function check_fio_retcode() {
     retcode_expected=$2
     if [ $retcode_expected == 0 ]; then
         if [ $fio_retcode != 0 ]; then
-            echo "    Fio test ended with error."
+            warning "    Fio test ended with error."
             vm_shutdown_all
             spdk_vhost_kill
             exit 1
         else
-            echo "    Fio test ended with success."
+            notice "    Fio test ended with success."
         fi
     else
         if [ $fio_retcode != 0 ]; then
-            echo "    Fio test ended with expected error."
+            notice "    Fio test ended with expected error."
         else
-            echo "    Fio test ended with unexpected success."
+            warning "    Fio test ended with unexpected success."
             vm_shutdown_all
             spdk_vhost_kill
             exit 1
