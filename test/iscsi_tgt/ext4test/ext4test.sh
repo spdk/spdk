@@ -123,4 +123,5 @@ trap - SIGINT SIGTERM EXIT
 rm -f $testdir/iscsi.conf
 iscsicleanup
 killprocess $pid
+report_test_completion "NIGHTLY_ISCSI_EXT4TEST"
 timing_exit ext4test

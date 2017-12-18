@@ -20,6 +20,8 @@ trap "process_core; $rootdir/scripts/setup.sh reset; exit 1" SIGINT SIGTERM EXIT
 
 timing_enter autotest
 
+create_test_list
+
 src=$(readlink -f $(dirname $0))
 out=$PWD
 cd $src
@@ -84,6 +86,7 @@ fi
 if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 	timing_enter unittest
 	run_test ./unittest.sh
+	report_test_completion "UNITTEST"
 	timing_exit unittest
 fi
 
@@ -163,6 +166,7 @@ if [ $SPDK_TEST_LVOL -eq 1 ]; then
 	test_cases="1,50,51,52,53,100,101,102,250,251,252,253,255,"
 	test_cases+="300,301,450,451,452,550,600,601,650,651,700"
 	run_test ./test/lvol/lvol.sh --test-cases=$test_cases
+	report_test_completion "LVOL"
 	timing_exit lvol
 fi
 

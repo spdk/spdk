@@ -55,4 +55,5 @@ trap - SIGINT SIGTERM EXIT
 
 iscsicleanup
 killprocess $pid
+report_test_completion "NIGHTLY_ISCSI_IDLE_MIGRATION"
 timing_exit idle_migration
