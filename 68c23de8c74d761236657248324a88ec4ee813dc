@@ -16,6 +16,40 @@
       "revId": "68c23de8c74d761236657248324a88ec4ee813dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48082df8_0fdee631",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2126,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-18T22:42:16Z",
+      "side": 1,
+      "message": "_spdk_bs_recover",
+      "revId": "68c23de8c74d761236657248324a88ec4ee813dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efa5c91f_5d5e2d07",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2356,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-18T22:42:16Z",
+      "side": 1,
+      "message": "header..",
+      "revId": "68c23de8c74d761236657248324a88ec4ee813dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
