@@ -169,6 +169,14 @@ function timing_finish() {
 	fi
 }
 
+function create_test_list() {
+	grep -rsh --exclude="autotest_common.sh" -e "report_test_completion" $rootdir | sed 's/report_test_completion//g; s/[ \t][ \t]*//g; s/"//g;' > $output_dir/all_tests.txt || true
+}
+
+function report_test_completion() {
+	echo "$1" >> $output_dir/test_completions.txt
+}
+
 function process_core() {
 	ret=0
 	for core in $(find . -type f \( -name 'core*' -o -name '*.core' \)); do
