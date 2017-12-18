@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f94ba4b_b2e5dee7",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T12:49:49Z",
+      "side": 0,
+      "message": "Why is that removed? Isn\u0027t it used in scripts?",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 1
+      },
+      "revId": "926740accd3bfd00be035acfc5f1c2f03329f302",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
