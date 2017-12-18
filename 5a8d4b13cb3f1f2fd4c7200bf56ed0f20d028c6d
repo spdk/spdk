@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "120cdd99_d9183762",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-18T13:53:03Z",
+      "side": 1,
+      "message": "Should xattr_ctx be set to NULL here as well ?",
+      "revId": "5a8d4b13cb3f1f2fd4c7200bf56ed0f20d028c6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e336613d_82b22bbd",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2235,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-18T13:53:03Z",
+      "side": 1,
+      "message": "Should we test different xattr_ctx or at least pass one, so it can be checked here?",
+      "range": {
+        "startLine": 2235,
+        "startChar": 29,
+        "endLine": 2235,
+        "endChar": 38
+      },
+      "revId": "5a8d4b13cb3f1f2fd4c7200bf56ed0f20d028c6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
