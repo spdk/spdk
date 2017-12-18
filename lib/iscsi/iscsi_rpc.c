@@ -716,6 +716,8 @@ spdk_rpc_get_portal_groups(struct spdk_jsonrpc_request *request,
 			spdk_json_write_string(w, portal->host);
 			spdk_json_write_name(w, "port");
 			spdk_json_write_string(w, portal->port);
+			spdk_json_write_name(w, "cpumask");
+			spdk_json_write_string_fmt(w, "%#" PRIx64, portal->cpumask);
 			spdk_json_write_object_end(w);
 		}
 		spdk_json_write_array_end(w);
