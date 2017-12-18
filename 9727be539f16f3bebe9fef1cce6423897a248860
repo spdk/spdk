@@ -22,6 +22,30 @@
       "revId": "9727be539f16f3bebe9fef1cce6423897a248860",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8ddf978_d1629072",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-18T18:27:03Z",
+      "side": 1,
+      "message": "change this to \n\n(spdk_get_ticks_hz() / 1000000ULL) * period_microseconds;\n\nand you avoid averflow for reasonable range of period_microseconds",
+      "parentUuid": "d3037f9c_86535843",
+      "range": {
+        "startLine": 270,
+        "startChar": 37,
+        "endLine": 270,
+        "endChar": 86
+      },
+      "revId": "9727be539f16f3bebe9fef1cce6423897a248860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
