@@ -69,7 +69,7 @@ if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 	rm -f *.state
 	rm -f $testdir/bdev.fio
 	timing_exit fio_trim
-
+	report_test_completion "BDEV_FIO"
 	timing_exit fio
 fi
 
@@ -78,6 +78,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter reset
 	#$testdir/bdevperf/bdevperf -c $testdir/bdev.conf -q 16 -w reset -s 4096 -t 60
 	timing_exit reset
+	report_test_completion "NIGHTLY_BDEV_RESET"
 fi
 
 
@@ -87,4 +88,5 @@ fi
 
 rm -f /tmp/aiofile
 rm -f $testdir/bdev.conf
+report_test_completion "BDEV"
 timing_exit bdev
