@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48a588c8_b29e93ed",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-18T19:32:11Z",
+      "side": 1,
+      "message": "I think you should just remove this check.  Always calculate quotient and remainder, even when period_microseconds \u003c\u003d SPDK_SEC_TO_MICROSEC.  In that case, quotient is just zero - rest of calculation is the same.\n\nThis simplifies the code.",
+      "revId": "4b1c723fb5954d80dc87398e72b3258441b158c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
