@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "c490c84c_e37b6b52",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-18T11:37:32Z",
+      "side": 1,
+      "message": "I am looking at \"Porting DTS to autotest\" test plan, \"nvmf host\" tab and I cannot find these combinations there. Could you please either update the test plan accordingly or point me to where I can find these cases described? Thanks",
+      "parentUuid": "c7a8558d_6e39b1e9",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 29
+      },
+      "revId": "8e57ea19a6c35e9c2f58e4f4b275de7e5fdc9849",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5a287bea_7934c765",
         "filename": "test/nvmf/host/perf.sh",
         "patchSetId": 11
