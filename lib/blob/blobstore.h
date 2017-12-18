@@ -133,6 +133,8 @@ struct spdk_blob {
 	uint64_t	data_ro_flags;
 	uint64_t	md_ro_flags;
 
+	struct spdk_bs_dev *back_bs_dev;
+
 	/* TODO: The xattrs are mutable, but we don't want to be
 	 * copying them unecessarily. Figure this out.
 	 */
@@ -348,6 +350,14 @@ _spdk_bs_byte_to_lba(struct spdk_blob_store *bs, uint64_t length)
 }
 
 static inline uint64_t
+_spdk_bs_blob_byte_to_back_dev_lba(struct spdk_blob *blob, uint64_t length)
+{
+	assert(length % blob->back_bs_dev->blocklen == 0);
+
+	return length / blob->back_bs_dev->blocklen;
+}
+
+static inline uint64_t
 _spdk_bs_lba_to_byte(struct spdk_blob_store *bs, uint64_t lba)
 {
 	return lba * bs->dev->blocklen;
@@ -357,6 +367,12 @@ static inline uint64_t
 _spdk_bs_page_to_lba(struct spdk_blob_store *bs, uint64_t page)
 {
 	return page * SPDK_BS_PAGE_SIZE / bs->dev->blocklen;
+}
+
+static inline uint64_t
+_spdk_bs_blob_page_to_back_dev_lba(struct spdk_blob *blob, uint64_t page)
+{
+	return page * SPDK_BS_PAGE_SIZE / blob->back_bs_dev->blocklen;
 }
 
 static inline uint32_t
@@ -397,6 +413,12 @@ _spdk_bs_lba_to_cluster(struct spdk_blob_store *bs, uint64_t lba)
 	assert(lba % (bs->cluster_sz / bs->dev->blocklen) == 0);
 
 	return lba / (bs->cluster_sz / bs->dev->blocklen);
+}
+
+static inline uint64_t
+_spdk_bs_blob_lba_to_back_dev_lba(struct spdk_blob *blob, uint64_t lba)
+{
+	return lba * blob->bs->dev->blocklen / blob->back_bs_dev->blocklen;
 }
 
 /* End basic conversions */
@@ -447,6 +469,17 @@ _spdk_bs_num_pages_to_cluster_boundary(struct spdk_blob *blob, uint32_t page)
 	pages_per_cluster = blob->bs->pages_per_cluster;
 
 	return pages_per_cluster - (page % pages_per_cluster);
+}
+
+/* Given a page offset into a blob, look up the pages number of current cluster beginning */
+static inline uint32_t
+_spdk_bs_page_to_cluster_beginning_page(struct spdk_blob *blob, uint32_t page)
+{
+	uint32_t	pages_per_cluster;
+
+	pages_per_cluster = blob->bs->pages_per_cluster;
+
+	return page - (page % pages_per_cluster);
 }
 
 /* Given a page offset into a blob, look up if it is from allocated cluster. */
