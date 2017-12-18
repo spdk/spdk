@@ -25,7 +25,7 @@ function prepare_fio_cmd_tc1() {
 
 # Check if fio test passes on device attached to first controller.
 function hotattach_tc1() {
-    echo "Hotattach test case 1"
+    notice "Hotattach test case 1"
 
     $rpc_py add_vhost_scsi_lun naa.Nvme0n1p0.0 0 Nvme0n1p0
 
@@ -38,7 +38,7 @@ function hotattach_tc1() {
 # Run fio test for previously attached device.
 # During test attach another device to first controller and check fio status.
 function hotattach_tc2() {
-    echo "Hotattach test case 2"
+    notice "Hotattach test case 2"
     prepare_fio_cmd_tc1 "0"
 
     $run_fio &
@@ -52,7 +52,7 @@ function hotattach_tc2() {
 # Run fio test for previously attached devices.
 # During test attach another device to second controller and check fio status.
 function hotattach_tc3() {
-    echo "Hotattach test case 3"
+    notice "Hotattach test case 3"
     prepare_fio_cmd_tc1 "0"
 
     $run_fio &
@@ -67,7 +67,7 @@ function hotattach_tc3() {
 # During test attach another device to third controller(VM2) and check fio status.
 # At the end after rebooting VMs run fio test for all devices and check fio status.
 function hotattach_tc4() {
-    echo "Hotattach test case 4"
+    notice "Hotattach test case 4"
 
     prepare_fio_cmd_tc1 "0"
 
