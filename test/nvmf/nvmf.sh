@@ -32,8 +32,10 @@ run_test test/nvmf/shutdown/shutdown.sh
 if [ $SPDK_TEST_NVML -eq 1 ]; then
 	if [ $RUN_NIGHTLY -eq 1 ]; then
 		run_test test/nvmf/pmem/nvmf_pmem.sh 30
+		report_test_completion "nightly_nvmf_pmem"
 	else
 		run_test test/nvmf/pmem/nvmf_pmem.sh 10
+		report_test_completion "nvmf_pmem"
 	fi
 fi
 
@@ -63,4 +65,6 @@ kill_stub
 run_test test/nvmf/rpc/rpc.sh
 run_test test/nvmf/fio/fio.sh
 revert_soft_roce
+
+report_test_completion "nvmf"
 timing_exit nvmf_tgt

@@ -136,6 +136,7 @@ kill -9 $qemupid
 rm "$qemu_pidfile"
 rm "$test_img"
 
+report_test_completion "nvme_hotplug"
 timing_exit hotplug_test
 
 timing_exit hotplug

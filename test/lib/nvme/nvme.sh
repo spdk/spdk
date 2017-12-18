@@ -99,6 +99,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 
 	timing_enter reset
 	$testdir/reset/reset -q 64 -w write -s 4096 -t 2
+	report_test_completion "nightly_nvme_reset"
 	timing_exit reset
 fi
 
@@ -114,6 +115,7 @@ $rootdir/examples/nvme/perf/perf -q 128 -w read -s 12288 -t 1 -LL -i 0
 if [ -b /dev/ram0 ]; then
 	# Test perf with AIO device
 	$rootdir/examples/nvme/perf/perf /dev/ram0 -q 128 -w read -s 12288 -t 1 -LL -i 0
+	report_test_completion "nvme_perf"
 fi
 timing_exit perf
 
@@ -154,6 +156,7 @@ if [ `uname` = Linux ]; then
 	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -s 4096 -t 3 -c 0x4
 	wait $pid0
 	wait $pid1
+	report_test_completion "nvme_multi_secondary"
 	timing_exit multi_secondary
 fi
 
@@ -169,6 +172,7 @@ if [ -d /usr/src/fio ]; then
 		# Only test when ASAN is not enabled. If ASAN is enabled, we cannot test.
 		if [ $SPDK_RUN_ASAN -eq 0 ]; then
 			LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=PCIe traddr=${bdf//:/.} ns=1"
+			report_test_completion "bdev_fio"
 		fi
 		break
 	done

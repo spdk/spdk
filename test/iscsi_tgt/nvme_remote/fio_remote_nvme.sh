@@ -80,4 +80,5 @@ rm -f $testdir/iscsi.conf.tmp
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 killprocess $nvmfpid
 
+report_test_completion "iscsi_nvme_remote"
 timing_exit nvme_remote
