@@ -766,13 +766,13 @@ class TestCases(object):
                                                    uuid_store,
                                                    self.cluster_size)
 
-        for i in range(10):
-            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
-                                                   self.lbd_name + str(i),
-                                                   size)
-            uuid_bdevs.append(uuid_bdev)
-            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
-
+#        for i in range(10):
+#            uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+#                                                   self.lbd_name + str(i),
+#                                                   size)
+#            uuid_bdevs.append(uuid_bdev)
+#            fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+#
         if self.c.destroy_lvol_store(uuid_store) != 0:
             fail_count += 1
 
