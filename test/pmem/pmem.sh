@@ -694,4 +694,5 @@ if $test_delete_bdev || $test_all; then
 fi
 
 pmem_clean_pool_file
+report_test_completion "PMEM"
 vhost_kill
