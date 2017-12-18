@@ -240,6 +240,12 @@ uint32_t spdk_env_get_next_core(uint32_t prev_core);
 	     i = spdk_env_get_next_core(i))
 
 /**
+ * \brief Return the index of the master CPU core for
+ *        this env abstraction
+ */
+uint32_t spdk_env_get_master_core(void);
+
+/**
  * \brief Return the socket ID for the given core.
  */
 uint32_t spdk_env_get_socket_id(uint32_t core);
