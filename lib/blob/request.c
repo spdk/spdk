@@ -470,6 +470,25 @@ spdk_bs_sequence_to_batch(spdk_bs_sequence_t *seq, spdk_bs_sequence_cpl cb_fn, v
 	return set;
 }
 
+spdk_bs_sequence_t *
+spdk_bs_batch_to_sequence(spdk_bs_batch_t *batch)
+{
+	struct spdk_bs_request_set *set = (struct spdk_bs_request_set *)batch;
+
+	set->u.batch.outstanding_ops++;
+
+	set->cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
+	set->cpl.u.blob_basic.cb_fn = spdk_bs_sequence_to_batch_completion;
+	set->cpl.u.blob_basic.cb_arg = set;
+	set->bserrno = 0;
+
+	set->cb_args.cb_fn = spdk_bs_sequence_completion;
+	set->cb_args.cb_arg = set;
+	set->cb_args.channel = set->channel->dev_channel;
+
+	return (spdk_bs_sequence_t *)set;
+}
+
 spdk_bs_user_op_t *
 spdk_bs_user_op_alloc(struct spdk_io_channel *_channel, struct spdk_bs_cpl *cpl,
 		      enum spdk_blob_op_type op_type, struct spdk_blob *blob,
@@ -553,6 +572,20 @@ spdk_bs_user_op_abort(spdk_bs_user_op_t *op)
 
 	set->cpl.u.blob_basic.cb_fn(set->cpl.u.blob_basic.cb_arg, -EIO);
 	TAILQ_INSERT_TAIL(&set->channel->reqs, set, link);
+}
+
+void
+spdk_bs_sequence_to_batch_completion(void *cb_arg, int bserrno)
+{
+	struct spdk_bs_request_set *set = (struct spdk_bs_request_set *)cb_arg;
+
+	set->u.batch.outstanding_ops--;
+
+	if (set->u.batch.outstanding_ops == 0 && set->u.batch.batch_closed) {
+		if (set->cb_args.cb_fn) {
+			set->cb_args.cb_fn(set->cb_args.channel, set->cb_args.cb_arg, bserrno);
+		}
+	}
 }
 
 SPDK_LOG_REGISTER_COMPONENT("blob_rw", SPDK_LOG_BLOB_RW)
