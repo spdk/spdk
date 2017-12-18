@@ -4,6 +4,11 @@ set -e
 
 DEFAULT_VM_IMAGE="/home/sys_sgsw/vhost_vm_image.qcow2"
 
+BASE_DIR=$(readlink -f $(dirname $0))
+[[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../ && pwd)"
+
+source $TEST_DIR/scripts/autotest_common.sh
+
 case $1 in
 	-h|--help)
 		echo "usage: $(basename $0) TEST_TYPE"
@@ -54,6 +59,7 @@ case $1 in
 	-n|--negative)
 		echo 'Negative tests suite...'
 		./other/negative.sh
+		report_test_completion "VHOST_NEGATIVE"
 	;;
 	-p|--performance)
 		echo 'Running performance suite...'
@@ -62,6 +68,7 @@ case $1 in
 		--test-type=spdk_vhost_scsi \
 		--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job \
 		--qemu-src=/home/sys_sgsw/vhost/qemu
+		report_test_completion "VHOST_PER"
 	;;
 	-pb|--performance-blk)
 		echo 'Running blk performance suite...'
@@ -70,6 +77,7 @@ case $1 in
 		--test-type=spdk_vhost_blk \
 		--fio-jobs=$WORKDIR/common/fio_jobs/default_performance.job \
 		--qemu-src=/home/sys_sgsw/vhost/qemu
+		report_test_completion "VHOST_PERF_BLK"
 		;;
 	-i|--integrity)
 		echo 'Running SCSI integrity suite...'
@@ -78,6 +86,7 @@ case $1 in
 		--test-type=spdk_vhost_scsi \
 		--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
 		--qemu-src=/home/sys_sgsw/vhost/qemu -x
+		report_test_completion "NIGHTLY_VHOST_INTEGRITY"
 		;;
 	-ib|--integrity-blk)
 		echo 'Running blk integrity suite...'
@@ -86,24 +95,29 @@ case $1 in
 		--test-type=spdk_vhost_blk \
 		--fio-jobs=$WORKDIR/common/fio_jobs/default_integrity.job \
 		--qemu-src=/home/sys_sgsw/vhost/qemu -x
+		report_test_completion "NIGHTLY_VHOST_INTEGRITY_BLK"
 		;;
 	-fs|--fs-integrity-scsi)
 		echo 'Running filesystem integrity suite...'
 		./integrity/integrity_start.sh -i $VM_IMAGE -m scsi -f ntfs
+		report_test_completion "VHOST_FS_INTEGRITY_SCSI"
 		;;
 	-fb|--fs-integrity-blk)
 		echo 'Running filesystem integrity suite...'
 		./integrity/integrity_start.sh -i $VM_IMAGE -m blk -f ntfs
+		report_test_completion "VHOST_FS_INTEGRITY_BLK"
 		;;
 	-ils|--integrity-lvol-scsi)
 		echo 'Running lvol integrity suite...'
 		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--ctrl-type=vhost_scsi
+		report_test_completion "VHOST_INTEGRITY_LVOL_SCSI"
 		;;
 	-ilb|--integrity-lvol-blk)
 		echo 'Running lvol integrity suite...'
 		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
 		--ctrl-type=vhost_blk
+		report_test_completion "VHOST_INTEGRITY_LVOL_BLK"
 		;;
 	-hp|--hotplug)
 		echo 'Running hotplug tests suite...'
@@ -114,10 +128,12 @@ case $1 in
 			--vm=3,$VM_IMAGE,Nvme0n1p6:Nvme0n1p7 \
 			--test-type=spdk_vhost_scsi \
 			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
+		report_test_completion "VHOST_HOTPLUG"
 		;;
 	-ro|--readonly)
 		echo 'Running readonly tests suite...'
 		./readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1_size_1G
+		report_test_completion "VHOST_READONLY"
 		;;
 	*)
 		echo "unknown test type: $1"
