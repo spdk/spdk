@@ -35,6 +35,7 @@
 
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
+#include "spdk/env.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -43,6 +44,8 @@
 #ifdef __FreeBSD__
 #include <pthread_np.h>
 #endif
+
+#define SPDK_THREAD_MGR_NAME "spdk_thread_mgr"
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -86,7 +89,27 @@ struct spdk_thread {
 	char *name;
 };
 
-static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
+struct spdk_thread_mgr {
+	TAILQ_HEAD(, spdk_thread) threads;
+};
+
+struct spdk_thread_mgr *g_thread_mgr = NULL;
+
+static void
+_spdk_init_thread_mgr(void)
+{
+	int socket_id = -1;
+	if (g_thread_mgr != NULL) {
+		return;
+	}
+	g_thread_mgr = spdk_memzone_reserve(SPDK_THREAD_MGR_NAME,
+					    sizeof(struct spdk_thread_mgr), socket_id, 0);
+	if (g_thread_mgr == NULL) {
+		SPDK_ERRLOG("Unable to reserve memory for thread_mgr\n");
+		return;
+	}
+	TAILQ_INIT(&g_thread_mgr->threads);
+}
 
 static struct spdk_thread *
 _get_thread(void)
@@ -94,10 +117,14 @@ _get_thread(void)
 	pthread_t thread_id;
 	struct spdk_thread *thread;
 
+	/* Not any thread has been allocated. */
+	if (g_thread_mgr == NULL) {
+		return NULL;
+	}
 	thread_id = pthread_self();
 
 	thread = NULL;
-	TAILQ_FOREACH(thread, &g_threads, tailq) {
+	TAILQ_FOREACH(thread, &g_thread_mgr->threads, tailq) {
 		if (thread->thread_id == thread_id) {
 			return thread;
 		}
@@ -126,6 +153,9 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 {
 	struct spdk_thread *thread;
 
+	if (g_thread_mgr == NULL) {
+		_spdk_init_thread_mgr();
+	}
 	pthread_mutex_lock(&g_devlist_mutex);
 
 	thread = _get_thread();
@@ -135,7 +165,7 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		return NULL;
 	}
 
-	thread = calloc(1, sizeof(*thread));
+	thread = spdk_dma_zmalloc(sizeof(*thread), 0x1000, NULL);
 	if (!thread) {
 		SPDK_ERRLOG("Unable to allocate memory for thread\n");
 		pthread_mutex_unlock(&g_devlist_mutex);
@@ -148,7 +178,7 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 	thread->stop_poller_fn = stop_poller_fn;
 	thread->thread_ctx = thread_ctx;
 	TAILQ_INIT(&thread->io_channels);
-	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
+	TAILQ_INSERT_TAIL(&g_thread_mgr->threads, thread, tailq);
 	if (name) {
 		_set_thread_name(name);
 		thread->name = strdup(name);
@@ -173,9 +203,10 @@ spdk_free_thread(void)
 		return;
 	}
 
-	TAILQ_REMOVE(&g_threads, thread, tailq);
+	TAILQ_REMOVE(&g_thread_mgr->threads, thread, tailq);
 	free(thread->name);
-	free(thread);
+	spdk_dma_free(thread);
+
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 }
@@ -298,7 +329,7 @@ spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	ct->orig_thread = _get_thread();
-	ct->cur_thread = TAILQ_FIRST(&g_threads);
+	ct->cur_thread = TAILQ_FIRST(&g_thread_mgr->threads);
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	spdk_thread_send_msg(ct->cur_thread, spdk_on_thread, ct);
@@ -310,7 +341,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 {
 	struct io_device *dev, *tmp;
 
-	dev = calloc(1, sizeof(struct io_device));
+	dev = spdk_dma_zmalloc(sizeof(struct io_device), sizeof(struct io_device), NULL);
 	if (dev == NULL) {
 		SPDK_ERRLOG("could not allocate io_device\n");
 		return;
@@ -328,7 +359,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
 		if (tmp->io_device == io_device) {
 			SPDK_ERRLOG("io_device %p already registered\n", io_device);
-			free(dev);
+			spdk_dma_free(dev);
 			pthread_mutex_unlock(&g_devlist_mutex);
 			return;
 		}
@@ -343,8 +374,13 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
 
+	/* Not any thread has been allocated at present. Free this device directly. */
+	if (g_thread_mgr == NULL) {
+		goto no_threads_allocated;
+	}
+
 	pthread_mutex_lock(&g_devlist_mutex);
-	TAILQ_FOREACH(thread, &g_threads, tailq) {
+	TAILQ_FOREACH(thread, &g_thread_mgr->threads, tailq) {
 		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 			if (ch->dev == dev) {
 				/* A channel that references this I/O
@@ -358,11 +394,12 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 	}
 	pthread_mutex_unlock(&g_devlist_mutex);
 
+no_threads_allocated:
 	if (dev->unregister_cb) {
 		dev->unregister_cb(dev->io_device);
 	}
 
-	free(dev);
+	spdk_dma_free(dev);
 }
 
 void
@@ -435,7 +472,7 @@ spdk_get_io_channel(void *io_device)
 		}
 	}
 
-	ch = calloc(1, sizeof(*ch) + dev->ctx_size);
+	ch = spdk_dma_zmalloc(sizeof(*ch) + dev->ctx_size, 0x1000, NULL);
 	if (ch == NULL) {
 		SPDK_ERRLOG("could not calloc spdk_io_channel\n");
 		pthread_mutex_unlock(&g_devlist_mutex);
@@ -454,7 +491,7 @@ spdk_get_io_channel(void *io_device)
 	if (rc == -1) {
 		pthread_mutex_lock(&g_devlist_mutex);
 		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
-		free(ch);
+		spdk_dma_free(ch);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
@@ -487,7 +524,7 @@ _spdk_put_io_channel(void *arg)
 	if (ch->dev->unregistered) {
 		_spdk_io_device_attempt_free(ch->dev);
 	}
-	free(ch);
+	spdk_dma_free(ch);
 }
 
 void
@@ -604,17 +641,22 @@ spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	i->orig_thread = _get_thread();
-
-	TAILQ_FOREACH(thread, &g_threads, tailq) {
-		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-			if (ch->dev->io_device == io_device) {
-				ch->dev->for_each_count++;
-				i->dev = ch->dev;
-				i->cur_thread = thread;
-				i->ch = ch;
-				pthread_mutex_unlock(&g_devlist_mutex);
-				spdk_thread_send_msg(thread, _call_channel, i);
-				return;
+	/*
+	 * If g_thread_mgr points to NULL, no thread has been allocated.
+	 * In this case, we don't need to check channel state.
+	 */
+	if (g_thread_mgr != NULL) {
+		TAILQ_FOREACH(thread, &g_thread_mgr->threads, tailq) {
+			TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+				if (ch->dev->io_device == io_device) {
+					ch->dev->for_each_count++;
+					i->dev = ch->dev;
+					i->cur_thread = thread;
+					i->ch = ch;
+					pthread_mutex_unlock(&g_devlist_mutex);
+					spdk_thread_send_msg(thread, _call_channel, i);
+					return;
+				}
 			}
 		}
 	}
