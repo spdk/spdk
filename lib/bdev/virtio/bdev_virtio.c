@@ -690,8 +690,12 @@ bdev_virtio_poll(void *arg)
 
 	cnt = virtio_recv_pkts(ch->vq, (void **)io, io_len, SPDK_COUNTOF(io));
 	for (i = 0; i < cnt; ++i) {
-		if (spdk_unlikely(svdev->scan_ctx &&
-				  io[i] == &svdev->scan_ctx->io_ctx)) {
+		if (spdk_unlikely(svdev->scan_ctx && io[i] == &svdev->scan_ctx->io_ctx)) {
+			if (svdev->removed) {
+				_virtio_scsi_dev_scan_finish(svdev->scan_ctx, -EINTR);
+				return;
+			}
+
 			process_scan_resp(svdev->scan_ctx);
 			continue;
 		}
@@ -699,7 +703,14 @@ bdev_virtio_poll(void *arg)
 		bdev_virtio_io_cpl(io[i]);
 	}
 
-	if (spdk_unlikely(cnt > 0 && svdev->scan_ctx && svdev->scan_ctx->needs_resend)) {
+	if (spdk_unlikely(svdev->scan_ctx && svdev->scan_ctx->needs_resend)) {
+		if (svdev->removed) {
+			_virtio_scsi_dev_scan_finish(svdev->scan_ctx, -EINTR);
+			return;
+		} else if (cnt == 0) {
+			return;
+		}
+
 		rc = send_scan_io(svdev->scan_ctx);
 		if (rc != 0) {
 			assert(svdev->scan_ctx->retries > 0);
@@ -1543,7 +1554,6 @@ virtio_scsi_dev_unregister_cb(void *io_device)
 static void
 virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev)
 {
-	struct virtio_scsi_scan_base *scan_ctx;
 	struct virtio_scsi_disk *disk, *disk_tmp;
 	bool do_remove = true;
 
@@ -1554,9 +1564,9 @@ virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev)
 
 	svdev->removed = true;
 
-	scan_ctx = svdev->scan_ctx;
-	if (scan_ctx) {
-		_virtio_scsi_dev_scan_finish(scan_ctx, -EINTR);
+	if (svdev->scan_ctx) {
+		 /* The removal will continue after we receive a pending scan I/O. */
+		return;
 	}
 
 	TAILQ_FOREACH_SAFE(disk, &svdev->luns, link, disk_tmp) {
