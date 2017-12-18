@@ -84,7 +84,7 @@ struct io_target {
 	struct spdk_io_channel		*ch;
 	struct io_target		*next;
 	unsigned			lcore;
-	int				io_completed;
+	uint64_t			io_completed;
 	int				current_queue_depth;
 	uint64_t			size_in_ios;
 	uint64_t			offset_in_ios;
