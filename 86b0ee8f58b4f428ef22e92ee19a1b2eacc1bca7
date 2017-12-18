@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "888fdde6_bf8d3e0e",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-18T10:32:17Z",
+      "side": 1,
+      "message": "This should not matter because we will always translate offsets and lengths accordingly.",
+      "parentUuid": "5927ee47_40deb3fc",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 15
+      },
+      "revId": "86b0ee8f58b4f428ef22e92ee19a1b2eacc1bca7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2ce20b2_2cddef62",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 29
