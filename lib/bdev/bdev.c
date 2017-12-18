@@ -1847,6 +1847,8 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 {
 	int i, rc;
 
+	assert(vbdev != NULL);
+
 	rc = _spdk_bdev_register(vbdev);
 	if (rc) {
 		return rc;

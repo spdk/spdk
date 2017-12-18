@@ -660,7 +660,8 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 		return NULL;
 	}
 
-	bdev = calloc(1, sizeof(struct spdk_bdev));
+	bdev = malloc(sizeof(struct spdk_bdev));
+	memset(bdev, 0, sizeof(struct spdk_bdev));
 	if (!bdev) {
 		SPDK_ERRLOG("Cannot alloc memory for lvol bdev\n");
 		return NULL;
@@ -871,10 +872,12 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 			     "Name for lvolstore on device %s conflicts with name for already loaded lvs\n",
 			     req->base_bdev->name);
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		assert(false);
 		goto end;
 	} else if (lvserrno != 0) {
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store not found on %s\n", req->base_bdev->name);
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		assert(false);
 		goto end;
 	}
 
@@ -883,6 +886,7 @@ _vbdev_lvs_examine_cb(void *arg, struct spdk_lvol_store *lvol_store, int lvserrn
 		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store base bdev already claimed by another bdev\n");
 		lvol_store->bs_dev->destroy(lvol_store->bs_dev);
 		spdk_bdev_module_examine_done(SPDK_GET_BDEV_MODULE(lvol));
+		assert(false);
 		goto end;
 	}
 
