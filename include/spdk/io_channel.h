@@ -225,6 +225,18 @@ struct spdk_thread *spdk_io_channel_get_thread(struct spdk_io_channel *ch);
 void spdk_for_each_channel(void *io_device, spdk_channel_msg fn, void *ctx,
 			   spdk_channel_for_each_cpl cpl);
 
+/**
+ * \brief Get number of channels.
+ *
+ * Provide number of channels allocated for specific io_device;
+ * it checks each thread.
+ *
+ * \param io_device The pointer to the io device.
+ *
+ * \return number of allocated channels.
+ */
+uint32_t spdk_get_io_channel_num(void *io_device);
+
 void *spdk_io_channel_iter_get_io_device(struct spdk_io_channel_iter *i);
 
 struct spdk_io_channel *spdk_io_channel_iter_get_channel(struct spdk_io_channel_iter *i);

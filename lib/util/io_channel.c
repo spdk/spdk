@@ -661,3 +661,25 @@ end:
 
 	spdk_thread_send_msg(i->orig_thread, _call_completion, i);
 }
+
+uint32_t
+spdk_get_io_channel_num(void *io_device)
+{
+	struct spdk_thread *thread;
+	struct spdk_io_channel *ch;
+	uint32_t count = 0;
+
+	pthread_mutex_lock(&g_devlist_mutex);
+
+	TAILQ_FOREACH(thread, &g_threads, tailq) {
+		TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+			if (ch->dev->io_device == io_device) {
+				count++;
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&g_devlist_mutex);
+
+	return count;
+}
