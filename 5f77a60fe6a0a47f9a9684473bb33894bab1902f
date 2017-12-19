@@ -1,0 +1,234 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3eb1412_53c045fe",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T08:06:44Z",
+      "side": 1,
+      "message": "default in scripts are 64MB, I think we can use that. No reason to change to 100M",
+      "range": {
+        "startLine": 625,
+        "startChar": 49,
+        "endLine": 625,
+        "endChar": 53
+      },
+      "revId": "5f77a60fe6a0a47f9a9684473bb33894bab1902f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f2fed83_eeab61ca",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 625,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T08:06:44Z",
+      "side": 1,
+      "message": "no need to capitalize first letter",
+      "range": {
+        "startLine": 625,
+        "startChar": 27,
+        "endLine": 625,
+        "endChar": 33
+      },
+      "revId": "5f77a60fe6a0a47f9a9684473bb33894bab1902f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "173ea667_649bbd91",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T08:06:44Z",
+      "side": 1,
+      "message": "no need to capitalize first letter",
+      "range": {
+        "startLine": 626,
+        "startChar": 26,
+        "endLine": 626,
+        "endChar": 32
+      },
+      "revId": "5f77a60fe6a0a47f9a9684473bb33894bab1902f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04cc4b87_de5b4ec7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T08:06:44Z",
+      "side": 1,
+      "message": "\"create thin provisioned lvol bdev\"",
+      "range": {
+        "startLine": 627,
+        "startChar": 2,
+        "endLine": 627,
+        "endChar": 40
+      },
+      "revId": "5f77a60fe6a0a47f9a9684473bb33894bab1902f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "229fb31a_6278800b",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T08:06:44Z",
+      "side": 1,
+      "message": "destroy lvol bdev as well;\nyou can also check that free clusters on lvol store have gone back to original value after removing bdev",
+      "range": {
+        "startLine": 635,
+        "startChar": 2,
+        "endLine": 635,
+        "endChar": 20
+      },
+      "revId": "5f77a60fe6a0a47f9a9684473bb33894bab1902f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "898e0a66_10f94d97",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T08:06:44Z",
+      "side": 1,
+      "message": "no need to capitalize first letter",
+      "range": {
+        "startLine": 636,
+        "startChar": 10,
+        "endLine": 636,
+        "endChar": 16
+      },
+      "revId": "5f77a60fe6a0a47f9a9684473bb33894bab1902f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c65c5009_0f943320",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T08:06:44Z",
+      "side": 1,
+      "message": "what about lvol bdev?",
+      "range": {
+        "startLine": 644,
+        "startChar": 1,
+        "endLine": 644,
+        "endChar": 37
+      },
+      "revId": "5f77a60fe6a0a47f9a9684473bb33894bab1902f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53233f59_5d1ab075",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T08:06:44Z",
+      "side": 1,
+      "message": "zeroes",
+      "range": {
+        "startLine": 645,
+        "startChar": 51,
+        "endLine": 645,
+        "endChar": 56
+      },
+      "revId": "5f77a60fe6a0a47f9a9684473bb33894bab1902f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37d804ed_b9b95c9c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T08:06:44Z",
+      "side": 1,
+      "message": "I think these operations should be done on various offsets",
+      "range": {
+        "startLine": 645,
+        "startChar": 2,
+        "endLine": 645,
+        "endChar": 25
+      },
+      "revId": "5f77a60fe6a0a47f9a9684473bb33894bab1902f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea0ca1ea_603ca81c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T08:06:44Z",
+      "side": 1,
+      "message": "what about lvol bdev?",
+      "range": {
+        "startLine": 655,
+        "startChar": 2,
+        "endLine": 655,
+        "endChar": 37
+      },
+      "revId": "5f77a60fe6a0a47f9a9684473bb33894bab1902f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
