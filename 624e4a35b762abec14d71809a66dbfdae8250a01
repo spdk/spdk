@@ -97,6 +97,54 @@
     },
     {
       "key": {
+        "uuid": "f48ae970_ad5d8316",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:35:14Z",
+      "side": 1,
+      "message": "Chen, If you want 2 controllers you can start up 2 VMs - this will produce 2 separate controllers",
+      "parentUuid": "d01ae487_357db9fb",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 125,
+        "endChar": 4
+      },
+      "revId": "624e4a35b762abec14d71809a66dbfdae8250a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6d36a39_43e70cb9",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:35:14Z",
+      "side": 1,
+      "message": "I\u0027d say we should drop the one with One core / Two Ctrl\u0027s.\nPersonally I see no benefit in running these two tests. I think two cores / two ctrl\u0027s is sufficient.",
+      "parentUuid": "999ebdb2_e71ab55a",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 125,
+        "endChar": 4
+      },
+      "revId": "624e4a35b762abec14d71809a66dbfdae8250a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4e8fc5c_b4d177b2",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 6
