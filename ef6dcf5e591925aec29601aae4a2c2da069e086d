@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07a46af8_22171e72",
+        "filename": "include/spdk/blob_bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T17:15:13Z",
+      "side": 1,
+      "message": "This function doesn\u0027t create a new blobstore for the given block device. This creates a blobstore block device from a bdev.",
+      "revId": "ef6dcf5e591925aec29601aae4a2c2da069e086d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
