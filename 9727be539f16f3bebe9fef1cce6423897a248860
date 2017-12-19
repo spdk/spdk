@@ -70,6 +70,30 @@
       "revId": "9727be539f16f3bebe9fef1cce6423897a248860",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "338a96e5_ed6f4c96",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-19T01:19:20Z",
+      "side": 1,
+      "message": "use / first will also lose precision. Suppose the value passed is 20 us. then you will get 0. I think that the reason why Daniel use * first is to make sure the precision, but he did not consider the overflow due to large value ipput",
+      "parentUuid": "d3037f9c_86535843",
+      "range": {
+        "startLine": 270,
+        "startChar": 37,
+        "endLine": 270,
+        "endChar": 86
+      },
+      "revId": "9727be539f16f3bebe9fef1cce6423897a248860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
