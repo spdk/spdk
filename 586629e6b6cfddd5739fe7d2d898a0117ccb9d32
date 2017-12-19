@@ -1,0 +1,349 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d61c0669_b92ed59c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "Snapshots \u0026 clones;\nIMO these features are very related so let\u0027s keep them in one place",
+      "range": {
+        "startLine": 624,
+        "startChar": 4,
+        "endLine": 624,
+        "endChar": 12
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9342508_18f0777c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "as in thin provisioning - default is 64M and I don\u0027t see a reason to change that",
+      "range": {
+        "startLine": 628,
+        "startChar": 48,
+        "endLine": 628,
+        "endChar": 52
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fc35dfd_88d29adc",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "no need for capital letter",
+      "range": {
+        "startLine": 628,
+        "startChar": 26,
+        "endLine": 628,
+        "endChar": 32
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3c77a64_2d0a487d",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "Why thin provisioned?",
+      "range": {
+        "startLine": 629,
+        "startChar": 2,
+        "endLine": 629,
+        "endChar": 38
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59e4cd38_70ebc031",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "How?",
+      "range": {
+        "startLine": 631,
+        "startChar": 2,
+        "endLine": 631,
+        "endChar": 50
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bd19e9e_2c505a83",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "How about destroying lvols and snapshot?",
+      "range": {
+        "startLine": 632,
+        "startChar": 2,
+        "endLine": 632,
+        "endChar": 20
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e98839a_8e62ebc0",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "This needs rephrasing. Created lvol bdev is thin provisioned so it is actually empty after creating.\nWhen you do a read operation the actual data is grabbed from snapshot lvol.",
+      "range": {
+        "startLine": 644,
+        "startChar": 2,
+        "endLine": 644,
+        "endChar": 46
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "799d6dd9_56341e7e",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 669,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "I think we need some additional steps after this one.",
+      "range": {
+        "startLine": 669,
+        "startChar": 15,
+        "endLine": 669,
+        "endChar": 61
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a1c996e_32018e5a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 669,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "write",
+      "range": {
+        "startLine": 669,
+        "startChar": 9,
+        "endLine": 669,
+        "endChar": 14
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66924b40_705f07d2",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "Should it fail?",
+      "range": {
+        "startLine": 682,
+        "startChar": 2,
+        "endLine": 682,
+        "endChar": 26
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb341112_5cd2d9ba",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "Should it fail?",
+      "range": {
+        "startLine": 695,
+        "startChar": 2,
+        "endLine": 695,
+        "endChar": 26
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a14af39_0aedcb92",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 709,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "Should it fail?",
+      "range": {
+        "startLine": 709,
+        "startChar": 2,
+        "endLine": 709,
+        "endChar": 26
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3e160a8_27a9b58b",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 712,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "Should it succeed?",
+      "range": {
+        "startLine": 712,
+        "startChar": 2,
+        "endLine": 712,
+        "endChar": 30
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1b1dc50_f4cf09e7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "I think this test (and some other up) need additional expected resutls:\n- do we expect a clone of lvol bdev to pass?\n- do we expect a clone of snapshot bdev to pass? etc.\n\nOtherwise \"Expected results\" seems like not-needed copy-paste, as we don\u0027t provide any useful info here.\n\nApplies to other tests as well.",
+      "range": {
+        "startLine": 715,
+        "startChar": 0,
+        "endLine": 717,
+        "endChar": 26
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91173ac7_5cab8b2c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 743,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:21:38Z",
+      "side": 1,
+      "message": "I think these 2 tests can be merged with  \"clone_bdev_only\"",
+      "range": {
+        "startLine": 719,
+        "startChar": 0,
+        "endLine": 743,
+        "endChar": 26
+      },
+      "revId": "586629e6b6cfddd5739fe7d2d898a0117ccb9d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
