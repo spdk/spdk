@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "d01ae487_357db9fb",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-19T10:30:44Z",
+      "side": 1,
+      "message": "you can see the line 168 in \"lvol/test.sh\" script. \"for (( j\u003d0; j\u003c${#bdevs[@]}; j++))\" it add all the bdevs into one controller in one VM",
+      "parentUuid": "01b22be0_f4a71e55",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 125,
+        "endChar": 4
+      },
+      "revId": "624e4a35b762abec14d71809a66dbfdae8250a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4e8fc5c_b4d177b2",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 6
@@ -108,6 +132,30 @@
       "side": 1,
       "message": "agree, the else should just be \u0027fi\u0027 so that all 3 are executed if \u003e1 drive is present... make sense",
       "parentUuid": "b4e8fc5c_b4d177b2",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 136,
+        "endChar": 6
+      },
+      "revId": "624e4a35b762abec14d71809a66dbfdae8250a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aab9e817_fde98cb3",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-19T10:30:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "162d8431_69e3d6f8",
       "range": {
         "startLine": 136,
         "startChar": 2,
