@@ -48,6 +48,54 @@
     },
     {
       "key": {
+        "uuid": "6c5f0499_6590a515",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c1ec39f1_99b9d48f",
+      "range": {
+        "startLine": 685,
+        "startChar": 1,
+        "endLine": 685,
+        "endChar": 11
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb5ef5bc_37d68287",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "06b20353_de1c51a6",
+      "range": {
+        "startLine": 685,
+        "startChar": 42,
+        "endLine": 685,
+        "endChar": 73
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "565cf103_5be1dbb5",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 15
@@ -59,6 +107,30 @@
       "writtenOn": "2017-12-14T14:59:26Z",
       "side": 1,
       "message": "This could be moved into _create_lvol_disk().",
+      "range": {
+        "startLine": 729,
+        "startChar": 1,
+        "endLine": 729,
+        "endChar": 45
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf8bec37_fb3737fd",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "565cf103_5be1dbb5",
       "range": {
         "startLine": 729,
         "startChar": 1,
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "e0333667_3d2c635f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "I need to pass name as parameter to _create_lvol_disk(). This function is called from _vbdev_lvol_create_cb, and it\u0027s parameters list do not contain name. I think i would be easier to keep alias in req, instead of adding a new parameter to",
+      "parentUuid": "3c3d0413_7b749beb",
+      "range": {
+        "startLine": 754,
+        "startChar": 27,
+        "endLine": 754,
+        "endChar": 28
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d47b02e9_ffa33fb6",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 15
@@ -105,6 +201,30 @@
       "writtenOn": "2017-12-14T14:59:26Z",
       "side": 1,
       "message": "This might be better suited to lvol.c rather than here.",
+      "range": {
+        "startLine": 797,
+        "startChar": 0,
+        "endLine": 804,
+        "endChar": 18
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8784cf3_1fd68c7d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 804,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "lvol_store_bdev is declared inside vbdev_lvol.h and it is inaccessible in lvol.c",
+      "parentUuid": "d47b02e9_ffa33fb6",
       "range": {
         "startLine": 797,
         "startChar": 0,
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "c6839674_1171ec9b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a683577_f1a7251a",
+      "range": {
+        "startLine": 816,
+        "startChar": 0,
+        "endLine": 820,
+        "endChar": 2
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fbdc7a12_20d7bbab",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 15
@@ -151,6 +295,30 @@
       "writtenOn": "2017-12-14T14:59:26Z",
       "side": 1,
       "message": "If for some reason adding new alias fails, old one is already deleted. Adding new alias first, then deleting old one might be better idea.",
+      "range": {
+        "startLine": 828,
+        "startChar": 1,
+        "endLine": 828,
+        "endChar": 47
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "519e8d7b_26a08172",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 828,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fbdc7a12_20d7bbab",
       "range": {
         "startLine": 828,
         "startChar": 1,
@@ -197,6 +365,54 @@
       "writtenOn": "2017-12-14T14:59:26Z",
       "side": 1,
       "message": "I think vbdev_lvs_rename() would be more suiting name.",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 23
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1a9aa18_35cd3889",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e3e8f155_5d62db06",
+      "range": {
+        "startLine": 62,
+        "startChar": 24,
+        "endLine": 62,
+        "endChar": 48
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e55837ab_b9cd4f75",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f7f77c5_f0c6882f",
       "range": {
         "startLine": 62,
         "startChar": 0,
@@ -278,6 +494,78 @@
     },
     {
       "key": {
+        "uuid": "cd876f3d_8ee23c1e",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f723889b_dc6a6dfe",
+      "range": {
+        "startLine": 67,
+        "startChar": 66,
+        "endLine": 67,
+        "endChar": 70
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae767685_274f401f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de00eb05_d00d5dc9",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 22
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b6a0a07a_4464aa58",
+        "filename": "lib/bdev/lvol/vbdev_lvol.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a2a33c1e_1b2f0fd8",
+      "range": {
+        "startLine": 67,
+        "startChar": 35,
+        "endLine": 67,
+        "endChar": 48
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f7d1a7df_4f032433",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 15
@@ -289,6 +577,30 @@
       "writtenOn": "2017-12-14T14:59:26Z",
       "side": 1,
       "message": "Can we keep this callback consistent with originating call? \n_spdk_rpc_rename_lvol_store_cb()",
+      "range": {
+        "startLine": 191,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 30
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "398dbb12_ca4a5e1e",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f7d1a7df_4f032433",
       "range": {
         "startLine": 191,
         "startChar": 0,
@@ -324,6 +636,30 @@
     },
     {
       "key": {
+        "uuid": "8700456d_773f3a07",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c885b07_bffc71ed",
+      "range": {
+        "startLine": 206,
+        "startChar": 1,
+        "endLine": 206,
+        "endChar": 33
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5c11c151_cf8fcf36",
         "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
         "patchSetId": 15
@@ -335,6 +671,30 @@
       "writtenOn": "2017-12-14T14:59:26Z",
       "side": 1,
       "message": "spdk_json_write_bool(w, true);",
+      "range": {
+        "startLine": 458,
+        "startChar": 1,
+        "endLine": 458,
+        "endChar": 33
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5cb42c4_37389372",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5c11c151_cf8fcf36",
       "range": {
         "startLine": 458,
         "startChar": 1,
@@ -370,6 +730,30 @@
     },
     {
       "key": {
+        "uuid": "e2a276d2_9bf88fde",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 972,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "33e87292_c4c6457c",
+      "range": {
+        "startLine": 971,
+        "startChar": 0,
+        "endLine": 972,
+        "endChar": 32
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b5dbcb5_168a9f8a",
         "filename": "scripts/rpc.py",
         "patchSetId": 15
@@ -393,6 +777,30 @@
     },
     {
       "key": {
+        "uuid": "f58a4e18_ee15ae7a",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4b5dbcb5_168a9f8a",
+      "range": {
+        "startLine": 399,
+        "startChar": 59,
+        "endLine": 399,
+        "endChar": 63
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cc74b2a3_685db2db",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 15
@@ -404,6 +812,30 @@
       "writtenOn": "2017-12-14T14:59:26Z",
       "side": 1,
       "message": "Stub for this callback can be removed, please see comment at bottom of this file.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 30
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4715380_3843a30a",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cc74b2a3_685db2db",
       "range": {
         "startLine": 63,
         "startChar": 0,
@@ -462,6 +894,30 @@
     },
     {
       "key": {
+        "uuid": "954c9b58_4cad0136",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4710e4cf_c3157f36",
+      "range": {
+        "startLine": 986,
+        "startChar": 0,
+        "endLine": 987,
+        "endChar": 55
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff64e1ff_3021511c",
         "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
         "patchSetId": 15
@@ -485,6 +941,30 @@
     },
     {
       "key": {
+        "uuid": "782a52e4_9831c196",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff64e1ff_3021511c",
+      "range": {
+        "startLine": 990,
+        "startChar": 62,
+        "endLine": 990,
+        "endChar": 92
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b291d44a_e6ab1966",
         "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
         "patchSetId": 15
@@ -496,6 +976,30 @@
       "writtenOn": "2017-12-14T14:59:26Z",
       "side": 1,
       "message": "UT here is for lvol.c, which should not use struct spdk_bdev at all. Is it needed here ?",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 1
+      },
+      "revId": "1b0490a3769ffe934c5fb82aace2bebb55d8656b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8114bbd5_06f34557",
+        "filename": "test/unit/lib/lvol/lvol.c/lvol_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-19T13:11:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b291d44a_e6ab1966",
       "range": {
         "startLine": 90,
         "startChar": 0,
