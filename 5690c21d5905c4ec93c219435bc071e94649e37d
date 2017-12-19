@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9aabcf37_21ae0f9b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-19T18:07:12Z",
+      "side": 1,
+      "message": "Hi Cunyin,\n\nI\u0027m not sure we should have this level of detail in the CHANGELOG - the CHANGELOG typically focused on just the new or changed features and not on implementation specifics.  I think a good comment with a lot of these details could go in the code though.  I think here you can just say something like:\n\nSPDK now supports hotplug for vfio-attached devices.\n\n-Jim",
+      "revId": "5690c21d5905c4ec93c219435bc071e94649e37d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
