@@ -145,6 +145,29 @@
     },
     {
       "key": {
+        "uuid": "46fa5ebf_f04512bc",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "need be checked against null and return -1 if so.",
+      "range": {
+        "startLine": 577,
+        "startChar": 38,
+        "endLine": 577,
+        "endChar": 45
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a20782e4_f0aac292",
         "filename": "lib/iscsi/portal_grp.c",
         "patchSetId": 8
@@ -156,6 +179,75 @@
       "writtenOn": "2017-12-19T20:17:19Z",
       "side": 1,
       "message": "Regular assignment should still work fine here - why memcpy?",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a560b11c_acd4673f",
+        "filename": "lib/iscsi/portal_grp.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "This should be const",
+      "range": {
+        "startLine": 62,
+        "startChar": 2,
+        "endLine": 62,
+        "endChar": 24
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a98afe3_d995b8e3",
+        "filename": "lib/util/Makefile",
+        "patchSetId": 8
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "can you move this to line above?",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 18
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "003e2d14_e5c27ca0",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "can you make this static or move to global space.\n\nAlso, in my mind, deffining this like\n\nconst char hex[] \u003d \"0123456789abcdef\"\n\ncould save you some characters ;)",
+      "range": {
+        "startLine": 44,
+        "startChar": 1,
+        "endLine": 46,
+        "endChar": 10
+      },
       "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -179,6 +271,144 @@
     },
     {
       "key": {
+        "uuid": "f99ad6d2_234bc80e",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "Would be nice to have on line comment for this.\nAlso notice log on truncation would be good (except if doing like in comment in line 72)",
+      "range": {
+        "startLine": 54,
+        "startChar": 1,
+        "endLine": 56,
+        "endChar": 2
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13b30b68_7bdc7546",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "just thinking that returning size_t or in or whatever int type might be better here, just like snprintf http://man7.org/linux/man-pages/man3/printf.3.html#RETURN_VALUE",
+      "range": {
+        "startLine": 72,
+        "startChar": 1,
+        "endLine": 72,
+        "endChar": 13
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98415f22_1135243f",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "You can drop redundant bracets.",
+      "range": {
+        "startLine": 133,
+        "startChar": 13,
+        "endLine": 133,
+        "endChar": 43
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27fe3bd6_590a2b9f",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "ERRLOG? goto invalid_character?",
+      "range": {
+        "startLine": 139,
+        "startChar": 4,
+        "endLine": 139,
+        "endChar": 14
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93787ad0_9031f151",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "Just thinking... Is something like this and error\nspdk_parse_core_mask(\"\", \u0026cpumask)\nor this might be equivalent to\nspdk_parse_core_mask(\"0\", \u0026cpumask) ?",
+      "range": {
+        "startLine": 176,
+        "startChar": 1,
+        "endLine": 178,
+        "endChar": 2
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bcbb04d2_bd2648d6",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "This is an error condition. You can check this here or check the len before parsing.",
+      "range": {
+        "startLine": 189,
+        "startChar": 23,
+        "endLine": 189,
+        "endChar": 47
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a4b75f8d_4c83a01e",
         "filename": "lib/util/cpuset.c",
         "patchSetId": 8
@@ -195,6 +425,144 @@
         "startChar": 1,
         "endLine": 202,
         "endChar": 4
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52ff9126_991d78cb",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "pls drop redundant bracets",
+      "range": {
+        "startLine": 213,
+        "startChar": 8,
+        "endLine": 213,
+        "endChar": 17
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "985ffad1_b8b5caf8",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "you are checking this already in spdk_parse_core_mask() and also should be checked in spdk_app_get_core_mask().",
+      "range": {
+        "startLine": 478,
+        "startChar": 1,
+        "endLine": 480,
+        "endChar": 2
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28178436_9b4db2d9",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "can you reuse buf and cpumask? buf can be expanded and cpumask is not needed anymore in case of spdk_vhost_parse_core_mask() failure.",
+      "range": {
+        "startLine": 523,
+        "startChar": 2,
+        "endLine": 523,
+        "endChar": 40
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5bc44d0_6be2c032",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "const",
+      "range": {
+        "startLine": 679,
+        "startChar": 28,
+        "endLine": 679,
+        "endChar": 50
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "010769f8_df70a856",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 695,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "Need to drop this limitation.",
+      "range": {
+        "startLine": 695,
+        "startChar": 31,
+        "endLine": 695,
+        "endChar": 40
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "886bde6a_dfd482b2",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-19T20:22:25Z",
+      "side": 1,
+      "message": "Magic value?",
+      "range": {
+        "startLine": 473,
+        "startChar": 10,
+        "endLine": 473,
+        "endChar": 14
       },
       "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
