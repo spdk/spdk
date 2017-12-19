@@ -477,6 +477,23 @@
     },
     {
       "key": {
+        "uuid": "c1dc853b_9b05a13c",
+        "filename": "lib/iscsi/conn.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "This needs to be reindented.",
+      "revId": "7c73611c2adefb0af5ff8bc3e274ab3b19393902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "988ec236_1c826e1d",
         "filename": "lib/iscsi/portal_grp.c",
         "patchSetId": 2
