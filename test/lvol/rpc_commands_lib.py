@@ -143,3 +143,11 @@ class Commands_Rpc(object):
     def construct_nvme_bdev(self, nvme_name, trtype, traddr):
         print("INFO: Add NVMe bdev {nvme}".format(nvme=nvme_name))
         self.rpc.construct_nvme_bdev("-b", nvme_name, "-t", trtype, "-a", traddr)
+
+    def construct_lvol_snapshot(self, bdev_name, snapshot_name):
+        output, rc = self.rpc.construct_lvol_snapshot(bdev_name, snapshot_name)
+        return rc
+
+    def construct_lvol_clone(self, snapshot_name, clone_name):
+        output, rc = self.rpc.construct_lvol_clone(snapshot_name, clone_name)
+        return rc
