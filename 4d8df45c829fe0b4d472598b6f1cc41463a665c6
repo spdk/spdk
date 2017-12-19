@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2569b965_2e88b878",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-19T14:06:40Z",
+      "side": 1,
+      "message": "This should be !\u003d (or \u003d\u003d SPDK_BLOB_THIN_PROV).",
+      "range": {
+        "startLine": 353,
+        "startChar": 71,
+        "endLine": 353,
+        "endChar": 73
+      },
+      "revId": "4d8df45c829fe0b4d472598b6f1cc41463a665c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
