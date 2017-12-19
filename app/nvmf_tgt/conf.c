@@ -412,6 +412,6 @@ spdk_nvmf_construct_subsystem(const char *name,
 	return 0;
 
 error:
-	spdk_nvmf_delete_subsystem(subsystem);
+	spdk_nvmf_subsystem_destroy(subsystem);
 	return -1;
 }
