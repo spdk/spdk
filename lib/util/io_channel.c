@@ -118,6 +118,18 @@ _set_thread_name(const char *thread_name)
 #endif
 }
 
+void
+spdk_devlist_mutex_lock(void)
+{
+	pthread_mutex_lock(&g_devlist_mutex);
+}
+
+void
+spdk_devlist_mutex_unlock(void)
+{
+	pthread_mutex_unlock(&g_devlist_mutex);
+}
+
 struct spdk_thread *
 spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		     spdk_start_poller start_poller_fn,

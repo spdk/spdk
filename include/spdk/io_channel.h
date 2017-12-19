@@ -71,6 +71,16 @@ typedef void (*spdk_channel_msg)(struct spdk_io_channel_iter *i);
 typedef void (*spdk_channel_for_each_cpl)(struct spdk_io_channel_iter *i, int status);
 
 /**
+ * \brief Lock device list mutex.
+ */
+void spdk_devlist_mutex_lock(void);
+
+/**
+ * \brief Unlock device list mutex.
+ */
+void spdk_devlist_mutex_unlock(void);
+
+/**
  * \brief Initializes the calling thread for I/O channel allocation.
  *
  * @param fn A function that may be called from any thread and is
