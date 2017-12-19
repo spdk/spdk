@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8c82de2_13a3fd2e",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-19T20:21:46Z",
+      "side": 1,
+      "message": "do we need to add this function to autotest_common.sh?  currently it is only used in one test script - maybe it should stay in the single file for now?  this just seems very very specific to one use case - we would not want to add a bunch of lvil-specific functions to autotest_common.sh in the future\n\nI think the other function below is OK to keep in this file though - get_bdev_size() applies to many use cases across the SPDK test scripts.",
+      "revId": "11355150516320ac9c5a2162391e295b423c0a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0848b78c_3bb84059",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-19T20:21:46Z",
+      "side": 1,
+      "message": "what does \"lbd\" stand for?  lvol block device?\n\nI guess I don\u0027t understand why this isn\u0027t just get_bdev_size().  Then the function is more generic and it is clear it can be used for any kind of bdev - not just lvol bdevs.",
+      "revId": "11355150516320ac9c5a2162391e295b423c0a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbec0fca_1fba42be",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-19T20:21:46Z",
+      "side": 1,
+      "message": "you can pass the bdev name to get_bdevs to just get the information for that specific bdev",
+      "revId": "11355150516320ac9c5a2162391e295b423c0a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b70f2093_040fc662",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-19T20:21:46Z",
+      "side": 1,
+      "message": "I would suggest moving this big chunk of script in a separate patch.",
+      "revId": "11355150516320ac9c5a2162391e295b423c0a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
