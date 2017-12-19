@@ -1416,6 +1416,10 @@ virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn,
 	struct virtio_scsi_cmd_resp *resp;
 	int rc;
 
+	if (svdev->scan_ctx) {
+		return -EEXIST;
+	}
+
 	io_ch = spdk_get_io_channel(svdev);
 	if (io_ch == NULL) {
 		return -EBUSY;
