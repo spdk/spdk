@@ -160,6 +160,30 @@
       "revId": "c80bbd62e16e5e47f5dadc164b63d05c9addbb9b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da150c4a_2e42b0e7",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T09:29:01Z",
+      "side": 1,
+      "message": "Replying myself: let\u0027s leave that as separate fio runs",
+      "parentUuid": "c00c3e26_055f2bb6",
+      "range": {
+        "startLine": 83,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 118
+      },
+      "revId": "c80bbd62e16e5e47f5dadc164b63d05c9addbb9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
