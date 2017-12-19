@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee532dbe_7c763f4d",
+        "filename": "test/nvmf/nvmf.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T14:42:25Z",
+      "side": 1,
+      "message": "Temporary change, to check if per-patch test will succeed.",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 53
+      },
+      "revId": "9a609e33c7cfd89f7886c2f163dfd9790b0b42c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
