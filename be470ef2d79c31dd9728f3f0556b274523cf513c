@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc115019_9d4f7fbf",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:57:40Z",
+      "side": 1,
+      "message": "usage function needs update",
+      "range": {
+        "startLine": 40,
+        "startChar": 8,
+        "endLine": 40,
+        "endChar": 46
+      },
+      "revId": "be470ef2d79c31dd9728f3f0556b274523cf513c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aee2b833_862bc271",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:57:40Z",
+      "side": 1,
+      "message": "not needed?",
+      "range": {
+        "startLine": 226,
+        "startChar": 4,
+        "endLine": 226,
+        "endChar": 14
+      },
+      "revId": "be470ef2d79c31dd9728f3f0556b274523cf513c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bf51cb7_949c535d",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:57:40Z",
+      "side": 1,
+      "message": "I think I reviewed that one already in some other commit. Why not just use lspci and skip parsing gen_nvme.sh output?",
+      "range": {
+        "startLine": 227,
+        "startChar": 4,
+        "endLine": 237,
+        "endChar": 20
+      },
+      "revId": "be470ef2d79c31dd9728f3f0556b274523cf513c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9daa9019_422edbc5",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:57:40Z",
+      "side": 1,
+      "message": "This will not work on 2MB HP systems.\nNRHUGE was change to HUGEMEM quite time ago.",
+      "range": {
+        "startLine": 258,
+        "startChar": 4,
+        "endLine": 258,
+        "endChar": 13
+      },
+      "revId": "be470ef2d79c31dd9728f3f0556b274523cf513c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94a03a8a_3be06809",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:57:40Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we change only in case of hot-remove tests? What\u0027s the point of changing for attach/detach tests?",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 2
+      },
+      "revId": "be470ef2d79c31dd9728f3f0556b274523cf513c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ffda274_6fb91d4d",
+        "filename": "test/vhost/hotplug/scsi_hotremove.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:57:40Z",
+      "side": 1,
+      "message": "don\u0027t you have some kind of conflict here?\nYou source $BASE_DIR/common.sh which already has the same function name defined.",
+      "range": {
+        "startLine": 153,
+        "startChar": 9,
+        "endLine": 153,
+        "endChar": 23
+      },
+      "revId": "be470ef2d79c31dd9728f3f0556b274523cf513c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79ceef78_1d2bed61",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:57:40Z",
+      "side": 1,
+      "message": "tab/spaces",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 16
+      },
+      "revId": "be470ef2d79c31dd9728f3f0556b274523cf513c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
