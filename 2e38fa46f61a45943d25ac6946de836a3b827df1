@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3430dbd3_40dcb83a",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2017-12-19T10:37:53Z",
+      "side": 1,
+      "message": "It will be later extended with more code (bind method)",
+      "parentUuid": "6c617c06_1f973c7c",
+      "range": {
+        "startLine": 181,
+        "startChar": 0,
+        "endLine": 187,
+        "endChar": 1
+      },
+      "revId": "2e38fa46f61a45943d25ac6946de836a3b827df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b8bb236b_4416c768",
         "filename": "test/vhost/hotplug/scsi_hotdetach.sh",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2017-12-18T12:49:49Z",
       "side": 1,
       "message": "Uhm... why do we add this here? Is there something wrong with the tests which are already merged? This does not look like something which is needed by future hot-remove tests",
+      "range": {
+        "startLine": 232,
+        "startChar": 4,
+        "endLine": 232,
+        "endChar": 81
+      },
+      "revId": "2e38fa46f61a45943d25ac6946de836a3b827df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b99b1c29_4c098ecf",
+        "filename": "test/vhost/hotplug/scsi_hotdetach.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2017-12-19T10:37:53Z",
+      "side": 1,
+      "message": "I want to have the same status of vhost after this test",
+      "parentUuid": "b8bb236b_4416c768",
       "range": {
         "startLine": 232,
         "startChar": 4,
