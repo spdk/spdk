@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "f9d1f497_9bcbd975",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-19T20:39:06Z",
+      "side": 1,
+      "message": "this should be util: instead of env: - these changes are not going in the env layer - they will be independent of the env implementation",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0887e2f2_12039679",
         "filename": "include/spdk/cpuset.h",
         "patchSetId": 8
