@@ -99,7 +99,7 @@ nvmf_tgt_create_subsystem(const char *name, enum spdk_nvmf_subtype subtype, uint
 		return NULL;
 	}
 
-	subsystem = spdk_nvmf_create_subsystem(g_tgt.tgt, name, subtype, num_ns);
+	subsystem = spdk_nvmf_subsystem_create(g_tgt.tgt, name, subtype, num_ns);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
 		return NULL;
@@ -120,7 +120,7 @@ nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn)
 		return -EINVAL;
 	}
 
-	spdk_nvmf_delete_subsystem(subsystem);
+	spdk_nvmf_subsystem_destroy(subsystem);
 
 	return 0;
 }
@@ -187,7 +187,7 @@ nvmf_tgt_destroy_poll_group(void *ctx)
 static void
 nvmf_tgt_create_poll_group_done(void *ctx)
 {
-	g_tgt.state = NVMF_TGT_INIT_START_ACCEPTOR;
+	g_tgt.state = NVMF_TGT_INIT_START_SUBSYSTEMS;
 	nvmf_tgt_advance_state(NULL, NULL);
 }
 
@@ -205,6 +205,36 @@ nvmf_tgt_create_poll_group(void *ctx)
 	}
 
 	g_active_poll_groups++;
+}
+
+static void
+nvmf_tgt_subsystem_started(struct spdk_nvmf_subsystem *subsystem,
+			   void *cb_arg, int status)
+{
+	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+
+	if (subsystem) {
+		spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
+		return;
+	}
+
+	g_tgt.state = NVMF_TGT_INIT_START_ACCEPTOR;
+	nvmf_tgt_advance_state(NULL, NULL);
+}
+
+static void
+nvmf_tgt_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
+			   void *cb_arg, int status)
+{
+	subsystem = spdk_nvmf_subsystem_get_next(subsystem);
+
+	if (subsystem) {
+		spdk_nvmf_subsystem_stop(subsystem, nvmf_tgt_subsystem_stopped, NULL);
+		return;
+	}
+
+	g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
+	nvmf_tgt_advance_state(NULL, NULL);
 }
 
 static void
@@ -254,6 +284,18 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 					     NULL,
 					     nvmf_tgt_create_poll_group_done);
 			break;
+		case NVMF_TGT_INIT_START_SUBSYSTEMS: {
+			struct spdk_nvmf_subsystem *subsystem;
+
+			subsystem = spdk_nvmf_subsystem_get_first(g_tgt.tgt);
+
+			if (subsystem) {
+				spdk_nvmf_subsystem_start(subsystem, nvmf_tgt_subsystem_started, NULL);
+			} else {
+				g_tgt.state = NVMF_TGT_INIT_START_ACCEPTOR;
+			}
+			break;
+		}
 		case NVMF_TGT_INIT_START_ACCEPTOR:
 			g_acceptor_poller = spdk_poller_register(acceptor_poll, g_tgt.tgt,
 					    g_spdk_nvmf_tgt_conf.acceptor_poll_rate);
@@ -268,8 +310,20 @@ nvmf_tgt_advance_state(void *arg1, void *arg2)
 			break;
 		case NVMF_TGT_FINI_STOP_ACCEPTOR:
 			spdk_poller_unregister(&g_acceptor_poller);
-			g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
+			g_tgt.state = NVMF_TGT_FINI_STOP_SUBSYSTEMS;
 			break;
+		case NVMF_TGT_FINI_STOP_SUBSYSTEMS: {
+			struct spdk_nvmf_subsystem *subsystem;
+
+			subsystem = spdk_nvmf_subsystem_get_first(g_tgt.tgt);
+
+			if (subsystem) {
+				spdk_nvmf_subsystem_stop(subsystem, nvmf_tgt_subsystem_stopped, NULL);
+			} else {
+				g_tgt.state = NVMF_TGT_FINI_DESTROY_POLL_GROUPS;
+			}
+			break;
+		}
 		case NVMF_TGT_FINI_DESTROY_POLL_GROUPS:
 			/* Send a message to each thread and destroy the poll group */
 			spdk_for_each_thread(nvmf_tgt_destroy_poll_group,

@@ -160,6 +160,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	const char *sn;
 	size_t num_ns;
 	struct spdk_nvmf_ns_params ns_list[MAX_NAMESPACES] = {};
+	struct spdk_nvmf_subsystem *subsystem;
 
 	nqn = spdk_conf_section_get_val(sp, "NQN");
 	mode = spdk_conf_section_get_val(sp, "Mode");
@@ -258,17 +259,17 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		num_ns++;
 	}
 
-	ret = spdk_nvmf_construct_subsystem(nqn,
-					    num_listen_addrs, listen_addrs,
-					    num_hosts, hosts, allow_any_host,
-					    sn,
-					    num_ns, ns_list);
+	subsystem = spdk_nvmf_construct_subsystem(nqn,
+			num_listen_addrs, listen_addrs,
+			num_hosts, hosts, allow_any_host,
+			sn,
+			num_ns, ns_list);
 
 	for (i = 0; i < MAX_LISTEN_ADDRESSES; i++) {
 		free(listen_addrs_str[i]);
 	}
 
-	return ret;
+	return (subsystem != NULL);
 }
 
 static int
@@ -310,8 +311,8 @@ spdk_nvmf_parse_conf(void)
 	return 0;
 }
 
-int
-spdk_nvmf_construct_subsystem(const char *name,
+struct spdk_nvmf_subsystem *
+	spdk_nvmf_construct_subsystem(const char *name,
 			      int num_listen_addresses, struct rpc_listen_address *addresses,
 			      int num_hosts, char *hosts[], bool allow_any_host,
 			      const char *sn, size_t num_ns, struct spdk_nvmf_ns_params *ns_list)
@@ -323,23 +324,23 @@ spdk_nvmf_construct_subsystem(const char *name,
 
 	if (name == NULL) {
 		SPDK_ERRLOG("No NQN specified for subsystem\n");
-		return -1;
+		return NULL;
 	}
 
 	if (num_listen_addresses > MAX_LISTEN_ADDRESSES) {
 		SPDK_ERRLOG("invalid listen adresses number\n");
-		return -1;
+		return NULL;
 	}
 
 	if (num_hosts > MAX_HOSTS) {
 		SPDK_ERRLOG("invalid hosts number\n");
-		return -1;
+		return NULL;
 	}
 
 	subsystem = nvmf_tgt_create_subsystem(name, SPDK_NVMF_SUBTYPE_NVME, num_ns);
 	if (subsystem == NULL) {
 		SPDK_ERRLOG("Subsystem creation failed\n");
-		return -1;
+		return NULL;
 	}
 
 	/* Parse Listen sections */
@@ -409,9 +410,9 @@ spdk_nvmf_construct_subsystem(const char *name,
 
 	}
 
-	return 0;
+	return subsystem;
 
 error:
-	spdk_nvmf_delete_subsystem(subsystem);
-	return -1;
+	spdk_nvmf_subsystem_destroy(subsystem);
+	return NULL;
 }

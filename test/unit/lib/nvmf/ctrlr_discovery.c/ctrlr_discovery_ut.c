@@ -160,16 +160,15 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 }
 
 int
-spdk_nvmf_poll_group_remove_ns(struct spdk_nvmf_poll_group *group,
-			       struct spdk_nvmf_ns *ns)
+spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
+				     struct spdk_nvmf_subsystem *subsystem)
 {
 	return 0;
 }
 
 int
-spdk_nvmf_poll_group_add_ns(struct spdk_nvmf_poll_group *group,
-			    struct spdk_nvmf_subsystem *subsystem,
-			    struct spdk_nvmf_ns *ns)
+spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
+				      struct spdk_nvmf_subsystem *subsystem)
 {
 	return 0;
 }
@@ -200,7 +199,7 @@ test_discovery_log(void)
 	struct spdk_nvme_transport_id trid = {};
 
 	/* Add one subsystem and verify that the discovery log contains it */
-	subsystem = spdk_nvmf_create_subsystem(&tgt, "nqn.2016-06.io.spdk:subsystem1",
+	subsystem = spdk_nvmf_subsystem_create(&tgt, "nqn.2016-06.io.spdk:subsystem1",
 					       SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 
@@ -249,7 +248,7 @@ test_discovery_log(void)
 					 offsetof(struct spdk_nvmf_discovery_log_page, entries[0]),
 					 sizeof(*entry));
 	CU_ASSERT(entry->trtype == 42);
-	spdk_nvmf_delete_subsystem(subsystem);
+	spdk_nvmf_subsystem_destroy(subsystem);
 	free(tgt.subsystems);
 	free(tgt.discovery_log_page);
 }

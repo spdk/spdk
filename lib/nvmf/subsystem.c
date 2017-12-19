@@ -71,25 +71,8 @@ spdk_nvmf_valid_nqn(const char *nqn)
 	return true;
 }
 
-static void
-spdk_nvmf_subsystem_create_done(struct spdk_io_channel_iter *i, int status)
-{
-}
-
-static void
-spdk_nvmf_subsystem_add_to_poll_group(struct spdk_io_channel_iter *i)
-{
-	struct spdk_nvmf_subsystem *subsystem = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
-	int rc;
-
-	rc = spdk_nvmf_poll_group_add_subsystem(group, subsystem);
-	spdk_for_each_channel_continue(i, rc);
-}
-
 struct spdk_nvmf_subsystem *
-spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
+spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 			   const char *nqn,
 			   enum spdk_nvmf_subtype type,
 			   uint32_t num_ns)
@@ -129,6 +112,7 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 		return NULL;
 	}
 
+	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 	subsystem->tgt = tgt;
 	subsystem->id = sid;
 	subsystem->subtype = type;
@@ -152,66 +136,22 @@ spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
 	tgt->subsystems[sid] = subsystem;
 	tgt->discovery_genctr++;
 
-	/* Send a message to each poll group to notify it that a new subsystem
-	 * is available.
-	 * TODO: This call does not currently allow the user to wait for these
-	 * messages to propagate. It also does not protect against two calls
-	 * to this function overlapping
-	 */
-	spdk_for_each_channel(tgt,
-			      spdk_nvmf_subsystem_add_to_poll_group,
-			      subsystem,
-			      spdk_nvmf_subsystem_create_done);
-
 	return subsystem;
 }
 
-static void
-spdk_nvmf_subsystem_delete_done(struct spdk_io_channel_iter *i, int status)
-{
-	struct spdk_nvmf_tgt *tgt = spdk_io_channel_iter_get_io_device(i);
-	struct spdk_nvmf_subsystem *subsystem = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_nvmf_ns *ns;
-
-	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
-	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
-		if (ns->bdev == NULL) {
-			continue;
-		}
-		spdk_bdev_close(ns->desc);
-	}
-
-	free(subsystem->ns);
-
-	tgt->subsystems[subsystem->id] = NULL;
-	tgt->discovery_genctr++;
-
-	free(subsystem);
-}
-
-static void
-spdk_nvmf_subsystem_remove_from_poll_group(struct spdk_io_channel_iter *i)
-{
-	struct spdk_nvmf_subsystem *subsystem = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
-	int rc;
-
-	rc = spdk_nvmf_poll_group_remove_subsystem(group, subsystem);
-
-	spdk_for_each_channel_continue(i, rc);
-}
-
 void
-spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
+spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_listener	*listener, *listener_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
 	struct spdk_nvmf_ctrlr		*ctrlr, *ctrlr_tmp;
+	struct spdk_nvmf_ns		*ns;
 
 	if (!subsystem) {
 		return;
 	}
+
+	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "subsystem is %p\n", subsystem);
 
@@ -230,16 +170,210 @@ spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem)
 		spdk_nvmf_ctrlr_destruct(ctrlr);
 	}
 
-	/* Send a message to each poll group to notify it that a subsystem
-	 * is no longer available.
-	 * TODO: This call does not currently allow the user to wait for these
-	 * messages to propagate. It also does not protect against two calls
-	 * to this function overlapping
-	 */
+	for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+	     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+		if (ns->bdev == NULL) {
+			continue;
+		}
+		spdk_bdev_close(ns->desc);
+	}
+
+	free(subsystem->ns);
+
+	subsystem->tgt->subsystems[subsystem->id] = NULL;
+	subsystem->tgt->discovery_genctr++;
+
+	free(subsystem);
+}
+
+static int
+spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
+			      enum spdk_nvmf_subsystem_state state)
+{
+	enum spdk_nvmf_subsystem_state actual_old_state, expected_old_state;
+
+	switch (state) {
+	case SPDK_NVMF_SUBSYSTEM_INACTIVE:
+		expected_old_state = SPDK_NVMF_SUBSYSTEM_DEACTIVATING;
+		break;
+	case SPDK_NVMF_SUBSYSTEM_ACTIVATING:
+		expected_old_state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
+		break;
+	case SPDK_NVMF_SUBSYSTEM_ACTIVE:
+		expected_old_state = SPDK_NVMF_SUBSYSTEM_ACTIVATING;
+		break;
+	case SPDK_NVMF_SUBSYSTEM_PAUSING:
+		expected_old_state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+		break;
+	case SPDK_NVMF_SUBSYSTEM_PAUSED:
+		expected_old_state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+		break;
+	case SPDK_NVMF_SUBSYSTEM_RESUMING:
+		expected_old_state = SPDK_NVMF_SUBSYSTEM_PAUSED;
+		break;
+	case SPDK_NVMF_SUBSYSTEM_DEACTIVATING:
+		expected_old_state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
+		break;
+	default:
+		assert(false);
+		return -1;
+	}
+
+	actual_old_state = __sync_val_compare_and_swap(&subsystem->state, expected_old_state, state);
+	if (actual_old_state != expected_old_state) {
+		if (actual_old_state == SPDK_NVMF_SUBSYSTEM_RESUMING &&
+		    state == SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+			expected_old_state = SPDK_NVMF_SUBSYSTEM_RESUMING;
+		}
+		actual_old_state = __sync_val_compare_and_swap(&subsystem->state, expected_old_state, state);
+	}
+	assert(actual_old_state == expected_old_state);
+	return actual_old_state - expected_old_state;
+}
+
+struct subsystem_state_change_ctx {
+	struct spdk_nvmf_subsystem *subsystem;
+
+	enum spdk_nvmf_subsystem_state requested_state;
+
+	spdk_nvmf_subsystem_state_change_done cb_fn;
+	void *cb_arg;
+};
+
+static void
+subsystem_state_change_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct subsystem_state_change_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	if (status == 0) {
+		status = spdk_nvmf_subsystem_set_state(ctx->subsystem, ctx->requested_state);
+		if (status) {
+			status = -1;
+		}
+	}
+
+	ctx->cb_fn(ctx->subsystem, ctx->cb_arg, status);
+	free(ctx);
+}
+
+static void
+subsystem_state_change_on_pg(struct spdk_io_channel_iter *i)
+{
+	struct subsystem_state_change_ctx *ctx;
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_poll_group *group;
+	int rc = -1;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	switch (ctx->requested_state) {
+	case SPDK_NVMF_SUBSYSTEM_INACTIVE:
+		rc = spdk_nvmf_poll_group_remove_subsystem(group, ctx->subsystem);
+		break;
+	case SPDK_NVMF_SUBSYSTEM_ACTIVE:
+		if (ctx->subsystem->state == SPDK_NVMF_SUBSYSTEM_ACTIVATING) {
+			rc = spdk_nvmf_poll_group_add_subsystem(group, ctx->subsystem);
+		} else if (ctx->subsystem->state == SPDK_NVMF_SUBSYSTEM_RESUMING) {
+			rc = spdk_nvmf_poll_group_resume_subsystem(group, ctx->subsystem);
+		}
+		break;
+	case SPDK_NVMF_SUBSYSTEM_PAUSED:
+		rc = spdk_nvmf_poll_group_pause_subsystem(group, ctx->subsystem);
+		break;
+	default:
+		assert(false);
+		break;
+	}
+
+	spdk_for_each_channel_continue(i, rc);
+}
+
+static void
+spdk_nvmf_subsystem_state_change(struct spdk_nvmf_subsystem *subsystem,
+				 enum spdk_nvmf_subsystem_state requested_state,
+				 spdk_nvmf_subsystem_state_change_done cb_fn,
+				 void *cb_arg)
+{
+	struct subsystem_state_change_ctx *ctx;
+	enum spdk_nvmf_subsystem_state intermediate_state;
+	int rc;
+
+	switch (requested_state) {
+	case SPDK_NVMF_SUBSYSTEM_INACTIVE:
+		intermediate_state = SPDK_NVMF_SUBSYSTEM_DEACTIVATING;
+		break;
+	case SPDK_NVMF_SUBSYSTEM_ACTIVE:
+		if (subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED) {
+			intermediate_state = SPDK_NVMF_SUBSYSTEM_RESUMING;
+		} else {
+			intermediate_state = SPDK_NVMF_SUBSYSTEM_ACTIVATING;
+		}
+		break;
+	case SPDK_NVMF_SUBSYSTEM_PAUSED:
+		intermediate_state = SPDK_NVMF_SUBSYSTEM_PAUSING;
+		break;
+	default:
+		assert(false);
+		cb_fn(subsystem, cb_arg, -EINVAL);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		cb_fn(subsystem, cb_arg, -ENOMEM);
+		return;
+	}
+
+	rc = spdk_nvmf_subsystem_set_state(subsystem, intermediate_state);
+	if (rc) {
+		free(ctx);
+		cb_fn(subsystem, cb_arg, -1);
+		return;
+	}
+
+	ctx->subsystem = subsystem;
+	ctx->requested_state = requested_state;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
 	spdk_for_each_channel(subsystem->tgt,
-			      spdk_nvmf_subsystem_remove_from_poll_group,
-			      subsystem,
-			      spdk_nvmf_subsystem_delete_done);
+			      subsystem_state_change_on_pg,
+			      ctx,
+			      subsystem_state_change_done);
+}
+
+void
+spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
+			  spdk_nvmf_subsystem_state_change_done cb_fn,
+			  void *cb_arg)
+{
+	spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
+}
+
+void
+spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
+			 spdk_nvmf_subsystem_state_change_done cb_fn,
+			 void *cb_arg)
+{
+	spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_INACTIVE, cb_fn, cb_arg);
+}
+
+void
+spdk_nvmf_subsystem_pause(struct spdk_nvmf_subsystem *subsystem,
+			  spdk_nvmf_subsystem_state_change_done cb_fn,
+			  void *cb_arg)
+{
+	spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_PAUSED, cb_fn, cb_arg);
+}
+
+void
+spdk_nvmf_subsystem_resume(struct spdk_nvmf_subsystem *subsystem,
+			   spdk_nvmf_subsystem_state_change_done cb_fn,
+			   void *cb_arg)
+{
+	spdk_nvmf_subsystem_state_change(subsystem, SPDK_NVMF_SUBSYSTEM_ACTIVE, cb_fn, cb_arg);
 }
 
 struct spdk_nvmf_subsystem *
@@ -427,29 +561,6 @@ spdk_nvmf_listener_get_trid(struct spdk_nvmf_listener *listener)
 	return &listener->trid;
 }
 
-static void
-spdk_nvmf_remove_ns_done(struct spdk_io_channel_iter *i, int status)
-{
-	struct spdk_nvmf_ns *ns = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_nvmf_subsystem *subsystem = ns->subsystem;
-
-	spdk_bdev_close(ns->desc);
-	ns->allocated = false;
-	subsystem->num_allocated_nsid--;
-}
-
-static void
-spdk_nvmf_subsystem_remove_ns_from_poll_group(struct spdk_io_channel_iter *i)
-{
-	struct spdk_nvmf_ns *ns = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
-	int rc;
-
-	rc = spdk_nvmf_poll_group_remove_ns(group, ns);
-	spdk_for_each_channel_continue(i, rc);
-}
-
 int
 spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
@@ -464,29 +575,11 @@ spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t ns
 		return -1;
 	}
 
-	spdk_for_each_channel(ns->subsystem->tgt,
-			      spdk_nvmf_subsystem_remove_ns_from_poll_group,
-			      ns,
-			      spdk_nvmf_remove_ns_done);
+	spdk_bdev_close(ns->desc);
+	ns->allocated = false;
+	subsystem->num_allocated_nsid--;
+
 	return 0;
-}
-
-static void
-spdk_nvmf_subsystem_add_ns_done(struct spdk_io_channel_iter *i, int status)
-{
-	return;
-}
-
-static void
-spdk_nvmf_subsystem_ns_update_poll_group(struct spdk_io_channel_iter *i)
-{
-	struct spdk_nvmf_ns *ns = spdk_io_channel_iter_get_ctx(i);
-	struct spdk_io_channel *ch = spdk_io_channel_iter_get_channel(i);
-	struct spdk_nvmf_poll_group *group = spdk_io_channel_get_ctx(ch);
-	int rc;
-
-	rc = spdk_nvmf_poll_group_add_ns(group, ns->subsystem, ns);
-	spdk_for_each_channel_continue(i, rc);
 }
 
 static void
@@ -515,6 +608,9 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	struct spdk_nvmf_ns *ns;
 	uint32_t i;
 	int rc;
+
+	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE ||
+	       subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED);
 
 	if (nsid == SPDK_NVME_GLOBAL_NS_TAG) {
 		SPDK_ERRLOG("Invalid NSID %" PRIu32 "\n", nsid);
@@ -589,17 +685,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 
 	subsystem->max_nsid = spdk_max(subsystem->max_nsid, nsid);
 	subsystem->num_allocated_nsid++;
-
-	/* Send a message to each poll group to notify it that a new namespace
-	 * is available.
-	 * TODO: This call does not currently allow the user to wait for these
-	 * messages to propagate. It also does not protect against two calls
-	 * to this function overlapping
-	 */
-	spdk_for_each_channel(subsystem->tgt,
-			      spdk_nvmf_subsystem_ns_update_poll_group,
-			      ns,
-			      spdk_nvmf_subsystem_add_ns_done);
 
 	return nsid;
 }

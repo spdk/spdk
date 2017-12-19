@@ -45,6 +45,16 @@
 
 #define SPDK_NVMF_DEFAULT_NUM_CTRLRS_PER_LCORE 1
 
+enum spdk_nvmf_subsystem_state {
+	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
+	SPDK_NVMF_SUBSYSTEM_ACTIVATING,
+	SPDK_NVMF_SUBSYSTEM_ACTIVE,
+	SPDK_NVMF_SUBSYSTEM_PAUSING,
+	SPDK_NVMF_SUBSYSTEM_PAUSED,
+	SPDK_NVMF_SUBSYSTEM_RESUMING,
+	SPDK_NVMF_SUBSYSTEM_DEACTIVATING,
+};
+
 struct spdk_nvmf_tgt {
 	struct spdk_nvmf_tgt_opts		opts;
 
@@ -81,6 +91,8 @@ struct spdk_nvmf_subsystem_poll_group {
 	/* Array of channels for each namespace indexed by nsid - 1 */
 	struct spdk_io_channel	**channels;
 	uint32_t		num_channels;
+
+	enum spdk_nvmf_subsystem_state state;
 };
 
 struct spdk_nvmf_poll_group {
@@ -91,7 +103,6 @@ struct spdk_nvmf_poll_group {
 	/* Array of poll groups indexed by subsystem id (sid) */
 	struct spdk_nvmf_subsystem_poll_group		*sgroups;
 	uint32_t					num_sgroups;
-
 };
 
 typedef enum _spdk_nvmf_request_exec_status {
@@ -185,7 +196,9 @@ struct spdk_nvmf_ctrlr {
 };
 
 struct spdk_nvmf_subsystem {
-	uint32_t id;
+	uint32_t			id;
+	enum spdk_nvmf_subsystem_state	state;
+
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
 	enum spdk_nvmf_subtype subtype;
 	uint16_t next_cntlid;
@@ -218,11 +231,10 @@ int spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 				       struct spdk_nvmf_subsystem *subsystem);
 int spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 		struct spdk_nvmf_subsystem *subsystem);
-int spdk_nvmf_poll_group_add_ns(struct spdk_nvmf_poll_group *group,
-				struct spdk_nvmf_subsystem *subsystem,
-				struct spdk_nvmf_ns *ns);
-int spdk_nvmf_poll_group_remove_ns(struct spdk_nvmf_poll_group *group,
-				   struct spdk_nvmf_ns *ns);
+int spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_subsystem *subsystem);
+int spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
+		struct spdk_nvmf_subsystem *subsystem);
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_abort(struct spdk_nvmf_request *req);
