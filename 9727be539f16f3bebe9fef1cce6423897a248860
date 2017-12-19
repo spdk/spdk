@@ -46,6 +46,30 @@
       "revId": "9727be539f16f3bebe9fef1cce6423897a248860",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7326daa6_02709bc2",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-19T01:17:01Z",
+      "side": 1,
+      "message": "I do not agree. How can you make sure this is an integer. If the value is not integrate after /, the precision will be an issue. For example,  if the value is 222.9, and you get 222 (just an example), and the precision will not be correct",
+      "parentUuid": "f8ddf978_d1629072",
+      "range": {
+        "startLine": 270,
+        "startChar": 37,
+        "endLine": 270,
+        "endChar": 86
+      },
+      "revId": "9727be539f16f3bebe9fef1cce6423897a248860",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
