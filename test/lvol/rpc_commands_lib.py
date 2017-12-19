@@ -1,4 +1,6 @@
 import json
+import time
+import subprocess
 from uuid import UUID
 from subprocess import check_output, CalledProcessError
 
@@ -137,6 +139,15 @@ class Commands_Rpc(object):
     def start_nbd_disk(self, bdev_name, nbd_name):
         print("INFO: RPC COMMAND start_nbd_disk")
         output, rc = self.rpc.start_nbd_disk(bdev_name, nbd_name)
+
+        cmd = "cat /sys/class/block/%s/size" % nbd_name.split("/")[-1]
+        if rc == 0:
+            try:
+                while "0" == subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True).strip():
+                    time.sleep(1)
+            except Exception as e:
+                pass
+
         return rc
 
     def stop_nbd_disk(self, nbd_name):
@@ -172,3 +183,13 @@ class Commands_Rpc(object):
     def construct_nvme_bdev(self, nvme_name, trtype, traddr):
         print("INFO: Add NVMe bdev {nvme}".format(nvme=nvme_name))
         self.rpc.construct_nvme_bdev("-b", nvme_name, "-t", trtype, "-a", traddr)
+
+    def snapshot_lvol_bdev(self, bdev_name, snapshot_name):
+        print("INFO: RPC COMMAND snapshot_lvol_bdev")
+        output, rc = self.rpc.snapshot_lvol_bdev(bdev_name, snapshot_name)
+        return rc
+
+    def clone_lvol_bdev(self, snapshot_name, clone_name):
+        print("INFO: RPC COMMAND clone_lvol_bdev")
+        output, rc = self.rpc.clone_lvol_bdev(snapshot_name, clone_name)
+        return rc
