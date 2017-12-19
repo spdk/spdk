@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "260bffda_36a0b22c",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T14:34:40Z",
+      "side": 1,
+      "message": "I think there\u0027s no need for loop here.\nIn jq command try to pipe to join(\":\"), that should do it.\nLike here:\nhttps://review.gerrithub.io/#/c/390983/16/test/vhost/lvol/lvol_test.sh @ 185",
+      "range": {
+        "startLine": 84,
+        "startChar": 1,
+        "endLine": 87,
+        "endChar": 5
+      },
+      "revId": "5cf2abac6357a9a3e4dadc1c34534f79b8e5d4ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eca03ca2_af880f48",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T14:34:40Z",
+      "side": 1,
+      "message": "this pipe is not needed I think. You can just do \".name\" after select (not 100% sure but you can try it:P)",
+      "range": {
+        "startLine": 89,
+        "startChar": 84,
+        "endLine": 89,
+        "endChar": 86
+      },
+      "revId": "5cf2abac6357a9a3e4dadc1c34534f79b8e5d4ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c808897_998c40bf",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T14:34:40Z",
+      "side": 1,
+      "message": "Like in previous comment - I think loop is not needed, just join() in jq",
+      "range": {
+        "startLine": 90,
+        "startChar": 1,
+        "endLine": 92,
+        "endChar": 5
+      },
+      "revId": "5cf2abac6357a9a3e4dadc1c34534f79b8e5d4ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
