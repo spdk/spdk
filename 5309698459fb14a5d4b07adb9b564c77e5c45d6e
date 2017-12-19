@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e15accbb_2c970552",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-19T15:18:27Z",
+      "side": 1,
+      "message": "Unrelated change.",
+      "revId": "5309698459fb14a5d4b07adb9b564c77e5c45d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
