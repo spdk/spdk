@@ -117,16 +117,15 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 }
 
 int
-spdk_nvmf_poll_group_remove_ns(struct spdk_nvmf_poll_group *group,
-			       struct spdk_nvmf_ns *ns)
+spdk_nvmf_poll_group_pause_subsystem(struct spdk_nvmf_poll_group *group,
+				     struct spdk_nvmf_subsystem *subsystem)
 {
 	return 0;
 }
 
 int
-spdk_nvmf_poll_group_add_ns(struct spdk_nvmf_poll_group *group,
-			    struct spdk_nvmf_subsystem *subsystem,
-			    struct spdk_nvmf_ns *ns)
+spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
+				      struct spdk_nvmf_subsystem *subsystem)
 {
 	return 0;
 }
@@ -240,27 +239,27 @@ nvmf_test_create_subsystem(void)
 	struct spdk_nvmf_subsystem *subsystem;
 
 	strncpy(nqn, "nqn.2016-06.io.spdk:subsystem1", sizeof(nqn));
-	subsystem = spdk_nvmf_create_subsystem(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
-	spdk_nvmf_delete_subsystem(subsystem);
+	spdk_nvmf_subsystem_destroy(subsystem);
 
 	/* Longest valid name */
 	strncpy(nqn, "nqn.2016-06.io.spdk:", sizeof(nqn));
 	memset(nqn + strlen(nqn), 'a', 223 - strlen(nqn));
 	nqn[223] = '\0';
 	CU_ASSERT(strlen(nqn) == 223);
-	subsystem = spdk_nvmf_create_subsystem(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	SPDK_CU_ASSERT_FATAL(subsystem != NULL);
 	CU_ASSERT_STRING_EQUAL(subsystem->subnqn, nqn);
-	spdk_nvmf_delete_subsystem(subsystem);
+	spdk_nvmf_subsystem_destroy(subsystem);
 
 	/* Name that is one byte longer than allowed */
 	strncpy(nqn, "nqn.2016-06.io.spdk:", sizeof(nqn));
 	memset(nqn + strlen(nqn), 'a', 224 - strlen(nqn));
 	nqn[224] = '\0';
 	CU_ASSERT(strlen(nqn) == 224);
-	subsystem = spdk_nvmf_create_subsystem(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
+	subsystem = spdk_nvmf_subsystem_create(&tgt, nqn, SPDK_NVMF_SUBTYPE_NVME, 0);
 	CU_ASSERT(subsystem == NULL);
 
 	free(tgt.subsystems);
