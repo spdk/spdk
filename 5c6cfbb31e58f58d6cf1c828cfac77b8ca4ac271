@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0cda166a_875bc0e6",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-19T14:00:15Z",
+      "side": 1,
+      "message": "Can we change name to spdk_BLOB_set_read_only instead of spdk_BS_set_read_only as this function is used for blob, not blobstores?",
+      "range": {
+        "startLine": 249,
+        "startChar": 10,
+        "endLine": 249,
+        "endChar": 12
+      },
+      "revId": "5c6cfbb31e58f58d6cf1c828cfac77b8ca4ac271",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "815f92cf_8a592ea9",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-19T14:00:15Z",
+      "side": 1,
+      "message": "You set this value here, but never use it. We should just set 0 here.",
+      "range": {
+        "startLine": 244,
+        "startChar": 35,
+        "endLine": 244,
+        "endChar": 54
+      },
+      "revId": "5c6cfbb31e58f58d6cf1c828cfac77b8ca4ac271",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
