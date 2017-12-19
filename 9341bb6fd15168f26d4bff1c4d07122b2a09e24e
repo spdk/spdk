@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4108050e_f1f32c51",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T09:32:53Z",
+      "side": 1,
+      "message": "Any chance we could do some kind of RPC call to get a list of these devs so that we could avoid hardcoding them?",
+      "range": {
+        "startLine": 80,
+        "startChar": 0,
+        "endLine": 81,
+        "endChar": 58
+      },
+      "revId": "9341bb6fd15168f26d4bff1c4d07122b2a09e24e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
