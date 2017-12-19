@@ -58,6 +58,12 @@ function usage() {
                                     655: 'thin_provisioning_filling_disks_less_than_lvs_size',
                                     700: 'tasting_positive',
                                     701: 'tasting_lvol_store_positive',
+                                    750: 'snapshot_readonly',
+                                    751: 'snapshot_compare_with_lvol_bdev',
+                                    752: 'snapshot_during_io_traffic',
+                                    753: 'snapshot_of_snapshot',
+                                    754: 'clone_bdev_only',
+                                    755: 'clone_writing_clone',
                                     10000: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
