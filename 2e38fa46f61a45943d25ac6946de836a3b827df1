@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "a8f264fe_74e66ef3",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:48:41Z",
+      "side": 1,
+      "message": "The only place where I see this function used is in case of fail.\nWhy not use \"at_app_exit\" function?",
+      "range": {
+        "startLine": 176,
+        "startChar": 0,
+        "endLine": 179,
+        "endChar": 1
+      },
+      "revId": "2e38fa46f61a45943d25ac6946de836a3b827df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b452782_7aa5ad4c",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:48:41Z",
+      "side": 1,
+      "message": "I case of fail I think it\u0027d be better to just kill VMs...\nin that case you dont need new fuctnion for that since there is \"at_app_exit\" function already in common.sh",
+      "range": {
+        "startLine": 184,
+        "startChar": 4,
+        "endLine": 184,
+        "endChar": 18
+      },
+      "revId": "2e38fa46f61a45943d25ac6946de836a3b827df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6c617c06_1f973c7c",
         "filename": "test/vhost/hotplug/common.sh",
         "patchSetId": 1
@@ -37,6 +83,30 @@
       "side": 1,
       "message": "It will be later extended with more code (bind method)",
       "parentUuid": "6c617c06_1f973c7c",
+      "range": {
+        "startLine": 181,
+        "startChar": 0,
+        "endLine": 187,
+        "endChar": 1
+      },
+      "revId": "2e38fa46f61a45943d25ac6946de836a3b827df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c11b7a3f_e5bde5cc",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:48:41Z",
+      "side": 1,
+      "message": "Why not add anything else (like bind) to trap?",
+      "parentUuid": "3430dbd3_40dcb83a",
       "range": {
         "startLine": 181,
         "startChar": 0,
@@ -96,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "b3f82630_2f6ef4df",
+        "filename": "test/vhost/hotplug/scsi_hotdetach.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:48:41Z",
+      "side": 1,
+      "message": "Same... same as what? I don\u0027t understand?",
+      "parentUuid": "b99b1c29_4c098ecf",
+      "range": {
+        "startLine": 232,
+        "startChar": 4,
+        "endLine": 232,
+        "endChar": 81
+      },
+      "revId": "2e38fa46f61a45943d25ac6946de836a3b827df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81be499d_415c8dba",
         "filename": "test/vhost/hotplug/scsi_hotplug.sh",
         "patchSetId": 1
@@ -107,6 +201,30 @@
       "writtenOn": "2017-12-18T12:49:49Z",
       "side": 1,
       "message": "Could we instead call this function \"clear_vhost_config\" (or something similar) and instead call RPC once (with get_vhost_controllers function), get a list of all controllers and iterate over them to remove?",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 1
+      },
+      "revId": "2e38fa46f61a45943d25ac6946de836a3b827df1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "034243e6_5873e241",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:48:41Z",
+      "side": 1,
+      "message": "How about this?",
+      "parentUuid": "81be499d_415c8dba",
       "range": {
         "startLine": 43,
         "startChar": 0,
