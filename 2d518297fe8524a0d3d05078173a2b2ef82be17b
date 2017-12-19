@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c12b479a_c5c9193d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2628,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T16:53:14Z",
+      "side": 1,
+      "message": "Extra whitespace change",
+      "revId": "2d518297fe8524a0d3d05078173a2b2ef82be17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2036dd38_038bd3d2",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2235,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T16:53:14Z",
+      "side": 1,
+      "message": "Format issue - the return type should be on a separate line in function definitions.",
+      "revId": "2d518297fe8524a0d3d05078173a2b2ef82be17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7f292bf_623c7e90",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2253,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T16:53:14Z",
+      "side": 1,
+      "message": "I\u0027d like to see a few more negative tests:\n\n1) The user passes an xattr_count greater than 0, but get_xattr_value is NULL.\n\n2) The user-provided get_xattr_value callback sets *value to NULL or doesn\u0027t update *value (it should be NULL going in).",
+      "revId": "2d518297fe8524a0d3d05078173a2b2ef82be17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a784c5a_2d9546d9",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2296,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T16:53:14Z",
+      "side": 1,
+      "message": "You can use CU_ASSERT_STRING_EQUAL for string comparisons.",
+      "revId": "2d518297fe8524a0d3d05078173a2b2ef82be17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
