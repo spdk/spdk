@@ -16,6 +16,24 @@
       "revId": "5690c21d5905c4ec93c219435bc071e94649e37d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99c8793f_3896df53",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T19:18:50Z",
+      "side": 1,
+      "message": "Agreed, this is good information, but CHANGELOG.md is meant to be user-visible changes, so we should go with something more like Jim\u0027s suggestion.  I think most of the detail you provided here was already in previous commit messages, so we shouldn\u0027t need to mention it again as long as VFIO-based hotplug works now.",
+      "parentUuid": "9aabcf37_21ae0f9b",
+      "revId": "5690c21d5905c4ec93c219435bc071e94649e37d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
