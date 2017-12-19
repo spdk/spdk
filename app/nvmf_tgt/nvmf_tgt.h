@@ -55,10 +55,12 @@ enum nvmf_tgt_state {
 	NVMF_TGT_INIT_NONE = 0,
 	NVMF_TGT_INIT_PARSE_CONFIG,
 	NVMF_TGT_INIT_CREATE_POLL_GROUPS,
+	NVMF_TGT_INIT_START_SUBSYSTEMS,
 	NVMF_TGT_INIT_START_ACCEPTOR,
 	NVMF_TGT_RUNNING,
 	NVMF_TGT_FINI_STOP_ACCEPTOR,
 	NVMF_TGT_FINI_DESTROY_POLL_GROUPS,
+	NVMF_TGT_FINI_STOP_SUBSYSTEMS,
 	NVMF_TGT_FINI_FREE_RESOURCES,
 	NVMF_TGT_STOPPED,
 	NVMF_TGT_ERROR,
@@ -86,11 +88,10 @@ struct spdk_nvmf_ns_params {
 	uint32_t nsid;
 };
 
-int
-spdk_nvmf_construct_subsystem(const char *name,
-			      int num_listen_addresses, struct rpc_listen_address *addresses,
-			      int num_hosts, char *hosts[], bool allow_any_host,
-			      const char *sn, size_t num_ns, struct spdk_nvmf_ns_params *ns_list);
+struct spdk_nvmf_subsystem *spdk_nvmf_construct_subsystem(const char *name,
+		int num_listen_addresses, struct rpc_listen_address *addresses,
+		int num_hosts, char *hosts[], bool allow_any_host,
+		const char *sn, size_t num_ns, struct spdk_nvmf_ns_params *ns_list);
 
 int
 nvmf_tgt_shutdown_subsystem_by_nqn(const char *nqn);

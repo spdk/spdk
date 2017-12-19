@@ -132,15 +132,85 @@ int spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 int spdk_nvmf_poll_group_remove(struct spdk_nvmf_poll_group *group,
 				struct spdk_nvmf_qpair *qpair);
 
-/*
- * The NVMf subsystem, as indicated in the specification, is a collection
- * of controllers.  Any individual controller has
- * access to all the NVMe device/namespaces maintained by the subsystem.
+/**
+ * Create an NVMe-oF subsystem.
+ *
+ * Subsystems are in one of three states: Inactive, Active, Paused. This
+ * state affects which operations may be performed on the subsystem. Upon
+ * creation, the subsystem will be in the Inactive state and may be activated
+ * by calling spdk_nvmf_subsystem_start(). No I/O will be processed in the Inactive
+ * or Paused states, but changes to the state of the subsystem may be made.
+ *
+ * \param tgt The NVMe-oF target that will own this subsystem.
+ * \param nqn The NVMe qualified name of this subsystem.
+ * \param type Whether this subsystem is an I/O subsystem or a Discovery subsystem.
+ * \param num_ns The number of namespaces this subsystem contains.
+ *
+ * \return An spdk_nvmf_subsystem or NULL on error.
  */
-struct spdk_nvmf_subsystem *spdk_nvmf_create_subsystem(struct spdk_nvmf_tgt *tgt,
+struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 		const char *nqn,
 		enum spdk_nvmf_subtype type,
 		uint32_t num_ns);
+
+/**
+ * Destroy an NVMe-oF subsystem. A subsystem may only be destroyed when in
+ * the Inactive state. See spdk_nvmf_subsystem_stop().
+ *
+ * \param subsystem The NVMe-oF subsystem to destroy.
+ */
+void spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem);
+
+typedef void (*spdk_nvmf_subsystem_state_change_done)(struct spdk_nvmf_subsystem *subsystem,
+		void *cb_arg, int status);
+
+/**
+ * Transition an NVMe-oF subsystem from Inactive to Active state.
+ *
+ * \param subsystem The NVMe-oF subsystem.
+ * \param cb_fn A function that will be called once the subsystem has changed state.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ */
+void spdk_nvmf_subsystem_start(struct spdk_nvmf_subsystem *subsystem,
+			       spdk_nvmf_subsystem_state_change_done cb_fn,
+			       void *cb_arg);
+
+/**
+ * Transition an NVMe-oF subsystem from Active to Inactive state.
+ *
+ * \param subsystem The NVMe-oF subsystem.
+ * \param cb_fn A function that will be called once the subsystem has changed state.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ */
+void spdk_nvmf_subsystem_stop(struct spdk_nvmf_subsystem *subsystem,
+			      spdk_nvmf_subsystem_state_change_done cb_fn,
+			      void *cb_arg);
+
+/**
+ * Transition an NVMe-oF subsystem from Active to Paused state.
+ *
+ * \param subsystem The NVMe-oF subsystem.
+ * \param cb_fn A function that will be called once the subsystem has changed state.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ */
+void spdk_nvmf_subsystem_pause(struct spdk_nvmf_subsystem *subsystem,
+			       spdk_nvmf_subsystem_state_change_done cb_fn,
+			       void *cb_arg);
+
+/**
+ * Transition an NVMe-oF subsystem from Paused to Active state.
+ *
+ * \param subsystem The NVMe-oF subsystem.
+ * \param cb_fn A function that will be called once the subsystem has changed state.
+ * \param cb_arg Argument passed to cb_fn.
+ *
+ */
+void spdk_nvmf_subsystem_resume(struct spdk_nvmf_subsystem *subsystem,
+				spdk_nvmf_subsystem_state_change_done cb_fn,
+				void *cb_arg);
 
 /**
  * Search the target for a subsystem with the given NQN
@@ -157,8 +227,6 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_first(struct spdk_nvmf_tgt *
  * Continue iterating over all known subsystems. If no additional subsystems, return NULL.
  */
 struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_get_next(struct spdk_nvmf_subsystem *subsystem);
-
-void spdk_nvmf_delete_subsystem(struct spdk_nvmf_subsystem *subsystem);
 
 /**
  * Allow the given host NQN to connect to the given subsystem.
