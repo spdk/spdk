@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd096685_18fbc1b1",
+        "filename": "include/spdk/crc16.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T17:07:51Z",
+      "side": 1,
+      "message": "Maybe SPDK_CRC16_T10DIF_POLYNOMIAL to match the spdk_crc16_t10dif() function name below.",
+      "range": {
+        "startLine": 51,
+        "startChar": 8,
+        "endLine": 51,
+        "endChar": 37
+      },
+      "revId": "106affd7e957d0ba5acd82693ad60a0200505d53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5503cba_8c682ec6",
+        "filename": "include/spdk/crc16.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T17:07:51Z",
+      "side": 1,
+      "message": "The buf parameter should still be changed to const void * so we can pass any type to this function.  You can cast it to const uint8_t * inside the function when calculating the checksum.",
+      "range": {
+        "startLine": 60,
+        "startChar": 27,
+        "endLine": 60,
+        "endChar": 45
+      },
+      "revId": "106affd7e957d0ba5acd82693ad60a0200505d53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ac7dd9f_688753d3",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T17:07:51Z",
+      "side": 1,
+      "message": "Add a newline between type and name in function definitions.",
+      "revId": "106affd7e957d0ba5acd82693ad60a0200505d53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a4ae48b_63072e2e",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T17:07:51Z",
+      "side": 1,
+      "message": "i should be a size_t, since it is used to count up to len, which is also size_t.",
+      "revId": "106affd7e957d0ba5acd82693ad60a0200505d53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
