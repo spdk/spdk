@@ -96,13 +96,16 @@ class Commands_Rpc(object):
             "-c {cluster_sz}".format(cluster_sz=cluster_size))[0]
         return output.rstrip('\n')
 
-    def construct_lvol_bdev(self, uuid, lbd_name, size):
+    def construct_lvol_bdev(self, uuid, lbd_name, size, thin=False):
         print("INFO: RPC COMMAND construct_lvol_bdev")
         try:
             uuid_obj = UUID(uuid)
             name_opt = "-u"
         except ValueError:
             name_opt = "-l"
+        thin_provisioned = ""
+        if thin:
+            thin_provisioned = "-t"
         output = self.rpc.construct_lvol_bdev(name_opt, uuid, lbd_name, size)[0]
         return output.rstrip('\n')
 
@@ -126,9 +129,22 @@ class Commands_Rpc(object):
         output, rc = self.rpc.resize_lvol_bdev(uuid, new_size)
         return rc
 
-    def get_lvol_stores(self):
+    def start_nbd_disk(self, bdev_name, nbd_name):
+        print("INFO: RPC COMMAND start_nbd_disk")
+        output, rc = self.rpc.start_nbd_disk(bdev_name, nbd_name)
+        return rc
+
+    def stop_nbd_disk(self, nbd_name):
+        print("INFO: RPC COMMAND stop_nbd_disk")
+        output, rc = self.rpc.stop_nbd_disk(nbd_name)
+        return rc
+
+    def get_lvol_stores(self, name=None):
         print("INFO: RPC COMMAND get_lvol_stores")
-        output = json.loads(self.rpc.get_lvol_stores()[0])
+        if name:
+            output = json.loads(self.rpc.get_lvol_stores("-l", name)[0])
+        else:
+            output = json.loads(self.rpc.get_lvol_stores()[0])
         return output
 
     def get_lvol_bdevs(self):
@@ -140,6 +156,22 @@ class Commands_Rpc(object):
                 output.append(bdev)
         return output
 
+    def get_lvol_bdev_with_name(self, name):
+        print("INFO: RPC COMMAND get_bdevs; lvol bdevs only")
+        rpc_output = json.loads(self.rpc.get_bdevs("-b", name)[0])
+        if len(rpc_output) > 0:
+            return rpc_output[0]
+
+        return None
+
     def construct_nvme_bdev(self, nvme_name, trtype, traddr):
         print("INFO: Add NVMe bdev {nvme}".format(nvme=nvme_name))
         self.rpc.construct_nvme_bdev("-b", nvme_name, "-t", trtype, "-a", traddr)
+
+    def snapshot_lvol_bdev(self, bdev_name, snapshot_name):
+        output, rc = self.rpc.snapshot_lvol_bdev(bdev_name, snapshot_name)
+        return rc
+
+    def clone_lvol_bdev(self, snapshot_name, clone_name):
+        output, rc = self.rpc.clone_lvol_bdev(snapshot_name, clone_name)
+        return rc
