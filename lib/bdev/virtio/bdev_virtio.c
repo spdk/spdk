@@ -130,6 +130,9 @@ struct virtio_scsi_scan_base {
 	/** Scan all targets on the device. */
 	bool				full_scan;
 
+	/** Start a full rescan after receiving next scan I/O response. */
+	bool				restart;
+
 	/** Additional targets to be (re)scanned. */
 	TAILQ_HEAD(, virtio_scsi_scan_info) scan_queue;
 
@@ -697,6 +700,7 @@ bdev_virtio_poll(void *arg)
 {
 	struct bdev_virtio_io_channel *ch = arg;
 	struct virtio_scsi_dev *svdev = ch->svdev;
+	struct virtio_scsi_scan_base *scan_ctx = svdev->scan_ctx;
 	void *io[32];
 	uint32_t io_len[32];
 	uint16_t i, cnt;
@@ -704,34 +708,41 @@ bdev_virtio_poll(void *arg)
 
 	cnt = virtio_recv_pkts(ch->vq, (void **)io, io_len, SPDK_COUNTOF(io));
 	for (i = 0; i < cnt; ++i) {
-		if (spdk_unlikely(svdev->scan_ctx && io[i] == &svdev->scan_ctx->io_ctx)) {
+		if (spdk_unlikely(scan_ctx && io[i] == &scan_ctx->io_ctx)) {
 			if (svdev->removed) {
-				_virtio_scsi_dev_scan_finish(svdev->scan_ctx, -EINTR);
+				_virtio_scsi_dev_scan_finish(scan_ctx, -EINTR);
 				return;
 			}
 
-			process_scan_resp(svdev->scan_ctx);
+			if (scan_ctx->restart) {
+				scan_ctx->restart = false;
+				scan_ctx->full_scan = true;
+				_virtio_scsi_dev_scan_tgt(scan_ctx, 0);
+				continue;
+			}
+
+			process_scan_resp(scan_ctx);
 			continue;
 		}
 
 		bdev_virtio_io_cpl(io[i]);
 	}
 
-	if (spdk_unlikely(svdev->scan_ctx && svdev->scan_ctx->needs_resend)) {
+	if (spdk_unlikely(scan_ctx && scan_ctx->needs_resend)) {
 		if (svdev->removed) {
-			_virtio_scsi_dev_scan_finish(svdev->scan_ctx, -EINTR);
+			_virtio_scsi_dev_scan_finish(scan_ctx, -EINTR);
 			return;
 		} else if (cnt == 0) {
 			return;
 		}
 
-		rc = send_scan_io(svdev->scan_ctx);
+		rc = send_scan_io(scan_ctx);
 		if (rc != 0) {
-			assert(svdev->scan_ctx->retries > 0);
-			svdev->scan_ctx->retries--;
-			if (svdev->scan_ctx->retries == 0) {
+			assert(scan_ctx->retries > 0);
+			scan_ctx->retries--;
+			if (scan_ctx->retries == 0) {
 				SPDK_ERRLOG("Target scan failed unrecoverably with rc = %d.\n", rc);
-				_virtio_scsi_dev_scan_finish(svdev->scan_ctx, rc);
+				_virtio_scsi_dev_scan_finish(scan_ctx, rc);
 			}
 		}
 	}
@@ -1511,7 +1522,27 @@ virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn,
 		     void *cb_arg)
 {
 	struct virtio_scsi_scan_base *base;
+	struct virtio_scsi_scan_info *tgt, *next_tgt;
 	int rc;
+
+	if (svdev->scan_ctx) {
+		if (svdev->scan_ctx->full_scan) {
+			return -EEXIST;
+		}
+
+		/* We're about to start a full rescan, so there's no need
+		 * to scan particular targets afterwards.
+		 */
+		TAILQ_FOREACH_SAFE(tgt, &svdev->scan_ctx->scan_queue, tailq, next_tgt) {
+			TAILQ_REMOVE(&svdev->scan_ctx->scan_queue, tgt, tailq);
+			free(tgt);
+		}
+
+		svdev->scan_ctx->cb_fn = cb_fn;
+		svdev->scan_ctx->cb_arg = cb_arg;
+		svdev->scan_ctx->restart = true;
+		return 0;
+	}
 
 	rc = _virtio_scsi_dev_scan_init(svdev);
 	if (rc != 0) {
