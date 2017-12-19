@@ -146,10 +146,13 @@ spdk_find_iscsi_connection_by_id(int cid)
 static int
 init_idle_conns(void)
 {
+	char buf[64];
+
 	assert(g_poll_fd == 0);
 	g_poll_fd = kqueue();
 	if (g_poll_fd < 0) {
-		SPDK_ERRLOG("kqueue failed master lcore\n");
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("kqueue() failed, errno %d: %s\n", errno, buf);
 		return -1;
 	}
 
@@ -248,10 +251,13 @@ check_idle_conns(void)
 static int
 init_idle_conns(void)
 {
+	char buf[64];
+
 	assert(g_poll_fd == 0);
 	g_poll_fd = epoll_create1(0);
 	if (g_poll_fd < 0) {
-		SPDK_ERRLOG("epoll_create1 failed master lcore\n");
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("epoll_create1() failed, errno %d: %s\n", errno, buf);
 		return -1;
 	}
 
@@ -1369,7 +1375,7 @@ static void spdk_iscsi_conn_handle_idle(struct spdk_iscsi_conn *conn)
 	    conn->pending_task_cnt == 0) {
 
 		spdk_trace_record(TRACE_ISCSI_CONN_IDLE, conn->id, 0, 0, 0);
-		spdk_iscsi_conn_stop_poller(conn, __add_idle_conn, rte_get_master_lcore());
+		spdk_iscsi_conn_stop_poller(conn, __add_idle_conn, spdk_env_get_first_core());
 	}
 }
 
@@ -1487,7 +1493,7 @@ spdk_iscsi_conn_full_feature_do_work(void *arg)
 
 	/* Check if the session was idle during this access pass. If it was,
 	   and it was idle longer than the configured timeout, migrate this
-	   session to the master core. */
+	   session to the first core. */
 	spdk_iscsi_conn_handle_idle(conn);
 }
 
@@ -1586,12 +1592,12 @@ spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 {
 	uint32_t i, selected_core;
 	enum rte_lcore_state_t state;
-	uint32_t master_lcore = rte_get_master_lcore();
+	uint32_t first_core = spdk_env_get_first_core();
 	int32_t num_pollers, min_pollers;
 
 	cpumask &= spdk_app_get_core_mask();
 	if (cpumask == 0) {
-		return 0;
+		return first_core;
 	}
 
 	min_pollers = INT_MAX;
@@ -1604,10 +1610,10 @@ spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 		}
 
 		/*
-		 * DPDK returns WAIT for the master lcore instead of RUNNING.
+		 * DPDK returns WAIT for the master core instead of RUNNING.
 		 * So we always treat the reactor on master core as RUNNING.
 		 */
-		if (i == master_lcore) {
+		if (i == first_core) {
 			state = RUNNING;
 		} else {
 			state = rte_eal_get_lcore_state(i);
