@@ -548,8 +548,8 @@ performance_dump(int io_time_in_usec)
 {
 	uint32_t index;
 	unsigned lcore_id;
-	float io_per_second, mb_per_second;
-	float total_io_per_second, total_mb_per_second;
+	double io_per_second, mb_per_second;
+	double total_io_per_second, total_mb_per_second;
 	struct io_target *target;
 
 	total_io_per_second = 0;
@@ -561,7 +561,7 @@ performance_dump(int io_time_in_usec)
 			printf("\r Logical core: %u\n", lcore_id);
 		}
 		while (target != NULL) {
-			io_per_second = (float)target->io_completed * 1000000 /
+			io_per_second = (double)target->io_completed * 1000000 /
 					io_time_in_usec;
 			mb_per_second = io_per_second * g_io_size /
 					(1024 * 1024);
