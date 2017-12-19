@@ -115,6 +115,7 @@ struct virtio_scsi_scan_info {
 	uint32_t			block_size;
 	uint8_t				target;
 	bool				unmap_supported;
+	TAILQ_ENTRY(virtio_scsi_scan_info) tailq;
 };
 
 struct virtio_scsi_scan_base {
@@ -125,6 +126,12 @@ struct virtio_scsi_scan_base {
 
 	bdev_virtio_create_cb		cb_fn;
 	void				*cb_arg;
+
+	/** Scan all targets on the device. */
+	bool				full_scan;
+
+	/** Particular targets to be scanned. */
+	TAILQ_HEAD(, virtio_scsi_scan_info) scan_queue;
 
 	/** Remaining attempts for sending the current request. */
 	unsigned                        retries;
@@ -351,6 +358,7 @@ virtio_scsi_dev_get_disk_by_id(struct virtio_scsi_dev *svdev, uint8_t target_id)
 static int send_scan_io(struct virtio_scsi_scan_base *base);
 static int _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base);
 static void _virtio_scsi_dev_scan_finish(struct virtio_scsi_scan_base *base, int errnum);
+static int virtio_scsi_dev_scan_tgt(struct virtio_scsi_dev *svdev, uint8_t target);
 
 static int
 bdev_virtio_get_ctx_size(void)
@@ -753,11 +761,17 @@ bdev_virtio_eventq_io_cpl(struct virtio_scsi_dev *svdev, struct virtio_scsi_even
 		goto out;
 	}
 
-	if (ev->event == VIRTIO_SCSI_T_TRANSPORT_RESET &&
-	    ev->reason == VIRTIO_SCSI_EVT_RESET_REMOVED) {
-		disk = virtio_scsi_dev_get_disk_by_id(svdev, ev->lun[1]);
-		if (disk != NULL) {
-			spdk_bdev_unregister(&disk->bdev, NULL, NULL);
+	if (ev->event == VIRTIO_SCSI_T_TRANSPORT_RESET) {
+		switch (ev->reason) {
+		case VIRTIO_SCSI_EVT_RESET_RESCAN:
+			virtio_scsi_dev_scan_tgt(svdev, ev->lun[1]);
+			break;
+		case VIRTIO_SCSI_EVT_RESET_REMOVED:
+			disk = virtio_scsi_dev_get_disk_by_id(svdev, ev->lun[1]);
+			if (disk != NULL) {
+				spdk_bdev_unregister(&disk->bdev, NULL, NULL);
+			}
+			break;
 		}
 	}
 
@@ -889,9 +903,15 @@ _virtio_scsi_dev_scan_finish(struct virtio_scsi_scan_base *base, int errnum)
 	size_t bdevs_cnt = 0;
 	struct spdk_bdev *bdevs[BDEV_VIRTIO_MAX_TARGET];
 	struct virtio_scsi_disk *disk;
+	struct virtio_scsi_scan_info *tgt, *next_tgt;
 
 	spdk_put_io_channel(spdk_io_channel_from_ctx(base->channel));
 	base->svdev->scan_ctx = NULL;
+
+	TAILQ_FOREACH_SAFE(tgt, &base->scan_queue, tailq, next_tgt) {
+		TAILQ_REMOVE(&base->scan_queue, tgt, tailq);
+		free(tgt);
+	}
 
 	if (base->cb_fn == NULL) {
 		spdk_dma_free(base);
@@ -1325,16 +1345,28 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 static int
 _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base)
 {
+	struct virtio_scsi_scan_info *next;
 	uint8_t target_id;
 
-	target_id = base->info.target + 1;
-	if (target_id == BDEV_VIRTIO_MAX_TARGET) {
+	if (base->full_scan) {
+		target_id = base->info.target + 1;
+		if (target_id < BDEV_VIRTIO_MAX_TARGET) {
+			memset(&base->info, 0, sizeof(base->info));
+			base->info.target = target_id;
+
+			return send_inquiry(base);
+		}
+	}
+
+	next = TAILQ_FIRST(&base->scan_queue);
+	if (next == NULL) {
 		_virtio_scsi_dev_scan_finish(base, 0);
 		return 0;
 	}
 
-	memset(&base->info, 0, sizeof(base->info));
-	base->info.target = target_id;
+	TAILQ_REMOVE(&base->scan_queue, next, tailq);
+	memcpy(&base->info, next, sizeof(base->info));
+	free(next);
 
 	return send_inquiry(base);
 }
@@ -1406,8 +1438,7 @@ out:
 }
 
 static int
-virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn,
-		     void *cb_arg)
+_virtio_scsi_dev_scan_init(struct virtio_scsi_dev *svdev)
 {
 	struct virtio_scsi_scan_base *base;
 	struct spdk_io_channel *io_ch;
@@ -1431,12 +1462,10 @@ virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn,
 		return -ENOMEM;
 	}
 
-	base->cb_fn = cb_fn;
-	base->cb_arg = cb_arg;
-
 	base->svdev = svdev;
 
 	base->channel = spdk_io_channel_get_ctx(io_ch);
+	TAILQ_INIT(&base->scan_queue);
 	svdev->scan_ctx = base;
 
 	memset(&base->info, 0, sizeof(base->info));
@@ -1452,6 +1481,68 @@ virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn,
 	io_ctx->iov_resp.iov_len = sizeof(*resp);
 
 	base->retries = SCAN_REQUEST_RETRIES;
+
+	rc = send_inquiry(base);
+	if (rc) {
+		/* Let response poller do the resend */
+	}
+
+	return 0;
+}
+
+static int
+virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn,
+		     void *cb_arg)
+{
+	struct virtio_scsi_scan_base *base;
+	int rc;
+
+	rc = _virtio_scsi_dev_scan_init(svdev);
+	if (rc != 0) {
+		return rc;
+	}
+
+	base = svdev->scan_ctx;
+	base->cb_fn = cb_fn;
+	base->cb_arg = cb_arg;
+	base->full_scan = true;
+	base->info.target = 0;
+
+	rc = send_inquiry(base);
+	if (rc) {
+		/* Let response poller do the resend */
+	}
+
+	return 0;
+}
+
+/* To be called only from the thread performing target scan */
+static int
+virtio_scsi_dev_scan_tgt(struct virtio_scsi_dev *svdev, uint8_t target)
+{
+	struct virtio_scsi_scan_base *base = svdev->scan_ctx;
+	struct virtio_scsi_scan_info *info;
+	int rc;
+
+	if (svdev->scan_ctx) {
+		info = calloc(1, sizeof(*info));
+		if (info == NULL) {
+			SPDK_ERRLOG("calloc failed\n");
+			return -ENOMEM;
+		}
+
+		info->target = target;
+		TAILQ_INSERT_TAIL(&base->scan_queue, info, tailq);
+		return 0;
+	}
+
+	rc = _virtio_scsi_dev_scan_init(svdev);
+	if (rc != 0) {
+		return rc;
+	}
+
+	base->full_scan = true;
+	base->info.target = target;
 
 	rc = send_inquiry(base);
 	if (rc) {
