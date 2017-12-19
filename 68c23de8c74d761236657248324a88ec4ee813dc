@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c0b3d273_606de869",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1953,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-19T17:39:04Z",
+      "side": 1,
+      "message": "This was mostly cleanup.  ctx-\u003emask gets set in _spdk_bs_write_used_md() and I wanted to set it to NULL here to avoid accidentally reusing this pointer in _spdk_bs_write_used_blobids.",
+      "parentUuid": "57938d39_5990bb3a",
+      "revId": "68c23de8c74d761236657248324a88ec4ee813dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48082df8_0fdee631",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 6
