@@ -60,6 +60,8 @@ case `uname` in
 		fi
 		MAKE=gmake
 		MAKEFLAGS=${MAKEFLAGS:--j$(sysctl -a | egrep -i 'hw.ncpu' | awk '{print $2}')}
+		SPDK_RUN_ASAN=0
+		SPDK_RUN_UBSAN=0
 		;;
 	Linux)
 		DPDK_LINUX_DIR=/usr/local/share/dpdk/x86_64-native-linuxapp-gcc
