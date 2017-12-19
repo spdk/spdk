@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93aa7649_79681fa4",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1371,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T21:44:25Z",
+      "side": 1,
+      "message": "I think it\u0027s safe to just call spdk_env_get_first_core() instead of getting the master core. What matters is that the core is consistent among all users, not that it\u0027s specifically the master core. Then you don\u0027t have to add a new API to env.h.",
+      "revId": "653916b8578fff82bfc88e03e7a9a5f86e27b9ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
