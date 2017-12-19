@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "788f7349_91b9815c",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T16:39:55Z",
+      "side": 1,
+      "message": "This isn\u0027t necessarily the same core that the initialization is running on. You need to event over to that core instead of the current core.",
+      "revId": "5518668f7481376580594abaf5ec9f502eba790b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
