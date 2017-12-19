@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b7d118a_d7f602e7",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T19:39:30Z",
+      "side": 1,
+      "message": "I think this name should be a little more specific - something like CONFIG_NVME_FORCE_DOORBELL (this isn\u0027t great either, but I don\u0027t know a concise way to put it).\n\nAlso, a default value for this new variable should be added to the base CONFIG file.",
+      "revId": "f3be04cc8c1f694214492f4eb98961d871705586",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
