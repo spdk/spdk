@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74a506e6_dc126e25",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T23:07:44Z",
+      "side": 1,
+      "message": "It should be valid to start used_blobids out as a 0-size bit array if that would be clearer.",
+      "revId": "3e636a638eb19ecde7eb46a573706b7bcc05a2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d77a7a2b_6ee39af1",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1723,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T23:07:44Z",
+      "side": 1,
+      "message": "It seems like the j \u003c 8 check is probably not necessary - uint8_t can only have 8 bits set, and the loop body will shift one off each time.",
+      "range": {
+        "startLine": 1723,
+        "startChar": 25,
+        "endLine": 1723,
+        "endChar": 32
+      },
+      "revId": "3e636a638eb19ecde7eb46a573706b7bcc05a2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1cd8655_b8633adc",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T23:07:44Z",
+      "side": 1,
+      "message": "This should be added to the doc/blob.md Media Format section.",
+      "revId": "3e636a638eb19ecde7eb46a573706b7bcc05a2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
