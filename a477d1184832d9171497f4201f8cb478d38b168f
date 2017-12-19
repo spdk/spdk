@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59a830a6_9e1a08ec",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-19T16:41:06Z",
+      "side": 1,
+      "message": "these changes are not needed - free(NULL) is a nop",
+      "revId": "a477d1184832d9171497f4201f8cb478d38b168f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abd9034a_be2b7af1",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 327,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-19T16:41:06Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "a477d1184832d9171497f4201f8cb478d38b168f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
