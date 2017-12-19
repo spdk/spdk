@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef9f216a_9d958a2f",
+        "filename": "test/vhost/common/fio_jobs/default_integrity_nightly.job",
+        "patchSetId": 7
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:35:14Z",
+      "side": 1,
+      "message": "Did you guys get my mail about testing with bsrange instead of just bs? And with skipping lower QD\u0027s? Any feedback?:)",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 10
+      },
+      "revId": "b00a72fbb6668118390a8aca7282ecd64871c480",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
