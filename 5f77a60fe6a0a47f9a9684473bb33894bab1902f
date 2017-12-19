@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "8b52a9b2_80c229f4",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-19T10:24:08Z",
+      "side": 1,
+      "message": "I think you should move that before tasting tests.\nI think it\u0027d be a good idea to add thin provisioning (as well as clone \u0026 snapshot) steps to existing tasting tests.\n\nI think tasting should be done last as it is more complex test, while tests in this commit are more basic and should be done first.",
+      "range": {
+        "startLine": 622,
+        "startChar": 0,
+        "endLine": 624,
+        "endChar": 56
+      },
+      "revId": "5f77a60fe6a0a47f9a9684473bb33894bab1902f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3eb1412_53c045fe",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 3
