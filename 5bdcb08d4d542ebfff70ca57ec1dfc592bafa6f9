@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e273904_af2098d0",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T17:14:09Z",
+      "side": 1,
+      "message": "public",
+      "revId": "5bdcb08d4d542ebfff70ca57ec1dfc592bafa6f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0347f4e7_2e5f9a6d",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T17:14:09Z",
+      "side": 1,
+      "message": "I\u0027d like to call this \"blobstore filesystem\" everywhere instead of just filesystem, just so we\u0027re being very clear.",
+      "revId": "5bdcb08d4d542ebfff70ca57ec1dfc592bafa6f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0d922b9_287f69d4",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T17:14:09Z",
+      "side": 1,
+      "message": "Instead of blobstore device, you should probably say block device. You should also mention that there is a helper function in blob_bdev.h that will create one of these given any bdev.",
+      "revId": "5bdcb08d4d542ebfff70ca57ec1dfc592bafa6f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efba0391_903b4786",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T17:14:09Z",
+      "side": 1,
+      "message": "We need to explain the purpose of send_request_fn since it isn\u0027t obvious. This function will be invoked any time the blobstore filesystem wants to pass a message to the main dispatch thread.",
+      "revId": "5bdcb08d4d542ebfff70ca57ec1dfc592bafa6f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9385cac0_fed1181b",
+        "filename": "include/spdk/blobfs.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-19T17:14:09Z",
+      "side": 1,
+      "message": "Put a blank line between \\param and \\return descriptions.\n\nohtherwise -\u003e otherwise",
+      "revId": "5bdcb08d4d542ebfff70ca57ec1dfc592bafa6f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
