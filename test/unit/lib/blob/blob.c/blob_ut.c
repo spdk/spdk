@@ -2248,6 +2248,10 @@ blob_flags(void)
 	CU_ASSERT(__blob_to_data(blob_md_ro)->data_ro == false);
 	CU_ASSERT(__blob_to_data(blob_md_ro)->md_ro == true);
 
+	g_bserrno = -1;
+	spdk_blob_sync_md(blob_md_ro, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
 	spdk_blob_close(blob_data_ro, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	spdk_blob_close(blob_md_ro, blob_op_complete, NULL);
