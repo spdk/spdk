@@ -52,7 +52,13 @@ function usage() {
                                     601 'construct_lvol_store_with_cluster_size_min',
                                     650: 'tasting_positive',
                                     651: 'tasting_lvol_store_positive',
-                                    700: 'SIGTERM'
+                                    750: 'snapshot_readonly',
+                                    751: 'snapshot_compare_with_lvol_bdev',
+                                    752: 'snapshot_during_io_traffic',
+                                    753: 'snapshot_of_snapshot',
+                                    754: 'clone_bdev_only',
+                                    755: 'clone_writing_clone',
+                                    10000: 'SIGTERM',
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"
