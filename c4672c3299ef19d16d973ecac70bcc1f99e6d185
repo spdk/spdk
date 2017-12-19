@@ -1,0 +1,221 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0887e2f2_12039679",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "Please use SPDK_CPUSET_H for consistency with other headers (no underscore).",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 22
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2531641_68e0f502",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "We should not define symbols ending in _t; this namespace is reserved for POSIX (see http://pubs.opengroup.org/onlinepubs/9699919799/functions/V2_chap02.html - the \"ANY header\" row with \"_t\" suffix). \n\nI think spdk_cpuset would be fine as the name in this case.",
+      "range": {
+        "startLine": 40,
+        "startChar": 18,
+        "endLine": 40,
+        "endChar": 31
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2223ced8_354ad999",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "Nitpick: this tab should probably be a space.",
+      "range": {
+        "startLine": 40,
+        "startChar": 7,
+        "endLine": 40,
+        "endChar": 8
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f69e1f35_fc7395fb",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "This can probably be moved to the top of the file (right after stdinc.h) for readability.",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0537bddf_b0d72206",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "It would be good to use consistent names here, e.g. spdk_cpuset_fmt() (by analogy with spdk_pci_addr_fmt()).",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f29292ed_c341fa48",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "Maybe spdk_cpuset_parse() for consistency (see above).",
+      "range": {
+        "startLine": 79,
+        "startChar": 4,
+        "endLine": 79,
+        "endChar": 24
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28111408_675099b2",
+        "filename": "lib/event/app.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "Unrelated whitespace change.",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a20782e4_f0aac292",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "Regular assignment should still work fine here - why memcpy?",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9b41fe5_f00e3678",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "This should probably fail rather than truncating if the string won\u0027t fit.",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4b75f8d_4c83a01e",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "strlen() returns size_t; assigning it to an int may truncate.",
+      "range": {
+        "startLine": 202,
+        "startChar": 1,
+        "endLine": 202,
+        "endChar": 4
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f1cb9c32_9720ee71",
+        "filename": "test/unit/lib/util/cpuset.c/Makefile",
+        "patchSetId": 8
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-19T20:17:19Z",
+      "side": 1,
+      "message": "This should either be uncommented or removed.",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
