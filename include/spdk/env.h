@@ -177,6 +177,20 @@ struct spdk_mempool *spdk_mempool_create_ctor(const char *name, size_t count,
 		spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg);
 
 /**
+ * Call a function for each mempool element
+ *
+ * Iterate across all objects attached to a spdk_mempool and call the
+ * callback function on it.
+ *
+ * \param mp A pointer to an initialized mempool.
+ * \param obj_cb A function pointer that is called for each object.
+ * \param obj_cb_arg An opaque pointer passed to the callback function.
+ * \return Number of objects iterated.
+ */
+uint32_t spdk_mempool_obj_iter(struct spdk_mempool *mp,
+			       spdk_mempool_obj_cb_t *obj_cb, void *obj_cb_arg);
+
+/**
  * Get the name of a mempool
  */
 char *spdk_mempool_get_name(struct spdk_mempool *mp);
