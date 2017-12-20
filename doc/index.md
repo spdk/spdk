@@ -24,6 +24,7 @@
 
 - @ref directory_structure
 - [Public API header files](files.html)
+- @ref iscsi_pg
 
 # Modules {#modules}
 
