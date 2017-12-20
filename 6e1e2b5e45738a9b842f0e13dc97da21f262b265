@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf97ad8d_5defae04",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 875,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-20T18:52:15Z",
+      "side": 1,
+      "message": "strdup() needs an allocation failure check.",
+      "revId": "6e1e2b5e45738a9b842f0e13dc97da21f262b265",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
