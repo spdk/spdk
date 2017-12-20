@@ -360,13 +360,19 @@ spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 }
 
 static void
+spdk_bdev_mgmt_channel_free_resources(struct spdk_bdev_mgmt_channel *ch)
+{
+	if (!TAILQ_EMPTY(&ch->need_buf_small) || !TAILQ_EMPTY(&ch->need_buf_large)) {
+		SPDK_ERRLOG("Pending I/O list wasn't empty on channel free\n");
+	}
+}
+
+static void
 spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 {
 	struct spdk_bdev_mgmt_channel *ch = ctx_buf;
 
-	if (!TAILQ_EMPTY(&ch->need_buf_small) || !TAILQ_EMPTY(&ch->need_buf_large)) {
-		SPDK_ERRLOG("Pending I/O list wasn't empty on channel destruction\n");
-	}
+	spdk_bdev_mgmt_channel_free_resources(ch);
 }
 
 static void
@@ -548,7 +554,7 @@ spdk_bdev_module_finish_cb(void *io_device)
 }
 
 static void
-spdk_bdev_module_finish_complete(void)
+spdk_bdev_module_finish_complete(struct spdk_io_channel_iter *i, int status)
 {
 	if (spdk_mempool_count(g_bdev_mgr.bdev_io_pool) != SPDK_BDEV_IO_POOL_SIZE) {
 		SPDK_ERRLOG("bdev IO pool count is %zu but should be %u\n",
@@ -576,6 +582,16 @@ spdk_bdev_module_finish_complete(void)
 	spdk_dma_free(g_bdev_mgr.zero_buffer);
 
 	spdk_io_device_unregister(&g_bdev_mgr, spdk_bdev_module_finish_cb);
+}
+
+static void
+mgmt_channel_free_resources(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_mgmt_channel *ch = spdk_io_channel_get_ctx(_ch);
+
+	spdk_bdev_mgmt_channel_free_resources(ch);
+	spdk_for_each_channel_continue(i, 0);
 }
 
 static void
@@ -615,7 +631,8 @@ spdk_bdev_module_finish_iter(void *arg)
 	}
 
 	resume_bdev_module = NULL;
-	spdk_bdev_module_finish_complete();
+	spdk_for_each_channel(&g_bdev_mgr, mgmt_channel_free_resources, NULL,
+			      spdk_bdev_module_finish_complete);
 }
 
 void
