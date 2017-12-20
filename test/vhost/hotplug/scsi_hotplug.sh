@@ -82,7 +82,7 @@ fi
 run_vhost
 rm $BASE_DIR/vhost.conf.in
 pre_test_case
-if [ $scsi_hot_remove_test == 0 ]; then
+if [ $scsi_hot_remove_test == 0 ] && [ $blk_hot_remove_test == 0]; then
     pre_hot_attach_detach_test_case
     $BASE_DIR/scsi_hotattach.sh --fio-bin=$fio_bin &
     first_script=$!
@@ -99,5 +99,8 @@ for vm in "${vms[@]}"; do
 done
 if [ $scsi_hot_remove_test == 1 ];then
     $BASE_DIR/scsi_hotremove.sh --fio-bin=$fio_bin $vm_arg --test-type=spdk_vhost_scsi
+fi
+if [ $blk_hot_remove_test == 1 ]; then
+    $BASE_DIR/blk_hotremove.sh --fio-bin=$fio_bin $vm_arg --test-type=spdk_vhost_blk
 fi
 post_test_case
