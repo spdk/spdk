@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c62c2d3f_85146393",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-20T08:40:18Z",
+      "side": 1,
+      "message": "I know this is not an ideal place for lvol store specific function (any suggestions where to put it?:P), but Chen and Whenzong would also want to make use of it, so I decided to put it here.\n\nhttps://review.gerrithub.io/#/c/390923/11/test/vhost/integrity/integrity_start.sh\nhttps://review.gerrithub.io/#/c/387556/15/test/nvmf/host/perf.sh",
+      "parentUuid": "e8c82de2_13a3fd2e",
+      "revId": "11355150516320ac9c5a2162391e295b423c0a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0848b78c_3bb84059",
         "filename": "scripts/autotest_common.sh",
         "patchSetId": 16
@@ -30,6 +48,24 @@
       "writtenOn": "2017-12-19T20:21:46Z",
       "side": 1,
       "message": "what does \"lbd\" stand for?  lvol block device?\n\nI guess I don\u0027t understand why this isn\u0027t just get_bdev_size().  Then the function is more generic and it is clear it can be used for any kind of bdev - not just lvol bdevs.",
+      "revId": "11355150516320ac9c5a2162391e295b423c0a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e390b15_028ed0f6",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-20T08:40:18Z",
+      "side": 1,
+      "message": "yup, logical block device:)\nDone.",
+      "parentUuid": "0848b78c_3bb84059",
       "revId": "11355150516320ac9c5a2162391e295b423c0a27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "b7a051a6_38b90822",
+        "filename": "scripts/autotest_common.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-20T08:40:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fbec0fca_1fba42be",
+      "revId": "11355150516320ac9c5a2162391e295b423c0a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b70f2093_040fc662",
         "filename": "test/vhost/lvol/lvol_test.sh",
         "patchSetId": 16
@@ -64,6 +118,24 @@
       "writtenOn": "2017-12-19T20:21:46Z",
       "side": 1,
       "message": "I would suggest moving this big chunk of script in a separate patch.",
+      "revId": "11355150516320ac9c5a2162391e295b423c0a27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ce1e9e2_f2882db5",
+        "filename": "test/vhost/lvol/lvol_test.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-20T08:40:18Z",
+      "side": 1,
+      "message": "Done, moved to separate commit:\nhttps://review.gerrithub.io/#/c/392450/",
+      "parentUuid": "b70f2093_040fc662",
       "revId": "11355150516320ac9c5a2162391e295b423c0a27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
