@@ -35,7 +35,6 @@
 #include "spdk/stdinc.h"
 
 #include <rte_config.h>
-#include <rte_mempool.h>
 
 #if defined(__FreeBSD__)
 #include <sys/event.h>
@@ -1591,56 +1590,31 @@ static uint32_t
 spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 {
 	uint32_t i, selected_core;
-	enum rte_lcore_state_t state;
-	uint32_t first_core = spdk_env_get_first_core();
 	int32_t num_pollers, min_pollers;
 
-	cpumask &= spdk_app_get_core_mask();
-	if (cpumask == 0) {
-		return first_core;
-	}
-
 	min_pollers = INT_MAX;
-	selected_core = 0;
+	selected_core = spdk_env_get_first_core();
 
 	/* we use u64 as CPU core mask */
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
+	SPDK_ENV_FOREACH_CORE(i) {
 		if (!((1ULL << i) & cpumask)) {
 			continue;
 		}
 
-		/*
-		 * DPDK returns WAIT for the master core instead of RUNNING.
-		 * So we always treat the reactor on master core as RUNNING.
-		 */
-		if (i == first_core) {
-			state = RUNNING;
-		} else {
-			state = rte_eal_get_lcore_state(i);
-		}
+		/* This core is running. Check how many pollers it already has. */
+		num_pollers = g_num_connections[i];
 
-		switch (state) {
-		case WAIT:
-		case FINISHED:
-			/* reactor does not run on the lcore */
-			break;
-		case RUNNING:
-			/* This lcore is running. Check how many pollers it already has. */
-			num_pollers = g_num_connections[i];
-
-			if ((num_pollers > 0) && (num_pollers < g_connections_per_lcore)) {
-				/* Fewer than the maximum connections per lcore,
-				 * but at least 1. Use this lcore.
-				 */
-				return i;
-			} else if (num_pollers < min_pollers) {
-				/* Track the core that has the minimum number of pollers
-				 * to be used if no cores meet our criteria
-				 */
-				selected_core = i;
-				min_pollers = num_pollers;
-			}
-			break;
+		if ((num_pollers > 0) && (num_pollers < g_connections_per_lcore)) {
+			/* Fewer than the maximum connections per core,
+			 * but at least 1. Use this core.
+			 */
+			return i;
+		} else if (num_pollers < min_pollers) {
+			/* Track the core that has the minimum number of pollers
+			 * to be used if no cores meet our criteria
+			 */
+			selected_core = i;
+			min_pollers = num_pollers;
 		}
 	}
 
