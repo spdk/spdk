@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "44fac429_e1b59980",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-20T18:27:11Z",
+      "side": 1,
+      "message": "This should just be EIO, not -EIO (the other examples of io engines in FIO are all setting error directly to errno values, e.g. EINVAL, not negated).",
+      "range": {
+        "startLine": 472,
+        "startChar": 36,
+        "endLine": 472,
+        "endChar": 41
+      },
+      "revId": "d53de0eae4f13f901441b97e6fa559fdf1955c2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4997d7c_3978dfe7",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-20T18:27:11Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 489,
+        "startChar": 23,
+        "endLine": 489,
+        "endChar": 31
+      },
+      "revId": "d53de0eae4f13f901441b97e6fa559fdf1955c2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df71cec1_c31df342",
         "filename": "examples/bdev/fio_plugin/fio_plugin.c",
         "patchSetId": 2
