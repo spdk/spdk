@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df71cec1_c31df342",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-20T18:25:53Z",
+      "side": 1,
+      "message": "It looks like the io-\u003eerror is expected to be a positive errno in this case (rather than the negated errno expected in the return value), so this should probably be just abs(rc).",
+      "revId": "d53de0eae4f13f901441b97e6fa559fdf1955c2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
