@@ -42,6 +42,33 @@ function usage()
     exit 0
 }
 
+function clean_lvol_cfg()
+{
+    echo "INFO: Removing nested lvol bdevs"
+    for lvol_bdev in "${nest_lvol_bdevs[@]}"; do
+        $rpc_py delete_bdev $lvol_bdev
+        echo -e "\tINFO: nested lvol bdev $lvol_bdev removed"
+    done
+
+    echo "INFO: Removing nested lvol stores"
+    for lvol_store in "${nest_lvol_stores[@]}"; do
+        $rpc_py destroy_lvol_store -u $lvol_store
+        echo -e "\tINFO: nested lvol store $lvol_store removed"
+    done
+
+    echo "INFO: Removing lvol bdevs"
+    for lvol_bdev in "${lvol_bdevs[@]}"; do
+        $rpc_py delete_bdev $lvol_bdev
+        echo -e "\tINFO: lvol bdev $lvol_bdev removed"
+    done
+
+    echo "INFO: Removing lvol stores"
+    for lvol_store in "${lvol_stores[@]}"; do
+        $rpc_py destroy_lvol_store -u $lvol_store
+        echo -e "\tINFO: lvol store $lvol_store removed"
+    done
+}
+
 while getopts 'xh-:' optchar; do
     case "$optchar" in
         -)
@@ -81,7 +108,7 @@ if $distribute_cores; then
     source $BASE_DIR/autotest.config
 fi
 
-trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
+trap 'error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 
 vm_kill_all
 
@@ -89,6 +116,8 @@ echo "INFO: running SPDK"
 echo ""
 $COMMON_DIR/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
 echo ""
+
+trap 'clean_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' SIGTERM SIGABRT ERR
 
 lvol_stores=()
 lvol_bdevs=()
@@ -240,29 +269,7 @@ elif [[ "$ctrl_type" == "vhost_blk" ]]; then
     done
 fi
 
-echo "INFO: Removing nested lvol bdevs"
-for lvol_bdev in "${nest_lvol_bdevs[@]}"; do
-    $rpc_py delete_bdev $lvol_bdev
-    echo -e "\tINFO: nested lvol bdev $lvol_bdev removed"
-done
-
-echo "INFO: Removing nested lvol stores"
-for lvol_store in "${nest_lvol_stores[@]}"; do
-    $rpc_py destroy_lvol_store -u $lvol_store
-    echo -e "\tINFO: nested lvol store $lvol_store removed"
-done
-
-echo "INFO: Removing lvol bdevs"
-for lvol_bdev in "${lvol_bdevs[@]}"; do
-    $rpc_py delete_bdev $lvol_bdev
-    echo -e "\tINFO: lvol bdev $lvol_bdev removed"
-done
-
-echo "INFO: Removing lvol stores"
-for lvol_store in "${lvol_stores[@]}"; do
-    $rpc_py destroy_lvol_store -u $lvol_store
-    echo -e "\tINFO: lvol store $lvol_store removed"
-done
+clean_lvol_cfg
 
 $rpc_py get_lvol_stores
 $rpc_py get_bdevs
