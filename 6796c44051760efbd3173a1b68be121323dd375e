@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d9b4b44_168e9ca9",
+        "filename": "doc/bdev.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-20T16:37:11Z",
+      "side": 1,
+      "message": "The first line of this comment (\"Expose bdev...\") should be moved above the start_nbd_disk call, since the bdev_svc call doesn\u0027t immediately expose the bdev as an NBD disk like the nbd app did.",
+      "revId": "6796c44051760efbd3173a1b68be121323dd375e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
