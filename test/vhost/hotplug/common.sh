@@ -9,6 +9,7 @@ used_vms=""
 disk_split=""
 x=""
 scsi_hot_remove_test=0
+blk_hotremove_test=0
 
 
 function usage() {
@@ -45,6 +46,7 @@ while getopts 'xh-:' optchar; do
             test-type=*) test_type="${OPTARG#*=}" ;;
             vm=*) vms+=("${OPTARG#*=}") ;;
             scsi-hotremove-test) scsi_hot_remove_test=1 ;;
+            blk-hotremove-test) blk_hot_remove_test=1 ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -181,6 +183,11 @@ function on_error_exit() {
 
 function get_disks() {
     vm_check_scsi_location $1
+    eval $2='"$SCSI_DISK"'
+}
+
+function get_blk_disks() {
+    vm_check_blk_location $1
     eval $2='"$SCSI_DISK"'
 }
 
