@@ -46,6 +46,11 @@
 #include "spdk/io_channel.h"
 
 #include "spdk_internal/log.h"
+#include "spdk/queue.h"
+
+/* Size of task pool size is maximum io-queue-depth of nbd */
+#define DEFAULT_IO_POOL_SIZE	128
+#define GET_IO_LOOP_COUNT	16
 
 /*
  * The life cycle of one NBD I/O just like this:
@@ -73,7 +78,6 @@ struct nbd_io {
 	struct spdk_nbd_disk	*nbd;
 	enum nbd_io_state_t	state;
 
-	int			ref;
 	void			*payload;
 
 	/* NOTE: for TRIM, this represents number of bytes to trim. */
@@ -87,6 +91,8 @@ struct nbd_io {
 	 * response, or payload from the nbd socket.
 	 */
 	uint32_t		offset;
+
+	TAILQ_ENTRY(nbd_io)	tailq;
 };
 
 struct spdk_nbd_disk {
@@ -97,9 +103,16 @@ struct spdk_nbd_disk {
 	char			*nbd_path;
 	int			kernel_sp_fd;
 	int			spdk_sp_fd;
-	struct nbd_io		io;
 	struct spdk_poller	*nbd_poller;
 	uint32_t		buf_align;
+
+	struct spdk_mempool	*io_pool;
+	TAILQ_HEAD(, nbd_io)	recv_io_list;
+	TAILQ_HEAD(, nbd_io)	processed_io_list;
+	/*
+	 * indicate nbd disk is stopping
+	 */
+	bool leave;
 
 	TAILQ_ENTRY(spdk_nbd_disk)	tailq;
 };
@@ -214,6 +227,72 @@ nbd_disconnect(struct spdk_nbd_disk *nbd)
 	ioctl(nbd->dev_fd, NBD_DISCONNECT);
 }
 
+static int
+spdk_nbd_io_pool_init(struct spdk_nbd_disk *nbd)
+{
+	char mempool_name[32];
+
+	snprintf(mempool_name, sizeof(mempool_name), "%s_io_pool", nbd->nbd_path);
+	/* create nbd io pool */
+	nbd->io_pool = spdk_mempool_create(mempool_name, DEFAULT_IO_POOL_SIZE,
+					   sizeof(struct nbd_io), 0, SPDK_ENV_SOCKET_ID_ANY);
+
+	if (!nbd->io_pool) {
+		SPDK_ERRLOG("create io pool failed\n");
+		return -1;
+	}
+
+	TAILQ_INIT(&nbd->recv_io_list);
+	TAILQ_INIT(&nbd->processed_io_list);
+
+	return 0;
+}
+
+/*
+ * Take outside nbd_io back to io_pool
+ *
+ * \return 1 there is still some nbd_io outside of io_pool
+ *         0 all nbd_io are put back to io_pool
+ */
+static int
+spdk_nbd_io_pool_withdraw(struct spdk_nbd_disk *nbd)
+{
+	struct nbd_io *io, *io_tmp;
+
+	/*
+	 * nbd_io linked in recv_io_list is under processing in bdev.
+	 * Wait for their done operation.
+	 */
+	if (!TAILQ_EMPTY(&nbd->recv_io_list)) {
+		io = TAILQ_FIRST(&nbd->recv_io_list);
+		if (io->state == NBD_IO_PROCESS) {
+			return 1;
+		} else {
+			/* withdraw io in process of receiving */
+			TAILQ_REMOVE(&nbd->recv_io_list, io, tailq);
+			spdk_mempool_put(nbd->io_pool, (void *)io);
+			if (io->payload) {
+				spdk_dma_free(io->payload);
+				io->payload = NULL;
+			}
+		}
+	}
+
+	/* withdraw io in processed_io_list */
+	if (!TAILQ_EMPTY(&nbd->processed_io_list)) {
+		TAILQ_FOREACH_SAFE(io, &nbd->processed_io_list, tailq, io_tmp) {
+			TAILQ_REMOVE(&nbd->processed_io_list, io, tailq);
+			spdk_mempool_put(nbd->io_pool, (void *)io);
+			if (io->payload) {
+				spdk_dma_free(io->payload);
+				io->payload = NULL;
+			}
+		}
+	}
+
+	return 0;
+}
+
 static void
 _nbd_stop(struct spdk_nbd_disk *nbd)
 {
@@ -247,6 +326,8 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 		spdk_poller_unregister(&nbd->nbd_poller);
 	}
 
+	spdk_mempool_free(nbd->io_pool);
+
 	spdk_nbd_disk_unregister(nbd);
 
 	free(nbd);
@@ -259,8 +340,13 @@ spdk_nbd_stop(struct spdk_nbd_disk *nbd)
 		return;
 	}
 
-	nbd->io.ref--;
-	if (nbd->io.ref == 0) {
+	nbd->leave = true;
+
+	/*
+	 * Stop may be caused by io_pool create failure, so check io_pool first.
+	 * If there are still outside nbd_io, wait their finish.
+	 */
+	if (!nbd->io_pool || !spdk_nbd_io_pool_withdraw(nbd)) {
 		_nbd_stop(nbd);
 	}
 }
@@ -315,13 +401,14 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 
 	memcpy(&io->resp.handle, &io->req.handle, sizeof(io->resp.handle));
 	io->state = NBD_IO_SEND_RESP;
+	TAILQ_REMOVE(&nbd->recv_io_list, io, tailq);
+	TAILQ_INSERT_TAIL(&nbd->processed_io_list, io, tailq);
 
 	if (bdev_io != NULL) {
 		spdk_bdev_free_io(bdev_io);
 	}
 
-	io->ref--;
-	if (io->ref == 0) {
+	if (nbd->leave && !spdk_nbd_io_pool_withdraw(nbd)) {
 		_nbd_stop(nbd);
 	}
 }
@@ -332,8 +419,6 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 	struct spdk_bdev_desc *desc = nbd->bdev_desc;
 	struct spdk_io_channel *ch = nbd->ch;
 	int rc = 0;
-
-	io->ref++;
 
 	switch (from_be32(&io->req.type)) {
 	case NBD_CMD_READ:
@@ -358,7 +443,9 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 		break;
 #endif
 	case NBD_CMD_DISC:
-		io->ref--;
+		io->state = NBD_IO_RECV_REQ;
+		TAILQ_REMOVE(&nbd->recv_io_list, io, tailq);
+		spdk_mempool_put(nbd->io_pool, (void *)io);
 		return -ECONNRESET;
 	default:
 		rc = -1;
@@ -385,10 +472,26 @@ spdk_nbd_io_exec(struct nbd_io *io)
 }
 
 static int
-spdk_nbd_io_recv(struct nbd_io *io)
+spdk_nbd_io_recv(struct spdk_nbd_disk *nbd, struct nbd_io **_io)
 {
-	struct spdk_nbd_disk *nbd = io->nbd;
+	struct nbd_io *io;
 	int ret = 0;
+
+	/* First element of recv_io_list is treated as io_in_receiving */
+	io = TAILQ_FIRST(&nbd->recv_io_list);
+
+	if (io == NULL || io->state == NBD_IO_PROCESS) {
+		io = spdk_mempool_get(nbd->io_pool);
+		if (io == NULL) {
+			*_io = NULL;
+			return 0;
+		} else {
+			io->nbd = nbd;
+			to_be32(&io->resp.magic, NBD_REPLY_MAGIC);
+			TAILQ_INSERT_HEAD(&nbd->recv_io_list, io, tailq);
+			*_io = io;
+		}
+	}
 
 	if (io->state == NBD_IO_RECV_REQ) {
 		ret = read_from_socket(nbd->spdk_sp_fd, (char *)&io->req + io->offset,
@@ -453,10 +556,15 @@ spdk_nbd_io_recv(struct nbd_io *io)
 }
 
 static int
-spdk_nbd_io_flush(struct nbd_io *io)
+spdk_nbd_io_flush(struct spdk_nbd_disk *nbd)
 {
-	struct spdk_nbd_disk *nbd = io->nbd;
+	struct nbd_io *io;
 	int ret = 0;
+
+	io = TAILQ_FIRST(&nbd->processed_io_list);
+	if (io == NULL) {
+		return 0;
+	}
 
 	/* resp error and handler are already set in io_done */
 
@@ -476,6 +584,8 @@ spdk_nbd_io_flush(struct nbd_io *io)
 			/* next IO step */
 			if (from_be32(&io->req.type) != NBD_CMD_READ) {
 				io->state = NBD_IO_RECV_REQ;
+				TAILQ_REMOVE(&nbd->processed_io_list, io, tailq);
+				spdk_mempool_put(nbd->io_pool, (void *)io);
 				if (io->payload) {
 					spdk_dma_free(io->payload);
 					io->payload = NULL;
@@ -498,6 +608,8 @@ spdk_nbd_io_flush(struct nbd_io *io)
 		if (io->offset == io->payload_size) {
 			io->offset = 0;
 			io->state = NBD_IO_RECV_REQ;
+			TAILQ_REMOVE(&nbd->processed_io_list, io, tailq);
+			spdk_mempool_put(nbd->io_pool, (void *)io);
 			if (io->payload) {
 				spdk_dma_free(io->payload);
 				io->payload = NULL;
@@ -516,15 +628,24 @@ spdk_nbd_io_flush(struct nbd_io *io)
 static int
 _spdk_nbd_poll(struct spdk_nbd_disk *nbd)
 {
-	struct nbd_io	*io = &nbd->io;
+	struct nbd_io	*io;
 	int rc;
+	int i;
 
-	rc = spdk_nbd_io_recv(io);
-	if (rc < 0) {
-		return rc;
+	if (nbd->leave) {
+		return 0;
 	}
 
-	rc = spdk_nbd_io_flush(io);
+	for (i = 0; i < GET_IO_LOOP_COUNT; i++) {
+		rc = spdk_nbd_io_recv(nbd, &io);
+		if (rc < 0) {
+			return rc;
+		} else if (rc == 0) {
+			break;
+		}
+	}
+
+	rc = spdk_nbd_io_flush(nbd);
 
 	return rc;
 }
@@ -588,7 +709,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		return NULL;
 	}
 
-	nbd->io.nbd = nbd;
 	nbd->dev_fd = -1;
 	nbd->spdk_sp_fd = -1;
 	nbd->kernel_sp_fd = -1;
@@ -599,7 +719,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		goto err;
 	}
 
-	nbd->io.ref = 1;
 	nbd->bdev = bdev;
 
 	nbd->ch = spdk_bdev_get_io_channel(nbd->bdev_desc);
@@ -618,6 +737,12 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		SPDK_ERRLOG("strdup allocation failure\n");
 		goto err;
 	}
+
+	rc = spdk_nbd_io_pool_init(nbd);
+	if (rc != 0) {
+		goto err;
+	}
+
 	/* Add nbd_disk to the end of disk list */
 	rc = spdk_nbd_disk_register(nbd);
 	if (rc != 0) {
@@ -691,8 +816,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n", nbd->spdk_sp_fd, buf);
 		goto err;
 	}
-
-	to_be32(&nbd->io.resp.magic, NBD_REPLY_MAGIC);
 
 	nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, nbd, 0);
 
