@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db03e858_f773a361",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-20T08:27:24Z",
+      "side": 1,
+      "message": "May need some comments here to have a detailed description about each state.",
+      "revId": "30c455c33f34ad0e90fd30f70895697483c18029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
