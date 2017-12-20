@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61ec9e31_cffb3c21",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-20T21:09:34Z",
+      "side": 1,
+      "message": "Is there value in doing both seq write and randwirte?",
+      "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73919fa8_39150e07",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2017-12-20T21:09:34Z",
+      "side": 1,
+      "message": "I asked this before but did not see a response: sorry for what might be a stupid question, but what\u0027s the purpose fo the fio runs above? The 1 sec is for per check-in and the 10 sec nightly I\u0027m guessing but why do either? I thought this was a test where we hotplug during IO and that IO is generated via the fio_py command below, no?",
+      "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
