@@ -197,6 +197,66 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster
 }
 
 static void
+_vbdev_lvs_rename_cb(void *cb_arg, int lvserrno)
+{
+	struct spdk_lvs_req *req = cb_arg;
+
+	if (req->cb_fn != NULL) {
+		req->cb_fn(req->cb_arg, lvserrno);
+	}
+	free(req);
+}
+
+int
+vbdev_lvs_rename(struct spdk_lvol_store *lvs, const char *new_lvs_name,
+		 spdk_lvs_op_complete cb_fn, void *cb_arg)
+{
+	struct spdk_lvol *tmp;
+	struct lvol_store_bdev *lvs_bdev;
+	struct spdk_lvs_req *req;
+	int rc;
+
+	lvs = vbdev_get_lvol_store_by_name(new_lvs_name);
+	if (lvs != NULL) {
+		SPDK_ERRLOG("lvs with name: %s already exists\n", new_lvs_name);
+		if (cb_fn != NULL) {
+			cb_fn(cb_arg, -EEXIST);
+		}
+		return -EEXIST;
+	}
+
+	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvs);
+	if (!lvs_bdev) {
+		SPDK_ERRLOG("No such lvol store found\n");
+		if (cb_fn != NULL) {
+			cb_fn(cb_arg, -ENODEV);
+		}
+		return -ENODEV;
+	}
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		cb_fn(cb_arg, -1);
+		return -ENOMEM;
+	}
+	req->cb_fn = cb_fn;
+	req->cb_arg = cb_arg;
+
+	rc = spdk_lvs_rename(lvs, new_lvs_name, _vbdev_lvs_rename_cb, req);
+	if (rc != 0) {
+		return rc;
+	}
+
+	strncpy(lvs->name, new_lvs_name, SPDK_LVS_NAME_MAX);
+
+	TAILQ_FOREACH(tmp, &lvs_bdev->lvs->lvols, link) {
+		spdk_sprintf_alloc(tmp->bdev->name, SPDK_LVS_NAME_MAX, "%s/%s", new_lvs_name, tmp->name);
+	}
+
+	return 0;
+}
+
+static void
 _vbdev_lvs_remove_cb(void *cb_arg, int lvserrno)
 {
 	struct lvol_store_bdev *lvs_bdev = cb_arg;
