@@ -46,6 +46,30 @@
       "revId": "5c67a3a22bf9b88f71454dcc613dd58a94fa7abe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3ad2d6c_c46fe43f",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-20T20:17:12Z",
+      "side": 0,
+      "message": "I agree - rte_config.h should also be removed - but this can be done in a separate patch.",
+      "parentUuid": "3e79dc4b_eba56a82",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 23
+      },
+      "revId": "5c67a3a22bf9b88f71454dcc613dd58a94fa7abe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
