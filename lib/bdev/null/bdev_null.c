@@ -50,6 +50,11 @@ struct null_bdev {
 	TAILQ_ENTRY(null_bdev)	tailq;
 };
 
+struct null_io_channel {
+	struct spdk_poller		*poller;
+	TAILQ_HEAD(, spdk_bdev_io)	io;
+};
+
 static TAILQ_HEAD(, null_bdev) g_null_bdev_head;
 static void *g_null_read_buf;
 
@@ -66,8 +71,10 @@ bdev_null_destruct(void *ctx)
 }
 
 static void
-bdev_null_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
+	struct null_io_channel *ch = spdk_io_channel_get_ctx(_ch);
+
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (bdev_io->u.bdev.iovs[0].iov_base == NULL) {
@@ -75,12 +82,12 @@ bdev_null_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 			bdev_io->u.bdev.iovs[0].iov_base = g_null_read_buf;
 			bdev_io->u.bdev.iovs[0].iov_len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 		}
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		TAILQ_INSERT_TAIL(&ch->io, bdev_io, module_link);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	case SPDK_BDEV_IO_TYPE_RESET:
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		TAILQ_INSERT_TAIL(&ch->io, bdev_io, module_link);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
@@ -168,15 +175,40 @@ create_null_bdev(const char *name, uint64_t num_blocks, uint32_t block_size)
 	return &bdev->bdev;
 }
 
+static void
+null_io_poll(void *arg)
+{
+	struct null_io_channel		*ch = arg;
+	TAILQ_HEAD(, spdk_bdev_io)	io;
+	struct spdk_bdev_io		*bdev_io;
+
+	TAILQ_INIT(&io);
+	TAILQ_SWAP(&ch->io, &io, spdk_bdev_io, module_link);
+
+	while (!TAILQ_EMPTY(&io)) {
+		bdev_io = TAILQ_FIRST(&io);
+		TAILQ_REMOVE(&io, bdev_io, module_link);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	}
+}
+
 static int
 null_bdev_create_cb(void *io_device, void *ctx_buf)
 {
+	struct null_io_channel *ch = ctx_buf;
+
+	TAILQ_INIT(&ch->io);
+	ch->poller = spdk_poller_register(null_io_poll, ch, 0);
+
 	return 0;
 }
 
 static void
 null_bdev_destroy_cb(void *io_device, void *ctx_buf)
 {
+	struct null_io_channel *ch = ctx_buf;
+
+	spdk_poller_unregister(&ch->poller);
 }
 
 static int
@@ -201,7 +233,8 @@ bdev_null_initialize(void)
 	 * We need to pick some unique address as our "io device" - so just use the
 	 *  address of the global tailq.
 	 */
-	spdk_io_device_register(&g_null_bdev_head, null_bdev_create_cb, null_bdev_destroy_cb, 0);
+	spdk_io_device_register(&g_null_bdev_head, null_bdev_create_cb, null_bdev_destroy_cb,
+				sizeof(struct null_io_channel));
 
 	if (sp == NULL) {
 		goto end;
