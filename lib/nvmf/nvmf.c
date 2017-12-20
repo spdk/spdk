@@ -433,13 +433,14 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 			return -ENOMEM;
 		}
 
+		group->sgroups = buf;
+
 		/* Zero out the newly allocated memory */
 		memset(&group->sgroups[group->num_sgroups],
 		       0,
-		       (subsystem->id + 1 - group->num_sgroups) * sizeof(struct spdk_io_channel *));
+		       (subsystem->id + 1 - group->num_sgroups) * sizeof(struct spdk_nvmf_subsystem_poll_group));
 
 		group->num_sgroups = subsystem->id + 1;
-		group->sgroups = buf;
 	}
 
 	sgroup = &group->sgroups[subsystem->id];
