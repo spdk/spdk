@@ -9,6 +9,7 @@ used_vms=""
 disk_split=""
 x=""
 scsi_hot_remove_test=0
+blk_hotremove_test=0
 
 
 function usage() {
@@ -45,6 +46,7 @@ while getopts 'xh-:' optchar; do
             test-type=*) test_type="${OPTARG#*=}" ;;
             vm=*) vms+=("${OPTARG#*=}") ;;
             scsi-hotremove-test) scsi_hot_remove_test=1 ;;
+            blk-hotremove-test) blk_hot_remove_test=1 ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -184,6 +186,11 @@ function get_disks() {
     eval $2='"$SCSI_DISK"'
 }
 
+function get_blk_disks() {
+    vm_check_blk_location $1
+    eval $2='"$SCSI_DISK"'
+}
+
 function check_disks() {
     if [ "$1" == "$2" ]; then
         echo "Disk has not been deleted"
@@ -207,9 +214,9 @@ function get_traddr() {
 }
 
 function unbind_nvme() {
-    $SPDK_BUILD_DIR/scripts/rpc.py delete_bdev $1
+    $rpc_py delete_bdev $1
 }
 
 function bind_nvme() {
-    $SPDK_BUILD_DIR/scripts/rpc.py construct_nvme_bdev -b $1 -t PCIe -a $2
+    $rpc_py construct_nvme_bdev -b $1 -t PCIe -a $2
 }
