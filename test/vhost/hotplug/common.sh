@@ -9,6 +9,7 @@ used_vms=""
 disk_split=""
 x=""
 scsi_hot_remove_test=0
+blk_hotremove_test=0
 
 
 function usage() {
@@ -45,6 +46,7 @@ while getopts 'xh-:' optchar; do
             test-type=*) test_type="${OPTARG#*=}" ;;
             vm=*) vms+=("${OPTARG#*=}") ;;
             scsi-hotremove-test) scsi_hot_remove_test=1 ;;
+            blk-hotremove-test) blk_hot_remove_test=1 ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -124,10 +126,56 @@ function vms_prepare() {
     done
 }
 
+# Execute ssh command on given VM
+# param $1 virtual machine number
+#
+function vm_ssh_hotplug()
+{
+	vm_create_ssh_config
+	local ssh_config="$VM_BASE_DIR/ssh_config"
+
+	local ssh_cmd="ssh -i $SPDK_VHOST_SSH_KEY_FILE -F $ssh_config \
+		-o ConnectionTimeout=1 -p $(vm_ssh_socket $1) 127.0.0.1"
+
+	shift
+	$ssh_cmd "$@"
+}
+
+# check if specified VM is running
+# param $1 VM num
+function vm_os_booted_hotplug()
+{
+	vm_num_is_valid $1 || return 1
+	local vm_dir="$VM_BASE_DIR/$1"
+
+	if [[ ! -r $vm_dir/qemu.pid ]]; then
+		error "VM $1 is not running"
+		return 1
+	fi
+
+	if ! vm_ssh_hotplug $1 "true" 2>/dev/null; then
+		return 1
+	fi
+
+	return 0
+}
+
 function vms_reboot_all() {
     notice "Rebooting all vms "
     for vm_num in $1; do
         vm_ssh $vm_num "reboot" || true
+    done
+
+    is_running=0
+    while [ $is_running == 0 ]; do
+        is_running=1
+        for vm in $1; do
+            if vm_os_booted_hotplug $vm; then
+                is_running=0
+            fi
+        done
+        sleep 1
+        echo "Waiting for reboot"
     done
 
     vm_wait_for_boot 600 $1
@@ -207,9 +255,9 @@ function get_traddr() {
 }
 
 function unbind_nvme() {
-    $SPDK_BUILD_DIR/scripts/rpc.py delete_bdev $1
+    $rpc_py delete_bdev $1
 }
 
 function bind_nvme() {
-    $SPDK_BUILD_DIR/scripts/rpc.py construct_nvme_bdev -b $1 -t PCIe -a $2
+    $rpc_py construct_nvme_bdev -b $1 -t PCIe -a $2
 }
