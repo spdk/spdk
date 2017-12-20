@@ -1,0 +1,199 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b386cad9_87941af3",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T15:05:49Z",
+      "side": 1,
+      "message": "Don\u0027t think it needs changing.",
+      "range": {
+        "startLine": 143,
+        "startChar": 33,
+        "endLine": 143,
+        "endChar": 34
+      },
+      "revId": "da2456cb13f59e2b6bdcde74c564a20a4cea34ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb83a96b_ac6a2cb4",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T15:05:49Z",
+      "side": 1,
+      "message": "lvol-\u003ebdev-\u003ename is not changeable by design, only aliases are. I think here each lvol could del/add alias according to new lvs-\u003ename/lvol-\u003ename.",
+      "range": {
+        "startLine": 774,
+        "startChar": 2,
+        "endLine": 774,
+        "endChar": 91
+      },
+      "revId": "da2456cb13f59e2b6bdcde74c564a20a4cea34ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9685c079_ee1183aa",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T15:05:49Z",
+      "side": 1,
+      "message": "This should be called only after all spdk_lvs_rename() succeed. Which would persist the new name on disk.",
+      "range": {
+        "startLine": 777,
+        "startChar": 1,
+        "endLine": 777,
+        "endChar": 18
+      },
+      "revId": "da2456cb13f59e2b6bdcde74c564a20a4cea34ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2f71ef1_9d5fd969",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 807,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T15:05:49Z",
+      "side": 1,
+      "message": "lvol-\u003ename should be changed as well here and persisted on blob as xattr. After persisting, cb_fn() should be called.",
+      "range": {
+        "startLine": 807,
+        "startChar": 1,
+        "endLine": 807,
+        "endChar": 18
+      },
+      "revId": "da2456cb13f59e2b6bdcde74c564a20a4cea34ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2a1c88a_abaf122b",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 954,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T15:05:49Z",
+      "side": 1,
+      "message": "This is a good change, but can be in separate small patch.",
+      "range": {
+        "startLine": 954,
+        "startChar": 0,
+        "endLine": 954,
+        "endChar": 18
+      },
+      "revId": "da2456cb13f59e2b6bdcde74c564a20a4cea34ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90b6a268_3713fe1e",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T15:05:49Z",
+      "side": 1,
+      "message": "lvs-\u003ename is taken from opts-\u003ename. Changing it will make UT more flexible, rather than hard coding value.",
+      "range": {
+        "startLine": 197,
+        "startChar": 2,
+        "endLine": 197,
+        "endChar": 56
+      },
+      "revId": "da2456cb13f59e2b6bdcde74c564a20a4cea34ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c34ce7eb_3ad0acd5",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 948,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T15:05:49Z",
+      "side": 1,
+      "message": "Please check if lvs was created with provided name. I think vbdev_get_lvol_store_by_name(name) suits best here. Return from that function can be compared with g_lvol_store.",
+      "revId": "da2456cb13f59e2b6bdcde74c564a20a4cea34ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6e69c5d_5b6ebd6c",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 949,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T15:05:49Z",
+      "side": 1,
+      "message": "Not sure if this is necessary.",
+      "range": {
+        "startLine": 949,
+        "startChar": 1,
+        "endLine": 949,
+        "endChar": 29
+      },
+      "revId": "da2456cb13f59e2b6bdcde74c564a20a4cea34ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22b1c7b5_7574a05a",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 956,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T15:05:49Z",
+      "side": 1,
+      "message": "Similar to previous comment, vbdev_get_lvol_store_by_name() can be used here to see if rename succeeded.",
+      "revId": "da2456cb13f59e2b6bdcde74c564a20a4cea34ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
