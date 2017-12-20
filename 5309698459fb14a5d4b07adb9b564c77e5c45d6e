@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "d225f4e1_b409430c",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T08:46:03Z",
+      "side": 1,
+      "message": "Missing return EINVAL",
+      "revId": "5309698459fb14a5d4b07adb9b564c77e5c45d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e15accbb_2c970552",
         "filename": "lib/bdev/pmem/bdev_pmem.c",
         "patchSetId": 13
