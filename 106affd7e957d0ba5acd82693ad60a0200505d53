@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2dd06ec0_79e9a1ea",
+        "filename": "include/spdk/crc16.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-20T01:47:16Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "dd096685_18fbc1b1",
+      "range": {
+        "startLine": 51,
+        "startChar": 8,
+        "endLine": 51,
+        "endChar": 37
+      },
+      "revId": "106affd7e957d0ba5acd82693ad60a0200505d53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b5503cba_8c682ec6",
         "filename": "include/spdk/crc16.h",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2017-12-19T17:07:51Z",
       "side": 1,
       "message": "The buf parameter should still be changed to const void * so we can pass any type to this function.  You can cast it to const uint8_t * inside the function when calculating the checksum.",
+      "range": {
+        "startLine": 60,
+        "startChar": 27,
+        "endLine": 60,
+        "endChar": 45
+      },
+      "revId": "106affd7e957d0ba5acd82693ad60a0200505d53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d076531_7a783eaf",
+        "filename": "include/spdk/crc16.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-20T01:47:16Z",
+      "side": 1,
+      "message": "yes, void * should be better.",
+      "parentUuid": "b5503cba_8c682ec6",
       "range": {
         "startLine": 60,
         "startChar": 27,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "72bd0d12_941a47c0",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-20T01:47:16Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "2ac7dd9f_688753d3",
+      "revId": "106affd7e957d0ba5acd82693ad60a0200505d53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a4ae48b_63072e2e",
         "filename": "lib/util/crc16.c",
         "patchSetId": 3
@@ -76,6 +142,24 @@
       "writtenOn": "2017-12-19T17:07:51Z",
       "side": 1,
       "message": "i should be a size_t, since it is used to count up to len, which is also size_t.",
+      "revId": "106affd7e957d0ba5acd82693ad60a0200505d53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "307a49b5_56fe3a98",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2017-12-20T01:47:16Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "1a4ae48b_63072e2e",
       "revId": "106affd7e957d0ba5acd82693ad60a0200505d53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
