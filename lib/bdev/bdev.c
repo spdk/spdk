@@ -56,6 +56,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #endif
 
 #define SPDK_BDEV_IO_POOL_SIZE	(64 * 1024)
+#define SPDK_BDEV_IO_CACHE_SIZE	256
 #define BUF_SMALL_POOL_SIZE	8192
 #define BUF_LARGE_POOL_SIZE	1024
 #define NOMEM_THRESHOLD_COUNT	8
@@ -101,6 +102,16 @@ static struct spdk_thread	*g_fini_thread = NULL;
 struct spdk_bdev_mgmt_channel {
 	bdev_io_tailq_t need_buf_small;
 	bdev_io_tailq_t need_buf_large;
+
+	/*
+	 * Each thread keeps a cache of bdev_io - this allows
+	 *  bdev threads which are *not* DPDK threads to still
+	 *  benefit from a per-thread bdev_io cache.  Without
+	 *  this, non-DPDK threads fetching from the mempool
+	 *  incur a cmpxchg on get and put.
+	 */
+	bdev_io_tailq_t per_thread_cache;
+	uint32_t	per_thread_cache_count;
 };
 
 struct spdk_bdev_desc {
@@ -356,15 +367,29 @@ spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->need_buf_small);
 	TAILQ_INIT(&ch->need_buf_large);
 
+	TAILQ_INIT(&ch->per_thread_cache);
+	ch->per_thread_cache_count = 0;
+
 	return 0;
 }
 
 static void
 spdk_bdev_mgmt_channel_free_resources(struct spdk_bdev_mgmt_channel *ch)
 {
+	struct spdk_bdev_io *bdev_io;
+
 	if (!TAILQ_EMPTY(&ch->need_buf_small) || !TAILQ_EMPTY(&ch->need_buf_large)) {
 		SPDK_ERRLOG("Pending I/O list wasn't empty on channel free\n");
 	}
+
+	while (!TAILQ_EMPTY(&ch->per_thread_cache)) {
+		bdev_io = TAILQ_FIRST(&ch->per_thread_cache);
+		TAILQ_REMOVE(&ch->per_thread_cache, bdev_io, buf_link);
+		ch->per_thread_cache_count--;
+		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+	}
+
+	assert(ch->per_thread_cache_count == 0);
 }
 
 static void
@@ -475,7 +500,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 				  SPDK_BDEV_IO_POOL_SIZE,
 				  sizeof(struct spdk_bdev_io) +
 				  spdk_bdev_module_get_max_ctx_size(),
-				  64,
+				  0,
 				  SPDK_ENV_SOCKET_ID_ANY);
 
 	if (g_bdev_mgr.bdev_io_pool == NULL) {
@@ -705,12 +730,19 @@ spdk_bdev_finish(spdk_bdev_fini_cb cb_fn, void *cb_arg)
 static struct spdk_bdev_io *
 spdk_bdev_get_io(struct spdk_io_channel *_ch)
 {
+	struct spdk_bdev_mgmt_channel *ch = spdk_io_channel_get_ctx(_ch);
 	struct spdk_bdev_io *bdev_io;
 
-	bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
-	if (!bdev_io) {
-		SPDK_ERRLOG("Unable to get spdk_bdev_io\n");
-		abort();
+	if (ch->per_thread_cache_count > 0) {
+		bdev_io = TAILQ_FIRST(&ch->per_thread_cache);
+		TAILQ_REMOVE(&ch->per_thread_cache, bdev_io, buf_link);
+		ch->per_thread_cache_count--;
+	} else {
+		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
+		if (!bdev_io) {
+			SPDK_ERRLOG("Unable to get spdk_bdev_io\n");
+			abort();
+		}
 	}
 
 	memset(bdev_io, 0, offsetof(struct spdk_bdev_io, u));
@@ -721,11 +753,18 @@ spdk_bdev_get_io(struct spdk_io_channel *_ch)
 static void
 spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 {
+	struct spdk_bdev_mgmt_channel *ch = spdk_io_channel_get_ctx(bdev_io->ch->mgmt_channel);
+
 	if (bdev_io->buf != NULL) {
 		spdk_bdev_io_put_buf(bdev_io);
 	}
 
-	spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+	if (ch->per_thread_cache_count < SPDK_BDEV_IO_CACHE_SIZE) {
+		ch->per_thread_cache_count++;
+		TAILQ_INSERT_TAIL(&ch->per_thread_cache, bdev_io, buf_link);
+	} else {
+		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+	}
 }
 
 static void
