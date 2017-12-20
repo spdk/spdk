@@ -344,8 +344,6 @@ p = subparsers.add_parser('construct_error_bdev', help='Add bdev with error inje
 p.add_argument('base_name', help='base bdev name')
 p.set_defaults(func=construct_error_bdev)
 
-
-
 def construct_lvol_store(args):
     params = {'bdev_name': args.bdev_name, 'lvs_name': args.lvs_name}
 
@@ -358,6 +356,18 @@ p.add_argument('bdev_name', help='base bdev name')
 p.add_argument('lvs_name', help='name for lvol store')
 p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int, required=False)
 p.set_defaults(func=construct_lvol_store)
+
+def rename_lvol_store(args):
+    params = {
+        'old_lvs_name': args.old_lvs_name,
+        'new_lvs_name': args.new_lvs_name
+    }
+
+    print_array(jsonrpc_call('rename_lvol_store', params))
+p = subparsers.add_parser('rename_lvol_store', help='Change logical volume store name')
+p.add_argument('old_lvs_name', help='old lvs name')
+p.add_argument('new_lvs_name', help='new lvs name')
+p.set_defaults(func=rename_lvol_store)
 
 def construct_lvol_bdev(args):
     num_bytes = (args.size * 1024 * 1024)
