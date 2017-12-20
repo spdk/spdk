@@ -473,6 +473,7 @@ spdk_fio_completion_cb(struct spdk_bdev_io *bdev_io,
 	struct spdk_fio_thread		*fio_thread = td->io_ops_data;
 
 	assert(fio_thread->iocq_count < fio_thread->iocq_size);
+	fio_req->io->error = success ? 0 : EIO;
 	fio_thread->iocq[fio_thread->iocq_count++] = fio_req->io;
 
 	spdk_bdev_free_io(bdev_io);
@@ -489,7 +490,8 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 
 	if (!target) {
 		SPDK_ERRLOG("Unable to look up correct I/O target.\n");
-		return -1;
+		fio_req->io->error = ENODEV;
+		return FIO_Q_COMPLETED;
 	}
 
 	switch (io_u->ddir) {
@@ -518,7 +520,8 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	}
 
 	if (rc != 0) {
-		return -abs(rc);
+		fio_req->io->error = abs(rc);
+		return FIO_Q_COMPLETED;
 	}
 
 	return FIO_Q_QUEUED;
