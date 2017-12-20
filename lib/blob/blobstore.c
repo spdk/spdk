@@ -780,12 +780,14 @@ _spdk_blob_persist_unmap_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 	void				*tmp;
 	size_t				i;
 
+	pthread_mutex_lock(&bs->mutex);
 	/* Release all clusters that were truncated */
 	for (i = blob->active.num_clusters; i < blob->active.cluster_array_size; i++) {
 		uint32_t cluster_num = _spdk_bs_lba_to_cluster(bs, blob->active.clusters[i]);
 
 		_spdk_bs_release_cluster(bs, cluster_num);
 	}
+	pthread_mutex_unlock(&bs->mutex);
 
 	if (blob->active.num_clusters == 0) {
 		free(blob->active.clusters);
@@ -865,6 +867,7 @@ _spdk_blob_persist_zero_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 	 * below. The pages (except the first) are never written in place,
 	 * so any pages in the clean list must be zeroed.
 	 */
+	pthread_mutex_lock(&bs->mutex);
 	for (i = 1; i < blob->clean.num_pages; i++) {
 		spdk_bit_array_clear(bs->used_md_pages, blob->clean.pages[i]);
 	}
@@ -875,6 +878,7 @@ _spdk_blob_persist_zero_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 		page_num = _spdk_bs_blobid_to_page(blob->id);
 		spdk_bit_array_clear(bs->used_md_pages, page_num);
 	}
+	pthread_mutex_unlock(&bs->mutex);
 
 	/* Move on to unmapping clusters */
 	_spdk_blob_persist_unmap_clusters(seq, ctx, 0);
@@ -1012,12 +1016,14 @@ _spdk_resize_blob(struct spdk_blob_data *blob, uint64_t sz)
 	 * and another to actually claim them.
 	 */
 
+	pthread_mutex_lock(&bs->mutex);
 	lfc = 0;
 	for (i = blob->active.num_clusters; i < sz; i++) {
 		lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
 		if (lfc >= bs->total_clusters) {
 			/* No more free clusters. Cannot satisfy the request */
 			assert(false);
+			pthread_mutex_unlock(&bs->mutex);
 			return -1;
 		}
 		lfc++;
@@ -1030,6 +1036,7 @@ _spdk_resize_blob(struct spdk_blob_data *blob, uint64_t sz)
 		tmp = realloc(blob->active.clusters, sizeof(uint64_t) * sz);
 		if (sz > 0 && tmp == NULL) {
 			assert(false);
+			pthread_mutex_unlock(&bs->mutex);
 			return -1;
 		}
 		blob->active.clusters = tmp;
@@ -1044,6 +1051,7 @@ _spdk_resize_blob(struct spdk_blob_data *blob, uint64_t sz)
 		blob->active.clusters[i] = _spdk_bs_cluster_to_lba(bs, lfc);
 		lfc++;
 	}
+	pthread_mutex_unlock(&bs->mutex);
 
 	blob->active.num_clusters = sz;
 
@@ -1117,6 +1125,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob_data *blob,
 	 * to actually claim them. */
 	page_num = 0;
 	/* Note that this loop starts at one. The first page location is fixed by the blobid. */
+	pthread_mutex_lock(&bs->mutex);
 	for (i = 1; i < blob->active.num_pages; i++) {
 		page_num = spdk_bit_array_find_first_clear(bs->used_md_pages, page_num);
 		if (page_num >= spdk_bit_array_capacity(bs->used_md_pages)) {
@@ -1124,6 +1133,7 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob_data *blob,
 			free(ctx);
 			blob->state = SPDK_BLOB_STATE_DIRTY;
 			cb_fn(seq, cb_arg, -ENOMEM);
+			pthread_mutex_unlock(&bs->mutex);
 			return;
 		}
 		page_num++;
@@ -1141,6 +1151,8 @@ _spdk_blob_persist(spdk_bs_sequence_t *seq, struct spdk_blob_data *blob,
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming page %u for blob %lu\n", page_num, blob->id);
 		page_num++;
 	}
+	pthread_mutex_unlock(&bs->mutex);
+
 	ctx->pages[i - 1].crc = _spdk_blob_md_page_calc_crc(&ctx->pages[i - 1]);
 	/* Start writing the metadata from last page to first */
 	ctx->idx = blob->active.num_pages - 1;
@@ -1464,6 +1476,7 @@ _spdk_bs_dev_destroy(void *io_device)
 	 */
 	spdk_bs_call_cpl(&bs->unload_cpl, bs->unload_err);
 
+	pthread_mutex_destroy(&bs->mutex);
 	free(bs);
 }
 
@@ -1522,6 +1535,7 @@ _spdk_bs_alloc(struct spdk_bs_dev *dev, struct spdk_bs_opts *opts)
 	}
 
 	TAILQ_INIT(&bs->blobs);
+	pthread_mutex_init(&bs->mutex, NULL);
 	bs->dev = dev;
 
 	/*
@@ -2712,13 +2726,16 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 	spdk_bs_sequence_t	*seq;
 	spdk_blob_id		id;
 
+	pthread_mutex_lock(&bs->mutex);
 	page_idx = spdk_bit_array_find_first_clear(bs->used_md_pages, 0);
 	if (page_idx >= spdk_bit_array_capacity(bs->used_md_pages)) {
+		pthread_mutex_unlock(&bs->mutex);
 		cb_fn(cb_arg, 0, -ENOMEM);
 		return;
 	}
 	spdk_bit_array_set(bs->used_blobids, page_idx);
 	spdk_bit_array_set(bs->used_md_pages, page_idx);
+	pthread_mutex_unlock(&bs->mutex);
 
 	id = _spdk_bs_page_to_blobid(page_idx);
 
@@ -2831,6 +2848,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 {
 	spdk_bs_sequence_t *seq = cb_arg;
 	struct spdk_blob_data *blob = __blob_to_data(_blob);
+	struct spdk_blob_store *bs = blob->bs;
 	uint32_t page_num;
 
 	if (bserrno != 0) {
@@ -2838,12 +2856,14 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 		return;
 	}
 
+	pthread_mutex_lock(&bs->mutex);
 	if (blob->open_ref > 1) {
 		/*
 		 * Someone has this blob open (besides this delete context).
 		 *  Decrement the ref count directly and return -EBUSY.
 		 */
 		blob->open_ref--;
+		pthread_mutex_unlock(&bs->mutex);
 		spdk_bs_sequence_finish(seq, -EBUSY);
 		return;
 	}
@@ -2855,6 +2875,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrno)
 	TAILQ_REMOVE(&blob->bs->blobs, blob, link);
 	page_num = _spdk_bs_blobid_to_page(blob->id);
 	spdk_bit_array_clear(blob->bs->used_blobids, page_num);
+	pthread_mutex_unlock(&bs->mutex);
 	blob->state = SPDK_BLOB_STATE_DIRTY;
 	blob->active.num_pages = 0;
 	_spdk_resize_blob(blob, 0);
@@ -2892,6 +2913,8 @@ static void
 _spdk_bs_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_data *blob = cb_arg;
+	struct spdk_blob_store *bs = blob->bs;
+	struct spdk_blob_data *iter;
 
 	/* If the blob have crc error, we just return NULL. */
 	if (blob == NULL) {
@@ -2900,9 +2923,21 @@ _spdk_bs_open_blob_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		return;
 	}
 
-	blob->open_ref++;
-
+	pthread_mutex_lock(&bs->mutex);
+	TAILQ_FOREACH(iter, &blob->bs->blobs, link) {
+		if (iter->id == blob->id) {
+			/*
+			 * We had racing opens on this blob - use the blob
+			 *  that was already added to the bs->blobs TAILQ.
+			 */
+			_spdk_blob_free(blob);
+			blob = iter;
+			break;
+		}
+	}
 	TAILQ_INSERT_HEAD(&blob->bs->blobs, blob, link);
+	blob->open_ref++;
+	pthread_mutex_unlock(&bs->mutex);
 
 	spdk_bs_sequence_finish(seq, bserrno);
 }
@@ -2924,12 +2959,15 @@ void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		return;
 	}
 
+	pthread_mutex_lock(&bs->mutex);
 	blob = _spdk_blob_lookup(bs, blobid);
 	if (blob) {
 		blob->open_ref++;
+		pthread_mutex_unlock(&bs->mutex);
 		cb_fn(cb_arg, __data_to_blob(blob), 0);
 		return;
 	}
+	pthread_mutex_unlock(&bs->mutex);
 
 	blob = _spdk_blob_alloc(bs, blobid);
 	if (!blob) {
@@ -3007,8 +3045,10 @@ static void
 _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_data *blob = cb_arg;
+	struct spdk_blob_store *bs = blob->bs;
 
 	if (bserrno == 0) {
+		pthread_mutex_lock(&bs->mutex);
 		blob->open_ref--;
 		if (blob->open_ref == 0) {
 			/*
@@ -3018,10 +3058,11 @@ _spdk_blob_close_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 			 *  remove them again.
 			 */
 			if (blob->active.num_pages > 0) {
-				TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+				TAILQ_REMOVE(&bs->blobs, blob, link);
 			}
 			_spdk_blob_free(blob);
 		}
+		pthread_mutex_unlock(&bs->mutex);
 	}
 
 	spdk_bs_sequence_finish(seq, bserrno);
