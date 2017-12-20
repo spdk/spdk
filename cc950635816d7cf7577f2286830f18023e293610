@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c2c96f9_14127d8c",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-20T20:43:59Z",
+      "side": 1,
+      "message": "This seems to have just been missing previously. It was caught by an assert during this testing.",
+      "revId": "cc950635816d7cf7577f2286830f18023e293610",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e65c5df5_f5320ef4",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-20T20:43:59Z",
+      "side": 1,
+      "message": "This also looks like it was just a bug before - we want to zero the newly allocated memory, but buf hadn\u0027t been assigned to group-\u003esgroups yet.",
+      "revId": "cc950635816d7cf7577f2286830f18023e293610",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e60cbe8b_5581ec25",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-20T20:43:59Z",
+      "side": 1,
+      "message": "This was a bug before too - group-\u003esgroups is an array of spdk_nvmf_subsystem_poll_groups.",
+      "revId": "cc950635816d7cf7577f2286830f18023e293610",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02391c07_3809f434",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-20T20:43:59Z",
+      "side": 1,
+      "message": "Setting the state here is not right. I\u0027ll remove it.",
+      "revId": "cc950635816d7cf7577f2286830f18023e293610",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
