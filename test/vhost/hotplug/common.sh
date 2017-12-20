@@ -9,6 +9,7 @@ used_vms=""
 disk_split=""
 x=""
 scsi_hot_remove_test=0
+blk_hot_remove_test=0
 
 
 function usage() {
@@ -45,6 +46,7 @@ while getopts 'xh-:' optchar; do
             test-type=*) test_type="${OPTARG#*=}" ;;
             vm=*) vms+=("${OPTARG#*=}") ;;
             scsi-hotremove-test) scsi_hot_remove_test=1 ;;
+            blk-hotremove-test) blk_hot_remove_test=1 ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -133,15 +135,21 @@ function vms_reboot_all() {
     notice "Rebooting all vms "
     for vm_num in $1; do
         vm_ssh $vm_num "reboot" || true
+        local retvalue=0
+        while [[ $retvalue == 0 ]]; do
+            sleep 0.5
+            retvalue=0
+            timeout 1 $BASE_DIR/../common/vm_ssh.sh $vm_num "true" || retvalue=$? || true
+        done
     done
 
-    vm_wait_for_boot 600 $1
+    vm_wait_for_boot 300 $1
 }
 
 function check_fio_retcode() {
-    fio_retcode=$3
+    local fio_retcode=$3
     echo $1
-    retcode_expected=$2
+    local retcode_expected=$2
     if [ $retcode_expected == 0 ]; then
         if [ $fio_retcode != 0 ]; then
             warning "    Fio test ended with error."
@@ -162,6 +170,28 @@ function check_fio_retcode() {
         fi
     fi
 }
+
+function wait_for_finish() {
+    local wait_for_pid=$1
+    local sequence=${2:-30}
+    for i in `seq 1 $sequence`; do
+        if kill -0 $wait_for_pid; then
+             sleep 0.5
+             continue
+        else
+             break
+        fi
+    done
+    if kill -0 $wait_for_pid; then
+        error "Timeout for fio command"
+        vm_shutdown_all
+        spdk_vhost_kill
+        exit 1
+    fi
+
+    wait $wait_for_pid
+}
+
 
 function reboot_all_and_prepare() {
     vms_reboot_all "$1"
