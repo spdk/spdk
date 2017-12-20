@@ -187,6 +187,13 @@ spdk_mempool_create(const char *name, size_t count,
 					NULL, NULL);
 }
 
+uint32_t
+spdk_mempool_obj_iter(struct spdk_mempool *mp,
+		      spdk_mempool_obj_cb_t *obj_cb, void *obj_cb_arg)
+{
+	return rte_mempool_obj_iter((struct rte_mempool *)mp, (rte_mempool_obj_cb_t *)obj_cb, obj_cb_arg);
+}
+
 char *
 spdk_mempool_get_name(struct spdk_mempool *mp)
 {
