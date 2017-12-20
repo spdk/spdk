@@ -41,7 +41,6 @@
 #include "iscsi/iscsi.c"
 
 #include "../common.c"
-#include "iscsi/acceptor.h"
 #include "iscsi/portal_grp.h"
 #include "scsi/scsi_internal.h"
 
@@ -78,11 +77,6 @@ spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
 		     const char *tiqn, uint8_t *data, int alloc_len, int data_len)
 {
 	return 0;
-}
-
-void
-spdk_iscsi_acceptor_stop(struct spdk_iscsi_portal *p)
-{
 }
 
 void

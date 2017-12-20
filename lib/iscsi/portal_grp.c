@@ -67,10 +67,12 @@ spdk_iscsi_portal_find_by_addr(const char *host, const char *port)
 
 /* Assumes caller allocated host and port strings on the heap */
 struct spdk_iscsi_portal *
-spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
+spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask)
 {
 	struct spdk_iscsi_portal *p = NULL;
 	char buf[64];
+	int rc;
+	uint64_t reactor_mask;
 
 	assert(host != NULL);
 	assert(port != NULL);
@@ -89,6 +91,23 @@ spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 		return NULL;
 	}
 
+	reactor_mask = spdk_app_get_core_mask();
+
+	if (cpumask != NULL) {
+		rc = spdk_app_parse_core_mask(cpumask, &p->cpumask);
+		if (rc < 0) {
+			SPDK_ERRLOG("cpumask (%s) is invalid\n", cpumask);
+			goto error_out;
+		}
+		if (p->cpumask == 0) {
+			SPDK_ERRLOG("no cpu is selected in reactor mask (0x%" PRIx64 ")\n",
+				    reactor_mask);
+			goto error_out;
+		}
+	} else {
+		p->cpumask = reactor_mask;
+	}
+
 	/* check and overwrite abbreviation of wildcard */
 	if (strcasecmp(host, "[*]") == 0) {
 		SPDK_WARNLOG("Please use \"[::]\" as IPv6 wildcard\n");
@@ -104,8 +123,22 @@ spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 		p->host = strdup(host);
 	}
 
+	if (p->host == NULL) {
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("strdup() failed for host (%s), errno %d: %s\n",
+			    host, errno, buf);
+		goto error_out;
+	}
+
 	p->port = strdup(port);
-	p->cpumask = cpumask;
+	if (p->port == NULL) {
+		free(p->host);
+		spdk_strerror_r(errno, buf, sizeof(buf));
+		SPDK_ERRLOG("strdup() failed for port (%s), errno %d: %s\n",
+			    port, errno, buf);
+		goto error_out;
+        }
+
 	p->sock = -1;
 	p->group = NULL; /* set at a later time by caller */
 	p->acceptor_poller = NULL;
@@ -113,6 +146,9 @@ spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.portal_head, p, g_tailq);
 
 	return p;
+
+error_out:
+	return NULL;
 }
 
 void
@@ -164,22 +200,40 @@ spdk_iscsi_portal_close(struct spdk_iscsi_portal *p)
 	}
 }
 
-static int
-spdk_iscsi_portal_create_from_configline(const char *portalstring,
-		struct spdk_iscsi_portal **ip,
-		int dry_run)
+struct parse_portal {
+        char *host;
+        char *port;
+        char *cpumask;
+};
+
+static void
+free_parse_portal(struct parse_portal *portal)
 {
-	char *host = NULL, *port = NULL;
-	const char *cpumask_str;
-	uint64_t cpumask = 0;
-	int n, len, rc = -1;
-	const char *p, *q;
+        if (portal->host) {
+                free(portal->host);
+        }
+        if (portal->port) {
+                free(portal->port);
+        }
+        if (portal->cpumask) {
+                free(portal->cpumask);
+        }
+}
+
+static int
+spdk_iscsi_portal_parse_configline(const char *portalstring,
+				   struct parse_portal *parse)
+{
+	const char *cpumask_str, *p, *q;
+	int len;
 	char buf[64];
 
-	if (portalstring == NULL) {
+	if (portalstring == NULL || parse == NULL) {
 		SPDK_ERRLOG("portal error\n");
 		goto error_out;
 	}
+
+	memset(parse, 0, sizeof(*parse));
 
 	if (portalstring[0] == '[') {
 		/* IPv6 */
@@ -189,51 +243,46 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 			goto error_out;
 		}
 		p++;
-		n = p - portalstring;
-		if (!dry_run) {
-			host = malloc(n + 1);
-			if (!host) {
+		len = p - portalstring;
+
+		parse->host = calloc(1, len + 1);
+		if (!parse->host) {
+			spdk_strerror_r(errno, buf, sizeof(buf));
+			SPDK_ERRLOG("calloc() failed for host, errno %d: %s\n",
+				    errno, buf);
+			goto error_out;
+		}
+		memcpy(parse->host, portalstring, len);
+
+		if (p[0] == '\0') {
+			parse->port = malloc(PORTNUMSTRLEN);
+			if (!parse->port) {
 				spdk_strerror_r(errno, buf, sizeof(buf));
-				SPDK_ERRLOG("malloc() failed for host, errno %d: %s\n",
+				SPDK_ERRLOG("malloc() failed for port, errno %d: %s\n",
 					    errno, buf);
 				goto error_out;
 			}
-			memcpy(host, portalstring, n);
-			host[n] = '\0';
-		}
-		if (p[0] == '\0') {
-			if (!dry_run) {
-				port = malloc(PORTNUMSTRLEN);
-				if (!port) {
-					spdk_strerror_r(errno, buf, sizeof(buf));
-					SPDK_ERRLOG("malloc() failed for port, errno %d: %s\n",
-						    errno, buf);
-					goto error_out;
-				}
-				snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
-			}
+			snprintf(parse->port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
 		} else {
 			if (p[0] != ':') {
 				SPDK_ERRLOG("portal error\n");
 				goto error_out;
 			}
-			if (!dry_run) {
-				q = strchr(portalstring, '@');
-				if (q == NULL) {
-					q = portalstring + strlen(portalstring);
-				}
-				len = q - p - 1;
 
-				port = malloc(len + 1);
-				if (!port) {
-					spdk_strerror_r(errno, buf, sizeof(buf));
-					SPDK_ERRLOG("malloc() failed for port, errno %d: %s\n",
-						    errno, buf);
-					goto error_out;
-				}
-				memset(port, 0, len + 1);
-				memcpy(port, p + 1, len);
+			q = strchr(portalstring, '@');
+			if (q == NULL) {
+				q = portalstring + strlen(portalstring);
 			}
+			len = q - p - 1;
+
+			parse->port = calloc(1, len + 1);
+			if (!parse->port) {
+				spdk_strerror_r(errno, buf, sizeof(buf));
+				SPDK_ERRLOG("calloc() failed for port, errno %d: %s\n",
+					    errno, buf);
+				goto error_out;
+			}
+			memcpy(parse->port, p + 1, len);
 		}
 	} else {
 		/* IPv4 */
@@ -241,93 +290,84 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 		if (p == NULL) {
 			p = portalstring + strlen(portalstring);
 		}
-		n = p - portalstring;
-		if (!dry_run) {
-			host = malloc(n + 1);
-			if (!host) {
+		len = p - portalstring;
+
+		parse->host = calloc(1, len + 1);
+		if (!parse->host) {
+			spdk_strerror_r(errno, buf, sizeof(buf));
+			SPDK_ERRLOG("malloc() failed for host, errno %d: %s\n",
+				    errno, buf);
+			goto error_out;
+		}
+		memcpy(parse->host, portalstring, len);
+
+		if (p[0] == '\0') {
+			parse->port = malloc(PORTNUMSTRLEN);
+			if (!parse->port) {
 				spdk_strerror_r(errno, buf, sizeof(buf));
-				SPDK_ERRLOG("malloc() failed for host, errno %d: %s\n",
+				SPDK_ERRLOG("malloc() failed for port, errno %d: %s\n",
 					    errno, buf);
 				goto error_out;
 			}
-			memcpy(host, portalstring, n);
-			host[n] = '\0';
-		}
-		if (p[0] == '\0') {
-			if (!dry_run) {
-				port = malloc(PORTNUMSTRLEN);
-				if (!port) {
-					spdk_strerror_r(errno, buf, sizeof(buf));
-					SPDK_ERRLOG("malloc() failed for port, errno %d: %s\n",
-						    errno, buf);
-					goto error_out;
-				}
-				snprintf(port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
-			}
+			snprintf(parse->port, PORTNUMSTRLEN, "%d", DEFAULT_PORT);
 		} else {
 			if (p[0] != ':') {
 				SPDK_ERRLOG("portal error\n");
 				goto error_out;
 			}
-			if (!dry_run) {
-				q = strchr(portalstring, '@');
-				if (q == NULL) {
-					q = portalstring + strlen(portalstring);
-				}
 
-				if (q == p) {
-					SPDK_ERRLOG("no port specified\n");
-					goto error_out;
-				}
-
-				len = q - p - 1;
-				port = malloc(len + 1);
-				if (!port) {
-					spdk_strerror_r(errno, buf, sizeof(buf));
-					SPDK_ERRLOG("malloc() failed for port, errno %d: %s\n",
-						    errno, buf);
-					goto error_out;
-				}
-				memset(port, 0, len + 1);
-				memcpy(port, p + 1, len);
+			q = strchr(portalstring, '@');
+			if (q == NULL) {
+				q = portalstring + strlen(portalstring);
 			}
 
+			if (p + 1 >= q) {
+				SPDK_ERRLOG("no port specified\n");
+				goto error_out;
+			}
+
+			len = q - p - 1;
+			parse->port = calloc(1, len + 1);
+			if (!parse->port) {
+				spdk_strerror_r(errno, buf, sizeof(buf));
+				SPDK_ERRLOG("calloc() failed for port, errno %d: %s\n",
+					    errno, buf);
+				goto error_out;
+			}
+			memcpy(parse->port, p + 1, len);
 		}
 	}
 
 	p = strchr(portalstring, '@');
 	if (p != NULL) {
 		cpumask_str = p + 1;
-		if (spdk_app_parse_core_mask(cpumask_str, &cpumask)) {
-			SPDK_ERRLOG("invalid portal cpumask %s\n", cpumask_str);
+		len = (portalstring + strlen(portalstring)) - cpumask_str;
+		parse->cpumask = calloc(1, len + 1);
+		if (!parse->cpumask) {
+			spdk_strerror_r(errno, buf, sizeof(buf));
+			SPDK_ERRLOG("calloc() failed for cpumask, errno %d: %s\n",
+				    errno, buf);
 			goto error_out;
 		}
-		if (cpumask == 0) {
-			SPDK_ERRLOG("no cpu is selected among reactor mask(=%jx)\n",
-				    spdk_app_get_core_mask());
-			goto error_out;
-		}
+		memcpy(parse->cpumask, cpumask_str, len);
 	} else {
-		cpumask = spdk_app_get_core_mask();
+		parse->cpumask = NULL;
 	}
 
-	if (!dry_run) {
-		*ip = spdk_iscsi_portal_create(host, port, cpumask);
-		if (!*ip) {
-			goto error_out;
-		}
-	}
+	return 0;
 
-	rc = 0;
 error_out:
-	if (host) {
-		free(host);
+	if (parse->host) {
+		free(parse->host);
 	}
-	if (port) {
-		free(port);
+	if (parse->port) {
+		free(parse->port);
+	}
+	if (parse->cpumask) {
+		free(parse->cpumask);
 	}
 
-	return rc;
+	return -1;
 }
 
 struct spdk_iscsi_portal_grp *
@@ -413,8 +453,8 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 		struct spdk_iscsi_portal *p = portal_list[i];
 
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
-			      "RIndex=%d, Host=%s, Port=%s, Tag=%d\n",
-			      i, p->host, p->port, tag);
+			      "open portal (%s, %s) in portal group (tag=%d)\n",
+			      p->host, p->port, tag);
 		rc = spdk_iscsi_portal_open(p);
 		if (rc < 0) {
 			/* if listening failed on any port, do not register the portal group
@@ -445,11 +485,11 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 int
 spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 {
-	struct spdk_iscsi_portal_grp *pg;
-	struct spdk_iscsi_portal	*p;
+	struct parse_portal parse;
+	struct spdk_iscsi_portal *portal_list[MAX_PORTAL] = {};
 	const char *val;
 	char *label, *portal;
-	int portals = 0, i = 0, rc = 0;
+	int i = 0, tag, rc = 0;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add portal group (from config file) %d\n",
 		      spdk_conf_section_get_num(sp));
@@ -471,54 +511,41 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 		if (label == NULL || portal == NULL) {
 			break;
 		}
-		rc = spdk_iscsi_portal_create_from_configline(portal, &p, 1);
+
+		if (i >= MAX_PORTAL) {
+			SPDK_ERRLOG("number of portals is more than MAX_PORTAL(=%d)\n",
+				    MAX_PORTAL);
+			goto error_out;
+		}
+
+		rc = spdk_iscsi_portal_parse_configline(portal, &parse);
 		if (rc < 0) {
 			SPDK_ERRLOG("parse portal error (%s)\n", portal);
 			goto error_out;
 		}
-	}
-
-	portals = i;
-	if (portals > MAX_PORTAL) {
-		SPDK_ERRLOG("%d > MAX_PORTAL\n", portals);
-		goto error_out;
-	}
-
-	pg = spdk_iscsi_portal_grp_create(spdk_conf_section_get_num(sp));
-	if (!pg) {
-		SPDK_ERRLOG("portal group malloc error (%s)\n", spdk_conf_section_get_name(sp));
-		goto error_out;
-	}
-
-	for (i = 0; i < portals; i++) {
-		label = spdk_conf_section_get_nmval(sp, "Portal", i, 0);
-		portal = spdk_conf_section_get_nmval(sp, "Portal", i, 1);
-		if (label == NULL || portal == NULL) {
-			spdk_iscsi_portal_grp_destroy(pg);
-			SPDK_ERRLOG("portal error\n");
+		portal_list[i] = spdk_iscsi_portal_create(parse.host, parse.port,
+							  0);
+		free_parse_portal(&parse);
+		if (portal_list[i] == NULL) {
+			SPDK_ERRLOG("portal_list allocation failed\n");
 			goto error_out;
 		}
-
-		rc = spdk_iscsi_portal_create_from_configline(portal, &p, 0);
-		if (rc < 0) {
-			spdk_iscsi_portal_grp_destroy(pg);
-			SPDK_ERRLOG("parse portal error (%s)\n", portal);
-			goto error_out;
-		}
-
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
-			      "RIndex=%d, Host=%s, Port=%s, Tag=%d\n",
-			      i, p->host, p->port, spdk_conf_section_get_num(sp));
-
-		spdk_iscsi_portal_grp_add_portal(pg, p);
 	}
 
-	/* Add portal group to the end of the pg list */
-	spdk_iscsi_portal_grp_register(pg);
+	tag = spdk_conf_section_get_num(sp);
+
+	rc = spdk_iscsi_portal_grp_create_from_portal_list(tag, portal_list, i);
+	if (rc < 0) {
+		SPDK_ERRLOG("create_from_portal_list() failed\n");
+		goto error_out;
+	}
 
 	return 0;
 
 error_out:
+	for (; i > 0; --i) {
+		spdk_iscsi_portal_destroy(portal_list[i - 1]);
+	}
 	return -1;
 }
 
