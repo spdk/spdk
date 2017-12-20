@@ -87,6 +87,12 @@ spdk_bdev_unregister_done(struct spdk_bdev *bdev, int bdeverrno)
 {
 }
 
+int spdk_lvs_rename(struct spdk_lvol_store *lvs, const char *new_name,
+		    spdk_lvs_op_complete cb_fn, void *cb_arg)
+{
+	return 0;
+}
+
 int
 spdk_lvol_rename(struct spdk_lvol *lvol, const char *new_name,
 		 spdk_lvol_op_complete cb_fn, void *cb_arg)
@@ -213,9 +219,12 @@ spdk_lvs_init(struct spdk_bs_dev *bs_dev, struct spdk_lvs_opts *o,
 		lvs = calloc(1, sizeof(*lvs));
 		SPDK_CU_ASSERT_FATAL(lvs != NULL);
 		TAILQ_INIT(&lvs->lvols);
+		uuid_generate_time(lvs->uuid);
+		strncpy(lvs->name, "old_lvs_name", SPDK_LVS_NAME_MAX);
 		lvs->bs_dev = bs_dev;
 		error = 0;
 	}
+
 	cb_fn(cb_arg, lvs, error);
 
 	return 0;
@@ -952,6 +961,32 @@ ut_vbdev_lvol_submit_request(void)
 	free(g_base_bdev);
 }
 
+static void
+ut_lvs_rename(void)
+{
+	int rc = 0;
+	struct spdk_lvol_store *lvs;
+
+	/* Lvol store is succesfully created */
+	rc = vbdev_lvs_create(&g_bdev, "old_lvs_name", 0, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(g_bs_dev != NULL);
+
+	lvs = g_lvol_store;
+	g_lvol_store = NULL;
+
+	/* Trying to rename lvs */
+	rc = vbdev_lvs_rename(lvs, "new_lvs_name", lvol_store_op_complete, NULL);
+	CU_ASSERT(rc == -ENODEV);
+
+	/* Unload lvol store */
+	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -979,7 +1014,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_lvol_op_comp", ut_lvol_op_comp) == NULL ||
 		CU_add_test(suite, "ut_lvol_read_write", ut_lvol_read_write) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_submit_request", ut_vbdev_lvol_submit_request) == NULL ||
-		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL
+		CU_add_test(suite, "lvol_examine", ut_lvol_examine) == NULL ||
+		CU_add_test(suite, "ut_lvs_rename", ut_lvs_rename) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
