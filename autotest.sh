@@ -93,6 +93,7 @@ timing_enter lib
 
 if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 	run_test test/lib/bdev/blockdev.sh
+	run_test test/lib/vtune/vtune.sh
 fi
 
 if [ $SPDK_TEST_EVENT -eq 1 ]; then
