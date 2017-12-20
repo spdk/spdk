@@ -170,6 +170,8 @@ struct spdk_blob_store {
 	int				unload_err;
 
 	TAILQ_HEAD(, spdk_blob_data) 	blobs;
+
+	pthread_mutex_t			mutex;
 };
 
 struct spdk_bs_channel {
