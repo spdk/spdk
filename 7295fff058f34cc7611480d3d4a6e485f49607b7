@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be22ac45_e944b270",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 2572,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-20T22:06:37Z",
+      "side": 1,
+      "message": "see comment on unit tests - I think we can remove this check",
+      "revId": "7295fff058f34cc7611480d3d4a6e485f49607b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b57dab40_8d95393f",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-20T22:06:37Z",
+      "side": 1,
+      "message": "I don\u0027t see where g_value is used.",
+      "revId": "7295fff058f34cc7611480d3d4a6e485f49607b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cbd8c44_93a445e8",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 2339,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-20T22:06:37Z",
+      "side": 1,
+      "message": "I think it would be better to fail spdk_bs_create_blob_ext() with -EINVAL if user does something like this.\n\nSo if xattr_count \u003e 0, then xattr_names and get_xattr_value must be !\u003d NULL.\n\nThen here you only need to test for this -EINVAL condition.  It makes the code and tests simpler.",
+      "revId": "7295fff058f34cc7611480d3d4a6e485f49607b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
