@@ -2096,7 +2096,7 @@ spdk_bdev_part_tailq_fini(struct bdev_part_tailq *tailq)
 	struct spdk_bdev_part *part, *tmp;
 
 	TAILQ_FOREACH_SAFE(part, tailq, tailq, tmp) {
-		spdk_bdev_part_free(part);
+		spdk_bdev_unregister(&part->bdev, NULL, NULL);
 	}
 }
 
