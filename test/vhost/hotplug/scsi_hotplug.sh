@@ -3,6 +3,10 @@ set -e
 BASE_DIR=$(readlink -f $(dirname $0))
 . $BASE_DIR/common.sh
 
+if [[ $scsi_hot_remove_test == 1 ]] && [[ $blk_hot_remove_test == 1 ]]; then
+    notice "Vhost-scsi and vhost-blk hotremove tests cannot be run together"
+fi
+
 # Add split section into vhost config
 function gen_config() {
     cp $BASE_DIR/vhost.conf.base $BASE_DIR/vhost.conf.in
@@ -13,6 +17,7 @@ function gen_config() {
   Split HotInNvme0n1 2
   Split HotInNvme1n1 2
   Split HotInNvme2n1 2
+  Split HotInNvme3n1 2
 END_OF_CONFIG
 }
 
@@ -63,7 +68,7 @@ trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
 gen_config
 run_vhost
 rm $BASE_DIR/vhost.conf.in
-if [[ $scsi_hot_remove_test == 0 ]]; then
+if [[ $scsi_hot_remove_test == 0 ]] && [[ $blk_hot_remove_test == 0 ]]; then
     pre_hot_attach_detach_test_case
     $BASE_DIR/scsi_hotattach.sh --fio-bin=$fio_bin &
     first_script=$!
@@ -76,5 +81,8 @@ if [[ $scsi_hot_remove_test == 0 ]]; then
 fi
 if [[ $scsi_hot_remove_test == 1 ]]; then
     source $BASE_DIR/scsi_hotremove.sh
+fi
+if [[ $blk_hot_remove_test == 1 ]]; then
+    source $BASE_DIR/blk_hotremove.sh
 fi
 post_test_case
