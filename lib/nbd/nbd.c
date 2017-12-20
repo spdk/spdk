@@ -46,7 +46,11 @@
 #include "spdk/io_channel.h"
 
 #include "spdk_internal/log.h"
+#include "spdk/queue.h"
 
+/* Size of task pool size is maximum io-queue-depth of nbd */
+#define DEFAULT_IO_POOL_SIZE	128
+#define NBD_POLL_LOOP_COUNT	16
 /*
  * The life cycle of one NBD I/O just like this:
  * 1. nbd kernel module sends io request header to nbd-server
@@ -75,7 +79,6 @@ struct nbd_io {
 	enum nbd_io_state_t	state;
 
 	enum spdk_bdev_io_type	type;
-	int			ref;
 	void			*payload;
 
 	/* NOTE: for TRIM, this represents number of bytes to trim. */
@@ -89,6 +92,31 @@ struct nbd_io {
 	 * response, or payload from the nbd socket.
 	 */
 	uint32_t		offset;
+
+	TAILQ_ENTRY(nbd_io)	tailq;
+};
+
+/**
+ * Struct to accommodate and coordinate nbd_io
+ *
+ * Each nbd_io may be recorded at 5 position.
+ * When it is not used, it is in io_pool;
+ * When it is under receiving, it is at cur_rio;
+ * When it is fully received, it is linked in the end of revc_io_list
+ * When it is processed by bdev, it is linked in the end of send_io_list
+ * When it is under sending, it is at cur_sio;
+ * After sending, it will be put back to io_pool.
+ *
+ * Several rotator functions are provided to rotate nbd_io into
+ * correct positions during nbd poller's data transiting and backend
+ * bdev's io processing.
+ */
+struct nbd_io_rotation {
+	struct nbd_io		*cur_rio;
+	struct nbd_io		*cur_sio;
+	TAILQ_HEAD(, nbd_io)	recv_io_list;
+	TAILQ_HEAD(, nbd_io)	send_io_list;
+	struct spdk_mempool	*io_pool;
 };
 
 /**
@@ -110,7 +138,12 @@ struct spdk_nbd_disk {
 	int			spdk_sp_fd;
 	struct nbd_io		io;
 	struct spdk_poller	*nbd_poller;
+	struct nbd_io_rotation	io_rotation;
 	uint32_t		buf_align;
+	/*
+	 * indicate nbd disk is stopping
+	 */
+	bool leave;
 
 	TAILQ_ENTRY(spdk_nbd_disk)	tailq;
 };
@@ -225,6 +258,190 @@ nbd_disconnect(struct spdk_nbd_disk *nbd)
 	ioctl(nbd->dev_fd, NBD_DISCONNECT);
 }
 
+/*
+ * Preset nbd_io during mempool creation
+ */
+static void spdk_nbd_io_obj_init(struct spdk_mempool *mp,
+				 void *opaque, void *obj, unsigned obj_idx)
+{
+	struct spdk_nbd_disk *nbd = opaque;
+	struct nbd_io *io = obj;
+
+	io->nbd = nbd;
+	to_be32(&io->resp.magic, NBD_REPLY_MAGIC);
+}
+
+static int
+spdk_nbd_io_rotation_init(struct spdk_nbd_disk *nbd)
+{
+	struct nbd_io_rotation *io_rotation = &nbd->io_rotation;
+	char mempool_name[32];
+
+	snprintf(mempool_name, sizeof(mempool_name), "%s_io_pool", nbd->nbd_path);
+	/* create nbd io pool */
+	io_rotation->io_pool = spdk_mempool_create_ctor(mempool_name, DEFAULT_IO_POOL_SIZE,
+			       sizeof(struct nbd_io), 0, SPDK_ENV_SOCKET_ID_ANY,
+			       spdk_nbd_io_obj_init, (void *)nbd);
+
+	if (!io_rotation->io_pool) {
+		SPDK_ERRLOG("create io pool failed\n");
+		return -1;
+	}
+
+	TAILQ_INIT(&io_rotation->recv_io_list);
+	TAILQ_INIT(&io_rotation->send_io_list);
+
+	return 0;
+}
+
+/*
+ * Release payload in nbd_io
+ */
+static void spdk_nbd_io_obj_payload_free(struct spdk_mempool *mp,
+		void *opaque, void *obj, unsigned obj_idx)
+{
+	struct nbd_io *io = obj;
+
+	if (io->payload) {
+		spdk_dma_free(io->payload);
+	}
+}
+
+static void
+spdk_nbd_io_rotation_fini(struct spdk_nbd_disk *nbd)
+{
+	struct nbd_io_rotation *io_rotation = &nbd->io_rotation;
+
+	if (!io_rotation->io_pool) {
+		return;
+	}
+	/*
+	 * free io->payload.
+	 * nbd_io may be discontinued from its sending states
+	 * in which it has no chance to free payload.
+	 */
+	spdk_mempool_obj_iter(io_rotation->io_pool,
+			      spdk_nbd_io_obj_payload_free, NULL);
+	spdk_mempool_free(io_rotation->io_pool);
+}
+
+/*
+ * Rotate cur_rio to recv_list if it is not in receive states.
+ * And get one nbd_io as cur_rio if previous one is NULL or rotated.
+ *
+ * \return 1 cur_rio is rotated
+ *         0 no nbd_io rotation occurred
+ */
+static int
+nbd_io_recv_rotator(struct nbd_io_rotation *io_rotation)
+{
+	int rc = 0;
+
+	if (io_rotation->cur_rio) {
+		if (io_rotation->cur_rio->state == NBD_IO_RECV_REQ ||
+		    io_rotation->cur_rio->state == NBD_IO_RECV_PAYLOAD) {
+			return 0;
+		} else {
+			TAILQ_INSERT_TAIL(&io_rotation->recv_io_list, io_rotation->cur_rio, tailq);
+			rc = 1;
+		}
+	}
+	/* Get one nbd_io as cur_rio if previous one is NULL or rotated */
+	io_rotation->cur_rio = spdk_mempool_get(io_rotation->io_pool);
+
+	return rc;
+}
+
+/*
+ * Rotate nbd_io to send_io_list after it is done.
+ * Generally, nbd_io is exsited in recv_io_list, but it may
+ * be cur_rio if it hasn't been successfully submitted to bdev.
+ */
+static void
+nbd_io_done_rotator(struct nbd_io_rotation *io_rotation, struct nbd_io *io)
+{
+	if (io == io_rotation->cur_rio) {
+		/* nbd_io is cur_rio, so clear cur_rio */
+		io_rotation->cur_rio = NULL;
+	} else {
+		/* nbd_io is from recv_io_list */
+		TAILQ_REMOVE(&io_rotation->recv_io_list, io, tailq);
+	}
+	/* rotate nbd_io to send list */
+	TAILQ_INSERT_TAIL(&io_rotation->send_io_list, io, tailq);
+}
+
+/*
+ * Put all nbd_io back to io_pool
+ *
+ * \return 0 there is still some nbd_io outside of io_pool
+ *         1 all nbd_io are put back to io_pool
+ */
+static int
+nbd_io_stop_rotator(struct nbd_io_rotation *io_rotation)
+{
+	struct nbd_io *io, *io_tmp;
+
+	/*
+	 * Each nbd_io linked in recv_list is under processing in bdev.
+	 * Wait for their done operation.
+	 */
+	if (TAILQ_EMPTY(&io_rotation->recv_io_list)) {
+		return 1;
+	}
+
+	TAILQ_FOREACH_SAFE(io, &io_rotation->send_io_list, tailq, io_tmp) {
+		spdk_mempool_put(io_rotation->io_pool, (void *)io);
+	}
+
+	if (io_rotation->cur_rio) {
+		spdk_mempool_put(io_rotation->io_pool, (void *)io_rotation->cur_rio);
+		io_rotation->cur_rio = NULL;
+	}
+
+	if (io_rotation->cur_sio) {
+		spdk_mempool_put(io_rotation->io_pool, (void *)io_rotation->cur_sio);
+		io_rotation->cur_sio = NULL;
+	}
+
+	return 0;
+}
+
+/*
+ * Rotate cur_sio back to io pool if it isn't in send states.
+ * And get one nbd_io from send_io_list as cur_sio, if previous one
+ * is NULL or rotated.
+ *
+ * \return 1 if cur_sio is rotated
+ *         0 no nbd_io rotation occurred
+ */
+static int
+nbd_io_send_rotator(struct nbd_io_rotation *io_rotation)
+{
+	struct nbd_io *sio;
+	int rc = 0;
+
+	if (io_rotation->cur_sio) {
+		if (io_rotation->cur_sio->state == NBD_IO_SEND_RESP ||
+		    io_rotation->cur_sio->state == NBD_IO_SEND_PAYLOAD) {
+			return 0;
+		} else {
+			spdk_mempool_put(io_rotation->io_pool, (void *)io_rotation->cur_sio);
+			rc = 1;
+		}
+	}
+	/* Get one nbd_io as cur_sio if previous one is NULL or rotated */
+	if (!TAILQ_EMPTY(&io_rotation->send_io_list)) {
+		sio = TAILQ_FIRST(&io_rotation->send_io_list);
+		TAILQ_REMOVE(&io_rotation->send_io_list, sio, tailq);
+		io_rotation->cur_sio = sio;
+	} else {
+		io_rotation->cur_sio = NULL;
+	}
+
+	return rc;
+}
+
 static void
 _nbd_stop(struct spdk_nbd_disk *nbd)
 {
@@ -256,6 +473,8 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 		spdk_poller_unregister(&nbd->nbd_poller);
 	}
 
+	spdk_nbd_io_rotation_fini(nbd);
+
 	spdk_nbd_disk_unregister(nbd);
 
 	free(nbd);
@@ -268,8 +487,9 @@ spdk_nbd_stop(struct spdk_nbd_disk *nbd)
 		return;
 	}
 
-	nbd->io.ref--;
-	if (nbd->io.ref == 0) {
+	nbd->leave = true;
+
+	if (!nbd->io_rotation.io_pool || nbd_io_stop_rotator(&nbd->io_rotation)) {
 		_nbd_stop(nbd);
 	}
 }
@@ -326,12 +546,13 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		spdk_bdev_free_io(bdev_io);
 	}
 
-
 	io->state = NBD_IO_SEND_RESP;
+	nbd_io_done_rotator(&nbd->io_rotation, io);
 
-	io->ref--;
-	if (io->ref == 0) {
-		_nbd_stop(nbd);
+	if (nbd->leave) {
+		if (nbd_io_stop_rotator(&nbd->io_rotation)) {
+			_nbd_stop(nbd);
+		}
 	}
 }
 
@@ -341,8 +562,6 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 	struct spdk_bdev_desc *desc = nbd->bdev_desc;
 	struct spdk_io_channel *ch = nbd->ch;
 	int rc = 0;
-
-	io->ref++;
 
 	switch (from_be32(&io->req.type)) {
 	case NBD_CMD_READ:
@@ -371,7 +590,6 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 		break;
 #endif
 	case NBD_CMD_DISC:
-		io->ref--;
 		return -ECONNRESET;
 	default:
 		rc = -1;
@@ -477,8 +695,10 @@ nbd_io_send_resp(struct nbd_io *io, bool *changed)
 	struct spdk_nbd_disk *nbd = io->nbd;
 	int ret;
 
-	/* resp error is set in io_done */
-	to_be32(&io->resp.magic, NBD_REPLY_MAGIC);
+	/*
+	 * resp error is set in io_done;
+	 * resp magic is set in io_pool initialization;
+	 */
 	memcpy(&io->resp.handle, &io->req.handle, sizeof(io->resp.handle));
 
 	ret = write_to_socket(nbd->spdk_sp_fd, (char *)&io->resp + io->offset,
@@ -558,9 +778,54 @@ const nbd_poller_func_t nbd_io_poll_func[NBD_IO_STATE_COUNT] = {
 static inline int
 _spdk_nbd_poll(struct spdk_nbd_disk *nbd)
 {
-	struct nbd_io	*io = &nbd->io;
+	struct nbd_io_rotation	*io_rotation = &nbd->io_rotation;
+	struct nbd_io	*io;
+	int		i, rc;
+	bool		state_changed;
 
-	return nbd_io_poll_func[io->state](io, NULL);
+	if (nbd->leave) {
+		return 0;
+	}
+
+	/* nbd_io sending data progress */
+	nbd_io_send_rotator(io_rotation);
+	for (i = 0; i < NBD_POLL_LOOP_COUNT && io_rotation->cur_sio; i++) {
+		io = io_rotation->cur_sio;
+		state_changed = 0;
+		rc = nbd_io_poll_func[io->state](io, &state_changed);
+		if (rc < 0) {
+			return rc;
+		}
+		/*
+		 * If io state is not changed, nor position rotated,
+		 * there is no available data to write to socket, so
+		 * stop data sending loop.
+		 */
+		if (!state_changed || !nbd_io_send_rotator(io_rotation)) {
+			break;
+		}
+	}
+
+	/* nbd_io receiving data progress */
+	nbd_io_recv_rotator(io_rotation);
+	for (i = 0; i < NBD_POLL_LOOP_COUNT && io_rotation->cur_rio; i++) {
+		io = io_rotation->cur_rio;
+		state_changed = 0;
+		rc = nbd_io_poll_func[io->state](io, &state_changed);
+		if (rc < 0) {
+			return rc;
+		}
+		/*
+		 * If io state is not changed, nor position rotated,
+		 * there is no available data to read from socket, so
+		 * stop data receiving loop.
+		 */
+		if (!state_changed || !nbd_io_recv_rotator(io_rotation)) {
+			break;
+		}
+	}
+
+	return 0;
 }
 
 static void
@@ -623,7 +888,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		return NULL;
 	}
 
-	nbd->io.nbd = nbd;
 	nbd->dev_fd = -1;
 	nbd->spdk_sp_fd = -1;
 	nbd->kernel_sp_fd = -1;
@@ -634,7 +898,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		goto err;
 	}
 
-	nbd->io.ref = 1;
 	nbd->bdev = bdev;
 
 	nbd->ch = spdk_bdev_get_io_channel(nbd->bdev_desc);
@@ -651,6 +914,11 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	nbd->nbd_path = strdup(nbd_path);
 	if (!nbd->nbd_path) {
 		SPDK_ERRLOG("strdup allocation failure\n");
+		goto err;
+	}
+
+	rc = spdk_nbd_io_rotation_init(nbd);
+	if (rc != 0) {
 		goto err;
 	}
 	/* Add nbd_disk to the end of disk list */
