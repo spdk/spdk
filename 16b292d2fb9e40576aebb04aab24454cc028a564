@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9625a2cf_b4e82e1c",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011235
+      },
+      "writtenOn": "2017-12-20T07:32:32Z",
+      "side": 1,
+      "message": "here only need a space.  \"HotInNvme0n1\" and \"lvs0\" middle.",
+      "revId": "16b292d2fb9e40576aebb04aab24454cc028a564",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60236ed3_45fcf912",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011235
+      },
+      "writtenOn": "2017-12-20T07:32:32Z",
+      "side": 1,
+      "message": "remove this space line.",
+      "revId": "16b292d2fb9e40576aebb04aab24454cc028a564",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
