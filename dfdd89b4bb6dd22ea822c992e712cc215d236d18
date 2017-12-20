@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "647716da_53f5dcac",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-20T20:46:21Z",
+      "side": 1,
+      "message": "This TAILQ_REMOVE can be dropped now.",
+      "revId": "dfdd89b4bb6dd22ea822c992e712cc215d236d18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
