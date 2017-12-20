@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b707111_5f1ff877",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-20T18:21:18Z",
+      "side": 1,
+      "message": "Your patch changes the per-core cache to 0.",
+      "revId": "30e17149f6b8f6abdc437204dd6c8c3056f72d5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
