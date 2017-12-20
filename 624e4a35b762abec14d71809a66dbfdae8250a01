@@ -145,6 +145,54 @@
     },
     {
       "key": {
+        "uuid": "9bb55e9d_b2f56cc6",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-20T02:57:00Z",
+      "side": 1,
+      "message": "I think we should cover more situations in the case of time permitting in nightly test.",
+      "parentUuid": "f6d36a39_43e70cb9",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 125,
+        "endChar": 4
+      },
+      "revId": "624e4a35b762abec14d71809a66dbfdae8250a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "380f4a25_12116b16",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2017-12-20T02:57:00Z",
+      "side": 1,
+      "message": "Ok I will add 2VMs with different controllers and different cores.",
+      "parentUuid": "f48ae970_ad5d8316",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 125,
+        "endChar": 4
+      },
+      "revId": "624e4a35b762abec14d71809a66dbfdae8250a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4e8fc5c_b4d177b2",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 6
