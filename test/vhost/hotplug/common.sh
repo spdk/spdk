@@ -9,6 +9,7 @@ used_vms=""
 disk_split=""
 x=""
 scsi_hot_remove_test=0
+blk_hotremove_test=0
 
 
 function usage() {
@@ -45,6 +46,7 @@ while getopts 'xh-:' optchar; do
             test-type=*) test_type="${OPTARG#*=}" ;;
             vm=*) vms+=("${OPTARG#*=}") ;;
             scsi-hotremove-test) scsi_hot_remove_test=1 ;;
+            blk-hotremove-test) blk_hot_remove_test=1 ;;
             *) usage $0 "Invalid argument '$OPTARG'" ;;
         esac
         ;;
@@ -124,13 +126,55 @@ function vms_prepare() {
     done
 }
 
+function is_vm_running() {
+    if timeout 1 $BASE_DIR/../common/vm_ssh.sh $1 "true"; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 function vms_reboot_all() {
     notice "Rebooting all vms "
     for vm_num in $1; do
         vm_ssh $vm_num "reboot" || true
     done
 
-    vm_wait_for_boot 600 $1
+    local is_running=()
+    local is_running_flag=0
+    local pid_map=()
+    for vm_num in $1; do
+        is_running[$vm_num]=0
+    done
+    while [ $is_running_flag == 0 ]; do
+        for vm_num in $1; do
+            pid_map[$vm_num]=0
+        done
+        for vm_num in $1; do
+            if [ ${is_running[$vm_num]} == 0 ]; then
+                is_vm_running $vm_num &
+                pid=$!
+                pid_map[$vm_num]=$pid
+            fi
+        done
+        set +xe
+        for vm_num in $1; do
+            if [ ${pid_map[$vm_num]} != 0 ]; then
+                wait ${pid_map[$vm_num]}
+                is_running[$vm_num]=$?
+            fi
+        done
+        set -xe
+        echo "Waiting for reboot"
+        is_running_flag=1
+        for vm_num in $1; do
+            if [ ${is_running[$vm_num]} == 0 ]; then
+               is_running_flag=0
+            fi
+        done
+    done
+
+    vm_wait_for_boot 300 $1
 }
 
 function check_fio_retcode() {
