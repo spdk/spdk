@@ -193,6 +193,7 @@ void
 spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 {
 	struct spdk_nvmf_transport *transport, *transport_tmp;
+	uint32_t i;
 
 	TAILQ_FOREACH_SAFE(transport, &tgt->transports, link, transport_tmp) {
 		TAILQ_REMOVE(&tgt->transports, transport, link);
@@ -204,6 +205,11 @@ spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt)
 	}
 
 	if (tgt->subsystems) {
+		for (i = 0; i < tgt->max_sid; i++) {
+			if (tgt->subsystems[i]) {
+				spdk_nvmf_delete_subsystem(tgt->subsystems[i]);
+			}
+		}
 		free(tgt->subsystems);
 	}
 
