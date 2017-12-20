@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0dffcec_27cbf5a8",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 670,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T09:07:28Z",
+      "side": 1,
+      "message": "Isn\u0027t bdev-\u003ealiases intialized now in spdk_vbdev_register() ?",
+      "range": {
+        "startLine": 670,
+        "startChar": 1,
+        "endLine": 670,
+        "endChar": 28
+      },
+      "revId": "9a32b618802b00e2df1e6bcf389d0b617ca2046a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bacb7ae_6651acc7",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 697,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-20T09:07:28Z",
+      "side": 1,
+      "message": "lvol-\u003ebdev is not yet assigned, it is after returning from this function. I think only bdev should be used here.",
+      "range": {
+        "startLine": 697,
+        "startChar": 22,
+        "endLine": 697,
+        "endChar": 32
+      },
+      "revId": "9a32b618802b00e2df1e6bcf389d0b617ca2046a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
