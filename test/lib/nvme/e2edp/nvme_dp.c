@@ -40,27 +40,7 @@
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/crc16.h"
-
-static uint32_t swap32(uint32_t value)
-{
-	uint32_t result = 0;
-	result |= (value & 0x000000FF) << 24;
-	result |= (value & 0x0000FF00) << 8;
-	result |= (value & 0x00FF0000) >> 8;
-	result |= (value & 0xFF000000) >> 24;
-	return result;
-}
-
-
-static uint16_t swap16(uint16_t value)
-{
-	uint16_t result = 0;
-
-	result |= (value & 0x00FF) << 8;
-	result |= (value & 0xFF00) >> 8;
-
-	return result;
-}
+#include "spdk/endian.h"
 
 #define MAX_DEVS 64
 
@@ -174,10 +154,10 @@ static uint32_t dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct
 	ns_data_buffer_reset(ns, req, DATA_PATTERN);
 	pi = (struct spdk_nvme_protection_info *)(req->contig + sector_size + md_size - 8);
 	/* big-endian for guard */
-	pi->guard = swap16(spdk_crc16_t10dif(req->contig, sector_size));
+	to_be16(&pi->guard, spdk_crc16_t10dif(req->contig, sector_size));
 
 	pi = (struct spdk_nvme_protection_info *)(req->contig + (sector_size + md_size) * 2 - 8);
-	pi->guard = swap16(spdk_crc16_t10dif(req->contig + sector_size + md_size, sector_size));
+	to_be16(&pi->guard, spdk_crc16_t10dif(req->contig + sector_size + md_size, sector_size));
 
 	*io_flags = SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
 
@@ -257,11 +237,11 @@ static uint32_t dp_without_pract_extended_lba_test(struct spdk_nvme_ns *ns, stru
 	req->metadata = NULL;
 	pi = (struct spdk_nvme_protection_info *)(req->contig + sector_size + md_size - 8);
 	/* big-endian for reference tag */
-	pi->ref_tag = swap32((uint32_t)req->lba);
+	to_be32(&pi->ref_tag, (uint32_t)req->lba);
 
 	pi = (struct spdk_nvme_protection_info *)(req->contig + (sector_size + md_size) * 2 - 8);
 	/* is incremented for each subsequent logical block */
-	pi->ref_tag = swap32((uint32_t)req->lba + 1);
+	to_be32(&pi->ref_tag, (uint32_t)(req->lba + 1));
 
 	*io_flags = SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
 
@@ -336,11 +316,11 @@ static uint32_t dp_without_pract_separate_meta_test(struct spdk_nvme_ns *ns, str
 	/* last 8 bytes if the metadata size bigger than 8 */
 	pi = (struct spdk_nvme_protection_info *)(req->metadata + md_size - 8);
 	/* big-endian for reference tag */
-	pi->ref_tag = swap32((uint32_t)req->lba);
+	to_be32(&pi->ref_tag, (uint32_t)req->lba);
 
 	pi = (struct spdk_nvme_protection_info *)(req->metadata + md_size * 2 - 8);
 	/* is incremented for each subsequent logical block */
-	pi->ref_tag = swap32((uint32_t)req->lba + 1);
+	to_be32(&pi->ref_tag, (uint32_t)(req->lba + 1));
 
 	*io_flags = SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
 
@@ -382,7 +362,7 @@ static uint32_t dp_without_pract_separate_meta_apptag_test(struct spdk_nvme_ns *
 
 	/* last 8 bytes if the metadata size bigger than 8 */
 	pi = (struct spdk_nvme_protection_info *)(req->metadata + md_size - 8);
-	pi->app_tag = swap16(req->lba_count);
+	to_be16(&pi->app_tag, req->lba_count);
 
 	*io_flags = SPDK_NVME_IO_FLAGS_PRCHK_APPTAG;
 
