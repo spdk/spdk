@@ -1836,6 +1836,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 {
 	struct nvme_tracker	*tr;
 	int			rc = 0;
+	void			*md_payload;
 	struct spdk_nvme_ctrlr	*ctrlr = qpair->ctrlr;
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
 
@@ -1865,6 +1866,16 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	TAILQ_INSERT_TAIL(&pqpair->outstanding_tr, tr, tq_list);
 	tr->req = req;
 	req->cmd.cid = tr->cid;
+
+	if (req->payload_size && req->payload.md) {
+		md_payload = req->payload.md + req->md_offset;
+		tr->req->cmd.mptr = spdk_vtophys(md_payload);
+		if (tr->req->cmd.mptr == SPDK_VTOPHYS_ERROR) {
+			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
+			rc = -EINVAL;
+			goto exit;
+		}
+	}
 
 	if (req->payload_size == 0) {
 		/* Null payload - leave PRP fields zeroed */
