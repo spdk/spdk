@@ -527,6 +527,8 @@ class TestCases(object):
         if traddr != -1:
             self.c.delete_bdev(base_name)
             self.c.construct_nvme_bdev("Nvme0", "PCIe", traddr)
+            # wait 1 second to allow time for lvolstore tasting
+            sleep(1)
         else:
             fail_count += 1
         ret_value = self.c.check_get_lvol_stores(base_name, uuid_store,
@@ -791,6 +793,8 @@ class TestCases(object):
         if traddr != -1:
             self.c.delete_bdev(base_name)
             self.c.construct_nvme_bdev("Nvme0", "PCIe", traddr)
+            # wait 1 second to allow time for lvolstore tasting
+            sleep(1)
         else:
             fail_count += 1
         if self.c.check_get_lvol_stores(base_name, uuid_store,
