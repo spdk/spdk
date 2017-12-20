@@ -59,6 +59,10 @@ int vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, size_t sz,
 int vbdev_lvol_resize(char *name, size_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg);
 
 int
+vbdev_lvs_rename(struct spdk_lvol_store *lvs, const char *new_lvs_name,
+		 spdk_lvs_op_complete cb_fn, void *cb_arg);
+
+int
 vbdev_lvol_rename(const char *old_lvol_name, const char *new_lvol_name,
 		  spdk_lvs_op_complete cb_fn, void *cb_arg);
 /**
