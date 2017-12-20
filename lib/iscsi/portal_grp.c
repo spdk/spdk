@@ -302,9 +302,8 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 			SPDK_ERRLOG("invalid portal cpumask %s\n", cpumask_str);
 			goto error_out;
 		}
-		if ((cpumask & spdk_app_get_core_mask()) != cpumask) {
-			SPDK_ERRLOG("portal cpumask %s not a subset of "
-				    "reactor mask %jx\n", cpumask_str,
+		if (cpumask == 0) {
+			SPDK_ERRLOG("no cpu is selected among reactor mask(=%jx)\n",
 				    spdk_app_get_core_mask());
 			goto error_out;
 		}
