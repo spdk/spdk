@@ -16,6 +16,24 @@
       "revId": "fd3f0bb67df327b44b13b530d14682074b1e1194",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a62a822c_f10de128",
+        "filename": "scripts/fio.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2017-12-20T14:50:52Z",
+      "side": 1,
+      "message": "Yes. I think we need a function to handle the parameter, like parse_args. I can do it in next patch.",
+      "parentUuid": "9bae2ead_2e6a4b26",
+      "revId": "fd3f0bb67df327b44b13b530d14682074b1e1194",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
