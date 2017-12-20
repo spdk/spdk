@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ccaa7c1_3c561afe",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1598,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-20T02:10:30Z",
+      "side": 1,
+      "message": "This state should also be removed, it is not necessary",
+      "range": {
+        "startLine": 1596,
+        "startChar": 2,
+        "endLine": 1598,
+        "endChar": 3
+      },
+      "revId": "f8ff4f29e0ba7ce6365327adb0366e18157e4299",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
