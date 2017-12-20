@@ -46,14 +46,15 @@
 #include "spdk/io_channel.h"
 
 #include "spdk_internal/log.h"
+#include "spdk/queue.h"
+
+#define GET_IO_LOOP_COUNT	16
 
 enum nbd_io_state_t {
 	/* Receiving or ready to receive nbd request header */
 	NBD_IO_RECV_REQ = 0,
 	/* Receiving write payload */
 	NBD_IO_RECV_PAYLOAD,
-	/* processing or ready to process of SPDK bdev module */
-	NBD_IO_PROCESS,
 	/* Transmitting or ready to transmit nbd response header */
 	NBD_IO_XMIT_RESP,
 	/* Transmitting read payload */
@@ -64,7 +65,6 @@ struct nbd_io {
 	struct spdk_nbd_disk	*nbd;
 	enum nbd_io_state_t	state;
 
-	int			ref;
 	void			*payload;
 
 	/* NOTE: for TRIM, this represents number of bytes to trim. */
@@ -78,6 +78,16 @@ struct nbd_io {
 	 * response, or payload from the nbd socket.
 	 */
 	uint32_t		offset;
+
+	TAILQ_ENTRY(nbd_io)	tailq;
+};
+
+enum nbd_disk_state_t {
+	NBD_DISK_STATE_RUNNING = 0,
+	/* soft disconnection caused by receiving nbd_cmd_disc */
+	NBD_DISK_STATE_SOFTDISC,
+	/* hard disconnection caused by mandatory conditions */
+	NBD_DISK_STATE_HARDDISC,
 };
 
 struct spdk_nbd_disk {
@@ -88,9 +98,16 @@ struct spdk_nbd_disk {
 	char			*nbd_path;
 	int			kernel_sp_fd;
 	int			spdk_sp_fd;
-	struct nbd_io		io;
 	struct spdk_poller	*nbd_poller;
 	uint32_t		buf_align;
+
+	struct nbd_io		*io_in_recv;
+	TAILQ_HEAD(, nbd_io)	received_io_list;
+	TAILQ_HEAD(, nbd_io)	executed_io_list;
+
+	enum nbd_disk_state_t	state;
+	/* count of nbd_io in spdk_nbd_disk */
+	int			io_count;
 
 	TAILQ_ENTRY(spdk_nbd_disk)	tailq;
 };
@@ -205,6 +222,99 @@ nbd_disconnect(struct spdk_nbd_disk *nbd)
 	ioctl(nbd->dev_fd, NBD_DISCONNECT);
 }
 
+static struct nbd_io *
+spdk_get_nbd_io(struct spdk_nbd_disk *nbd)
+{
+	struct nbd_io *io;
+
+	io = calloc(1, sizeof(*io));
+	if (!io) {
+		SPDK_ERRLOG("Unable to get nbd_io\n");
+		abort();
+	}
+
+	io->nbd = nbd;
+	to_be32(&io->resp.magic, NBD_REPLY_MAGIC);
+
+	nbd->io_count++;
+
+	return io;
+}
+
+static void
+spdk_put_nbd_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
+{
+	if (io->payload) {
+		spdk_dma_free(io->payload);
+	}
+	free(io);
+
+	nbd->io_count--;
+}
+
+/*
+ * Check whether received nbd_io are all transmitted.
+ *
+ * \return 1 there is still some nbd_io not transmitted.
+ *         0 all nbd_io received are transmitted.
+ */
+static int
+spdk_nbd_io_xmit_check(struct spdk_nbd_disk *nbd)
+{
+	if (nbd->io_count == 0) {
+		return 0;
+	} else if (nbd->io_count == 1 && nbd->io_in_recv != NULL) {
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * Check whether received nbd_io are all executed,
+ * and put back executed nbd_io instead of transmitting them
+ *
+ * \return 1 there is still some nbd_io under executing
+ *         0 all nbd_io gotten are freed.
+ */
+static int
+spdk_nbd_cleanup_io(struct spdk_nbd_disk *nbd)
+{
+	struct nbd_io *io, *io_tmp;
+
+	/* free io_in_recv */
+	if (nbd->io_in_recv != NULL) {
+		spdk_put_nbd_io(nbd, nbd->io_in_recv);
+		nbd->io_in_recv = NULL;
+	}
+
+	/* free io in received_io_list */
+	if (!TAILQ_EMPTY(&nbd->received_io_list)) {
+		TAILQ_FOREACH_SAFE(io, &nbd->received_io_list, tailq, io_tmp) {
+			TAILQ_REMOVE(&nbd->received_io_list, io, tailq);
+			spdk_put_nbd_io(nbd, io);
+		}
+	}
+
+	/* free io in executed_io_list */
+	if (!TAILQ_EMPTY(&nbd->executed_io_list)) {
+		TAILQ_FOREACH_SAFE(io, &nbd->executed_io_list, tailq, io_tmp) {
+			TAILQ_REMOVE(&nbd->executed_io_list, io, tailq);
+			spdk_put_nbd_io(nbd, io);
+		}
+	}
+
+	/*
+	 * Some nbd_io may be under executing in bdev.
+	 * Wait for their done operation.
+	 */
+	if (nbd->io_count != 0) {
+		return 1;
+	}
+
+	return 0;
+}
+
 static void
 _nbd_stop(struct spdk_nbd_disk *nbd)
 {
@@ -250,8 +360,12 @@ spdk_nbd_stop(struct spdk_nbd_disk *nbd)
 		return;
 	}
 
-	nbd->io.ref--;
-	if (nbd->io.ref == 0) {
+	nbd->state = NBD_DISK_STATE_HARDDISC;
+
+	/*
+	 * Stop action should be called only after all nbd_io are executed.
+	 */
+	if (!spdk_nbd_cleanup_io(nbd)) {
 		_nbd_stop(nbd);
 	}
 }
@@ -305,14 +419,13 @@ nbd_io_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	}
 
 	memcpy(&io->resp.handle, &io->req.handle, sizeof(io->resp.handle));
-	io->state = NBD_IO_XMIT_RESP;
+	TAILQ_INSERT_TAIL(&nbd->executed_io_list, io, tailq);
 
 	if (bdev_io != NULL) {
 		spdk_bdev_free_io(bdev_io);
 	}
 
-	io->ref--;
-	if (io->ref == 0) {
+	if (nbd->state == NBD_DISK_STATE_HARDDISC && !spdk_nbd_cleanup_io(nbd)) {
 		_nbd_stop(nbd);
 	}
 }
@@ -323,8 +436,6 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 	struct spdk_bdev_desc *desc = nbd->bdev_desc;
 	struct spdk_io_channel *ch = nbd->ch;
 	int rc = 0;
-
-	io->ref++;
 
 	switch (from_be32(&io->req.type)) {
 	case NBD_CMD_READ:
@@ -349,8 +460,9 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 		break;
 #endif
 	case NBD_CMD_DISC:
-		io->ref--;
-		return -ECONNRESET;
+		spdk_put_nbd_io(nbd, io);
+		nbd->state = NBD_DISK_STATE_SOFTDISC;
+		break;
 	default:
 		rc = -1;
 	}
@@ -363,28 +475,50 @@ nbd_submit_bdev_io(struct spdk_nbd_disk *nbd, struct nbd_io *io)
 }
 
 static int
-spdk_nbd_io_exec(struct nbd_io *io)
+spdk_nbd_io_exec(struct spdk_nbd_disk *nbd)
 {
-	struct spdk_nbd_disk *nbd = io->nbd;
+	struct nbd_io *io, *io_tmp;
 	int ret = 0;
 
-	if (io->state == NBD_IO_PROCESS) {
-		ret = nbd_submit_bdev_io(nbd, io);
+	/*
+	 * For soft disconnection, nbd server must handle all outstanding
+	 * request before closing connection.
+	 */
+	if (nbd->state == NBD_DISK_STATE_HARDDISC) {
+		return 0;
+	}
+
+	if (!TAILQ_EMPTY(&nbd->received_io_list)) {
+		TAILQ_FOREACH_SAFE(io, &nbd->received_io_list, tailq, io_tmp) {
+			TAILQ_REMOVE(&nbd->received_io_list, io, tailq);
+			ret = nbd_submit_bdev_io(nbd, io);
+			if (ret < 0) {
+				break;
+			}
+		}
 	}
 
 	return ret;
 }
 
 static int
-spdk_nbd_io_recv(struct nbd_io *io)
+spdk_nbd_io_recv_internal(struct spdk_nbd_disk *nbd)
 {
-	struct spdk_nbd_disk *nbd = io->nbd;
+	struct nbd_io *io;
 	int ret = 0;
+
+	if (nbd->io_in_recv == NULL) {
+		nbd->io_in_recv = spdk_get_nbd_io(nbd);
+	}
+
+	io = nbd->io_in_recv;
 
 	if (io->state == NBD_IO_RECV_REQ) {
 		ret = read_from_socket(nbd->spdk_sp_fd, (char *)&io->req + io->offset,
 				       sizeof(io->req) - io->offset);
-		if (ret <= 0) {
+		if (ret < 0) {
+			spdk_put_nbd_io(nbd, io);
+			nbd->io_in_recv = NULL;
 			return ret;
 		}
 
@@ -397,6 +531,8 @@ spdk_nbd_io_recv(struct nbd_io *io)
 			/* req magic check */
 			if (from_be32(&io->req.magic) != NBD_REQUEST_MAGIC) {
 				SPDK_ERRLOG("invalid request magic\n");
+				spdk_put_nbd_io(nbd, io);
+				nbd->io_in_recv = NULL;
 				return -EINVAL;
 			}
 
@@ -413,6 +549,8 @@ spdk_nbd_io_recv(struct nbd_io *io)
 				io->payload = spdk_dma_malloc(io->payload_size, nbd->buf_align, NULL);
 				if (io->payload == NULL) {
 					SPDK_ERRLOG("could not allocate io->payload of size %d\n", io->payload_size);
+					spdk_put_nbd_io(nbd, io);
+					nbd->io_in_recv = NULL;
 					return -ENOMEM;
 				}
 			} else {
@@ -423,15 +561,18 @@ spdk_nbd_io_recv(struct nbd_io *io)
 			if (from_be32(&io->req.type) == NBD_CMD_WRITE) {
 				io->state = NBD_IO_RECV_PAYLOAD;
 			} else {
-				io->state = NBD_IO_PROCESS;
-				ret = spdk_nbd_io_exec(io);
+				io->state = NBD_IO_XMIT_RESP;
+				nbd->io_in_recv = NULL;
+				TAILQ_INSERT_TAIL(&nbd->received_io_list, io, tailq);
 			}
 		}
 	}
 
 	if (io->state == NBD_IO_RECV_PAYLOAD) {
 		ret = read_from_socket(nbd->spdk_sp_fd, io->payload + io->offset, io->payload_size - io->offset);
-		if (ret <= 0) {
+		if (ret < 0) {
+			spdk_put_nbd_io(nbd, io);
+			nbd->io_in_recv = NULL;
 			return ret;
 		}
 
@@ -440,20 +581,49 @@ spdk_nbd_io_recv(struct nbd_io *io)
 		/* request payload is fully received */
 		if (io->offset == io->payload_size) {
 			io->offset = 0;
-			io->state = NBD_IO_PROCESS;
-			ret = spdk_nbd_io_exec(io);
+			io->state = NBD_IO_XMIT_RESP;
+			nbd->io_in_recv = NULL;
+			TAILQ_INSERT_TAIL(&nbd->received_io_list, io, tailq);
 		}
 
 	}
 
-	return ret;
+	return 0;
 }
 
 static int
-spdk_nbd_io_xmit(struct nbd_io *io)
+spdk_nbd_io_recv(struct spdk_nbd_disk *nbd)
 {
-	struct spdk_nbd_disk *nbd = io->nbd;
+	int i, ret = 0;
+
+	/*
+	 * nbd server should not accept request in both soft and hard
+	 * disconnect states.
+	 */
+	if (nbd->state != NBD_DISK_STATE_RUNNING) {
+		return 0;
+	}
+
+	for (i = 0; i < GET_IO_LOOP_COUNT; i++) {
+		ret = spdk_nbd_io_recv_internal(nbd);
+		if (ret != 0) {
+			return ret;
+		}
+	}
+
+	return 0;
+}
+
+static int
+spdk_nbd_io_xmit_internal(struct spdk_nbd_disk *nbd)
+{
+	struct nbd_io *io;
 	int ret = 0;
+
+	io = TAILQ_FIRST(&nbd->executed_io_list);
+	if (io == NULL) {
+		return 0;
+	}
 
 	/* resp error and handler are already set in io_done */
 
@@ -472,11 +642,9 @@ spdk_nbd_io_xmit(struct nbd_io *io)
 
 			/* transmit payload only when NBD_CMD_READ with no resp error */
 			if (from_be32(&io->req.type) != NBD_CMD_READ || io->resp.error != 0) {
-				io->state = NBD_IO_RECV_REQ;
-				if (io->payload) {
-					spdk_dma_free(io->payload);
-					io->payload = NULL;
-				}
+				TAILQ_REMOVE(&nbd->executed_io_list, io, tailq);
+				spdk_put_nbd_io(nbd, io);
+				return 0;
 			} else {
 				io->state = NBD_IO_XMIT_PAYLOAD;
 			}
@@ -493,13 +661,40 @@ spdk_nbd_io_xmit(struct nbd_io *io)
 
 		/* read payload is fully transmitted */
 		if (io->offset == io->payload_size) {
-			io->offset = 0;
-			io->state = NBD_IO_RECV_REQ;
-			if (io->payload) {
-				spdk_dma_free(io->payload);
-				io->payload = NULL;
-			}
+			TAILQ_REMOVE(&nbd->executed_io_list, io, tailq);
+			spdk_put_nbd_io(nbd, io);
 		}
+	}
+
+	return 0;
+}
+
+static int
+spdk_nbd_io_xmit(struct spdk_nbd_disk *nbd)
+{
+	int ret = 0;
+
+	/*
+	 * For soft disconnection, nbd server must handle all outstanding
+	 * request before closing connection.
+	 */
+	if (nbd->state == NBD_DISK_STATE_HARDDISC) {
+		return 0;
+	}
+
+	while (!TAILQ_EMPTY(&nbd->executed_io_list)) {
+		ret = spdk_nbd_io_xmit_internal(nbd);
+		if (ret != 0) {
+			return ret;
+		}
+	}
+
+	/*
+	 * For soft disconnection, nbd server can close connection after all
+	 * outstanding request are transmitted.
+	 */
+	if (nbd->state == NBD_DISK_STATE_SOFTDISC && !spdk_nbd_io_xmit_check(nbd)) {
+		return -1;
 	}
 
 	return 0;
@@ -513,15 +708,20 @@ spdk_nbd_io_xmit(struct nbd_io *io)
 static int
 _spdk_nbd_poll(struct spdk_nbd_disk *nbd)
 {
-	struct nbd_io	*io = &nbd->io;
 	int rc;
 
-	rc = spdk_nbd_io_recv(io);
+	/* transmit executed io first */
+	rc = spdk_nbd_io_xmit(nbd);
 	if (rc < 0) {
 		return rc;
 	}
 
-	rc = spdk_nbd_io_xmit(io);
+	rc = spdk_nbd_io_recv(nbd);
+	if (rc < 0) {
+		return rc;
+	}
+
+	rc = spdk_nbd_io_exec(nbd);
 
 	return rc;
 }
@@ -582,7 +782,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		return NULL;
 	}
 
-	nbd->io.nbd = nbd;
 	nbd->dev_fd = -1;
 	nbd->spdk_sp_fd = -1;
 	nbd->kernel_sp_fd = -1;
@@ -593,7 +792,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		goto err;
 	}
 
-	nbd->io.ref = 1;
 	nbd->bdev = bdev;
 
 	nbd->ch = spdk_bdev_get_io_channel(nbd->bdev_desc);
@@ -612,6 +810,10 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 		SPDK_ERRLOG("strdup allocation failure\n");
 		goto err;
 	}
+
+	TAILQ_INIT(&nbd->received_io_list);
+	TAILQ_INIT(&nbd->executed_io_list);
+
 	/* Add nbd_disk to the end of disk list */
 	rc = spdk_nbd_disk_register(nbd);
 	if (rc != 0) {
@@ -677,8 +879,6 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 			    nbd->spdk_sp_fd, spdk_strerror(errno));
 		goto err;
 	}
-
-	to_be32(&nbd->io.resp.magic, NBD_REPLY_MAGIC);
 
 	nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, nbd, 0);
 
