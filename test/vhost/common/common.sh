@@ -278,7 +278,7 @@ function vm_create_ssh_config()
 		(
 		echo "Host *"
 		echo "  ControlPersist=10m"
-		echo "  ConnectTimeout=2"
+		echo "  ConnectTimeout=1"
 		echo "  Compression=no"
 		echo "  ControlMaster=auto"
 		echo "  UserKnownHostsFile=/dev/null"
@@ -361,6 +361,9 @@ function vm_os_booted()
 		error "VM $1 is not running"
 		return 1
 	fi
+
+	# Shutdown existing master. Ignore errors as it might not exist.
+	ssh -O exit -F $VM_BASE_DIR/ssh_config -p $(vm_ssh_socket $1) 127.0.0.1 2> /dev/null || true
 
 	if ! vm_ssh $1 "true" 2>/dev/null; then
 		return 1
