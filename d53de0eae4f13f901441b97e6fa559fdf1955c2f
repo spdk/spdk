@@ -62,6 +62,24 @@
       "revId": "d53de0eae4f13f901441b97e6fa559fdf1955c2f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae6e609a_881d899f",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 519,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-20T19:00:05Z",
+      "side": 1,
+      "message": "right, negative errnos are always considered fatal and will fail the test, while positive might cause fio to retry issuing the I/O",
+      "parentUuid": "df71cec1_c31df342",
+      "revId": "d53de0eae4f13f901441b97e6fa559fdf1955c2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
