@@ -70,6 +70,30 @@
       "revId": "fb373d577784cbccf11e08937933b9679c98942f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7290f65f_ea3caf7b",
+        "filename": "doc/bdev.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-20T08:56:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e6cd94a4_3d1679af",
+      "range": {
+        "startLine": 200,
+        "startChar": 9,
+        "endLine": 200,
+        "endChar": 26
+      },
+      "revId": "fb373d577784cbccf11e08937933b9679c98942f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
