@@ -22,6 +22,30 @@
       "revId": "f8ff4f29e0ba7ce6365327adb0366e18157e4299",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf16f9cd_9eb208b7",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1598,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-20T03:44:16Z",
+      "side": 1,
+      "message": "No, this is necessary.\n\nThe cpumask is like OS\u0027s schedule affinity bitmask. By this we can limit the scheduled cpu for each iSCSI connection.",
+      "parentUuid": "5ccaa7c1_3c561afe",
+      "range": {
+        "startLine": 1596,
+        "startChar": 2,
+        "endLine": 1598,
+        "endChar": 3
+      },
+      "revId": "f8ff4f29e0ba7ce6365327adb0366e18157e4299",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
