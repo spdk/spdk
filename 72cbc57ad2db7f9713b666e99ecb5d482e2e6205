@@ -16,6 +16,24 @@
       "revId": "72cbc57ad2db7f9713b666e99ecb5d482e2e6205",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80a016c0_6192fb9f",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-20T18:17:29Z",
+      "side": 1,
+      "message": "Small oversight, to be removed.",
+      "parentUuid": "ed5df38b_9bbfb31e",
+      "revId": "72cbc57ad2db7f9713b666e99ecb5d482e2e6205",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
