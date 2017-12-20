@@ -18,7 +18,8 @@ case $1 in
 		echo "  -ils|--integrity-lvol-scsi  for running an integrity test with vhost scsi and lvol backends"
 		echo "  -ilb|--integrity-lvol-blk   for running an integrity test with vhost blk and lvol backends"
 		echo "  -hp|--hotplug               for running hotplug tests"
-		echo "  -shr|--scsi-hot-remove      for running scsi hot remove tests"
+                echo "  -shr|--scsi-hot-remove      for running scsi hot remove tests"
+                echo "  -bhr|--blk-hot-remove       for running blk hot remove tests"
 		echo "  -ro|--readonly              for running readonly test for vhost blk"
 		echo "  -h |--help                  prints this message"
 		echo ""
@@ -113,15 +114,24 @@ case $1 in
 			--test-type=spdk_vhost_scsi \
 			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job -x
 		;;
-	-shr|--scsi-hot-remove)
-		echo 'Running scsi hotremove tests suite...'
-		./hotplug/scsi_hotplug.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
-		--vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
-		--vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
-		--test-type=spdk_vhost_scsi \
-		--scsi-hotremove-test \
-		--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job
-		;;
+        -shr|--scsi-hot-remove)
+                echo 'Running scsi hotremove tests suite...'
+                ./hotplug/scsi_hotplug.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+                --vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
+                --vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
+                --test-type=spdk_vhost_scsi \
+                --scsi-hotremove-test \
+                --fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job
+                ;;
+        -bhr|--blk-hot-remove)
+                echo 'Running blk hotremove tests suite...'
+                ./hotplug/scsi_hotplug.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+                --vm=0,$VM_IMAGE,Nvme0n1p0:Nvme0n1p1 \
+                --vm=1,$VM_IMAGE,Nvme0n1p2:Nvme0n1p3 \
+                --test-type=spdk_vhost_blk \
+                --blk-hotremove-test \
+                --fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job
+                ;;
 	-ro|--readonly)
 		echo 'Running readonly tests suite...'
 		./readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1_size_1G
