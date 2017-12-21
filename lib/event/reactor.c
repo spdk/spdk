@@ -124,6 +124,8 @@ static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore,
 
 static struct spdk_mempool *g_spdk_event_mempool[SPDK_MAX_SOCKET];
 
+static struct spdk_cpuset *g_spdk_app_core_mask;
+
 static struct spdk_reactor *
 spdk_reactor_get(uint32_t lcore)
 {
@@ -559,46 +561,26 @@ spdk_app_get_current_core(void)
 }
 
 int
-spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
+spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 {
-	uint32_t i;
-	char *end;
-	uint64_t validmask;
+	int ret;
+	struct spdk_cpuset *validmask;
 
-	if (mask == NULL || cpumask == NULL) {
-		return -1;
+	ret = spdk_cpuset_parse(cpumask, mask);
+	if (ret < 0) {
+		return ret;
 	}
 
-	errno = 0;
-	*cpumask = strtoull(mask, &end, 16);
-	if (*end != '\0' || errno) {
-		return -1;
-	}
-
-	validmask = 0;
-	SPDK_ENV_FOREACH_CORE(i) {
-		if (i >= 64) {
-			break;
-		}
-		validmask |= 1ULL << i;
-	}
-
-	*cpumask &= validmask;
+	validmask = spdk_app_get_core_mask();
+	spdk_cpuset_and(cpumask, validmask);
 
 	return 0;
 }
 
-uint64_t
+struct spdk_cpuset *
 spdk_app_get_core_mask(void)
 {
-	uint32_t i;
-	uint64_t mask = 0;
-
-	SPDK_ENV_FOREACH_CORE(i) {
-		mask |= 1ULL << i;
-	}
-
-	return mask;
+	return g_spdk_app_core_mask;
 }
 
 
@@ -625,6 +607,7 @@ spdk_reactors_start(void)
 	int rc;
 
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
+	g_spdk_app_core_mask = spdk_cpuset_alloc();
 
 	current_core = spdk_env_get_current_core();
 	SPDK_ENV_FOREACH_CORE(i) {
@@ -637,6 +620,7 @@ spdk_reactors_start(void)
 				return;
 			}
 		}
+		spdk_cpuset_set_cpu(g_spdk_app_core_mask, i, true);
 	}
 
 	/* Start the master reactor */
@@ -646,6 +630,8 @@ spdk_reactors_start(void)
 	spdk_env_thread_wait_all();
 
 	g_reactor_state = SPDK_REACTOR_STATE_SHUTDOWN;
+	spdk_cpuset_free(g_spdk_app_core_mask);
+	g_spdk_app_core_mask = NULL;
 }
 
 void

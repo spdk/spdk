@@ -70,7 +70,7 @@ struct spdk_iscsi_portal *
 spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask)
 {
 	struct spdk_iscsi_portal *p = NULL;
-	uint64_t core_mask;
+	struct spdk_cpuset *core_mask = NULL;
 	int rc;
 
 	assert(host != NULL);
@@ -113,22 +113,28 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 		goto error_out;
 	}
 
-	core_mask = spdk_app_get_core_mask();
+	core_mask = spdk_cpuset_alloc();
+	if (!core_mask) {
+		SPDK_ERRLOG("spdk_cpuset_alloc() failed for host\n");
+		goto error_out;
+	}
 
 	if (cpumask != NULL) {
-		rc = spdk_app_parse_core_mask(cpumask, &p->cpumask);
+		rc = spdk_app_parse_core_mask(cpumask, core_mask);
 		if (rc < 0) {
 			SPDK_ERRLOG("cpumask (%s) is invalid\n", cpumask);
 			goto error_out;
 		}
-		if (p->cpumask == 0) {
-			SPDK_ERRLOG("cpumask (%s) does not contain core mask (0x%" PRIx64 ")\n",
-				    cpumask, core_mask);
+		if (spdk_cpuset_count(core_mask) == 0) {
+			SPDK_ERRLOG("cpumask (%s) does not contain core mask (0x%s)\n",
+				    cpumask, spdk_cpuset_fmt(spdk_app_get_core_mask()));
 			goto error_out;
 		}
 	} else {
-		p->cpumask = core_mask;
+		spdk_cpuset_copy(core_mask, spdk_app_get_core_mask());
 	}
+
+	p->cpumask = core_mask;
 
 	p->sock = -1;
 	p->group = NULL; /* set at a later time by caller */
@@ -139,6 +145,7 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 	return p;
 
 error_out:
+	spdk_cpuset_free(core_mask);
 	free(p->port);
 	free(p->host);
 	free(p);
@@ -155,6 +162,7 @@ spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p)
 	TAILQ_REMOVE(&g_spdk_iscsi.portal_head, p, g_tailq);
 	free(p->host);
 	free(p->port);
+	spdk_cpuset_free(p->cpumask);
 	free(p);
 }
 
