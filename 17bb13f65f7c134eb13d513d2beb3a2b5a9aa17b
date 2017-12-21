@@ -1,0 +1,349 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c74a582_283fc8ae",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "As in thin prov plan: running vhost is not an actual step in the test case as it should be already running",
+      "range": {
+        "startLine": 627,
+        "startChar": 2,
+        "endLine": 627,
+        "endChar": 15
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc601a30_86745b50",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "can be removed",
+      "range": {
+        "startLine": 628,
+        "startChar": 38,
+        "endLine": 628,
+        "endChar": 51
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "593edf24_b6f6386e",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "readonly status",
+      "range": {
+        "startLine": 631,
+        "startChar": 32,
+        "endLine": 631,
+        "endChar": 50
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fce090b0_eac65309",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "destroy lvol bdev",
+      "range": {
+        "startLine": 632,
+        "startChar": 2,
+        "endLine": 632,
+        "endChar": 20
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d4ea800_2b898299",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "program",
+      "range": {
+        "startLine": 646,
+        "startChar": 18,
+        "endLine": 646,
+        "endChar": 26
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c561151_967f68f7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "destroy lvol bdev",
+      "range": {
+        "startLine": 648,
+        "startChar": 2,
+        "endLine": 648,
+        "endChar": 20
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2864428_45e7c840",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "Why 50%? I say we shoudl write 100% of bdev with known pattern.",
+      "range": {
+        "startLine": 660,
+        "startChar": 2,
+        "endLine": 660,
+        "endChar": 50
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d28db6cc_41dc3de0",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "How do we do that?",
+      "range": {
+        "startLine": 662,
+        "startChar": 2,
+        "endLine": 662,
+        "endChar": 32
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7abaf38f_8504fa27",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 663,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "Here 50% would be ok, again with known pattern (but different than for original snapshot)",
+      "range": {
+        "startLine": 663,
+        "startChar": 2,
+        "endLine": 663,
+        "endChar": 56
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05e439e9_090941d0",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "First 50% should be different between two bdevs, while second 50% should be the same as in snapshot bdev",
+      "range": {
+        "startLine": 664,
+        "startChar": 2,
+        "endLine": 664,
+        "endChar": 64
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "defa78ed_20bcf6b0",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "Should we check anything else than if creating snapshot was successful?",
+      "range": {
+        "startLine": 679,
+        "startChar": 2,
+        "endLine": 679,
+        "endChar": 61
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3013f5e_955da879",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "Again 50%... why only 50%?",
+      "range": {
+        "startLine": 693,
+        "startChar": 0,
+        "endLine": 693,
+        "endChar": 50
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ff414bc_ede656b7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "Should it pass  or fail? This should be explicitly described in expected results. E.g, \"Removal of snapshot with dependent bdevs should / should not fail\"",
+      "range": {
+        "startLine": 696,
+        "startChar": 1,
+        "endLine": 696,
+        "endChar": 38
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e72d30cf_639d346c",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "Should it pass  or fail? This should be explicitly described in expected results",
+      "range": {
+        "startLine": 710,
+        "startChar": 0,
+        "endLine": 710,
+        "endChar": 26
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e18cced0_642e4ab2",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:45:58Z",
+      "side": 1,
+      "message": "Should it pass  or fail? This should be explicitly described in expected results",
+      "range": {
+        "startLine": 723,
+        "startChar": 1,
+        "endLine": 723,
+        "endChar": 26
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
