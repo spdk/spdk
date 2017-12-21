@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "75a8f0c9_7d1ebd55",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2575,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-21T15:32:51Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we consider that spdk_blob_set_xattr() can fail ?",
+      "range": {
+        "startLine": 2575,
+        "startChar": 3,
+        "endLine": 2575,
+        "endChar": 69
+      },
+      "revId": "dd3229ef6a156a4cfbc4603627db96aa5130c87e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "502e2e9e_c036742c",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 18
