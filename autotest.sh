@@ -125,6 +125,8 @@ fi
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	run_test ./test/nvmf/nvmf.sh
+	run_test ./test/spdk_nvme_cli/spdk_nvme_cli.sh
+
 fi
 
 if [ $SPDK_TEST_VHOST -eq 1 ]; then
