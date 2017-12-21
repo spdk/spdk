@@ -92,6 +92,18 @@ struct spdk_histogram_data {
 };
 
 static inline void
+__spdk_histogram_increment(struct spdk_histogram_data *h, uint32_t range, uint32_t index)
+{
+	h->bucket[range][index]++;
+}
+
+static inline uint64_t
+__spdk_histogram_get_count(const struct spdk_histogram_data *h, uint32_t range, uint32_t index)
+{
+	return h->bucket[range][index];
+}
+
+static inline void
 spdk_histogram_data_reset(struct spdk_histogram_data *histogram)
 {
 	memset(histogram, 0, sizeof(*histogram));
@@ -136,7 +148,7 @@ spdk_histogram_data_tally(struct spdk_histogram_data *histogram, uint64_t datapo
 	uint32_t range = __spdk_histogram_data_get_bucket_range(histogram, datapoint);
 	uint32_t index = __spdk_histogram_data_get_bucket_index(histogram, datapoint, range);
 
-	histogram->bucket[range][index]++;
+	__spdk_histogram_increment(histogram, range, index);
 }
 
 static inline uint64_t
@@ -170,7 +182,7 @@ spdk_histogram_data_iterate(const struct spdk_histogram_data *histogram,
 
 	for (i = 0; i < SPDK_HISTOGRAM_NUM_BUCKET_RANGES(histogram); i++) {
 		for (j = 0; j < SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(histogram); j++) {
-			total += histogram->bucket[i][j];
+			total += __spdk_histogram_get_count(histogram, i, j);
 		}
 	}
 
@@ -179,7 +191,7 @@ spdk_histogram_data_iterate(const struct spdk_histogram_data *histogram,
 
 	for (i = 0; i < SPDK_HISTOGRAM_NUM_BUCKET_RANGES(histogram); i++) {
 		for (j = 0; j < SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(histogram); j++) {
-			count = histogram->bucket[i][j];
+			count = __spdk_histogram_get_count(histogram, i, j);
 			so_far += count;
 			last_bucket = bucket;
 			bucket = __spdk_histogram_data_get_bucket_start(histogram, i, j);
