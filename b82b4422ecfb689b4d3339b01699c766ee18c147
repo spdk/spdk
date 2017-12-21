@@ -120,6 +120,29 @@
       "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39a96e72_ed3ef6ae",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T08:39:01Z",
+      "side": 1,
+      "message": "Is this change needed?",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 36
+      },
+      "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
