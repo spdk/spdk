@@ -142,7 +142,7 @@ struct spdk_vhost_dev {
 	int vid;
 	int task_cnt;
 	int32_t lcore;
-	uint64_t cpumask;
+	spdk_cpuset *cpumask;
 
 	enum spdk_vhost_dev_type type;
 	const struct spdk_vhost_dev_backend *backend;

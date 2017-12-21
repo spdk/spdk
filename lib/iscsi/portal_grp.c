@@ -67,12 +67,13 @@ spdk_iscsi_portal_find_by_addr(const char *host, const char *port)
 
 /* Assumes caller allocated host and port strings on the heap */
 struct spdk_iscsi_portal *
-spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
+spdk_iscsi_portal_create(const char *host, const char *port, const spdk_cpuset *cpumask)
 {
 	struct spdk_iscsi_portal *p = NULL;
 
 	assert(host != NULL);
 	assert(port != NULL);
+	assert(cpumask != NULL);
 
 	p = spdk_iscsi_portal_find_by_addr(host, port);
 	if (p != NULL) {
@@ -102,7 +103,8 @@ spdk_iscsi_portal_create(const char *host, const char *port, uint64_t cpumask)
 	}
 
 	p->port = strdup(port);
-	p->cpumask = cpumask;
+	p->cpumask = spdk_cpuset_alloc();
+	spdk_cpuset_copy(p->cpumask, cpumask);
 	p->sock = -1;
 	p->group = NULL; /* set at a later time by caller */
 	p->acceptor_poller = NULL;
@@ -168,9 +170,11 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 {
 	char *host = NULL, *port = NULL;
 	const char *cpumask_str;
-	uint64_t cpumask = 0;
+	spdk_cpuset *cpumask;
 	int n, len, rc = -1;
 	const char *p, *q;
+
+	cpumask = spdk_cpuset_alloc();
 
 	if (portalstring == NULL) {
 		SPDK_ERRLOG("portal error\n");
@@ -282,17 +286,18 @@ spdk_iscsi_portal_create_from_configline(const char *portalstring,
 	p = strchr(portalstring, '@');
 	if (p != NULL) {
 		cpumask_str = p + 1;
-		if (spdk_app_parse_core_mask(cpumask_str, &cpumask)) {
+		if (spdk_app_parse_core_mask(cpumask_str, cpumask)) {
 			SPDK_ERRLOG("invalid portal cpumask %s\n", cpumask_str);
 			goto error_out;
 		}
-		if (cpumask == 0) {
-			SPDK_ERRLOG("no cpu is selected among reactor mask(=%jx)\n",
-				    spdk_app_get_core_mask());
+		if (spdk_cpuset_count(cpumask) == 0) {
+			spdk_app_get_core_mask(cpumask);
+			SPDK_ERRLOG("no cpu is selected among reactor mask(=%s)\n",
+				    spdk_cpuset_fmt(cpumask));
 			goto error_out;
 		}
 	} else {
-		cpumask = spdk_app_get_core_mask();
+		spdk_app_get_core_mask(cpumask);
 	}
 
 	if (!dry_run) {
@@ -310,6 +315,7 @@ error_out:
 	if (port) {
 		free(port);
 	}
+	spdk_cpuset_free(cpumask);
 
 	return rc;
 }

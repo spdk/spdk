@@ -100,15 +100,15 @@ typedef int (*spdk_vhost_event_fn)(struct spdk_vhost_dev *vdev, void *arg);
 const char *spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev);
 
 /**
- * Get cpumask of the vhost device.  The mask is constant
+ * Get cpuset of the vhost device.  The cpuset is constant
  * throughout the lifetime of a vdev. It is be a subset
- * of SPDK app cpumask vhost was started with.
+ * of SPDK app cpuset vhost was started with.
  *
  * \param dev vhost device
- * \return cpumask of the vdev. The mask is constructed as:
- * ((1 << cpu0) | (1 << cpu1) | ... | (1 << cpuN)).
+ * \param cpuset pointer to the cpuset of the vdev.
  */
-uint64_t spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev);
+void spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev,
+				spdk_cpuset *cpuset);
 
 /**
  * By default, events are generated when asked, but for high queue depth and
