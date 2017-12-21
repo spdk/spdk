@@ -41,6 +41,8 @@ if [ "$cov_avail" = "yes" ]; then
 	$LCOV -q -c -i -d . -t "Baseline" -o $UT_COVERAGE/ut_cov_base.info
 fi
 
+$valgrind test/unit/include/spdk/histogram_data.h/histogram_ut
+
 $valgrind test/unit/lib/bdev/bdev.c/bdev_ut
 $valgrind test/unit/lib/bdev/scsi_nvme.c/scsi_nvme_ut
 $valgrind test/unit/lib/bdev/gpt/gpt.c/gpt_ut
