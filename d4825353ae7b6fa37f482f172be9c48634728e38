@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35b9cd52_71e94acd",
+        "filename": "app/nvmf_tgt/nvmf_tgt.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-21T17:27:14Z",
+      "side": 1,
+      "message": "You still haven\u0027t fixed the problem - you need to store the initialization core when initialization starts and then read that value here to send the event.\n\nAs a simplification, it might be safe to just use spdk_env_get_first_core(), since I believe the event framework will always run the initial user callback on the first core in the mask.",
+      "revId": "d4825353ae7b6fa37f482f172be9c48634728e38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
