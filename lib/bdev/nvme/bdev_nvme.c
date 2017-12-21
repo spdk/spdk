@@ -45,7 +45,7 @@
 #include "spdk/string.h"
 #include "spdk/likely.h"
 #include "spdk/util.h"
-
+#include "spdk/env.h"
 #include "spdk_internal/bdev.h"
 #include "spdk_internal/log.h"
 
@@ -244,8 +244,8 @@ bdev_nvme_destruct(void *ctx)
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&g_nvme_bdevs, nvme_disk, link);
 	nvme_ctrlr->ref--;
-	free(nvme_disk->disk.name);
-	free(nvme_disk);
+	spdk_dma_free(nvme_disk->disk.name);
+	spdk_dma_free(nvme_disk);
 	if (nvme_ctrlr->ref == 0) {
 		TAILQ_REMOVE(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 		pthread_mutex_unlock(&g_bdev_nvme_mutex);
@@ -1130,6 +1130,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 	const struct spdk_nvme_ctrlr_data *cdata;
 	int			ns_id, num_ns, rc;
 	int			bdev_created = 0;
+	char *bdev_name_t = NULL;
 
 	num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -1146,7 +1147,7 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 			continue;
 		}
 
-		bdev = calloc(1, sizeof(*bdev));
+		bdev = spdk_dma_zmalloc(sizeof(*bdev), 0, NULL);
 		if (!bdev) {
 			break;
 		}
@@ -1155,9 +1156,15 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		bdev->ns = ns;
 		nvme_ctrlr->ref++;
 
-		bdev->disk.name = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
+		bdev_name_t = spdk_sprintf_alloc("%sn%d", nvme_ctrlr->name, spdk_nvme_ns_get_id(ns));
+		bdev->disk.name = spdk_dma_zmalloc(MAX_BDEV_NAME_SIZE, 0, NULL);
+		spdk_strcpy_pad(bdev->disk.name, bdev_name_t, MAX_BDEV_NAME_SIZE, '\0');
+
+		if (bdev_name_t != NULL) {
+			free(bdev_name_t);
+		}
 		if (!bdev->disk.name) {
-			free(bdev);
+			spdk_dma_free(bdev);
 			break;
 		}
 		bdev->disk.product_name = "NVMe disk";
@@ -1175,8 +1182,8 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 		bdev->disk.module = SPDK_GET_BDEV_MODULE(nvme);
 		rc = spdk_bdev_register(&bdev->disk);
 		if (rc) {
-			free(bdev->disk.name);
-			free(bdev);
+			spdk_dma_free(bdev->disk.name);
+			spdk_dma_free(bdev);
 			break;
 		}
 
