@@ -544,7 +544,7 @@ static void usage(char *program_name)
 }
 
 static void
-performance_dump(int io_time_in_usec)
+performance_dump(uint64_t io_time_in_usec)
 {
 	uint32_t index;
 	unsigned lcore_id;
