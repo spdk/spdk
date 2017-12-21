@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93629587_6af95c88",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-21T21:29:19Z",
+      "side": 1,
+      "message": "This really ought to use the output of the get_bdevs RPC method rather than hard-coding a list, especially since we may add tests for more bdev backends later.  You can use jq to filter out the non-leaf bdevs - see the \"select(.claimed \u003d\u003d false)\" logic below.",
+      "revId": "3eb5a0ed8306c3993a241d52aa89c57244c85c35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4030e25_81e11cc4",
+        "filename": "test/lib/bdev/nbd/nbd_common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-21T21:29:19Z",
+      "side": 1,
+      "message": "If this file is intended to be sourced (not executed directly), it should not have a #! line and should be non-executable mode (0644 rather than 0755).",
+      "revId": "3eb5a0ed8306c3993a241d52aa89c57244c85c35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
