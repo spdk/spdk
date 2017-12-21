@@ -35,6 +35,7 @@
 
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
+#include "spdk/env.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -435,7 +436,7 @@ spdk_get_io_channel(void *io_device)
 		}
 	}
 
-	ch = calloc(1, sizeof(*ch) + dev->ctx_size);
+	ch = spdk_dma_zmalloc(sizeof(*ch) + dev->ctx_size, 0, NULL);
 	if (ch == NULL) {
 		SPDK_ERRLOG("could not calloc spdk_io_channel\n");
 		pthread_mutex_unlock(&g_devlist_mutex);
@@ -454,7 +455,7 @@ spdk_get_io_channel(void *io_device)
 	if (rc == -1) {
 		pthread_mutex_lock(&g_devlist_mutex);
 		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
-		free(ch);
+		spdk_dma_free(ch);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
@@ -487,7 +488,7 @@ _spdk_put_io_channel(void *arg)
 	if (ch->dev->unregistered) {
 		_spdk_io_device_attempt_free(ch->dev);
 	}
-	free(ch);
+	spdk_dma_free(ch);
 }
 
 void
