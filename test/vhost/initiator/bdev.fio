@@ -4,6 +4,7 @@ group_reporting=1
 direct=1
 norandommap=1
 time_based=1
+size=20m
 do_verify=1
 verify=md5
 verify_backlog=1024
@@ -11,23 +12,22 @@ iodepth=128
 bs=4K
 
 [job_randwrite]
-stonewall
 rw=randwrite
 name=rardwrite
 
 [job_unmap_trim_sequential]
-stonewall
+offset=20m
 rw=trim
 trim_verify_zero=1
 name=unmap_trim_sequential
 
 [job_unmap_trim_random]
-stonewall
+offset=40m
 rw=randtrim
 trim_verify_zero=1
 name=unmap_trim_random
 
 [job_unmap_write]
-stonewall
+offset=60m
 rw=write
 name=unmap_write
