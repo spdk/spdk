@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ed83bc0_e5dd3c25",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-21T10:33:02Z",
+      "side": 1,
+      "message": "Now thinking back, I\u0027m not sure read_only flag in opts make much sense. When blob is created using spdk_bs_create_blob_ext() and set to read_only at creation time, it won\u0027t be of any use to anyone as no data can be written to it.\n\nI think having separate function spdk_blob_set_read_only() makes sense. For snapshots later on, spdk_bs_md_create_blob_snapshot_opts() would internally call spdk_bs_create_blob_ext() and spdk_blob_set_read_only().",
+      "range": {
+        "startLine": 211,
+        "startChar": 1,
+        "endLine": 211,
+        "endChar": 16
+      },
+      "revId": "0a0c11c767e48f310662b75a1c05e793d8638c5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
