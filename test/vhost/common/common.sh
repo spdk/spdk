@@ -371,6 +371,7 @@ function vm_shutdown_all()
 
 function vm_setup()
 {
+	set -x
 	local OPTIND optchar a
 
 	local os=""
@@ -467,8 +468,8 @@ function vm_setup()
 	#-cpu host
 	local node_num=${!qemu_numa_node_param}
 	echo "INFO: NUMA NODE: $node_num"
-	cmd+="-m 1024 --enable-kvm -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize -snapshot ${eol}"
-	cmd+="-object memory-backend-file,id=mem,size=1G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
+	cmd+="-m 6144 --enable-kvm -cpu host -smp $cpu_num -vga std -vnc :$vnc_socket -daemonize -snapshot ${eol}"
+	cmd+="-object memory-backend-file,id=mem,size=6G,mem-path=/dev/hugepages,share=on,prealloc=yes,host-nodes=$node_num,policy=bind ${eol}"
 	cmd+="-numa node,memdev=mem ${eol}"
 	cmd+="-pidfile $qemu_pid_file ${eol}"
 	cmd+="-serial file:$vm_dir/serial.log ${eol}"
@@ -519,7 +520,7 @@ function vm_setup()
 			spdk_vhost_scsi)
 				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$cpu_num,chardev=char_$disk ${eol}"
+				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=16,chardev=char_$disk ${eol}"
 				;;
 			spdk_vhost_blk)
 				[[ $disk =~ _size_([0-9]+[MG]?) ]] || true
@@ -530,7 +531,7 @@ function vm_setup()
 				disk=${disk%%_*}
 				echo "INFO: using socket $SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$SPDK_VHOST_SCSI_TEST_DIR/naa.$disk.$vm_num ${eol}"
-				cmd+="-device vhost-user-blk-pci,num_queues=$cpu_num,chardev=char_$disk,"
+				cmd+="-device vhost-user-blk-pci,num_queues=16,chardev=char_$disk,"
 				cmd+="logical_block_size=4096,size=$size ${eol}"
 				;;
 			kernel_vhost)
@@ -592,6 +593,7 @@ function vm_setup()
 
 function vm_run()
 {
+	set -x
 	local OPTIND optchar a
 	local run_all=false
 	while getopts 'a-:' optchar; do
@@ -639,6 +641,7 @@ function vm_run()
 # param $1 max wait time
 function vm_wait_for_boot()
 {
+	set -x
 	assert_number $1
 
 	local all_booted=false
