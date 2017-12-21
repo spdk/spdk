@@ -472,18 +472,22 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 static int
 spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask)
 {
-	char *end;
+	int rc;
 
 	if (mask == NULL) {
 		*cpumask = spdk_app_get_core_mask();
 		return 0;
 	}
 
-	errno = 0;
-	*cpumask = strtoull(mask, &end, 16);
+	rc = spdk_parse_core_mask(mask, cpumask);
+	if (rc != 0) {
+		SPDK_ERRLOG("invalid cpumask %s\n", mask);
+		return -1;
+	}
 
-	if (*end != '\0' || errno || !*cpumask ||
-	    ((*cpumask & spdk_app_get_core_mask()) != *cpumask)) {
+	if (*cpumask == 0) {
+		SPDK_ERRLOG("no cpu is selected among reactor mask(=%jx)\n",
+			    spdk_app_get_core_mask());
 		return -1;
 	}
 
@@ -508,7 +512,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	}
 
 	if (spdk_vhost_parse_core_mask(mask_str, &cpumask) != 0) {
-		SPDK_ERRLOG("cpumask %s not a subset of app mask 0x%jx\n",
+		SPDK_ERRLOG("cpumask %s is invalid (subset of app mask is 0x%jx)\n",
 			    mask_str, spdk_app_get_core_mask());
 		return -EINVAL;
 	}
