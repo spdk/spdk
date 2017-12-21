@@ -46,8 +46,18 @@ DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
 	    (uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2), NULL);
 DEFINE_STUB(spdk_mem_register, int, (void *vaddr, size_t len), 0);
 DEFINE_STUB(spdk_mem_unregister, int, (void *vaddr, size_t len), 0);
-DEFINE_STUB(spdk_app_get_core_mask, uint64_t, (void), 0);
-DEFINE_STUB(spdk_app_parse_core_mask, int, (const char *mask, uint64_t *cpumask), 0);
+
+int spdk_app_get_core_mask(spdk_cpuset *cpumask)
+{
+	if (cpumask == NULL) {
+		return -1;
+	}
+	spdk_cpuset_zero(cpumask);
+	spdk_cpuset_set_cpu(cpumask, 0, true);
+	return 0;
+}
+
+DEFINE_STUB(spdk_app_parse_core_mask, int, (const char *mask, spdk_cpuset *cpumask), 0);
 DEFINE_STUB(spdk_env_get_first_core, uint32_t, (void), 0);
 DEFINE_STUB(spdk_env_get_next_core, uint32_t, (uint32_t prev_core), 0);
 DEFINE_STUB(spdk_env_get_last_core, uint32_t, (void), 0);
@@ -218,7 +228,7 @@ create_controller_test(void)
 	char long_name[PATH_MAX];
 	struct spdk_vhost_dev_backend backend;
 
-	MOCK_SET(spdk_app_get_core_mask, uint64_t, 1);
+	/* NOTE: spdk_app_get_core_mask stub always sets coremask 0x01 */
 
 	/* Create device with no name */
 	vdev = alloc_vdev();
