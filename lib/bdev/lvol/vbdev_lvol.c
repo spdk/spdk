@@ -368,7 +368,7 @@ vbdev_get_lvol_store_by_name(const char *name)
 }
 
 static struct spdk_lvol *
-vbdev_get_lvol_by_name(const char *name)
+vbdev_get_lvol_by_unique_id(const char *name)
 {
 	struct spdk_lvol *lvol, *tmp_lvol;
 	struct lvol_store_bdev *lvs_bdev, *tmp_lvs_bdev;
@@ -378,7 +378,7 @@ vbdev_get_lvol_by_name(const char *name)
 			continue;
 		}
 		TAILQ_FOREACH_SAFE(lvol, &lvs_bdev->lvs->lvols, link, tmp_lvol) {
-			if (!strcmp(lvol->old_name, name)) {
+			if (!strcmp(lvol->unique_id, name)) {
 				return lvol;
 			}
 		}
@@ -427,14 +427,14 @@ _vbdev_lvol_destroy_after_close_cb(void *cb_arg, int lvserrno)
 	struct spdk_bdev *bdev = lvol->bdev;
 
 	if (lvserrno != 0) {
-		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Could not close Lvol %s\n", lvol->old_name);
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Could not close Lvol %s\n", lvol->unique_id);
 		spdk_bdev_unregister_done(bdev, lvserrno);
 		free(bdev->name);
 		free(bdev);
 		return;
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol %s closed, begin destroying\n", lvol->old_name);
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol %s closed, begin destroying\n", lvol->unique_id);
 	spdk_lvol_destroy(lvol, _vbdev_lvol_destroy_cb, bdev);
 }
 
@@ -659,13 +659,13 @@ _create_lvol_disk(struct spdk_lvol *lvol)
 	uint64_t total_size;
 	int rc;
 
-	if (!lvol->old_name) {
+	if (!lvol->unique_id) {
 		return NULL;
 	}
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
 	if (lvs_bdev == NULL) {
-		SPDK_ERRLOG("No spdk lvs-bdev pair found for lvol %s\n", lvol->old_name);
+		SPDK_ERRLOG("No spdk lvs-bdev pair found for lvol %s\n", lvol->unique_id);
 		return NULL;
 	}
 
@@ -765,7 +765,7 @@ vbdev_lvol_resize(char *name, size_t sz,
 	uint64_t cluster_size;
 	int rc;
 
-	lvol = vbdev_get_lvol_by_name(name);
+	lvol = vbdev_get_lvol_by_unique_id(name);
 	if (lvol == NULL) {
 		SPDK_ERRLOG("lvol '%s' does not exist\n", name);
 		return -ENODEV;
@@ -816,29 +816,29 @@ _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 	struct spdk_bdev *bdev;
 
 	if (lvolerrno != 0) {
-		SPDK_ERRLOG("Error opening lvol %s\n", lvol->old_name);
+		SPDK_ERRLOG("Error opening lvol %s\n", lvol->unique_id);
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
 		lvs->lvol_count--;
-		free(lvol->old_name);
+		free(lvol->unique_id);
 		free(lvol);
 		goto end;
 	}
 
 	bdev = _create_lvol_disk(lvol);
 	if (bdev == NULL) {
-		SPDK_ERRLOG("Cannot create bdev for lvol %s\n", lvol->old_name);
+		SPDK_ERRLOG("Cannot create bdev for lvol %s\n", lvol->unique_id);
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
 		lvs->lvol_count--;
 		spdk_blob_close(lvol->blob, _vbdev_lvol_close_cb, lvs);
-		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvol %s failed\n", lvol->old_name);
-		free(lvol->old_name);
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvol %s failed\n", lvol->unique_id);
+		free(lvol->unique_id);
 		free(lvol);
 		return;
 	}
 
 	lvol->bdev = bdev;
 	lvs->lvols_opened++;
-	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvol %s succeeded\n", lvol->old_name);
+	SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Opening lvol %s succeeded\n", lvol->unique_id);
 
 end:
 
