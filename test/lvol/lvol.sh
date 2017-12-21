@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -xe
+set -e
 BASE_DIR=$(readlink -f $(dirname $0))
 [[ -z "$TEST_DIR" ]] && TEST_DIR="$(cd $BASE_DIR/../../ && pwd)"
 
@@ -25,51 +25,57 @@ function usage() {
                                     1: 'construct_lvs_positive',
                                     2: 'construct_logical_volume_positive',
                                     3: 'construct_multi_logical_volumes_positive',
-                                    4: 'resize_lvol_bdev_positive',
-                                    5: 'destroy_lvol_store_positive',
-                                    6: 'destroy_lvol_store_with_lvol_bdev_positive',
-                                    7: 'destroy_multi_logical_volumes_positive',
-                                    8: 'nested construct_logical_volume_positive',
-                                    9: 'destroy_after_resize_lvol_bdev_positive',
-                                    10: 'construct_lvs_nonexistent_bdev',
-                                    11: 'construct_lvs_on_bdev_twice_negative',
-                                    12: 'construct_logical_volume_nonexistent_lvs_uuid',
-                                    13: 'construct_logical_volumes_on_busy_bdev',
-                                    14: 'resize_logical_volume_nonexistent_logical_volume',
-                                    15: 'resize_logical_volume_with_size_out_of_range',
-                                    16: 'destroy_lvol_store_nonexistent_lvs_uuid',
-                                    17: 'destroy_lvol_store_nonexistent_bdev',
-                                    18: 'nested construct_logical_volume_on_busy_bdev',
-                                    19: 'nested destroy_logical_volume_positive',
-                                    20: 'delete_bdev_positive',
-                                    21: 'construct_lvs_with_cluster_sz_out_of_range_max',
-                                    22: 'construct_lvs_with_cluster_sz_out_of_range_min',
-                                    23: 'tasting_positive',
-                                    24: 'SIGTERM'
+                                    4: 'construct_lvol_bdev_using_name_positive',
+                                    5: 'construct_lvol_bdev_duplicate_names_positive',
+                                    6: 'construct_logical_volume_nonexistent_lvs_uuid',
+                                    7: 'construct_lvol_bdev_on_full_lvol_store',
+                                    8: 'construct_lvol_bdev_name_twice',
+                                    9: 'resize_lvol_bdev_positive',
+                                    10: 'resize_logical_volume_nonexistent_logical_volume',
+                                    11: 'resize_logical_volume_with_size_out_of_range',
+                                    12: 'destroy_lvol_store_positive',
+                                    13: 'destroy_lvol_store_use_name_positive',
+                                    14: 'destroy_lvol_store_with_lvol_bdev_positive',
+                                    15: 'destroy_multi_logical_volumes_positive',
+                                    16: 'destroy_after_resize_lvol_bdev_positive',
+                                    17: 'delete_lvol_store_persistent_positive',
+                                    18: 'destroy_lvol_store_nonexistent_lvs_uuid',
+                                    19: 'delete_lvol_store_underlying_bdev',
+                                    20: 'nested_destroy_logical_volume_negative',
+                                    21: 'nested_construct_logical_volume_positive',
+                                    22: 'construct_lvs_nonexistent_bdev',
+                                    23: 'construct_lvs_on_bdev_twice',
+                                    24: 'construct_lvs_name_twice',
+                                    25: 'nested_construct_lvol_bdev_on_full_lvol_store',
+                                    26: 'delete_bdev_positive',
+                                    27: 'construct_lvol_store_with_cluster_size_max',
+                                    28: 'construct_lvol_store_with_cluster_size_min',
+                                    29: 'tasting_positive',
+                                    30: 'tasting_lvol_store_positive',
+                                    31: 'SIGTERM'
                                     or
                                     all: This parameter runs all tests
                                     Ex: \"1,2,19,20\", default: all"
     echo
     echo
-    exit 0
 }
 
 while getopts 'xh-:' optchar; do
     case "$optchar" in
         -)
         case "$OPTARG" in
-            help) usage $0 ;;
+            help) usage $0 && exit 0;;
             total-size=*) total_size="${OPTARG#*=}" ;;
             block-size=*) block_size="${OPTARG#*=}" ;;
             cluster-sz=*) cluster_sz="${OPTARG#*=}" ;;
             test-cases=*) test_cases="${OPTARG#*=}" ;;
-            *) usage $0 "Invalid argument '$OPTARG'" ;;
+            *) usage $0 "Invalid argument '$OPTARG'" && exit 1 ;;
         esac
         ;;
-    h) usage $0 ;;
+    h) usage $0 && exit 0 ;;
     x) set -x
         x="-x" ;;
-    *) usage $0 "Invalid argument '$OPTARG'"
+    *) usage $0 "Invalid argument '$OPTARG'" && exit 1 ;;
     esac
 done
 shift $(( OPTIND - 1 ))
