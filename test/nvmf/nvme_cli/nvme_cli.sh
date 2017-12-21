@@ -4,6 +4,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
+spdk_nvme_cli="/home/sys_sgsw/nvme-cli"
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
@@ -52,8 +53,36 @@ done
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode2" || true
 
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+if [ -d  $spdk_nvme_cli -a $RUN_NIGHTLY -eq 1 ]; then
+	# Build spdk/nvme-cli source code
+	cd $spdk_nvme_cli && make clean
+	make
+	bdfs=$(iter_pci_class_code 01 08 02)
+	# Test spdk/nvme-cli discover,connect and disconnect commamd
+	cd $spdk_nvme_cli && ./nvme discover -t rdma -a $NVMF_FIRST_TARGET_IP -s 4420
+	./nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	./nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+	./nvme help
+	./nvme list
+	./nvme id-ctrl $bdfs
+	./nvme list-ctrl $bdfs
+	./nvme get-ns-id $bdfs
+	./nvme id-ns $bdfs
+	./nvme fw-log $bdfs
+	./nvme smart-log $bdfs
+	./nvme error-log $bdfs
+	./nvme list-ns $bdfs -n 1
+	./nvme flush $bdfs -n 1
+	./nvme get-feature $bdfs -n 1 -f 1 -s 1 -l 100
+	./nvme fw-activate $bdfs -s 1 -a 2
+	./nvme get-log $bdfs -n 1 -i 1 -l 100
+	./nvme read $bdfs -s 0x0 -c 0x1 -z 1024
+	./nvme write-uncor $bdfs -n 1 -s 64 -c 1
+	./nvme reset $bdfs
+	./nvme gen-hostnqn
+fi
 
+$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
