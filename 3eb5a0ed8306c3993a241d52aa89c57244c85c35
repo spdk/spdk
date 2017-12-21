@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bee2c9ed_da4e4da2",
+        "filename": "test/lib/bdev/blockdev.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-21T23:11:45Z",
+      "side": 1,
+      "message": "Yes, filtering results of get_bdevs is better.\nAt start, I intended to do so, but nbd_list also need to be filtered out.\nElement number of nbd_list should be equal to bdev_list. And number of /dev/nbdX is decided by nbd kernel module, even if generally it is 16. And script should also filter out nbd devices which is already exported by system.\nIn order to simplify this patch, I just put hard-coding lists here. If dynamic generation is necessary, it can be added by a following patch",
+      "parentUuid": "93629587_6af95c88",
+      "revId": "3eb5a0ed8306c3993a241d52aa89c57244c85c35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4030e25_81e11cc4",
         "filename": "test/lib/bdev/nbd/nbd_common.sh",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2017-12-21T21:29:19Z",
       "side": 1,
       "message": "If this file is intended to be sourced (not executed directly), it should not have a #! line and should be non-executable mode (0644 rather than 0755).",
+      "revId": "3eb5a0ed8306c3993a241d52aa89c57244c85c35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69d18ab8_0adfbd93",
+        "filename": "test/lib/bdev/nbd/nbd_common.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2017-12-21T23:11:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4030e25_81e11cc4",
       "revId": "3eb5a0ed8306c3993a241d52aa89c57244c85c35",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
