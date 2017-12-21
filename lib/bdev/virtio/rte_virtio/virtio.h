@@ -191,11 +191,6 @@ struct virtio_pci_ctx;
  */
 typedef int (*virtio_pci_create_cb)(struct virtio_pci_ctx *pci_ctx);
 
-/* Features desired/implemented by this driver. */
-#define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
-	(1ULL << VIRTIO_SCSI_F_INOUT		|	\
-	 1ULL << VIRTIO_F_VERSION_1)
-
 uint16_t virtio_recv_pkts(struct virtqueue *vq, void **io, uint32_t *len, uint16_t io_cnt);
 
 /**
@@ -266,7 +261,8 @@ int virtio_dev_construct(struct virtio_dev *vdev, const struct virtio_dev_ops *o
  * This call will also allocate virtqueues and renegotiate feature flags.
  *
  * \param vdev virtio device
- * \param req_features features this driver supports
+ * \param req_features features this driver supports. A VIRTIO_F_VERSION_1
+ * flag will be automatically appended, as legacy devices are not supported.
  */
 int virtio_dev_restart(struct virtio_dev *vdev, uint64_t req_features);
 

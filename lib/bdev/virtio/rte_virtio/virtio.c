@@ -334,6 +334,8 @@ virtio_dev_restart(struct virtio_dev *dev, uint64_t req_features)
 {
 	int ret;
 
+	req_features |= (1ULL << VIRTIO_F_VERSION_1);
+
 	/* Reset the device although not necessary at startup */
 	virtio_dev_stop(dev);
 
