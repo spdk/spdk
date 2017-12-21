@@ -1,0 +1,372 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "261d41e6_7fb71596",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "vhost should be already started; running vhost is not a step in this test",
+      "range": {
+        "startLine": 554,
+        "startChar": 2,
+        "endLine": 554,
+        "endChar": 20
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1695dd23_e3c2156b",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "we can skip specifying in the test plan what is the size of malloc bdev, it\u0027s not really that important",
+      "range": {
+        "startLine": 554,
+        "startChar": 39,
+        "endLine": 554,
+        "endChar": 52
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10f43ce4_d98121e5",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "we should also start from offset diefferent than 0; Otherwise in next step free clusters will be decremented only by 1.\n(as 1 cluster is already taken by data from previous step)",
+      "range": {
+        "startLine": 560,
+        "startChar": 35,
+        "endLine": 560,
+        "endChar": 83
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9945aeb6_90f09656",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "zeroes",
+      "range": {
+        "startLine": 577,
+        "startChar": 51,
+        "endLine": 577,
+        "endChar": 56
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fb095ec_2707815d",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 578,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "also destroy lvol bdev",
+      "range": {
+        "startLine": 578,
+        "startChar": 1,
+        "endLine": 578,
+        "endChar": 20
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c85f4c86_2df32bd0",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 589,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "Not necessarily FIO; this point may change while implementing the actual test",
+      "range": {
+        "startLine": 589,
+        "startChar": 2,
+        "endLine": 589,
+        "endChar": 50
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0216ee1_61530e9e",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "also destroy bdev",
+      "range": {
+        "startLine": 590,
+        "startChar": 2,
+        "endLine": 590,
+        "endChar": 20
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf8d16c9_35fc1385",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "add expected result about verification",
+      "range": {
+        "startLine": 594,
+        "startChar": 0,
+        "endLine": 594,
+        "endChar": 35
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6356c56b_6e596fc0",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "should we somehow fill up the bdev before resizing?",
+      "range": {
+        "startLine": 600,
+        "startChar": 2,
+        "endLine": 600,
+        "endChar": 75
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36b8ccd9_fbec05f7",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "resize to full size of lvs",
+      "range": {
+        "startLine": 601,
+        "startChar": 2,
+        "endLine": 601,
+        "endChar": 20
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0d30f05_0bcfbf9a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "Check if free_clusters on lvs remain unaffected",
+      "range": {
+        "startLine": 603,
+        "startChar": 2,
+        "endLine": 603,
+        "endChar": 62
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5b1aace_8d35c50e",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "Additional steps:\n- resize again but this time make bdev smaller and check free clusters again\n- destroy lvol bdev",
+      "range": {
+        "startLine": 604,
+        "startChar": 2,
+        "endLine": 604,
+        "endChar": 20
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69767bd0_4c377b02",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 611,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "overprovision",
+      "range": {
+        "startLine": 611,
+        "startChar": 45,
+        "endLine": 611,
+        "endChar": 76
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09cb3832_38d4ce7a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "construct both bdevs with size ~ lvs size",
+      "range": {
+        "startLine": 614,
+        "startChar": 2,
+        "endLine": 614,
+        "endChar": 89
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "543c4355_397c7f3a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "In next steps we will check if data on this bdev remains unchnged, so we have to fill ith with known pattern",
+      "range": {
+        "startLine": 615,
+        "startChar": 2,
+        "endLine": 615,
+        "endChar": 33
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb18ef99_b0b78cb4",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 636,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:30:46Z",
+      "side": 1,
+      "message": "tasting test number should start with 7**",
+      "range": {
+        "startLine": 636,
+        "startChar": 0,
+        "endLine": 636,
+        "endChar": 43
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
