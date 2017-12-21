@@ -351,6 +351,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 {
 	struct malloc_disk	*mdisk;
 	int			rc;
+	char *bdev_name_t = NULL;
 
 	if (block_size % 512 != 0) {
 		SPDK_ERRLOG("Block size %u is not a multiple of 512.\n", block_size);
@@ -382,11 +383,18 @@ struct spdk_bdev *create_malloc_disk(const char *name, uint64_t num_blocks, uint
 	}
 
 	if (name) {
-		mdisk->disk.name = strdup(name);
+		bdev_name_t = strdup(name);
+		mdisk->disk.name = spdk_dma_zmalloc(MAX_BDEV_NAME_SIZE, 0, NULL);
+		spdk_strcpy_pad(mdisk->disk.name, bdev_name_t, MAX_BDEV_NAME_SIZE, '\0');
 	} else {
 		/* Auto-generate a name */
-		mdisk->disk.name = spdk_sprintf_alloc("Malloc%d", malloc_disk_count);
+		bdev_name_t = spdk_sprintf_alloc("Malloc%d", malloc_disk_count);
+		mdisk->disk.name = spdk_dma_zmalloc(MAX_BDEV_NAME_SIZE, 0, NULL);
+		spdk_strcpy_pad(mdisk->disk.name, bdev_name_t, MAX_BDEV_NAME_SIZE, '\0');
 		malloc_disk_count++;
+	}
+	if (bdev_name_t != NULL) {
+		free(bdev_name_t);
 	}
 	if (!mdisk->disk.name) {
 		malloc_disk_free(mdisk);

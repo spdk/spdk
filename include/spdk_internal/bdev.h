@@ -46,6 +46,8 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/io_channel.h"
 
+#define MAX_BDEV_NAME_SIZE 20
+
 /** \page block_backend_modules Block Device Backend Modules
  *
  * To implement a backend block device driver, a number of functions
