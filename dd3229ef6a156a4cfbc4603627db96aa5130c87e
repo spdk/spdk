@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2db47c4e_dd2e182f",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-21T15:24:55Z",
+      "side": 0,
+      "message": "Why was this removed ?",
+      "range": {
+        "startLine": 341,
+        "startChar": 0,
+        "endLine": 343,
+        "endChar": 13
+      },
+      "revId": "dd3229ef6a156a4cfbc4603627db96aa5130c87e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00f097c9_938f71d9",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-21T15:24:55Z",
+      "side": 1,
+      "message": "This field is no longer used, please remove it.",
+      "range": {
+        "startLine": 211,
+        "startChar": 1,
+        "endLine": 211,
+        "endChar": 16
+      },
+      "revId": "3468e0cb10ef1e3a181c30eb3191a639028e44b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ac8c134_41d80b30",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2622,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-21T15:24:55Z",
+      "side": 1,
+      "message": "This is unnecessary whitespace.",
+      "revId": "3468e0cb10ef1e3a181c30eb3191a639028e44b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
