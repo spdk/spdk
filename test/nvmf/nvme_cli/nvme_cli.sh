@@ -4,6 +4,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../../..)
 source $rootdir/scripts/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
+spdk_nvme_cli="/home/sys_sgsw/nvme-cli"
 
 MALLOC_BDEV_SIZE=64
 MALLOC_BLOCK_SIZE=512
@@ -53,8 +54,17 @@ done
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode2" || true
 
-$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
+if [ -d  $spdk_nvme_cli ]; then
+	# Test spdk/nvme-cli discover,connect and disconnect commamd
+	cd $spdk_nvme_cli
+	./nvme discover -t rdma -a $NVMF_FIRST_TARGET_IP -s 4420
+	./nvme connect -t rdma -n "nqn.2016-06.io.spdk:cnode1" -a "$NVMF_FIRST_TARGET_IP" -s "$NVMF_PORT"
+	./nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
+	sed -i 's/spdk=1/spdk=0/g' spdk.conf
+	sed -i 's/shm_id=0/shm_id=1/g' spdk.conf
+fi
 
+$rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 trap - SIGINT SIGTERM EXIT
 
 nvmfcleanup
