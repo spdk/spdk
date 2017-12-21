@@ -33,6 +33,52 @@
       "revId": "8968ed7e02df794cc44156b8f22663230d4e04ea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2192f157_ff03345f",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-21T06:45:22Z",
+      "side": 1,
+      "message": "Currently SPDK_SCSI_DEV_MAX_NAME is 255 but 252 is better?\nIf 252 is used, padding processing will become simpler",
+      "range": {
+        "startLine": 328,
+        "startChar": 51,
+        "endLine": 328,
+        "endChar": 74
+      },
+      "revId": "8968ed7e02df794cc44156b8f22663230d4e04ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8bc1d1f_1cf4097d",
+        "filename": "lib/util/string.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-21T06:45:22Z",
+      "side": 1,
+      "message": "If this function is moved to scsi_bdev.c, snprintf() will be simpler.",
+      "range": {
+        "startLine": 353,
+        "startChar": 1,
+        "endLine": 355,
+        "endChar": 12
+      },
+      "revId": "8968ed7e02df794cc44156b8f22663230d4e04ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
