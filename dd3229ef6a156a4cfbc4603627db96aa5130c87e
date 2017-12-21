@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "502e2e9e_c036742c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2612,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-21T15:30:37Z",
+      "side": 1,
+      "message": "Blob is allocated here, but not freed. Please use _spdk_blob_free(blob) or move opts whole section above _spdk_blob_alloc().",
+      "revId": "dd3229ef6a156a4cfbc4603627db96aa5130c87e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
