@@ -76,7 +76,7 @@ static pthread_mutex_t g_conns_mutex;
 
 static struct spdk_poller *g_shutdown_timer = NULL;
 
-static uint32_t spdk_iscsi_conn_allocate_reactor(uint64_t cpumask);
+static uint32_t spdk_iscsi_conn_allocate_reactor(const spdk_cpuset *cpumask);
 static void __add_idle_conn(void *arg1, void *arg2);
 
 /** Global variables used for managing idle connections. */
@@ -1589,7 +1589,7 @@ spdk_iscsi_conn_set_min_per_core(int count)
 }
 
 static uint32_t
-spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
+spdk_iscsi_conn_allocate_reactor(const spdk_cpuset *cpumask)
 {
 	uint32_t i, selected_core;
 	int32_t num_pollers, min_pollers;
@@ -1597,9 +1597,8 @@ spdk_iscsi_conn_allocate_reactor(uint64_t cpumask)
 	min_pollers = INT_MAX;
 	selected_core = spdk_env_get_first_core();
 
-	/* we use u64 as CPU core mask */
 	SPDK_ENV_FOREACH_CORE(i) {
-		if (!((1ULL << i) & cpumask)) {
+		if (!spdk_cpuset_get_cpu(cpumask, i)) {
 			continue;
 		}
 
