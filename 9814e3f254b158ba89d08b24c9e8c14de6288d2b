@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e451486e_0285d7f4",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T09:18:04Z",
+      "side": 1,
+      "message": "This function is already merged and avaialble in autotest_common.sh, please rebase.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 1
+      },
+      "revId": "9814e3f254b158ba89d08b24c9e8c14de6288d2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95a9d382_f5ec7adc",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T09:18:04Z",
+      "side": 1,
+      "message": "Is this just to get first bdf from lspci output?\nMaybe you could change it to:\nlinux_iter_pci 0108 | head -1 ?",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 4
+      },
+      "revId": "9814e3f254b158ba89d08b24c9e8c14de6288d2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72dca822_dc6caff9",
+        "filename": "test/iscsi_tgt/filesystem/filesystem.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T09:18:04Z",
+      "side": 1,
+      "message": "Is this echo needed? I think we can remove it (or add some meaningful message to it if you\u0027d like to leave it here)",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 77,
+        "endChar": 9
+      },
+      "revId": "9814e3f254b158ba89d08b24c9e8c14de6288d2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
