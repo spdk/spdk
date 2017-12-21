@@ -126,26 +126,34 @@ spdk_sock_close(int sock)
 	return 0;
 }
 
-uint64_t
+static struct spdk_cpuset *g_app_core_mask;
+
+struct spdk_cpuset *
 spdk_app_get_core_mask(void)
 {
-	return 0xFFFFFFFFFFFFFFFF;
+	int i;
+	if (!g_app_core_mask) {
+		g_app_core_mask = spdk_cpuset_alloc();
+		for (i = 0; i < SPDK_CPUSET_SIZE; i++) {
+			spdk_cpuset_set_cpu(g_app_core_mask, i, true);
+		}
+	}
+	return g_app_core_mask;
 }
 
 int
-spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
+spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 {
-	char *end;
+	int rc;
 
 	if (mask == NULL || cpumask == NULL) {
 		return -1;
 	}
 
-	*cpumask = strtoull(mask, &end, 16);
-	if (*end != '\0' || errno) {
+	rc = spdk_cpuset_parse(cpumask, mask);
+	if (rc < 0) {
 		return -1;
 	}
-
 	return 0;
 }
 

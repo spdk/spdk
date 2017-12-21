@@ -166,18 +166,25 @@ portal_create_from_configline_ipv4_normal_case(void)
 	const char *string = "192.168.2.0:3260@1";
 	const char *host_str = "192.168.2.0";
 	const char *port_str = "3260";
-	uint64_t cpumask_val = 1;
+	struct spdk_cpuset *cpumask_val;
 	struct spdk_iscsi_portal *p;
 	int rc;
+
+	cpumask_val = spdk_cpuset_alloc();
+	CU_ASSERT_FATAL(cpumask_val != NULL);
+
+	spdk_cpuset_set_cpu(cpumask_val, 0, true);
 
 	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(p->cpumask == cpumask_val);
+	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+
+	spdk_cpuset_free(cpumask_val);
 }
 
 static void
@@ -186,18 +193,25 @@ portal_create_from_configline_ipv6_normal_case(void)
 	const char *string = "[2001:ad6:1234::]:3260@1";
 	const char *host_str = "[2001:ad6:1234::]";
 	const char *port_str = "3260";
-	uint64_t cpumask_val = 1;
+	struct spdk_cpuset *cpumask_val;
 	struct spdk_iscsi_portal *p;
 	int rc;
+
+	cpumask_val = spdk_cpuset_alloc();
+	CU_ASSERT_FATAL(cpumask_val != NULL);
+
+	spdk_cpuset_set_cpu(cpumask_val, 0, true);
 
 	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(p->cpumask == cpumask_val);
+	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
+
+	spdk_cpuset_free(cpumask_val);
 }
 
 static void
@@ -206,15 +220,17 @@ portal_create_from_configline_ipv4_skip_cpumask_case(void)
 	const char *string = "192.168.2.0:3260";
 	const char *host_str = "192.168.2.0";
 	const char *port_str = "3260";
-	uint64_t cpumask_val = 0xFFFFFFFFFFFFFFFF;
+	struct spdk_cpuset *cpumask_val;
 	struct spdk_iscsi_portal *p;
 	int rc;
+
+	cpumask_val = spdk_app_get_core_mask();
 
 	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(p->cpumask == cpumask_val);
+	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
@@ -226,15 +242,17 @@ portal_create_from_configline_ipv6_skip_cpumask_case(void)
 	const char *string = "[2001:ad6:1234::]:3260";
 	const char *host_str = "[2001:ad6:1234::]";
 	const char *port_str = "3260";
-	uint64_t cpumask_val = 0xFFFFFFFFFFFFFFFF;
+	struct spdk_cpuset *cpumask_val;
 	struct spdk_iscsi_portal *p;
 	int rc;
+
+	cpumask_val = spdk_app_get_core_mask();
 
 	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(p->cpumask == cpumask_val);
+	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
@@ -246,15 +264,17 @@ portal_create_from_configline_ipv4_skip_port_and_cpumask_case(void)
 	const char *string = "192.168.2.0";
 	const char *host_str = "192.168.2.0";
 	const char *port_str = "3260";
-	uint64_t cpumask_val = 0xFFFFFFFFFFFFFFFF;
+	struct spdk_cpuset *cpumask_val;
 	struct spdk_iscsi_portal *p;
 	int rc;
+
+	cpumask_val = spdk_app_get_core_mask();
 
 	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(p->cpumask == cpumask_val);
+	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));
@@ -266,15 +286,17 @@ portal_create_from_configline_ipv6_skip_port_and_cpumask_case(void)
 	const char *string = "[2001:ad6:1234::]";
 	const char *host_str = "[2001:ad6:1234::]";
 	const char *port_str = "3260";
-	uint64_t cpumask_val = 0xFFFFFFFFFFFFFFFF;
+	struct spdk_cpuset *cpumask_val;
 	struct spdk_iscsi_portal *p;
 	int rc;
+
+	cpumask_val = spdk_app_get_core_mask();
 
 	rc = spdk_iscsi_portal_create_from_configline(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
 	CU_ASSERT(strcmp(p->port, port_str) == 0);
-	CU_ASSERT(p->cpumask == cpumask_val);
+	CU_ASSERT(spdk_cpuset_equal(p->cpumask, cpumask_val));
 
 	spdk_iscsi_portal_destroy(p);
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_iscsi.portal_head));

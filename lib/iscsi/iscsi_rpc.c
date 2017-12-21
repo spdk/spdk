@@ -733,7 +733,7 @@ spdk_rpc_get_portal_groups(struct spdk_jsonrpc_request *request,
 			spdk_json_write_name(w, "port");
 			spdk_json_write_string(w, portal->port);
 			spdk_json_write_name(w, "cpumask");
-			spdk_json_write_string_fmt(w, "%#" PRIx64, portal->cpumask);
+			spdk_json_write_string_fmt(w, "0x%s", spdk_cpuset_fmt(portal->cpumask));
 			spdk_json_write_object_end(w);
 		}
 		spdk_json_write_array_end(w);
@@ -837,7 +837,6 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto out;
 	}
-
 
 	for (i = 0; i < req.portal_list.num_portals; i++) {
 		portal_list[i] = spdk_iscsi_portal_create(req.portal_list.portals[i].host,

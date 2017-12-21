@@ -36,13 +36,14 @@
 #define SPDK_PORTAL_GRP_H
 
 #include "spdk/conf.h"
+#include "spdk/cpuset.h"
 
 struct spdk_iscsi_portal {
 	struct spdk_iscsi_portal_grp	*group;
 	char				*host;
 	char				*port;
 	int				sock;
-	uint64_t			cpumask;
+	struct spdk_cpuset		*cpumask;
 	struct spdk_poller		*acceptor_poller;
 	TAILQ_ENTRY(spdk_iscsi_portal)	per_pg_tailq;
 	TAILQ_ENTRY(spdk_iscsi_portal)	g_tailq;
