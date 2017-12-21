@@ -16,6 +16,24 @@
       "revId": "44a86e1de13f706fa9c6231bd041b6c3c15e7914",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "103370dc_3fd9a444",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-21T17:56:32Z",
+      "side": 1,
+      "message": "Tomasz Z. asked for it here -\u003e https://trello.com/c/Fc5jPUxO/83-logical-volume-rename\nMaybe he has some purpose fot this function, or i misunderstand him.",
+      "parentUuid": "f0573761_c76838c9",
+      "revId": "44a86e1de13f706fa9c6231bd041b6c3c15e7914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
