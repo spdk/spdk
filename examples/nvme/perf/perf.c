@@ -128,7 +128,7 @@ struct ns_worker_ctx {
 
 	struct ns_worker_ctx	*next;
 
-	struct spdk_histogram_data	histogram;
+	struct spdk_histogram_data	*histogram;
 };
 
 struct perf_task {
@@ -626,7 +626,7 @@ task_complete(struct perf_task *task)
 		ns_ctx->max_tsc = tsc_diff;
 	}
 	if (g_latency_sw_tracking_level > 0) {
-		spdk_histogram_data_tally(&ns_ctx->histogram, tsc_diff);
+		spdk_histogram_data_tally(ns_ctx->histogram, tsc_diff);
 	}
 
 	/*
@@ -950,7 +950,7 @@ print_performance(void)
 			printf("Summary latency data for %-43.43s from core %u:\n", ns_ctx->entry->name, worker->lcore);
 			printf("=================================================================================\n");
 
-			spdk_histogram_data_iterate(&ns_ctx->histogram, check_cutoff, &cutoff);
+			spdk_histogram_data_iterate(ns_ctx->histogram, check_cutoff, &cutoff);
 
 			printf("\n");
 			ns_ctx = ns_ctx->next;
@@ -970,7 +970,7 @@ print_performance(void)
 			printf("==============================================================================\n");
 			printf("       Range in us     Cumulative    IO count\n");
 
-			spdk_histogram_data_iterate(&ns_ctx->histogram, print_bucket, NULL);
+			spdk_histogram_data_iterate(ns_ctx->histogram, print_bucket, NULL);
 			printf("\n");
 			ns_ctx = ns_ctx->next;
 		}
@@ -1325,6 +1325,7 @@ unregister_workers(void)
 
 		while (ns_ctx) {
 			struct ns_worker_ctx *next_ns_ctx = ns_ctx->next;
+			spdk_histogram_data_free(ns_ctx->histogram);
 			free(ns_ctx);
 			ns_ctx = next_ns_ctx;
 		}
@@ -1487,7 +1488,7 @@ associate_workers_with_ns(void)
 		ns_ctx->min_tsc = UINT64_MAX;
 		ns_ctx->entry = entry;
 		ns_ctx->next = worker->ns_ctx;
-		spdk_histogram_data_reset(&ns_ctx->histogram);
+		ns_ctx->histogram = spdk_histogram_data_alloc();
 		worker->ns_ctx = ns_ctx;
 
 		worker = worker->next;
