@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
+#include "spdk/cpuset.h"
 
 #include <rte_config.h>
 #include <rte_cycles.h>
