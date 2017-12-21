@@ -26,6 +26,7 @@ export NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i 0"
 run_test test/nvmf/filesystem/filesystem.sh
 run_test test/nvmf/discovery/discovery.sh
 run_test test/nvmf/nvme_cli/nvme_cli.sh
+start_stub "-s 2048 -i 0 -m $NVMF_TEST_CORE_MASK"
 run_test test/nvmf/lvol/nvmf_lvol.sh
 run_test test/nvmf/shutdown/shutdown.sh
 
