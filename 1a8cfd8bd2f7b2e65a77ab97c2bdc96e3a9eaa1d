@@ -22,6 +22,30 @@
       "revId": "1a8cfd8bd2f7b2e65a77ab97c2bdc96e3a9eaa1d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99afc270_028fb723",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2017-12-21T08:02:13Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "473b2851_b67a64cb",
+      "range": {
+        "startLine": 392,
+        "startChar": 14,
+        "endLine": 392,
+        "endChar": 64
+      },
+      "revId": "1a8cfd8bd2f7b2e65a77ab97c2bdc96e3a9eaa1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
