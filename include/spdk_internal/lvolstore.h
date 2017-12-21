@@ -99,7 +99,7 @@ struct spdk_lvol {
 	struct spdk_blob		*blob;
 	uint64_t			num_clusters;
 	spdk_blob_id			blob_id;
-	char				*old_name;
+	char				*unique_id;
 	char				name[SPDK_LVOL_NAME_MAX];
 	bool				close_only;
 	struct spdk_bdev		*bdev;

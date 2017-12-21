@@ -88,7 +88,7 @@ _spdk_lvol_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	struct spdk_lvol *lvol = req->lvol;
 
 	if (lvolerrno != 0) {
-		SPDK_INFOLOG(SPDK_LOG_LVOL, "Failed to open lvol %s\n", lvol->old_name);
+		SPDK_INFOLOG(SPDK_LOG_LVOL, "Failed to open lvol %s\n", lvol->unique_id);
 		goto end;
 	}
 
@@ -192,8 +192,8 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	lvol->num_clusters = spdk_blob_get_num_clusters(blob);
 	lvol->close_only = false;
 	uuid_unparse(lvol->lvol_store->uuid, uuid);
-	lvol->old_name = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
-	if (!lvol->old_name) {
+	lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
+	if (!lvol->unique_id) {
 		SPDK_ERRLOG("Cannot assign lvol name\n");
 		free(lvol);
 		req->lvserrno = -ENOMEM;
@@ -203,7 +203,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	rc = spdk_blob_get_xattr_value(blob, "name", (const void **)&attr, &value_len);
 	if (rc != 0 || value_len > SPDK_LVOL_NAME_MAX) {
 		SPDK_ERRLOG("Cannot assign lvol name\n");
-		free(lvol->old_name);
+		free(lvol->unique_id);
 		free(lvol);
 		req->lvserrno = -EINVAL;
 		goto invalid;
@@ -215,7 +215,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 
 	lvs->lvol_count++;
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "added lvol %s\n", lvol->old_name);
+	SPDK_INFOLOG(SPDK_LOG_LVOL, "added lvol %s\n", lvol->unique_id);
 
 	spdk_bs_iter_next(bs, blob, _spdk_load_next_lvol, req);
 
@@ -224,7 +224,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 invalid:
 	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
-		free(lvol->old_name);
+		free(lvol->unique_id);
 		free(lvol);
 	}
 
@@ -641,7 +641,7 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 
 	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
-		free(lvol->old_name);
+		free(lvol->unique_id);
 		free(lvol);
 	}
 
@@ -723,7 +723,7 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 	}
 
 	TAILQ_FOREACH_SAFE(iter_lvol, &lvs->lvols, link, tmp) {
-		free(iter_lvol->old_name);
+		free(iter_lvol->unique_id);
 		free(iter_lvol);
 	}
 
@@ -753,7 +753,7 @@ _spdk_lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not close blob on lvol\n");
-		free(lvol->old_name);
+		free(lvol->unique_id);
 		free(lvol);
 		goto end;
 	}
@@ -768,7 +768,7 @@ _spdk_lvol_close_blob_cb(void *cb_arg, int lvolerrno)
 
 	lvol->action_in_progress = false;
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s closed\n", lvol->old_name);
+	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s closed\n", lvol->unique_id);
 
 	if (lvol->lvol_store->destruct_req && all_lvols_closed == true) {
 		if (!lvol->lvol_store->destruct) {
@@ -790,7 +790,7 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not delete blob on lvol\n");
-		free(lvol->old_name);
+		free(lvol->unique_id);
 		free(lvol);
 		goto end;
 	}
@@ -803,9 +803,9 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 		}
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s deleted\n", lvol->old_name);
+	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s deleted\n", lvol->unique_id);
 
-	free(lvol->old_name);
+	free(lvol->unique_id);
 	free(lvol);
 
 end:
@@ -824,14 +824,14 @@ _spdk_lvol_destroy_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not delete blob on lvol\n");
-		free(lvol->old_name);
+		free(lvol->unique_id);
 		free(lvol);
 		lvol_req->cb_fn(lvol_req->cb_arg, lvolerrno);
 		free(lvol_req);
 		free(req);
 		return;
 	}
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Blob closed on lvol %s\n", lvol->old_name);
+	SPDK_INFOLOG(SPDK_LOG_LVOL, "Blob closed on lvol %s\n", lvol->unique_id);
 
 	spdk_bs_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
 }
@@ -871,8 +871,8 @@ _spdk_lvol_create_open_cb(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	lvol->blob_id = blob_id;
 
 	uuid_unparse(lvol->lvol_store->uuid, uuid);
-	lvol->old_name = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
-	if (!lvol->old_name) {
+	lvol->unique_id = spdk_sprintf_alloc("%s_%"PRIu64, uuid, (uint64_t)blob_id);
+	if (!lvol->unique_id) {
 		spdk_blob_close(blob, _spdk_lvol_delete_blob_cb, lvol);
 		SPDK_ERRLOG("Cannot alloc memory for lvol name\n");
 		lvolerrno = -ENOMEM;
@@ -1064,7 +1064,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	}
 
 	if (lvol->ref_count != 0) {
-		SPDK_ERRLOG("Cannot destroy lvol %s because it is still open\n", lvol->old_name);
+		SPDK_ERRLOG("Cannot destroy lvol %s because it is still open\n", lvol->unique_id);
 		cb_fn(cb_arg, -EBUSY);
 		return;
 	}
