@@ -34,8 +34,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-
 #if defined(__FreeBSD__)
 #include <sys/event.h>
 #else
@@ -68,8 +66,9 @@ static int64_t g_conn_idle_interval_in_tsc = -1;
 
 #define DEFAULT_CONNECTIONS_PER_LCORE	4
 #define SPDK_MAX_POLLERS_PER_CORE	4096
+#define SPDK_MAX_POLLERS_CORE		128
 static int g_connections_per_lcore = DEFAULT_CONNECTIONS_PER_LCORE;
-static uint32_t g_num_connections[RTE_MAX_LCORE];
+static uint32_t g_num_connections[SPDK_MAX_POLLERS_CORE];
 
 struct spdk_iscsi_conn *g_conns_array;
 static char g_shm_name[64];
@@ -385,7 +384,7 @@ int spdk_initialize_iscsi_conns(void)
 		g_conns_array[i].id = i;
 	}
 
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
+	for (i = 0; i < SPDK_MAX_POLLERS_CORE; i++) {
 		g_num_connections[i] = 0;
 	}
 
