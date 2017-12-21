@@ -470,33 +470,36 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 }
 
 static int
-spdk_vhost_parse_core_mask(const char *mask, uint64_t *cpumask)
+spdk_vhost_parse_core_mask(const char *mask, spdk_cpuset *cpumask)
 {
 	int rc;
+	spdk_cpuset *cpumask_valid = spdk_cpuset_alloc();
 
 	if (cpumask == NULL) {
 		return -1;
 	}
 
 	if (mask == NULL) {
-		*cpumask = spdk_app_get_core_mask();
+		spdk_app_get_core_mask(cpumask);
 		return 0;
 	}
 
-	*cpumask = 0;
-
 	rc = spdk_app_parse_core_mask(mask, cpumask);
-	if (rc != 0) {
+	if (rc < 0) {
 		SPDK_ERRLOG("invalid cpumask %s\n", mask);
 		return -1;
 	}
 
-	if (*cpumask == 0) {
-		SPDK_ERRLOG("no cpu is selected among reactor mask(=%jx)\n",
-			    spdk_app_get_core_mask());
+	if (spdk_cpuset_count(cpumask) == 0) {
+		char buf[SPDK_CPUSET_STR_MAX_LEN];
+		spdk_app_get_core_mask(cpumask_valid);
+		spdk_cpuset_fmt(buf, sizeof(buf), cpumask_valid);
+		SPDK_ERRLOG("no cpu is selected among reactor mask(=%s)\n", buf);
+		spdk_cpuset_free(cpumask_valid);
 		return -1;
 	}
 
+	spdk_cpuset_free(cpumask_valid);
 	return 0;
 }
 
@@ -507,8 +510,8 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	unsigned ctrlr_num;
 	char path[PATH_MAX];
 	struct stat file_stat;
-	char buf[64];
-	uint64_t cpumask;
+	char buf[SPDK_CPUSET_STR_MAX_LEN];
+	spdk_cpuset *cpumask;
 
 	assert(vdev);
 
@@ -517,14 +520,20 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 		return -EINVAL;
 	}
 
-	if (spdk_vhost_parse_core_mask(mask_str, &cpumask) != 0) {
-		SPDK_ERRLOG("cpumask %s is invalid (app mask is 0x%jx)\n",
-			    mask_str, spdk_app_get_core_mask());
+	cpumask = spdk_cpuset_alloc();
+
+	if (spdk_vhost_parse_core_mask(mask_str, cpumask) != 0) {
+		spdk_app_get_core_mask(cpumask);
+		spdk_cpuset_fmt(buf, sizeof(buf), cpumask);
+		SPDK_ERRLOG("cpumask %s is invalid (app mask is 0x%s)\n",
+			    mask_str, buf);
+		spdk_cpuset_free(cpumask);
 		return -EINVAL;
 	}
 
 	if (spdk_vhost_dev_find(name)) {
 		SPDK_ERRLOG("vhost controller %s already exists.\n", name);
+		spdk_cpuset_free(cpumask);
 		return -EEXIST;
 	}
 
@@ -536,12 +545,14 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 
 	if (ctrlr_num == MAX_VHOST_DEVICES) {
 		SPDK_ERRLOG("Max controllers reached (%d).\n", MAX_VHOST_DEVICES);
+		spdk_cpuset_free(cpumask);
 		return -ENOSPC;
 	}
 
 	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, name) >= (int)sizeof(path)) {
 		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", name, dev_dirname,
 			    name);
+		spdk_cpuset_free(cpumask);
 		return -EINVAL;
 	}
 
@@ -551,11 +562,13 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 			SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": "
 				    "The file already exists and is not a socket.\n",
 				    path);
+			spdk_cpuset_free(cpumask);
 			return -EIO;
 		} else if (unlink(path) != 0) {
 			SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": "
 				    "The socket already exists and failed to unlink.\n",
 				    path);
+			spdk_cpuset_free(cpumask);
 			return -EIO;
 		}
 	}
@@ -563,6 +576,7 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 	if (rte_vhost_driver_register(path, 0) != 0) {
 		SPDK_ERRLOG("Could not register controller %s with vhost library\n", name);
 		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
+		spdk_cpuset_free(cpumask);
 		return -EIO;
 	}
 	if (rte_vhost_driver_set_features(path, backend->virtio_features) ||
@@ -570,12 +584,14 @@ spdk_vhost_dev_construct(struct spdk_vhost_dev *vdev, const char *name, const ch
 		SPDK_ERRLOG("Couldn't set vhost features for controller %s\n", name);
 
 		rte_vhost_driver_unregister(path);
+		spdk_cpuset_free(cpumask);
 		return -EIO;
 	}
 
 	if (rte_vhost_driver_callback_register(path, &g_spdk_vhost_ops) != 0) {
 		rte_vhost_driver_unregister(path);
 		SPDK_ERRLOG("Couldn't register callbacks for controller %s\n", name);
+		spdk_cpuset_free(cpumask);
 		return -EIO;
 	}
 
@@ -639,6 +655,7 @@ spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 
 	free(vdev->name);
 	free(vdev->path);
+	spdk_cpuset_free(vdev->cpumask);
 	g_spdk_vhost_devices[ctrlr_num] = NULL;
 	return 0;
 }
@@ -664,30 +681,32 @@ spdk_vhost_dev_get_name(struct spdk_vhost_dev *vdev)
 	return vdev->name;
 }
 
-uint64_t
-spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
+void
+spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev, spdk_cpuset *cpumask)
 {
 	assert(vdev != NULL);
-	return vdev->cpumask;
+	spdk_cpuset_copy(cpumask, vdev->cpumask);
 }
 
 static uint32_t
-spdk_vhost_allocate_reactor(uint64_t cpumask)
+spdk_vhost_allocate_reactor(spdk_cpuset *cpumask)
 {
 	uint32_t i, selected_core;
 	uint32_t min_ctrlrs;
+	spdk_cpuset *cpumask_valid = spdk_cpuset_alloc();
 
-	cpumask &= spdk_app_get_core_mask();
+	spdk_app_get_core_mask(cpumask_valid);
+	spdk_cpuset_and(cpumask_valid, cpumask);
 
-	if (cpumask == 0) {
+	if (spdk_cpuset_count(cpumask_valid) == 0) {
 		return 0;
 	}
 
 	min_ctrlrs = INT_MAX;
 	selected_core = 0;
 
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
-		if (!((1ULL << i) & cpumask)) {
+	for (i = 0; i < RTE_MAX_LCORE; i++) {
+		if (!spdk_cpuset_get_cpu(cpumask_valid, i)) {
 			continue;
 		}
 

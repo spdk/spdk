@@ -560,46 +560,40 @@ spdk_app_get_current_core(void)
 }
 
 int
-spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask)
+spdk_app_parse_core_mask(const char *mask, spdk_cpuset *cpumask)
 {
+	int ret;
 	uint32_t i;
-	char *end;
-	uint64_t validmask;
+	spdk_cpuset *cpumask_valid = spdk_cpuset_alloc();
 
-	if (mask == NULL || cpumask == NULL) {
-		return -1;
+	ret = spdk_cpuset_parse(cpumask, mask);
+	if (ret < 0) {
+		return ret;
 	}
 
-	errno = 0;
-	*cpumask = strtoull(mask, &end, 16);
-	if (*end != '\0' || errno) {
-		return -1;
-	}
-
-	validmask = 0;
 	SPDK_ENV_FOREACH_CORE(i) {
-		if (i >= 64) {
-			break;
-		}
-		validmask |= 1ULL << i;
+		spdk_cpuset_set_cpu(cpumask_valid, i, 1);
 	}
-
-	*cpumask &= validmask;
+	spdk_cpuset_and(cpumask, cpumask_valid);
 
 	return 0;
 }
 
-uint64_t
-spdk_app_get_core_mask(void)
+int
+spdk_app_get_core_mask(spdk_cpuset *cpumask)
 {
 	uint32_t i;
-	uint64_t mask = 0;
 
-	SPDK_ENV_FOREACH_CORE(i) {
-		mask |= 1ULL << i;
+	if (cpumask == NULL) {
+		return -1;
 	}
 
-	return mask;
+	spdk_cpuset_zero(cpumask);
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_set_cpu(cpumask, i, 1);
+	}
+
+	return 0;
 }
 
 
