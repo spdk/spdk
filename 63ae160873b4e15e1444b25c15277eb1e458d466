@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3570516d_3b4be75a",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-21T14:37:00Z",
+      "side": 1,
+      "message": "shouldn\u0027t it be FIO_BIN?",
+      "range": {
+        "startLine": 27,
+        "startChar": 13,
+        "endLine": 27,
+        "endChar": 20
+      },
+      "revId": "63ae160873b4e15e1444b25c15277eb1e458d466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
