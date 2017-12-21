@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d32e62c9_7054ea2a",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-21T17:21:34Z",
+      "side": 1,
+      "message": "While we\u0027re here, \"calll back\" -\u003e \"callback\" would be good to fix too, as well as removing the extra space between obj_init and User.",
+      "range": {
+        "startLine": 172,
+        "startChar": 41,
+        "endLine": 172,
+        "endChar": 46
+      },
+      "revId": "498c1f5cd3e271d6c5a81e850ae2126001082b75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
