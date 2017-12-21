@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5bf7021_d2d03f09",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-21T06:24:27Z",
+      "side": 1,
+      "message": "Locating this just before the function using this is easier to understand.",
+      "range": {
+        "startLine": 421,
+        "startChar": 0,
+        "endLine": 429,
+        "endChar": 1
+      },
+      "revId": "78b55f187d08e37248d0c9a32210e195badbc374",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
