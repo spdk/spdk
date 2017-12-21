@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e204ef2a_a1178441",
+        "filename": "include/spdk/virtio.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-21T11:37:51Z",
+      "side": 1,
+      "message": "Thanks, moved it to spdk_internal.",
+      "parentUuid": "4d213376_2dfacc0e",
+      "revId": "aeef080b34b96167611957e7a8a459a8e043f492",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d04fb8b4_87f0c564",
         "filename": "include/spdk/virtio.h",
         "patchSetId": 3
