@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0573761_c76838c9",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-21T17:32:13Z",
+      "side": 1,
+      "message": "I think you\u0027ll need to remove this function - I don\u0027t see where else it is called in this file now.",
+      "revId": "44a86e1de13f706fa9c6231bd041b6c3c15e7914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
