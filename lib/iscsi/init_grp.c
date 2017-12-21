@@ -295,7 +295,7 @@ spdk_iscsi_init_grp_delete_all_netmasks(struct spdk_iscsi_init_grp *ig)
 
 
 /* Read spdk iscsi target's config file and create initiator group */
-int
+static int
 spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 {
 	int i, rc = 0;
@@ -466,7 +466,7 @@ cleanup:
 	return rc;
 }
 
-void
+static void
 spdk_iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig)
 {
 	if (!ig) {
@@ -492,7 +492,7 @@ spdk_iscsi_init_grp_find_by_tag(int tag)
 	return NULL;
 }
 
-void
+static void
 spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig)
 {
 	assert(ig != NULL);
