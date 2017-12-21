@@ -58,19 +58,11 @@ struct spdk_iscsi_init_grp {
 };
 
 /* SPDK iSCSI Initiator Group management API */
-int spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp);
-
 int spdk_iscsi_init_grp_create_from_initiator_list(int tag,
 		int num_initiator_names, char **initiator_names,
 		int num_initiator_masks, char **initiator_masks);
-
-void spdk_iscsi_init_grp_destroy(struct spdk_iscsi_init_grp *ig);
 void spdk_iscsi_init_grp_release(struct spdk_iscsi_init_grp *ig);
-
 struct spdk_iscsi_init_grp *spdk_iscsi_init_grp_find_by_tag(int tag);
-
-void spdk_iscsi_init_grp_register(struct spdk_iscsi_init_grp *ig);
-
 int spdk_iscsi_init_grp_array_create(void);
 void spdk_iscsi_init_grp_array_destroy(void);
 
