@@ -153,6 +153,10 @@ struct bdev_virtio_io_channel {
 /** Module finish in progress */
 static bool g_bdev_virtio_finish = false;
 
+/* Features desired/implemented by this driver. */
+#define VIRTIO_SCSI_DEV_SUPPORTED_FEATURES		\
+	(1ULL << VIRTIO_SCSI_F_INOUT)
+
 static void virtio_scsi_dev_unregister_cb(void *io_device);
 static void virtio_scsi_dev_remove(struct virtio_scsi_dev *svdev);
 static int bdev_virtio_scsi_ch_create_cb(void *io_device, void *ctx_buf);
