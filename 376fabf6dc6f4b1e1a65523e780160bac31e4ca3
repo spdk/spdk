@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5624ad77_cb6e29ce",
+        "filename": "test/vhost/initiator/bdev.conf",
+        "patchSetId": 7
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-21T15:21:12Z",
+      "side": 1,
+      "message": "This is not enough for nightly tests.\nYou currently have 7 jobs in bdev_nightly.fio and 3 virtio controllers. Each thread does I/O to each controller, hence you will need 3*7 queues.\n(Targets within the same controller share virtqueues (io_channels))",
+      "range": {
+        "startLine": 3,
+        "startChar": 9,
+        "endLine": 3,
+        "endChar": 11
+      },
+      "revId": "376fabf6dc6f4b1e1a65523e780160bac31e4ca3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
