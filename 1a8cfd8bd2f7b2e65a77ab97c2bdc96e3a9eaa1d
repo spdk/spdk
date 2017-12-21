@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "473b2851_b67a64cb",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-21T07:13:53Z",
+      "side": 1,
+      "message": "Please output last_core + 1 as the value g_num_connections.",
+      "range": {
+        "startLine": 392,
+        "startChar": 14,
+        "endLine": 392,
+        "endChar": 64
+      },
+      "revId": "1a8cfd8bd2f7b2e65a77ab97c2bdc96e3a9eaa1d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
