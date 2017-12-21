@@ -135,7 +135,7 @@ static const char *portal_group_section = \
 "  Comment \"Portal%d\"\n"
 
 #define PORTAL_TMPL \
-"  Portal DA1 %s:%s@0x%" PRIx64 "\n"
+"  Portal DA1 %s:%s@0x%s\n"
 
 static void
 spdk_iscsi_config_dump_portal_groups(FILE *fp)
@@ -153,7 +153,8 @@ spdk_iscsi_config_dump_portal_groups(FILE *fp)
 		/* Dump portals */
 		TAILQ_FOREACH(p, &pg->head, per_pg_tailq) {
 			if (NULL == p) { continue; }
-			fprintf(fp, PORTAL_TMPL, p->host, p->port, p->cpumask);
+			fprintf(fp, PORTAL_TMPL, p->host, p->port,
+				spdk_cpuset_fmt(p->cpumask));
 		}
 	}
 }
