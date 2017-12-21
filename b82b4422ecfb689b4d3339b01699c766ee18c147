@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "fcc1af5b_f4c5b575",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T08:38:36Z",
+      "side": 1,
+      "message": "This function is now in autotest_common.sh, please rebase your commit.",
+      "range": {
+        "startLine": 35,
+        "startChar": 0,
+        "endLine": 42,
+        "endChar": 1
+      },
+      "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9166c94c_f7178786",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T08:38:36Z",
+      "side": 1,
+      "message": "I understand that if there are no NVMe disks available then we skip the test rather than fail it? I think some info message should be echoed here so that we know what\u0027s going on.\n\nBTW, are we even OK to skip the test whatsoever? I didn\u0027t see that done in any other script.",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 56
+      },
+      "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "61ec9e31_cffb3c21",
         "filename": "test/iscsi_tgt/fio/fio.sh",
         "patchSetId": 20
@@ -19,6 +65,24 @@
     },
     {
       "key": {
+        "uuid": "fd33eef3_0987b706",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T08:38:36Z",
+      "side": 1,
+      "message": "I\u0027d also remove 131072 32 randrw 10 verify from this \"if\" block. This combination is already run in general (non-nightly) test.",
+      "parentUuid": "61ec9e31_cffb3c21",
+      "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73919fa8_39150e07",
         "filename": "test/iscsi_tgt/fio/fio.sh",
         "patchSetId": 20
@@ -30,6 +94,29 @@
       "writtenOn": "2017-12-20T21:09:34Z",
       "side": 1,
       "message": "I asked this before but did not see a response: sorry for what might be a stupid question, but what\u0027s the purpose fo the fio runs above? The 1 sec is for per check-in and the 10 sec nightly I\u0027m guessing but why do either? I thought this was a test where we hotplug during IO and that IO is generated via the fio_py command below, no?",
+      "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ed441a2_acdb9915",
+        "filename": "test/iscsi_tgt/fio/fio.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T08:38:36Z",
+      "side": 1,
+      "message": "I think this should be also in trap in case the test fails",
+      "range": {
+        "startLine": 133,
+        "startChar": 0,
+        "endLine": 133,
+        "endChar": 34
+      },
       "revId": "b82b4422ecfb689b4d3339b01699c766ee18c147",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
