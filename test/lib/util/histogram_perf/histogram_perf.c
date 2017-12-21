@@ -57,7 +57,7 @@ usage(const char *prog)
 int
 main(int argc, char **argv)
 {
-	struct spdk_histogram_data h;
+	struct spdk_histogram_data *h;
 	struct spdk_env_opts opts;
 	uint64_t tsc[128], t, end_tsc, count;
 	uint32_t i;
@@ -81,11 +81,11 @@ main(int argc, char **argv)
 
 	end_tsc = spdk_get_ticks() + (10 * spdk_get_ticks_hz());
 	count = 0;
-	spdk_histogram_data_reset(&h);
+	h = spdk_histogram_data_alloc();
 
 	while (true) {
 		t = spdk_get_ticks();
-		spdk_histogram_data_tally(&h, t - tsc[count % 128]);
+		spdk_histogram_data_tally(h, t - tsc[count % 128]);
 		count++;
 		if (t > end_tsc) {
 			break;
@@ -93,5 +93,7 @@ main(int argc, char **argv)
 	}
 
 	printf("count = %ju\n", count);
+	spdk_histogram_data_free(h);
+
 	return rc;
 }

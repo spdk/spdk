@@ -45,11 +45,14 @@
 extern "C" {
 #endif
 
-#define SPDK_HISTOGRAM_BUCKET_SHIFT(h)		7
+#define SPDK_HISTOGRAM_BUCKET_SHIFT_DEFAULT	7
+#define SPDK_HISTOGRAM_BUCKET_SHIFT(h)		h->bucket_shift
 #define SPDK_HISTOGRAM_BUCKET_LSB(h)		(64 - SPDK_HISTOGRAM_BUCKET_SHIFT(h))
 #define SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(h)	(1ULL << SPDK_HISTOGRAM_BUCKET_SHIFT(h))
 #define SPDK_HISTOGRAM_BUCKET_MASK(h)		(SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(h) - 1)
 #define SPDK_HISTOGRAM_NUM_BUCKET_RANGES(h)	(SPDK_HISTOGRAM_BUCKET_LSB(h) + 1)
+#define SPDK_HISTOGRAM_NUM_BUCKETS(h)		(SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(h) * \
+						 SPDK_HISTOGRAM_NUM_BUCKET_RANGES(h))
 
 /*
  * SPDK histograms are implemented using ranges of bucket arrays.  The most common usage
@@ -83,30 +86,30 @@ extern "C" {
 
 struct spdk_histogram_data {
 
-	/*
-	 * "x" is just a filler here for now - a future patch will make this a dynamic array of
-	 *  uint64_t's and this will go away.
-	 */
-	uint64_t	bucket[SPDK_HISTOGRAM_NUM_BUCKET_RANGES(x)][SPDK_HISTOGRAM_NUM_BUCKETS_PER_RANGE(x)];
+	uint32_t	bucket_shift;
+	uint64_t	*bucket;
 
 };
 
 static inline void
 __spdk_histogram_increment(struct spdk_histogram_data *h, uint32_t range, uint32_t index)
 {
-	h->bucket[range][index]++;
+	uint64_t *count;
+
+	count = &h->bucket[(range << SPDK_HISTOGRAM_BUCKET_SHIFT(h)) + index];
+	(*count)++;
 }
 
 static inline uint64_t
 __spdk_histogram_get_count(const struct spdk_histogram_data *h, uint32_t range, uint32_t index)
 {
-	return h->bucket[range][index];
+	return h->bucket[(range << SPDK_HISTOGRAM_BUCKET_SHIFT(h)) + index];
 }
 
 static inline void
 spdk_histogram_data_reset(struct spdk_histogram_data *histogram)
 {
-	memset(histogram, 0, sizeof(*histogram));
+	memset(histogram->bucket, 0, SPDK_HISTOGRAM_NUM_BUCKETS(histogram) * sizeof(uint64_t));
 }
 
 static inline uint32_t
@@ -198,6 +201,43 @@ spdk_histogram_data_iterate(const struct spdk_histogram_data *histogram,
 			fn(ctx, last_bucket, bucket, count, total, so_far);
 		}
 	}
+}
+
+static inline struct spdk_histogram_data *
+spdk_histogram_data_alloc_sized(uint32_t bucket_shift)
+{
+	struct spdk_histogram_data *h;
+
+	h = (struct spdk_histogram_data *)calloc(1, sizeof(*h));
+	if (h == NULL) {
+		return NULL;
+	}
+
+	h->bucket_shift = bucket_shift;
+	h->bucket = (uint64_t *)calloc(SPDK_HISTOGRAM_NUM_BUCKETS(h), sizeof(uint64_t));
+	if (h->bucket == NULL) {
+		free(h);
+		return NULL;
+	}
+
+	return h;
+}
+
+static inline struct spdk_histogram_data *
+spdk_histogram_data_alloc(void)
+{
+	return spdk_histogram_data_alloc_sized(SPDK_HISTOGRAM_BUCKET_SHIFT_DEFAULT);
+}
+
+static inline void
+spdk_histogram_data_free(struct spdk_histogram_data *h)
+{
+	if (h == NULL) {
+		return;
+	}
+
+	free(h->bucket);
+	free(h);
 }
 
 #ifdef __cplusplus
