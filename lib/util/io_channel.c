@@ -35,6 +35,9 @@
 
 #include "spdk/io_channel.h"
 #include "spdk/log.h"
+#include "spdk/env.h"
+#include "spdk/env.h"
+#include "spdk/string.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>
@@ -43,6 +46,8 @@
 #ifdef __FreeBSD__
 #include <pthread_np.h>
 #endif
+
+#define MAX_THREAD_NAME_SIZE 30
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -125,6 +130,7 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		     void *thread_ctx, const char *name)
 {
 	struct spdk_thread *thread;
+	char *thread_name_temp = NULL;
 
 	pthread_mutex_lock(&g_devlist_mutex);
 
@@ -135,7 +141,7 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		return NULL;
 	}
 
-	thread = calloc(1, sizeof(*thread));
+	thread = spdk_dma_zmalloc(sizeof(*thread), 0, NULL);
 	if (!thread) {
 		SPDK_ERRLOG("Unable to allocate memory for thread\n");
 		pthread_mutex_unlock(&g_devlist_mutex);
@@ -151,7 +157,10 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
 	if (name) {
 		_set_thread_name(name);
-		thread->name = strdup(name);
+		thread_name_temp = strdup(name);
+		thread->name = spdk_dma_zmalloc(MAX_THREAD_NAME_SIZE, 0, NULL);
+		spdk_strcpy_pad(thread->name, thread_name_temp, MAX_THREAD_NAME_SIZE, '\0');
+		free(thread_name_temp);
 	}
 
 	pthread_mutex_unlock(&g_devlist_mutex);
@@ -174,8 +183,8 @@ spdk_free_thread(void)
 	}
 
 	TAILQ_REMOVE(&g_threads, thread, tailq);
-	free(thread->name);
-	free(thread);
+	spdk_dma_free(thread->name);
+	spdk_dma_free(thread);
 
 	pthread_mutex_unlock(&g_devlist_mutex);
 }
@@ -310,7 +319,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 {
 	struct io_device *dev, *tmp;
 
-	dev = calloc(1, sizeof(struct io_device));
+	dev = spdk_dma_zmalloc(sizeof(struct io_device), sizeof(struct io_device), NULL);
 	if (dev == NULL) {
 		SPDK_ERRLOG("could not allocate io_device\n");
 		return;
@@ -328,7 +337,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
 		if (tmp->io_device == io_device) {
 			SPDK_ERRLOG("io_device %p already registered\n", io_device);
-			free(dev);
+			spdk_dma_free(dev);
 			pthread_mutex_unlock(&g_devlist_mutex);
 			return;
 		}
@@ -362,7 +371,7 @@ _spdk_io_device_attempt_free(struct io_device *dev)
 		dev->unregister_cb(dev->io_device);
 	}
 
-	free(dev);
+	spdk_dma_free(dev);
 }
 
 void
@@ -435,7 +444,7 @@ spdk_get_io_channel(void *io_device)
 		}
 	}
 
-	ch = calloc(1, sizeof(*ch) + dev->ctx_size);
+	ch = spdk_dma_zmalloc(sizeof(*ch) + dev->ctx_size, 0, NULL);
 	if (ch == NULL) {
 		SPDK_ERRLOG("could not calloc spdk_io_channel\n");
 		pthread_mutex_unlock(&g_devlist_mutex);
@@ -454,7 +463,7 @@ spdk_get_io_channel(void *io_device)
 	if (rc == -1) {
 		pthread_mutex_lock(&g_devlist_mutex);
 		TAILQ_REMOVE(&ch->thread->io_channels, ch, tailq);
-		free(ch);
+		spdk_dma_free(ch);
 		pthread_mutex_unlock(&g_devlist_mutex);
 		return NULL;
 	}
@@ -487,7 +496,7 @@ _spdk_put_io_channel(void *arg)
 	if (ch->dev->unregistered) {
 		_spdk_io_device_attempt_free(ch->dev);
 	}
-	free(ch);
+	spdk_dma_free(ch);
 }
 
 void
