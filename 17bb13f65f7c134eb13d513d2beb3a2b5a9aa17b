@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "10f8a936_79a127c3",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2017-12-21T10:48:13Z",
+      "side": 1,
+      "message": "I am thinking... we could actually remove this test case completely and add read-only check as part of function which creates snapshot? This way RO would be checked in each test every time a snapshot is created.",
+      "range": {
+        "startLine": 626,
+        "startChar": 0,
+        "endLine": 626,
+        "endChar": 44
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c74a582_283fc8ae",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 2
