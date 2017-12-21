@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dca3984c_5fcaddc4",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 2638,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-21T15:38:42Z",
+      "side": 1,
+      "message": "This is a good change, but don\u0027t think it belongs to this patch.\nIn that new patch, please add a UT that creates blob with number of clusters higher than possible on blobstore using spdk_bs_create_blob_ext().",
+      "range": {
+        "startLine": 2633,
+        "startChar": 0,
+        "endLine": 2638,
+        "endChar": 2
+      },
+      "revId": "c3c2d64af960317ddab6ca767d03d8dcb8d0d9c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
