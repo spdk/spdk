@@ -110,6 +110,7 @@ if [ $SPDK_TEST_NVME -eq 1 ]; then
 fi
 
 run_test test/lib/env/env.sh
+run_test test/lib/nvme/spdk_nvme_cli.sh
 
 if [ $SPDK_TEST_IOAT -eq 1 ]; then
 	run_test test/lib/ioat/ioat.sh
