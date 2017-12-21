@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4cee7ecc_c66639e3",
+        "filename": "scripts/rpc.py.rej",
+        "patchSetId": 6
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-21T21:43:43Z",
+      "side": 1,
+      "message": "This looks like it was added by accident.",
+      "revId": "5fb3c953941516203035d5e4d310286220a9a496",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
