@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20a361e1_91adac42",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 29
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2017-12-21T17:29:01Z",
+      "side": 1,
+      "message": "Sorry Sebastian - I missed this earlier.\n\nBut I think this should go in spdk_internal/bdev.h - not the public header.  spdk_bdev_aliases_list is not usable from the public header - the user will need to include spdk_internal/bdev.h to use it.  So this function should go in the internal header too.",
+      "revId": "a6cfc5abb3a0172be0439566a8545e3f16647686",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
