@@ -34,8 +34,6 @@
 
 #include "spdk/stdinc.h"
 
-#include <rte_config.h>
-
 #if defined(__FreeBSD__)
 #include <sys/event.h>
 #else
@@ -69,7 +67,7 @@ static int64_t g_conn_idle_interval_in_tsc = -1;
 #define DEFAULT_CONNECTIONS_PER_LCORE	4
 #define SPDK_MAX_POLLERS_PER_CORE	4096
 static int g_connections_per_lcore = DEFAULT_CONNECTIONS_PER_LCORE;
-static uint32_t g_num_connections[RTE_MAX_LCORE];
+static uint32_t *g_num_connections;
 
 struct spdk_iscsi_conn *g_conns_array;
 static char g_shm_name[64];
@@ -350,8 +348,8 @@ check_idle_conns(void)
 int spdk_initialize_iscsi_conns(void)
 {
 	size_t conns_size;
-	int conns_array_fd;
-	int i, rc;
+	int conns_array_fd, rc;
+	uint32_t i, last_core = 0;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init\n");
 
@@ -385,8 +383,15 @@ int spdk_initialize_iscsi_conns(void)
 		g_conns_array[i].id = i;
 	}
 
-	for (i = 0; i < RTE_MAX_LCORE; i++) {
-		g_num_connections[i] = 0;
+	SPDK_ENV_FOREACH_CORE(i) {
+		last_core = i;
+	}
+
+	g_num_connections = calloc(last_core + 1, sizeof(uint32_t));
+	if (!g_num_connections) {
+		SPDK_ERRLOG("Could not allocate array size=%u for g_num_connections\n",
+			    last_core + 1);
+		return -1;
 	}
 
 	if (g_conn_idle_interval_in_tsc == -1) {
@@ -758,6 +763,7 @@ spdk_iscsi_get_active_conns(void)
 static void
 spdk_iscsi_conns_cleanup(void)
 {
+	free(g_num_connections);
 	munmap(g_conns_array, sizeof(struct spdk_iscsi_conn) *
 	       MAX_ISCSI_CONNECTIONS);
 	shm_unlink(g_shm_name);
