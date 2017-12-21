@@ -43,6 +43,7 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/cpuset.h"
 #include "spdk/queue.h"
 #include "spdk/log.h"
 
@@ -140,12 +141,12 @@ int spdk_app_get_shm_id(void);
 /**
  * \brief Convert a string containing a CPU core mask into a bitmask
  */
-int spdk_app_parse_core_mask(const char *mask, uint64_t *cpumask);
+int spdk_app_parse_core_mask(const char *mask, spdk_cpuset *cpumask);
 
 /**
  * \brief Return a mask of the CPU cores active for this application
  */
-uint64_t spdk_app_get_core_mask(void);
+int spdk_app_get_core_mask(spdk_cpuset *cpumask);
 
 /**
  * \brief Return the number of CPU cores utilized by this application

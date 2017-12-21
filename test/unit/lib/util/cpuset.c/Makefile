@@ -31,10 +31,27 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
-C_SRCS = bit_array.c cpuset.c crc16.c crc32.c crc32c.c crc32_ieee.c fd.c io_channel.c strerror_tls.c string.c
-LIBNAME = util
+SPDK_LIB_LIST = log
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+CFLAGS += $(ENV_CFLAGS)
+CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
+LIBS += $(SPDK_LIB_LINKER_ARGS)
+LIBS += -lcunit
+
+APP = cpuset_ut
+C_SRCS = $(APP).c
+
+all: $(APP)
+
+$(APP): $(OBJS) $(SPDK_LIB_FILES)
+	$(LINK_C)
+
+clean:
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
