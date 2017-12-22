@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd58cc21_664c603b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 871,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:31:49Z",
+      "side": 1,
+      "message": "No need to free tmp as the allocation failed.",
+      "range": {
+        "startLine": 871,
+        "startChar": 2,
+        "endLine": 871,
+        "endChar": 12
+      },
+      "revId": "bc33a50e0e1e0857b6d2189a0aa8952f398cfb54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d449a85e_af1d4eb7",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 877,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:31:49Z",
+      "side": 1,
+      "message": "No need to free tmp-\u003ealias as the allocation failed.",
+      "range": {
+        "startLine": 877,
+        "startChar": 2,
+        "endLine": 877,
+        "endChar": 19
+      },
+      "revId": "bc33a50e0e1e0857b6d2189a0aa8952f398cfb54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
