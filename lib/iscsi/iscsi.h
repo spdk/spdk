@@ -361,7 +361,7 @@ void spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task);
 /* Memory management */
 void spdk_put_pdu(struct spdk_iscsi_pdu *pdu);
 struct spdk_iscsi_pdu *spdk_get_pdu(void);
-int spdk_iscsi_conn_handle_queued_tasks(struct spdk_iscsi_conn *conn);
+int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn);
 
 static inline int
 spdk_get_immediate_data_buffer_size(void)

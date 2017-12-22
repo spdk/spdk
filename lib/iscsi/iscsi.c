@@ -2900,7 +2900,7 @@ static void spdk_iscsi_queue_mgmt_task(struct spdk_iscsi_conn *conn,
 	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi, func);
 }
 
-int spdk_iscsi_conn_handle_queued_tasks(struct spdk_iscsi_conn *conn)
+int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_task *task;
 
@@ -2978,7 +2978,7 @@ static int spdk_iscsi_op_scsi_read(struct spdk_iscsi_conn *conn,
 
 	TAILQ_INSERT_TAIL(&conn->queued_datain_tasks, task, link);
 
-	return spdk_iscsi_conn_handle_queued_tasks(conn);
+	return spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 }
 
 static int
