@@ -1,0 +1,274 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ace97ca_bd9b468d",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "Can we rather do: rc \u003d spdk_bdev_set_num_blocks; if( rc...\nUsually we don\u0027t call functions in if statement.",
+      "range": {
+        "startLine": 494,
+        "startChar": 0,
+        "endLine": 494,
+        "endChar": 1
+      },
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4e52bdd_f604f843",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "Some meaningful errno would be better - like -EBUSY",
+      "range": {
+        "startLine": 905,
+        "startChar": 8,
+        "endLine": 905,
+        "endChar": 10
+      },
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2e5b9e1_2eeba6e9",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "Can we rather do: rc \u003d spdk_bdev_set_num_blocks; if( rc...",
+      "range": {
+        "startLine": 672,
+        "startChar": 5,
+        "endLine": 672,
+        "endChar": 29
+      },
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a2ea46a_0a959bcb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 789,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "Same as above",
+      "range": {
+        "startLine": 789,
+        "startChar": 6,
+        "endLine": 789,
+        "endChar": 30
+      },
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21ef1230_50629c8e",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "Can we rather do: rc \u003d spdk_bdev_set_num_blocks; if( rc...",
+      "range": {
+        "startLine": 399,
+        "startChar": 5,
+        "endLine": 399,
+        "endChar": 29
+      },
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "475fe9a1_ef7c775e",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "Same again",
+      "range": {
+        "startLine": 153,
+        "startChar": 5,
+        "endLine": 153,
+        "endChar": 29
+      },
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bea3c7b_4b4ba38e",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1155,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "Same again",
+      "range": {
+        "startLine": 1155,
+        "startChar": 6,
+        "endLine": 1155,
+        "endChar": 30
+      },
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf14ed5a_fcae4c6c",
+        "filename": "lib/bdev/pmem/bdev_pmem.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "Same again",
+      "range": {
+        "startLine": 334,
+        "startChar": 5,
+        "endLine": 334,
+        "endChar": 29
+      },
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb777497_efb12309",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "Same again",
+      "range": {
+        "startLine": 521,
+        "startChar": 5,
+        "endLine": 521,
+        "endChar": 29
+      },
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25cac426_93932c03",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1070,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "Same again",
+      "range": {
+        "startLine": 1070,
+        "startChar": 5,
+        "endLine": 1070,
+        "endChar": 29
+      },
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98ee3843_decd6be9",
+        "filename": "lib/bdev/virtio/bdev_virtio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1072,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "You could return here value returned from the spdk_bdev_set_num_blocks function",
+      "range": {
+        "startLine": 1072,
+        "startChar": 9,
+        "endLine": 1072,
+        "endChar": 11
+      },
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f4e6e52_c74e8ccc",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T10:26:47Z",
+      "side": 1,
+      "message": "You can try to set num blocks after unregistering too.",
+      "revId": "a4578071e29d17ac45f86203f1d0010011e76b58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
