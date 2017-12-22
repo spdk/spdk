@@ -47,7 +47,7 @@ if [[ ! -r "${VM_IMAGE}" ]]; then
 	exit 1
 fi
 
-WORKDIR=$(dirname $0)
+WORKDIR=$(readlink -f $(dirname $0))
 cd $WORKDIR
 
 case $1 in
