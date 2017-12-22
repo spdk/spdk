@@ -363,6 +363,8 @@ virtio_scsi_dev_get_disk_by_id(struct virtio_scsi_dev *svdev, uint8_t target_id)
 	return NULL;
 }
 
+static int virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev,
+				bdev_virtio_create_cb cb_fn, void *cb_arg);
 static int send_scan_io(struct virtio_scsi_scan_base *base);
 static void _virtio_scsi_dev_scan_tgt(struct virtio_scsi_scan_base *base, uint8_t target);
 static int _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base);
@@ -778,7 +780,15 @@ bdev_virtio_eventq_io_cpl(struct virtio_scsi_dev *svdev, struct virtio_scsi_even
 		goto out;
 	}
 
-	if (ev->event == VIRTIO_SCSI_T_TRANSPORT_RESET) {
+	if (ev->event & VIRTIO_SCSI_T_EVENTS_MISSED) {
+		ev->event &= ~VIRTIO_SCSI_T_EVENTS_MISSED;
+		virtio_scsi_dev_scan(svdev, NULL, NULL);
+	}
+
+	switch (ev->event) {
+	case VIRTIO_SCSI_T_NO_EVENT:
+		break;
+	case VIRTIO_SCSI_T_TRANSPORT_RESET:
 		switch (ev->reason) {
 		case VIRTIO_SCSI_EVT_RESET_RESCAN:
 			virtio_scsi_dev_scan_tgt(svdev, ev->lun[1]);
@@ -792,6 +802,9 @@ bdev_virtio_eventq_io_cpl(struct virtio_scsi_dev *svdev, struct virtio_scsi_even
 		default:
 			break;
 		}
+		break;
+	default:
+		break;
 	}
 
 out:
