@@ -94,6 +94,29 @@
     },
     {
       "key": {
+        "uuid": "32afc10f_1ad0218a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T12:47:15Z",
+      "side": 1,
+      "message": "We could also try to write something on it - not only relay on status.",
+      "range": {
+        "startLine": 631,
+        "startChar": 32,
+        "endLine": 631,
+        "endChar": 50
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fce090b0_eac65309",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 2
@@ -110,6 +133,29 @@
         "startChar": 2,
         "endLine": 632,
         "endChar": 20
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e1a4ccb_72eb4b54",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T12:47:15Z",
+      "side": 1,
+      "message": "We should also add one test for thick provisioned lvol.",
+      "range": {
+        "startLine": 642,
+        "startChar": 0,
+        "endLine": 642,
+        "endChar": 38
       },
       "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -278,6 +324,53 @@
     },
     {
       "key": {
+        "uuid": "130cc293_c37e3392",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 679,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T12:47:15Z",
+      "side": 1,
+      "message": "Writes should not encounter any errors during this process",
+      "parentUuid": "defa78ed_20bcf6b0",
+      "range": {
+        "startLine": 679,
+        "startChar": 2,
+        "endLine": 679,
+        "endChar": 61
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "faca4f89_68145e64",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 691,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T12:47:15Z",
+      "side": 1,
+      "message": "Starting from this test till the last test there is no need to make lvol thin provisioned - it can be thick provisioned - this will speed things up a bit.",
+      "range": {
+        "startLine": 691,
+        "startChar": 2,
+        "endLine": 691,
+        "endChar": 38
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f3013f5e_955da879",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 2
@@ -364,6 +457,46 @@
         "endLine": 723,
         "endChar": 26
       },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11fd96eb_3868b8bf",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 772,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T12:47:15Z",
+      "side": 1,
+      "message": "Actually all clones based on this snapshot should be automatically removed when snapshot is being removed. So we cal only check if all clones were removed as well (we can create more clones for this test)",
+      "range": {
+        "startLine": 772,
+        "startChar": 2,
+        "endLine": 772,
+        "endChar": 46
+      },
+      "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58323dba_72986c0a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T12:47:15Z",
+      "side": 1,
+      "message": "We can do 2 more tests:\n1. Try to clone lvol that is not a snapshot\n2. Create snapshot and clone, write on clone and check that snapshot did not change, but clone changed as expected.",
       "revId": "17bb13f65f7c134eb13d513d2beb3a2b5a9aa17b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
