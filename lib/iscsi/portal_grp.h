@@ -62,19 +62,10 @@ struct spdk_iscsi_portal *spdk_iscsi_portal_create(const char *host, const char 
 void spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p);
 
 struct spdk_iscsi_portal_grp *spdk_iscsi_portal_grp_create(int tag);
-int spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp);
 int spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 		struct spdk_iscsi_portal **portal_list,
 		int num_portals);
-void spdk_iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg);
-void spdk_iscsi_portal_grp_destroy_by_tag(int tag);
 void spdk_iscsi_portal_grp_release(struct spdk_iscsi_portal_grp *pg);
-
-void spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
-				      struct spdk_iscsi_portal *p);
-void spdk_iscsi_portal_grp_delete_portal(struct spdk_iscsi_portal_grp *pg,
-		struct spdk_iscsi_portal *p);
-
 
 int spdk_iscsi_portal_grp_array_create(void);
 void spdk_iscsi_portal_grp_array_destroy(void);
