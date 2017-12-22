@@ -338,6 +338,14 @@ blob_create(void)
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
+	/* Try to create blob with size larger than blobstore */
+
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = bs->total_clusters + 1;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno == -ENOSPC);
+
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
@@ -432,6 +440,10 @@ blob_resize(void)
 	rc = spdk_blob_resize(blob, 10);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT((free_clusters - 10) == spdk_bs_free_cluster_count(bs));
+
+	/* Try to resize the blob to size larger than blobstore. */
+	rc = spdk_blob_resize(blob, bs->total_clusters + 1);
+	CU_ASSERT(rc == -ENOSPC);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
