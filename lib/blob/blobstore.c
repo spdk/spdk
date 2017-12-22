@@ -2711,6 +2711,7 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 	struct spdk_blob_opts	opts_default;
 	spdk_bs_sequence_t	*seq;
 	spdk_blob_id		id;
+	int rc;
 
 	page_idx = spdk_bit_array_find_first_clear(bs->used_md_pages, 0);
 	if (page_idx >= spdk_bit_array_capacity(bs->used_md_pages)) {
@@ -2735,7 +2736,12 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		opts = &opts_default;
 	}
 
-	spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
+	rc = spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
+	if (rc < 0) {
+		_spdk_blob_free(blob);
+		cb_fn(cb_arg, 0, rc);
+		return;
+	}
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
