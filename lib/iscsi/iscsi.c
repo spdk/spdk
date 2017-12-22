@@ -3651,7 +3651,8 @@ void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 	}
 }
 
-void spdk_del_connection_queued_task(void *tailq, struct spdk_scsi_lun *lun)
+static void
+spdk_del_connection_queued_task(void *tailq, struct spdk_scsi_lun *lun)
 {
 	struct spdk_iscsi_task *task, *task_tmp;
 	/*
