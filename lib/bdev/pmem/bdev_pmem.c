@@ -331,6 +331,12 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 		return EINVAL;
 	}
 
+	if (spdk_bdev_set_num_blocks(&pdisk->disk, num_blocks) != 0) {
+		pmemblk_close(pdisk->pool);
+		free(pdisk);
+		return EINVAL;
+	}
+
 	pdisk->disk.name = strdup(name);
 	if (!pdisk->disk.name) {
 		pmemblk_close(pdisk->pool);
@@ -341,7 +347,6 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 	pdisk->disk.product_name = "pmemblk disk";
 	pdisk->disk.write_cache = 0;
 	pdisk->disk.blocklen = block_size;
-	pdisk->disk.blockcnt = num_blocks;
 
 	pdisk->disk.ctxt = pdisk;
 	pdisk->disk.fn_table = &pmem_fn_table;
