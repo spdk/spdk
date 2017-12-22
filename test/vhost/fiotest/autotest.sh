@@ -161,7 +161,7 @@ for vm_conf in ${vms[@]}; do
 			done
 
 			echo "INFO: Trying to create scsi controller with incorrect cpumask"
-			if $rpc_py construct_vhost_scsi_controller vhost.invalid.cpumask --cpumask 9; then
+			if $rpc_py construct_vhost_scsi_controller vhost.invalid.cpumask --cpumask 0x2; then
 				echo "ERROR: Creating scsi controller with incorrect cpumask succeeded, but it shouldn't"
 				false
 			fi
@@ -185,7 +185,7 @@ for vm_conf in ${vms[@]}; do
 			fi
 
 			echo "INFO: Trying to create block controller with incorrect cpumask"
-			if $rpc_py construct_vhost_blk_controller vhost.invalid.cpumask  Malloc0 --cpumask 9; then
+			if $rpc_py construct_vhost_blk_controller vhost.invalid.cpumask  Malloc0 --cpumask 0x2; then
 				echo "ERROR: Creating block controller with incorrect cpumask succeeded, but it shouldn't"
 				false
 			fi
@@ -201,6 +201,7 @@ for vm_conf in ${vms[@]}; do
 				echo "ERROR: Creating block controller with incorrect name succeeded, but it shouldn't"
 				false
 			fi
+
 		done <<< "${conf[2]}"
 		unset IFS;
 		$rpc_py get_vhost_controllers
