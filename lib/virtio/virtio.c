@@ -511,7 +511,8 @@ virtqueue_req_add_iovs(struct virtqueue *vq, struct iovec *iovs, uint16_t iovcnt
 	 * or the caller specifies SPDK_VIRTIO_DESC_F_INDIRECT
 	 */
 
-	prev_head = new_head = vq->vq_desc_head_idx;
+	prev_head = vq->req_end;
+	new_head = vq->vq_desc_head_idx;
 	for (i = 0; i < iovcnt; ++i) {
 		desc = &vq->vq_ring.desc[new_head];
 
