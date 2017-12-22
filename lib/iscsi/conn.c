@@ -1422,7 +1422,7 @@ spdk_iscsi_conn_execute(struct spdk_iscsi_conn *conn)
 		}
 	}
 
-	spdk_iscsi_conn_handle_queued_tasks(conn);
+	spdk_iscsi_conn_handle_queued_datain_tasks(conn);
 
 	if (conn_active) {
 		return 1;
