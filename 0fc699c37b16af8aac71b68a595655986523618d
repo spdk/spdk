@@ -71,6 +71,29 @@
     },
     {
       "key": {
+        "uuid": "a531643e_96eeac1a",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T12:24:51Z",
+      "side": 1,
+      "message": "This will only work if lvol bdev size \u003d lvs size",
+      "range": {
+        "startLine": 562,
+        "startChar": 1,
+        "endLine": 563,
+        "endChar": 56
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9945aeb6_90f09656",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 5
@@ -347,6 +370,23 @@
     },
     {
       "key": {
+        "uuid": "f0eb1f60_ab8a576e",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T12:24:51Z",
+      "side": 1,
+      "message": "We could aslo check integrity of the data written on both lvols",
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb18ef99_b0b78cb4",
         "filename": "test/lvol/test_plan.md",
         "patchSetId": 5
@@ -363,6 +403,29 @@
         "startChar": 0,
         "endLine": 636,
         "endChar": 43
+      },
+      "revId": "0fc699c37b16af8aac71b68a595655986523618d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4ab9a16_0ce83f57",
+        "filename": "test/lvol/test_plan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 709,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2017-12-22T12:24:51Z",
+      "side": 1,
+      "message": "This probably should not be here",
+      "range": {
+        "startLine": 706,
+        "startChar": 0,
+        "endLine": 709,
+        "endChar": 26
       },
       "revId": "0fc699c37b16af8aac71b68a595655986523618d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
