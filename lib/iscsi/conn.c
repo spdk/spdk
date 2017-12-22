@@ -349,7 +349,7 @@ int spdk_initialize_iscsi_conns(void)
 {
 	size_t conns_size;
 	int conns_array_fd, rc;
-	uint32_t i, last_core = 0;
+	uint32_t i, last_core;
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_iscsi_init\n");
 
@@ -383,10 +383,7 @@ int spdk_initialize_iscsi_conns(void)
 		g_conns_array[i].id = i;
 	}
 
-	SPDK_ENV_FOREACH_CORE(i) {
-		last_core = i;
-	}
-
+	last_core = spdk_env_get_last_core();
 	g_num_connections = calloc(last_core + 1, sizeof(uint32_t));
 	if (!g_num_connections) {
 		SPDK_ERRLOG("Could not allocate array size=%u for g_num_connections\n",

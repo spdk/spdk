@@ -228,6 +228,12 @@ uint32_t spdk_env_get_current_core(void);
 uint32_t spdk_env_get_first_core(void);
 
 /**
+ * \brief Return the index of the last dedicated CPU core for
+ *	  this application.
+ */
+uint32_t spdk_env_get_last_core(void);
+
+/**
  * \brief Return the index of the next dedicated CPU core for
  *	  this application.
  *        If there is no next core, return UINT32_MAX.
