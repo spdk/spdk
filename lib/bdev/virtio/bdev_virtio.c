@@ -1187,6 +1187,13 @@ virtio_scsi_dev_add_tgt(struct virtio_scsi_dev *svdev, struct virtio_scsi_scan_i
 	struct spdk_bdev *bdev;
 	int rc;
 
+	TAILQ_FOREACH(disk, &svdev->luns, link) {
+		if (disk->info.target == info->target) {
+			/* Target is already attached and param change is not supported */
+			return 0;
+		}
+	}
+
 	disk = calloc(1, sizeof(*disk));
 	if (disk == NULL) {
 		SPDK_ERRLOG("could not allocate disk\n");
