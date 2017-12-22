@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a92c5b48_2bc2a5df",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1039,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-22T13:29:15Z",
+      "side": 1,
+      "message": "I don\u0027t this is needed here. We could iterate over num_clusters in loop below. We assign blob-\u003eactive.num_clusters at line 1052 anyway.",
+      "range": {
+        "startLine": 1037,
+        "startChar": 3,
+        "endLine": 1039,
+        "endChar": 2
+      },
+      "revId": "549fc7bcc8119abb6bc19ae7bf070df9f2100d27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f19dc1bc_6ae59328",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-22T13:29:15Z",
+      "side": 1,
+      "message": "Can we please add UT that resizes blob over available space of blobstore ?",
+      "revId": "549fc7bcc8119abb6bc19ae7bf070df9f2100d27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

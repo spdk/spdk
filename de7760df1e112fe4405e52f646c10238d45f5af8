@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f2fd8d6_72d769ba",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-22T13:29:15Z",
+      "side": 0,
+      "message": "I think this needs comment in commit message. Previously blob failed with assert, when blob was to be resized over blobstore size.",
+      "range": {
+        "startLine": 1020,
+        "startChar": 3,
+        "endLine": 1020,
+        "endChar": 17
+      },
+      "revId": "de7760df1e112fe4405e52f646c10238d45f5af8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
