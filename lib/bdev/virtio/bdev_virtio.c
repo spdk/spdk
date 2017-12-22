@@ -361,6 +361,7 @@ virtio_scsi_dev_get_disk_by_id(struct virtio_scsi_dev *svdev, uint8_t target_id)
 }
 
 static int send_scan_io(struct virtio_scsi_scan_base *base);
+static void _virtio_scsi_dev_scan_tgt(struct virtio_scsi_scan_base *base, uint8_t target);
 static int _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base);
 static void _virtio_scsi_dev_scan_finish(struct virtio_scsi_scan_base *base, int errnum);
 static int virtio_scsi_dev_scan_tgt(struct virtio_scsi_dev *svdev, uint8_t target);
@@ -1365,10 +1366,8 @@ _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base)
 	if (base->full_scan) {
 		target_id = base->info.target + 1;
 		if (target_id < BDEV_VIRTIO_MAX_TARGET) {
-			memset(&base->info, 0, sizeof(base->info));
-			base->info.target = target_id;
-
-			return send_inquiry(base);
+			_virtio_scsi_dev_scan_tgt(base, target_id);
+			return 0;
 		}
 
 		base->full_scan = false;
@@ -1381,11 +1380,11 @@ _virtio_scsi_dev_scan_next(struct virtio_scsi_scan_base *base)
 	}
 
 	TAILQ_REMOVE(&base->scan_queue, next, tailq);
-	memset(&base->info, 0, sizeof(base->info));
-	base->info.target = next->target;
+	target_id = next->target;
 	free(next);
 
-	return send_inquiry(base);
+	_virtio_scsi_dev_scan_tgt(base, target_id);
+	return 0;
 }
 
 static int
@@ -1480,8 +1479,6 @@ _virtio_scsi_dev_scan_init(struct virtio_scsi_dev *svdev)
 	TAILQ_INIT(&base->scan_queue);
 	svdev->scan_ctx = base;
 
-	memset(&base->info, 0, sizeof(base->info));
-
 	base->iov.iov_base = base->payload;
 	io_ctx = &base->io_ctx;
 	req = &io_ctx->req;
@@ -1493,6 +1490,20 @@ _virtio_scsi_dev_scan_init(struct virtio_scsi_dev *svdev)
 
 	base->retries = SCAN_REQUEST_RETRIES;
 	return 0;
+}
+
+static void
+_virtio_scsi_dev_scan_tgt(struct virtio_scsi_scan_base *base, uint8_t target)
+{
+	int rc;
+
+	memset(&base->info, 0, sizeof(base->info));
+	base->info.target = target;
+
+	rc = send_inquiry(base);
+	if (rc) {
+		/* Let response poller do the resend */
+	}
 }
 
 static int
@@ -1511,13 +1522,8 @@ virtio_scsi_dev_scan(struct virtio_scsi_dev *svdev, bdev_virtio_create_cb cb_fn,
 	base->cb_fn = cb_fn;
 	base->cb_arg = cb_arg;
 	base->full_scan = true;
-	base->info.target = 0;
 
-	rc = send_inquiry(base);
-	if (rc) {
-		/* Let response poller do the resend */
-	}
-
+	_virtio_scsi_dev_scan_tgt(base, 0);
 	return 0;
 }
 
@@ -1548,13 +1554,7 @@ virtio_scsi_dev_scan_tgt(struct virtio_scsi_dev *svdev, uint8_t target)
 
 	base = svdev->scan_ctx;
 	base->full_scan = true;
-	base->info.target = target;
-
-	rc = send_inquiry(base);
-	if (rc) {
-		/* Let response poller do the resend */
-	}
-
+	_virtio_scsi_dev_scan_tgt(base, target);
 	return 0;
 }
 
