@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e5aeefe1_7d359cf7",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2017-12-22T12:55:16Z",
+      "side": 0,
+      "message": "If vhost cpu mask is set to 0x1, could we just set cpumask here to 0x2?\n$rpc_py construct_vhost_scsi_controller vhost.invalid.cpumask --cpumask 0x2 ?",
+      "range": {
+        "startLine": 163,
+        "startChar": 0,
+        "endLine": 168,
+        "endChar": 0
+      },
+      "revId": "de7760df1e112fe4405e52f646c10238d45f5af8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
