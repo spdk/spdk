@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2aec91c3_6f18ad21",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-22T11:49:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc588dfe_fb1c50d3",
+      "revId": "4dd612f5b164b49a8205ca3f4d77a3af209874d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b1eda299_66763cb6",
         "filename": "include/spdk_internal/bdev.h",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2017-12-14T17:25:40Z",
       "side": 1,
       "message": "-ENOENT if alias does not exist",
+      "revId": "4dd612f5b164b49a8205ca3f4d77a3af209874d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4c69605_53c86fa1",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-22T11:49:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b1eda299_66763cb6",
       "revId": "4dd612f5b164b49a8205ca3f4d77a3af209874d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "4affc7ae_016327b5",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-22T11:49:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dac95b98_3636111e",
+      "revId": "4dd612f5b164b49a8205ca3f4d77a3af209874d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10e7b77c_4c2152e3",
         "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
         "patchSetId": 12
@@ -64,6 +118,24 @@
       "writtenOn": "2017-12-14T17:25:40Z",
       "side": 1,
       "message": "same as above",
+      "revId": "4dd612f5b164b49a8205ca3f4d77a3af209874d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cb7a38b_b86c17cd",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1012904
+      },
+      "writtenOn": "2017-12-22T11:49:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "10e7b77c_4c2152e3",
       "revId": "4dd612f5b164b49a8205ca3f4d77a3af209874d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
