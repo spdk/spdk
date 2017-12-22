@@ -335,6 +335,14 @@ blob_create(void)
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
+	/* Fail on blob create */
+
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = -1;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	CU_ASSERT(g_bserrno != 0);
+
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	g_bs = NULL;
