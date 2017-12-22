@@ -986,6 +986,7 @@ _spdk_resize_blob(struct spdk_blob_data *blob, uint64_t sz)
 	uint64_t	i;
 	uint64_t	*tmp;
 	uint64_t	lfc; /* lowest free cluster */
+	uint64_t	num_clusters;
 	struct spdk_blob_store *bs;
 
 	bs = blob->bs;
@@ -1002,42 +1003,42 @@ _spdk_resize_blob(struct spdk_blob_data *blob, uint64_t sz)
 		 * larger without syncing, then the cluster array already
 		 * contains spare assigned clusters we can use.
 		 */
-		blob->active.num_clusters = spdk_min(blob->active.cluster_array_size,
-						     sz);
+		num_clusters = spdk_min(blob->active.cluster_array_size,
+					sz);
+	} else {
+		num_clusters = blob->active.num_clusters;
 	}
-
-	blob->state = SPDK_BLOB_STATE_DIRTY;
 
 	/* Do two passes - one to verify that we can obtain enough clusters
 	 * and another to actually claim them.
 	 */
 
 	lfc = 0;
-	for (i = blob->active.num_clusters; i < sz; i++) {
+	for (i = num_clusters; i < sz; i++) {
 		lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
 		if (lfc >= bs->total_clusters) {
 			/* No more free clusters. Cannot satisfy the request */
-			assert(false);
-			return -1;
+			return -ENOSPC;
 		}
 		lfc++;
 	}
 
-	if (sz > blob->active.num_clusters) {
+	if (sz > num_clusters) {
 		/* Expand the cluster array if necessary.
 		 * We only shrink the array when persisting.
 		 */
 		tmp = realloc(blob->active.clusters, sizeof(uint64_t) * sz);
 		if (sz > 0 && tmp == NULL) {
-			assert(false);
-			return -1;
+			return -ENOMEM;
 		}
 		blob->active.clusters = tmp;
 		blob->active.cluster_array_size = sz;
 	}
 
+	blob->state = SPDK_BLOB_STATE_DIRTY;
+
 	lfc = 0;
-	for (i = blob->active.num_clusters; i < sz; i++) {
+	for (i = num_clusters; i < sz; i++) {
 		lfc = spdk_bit_array_find_first_clear(bs->used_clusters, lfc);
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Claiming cluster %lu for blob %lu\n", lfc, blob->id);
 		_spdk_bs_claim_cluster(bs, lfc);
@@ -2711,6 +2712,7 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 	struct spdk_blob_opts	opts_default;
 	spdk_bs_sequence_t	*seq;
 	spdk_blob_id		id;
+	int rc;
 
 	page_idx = spdk_bit_array_find_first_clear(bs->used_md_pages, 0);
 	if (page_idx >= spdk_bit_array_capacity(bs->used_md_pages)) {
@@ -2735,7 +2737,12 @@ void spdk_bs_create_blob_ext(struct spdk_blob_store *bs, const struct spdk_blob_
 		opts = &opts_default;
 	}
 
-	spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
+	rc = spdk_blob_resize(__data_to_blob(blob), opts->num_clusters);
+	if (rc < 0) {
+		_spdk_blob_free(blob);
+		cb_fn(cb_arg, 0, rc);
+		return;
+	}
 	cpl.type = SPDK_BS_CPL_TYPE_BLOBID;
 	cpl.u.blobid.cb_fn = cb_fn;
 	cpl.u.blobid.cb_arg = cb_arg;
