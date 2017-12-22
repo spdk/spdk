@@ -160,12 +160,6 @@ for vm_conf in ${vms[@]}; do
 				fi
 			done
 
-			echo "INFO: Trying to create scsi controller with incorrect cpumask"
-			if $rpc_py construct_vhost_scsi_controller vhost.invalid.cpumask --cpumask 9; then
-				echo "ERROR: Creating scsi controller with incorrect cpumask succeeded, but it shouldn't"
-				false
-			fi
-
 			echo "INFO: Trying to remove device from nonexistent scsi controller"
 			if $rpc_py remove_vhost_scsi_target vhost.nonexistent.name 0; then
 				echo "ERROR: Removing device from nonexistent scsi controller succeeded, but it shouldn't"
@@ -181,12 +175,6 @@ for vm_conf in ${vms[@]}; do
 			echo "INFO: Trying to create scsi controller with incorrect name"
 			if $rpc_py construct_vhost_scsi_controller .; then
 				echo "ERROR: Creating scsi controller with incorrect name succeeded, but it shouldn't"
-				false
-			fi
-
-			echo "INFO: Trying to create block controller with incorrect cpumask"
-			if $rpc_py construct_vhost_blk_controller vhost.invalid.cpumask  Malloc0 --cpumask 9; then
-				echo "ERROR: Creating block controller with incorrect cpumask succeeded, but it shouldn't"
 				false
 			fi
 
