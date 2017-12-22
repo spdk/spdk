@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1553e46_96bddc23",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 435,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-22T12:31:28Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we spdk_bdev_alias_del() here ? And couple places below where we free bdev/bdev-\u003ename.",
+      "range": {
+        "startLine": 434,
+        "startChar": 0,
+        "endLine": 435,
+        "endChar": 12
+      },
+      "revId": "fcc2708e7d80e8ae16304bf9b0cec26cb1031fdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
