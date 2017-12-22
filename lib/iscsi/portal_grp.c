@@ -330,7 +330,7 @@ error_out:
 	return rc;
 }
 
-struct spdk_iscsi_portal_grp *
+static struct spdk_iscsi_portal_grp *
 spdk_iscsi_portal_grp_create(int tag)
 {
 	char buf[64];
@@ -358,7 +358,7 @@ spdk_iscsi_portal_grp_create(int tag)
 	return pg;
 }
 
-void
+static void
 spdk_iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg)
 {
 	struct spdk_iscsi_portal	*p;
@@ -383,6 +383,17 @@ spdk_iscsi_portal_grp_register(struct spdk_iscsi_portal_grp *pg)
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	TAILQ_INSERT_TAIL(&g_spdk_iscsi.pg_head, pg, tailq);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+}
+
+static void
+spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
+				 struct spdk_iscsi_portal *p)
+{
+	assert(pg != NULL);
+	assert(p != NULL);
+
+	p->group = pg;
+	TAILQ_INSERT_TAIL(&pg->head, p, per_pg_tailq);
 }
 
 /**
@@ -442,7 +453,7 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 	return rc;
 }
 
-int
+static int
 spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 {
 	struct spdk_iscsi_portal_grp *pg;
@@ -520,17 +531,6 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 
 error_out:
 	return -1;
-}
-
-void
-spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
-				 struct spdk_iscsi_portal *p)
-{
-	assert(pg != NULL);
-	assert(p != NULL);
-
-	p->group = pg;
-	TAILQ_INSERT_TAIL(&pg->head, p, per_pg_tailq);
 }
 
 struct spdk_iscsi_portal_grp *
