@@ -78,6 +78,9 @@ void *
 spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
 {
 	void *buf = NULL;
+	if (align == 0) {
+		align = 0x10;
+	}
 	if (posix_memalign(&buf, align, size)) {
 		return NULL;
 	}
