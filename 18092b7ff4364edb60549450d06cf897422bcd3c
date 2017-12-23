@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4abd5bff_dbf568a5",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-23T00:34:10Z",
+      "side": 1,
+      "message": "We can make this function static too.",
+      "range": {
+        "startLine": 333,
+        "startChar": 0,
+        "endLine": 334,
+        "endChar": 37
+      },
+      "revId": "18092b7ff4364edb60549450d06cf897422bcd3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a3f7840_2d085643",
+        "filename": "lib/iscsi/portal_grp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-23T00:34:10Z",
+      "side": 1,
+      "message": "We can remove this too.",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 68
+      },
+      "revId": "18092b7ff4364edb60549450d06cf897422bcd3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
