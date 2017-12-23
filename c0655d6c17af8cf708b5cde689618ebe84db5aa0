@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c289bcb8_befa878e",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 350,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-23T01:24:43Z",
+      "side": 1,
+      "message": "Please delete a space here.",
+      "range": {
+        "startLine": 350,
+        "startChar": 4,
+        "endLine": 350,
+        "endChar": 5
+      },
+      "revId": "c0655d6c17af8cf708b5cde689618ebe84db5aa0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
