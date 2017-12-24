@@ -42,7 +42,7 @@
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
 
-static uint32_t g_num_ctrlrs[RTE_MAX_LCORE];
+static uint32_t *g_num_ctrlrs;
 
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
@@ -1159,6 +1159,15 @@ spdk_vhost_unlock(void)
 int
 spdk_vhost_init(void)
 {
+	uint32_t last_core;
+
+	last_core = spdk_env_get_last_core();
+	g_num_ctrlrs = calloc(last_core + 1, sizeof(uint32_t));
+	if (!g_num_ctrlrs) {
+		SPDK_ERRLOG("Could not allocate array size=%u for g_num_ctrlrs\n",
+			    last_core + 1);
+		return -1;
+	}
 	return 0;
 }
 
