@@ -42,7 +42,6 @@
 
 #define SPDK_MAX_SOCKET		64
 
-#define SPDK_MAX_REACTORS		128
 #define SPDK_REACTOR_SPIN_TIME_USEC	1000
 #define SPDK_TIMER_POLL_ITERATIONS	5
 #define SPDK_EVENT_BATCH_SIZE		8
@@ -114,7 +113,7 @@ struct spdk_reactor {
 	uint64_t					max_delay_us;
 } __attribute__((aligned(64)));
 
-static struct spdk_reactor g_reactors[SPDK_MAX_REACTORS];
+static struct spdk_reactor *g_reactors;
 
 static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 
@@ -658,7 +657,8 @@ spdk_reactors_stop(void *arg1, void *arg2)
 int
 spdk_reactors_init(unsigned int max_delay_us)
 {
-	uint32_t i, j;
+	int rc;
+	uint32_t i, j, last_core;
 	struct spdk_reactor *reactor;
 	uint64_t socket_mask = 0x0;
 	uint8_t socket_count = 0;
@@ -716,6 +716,23 @@ spdk_reactors_init(unsigned int max_delay_us)
 		}
 	}
 
+	/* struct spdk_reactor must be aligned on 64 byte boundary */
+	last_core = spdk_env_get_last_core();
+	rc = posix_memalign((void **)&g_reactors, 64,
+			    (last_core + 1) * sizeof(struct spdk_reactor));
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not allocate array size=%u for g_reactors\n",
+			    last_core + 1);
+		for (i = 0; i < SPDK_MAX_SOCKET; i++) {
+			if (g_spdk_event_mempool[i] != NULL) {
+				spdk_mempool_free(g_spdk_event_mempool[i]);
+			}
+		}
+		return -1;
+	}
+
+	memset(g_reactors, 0, (last_core + 1) * sizeof(struct spdk_reactor));
+
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
 		spdk_reactor_construct(reactor, i, max_delay_us);
@@ -744,6 +761,8 @@ spdk_reactors_fini(void)
 			spdk_mempool_free(g_spdk_event_mempool[i]);
 		}
 	}
+
+	free(g_reactors);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("reactor", SPDK_LOG_REACTOR)
