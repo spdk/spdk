@@ -677,16 +677,10 @@ spdk_vhost_allocate_reactor(uint64_t cpumask)
 	uint32_t i, selected_core;
 	uint32_t min_ctrlrs;
 
-	cpumask &= spdk_app_get_core_mask();
-
-	if (cpumask == 0) {
-		return 0;
-	}
-
 	min_ctrlrs = INT_MAX;
-	selected_core = 0;
+	selected_core = spdk_env_get_first_core();
 
-	for (i = 0; i < RTE_MAX_LCORE && i < 64; i++) {
+	SPDK_ENV_FOREACH_CORE(i) {
 		if (!((1ULL << i) & cpumask)) {
 			continue;
 		}
