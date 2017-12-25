@@ -125,6 +125,24 @@ config_file_fail_cases(void)
 }
 
 static void
+allow_any_allowed(void)
+{
+	bool result;
+	char *netmask;
+	char *addr1, *addr2;
+
+	netmask = "ANY";
+	addr1 = "2001:ad6:1234:5678:9abc::";
+	addr2 = "192.168.2.1";
+
+	result = spdk_iscsi_netmask_allow_addr(netmask, addr1);
+	CU_ASSERT(result == true);
+
+	result = spdk_iscsi_netmask_allow_addr(netmask, addr2);
+	CU_ASSERT(result == true);
+}
+
+static void
 allow_ipv6_allowed(void)
 {
 	bool result;
@@ -662,6 +680,7 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "config file fail cases", config_file_fail_cases) == NULL
+		|| CU_add_test(suite, "allow any allowed case", allow_any_allowed) == NULL
 		|| CU_add_test(suite, "allow ipv6 allowed case", allow_ipv6_allowed) == NULL
 		|| CU_add_test(suite, "allow ipv6 denied case", allow_ipv6_denied) == NULL
 		|| CU_add_test(suite, "allow ipv4 allowed case", allow_ipv4_allowed) == NULL
