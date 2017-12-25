@@ -44,6 +44,10 @@
 
 #include "spdk_internal/log.h"
 
+#define	MAX_PORTAL	1024
+#define	MAX_INITIATOR	256
+#define	MAX_NETMASK	256
+
 static void
 spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)

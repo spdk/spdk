@@ -87,11 +87,6 @@ spdk_iscsi_init_grp_add_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 	char *p;
 	char buf[64];
 
-	if (ig->ninitiators >= MAX_INITIATOR) {
-		SPDK_ERRLOG("> MAX_INITIATOR(=%d) is not allowed\n", MAX_INITIATOR);
-		return -EPERM;
-	}
-
 	iname = spdk_iscsi_init_grp_find_initiator(ig, name);
 	if (iname != NULL) {
 		return -EEXIST;
@@ -199,11 +194,6 @@ spdk_iscsi_init_grp_add_netmask(struct spdk_iscsi_init_grp *ig, char *mask)
 	struct spdk_iscsi_initiator_netmask *imask;
 	char *p;
 	char buf[64];
-
-	if (ig->nnetmasks >= MAX_NETMASK) {
-		SPDK_ERRLOG("> MAX_NETMASK(=%d) is not allowed\n", MAX_NETMASK);
-		return -EPERM;
-	}
 
 	imask = spdk_iscsi_init_grp_find_netmask(ig, mask);
 	if (imask != NULL) {
@@ -325,10 +315,7 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 		return -EINVAL;
 	}
 	num_initiator_names = i;
-	if (num_initiator_names > MAX_INITIATOR) {
-		SPDK_ERRLOG("%d > MAX_INITIATOR\n", num_initiator_names);
-		return -E2BIG;
-	}
+
 	for (i = 0; ; i++) {
 		val = spdk_conf_section_get_nval(sp, "Netmask", i);
 		if (val == NULL) {
@@ -340,10 +327,6 @@ spdk_iscsi_init_grp_create_from_configfile(struct spdk_conf_section *sp)
 		return -EINVAL;
 	}
 	num_initiator_masks = i;
-	if (num_initiator_masks > MAX_NETMASK) {
-		SPDK_ERRLOG("%d > MAX_NETMASK\n", num_initiator_masks);
-		return -E2BIG;
-	}
 
 	initiators = calloc(num_initiator_names, sizeof(char *));
 	if (!initiators) {

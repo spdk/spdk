@@ -208,12 +208,6 @@ add_initiator_name_fail_case(void)
 	ig = spdk_iscsi_init_grp_create(1);
 	CU_ASSERT(ig != NULL);
 
-	/* add an name to the full name list */
-	ig->ninitiators = MAX_INITIATOR;
-
-	rc = spdk_iscsi_init_grp_add_initiator(ig, name1);
-	CU_ASSERT(rc != 0);
-
 	ig->ninitiators = 0;
 
 	/* add the same name to the name list twice */
@@ -318,12 +312,6 @@ add_netmask_fail_case(void)
 
 	ig = spdk_iscsi_init_grp_create(1);
 	CU_ASSERT(ig != NULL);
-
-	/* add an netmask to the full netmask list */
-	ig->nnetmasks = MAX_NETMASK;
-
-	rc = spdk_iscsi_init_grp_add_netmask(ig, netmask1);
-	CU_ASSERT(rc != 0);
 
 	ig->nnetmasks = 0;
 
