@@ -67,7 +67,7 @@
 # PortalGroup sections define which network portals the iSCSI target
 #  will use to listen for incoming connections.  These are also used to
 #  determine which targets are accessible over each portal group.
-# Up to 1024 Portal directives are allowed.  These define the network
+# Up to 1024 portal directives are allowed.  These define the network
 #  portals of the portal group. The user must specify a IP address
 #  for each network portal, and may optionally specify a port and
 #  a cpumask. If the port is omitted, 3260 will be used. Cpumask will
