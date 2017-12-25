@@ -99,102 +99,155 @@ struct spdk_app_opts {
 };
 
 /**
- * \brief Initialize the default value of opts
+ * Initialize the default value of opts
+ *
+ * \param opts  Initialization options.
  */
 void spdk_app_opts_init(struct spdk_app_opts *opts);
 
 /**
- * \brief Start the framework. Once started, the framework will call start_fn on the master
- * core with the arguments provided. This call will block until \ref spdk_app_stop is called.
+ * Start the framework.
+ *
+ * Before calling this function, the value of opts must be initilized by \ref
+ * spdk_app_opts_init. Once started, the framework will call start_fn on the
+ * master core with the arguments provided. This call will block until \ref
+ * spdk_app_stop is called.
+ *
+ * \param start_fn Event function that is called when the framework starts.
+ * \param arg1 Arugument passed to function start_fn.
+ * \param arg2 Arugument passed to function start_fn.
+ *
+ * \return 0 on success or abnormal exit on failure.
  */
 int spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 		   void *arg1, void *arg2);
 
 /**
- * \brief Perform final shutdown operations on an application using the event framework.
+ * Perform final shutdown operations on an application using the event framework.
  */
 void spdk_app_fini(void);
 
 /**
- * \brief Start shutting down the framework.  Typically this function is not called directly, and
- * the shutdown process is started implicitly by a process signal.  But in applications that are
- * using SPDK for a subset of its process threads, this function can be called in lieu of a signal.
+ * Start shutting down the framework.
+ *
+ * Typically this function is not called directly, and the shutdown process is
+ * started implicitly by a process signal. But in applications that are using
+ * SPDK for a subset of its process threads, this function can be called in lieu
+ * of a signal.
  */
 void spdk_app_start_shutdown(void);
 
 /**
- * \brief Stop the framework. This does not wait for all threads to exit. Instead, it kicks off
- * the shutdown process and returns. Once the shutdown process is complete, \ref spdk_app_start will return.
+ * Stop the framework.
+ *
+ * This does not wait for all threads to exit. Instead, it kicks off the shutdown
+ * process and returns. Once the shutdown process is complete, \ref spdk_app_start
+ * will return.
+ *
+ * \param rc Value of rc that is used to change the value of g_spdk_app->rc.
  */
 void spdk_app_stop(int rc);
 
 /**
- * \brief Generate a configuration file that corresponds to the current running state.
+ * Generate a configuration file that corresponds to the current running state.
+ *
+ * \param config_str Values obtained from the generated configuration file.
+ * \param name Name of configuration file to save the current config to. This file
+ * will be allocated in directory '/tmp'.
+ *
+ * \return 0 on success, -1 on failure.
  */
 int spdk_app_get_running_config(char **config_str, char *name);
 
 /**
- * \brief Return the shared memory id for this application.
+ * Return the shared memory id for this application.
+ *
+ * \return shared memory id.
  */
 int spdk_app_get_shm_id(void);
 
 /**
- * \brief Convert a string containing a CPU core mask into a bitmask
+ * Convert a string containing a CPU core mask into a bitmask
+ *
+ * \param mask String containing a CPU core mask.
+ * \param cpumask Bitmask of CPU cores.
+ *
+ * \return 0 on success, -1 on failure.
  */
 int spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask);
 
 /**
- * \brief Return a mask of the CPU cores active for this application
+ * Get the mask of the CPU cores active for this application
+ *
+ * \return the bitmask of the avtive CPU cores.
  */
 struct spdk_cpuset *spdk_app_get_core_mask(void);
 
 /**
- * \brief Return the number of CPU cores utilized by this application
+ * Get the number of CPU cores utilized by this application
+ *
+ * \return the number of the utilized CPU cores.
  */
 int spdk_app_get_core_count(void) __attribute__((deprecated));
 
 /**
- * \brief Return the lcore of the current thread.
+ * Get the lcore of the current thread.
+ *
+ * \return the lcore of the current thread.
  */
 uint32_t spdk_app_get_current_core(void) __attribute__((deprecated));
 
 #define SPDK_APP_GETOPT_STRING "c:de:hi:m:n:p:qr:s:t:"
 
 /**
- * \brief Helper function for parsing arguments and printing usage messages.
+ * Helper function for parsing arguments and printing usage messages.
  *
  * \param argc Count of arguments in argv parameter array.
  * \param argv Array of command line arguments.
  * \param opts Default options for the application.
  * \param getopt_str String representing the app-specific command line parameters.
- *		     Characters in this string must not conflict with characters in
- *		     SPDK_APP_GETOPT_STRING.
+ * Characters in this string must not conflict with characters in SPDK_APP_GETOPT_STRING.
  * \param parse Function pointer to call if an argument in getopt_str is found.
  * \param usage Function pointer to print usage messages for app-specific command
- *		line parameters.
+ * line parameters.
+ *
+ * \return 0 on success or exit application directly otherwise.
  */
 int spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			const char *getopt_str, void (*parse)(int ch, char *arg),
 			void (*usage)(void));
 
 /**
- * \brief Allocate an event to be passed to \ref spdk_event_call
+ * Allocate an event to be passed to \ref spdk_event_call.
+ *
+ * \param lcore Lcore to run this event.
+ * \param fn Function used to start event.
+ * \param arg1 Argument passed to function fn.
+ * \param arg2 Argument passed to function fn.
+ *
+ * \return a pointer to the allocated event.
  */
 struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
 				       void *arg1, void *arg2);
 
 /**
- * \brief Pass the given event to the associated lcore and call the function.
+ * Pass the given event to the associated lcore and call the function.
+ *
+ * \param event Event to start.
  */
 void spdk_event_call(struct spdk_event *event);
 
 /**
- * \brief Enable or disable monitoring of context switches.
+ * Enable or disable monitoring of context switches.
+ *
+ * \param enabled True to enable, false to disable.
  */
 void spdk_reactor_enable_context_switch_monitor(bool enabled);
 
 /**
- * \brief Return whether context switch monitoring is enabled.
+ * Return whether context switch monitoring is enabled.
+ *
+ * \return true if enabled or false otherwise.
  */
 bool spdk_reactor_context_switch_monitor_enabled(void);
 
