@@ -398,11 +398,6 @@ spdk_iscsi_portal_grp_create_from_portal_list(int tag,
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add portal group (from portal list) %d\n", tag);
 
-	if (num_portals > MAX_PORTAL) {
-		SPDK_ERRLOG("%d > MAX_PORTAL\n", num_portals);
-		return -1;
-	}
-
 	pg = spdk_iscsi_portal_grp_create(tag);
 	if (!pg) {
 		SPDK_ERRLOG("portal group creation error (%d)\n", tag);
@@ -479,10 +474,6 @@ spdk_iscsi_portal_grp_create_from_configfile(struct spdk_conf_section *sp)
 	}
 
 	portals = i;
-	if (portals > MAX_PORTAL) {
-		SPDK_ERRLOG("%d > MAX_PORTAL\n", portals);
-		goto error_out;
-	}
 
 	pg = spdk_iscsi_portal_grp_create(spdk_conf_section_get_num(sp));
 	if (!pg) {
