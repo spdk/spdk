@@ -137,9 +137,9 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 SPDK uses the [DPDK Environment Abstraction Layer](http://dpdk.org/doc/guides/prog_guide/env_abstraction_layer.html)
 to gain access to hardware resources such as huge memory pages and CPU core(s). DPDK EAL provides
 functions to assign threads to specific cores.
-To ensure the SPDK NVMe-oF target has the best performance, configure the RNICs, NVMe
-devices, and the core assigned to the NVMe-oF subsystem to all be located on the same NUMA node.
-The following parameters are used to control which CPU cores SPDK executes on:
+To ensure the SPDK NVMe-oF target has the best performance, configure the RNICs and NVMe devices to
+be located on the same NUMA node. The following parameters in the configuration file
+are used to configure SPDK NVMe-oF target:
 
 **ReactorMask:** A hexadecimal bit mask of the CPU cores that SPDK is allowed to execute work
 items on. The ReactorMask is located in the [Global] section of the configuration file. For example,
@@ -148,9 +148,8 @@ to assign lcores 24,25,26 and 27 to NVMe-oF work items, set the ReactorMask to:
 ReactorMask 0xF000000
 ~~~
 
-**Assign each Subsystem to a CPU core:** This is accomplished by specifying the "Core" value in
-the [Subsystem] section of the configuration file. For example,
-to assign the Subsystems to lcores 25 and 26:
+**Subsystem configuration:** the [Subsystem] section in the configuration file is used to configure
+subysystems for the NVMe-oF target.
 ~~~{.sh}
 [Nvme]
 TransportID "trtype:PCIe traddr:0000:02:00.0" Nvme0
@@ -158,7 +157,6 @@ TransportID "trtype:PCIe traddr:0000:82:00.0" Nvme1
 
 [Subsystem1]
 NQN nqn.2016-06.io.spdk:cnode1
-Core 25
 Listen RDMA 192.168.100.8:4420
 AllowAnyHost No
 Host nqn.2016-06.io.spdk:init
@@ -167,16 +165,13 @@ Namespace Nvme0n1 1
 
 [Subsystem2]
 NQN nqn.2016-06.io.spdk:cnode2
-Core 26
 Listen RDMA 192.168.100.9:4420
 AllowAnyHost Yes
 SN SPDK00000000000002
 Namespace Nvme1n1 1
 ~~~
-SPDK executes all code for an NVMe-oF subsystem on a single thread. Different subsystems may execute
-on different threads. SPDK gives the user maximum control to determine how many CPU cores are used
-to execute subsystems. Configuring different subsystems to execute on different CPU cores prevents
-the subsystem data from being evicted from limited CPU cache space.
+SPDK spreads the execution of requests for a single subsystem across all available cores
+in a round-robin manner.
 
 ## Emulating an NVMe controller {#nvmf_config_virtual_controller}
 
@@ -194,7 +189,6 @@ available as NSID 1 and 2:
 # Virtual controller
 [Subsystem2]
   NQN nqn.2016-06.io.spdk:cnode2
-  Core 0
   Listen RDMA 192.168.2.21:4420
   AllowAnyHost No
   Host nqn.2016-06.io.spdk:init
