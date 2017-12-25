@@ -168,7 +168,7 @@ spdk_iscsi_netmask_allow_addr(const char *netmask, const char *addr)
 	if (netmask == NULL || addr == NULL) {
 		return false;
 	}
-	if (strcasecmp(netmask, "ALL") == 0) {
+	if (strcasecmp(netmask, "ANY") == 0) {
 		return true;
 	}
 	if (netmask[0] == '[') {
