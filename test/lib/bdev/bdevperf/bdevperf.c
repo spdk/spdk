@@ -95,9 +95,8 @@ struct io_target {
 	TAILQ_HEAD(, bdevperf_task)	task_list;
 };
 
-#define SPDK_MAX_LCORE  128
-struct io_target *head[SPDK_MAX_LCORE];
-uint32_t coremap[SPDK_MAX_LCORE];
+struct io_target **head;
+uint32_t *coremap;
 static int g_target_count = 0;
 
 /*
@@ -108,19 +107,32 @@ static int g_target_count = 0;
  */
 static size_t g_min_alignment = 8;
 
-static void
+static int
 blockdev_heads_init(void)
 {
-	uint32_t i, idx;
+	uint32_t i, idx = 0;
+	uint32_t core_count = spdk_env_get_core_count();
 
-	for (i = 0; i < SPDK_MAX_LCORE; i++) {
-		head[i] = NULL;
+	head = calloc(core_count, sizeof(struct io_target *));
+	if (!head) {
+		fprintf(stderr, "Cannot allocate head array with size=%u\n",
+			core_count);
+		return -1;
 	}
 
-	idx = 0;
+	coremap = calloc(core_count, sizeof(uint32_t));
+	if (!coremap) {
+		free(head);
+		fprintf(stderr, "Cannot allocate coremap array with size=%u\n",
+			core_count);
+		return -1;
+	}
+
 	SPDK_ENV_FOREACH_CORE(i) {
 		coremap[idx++] = i;
 	}
+
+	return 0;
 }
 
 static void
@@ -141,10 +153,11 @@ bdevperf_free_target(struct io_target *target)
 static void
 blockdev_heads_destroy(void)
 {
-	uint32_t i;
+	uint32_t i, core_count;
 	struct io_target *target, *next_target;
 
-	for (i = 0; i < SPDK_MAX_LCORE; i++) {
+	core_count = spdk_env_get_core_count();
+	for (i = 0; i < core_count; i++) {
 		target = head[i];
 		while (target != NULL) {
 			next_target = target->next;
@@ -152,6 +165,9 @@ blockdev_heads_destroy(void)
 			target = next_target;
 		}
 	}
+
+	free(head);
+	free(coremap);
 }
 
 static void
@@ -648,7 +664,12 @@ bdevperf_run(void *arg1, void *arg2)
 	struct spdk_event *event;
 	int rc;
 
-	blockdev_heads_init();
+	rc = blockdev_heads_init();
+	if (rc) {
+		spdk_app_stop(1);
+		return;
+	}
+
 	bdevperf_construct_targets();
 
 	rc = bdevperf_construct_targets_tasks();
