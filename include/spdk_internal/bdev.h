@@ -298,6 +298,9 @@ struct spdk_bdev_io {
 	 */
 	bool in_submit_request;
 
+	/** limit tag for rate limitting (QoS) */
+	uint64_t qos_limit_tag;
+
 	union {
 		struct {
 			/** For basic IO case, use our own iovec element. */
