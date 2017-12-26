@@ -674,6 +674,7 @@ bdevperf_run(void *arg1, void *arg2)
 
 	rc = bdevperf_construct_targets_tasks();
 	if (rc) {
+		blockdev_heads_destroy();
 		spdk_app_stop(1);
 		return;
 	}
