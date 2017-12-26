@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec738e92_7527e19d",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-26T16:59:03Z",
+      "side": 1,
+      "message": "We should probably have a corresponding free() for g_reactors in spdk_reactors_fini().",
+      "revId": "6ce0950af611868ac31dc06c3f9343f919d7c1d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
