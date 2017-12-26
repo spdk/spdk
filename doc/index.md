@@ -10,6 +10,7 @@
 
 # Concepts {#concepts}
 
+- @ref userspace
 - @ref memory
 - @ref porting
 
