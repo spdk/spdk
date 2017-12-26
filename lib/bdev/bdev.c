@@ -62,7 +62,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define NOMEM_THRESHOLD_COUNT	8
 #define ZERO_BUFFER_SIZE	0x100000
 
-typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
+typedef TAILQ_HEAD(tailq_head, spdk_bdev_io) bdev_io_tailq_t;
 
 struct spdk_bdev_mgr {
 	struct spdk_mempool *bdev_io_pool;
@@ -123,6 +123,7 @@ struct spdk_bdev_desc {
 };
 
 #define BDEV_CH_RESET_IN_PROGRESS	(1 << 0)
+#define BDEV_CH_QOS_ENABLED		(1 << 1)
 
 struct spdk_bdev_channel {
 	struct spdk_bdev	*bdev;
@@ -148,6 +149,34 @@ struct spdk_bdev_channel {
 	 *  on this channel.
 	 */
 	bdev_io_tailq_t		nomem_io;
+
+	/*
+	 * Queue of tagged IO waiting to be checked the underlying device
+	 *  have not reached its rate limit.
+	 */
+	bdev_io_tailq_t		qos_io;
+
+	/*
+	 * Max IOPS for the underlying device
+	 */
+	uint64_t		qos_max_iops;
+
+	/*
+	 * Current limit tag for the underlying device
+	 */
+	uint64_t		qos_limit_tag;
+
+	/*
+	 * Maximum credit that can be gained by idle for the underlying device
+	 */
+	uint64_t		qos_max_idle_credit;
+
+	uint64_t		qos_ticks_hz;
+
+	/*
+	 * Poller to check and schedule limit enforced bdev_io
+	 */
+	struct spdk_poller	*qos_poller;
 
 	/*
 	 * Threshold which io_outstanding must drop to before retrying nomem_io.
@@ -768,7 +797,7 @@ spdk_bdev_put_io(struct spdk_bdev_io *bdev_io)
 }
 
 static void
-spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
+_spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_bdev *bdev = bdev_io->bdev;
 	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
@@ -778,7 +807,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	bdev_ch->io_outstanding++;
 	bdev_io->in_submit_request = true;
-	if (spdk_likely(bdev_ch->flags == 0)) {
+	if (spdk_likely((bdev_ch->flags & ~BDEV_CH_QOS_ENABLED) == 0)) {
 		if (spdk_likely(TAILQ_EMPTY(&bdev_ch->nomem_io))) {
 			bdev->fn_table->submit_request(ch, bdev_io);
 		} else {
@@ -792,6 +821,67 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 	bdev_io->in_submit_request = false;
+}
+
+static void
+spdk_bdev_qos_io_schedule(void *arg)
+{
+	struct spdk_bdev_channel *bdev_ch = arg;
+	struct spdk_bdev_io *bdev_io, *tmp_io;
+
+	TAILQ_FOREACH_SAFE(bdev_io, &bdev_ch->qos_io, link, tmp_io) {
+		if (bdev_io->qos_limit_tag <= spdk_get_ticks()) {
+			TAILQ_REMOVE(&bdev_ch->qos_io, bdev_io, link);
+			_spdk_bdev_io_submit(bdev_io);
+		}
+	}
+}
+
+static void
+spdk_bdev_qos_io_submit(struct spdk_bdev_io *bdev_io, struct spdk_bdev_channel *bdev_ch)
+{
+	uint64_t time, limit_tag, credit, stride;
+	struct spdk_bdev_io *tmp_io;
+	bool inserted = false;
+
+	time = spdk_get_ticks();
+	credit = bdev_ch->qos_max_idle_credit / bdev_ch->qos_max_iops;
+	time = (time >= credit) ? time - credit : 0;
+
+	stride = bdev_ch->qos_ticks_hz / bdev_ch->qos_max_iops;
+	limit_tag = spdk_max(bdev_ch->qos_limit_tag + stride, time);
+
+	bdev_io->qos_limit_tag = limit_tag;
+	bdev_ch->qos_limit_tag = limit_tag;
+
+	if (spdk_unlikely(!TAILQ_EMPTY(&bdev_ch->qos_io))) {
+		TAILQ_FOREACH_REVERSE(tmp_io, &bdev_ch->qos_io, tailq_head, link) {
+			if (bdev_io->qos_limit_tag >= tmp_io->qos_limit_tag) {
+				TAILQ_INSERT_AFTER(&bdev_ch->qos_io, tmp_io, bdev_io, link);
+				inserted = true;
+			}
+		}
+	}
+
+	if (!inserted) {
+		TAILQ_INSERT_HEAD(&bdev_ch->qos_io, bdev_io, link);
+	}
+
+	spdk_bdev_qos_io_schedule(bdev_ch);
+}
+
+static void
+spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev_channel *bdev_ch = bdev_io->ch;
+
+	assert(bdev_io->status == SPDK_BDEV_IO_STATUS_PENDING);
+
+	if (!(bdev_ch->flags & BDEV_CH_QOS_ENABLED)) {
+		_spdk_bdev_io_submit(bdev_io);
+	} else {
+		spdk_bdev_qos_io_submit(bdev_io, bdev_ch);
+	}
 }
 
 static void
@@ -860,6 +950,12 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	TAILQ_INIT(&ch->nomem_io);
 	ch->nomem_threshold = 0;
 	ch->flags = 0;
+	TAILQ_INIT(&ch->qos_io);
+	ch->qos_max_iops = UINT64_MAX;
+	ch->qos_ticks_hz = spdk_get_ticks_hz();
+	ch->qos_limit_tag = 0;
+	ch->qos_max_idle_credit = 0;
+	ch->qos_poller = NULL;
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -879,6 +975,36 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 #endif
 
 	return 0;
+}
+
+void
+spdk_bdev_qos_io_enable(struct spdk_bdev_desc *desc, uint64_t max_iops,
+			uint64_t max_credit)
+{
+	struct spdk_io_channel *ch = spdk_bdev_get_io_channel(desc);
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
+
+	bdev_ch->qos_max_iops = max_iops;
+	bdev_ch->qos_max_idle_credit = max_credit;
+
+	bdev_ch->qos_poller = spdk_poller_register(spdk_bdev_qos_io_schedule, bdev_ch, 1);
+
+	bdev_ch->flags |= BDEV_CH_QOS_ENABLED;
+}
+
+void
+spdk_bdev_qos_io_disable(struct spdk_bdev_desc *desc)
+{
+	struct spdk_io_channel *ch = spdk_bdev_get_io_channel(desc);
+	struct spdk_bdev_channel *bdev_ch = spdk_io_channel_get_ctx(ch);
+
+	bdev_ch->flags &= ~BDEV_CH_QOS_ENABLED;
+
+	while (!TAILQ_EMPTY(&bdev_ch->qos_io)) {
+		spdk_bdev_qos_io_schedule(bdev_ch);
+	}
+
+	spdk_poller_unregister(&bdev_ch->qos_poller);
 }
 
 /*
@@ -940,6 +1066,8 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
 	spdk_put_io_channel(ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
 	assert(ch->io_outstanding == 0);
+
+	spdk_poller_unregister(&ch->qos_poller);
 }
 
 struct spdk_io_channel *
@@ -1801,6 +1929,10 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 				     _spdk_bdev_io_complete, bdev_io);
 	} else {
 		_spdk_bdev_io_complete(bdev_io);
+	}
+
+	if (bdev_ch->flags & BDEV_CH_QOS_ENABLED) {
+		spdk_bdev_qos_io_schedule(bdev_ch);
 	}
 }
 
