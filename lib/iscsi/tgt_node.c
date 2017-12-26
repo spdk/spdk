@@ -79,7 +79,7 @@ spdk_iscsi_ipv6_netmask_allow_addr(const char *netmask, const char *addr)
 
 	if (p[0] == '/') {
 		bits = (int) strtol(p + 1, NULL, 10);
-		if (bits < 0 || bits > 128) {
+		if (bits <= 0 || bits > 128) {
 			return false;
 		}
 	} else {
@@ -139,7 +139,7 @@ spdk_iscsi_ipv4_netmask_allow_addr(const char *netmask, const char *addr)
 
 	if (p[0] == '/') {
 		bits = (int) strtol(p + 1, NULL, 10);
-		if (bits < 0 || bits > 32) {
+		if (bits <= 0 || bits > 32) {
 			return false;
 		}
 	} else {
@@ -153,7 +153,7 @@ spdk_iscsi_ipv4_netmask_allow_addr(const char *netmask, const char *addr)
 	}
 
 	/* check 32bits */
-	bmask = (0xffffffffULL << (32 - bits)) & 0xffffffffU;
+	bmask = (0xffffffffU << (32 - bits)) & 0xffffffffU;
 	if ((ntohl(in4_mask.s_addr) & bmask) != (ntohl(in4_addr.s_addr) & bmask)) {
 		return false;
 	}

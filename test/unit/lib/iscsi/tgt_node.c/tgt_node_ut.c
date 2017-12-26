@@ -157,6 +157,12 @@ allow_ipv6_allowed(void)
 
 	result = spdk_iscsi_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == true);
+
+	/* Netmask prefix bits == 128 (all bits must match) */
+	netmask = "[2001:ad6:1234:5678:9abc::1]/128";
+	addr = "2001:ad6:1234:5678:9abc::1";
+	result = spdk_iscsi_ipv6_netmask_allow_addr(netmask, addr);
+	CU_ASSERT(result == true);
 }
 
 static void
@@ -173,6 +179,38 @@ allow_ipv6_denied(void)
 	CU_ASSERT(result == false);
 
 	result = spdk_iscsi_netmask_allow_addr(netmask, addr);
+	CU_ASSERT(result == false);
+
+	/* Netmask prefix bits == 128 (all bits must match) */
+	netmask = "[2001:ad6:1234:5678:9abc::1]/128";
+	addr = "2001:ad6:1234:5678:9abc::2";
+	result = spdk_iscsi_ipv6_netmask_allow_addr(netmask, addr);
+	CU_ASSERT(result == false);
+}
+
+static void
+allow_ipv6_invalid(void)
+{
+	bool result;
+	char *netmask;
+	char *addr;
+
+	/* Netmask prefix bits > 128 */
+	netmask = "[2001:ad6:1234::]/129";
+	addr = "2001:ad6:1234:5678:9abc::";
+	result = spdk_iscsi_ipv6_netmask_allow_addr(netmask, addr);
+	CU_ASSERT(result == false);
+
+	/* Netmask prefix bits == 0 */
+	netmask = "[2001:ad6:1234::]/0";
+	addr = "2001:ad6:1234:5678:9abc::";
+	result = spdk_iscsi_ipv6_netmask_allow_addr(netmask, addr);
+	CU_ASSERT(result == false);
+
+	/* Netmask prefix bits < 0 */
+	netmask = "[2001:ad6:1234::]/-1";
+	addr = "2001:ad6:1234:5678:9abc::";
+	result = spdk_iscsi_ipv6_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == false);
 }
 
@@ -191,6 +229,12 @@ allow_ipv4_allowed(void)
 
 	result = spdk_iscsi_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == true);
+
+	/* Netmask prefix == 32 (all bits must match) */
+	netmask = "192.168.2.1/32";
+	addr = "192.168.2.1";
+	result = spdk_iscsi_ipv4_netmask_allow_addr(netmask, addr);
+	CU_ASSERT(result == true);
 }
 
 static void
@@ -207,6 +251,38 @@ allow_ipv4_denied(void)
 	CU_ASSERT(result == false);
 
 	result = spdk_iscsi_netmask_allow_addr(netmask, addr);
+	CU_ASSERT(result == false);
+
+	/* Netmask prefix == 32 (all bits must match) */
+	netmask = "192.168.2.1/32";
+	addr = "192.168.2.2";
+	result = spdk_iscsi_ipv4_netmask_allow_addr(netmask, addr);
+	CU_ASSERT(result == false);
+}
+
+static void
+allow_ipv4_invalid(void)
+{
+	bool result;
+	char *netmask;
+	char *addr;
+
+	/* Netmask prefix bits > 32 */
+	netmask = "192.168.2.0/33";
+	addr = "192.168.2.1";
+	result = spdk_iscsi_ipv4_netmask_allow_addr(netmask, addr);
+	CU_ASSERT(result == false);
+
+	/* Netmask prefix bits == 0 */
+	netmask = "192.168.2.0/0";
+	addr = "192.168.2.1";
+	result = spdk_iscsi_ipv4_netmask_allow_addr(netmask, addr);
+	CU_ASSERT(result == false);
+
+	/* Netmask prefix bits < 0 */
+	netmask = "192.168.2.0/-1";
+	addr = "192.168.2.1";
+	result = spdk_iscsi_ipv4_netmask_allow_addr(netmask, addr);
 	CU_ASSERT(result == false);
 }
 
@@ -683,8 +759,10 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "allow any allowed case", allow_any_allowed) == NULL
 		|| CU_add_test(suite, "allow ipv6 allowed case", allow_ipv6_allowed) == NULL
 		|| CU_add_test(suite, "allow ipv6 denied case", allow_ipv6_denied) == NULL
+		|| CU_add_test(suite, "allow ipv6 invalid case", allow_ipv6_invalid) == NULL
 		|| CU_add_test(suite, "allow ipv4 allowed case", allow_ipv4_allowed) == NULL
 		|| CU_add_test(suite, "allow ipv4 denied case", allow_ipv4_denied) == NULL
+		|| CU_add_test(suite, "allow ipv4 invalid case", allow_ipv4_invalid) == NULL
 		|| CU_add_test(suite, "node access allowed case", node_access_allowed) == NULL
 		|| CU_add_test(suite, "node access denied case (empty netmask)",
 			       node_access_denied_by_empty_netmask) == NULL
