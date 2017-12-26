@@ -1,24 +1,20 @@
-# Block Device Abstraction Layer {#bdev}
+# Block Device Layer {#bdev}
 
-# SPDK bdev Getting Started Guide {#bdev_getting_started}
+# Introduction {#bdev_intro}
 
-Block storage in SPDK applications is provided by the SPDK bdev layer.  SPDK bdev consists of:
+The SPDK block device layer, often simply called *bdev*, is a C library intended to be a full substitute for the operating system block storage layer that often sits immediately above the device drivers in a traditional kernel storage stack. See [this diagram](https://www.thomas-krenn.com/de/wikiDE/images/e/e0/Linux-storage-stack-diagram_v4.10.png) for an overview of the storage stack on Linux, for example. This library provides a suitable replacement for the components labeled "Block Layer" and the stackable devices immediately above it. Specifically, this library provides the following functionality:
 
-* a driver module API for implementing bdev drivers
-* an application API for enumerating and claiming SPDK block devices and performance operations
-(read, write, unmap, etc.) on those devices
-* bdev drivers for NVMe, malloc (ramdisk), Linux AIO and Ceph RBD
-* configuration via SPDK configuration files or JSON RPC
+* A pluggable module API for implementing block devices that interface with different types of block storage devices.
+* Driver modules for NVMe, malloc (ramdisk), Linux AIO, Ceph RBD, Persistent Memory (PMDK), and more.
+* An application API for enumerating and claiming SPDK block devices and then performing operations (read, write, unmap, etc.) on those devices.
+* Facilities to stack block devices to create complex I/O pipelines.
+* Configuration of block devices via JSON RPC and a configuration file.
+* Request queueing, timeout, and reset handling.
+* Multiple, lockless queues for sending I/O to block devices.
 
-# Configuring block devices {#bdev_config}
+# Using the bdev API
 
-SPDK block devices are typically configured via an SPDK configuration file.  These block devices
-can then be associated with higher level abstractions such as iSCSI target nodes, NVMe-oF namespaces
-or vhost-scsi controllers.  This section will describe how to configure block devices for the
-SPDK bdev drivers included with SPDK.
-
-The SPDK configuration file is typically passed to your SPDK-based application via the command line.
-Refer to the help facility of your application for more details.
+The block device layer is a C library with a single public header file at [include/spdk/bdev.h](http://www.spdk.io/doc/bdev_8h.html). Upon initialization, the library will read in a configuration file that defines the block devices it will expose. The configuration file is formatted similar to an INI file and is often passed as a command line argument to the application. Refer to the help facility of your application for more details.
 
 ## NVMe {#bdev_config_nvme}
 
