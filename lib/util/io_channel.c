@@ -223,6 +223,11 @@ spdk_poller_register(spdk_poller_fn fn,
 		abort();
 	}
 
+	if (!thread->start_poller_fn) {
+		SPDK_ERRLOG("Unable to start requested poller\n");
+		abort();
+	}
+
 	poller = thread->start_poller_fn(thread->thread_ctx, fn, arg, period_microseconds);
 	if (!poller) {
 		SPDK_ERRLOG("Unable to start requested poller\n");
@@ -247,7 +252,7 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 
 	thread = spdk_get_thread();
 
-	if (thread) {
+	if (thread && thread->stop_poller_fn) {
 		thread->stop_poller_fn(poller, thread->thread_ctx);
 	}
 }
