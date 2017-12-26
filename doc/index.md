@@ -2,6 +2,7 @@
 
 # Introduction {#intro}
 
+- @ref about
 - @ref getting_started
 - @ref vagrant
 - @ref changelog
