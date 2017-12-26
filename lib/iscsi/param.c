@@ -131,7 +131,6 @@ spdk_iscsi_param_add(struct iscsi_param **params, const char *key,
 		     const char *val, const char *list, int type)
 {
 	struct iscsi_param *param, *last_param;
-	char buf[64];
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "add %s=%s, list=[%s], type=%d\n",
 		      key, val, list, type);
@@ -144,14 +143,13 @@ spdk_iscsi_param_add(struct iscsi_param **params, const char *key,
 		spdk_iscsi_param_del(params, key);
 	}
 
-	param = malloc(sizeof * param);
+	param = malloc(sizeof(*param));
 	if (!param) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for parameter, errno %d: %s\n", errno, buf);
+		SPDK_ERRLOG("malloc() failed for parameter\n");
 		return -ENOMEM;
 	}
 
-	memset(param, 0, sizeof * param);
+	memset(param, 0, sizeof(*param));
 	param->next = NULL;
 	param->key = xstrdup(key);
 	param->val = xstrdup(val);
@@ -225,7 +223,6 @@ spdk_iscsi_parse_param(struct iscsi_param **params, const uint8_t *data)
 	const uint8_t *key_end, *val;
 	int key_len, val_len;
 	int max_len;
-	char buf[64];
 
 	key_end = strchr(data, '=');
 	if (!key_end) {
@@ -248,8 +245,7 @@ spdk_iscsi_parse_param(struct iscsi_param **params, const uint8_t *data)
 
 	key_copy = malloc(key_len + 1);
 	if (!key_copy) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for key_copy, errno %d: %s\n", errno, buf);
+		SPDK_ERRLOG("malloc() failed for key_copy\n");
 		return -ENOMEM;
 	}
 
@@ -524,12 +520,10 @@ spdk_iscsi_special_param_construction(struct spdk_iscsi_conn *conn,
 	uint32_t FirstBurstLength;
 	uint32_t MaxBurstLength;
 	char *val;
-	char buf[64];
 
 	val = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
 	if (!val) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for temporary buffer, errno %d: %s\n", errno, buf);
+		SPDK_ERRLOG("malloc() failed for temporary buffer\n");
 		return -ENOMEM;
 	}
 
@@ -891,7 +885,6 @@ spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 	uint32_t MaxBurstLength;
 	bool FirstBurstLength_flag = false;
 	int type;
-	char buf[64];
 
 	total = data_len;
 	if (alloc_len < 1) {
@@ -929,23 +922,20 @@ spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 	/* for temporary store */
 	valid_list = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
 	if (!valid_list) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for valid_list, errno %d: %s\n", errno, buf);
+		SPDK_ERRLOG("malloc() failed for valid_list\n");
 		return -ENOMEM;
 	}
 
 	in_val = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
 	if (!in_val) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for in_val, errno %d: %s\n", errno, buf);
+		SPDK_ERRLOG("malloc() failed for in_val\n");
 		free(valid_list);
 		return -ENOMEM;
 	}
 
 	cur_val = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
 	if (!cur_val) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for cur_val, errno %d: %s\n", errno, buf);
+		SPDK_ERRLOG("malloc() failed for cur_val\n");
 		free(valid_list);
 		free(in_val);
 		return -ENOMEM;
