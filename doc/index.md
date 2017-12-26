@@ -1,24 +1,28 @@
 # Storage Performance Development Kit {#index}
 
 # Introduction {#intro}
+
 - @ref getting_started
 - @ref vagrant
 - @ref changelog
 - [Source Code (GitHub)](https://github.com/spdk/spdk/)
+
+# Concepts {#concepts}
+
+- @ref memory
+- @ref porting
 
 # User Guides {#user_guides}
 
 - @ref iscsi_getting_started
 - @ref nvmf_getting_started
 - @ref blobfs_getting_started
+- @ref jsonrpc
 
-# General Information {#general}
+# Programmer Guides {#general}
 
- - @ref directory_structure
- - @ref memory
- - @ref porting
- - [Public API header files](files.html)
- - @ref jsonrpc
+- @ref directory_structure
+- [Public API header files](files.html)
 
 # Modules {#modules}
 
