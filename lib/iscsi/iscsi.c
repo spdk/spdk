@@ -774,7 +774,6 @@ spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 	char *authfile = NULL;
 	int ag_tag;
 	int rc;
-	char buf[64];
 
 	if (conn->sess->target != NULL) {
 		ag_tag = conn->sess->target->auth_group;
@@ -792,9 +791,7 @@ spdk_iscsi_get_authinfo(struct spdk_iscsi_conn *conn, const char *authuser)
 	authfile = strdup(g_spdk_iscsi.authfile);
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 	if (!authfile) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("strdup() failed from %s to authfile, errno %d: %s\n",
-			    g_spdk_iscsi.authfile, errno, buf);
+		SPDK_ERRLOG("strdup() failed for authfile\n");
 		return -ENOMEM;
 	}
 
@@ -822,7 +819,6 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 	const char *challenge;
 	int total;
 	int rc;
-	char buf[64];
 
 	if (conn == NULL || params == NULL || method == NULL) {
 		return -1;
@@ -847,9 +843,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 	/* for temporary store */
 	in_val = malloc(ISCSI_TEXT_MAX_VAL_LEN + 1);
 	if (!in_val) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for temporary store, errno %d: %s\n",
-			    errno, buf);
+		SPDK_ERRLOG("malloc() failed for temporary store\n");
 		return -ENOMEM;
 	}
 
@@ -1049,7 +1043,6 @@ spdk_iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 	int total_ahs_len;
 	int data_len;
 	int alloc_len;
-	char buf[64];
 
 	total_ahs_len = pdu->bhs.total_ahs_len;
 	data_len = 0;
@@ -1061,9 +1054,7 @@ spdk_iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 
 	data = malloc(alloc_len);
 	if (!data) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for data segment, errno %d: %s\n",
-			    errno, buf);
+		SPDK_ERRLOG("malloc() failed for data segment\n");
 		return -ENOMEM;
 	}
 
@@ -1839,7 +1830,6 @@ spdk_iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 	struct iscsi_bhs_login_req *reqh;
 	struct iscsi_bhs_login_rsp *rsph;
 	int rc;
-	char buf[64];
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	rsph->opcode = ISCSI_OP_LOGIN_RSP;
@@ -1856,9 +1846,7 @@ spdk_iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 
 	rsp_pdu->data = malloc(*alloc_len);
 	if (!rsp_pdu->data) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for data segment, errno %d: %s\n",
-			    errno, buf);
+		SPDK_ERRLOG("malloc() failed for data segment\n");
 		return -ENOMEM;
 	}
 
@@ -2277,7 +2265,6 @@ spdk_iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	int rc;
 	struct iscsi_bhs_text_req *reqh;
 	struct iscsi_bhs_text_resp *rsph;
-	char buf[64];
 
 	data_len = 0;
 	alloc_len = conn->MaxRecvDataSegmentLength;
@@ -2341,8 +2328,7 @@ spdk_iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	data = malloc(alloc_len);
 	if (!data) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for data segment, errno %d: %s\n", errno, buf);
+		SPDK_ERRLOG("malloc() failed for data segment\n");
 		spdk_iscsi_param_free(params);
 		return -ENOMEM;
 	}
@@ -3450,7 +3436,6 @@ spdk_iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint32_t CmdSN;
 	int I_bit;
 	int data_len;
-	char buf[64];
 
 	if (conn->sess->session_type == SESSION_TYPE_DISCOVERY) {
 		SPDK_ERRLOG("ISCSI_OP_NOPOUT not allowed in discovery session\n");
@@ -3508,9 +3493,7 @@ spdk_iscsi_op_nopout(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	data = malloc(data_len);
 	if (!data) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for ping data, errno %d: %s\n",
-			    errno, buf);
+		SPDK_ERRLOG("malloc() failed for ping data\n");
 		return SPDK_ISCSI_CONNECTION_FATAL;
 	}
 	memset(data, 0, data_len);
@@ -4550,7 +4533,6 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 {
 	struct spdk_iscsi_sess *sess;
 	int rc;
-	char buf[64];
 
 	sess = spdk_mempool_get(g_spdk_iscsi.session_pool);
 	if (!sess) {
@@ -4589,9 +4571,7 @@ spdk_create_iscsi_sess(struct spdk_iscsi_conn *conn,
 
 	sess->conns = malloc(sizeof(*sess->conns) * sess->MaxConnections);
 	if (!sess->conns) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("malloc() failed for connection array, errno %d: %s\n",
-			    errno, buf);
+		SPDK_ERRLOG("malloc() failed for connection array\n");
 		return -ENOMEM;
 	}
 

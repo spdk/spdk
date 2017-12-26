@@ -751,7 +751,6 @@ spdk_iscsi_app_read_parameters(void)
 {
 	struct spdk_conf_section *sp;
 	int rc;
-	char buf[64];
 
 	g_spdk_iscsi.MaxSessions = DEFAULT_MAX_SESSIONS;
 	g_spdk_iscsi.MaxConnectionsPerSession = DEFAULT_MAX_CONNECTIONS_PER_SESSION;
@@ -788,9 +787,7 @@ spdk_iscsi_app_read_parameters(void)
 
 	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
 	if (!g_spdk_iscsi.session) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("spdk_dma_zmalloc() failed for session array, errno %d: %s\n",
-			    errno, buf);
+		SPDK_ERRLOG("spdk_dma_zmalloc() failed for session array\n");
 		return -1;
 	}
 
