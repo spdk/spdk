@@ -54,6 +54,9 @@ struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
 	enum spdk_nvme_transport_type		trtype;
 	struct spdk_nvme_intel_rw_latency_page	*latency_page;
+
+	struct spdk_nvme_qpair			**unused_qpairs;
+
 	struct ctrlr_entry			*next;
 	char					name[1024];
 };
@@ -200,6 +203,7 @@ static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
 static int g_nr_io_queues_per_ns = 1;
+static int g_nr_unused_io_queues = 0;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
@@ -807,6 +811,26 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 		register_ns(ctrlr, ns);
 	}
 
+	if (g_nr_unused_io_queues) {
+		int i;
+
+		printf("Creating %u unused qpairs for controller %s\n", g_nr_unused_io_queues, entry->name);
+
+		entry->unused_qpairs = calloc(g_nr_unused_io_queues, sizeof(struct spdk_nvme_qpair *));
+		if (!entry->unused_qpairs) {
+			fprintf(stderr, "Unable to allocate memory for qpair array\n");
+			exit(1);
+		}
+
+		for (i = 0; i < g_nr_unused_io_queues; i++) {
+			entry->unused_qpairs[i] = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+			if (!entry->unused_qpairs[i]) {
+				fprintf(stderr, "Unable to allocate unused qpair. Did you request too many?\n");
+				exit(1);
+			}
+		}
+	}
+
 }
 
 static __thread unsigned int seed = 0;
@@ -1029,6 +1053,7 @@ static void usage(char *program_name)
 	printf("\t[-q io depth]\n");
 	printf("\t[-o io size in bytes]\n");
 	printf("\t[-n number of io queues per namespace. default: 1]\n");
+	printf("\t[-U number of unused io queues per controller. default: 0]\n");
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
@@ -1462,7 +1487,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DHILM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DHILM:U:")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'm':
@@ -1506,6 +1531,9 @@ parse_args(int argc, char **argv)
 			case 'M':
 				g_rw_percentage = val;
 				mix_specified = true;
+				break;
+			case 'U':
+				g_nr_unused_io_queues = val;
 				break;
 			}
 			break;
@@ -1784,6 +1812,17 @@ unregister_controllers(void)
 		    spdk_nvme_ctrlr_is_feature_supported(entry->ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)) {
 			set_latency_tracking_feature(entry->ctrlr, false);
 		}
+
+		if (g_nr_unused_io_queues) {
+			int i;
+
+			for (i = 0; i < g_nr_unused_io_queues; i++) {
+				spdk_nvme_ctrlr_free_io_qpair(entry->unused_qpairs[i]);
+			}
+
+			free(entry->unused_qpairs);
+		}
+
 		spdk_nvme_detach(entry->ctrlr);
 		free(entry);
 		entry = next;
