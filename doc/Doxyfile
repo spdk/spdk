@@ -782,6 +782,7 @@ WARN_LOGFILE           =
 
 INPUT                  = ../include/spdk \
                          index.md \
+                         about.md \
                          changelog.md \
                          directory_structure.md \
                          getting_started.md \
