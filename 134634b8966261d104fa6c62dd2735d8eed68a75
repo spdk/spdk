@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7fe831f9_874a7fb9",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-26T18:06:06Z",
+      "side": 1,
+      "message": "This statement isn\u0027t true anymore. SPDK spreads the execution of requests for a single subsystem across all available cores round-robin now.",
+      "revId": "134634b8966261d104fa6c62dd2735d8eed68a75",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
