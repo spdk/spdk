@@ -1010,13 +1010,15 @@ spdk_vhost_shutdown_cb(void)
 {
 	pthread_t tid;
 	char buf[64];
+	int rc;
 	struct spdk_event *vhost_app_stop;
 
 	vhost_app_stop = spdk_event_allocate(spdk_env_get_current_core(), session_app_stop, NULL, NULL);
 
-	if (pthread_create(&tid, NULL, &session_shutdown, vhost_app_stop) < 0) {
-		spdk_strerror_r(errno, buf, sizeof(buf));
-		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s\n", errno, buf);
+	rc = pthread_create(&tid, NULL, &session_shutdown, vhost_app_stop);
+	if (rc < 0) {
+		spdk_strerror_r(rc, buf, sizeof(buf));
+		SPDK_ERRLOG("Failed to start session shutdown thread (%d): %s\n", rc, buf);
 		abort();
 	}
 	pthread_detach(tid);
