@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4caabca_0a80fa84",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 824,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-27T02:08:37Z",
+      "side": 1,
+      "message": "I think this should be done before or outer side of checking the emptiness of bdev_ch-\u003enomem_io because nomem is determined in the lower layer than bdev.\n\nWe should keep correct layering for QoS too.",
+      "range": {
+        "startLine": 821,
+        "startChar": 0,
+        "endLine": 824,
+        "endChar": 55
+      },
+      "revId": "2f1a1fbceaeaa9c876aa584a1108c0d9a8cc8b1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d4f7ed3_04a98d66",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 833,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-27T02:08:37Z",
+      "side": 1,
+      "message": "Enqueued IO will not be dequeued until the poller runs. This is too late.\nThe procedure in the poller should run in the bdev_io_complete too.\n\nImproved but overall flow is still not visible clearly because correct layering and looping are not created.",
+      "range": {
+        "startLine": 830,
+        "startChar": 0,
+        "endLine": 833,
+        "endChar": 56
+      },
+      "revId": "2f1a1fbceaeaa9c876aa584a1108c0d9a8cc8b1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
