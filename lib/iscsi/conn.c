@@ -522,8 +522,7 @@ error_return:
 
 	/*
 	 * Since we are potentially moving control of this socket to a different
-	 *  core, suspend the connection here.  This ensures any necessary libuns
-	 *  housekeeping for TCP socket to lcore associations gets cleared.
+	 *  core, suspend the connection here.
 	 */
 	conn->lcore = spdk_env_get_current_core();
 	spdk_net_framework_clear_socket_association(conn->sock);
