@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13642da3_4e37e55d",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-27T18:37:48Z",
+      "side": 1,
+      "message": "Based on my reading of the spec, this can actually still be 255.\n\nThe spec says \"The number of bytes in the SCSI NAME STRING field [...] shall be no larger than 256\", and it must be null-terminated, so the final byte must be a 0, but the other 255 bytes may be used to contain the name string data.  The total number of bytes must be a multiple of 4, while the number of null terminator bytes just needs to be at least 1.\n\nCan you further explain why this should be 252 instead? Maybe I am missing some detail.",
+      "revId": "2e462f39b8de705b23d8ded6720c420f392cb190",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0faad8de_23fc9464",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-27T18:37:48Z",
+      "side": 1,
+      "message": "snprintf() is probably not necessary here; it might be simpler to assume that the caller provides SPDK_SCSI_DEV_MAX_NAME + 1 bytes of space, and just do something like:\n\n    size_t len \u003d strnlen(name, SPDK_SCSI_DEV_MAX_NAME);\n    memcpy(dst, name, len);\n    do {\n        dst[len++] \u003d \u0027\\0\u0027;\n    } while (len \u0026 3);\n    return len;",
+      "revId": "2e462f39b8de705b23d8ded6720c420f392cb190",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a24e54b_d85e00b3",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-27T18:37:48Z",
+      "side": 1,
+      "message": "I think this SPDK_SCSI_DEV_MAX_NAME instance also needs to take into account the possibility of padding.  The simplest thing to do would be + 1 here to account for the 255 bytes of name plus one byte of terminator that is the largest allowed.",
+      "range": {
+        "startLine": 300,
+        "startChar": 48,
+        "endLine": 300,
+        "endChar": 70
+      },
+      "revId": "2e462f39b8de705b23d8ded6720c420f392cb190",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
