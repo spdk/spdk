@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea7bce84_68b45cf4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 2005,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T20:13:02Z",
+      "side": 1,
+      "message": "still broken :)\nJust do\nWhile (!TAILQ_EMPTY(\u0026bdev-\u003ealiases)) {\n   del_alias(TAILQ_FIRST(\u0026bdev-\u003ealiases)-\u003ealias)\n}\n\nAnd pls move this to closer to other alias functions.",
+      "range": {
+        "startLine": 2002,
+        "startChar": 0,
+        "endLine": 2005,
+        "endChar": 2
+      },
+      "revId": "956549556c43af8e5f7a73bc1c654d017d96d074",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
