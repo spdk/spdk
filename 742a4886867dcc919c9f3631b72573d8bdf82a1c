@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "76be991f_8488634f",
+        "filename": "lib/util/strerror_tls.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2017-12-27T06:13:46Z",
+      "side": 1,
+      "message": "could we include sprintf(\"%d\", errnum) here?",
+      "range": {
+        "startLine": 45,
+        "startChar": 8,
+        "endLine": 45,
+        "endChar": 23
+      },
+      "revId": "742a4886867dcc919c9f3631b72573d8bdf82a1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
