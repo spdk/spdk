@@ -81,3 +81,23 @@ def construct_virtio_pci_scsi_bdev(args):
 def remove_virtio_scsi_bdev(args):
     params = {'name': args.name}
     args.client.call('remove_virtio_scsi_bdev', params)
+
+
+def construct_virtio_user_blk_bdev(args):
+    params = {
+        'path': args.path,
+        'name': args.name,
+    }
+    if args.vq_count:
+        params['vq_count'] = args.vq_count
+    if args.vq_size:
+        params['vq_size'] = args.vq_size
+    print_dict(args.client.call('construct_virtio_user_blk_bdev', params))
+
+
+def construct_virtio_pci_blk_bdev(args):
+    params = {
+        'pci_address': args.pci_address,
+        'name': args.name,
+    }
+    print_dict(args.client.call('construct_virtio_pci_blk_bdev', params))
