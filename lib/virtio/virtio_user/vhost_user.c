@@ -366,6 +366,7 @@ vhost_user_sock(struct virtio_user_dev *dev,
 		break;
 
 	case VHOST_USER_GET_CONFIG:
+		memcpy(&msg.payload.cfg, arg, sizeof(msg.payload.cfg));
 		msg.size = sizeof(msg.payload.cfg);
 		need_reply = 1;
 		break;
