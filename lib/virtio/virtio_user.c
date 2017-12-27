@@ -134,7 +134,22 @@ static int
 virtio_user_start_device(struct virtio_dev *vdev)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
+	uint64_t host_max_queues;
 	int ret;
+
+	/* negotiate the number of I/O queues. */
+	ret = dev->ops->send_request(dev, VHOST_USER_GET_QUEUE_NUM, &host_max_queues);
+	if (ret < 0) {
+		return -1;
+	}
+
+	if (vdev->max_queues > host_max_queues + vdev->fixed_queues_num) {
+		SPDK_WARNLOG("%s: requested %"PRIu16" request queues"
+			     "but only %"PRIu64" available\n",
+			     vdev->name, vdev->max_queues - vdev->fixed_queues_num,
+			     host_max_queues);
+		vdev->max_queues = host_max_queues;
+	}
 
 	/* tell vhost to create queues */
 	if (virtio_user_queue_setup(vdev, virtio_user_create_queue) < 0) {
@@ -387,18 +402,14 @@ static const struct virtio_dev_ops virtio_user_ops = {
 
 int
 virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path,
-		     uint16_t requested_queues, uint32_t queue_size, uint16_t fixed_queue_num)
+		     uint32_t queue_size)
 {
 	struct virtio_user_dev *dev;
-	uint64_t max_queues;
 	char err_str[64];
 	int rc;
 
 	if (name == NULL) {
 		SPDK_ERRLOG("No name gived for controller: %s\n", path);
-		return -1;
-	} else if (requested_queues == 0) {
-		SPDK_ERRLOG("Can't create controller with no queues: %s\n", path);
 		return -1;
 	}
 
@@ -428,20 +439,6 @@ virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path
 		SPDK_ERRLOG("backend set up fails\n");
 		goto err;
 	}
-
-	if (dev->ops->send_request(dev, VHOST_USER_GET_QUEUE_NUM, &max_queues) < 0) {
-		spdk_strerror_r(errno, err_str, sizeof(err_str));
-		SPDK_ERRLOG("get_queue_num fails: %s\n", err_str);
-		goto err;
-	}
-
-	if (requested_queues > max_queues) {
-		SPDK_ERRLOG("requested %"PRIu16" request queues but only %"PRIu64" available\n",
-			    requested_queues, max_queues);
-		goto err;
-	}
-
-	vdev->max_queues = fixed_queue_num + requested_queues;
 
 	if (dev->ops->send_request(dev, VHOST_USER_SET_OWNER, NULL) < 0) {
 		spdk_strerror_r(errno, err_str, sizeof(err_str));

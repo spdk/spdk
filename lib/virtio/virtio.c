@@ -261,16 +261,19 @@ virtio_free_queues(struct virtio_dev *dev)
 }
 
 static int
-virtio_alloc_queues(struct virtio_dev *dev)
+virtio_alloc_queues(struct virtio_dev *dev, uint16_t request_vq_num, uint16_t fixed_vq_num)
 {
-	uint16_t nr_vq = dev->max_queues;
+	uint16_t nr_vq;
 	uint16_t i;
 	int ret;
 
-	if (dev->vqs != NULL) {
+	nr_vq = request_vq_num + fixed_vq_num;
+	if (nr_vq == 0) {
+		/* perfectly fine to have a device with no virtqueues. */
 		return 0;
 	}
 
+	assert(dev->vqs == NULL);
 	dev->vqs = rte_zmalloc(NULL, sizeof(struct virtqueue *) * nr_vq, 0);
 	if (!dev->vqs) {
 		SPDK_ERRLOG("failed to allocate %"PRIu16" vqs\n", nr_vq);
@@ -285,6 +288,8 @@ virtio_alloc_queues(struct virtio_dev *dev)
 		}
 	}
 
+	dev->max_queues = nr_vq;
+	dev->fixed_queues_num = fixed_vq_num;
 	return 0;
 }
 
@@ -330,10 +335,8 @@ virtio_dev_construct(struct virtio_dev *vdev, const struct virtio_dev_ops *ops, 
 }
 
 int
-virtio_dev_restart(struct virtio_dev *dev, uint64_t req_features)
+virtio_dev_reset(struct virtio_dev *dev, uint64_t req_features)
 {
-	int ret;
-
 	req_features |= (1ULL << VIRTIO_F_VERSION_1);
 
 	/* Reset the device although not necessary at startup */
@@ -344,23 +347,27 @@ virtio_dev_restart(struct virtio_dev *dev, uint64_t req_features)
 
 	/* Tell the host we've known how to drive the device. */
 	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_DRIVER);
-	if (virtio_negotiate_features(dev, req_features) < 0) {
-		return -1;
-	}
 
-	ret = virtio_alloc_queues(dev);
+	return virtio_negotiate_features(dev, req_features);
+}
+
+int
+virtio_dev_start(struct virtio_dev *vdev, uint16_t max_queues, uint16_t fixed_queue_num)
+{
+	int ret;
+
+	ret = virtio_alloc_queues(vdev, max_queues, fixed_queue_num);
 	if (ret < 0) {
 		return ret;
 	}
 
-	virtio_dev_set_status(dev, VIRTIO_CONFIG_S_DRIVER_OK);
+	virtio_dev_set_status(vdev, VIRTIO_CONFIG_S_DRIVER_OK);
 	return 0;
 }
 
 void
 virtio_dev_destruct(struct virtio_dev *dev)
 {
-	virtio_free_queues(dev);
 	virtio_dev_backend_ops(dev)->destruct_dev(dev);
 	pthread_mutex_destroy(&dev->mutex);
 }
@@ -687,6 +694,7 @@ virtio_dev_stop(struct virtio_dev *dev)
 	virtio_dev_backend_ops(dev)->set_status(dev, VIRTIO_CONFIG_S_RESET);
 	/* flush status write */
 	virtio_dev_backend_ops(dev)->get_status(dev);
+	virtio_free_queues(dev);
 }
 
 void
