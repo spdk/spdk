@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8fbc2093_d6dde80e",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-27T12:46:39Z",
+      "side": 1,
+      "message": "It looks that \"suspends the connection here\" explains this function.\nThe comment deleted by you explains that libuns needed this function.\n\nHence we should remove not only the comment but also this function.",
+      "range": {
+        "startLine": 528,
+        "startChar": 1,
+        "endLine": 528,
+        "endChar": 57
+      },
+      "revId": "45a0cf80ce7fe1c3de0567aac501726f7952e55a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
