@@ -34,6 +34,24 @@
       "revId": "44a86e1de13f706fa9c6231bd041b6c3c15e7914",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc5e6db1_91e5a859",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-27T08:49:30Z",
+      "side": 1,
+      "message": "I would have to agree that vbdev_get_lvol_by_name() is no longer needed. Reason for that is lovl names are not unique among lvol stores (lvol name can be the same, but combination of lvol store name and lvol name cannnot).\n\nSorry for that, I\u0027ll edit the card.",
+      "parentUuid": "103370dc_3fd9a444",
+      "revId": "44a86e1de13f706fa9c6231bd041b6c3c15e7914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
