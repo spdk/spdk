@@ -95,10 +95,8 @@ char *spdk_str_trim(char *s);
  * \param errnum Error code
  * \param buf Pointer to a buffer in which to place the error message
  * \param buflen the size of the buffer in bytes
- *
- * \return 0 upon success, a positive error number or -1 upon failure.
  */
-int spdk_strerror_r(int errnum, char *buf, size_t buflen);
+void spdk_strerror_r(int errnum, char *buf, size_t buflen);
 
 /**
  * Remove trailing newlines from the end of a string in place.
