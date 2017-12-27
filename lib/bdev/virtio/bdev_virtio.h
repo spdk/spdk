@@ -59,9 +59,8 @@ typedef void (*bdev_virtio_create_cb)(void *ctx, int errnum,
  * \param name name for the virtio device. It will be inherited by all created
  * bdevs, which are named in the following format: <name>t<target_id>
  * \param path path to the socket
- * \param num_queues max number of request virtqueues (I/O queues) to use.
- * If given value exceeds a hard limit of the physical (host) device, this
- * function will return with error.
+ * \param num_queues max number of request virtqueues to use. `vdev` will be
+ * started successfully even if the host device supports less queues than requested.
  * \param queue_size depth of each queue
  * \param cb_fn function to be called after scanning all targets on the virtio
  * device. It's optional, can be NULL. See \c bdev_virtio_create_cb.
@@ -72,5 +71,21 @@ typedef void (*bdev_virtio_create_cb)(void *ctx, int errnum,
 int bdev_virtio_scsi_dev_create(const char *name, const char *path,
 				unsigned num_queues, unsigned queue_size,
 				bdev_virtio_create_cb cb_fn, void *cb_arg);
+
+/**
+ * Connect to a vhost-user Unix domain socket and create a Virtio BLK bdev.
+ *
+ * \param name name for the virtio bdev
+ * \param path path to the socket
+ * \param num_blocks number of logical blocks
+ * \param block_size logical block size in bytes
+ * \param num_queues max number of request virtqueues to use. `vdev` will be
+ * started successfully even if the host device supports less queues than requested.
+ * \param queue_size depth of each queue
+ * \return virtio-blk bdev or NULL
+ */
+struct spdk_bdev *bdev_virtio_blk_dev_create(const char *name, const char *path,
+		uint64_t num_blocks, uint32_t block_size,
+		unsigned num_queues, unsigned queue_size);
 
 #endif /* SPDK_BDEV_VIRTIO_H */
