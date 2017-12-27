@@ -30,15 +30,15 @@ run_test test/nvmf/lvol/nvmf_lvol.sh
 run_test test/nvmf/shutdown/shutdown.sh
 
 if [ $SPDK_TEST_NVML -eq 1 ]; then
-	run_test test/nvmf/pmem/nvmf_pmem.sh 10
+	if [ $RUN_NIGHTLY -eq 1 ]; then
+		run_test test/nvmf/pmem/nvmf_pmem.sh 30
+	else
+		run_test test/nvmf/pmem/nvmf_pmem.sh 10
+	fi
 fi
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test test/nvmf/multiconnection/multiconnection.sh
-fi
-
-if [ $RUN_NIGHTLY -eq 1 ] && [ $SPDK_TEST_NVML -eq 1 ]; then
-	run_test test/nvmf/pmem/nvmf_pmem.sh 600
 fi
 
 timing_enter host
