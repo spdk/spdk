@@ -481,6 +481,19 @@ if __name__ == "__main__":
     p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
     p.set_defaults(func=rpc.vhost.remove_virtio_scsi_bdev)
 
+    p = subparsers.add_parser('construct_virtio_user_blk_bdev', help='Connect to a virtio user blk device.')
+    p.add_argument('path', help='Path to Virtio BLK socket')
+    p.add_argument('name', help='Name for the bdev')
+    p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=int)
+    p.add_argument('--vq-size', help='Size of each queue', type=int)
+    p.set_defaults(func=rpc.vhost.construct_virtio_user_blk_bdev)
+
+    p = subparsers.add_parser('construct_virtio_pci_scsi_bdev', help='Create a Virtio Blk device from a virtio-pci device.')
+    p.add_argument('pci_address', help="""PCI address in domain:bus:device.function format or
+    domain.bus.device.function format""")
+    p.add_argument('name', help='Name for the bdev')
+    p.set_defaults(func=rpc.vhost.construct_virtio_pci_blk_bdev)
+
     args = parser.parse_args()
 
     args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.verbose)
