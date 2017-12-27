@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a66f4aa_8a543c65",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:57:37Z",
+      "side": 1,
+      "message": "\"I\"",
+      "range": {
+        "startLine": 117,
+        "startChar": 10,
+        "endLine": 117,
+        "endChar": 11
+      },
+      "revId": "e53884e542b0a2b76b59b4e2e0a76fd9bd23c3dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c686a01_7470b95b",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:57:37Z",
+      "side": 1,
+      "message": "Artifact",
+      "range": {
+        "startLine": 255,
+        "startChar": 1,
+        "endLine": 255,
+        "endChar": 20
+      },
+      "revId": "e53884e542b0a2b76b59b4e2e0a76fd9bd23c3dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e689a47_b2d841f8",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:57:37Z",
+      "side": 1,
+      "message": "strlen() + 1",
+      "range": {
+        "startLine": 630,
+        "startChar": 45,
+        "endLine": 630,
+        "endChar": 61
+      },
+      "revId": "e53884e542b0a2b76b59b4e2e0a76fd9bd23c3dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
