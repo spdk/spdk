@@ -37,6 +37,7 @@
 
 static struct rte_pci_id virtio_pci_driver_id[] = {
 	{ RTE_PCI_DEVICE(SPDK_PCI_VID_VIRTIO, PCI_DEVICE_ID_VIRTIO_SCSI_MODERN) },
+	{ RTE_PCI_DEVICE(SPDK_PCI_VID_VIRTIO, PCI_DEVICE_ID_VIRTIO_BLK_MODERN) },
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
