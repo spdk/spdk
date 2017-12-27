@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aaad335_329d10fe",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 2004,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:53:57Z",
+      "side": 1,
+      "message": "If you move this function after spdk_bdev_alias_del() you will see why this is broken.",
+      "range": {
+        "startLine": 2002,
+        "startChar": 0,
+        "endLine": 2004,
+        "endChar": 2
+      },
+      "revId": "f7ea92a035659b889e9cab4395240179d858dd45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5c23eb4_3d5dd38b",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 942,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:53:57Z",
+      "side": 1,
+      "message": "Why changed to INFOLOG?",
+      "range": {
+        "startLine": 942,
+        "startChar": 2,
+        "endLine": 942,
+        "endChar": 14
+      },
+      "revId": "f7ea92a035659b889e9cab4395240179d858dd45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0723752_10feb436",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1075,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:53:57Z",
+      "side": 1,
+      "message": "strlen() + 1",
+      "range": {
+        "startLine": 1075,
+        "startChar": 45,
+        "endLine": 1075,
+        "endChar": 61
+      },
+      "revId": "f7ea92a035659b889e9cab4395240179d858dd45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
