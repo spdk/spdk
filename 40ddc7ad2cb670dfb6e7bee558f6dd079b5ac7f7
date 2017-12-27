@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ac84132_4be50474",
+        "filename": "include/spdk_internal/bdev.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2017-12-27T20:25:00Z",
+      "side": 1,
+      "message": "Can \u0027name\u0027 just be an alias? Does a bdev have to have a name all the time, or can it be assigned a name as an alias only when the user wants to refer to it by that name?",
+      "revId": "40ddc7ad2cb670dfb6e7bee558f6dd079b5ac7f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
