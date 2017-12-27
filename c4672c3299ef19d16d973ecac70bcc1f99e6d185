@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "aec51fe9_da69c665",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f9d1f497_9bcbd975",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0887e2f2_12039679",
         "filename": "include/spdk/cpuset.h",
         "patchSetId": 8
@@ -30,6 +48,30 @@
       "writtenOn": "2017-12-19T20:17:19Z",
       "side": 1,
       "message": "Please use SPDK_CPUSET_H for consistency with other headers (no underscore).",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 22
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b859a985_25bf354f",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0887e2f2_12039679",
       "range": {
         "startLine": 34,
         "startChar": 8,
@@ -105,6 +147,24 @@
     },
     {
       "key": {
+        "uuid": "470e82d1_2a70bbf2",
+        "filename": "include/spdk/cpuset.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f69e1f35_fc7395fb",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0537bddf_b0d72206",
         "filename": "include/spdk/cpuset.h",
         "patchSetId": 8
@@ -162,6 +222,24 @@
     },
     {
       "key": {
+        "uuid": "ac37ed4e_6780f756",
+        "filename": "lib/event/app.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28111408_675099b2",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46fa5ebf_f04512bc",
         "filename": "lib/event/reactor.c",
         "patchSetId": 8
@@ -173,6 +251,30 @@
       "writtenOn": "2017-12-19T20:22:25Z",
       "side": 1,
       "message": "need be checked against null and return -1 if so.",
+      "range": {
+        "startLine": 577,
+        "startChar": 38,
+        "endLine": 577,
+        "endChar": 45
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9519c905_e7b6808a",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46fa5ebf_f04512bc",
       "range": {
         "startLine": 577,
         "startChar": 38,
@@ -225,6 +327,30 @@
     },
     {
       "key": {
+        "uuid": "9d0c20ab_db837d5e",
+        "filename": "lib/iscsi/portal_grp.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a560b11c_acd4673f",
+      "range": {
+        "startLine": 62,
+        "startChar": 2,
+        "endLine": 62,
+        "endChar": 24
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3a98afe3_d995b8e3",
         "filename": "lib/util/Makefile",
         "patchSetId": 8
@@ -248,6 +374,30 @@
     },
     {
       "key": {
+        "uuid": "9e3c5ff3_18ee0c07",
+        "filename": "lib/util/Makefile",
+        "patchSetId": 8
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3a98afe3_d995b8e3",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 18
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "003e2d14_e5c27ca0",
         "filename": "lib/util/cpuset.c",
         "patchSetId": 8
@@ -259,6 +409,30 @@
       "writtenOn": "2017-12-19T20:22:25Z",
       "side": 1,
       "message": "can you make this static or move to global space.\n\nAlso, in my mind, deffining this like\n\nconst char hex[] \u003d \"0123456789abcdef\"\n\ncould save you some characters ;)",
+      "range": {
+        "startLine": 44,
+        "startChar": 1,
+        "endLine": 46,
+        "endChar": 10
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7f2bda4e_22debbda",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "003e2d14_e5c27ca0",
       "range": {
         "startLine": 44,
         "startChar": 1,
@@ -449,6 +623,30 @@
     },
     {
       "key": {
+        "uuid": "fa69bf63_957245d6",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a4b75f8d_4c83a01e",
+      "range": {
+        "startLine": 202,
+        "startChar": 1,
+        "endLine": 202,
+        "endChar": 4
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52ff9126_991d78cb",
         "filename": "lib/util/cpuset.c",
         "patchSetId": 8
@@ -460,6 +658,30 @@
       "writtenOn": "2017-12-19T20:22:25Z",
       "side": 1,
       "message": "pls drop redundant bracets",
+      "range": {
+        "startLine": 213,
+        "startChar": 8,
+        "endLine": 213,
+        "endChar": 17
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84540a66_1660ea98",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "52ff9126_991d78cb",
       "range": {
         "startLine": 213,
         "startChar": 8,
@@ -506,6 +728,30 @@
       "writtenOn": "2017-12-19T20:22:25Z",
       "side": 1,
       "message": "can you reuse buf and cpumask? buf can be expanded and cpumask is not needed anymore in case of spdk_vhost_parse_core_mask() failure.",
+      "range": {
+        "startLine": 523,
+        "startChar": 2,
+        "endLine": 523,
+        "endChar": 40
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8eb7304_d41e470a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28178436_9b4db2d9",
       "range": {
         "startLine": 523,
         "startChar": 2,
@@ -587,6 +833,30 @@
     },
     {
       "key": {
+        "uuid": "c58c9c7b_41ebfa86",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 473,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "886bde6a_dfd482b2",
+      "range": {
+        "startLine": 473,
+        "startChar": 10,
+        "endLine": 473,
+        "endChar": 14
+      },
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f1cb9c32_9720ee71",
         "filename": "test/unit/lib/util/cpuset.c/Makefile",
         "patchSetId": 8
@@ -598,6 +868,24 @@
       "writtenOn": "2017-12-19T20:17:19Z",
       "side": 1,
       "message": "This should either be uncommented or removed.",
+      "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bd536a5_22d7ba5c",
+        "filename": "test/unit/lib/util/cpuset.c/Makefile",
+        "patchSetId": 8
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2017-12-27T17:06:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f1cb9c32_9720ee71",
       "revId": "c4672c3299ef19d16d973ecac70bcc1f99e6d185",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
