@@ -1420,7 +1420,7 @@ bdev_virtio_process_config(void)
 	struct spdk_conf_section *sp;
 	struct virtio_scsi_dev *svdev;
 	char *default_name = NULL;
-	char *path, *name;
+	char *path, *type, *name;
 	unsigned vdev_num;
 	int num_queues;
 	bool enable_pci;
@@ -1443,6 +1443,11 @@ bdev_virtio_process_config(void)
 			SPDK_ERRLOG("VirtioUser%u: missing Path\n", vdev_num);
 			rc = -1;
 			goto out;
+		}
+
+		type = spdk_conf_section_get_val(sp, "Type");
+		if (type != NULL && strcmp(type, "SCSI") != 0) {
+			continue;
 		}
 
 		num_queues = spdk_conf_section_get_intval(sp, "Queues");
