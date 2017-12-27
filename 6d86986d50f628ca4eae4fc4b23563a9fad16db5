@@ -22,6 +22,30 @@
       "revId": "6d86986d50f628ca4eae4fc4b23563a9fad16db5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "526af21b_c82cf0cd",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-12-27T05:41:13Z",
+      "side": 1,
+      "message": "Sure. Thanks for noticing this issue. Will split a new patch for this specific change.\n\nMeanwhile I am in the process of refactoring the QoS changes and will split into more specific patches for easy reviewing.\n\nThanks for those great comments and I will address them one by one.",
+      "parentUuid": "8e28fa37_adcf5d74",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 33
+      },
+      "revId": "6d86986d50f628ca4eae4fc4b23563a9fad16db5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
