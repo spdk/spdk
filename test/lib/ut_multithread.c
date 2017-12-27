@@ -56,6 +56,24 @@ struct ut_thread {
 
 struct ut_thread *g_ut_threads;
 
+enum ut_poller_state {
+	UT_POLLER_STATE_WAITING,
+	UT_POLLER_STATE_RUNNING,
+	UT_POLLER_SATE_UNREGISTERED,
+};
+
+struct ut_poller {
+	TAILQ_ENTRY(spdk_poller)	tailq;
+	uint32_t			lcore;
+	enum ut_poller_state		state;
+	uint64_t			period_ticks;
+	uint64_t			next_run_tick;
+	spdk_poller_fn			fn;
+	void				*arg;
+};
+
+static struct ut_poller g_ut_poller;
+
 static void
 __send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
@@ -68,6 +86,18 @@ __send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 	msg->fn = fn;
 	msg->ctx = ctx;
 	TAILQ_INSERT_TAIL(&thread->msgs, msg, link);
+}
+
+static struct spdk_poller *
+__start_poller(void *thread_ctx, spdk_thread_fn fn, void *arg,
+	       uint64_t period_microseconds)
+{
+	return (struct spdk_poller *)&g_ut_poller;
+}
+
+static void
+__stop_poller(struct spdk_poller *poller, void *thread_ctx)
+{
 }
 
 static uintptr_t g_thread_id = MOCK_PASS_THRU;
@@ -92,7 +122,8 @@ allocate_threads(int num_threads)
 
 	for (i = 0; i < g_ut_num_threads; i++) {
 		set_thread(i);
-		spdk_allocate_thread(__send_msg, NULL, NULL, &g_ut_threads[i], NULL);
+		spdk_allocate_thread(__send_msg, __start_poller, __stop_poller,
+				     &g_ut_threads[i], NULL);
 		thread = spdk_get_thread();
 		SPDK_CU_ASSERT_FATAL(thread != NULL);
 		g_ut_threads[i].thread = thread;
