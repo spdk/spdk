@@ -61,6 +61,25 @@ struct ut_bdev g_bdev;
 struct spdk_bdev_desc *g_desc;
 bool g_teardown_done = false;
 
+uint32_t
+spdk_env_get_current_core(void)
+{
+	return 0;
+}
+
+struct spdk_event *
+spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
+{
+	fn(arg1, arg2);
+
+	return NULL;
+}
+
+void
+spdk_event_call(struct spdk_event *event)
+{
+}
+
 static int
 stub_create_ch(void *io_device, void *ctx_buf)
 {
@@ -340,7 +359,7 @@ aborted_reset(void)
 }
 
 static void
-io_during_reset_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+io_during_reset_qos_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	enum spdk_bdev_io_status *status = cb_arg;
 
@@ -367,7 +386,7 @@ io_during_reset(void)
 	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
 	CU_ASSERT(bdev_ch[0]->flags == 0);
 	status0 = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_done, &status0);
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_qos_done, &status0);
 	CU_ASSERT(rc == 0);
 
 	set_thread(1);
@@ -375,7 +394,7 @@ io_during_reset(void)
 	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
 	CU_ASSERT(bdev_ch[1]->flags == 0);
 	status1 = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_done, &status1);
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_qos_done, &status1);
 	CU_ASSERT(rc == 0);
 
 	poll_threads();
@@ -397,7 +416,7 @@ io_during_reset(void)
 	 */
 	set_thread(0);
 	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_reset(g_desc, io_ch[0], io_during_reset_done, &status_reset);
+	rc = spdk_bdev_reset(g_desc, io_ch[0], io_during_reset_qos_done, &status_reset);
 	CU_ASSERT(rc == 0);
 
 	CU_ASSERT(bdev_ch[0]->flags == 0);
@@ -408,12 +427,12 @@ io_during_reset(void)
 
 	set_thread(0);
 	status0 = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_done, &status0);
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_qos_done, &status0);
 	CU_ASSERT(rc == 0);
 
 	set_thread(1);
 	status1 = SPDK_BDEV_IO_STATUS_PENDING;
-	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_done, &status1);
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_qos_done, &status1);
 	CU_ASSERT(rc == 0);
 
 	/*
@@ -448,6 +467,295 @@ io_during_reset(void)
 	set_thread(1);
 	spdk_put_io_channel(io_ch[1]);
 	poll_threads();
+
+	teardown_test();
+}
+
+static void
+io_during_qos_reset(void)
+{
+	struct spdk_io_channel *io_ch[3];
+	struct spdk_bdev_channel *bdev_ch[3], *qos_bdev_ch;
+	struct spdk_bdev *bdev;
+	enum spdk_bdev_io_status status0, status1, status_reset;
+	int rc;
+
+	setup_test();
+
+	/*
+	 * First test normal case - submit an I/O on each of two channels (with no resets)
+	 *  and verify they complete successfully.
+	 */
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_qos_done, &status0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev_ch[0]->flags == 0);
+
+	set_thread(1);
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_qos_done, &status1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev_ch[1]->flags == 0);
+
+	poll_threads();
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
+
+	set_thread(0);
+	stub_complete_io(0);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	set_thread(1);
+	stub_complete_io(0);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	set_thread(2);
+	bdev = bdev_ch[0]->bdev;
+	bdev->ios_per_sec = 2000;
+	io_ch[2] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[2] = spdk_io_channel_get_ctx(io_ch[2]);
+	qos_bdev_ch = bdev->qos_channel;
+	CU_ASSERT(bdev->qos_channel->flags == BDEV_CH_QOS_ENABLED);
+	CU_ASSERT(qos_bdev_ch != NULL);
+	CU_ASSERT(qos_bdev_ch->io_outstanding == 0);
+
+	/*
+	 * Now submit a reset, and leave it pending while we submit I/O on two different
+	 *  channels.  These I/O should be failed by the bdev layer since the reset is in
+	 *  progress.
+	 */
+	set_thread(0);
+	status_reset = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_reset(g_desc, io_ch[0], io_during_reset_qos_done, &status_reset);
+	CU_ASSERT(rc == 0);
+
+	CU_ASSERT(bdev_ch[0]->flags == 0);
+	CU_ASSERT(bdev_ch[1]->flags == 0);
+	CU_ASSERT(qos_bdev_ch->flags & BDEV_CH_QOS_ENABLED);
+	poll_threads();
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_RESET_IN_PROGRESS);
+	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_RESET_IN_PROGRESS);
+	CU_ASSERT(qos_bdev_ch->flags & BDEV_CH_RESET_IN_PROGRESS);
+
+	set_thread(0);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_qos_done, &status0);
+	CU_ASSERT(rc == 0);
+
+	set_thread(1);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_qos_done, &status1);
+	CU_ASSERT(rc == 0);
+
+	/*
+	 * A reset is in progress so these read I/O should complete with failure.  Note that we
+	 *  need to poll_threads() since I/O completed inline have their completion deferred.
+	 */
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_FAILED);
+
+	set_thread(0);
+	stub_complete_io(0);
+	spdk_put_io_channel(io_ch[0]);
+	set_thread(1);
+	stub_complete_io(1);
+	spdk_put_io_channel(io_ch[1]);
+	set_thread(2);
+	stub_complete_io(2);
+	spdk_put_io_channel(io_ch[2]);
+	poll_threads();
+	CU_ASSERT(status_reset == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	teardown_test();
+}
+
+static void
+io_during_qos(void)
+{
+	struct spdk_io_channel *io_ch[3];
+	struct spdk_bdev_channel *bdev_ch[3], *qos_bdev_ch;
+	struct spdk_bdev *bdev;
+	enum spdk_bdev_io_status status0, status1;
+	int rc;
+
+	setup_test();
+
+	/*
+	 * First test normal case - submit an I/O on each of two channels (with no resets)
+	 *  and verify they complete successfully.
+	 */
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_qos_done, &status0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev_ch[0]->flags == 0);
+
+	set_thread(1);
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_qos_done, &status1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev_ch[1]->flags == 0);
+
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
+
+	set_thread(0);
+	stub_complete_io(0);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	set_thread(1);
+	stub_complete_io(0);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	poll_threads();
+
+	set_thread(2);
+	bdev = &g_bdev.bdev;
+	bdev->ios_per_sec = 2000;
+	io_ch[2] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[2] = spdk_io_channel_get_ctx(io_ch[2]);
+	qos_bdev_ch = bdev->qos_channel;
+	CU_ASSERT(bdev->qos_channel->flags == BDEV_CH_QOS_ENABLED);
+	CU_ASSERT(qos_bdev_ch != NULL);
+	CU_ASSERT(qos_bdev_ch->io_outstanding == 0);
+
+	/*
+	 * Now sending some I/Os on different channels
+	 */
+	set_thread(0);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_qos_done, &status0);
+	CU_ASSERT(rc == 0);
+
+	set_thread(1);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_qos_done, &status1);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	CU_ASSERT(qos_bdev_ch->io_outstanding == 2);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
+
+	/*
+	 * IOs are operated on thread_id(2) via the QoS thread
+	 */
+	set_thread(2);
+	stub_complete_io(2);
+
+	poll_threads();
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	set_thread(0);
+	spdk_put_io_channel(io_ch[0]);
+	set_thread(1);
+	spdk_put_io_channel(io_ch[1]);
+	set_thread(2);
+	spdk_put_io_channel(io_ch[2]);
+
+	poll_threads();
+
+	teardown_test();
+}
+
+static void
+io_during_qos_queue(void)
+{
+	struct spdk_io_channel *io_ch[3];
+	struct spdk_bdev_channel *bdev_ch[3], *qos_bdev_ch;
+	struct spdk_bdev *bdev;
+	enum spdk_bdev_io_status status0, status1;
+	int rc;
+
+	setup_test();
+
+	/*
+	 * First test normal case - submit an I/O on each of two channels (with no resets)
+	 *  and verify they complete successfully.
+	 */
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_qos_done, &status0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev_ch[0]->flags == 0);
+
+	set_thread(1);
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_qos_done, &status1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bdev_ch[1]->flags == 0);
+
+	poll_threads();
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
+
+	set_thread(0);
+	stub_complete_io(0);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	set_thread(1);
+	stub_complete_io(0);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	poll_threads();
+
+	set_thread(2);
+	bdev = bdev_ch[0]->bdev;
+	bdev->ios_per_sec = 1000;
+	io_ch[2] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[2] = spdk_io_channel_get_ctx(io_ch[2]);
+	qos_bdev_ch = bdev->qos_channel;
+	CU_ASSERT(bdev->qos_channel->flags == BDEV_CH_QOS_ENABLED);
+	CU_ASSERT(qos_bdev_ch != NULL);
+	CU_ASSERT(qos_bdev_ch->io_outstanding == 0);
+
+	/*
+	 * Now sending some I/Os on different channels
+	 */
+	set_thread(0);
+	status0 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[0], NULL, 0, 1, io_during_reset_qos_done, &status0);
+	CU_ASSERT(rc == 0);
+
+	set_thread(1);
+	status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_read_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_reset_qos_done, &status1);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	CU_ASSERT(qos_bdev_ch->io_outstanding == 2);
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
+
+	/*
+	 * IOs are handled on the thread(2) as the master thread
+	 */
+	set_thread(2);
+	stub_complete_io(2);
+	spdk_put_io_channel(io_ch[0]);
+	spdk_put_io_channel(io_ch[1]);
+	spdk_put_io_channel(io_ch[2]);
+
+	poll_threads();
+
+	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
 
 	teardown_test();
 }
@@ -589,6 +897,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "put_channel_during_reset", put_channel_during_reset) == NULL ||
 		CU_add_test(suite, "aborted_reset", aborted_reset) == NULL ||
 		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL ||
+		CU_add_test(suite, "io_during_qos", io_during_qos) == NULL ||
+		CU_add_test(suite, "io_during_qos_queue", io_during_qos_queue) == NULL ||
+		CU_add_test(suite, "io_during_qos_reset", io_during_qos_reset) == NULL ||
 		CU_add_test(suite, "enomem", enomem) == NULL
 	) {
 		CU_cleanup_registry();

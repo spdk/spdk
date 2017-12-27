@@ -41,6 +41,7 @@ struct rpc_construct_malloc {
 	char *name;
 	uint32_t num_blocks;
 	uint32_t block_size;
+	uint64_t ios_per_sec;
 };
 
 static void
@@ -53,6 +54,7 @@ static const struct spdk_json_object_decoder rpc_construct_malloc_decoders[] = {
 	{"name", offsetof(struct rpc_construct_malloc, name), spdk_json_decode_string, true},
 	{"num_blocks", offsetof(struct rpc_construct_malloc, num_blocks), spdk_json_decode_uint32},
 	{"block_size", offsetof(struct rpc_construct_malloc, block_size), spdk_json_decode_uint32},
+	{"ios_per_sec", offsetof(struct rpc_construct_malloc, ios_per_sec), spdk_json_decode_uint64},
 };
 
 static void
@@ -70,7 +72,7 @@ spdk_rpc_construct_malloc_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev = create_malloc_disk(req.name, req.num_blocks, req.block_size);
+	bdev = create_malloc_disk(req.name, req.num_blocks, req.block_size, req.ios_per_sec);
 	if (bdev == NULL) {
 		goto invalid;
 	}
