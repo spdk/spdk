@@ -419,6 +419,8 @@ void virtio_dev_dump_json_config(struct virtio_dev *vdev, struct spdk_json_write
  */
 int virtio_pci_scsi_dev_enumerate(virtio_pci_create_cb enum_cb);
 
+int virtio_pci_blk_dev_enumerate(virtio_pci_create_cb enum_cb);
+
 /**
  * Connect to a vhost-user device and init corresponding virtio_dev struct.
  * The virtio_dev will have to be freed with \c virtio_dev_free.
