@@ -73,4 +73,8 @@ int bdev_virtio_scsi_dev_create(const char *name, const char *path,
 				unsigned num_queues, unsigned queue_size,
 				bdev_virtio_create_cb cb_fn, void *cb_arg);
 
+int bdev_virtio_blk_dev_create(const char *base_name, const char *path,
+			       uint64_t num_blocks, uint32_t block_size,
+			       unsigned num_queues, unsigned queue_size);
+
 #endif /* SPDK_BDEV_VIRTIO_H */

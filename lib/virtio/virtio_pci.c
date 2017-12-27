@@ -476,6 +476,19 @@ virtio_pci_scsi_dev_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	return virtio_pci_dev_probe(pci_dev, enum_cb);
 }
 
+static int
+virtio_pci_blk_dev_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
+{
+	virtio_pci_create_cb enum_cb = ctx;
+	uint16_t pci_device_id = spdk_pci_device_get_device_id(pci_dev);
+
+	if (pci_device_id != PCI_DEVICE_ID_VIRTIO_BLK_MODERN) {
+		return 1;
+	}
+
+	return virtio_pci_dev_probe(pci_dev, enum_cb);
+}
+
 int
 virtio_pci_scsi_dev_enumerate(virtio_pci_create_cb enum_cb)
 {
@@ -485,6 +498,17 @@ virtio_pci_scsi_dev_enumerate(virtio_pci_create_cb enum_cb)
 	}
 
 	return spdk_pci_virtio_enumerate(virtio_pci_scsi_dev_probe_cb, enum_cb);
+}
+
+int
+virtio_pci_blk_dev_enumerate(virtio_pci_create_cb enum_cb)
+{
+	if (!spdk_process_is_primary()) {
+		SPDK_WARNLOG("virtio_pci secondary process support is not implemented yet.\n");
+		return 0;
+	}
+
+	return spdk_pci_virtio_enumerate(virtio_pci_blk_dev_probe_cb, enum_cb);
 }
 
 int
