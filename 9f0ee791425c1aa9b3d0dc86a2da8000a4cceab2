@@ -107,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "a5ef6863_c7d83e9a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 746,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2017-12-27T11:53:05Z",
+      "side": 1,
+      "message": "Thanks for this great comment. I\u0027ve updated accordingly and consolidated into one function as suggested. This makes the simple algorithm more clear and understandable.",
+      "parentUuid": "0ec03a9b_3a86412e",
+      "revId": "9f0ee791425c1aa9b3d0dc86a2da8000a4cceab2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f750ec6_91f4bc4a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 33
