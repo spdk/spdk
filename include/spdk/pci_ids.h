@@ -115,6 +115,7 @@ extern "C" {
 
 #define PCI_DEVICE_ID_INTEL_IOAT_SKX	0x2021
 
+#define PCI_DEVICE_ID_VIRTIO_BLK_MODERN	0x1001
 #define PCI_DEVICE_ID_VIRTIO_SCSI_MODERN 0x1004
 
 #ifdef __cplusplus
