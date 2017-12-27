@@ -36,7 +36,6 @@
 #include "spdk/mmio.h"
 #include "spdk/string.h"
 #include "spdk/env.h"
-#include "spdk/pci_ids.h"
 
 #include "spdk_internal/virtio.h"
 
@@ -59,6 +58,11 @@ struct virtio_hw {
 
 	/** Device-specific PCI config space */
 	void *dev_cfg;
+};
+
+struct virtio_pci_probe_ctx {
+	virtio_pci_create_cb enum_cb;
+	uint16_t device_id;
 };
 
 /*
@@ -464,27 +468,32 @@ virtio_pci_dev_probe(struct spdk_pci_device *pci_dev, virtio_pci_create_cb enum_
 }
 
 static int
-virtio_pci_scsi_dev_probe_cb(void *ctx, struct spdk_pci_device *pci_dev)
+virtio_pci_dev_probe_cb(void *probe_ctx, struct spdk_pci_device *pci_dev)
 {
-	virtio_pci_create_cb enum_cb = ctx;
+	struct virtio_pci_probe_ctx *ctx = probe_ctx;
 	uint16_t pci_device_id = spdk_pci_device_get_device_id(pci_dev);
 
-	if (pci_device_id != PCI_DEVICE_ID_VIRTIO_SCSI_MODERN) {
+	if (pci_device_id != ctx->device_id) {
 		return 1;
 	}
 
-	return virtio_pci_dev_probe(pci_dev, enum_cb);
+	return virtio_pci_dev_probe(pci_dev, ctx->enum_cb);
 }
 
 int
-virtio_pci_scsi_dev_enumerate(virtio_pci_create_cb enum_cb)
+virtio_pci_dev_enumerate(virtio_pci_create_cb enum_cb, uint16_t pci_device_id)
 {
+	struct virtio_pci_probe_ctx ctx;
+
 	if (!spdk_process_is_primary()) {
 		SPDK_WARNLOG("virtio_pci secondary process support is not implemented yet.\n");
 		return 0;
 	}
 
-	return spdk_pci_virtio_enumerate(virtio_pci_scsi_dev_probe_cb, enum_cb);
+	ctx.enum_cb = enum_cb;
+	ctx.device_id = pci_device_id;
+
+	return spdk_pci_virtio_enumerate(virtio_pci_dev_probe_cb, &ctx);
 }
 
 int

@@ -1473,7 +1473,8 @@ bdev_virtio_process_config(void)
 
 	enable_pci = spdk_conf_section_get_boolval(sp, "Enable", false);
 	if (enable_pci) {
-		rc = virtio_pci_scsi_dev_enumerate(virtio_pci_scsi_dev_create_cb);
+		rc = virtio_pci_dev_enumerate(virtio_pci_scsi_dev_create_cb,
+					      PCI_DEVICE_ID_VIRTIO_SCSI_MODERN);
 	}
 
 out:
