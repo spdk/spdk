@@ -264,3 +264,124 @@ invalid:
 	free_rpc_remove_virtio_scsi_dev(req);
 }
 SPDK_RPC_REGISTER("remove_virtio_scsi_bdev", spdk_rpc_remove_virtio_scsi_bdev);
+
+struct rpc_construct_virtio_blk_dev {
+	char *path;
+	char *pci_address;
+	char *name;
+	uint32_t vq_count;
+	uint32_t vq_size;
+};
+
+static void
+free_rpc_construct_virtio_blk_dev(struct rpc_construct_virtio_blk_dev *req)
+{
+	free(req->path);
+	free(req->pci_address);
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_construct_virtio_user_blk_dev[] = {
+	{"path", offsetof(struct rpc_construct_virtio_blk_dev, path), spdk_json_decode_string },
+	{"name", offsetof(struct rpc_construct_virtio_blk_dev, name), spdk_json_decode_string },
+	{"vq_count", offsetof(struct rpc_construct_virtio_blk_dev, vq_count), spdk_json_decode_uint32, true },
+	{"vq_size", offsetof(struct rpc_construct_virtio_blk_dev, vq_size), spdk_json_decode_uint32, true },
+};
+
+static void
+spdk_rpc_create_virtio_user_blk_bdev(struct spdk_jsonrpc_request *request,
+				     const struct spdk_json_val *params)
+{
+	struct rpc_construct_virtio_blk_dev req = {0};
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev;
+	int rc;
+
+	req.pci_address = NULL;
+	req.vq_count = 1;
+	req.vq_size = 512;
+
+	if (spdk_json_decode_object(params, rpc_construct_virtio_user_blk_dev,
+				    SPDK_COUNTOF(rpc_construct_virtio_user_blk_dev),
+				    &req)) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = bdev_virtio_user_blk_dev_create(req.name, req.path, req.vq_count, req.vq_size);
+	if (bdev == NULL) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+	free_rpc_construct_virtio_blk_dev(&req);
+}
+SPDK_RPC_REGISTER("construct_virtio_user_blk_bdev", spdk_rpc_create_virtio_user_blk_bdev);
+
+static const struct spdk_json_object_decoder rpc_construct_virtio_pci_blk_dev[] = {
+	{"pci_address", offsetof(struct rpc_construct_virtio_blk_dev, pci_address), spdk_json_decode_string },
+	{"name", offsetof(struct rpc_construct_virtio_blk_dev, name), spdk_json_decode_string },
+};
+
+static void
+spdk_rpc_create_virtio_pci_blk_bdev(struct spdk_jsonrpc_request *request,
+				    const struct spdk_json_val *params)
+{
+	struct rpc_construct_virtio_blk_dev req = {0};
+	struct spdk_json_write_ctx *w;
+	struct spdk_bdev *bdev;
+	struct spdk_pci_addr pci_addr;
+	int rc;
+
+	req.pci_address = NULL;
+
+	if (spdk_json_decode_object(params, rpc_construct_virtio_pci_blk_dev,
+				    SPDK_COUNTOF(rpc_construct_virtio_pci_blk_dev),
+				    &req)) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	if (spdk_pci_addr_parse(&pci_addr, req.pci_address) != 0) {
+		SPDK_ERRLOG("Invalid PCI address '%s'\n", req.pci_address);
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = bdev_virtio_pci_blk_dev_create(req.name, &pci_addr);
+	if (bdev == NULL) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+	free_rpc_construct_virtio_blk_dev(&req);
+}
+SPDK_RPC_REGISTER("construct_virtio_pci_blk_bdev", spdk_rpc_create_virtio_pci_blk_bdev);
