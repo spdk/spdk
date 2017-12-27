@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e28fa37_adcf5d74",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-27T05:31:38Z",
+      "side": 1,
+      "message": "This file\u0027s change looks nice.",
+      "range": {
+        "startLine": 115,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 33
+      },
+      "revId": "6d86986d50f628ca4eae4fc4b23563a9fad16db5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
