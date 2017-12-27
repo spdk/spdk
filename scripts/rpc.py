@@ -842,6 +842,29 @@ p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=i
 p.add_argument('--vq-size', help='Size of each queue', type=int)
 p.set_defaults(func=construct_virtio_user_scsi_bdev)
 
+def construct_virtio_user_blk_bdev(args):
+    num_blocks = (args.total_size * 1024 * 1024) / args.block_size
+    params = {
+        'path': args.path,
+        'name': args.name,
+        'num_blocks': num_blocks,
+        'block_size': args.block_size,
+    }
+    if args.vq_count:
+        params['vq_count'] = args.vq_count
+    if args.vq_size:
+        params['vq_size'] = args.vq_size
+    print_array(jsonrpc_call('construct_virtio_user_blk_bdev', params))
+
+p = subparsers.add_parser('construct_virtio_user_blk_bdev', help='Create a Virtio BLK bdev from a vhost-user socket.')
+p.add_argument('path', help='Path to the Unix domain socket')
+p.add_argument('name', help='Name for the bdev')
+p.add_argument('total_size', help='Size of the virtio bdev in MB (int > 0)', type=int)
+p.add_argument('block_size', help='Block size for this bdev', type=int)
+p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=int)
+p.add_argument('--vq-size', help='Size of each queue', type=int)
+p.set_defaults(func=construct_virtio_user_blk_bdev)
+
 def get_rpc_methods(args):
     print_dict(jsonrpc_call('get_rpc_methods'))
 
