@@ -68,9 +68,8 @@ typedef void (*bdev_virtio_remove_cb)(void *ctx, int errnum);
  * \param name name for the virtio device. It will be inherited by all created
  * bdevs, which are named in the following format: <name>t<target_id>
  * \param path path to the socket
- * \param num_queues max number of request virtqueues (I/O queues) to use.
- * If given value exceeds a hard limit of the physical (host) device, this
- * function will return with error.
+ * \param num_queues max number of request virtqueues to use. `vdev` will be
+ * started successfully even if the host device supports less queues than requested.
  * \param queue_size depth of each queue
  * \param cb_fn function to be called after scanning all targets on the virtio
  * device. It's optional, can be NULL. See \c bdev_virtio_create_cb.
@@ -116,5 +115,30 @@ int bdev_virtio_pci_scsi_dev_create(const char *name, struct spdk_pci_addr *pci_
  */
 void bdev_virtio_scsi_dev_remove(const char *name,
 				 bdev_virtio_remove_cb cb_fn, void *cb_arg);
+
+/**
+ * Connect to a vhost-user Unix domain socket and create a Virtio BLK bdev.
+ *
+ * \param name name for the virtio bdev
+ * \param path path to the socket
+ * \param num_queues max number of request virtqueues to use. `vdev` will be
+ * started successfully even if the host device supports less queues than requested.
+ * \param queue_size depth of each queue
+ * \return virtio-blk bdev or NULL
+ */
+struct spdk_bdev *bdev_virtio_user_blk_dev_create(const char *name, const char *path,
+		unsigned num_queues, unsigned queue_size);
+
+/**
+ * Attach virtio-pci device. This creates a Virtio BLK device with the same
+ * capabilities as the vhost-user equivalent.
+ *
+ * \param name name for the virtio device. It will be inherited by all created
+ * bdevs, which are named in the following format: <name>t<target_id>
+ * \param pci_addr PCI address of the device to attach
+ * \return virtio-blk bdev or NULL
+ */
+struct spdk_bdev *bdev_virtio_pci_blk_dev_create(const char *name,
+		struct spdk_pci_addr *pci_addr);
 
 #endif /* SPDK_BDEV_VIRTIO_H */
