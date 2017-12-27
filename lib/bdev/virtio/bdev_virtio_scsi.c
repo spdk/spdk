@@ -199,7 +199,7 @@ virtio_scsi_dev_send_eventq_io(struct virtqueue *vq, struct virtio_scsi_eventq_i
 }
 
 static int
-virtio_scsi_dev_init(struct virtio_scsi_dev *svdev)
+virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 {
 	struct virtio_dev *vdev = &svdev->vdev;
 	struct spdk_ring *ctrlq_ring;
@@ -208,7 +208,12 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev)
 	uint16_t i, num_events;
 	int rc;
 
-	rc = virtio_dev_restart(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
+	rc = virtio_dev_reset(vdev, VIRTIO_SCSI_DEV_SUPPORTED_FEATURES);
+	if (rc != 0) {
+		return rc;
+	}
+
+	rc = virtio_dev_start(vdev, max_queues, SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
 	if (rc != 0) {
 		return rc;
 	}
@@ -305,9 +310,8 @@ virtio_pci_scsi_dev_create_cb(struct virtio_pci_ctx *pci_ctx)
 
 	virtio_dev_read_dev_config(vdev, offsetof(struct virtio_scsi_config, num_queues),
 				   &num_queues, sizeof(num_queues));
-	vdev->max_queues = SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED + num_queues;
 
-	rc = virtio_scsi_dev_init(svdev);
+	rc = virtio_scsi_dev_init(svdev, num_queues);
 	if (rc != 0) {
 		virtio_dev_destruct(vdev);
 		free(svdev);
@@ -331,15 +335,14 @@ virtio_user_scsi_dev_create(const char *name, const char *path,
 	}
 
 	vdev = &svdev->vdev;
-	rc = virtio_user_dev_init(vdev, name, path, num_queues, queue_size,
-				  SPDK_VIRTIO_SCSI_QUEUE_NUM_FIXED);
+	rc = virtio_user_dev_init(vdev, name, path, queue_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("Failed to create virito device %s: %s\n", name, path);
 		free(svdev);
 		return NULL;
 	}
 
-	rc = virtio_scsi_dev_init(svdev);
+	rc = virtio_scsi_dev_init(svdev, num_queues);
 	if (rc != 0) {
 		virtio_dev_destruct(vdev);
 		free(svdev);

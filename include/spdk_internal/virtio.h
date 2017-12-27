@@ -67,7 +67,10 @@ struct virtio_dev {
 	/** Name of this virtio dev set by backend */
 	char		*name;
 
-	/** Max number of queues the host supports. */
+	/** Fixed number of backend-specific non-I/O virtqueues. */
+	uint16_t	fixed_queues_num;
+
+	/** Max number of virtqueues the host supports. */
 	uint16_t	max_queues;
 
 	/** Common device & guest features. */
@@ -256,20 +259,36 @@ int virtio_dev_construct(struct virtio_dev *vdev, const struct virtio_dev_ops *o
 			 void *ctx);
 
 /**
- * Notify the host to start processing this virtio device.  This is
- * a blocking call that won't return until the host has started.
- * This call will also allocate virtqueues and renegotiate feature flags.
+ * Reset the device and prepare it to be `virtio_dev_start`ed.  This call
+ * will also renegotiate feature flags.
  *
  * \param vdev virtio device
  * \param req_features features this driver supports. A VIRTIO_F_VERSION_1
  * flag will be automatically appended, as legacy devices are not supported.
  */
-int virtio_dev_restart(struct virtio_dev *vdev, uint64_t req_features);
+int virtio_dev_reset(struct virtio_dev *vdev, uint64_t req_features);
+
+/**
+ * Notify the host to start processing this virtio device.  This is
+ * a blocking call that won't return until the host has started.
+ * This will also allocate virtqueues.
+ *
+ * \param vdev virtio device
+ * \param max_queues number of queues to allocate. The max number of
+ * usable I/O queues is also limited by the host device. `vdev` will be
+ * started successfully even if the host supports less queues than requested.
+ * \param fixed_queue_num number of queues preceeding the first
+ * request queue. For Virtio-SCSI this is equal to 2, as there are
+ * additional event and control queues.
+ */
+int virtio_dev_start(struct virtio_dev *vdev, uint16_t max_queues,
+		     uint16_t fixed_queues_num);
 
 /**
  * Stop the host from processing the device.  This is a blocking call
  * that won't return until all outstanding I/O has been processed on
- * the host (virtio device) side.
+ * the host (virtio device) side. In order to re-start the device, it
+ * has to be `virtio_dev_reset` first.
  *
  * \param vdev virtio device
  */
@@ -426,23 +445,14 @@ int virtio_pci_scsi_dev_enumerate(virtio_pci_create_cb enum_cb);
  * \param vdev preallocated vhost device struct to operate on
  * \param name name of this virtio device
  * \param path path to the Unix domain socket of the vhost-user device
- * \param requested_queues maximum number of request queues that this
- * device will support
  * \param queue_size size of each of the queues
- * \param fixed_queue_num number of queues preceeding the first
- * request queue. For Virtio-SCSI this is equal to 2, as there are
- * additional event and control queues.
  * \return virtio device
  */
 int virtio_user_dev_init(struct virtio_dev *vdev, const char *name, const char *path,
-			 uint16_t requested_queues, uint32_t queue_size,
-			 uint16_t fixed_queue_num);
+			 uint32_t queue_size);
 
 /**
- * Initialize a virtio_dev for the given PCI device.
- * The virtio_dev will try to use \c SPDK_VIRTIO_MAX_VIRTQUEUES queues by
- * default and might fail to start. It is advised to overwrite the
- * `virtio_dev->max_queues` field manually starting the device.
+ * Initialize virtio_dev for a given PCI device.
  * The virtio_dev has to be freed with \c virtio_dev_destruct.
  *
  * \param vdev preallocated vhost device struct to operate on
