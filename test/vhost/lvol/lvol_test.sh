@@ -192,7 +192,7 @@ for (( i=0; i<$vm_count; i++)); do
     fi
     setup_cmd+=" -f $i"
     if [[ $i -eq 1 ]] && [[ $multi_os ]]; then
-        setup_cmd+=" --os=/home/sys_sgsw/vhost_centos_image.qcow2"
+        setup_cmd+=" --os=/home/sys_sgsw/spdk_vhost_CentOS_vm_image.qcow2"
     else
         setup_cmd+=" --os=/home/sys_sgsw/vhost_vm_image.qcow2"
     fi

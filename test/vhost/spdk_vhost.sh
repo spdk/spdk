@@ -98,14 +98,20 @@ case $1 in
 		./integrity/integrity_start.sh -i $VM_IMAGE -m blk -f ntfs
 		;;
 	-ils|--integrity-lvol-scsi)
-		echo 'Running lvol integrity suite...'
-		./lvol/lvol_test.sh -x --fio-bin=/home/sys_sgsw/fio_ubuntu \
-		--ctrl-type=vhost_scsi
+		#echo 'Running lvol integrity suite...'
+		#./lvol/lvol_test.sh -x --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		#--ctrl-type=vhost_scsi
+		echo 'Running lvol integrity nightly suite with different os types'
+		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		--ctrl-type=vhost_scsi --vm-count=2 --multi-os
 		;;
 	-ilb|--integrity-lvol-blk)
-		echo 'Running lvol integrity suite...'
-		./lvol/lvol_test.sh -x --fio-bin=/home/sys_sgsw/fio_ubuntu \
-		--ctrl-type=vhost_blk
+		#echo 'Running lvol integrity suite...'
+		#./lvol/lvol_test.sh -x --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		#--ctrl-type=vhost_blk
+		echo 'Running lvol integrity nightly suite with different os types'
+		./lvol/lvol_test.sh --fio-bin=/home/sys_sgsw/fio_ubuntu \
+		--ctrl-type=vhost_blk --vm-count=2 --multi-os
 		;;
 	-ilsn|--integrity-lvol-scsi-nightly)
 		if [[ $DISKS_NUMBER -ge 2 ]]; then
