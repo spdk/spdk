@@ -16,6 +16,24 @@
       "revId": "a7de8cabbc0b69d99df0be4035d48f1e13ab5551",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8065e295_c5ebaece",
+        "filename": "include/spdk/jsonrpc_util.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T19:32:51Z",
+      "side": 1,
+      "message": "Sure, I only wanted get some comments on how to do this. Final patch will be a set of small patches.\n\nAnyway, whole idea behind this POC patch is to free developer from handling of every param (parse, free etc). This why I made jsonrpc_util but not json_util. So typical flow would change from:\n- Register command and parameters\n-- Implement parameters free() function\n- JSONRPC hander\n-- Parse parameters\n--- if error -\u003e call params_free()\n--- finish JSONRPC request\n-- Process RPC\n--- if error -\u003e call params_free()\n--- finish JSONRPC request\n- call params_free()\n- finish JSONRPC request\n\nJust to:\n- Parse all arguments in jsonrpc_util.c\n- Call RPC handler.\n-- Process RPC\n-- Write result - Doesn\u0027t really matter what the results is. Writing result finishes JSON RPC request and free everything automaticaly.\n- Done",
+      "parentUuid": "7e81151d_59c78ea9",
+      "revId": "a7de8cabbc0b69d99df0be4035d48f1e13ab5551",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
