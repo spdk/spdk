@@ -22,6 +22,30 @@
       "revId": "742a4886867dcc919c9f3631b72573d8bdf82a1c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a70e389_ddf3725d",
+        "filename": "lib/util/strerror_tls.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-27T18:11:13Z",
+      "side": 1,
+      "message": "This is a good idea; I uploaded a new patch (before this one in the series) that makes spdk_strerror_r() handle this case instead so that spdk_strerror() can be simplified.",
+      "parentUuid": "76be991f_8488634f",
+      "range": {
+        "startLine": 45,
+        "startChar": 8,
+        "endLine": 45,
+        "endChar": 23
+      },
+      "revId": "742a4886867dcc919c9f3631b72573d8bdf82a1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
