@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a678ebc0_e3b7af0d",
+        "filename": "test/lib/ut_multithread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-27T17:46:29Z",
+      "side": 1,
+      "message": "struct ut_poller has fields for fn and arg, but you did not set them here; was that intentional?",
+      "revId": "c729db8e18bc971ee345cfe6313fcc848d122ec2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
