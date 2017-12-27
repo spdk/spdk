@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = bdev_virtio_scsi.c bdev_virtio_rpc.c
+C_SRCS = bdev_virtio_scsi.c bdev_virtio_blk.c bdev_virtio_rpc.c
 LIBNAME = bdev_virtio
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
