@@ -16,6 +16,24 @@
       "revId": "f70a9d6767077bea6d65705ec83126ec3b86d324",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e60bf529_8bed5663",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-27T00:18:43Z",
+      "side": 0,
+      "message": "Thank you. Make sense to me.\n\nI confirmed that every element of the dynamic spdk_poller array is aligned to 64 byte by using both posix_memalign() and __attribute__((aligned(64))).",
+      "parentUuid": "88407d3d_887686db",
+      "revId": "f70a9d6767077bea6d65705ec83126ec3b86d324",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
