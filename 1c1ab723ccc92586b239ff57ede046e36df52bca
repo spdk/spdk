@@ -1,0 +1,349 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9a05ead_c7a77766",
+        "filename": "lib/iscsi/iscsi_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 824,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "You need to free this.",
+      "range": {
+        "startLine": 824,
+        "startChar": 1,
+        "endLine": 824,
+        "endChar": 31
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7c9ec7c_efbf39ad",
+        "filename": "lib/iscsi/portal_grp.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "you need to allocate p-\u003ecpumask first.",
+      "range": {
+        "startLine": 109,
+        "startChar": 1,
+        "endLine": 109,
+        "endChar": 39
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "191b8220_cc66ee3b",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "Don\u0027t understand why this need to be so comlicated. Can you just fix this to SPDK_CPUSET_SIZE / sizeof(uint64_t)?\n\nIf you are afraid of SPDK_CPUSET_SIZE \u003c sizeof(uint64_t) put SPDK_STATIC_ASSERT() before.",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 108
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ce9f7bb_9671fefc",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "free(NULL) is valid so no need to check.",
+      "range": {
+        "startLine": 50,
+        "startChar": 1,
+        "endLine": 52,
+        "endChar": 2
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0930c63_2007749a",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "This is inconsistent with SPDK_ALLOC_SIZE(SPDK_CPUSET_SIZE) from spdk_cpuset_alloc()",
+      "range": {
+        "startLine": 59,
+        "startChar": 39,
+        "endLine": 59,
+        "endChar": 59
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f1b68fe_40d0f8db",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "If you define cpus to be uint8_t use uint8_t here. If you want to use uint64_t change cpus to be uint64_t.",
+      "range": {
+        "startLine": 75,
+        "startChar": 2,
+        "endLine": 75,
+        "endChar": 61
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dce13ebd_73ed0d8b",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "why int insted of uint32_t or bool?",
+      "range": {
+        "startLine": 105,
+        "startChar": 0,
+        "endLine": 105,
+        "endChar": 3
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4268ad3_6a29c3c2",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "static or *hex ?",
+      "range": {
+        "startLine": 136,
+        "startChar": 1,
+        "endLine": 136,
+        "endChar": 39
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d85e63a9_0c99e077",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "As commented before I would rather return desired number of bytes instead if -1. This way we have a chance to know how many bytes we need. -1 might be returned when mask \u003d\u003d NULL and sz \u003e 0 or cpumask \u003d\u003d NULL (which BTW is not checked here).",
+      "range": {
+        "startLine": 144,
+        "startChar": 1,
+        "endLine": 146,
+        "endChar": 2
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0722f586_7760c2d7",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "Is len used here for something other than checking for 0?",
+      "range": {
+        "startLine": 186,
+        "startChar": 16,
+        "endLine": 186,
+        "endChar": 63
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1245ad1_ee2b9549",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "You can drop this check (assume mask is valid C string checked in spdk_cpuset_parse()).",
+      "range": {
+        "startLine": 193,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 1
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e21a808f_4ede840a",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "You can drop this check (assume mask is valid C string checked in spdk_cpuset_parse()).",
+      "range": {
+        "startLine": 269,
+        "startChar": 5,
+        "endLine": 269,
+        "endChar": 15
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14af845b_252fb509",
+        "filename": "lib/util/cpuset.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 273,
+        "startChar": 0,
+        "endLine": 275,
+        "endChar": 2
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88db9662_a1a27f48",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "I see memory leak everywhere in this function now.",
+      "range": {
+        "startLine": 478,
+        "startChar": 0,
+        "endLine": 480,
+        "endChar": 2
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1eba568_6348f240",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 702,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2017-12-27T18:26:03Z",
+      "side": 1,
+      "message": "memory leak",
+      "range": {
+        "startLine": 702,
+        "startChar": 2,
+        "endLine": 702,
+        "endChar": 11
+      },
+      "revId": "1c1ab723ccc92586b239ff57ede046e36df52bca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
