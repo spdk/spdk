@@ -532,6 +532,53 @@ inquiry_overflow_test(void)
 	}
 }
 
+static void
+scsi_name_padding_test(void)
+{
+	char name[SPDK_SCSI_DEV_MAX_NAME + 10];
+	char buf[SPDK_SCSI_DEV_MAX_NAME];
+	int written;
+
+	memset(name, '@', 251);
+	written = spdk_bdev_scsi_pad_scsi_name(buf, name);
+
+	CU_ASSERT(written == 252);
+	CU_ASSERT(buf[250] == '@');
+	CU_ASSERT(buf[251] == '\0');
+
+	memset(name, 0, SPDK_SCSI_DEV_MAX_NAME + 10);
+
+	memset(name, '@', 252);
+	written = spdk_bdev_scsi_pad_scsi_name(buf, name);
+
+	CU_ASSERT(written == 252);
+	CU_ASSERT(buf[250] == '@');
+	CU_ASSERT(buf[251] == '\0');
+
+	memset(name, 0, SPDK_SCSI_DEV_MAX_NAME + 10);
+
+	memset(name, '@', 249);
+	written = spdk_bdev_scsi_pad_scsi_name(buf, name);
+
+	CU_ASSERT(written == 252);
+	CU_ASSERT(buf[248] == '@');
+	CU_ASSERT(buf[249] == '\0');
+	CU_ASSERT(buf[250] == '\0');
+	CU_ASSERT(buf[251] == '\0');
+
+	memset(name, 0, SPDK_SCSI_DEV_MAX_NAME + 10);
+
+	memset(name, '@', 248);
+	written = spdk_bdev_scsi_pad_scsi_name(buf, name);
+
+	CU_ASSERT(written == 252);
+	CU_ASSERT(buf[247] == '@');
+	CU_ASSERT(buf[248] == '\0');
+	CU_ASSERT(buf[249] == '\0');
+	CU_ASSERT(buf[250] == '\0');
+	CU_ASSERT(buf[251] == '\0');
+}
+
 /*
  * This test is to verify specific error translation from bdev to scsi.
  */
@@ -718,6 +765,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "task complete test", task_complete_test) == NULL
 		|| CU_add_test(suite, "LBA range test", lba_range_test) == NULL
 		|| CU_add_test(suite, "transfer length test", xfer_len_test) == NULL
+		|| CU_add_test(suite, "scsi name padding test", scsi_name_padding_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

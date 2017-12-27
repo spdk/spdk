@@ -169,6 +169,34 @@ spdk_bdev_scsi_report_luns(struct spdk_scsi_lun *lun,
 }
 
 static int
+spdk_bdev_scsi_pad_scsi_name(char *dst, const char *name)
+{
+	int written, padded_len, i;
+
+	written = snprintf(dst, SPDK_SCSI_DEV_MAX_NAME, "%s", name);
+	if (written >= SPDK_SCSI_DEV_MAX_NAME) {
+		/* Output truncated */
+		return SPDK_SCSI_DEV_MAX_NAME;
+	}
+
+	/* Account for NULL terminator */
+	written++;
+
+	padded_len = (written + 3) & ~0x3;
+	if (padded_len > SPDK_SCSI_DEV_MAX_NAME) {
+		SPDK_ERRLOG("padding length is unexpected (padded=%d, written=%d)\n",
+			    padded_len, written);
+		return written;
+	}
+
+	for (i = written; i < padded_len; i++) {
+		dst[i] = '\0';
+	}
+
+	return padded_len;
+}
+
+static int
 spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		       uint8_t *cdb, uint8_t *data, uint16_t alloc_len)
 {
@@ -325,7 +353,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 			desig->reserved0 = 0;
 			desig->piv = 1;
 			desig->reserved1 = 0;
-			desig->len = snprintf(desig->desig, SPDK_SCSI_DEV_MAX_NAME, "%s", dev->name);
+			desig->len = spdk_bdev_scsi_pad_scsi_name(desig->desig, dev->name);
 			len += sizeof(struct spdk_scsi_desig_desc) + desig->len;
 
 			buf += sizeof(struct spdk_scsi_desig_desc) + desig->len;
