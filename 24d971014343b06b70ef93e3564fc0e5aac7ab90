@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d546e60c_e54610c0",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 347,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2017-12-27T10:11:14Z",
+      "side": 1,
+      "message": "I don\u0027t think this belongs to this patch (rather to this one https://review.gerrithub.io/#/c/392749/).\nThis is reason why Test Pool fails in current patch set.",
+      "range": {
+        "startLine": 341,
+        "startChar": 0,
+        "endLine": 347,
+        "endChar": 27
+      },
+      "revId": "24d971014343b06b70ef93e3564fc0e5aac7ab90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
