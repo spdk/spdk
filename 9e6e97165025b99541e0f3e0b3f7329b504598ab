@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6641b71_cc48c92e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2017-12-27T02:33:21Z",
+      "side": 1,
+      "message": "Is my understanding correct?\n\nIf thread 1 calls spdk_bdev_io_submit() and bdev-\u003eqos_thread is  thread 2, _spdk_bdev_io_submit() will be called by thread 2 and its callback will be called by thread 2.\nOur expectation is its callback should be called by thread 1?",
+      "range": {
+        "startLine": 861,
+        "startChar": 0,
+        "endLine": 861,
+        "endChar": 72
+      },
+      "revId": "9e6e97165025b99541e0f3e0b3f7329b504598ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
