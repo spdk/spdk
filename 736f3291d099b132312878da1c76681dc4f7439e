@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a24fa20_4c408749",
+        "filename": "doc/index.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T17:34:28Z",
+      "side": 1,
+      "message": "I think this is generally written User Guides or User\u0027s Guides, but not Users\u0027 Guides. https://english.stackexchange.com/questions/36657/user-s-guide-vs-users-guide",
+      "range": {
+        "startLine": 15,
+        "startChar": 2,
+        "endLine": 15,
+        "endChar": 15
+      },
+      "revId": "736f3291d099b132312878da1c76681dc4f7439e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "080ade7b_5dbec22f",
+        "filename": "doc/index.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T17:34:28Z",
+      "side": 1,
+      "message": "Same as User/User\u0027s/Users\u0027 above.",
+      "revId": "736f3291d099b132312878da1c76681dc4f7439e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
