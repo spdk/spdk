@@ -1,11 +1,11 @@
 if [ -z $TARGET_IP ]; then
-	echo "TARGET_IP not defined in environment"
-	exit 1
+	TARGET_IP=127.0.0.1
+	echo "TARGET_IP not defined in environment; defaulting to $TARGET_IP"
 fi
 
 if [ -z $INITIATOR_IP ]; then
-	echo "INITIATOR_IP not defined in environment"
-	exit 1
+	INITIATOR_IP=127.0.0.1
+	echo "INITIATOR_IP not defined in environment; defaulting to $INITIATOR_IP"
 fi
 
 if [ -z "$ISCSI_APP" ]; then
