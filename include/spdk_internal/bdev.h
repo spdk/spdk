@@ -206,6 +206,18 @@ struct spdk_bdev {
 	/** Number of blocks */
 	uint64_t blockcnt;
 
+	/** QoS per second */
+	uint64_t ios_per_sec;
+
+	/** Number of outstanding channels on this bdev */
+	uint32_t channel_count;
+
+	/** QoS bdev channel for this bdev */
+	struct spdk_bdev_channel *qos_channel;
+
+	/** QoS thread for this bdev */
+	struct spdk_thread *qos_thread;
+
 	/** write cache enabled, not used at the moment */
 	int write_cache;
 
@@ -271,8 +283,11 @@ struct spdk_bdev_io {
 	/** The block device that this I/O belongs to. */
 	struct spdk_bdev *bdev;
 
-	/** The bdev I/O channel that this was submitted on. */
+	/** The bdev I/O channel that this was handled on. */
 	struct spdk_bdev_channel *ch;
+
+	/** The bdev I/O channel that this was submitted on. */
+	struct spdk_bdev_channel *io_submit_ch;
 
 	/** The mgmt channel that this I/O was allocated from. */
 	struct spdk_bdev_mgmt_channel *mgmt_ch;
