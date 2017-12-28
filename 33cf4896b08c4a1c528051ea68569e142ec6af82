@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65f86bfb_690c2aa1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010525
+      },
+      "writtenOn": "2017-12-28T17:28:34Z",
+      "side": 1,
+      "message": "opts -\u003e ops throughout the commit message.  In this case, ops is short for \"operations\".",
+      "range": {
+        "startLine": 7,
+        "startChar": 25,
+        "endLine": 7,
+        "endChar": 29
+      },
+      "revId": "33cf4896b08c4a1c528051ea68569e142ec6af82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
