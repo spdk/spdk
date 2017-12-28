@@ -61,7 +61,7 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define BUF_LARGE_POOL_SIZE	1024
 #define NOMEM_THRESHOLD_COUNT	8
 #define ZERO_BUFFER_SIZE	0x100000
-
+#define MAX_IO_CHANNEL          64
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
 
 struct spdk_bdev_mgr {
@@ -1514,6 +1514,27 @@ spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 
 	*stat = channel->stat;
 	memset(&channel->stat, 0, sizeof(channel->stat));
+}
+
+void
+spdk_bdev_get_device_stat(struct spdk_bdev *bdev,
+			  struct spdk_bdev_io_stat *stat)
+{
+	int i;
+	int num;
+	struct spdk_io_channel *ch_array[MAX_IO_CHANNEL];
+	struct spdk_bdev_channel *channel;
+
+	memset(stat, 0, sizeof(struct spdk_bdev_io_stat));
+
+	num = spdk_io_channel_get_all(bdev, ch_array);
+	for (i = 0; i < num; i++) {
+		channel = spdk_io_channel_get_ctx(ch_array[i]);
+		stat->bytes_read    += channel->stat.bytes_read;
+		stat->num_read_ops  += channel->stat.num_read_ops;
+		stat->bytes_written += channel->stat.bytes_written;
+		stat->num_write_ops += channel->stat.num_write_ops;
+	}
 }
 
 int

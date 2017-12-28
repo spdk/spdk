@@ -233,6 +233,8 @@ void *spdk_io_channel_iter_get_ctx(struct spdk_io_channel_iter *i);
 
 void spdk_for_each_channel_continue(struct spdk_io_channel_iter *i, int status);
 
+int spdk_io_channel_get_all(void *io_device, struct spdk_io_channel **ch_array);
+
 #ifdef __cplusplus
 }
 #endif
