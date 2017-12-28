@@ -16,3 +16,15 @@
 
 [Ioat]
   Disable Yes
+
+[QoS]
+  # QoS section defines limitation on performance
+  # metric like IOPS
+  #
+  # Format: Limit_IOPS Bdev_Name IOPS_Limit_Value
+  #
+  # IOPS limit must be 10000 or greater and be multiple
+  # of 10000
+  #
+  # Assign 20000 IOPS for the Malloc0 block device
+  Limit_IOPS Malloc0 20000
