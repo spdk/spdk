@@ -154,6 +154,31 @@ struct spdk_bdev_channel {
 	 */
 	uint64_t		nomem_threshold;
 
+	/*
+	 * Rate limiting on this channel.
+	 * Queue of IO awaiting issue because of a QoS rate limiting happened
+	 *  on this channel.
+	 */
+	bdev_io_tailq_t		qos_io;
+
+	/*
+	 * Rate limiting on this channel.
+	 * Only valid for the master channel which manages the outstanding IOs.
+	 */
+	uint64_t		qos_max_ios_per_ms;
+
+	/*
+	 * Rate limiting on this channel.
+	 * Completed IO per millisecond.
+	 */
+	uint64_t		io_completed_per_ms;
+
+	/*
+	 * Rate limiting on this channel.
+	 * Periodic qos poller in millisecond.
+	 */
+	struct spdk_poller	*qos_poller;
+
 	uint32_t		flags;
 
 #ifdef SPDK_CONFIG_VTUNE
@@ -837,10 +862,9 @@ spdk_bdev_dump_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 }
 
 static int
-spdk_bdev_channel_create(void *io_device, void *ctx_buf)
+_spdk_bdev_channel_create(struct spdk_bdev_channel *ch, void *io_device)
 {
-	struct spdk_bdev		*bdev = io_device;
-	struct spdk_bdev_channel	*ch = ctx_buf;
+	struct spdk_bdev	*bdev = io_device;
 
 	ch->bdev = io_device;
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
@@ -858,8 +882,24 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	ch->io_outstanding = 0;
 	TAILQ_INIT(&ch->queued_resets);
 	TAILQ_INIT(&ch->nomem_io);
+	TAILQ_INIT(&ch->qos_io);
+	ch->qos_max_ios_per_ms = 0;
+	ch->io_completed_per_ms = 0;
+	ch->qos_poller = NULL;
 	ch->nomem_threshold = 0;
 	ch->flags = 0;
+
+	return 0;
+}
+
+static int
+spdk_bdev_channel_create(void *io_device, void *ctx_buf)
+{
+	struct spdk_bdev_channel	*ch = ctx_buf;
+
+	if (_spdk_bdev_channel_create(ch, io_device) != 0) {
+		goto exit;
+	}
 
 #ifdef SPDK_CONFIG_VTUNE
 	{
@@ -867,9 +907,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 		__itt_init_ittlib(NULL, 0);
 		name = spdk_sprintf_alloc("spdk_bdev_%s_%p", ch->bdev->name, ch);
 		if (!name) {
-			spdk_put_io_channel(ch->channel);
-			spdk_put_io_channel(ch->mgmt_channel);
-			return -1;
+			goto exit;
 		}
 		ch->handle = __itt_string_handle_create(name);
 		free(name);
@@ -879,6 +917,16 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 #endif
 
 	return 0;
+
+exit:
+	if (ch->channel) {
+		spdk_put_io_channel(ch->channel);
+	}
+	if (ch->mgmt_channel) {
+		spdk_put_io_channel(ch->mgmt_channel);
+	}
+
+	return -1;
 }
 
 /*
@@ -925,21 +973,30 @@ _spdk_bdev_abort_queued_io(bdev_io_tailq_t *queue, struct spdk_bdev_channel *ch)
 }
 
 static void
-spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
+_spdk_bdev_channel_destroy(struct spdk_bdev_channel *ch)
 {
-	struct spdk_bdev_channel	*ch = ctx_buf;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
 
 	mgmt_channel = spdk_io_channel_get_ctx(ch->mgmt_channel);
 
 	_spdk_bdev_abort_queued_io(&ch->queued_resets, ch);
 	_spdk_bdev_abort_queued_io(&ch->nomem_io, ch);
+	_spdk_bdev_abort_queued_io(&ch->qos_io, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, ch);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, ch);
 
 	spdk_put_io_channel(ch->channel);
 	spdk_put_io_channel(ch->mgmt_channel);
 	assert(ch->io_outstanding == 0);
+}
+
+static void
+spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)
+{
+	struct spdk_bdev_channel	*ch = ctx_buf;
+
+	_spdk_bdev_channel_destroy(ch);
+
 }
 
 struct spdk_io_channel *
@@ -1434,6 +1491,7 @@ _spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 	channel->flags |= BDEV_CH_RESET_IN_PROGRESS;
 
 	_spdk_bdev_abort_queued_io(&channel->nomem_io, channel);
+	_spdk_bdev_abort_queued_io(&channel->qos_io, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_small, channel);
 	_spdk_bdev_abort_buf_io(&mgmt_channel->need_buf_large, channel);
 
