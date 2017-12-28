@@ -100,6 +100,8 @@ __stop_poller(struct spdk_poller *poller, void *thread_ctx)
 	TAILQ_REMOVE(&thread->pollers, (struct ut_poller *)poller, tailq);
 
 	free((struct ut_poller *)poller);
+
+	poller = NULL;
 }
 
 static uintptr_t g_thread_id = MOCK_PASS_THRU;
