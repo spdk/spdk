@@ -488,8 +488,8 @@ function vm_setup()
 
 	local ssh_socket=$(( vm_socket_offset + 0 ))
 	local fio_socket=$(( vm_socket_offset + 1 ))
-	local http_socket=$(( vm_socket_offset + 2 ))
-	local https_socket=$(( vm_socket_offset + 3 ))
+	# vm_socket_offset + 2 - can be reused
+	# vm_socket_offset + 3 - can be reused
 	local gdbserver_socket=$(( vm_socket_offset + 4 ))
 	local vnc_socket=$(( 100 + vm_num ))
 	local qemu_pid_file="$vm_dir/qemu.pid"
@@ -509,7 +509,7 @@ function vm_setup()
 	cmd+="-pidfile $qemu_pid_file ${eol}"
 	cmd+="-serial file:$vm_dir/serial.log ${eol}"
 	cmd+="-D $vm_dir/qemu.log ${eol}"
-	cmd+="-net user,hostfwd=tcp::$ssh_socket-:22,hostfwd=tcp::$fio_socket-:8765,hostfwd=tcp::$https_socket-:443,hostfwd=tcp::$http_socket-:80 ${eol}"
+	cmd+="-net user,hostfwd=tcp::$ssh_socket-:22,hostfwd=tcp::$fio_socket-:8765 ${eol}"
 	cmd+="-net nic ${eol}"
 
 	cmd+="-drive file=$os,if=none,id=os_disk ${eol}"
@@ -618,8 +618,6 @@ function vm_setup()
 	# Save generated sockets redirection
 	echo $ssh_socket > $vm_dir/ssh_socket
 	echo $fio_socket > $vm_dir/fio_socket
-	echo $http_socket > $vm_dir/http_socket
-	echo $https_socket > $vm_dir/https_socket
 	echo $gdbserver_socket > $vm_dir/gdbserver_socket
 	echo $vnc_socket >> $vm_dir/vnc_socket
 }
