@@ -726,6 +726,14 @@ void spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			   struct spdk_bdev_io_stat *stat);
 
 /**
+ * Get I/O statistics for the given bdev.
+ *
+ * \param bdev I/O device to get statistics.
+ * \param stat The statistics for this bdev.
+ */
+void spdk_bdev_get_device_stat(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat)
+
+/**
  * Get the status of bdev_io as an NVMe status code.
  *
  * \param bdev_io I/O to get the status from.
