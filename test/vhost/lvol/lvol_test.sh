@@ -215,7 +215,7 @@ $rpc_py get_vhost_controllers
 $rpc_py get_luns
 
 # Run VMs
-$COMMON_DIR/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
+vm_run $used_vms
 vm_wait_for_boot 600 $used_vms
 
 # Get disk names from VMs and run FIO traffic

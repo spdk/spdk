@@ -114,7 +114,7 @@ function vms_setup() {
 function vms_setup_and_run() {
     vms_setup
     # Run everything
-    $BASE_DIR/../common/vm_run.sh $x --work-dir=$TEST_DIR $used_vms
+    vm_run $used_vms
     vm_wait_for_boot 600 $used_vms
 }
 
