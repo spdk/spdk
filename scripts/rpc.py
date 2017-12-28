@@ -592,6 +592,12 @@ p.add_argument('filename', help='filename of the firmware to download')
 p.add_argument('bdev_name', help='name of the NVMe device')
 p.set_defaults(func=apply_firmware)
 
+def get_bdev_io_stat(args):
+    print_dict(jsonrpc_call('get_bdev_io_stat'))
+
+p = subparsers.add_parser('get_bdev_io_stat', help='Display current I/O statistic of all bdevs')
+p.set_defaults(func=get_bdev_io_stat)
+
 def get_bdevs(args):
     params = {}
     if args.name:
