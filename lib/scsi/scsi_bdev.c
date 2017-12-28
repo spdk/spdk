@@ -1610,23 +1610,21 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev,
 
 	for (i = 0; i < desc_count; i++) {
 		struct spdk_scsi_unmap_bdesc	*desc;
-		uint64_t block_size;
-		uint64_t offset;
-		uint64_t nbytes;
+		uint64_t offset_blocks;
+		uint64_t num_blocks;
 
 		desc = &ctx->desc[i];
 
-		block_size = spdk_bdev_get_block_size(bdev);
-		offset = from_be64(&desc->lba) * block_size;
-		nbytes = from_be32(&desc->block_count) * block_size;
+		offset_blocks = from_be64(&desc->lba);
+		num_blocks = from_be32(&desc->block_count);
 
-		if (nbytes == 0) {
+		if (num_blocks == 0) {
 			continue;
 		}
 
 		ctx->count++;
-		rc = spdk_bdev_unmap(task->desc, task->ch, offset, nbytes,
-				     spdk_bdev_scsi_task_complete_unmap_cmd, ctx);
+		rc = spdk_bdev_unmap_blocks(task->desc, task->ch, offset_blocks, num_blocks,
+					    spdk_bdev_scsi_task_complete_unmap_cmd, ctx);
 
 		if (rc) {
 			SPDK_ERRLOG("SCSI Unmapping failed\n");
