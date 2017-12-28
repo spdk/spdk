@@ -83,7 +83,7 @@ function run_vhost() {
     notice ""
     notice "running SPDK"
     notice ""
-    $BASE_DIR/../common/run_vhost.sh $x --work-dir=$TEST_DIR --conf-dir=$BASE_DIR
+    spdk_vhost_run $BASE_DIR
     notice ""
 }
 
