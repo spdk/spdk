@@ -35,6 +35,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
+#include "spdk/conf.h"
 
 #include "spdk/env.h"
 #include "spdk/event.h"
@@ -55,12 +56,13 @@
 int __itt_init_ittlib(const char *, __itt_group_id);
 #endif
 
-#define SPDK_BDEV_IO_POOL_SIZE	(64 * 1024)
-#define SPDK_BDEV_IO_CACHE_SIZE	256
-#define BUF_SMALL_POOL_SIZE	8192
-#define BUF_LARGE_POOL_SIZE	1024
-#define NOMEM_THRESHOLD_COUNT	8
-#define ZERO_BUFFER_SIZE	0x100000
+#define SPDK_BDEV_IO_POOL_SIZE		(64 * 1024)
+#define SPDK_BDEV_IO_CACHE_SIZE		256
+#define BUF_SMALL_POOL_SIZE		8192
+#define BUF_LARGE_POOL_SIZE		1024
+#define NOMEM_THRESHOLD_COUNT		8
+#define ZERO_BUFFER_SIZE		0x100000
+#define SPDK_BDEV_QOS_MIN_IOS_PER_SEC	1000
 
 typedef TAILQ_HEAD(, spdk_bdev_io) bdev_io_tailq_t;
 
@@ -2233,6 +2235,33 @@ spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io)
 	return spdk_io_channel_get_thread(bdev_io->ch->channel);
 }
 
+static void
+_spdk_bdev_qos_config(struct spdk_bdev *bdev)
+{
+	struct spdk_conf_section	*sp = NULL;
+	int				ios_per_sec = 0;
+
+	sp = spdk_conf_find_section(NULL, "QoS");
+	if (sp != NULL) {
+		ios_per_sec = spdk_conf_section_get_intval(sp, bdev->name);
+		if (ios_per_sec > 0) {
+			if (ios_per_sec % SPDK_BDEV_QOS_MIN_IOS_PER_SEC) {
+				SPDK_ERRLOG("Assigned IOPS %u on bdev %s is not multiple of 1000\n",
+					    ios_per_sec, bdev->name);
+				SPDK_ERRLOG("Not enable QoS on this bdev %s\n", bdev->name);
+				return;
+			}
+
+			bdev->ios_per_sec = (uint64_t)ios_per_sec;
+			bdev->ios_per_sec = spdk_max(bdev->ios_per_sec,
+						     SPDK_BDEV_QOS_MIN_IOS_PER_SEC);
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Bdev:%s QoS:%lu\n",
+				      bdev->name, bdev->ios_per_sec);
+		}
+	}
+
+}
+
 static int
 _spdk_bdev_register(struct spdk_bdev *bdev)
 {
@@ -2258,6 +2287,8 @@ _spdk_bdev_register(struct spdk_bdev *bdev)
 	TAILQ_INIT(&bdev->base_bdevs);
 
 	bdev->reset_in_progress = NULL;
+
+	_spdk_bdev_qos_config(bdev);
 
 	spdk_io_device_register(bdev, spdk_bdev_channel_create, spdk_bdev_channel_destroy,
 				sizeof(struct spdk_bdev_channel));
