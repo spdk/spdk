@@ -36,6 +36,104 @@
 
 #include "spdk_internal/bdev.h"
 
+struct rpc_get_bdev_io_stat {
+	int bdev_num;
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+	pthread_mutex_t mutex;
+};
+
+static void
+spdk_rpc_get_bdev_io_stat_cb(struct spdk_bdev *bdev,
+			     const struct spdk_bdev_io_stat *stat, void *cb_arg)
+{
+	static int iter = 0;
+	struct rpc_get_bdev_io_stat *req = cb_arg;
+	struct spdk_jsonrpc_request *request = req->request;
+	struct spdk_json_write_ctx *w = req->w;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+
+	spdk_json_write_name(w, "bytes_read");
+	spdk_json_write_uint64(w, stat->bytes_read);
+
+	spdk_json_write_name(w, "num_read_ops");
+	spdk_json_write_uint64(w, stat->num_read_ops);
+
+	spdk_json_write_name(w, "bytes_written");
+	spdk_json_write_uint64(w, stat->bytes_written);
+
+	spdk_json_write_name(w, "num_write_ops");
+	spdk_json_write_uint64(w, stat->num_write_ops);
+
+	spdk_json_write_object_end(w);
+
+	pthread_mutex_lock(&req->mutex);
+	if (++iter == req->bdev_num) {
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(request, w);
+		iter = 0;
+		pthread_mutex_unlock(&req->mutex);
+		pthread_mutex_destroy(&req->mutex);
+		free(req);
+		return;
+	}
+	pthread_mutex_unlock(&req->mutex);
+}
+
+static void
+spdk_rpc_get_bdev_io_stat(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	int bdev_num = 0;
+	struct spdk_bdev *bdev = NULL;
+	struct spdk_json_write_ctx *w;
+	struct rpc_get_bdev_io_stat *req;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_bdev_io_stat requires no parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+		bdev_num++;
+	}
+	if (bdev_num == 0) {
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(request, w);
+		return;
+	}
+
+	req = calloc(1, sizeof(struct rpc_get_bdev_io_stat));
+	if (req == NULL) {
+		SPDK_ERRLOG("Filed to allocate rpc_get_bdev_io_stat struct\n");
+		spdk_json_write_array_end(w);
+		spdk_jsonrpc_end_result(request, w);
+		return;
+	}
+
+	req->bdev_num = bdev_num;
+	req->request = request;
+	req->w = w;
+	pthread_mutex_init(&req->mutex, NULL);
+
+	for (bdev = spdk_bdev_first(); bdev != NULL; bdev = spdk_bdev_next(bdev)) {
+		spdk_bdev_get_device_stat(bdev, spdk_rpc_get_bdev_io_stat_cb, req);
+	}
+}
+SPDK_RPC_REGISTER("get_bdev_io_stat", spdk_rpc_get_bdev_io_stat)
+
 static void
 spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 			struct spdk_bdev *bdev)

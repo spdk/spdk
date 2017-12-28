@@ -119,7 +119,8 @@ struct spdk_bdev_io_stat {
 
 typedef void (*spdk_bdev_init_cb)(void *cb_arg, int rc);
 typedef void (*spdk_bdev_fini_cb)(void *cb_arg);
-
+typedef void (*spdk_bdev_get_device_stat_cb)(struct spdk_bdev *bdev,
+		const struct spdk_bdev_io_stat *stat, void *cb_arg);
 /**
  * Initialize block device modules.
  *
@@ -725,6 +726,8 @@ int spdk_bdev_free_io(struct spdk_bdev_io *bdev_io);
 void spdk_bdev_get_io_stat(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 			   struct spdk_bdev_io_stat *stat);
 
+void spdk_bdev_get_device_stat(struct spdk_bdev *bdev,
+			       spdk_bdev_get_device_stat_cb cb, void *cb_arg);
 /**
  * Get the status of bdev_io as an NVMe status code.
  *
